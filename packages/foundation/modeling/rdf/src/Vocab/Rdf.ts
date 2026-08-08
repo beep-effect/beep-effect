@@ -23,7 +23,8 @@ export { RDF_NAMESPACE, RDF_TERMS } from "./generated/Rdf.terms.ts";
 /**
  * `rdf:type`
  *
- * @example
+ * **Example** (Inspect type NamedNode)
+ *
  * ```ts
  * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
  *
@@ -31,15 +32,16 @@ export { RDF_NAMESPACE, RDF_TERMS } from "./generated/Rdf.terms.ts";
  * console.log(RDF_TYPE.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDF_TYPE = makeNamedNode(`${RDF_NAMESPACE}type`);
 
 /**
  * `rdf:first`
  *
- * @example
+ * **Example** (Inspect first NamedNode)
+ *
  * ```ts
  * import { RDF_FIRST } from "@beep/rdf/Vocab/Rdf"
  *
@@ -47,15 +49,16 @@ export const RDF_TYPE = makeNamedNode(`${RDF_NAMESPACE}type`);
  * console.log(RDF_FIRST.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDF_FIRST = makeNamedNode(`${RDF_NAMESPACE}first`);
 
 /**
  * `rdf:rest`
  *
- * @example
+ * **Example** (Inspect rest NamedNode)
+ *
  * ```ts
  * import { RDF_REST } from "@beep/rdf/Vocab/Rdf"
  *
@@ -63,15 +66,16 @@ export const RDF_FIRST = makeNamedNode(`${RDF_NAMESPACE}first`);
  * console.log(RDF_REST.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDF_REST = makeNamedNode(`${RDF_NAMESPACE}rest`);
 
 /**
  * `rdf:nil`
  *
- * @example
+ * **Example** (Inspect nil NamedNode)
+ *
  * ```ts
  * import { RDF_NIL } from "@beep/rdf/Vocab/Rdf"
  *
@@ -79,7 +83,7 @@ export const RDF_REST = makeNamedNode(`${RDF_NAMESPACE}rest`);
  * console.log(RDF_NIL.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDF_NIL = makeNamedNode(`${RDF_NAMESPACE}nil`);

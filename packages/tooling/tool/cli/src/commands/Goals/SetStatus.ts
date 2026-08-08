@@ -166,12 +166,14 @@ const migrateWriteFlag = Flag.boolean("write").pipe(
 /**
  * `bun run beep goals set-status` — single writer for goal-packet status.
  *
- * @example
+ * **Example** (Import and log command name)
+ *
  * ```ts
  * import { goalsSetStatusCommand } from "@beep/repo-cli/commands/Goals/SetStatus"
  *
  * console.log(goalsSetStatusCommand.name)
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

@@ -46,7 +46,8 @@ const unsupportedFloat16ArrayRuntime = (): never => {
 /**
  * Float16Array type guard.
  *
- * @example
+ * **Example** (Type guard usage)
+ *
  * ```ts
  * import { isFloat16Array } from "@beep/schema/Float16Array";
  *
@@ -63,12 +64,13 @@ export const isFloat16Array = (u: unknown): u is Float16Array<ArrayBufferLike> =
 /**
  * Schema that accepts native `Float16Array` instances.
  *
+ * **Details**
+ *
  * This is useful for internal boundaries that already operate on typed arrays
  * and only need runtime schema validation plus reusable schema metadata.
  *
- * @category validation
- * @since 0.0.0
- * @example
+ * **Example** (Decode native Float16Array)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float16Arr } from "@beep/schema/Float16Array";
@@ -78,6 +80,9 @@ export const isFloat16Array = (u: unknown): u is Float16Array<ArrayBufferLike> =
  *
  * console.log(value.length); // 3
  * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const Float16Arr = S.declare(isFloat16Array)
   .annotate({
@@ -99,7 +104,8 @@ export const Float16Arr = S.declare(isFloat16Array)
 /**
  * Type for {@link Float16Arr}.
  *
- * @example
+ * **Example** (Typed decoded value)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float16Arr } from "@beep/schema/Float16Array";
@@ -117,13 +123,14 @@ export type Float16Arr = typeof Float16Arr.Type;
  * Bidirectional schema that decodes arrays of numbers into `Float16Array`
  * values.
  *
+ * **Details**
+ *
  * Decoding allocates a new `Float16Array` from the provided numeric array.
  * Encoding converts the typed array back into a standard array of numbers so it
  * can be transported through JSON-friendly boundaries.
  *
- * @category validation
- * @since 0.0.0
- * @example
+ * **Example** (Decode and encode arrays)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float16ArrayFromArray } from "@beep/schema/Float16Array";
@@ -137,6 +144,9 @@ export type Float16Arr = typeof Float16Arr.Type;
  * console.log(value instanceof Float16Array); // true
  * console.log(encoded); // [0.5, 1.25, 2.75]
  * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const Float16ArrayFromArray = S.Finite.pipe(
   S.Array,
@@ -159,7 +169,8 @@ export const Float16ArrayFromArray = S.Finite.pipe(
 /**
  * Type for {@link Float16ArrayFromArray}.
  *
- * @example
+ * **Example** (Typed decoded Float16Array)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { Float16ArrayFromArray } from "@beep/schema/Float16Array";
@@ -176,7 +187,8 @@ export type Float16ArrayFromArray = typeof Float16ArrayFromArray.Type;
 /**
  * Namespace members for {@link Float16ArrayFromArray}.
  *
- * @example
+ * **Example** (Encoded payload type)
+ *
  * ```ts
  * import { type Float16ArrayFromArray } from "@beep/schema/Float16Array";
  *
@@ -191,12 +203,13 @@ export declare namespace Float16ArrayFromArray {
   /**
    * Encoded representation accepted by {@link Float16ArrayFromArray}.
    *
+   * **Details**
+   *
    * This stays as a plain array of numbers so JSON payloads can represent
    * typed-array content without a custom wire format.
    *
-   * @category models
-   * @since 0.0.0
-   * @example
+   * **Example** (Plain number array payload)
+   *
    * ```ts
    * import { type Float16ArrayFromArray } from "@beep/schema/Float16Array";
    *
@@ -204,6 +217,9 @@ export declare namespace Float16ArrayFromArray {
    *
    * console.log(payload.length); // 3
    * ```
+   *
+   * @category models
+   * @since 0.0.0
    */
   export type Encoded = typeof Float16ArrayFromArray.Encoded;
 }
@@ -212,13 +228,16 @@ export declare namespace Float16ArrayFromArray {
  * Model field helper for storing `Float16Array` values in variant-based model
  * schemas.
  *
+ * **Details**
+ *
  * Database-facing `insert` and `update` variants require native
  * `Float16Array` instances, while `jsonCreate` and `jsonUpdate` accept plain
  * numeric arrays through {@link Float16ArrayFromArray}. This field does not
  * define a `json` variant, allowing read-side JSON serialization to be chosen
  * explicitly by the surrounding model.
  *
- * @example
+ * **Example** (Check insert schema)
+ *
  * ```ts
  * import { Float16ArrayField } from "@beep/schema/Float16Array";
  * import * as S from "effect/Schema";

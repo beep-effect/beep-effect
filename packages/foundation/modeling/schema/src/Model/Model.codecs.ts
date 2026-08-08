@@ -12,7 +12,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
 /**
  * Interface for a field stored as a JSON text column in the database.
  *
- * @example
+ * **Example** (JsonFromString field creation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -22,8 +23,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface JsonFromString<S extends S.Top>
   extends VariantSchema.Field<{
@@ -38,9 +39,12 @@ export interface JsonFromString<S extends S.Top>
 /**
  * A field that represents a JSON value stored as text in the database.
  *
+ * **Details**
+ *
  * The "json" variants will use the object schema directly.
  *
- * @example
+ * **Example** (JsonFromString in Model.Class)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -52,8 +56,8 @@ export interface JsonFromString<S extends S.Top>
  * console.log(Record)
  * ```
  *
- * @since 0.0.0
  * @category codecs
+ * @since 0.0.0
  */
 export const JsonFromString = <S extends S.Top>(schema: S): JsonFromString<S> => {
   const parsed = schema.pipe(S.toCodecJson, S.fromJsonString) as TUnsafe.Any;

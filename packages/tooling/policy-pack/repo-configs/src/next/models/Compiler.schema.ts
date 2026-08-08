@@ -47,12 +47,14 @@ class EmotionImportMapEntry extends S.Class<EmotionImportMapEntry>($I`EmotionImp
 /**
  * Emotion compiler transform configuration.
  *
- * @example
+ * **Example** (Make EmotionConfig with sourceMap)
+ *
  * ```ts
  * import { EmotionConfig } from "@beep/repo-configs/next/models/Compiler.schema"
  * const config = EmotionConfig.make({ sourceMap: true })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -71,12 +73,14 @@ export class EmotionConfig extends S.Class<EmotionConfig>($I`EmotionConfig`)(
 /**
  * Styled Components compiler transform configuration.
  *
- * @example
+ * **Example** (Make StyledComponentsConfig with ssr)
+ *
  * ```ts
  * import { StyledComponentsConfig } from "@beep/repo-configs/next/models/Compiler.schema"
  * const config = StyledComponentsConfig.make({ ssr: true })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -101,12 +105,14 @@ export class StyledComponentsConfig extends S.Class<StyledComponentsConfig>($I`S
 /**
  * React Compiler options supported by Next.js.
  *
- * @example
+ * **Example** (Make ReactCompilerOptions with infer)
+ *
  * ```ts
  * import { ReactCompilerOptions } from "@beep/repo-configs/next/models/Compiler.schema"
  * const config = ReactCompilerOptions.make({ compilationMode: "infer" })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -163,12 +169,14 @@ class StyledJsxConfig extends S.Class<StyledJsxConfig>($I`StyledJsxConfig`)(
 /**
  * Next.js compiler configuration block.
  *
- * @example
+ * **Example** (Make CompilerConfig removeConsole)
+ *
  * ```ts
  * import { CompilerConfig } from "@beep/repo-configs/next/models/Compiler.schema"
  * const config = CompilerConfig.make({ removeConsole: true })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -200,7 +208,8 @@ export class CompilerConfig extends S.Class<CompilerConfig>($I`CompilerConfig`)(
 /**
  * Sass options passed through to Next.js.
  *
- * @example
+ * **Example** (Decode SassOptions with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -208,6 +217,7 @@ export class CompilerConfig extends S.Class<CompilerConfig>($I`CompilerConfig`)(
  * const program = S.decodeUnknownEffect(SassOptions)({ implementation: "sass" })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -223,12 +233,14 @@ export const SassOptions = S.declare<SassOptionsFromNext>(isSassOptions, {
 /**
  * Sass options passed through to Next.js.
  *
- * @example
+ * **Example** (Type annotate SassOptions value)
+ *
  * ```ts
  * import type { SassOptions } from "@beep/repo-configs/next"
  * const options: SassOptions = { implementation: "sass" }
  * console.log(options)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

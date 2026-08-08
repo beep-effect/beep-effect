@@ -18,7 +18,8 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
 /**
  * Persistence failure raised when a Worker row is absent.
  *
- * @example
+ * **Example** (Make not-found error)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryNotFound } from "@beep/architecture-lab-use-cases/entities/Worker/server"
@@ -50,7 +51,8 @@ export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryN
 /**
  * Persistence failure raised when a Worker write conflicts.
  *
- * @example
+ * **Example** (Make conflict with reason)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryConflict } from "@beep/architecture-lab-use-cases/entities/Worker/server"
@@ -86,7 +88,8 @@ export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryC
 /**
  * Persistence failure raised when the Worker repository is unavailable.
  *
- * @example
+ * **Example** (Make unavailable error)
+ *
  * ```ts
  * import { WorkerRepositoryUnavailable } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  *
@@ -118,7 +121,8 @@ export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerReposito
 /**
  * Worker repository failure schema.
  *
- * @example
+ * **Example** (Check repository error membership)
+ *
  * ```ts
  * import {
  *   WorkerRepositoryError,
@@ -149,7 +153,8 @@ export const WorkerRepositoryError = S.Union([
 /**
  * Runtime type for {@link WorkerRepositoryError}.
  *
- * @example
+ * **Example** (Type a repository error)
+ *
  * ```ts
  * import {
  *   WorkerRepositoryUnavailable,
@@ -169,11 +174,13 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
 /**
  * Worker repository port consumed by the server-side use-case factory.
  *
- * @remarks
+ * **Details**
+ *
  * `create` fails on duplicate identity, `get` fails when no entity exists, and
  * `list` returns repository order for the use-case layer to filter.
  *
- * @example
+ * **Example** (Implement repository shape)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import {
@@ -218,7 +225,8 @@ export interface WorkerRepositoryShape {
 /**
  * Context tag for the Worker repository port.
  *
- * @example
+ * **Example** (Provide WorkerRepository service)
+ *
  * ```ts
  * import {
  *   WorkerRepository,

@@ -27,13 +27,16 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  * Maps a literal value to its string key representation used in `Enum`, `is`,
  * `$match`, and `thunk` objects.
  *
+ * **Details**
+ *
  * Key format by type:
  * - boolean: `"true"` or `"false"`
  * - bigint: `"bigint${value}n"` (e.g., `1n` becomes `"bigint1n"`)
  * - number: `"number${value}"` (e.g., `200` becomes `"number200"`)
  * - string: as-is (e.g., `"pending"` stays `"pending"`)
  *
- * @example
+ * **Example** (Number literal key mapping)
+ *
  * ```ts
  * import type { LiteralToKey } from "@beep/schema/LiteralKit"
  *
@@ -41,8 +44,8 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LiteralToKey<L extends SchemaAST.LiteralValue> = L extends boolean
   ? L extends true
@@ -210,7 +213,8 @@ type ToTaggedUnionFn<L extends PropertyKeyLiteralArray, M extends EnumMappings<L
  * Converts a literal value to its string key at runtime using the
  * {@link LiteralToKey} mapping rules.
  *
- * @example
+ * **Example** (Runtime literal key conversion)
+ *
  * ```ts
  * import { matchLiteral } from "@beep/schema/LiteralKit"
  *
@@ -218,8 +222,8 @@ type ToTaggedUnionFn<L extends PropertyKeyLiteralArray, M extends EnumMappings<L
  * console.log(keys) // ["pending", "number200", "true", "bigint1n"]
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const matchLiteral = <L extends SchemaAST.LiteralValue>(literal: L): LiteralToKey<L> =>
   Match.value(literal).pipe(
@@ -373,7 +377,8 @@ const LiteralKitTaggedUnionLiteralErrorBase: TaggedErrorClassFromFields<
  * array, typically when `omitOptions` removes every literal and cannot return
  * a non-empty result.
  *
- * @example
+ * **Example** (Create not-in-set error)
+ *
  * ```ts
  * import { LiteralNotInSetError } from "@beep/schema/LiteralKit"
  *
@@ -393,7 +398,8 @@ export class LiteralNotInSetError extends LiteralNotInSetErrorBase {}
  * Error thrown when different literals encode to the same helper key via
  * {@link LiteralToKey} mapping.
  *
- * @example
+ * **Example** (Create key collision error)
+ *
  * ```ts
  * import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit"
  *
@@ -416,7 +422,8 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  * Error thrown when the same source literal appears more than once in a manual
  * enum mapping provided to {@link LiteralKit}.
  *
- * @example
+ * **Example** (Create duplicate literal error)
+ *
  * ```ts
  * import { LiteralKitEnumMappingDuplicateLiteralError } from "@beep/schema/LiteralKit"
  *
@@ -437,7 +444,8 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends LiteralKitEnumMa
  * Error thrown when a manual enum mapping does not exactly cover the provided
  * literal set (has missing or unexpected entries).
  *
- * @example
+ * **Example** (Create coverage error instance)
+ *
  * ```ts
  * import { LiteralKitEnumMappingCoverageError } from "@beep/schema/LiteralKit"
  *
@@ -459,7 +467,8 @@ export class LiteralKitEnumMappingCoverageError extends LiteralKitEnumMappingCov
  * Error thrown when `LiteralKit.toTaggedUnion` receives a literal that cannot
  * act as an object property key.
  *
- * @example
+ * **Example** (Create tagged-union literal error)
+ *
  * ```ts
  * import { LiteralKitTaggedUnionLiteralError } from "@beep/schema/LiteralKit"
  *
@@ -677,7 +686,8 @@ type LiteralKitBase<L extends Literals, M extends EnumMappings<L> | undefined = 
 /**
  * Runtime literal kit returned by {@link LiteralKit}.
  *
- * @example
+ * **Example** (Runtime kit type usage)
+ *
  * ```ts
  * import { LiteralKit, type LiteralKit as LiteralKitType } from "@beep/schema/LiteralKit"
  *
@@ -696,7 +706,8 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
 /**
  * Builds a literal schema kit from a non-empty tuple of mixed literals.
  *
- * @example
+ * **Example** (Build mixed literal kit)
+ *
  * ```typescript
  * import { LiteralKit } from "@beep/schema";
  * import * as HashSet from "effect/HashSet";
@@ -748,7 +759,8 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
 /**
  * Builds a literal schema kit with a custom key mapping for `.Enum`.
  *
- * @example
+ * **Example** (Custom enum key mapping)
+ *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
@@ -771,7 +783,8 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
  * Implementation signature for {@link LiteralKit}; see the overloads above for
  * the public call shapes.
  *
- * @example
+ * **Example** (Implementation signature usage)
+ *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *

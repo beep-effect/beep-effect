@@ -17,7 +17,8 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
 /**
  * Splits comma-separated text, trims each entry, and drops empty values.
  *
- * @example
+ * **Example** (Trim and drop empties)
+ *
  * ```ts
  * import { Text } from "@beep/utils"
  *
@@ -35,10 +36,13 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim), 
 /**
  * Renders a named list row with optional aliases.
  *
+ * **Details**
+ *
  * Produces `"name (alias1, alias2): description"` when aliases are present,
  * or `"name: description"` when there are none.
  *
- * @example
+ * **Example** (Format name with aliases)
+ *
  * ```ts
  * import { Text } from "@beep/utils"
  *
@@ -73,7 +77,8 @@ export const formatNameWithAliases: {
 /**
  * Joins text lines with a newline separator.
  *
- * @example
+ * **Example** (Join lines with newline)
+ *
  * ```ts
  * import { Text } from "@beep/utils"
  *

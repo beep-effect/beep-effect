@@ -19,7 +19,8 @@ import type { JSX } from "react";
  * Serialized wire shape of {@link ArtifactRefNode} — pinned to the
  * `@beep/lexical-schema` encoded contract.
  *
- * @example
+ * **Example** (Satisfy serialized wire shape)
+ *
  * ```ts
  * import type { SerializedArtifactRefNode } from "@beep/editor/artifact-ref-node"
  *
@@ -44,7 +45,8 @@ export type SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded;
  * construction subset of the serialized artifact-ref wire shape used by runtime
  * Lexical node construction.
  *
- * @example
+ * **Example** (Typed creation input)
+ *
  * ```ts
  * import type { ArtifactRefNodeCreateInput } from "@beep/editor/artifact-ref-node"
  *
@@ -75,7 +77,8 @@ const invalidArtifactRefNode = (): ArtifactRefNode => new ArtifactRefNode("");
 /**
  * Block-level decorator node referencing a runtime artifact.
  *
- * @example
+ * **Example** (Create node get type)
+ *
  * ```tsx
  * import { $createArtifactRefNode } from "@beep/editor/artifact-ref-node"
  *
@@ -167,7 +170,8 @@ export class ArtifactRefNode extends DecoratorNode<JSX.Element> {
 /**
  * Create an {@link ArtifactRefNode}.
  *
- * @example
+ * **Example** (Create labeled artifact node)
+ *
  * ```tsx
  * import { $createArtifactRefNode } from "@beep/editor/artifact-ref-node"
  *
@@ -187,7 +191,8 @@ export const $createArtifactRefNode = (props: ArtifactRefNodeCreateInput): Artif
 /**
  * Type guard for {@link ArtifactRefNode}.
  *
- * @example
+ * **Example** (Guard returns true)
+ *
  * ```tsx
  * import { $createArtifactRefNode, $isArtifactRefNode } from "@beep/editor/artifact-ref-node"
  *

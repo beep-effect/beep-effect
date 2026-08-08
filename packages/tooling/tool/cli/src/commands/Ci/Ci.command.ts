@@ -246,7 +246,7 @@ const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSum
 /**
  * Append the latest Turbo run summary to GitHub step summary or stdout.
  *
- * **Example** (Append the latest Turbo summary)
+ * **Example** (Append Turbo summary program)
  *
  * ```ts
  * import { appendTurboSummary } from "@beep/repo-cli/commands/Ci"
@@ -309,7 +309,7 @@ const appendTurboSummaryCommand = Command.make(
 /**
  * CI helper command group.
  *
- * **Example** (Name the command group)
+ * **Example** (Register CI command group)
  *
  * ```ts
  * import { ciCommand } from "@beep/repo-cli/commands/Ci"

@@ -47,7 +47,8 @@ const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePa
  * actions, derived from the in-flight flags of the open/save/preview atoms
  * and whether a session is open.
  *
- * @example
+ * **Example** (Compute toolbar busy state)
+ *
  * ```ts
  * import { documentToolbarState } from "@beep/ontology-ui/aggregates/Session"
  *
@@ -84,7 +85,8 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
 /**
  * Document actions, view controls, dirty state, and document errors.
  *
- * @example
+ * **Example** (Import OntologyDocumentRegion)
+ *
  * ```tsx
  * import { OntologyDocumentRegion } from "@beep/ontology-ui"
  *

@@ -8,7 +8,8 @@
 /**
  * Shared entity exports.
  *
- * @example
+ * **Example** (Import shared entities module)
+ *
  * ```ts
  * import * as Entities from "@beep/shared-domain/entities"
  *

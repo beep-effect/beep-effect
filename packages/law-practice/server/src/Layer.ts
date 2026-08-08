@@ -51,6 +51,8 @@ const OfficeActionReviewLayer = Layer.effect(
  * office-action review loop over provider-neutral extraction and the epistemic
  * admission services.
  *
+ * **Details**
+ *
  * Hosts must merge in a `LanguageModel.LanguageModel` provider and a
  * `Crypto.Crypto` provider (e.g. `BunCrypto.layer`); this layer keeps model
  * selection and the runtime crypto primitive outside law-practice while
@@ -58,7 +60,8 @@ const OfficeActionReviewLayer = Layer.effect(
  * `BEEP_LANGEXTRACT_ALLOW_REMOTE=true`, and the file-processing capability uses
  * crypto for content hashing.
  *
- * @example
+ * **Example** (Log the live layer)
+ *
  * ```ts
  * import { LawPracticeServerLive } from "@beep/law-practice-server/layer"
  *

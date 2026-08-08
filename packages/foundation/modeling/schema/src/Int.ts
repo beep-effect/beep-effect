@@ -14,7 +14,8 @@ const $I = $SchemaId.create("Int");
 /**
  * Branded schema for finite integers.
  *
- * @example
+ * **Example** (Decode finite integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Int } from "@beep/schema/Int"
@@ -23,8 +24,8 @@ const $I = $SchemaId.create("Int");
  * console.log(value) // 42
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Int = S.Int.pipe(S.brand("Int"))
   .check(
@@ -42,7 +43,8 @@ export const Int = S.Int.pipe(S.brand("Int"))
 /**
  * Type for {@link Int}.
  *
- * @example
+ * **Example** (Typed integer value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Int } from "@beep/schema/Int"
@@ -51,15 +53,16 @@ export const Int = S.Int.pipe(S.brand("Int"))
  * console.log(value + 1) // 43
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Int = typeof Int.Type;
 
 /**
  * Branded schema for positive integers (greater than zero).
  *
- * @example
+ * **Example** (Decode positive integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PosInt } from "@beep/schema/Int"
@@ -68,8 +71,8 @@ export type Int = typeof Int.Type;
  * console.log(value) // 5
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PosInt = Int.pipe(S.brand("PosInt"))
   .check(
@@ -87,7 +90,8 @@ export const PosInt = Int.pipe(S.brand("PosInt"))
 /**
  * Type for {@link PosInt}.
  *
- * @example
+ * **Example** (Typed positive integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PosInt } from "@beep/schema/Int"
@@ -96,15 +100,16 @@ export const PosInt = Int.pipe(S.brand("PosInt"))
  * console.log(count > 0) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PosInt = typeof PosInt.Type;
 
 /**
  * Branded schema for PostgreSQL `serial` column values.
  *
- * @example
+ * **Example** (Decode serial identifier)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PostgresSerialInt } from "@beep/schema/Int"
@@ -113,8 +118,8 @@ export type PosInt = typeof PosInt.Type;
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const PostgresSerialInt = Int.pipe(S.brand("PostgresSerialInt"))
   .check(isPostgresSerialInt)
@@ -127,7 +132,8 @@ export const PostgresSerialInt = Int.pipe(S.brand("PostgresSerialInt"))
 /**
  * Type for {@link PostgresSerialInt}.
  *
- * @example
+ * **Example** (Typed serial identifier)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PostgresSerialInt } from "@beep/schema/Int"
@@ -136,15 +142,16 @@ export const PostgresSerialInt = Int.pipe(S.brand("PostgresSerialInt"))
  * console.log(id) // 1
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PostgresSerialInt = typeof PostgresSerialInt.Type;
 
 /**
  * Branded schema for negative integers (less than zero).
  *
- * @example
+ * **Example** (Decode negative integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NegInt } from "@beep/schema/Int"
@@ -153,8 +160,8 @@ export type PostgresSerialInt = typeof PostgresSerialInt.Type;
  * console.log(value) // -3
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NegInt = Int.pipe(S.brand("NegInt"))
   .check(
@@ -172,7 +179,8 @@ export const NegInt = Int.pipe(S.brand("NegInt"))
 /**
  * Type for {@link NegInt}.
  *
- * @example
+ * **Example** (Typed negative integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NegInt } from "@beep/schema/Int"
@@ -181,15 +189,16 @@ export const NegInt = Int.pipe(S.brand("NegInt"))
  * console.log(debt < 0) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NegInt = typeof NegInt.Type;
 
 /**
  * Branded schema for non-positive integers (zero or less).
  *
- * @example
+ * **Example** (Decode non-positive values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonPositiveInt } from "@beep/schema/Int"
@@ -198,8 +207,8 @@ export type NegInt = typeof NegInt.Type;
  * console.log(S.decodeUnknownSync(NonPositiveInt)(-5)) // -5
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonPositiveInt = Int.pipe(S.brand("NonPositiveInt"))
   .check(
@@ -217,7 +226,8 @@ export const NonPositiveInt = Int.pipe(S.brand("NonPositiveInt"))
 /**
  * Type for {@link NonPositiveInt}.
  *
- * @example
+ * **Example** (Typed non-positive integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonPositiveInt } from "@beep/schema/Int"
@@ -226,8 +236,8 @@ export const NonPositiveInt = Int.pipe(S.brand("NonPositiveInt"))
  * console.log(offset <= 0) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonPositiveInt = typeof NonPositiveInt.Type;
 
@@ -239,7 +249,8 @@ export * from "./Int64.ts";
 /**
  * Branded schema for non-negative integers (zero or greater).
  *
- * @example
+ * **Example** (Decode non-negative values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Int"
@@ -248,7 +259,7 @@ export * from "./Int64.ts";
  * console.log(S.decodeUnknownSync(NonNegativeInt)(100)) // 100
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export { NonNegativeInt } from "./Number.ts";

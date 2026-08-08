@@ -1,7 +1,8 @@
 /**
  * Re-export of all helpers from `effect/Boolean`.
  *
- * @example
+ * **Example** (Negate a boolean value)
+ *
  * ```ts
  * import { Bool } from "@beep/utils"
  *

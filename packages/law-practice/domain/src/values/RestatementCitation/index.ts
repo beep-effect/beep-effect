@@ -9,9 +9,8 @@
 /**
  * RestatementCitation model exports.
  *
- * **Example**
+ * **Example** (Import RestatementCitation export)
  *
- * @example
  * ```ts
  * import { RestatementCitation } from "@beep/law-practice-domain/values";
  * ```

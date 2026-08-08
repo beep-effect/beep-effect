@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for cardinal direction schemas.
  *
- * @example
+ * **Example** (Import and decode schema)
+ *
  * ```ts
  * import * as CardinalDirection from "@beep/schema/CardinalDirection"
  * import * as S from "effect/Schema"

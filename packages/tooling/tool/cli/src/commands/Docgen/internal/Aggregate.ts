@@ -94,10 +94,8 @@ const copyDocsTree: (
 /**
  * Aggregate generated package docs into the root ignored `docs/generated` tree.
  *
- * @param options - Optional package selector and clean flag.
- * @returns Aggregation result rows for every copied package.
- * @effects Reads package-local generated docs and writes the aggregate docs tree.
- * @example
+ * **Example** (Aggregate selected package docs)
+ *
  * ```ts
  * import { aggregateGeneratedDocs } from "@beep/repo-cli/commands/Docgen/internal/Aggregate"
  * import { Effect } from "effect"
@@ -105,6 +103,10 @@ const copyDocsTree: (
  * const program = aggregateGeneratedDocs({ package: "packages/tooling/tool/cli" })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Optional package selector and clean flag.
+ * @returns Aggregation result rows for every copied package.
+ * @effects Reads package-local generated docs and writes the aggregate docs tree.
  * @category workflows
  * @since 0.0.0
  */

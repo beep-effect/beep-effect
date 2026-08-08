@@ -121,7 +121,8 @@ const iriReferenceValue = (iri: string): string => iri.replace(IriReferenceUnsaf
 /**
  * Schema for local names that can be emitted as unescaped Turtle PN_LOCAL values.
  *
- * @example
+ * **Example** (Validate safe local name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafePnLocal } from "@beep/identity"
@@ -149,7 +150,8 @@ export const SafePnLocal = S.String.check(
 /**
  * Runtime type for {@link SafePnLocal}.
  *
- * @example
+ * **Example** (Type a safe local)
+ *
  * ```ts
  * import type { SafePnLocal } from "@beep/identity"
  *
@@ -167,7 +169,8 @@ const isSafePnLocal = S.is(SafePnLocal);
 /**
  * Schema for namespace prefixes that can be emitted as unescaped Turtle PN_PREFIX values.
  *
- * @example
+ * **Example** (Validate safe prefix)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafePnPrefix } from "@beep/identity"
@@ -195,7 +198,8 @@ export const SafePnPrefix = S.String.check(
 /**
  * Runtime type for {@link SafePnPrefix}.
  *
- * @example
+ * **Example** (Type a safe prefix)
+ *
  * ```ts
  * import type { SafePnPrefix } from "@beep/identity"
  *
@@ -213,7 +217,8 @@ const isSafePnPrefix = S.is(SafePnPrefix);
 /**
  * Check whether a local name can be emitted as an unescaped Turtle PN_LOCAL.
  *
- * @example
+ * **Example** (Check safe local names)
+ *
  * ```ts
  * import { isSafeLocal } from "@beep/identity"
  *
@@ -229,7 +234,8 @@ export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
 /**
  * Check whether a namespace prefix can be emitted as an unescaped Turtle PN_PREFIX.
  *
- * @example
+ * **Example** (Check safe prefixes)
+ *
  * ```ts
  * import { isSafePrefix } from "@beep/identity"
  *
@@ -321,7 +327,8 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
 /**
  * Schema for escaped local names accepted by Turtle PN_LOCAL parsing.
  *
- * @example
+ * **Example** (Validate escaped local name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EscapedPnLocal } from "@beep/identity"
@@ -349,7 +356,8 @@ export const EscapedPnLocal = S.String.check(
 /**
  * Runtime type for {@link EscapedPnLocal}.
  *
- * @example
+ * **Example** (Type an escaped local)
+ *
  * ```ts
  * import type { EscapedPnLocal } from "@beep/identity"
  *
@@ -367,7 +375,8 @@ const isEscapedPnLocal = S.is(EscapedPnLocal);
 /**
  * Check whether an escaped local name is accepted by Turtle PN_LOCAL parsing.
  *
- * @example
+ * **Example** (Accept escaped local name)
+ *
  * ```ts
  * import { acceptsEscapedLocal } from "@beep/identity"
  *
@@ -382,7 +391,8 @@ export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(
 /**
  * Remove Turtle PN_LOCAL backslash escapes from an escaped local name.
  *
- * @example
+ * **Example** (Unescape local name)
+ *
  * ```ts
  * import { unescapeLocal } from "@beep/identity"
  *
@@ -397,12 +407,14 @@ export const unescapeLocal = (local: string): string => local.replace(/\\([_~.\-
 /**
  * Escape characters that Turtle permits through PN_LOCAL backslash escapes.
  *
- * @remarks
+ * **Details**
+ *
  * Escaped-local emission currently feeds codec parity tests only. Writer-side
  * identity output uses {@link prefixedNameOrIri} and falls back to full IRIs
  * for unsafe locals.
  *
- * @example
+ * **Example** (Escape local name)
+ *
  * ```ts
  * import { escapeLocal } from "@beep/identity"
  *
@@ -417,7 +429,8 @@ export const escapeLocal = (local: string): string => local.replace(/[_~.\-!$&'(
 /**
  * Emit a prefixed name only when the prefix and local part are safe, otherwise emit a full IRI reference.
  *
- * @example
+ * **Example** (Emit prefixed name or IRI)
+ *
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *

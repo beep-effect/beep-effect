@@ -29,7 +29,8 @@ const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.
  * under review, the matter it prosecutes, and the source artifact the loop
  * extracts character-anchored text from.
  *
- * @example
+ * **Example** (Construct review input fixture)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
@@ -94,7 +95,8 @@ export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I
 /**
  * Candidate claim and evidence produced by the grounded extraction phase.
  *
- * @example
+ * **Example** (Read candidate lifecycle field)
+ *
  * ```ts
  * import type { OfficeActionCandidateExtraction } from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -121,7 +123,8 @@ export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandida
  * Failure raised by the office-action review loop while extracting source text,
  * extracting grounded law labels, or mapping those labels into law entities.
  *
- * @example
+ * **Example** (Detect review error type)
+ *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReviewError } from "@beep/law-practice-use-cases/OfficeActionReview"
@@ -152,7 +155,8 @@ export const OfficeActionReviewError = S.Union([
 /**
  * Type for {@link OfficeActionReviewError}.
  *
- * @example
+ * **Example** (Assign typed review error)
+ *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import type { OfficeActionReviewError } from "@beep/law-practice-use-cases/OfficeActionReview"
@@ -175,12 +179,15 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
  * {@link OfficeActionReviewInput} and return the epistemic
  * {@link ClaimProjectionView} folded from the reviewed claims.
  *
+ * **Details**
+ *
  * The server Layer satisfying this contract composes `@beep/file-processing`,
  * `@beep/langextract`, the {@link IrToLaw} mapper, and the epistemic `ClaimGate`
  * / `ClaimLifecycle` services. The shape stays driver-neutral so tests can
  * inject deterministic fake extraction output without live provider credentials.
  *
- * @example
+ * **Example** (Stub failing review shape)
+ *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import type { OfficeActionReviewShape } from "@beep/law-practice-use-cases/OfficeActionReview"
@@ -214,7 +221,8 @@ export interface OfficeActionReviewShape {
 /**
  * Office-action review loop service tag.
  *
- * @example
+ * **Example** (Provide tagged review service)
+ *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview"

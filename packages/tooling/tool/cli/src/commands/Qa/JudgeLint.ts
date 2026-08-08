@@ -32,7 +32,8 @@ import type { QaJudgeLintOptions } from "./Qa.schemas.ts";
 /**
  * Re-validate a round's committed inventory against its evidence.
  *
- * @example
+ * **Example** (Lint inventory for round)
+ *
  * ```ts
  * import { runQaJudgeLint } from "@beep/repo-cli/commands/Qa/JudgeLint"
  * import { QaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -41,6 +42,7 @@ import type { QaJudgeLintOptions } from "./Qa.schemas.ts";
  * const program = runQaJudgeLint("/repo", QaJudgeLintOptions.make({ round: 3 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

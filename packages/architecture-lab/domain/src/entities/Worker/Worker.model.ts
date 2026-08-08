@@ -19,7 +19,8 @@ const $I = $ArchitectureLabDomainId.create("entities/Worker/Worker.model");
 /**
  * Entity identifier for a persisted architecture lab Worker.
  *
- * @example
+ * **Example** (Decode WorkerId schema)
+ *
  * ```ts
  * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const WorkerId = ArchitectureLab.WorkerId;
 /**
  * Runtime type for {@link WorkerId}.
  *
- * @example
+ * **Example** (Type WorkerId values)
+ *
  * ```ts
  * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
  * import * as S from "effect/Schema"
@@ -60,7 +62,8 @@ export type WorkerId = typeof WorkerId.Type;
 /**
  * Organization identity used by the Worker proof entity.
  *
- * @example
+ * **Example** (Decode organization id)
+ *
  * ```ts
  * import { WorkerOrganizationId, type WorkerOrganizationId as WorkerOrganizationIdValue } from "@beep/architecture-lab-domain/entities/Worker"
  * import * as S from "effect/Schema"
@@ -80,7 +83,8 @@ export const WorkerOrganizationId = Shared.OrganizationId;
 /**
  * Runtime type for {@link WorkerOrganizationId}.
  *
- * @example
+ * **Example** (Type organization id)
+ *
  * ```ts
  * import {
  *   WorkerOrganizationId,
@@ -103,7 +107,8 @@ export type WorkerOrganizationId = typeof WorkerOrganizationId.Type;
 /**
  * Closed lifecycle vocabulary for the Worker proof entity.
  *
- * @example
+ * **Example** (Use active WorkerStatus)
+ *
  * ```ts
  * import { WorkerStatus, type WorkerStatus as WorkerStatusValue } from "@beep/architecture-lab-domain/entities/Worker"
  *
@@ -130,7 +135,8 @@ export const WorkerStatus = LiteralKit(["active", "inactive"]).pipe(
 /**
  * Runtime type for {@link WorkerStatus}.
  *
- * @example
+ * **Example** (Type inactive WorkerStatus)
+ *
  * ```ts
  * import type { WorkerStatus } from "@beep/architecture-lab-domain/entities/Worker"
  *
@@ -152,7 +158,8 @@ export type WorkerStatus = typeof WorkerStatus.Type;
 /**
  * Persisted Worker entity used by WorkItem assignment flows.
  *
- * @example
+ * **Example** (Create Worker entity)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
@@ -210,7 +217,8 @@ export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
 /**
  * Constructor input for an active Worker in an organization.
  *
- * @example
+ * **Example** (Make CreateWorkerInput)
+ *
  * ```ts
  * import { CreateWorkerInput, WorkerId, WorkerOrganizationId } from "@beep/architecture-lab-domain/entities/Worker"
  * import * as S from "effect/Schema"
@@ -257,7 +265,8 @@ const publicIdFor = (id: WorkerId): string => `${WorkerId.tableName}_a${id}`;
 /**
  * Create a new active Worker entity.
  *
- * @example
+ * **Example** (Create active Worker)
+ *
  * ```ts
  * import { CreateWorkerInput, WorkerId, WorkerOrganizationId, create } from "@beep/architecture-lab-domain/entities/Worker"
  * import * as S from "effect/Schema"

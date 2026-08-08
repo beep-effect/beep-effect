@@ -8,10 +8,13 @@
 /**
  * Repository-wide escape hatch for the `any` type.
  *
+ * **Details**
+ *
  * All code that requires `any` should import this alias so unsafe usage
  * remains visible, auditable, and centralized.
  *
- * @example
+ * **Example** (Using Any escape hatch)
+ *
  * ```typescript
  * import type { TUnsafe } from "@beep/types"
  *

@@ -11,7 +11,8 @@ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 /**
  * PGLite/Postgres Drizzle table for the epistemic Evidence entity.
  *
- * @example
+ * **Example** (Log Evidence table name)
+ *
  * ```ts
  * import { Evidence } from "@beep/epistemic-tables/entities"
  *

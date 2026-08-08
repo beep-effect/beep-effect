@@ -13,13 +13,15 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgProvenanceKind");
 /**
  * Closed provenance-reference kinds stored on graph projections.
  *
- * @remarks
+ * **Details**
+ *
  * The kind tells a reader how to interpret the accompanying `provenanceRef`: a
  * `catalog-digest` ref is a content digest, a `uspto-anchor` ref is an
  * application number, and so on. Widening this set means teaching every consumer
  * a new ref format.
  *
- * @example
+ * **Example** (Decode provenance kind value)
+ *
  * ```ts
  * import { PracticeKgProvenanceKind } from "@beep/law-practice-domain/values"
  * import * as S from "effect/Schema"
@@ -30,7 +32,6 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgProvenanceKind");
  * ```
  *
  * @see {@link PracticeKgEpistemicStatus} for the authority label carried beside this kind.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -48,7 +49,8 @@ export const PracticeKgProvenanceKind = LiteralKit([
 /**
  * Runtime type for {@link PracticeKgProvenanceKind}.
  *
- * @example
+ * **Example** (Map kind to ref label)
+ *
  * ```ts
  * import type { PracticeKgProvenanceKind } from "@beep/law-practice-domain/values"
  *

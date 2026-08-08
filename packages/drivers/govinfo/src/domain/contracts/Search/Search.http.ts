@@ -11,7 +11,8 @@ import * as Contract from "./Search.contract.ts";
 /**
  * HTTP API endpoint descriptor for the GovInfo `/search` POST route.
  *
- * @example
+ * **Example** (Check HttpApiEndpoint type)
+ *
  * ```ts
  * import { Http } from "@beep/govinfo/domain/contracts/Search/Search.http"
  * import { HttpApiEndpoint } from "effect/unstable/httpapi"

@@ -15,7 +15,8 @@ const PatentAssetStatusBase = LiteralKit(["pre_filing"]);
 /**
  * Patent asset lifecycle status accepted by the law-practice proof fixtures.
  *
- * @example
+ * **Example** (Decode pre-filing status)
+ *
  * ```ts
  * import { PatentAssetStatus } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -41,7 +42,8 @@ export const PatentAssetStatus = PatentAssetStatusBase.pipe(
 /**
  * Type-level literal union produced by {@link PatentAssetStatus}.
  *
- * @example
+ * **Example** (Satisfy type-level status)
+ *
  * ```ts
  * import type { PatentAssetStatus } from "@beep/law-practice-domain"
  *

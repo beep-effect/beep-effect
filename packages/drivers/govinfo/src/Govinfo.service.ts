@@ -42,7 +42,8 @@ const $I = $GovinfoId.create("Govinfo.service");
 /**
  * Public service shape for the GovInfo driver.
  *
- * @example
+ * **Example** (Construct shape with rate limit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -144,7 +145,8 @@ const makeFromEnvironment = Effect.fnUntraced(function* () {
 /**
  * Effect service for the keyed GovInfo REST API search operation.
  *
- * @example
+ * **Example** (Yield service rate limit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Govinfo } from "@beep/govinfo"

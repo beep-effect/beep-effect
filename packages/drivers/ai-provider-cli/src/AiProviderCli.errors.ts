@@ -15,12 +15,14 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
 /**
  * Redacted technical failure from a provider CLI status probe.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The error keeps the provider, operation, command, and optional process
  * details needed for diagnostics. Callers should continue treating stdout and
  * stderr as redacted diagnostic text, not as a stable account-status API.
  *
- * @example
+ * **Example** (Constructing AiProviderCliError with make)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliError } from "@beep/ai-provider-cli"

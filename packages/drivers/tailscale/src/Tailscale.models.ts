@@ -15,7 +15,8 @@ const tailnetIpv4Pattern =
 /**
  * IPv4 address in Tailscale's `100.64.0.0/10` carrier-grade NAT range.
  *
- * @example
+ * **Example** (Make Tailnet IPv4 address)
+ *
  * ```ts
  * import { TailnetIpv4Address } from "@beep/tailscale/Tailscale.models"
  *
@@ -42,7 +43,8 @@ export const TailnetIpv4Address = S.String.check(
 /**
  * Runtime type for {@link TailnetIpv4Address}.
  *
- * @example
+ * **Example** (Type a Tailnet IPv4)
+ *
  * ```ts
  * import type { TailnetIpv4Address } from "@beep/tailscale/Tailscale.models"
  *
@@ -58,7 +60,8 @@ export type TailnetIpv4Address = typeof TailnetIpv4Address.Type;
 /**
  * `Self` payload decoded from `tailscale status --json`.
  *
- * @example
+ * **Example** (Create Self status payload)
+ *
  * ```ts
  * import { TailscaleStatusSelf } from "@beep/tailscale/Tailscale.models"
  *
@@ -86,7 +89,8 @@ export class TailscaleStatusSelf extends S.Class<TailscaleStatusSelf>($I`Tailsca
 /**
  * Top-level payload decoded from `tailscale status --json`.
  *
- * @example
+ * **Example** (Create status JSON payload)
+ *
  * ```ts
  * import { TailscaleStatusJson, TailscaleStatusSelf } from "@beep/tailscale/Tailscale.models"
  *
@@ -111,7 +115,8 @@ export class TailscaleStatusJson extends S.Class<TailscaleStatusJson>($I`Tailsca
 /**
  * Normalized Tailscale facts used by application runtimes.
  *
- * @example
+ * **Example** (Create normalized Tailscale status)
+ *
  * ```ts
  * import { TailscaleStatus } from "@beep/tailscale/Tailscale.models"
  * import * as O from "effect/Option"

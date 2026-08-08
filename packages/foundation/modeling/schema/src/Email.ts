@@ -10,12 +10,15 @@ import { Email as InternalEmail, EmailString as InternalEmailString } from "./in
 /**
  * RFC 5322 compliant email address string schema.
  *
+ * **Details**
+ *
  * Accepts a string, trims whitespace, lowercases, validates against RFC 5322,
  * and keeps the decoded value as a branded string. Use this when the email
  * address must remain displayable or serializable as plain text. Use
  * {@link Email} when accidental logging should be prevented with `Redacted`.
  *
- * @example
+ * **Example** (Normalize email address strings)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EmailString } from "@beep/schema"
@@ -32,7 +35,8 @@ export const EmailString = InternalEmailString;
 /**
  * Branded email address string type extracted from {@link EmailString}.
  *
- * @example
+ * **Example** (Type branded email strings)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { EmailString } from "@beep/schema"
@@ -50,10 +54,13 @@ export type EmailString = typeof EmailString.Type;
 /**
  * RFC 5322 compliant email address schema.
  *
+ * **Details**
+ *
  * Accepts a string, trims whitespace, lowercases, validates against RFC 5322,
  * and wraps the result in a `Redacted` to prevent accidental logging.
  *
- * @example
+ * **Example** (Decode redacted email addresses)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Email } from "@beep/schema"
@@ -71,7 +78,8 @@ export const Email = InternalEmail;
 /**
  * Branded, redacted email address type extracted from {@link Email}.
  *
- * @example
+ * **Example** (Type redacted email values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Email, type Email as EmailValue } from "@beep/schema"

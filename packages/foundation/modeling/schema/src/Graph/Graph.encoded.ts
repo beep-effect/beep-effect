@@ -13,7 +13,8 @@ import type { GraphKindValue } from "./Graph.shared.ts";
 /**
  * Encoded edge representation used by graph codecs.
  *
- * @example
+ * **Example** (Satisfies encoded edge shape)
+ *
  * ```ts
  * import { NodeIndex, type EdgeEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -24,8 +25,8 @@ import type { GraphKindValue } from "./Graph.shared.ts";
  * console.log(edge.data)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EdgeEncoded<Data> = Readonly<{
   readonly source: NodeIndex;
@@ -36,7 +37,8 @@ export type EdgeEncoded<Data> = Readonly<{
 /**
  * Encoded graph representation used by graph codecs.
  *
- * @example
+ * **Example** (Satisfies encoded graph shape)
+ *
  * ```ts
  * import { NodeIndex, type GraphEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -53,8 +55,8 @@ export type EdgeEncoded<Data> = Readonly<{
  * console.log(graph.nodes.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GraphEncoded<Node, Edge, Kind extends GraphKindValue = GraphKindValue> = Readonly<{
   readonly _tag: "Graph";
@@ -72,7 +74,8 @@ export type GraphEncoded<Node, Edge, Kind extends GraphKindValue = GraphKindValu
 /**
  * Iso (identity-transformed) representation of a graph edge for a given payload schema.
  *
- * @example
+ * **Example** (Typed iso edge value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NodeIndex, type EdgeIso } from "@beep/schema/Graph"
@@ -96,7 +99,8 @@ export type EdgeIso<Data extends S.Top> = Readonly<{
 /**
  * Iso (identity-transformed) representation of a graph for given node and edge payload schemas.
  *
- * @example
+ * **Example** (Typed iso graph value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NodeIndex, type GraphIso } from "@beep/schema/Graph"
@@ -131,7 +135,8 @@ export type GraphIso<Node extends S.Top, Edge extends S.Top, Kind extends GraphK
 /**
  * Schema type for encoded graph edges.
  *
- * @example
+ * **Example** (EdgeEncoded schema type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EdgeEncoded, type EdgeEncodedSchema } from "@beep/schema/Graph"
@@ -140,8 +145,8 @@ export type GraphIso<Node extends S.Top, Edge extends S.Top, Kind extends GraphK
  * console.log(S.isSchema(schema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface EdgeEncodedSchema<Data extends S.Top>
   extends S.Codec<
@@ -157,7 +162,8 @@ export interface EdgeEncodedSchema<Data extends S.Top>
 /**
  * Schema type for encoded graphs.
  *
- * @example
+ * **Example** (GraphEncoded schema type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GraphEncoded, type GraphEncodedSchema } from "@beep/schema/Graph"
@@ -166,8 +172,8 @@ export interface EdgeEncodedSchema<Data extends S.Top>
  * console.log(S.isSchema(schema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface GraphEncodedSchema<Node extends S.Top, Edge extends S.Top>
   extends S.Codec<
@@ -184,7 +190,8 @@ export interface GraphEncodedSchema<Node extends S.Top, Edge extends S.Top>
 /**
  * Schema for encoded graph edges.
  *
- * @example
+ * **Example** (Decode encoded edge)
+ *
  * ```ts
  * import { EdgeEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -196,8 +203,8 @@ export interface GraphEncodedSchema<Node extends S.Top, Edge extends S.Top>
  *
  * @param data - Schema for edge payloads.
  * @returns Schema for the encoded edge representation.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EdgeEncoded = <Data extends S.Top>(data: Data): EdgeEncodedSchema<Data> => {
   const schema = S.Class<EdgeEncoded<Data["Type"]>>($I`EdgeEncoded`)({
@@ -216,7 +223,8 @@ export const EdgeEncoded = <Data extends S.Top>(data: Data): EdgeEncodedSchema<D
 /**
  * Schema for encoded graphs.
  *
- * @example
+ * **Example** (Decode encoded graph)
+ *
  * ```ts
  * import { GraphEncoded } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -235,8 +243,8 @@ export const EdgeEncoded = <Data extends S.Top>(data: Data): EdgeEncodedSchema<D
  * @param node - Schema for node payloads.
  * @param edge - Schema for edge payloads.
  * @returns Encoded graph schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GraphEncoded: {
   <Node extends S.Top, Edge extends S.Top>(node: Node): (edge: Edge) => GraphEncodedSchema<Node, Edge>;

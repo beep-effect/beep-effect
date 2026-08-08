@@ -28,7 +28,8 @@ import type { SourceAuthRegistration } from "./SourceAuth.ts";
  * One credential-gated layer entry: a {@link SourceAuth.SourceAuthRegistration}
  * paired with the layer that registers that source's toolkit into the host.
  *
- * @example
+ * **Example** (Construct GatedLayer entry)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import type { GatedLayer } from "@beep/mcp-kit"
@@ -63,7 +64,8 @@ export interface GatedLayer<ROut, E, RIn> {
  * Pairs a {@link SourceAuth.SourceAuthRegistration} with the layer it gates,
  * producing a {@link GatedLayer} entry for {@link composeGatedLayers}.
  *
- * @example
+ * **Example** (Create entry with gatedLayer)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import * as O from "effect/Option"
@@ -100,7 +102,8 @@ export const gatedLayer = <ROut, E, RIn>(
  * credential removes that source's tools entirely rather than registering
  * broken tools.
  *
- * @example
+ * **Example** (Compose hard-gated layers)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import * as O from "effect/Option"

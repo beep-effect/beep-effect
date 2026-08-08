@@ -181,7 +181,8 @@ const probeWebGl2 = (): boolean =>
  * is a node **index into the mounted projection**; the ontology-aware caller
  * owns the index → IRI resolution.
  *
- * @example
+ * **Example** (Make empty render options)
+ *
  * ```ts
  * import { Graph3DRenderOptions } from "@beep/graph-3d/browser"
  *
@@ -209,7 +210,8 @@ export class Graph3DRenderOptions extends S.Class<Graph3DRenderOptions>($I`Graph
 /**
  * Introspection snapshot of a mounted renderer, for probes and tests.
  *
- * @example
+ * **Example** (Create stats with counts)
+ *
  * ```ts
  * import { Graph3DRenderStats } from "@beep/graph-3d/browser"
  *
@@ -243,7 +245,8 @@ export class Graph3DRenderStats extends S.Class<Graph3DRenderStats>($I`Graph3DRe
 /**
  * Mounted 3D graph renderer handle.
  *
- * @example
+ * **Example** (Type a render handle)
+ *
  * ```ts
  * import { type Graph3DRenderHandle } from "@beep/graph-3d/browser"
  *
@@ -910,12 +913,14 @@ const mountRenderer = (
 /**
  * Renders a 3D graph projection with the instanced three.js backend.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The returned handle owns the frame loop, controls, listeners, observers,
  * GPU geometries/materials/textures, and the canvas; call `destroy` when the
  * host unmounts the graph. WebGL2 is required — there is no fallback backend.
  *
- * @example
+ * **Example** (Render projection into element)
+ *
  * ```ts
  * import { Graph3DProjection, renderGraph3D } from "@beep/graph-3d/browser"
  * import { Effect } from "effect"
@@ -938,7 +943,6 @@ const mountRenderer = (
  * ```
  *
  * @effects Mounts a browser WebGL renderer and starts a request-animation-frame loop.
- *
  * @category adapters
  * @since 0.0.0
  */

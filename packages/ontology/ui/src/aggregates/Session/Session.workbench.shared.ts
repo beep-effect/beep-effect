@@ -10,7 +10,8 @@ import type { ChangeEvent } from "react";
 /**
  * Extracts the current string value from a workbench form control event.
  *
- * @example
+ * **Example** (Extract form control value)
+ *
  * ```ts
  * import { valueFromEvent } from "@beep/ontology-ui/aggregates/Session"
  *

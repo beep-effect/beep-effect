@@ -25,7 +25,8 @@ const NoSniffValueBase = LiteralKit([defaultValue]);
 /**
  * Schema for supported `X-Content-Type-Options` header values.
  *
- * @example
+ * **Example** (Decode nosniff value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoSniffValue } from "@beep/schema/NoSniff"
@@ -34,8 +35,8 @@ const NoSniffValueBase = LiteralKit([defaultValue]);
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const NoSniffValue = NoSniffValueBase.pipe(
   $I.annoteSchema("NoSniffValue", {
@@ -47,7 +48,8 @@ export const NoSniffValue = NoSniffValueBase.pipe(
 /**
  * Type-level representation of {@link NoSniffValue}.
  *
- * @example
+ * **Example** (Annotate nosniff type)
+ *
  * ```ts
  * import type { NoSniffValue } from "@beep/schema/NoSniff"
  *
@@ -55,8 +57,8 @@ export const NoSniffValue = NoSniffValueBase.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NoSniffValue = typeof NoSniffValue.Type;
 
@@ -65,7 +67,8 @@ const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
 /**
  * Schema for `X-Content-Type-Options` option values, including `false` to disable.
  *
- * @example
+ * **Example** (Decode disabled option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoSniffOption } from "@beep/schema/NoSniff"
@@ -74,8 +77,8 @@ const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
  * console.log(option)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const NoSniffOption = NoSniffOptionBase.pipe(
   $I.annoteSchema("NoSniffOption", {
@@ -87,7 +90,8 @@ export const NoSniffOption = NoSniffOptionBase.pipe(
 /**
  * Type-level representation of {@link NoSniffOption}.
  *
- * @example
+ * **Example** (Annotate false option)
+ *
  * ```ts
  * import type { NoSniffOption } from "@beep/schema/NoSniff"
  *
@@ -95,15 +99,16 @@ export const NoSniffOption = NoSniffOptionBase.pipe(
  * console.log(option)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NoSniffOption = typeof NoSniffOption.Type;
 
 /**
  * Parsed `X-Content-Type-Options` response header with name and optional value.
  *
- * @example
+ * **Example** (Construct empty header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader } from "@beep/schema/NoSniff"
@@ -112,8 +117,8 @@ export type NoSniffOption = typeof NoSniffOption.Type;
  * console.log(header.name)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NoSniffResponseHeader extends S.Class<NoSniffResponseHeader>($I`NoSniffResponseHeader`)(
   {
@@ -130,7 +135,8 @@ type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
 /**
  * One-way schema that decodes `X-Content-Type-Options` options into the response header.
  *
- * @example
+ * **Example** (Create default header)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { NoSniffHeader } from "@beep/schema/NoSniff"
@@ -140,8 +146,8 @@ type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
  * console.log(header._tag)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
   S.decodeTo(
@@ -205,7 +211,8 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
 /**
  * Type-level representation of {@link NoSniffHeader}.
  *
- * @example
+ * **Example** (Assign response header type)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader, type NoSniffHeader } from "@beep/schema/NoSniff"
@@ -214,8 +221,8 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
  * console.log(header.name)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NoSniffHeader = typeof NoSniffHeader.Type;
 
@@ -230,7 +237,8 @@ export { NoSniffOption as Option, NoSniffResponseHeader as ResponseHeader, NoSni
 /**
  * Concise alias for {@link NoSniffHeader}.
  *
- * @example
+ * **Example** (Create via Header alias)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Header } from "@beep/schema/NoSniff"
@@ -248,7 +256,8 @@ export const Header = NoSniffHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Type Header as response)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoSniffResponseHeader, type Header } from "@beep/schema/NoSniff"

@@ -37,10 +37,13 @@ class DeleteCorpusSuccess extends S.Class<DeleteCorpusSuccess>($I`DeleteCorpusSu
  * Defines the agent-facing tool contract for deleting a managed corpus session
  * and releasing its in-memory index state.
  *
+ * **Details**
+ *
  * Use this tool when a temporary corpus is no longer needed or a caller must
  * discard learned documents before recreating the corpus id.
  *
- * @example
+ * **Example** (Decode DeleteCorpus parameters)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DeleteCorpus } from "@beep/nlp-processing/Tools/DeleteCorpus"

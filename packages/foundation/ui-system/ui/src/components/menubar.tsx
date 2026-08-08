@@ -30,7 +30,8 @@ import type * as React from "react";
 /**
  * Menubar component.
  *
- * @example
+ * **Example** (Import Menubar component)
+ *
  * ```tsx
  * import { Menubar } from "@beep/ui/components/menubar"
  *
@@ -53,7 +54,8 @@ function Menubar({ className, ...props }: MenubarPrimitive.Props) {
 /**
  * Menubar menu component.
  *
- * @example
+ * **Example** (Import MenubarMenu component)
+ *
  * ```tsx
  * import { MenubarMenu } from "@beep/ui/components/menubar"
  *
@@ -70,7 +72,8 @@ function MenubarMenu({ ...props }: React.ComponentProps<typeof DropdownMenu>) {
 /**
  * Menubar group component.
  *
- * @example
+ * **Example** (Import MenubarGroup component)
+ *
  * ```tsx
  * import { MenubarGroup } from "@beep/ui/components/menubar"
  *
@@ -87,7 +90,8 @@ function MenubarGroup({ ...props }: React.ComponentProps<typeof DropdownMenuGrou
 /**
  * Menubar portal component.
  *
- * @example
+ * **Example** (Import MenubarPortal component)
+ *
  * ```tsx
  * import { MenubarPortal } from "@beep/ui/components/menubar"
  *
@@ -104,7 +108,8 @@ function MenubarPortal({ ...props }: React.ComponentProps<typeof DropdownMenuPor
 /**
  * Menubar trigger component.
  *
- * @example
+ * **Example** (Import MenubarTrigger component)
+ *
  * ```tsx
  * import { MenubarTrigger } from "@beep/ui/components/menubar"
  *
@@ -130,7 +135,8 @@ function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof Dro
 /**
  * Menubar content component.
  *
- * @example
+ * **Example** (Import MenubarContent component)
+ *
  * ```tsx
  * import { MenubarContent } from "@beep/ui/components/menubar"
  *
@@ -165,7 +171,8 @@ function MenubarContent({
 /**
  * Menubar item component.
  *
- * @example
+ * **Example** (Import MenubarItem component)
+ *
  * ```tsx
  * import { MenubarItem } from "@beep/ui/components/menubar"
  *
@@ -198,7 +205,8 @@ function MenubarItem({
 /**
  * Menubar checkbox item component.
  *
- * @example
+ * **Example** (Import MenubarCheckboxItem component)
+ *
  * ```tsx
  * import { MenubarCheckboxItem } from "@beep/ui/components/menubar"
  *
@@ -232,7 +240,8 @@ function MenubarCheckboxItem({ className, children, checked, ...props }: MenuPri
 /**
  * Menubar radio group component.
  *
- * @example
+ * **Example** (Import MenubarRadioGroup component)
+ *
  * ```tsx
  * import { MenubarRadioGroup } from "@beep/ui/components/menubar"
  *
@@ -249,7 +258,8 @@ function MenubarRadioGroup({ ...props }: React.ComponentProps<typeof DropdownMen
 /**
  * Menubar radio item component.
  *
- * @example
+ * **Example** (Import MenubarRadioItem component)
+ *
  * ```tsx
  * import { MenubarRadioItem } from "@beep/ui/components/menubar"
  *
@@ -282,7 +292,8 @@ function MenubarRadioItem({ className, children, ...props }: MenuPrimitive.Radio
 /**
  * Menubar label component.
  *
- * @example
+ * **Example** (Import MenubarLabel component)
+ *
  * ```tsx
  * import { MenubarLabel } from "@beep/ui/components/menubar"
  *
@@ -306,7 +317,8 @@ function MenubarLabel({ className, inset, ...props }: React.ComponentProps<typeo
 /**
  * Menubar separator component.
  *
- * @example
+ * **Example** (Import MenubarSeparator component)
+ *
  * ```tsx
  * import { MenubarSeparator } from "@beep/ui/components/menubar"
  *
@@ -329,7 +341,8 @@ function MenubarSeparator({ className, ...props }: React.ComponentProps<typeof D
 /**
  * Menubar shortcut component.
  *
- * @example
+ * **Example** (Import MenubarShortcut component)
+ *
  * ```tsx
  * import { MenubarShortcut } from "@beep/ui/components/menubar"
  *
@@ -355,7 +368,8 @@ function MenubarShortcut({ className, ...props }: React.ComponentProps<typeof Dr
 /**
  * Menubar sub component.
  *
- * @example
+ * **Example** (Import MenubarSub component)
+ *
  * ```tsx
  * import { MenubarSub } from "@beep/ui/components/menubar"
  *
@@ -372,7 +386,8 @@ function MenubarSub({ ...props }: React.ComponentProps<typeof DropdownMenuSub>) 
 /**
  * Menubar sub trigger component.
  *
- * @example
+ * **Example** (Import MenubarSubTrigger component)
+ *
  * ```tsx
  * import { MenubarSubTrigger } from "@beep/ui/components/menubar"
  *
@@ -405,7 +420,8 @@ function MenubarSubTrigger({
 /**
  * Menubar sub content component.
  *
- * @example
+ * **Example** (Import MenubarSubContent component)
+ *
  * ```tsx
  * import { MenubarSubContent } from "@beep/ui/components/menubar"
  *

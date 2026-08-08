@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/documents-domain`.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/documents-domain"
  *

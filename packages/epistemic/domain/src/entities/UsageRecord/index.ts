@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import UsageRecord entity)
+ *
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain/entities/UsageRecord"
  *

@@ -15,7 +15,8 @@ const $I = $IdentityId.create("Vocab");
 /**
  * Registry shape consumed by identity CURIE type helpers and codecs.
  *
- * @example
+ * **Example** (Satisfies VocabShape registry)
+ *
  * ```ts
  * import type { VocabShape } from "@beep/identity"
  *
@@ -45,7 +46,8 @@ export type VocabShape = Readonly<
 /**
  * Runtime schema for one vocabulary registry entry.
  *
- * @example
+ * **Example** (Make and validate entry)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { VocabEntry } from "@beep/identity"
@@ -70,7 +72,8 @@ export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabE
 /**
  * Runtime schema for vocabulary registries consumed by CURIE codecs.
  *
- * @example
+ * **Example** (Validate registry with Schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { VocabRegistry } from "@beep/identity"
@@ -91,7 +94,8 @@ export const VocabRegistry = S.Record(S.String, VocabEntry).annotate({
 /**
  * Runtime type for {@link VocabRegistry}.
  *
- * @example
+ * **Example** (Typed registry with VocabEntry)
+ *
  * ```ts
  * import { VocabEntry, type VocabRegistry } from "@beep/identity"
  *
@@ -109,7 +113,8 @@ type TermOf<V extends VocabShape, Prefix extends keyof V & string> = V[Prefix]["
 /**
  * Core borrowed vocabulary registry used by identity CURIE helpers.
  *
- * @example
+ * **Example** (Build IRI from CoreVocab)
+ *
  * ```ts
  * import { CoreVocab } from "@beep/identity"
  *
@@ -338,7 +343,8 @@ export const CoreVocab = {
 /**
  * Runtime type for {@link CoreVocab}.
  *
- * @example
+ * **Example** (Assign CoreVocab type alias)
+ *
  * ```ts
  * import { CoreVocab, type CoreVocab as CoreVocabType } from "@beep/identity"
  *
@@ -354,7 +360,8 @@ export type CoreVocab = typeof CoreVocab;
 /**
  * Literal CURIE union derived from a vocabulary registry.
  *
- * @example
+ * **Example** (Typed CURIE from CoreVocab)
+ *
  * ```ts
  * import { CoreVocab, type Curie } from "@beep/identity"
  *
@@ -372,7 +379,8 @@ export type Curie<V extends VocabShape> = {
 /**
  * Forward or inverse predicate CURIE derived from a vocabulary registry.
  *
- * @example
+ * **Example** (Inverse predicate CURIE type)
+ *
  * ```ts
  * import { CoreVocab, type Predicate } from "@beep/identity"
  *
@@ -388,7 +396,8 @@ export type Predicate<V extends VocabShape> = Curie<V> | `^${Curie<V>}`;
 /**
  * Type-level expansion from a known CURIE to its exact IRI literal.
  *
- * @example
+ * **Example** (Expand CURIE to IRI literal)
+ *
  * ```ts
  * import { CoreVocab, type Expand } from "@beep/identity"
  *
@@ -419,7 +428,8 @@ const mergeVocabImpl = <const Base extends VocabShape, const Extension extends V
 /**
  * Merge a base registry with literal-preserving extension vocabulary data.
  *
- * @example
+ * **Example** (Merge CoreVocab with extension)
+ *
  * ```ts
  * import { CoreVocab, mergeVocab } from "@beep/identity"
  *
@@ -449,7 +459,8 @@ export const mergeVocab: {
 /**
  * Core vocabulary extended with repository-owned semantic-foundation terms.
  *
- * @example
+ * **Example** (Access beep foundation terms)
+ *
  * ```ts
  * import { SemanticFoundationVocab } from "@beep/identity"
  *
@@ -475,7 +486,8 @@ export const SemanticFoundationVocab = mergeVocab(CoreVocab, {
 /**
  * Runtime type for {@link SemanticFoundationVocab}.
  *
- * @example
+ * **Example** (Typed SemanticFoundationVocab value)
+ *
  * ```ts
  * import { SemanticFoundationVocab, type SemanticFoundationVocab as SemanticFoundationVocabType } from "@beep/identity"
  *

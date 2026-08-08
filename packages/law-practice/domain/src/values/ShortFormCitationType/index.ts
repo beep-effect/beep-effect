@@ -9,9 +9,8 @@
 /**
  * ShortFormCitationType model exports.
  *
- * **Example**
+ * **Example** (Import ShortFormCitationType export)
  *
- * @example
  * ```ts
  * import { ShortFormCitationType } from "@beep/law-practice-domain/values";
  * ```

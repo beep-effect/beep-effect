@@ -38,7 +38,8 @@ const descriptor =
 /**
  * Persistence descriptor constructors.
  *
- * @example
+ * **Example** (Create text persist descriptor)
+ *
  * ```ts
  * import { persist } from "@beep/schema/EntitySchema"
  *
@@ -46,8 +47,8 @@ const descriptor =
  * console.log(descriptor.columnName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const persist = {
   blob: descriptor("blob"),
@@ -64,7 +65,8 @@ export const persist = {
 /**
  * Epoch-millis DateTime schema used by persisted timestamp fields.
  *
- * @example
+ * **Example** (Decode epoch millis DateTime)
+ *
  * ```ts
  * import { DateTimeFromMillis } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -73,15 +75,16 @@ export const persist = {
  * console.log(instant)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DateTimeFromMillis = S.DateTimeUtcFromMillis;
 
 /**
  * Integer schema used by persisted integer fields.
  *
- * @example
+ * **Example** (Decode integer schema value)
+ *
  * ```ts
  * import { int } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -90,15 +93,16 @@ export const DateTimeFromMillis = S.DateTimeUtcFromMillis;
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const int = S.Int;
 
 /**
  * Literal schema helper for persisted discriminators.
  *
- * @example
+ * **Example** (Decode literal discriminator)
+ *
  * ```ts
  * import { literal } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -107,8 +111,8 @@ export const int = S.Int;
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const literal = <const Value extends string | number | boolean | bigint>(value: Value): S.Literal<Value> =>
   S.Literal(value);
@@ -119,7 +123,8 @@ const titleSegment = <const Identifier extends string>(identifier: Identifier): 
 /**
  * Derive a table name from the final segment of a schema identifier.
  *
- * @example
+ * **Example** (Derive table name from identifier)
+ *
  * ```ts
  * import { tableNameFromIdentifier } from "@beep/schema/EntitySchema"
  *
@@ -127,8 +132,8 @@ const titleSegment = <const Identifier extends string>(identifier: Identifier): 
  * console.log(tableName)
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const tableNameFromIdentifier = <const Identifier extends string>(
   identifier: Identifier
@@ -138,7 +143,8 @@ export const tableNameFromIdentifier = <const Identifier extends string>(
 /**
  * Resolve a column name from field key and descriptor override.
  *
- * @example
+ * **Example** (Resolve column name from field)
+ *
  * ```ts
  * import { columnNameFor, persist } from "@beep/schema/EntitySchema"
  *
@@ -146,8 +152,8 @@ export const tableNameFromIdentifier = <const Identifier extends string>(
  * console.log(columnName)
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const columnNameFor: {
   <const Key extends string, const Descriptor extends PersistDescriptor>(

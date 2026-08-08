@@ -9,9 +9,8 @@
 /**
  * SessionLawCitation model exports.
  *
- * **Example**
+ * **Example** (Import SessionLawCitation export)
  *
- * @example
  * ```ts
  * import { SessionLawCitation } from "@beep/law-practice-domain/values";
  * ```

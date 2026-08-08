@@ -24,6 +24,8 @@ type GetSomesStruct<Self extends OptionStruct> = Simplify<
  * Retrieves a value from a struct by path and converts missing or nullish
  * results into an `Option`.
  *
+ * **Details**
+ *
  * Mirrors `Struct.dotGet` path validation and tuple path support, then
  * applies `Option.fromNullishOr` to the retrieved value.
  *
@@ -32,7 +34,8 @@ type GetSomesStruct<Self extends OptionStruct> = Simplify<
  * - Data-first: `O.propFromNullishOr(person, "age")`
  * - Tuple paths: `O.propFromNullishOr(person, ["profile", "age"] as const)`
  *
- * @example
+ * **Example** (Get path as Option)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { O } from "@beep/utils"
@@ -80,10 +83,13 @@ export const propFromNullishOr: {
  * Compact a struct of `Option` values into an object containing only `Some`
  * fields.
  *
+ * **Details**
+ *
  * This mirrors `Record.getSomes` at runtime while preserving heterogeneous
  * per-key value types for object-constructor payloads.
  *
- * @example
+ * **Example** (Compact Option struct fields)
+ *
  * ```ts
  * import { O } from "@beep/utils"
  *
@@ -105,7 +111,8 @@ export const getSomesStruct = <const Self extends OptionStruct>(self: Self): Get
 /**
  * Re-export of all helpers from `effect/Option`.
  *
- * @example
+ * **Example** (Import Option helpers)
+ *
  * ```ts
  * import * as O from "@beep/utils/Option"
  *

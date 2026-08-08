@@ -13,12 +13,14 @@ const $I = $GovinfoId.create("domain/values/Sort/Sort.model");
 /**
  * Shared GovInfo search sort field.
  *
- * @remarks
+ * **Details**
+ *
  * GovInfo currently documents `score`, `publishdate`, `lastModified`, and
  * `title` as supported search sort fields. This schema keeps the field open so
  * new GovInfo sort fields can be represented without a package release.
  *
- * @example
+ * **Example** (Decode open sort field)
+ *
  * ```ts
  * import { SortBase } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -47,7 +49,8 @@ export class SortBase extends S.Class<SortBase>($I`SortBase`)(
 /**
  * Companion namespace for {@link SortBase} encoded helpers.
  *
- * @example
+ * **Example** (Type SortBase decode)
+ *
  * ```ts
  * import { SortBase } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -63,7 +66,8 @@ export declare namespace SortBase {
   /**
    * Encoded JSON shape accepted by {@link SortBase}.
    *
-   * @example
+   * **Example** (Encode SortBase shape)
+   *
    * ```ts
    * import { SortBase } from "@beep/govinfo/domain/values/Sort/Sort.model";
    * import * as S from "effect/Schema";
@@ -85,7 +89,8 @@ export declare namespace SortBase {
 /**
  * Ascending GovInfo search sort directive.
  *
- * @example
+ * **Example** (Decode ascending sort)
+ *
  * ```ts
  * import { SortASC } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -115,7 +120,8 @@ export class SortASC extends SortBase.extend<SortASC>($I`SortASC`)(
 /**
  * Companion namespace for {@link SortASC} encoded helpers.
  *
- * @example
+ * **Example** (Type SortASC decode)
+ *
  * ```ts
  * import { SortASC } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -131,7 +137,8 @@ export declare namespace SortASC {
   /**
    * Encoded JSON shape accepted by {@link SortASC}.
    *
-   * @example
+   * **Example** (Encode SortASC shape)
+   *
    * ```ts
    * import { SortASC } from "@beep/govinfo/domain/values/Sort/Sort.model";
    * import * as S from "effect/Schema";
@@ -154,11 +161,13 @@ export declare namespace SortASC {
 /**
  * Descending GovInfo search sort directive.
  *
- * @remarks
+ * **Gotchas**
+ *
  * GovInfo relevance sorting uses `field: "score"` with `sortOrder: "DESC"`;
  * ascending score ordering is not documented as supported by the API.
  *
- * @example
+ * **Example** (Decode descending score sort)
+ *
  * ```ts
  * import { SortDESC } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -188,7 +197,8 @@ export class SortDESC extends SortBase.extend<SortDESC>($I`SortDESC`)(
 /**
  * Companion namespace for {@link SortDESC} encoded helpers.
  *
- * @example
+ * **Example** (Type SortDESC decode)
+ *
  * ```ts
  * import { SortDESC } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -204,7 +214,8 @@ export declare namespace SortDESC {
   /**
    * Encoded JSON shape accepted by {@link SortDESC}.
    *
-   * @example
+   * **Example** (Encode SortDESC shape)
+   *
    * ```ts
    * import { SortDESC } from "@beep/govinfo/domain/values/Sort/Sort.model";
    * import * as S from "effect/Schema";
@@ -227,7 +238,8 @@ export declare namespace SortDESC {
 /**
  * GovInfo search sort directive tagged by `sortOrder`.
  *
- * @example
+ * **Example** (Decode tagged sort order)
+ *
  * ```ts
  * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -254,7 +266,8 @@ export const Sort = S.Union([SortASC, SortDESC]).pipe(
 /**
  * Type for {@link Sort}.
  *
- * @example
+ * **Example** (Type Sort decode)
+ *
  * ```ts
  * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import * as S from "effect/Schema";
@@ -271,7 +284,8 @@ export type Sort = typeof Sort.Type;
 /**
  * Companion namespace for {@link Sort} encoded helpers.
  *
- * @example
+ * **Example** (Namespace Sort decode)
+ *
  * ```ts
  * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
  * import type { Sort as SortValue } from "@beep/govinfo/domain/values/Sort/Sort.model";
@@ -288,7 +302,8 @@ export declare namespace Sort {
   /**
    * Encoded JSON shape accepted by {@link Sort}.
    *
-   * @example
+   * **Example** (Encode Sort shape)
+   *
    * ```ts
    * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
    * import * as S from "effect/Schema";

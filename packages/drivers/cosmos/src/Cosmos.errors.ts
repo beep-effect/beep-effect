@@ -15,7 +15,8 @@ const $I = $CosmosId.create("Cosmos.errors");
 /**
  * Cosmos driver failure reason.
  *
- * @example
+ * **Example** (Assign importFailed reason)
+ *
  * ```ts
  * import { CosmosDriverErrorReason } from "@beep/cosmos"
  *
@@ -36,7 +37,8 @@ export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvar
 /**
  * Type for {@link CosmosDriverErrorReason}.
  *
- * @example
+ * **Example** (Assign renderFailed reason)
+ *
  * ```ts
  * import { CosmosDriverErrorReason } from "@beep/cosmos"
  *
@@ -53,7 +55,8 @@ export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
 /**
  * Typed cosmos driver error.
  *
- * @example
+ * **Example** (Create typed driver error)
+ *
  * ```ts
  * import { CosmosDriverError } from "@beep/cosmos"
  *

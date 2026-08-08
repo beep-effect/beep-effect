@@ -15,7 +15,8 @@ import type { HTMLAttributes } from "react";
 /**
  * Live waveform props type.
  *
- * @example
+ * **Example** (Set active scrolling props)
+ *
  * ```ts
  * import type { LiveWaveformProps } from "@beep/ui/components/live-waveform"
  *
@@ -65,7 +66,8 @@ const waveformAriaLabel = (active: boolean, processing: boolean): string => {
 /**
  * Live waveform component.
  *
- * @example
+ * **Example** (Import LiveWaveform component)
+ *
  * ```tsx
  * import { LiveWaveform } from "@beep/ui/components/live-waveform"
  *

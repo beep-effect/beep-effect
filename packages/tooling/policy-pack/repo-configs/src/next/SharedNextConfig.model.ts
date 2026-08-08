@@ -58,11 +58,14 @@ const AnalyzerLogLevel = LiteralKit(["info", "warn", "error", "silent"]).pipe(
 /**
  * Environment snapshot understood by the shared Next.js config preset.
  *
- * @remarks
+ * **Details**
+ *
  * The app entrypoint passes environment values into this data contract. The
  * shared helper decodes only the keys it understands and strips everything
  * else, avoiding hidden ambient `process.env` reads inside repo-configs.
- * @example
+ *
+ * **Example** (Making env with toggles)
+ *
  * ```ts
  * import { BeepNextConfigEnv } from "@beep/repo-configs/next"
  * const env = BeepNextConfigEnv.make({
@@ -71,6 +74,7 @@ const AnalyzerLogLevel = LiteralKit(["info", "warn", "error", "silent"]).pipe(
  * })
  * console.log(env)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -104,7 +108,8 @@ class BeepNextBundleAnalyzerConfigOptions extends S.Class<BeepNextBundleAnalyzer
 /**
  * Bundle analyzer feature configuration for the shared Next.js preset.
  *
- * @example
+ * **Example** (Making static analyzer config)
+ *
  * ```ts
  * import { BeepNextBundleAnalyzerConfig } from "@beep/repo-configs/next"
  * const config = BeepNextBundleAnalyzerConfig.make({
@@ -113,6 +118,7 @@ class BeepNextBundleAnalyzerConfigOptions extends S.Class<BeepNextBundleAnalyzer
  * })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -125,12 +131,14 @@ export const BeepNextBundleAnalyzerConfig = S.Union([S.Literal(false), BeepNextB
 /**
  * Bundle analyzer feature configuration for the shared Next.js preset.
  *
- * @example
+ * **Example** (Typing enabled analyzer config)
+ *
  * ```ts
  * import type { BeepNextBundleAnalyzerConfig } from "@beep/repo-configs/next"
  * const config: BeepNextBundleAnalyzerConfig = { enabled: true }
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -150,7 +158,8 @@ class BeepNextMdxConfigOptions extends S.Class<BeepNextMdxConfigOptions>($I`Beep
 /**
  * MDX feature configuration for the shared Next.js preset.
  *
- * @example
+ * **Example** (Making MDX extension config)
+ *
  * ```ts
  * import { BeepNextMdxConfig } from "@beep/repo-configs/next"
  * const config = BeepNextMdxConfig.make({
@@ -158,6 +167,7 @@ class BeepNextMdxConfigOptions extends S.Class<BeepNextMdxConfigOptions>($I`Beep
  * })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -170,7 +180,8 @@ export const BeepNextMdxConfig = S.Union([S.Literal(false), BeepNextMdxConfigOpt
 /**
  * MDX feature configuration for the shared Next.js preset.
  *
- * @example
+ * **Example** (Typing MDX extension config)
+ *
  * ```ts
  * import type { BeepNextMdxConfig } from "@beep/repo-configs/next"
  * const config: BeepNextMdxConfig = {
@@ -178,6 +189,7 @@ export const BeepNextMdxConfig = S.Union([S.Literal(false), BeepNextMdxConfigOpt
  * }
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -204,10 +216,13 @@ class BeepNextPwaConfigOptions extends S.Class<BeepNextPwaConfigOptions>($I`Beep
 /**
  * PWA feature configuration for the shared Next.js preset.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `enabled` overrides the decoded env snapshot. When absent, PWA remains
  * disabled unless `NEXT_DISABLE_PWA` is set to `0`.
- * @example
+ *
+ * **Example** (Making PWA service worker config)
+ *
  * ```ts
  * import { BeepNextPwaConfig } from "@beep/repo-configs/next"
  * const config = BeepNextPwaConfig.make({
@@ -216,6 +231,7 @@ class BeepNextPwaConfigOptions extends S.Class<BeepNextPwaConfigOptions>($I`Beep
  * })
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -228,7 +244,8 @@ export const BeepNextPwaConfig = S.Union([S.Literal(false), BeepNextPwaConfigOpt
 /**
  * PWA feature configuration for the shared Next.js preset.
  *
- * @example
+ * **Example** (Typing disabled PWA config)
+ *
  * ```ts
  * import type { BeepNextPwaConfig } from "@beep/repo-configs/next"
  * const config: BeepNextPwaConfig = {
@@ -238,6 +255,7 @@ export const BeepNextPwaConfig = S.Union([S.Literal(false), BeepNextPwaConfigOpt
  * }
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -246,7 +264,8 @@ export type BeepNextPwaConfig = typeof BeepNextPwaConfig.Type;
 /**
  * Input options for the shared repo-owned Next.js config preset.
  *
- * @example
+ * **Example** (Decoding options with Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -257,6 +276,7 @@ export type BeepNextPwaConfig = typeof BeepNextPwaConfig.Type;
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -290,10 +310,13 @@ export class BeepNextConfigOptions extends S.Class<BeepNextConfigOptions>($I`Bee
 /**
  * User-authored input options accepted by {@link defineBeepNextConfig}.
  *
- * @remarks
+ * **Details**
+ *
  * `env` intentionally accepts unknown objects such as `process.env`; the schema
  * decoder keeps only the two feature-toggle keys the shared preset owns.
- * @example
+ *
+ * **Example** (Typing options with env)
+ *
  * ```ts
  * import type { BeepNextConfigOptionsInput } from "@beep/repo-configs/next"
  * const options: BeepNextConfigOptionsInput = {
@@ -303,6 +326,7 @@ export class BeepNextConfigOptions extends S.Class<BeepNextConfigOptions>($I`Bee
  * }
  * console.log(options)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -313,12 +337,14 @@ export type BeepNextConfigOptionsInput = Omit<typeof BeepNextConfigOptions.Encod
 /**
  * A pure Next.js config plugin function.
  *
- * @example
+ * **Example** (Identity plugin function)
+ *
  * ```ts
  * import type { NextConfigPlugin } from "@beep/repo-configs/next"
  * const plugin: NextConfigPlugin = (config) => config
  * console.log(plugin)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -471,13 +497,15 @@ const makeBaseConfig = (options: BeepNextConfigOptions): NextConfigFromNext => {
 /**
  * Decode an unknown environment snapshot for the shared Next.js preset.
  *
- * @example
+ * **Example** (Decoding ANALYZE env flag)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeBeepNextConfigEnv } from "@beep/repo-configs/next"
  * const program = decodeBeepNextConfigEnv({ ANALYZE: "1" })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -486,14 +514,16 @@ export const decodeBeepNextConfigEnv = BeepNextConfigEnv.decodeEffect;
 /**
  * Synchronously decode an environment snapshot for the shared Next.js preset.
  *
- * @param env - Unknown environment snapshot containing shared preset toggles.
- * @returns The decoded environment toggle object.
- * @example
+ * **Example** (Sync decoding PWA toggle)
+ *
  * ```ts
  * import { defineBeepNextConfigEnv } from "@beep/repo-configs/next"
  * const env = defineBeepNextConfigEnv({ NEXT_DISABLE_PWA: "0" })
  * console.log(env)
  * ```
+ *
+ * @param env - Unknown environment snapshot containing shared preset toggles.
+ * @returns The decoded environment toggle object.
  * @category constructors
  * @since 0.0.0
  */
@@ -503,7 +533,8 @@ export const defineBeepNextConfigEnv = (env: unknown): BeepNextConfigEnv =>
 /**
  * Compose Next.js config plugin functions in explicit left-to-right order.
  *
- * @example
+ * **Example** (Composing plugins left-to-right)
+ *
  * ```ts
  * import { composeNextConfig } from "@beep/repo-configs/next"
  * const config = composeNextConfig({ reactStrictMode: true }, [
@@ -511,6 +542,7 @@ export const defineBeepNextConfigEnv = (env: unknown): BeepNextConfigEnv =>
  * ])
  * console.log(config)
  * ```
+ *
  * @category combinators
  * @since 0.0.0
  */
@@ -529,9 +561,8 @@ export const composeNextConfig: {
 /**
  * Build the shared repo-owned Next.js base config before plugin wrapping.
  *
- * @param options - User-authored shared Next.js preset options.
- * @returns The shared base Next.js configuration before plugin wrapping.
- * @example
+ * **Example** (Building shared base config)
+ *
  * ```ts
  * import { makeBeepNextBaseConfig } from "@beep/repo-configs/next"
  * const config = makeBeepNextBaseConfig({
@@ -540,6 +571,9 @@ export const composeNextConfig: {
  * })
  * console.log(config)
  * ```
+ *
+ * @param options - User-authored shared Next.js preset options.
+ * @returns The shared base Next.js configuration before plugin wrapping.
  * @category constructors
  * @since 0.0.0
  */
@@ -549,12 +583,13 @@ export const makeBeepNextBaseConfig = (options: BeepNextConfigOptionsInput): Nex
 /**
  * Define a shared repo-owned Next.js config with the standard plugin stack.
  *
- * @param options - User-authored shared Next.js preset options.
- * @returns The fully composed shared Next.js configuration.
- * @remarks
+ * **Details**
+ *
  * The canonical composition order is MDX, then PWA, then bundle analyzer.
  * Secure headers are added to the base config before those plugin wrappers.
- * @example
+ *
+ * **Example** (Defining full preset config)
+ *
  * ```ts
  * import { defineBeepNextConfig } from "@beep/repo-configs/next"
  * const config = defineBeepNextConfig({
@@ -564,6 +599,9 @@ export const makeBeepNextBaseConfig = (options: BeepNextConfigOptionsInput): Nex
  * })
  * console.log(config)
  * ```
+ *
+ * @param options - User-authored shared Next.js preset options.
+ * @returns The fully composed shared Next.js configuration.
  * @category constructors
  * @since 0.0.0
  */

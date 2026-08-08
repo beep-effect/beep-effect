@@ -40,7 +40,8 @@ const EthAmountInput = S.Finite.pipe(
  * ETH-denominated amount decoded from a non-negative JSON number into Effect
  * `BigDecimal`.
  *
- * @example
+ * **Example** (Decode ETH amount value)
+ *
  * ```ts
  * import { EthAmount } from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"
@@ -49,8 +50,8 @@ const EthAmountInput = S.Finite.pipe(
  * console.log(amount)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EthAmount = EthAmountInput.pipe(
   S.decodeTo(S.BigDecimal, {
@@ -65,7 +66,8 @@ export const EthAmount = EthAmountInput.pipe(
 /**
  * Type for {@link EthAmount}.
  *
- * @example
+ * **Example** (Type decoded ETH amount)
+ *
  * ```ts
  * import { EthAmount } from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"
@@ -74,8 +76,8 @@ export const EthAmount = EthAmountInput.pipe(
  * console.log(amount)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EthAmount = typeof EthAmount.Type;
 

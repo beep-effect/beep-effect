@@ -45,7 +45,8 @@ const proposalTargetsPair = (
  * Immutable, evidence-backed proposal that two exact belief versions
  * contradict.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction"
  *
@@ -120,7 +121,8 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
   /**
    * Recompute every digest and key sealing this immutable candidate.
    *
-   * @example
+   * **Example** (Validate candidate seals)
+   *
    * ```ts
    * import type { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction"
    * import * as Result from "effect/Result"
@@ -188,7 +190,8 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
  * Durable receipt proving a submission was observed even when its candidate
  * was duplicate-suppressed.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { ContradictionReceipt } from "@beep/epistemic-domain/entities/Contradiction"
  *
@@ -239,7 +242,8 @@ export class ContradictionReceipt extends BaseEntity.Class<ContradictionReceipt>
 /**
  * Append-only record of a human contradiction review.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction"
  *

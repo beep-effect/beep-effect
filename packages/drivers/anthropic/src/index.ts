@@ -9,7 +9,8 @@
 /**
  * Package version published by the `@beep/anthropic` entry point.
  *
- * @example
+ * **Example** (Build package coordinate string)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { VERSION } from "@beep/anthropic"

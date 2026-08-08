@@ -24,7 +24,8 @@ const $I = $BoxId.create("Box.service");
 /**
  * Public Box service shape.
  *
- * @example
+ * **Example** (Keyof BoxShape managers)
+ *
  * ```ts
  * import type { BoxShape } from "@beep/box"
  *
@@ -101,7 +102,8 @@ const makeCcgClient = (config: BoxCcgConfig): BoxClient =>
 /**
  * Effect service for the Box Node SDK.
  *
- * @example
+ * **Example** (Make developer token layer)
+ *
  * ```ts
  * import { Box, BoxDeveloperTokenConfig } from "@beep/box"
  * import { Redacted } from "effect"
@@ -117,7 +119,8 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
   /**
    * Build a Box layer from explicit developer-token configuration.
    *
-   * @example
+   * **Example** (Build developer-token layer)
+   *
    * ```ts
    * import { Box, BoxDeveloperTokenConfig } from "@beep/box"
    * import { Redacted } from "effect"
@@ -135,7 +138,8 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
   /**
    * Build a Box layer from explicit Client Credentials Grant configuration.
    *
-   * @example
+   * **Example** (Build CCG config layer)
+   *
    * ```ts
    * import { Box, BoxCcgConfig } from "@beep/box"
    * import { Redacted } from "effect"
@@ -158,7 +162,8 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
   /**
    * Build a Box layer from a pre-authenticated SDK client.
    *
-   * @example
+   * **Example** (Layer from SDK client)
+   *
    * ```ts
    * import { Box } from "@beep/box"
    *
@@ -175,7 +180,8 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
   /**
    * Live developer-token layer backed by `CLOUD_BOX_TOKEN`.
    *
-   * @example
+   * **Example** (Inspect live token layer)
+   *
    * ```ts
    * import { Box } from "@beep/box"
    *

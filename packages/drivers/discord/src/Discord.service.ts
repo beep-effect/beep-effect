@@ -206,12 +206,14 @@ const makeService = (client: HttpClient.HttpClient, baseUrl: URLStr): DiscordSha
 /**
  * Discord REST boundary for channel liveness checks and proof message creation.
  *
- * @remarks
+ * **Details**
+ *
  * The service validates request objects before issuing HTTP, maps transport and
  * decoding failures into {@link DiscordError}, and returns sanitized proof
  * models instead of raw Discord payloads.
  *
- * @example
+ * **Example** (Mocked getChannel with test layer)
+ *
  * ```ts
  * import {
  *   Discord,
@@ -263,7 +265,6 @@ const makeService = (client: HttpClient.HttpClient, baseUrl: URLStr): DiscordSha
  *   `POST /channels/:id/messages` requests through the provided HTTP client.
  * - Reads the redacted bot token to set Discord's `Authorization` header.
  * - Creates proof messages with Discord mentions disabled.
- *
  * @see {@link DiscordConfigInput} for base URL configuration.
  * @see {@link DiscordError} for typed failures.
  * @category services

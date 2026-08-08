@@ -32,12 +32,14 @@ const $I = $AiProviderCliId.create("AiProviderCli.service");
 /**
  * Injectable process runner used by provider CLI auth probes.
  *
- * @remarks
+ * **Details**
+ *
  * The service supplies the normalized provider, executable path, and status
  * arguments. Custom runners should return captured stdout, stderr, and exit
  * code without performing auth-status interpretation themselves.
  *
- * @example
+ * **Example** (Mock runner returning stdout)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
@@ -266,7 +268,8 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
 /**
  * Effect service for redacted Claude and Codex CLI authentication checks.
  *
- * @remarks
+ * **Details**
+ *
  * `checkAuth` maps provider-specific status commands to a stable
  * `AiProviderCliAuthProbe`. It only treats exit code `0` as authenticated; the
  * returned probe never includes raw account, token, stdout, or stderr data.
@@ -275,7 +278,8 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * the Codex status line; undecodable output degrades to the exit-code-only
  * interpretation instead of leaking raw output.
  *
- * @example
+ * **Example** (checkAuth with injected runner)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
@@ -302,7 +306,6 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * Live layers spawn `claude auth status` or `codex login status` through
  * `ChildProcessSpawner`; injected-runner layers perform only the effects
  * encoded by the supplied runner.
- *
  * @category services
  * @since 0.0.0
  */
@@ -310,7 +313,8 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
   /**
    * Build a live provider CLI layer backed by native child processes.
    *
-   * @example
+   * **Example** (Live layer with paths)
+   *
    * ```ts
    * import { AiProviderCli } from "@beep/ai-provider-cli"
    *
@@ -325,7 +329,6 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    * @effects
    * Services produced by this layer spawn the configured provider CLI command
    * whenever `checkAuth` is evaluated.
-   *
    * @category layers
    * @since 0.0.0
    */
@@ -344,7 +347,8 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
   /**
    * Build a deterministic test layer from an injected command runner.
    *
-   * @example
+   * **Example** (Injected runner test layer)
+   *
    * ```ts
    * import { Effect } from "effect"
    * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"

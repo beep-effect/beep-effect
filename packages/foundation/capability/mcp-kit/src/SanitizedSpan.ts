@@ -42,7 +42,8 @@ import type * as Toolkit from "effect/unstable/ai/Toolkit";
  * Span attribute keys suppressed by default: the raw, undecoded tool call
  * parameters set by upstream `Toolkit.ts:263-265`.
  *
- * @example
+ * **Example** (Log default sanitized keys)
+ *
  * ```ts
  * import { defaultSanitizedSpanKeys } from "@beep/mcp-kit"
  *
@@ -60,7 +61,8 @@ export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
  * set under the given keys, while every other attribute passes through
  * unchanged.
  *
- * @example
+ * **Example** (Wrap tracer suppressing keys)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { sanitizeTracerAttributes } from "@beep/mcp-kit"
@@ -153,7 +155,8 @@ export const sanitizeTracerAttributes: {
  * or `McpServer.callTool(...)`) with this combinator so tool parameters
  * never reach exported span attributes.
  *
- * @example
+ * **Example** (Run under sanitized span)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
@@ -320,6 +323,15 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * wrapping every tool's dispatch in {@link withSanitizedToolSpan} so raw,
  * undecoded call parameters never reach span attributes.
  *
+ * **When to use**
+ *
+ * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
+ * its tool dispatch spans sanitized; same signature, same registration
+ * semantics (McpTool wire shape, hint annotations, `CallToolResult` mapping),
+ * only the dispatch wrapping differs.
+ *
+ * **Details**
+ *
  * **Why this exists**
  *
  * Upstream `McpServer.toolkit` (`effect/unstable/ai/McpServer.ts:749-758`)
@@ -337,14 +349,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * requires mirroring `registerToolkit`'s per-tool registration loop, since
  * upstream offers no dispatch-wrapping hook.
  *
- * **When to use**
+ * **Example** (Register sanitized toolkit)
  *
- * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
- * its tool dispatch spans sanitized; same signature, same registration
- * semantics (McpTool wire shape, hint annotations, `CallToolResult` mapping),
- * only the dispatch wrapping differs.
- *
- * @example
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { sanitizedToolkit } from "@beep/mcp-kit"

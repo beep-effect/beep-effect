@@ -93,7 +93,8 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
 /**
  * Build the in-memory SyncItem repository used by deterministic sync tests.
  *
- * @example
+ * **Example** (In-memory repository import)
+ *
  * ```ts
  * import { makeInMemorySyncItemRepository } from "@beep/documents-server/entities/SyncItem"
  *
@@ -103,7 +104,6 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for create, update, find, and list repository
  * calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -165,7 +165,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncItem repository used by live persistence tests.
  *
- * @example
+ * **Example** (Drizzle repository import)
+ *
  * ```ts
  * import { makeDrizzleSyncItemRepository } from "@beep/documents-server/entities/SyncItem"
  *
@@ -175,7 +176,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncItem table and redacts driver failures
  * to `SyncItemRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

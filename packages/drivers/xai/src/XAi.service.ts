@@ -44,7 +44,8 @@ const $I = $XaiId.create("XAi.service");
 /**
  * Endpoint method names backed by normal HTTP requests.
  *
- * @example
+ * **Example** (Type listModels method name)
+ *
  * ```ts
  * import type { XAiHttpEndpointMethodName } from "@beep/xai"
  *
@@ -63,7 +64,8 @@ export type XAiHttpEndpointMethodName = Exclude<
 /**
  * Endpoint method names backed by WebSocket sessions.
  *
- * @example
+ * **Example** (Type WebSocket method name)
+ *
  * ```ts
  * import type { XAiWebSocketEndpointMethodName } from "@beep/xai"
  *
@@ -82,7 +84,8 @@ export type XAiWebSocketEndpointMethodName = Extract<
 /**
  * Function shape used by every non-streaming xAI HTTP endpoint method.
  *
- * @example
+ * **Example** (Return NoBody response Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { XAiEndpointMethod } from "@beep/xai"
@@ -99,7 +102,6 @@ export type XAiWebSocketEndpointMethodName = Extract<
  * Runs one HTTP-backed xAI endpoint request with already resolved driver
  * configuration. Request, transport, and response failures are reported as
  * `XAiError` values in the Effect error channel.
- *
  * @category models
  * @since 0.0.0
  */
@@ -108,7 +110,8 @@ export type XAiEndpointMethod = (request?: XAiRequestOptions) => Effect.Effect<X
 /**
  * Function shape used by streaming xAI server-sent event helpers.
  *
- * @example
+ * **Example** (Create empty stream method)
+ *
  * ```ts
  * import { Stream } from "effect"
  * import type { XAiStreamMethod } from "@beep/xai"
@@ -126,7 +129,8 @@ export type XAiStreamMethod = (request?: XAiRequestOptions) => Stream.Stream<XAi
 /**
  * Active xAI WebSocket session handle.
  *
- * @example
+ * **Example** (Send JSON session frame)
+ *
  * ```ts
  * import type { XAiWebSocketSession } from "@beep/xai"
  *
@@ -148,7 +152,8 @@ export interface XAiWebSocketSession {
 /**
  * Function shape used by xAI WebSocket endpoint methods.
  *
- * @example
+ * **Example** (Open session and send text)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import type { XAiWebSocketMethod } from "@beep/xai"
@@ -175,7 +180,6 @@ export interface XAiWebSocketSession {
  * Opens an xAI WebSocket session. The returned handle writes frames through
  * `sendBytes`, `sendJson`, or `sendText`; connection and frame failures are
  * reported as `XAiError` values in the Effect error channel.
- *
  * @category models
  * @since 0.0.0
  */
@@ -184,7 +188,8 @@ export type XAiWebSocketMethod = (request?: XAiRequestOptions) => Effect.Effect<
 /**
  * Public service shape for every documented xAI endpoint plus SSE helpers.
  *
- * @example
+ * **Example** (Pick service method key)
+ *
  * ```ts
  * import type { XAiShape } from "@beep/xai"
  *
@@ -1009,7 +1014,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedXAiConfig): 
 /**
  * Effect service for all documented xAI API endpoints.
  *
- * @example
+ * **Example** (Call listModels via service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { XAi } from "@beep/xai"
@@ -1027,7 +1033,8 @@ export class XAi extends Context.Service<XAi, XAiShape>()($I`XAi`) {
   /**
    * Build an xAI layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Build layer from config)
+   *
    * ```ts
    * import { Redacted } from "effect"
    * import * as O from "effect/Option"
@@ -1052,7 +1059,8 @@ export class XAi extends Context.Service<XAi, XAiShape>()($I`XAi`) {
   /**
    * Live xAI layer backed by optional API and management credentials.
    *
-   * @example
+   * **Example** (Use live service layer)
+   *
    * ```ts
    * import { XAi } from "@beep/xai"
    *

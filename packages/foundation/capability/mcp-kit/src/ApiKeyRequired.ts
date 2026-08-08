@@ -43,7 +43,8 @@ type ApiKeyRequiredFailureParamsInput = Exclude<(typeof ApiKeyRequiredFailurePar
  * credential is absent at call time. Intended for use as a `Tool.make`
  * `failure` schema with `failureMode: "return"`.
  *
- * @example
+ * **Example** (Creating typed tool failure)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ApiKeyRequiredFailure, SourceAuthRegistration } from "@beep/mcp-kit"
@@ -100,7 +101,8 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
  * resolved credential is absent, with the tool declared
  * `failureMode: "return"`.
  *
- * @example
+ * **Example** (Building failure from registration)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { apiKeyRequiredFailure, SourceAuthRegistration } from "@beep/mcp-kit"

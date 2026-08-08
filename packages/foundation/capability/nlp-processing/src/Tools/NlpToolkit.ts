@@ -66,10 +66,13 @@ type NlpToolkitTools = Toolkit.ToolsByName<NlpToolList>;
  * Canonical ordered NLP tool list used to build the toolkit and export
  * adapters.
  *
+ * **Details**
+ *
  * The order is stable for export adapters that present tools to non-Effect
  * runtimes and for agents that need to inspect the available NLP surface.
  *
- * @example
+ * **Example** (Summarize available tool names)
+ *
  * ```ts
  * import { NlpTools } from "@beep/nlp-processing/Tools/NlpToolkit"
  *
@@ -117,10 +120,13 @@ export const NlpTools: NlpToolList = [
 /**
  * Effect AI toolkit definition containing the full NLP tool surface.
  *
+ * **Details**
+ *
  * Drivers provide the handler layer for this contract. For example,
  * `@beep/wink` provides a wink-backed implementation.
  *
- * @example
+ * **Example** (Compare toolkit tool counts)
+ *
  * ```ts
  * import { NlpToolkit, NlpTools } from "@beep/nlp-processing/Tools/NlpToolkit"
  *

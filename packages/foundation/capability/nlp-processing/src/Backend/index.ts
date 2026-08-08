@@ -8,14 +8,15 @@
 /**
  * The abstract NLP backend contract (interface, capabilities, failures, helpers).
  *
- * @example
+ * **Example** (Import NLPBackend and log key)
+ *
  * ```typescript
  * import { NLPBackend } from "@beep/nlp-processing/Backend"
  *
  * console.log(NLPBackend.NLPBackend.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * as NLPBackend from "./NLPBackend.ts";

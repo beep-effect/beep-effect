@@ -58,10 +58,8 @@ const closeoutIssue = (
 /**
  * Convert an unresolved GitHub review thread into a normalized Yeet issue.
  *
- * @param thread - Review thread whose latest comment and location become issue
- * evidence.
- * @returns A blocking `pr-review` quality issue for closeout packets.
- * @example
+ * **Example** (Convert thread to issue)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThread, GhReviewThreadCommentConnection, reviewThreadIssue } from "@beep/repo-cli/test/Yeet"
@@ -85,6 +83,10 @@ const closeoutIssue = (
  *
  * strictEqual(reviewThreadIssue(thread).category, "pr-review")
  * ```
+ *
+ * @param thread - Review thread whose latest comment and location become issue
+ * evidence.
+ * @returns A blocking `pr-review` quality issue for closeout packets.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -110,10 +112,8 @@ const greptileIssueLimitExceeded = (issueCount: number | undefined, limit: numbe
 /**
  * Determine whether the Greptile issue-count gate should block closeout.
  *
- * @param issueCount - Parsed Greptile issue count, if present.
- * @param limit - Maximum accepted issue count. Negative values disable the gate.
- * @returns Whether the issue-count gate should fail.
- * @example
+ * **Example** (Limit exceeded and disabled)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { greptileIssueLimitExceededForTesting } from "@beep/repo-cli/test/Yeet"
@@ -121,6 +121,10 @@ const greptileIssueLimitExceeded = (issueCount: number | undefined, limit: numbe
  * strictEqual(greptileIssueLimitExceededForTesting(1, 0), true)
  * strictEqual(greptileIssueLimitExceededForTesting(1, -1), false)
  * ```
+ *
+ * @param issueCount - Parsed Greptile issue count, if present.
+ * @param limit - Maximum accepted issue count. Negative values disable the gate.
+ * @returns Whether the issue-count gate should fail.
  * @category testing
  * @since 0.0.0
  */
@@ -129,12 +133,8 @@ export const greptileIssueLimitExceededForTesting = greptileIssueLimitExceeded;
 /**
  * Derive blocking closeout issues from review-thread and Greptile gate inputs.
  *
- * @param options - Required gate thresholds configured for closeout.
- * @param actionableReviewThreadCount - Count of unresolved human review
- * threads.
- * @param greptile - Parsed Greptile score and issue count.
- * @returns Structured issues for every closeout requirement that failed.
- * @example
+ * **Example** (Failed review gate issues)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { gateIssues, GreptileSummary, PrCloseoutOptions } from "@beep/repo-cli/test/Yeet"
@@ -150,6 +150,12 @@ export const greptileIssueLimitExceededForTesting = greptileIssueLimitExceeded;
  *
  * strictEqual(issues[0]?.category, "pr-review")
  * ```
+ *
+ * @param options - Required gate thresholds configured for closeout.
+ * @param actionableReviewThreadCount - Count of unresolved human review
+ * threads.
+ * @param greptile - Parsed Greptile score and issue count.
+ * @returns Structured issues for every closeout requirement that failed.
  * @category validation
  * @since 0.0.0
  */
@@ -276,11 +282,8 @@ const closeoutGateStatesFromParts = (
 /**
  * Build durable closeout gate states for the current PR evidence snapshot.
  *
- * @param input - Full closeout evidence and option bundle collected from
- * GitHub.
- * @returns Gate states for review threads, enabled bot signals, and hosted
- * checks.
- * @example
+ * **Example** (Build review-threads gate state)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { closeoutGateStates, GreptileSummary, PrCloseoutOptions } from "@beep/repo-cli/test/Yeet"
@@ -301,6 +304,11 @@ const closeoutGateStatesFromParts = (
  *
  * strictEqual(states[0]?.name, "review-threads")
  * ```
+ *
+ * @param input - Full closeout evidence and option bundle collected from
+ * GitHub.
+ * @returns Gate states for review threads, enabled bot signals, and hosted
+ * checks.
  * @category validation
  * @since 0.0.0
  */
@@ -316,9 +324,8 @@ export const closeoutGateStates = (input: CloseoutGateStatesInput): ReadonlyArra
 /**
  * Build durable PR closeout gate states from simplified test inputs.
  *
- * @param input - Closeout test inputs controlling gate requirements.
- * @returns Durable PR closeout gate states for tests.
- * @example
+ * **Example** (Simplified test gate states)
+ *
  * ```ts
  * import { closeoutGateStatesForTesting, GreptileSummary, PrCloseoutOptions } from "@beep/repo-cli/test/Yeet"
  *
@@ -336,6 +343,9 @@ export const closeoutGateStates = (input: CloseoutGateStatesInput): ReadonlyArra
  * })
  * console.log(states.length)
  * ```
+ *
+ * @param input - Closeout test inputs controlling gate requirements.
+ * @returns Durable PR closeout gate states for tests.
  * @category testing
  * @since 0.0.0
  */

@@ -11,7 +11,8 @@ import type { Brand } from "effect/Brand";
 /**
  * Marks a value as an explicit override for an overridable schema field.
  *
- * @example
+ * **Example** (Create explicit override value)
+ *
  * ```ts
  * import * as VariantSchema from "@beep/schema/VariantSchema"
  *
@@ -19,8 +20,8 @@ import type { Brand } from "effect/Brand";
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Override = <A>(value: A): A & Brand<"Override"> => value as A & Brand<"Override">;
 
@@ -28,7 +29,8 @@ export const Override = <A>(value: A): A & Brand<"Override"> => value as A & Bra
  * Schema type for fields that receive an Effect-backed constructor default but
  * can still be supplied explicitly as overrides.
  *
- * @example
+ * **Example** (Type Overridable schema field)
+ *
  * ```ts
  * import type { Overridable } from "@beep/schema/VariantSchema"
  * import * as VariantSchema from "@beep/schema/VariantSchema"
@@ -41,8 +43,8 @@ export const Override = <A>(value: A): A & Brand<"Override"> => value as A & Bra
  * console.log(S.isSchema(field))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export interface Overridable<S extends S.Top & S.WithoutConstructorDefault>
   extends S.Bottom<
@@ -67,7 +69,8 @@ export interface Overridable<S extends S.Top & S.WithoutConstructorDefault>
  * Adds an Effect-backed constructor default while preserving explicit override
  * values.
  *
- * @example
+ * **Example** (Create Overridable with default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -80,8 +83,8 @@ export interface Overridable<S extends S.Top & S.WithoutConstructorDefault>
  * console.log(S.isSchema(field))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Overridable: {
   <S extends S.Top & S.WithoutConstructorDefault>(options: {
@@ -110,7 +113,8 @@ export const Overridable: {
 /**
  * Upstream-compatible alias for {@link Overridable}.
  *
- * @example
+ * **Example** (Type Overrideable schema field)
+ *
  * ```ts
  * import type { Overrideable } from "@beep/schema/VariantSchema"
  * import * as VariantSchema from "@beep/schema/VariantSchema"
@@ -123,7 +127,8 @@ export const Overridable: {
  * console.log(S.isSchema(field))
  * ```
  *
- * @example
+ * **Example** (Create Overrideable field)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
@@ -136,8 +141,8 @@ export const Overridable: {
  * console.log(field)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault>
   extends S.Bottom<
@@ -161,7 +166,8 @@ export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault>
 /**
  * Upstream-compatible alias for {@link Overridable}.
  *
- * @example
+ * **Example** (Create Overrideable with default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -174,7 +180,7 @@ export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault>
  * console.log(S.isSchema(field))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Overrideable: typeof Overridable = Overridable;

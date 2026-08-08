@@ -14,7 +14,8 @@ const $I = $ObsId.create("Obs.models");
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Make positive milliseconds)
+ *
  * ```ts
  * import { PositiveMilliseconds } from "@beep/obs"
  *
@@ -59,7 +60,8 @@ export const PositiveMilliseconds = S.Finite.check(
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Type-annotated timeout value)
+ *
  * ```ts
  * import { PositiveMilliseconds } from "@beep/obs"
  * import type { PositiveMilliseconds as PositiveMillisecondsValue } from "@beep/obs"
@@ -76,7 +78,8 @@ export type PositiveMilliseconds = typeof PositiveMilliseconds.Type;
 /**
  * Network port number in the closed 1-65535 range.
  *
- * @example
+ * **Example** (Make websocket port)
+ *
  * ```ts
  * import { ObsWebSocketPort } from "@beep/obs"
  *
@@ -119,7 +122,8 @@ export const ObsWebSocketPort = S.Int.check(
 /**
  * Network port number in the closed 1-65535 range.
  *
- * @example
+ * **Example** (Type-annotated port value)
+ *
  * ```ts
  * import { ObsWebSocketPort } from "@beep/obs"
  * import type { ObsWebSocketPort as ObsWebSocketPortValue } from "@beep/obs"
@@ -136,10 +140,13 @@ export type ObsWebSocketPort = typeof ObsWebSocketPort.Type;
 /**
  * Runtime configuration overrides for the OBS driver.
  *
+ * **Details**
+ *
  * The default `eventSubscriptions` bitmask 79 selects
  * General(1) | Config(2) | Scenes(4) | Inputs(8) | Outputs(64).
  *
- * @example
+ * **Example** (Make empty config input)
+ *
  * ```ts
  * import { ObsConfigInput } from "@beep/obs"
  *
@@ -205,7 +212,8 @@ export class ObsConfigInput extends S.Class<ObsConfigInput>($I`ObsConfigInput`)(
  * Constructor input accepted by {@link ObsConfigInput} and the driver layer
  * factories — every field optional, schema defaults applied.
  *
- * @example
+ * **Example** (Partial config options object)
+ *
  * ```ts
  * import type { ObsConfigInputOptions } from "@beep/obs"
  *
@@ -221,7 +229,8 @@ export type ObsConfigInputOptions = (typeof ObsConfigInput)["~type.make.in"];
 /**
  * Resolved runtime configuration for the OBS driver.
  *
- * @example
+ * **Example** (Resolve empty config overrides)
+ *
  * ```ts
  * import { resolveObsConfig } from "@beep/obs"
  *
@@ -279,7 +288,8 @@ export class ObsConfig extends S.Class<ObsConfig>($I`ObsConfig`)(
  * Resolve optional configuration overrides into a full {@link ObsConfig}
  * with schema defaults applied.
  *
- * @example
+ * **Example** (Resolve default configuration)
+ *
  * ```ts
  * import { resolveObsConfig } from "@beep/obs"
  *
@@ -296,7 +306,8 @@ export const resolveObsConfig = (input?: ObsConfigInputOptions | undefined): Obs
 /**
  * Result of verifying the OBS process behind the connected session.
  *
- * @example
+ * **Example** (Make ensure-running result)
+ *
  * ```ts
  * import { EnsureRunningResult } from "@beep/obs"
  *
@@ -337,7 +348,8 @@ export class EnsureRunningResult extends S.Class<EnsureRunningResult>($I`EnsureR
 /**
  * Request to provision the idempotent QA capture scene.
  *
- * @example
+ * **Example** (Make empty QA request)
+ *
  * ```ts
  * import { EnsureQaSceneRequest } from "@beep/obs"
  *
@@ -377,11 +389,14 @@ export class EnsureQaSceneRequest extends S.Class<EnsureQaSceneRequest>($I`Ensur
 /**
  * Result of provisioning the QA capture scene.
  *
+ * **Details**
+ *
  * A none `restoreToken` means the PipeWire portal picker has not persisted a
  * window selection yet: the first interactive pick populates it, and a stale
  * token makes the picker reappear rather than failing.
  *
- * @example
+ * **Example** (Make QA scene result)
+ *
  * ```ts
  * import { EnsureQaSceneResult } from "@beep/obs"
  * import * as O from "effect/Option"
@@ -436,7 +451,8 @@ export class EnsureQaSceneResult extends S.Class<EnsureQaSceneResult>($I`EnsureQ
 /**
  * Request to start an OBS recording into a specific directory.
  *
- * @example
+ * **Example** (Start recording request)
+ *
  * ```ts
  * import { StartRecordingRequest } from "@beep/obs"
  *
@@ -471,7 +487,8 @@ export class StartRecordingRequest extends S.Class<StartRecordingRequest>($I`Sta
  * receipt time of the `OBS_WEBSOCKET_OUTPUT_STARTED` event — the Lane B
  * clock-sync anchor for correlating witness events with video time.
  *
- * @example
+ * **Example** (Make start recording result)
+ *
  * ```ts
  * import { StartRecordingResult } from "@beep/obs"
  *
@@ -503,7 +520,8 @@ export class StartRecordingResult extends S.Class<StartRecordingResult>($I`Start
 /**
  * Request options for stopping an OBS recording.
  *
- * @example
+ * **Example** (Make stop recording request)
+ *
  * ```ts
  * import { StopRecordingRequest } from "@beep/obs"
  *
@@ -533,7 +551,8 @@ export class StopRecordingRequest extends S.Class<StopRecordingRequest>($I`StopR
  * response (authoritative), and the STOPPED event has been awaited so the
  * file is closed and safe to read.
  *
- * @example
+ * **Example** (Make stop recording result)
+ *
  * ```ts
  * import { StopRecordingResult } from "@beep/obs"
  *

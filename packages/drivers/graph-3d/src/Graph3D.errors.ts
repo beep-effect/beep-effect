@@ -15,7 +15,8 @@ const $I = $Graph3dId.create("Graph3D.errors");
 /**
  * Graph-3d driver failure reason.
  *
- * @example
+ * **Example** (Assign webglUnavailable reason)
+ *
  * ```ts
  * import { Graph3DDriverErrorReason } from "@beep/graph-3d"
  *
@@ -41,7 +42,8 @@ export const Graph3DDriverErrorReason = LiteralKit([
 /**
  * Type for {@link Graph3DDriverErrorReason}.
  *
- * @example
+ * **Example** (Assign renderFailed reason)
+ *
  * ```ts
  * import { Graph3DDriverErrorReason } from "@beep/graph-3d"
  *
@@ -58,7 +60,8 @@ export type Graph3DDriverErrorReason = typeof Graph3DDriverErrorReason.Type;
 /**
  * Typed graph-3d driver error.
  *
- * @example
+ * **Example** (Make Graph3DDriverError instance)
+ *
  * ```ts
  * import { Graph3DDriverError } from "@beep/graph-3d"
  *

@@ -734,7 +734,8 @@ const literalValueFromRdf = Effect.fn("JsonLdDocument.literalValueFromRdf")(func
 /**
  * JSON-LD document service live layer.
  *
- * @example
+ * **Example** (Flatten empty JSON-LD)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

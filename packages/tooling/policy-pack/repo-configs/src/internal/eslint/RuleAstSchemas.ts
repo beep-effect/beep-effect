@@ -11,12 +11,14 @@ const $I = $RepoConfigsId.create("internal/eslint/RuleAstSchemas");
 /**
  * Import-kind literals reflected by ESTree import nodes.
  *
- * @example
+ * **Example** (Satisfy type import kind)
+ *
  * ```ts
  * import { ImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas"
  * const kind = "type" satisfies ImportKind
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -29,12 +31,14 @@ export const ImportKind = LiteralKit(["type", "value"]).pipe(
 /**
  * Import-kind literals reflected by ESTree import nodes.
  *
- * @example
+ * **Example** (Assign value import kind)
+ *
  * ```ts
  * import type { ImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas"
  * const kind: ImportKind = "value"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

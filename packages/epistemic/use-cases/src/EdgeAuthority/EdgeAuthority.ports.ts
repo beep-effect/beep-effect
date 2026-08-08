@@ -20,6 +20,8 @@ const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.ports");
 /**
  * Service shape for the bitemporal edge authority.
  *
+ * **Details**
+ *
  * The surface is deliberately four operations wide, and what it omits is the
  * contract:
  *
@@ -37,7 +39,8 @@ const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.ports");
  * - `readAsOf` answers on both axes; `readLatest` is the same predicate asked at
  *   now/now, not a separate "current" table or an `isLatest` flag.
  *
- * @example
+ * **Example** (Read-only offline stub)
+ *
  * ```ts
  * import type { EdgeAuthorityRepositoryShape } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
@@ -69,7 +72,8 @@ export interface EdgeAuthorityRepositoryShape {
 /**
  * Edge authority repository service tag.
  *
- * @example
+ * **Example** (Provide service with stub)
+ *
  * ```ts
  * import { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"

@@ -23,7 +23,8 @@ import type { executionDecisionTable, executionOutcomeTable } from "./ExecutionR
 /**
  * Row type selected from {@link executionDecisionTable}.
  *
- * @example
+ * **Example** (Access seq from decision row)
+ *
  * ```ts
  * import type { ExecutionDecisionRow } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -39,7 +40,8 @@ export type ExecutionDecisionRow = typeof executionDecisionTable.$inferSelect;
 /**
  * Insert row type for {@link executionDecisionTable}.
  *
- * @example
+ * **Example** (Access hash from decision insert)
+ *
  * ```ts
  * import type { ExecutionDecisionInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -55,7 +57,8 @@ export type ExecutionDecisionInsert = typeof executionDecisionTable.$inferInsert
 /**
  * Row type selected from {@link executionOutcomeTable}.
  *
- * @example
+ * **Example** (Access settlement from outcome row)
+ *
  * ```ts
  * import type { ExecutionOutcomeRow } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -71,7 +74,8 @@ export type ExecutionOutcomeRow = typeof executionOutcomeTable.$inferSelect;
 /**
  * Insert row type for {@link executionOutcomeTable}.
  *
- * @example
+ * **Example** (Access hash from outcome insert)
+ *
  * ```ts
  * import type { ExecutionOutcomeInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -92,7 +96,8 @@ const decodeExecutionOutcomeRow = S.decodeUnknownSync(ExecutionOutcomeRecord);
 /**
  * Project a sealed decision record onto its insert row.
  *
- * @example
+ * **Example** (Project sealed decision to insert)
+ *
  * ```ts
  * import { ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord"
  * import { toExecutionDecisionInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
@@ -126,13 +131,16 @@ export const toExecutionDecisionInsert = (record: ExecutionDecisionRecord): Exec
 /**
  * Decode a decision row back into the domain record.
  *
+ * **Details**
+ *
  * A `null` reason is the column's shape for the allowed variant, not domain
  * data, so it is stripped before decoding. A non-null reason on an allowed row
  * is NOT guarded here — union decoding drops the excess key silently — because
  * the migration's `reason_iff_denied` CHECK makes such a row unrepresentable at
  * the table; the database owns that invariant, not this converter.
  *
- * @example
+ * **Example** (Check fromExecutionDecisionRow type)
+ *
  * ```ts
  * import { fromExecutionDecisionRow } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -150,7 +158,8 @@ export const fromExecutionDecisionRow = (row: ExecutionDecisionRow): ExecutionDe
 /**
  * Project a sealed outcome record onto its insert row.
  *
- * @example
+ * **Example** (Check toExecutionOutcomeInsert type)
+ *
  * ```ts
  * import { toExecutionOutcomeInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -166,7 +175,8 @@ export const toExecutionOutcomeInsert = (record: ExecutionOutcomeRecord): Execut
 /**
  * Decode an outcome row back into the domain record.
  *
- * @example
+ * **Example** (Check fromExecutionOutcomeRow type)
+ *
  * ```ts
  * import { fromExecutionOutcomeRow } from "@beep/epistemic-tables/values/ExecutionRecord"
  *

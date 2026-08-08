@@ -42,9 +42,12 @@ const $I = $FileProcessingId.create("PathSafety");
 /**
  * Machine-readable reasons a path was rejected by the safety guard.
  *
+ * **Details**
+ *
  * Every reason is fail-closed: the guard refuses access rather than guessing.
  *
- * @example
+ * **Example** (Log violation reason options)
+ *
  * ```ts
  * import { PathSafetyViolationReason } from "@beep/file-processing/PathSafety"
  *
@@ -69,7 +72,8 @@ export const PathSafetyViolationReason = LiteralKit([
 /**
  * Type for {@link PathSafetyViolationReason}.
  *
- * @example
+ * **Example** (Check escapes-root reason type)
+ *
  * ```ts
  * import { PathSafetyViolationReason } from "@beep/file-processing/PathSafety"
  *
@@ -85,10 +89,13 @@ export type PathSafetyViolationReason = typeof PathSafetyViolationReason.Type;
 /**
  * Typed, fail-closed path-safety violation.
  *
+ * **Details**
+ *
  * Carries the sanitized allowed root, the original candidate path, and (when
  * the candidate canonicalized) the resolved real path that escaped the root.
  *
- * @example
+ * **Example** (Create escapesRoot error)
+ *
  * ```ts
  * import { PathSafetyError } from "@beep/file-processing/PathSafety"
  *
@@ -224,6 +231,8 @@ const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split
 /**
  * Pure containment check for two already-resolved absolute paths.
  *
+ * **Details**
+ *
  * Returns `true` when `candidate` is the root itself or a descendant of it.
  * This consults no filesystem; it only compares canonicalized strings, so the
  * caller must pass paths that have already been resolved. Windows drive and
@@ -233,7 +242,8 @@ const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split
  * containment. Filesystem operations use their platform `Path` service rather
  * than this style-inference helper.
  *
- * @example
+ * **Example** (Compare contained absolute paths)
+ *
  * ```ts
  * import { isPathWithinRoot } from "@beep/file-processing/PathSafety"
  *
@@ -279,13 +289,16 @@ const isResolvedPathWithinRoot = (path: Path.Path, root: string, candidate: stri
 /**
  * Pure, fail-closed validation for an already-resolved candidate path.
  *
+ * **Details**
+ *
  * Returns `Result.succeed(candidate)` when the candidate is contained by the
  * root and `Result.fail(PathSafetyError)` otherwise. No filesystem access is
  * performed, so symlink resolution is the caller's responsibility; use this
  * only on paths already canonicalized (for example the output of
  * {@link resolvePathWithinRoot}, or a `Path.resolve` result you trust).
  *
- * @example
+ * **Example** (Validate contained resolved path)
+ *
  * ```ts
  * import { validateResolvedPath } from "@beep/file-processing/PathSafety"
  * import { Result } from "effect"
@@ -318,6 +331,8 @@ export const validateResolvedPath = (options: {
  * Resolve a candidate path against an allowed root and fail closed if it
  * escapes.
  *
+ * **Details**
+ *
  * The root is canonicalized with `FileSystem.realPath`, then the candidate is
  * resolved relative to that canonical root (`Path.resolve`) and itself
  * canonicalized, following symlinks. The deepest existing ancestor is
@@ -331,7 +346,8 @@ export const validateResolvedPath = (options: {
  * the actual read or write. Non-regular/device-file rejection is out of scope
  * and left to callers.
  *
- * @example
+ * **Example** (Resolve candidate under root)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
@@ -445,6 +461,8 @@ const resolveCandidateWithinCanonicalRoot: (
 /**
  * Resolve a candidate beneath a root that the caller already canonicalized.
  *
+ * **Details**
+ *
  * Unlike {@link resolvePathWithinRoot}, this guard deliberately does not call
  * `FileSystem.realPath` on `canonicalRoot`. This lets a long-lived service pin
  * its authority boundary during layer construction: if the lexical root is
@@ -455,7 +473,8 @@ const resolveCandidateWithinCanonicalRoot: (
  * `FileSystem.realPath`. Candidate paths and their deepest existing ancestors
  * are still canonicalized on every invocation.
  *
- * @example
+ * **Example** (Resolve under pinned root)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
@@ -555,6 +574,8 @@ const writeWithinCanonicalRootAtomically: (
 /**
  * Write bytes atomically beneath a root that the caller already canonicalized.
  *
+ * **Details**
+ *
  * This is the mutation counterpart to
  * {@link resolvePathWithinCanonicalRoot}: it never re-canonicalizes
  * `canonicalRoot`, so a long-lived service does not transfer its authority if
@@ -564,7 +585,8 @@ const writeWithinCanonicalRootAtomically: (
  * The caller must supply an absolute path previously returned by
  * `FileSystem.realPath`.
  *
- * @example
+ * **Example** (Atomic write under pinned root)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
@@ -604,6 +626,8 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
 /**
  * Write bytes atomically to a root-contained destination.
  *
+ * **Details**
+ *
  * The destination is containment-checked before and after parent-directory
  * creation. The bytes are then written with exclusive creation and mode
  * `0o600` inside an unpredictable temporary directory beside the destination,
@@ -619,7 +643,8 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
  * directory-handle-relative operations for complete concurrent-adversary
  * protection.
  *
- * @example
+ * **Example** (Atomic write under root)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"

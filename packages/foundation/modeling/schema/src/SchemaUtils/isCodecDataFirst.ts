@@ -18,11 +18,14 @@ const isParseOptions = (input: unknown): input is AST.ParseOptions =>
 /**
  * Detect whether a Schema codec-style dual helper was called data-first.
  *
+ * **Details**
+ *
  * Effect Schema decoders and encoders accept parse options in both the
  * constructor and application positions. Use this predicate with `dual` when a
  * schema static should support `(input, options?)` and `(options?)(input)`.
  *
- * @example
+ * **Example** (Dual codec data-first detection)
+ *
  * ```ts
  * import { isCodecDataFirst } from "@beep/schema/SchemaUtils/isCodecDataFirst"
  * import { dual } from "effect/Function"

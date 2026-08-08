@@ -28,7 +28,8 @@ import type { FieldOption } from "../core/Options.ts";
  * label/description/options/placeholder; binding props
  * (`items`/`value`/`onValueChange`/`name`/`multiple`) are owned by the field.
  *
- * @example
+ * **Example** (Tags multi-select props)
+ *
  * ```ts
  * import type { MultiSelectFieldProps } from "@beep/form/fields/MultiSelectField"
  *
@@ -80,7 +81,8 @@ const optionAccessibleLabel = (options: ReadonlyArray<FieldOption>, value: strin
  * Schema-bound multi-select combobox: the value is the array of selected option
  * values, rendered as removable chips.
  *
- * @example
+ * **Example** (Filter form multi-select)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

@@ -14,7 +14,8 @@ const $I = $GovinfoId.create("Govinfo.config");
 /**
  * Default GovInfo REST API base URL (official, public-domain source).
  *
- * @example
+ * **Example** (Log default API URL)
+ *
  * ```ts
  * import { GOVINFO_API_URL } from "@beep/govinfo"
  *
@@ -29,7 +30,8 @@ export const GOVINFO_API_URL = "https://api.govinfo.gov";
 /**
  * api.data.gov query-parameter name carrying the GovInfo API key.
  *
- * @example
+ * **Example** (Log API key param)
+ *
  * ```ts
  * import { GOVINFO_API_KEY_PARAM } from "@beep/govinfo"
  *
@@ -44,7 +46,8 @@ export const GOVINFO_API_KEY_PARAM = "api_key";
 /**
  * Environment variable read for the GovInfo api.data.gov API key.
  *
- * @example
+ * **Example** (Log API key env)
+ *
  * ```ts
  * import { GOVINFO_API_KEY_ENV } from "@beep/govinfo"
  *
@@ -59,7 +62,8 @@ export const GOVINFO_API_KEY_ENV = "GOVINFO_API_KEY";
 /**
  * Default api.data.gov hourly request budget for a keyed GovInfo client.
  *
- * @example
+ * **Example** (Log default rate limit)
+ *
  * ```ts
  * import { GOVINFO_RATE_LIMIT } from "@beep/govinfo"
  *
@@ -74,7 +78,8 @@ export const GOVINFO_RATE_LIMIT = 1000;
 /**
  * Default rate-limit window matching the api.data.gov hourly budget.
  *
- * @example
+ * **Example** (Log rate limit window)
+ *
  * ```ts
  * import { GOVINFO_RATE_LIMIT_WINDOW } from "@beep/govinfo"
  *
@@ -89,7 +94,8 @@ export const GOVINFO_RATE_LIMIT_WINDOW = "1 hour";
 /**
  * Default response cache time-to-live for repeated identical searches.
  *
- * @example
+ * **Example** (Log default cache TTL)
+ *
  * ```ts
  * import { GOVINFO_CACHE_TTL } from "@beep/govinfo"
  *
@@ -104,7 +110,8 @@ export const GOVINFO_CACHE_TTL = "5 minutes";
 /**
  * Runtime configuration accepted by {@link Govinfo.makeLayer}.
  *
- * @example
+ * **Example** (Make config with API URL)
+ *
  * ```ts
  * import { GovinfoConfigInput } from "@beep/govinfo"
  * import { URLStr } from "@beep/schema"

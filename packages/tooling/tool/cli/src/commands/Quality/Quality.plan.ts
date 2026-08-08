@@ -15,14 +15,16 @@ const gibibytes = (bytes: number): number => Math.round((bytes / 1024 / 1024 / 1
 /**
  * Return static quality scheduling settings for a hardware profile.
  *
- * @param profile - Quality hardware profile to map to scheduling settings.
- * @returns Static quality scheduling configuration for the profile.
- * @example
+ * **Example** (Workstation scheduling settings)
+ *
  * ```ts
  * import { qualityProfileConfigForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(qualityProfileConfigForTesting("workstation").reviewFixSlots)
  * ```
+ *
+ * @param profile - Quality hardware profile to map to scheduling settings.
+ * @returns Static quality scheduling configuration for the profile.
  * @category configuration
  * @since 0.0.0
  */
@@ -60,9 +62,8 @@ export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile):
 /**
  * Detect the quality hardware profile from host facts.
  *
- * @param input - Host and CI facts used for profile detection.
- * @returns Detected quality profile with derived scheduling configuration.
- * @example
+ * **Example** (Detect from host facts)
+ *
  * ```ts
  * import { detectQualityProfileForTesting } from "@beep/repo-cli/test/Quality"
  *
@@ -73,6 +74,9 @@ export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile):
  * })
  * console.log(profile.profile)
  * ```
+ *
+ * @param input - Host and CI facts used for profile detection.
+ * @returns Detected quality profile with derived scheduling configuration.
  * @category configuration
  * @since 0.0.0
  */
@@ -94,13 +98,15 @@ export const detectQualityProfileForTesting = (input: QualityProfileDetectionInp
 /**
  * Detect the quality hardware profile from the current process environment.
  *
- * @returns Detected quality profile with derived scheduling configuration.
- * @example
+ * **Example** (Detect from environment)
+ *
  * ```ts
  * import { detectQualityProfile } from "@beep/repo-cli/commands/Quality/Quality.plan"
  *
  * console.log(detectQualityProfile().profile)
  * ```
+ *
+ * @returns Detected quality profile with derived scheduling configuration.
  * @category configuration
  * @since 0.0.0
  */

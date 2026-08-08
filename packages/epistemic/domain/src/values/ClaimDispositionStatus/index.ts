@@ -8,7 +8,8 @@
 /**
  * Claim disposition status exports.
  *
- * @example
+ * **Example** (Import and log rejected status)
+ *
  * ```ts
  * import { ClaimDispositionStatus } from "@beep/epistemic-domain/values/ClaimDispositionStatus"
  *

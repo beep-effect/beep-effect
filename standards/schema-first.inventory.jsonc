@@ -129,7 +129,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 46,
+      "line": 47,
       "owner": "@beep/graph-3d",
       "reason": "React hook boundary: the result carries React's RefObject (null until attached) and the not-yet-mounted handle/error as undefined, matching React ref and state conventions for the Storybook/spike consumers."
     },
@@ -139,7 +139,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 194,
+      "line": 201,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },

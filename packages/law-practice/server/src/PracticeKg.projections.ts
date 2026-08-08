@@ -532,7 +532,8 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
 /**
  * Build a deterministic PGlite + DuckDB practice knowledge-graph bundle.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the unwrapped implementation: it takes its filesystem, path, and SQL
  * client from the ambient context rather than from a service, which is what lets
  * {@link PracticeKgProjectionsLive} capture the host's context once and hand out
@@ -542,7 +543,8 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
  * The build refuses to run against an existing bundle unless `overwrite` is set,
  * and a failure part-way through leaves the partial bundle on disk.
  *
- * @example
+ * **Example** (Build with overwrite options)
+ *
  * ```ts
  * import { PracticeKgOptions } from "@beep/law-practice-server"
  * import { Effect } from "effect"
@@ -663,12 +665,14 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
 /**
  * Injected projection service for deterministic practice knowledge-graph builds.
  *
- * @remarks
+ * **Details**
+ *
  * `build` is dependency-free by construction: the layer that provides this
  * service has already captured the host's filesystem, path, and SQL client, so a
  * caller yielding this service needs nothing else in context.
  *
- * @example
+ * **Example** (Yield service and build)
+ *
  * ```ts
  * import { PracticeKgOptions, PracticeKgProjections } from "@beep/law-practice-server"
  * import { Effect } from "effect"
@@ -690,7 +694,6 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
  * ```
  *
  * @see {@link PracticeKgProjectionsLive} for the layer that satisfies it.
- *
  * @category services
  * @since 0.0.0
  */
@@ -704,14 +707,16 @@ export class PracticeKgProjections extends Context.Service<
 /**
  * Projection layer capturing the host-provided filesystem, path, and SQL client.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The context is captured once when the layer is built and then closed over by
  * every `build` call, which is why {@link PracticeKgProjections} exposes a
  * requirement-free effect. The SQL client the layer sees is the one live at
  * build time — provide the bundle's own PGlite store beneath it, not a shared
  * application database.
  *
- * @example
+ * **Example** (Wire PGlite under projections)
+ *
  * ```ts
  * import { PracticeKgProjectionsLive } from "@beep/law-practice-server"
  * import * as Pglite from "@beep/pglite"
@@ -744,12 +749,14 @@ export const PracticeKgProjectionsLive = Layer.effect(
 /**
  * Build through the injected projection service.
  *
- * @remarks
+ * **Details**
+ *
  * The ordinary entry point for a bundle build. Everything the build needs is
  * reached through {@link PracticeKgProjections}, so the only wiring a caller
  * does is providing that service.
  *
- * @example
+ * **Example** (Build with full layer stack)
+ *
  * ```ts
  * import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgProjectionsLive } from "@beep/law-practice-server"
  * import * as Pglite from "@beep/pglite"

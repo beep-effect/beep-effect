@@ -28,7 +28,8 @@ const embedTitle = (embed: { readonly src: string; readonly title: O.Option<stri
  * The strategy consumed by {@link segmentInlineRuns}: the inline guard plus the
  * per-run and per-block renderers.
  *
- * @example
+ * **Example** (SegmentStrategy type shape)
+ *
  * ```ts
  * import type { SegmentStrategy } from "@beep/md/Md.behavior"
  *
@@ -71,6 +72,8 @@ export interface SegmentStrategy<I, B> {
  * of inline children collapses to one inline render, while every block child
  * renders on its own.
  *
+ * **Details**
+ *
  * The runs are grouped with {@link A.groupWith} keyed by the inline guard, then
  * each run is rendered by the matching handler — inline runs through
  * `renderInlineRun`, block children individually through `renderBlock`.
@@ -78,7 +81,8 @@ export interface SegmentStrategy<I, B> {
  * Dual-arity: call data-first as `segmentInlineRuns(items, strategy)` or
  * data-last as `segmentInlineRuns(strategy)(items)`.
  *
- * @example
+ * **Example** (Segment inline and block runs)
+ *
  * ```ts
  * import { Inline } from "@beep/md/Md.model"
  * import { segmentInlineRuns } from "@beep/md/Md.behavior"
@@ -173,7 +177,8 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
 /**
  * Projects an inline node to its escaping-free plain-text content.
  *
- * @example
+ * **Example** (Plain text from inline)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderPlainTextInline } from "@beep/md/Md.behavior"
@@ -191,7 +196,8 @@ export function renderPlainTextInline(inline: Inline): string {
 /**
  * Projects a block node to its escaping-free plain-text content.
  *
- * @example
+ * **Example** (Plain text from block)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlock } from "@beep/md/Md.behavior"
@@ -224,7 +230,8 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
 /**
  * Projects block nodes to plain text, one block per line.
  *
- * @example
+ * **Example** (Plain text blocks per line)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlocks } from "@beep/md/Md.behavior"

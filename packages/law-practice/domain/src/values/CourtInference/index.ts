@@ -9,9 +9,8 @@
 /**
  * CourtInference model exports.
  *
- * **Example**
+ * **Example** (Import CourtInference)
  *
- * @example
  * ```ts
  * import { CourtInference } from "@beep/law-practice-domain/values";
  * ```

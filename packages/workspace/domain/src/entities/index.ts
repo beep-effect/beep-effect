@@ -8,13 +8,14 @@
 /**
  * ApprovalGate entity exports.
  *
- * @example
+ * **Example** (Import ApprovalGate entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -22,13 +23,14 @@ export * from "./ApprovalGate/index.ts";
 /**
  * CandidateDraft entity exports.
  *
- * @example
+ * **Example** (Import CandidateDraft entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -36,13 +38,14 @@ export * from "./CandidateDraft/index.ts";
 /**
  * CandidateProject entity exports.
  *
- * @example
+ * **Example** (Import CandidateProject entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -50,13 +53,14 @@ export * from "./CandidateProject/index.ts";
 /**
  * CandidateTask entity exports.
  *
- * @example
+ * **Example** (Import CandidateTask entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -64,13 +68,14 @@ export * from "./CandidateTask/index.ts";
 /**
  * ContextPacket entity exports.
  *
- * @example
+ * **Example** (Import ContextPacket entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -78,13 +83,14 @@ export * from "./ContextPacket/index.ts";
 /**
  * EmailArtifact entity exports.
  *
- * @example
+ * **Example** (Import EmailArtifact entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -92,13 +98,14 @@ export * from "./EmailArtifact/index.ts";
 /**
  * Message entity exports.
  *
- * @example
+ * **Example** (Import Message entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -106,13 +113,14 @@ export * from "./Message/index.ts";
 /**
  * Thread entity exports.
  *
- * @example
+ * **Example** (Import Thread entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -120,13 +128,14 @@ export * from "./Thread/index.ts";
 /**
  * Turn entity exports.
  *
- * @example
+ * **Example** (Import Turn entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -134,13 +143,14 @@ export * from "./Turn/index.ts";
 /**
  * Workspace entity exports.
  *
- * @example
+ * **Example** (Import Workspace entity module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */

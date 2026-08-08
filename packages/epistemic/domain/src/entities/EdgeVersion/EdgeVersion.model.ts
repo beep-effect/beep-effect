@@ -49,6 +49,8 @@ const $I = $EpistemicDomainId.create("entities/EdgeVersion/EdgeVersion.model");
 /**
  * One immutable version of one logical epistemic edge.
  *
+ * **Details**
+ *
  * The organization scope is the inherited `orgId` — there is no separate
  * `org_scope` column; the digest's org component is the stringified `orgId`.
  * Endpoints are stored flattened into a per-kind column quadruple per side so the
@@ -56,7 +58,8 @@ const $I = $EpistemicDomainId.create("entities/EdgeVersion/EdgeVersion.model");
  * populated" as a CHECK constraint and point real foreign keys at the claim and
  * evidence tables.
  *
- * @example
+ * **Example** (Decode full EdgeVersion row)
+ *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -240,7 +243,8 @@ export class EdgeVersion extends BaseEntity.Class<EdgeVersion>($I`EdgeVersion`)(
  * The source half of the flattened endpoint quadruple carried by an
  * {@link EdgeVersion} row.
  *
- * @example
+ * **Example** (Source columns type shape)
+ *
  * ```ts
  * import type { EdgeVersionSourceColumns } from "@beep/epistemic-domain"
  * import * as O from "effect/Option"
@@ -267,7 +271,8 @@ export type EdgeVersionSourceColumns = Pick<
  * The target half of the flattened endpoint quadruple carried by an
  * {@link EdgeVersion} row.
  *
- * @example
+ * **Example** (Target columns type shape)
+ *
  * ```ts
  * import type { EdgeVersionTargetColumns } from "@beep/epistemic-domain"
  * import * as O from "effect/Option"
@@ -295,7 +300,8 @@ export type EdgeVersionTargetColumns = Pick<
  * endpoint kind is populated and the other three are `Option.none`, which is
  * exactly the shape the database CHECK constraint enforces.
  *
- * @example
+ * **Example** (Flatten claim source endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint, flattenEdgeSource } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -342,7 +348,8 @@ export const flattenEdgeSource = (endpoint: EdgeEndpoint): EdgeVersionSourceColu
 /**
  * Project an endpoint onto the target column quadruple.
  *
- * @example
+ * **Example** (Flatten evidence target endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint, flattenEdgeTarget } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -392,7 +399,8 @@ export const flattenEdgeTarget = (endpoint: EdgeEndpoint): EdgeVersionTargetColu
  * row that somehow escaped the CHECK constraint surfaces as absence rather than
  * as a fabricated endpoint.
  *
- * @example
+ * **Example** (Round-trip source endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint, flattenEdgeSource, unflattenEdgeSource } from "@beep/epistemic-domain"
  * import * as O from "effect/Option"
@@ -417,7 +425,8 @@ export const unflattenEdgeSource = (columns: EdgeVersionSourceColumns): O.Option
 /**
  * Rebuild the target endpoint from a stored column quadruple.
  *
- * @example
+ * **Example** (Round-trip target endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint, flattenEdgeTarget, unflattenEdgeTarget } from "@beep/epistemic-domain"
  * import * as O from "effect/Option"

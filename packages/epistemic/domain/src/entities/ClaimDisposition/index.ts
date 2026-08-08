@@ -8,7 +8,8 @@
 /**
  * Claim disposition entity exports.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition"
  *

@@ -24,7 +24,8 @@ const RgbChannelRangeCheck = S.isBetween(
 /**
  * Branded finite RGB input channel.
  *
- * @example
+ * **Example** (Decode finite channel value)
+ *
  * ```ts
  * import { RgbInputChannel } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -33,8 +34,8 @@ const RgbChannelRangeCheck = S.isBetween(
  * console.log(channel)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RgbInputChannel = S.Finite.pipe(
   S.brand("RgbInputChannel"),
@@ -46,7 +47,8 @@ export const RgbInputChannel = S.Finite.pipe(
 /**
  * Type for {@link RgbInputChannel}.
  *
- * @example
+ * **Example** (Type decoded channel value)
+ *
  * ```ts
  * import { RgbInputChannel } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -55,15 +57,16 @@ export const RgbInputChannel = S.Finite.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RgbInputChannel = typeof RgbInputChannel.Type;
 
 /**
  * Branded normalized RGB channel in the range 0 through 1.
  *
- * @example
+ * **Example** (Decode normalized channel value)
+ *
  * ```ts
  * import { RgbChannel } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -72,8 +75,8 @@ export type RgbInputChannel = typeof RgbInputChannel.Type;
  * console.log(channel)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RgbChannel = RgbInputChannel.pipe(
   S.check(RgbChannelRangeCheck),
@@ -86,7 +89,8 @@ export const RgbChannel = RgbInputChannel.pipe(
 /**
  * Type for {@link RgbChannel}.
  *
- * @example
+ * **Example** (Type normalized channel value)
+ *
  * ```ts
  * import { RgbChannel } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -95,15 +99,16 @@ export const RgbChannel = RgbInputChannel.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RgbChannel = typeof RgbChannel.Type;
 
 /**
  * RGB object with finite channel inputs.
  *
- * @example
+ * **Example** (Decode RGB input object)
+ *
  * ```ts
  * import { RgbInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -112,8 +117,8 @@ export type RgbChannel = typeof RgbChannel.Type;
  * console.log(color.r)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class RgbInput extends S.Class<RgbInput>($I`RgbInput`)(
   {
@@ -129,7 +134,8 @@ export class RgbInput extends S.Class<RgbInput>($I`RgbInput`)(
 /**
  * RGB object with normalized channels.
  *
- * @example
+ * **Example** (Decode normalized RGB object)
+ *
  * ```ts
  * import { Rgb } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -138,8 +144,8 @@ export class RgbInput extends S.Class<RgbInput>($I`RgbInput`)(
  * console.log(color.g)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class Rgb extends S.Class<Rgb>($I`Rgb`)(
   {

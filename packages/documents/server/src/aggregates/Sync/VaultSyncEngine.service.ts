@@ -1,12 +1,15 @@
 /**
  * Vault sync engine server service.
  *
+ * **Details**
+ *
  * Implements the {@link VaultSyncEngine} port: one `syncOnce` pass recovers
  * leased outbox operations, scans the local vault, pumps the push outbox
  * against the DMS mirror, polls remote drift events, and returns the resulting
  * status snapshot.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Design posture (goals/legal-document-intake P3): the mirror is a one-way
  * push, so locally deleted items never trigger remote deletes; folder
  * move/rename is not inferred (files converge individually and empty remote
@@ -374,7 +377,8 @@ const matchesPushedState = (
  * Build the vault sync engine from its repository, mirror, configuration, and
  * platform dependencies.
  *
- * @example
+ * **Example** (Construct with in-memory layers)
+ *
  * ```ts
  * import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "@beep/documents-server/aggregates/Sync"
  * import { SyncConflictRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncConflict"
@@ -408,7 +412,6 @@ const matchesPushedState = (
  * availability probe, the vault sync configuration, and platform filesystem
  * and path services. `syncOnce` reads the local vault tree, mutates sync
  * repository state, and calls remote mirror verbs.
- *
  * @category constructors
  * @since 0.0.0
  */

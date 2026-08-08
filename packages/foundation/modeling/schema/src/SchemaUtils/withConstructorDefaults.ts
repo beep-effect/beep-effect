@@ -19,12 +19,15 @@ import * as S from "effect/Schema";
  * Attach an `Option.none()` constructor default to an `Option`-typed schema
  * field, so the field can be omitted when constructing a value.
  *
+ * **Details**
+ *
  * The decode behaviour is unchanged: schemas such as `Schema.OptionFromOptional`
  * and `Schema.OptionFromNullOr` already decode a missing/`null` value to `None`.
  * This only removes the obligation to pass `Option.none()` explicitly at every
  * `make` call site (the `*Defaults` spread-object smell).
  *
- * @example
+ * **Example** (Omitting Option at construction)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -55,11 +58,14 @@ export const withNoneDefault = <
  * omitted when constructing a value while its encoded/wire contract is left
  * unchanged.
  *
+ * **Details**
+ *
  * Use this for fields that are always present on the wire but carry a single
  * canonical value at construction time (e.g. a serialized node `version: 1` or
  * an alignment `format: ""`), to delete the per-call default boilerplate.
  *
- * @example
+ * **Example** (Constant constructor default)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { withConstantDefault } from "@beep/schema/SchemaUtils/withConstructorDefaults"

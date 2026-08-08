@@ -8,7 +8,8 @@
 /**
  * Evidence span model exports.
  *
- * @example
+ * **Example** (Decode EvidenceSpan with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan"
@@ -22,7 +23,7 @@
  * })
  * Effect.runPromise(program).then((span) => console.log(span.quote))
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

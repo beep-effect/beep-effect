@@ -51,7 +51,8 @@ export * from "./Libpff.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/libpff"
  *

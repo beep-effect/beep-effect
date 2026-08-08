@@ -53,13 +53,15 @@ const bundleWitness: Effect.Effect<string, QaCaptureError> = Effect.tryPromise({
 /**
  * Runtime shape exposed by the {@link Witness} service.
  *
- * @example
+ * **Example** (Build WitnessShape service)
+ *
  * ```ts
  * import type { WitnessShape } from "@beep/qa-capture"
  * import { Effect } from "effect"
  * const service: WitnessShape = { script: Effect.succeed("(()=>{})();") }
  * console.log(service)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -70,12 +72,14 @@ export interface WitnessShape {
 /**
  * Effect service that serves the bundled in-page witness script.
  *
- * @example
+ * **Example** (Get Witness layer)
+ *
  * ```ts
  * import { Witness } from "@beep/qa-capture"
  * const layer = Witness.layer
  * console.log(layer)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -83,12 +87,14 @@ export class Witness extends Context.Service<Witness, WitnessShape>()($I`Witness
   /**
    * Live witness layer bundling the checked-in source on first request.
    *
-   * @example
+   * **Example** (Reference live witness layer)
+   *
    * ```ts
    * import { Witness } from "@beep/qa-capture"
    * const layer = Witness.layer
    * console.log(layer)
    * ```
+   *
    * @category layers
    * @since 0.0.0
    */
@@ -100,14 +106,16 @@ export class Witness extends Context.Service<Witness, WitnessShape>()($I`Witness
   /**
    * Fixed-script witness layer for tests and offline fallbacks.
    *
-   * @param script - Witness IIFE source served verbatim to the page.
-   * @returns A layer serving exactly that script.
-   * @example
+   * **Example** (Create fixed script layer)
+   *
    * ```ts
    * import { Witness } from "@beep/qa-capture"
    * const layer = Witness.layerScript("(()=>{})();")
    * console.log(layer)
    * ```
+   *
+   * @param script - Witness IIFE source served verbatim to the page.
+   * @returns A layer serving exactly that script.
    * @category layers
    * @since 0.0.0
    */

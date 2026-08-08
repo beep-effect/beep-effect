@@ -10,7 +10,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Data grid theme theme value.
  *
- * @example
+ * **Example** (Import and log theme)
+ *
  * ```ts
  * import { dataGridTheme } from "@beep/ui/themes/components/data-grid"
  *

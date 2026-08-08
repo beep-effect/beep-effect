@@ -12,7 +12,8 @@ import { EntityTable } from "@beep/drizzle";
 /**
  * Drizzle table projection for documents SyncOperation entities.
  *
- * @example
+ * **Example** (Verify table projection columns)
+ *
  * ```ts
  * import { syncOperationTable } from "@beep/documents-tables/entities/SyncOperation"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -34,7 +35,8 @@ export const syncOperationTable = EntityTable.pgTableFrom(DomainSyncOperation.Sy
 /**
  * Physical Postgres table name derived from the SyncOperation entity definition.
  *
- * @example
+ * **Example** (Verify physical table name)
+ *
  * ```ts
  * import { SYNC_OPERATION_TABLE_NAME } from "@beep/documents-tables/entities/SyncOperation"
  *

@@ -8,7 +8,8 @@
 /**
  * CandidateClaim row converter exports.
  *
- * @example
+ * **Example** (Import row converter exports)
+ *
  * ```ts
  * import * as CandidateClaim from "@beep/epistemic-tables/entities/CandidateClaim"
  *
@@ -22,7 +23,8 @@ export * from "./CandidateClaim.converters.ts";
 /**
  * CandidateClaim table exports.
  *
- * @example
+ * **Example** (Import table definition exports)
+ *
  * ```ts
  * import * as CandidateClaim from "@beep/epistemic-tables/entities/CandidateClaim"
  *

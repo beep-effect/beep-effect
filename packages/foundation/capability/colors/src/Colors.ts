@@ -1,11 +1,14 @@
 /**
  * ANSI color helpers inspired by `picocolors`.
  *
+ * **Details**
+ *
  * The module exports a shared default formatter set detected from the current runtime,
  * plus helpers for forcing enabled or disabled formatter instances when you need stable
  * behavior in tests, browser builds, or log pipelines.
  *
- * @example
+ * **Example** (Default bold green output)
+ *
  * ```typescript
  * import colors from "@beep/colors"
  *
@@ -14,7 +17,8 @@
  * console.log(message)
  * ```
  *
- * @example
+ * **Example** (Disabled color formatters)
+ *
  * ```typescript
  * import { createColors } from "@beep/colors"
  *
@@ -24,8 +28,8 @@
  * console.log(rendered) // "warning"
  * ```
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ColorsId } from "@beep/identity";
@@ -44,7 +48,8 @@ const $I = $ColorsId.create("Domain");
 /**
  * Minimal stdout metadata used by ANSI color support detection.
  *
- * @example
+ * **Example** (Create TTY stdout metadata)
+ *
  * ```typescript
  * import { ProcessLikeStdout } from "@beep/colors"
  *
@@ -71,7 +76,8 @@ export class ProcessLikeStdout extends S.Class<ProcessLikeStdout>($I`ProcessLike
 /**
  * Minimal process-like runtime metadata used by ANSI color support detection.
  *
- * @example
+ * **Example** (Force color via process env)
+ *
  * ```typescript
  * import { ProcessLike, supportsColor } from "@beep/colors"
  *
@@ -169,10 +175,13 @@ const replaceClose = (text: string, close: string, replace: string, index: numbe
 /**
  * Schema describing a unary formatter function.
  *
+ * **Details**
+ *
  * Formatter inputs are normalized with `String(...)`, matching the lightweight coercion
  * behavior expected from CLI color helpers.
  *
- * @example
+ * **Example** (Format number with cyan)
+ *
  * ```typescript
  * import { createColors, type Formatter } from "@beep/colors"
  *
@@ -190,7 +199,8 @@ export const Formatter = FormatterDefinition;
 /**
  * Runtime type for {@link Formatter}.
  *
- * @example
+ * **Example** (Assign runtime Formatter function)
+ *
  * ```typescript
  * import type { Formatter } from "@beep/colors"
  *
@@ -218,10 +228,13 @@ const formatter =
 /**
  * Detect whether ANSI color output should be enabled for a process-like runtime.
  *
+ * **Details**
+ *
  * `NO_COLOR` and `--no-color` always disable colors, even when CI, Windows TTYs,
  * or `FORCE_COLOR` would otherwise enable them. `FORCE_COLOR="0"` is treated as disabled.
  *
- * @example
+ * **Example** (Detect forced color support)
+ *
  * ```typescript
  * import { supportsColor } from "@beep/colors"
  *
@@ -232,9 +245,9 @@ const formatter =
  * console.log(enabled) // true
  * ```
  *
- * @category utilities
  * @param processLike - The process-like runtime metadata used for color capability detection.
  * @returns `true` when ANSI escape sequences should be emitted.
+ * @category utilities
  * @since 0.0.0
  */
 export const supportsColor = ProcessLike.supportsColor;
@@ -242,7 +255,8 @@ export const supportsColor = ProcessLike.supportsColor;
 /**
  * Whether ANSI color output is enabled for the current runtime.
  *
- * @example
+ * **Example** (Check runtime color support type)
+ *
  * ```typescript
  * import { isColorSupported } from "@beep/colors"
  *
@@ -257,10 +271,13 @@ export const isColorSupported = supportsColor();
 /**
  * A configured set of ANSI color formatter functions.
  *
+ * **Details**
+ *
  * Instances are immutable and can be reused safely across loggers or render paths.
  * Use {@link createColors} to build explicitly enabled or disabled formatter sets.
  *
- * @example
+ * **Example** (Verify Colors instance type)
+ *
  * ```typescript
  * import { Colors, createColors } from "@beep/colors"
  *
@@ -282,7 +299,8 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
   /**
    * Recreate a `Colors` formatter set with explicit color support.
    *
-   * @example
+   * **Example** (Recreate enabled formatter set)
+   *
    * ```typescript
    * import { createColors } from "@beep/colors"
    *
@@ -300,10 +318,13 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
 /**
  * Create a formatter set with ANSI escapes either enabled or disabled.
  *
+ * **Details**
+ *
  * When disabled, every formatter falls back to `String(...)` so downstream code can keep
  * the same call sites without branching on environment support.
  *
- * @example
+ * **Example** (Create disabled formatter set)
+ *
  * ```typescript
  * import { createColors } from "@beep/colors"
  *
@@ -313,9 +334,9 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
  * console.log(rendered) // "offline"
  * ```
  *
- * @category utilities
  * @param enabled - Whether the returned formatter set should emit ANSI escapes.
  * @returns A configured immutable formatter set.
+ * @category utilities
  * @since 0.0.0
  */
 export const createColors = (enabled: boolean = isColorSupported): Colors => {
@@ -374,7 +395,8 @@ export const createColors = (enabled: boolean = isColorSupported): Colors => {
 /**
  * Default formatter set for the current runtime.
  *
- * @example
+ * **Example** (Use default cyan formatter)
+ *
  * ```typescript
  * import colors from "@beep/colors"
  *

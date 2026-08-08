@@ -16,7 +16,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
 /**
  * Raised when the DMS mirror adapter cannot complete a remote operation.
  *
- * @example
+ * **Example** (Make DmsMirrorUnavailable error)
+ *
  * ```ts
  * import { DmsMirrorUnavailable } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -52,7 +53,8 @@ export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>
 /**
  * Raised when scanning the local workspace vault fails.
  *
- * @example
+ * **Example** (Make VaultScanFailed error)
+ *
  * ```ts
  * import { VaultScanFailed } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -78,7 +80,8 @@ export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultS
 /**
  * Client-safe failure raised when a vault sync action cannot complete.
  *
- * @example
+ * **Example** (Create VaultSyncActionError instance)
+ *
  * ```ts
  * import { VaultSyncActionError } from "@beep/documents-use-cases/public"
  *

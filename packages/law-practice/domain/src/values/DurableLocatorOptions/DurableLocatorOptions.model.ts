@@ -15,12 +15,13 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
 /**
  * Options for `toDurableLocator` / `toDurableLocators`.
  *
+ * **Details**
+ *
  * Omitted fields use the durable-locator defaults: `space` is `"original"`,
  * `fullSpan` is `false`, and `contextLength` is 32.
  *
- * **Example**
+ * **Example** (Build custom locator options)
  *
- * @example
  * ```ts
  * import { DurableLocatorOptions } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -68,7 +69,8 @@ export class DurableLocatorOptions extends S.Class<DurableLocatorOptions>($I`Dur
 /**
  * Companion namespace for `DurableLocatorOptions`.
  *
- * @example
+ * **Example** (Read Encoded space field)
+ *
  * ```ts
  * import type { DurableLocatorOptions } from "@beep/law-practice-domain"
  *
@@ -83,9 +85,8 @@ export declare namespace DurableLocatorOptions {
   /**
    * Wire-encoded representation of a decoded {@link DurableLocatorOptions}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { DurableLocatorOptions } from "@beep/law-practice-domain"
    *

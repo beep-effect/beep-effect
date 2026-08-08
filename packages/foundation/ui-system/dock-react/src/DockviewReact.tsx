@@ -202,11 +202,13 @@ const DockviewRoot = (
 /**
  * Renders a dock workspace backed by a serialized Atom graph.
  *
- * @remarks
+ * **Details**
+ *
  * Adapter state is cached by graph identity and geometry inputs so portal
  * hosts remain stable across React remounts and dock topology changes.
  *
- * @example
+ * **Example** (Create DockviewReact from workspace)
+ *
  * ```ts
  * import { GroupId, makeDockAtoms, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import { DockviewReact } from "@beep/dock-react"

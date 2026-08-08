@@ -40,7 +40,8 @@ const absentScopeMarker = "<none>";
  * Organization scope of a logical edge: the stringified owning organization id.
  * Every edge is org-scoped, so this component is never absent.
  *
- * @example
+ * **Example** (Decode org scope string)
+ *
  * ```ts
  * import { EdgeOrgScope } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -61,7 +62,8 @@ export const EdgeOrgScope = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EdgeOrgScope}.
  *
- * @example
+ * **Example** (Annotate org scope type)
+ *
  * ```ts
  * import type { EdgeOrgScope } from "@beep/epistemic-domain"
  *
@@ -78,7 +80,8 @@ export type EdgeOrgScope = typeof EdgeOrgScope.Type;
  * Optional matter scope narrowing a logical edge to one matter. Two edges that
  * differ only in matter scope are different logical edges.
  *
- * @example
+ * **Example** (Decode matter scope string)
+ *
  * ```ts
  * import { EdgeMatterScope } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -99,7 +102,8 @@ export const EdgeMatterScope = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EdgeMatterScope}.
  *
- * @example
+ * **Example** (Annotate matter scope type)
+ *
  * ```ts
  * import type { EdgeMatterScope } from "@beep/epistemic-domain"
  *
@@ -115,7 +119,8 @@ export type EdgeMatterScope = typeof EdgeMatterScope.Type;
 /**
  * Optional evidence-set scope narrowing a logical edge to one evidence set.
  *
- * @example
+ * **Example** (Decode evidence scope string)
+ *
  * ```ts
  * import { EdgeEvidenceScope } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -136,7 +141,8 @@ export const EdgeEvidenceScope = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EdgeEvidenceScope}.
  *
- * @example
+ * **Example** (Annotate evidence scope type)
+ *
  * ```ts
  * import type { EdgeEvidenceScope } from "@beep/epistemic-domain"
  *
@@ -154,7 +160,8 @@ export type EdgeEvidenceScope = typeof EdgeEvidenceScope.Type;
  * the statute or claim element an assertion is scoped to. Insertion order is not
  * meaningful: the digest sorts entries by key.
  *
- * @example
+ * **Example** (Decode qualifiers object)
+ *
  * ```ts
  * import { EdgeQualifiers } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -175,7 +182,8 @@ export const EdgeQualifiers = S.Record(S.String, S.String).pipe(
 /**
  * Runtime type for {@link EdgeQualifiers}.
  *
- * @example
+ * **Example** (Annotate qualifiers type)
+ *
  * ```ts
  * import type { EdgeQualifiers } from "@beep/epistemic-domain"
  *
@@ -194,7 +202,8 @@ export type EdgeQualifiers = typeof EdgeQualifiers.Type;
  * shared {@link Sha256Hex} primitive with a domain brand so an arbitrary digest
  * cannot be passed where an edge key is expected.
  *
- * @example
+ * **Example** (Decode SHA-256 edge key)
+ *
  * ```ts
  * import { LogicalEdgeKey } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -219,7 +228,8 @@ export const LogicalEdgeKey = Sha256Hex.pipe(
 /**
  * Runtime type for {@link LogicalEdgeKey}.
  *
- * @example
+ * **Example** (Annotate decoded edge key)
+ *
  * ```ts
  * import { LogicalEdgeKey } from "@beep/epistemic-domain"
  * import type { LogicalEdgeKey as LogicalEdgeKeyValue } from "@beep/epistemic-domain"
@@ -242,7 +252,8 @@ export type LogicalEdgeKey = typeof LogicalEdgeKey.Type;
  * they were asserted under, and any further qualifiers. Time is deliberately
  * absent — it is what varies between versions of one identity.
  *
- * @example
+ * **Example** (Decode full edge identity)
+ *
  * ```ts
  * import { LogicalEdgeIdentity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -343,7 +354,8 @@ const orderEndpoints = (identity: LogicalEdgeIdentity): ReadonlyArray<string> =>
  * before joining, so no two distinct identities can produce the same string by
  * omission or by delimiter injection.
  *
- * @example
+ * **Example** (Encode identity canonically)
+ *
  * ```ts
  * import { encodeLogicalEdgeIdentity, LogicalEdgeIdentity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -384,7 +396,8 @@ export const encodeLogicalEdgeIdentity = (identity: LogicalEdgeIdentity): string
  * the SHA-256 digest of its canonical encoding. Equivalent presentations of one
  * edge collapse to one key, and distinct edges never merge.
  *
- * @example
+ * **Example** (Hash identity to key)
+ *
  * ```ts
  * import { logicalEdgeKey, LogicalEdgeIdentity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"

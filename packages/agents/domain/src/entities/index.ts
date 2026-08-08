@@ -8,7 +8,8 @@
 /**
  * Agent entity and value-schema exports.
  *
- * @example
+ * **Example** (Access Agent entity type)
+ *
  * ```ts
  * import { Agent } from "@beep/agents-domain/entities"
  *
@@ -22,7 +23,8 @@ export * from "./Agent/index.ts";
 /**
  * Shared fixture-backed entity field schemas.
  *
- * @example
+ * **Example** (Decode AgentFixtureKey schema)
+ *
  * ```ts
  * import { AgentFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -37,7 +39,8 @@ export * from "./Fixture.values.ts";
 /**
  * ProviderInstance entity, value-schema, and behavior exports.
  *
- * @example
+ * **Example** (Access ProviderInstance entity type)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain/entities"
  *
@@ -51,7 +54,8 @@ export * from "./ProviderInstance/index.ts";
 /**
  * Skill entity exports.
  *
- * @example
+ * **Example** (Access Skill table name)
+ *
  * ```ts
  * import { Skill } from "@beep/agents-domain/entities"
  *

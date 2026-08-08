@@ -25,7 +25,8 @@ const NumberOrString = S.Union([S.Finite, S.String]);
 /**
  * `CourtCaseSearchDto` — request body for `/cases/find` (pragmatic subset).
  *
- * @example
+ * **Example** (Search by full case number)
+ *
  * ```ts
  * import { CourtCaseSearchDto } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -56,7 +57,8 @@ export class CourtCaseSearchDto extends S.Class<CourtCaseSearchDto>($I`CourtCase
 /**
  * `PartySearchDto` — request body for `/parties/find` (pragmatic subset).
  *
- * @example
+ * **Example** (Search by party last name)
+ *
  * ```ts
  * import { PartySearchDto } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -85,7 +87,8 @@ export class PartySearchDto extends S.Class<PartySearchDto>($I`PartySearchDto`)(
 /**
  * Billing receipt block returned with each immediate search.
  *
- * @example
+ * **Example** (Create receipt with fees)
+ *
  * ```ts
  * import { Receipt } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -118,7 +121,8 @@ export class Receipt extends S.Class<Receipt>($I`Receipt`)(
 /**
  * Pagination block. `last` drives the pagination stream's stop condition.
  *
- * @example
+ * **Example** (Create non-final page info)
+ *
  * ```ts
  * import { PageInfo } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -148,7 +152,8 @@ export class PageInfo extends S.Class<PageInfo>($I`PageInfo`)(
 /**
  * A single case search result (pragmatic subset).
  *
- * @example
+ * **Example** (Create titled case result)
+ *
  * ```ts
  * import { CaseResult } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -184,7 +189,8 @@ export class CaseResult extends S.Class<CaseResult>($I`CaseResult`)(
 /**
  * A single party search result (pragmatic subset).
  *
- * @example
+ * **Example** (Create named party result)
+ *
  * ```ts
  * import { PartyResult } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -219,7 +225,8 @@ export class PartyResult extends S.Class<PartyResult>($I`PartyResult`)(
 /**
  * `/cases/find` response envelope.
  *
- * @example
+ * **Example** (Wrap case results list)
+ *
  * ```ts
  * import { CaseReportList, CaseResult } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -245,7 +252,8 @@ export class CaseReportList extends S.Class<CaseReportList>($I`CaseReportList`)(
 /**
  * `/parties/find` response envelope.
  *
- * @example
+ * **Example** (Wrap party results list)
+ *
  * ```ts
  * import { PartyReportList, PartyResult } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -275,7 +283,8 @@ export class PartyReportList extends S.Class<PartyReportList>($I`PartyReportList
  * `reportId` is an integer for batch jobs (vs a UUID string in immediate
  * receipts), so it is modeled permissively.
  *
- * @example
+ * **Example** (Create completed report info)
+ *
  * ```ts
  * import { ReportInfoType } from "@beep/pacer"
  * import * as O from "effect/Option"

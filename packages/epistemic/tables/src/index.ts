@@ -8,7 +8,8 @@
 /**
  * Epistemic entity table metadata namespaces.
  *
- * @example
+ * **Example** (Access UsageRecord table name)
+ *
  * ```ts
  * import { Entities } from "@beep/epistemic-tables"
  *
@@ -29,7 +30,8 @@ export { DbSchema } from "./Schema.ts";
 /**
  * Epistemic value-record table metadata namespaces.
  *
- * @example
+ * **Example** (Access execution decision name)
+ *
  * ```ts
  * import { Values } from "@beep/epistemic-tables"
  *

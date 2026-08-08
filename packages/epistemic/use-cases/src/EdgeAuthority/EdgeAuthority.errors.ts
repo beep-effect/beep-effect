@@ -30,7 +30,8 @@ const EdgeAuthorityOperationBase = LiteralKit(["record", "supersede", "readAsOf"
  * error handling exhaustive: a new operation cannot be reported without widening
  * this vocabulary first.
  *
- * @example
+ * **Example** (Decode supersede operation)
+ *
  * ```ts
  * import { EdgeAuthorityOperation } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import * as S from "effect/Schema"
@@ -52,7 +53,8 @@ export const EdgeAuthorityOperation = EdgeAuthorityOperationBase.pipe(
 /**
  * Runtime type for {@link EdgeAuthorityOperation}.
  *
- * @example
+ * **Example** (Satisfy operation type)
+ *
  * ```ts
  * import type { EdgeAuthorityOperation } from "@beep/epistemic-use-cases/EdgeAuthority"
  *
@@ -72,7 +74,8 @@ const EdgeWriteOperationBase = LiteralKit(EdgeAuthorityOperationBase.pickOptions
  * can only be raised by a write, so deriving the subset from the parent
  * vocabulary makes that fact type-level rather than commentary.
  *
- * @example
+ * **Example** (Decode record write operation)
+ *
  * ```ts
  * import { EdgeWriteOperation } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import * as S from "effect/Schema"
@@ -94,7 +97,8 @@ export const EdgeWriteOperation = EdgeWriteOperationBase.pipe(
 /**
  * Runtime type for {@link EdgeWriteOperation}.
  *
- * @example
+ * **Example** (Satisfy write operation type)
+ *
  * ```ts
  * import type { EdgeWriteOperation } from "@beep/epistemic-use-cases/EdgeAuthority"
  *
@@ -117,6 +121,8 @@ const optionalDefect = (description: string) =>
 /**
  * Raised when a supersession cannot be applied to the version the caller named.
  *
+ * **Details**
+ *
  * The three rejection paths — losing the row lock to a concurrent writer,
  * naming a version that is no longer the open head, and being caught by a
  * database backstop such as the open-head unique index — collapse into this one
@@ -124,7 +130,8 @@ const optionalDefect = (description: string) =>
  * distinguishing them would leak the repository's locking strategy into the
  * contract. `observedVersion` is absent exactly when no open head could be read.
  *
- * @example
+ * **Example** (Build stale version conflict)
+ *
  * ```ts
  * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
@@ -165,7 +172,8 @@ export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>
    * Build the conflict for a caller whose `expectedVersion` disagrees with the
    * version actually locked at the open head.
    *
-   * @example
+   * **Example** (Construct stale version conflict)
+   *
    * ```ts
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
@@ -194,7 +202,8 @@ export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>
    * Build the conflict for a caller that found no open head to lock, because a
    * concurrent writer closed it first.
    *
-   * @example
+   * **Example** (Construct lock loser conflict)
+   *
    * ```ts
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
@@ -218,7 +227,8 @@ export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>
    * the application-side lock did not serialize. The driver defect is retained
    * so the backstop that fired can be identified after the fact.
    *
-   * @example
+   * **Example** (Construct backstop conflict)
+   *
    * ```ts
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
@@ -244,11 +254,14 @@ export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>
  * that is not a supersession race — an unordered interval, an endpoint whose
  * kind and reference columns disagree, a dangling foreign key.
  *
+ * **Details**
+ *
  * The constraint is identified by NAME rather than by driver message prose,
  * because the name is the part of the contract the migration owns and tests can
  * assert.
  *
- * @example
+ * **Example** (Build constraint violation)
+ *
  * ```ts
  * import { EdgeConstraintViolation } from "@beep/epistemic-use-cases/EdgeAuthority"
  *
@@ -280,7 +293,8 @@ export class EdgeConstraintViolation extends TaggedErrorClass<EdgeConstraintViol
    * Build the violation from the operation that was rejected and the constraint
    * name the driver reported.
    *
-   * @example
+   * **Example** (Construct named constraint violation)
+   *
    * ```ts
    * import { EdgeConstraintViolation } from "@beep/epistemic-use-cases/EdgeAuthority"
    *
@@ -300,7 +314,8 @@ export class EdgeConstraintViolation extends TaggedErrorClass<EdgeConstraintViol
  * the connection is gone, the transaction was aborted by the driver, the query
  * failed for a reason that is neither a conflict nor a named constraint.
  *
- * @example
+ * **Example** (Build unavailability error)
+ *
  * ```ts
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
  *
@@ -335,7 +350,8 @@ export class EdgeRepositoryUnavailable extends TaggedErrorClass<EdgeRepositoryUn
    * Build the unavailability error for an operation, optionally retaining the
    * driver defect that produced it.
    *
-   * @example
+   * **Example** (Construct unavailability with cause)
+   *
    * ```ts
    * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import * as O from "effect/Option"
@@ -359,7 +375,8 @@ export class EdgeRepositoryUnavailable extends TaggedErrorClass<EdgeRepositoryUn
 /**
  * Union of every edge authority repository failure.
  *
- * @example
+ * **Example** (Check error union membership)
+ *
  * ```ts
  * import { EdgeAuthorityError, EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
  *
@@ -384,7 +401,8 @@ export const EdgeAuthorityError = S.Union([
 /**
  * Runtime type for {@link EdgeAuthorityError}.
  *
- * @example
+ * **Example** (Assign error union type)
+ *
  * ```ts
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import type { EdgeAuthorityError } from "@beep/epistemic-use-cases/EdgeAuthority"

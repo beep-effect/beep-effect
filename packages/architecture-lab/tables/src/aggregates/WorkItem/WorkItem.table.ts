@@ -20,7 +20,8 @@ const $I = $ArchitectureLabTablesId.create("aggregates/WorkItem/WorkItem.table")
 /**
  * Physical Postgres table name for persisted architecture lab WorkItems.
  *
- * @example
+ * **Example** (Assert physical table name)
+ *
  * ```ts
  * import { WORK_ITEM_TABLE_NAME } from "@beep/architecture-lab-tables/aggregates/WorkItem"
  *
@@ -40,7 +41,8 @@ export const WORK_ITEM_TABLE_NAME = "architecture_lab_work_item" as const;
 /**
  * Drizzle table projection for architecture lab WorkItem aggregates.
  *
- * @example
+ * **Example** (Verify table projection columns)
+ *
  * ```ts
  * import {
  *   WORK_ITEM_TABLE_NAME,
@@ -72,7 +74,8 @@ export const workItemTable = pgTable(WORK_ITEM_TABLE_NAME, {
 /**
  * Selected row shape returned by queries against {@link workItemTable}.
  *
- * @example
+ * **Example** (Satisfy selected row shape)
+ *
  * ```ts
  * import {
  *   WorkItemId,
@@ -105,7 +108,8 @@ export type WorkItemRow = typeof workItemTable.$inferSelect;
 /**
  * Insert row shape accepted by writes to {@link workItemTable}.
  *
- * @example
+ * **Example** (Satisfy insert row shape)
+ *
  * ```ts
  * import {
  *   WorkItemId,
@@ -169,7 +173,8 @@ const decodeWorkItemSelectedRow = S.decodeUnknownResult(WorkItemSelectedRow);
 /**
  * Convert a WorkItem aggregate to the insert row accepted by {@link workItemTable}.
  *
- * @example
+ * **Example** (Project aggregate to insert)
+ *
  * ```ts
  * import {
  *   WorkItem,
@@ -217,7 +222,8 @@ export const toWorkItemInsert = (workItem: DomainWorkItem.WorkItem): WorkItemIns
 /**
  * Decode a selected WorkItem row back into the domain aggregate.
  *
- * @example
+ * **Example** (Decode row to aggregate)
+ *
  * ```ts
  * import {
  *   WorkItemId,

@@ -90,14 +90,16 @@ function checkFunction(model: Domain.Function) {
 /**
  * Checks documented functions for required docgen annotations.
  *
- * @param models - Function models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty function models)
+ *
  * ```ts
  * import { checkFunctions } from "@beep/repo-docgen/Checker"
  * const checked = checkFunctions([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Function models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -116,14 +118,16 @@ const checkClass = Effect.fn("checkClass")(function* (model: Domain.Class) {
 /**
  * Checks documented classes and their members for required docgen annotations.
  *
- * @param models - Class models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty class models)
+ *
  * ```ts
  * import { checkClasses } from "@beep/repo-docgen/Checker"
  * const checked = checkClasses([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Class models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -138,14 +142,16 @@ function checkConstant(model: Domain.Constant) {
 /**
  * Checks documented constants for required docgen annotations.
  *
- * @param models - Constant models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty constant models)
+ *
  * ```ts
  * import { checkConstants } from "@beep/repo-docgen/Checker"
  * const checked = checkConstants([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Constant models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -160,14 +166,16 @@ function checkInterface(model: Domain.Interface) {
 /**
  * Checks documented interfaces for required docgen annotations.
  *
- * @param models - Interface models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty interface models)
+ *
  * ```ts
  * import { checkInterfaces } from "@beep/repo-docgen/Checker"
  * const checked = checkInterfaces([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Interface models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -182,14 +190,16 @@ function checkTypeAlias(model: Domain.TypeAlias) {
 /**
  * Checks documented type aliases for required docgen annotations.
  *
- * @param models - Type alias models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty type aliases)
+ *
  * ```ts
  * import { checkTypeAliases } from "@beep/repo-docgen/Checker"
  * const checked = checkTypeAliases([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Type alias models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -210,14 +220,16 @@ const checkNamespace = Effect.fn("checkNamespace")(function* (
 /**
  * Checks documented namespaces and their nested members for required docgen annotations.
  *
- * @param models - Namespace models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty namespace models)
+ *
  * ```ts
  * import { checkNamespaces } from "@beep/repo-docgen/Checker"
  * const checked = checkNamespaces([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Namespace models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -232,14 +244,16 @@ function checkExport(model: Domain.Export) {
 /**
  * Checks documented manual exports for required docgen annotations.
  *
- * @param models - Export models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty export models)
+ *
  * ```ts
  * import { checkExports } from "@beep/repo-docgen/Checker"
  * const checked = checkExports([])
  * console.log(checked)
  * ```
+ *
+ * @param models - Export models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */
@@ -250,13 +264,13 @@ export function checkExports(models: ReadonlyArray<Domain.Export>) {
 /**
  * Checks a parsed module and all of its documented members for required docgen annotations.
  *
- * @param module - Module model to validate.
- * @returns Effect that accumulates validation error messages.
- * @remarks
+ * **Details**
+ *
  * The check uses the module's source file for code-frame locations and the
  * active {@link Configuration.Configuration} service for enforcement flags.
- * @effects Reads parser source metadata from the parsed module and consults the active docgen configuration service.
- * @example
+ *
+ * **Example** (Validate module with enforcement)
+ *
  * ```ts
  * import { Configuration, ConfigurationShape, DEFAULT_THEME, defaultCompilerOptions } from "@beep/repo-docgen/Configuration"
  * import { checkModule } from "@beep/repo-docgen/Checker"
@@ -288,6 +302,10 @@ export function checkExports(models: ReadonlyArray<Domain.Export>) {
  * const errors = Effect.runSync(checkModule(parsedModule).pipe(Effect.provide(Configuration.layer(config))))
  * console.log(errors.length) // 3
  * ```
+ *
+ * @param module - Module model to validate.
+ * @returns Effect that accumulates validation error messages.
+ * @effects Reads parser source metadata from the parsed module and consults the active docgen configuration service.
  * @category predicates
  * @since 0.0.0
  */
@@ -324,14 +342,16 @@ export function checkModule(module: Domain.Module) {
 /**
  * Checks multiple parsed modules for required docgen annotations.
  *
- * @param modules - Module models to validate.
- * @returns Effect that accumulates validation error messages.
- * @example
+ * **Example** (Check empty modules list)
+ *
  * ```ts
  * import { checkModules } from "@beep/repo-docgen/Checker"
  * const checked = checkModules([])
  * console.log(checked)
  * ```
+ *
+ * @param modules - Module models to validate.
+ * @returns Effect that accumulates validation error messages.
  * @category predicates
  * @since 0.0.0
  */

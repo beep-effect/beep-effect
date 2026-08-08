@@ -13,7 +13,8 @@ import { makeDrizzleSyncOperationRepository, makeInMemorySyncOperationRepository
 /**
  * In-memory SyncOperation repository layer for deterministic sync tests.
  *
- * @example
+ * **Example** (In-memory layer import)
+ *
  * ```ts
  * import { SyncOperationRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncOperation"
  *
@@ -31,7 +32,8 @@ export const SyncOperationRepositoryInMemoryLayer = Layer.effect(
 /**
  * Drizzle-backed SyncOperation repository layer; requires `PostgresDrizzle`.
  *
- * @example
+ * **Example** (Drizzle layer import)
+ *
  * ```ts
  * import { SyncOperationRepositoryDrizzleLayer } from "@beep/documents-server/entities/SyncOperation"
  *

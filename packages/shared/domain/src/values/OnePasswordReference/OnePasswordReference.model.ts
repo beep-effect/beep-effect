@@ -26,11 +26,13 @@ const OnePasswordReferenceChecks = S.makeFilterGroup([
 /**
  * Typed reference to a 1Password item field.
  *
- * @remarks
+ * **Details**
+ *
  * This value is a reference only. It is safe for manifests, approvals, and
  * validators because it never contains the resolved secret value.
  *
- * @example
+ * **Example** (Decoding a 1Password reference)
+ *
  * ```ts
  * import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference/OnePasswordReference.model"
  * import * as S from "effect/Schema"
@@ -58,7 +60,8 @@ export const OnePasswordReference = S.String.check(OnePasswordReferenceChecks).p
 /**
  * Runtime type for {@link OnePasswordReference}.
  *
- * @example
+ * **Example** (Typing a decoded reference)
+ *
  * ```ts
  * import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference/OnePasswordReference.model"
  * import type { OnePasswordReference as OnePasswordReferenceValue } from "@beep/shared-domain/values/OnePasswordReference/OnePasswordReference.model"
@@ -79,7 +82,8 @@ export type OnePasswordReference = typeof OnePasswordReference.Type;
 /**
  * Schema-derived guard for 1Password references.
  *
- * @example
+ * **Example** (Checking reference validity)
+ *
  * ```ts
  * import { isOnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference/OnePasswordReference.model"
  *

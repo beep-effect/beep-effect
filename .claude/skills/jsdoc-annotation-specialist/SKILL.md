@@ -37,9 +37,9 @@ the annotation reference for schemas and the grep reference for multi-file audit
    `**Gotchas**`, then titled `**Example** (Title)` blocks.
 5. Require an Example for value-level exports. For pure type-level exports, require
    prose and add an Example only when it teaches something material.
-6. In each file whose documentation is touched, move legacy `@remarks` into Details
-   or Gotchas and convert legacy `@example` tags into titled Example sections. Do
-   not mass-migrate untouched files.
+6. Never introduce `@example` or `@remarks`: the repo-wide zero-legacy gate fails
+   on any occurrence in `packages/**/src`. Move `@remarks` content into Details or
+   Gotchas and write examples as titled Example sections.
 7. Add conditional tags only for facts absent from the signature, order them per
    `references/conventions.md`, and describe every `@see` with a purpose phrase.
 8. Verify `@category`, `@since 0.0.0`, TSDoc grammar, imports, and Example safety.
@@ -58,9 +58,10 @@ the annotation reference for schemas and the grep reference for multi-file audit
   Example section.
 - Tags follow all body sections.
 
-`**Example** (Title)` is canonical for new and touched code. Legacy carriers are
-grandfathered in untouched files. `@remarks` is retired and forbidden in new work;
-files whose documentation is touched migrate their existing carriers.
+`**Example** (Title)` is canonical everywhere. The legacy `@example`/`@remarks`
+carriers are retired repo-wide: `beep quality jsdoc-ratchet` fails on any
+occurrence in `packages/**/src` (generated files included; the sole allowlisted
+residual is acp `schema.gen.ts` until its resync PR lands).
 
 ## Kind split
 
@@ -100,9 +101,9 @@ type companions. Their Example is optional.
 8. `bun run docgen:local` passes; use
    `bun run beep docgen quality -p <package>` as advisory editorial input.
 
-The current aggregate ratchet detects repo-wide growth. Direct cleanup-on-touch
-enforcement is scheduled for the goal's P2 changed-files gate; until it lands,
-review touched blocks explicitly rather than claiming per-file gate coverage.
+The ratchet has two layers: the totals baseline fails on growth, and the
+zero-legacy scan fails on any legacy carrier in `packages/**/src` regardless of
+whether the file was touched.
 
 ## Escalation
 

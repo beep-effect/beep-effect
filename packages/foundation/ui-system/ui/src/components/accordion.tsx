@@ -13,7 +13,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Root container for a vertically stacked disclosure group.
  *
- * @example
+ * **Example** (Billing invoices accordion)
+ *
  * ```tsx
  * import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@beep/ui/components/accordion"
  *
@@ -39,7 +40,8 @@ function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
 /**
  * Disclosure item that owns one trigger/content pair.
  *
- * @example
+ * **Example** (Security accordion item)
+ *
  * ```tsx
  * import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@beep/ui/components/accordion"
  *
@@ -67,7 +69,8 @@ function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
 /**
  * Button-like control that toggles its accordion panel.
  *
- * @example
+ * **Example** (Preferences accordion trigger)
+ *
  * ```tsx
  * import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@beep/ui/components/accordion"
  *
@@ -114,7 +117,8 @@ function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.
 /**
  * Collapsible panel content for an accordion item.
  *
- * @example
+ * **Example** (Details content with paragraph)
+ *
  * ```tsx
  * import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@beep/ui/components/accordion"
  *
