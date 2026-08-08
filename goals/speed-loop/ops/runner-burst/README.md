@@ -11,7 +11,8 @@ policy expects; their successor is a `beep runners` CLI command.
   to the `beep-ci-runner-launcher` identity for launches internally).
 - `gh` authenticated with repo admin (mints single-use registration tokens).
 - `op` unlocked (launcher keys resolve from `op://BEEP_CI/aws-runner-launcher`).
-- Reaper TTL raised for the burst window (launch script prints the command;
+- Reaper TTL raised for the burst window (launch script prints the command
+  before it launches anything;
   default 90 min WILL kill long-lived burst workers mid-job).
 
 ## Burst lifecycle
@@ -25,8 +26,10 @@ policy expects; their successor is a `beep runners` CLI command.
    zombie — terminate it and launch a replacement. Non-ephemeral agents on
    long-lived guests zombie silently (three times in one night); this is why
    the controller uses one-job-one-VM ephemeral.
-3. `bash teardown-burst-runners.sh` — terminates all tagged workers, drops
-   offline registrations, prints the TTL-restore command.
+3. `bash teardown-burst-runners.sh` — terminates all tagged workers, waits
+   until EC2 confirms termination, drops all `beep-ec2-i-*` registrations,
+   and prints the TTL-restore command. Any failed cleanup step aborts the
+   script.
 
 ## Known failure modes (all lived, see ledger runner-burst receipts)
 
@@ -37,3 +40,7 @@ policy expects; their successor is a `beep runners` CLI command.
   registered — non-ephemeral runners would execute them.
 - Cancelling a PR's run does not stop in-flight jobs instantly; a worker can
   stay busy on a closed PR's job — cancel the run explicitly.
+- The registration token is workload-readable (user-data via IMDSv2) for its
+  1-hour life and reusable until expiry — accepted for break-glass use only.
+  After every burst, audit the runner list and deregister anything you did
+  not launch; the endgame controller's single-use JIT configs retire this.

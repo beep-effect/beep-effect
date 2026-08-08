@@ -12,6 +12,7 @@
 #  - do NOT approve outside-collaborator workflow runs while burst runners live
 set -euo pipefail
 export AWS_PAGER=""
+export GH_PAGER=cat
 REPO="beep-effect/beep-effect"
 COUNT="${1:-2}"
 RUNNER_VERSION="2.336.0"
@@ -21,11 +22,33 @@ LABEL="beep-ec2-heavy"
 # mismatches the worker SG. Alternate across the fleet's two public subnets.
 SUBNETS=("subnet-078ddb80baeea06c3" "subnet-0bc46726b34c5fc3b")
 
+cat <<'NOTES'
+== SECURITY (P1, accepted for break-glass use only)
+The registration token rides in instance user-data, readable by ANY job on
+the worker (IMDSv2 -> /latest/user-data) for the token's 1-hour life — and
+registration tokens are REUSABLE until expiry, so a malicious job could
+register a rogue runner that outlives teardown. Guards while this runbook
+exists: never approve outside-collaborator runs during a burst, and after
+teardown audit the runner list and deregister ANY runner you did not launch
+(teardown-burst-runners.sh prints the list). The ci-fleet-endgame controller
+uses single-use JIT configs and retires this exposure class entirely.
+
+== preflight: confirm the reaper TTL is 360 minutes before launching
+WARNING: this script cannot inspect the Pulumi stack; abort now if the TTL has not been raised.
+From infra/ci-runners:
+  PULUMI_CONFIG_PASSPHRASE="$(op read 'op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE')" \
+    pulumi config set ciRunners:reaperTtlMinutes 360 && \
+  PULUMI_CONFIG_PASSPHRASE="$(op read 'op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE')" pulumi up --yes
+NOTES
+
 for i in $(seq 1 "$COUNT"); do
   echo "== minting registration token for runner $i/$COUNT"
   token="$(gh api -X POST "repos/${REPO}/actions/runners/registration-token" --jq .token)"
 
-  userdata="$(base64 -w0 <<EOF
+  umask 077
+  userdata_file="$(mktemp)"
+  trap 'rm -f "$userdata_file"' EXIT
+  cat >"$userdata_file" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 # Backstop first (mirrors the template default): poweroff terminates the VM.
@@ -60,7 +83,6 @@ sudo -u runner ./config.sh --unattended \
 ./svc.sh install runner
 ./svc.sh start
 EOF
-)"
 
   echo "== launching worker $i/$COUNT from template beep-ci-runner (as beep-ci-runner-launcher)"
   # The admin user carries a legacy t2.micro-only RunInstances deny
@@ -70,31 +92,26 @@ EOF
   # The template declares the NIC (public IP + worker SG); a request-level
   # subnet must ride the same structure and re-state the full interface,
   # because the request block replaces the template's per device index.
+  unset AWS_SESSION_TOKEN AWS_SECURITY_TOKEN AWS_PROFILE AWS_DEFAULT_PROFILE
   AWS_ACCESS_KEY_ID="$(op read 'op://BEEP_CI/aws-runner-launcher/access-key-id')" \
   AWS_SECRET_ACCESS_KEY="$(op read 'op://BEEP_CI/aws-runner-launcher/secret-access-key')" \
   aws ec2 run-instances \
-    --launch-template LaunchTemplateName=beep-ci-runner \
+    --launch-template 'LaunchTemplateName=beep-ci-runner,Version=$Latest' \
     --network-interfaces "DeviceIndex=0,SubnetId=${SUBNETS[$((i % 2))]},Groups=sg-0ec4816fcd2af2d4b,AssociatePublicIpAddress=true,DeleteOnTermination=true" \
-    --user-data "$userdata" \
+    --user-data "file://${userdata_file}" \
     --count 1 \
     --query 'Instances[0].InstanceId' --output text
+  rm -f "$userdata_file"
+  trap - EXIT
+  unset token
 done
 
 echo "== waiting ~90s for registration, then listing runners"
 sleep 90
-gh api "repos/${REPO}/actions/runners" --jq '.runners[] | [.name, .status, ([.labels[].name] | join(","))] | @tsv'
+gh api --paginate "repos/${REPO}/actions/runners?per_page=100" \
+  --jq '.runners[] | [.name, .status, ([.labels[].name] | join(","))] | @tsv'
 
 cat <<'NOTES'
-
-Before first launch (raise the reaper cap for the burst, from infra/ci-runners):
-  PULUMI_CONFIG_PASSPHRASE="$(op read 'op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE')" \
-    pulumi config set ciRunners:reaperTtlMinutes 360 && \
-  PULUMI_CONFIG_PASSPHRASE="$(op read 'op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE')" pulumi up --yes
-
-Teardown after the burst (terminate workers + drop offline runner registrations + restore TTL):
-  aws ec2 describe-instances --filters "Name=tag:beep-ci,Values=runner" "Name=instance-state-name,Values=running,pending" \
-    --query 'Reservations[].Instances[].InstanceId' --output text | xargs -r aws ec2 terminate-instances --instance-ids
-  gh api repos/beep-effect/beep-effect/actions/runners --jq '.runners[] | select(.status == "offline") | .id' \
-    | xargs -r -I{} gh api -X DELETE repos/beep-effect/beep-effect/actions/runners/{}
-  # then: pulumi config set ciRunners:reaperTtlMinutes 90 && pulumi up --yes
+After the burst, run teardown-burst-runners.sh to terminate workers, wait for
+termination, remove their registrations, and print the TTL-restore command.
 NOTES

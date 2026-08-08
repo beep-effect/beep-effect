@@ -2,23 +2,34 @@
 # Tear down the supervised burst: terminate all tagged workers, drop dead
 # runner registrations, and remind about the reaper TTL restore.
 # Requires: authenticated aws session + gh with repo admin.
-set -uo pipefail
+set -euo pipefail
 export AWS_PAGER=""
 export GH_PAGER=cat
 REPO="beep-effect/beep-effect"
 
 echo "== terminating all beep-ci=runner instances"
-aws ec2 describe-instances \
-  --filters "Name=tag:beep-ci,Values=runner" "Name=instance-state-name,Values=running,pending" \
-  --query 'Reservations[].Instances[].InstanceId' --output text \
-  | xargs -r aws ec2 terminate-instances --query 'TerminatingInstances[].[InstanceId,CurrentState.Name]' --output text --instance-ids
+instance_ids_text="$(aws ec2 describe-instances \
+  --filters "Name=tag:beep-ci,Values=runner" \
+    "Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down" \
+  --query 'Reservations[].Instances[].InstanceId' --output text)"
+read -r -a instance_ids <<<"$instance_ids_text"
 
-echo "== deregistering offline runners"
-gh api "repos/${REPO}/actions/runners" --jq '.runners[] | select(.status == "offline") | .id' \
+if ((${#instance_ids[@]})); then
+  aws ec2 terminate-instances \
+    --query 'TerminatingInstances[].[InstanceId,CurrentState.Name]' --output text \
+    --instance-ids "${instance_ids[@]}"
+  echo "== waiting for instance termination"
+  aws ec2 wait instance-terminated --instance-ids "${instance_ids[@]}"
+fi
+
+echo "== deregistering burst runners"
+gh api --paginate "repos/${REPO}/actions/runners?per_page=100" \
+  --jq '.runners[] | select(.name | startswith("beep-ec2-i-")) | .id' \
   | xargs -r -I{} gh api -X DELETE "repos/${REPO}/actions/runners/{}"
 
 echo "== remaining runners:"
-gh api "repos/${REPO}/actions/runners" --jq '.runners[] | [.name, .status] | @tsv'
+gh api --paginate "repos/${REPO}/actions/runners?per_page=100" \
+  --jq '.runners[] | [.name, .status] | @tsv'
 
 cat <<'NOTES'
 Restore the reaper TTL to steady-state (from infra/ci-runners):

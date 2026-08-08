@@ -154,9 +154,10 @@ grills #2–#3.
     protocol + #35 fingerprint lane-collapse → grill #5 design docket, after
     B/G/E teach us the fields. #27 attestation parked behind #24 + #26.
     Grit collector PARKED — #40's changed-scope collapsed its payback;
-    revivable only if nightly full-sweep cost matters. Updated spike order:
-    LAN cache + workstation runner → predict-squash → single-process battery
-    → vitest projects → stage-3 html.
+    revivable only if nightly full-sweep cost matters. Updated spike order
+    (superseded 2026-08-08 by the amendment above — the workstation entry
+    drops with the deferral): LAN cache → predict-squash → single-process
+    battery → vitest projects → stage-3 html.
 22. **Test-typecheck blindspot burn-down: passive + opportunistic.** The
     ratchet (standards/test-typecheck.blindspot-baseline.jsonc) blocks new
     blindspots; queued PRs wire test typecheck for packages they already
