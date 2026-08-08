@@ -147,3 +147,30 @@ export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid
             : C extends Bytea
               ? Uint8Array
               : never;
+
+/** Runtime mirror of {@link CarrierOf}, used while assembling foreign keys. */
+export type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes";
+
+export const carrierTag = (spec: Spec): CarrierTag => {
+  switch (spec.kind) {
+    case "text":
+    case "varchar":
+    case "uuid":
+      return "string";
+    case "integer":
+    case "smallint":
+    case "serial":
+    case "doublePrecision":
+      return "number";
+    case "bigint":
+      return spec.mode;
+    case "boolean":
+      return "boolean";
+    case "jsonb":
+      return "object";
+    case "timestamp":
+      return spec.mode;
+    case "bytea":
+      return "bytes";
+  }
+};

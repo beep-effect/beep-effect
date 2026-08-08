@@ -113,10 +113,8 @@ export type ResolvedColumn<I extends Field.Input> =
 /** The select-side schema of a field input's schema at runtime. */
 export const selectSchemaOf = (schema: Field.AnySchema): S.Top => {
   if (VariantSchema.isField(schema)) {
-    const select: unknown = (schema as VariantSchema.Field<any>).schemas["select"];
-    if (P.hasProperty(select, "ast")) {
-      return select as S.Top;
-    }
+    const select: unknown = schema.schemas["select"];
+    if (S.isSchema(select)) return select;
     throw DeriveColumnError.make({
       message: "Variant field has no select schema; the select variant is the database row representation.",
       fieldName: "(unknown)",
@@ -229,4 +227,43 @@ export const isNullable = (schema: Field.AnySchema): boolean => {
   const encoded = AST.toEncoded(select.ast);
   if (encoded._tag !== "Union") return encoded._tag === "Null";
   return encoded.types.some((member) => member._tag === "Null");
+};
+
+const maxLengthFromCheck = (check: AST.Check<unknown>, found: Array<number>): void => {
+  const representation = check.annotations?.representation;
+  if (
+    representation?.id === "effect/schema/isMaxLength" &&
+    P.hasProperty(representation.payload, "maxLength") &&
+    P.isNumber(representation.payload.maxLength)
+  ) {
+    found.push(representation.payload.maxLength);
+  }
+  if (check._tag === "FilterGroup") {
+    for (const nested of check.checks) maxLengthFromCheck(nested, found);
+  }
+};
+
+const collectMaxLengths = (node: AST.AST, found: Array<number>, visited: WeakSet<object>): void => {
+  if (visited.has(node)) return;
+  visited.add(node);
+  if (node.checks !== undefined) {
+    for (const check of node.checks) maxLengthFromCheck(check, found);
+  }
+  if (node.encoding !== undefined) {
+    for (const link of node.encoding) collectMaxLengths(link.to, found, visited);
+  }
+  if (node._tag === "Union") {
+    for (const member of node.types) collectMaxLengths(member, found, visited);
+  } else if (node._tag === "Suspend") {
+    collectMaxLengths(node.thunk(), found, visited);
+  } else if (node._tag === "Declaration") {
+    for (const parameter of node.typeParameters) collectMaxLengths(parameter, found, visited);
+  }
+};
+
+/** All installed `S.isMaxLength` payloads visible on the encoded select schema. */
+export const maxLengths = (schema: Field.AnySchema): ReadonlyArray<number> => {
+  const found: Array<number> = [];
+  collectMaxLengths(AST.toEncoded(selectSchemaOf(schema).ast), found, new WeakSet<object>());
+  return found;
 };

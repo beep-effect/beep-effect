@@ -9,10 +9,13 @@
 export * as Field from "./Field.ts";
 export * as Meta from "./Meta.ts";
 export * as PgColumn from "./PgColumn.ts";
+export * as Table from "./TableExtras.ts";
 export * as Columns from "./Model.ts";
 export * as Derive from "./derive.ts";
 export * as pg from "./pg.ts";
 export { Model, VariantField, FieldOnly, FieldExcept, fieldEvolve, extract, ModelInvariantError } from "./factory.ts";
-export type { AnyModel, ColumnsOf, FieldsInput, ModelClass, Statics, ValidateFields, Variant } from "./factory.ts";
+export type { AnyModel, ColumnsOf, EffectiveSchema, FieldsInput, ModelClass, Statics, ValidateFields, Variant } from "./factory.ts";
+export { schema, SchemaAssemblyError } from "./schema.ts";
+export type { Assembly, ModelRecord, RelationsConfig, TablesOf, ValidateSchema } from "./schema.ts";
 export { toPgTable } from "./table.ts";
-export type { BuilderFor, BuildersOf, TableOf } from "./table.ts";
+export type { AdditionalExtras, BuilderFor, BuildersOf, TableOf } from "./table.ts";

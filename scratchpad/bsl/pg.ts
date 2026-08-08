@@ -10,10 +10,13 @@
  * Usage: `S.NonEmptyString.pipe(pg.varchar(320), pg.unique())`.
  */
 import type { SQL } from "drizzle-orm";
+import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
+import { VariantSchema } from "effect/unstable/schema";
 import * as Field from "./Field.ts";
-import type * as Meta from "./Meta.ts";
+import * as Meta from "./Meta.ts";
 import type * as PgColumn from "./PgColumn.ts";
-import type { EntityIdLike } from "./derive.ts";
+import { DeriveColumnError, isEntityIdLike, maxLengths, type EntityIdLike } from "./derive.ts";
 
 // ---------------------------------------------------------------------------
 // Column setters
@@ -26,12 +29,54 @@ export const text =
   ): Field.Patched<I, { readonly column: PgColumn.Text }> =>
     Field.patch(input, { column: { kind: "text", ident: "text" } });
 
-export const varchar =
-  <const L extends number>(length: L) =>
-  <I extends Field.Input>(
+/**
+ * Varchar column with three authoring modes, so the length is written exactly
+ * once:
+ *
+ * - `pg.varchar()` — DERIVE: the length comes from the schema's `isMaxLength`
+ *   check (tightest bound wins); no check is a loud construction error.
+ * - `pg.varchar(n)` on a schema WITH a maxLength `m` — VERIFY: `m ≤ n` passes,
+ *   `m > n` fails at model construction (column would truncate).
+ * - `pg.varchar(n)` on a plain schema WITHOUT one — INJECT: the field's schema
+ *   gains `S.check(S.isMaxLength(n))`, so the domain validates exactly what
+ *   the column enforces. Variant-field inputs are verify-only (their per-variant
+ *   codecs are author-owned).
+ */
+export const varchar: {
+  (): <I extends Field.Input>(
     input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">
-  ): Field.Patched<I, { readonly column: PgColumn.Varchar<L> }> =>
-    Field.patch(input, { column: { kind: "varchar", ident: "varchar", length } });
+  ) => Field.Patched<I, { readonly column: PgColumn.Varchar<number> }>;
+  <const L extends number>(length: L): <I extends Field.Input>(
+    input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">
+  ) => Field.Patched<I, { readonly column: PgColumn.Varchar<L> }>;
+} =
+  (length?: number) =>
+  (input: Field.Input): never => {
+    const f = Field.from(input);
+    const bounds = maxLengths(f.schema);
+    const spec = (resolved: number): PgColumn.Varchar => ({ kind: "varchar", ident: "varchar", length: resolved });
+    if (length === undefined) {
+      if (bounds.length === 0) {
+        throw DeriveColumnError.make({
+          message:
+            "pg.varchar() derive mode requires an isMaxLength check on the schema; add one or pass an explicit length.",
+          fieldName: "(unknown — set at model definition)",
+          astTag: "(checks)",
+        });
+      }
+      // Audited boundary: the overload impl returns `never`-typed; each branch
+      // constructs exactly the declared Patched shape for its overload.
+      return Field.patch(f, { column: spec(Math.min(...bounds)) }) as never;
+    }
+    if (bounds.length === 0 && !VariantSchema.isField(f.schema)) {
+      // Audited boundary: ValidateEncoded proved the schema is string-encoded,
+      // so its Type has `length`; S.Top erases that to `unknown`, which the
+      // contravariant Check parameter cannot accept without help.
+      const evolved = f.schema.check(S.isMaxLength(length) as AST.Check<unknown>);
+      return Field.make(evolved, Meta.merge(f.meta, { column: spec(length) })) as never;
+    }
+    return Field.patch(f, { column: spec(length) }) as never;
+  };
 
 export const uuid =
   () =>
@@ -40,12 +85,28 @@ export const uuid =
   ): Field.Patched<I, { readonly column: PgColumn.Uuid }> =>
     Field.patch(input, { column: { kind: "uuid", ident: "uuid" } });
 
+type IntegerColumn<I extends Field.Input> = Field.SchemaFrom<I> extends EntityIdLike & {
+  readonly tableName: infer TableName extends string;
+}
+  ? PgColumn.Integer<PgColumn.EntityIdIdent<TableName>>
+  : PgColumn.Integer;
+
 export const integer =
   () =>
   <I extends Field.Input>(
     input: I & Field.ValidateEncoded<I, number, "pg.integer requires a number-encoded schema">
-  ): Field.Patched<I, { readonly column: PgColumn.Integer }> =>
-    Field.patch(input, { column: { kind: "integer", ident: "integer" } });
+  ): Field.Patched<I, { readonly column: IntegerColumn<I> }> => {
+    const schema = Field.from(input).schema;
+    const ident: "integer" | PgColumn.EntityIdIdent<string> = isEntityIdLike(schema)
+      ? `entityId<"${schema.tableName}">`
+      : "integer";
+    // Audited boundary: the runtime EntityIdLike guard mirrors IntegerColumn's
+    // structural tableName branch and constructs the corresponding literal.
+    return Field.patch(input, { column: { kind: "integer", ident } }) as unknown as Field.Patched<
+      I,
+      { readonly column: IntegerColumn<I> }
+    >;
+  };
 
 export const smallint =
   () =>
@@ -160,7 +221,7 @@ export const identity =
   ): Field.Patched<
     I,
     K extends "always"
-      ? { readonly identity: K; readonly hasDefault: false; readonly generated: Meta.Generated.IdentityAlways }
+      ? { readonly identity: K; readonly generated: Meta.Generated.IdentityAlways }
       : { readonly identity: K; readonly hasDefault: true; readonly generated: false }
   > => {
     const resolved = kind ?? "always";
@@ -169,12 +230,12 @@ export const identity =
     return Field.patch(
       input,
       resolved === "always"
-        ? { identity: resolved, hasDefault: false, generated: { _tag: "identityAlways" } }
+        ? { identity: resolved, generated: { _tag: "identityAlways" } }
         : { identity: resolved, hasDefault: true, generated: false }
     ) as unknown as Field.Patched<
       I,
       K extends "always"
-        ? { readonly identity: K; readonly hasDefault: false; readonly generated: Meta.Generated.IdentityAlways }
+        ? { readonly identity: K; readonly generated: Meta.Generated.IdentityAlways }
         : { readonly identity: K; readonly hasDefault: true; readonly generated: false }
     >;
   };
@@ -235,16 +296,16 @@ export const generated =
   <Carrier>(expression: SQL<Carrier>) =>
   <I extends Field.Input>(
     input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I>
-  ): Field.Patched<I, { readonly generated: Meta.Generated.SqlExpr<Carrier>; readonly hasDefault: false }> =>
-    Field.patch(input, { generated: { _tag: "sqlExpr", expression }, hasDefault: false });
+  ): Field.Patched<I, { readonly generated: Meta.Generated.SqlExpr<Carrier> }> =>
+    Field.patch(input, { generated: { _tag: "sqlExpr", expression } });
 
 /** Explicit raw-SQL escape hatch for stored generated expressions. */
 export const unsafeGeneratedSql =
   (sql: string) =>
   <I extends Field.Input>(
     input: I & ValidateNotDefaulted<I>
-  ): Field.Patched<I, { readonly generated: Meta.Generated.UnsafeSql; readonly hasDefault: false }> =>
-    Field.patch(input, { generated: { _tag: "unsafeSql", sql }, hasDefault: false });
+  ): Field.Patched<I, { readonly generated: Meta.Generated.UnsafeSql }> =>
+    Field.patch(input, { generated: { _tag: "unsafeSql", sql } });
 
 /** Physical column-name override — the exception, not the rule (keys derive snake_case). */
 export const columnName =
@@ -262,7 +323,7 @@ export const references =
     options?: { readonly onDelete?: Meta.FkAction; readonly onUpdate?: Meta.FkAction }
   ) =>
   <I extends Field.Input>(
-    input: I & Field.ValidateEncoded<I, number, "references() requires a number-encoded schema (EntityIds encode as integers)">
+    input: I
   ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> => {
     const ref: Meta.References<Id["tableName"], "id"> = {
       tableName: id.tableName,

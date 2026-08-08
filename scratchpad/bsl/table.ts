@@ -8,15 +8,10 @@
  * `pgTable` — so the result is query-builder- and drizzle-kit-equivalent to a
  * hand-written table.
  *
- * There is exactly ONE audited assertion (the dynamically-built builder record
- * → `BuildersOf<F>`), restoring the key/value correlation JavaScript object
- * construction erases; it is backed by the exhaustive dispatch and the type
- * fixtures.
- *
- * Round-one scope notes: DDL foreign keys are not emitted yet (references
- * metadata is recorded; emission needs cross-table wiring, arriving with the
- * `defineRelations` derivation), and per-column `unique()` is inline rather
- * than a named constraint.
+ * Audited assertions restore correlations erased by dynamic record building:
+ * builder keys, pg-bound extra-config keys, and the final table projection.
+ * Cross-table foreign keys arrive through `schema.ts`; declared table extras
+ * and per-column unique metadata share this single projection path.
  */
 import { Str } from "@beep/utils";
 import { type SQL, sql } from "drizzle-orm";
@@ -47,6 +42,7 @@ import type {
   PgSerialBuilder,
   PgSmallIntBuilder,
   PgTableWithColumns,
+  PgTableExtraConfigValue,
   PgTextBuilder,
   PgTimestampBuilder,
   PgTimestampStringBuilder,
@@ -64,6 +60,7 @@ import * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
 import type * as PgColumn from "./PgColumn.ts";
 import type { AnyModel, FieldsInput } from "./factory.ts";
+import * as TableExtras from "./TableExtras.ts";
 
 // ---------------------------------------------------------------------------
 // Type-level projection
@@ -241,8 +238,12 @@ const buildColumn = (key: string, meta: Meta.Meta, nullable: boolean): FluentPgB
   return builder;
 };
 
+export type AdditionalExtras<M extends AnyModel> = (
+  columns: TableExtras.BoundColumns<M["bsl"]["fields"]>
+) => ReadonlyArray<PgTableExtraConfigValue>;
+
 /** Project a BSL model class into a fully-typed drizzle pg table. */
-export const toPgTable = <M extends AnyModel>(model: M): TableOf<M> => {
+export const toPgTable = <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>): TableOf<M> => {
   const builders: Record<string, FluentPgBuilder> = {};
   for (const key of Object.keys(model.bsl.fields)) {
     const f = Field.from(model.bsl.fields[key]!);
@@ -252,5 +253,18 @@ export const toPgTable = <M extends AnyModel>(model: M): TableOf<M> => {
   // Audited boundary: builders is keywise BuilderFor of the model's fields —
   // the exhaustive dispatch above implements exactly the BuilderFor
   // conditional type; JavaScript record construction erases the correlation.
-  return pgTable(model.bsl.tableName, builders as unknown as BuildersOf<M["bsl"]["fields"]>) as TableOf<M>;
+  const typedBuilders = builders as unknown as BuildersOf<M["bsl"]["fields"]>;
+  const table = pgTable(model.bsl.tableName, typedBuilders, (columns) => {
+    // Audited boundary: pgTable binds the same field keys passed in
+    // typedBuilders; the phantom only restores each key's originating Field.
+    const bound = columns as TableExtras.BoundColumns<M["bsl"]["fields"]>;
+    // Audited boundary: the AnyModel lower bound uses `never` contravariantly
+    // so callbacks with exact field records remain assignable; this invocation
+    // restores M's already-proven bound-column record.
+    const declared = model.bsl.extras?.(bound as never).map(TableExtras.emit) ?? [];
+    return [...declared, ...(additionalExtras?.(bound) ?? [])];
+  });
+  // Audited boundary: pgTable received the exact mapped builder record above;
+  // only its dynamic string table name is wider than TableOf<M>'s projection.
+  return table as TableOf<M>;
 };

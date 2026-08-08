@@ -16,12 +16,14 @@
 import { $ScratchpadId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema";
 import { Str } from "@beep/utils";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { VariantSchema } from "effect/unstable/schema";
 import * as Derive from "./derive.ts";
 import * as Field from "./Field.ts";
 import * as Meta from "./Meta.ts";
 import type * as PgColumn from "./PgColumn.ts";
+import type * as TableExtras from "./TableExtras.ts";
 
 const $I = $ScratchpadId.create("bsl/factory");
 
@@ -36,6 +38,8 @@ export class ModelInvariantError extends TaggedErrorClass<ModelInvariantError>($
   })
 ) {}
 
+// Audited boundary: VariantSchema requires the fixed family as a literal tuple;
+// this assertion changes no runtime representation.
 export const variants = ["select", "insert", "update", "json", "jsonCreate", "jsonUpdate"] as const;
 export type Variant = (typeof variants)[number];
 
@@ -60,9 +64,11 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
   ? Field.MetaFrom<I>["references"]
   : Field.MetaFrom<I>["primaryKey"] extends true
     ? undefined
-    : Derive.SelectSchemaOf<Field.SchemaFrom<I>> extends Derive.EntityIdLike
+    : Derive.SelectSchemaOf<Field.SchemaFrom<I>> extends Derive.EntityIdLike & {
+          readonly tableName: infer TableName extends string;
+        }
       ? [Exclude<Field.EncodedOf<I>, null>] extends [number]
-        ? Meta.References
+        ? Meta.References<TableName, "id">
         : undefined
       : undefined;
 
@@ -123,7 +129,7 @@ export type ValidateFields<F extends FieldsInput> = {
     ? Field.BslTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
     : unknown;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
-  ? Field.BslTypeError<"model declares multiple primary keys — BSL round one supports exactly one">
+  ? Field.BslTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
   : unknown);
 
 // ---------------------------------------------------------------------------
@@ -138,6 +144,7 @@ export interface Statics<F extends FieldsInput> {
     readonly tableName: string;
     readonly fields: F;
     readonly columns: ColumnsOf<F>;
+    readonly extras: TableExtras.Callback<F> | undefined;
   };
 }
 
@@ -155,6 +162,7 @@ export interface AnyModel {
     readonly tableName: string;
     readonly fields: FieldsInput;
     readonly columns: Record<string, Meta.Meta>;
+    readonly extras: ((columns: never) => ReadonlyArray<TableExtras.Node>) | undefined;
   };
 }
 
@@ -209,13 +217,15 @@ export const Model =
   <Self = never>(identifier: string) =>
   <const F extends FieldsInput>(
     fields: F & ValidateFields<F>,
-    annotations?: S.Annotations.Annotations
+    annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<F>
   ): [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F> => {
     const fieldRecord: FieldsInput = fields;
     const tableName = deriveTableName(identifier);
     const schemaFields: Record<string, Field.AnySchema> = {};
     const columns: Record<string, Meta.Meta> = {};
     let primaryKeys = 0;
+    const extras = P.isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+    const annotations = P.isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
 
     for (const key of Object.keys(fieldRecord)) {
       const f = Field.from(fieldRecord[key]!);
@@ -240,6 +250,24 @@ export const Model =
           fieldName: key,
         });
       }
+      if (f.meta.generated !== false && (f.meta.hasDefault || f.meta.default !== undefined)) {
+        throw ModelInvariantError.make({
+          message: `Field '${key}' cannot be both defaulted and generated.`,
+          fieldName: key,
+        });
+      }
+      if (classified.column.kind === "varchar") {
+        const varcharLength = classified.column.length;
+        const incompatible = Derive.maxLengths(f.schema).find(
+          (maxLength) => maxLength > varcharLength
+        );
+        if (incompatible !== undefined) {
+          throw ModelInvariantError.make({
+            message: `varchar(${varcharLength}) on '${key}' is narrower than schema maxLength ${incompatible}.`,
+            fieldName: key,
+          });
+        }
+      }
       const resolvedMeta = Meta.merge(f.meta, {
         column: classified.column,
         references: resolveReferences(f.meta, select),
@@ -250,16 +278,17 @@ export const Model =
 
     if (primaryKeys > 1) {
       throw ModelInvariantError.make({
-        message: `Model '${identifier}' declares ${primaryKeys} primary keys; BSL round one supports exactly one.`,
+        message: `Model '${identifier}' declares ${primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
         fieldName: "(model)",
       });
     }
 
-    // Audited boundary: schemaFields is keywise Field.SchemaFrom of F and the
-    // variant factory validates it at runtime; TS cannot see through the
-    // dynamic record construction.
+    // Audited boundary: schemaFields is keywise EffectiveSchema of F, the
+    // variant factory validates it at runtime, and Object.assign attaches the
+    // exact bsl statics built above; TS cannot see through those dynamic class
+    // construction operations.
     const Base = V.Class<Self>(identifier)(schemaFields as never, annotations as never);
-    Object.assign(Base as object, { bsl: { tableName, fields: fieldRecord, columns } });
+    Object.assign(Base as object, { bsl: { tableName, fields: fieldRecord, columns, extras } });
     // Audited boundary: the returned class is exactly ModelClass<Self, F> by
     // construction (variant class + bsl statics); the conditional return type
     // cannot be proven inside the generic body.
