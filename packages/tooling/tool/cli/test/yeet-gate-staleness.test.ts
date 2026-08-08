@@ -4,8 +4,10 @@ import {
   GateFileWitness,
   GateFresh,
   GateStale,
+  GateUnproven,
   renderYeetGateStalenessBlock,
   staleGateVerdicts,
+  unprovenGateVerdicts,
   YEET_GATE_ARTIFACT_DESCRIPTORS,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
@@ -86,6 +88,16 @@ describe("gate staleness reporting", () => {
     expect(renderYeetGateStalenessBlock([])).toBe("gate staleness: none");
   });
 
+  it("preserves an absent artifact as unproven in operator output", () => {
+    const verdict = GateUnproven.make({
+      gateId: "jsdoc-documentation-inventory",
+      detail: ".beep/ci/jsdoc-documentation.inventory.jsonc does not exist",
+    });
+
+    expect(unprovenGateVerdicts([verdict])).toStrictEqual([verdict]);
+    expect(renderYeetGateStalenessBlock([], [verdict])).toContain("jsdoc-documentation-inventory (unproven)");
+  });
+
   it("names the artifact, the newer input, and the regenerate command", () => {
     const rendered = renderYeetGateStalenessBlock([
       GateStale.make({
@@ -110,5 +122,13 @@ describe("gate staleness reporting", () => {
     expect(A.length(YEET_GATE_ARTIFACT_DESCRIPTORS)).toBeGreaterThan(0);
     expect(A.length(A.dedupe(gateIds))).toBe(A.length(gateIds));
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
+    expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
+      "bun run coverage:baseline:write",
+      "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
+      "bun run beep quality knip --write-baseline",
+      "bun run beep lint package-test-typecheck --write-baseline",
+      "bun run beep goals doctor --write-baseline",
+      "bun run beep ci lane jsdoc-inventory",
+    ]);
   });
 });

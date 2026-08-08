@@ -70,7 +70,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MergedPreview");
  * @category configuration
  * @since 0.0.0
  */
-export const YEET_MERGED_PREVIEW_DIR_NAME = "merged-preview";
+export const YEET_MERGED_PREVIEW_DIR_NAME = `merged-preview-${process.pid}`;
 
 /**
  * A merge preview whose tree merged cleanly.

@@ -1,5 +1,7 @@
 /**
- * Hosted CI lane timings, collected per job with attempt-aware provenance.
+ * Hosted CI lane timings collected per job with attempt-aware provenance.
+ *
+ * **Details**
  *
  * The lane-timings numbers this repo reasons about used to be gathered ad hoc
  * from `gh run`, and one of those numbers was an artifact. Run-level
@@ -10,8 +12,6 @@
  * not runner wait. Actual pickup, measured at job level in the same window, was
  * 19–67 seconds — and "PRs are blocked because no runners are available" was
  * falsified as a justification for an entire project.
- *
- * **Details**
  *
  * The correction is structural, not procedural: the attempt filter lives in the
  * collector, so a reader cannot forget it. {@link ciLaneTimingRow} returns
@@ -48,6 +48,7 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { CiCommandError } from "./Ci.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
@@ -128,7 +129,7 @@ export class CiWorkflowJob extends S.Class<CiWorkflowJob>($I`CiWorkflowJob`)(
     id: S.Finite,
     labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
     name: S.String,
-    run_attempt: S.Finite.pipe(SchemaUtils.withKeyDefaults(1)),
+    run_attempt: S.Finite,
     run_id: S.Finite,
     runner_name: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
     started_at: S.NullOr(S.String),
@@ -484,9 +485,20 @@ export const withCiLanePeakRss = (
 const numberOrder = Order.Number;
 
 const medianOf = (values: ReadonlyArray<number>): O.Option<number> =>
-  pipe(A.sort(values, numberOrder), (sorted) =>
-    A.isReadonlyArrayEmpty(sorted) ? O.none() : O.fromNullishOr(sorted[Math.floor(A.length(sorted) / 2)])
-  );
+  pipe(A.sort(values, numberOrder), (sorted) => {
+    const length = A.length(sorted);
+    if (length === 0) {
+      return O.none();
+    }
+    const middle = Math.floor(length / 2);
+    return length % 2 === 0
+      ? O.zipWith(
+          O.fromNullishOr(sorted[middle - 1]),
+          O.fromNullishOr(sorted[middle]),
+          (left, right) => (left + right) / 2
+        )
+      : O.fromNullishOr(sorted[middle]);
+  });
 
 /**
  * Aggregate collected rows into the report operators read.
@@ -663,11 +675,42 @@ const decodeCiWorkflowRunsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkfl
 const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture("gh", ["api", endpoint], repoRoot).pipe(
-    Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false }))
+    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
   );
-  return result.exitCode === 0 && !result.truncated ? O.some(result.output) : O.none();
+  if (result.exitCode !== 0 || result.truncated) {
+    return yield* CiCommandError.make({
+      message: result.truncated
+        ? `gh api ${endpoint} returned a truncated response.`
+        : `gh api ${endpoint} exited ${result.exitCode}: ${result.output}`,
+    });
+  }
+  return result.output;
+});
+
+const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(function* (
+  repoRoot: string,
+  runId: number,
+  pageNumber: number,
+  collected: ReadonlyArray<CiWorkflowJob>
+): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const endpoint = `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=100&page=${pageNumber}`;
+  const json = yield* ghApiJson(repoRoot, endpoint);
+  const page = yield* decodeCiWorkflowJobsPage(json).pipe(
+    CiCommandError.mapError(`Failed to decode jobs page ${pageNumber} for run ${runId}.`)
+  );
+  const jobs = A.appendAll(collected, page.jobs);
+  if (A.length(jobs) >= page.total_count) {
+    return jobs;
+  }
+  return yield* A.match(page.jobs, {
+    onEmpty: () =>
+      CiCommandError.make({
+        message: `Jobs pagination for run ${runId} ended after ${A.length(jobs)} of ${page.total_count} jobs.`,
+      }),
+    onNonEmpty: () => collectCiWorkflowJobPages(repoRoot, runId, pageNumber + 1, jobs),
+  });
 });
 
 /**
@@ -685,9 +728,9 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
  * GitHub rewrites on re-dispatch; the job record carries `run_attempt`, which
  * is what makes the filter possible at all.
  *
- * A run whose jobs cannot be fetched is skipped rather than failing the sweep,
- * because a partial corpus is more useful than none — and the row count is
- * reported so a reader can see how partial it is.
+ * API failures, truncated captures, and invalid payloads fail the collection.
+ * Returning an empty or partial corpus would make unavailable evidence look
+ * like a successful observation of zero runs or jobs.
  *
  * **Example** (Collect timings through the test seam)
  *
@@ -708,39 +751,23 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
 export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(function* (
   repoRoot: string,
   runLimit: number
-): Effect.fn.Return<CiLaneTimingsReport, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const runsJson = yield* ghApiJson(
-    repoRoot,
-    `repos/{owner}/{repo}/actions/runs?per_page=${Math.max(1, Math.min(runLimit, 100))}`
+): Effect.fn.Return<CiLaneTimingsReport, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  if (runLimit < 1 || runLimit > 100) {
+    return yield* CiCommandError.make({ message: `--runs must be between 1 and 100; received ${runLimit}.` });
+  }
+  const runsJson = yield* ghApiJson(repoRoot, `repos/{owner}/{repo}/actions/runs?per_page=${runLimit}`);
+  const runs = yield* decodeCiWorkflowRunsPage(runsJson).pipe(
+    Effect.map((page) => page.workflow_runs),
+    CiCommandError.mapError("Failed to decode the workflow-runs response.")
   );
-  const runs = yield* O.match(runsJson, {
-    onNone: () => Effect.succeed(A.empty<CiWorkflowRun>()),
-    onSome: (json) =>
-      decodeCiWorkflowRunsPage(json).pipe(
-        Effect.map((page) => page.workflow_runs),
-        Effect.orElseSucceed(A.empty<CiWorkflowRun>)
-      ),
+  const jobPages = yield* Effect.forEach(runs, (run) => collectCiWorkflowJobPages(repoRoot, run.id, 1, A.empty()), {
+    concurrency: 4,
   });
-  const jobPages = yield* Effect.forEach(
-    runs,
-    Effect.fnUntraced(function* (run: CiWorkflowRun) {
-      const json = yield* ghApiJson(repoRoot, `repos/{owner}/{repo}/actions/runs/${run.id}/jobs?per_page=100`);
-      return yield* O.match(json, {
-        onNone: () => Effect.succeed(A.empty<CiWorkflowJob>()),
-        onSome: (payload) =>
-          decodeCiWorkflowJobsPage(payload).pipe(
-            Effect.map((page) => page.jobs),
-            Effect.orElseSucceed(A.empty<CiWorkflowJob>)
-          ),
-      });
-    }),
-    { concurrency: 4 }
-  );
   return ciLaneTimingsReport(A.map(A.flatten(jobPages), ciLaneTimingRow));
 });
 
 const runLimitFlag = Flag.integer("runs").pipe(
-  Flag.withDescription("How many recent workflow runs to read jobs for"),
+  Flag.withDescription("How many recent workflow runs to read jobs for (1-100)"),
   Flag.withDefault(20)
 );
 
