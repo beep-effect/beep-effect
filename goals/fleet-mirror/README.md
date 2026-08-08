@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,15 +45,32 @@ references**. Everything rung 1 needs — `worktree doctor`, `git merge-tree`,
 
 ## Current Phase
 
-**P1 Implement** — next. P0 is complete. Next concrete action: author the
-`FleetCheckout` schema as a sibling class in `Worktree.command.ts` (not an
-extension of `WorktreeDoctorEntry`), with liveness as a three-member `LiteralKit`
-domain and every derived field expressible as `unknown`.
+**Complete.** Rung 1 shipped: `beep worktree fleet` derives the read-only
+snapshot (schema family in `Worktree.schemas.ts`, `FleetMirrorService` in
+`Fleet.service.ts`, subcommand in `Fleet.command.ts` — all under
+`packages/tooling/tool/cli/src/commands/Worktree/`). One siting deviation from
+P0 §5, made for cause: the schemas live in a leaf `Worktree.schemas.ts` rather
+than inside `Worktree.command.ts`, because registering the subcommand from the
+same file the service imports schemas from is a TDZ-fatal ESM cycle (hit live
+on first run; see [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)).
+Doctor's row schema is unchanged.
 
 ## Latest Evidence
 
-[`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md)
-(2026-08-06) — 26 paths measured over 300 first-parent `main` commits.
+- Implementation + proof tests: `packages/tooling/tool/cli/src/commands/Worktree/`
+  and `packages/tooling/tool/cli/test/worktree-fleet*.test.ts` — the #551-shape
+  proof (signal 3 fires; signals 1–2 stay silent), unreadable `/proc` ⇒
+  `unknown`, unmaterialized target ⇒ `unknown`.
+- First live scan (2026-08-06): 17 clones, 75 checkouts; signal 3 correctly
+  reported policy movement per checkout against `main @ 8fbbf1ef63`, with
+  `unmoved` for a branch cut after the moved commits — and `dormant` proved
+  unreachable on this host (1285/1816 `/proc` entries root-owned ⇒ scan never
+  complete), which is the measured-or-`unknown` law behaving as specified.
+- [`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md)
+  (2026-08-06) — 26 paths measured over 300 first-parent `main` commits.
+- Friction ledger: [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md).
+- Closeout reflection:
+  [`history/reflections/2026-08-06-claude.md`](./history/reflections/2026-08-06-claude.md).
 
 **The P0 finding worth carrying into P1:** back-tested against the three Mode B
 specimens actually observed this week, the config-only surface the design assumed
