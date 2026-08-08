@@ -167,7 +167,11 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   reduced to one real defect class: the upstream openapi-generator emits `S.Number`, which
   the schemaNumber governance rule rejects (45 sites); OpenAPI numbers are JSON numbers
   (always finite), so the repo-owned script now rewrites them to `S.Finite`. The predicted
-  `Acp.errors.ts` S.Json break never materialized post-beta.104. acp check, tests, and
+  `Acp.errors.ts` S.Json break DID materialize — at runtime, not compile time: the JSON-RPC
+  error `data` field became S.Json, and the ext-request error path was stuffing a live
+  SchemaIssue object into it, so `Error.make` threw inside mapError and the error response
+  never reached the peer (integration test hung at 30s). Fixed by carrying the rendered
+  issue string; the old behavior was a latent wire bug that S.Unknown had been masking. acp check, tests, and
   docgen all green; the last 342 legacy carriers are gone and the
   `jsdocZeroLegacyGeneratedResiduals` allowlist is EMPTY — SPEC DoD item 2 now closes
   without vacuity. (2) apps/** joined both zero-legacy scopes and its 272 blocks migrated
