@@ -49,7 +49,10 @@ export const KNOWLEDGE_HISTORY_REMEDIATION =
  *
  * Git, archive extraction, UTF-8 decoding, command-probe, and index-probe failures all raise this
  * error rather than becoming synthetic findings. Emitting them as findings would let a broken
- * scanner look like a clean comparison, so they stay strictly in the error channel.
+ * scanner look like a clean comparison, so they stay strictly in the error channel. The reference
+ * census reuses the same error for tree resolution and for an undecodable goal manifest: one
+ * operational error per family beats a parallel hierarchy, and a census that cannot read the tree
+ * it was asked about must never report an empty one.
  *
  * **Example** (Fail a scan closed)
  *
@@ -75,7 +78,8 @@ export class KnowledgeOperationalError extends TaggedErrorClass<KnowledgeOperati
     cause: S.optionalKey(S.Defect({ includeStack: true })),
   },
   $I.annote("KnowledgeOperationalError", {
-    description: "A Git, archive, UTF-8, command-probe, or index-probe failure that must fail closed.",
+    description:
+      "A Git, tree-resolution, archive, UTF-8, manifest-decode, command-probe, or index-probe failure that must fail closed.",
   })
 ) {
   /**
