@@ -12,6 +12,7 @@ const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "li
 const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
   "circular",
   "deprecated-apis",
+  "judge-rubric",
   "package-test-imports",
   "package-test-typecheck",
   "reflection-artifacts",

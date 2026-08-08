@@ -122,6 +122,25 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   it("returns none when the output holds no fenced block", () => {
     expect(O.isNone(extractLastJsonBlock("no json here at all"))).toBe(true);
   });
+
+  it("salvages a correct unfenced object when the judge omits fences entirely", () => {
+    const stdout = ["REQUIRED FINDINGS: 0", 'Inventory follows: { "round": 3, "findings": [] }'].join("\n");
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "round": 3, "findings": [] }');
+  });
+
+  it("takes the last parseable unfenced object, skipping prose braces and brace-bearing strings", () => {
+    const stdout = 'set {a, b} then { "draft": true } and finally { "final": { "nested": "}{" } }';
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": { "nested": "}{" } }');
+  });
+
+  it("prefers a fenced block over later unfenced objects", () => {
+    const stdout = ["```json", '{ "final": true }', "```", 'afterthought: { "not": "the inventory" }'].join("\n");
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
+  });
+
+  it("returns none when braces never balance into valid JSON", () => {
+    expect(O.isNone(extractLastJsonBlock("opening { and prose {still not json}"))).toBe(true);
+  });
 });
 
 describe("commands/Qa JudgeCheck evidence cross-check", () => {

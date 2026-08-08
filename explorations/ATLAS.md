@@ -40,6 +40,20 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
+  research-stage: mine Harvey + Engram's open-sourced synthetic law firm
+  (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
+  graded firm-knowledge tasks in MIT-licensed harvey-labs) for leverage: a
+  graded testbed for the knowledge-engine bet, spec→feature→render synthetic
+  corpus generation for confidentiality-safe OIP evals, all-pass/rubric eval
+  methodology ports to beep qa, and a legal-DMS task taxonomy. Research landed
+  2026-08-08: 12-agent opus-5 run produced 12 verified reports under
+  `research/` (286 fact-checks; 20 opportunities → 6 KEEP / 2 KEEP-cond /
+  10 WEAKEN / 2 KILL; new find: LAB's pipeline is redline-blind while 371
+  tasks grade redlines — an unclaimed, OIP-load-bearing wedge). Two decisions
+  pre-seeded: C&H is a standing test asset; their eval code is reference for a
+  roll-our-own Effect-native eval. Next: align — 8 questions queued, wedge
+  question (Q2) first.
 - [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
   align-stage: deep-dive of the Lynx project's Legal Knowledge Graph ontology
   (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded

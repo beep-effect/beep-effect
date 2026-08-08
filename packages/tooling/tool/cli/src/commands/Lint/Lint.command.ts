@@ -20,6 +20,7 @@ import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
+import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.ts";
 import { lintPackageTestTypecheckCommand } from "./PackageTestTypecheck.ts";
@@ -606,6 +607,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint deprecated-apis",
     "- bun run beep lint goal-packets",
     "- bun run beep lint identity-registry",
+    "- bun run beep lint judge-rubric",
     "- bun run beep lint package-test-imports",
     "- bun run beep lint package-test-typecheck",
     "- bun run beep lint policy",
@@ -623,6 +625,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintDeprecatedApisCommand,
     lintGoalPacketsCommand,
     lintIdentityRegistryCommand,
+    lintJudgeRubricCommand,
     lintPackageTestImportsCommand,
     lintPackageTestTypecheckCommand,
     lintPolicyCommand,

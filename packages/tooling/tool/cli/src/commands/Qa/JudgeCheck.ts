@@ -365,12 +365,73 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
     O.map(Str.trim)
   );
 
+const parseJsonOption: (span: string) => O.Option<unknown> = O.liftThrowable(JSON.parse);
+
+const skipJsonString = (text: string, afterOpeningQuote: number): number => {
+  let index = afterOpeningQuote;
+  while (index < text.length && text.charAt(index) !== '"') {
+    index = text.charAt(index) === "\\" ? index + 2 : index + 1;
+  }
+  return index;
+};
+
+const balancedSpanEnd = (text: string, start: number): O.Option<number> => {
+  let depth = 0;
+  for (let index = start; index < text.length; index++) {
+    const char = text.charAt(index);
+    if (char === '"') {
+      index = skipJsonString(text, index + 1);
+    } else if (char === "{") {
+      depth = depth + 1;
+    } else if (char === "}" && depth === 1) {
+      return O.some(index);
+    } else if (char === "}") {
+      depth = depth - 1;
+    }
+  }
+  return O.none();
+};
+
+const lastParseableObject = (text: string): O.Option<string> => {
+  let last = O.none<string>();
+  for (let index = 0; index < text.length; index++) {
+    if (text.charAt(index) !== "{") {
+      continue;
+    }
+    const end = balancedSpanEnd(text, index);
+    if (O.isNone(end)) {
+      continue;
+    }
+    const span = Str.trim(Str.slice(index, end.value + 1)(text));
+    if (O.isSome(parseJsonOption(span))) {
+      last = O.some(span);
+      index = end.value;
+    }
+  }
+  return last;
+};
+
 /**
- * Extract the last fenced JSON block from noisy judge output.
+ * Extract the last JSON inventory block from noisy judge output.
  *
  * Judges narrate. The contract is that the inventory is the final fenced JSON
  * block, so everything before it — reasoning, tool chatter, earlier draft
  * blocks — is ignored rather than parsed.
+ *
+ * **Details**
+ *
+ * Extraction degrades through three rungs: the last json-tagged fence, then
+ * the last anonymous fence holding an object, then a balanced-brace scan that
+ * accepts the last parseable top-level object anywhere in the text.
+ * The final rung exists because judges sometimes emit a correct, schema-valid
+ * inventory without any fence at all — an output that used to hard-fail
+ * ingest and discard the whole capture+extract+judge round.
+ *
+ * **Gotchas**
+ *
+ * A fenced block always wins over unfenced text, even when prose after the
+ * fence contains a parseable object; the unfenced rung only runs when no
+ * fence matched anywhere.
  *
  * **Example** (Usage)
  *
@@ -383,12 +444,18 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
  * const final = [`${fence}json`, `{"final":true}`, fence].join("\n")
  * const stdout = ["thinking...", draft, "on reflection:", final, "REQUIRED FINDINGS: 0"].join("\n")
  * console.log(O.getOrElse(extractLastJsonBlock(stdout), () => "")) // '{"final":true}'
+ * console.log(O.getOrElse(extractLastJsonBlock('no fence: {"final":true}'), () => "")) // '{"final":true}'
  * ```
  *
  * @param text - Raw judge output, narration and draft blocks included.
- * @returns The last fenced JSON block, or none when the output carries none.
+ * @returns The last fenced JSON block, the last parseable unfenced object when
+ * no fence matched, or none when the output carries neither.
  * @category utilities
  * @since 0.0.0
  */
 export const extractLastJsonBlock = (text: string): O.Option<string> =>
-  O.orElse(lastMatch(text, FENCED_JSON), () => lastMatch(text, FENCED_ANY));
+  pipe(
+    lastMatch(text, FENCED_JSON),
+    O.orElse(() => lastMatch(text, FENCED_ANY)),
+    O.orElse(() => lastParseableObject(text))
+  );
