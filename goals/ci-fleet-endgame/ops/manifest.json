@@ -55,7 +55,8 @@
     {
       "id": "P1",
       "name": "Bridge spike and shadow deploy",
-      "status": "pending"
+      "status": "in-progress",
+      "statusNote": "Controller deployed to production (122 resources, shadow label beep-ec2-heavy-shadow) and webhook-activated via repository hook; bridge PR #632 carries the source. Shadow acceptance (probe + red-team gates) outstanding before P2."
     },
     {
       "id": "P2",
