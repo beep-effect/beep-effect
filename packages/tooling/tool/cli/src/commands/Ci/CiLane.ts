@@ -705,7 +705,15 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
         "--parallel=2",
       ]),
     ],
-    full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
+    // Full mode is what the workflow lane-gate picks when docgen tooling
+    // itself changed, so it must survive the same 16 GB runners: swap plus
+    // the docgen:ci root script (turbo --concurrency=2 — three concurrent
+    // example compiles died at 21-24 min on the beta.104 tree; local `docgen`
+    // keeps --concurrency=3).
+    full: () => [
+      ...hostedSwapSteps(repoRoot, "docgen"),
+      rootScriptStep(repoRoot, "ci:docgen", "docgen:ci", A.empty<string>()),
+    ],
   });
 
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;

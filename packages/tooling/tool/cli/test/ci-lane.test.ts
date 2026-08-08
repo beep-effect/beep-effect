@@ -247,7 +247,7 @@ describe("ciLaneStepsForTesting", () => {
     const full = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }))
     );
-    expect([...full.args]).toEqual(["run", "docgen"]);
+    expect([...full.args]).toEqual(["run", "docgen:ci"]);
   });
 
   it("appends the changeset status step to repo-sanity on request", () => {
