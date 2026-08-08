@@ -17,21 +17,20 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-Both opened wedges are fully landed, so the campaign's next move is a routing
-call, not a stage. The first wedge graduated 2026-08-04 into
-`goals/patent-citation-candor-gate` (graduation PR #560 merged 2026-08-05;
-implementation PR #575 merged 2026-08-06). The second,
-[`explorations/legal-position-relator-runtime`](../legal-position-relator-runtime/README.md),
-graduated 2026-08-06 into
-[`goals/legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md)
-after decompose settled the migration-lane fork and narrowed the candidate
-handoff to a goal-P0 decision.
+The third wedge is OPEN:
+[`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+(opened 2026-08-06 on Benjamin's call after the relator wedge graduated)
+sits at capture stage carrying the merged drafting-episodes +
+claim-limitation-support row, the resolved remo2/remo3 boundaries verbatim,
+and parent align questions 11 (the `T3-F4` half), 12, 14, 15, and 16. Its
+next step is its two locked research lanes, then review gate 1, then its
+align session — which is Benjamin's.
 
-Next: **`patent-drafting-episode-ledger` and the FunctionalUnit extension into
-`uspto-patent-driver-depth` are queued on Benjamin's call** — both are approved
-routing-matrix slugs, so opening either needs only his go-ahead, not new
-routing approval. Goal execution on the two graduated packets is likewise his
-call.
+Behind it: **the FunctionalUnit extension into `uspto-patent-driver-depth`
+stays queued on Benjamin's call** — an approved routing-matrix slug needing
+only his go-ahead, not new routing approval. Goal execution on the two
+graduated packets (candor already implemented via PR #575; relator execution
+not started) is likewise his call.
 
 ## Read This First
 
@@ -108,3 +107,12 @@ call.
   packets from two wedges with no wedge left mid-stage. Both remaining
   routing-matrix slugs (`patent-drafting-episode-ledger`, the FunctionalUnit
   extension) stay queued on Benjamin's call.
+- 2026-08-06: third wedge opened on Benjamin's call —
+  `explorations/patent-drafting-episode-ledger` (capture stage, decisions
+  pre-seeded, carrying the merged drafting-episodes +
+  claim-limitation-support row with the resolved remo2/remo3 boundaries
+  verbatim) — after the relator wedge's graduation PR #590 merged. Both
+  routing-seed forms amended (targets flipped to the live path, dated
+  AMENDED notes, slug-count line, a dated Phase-2 amendments item); align
+  questions 11 (the `T3-F4` half), 12, 14, 15, and 16 carried into the
+  wedge; HANDOFF first action now points at the new wedge's research lanes.

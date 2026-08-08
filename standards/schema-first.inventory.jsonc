@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-06",
+  "generatedOn": "2026-08-07",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -482,6 +482,46 @@
       "reason": "Scoped test resource intentionally couples a live StartedTestContainer with its connection metadata for use and teardown."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeDocumentLine",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Line-scanner intermediate pairing one raw document line with its 1-based number and ratified fence verdict; produced and consumed inside a single census pass and never decoded or persisted, while every value it flows into (KnowledgeRefObservation, KnowledgeRefsReport) is schema-backed."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeHostAnchorMatch",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lexical host-anchor match intermediate (anchor, containing token, column) consumed in the same extraction pass that produced it; the anchor member is already schema-backed by KnowledgeHostAnchor and the observation it becomes is a schema class, so the intermediate has no decode or persistence boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeInlineSpan",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Inline-code span intermediate from the shared Markdown reader (span text plus 1-based column); assembled from RegExp matches in-process and consumed by the same line pass, never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeRefClassificationInput",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Pure classifier input carrying Option-typed per-bus fields for the ordered rule table; constructed in-process from schema-backed candidates and consumed synchronously by classifyKnowledgeRef, never decoded from external data or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeTreeOracle",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Injected single-tree read seam, the census counterpart of KnowledgeArchiveOracle's recorded exception: readBytes is an Effectful read over an extracted Git archive, trackedEntries is already schema-backed by KnowledgeTrackedEntry, and treeish/commit are validated into the schema-backed KnowledgeRefsReport. The seam is constructed in-process by the live layer and by golden fixtures, so it has no decode or persistence boundary."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
       "symbol": "KnowledgeArchiveOracle",
       "kind": "exported-interface",
@@ -507,16 +547,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
-      "symbol": "partitionMigratedOrphans",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 233,
-      "owner": "@beep/repo-cli",
-      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
       "symbol": "computeJSDocMigrateBinding",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -524,6 +554,16 @@
       "line": 178,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "symbol": "partitionMigratedOrphans",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 233,
+      "owner": "@beep/repo-cli",
+      "reason": "Pure partition over in-memory anchor strings and scanned-block lookups; the inline pair of anchor arrays is transient control flow for the apply re-run tolerance, never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
