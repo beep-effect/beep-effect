@@ -54,7 +54,7 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
  * @category error-handling
  * @since 0.0.0
  */
-export class EmptyStructError extends S.TaggedErrorClass<EmptyStructError>($I`EmptyStructError`)(
+export class EmptyStructError extends S.TaggedError<EmptyStructError>($I`EmptyStructError`)(
   "EmptyStructError",
   {
     input: S.Unknown,

@@ -704,7 +704,7 @@ const makeToolCallDeltaParts = (
   activeToolCalls: Readonly<Record<string, ActiveToolCall>>,
   toolCall: OpenAiCompatToolCallDelta,
   indexInChunk: number
-): readonly [Readonly<Record<string, ActiveToolCall>>, ReadonlyArray<Response.StreamPartEncoded>] => {
+): [Readonly<Record<string, ActiveToolCall>>, Array<Response.StreamPartEncoded>] => {
   const toolIndex = streamToolCallIndex(toolCall, indexInChunk);
   const activeToolCall = activeToolCalls[toolIndex];
   const id = streamToolCallId(chunk, toolIndex, activeToolCall, toolCall);
@@ -715,7 +715,7 @@ const makeToolCallDeltaParts = (
     id,
     name,
   };
-  const parts: ReadonlyArray<Response.StreamPartEncoded> = [
+  const parts: Array<Response.StreamPartEncoded> = [
     ...(activeToolCall === undefined
       ? [
           Response.makePart("tool-params-start", {
@@ -734,7 +734,7 @@ const makeToolCallDeltaParts = (
         ]
       : []),
   ];
-  return Tuple.make(R.set(activeToolCalls, toolIndex, nextToolCall), parts);
+  return [R.set(activeToolCalls, toolIndex, nextToolCall), parts];
 };
 
 const makeCompletedStreamToolCallParts = (
@@ -842,7 +842,10 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
           O.flatMap((delta) => delta.tool_calls),
           O.getOrElse(A.empty<OpenAiCompatToolCallDelta>),
           A.reduce(
-            Tuple.make(activeToolCalls, A.empty<Response.StreamPartEncoded>()),
+            [activeToolCalls, A.empty<Response.StreamPartEncoded>()] as [
+              Readonly<Record<string, ActiveToolCall>>,
+              Array<Response.StreamPartEncoded>,
+            ],
             ([currentActiveToolCalls, currentParts], toolCall, indexInChunk) => {
               const [updatedActiveToolCalls, deltaParts] = makeToolCallDeltaParts(
                 toolNameMapper,
@@ -851,7 +854,10 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
                 toolCall,
                 indexInChunk
               );
-              return Tuple.make(updatedActiveToolCalls, [...currentParts, ...deltaParts]);
+              return [updatedActiveToolCalls, A.appendAll(currentParts, deltaParts)] as [
+                Readonly<Record<string, ActiveToolCall>>,
+                Array<Response.StreamPartEncoded>,
+              ];
             }
           )
         );
