@@ -62,7 +62,7 @@ module in production before.
    module's lambda-release artifacts or provider surface.
 3. **GitHub App: repo-scoped, KMS, 1Password (signed).** App installed on
    beep-effect only. Private key + webhook secret in SSM SecureString under
-   KMS; source-of-truth copy in the 1Password vault/Developer Environment
+   KMS; source-of-truth copy in the 1Password `BEEP_CI` vault
    named `BEEP_CI`, with each secret addressed by a complete
    `op://BEEP_CI/<item>/<field>` reference. A future repo re-runs the install
    step rather than widening blast radius now.
