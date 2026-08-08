@@ -31,12 +31,12 @@ reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed 
 [[IgnoredVulns]]
 id = "GHSA-w3rx-r6r6-pgpr"
 ignoreUntil = 2026-09-15T00:00:00Z
-reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2, which is the latest published release — no fixed version exists to bump to. image-size is a direct @beep/repo-cli dependency used only by the files media pipeline (imageSizeFromFile in commands/Files/internal/MediaExec.ts) on operator-supplied local media, never on network- or attacker-controlled input, and the affected ICNS format is not part of that pipeline. Newly published advisory, not introduced by the current PR. Revisit when image-size publishes a fixed release."
+reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS the npm latest, so no fixed release exists to bump to (verified against the registry 2026-08-08). image-size is a direct dependency of @beep/repo-cli used only by the operator-invoked media tooling (Files/internal/Media*) over locally produced QA artifacts; the DoS requires attacker-supplied ICNS input and no CI lane feeds untrusted files to it, so worst case is an infinite loop inside a timeboxed job. Newly published advisory, not introduced by the current PR (identical version on main; main's Security lane is red on the same finding). Revisit when image-size publishes a release above 2.0.2."
 
 [[IgnoredVulns]]
 id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
-reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2, which is the latest published release — no fixed version exists to bump to. Same exposure assessment as GHSA-w3rx-r6r6-pgpr: direct @beep/repo-cli dependency confined to the local files media pipeline on operator-supplied media. Newly published advisory, not introduced by the current PR. Revisit when image-size publishes a fixed release."
+reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
 
 [[PackageOverrides]]
 name = "effect"

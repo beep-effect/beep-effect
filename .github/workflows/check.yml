@@ -74,7 +74,7 @@ jobs:
             install_typos: "false"
           - id: check
             name: Check
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 120
             uses_turbo: "true"
             install_typos: "false"
@@ -86,19 +86,19 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: ubuntu-24.04
-            timeout_minutes: 60
+            runner: beep-ec2-heavy
+            timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
-            runner: ubuntu-24.04
-            timeout_minutes: 110
+            runner: beep-ec2-heavy
+            timeout_minutes: 80
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
             name: Docgen
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
@@ -112,20 +112,6 @@ jobs:
       # Verification runs PR-controlled code. Keep every secret-backed value on
       # trusted push events only; PR lanes use local cache and fixture/default
       # app configuration.
-      #
-      # GOMEMLIMIT bounds the Go runtime (tsgo, the repo's typechecker): on a
-      # cold CI build the epistemic-server project compile balloons past the
-      # 16GB hosted VM and the kernel SIGKILLs it (exit 137), even serial. The
-      # same check peaks ~4.6GB warm, so the overage is GC slack, not live
-      # heap — a soft limit trades CPU for survival. Remove when lanes move to
-      # owned runners with real memory.
-      GOMEMLIMIT: 10GiB
-      # The Node-side twin: package builds run V8 tsc, whose default heap cap
-      # scales with machine RAM (~8GB here), so two concurrent builds in the
-      # concurrency-2 lanes OOM the VM the same way tsgo did (Test Integration
-      # died on epistemic #build tasks, exit 137). 5GB x 2 fits; local dev is
-      # unaffected because this is CI job env, not repo config.
-      NODE_OPTIONS: --max-old-space-size=5120
       TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
       TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
@@ -568,7 +554,7 @@ jobs:
   build:
     name: Build
     if: github.event_name == 'push'
-    runs-on: ubuntu-24.04
+    runs-on: beep-ec2-heavy
     timeout-minutes: 40
     permissions:
       contents: read

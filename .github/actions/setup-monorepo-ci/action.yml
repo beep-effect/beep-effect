@@ -27,6 +27,12 @@ runs:
       uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       with:
         bun-version-file: .bun-version
+        # The fleet is heterogeneous (GitHub-hosted + owned beep-ec2 workers):
+        # setup-bun's cross-job cache stores absolute paths from the SAVING
+        # runner's home, which poisons restores on runners with a different
+        # layout (fleet run 31245263696: "Cache restored successfully" followed
+        # by bun missing at $HOME/.bun). A fresh ~2s download is deterministic.
+        no-cache: "true"
 
     - name: Setup Node.js
       if: ${{ inputs.use-node == 'true' }}

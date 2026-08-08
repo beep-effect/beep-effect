@@ -112,3 +112,20 @@ measurement first). Reviewed at each grill.
    baseline. Nobody tightens it because the baseline file conflicts with every
    concurrent branch, so the slack accumulates. A CI-generated baseline-only PR
    (the pattern C8 already ratifies for sealed baselines) would fit here too.
+
+## Receipts from P1 refs census (2026-08-06, PR-A refs-tree)
+
+9. **The packet's own host-path verification grep was red on `main`.** `fixed-in-pr`
+
+   `! rg -n "<redacted-home-prefix>|<redacted-tilde-tree>" goals/knowledge-surface-automation …`
+   (the manifest's sixth verification command) failed against the checkout this
+   branch forked from: `research/p1-context-pruning-analysis.md:110` carried an
+   unredacted absolute home path, landed by an earlier PR without the command
+   being run. Redacted in the refs-tree PR; the census itself now reports the
+   same class (`actionable-host-path` / `archival-provenance`), so once the P3
+   gate consumes it this cannot silently recur.
+
+   **What would have prevented it:** manifest `verificationCommands` are prose
+   until something executes them; a lane that runs each packet's declared
+   commands on touched packets (Workstream E's doctor is the natural home) would
+   have caught this at the introducing PR.
