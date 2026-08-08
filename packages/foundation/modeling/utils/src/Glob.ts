@@ -184,7 +184,7 @@ export declare namespace GlobError {
  * @category errors
  * @since 0.0.0
  */
-export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
+export class GlobError extends S.TaggedError<GlobError>($I`GlobError`)(
   "GlobError",
   {
     pattern: Pattern.annotateKey({

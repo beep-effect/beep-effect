@@ -3,12 +3,12 @@
  *
  * **Details**
  *
- * Provides composable, type-safe identity strings and symbols for schema
- * annotations, error tagging, and service identification throughout the
- * Effect codebase. Identities follow a `@beep/{package}/{path}` convention
- * and are validated at construction time.
+ * Composable, type-safe identity strings and symbols back schema annotations,
+ * error tagging, and service identification throughout the Effect codebase.
+ * Identities follow a `@beep/{package}/{path}` convention and are validated at
+ * construction time.
  *
- * **Example** (Package identity composer usage)
+ * **Example** (Compose a package identity)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -93,6 +93,8 @@ const preserveSchemaStatics = <Schema extends S.Top>(
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
  *
+ * **Details**
+ *
  * The real `IdentityComposer` (`$I`, as used throughout the rest of the
  * workspace) is produced by calling `make`, which itself throws
  * {@link IdentityInterpolationError} and {@link IdentitySegmentCountError} --
@@ -119,7 +121,7 @@ const $I = {
  * Passing interpolated expressions is forbidden because identity strings
  * must be statically deterministic.
  *
- * **Example** (Catching interpolation error)
+ * **Example** (Reject an interpolated tag call)
  *
  * ```ts
  * import { make, IdentityInterpolationError } from "@beep/identity"
@@ -133,10 +135,10 @@ const $I = {
  * }
  * ```
  *
- * @category error-handling
  * @since 0.0.0
+ * @category error-handling
  */
-export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInterpolationError>(
+export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolationError>(
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
@@ -158,7 +160,7 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
  *
  * Template tags must be called with exactly one static string segment.
  *
- * **Example** (Creating segment count error)
+ * **Example** (Read the segment-count message)
  *
  * ```ts
  * import { IdentitySegmentCountError } from "@beep/identity"
@@ -167,10 +169,10 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
  * console.log(error.message) // "Identity template tags must use a single literal segment."
  * ```
  *
- * @category error-handling
  * @since 0.0.0
+ * @category error-handling
  */
-export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmentCountError>(
+export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCountError>(
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
@@ -194,7 +196,7 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
 /**
  * Current version of the `@beep/identity` package.
  *
- * **Example** (Logging package version)
+ * **Example** (Read the package version)
  *
  * ```ts
  * import { VERSION } from "@beep/identity"
@@ -202,8 +204,8 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
  * console.log(VERSION) // "0.0.0"
  * ```
  *
- * @category configuration
  * @since 0.0.0
+ * @category configuration
  */
 export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
 
@@ -215,7 +217,7 @@ export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
  * Resolves to `never` when the segment starts or ends with `/`, preventing
  * invalid identity paths at compile time.
  *
- * **Example** (Valid and invalid segments)
+ * **Example** (Contrast a valid and an invalid segment)
  *
  * ```ts
  * import type { SegmentValue } from "@beep/identity"
@@ -224,8 +226,8 @@ export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
  * type Invalid = SegmentValue<"/leading">
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type SegmentValue<S extends TString.NonEmpty> = S extends `/${string}`
   ? never
@@ -352,7 +354,7 @@ type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Res
  *
  * Converts `"my-service"` to `"My Service"` and `"user_account"` to `"User Account"`.
  *
- * **Example** (Kebab-case title derivation)
+ * **Example** (Title a kebab-case identifier)
  *
  * ```ts
  * import type { TitleFromIdentifier } from "@beep/identity"
@@ -360,8 +362,8 @@ type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Res
  * type Title = TitleFromIdentifier<"my-service"> // "My Service"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
   SplitTitleWords<TrimTitleSpaces<NormalizeTitleSeparators<Identifier>>>
@@ -375,7 +377,7 @@ export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
  * Converts `"@beep/a/b"` to `"https://ns.beep.sh/a/b"` when the authority is
  * `"https://ns.beep.sh/"`. Widened string inputs intentionally widen to `string`.
  *
- * **Example** (Identity path to IRI)
+ * **Example** (Project an identity onto a namespace authority)
  *
  * ```ts
  * import type { IriFromIdentity } from "@beep/identity"
@@ -385,8 +387,8 @@ export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
  * console.log(iri)
  * ```
  *
- * @category type-level
  * @since 0.0.0
+ * @category type-level
  */
 export type IriFromIdentity<Authority extends string, Identity extends string> = string extends Authority
   ? string
@@ -404,7 +406,7 @@ export type IriFromIdentity<Authority extends string, Identity extends string> =
  * Converts `"@beep/a/b"` to `"beep:a/b"` when the prefix is `"beep"`. Widened
  * string inputs intentionally widen to `string`.
  *
- * **Example** (Identity path to CURIE)
+ * **Example** (Abbreviate an identity with an owned prefix)
  *
  * ```ts
  * import type { CurieFromIdentity } from "@beep/identity"
@@ -414,8 +416,8 @@ export type IriFromIdentity<Authority extends string, Identity extends string> =
  * console.log(curie)
  * ```
  *
- * @category type-level
  * @since 0.0.0
+ * @category type-level
  */
 export type CurieFromIdentity<Prefix extends string, Identity extends string> = string extends Prefix
   ? string
@@ -434,7 +436,7 @@ export type CurieFromIdentity<Prefix extends string, Identity extends string> = 
  * paths, including slash, dot, underscore, hyphen, space, and lower-to-upper
  * word boundaries.
  *
- * **Example** (Identity path to slug)
+ * **Example** (Slug a mixed-separator identity)
  *
  * ```ts
  * import type { SlugFromIdentifier } from "@beep/identity"
@@ -444,8 +446,8 @@ export type CurieFromIdentity<Prefix extends string, Identity extends string> = 
  * console.log(slug)
  * ```
  *
- * @category type-level
  * @since 0.0.0
+ * @category type-level
  */
 export type SlugFromIdentifier<Identifier extends string> = string extends Identifier
   ? string
@@ -478,7 +480,7 @@ type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModul
  * with an alphabetic character and contain only alphanumerics, hyphens, or underscores.
  * Resolves to `never` when violated.
  *
- * **Example** (Valid and invalid modules)
+ * **Example** (Reject a digit-leading segment)
  *
  * ```ts
  * import type { ModuleSegmentValue } from "@beep/identity"
@@ -487,8 +489,8 @@ type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModul
  * type Invalid = ModuleSegmentValue<"1bad">
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type ModuleSegmentValue<S extends TString.NonEmpty> =
   InvalidModulePrefix<S> extends true ? never : HasInvalidModuleChar<S> extends true ? never : SegmentValue<S>;
@@ -500,7 +502,7 @@ export type ModuleSegmentValue<S extends TString.NonEmpty> =
  *
  * `"my-service"` becomes `"MyServiceId"`.
  *
- * **Example** (Module segment to accessor)
+ * **Example** (Derive an accessor name)
  *
  * ```ts
  * import type { ModuleAccessor } from "@beep/identity"
@@ -508,8 +510,8 @@ export type ModuleSegmentValue<S extends TString.NonEmpty> =
  * type Acc = ModuleAccessor<"my-service"> // "MyServiceId"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<ModuleSegmentValue<S>>}Id`;
 
@@ -518,9 +520,10 @@ export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<Modu
  *
  * **Details**
  *
- * `"my-service"` becomes `"$MyServiceId"`.
+ * `"my-service"` becomes `"$MyServiceId"`. This is the key shape `compose` and
+ * `make` use when they destructure composers out of their result record.
  *
- * **Example** (Module segment to tagged key)
+ * **Example** (Derive a tagged accessor key)
  *
  * ```ts
  * import type { TaggedAccessor } from "@beep/identity"
@@ -528,15 +531,15 @@ export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<Modu
  * type Tag = TaggedAccessor<"my-service"> // "$MyServiceId"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`;
 
 /**
  * Branded string type for identity values, preventing accidental use of raw strings.
  *
- * **Example** (Branded identity string usage)
+ * **Example** (Hold a composer's identity as a branded string)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -547,8 +550,8 @@ export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`
  * console.log(id)// "@beep/utils"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type IdentityString<Value extends string> = Value & {
   readonly __brand: unique symbol;
@@ -557,7 +560,7 @@ export type IdentityString<Value extends string> = Value & {
 /**
  * Branded symbol type for identity values, created via `Symbol.for` for interning.
  *
- * **Example** (Branded identity symbol usage)
+ * **Example** (Read an interned identity symbol)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -568,8 +571,8 @@ export type IdentityString<Value extends string> = Value & {
  * console.log(sym.description)// "@beep/utils"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type IdentitySymbol<Value extends string> = symbol & {
   readonly description: Value;
@@ -583,7 +586,7 @@ export type IdentitySymbol<Value extends string> = symbol & {
  * Mirrors `S.Annotations.Bottom` so callers can supply `description`, `documentation`,
  * and other Effect Schema annotation keys alongside identity metadata.
  *
- * **Example** (Schema annotation extras type)
+ * **Example** (Name the extras a schema annotation accepts)
  *
  * ```ts
  * import type { SchemaAnnotationExtras } from "@beep/identity"
@@ -591,8 +594,8 @@ export type IdentitySymbol<Value extends string> = symbol & {
  * type Extras = SchemaAnnotationExtras<string>
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type SchemaAnnotationExtras<
   SchemaType,
@@ -607,7 +610,7 @@ export type SchemaAnnotationExtras<
  * Mirrors `S.Annotations.Declaration` so declaration-only hooks are checked
  * against both the declared value and its schema type parameters.
  *
- * **Example** (Declaration annotation extras type)
+ * **Example** (Type declaration-only annotation hooks)
  *
  * ```ts
  * import type { DeclarationAnnotationExtras } from "@beep/identity"
@@ -628,7 +631,7 @@ export type DeclarationAnnotationExtras<
 /**
  * Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
  *
- * **Example** (Key annotation extras type)
+ * **Example** (Name the extras a key annotation accepts)
  *
  * ```ts
  * import type { KeyAnnotationExtras } from "@beep/identity"
@@ -636,8 +639,8 @@ export type DeclarationAnnotationExtras<
  * type Extras = KeyAnnotationExtras<string>
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
 
@@ -650,7 +653,7 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
  * `skos:Concept` and `"conceptScheme"` adds `skos:ConceptScheme` beside
  * `rdfs:Class`.
  *
- * **Example** (SKOS concept classification marker)
+ * **Example** (Mark a schema as a SKOS concept)
  *
  * ```ts
  * import type { SkosClassification } from "@beep/identity"
@@ -659,8 +662,8 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
  * console.log(marker)
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type SkosClassification = "concept" | "conceptScheme";
 
@@ -673,7 +676,7 @@ export type SkosClassification = "concept" | "conceptScheme";
  * optionally reverse-marked with a leading `^` (SPARQL inverse-path syntax).
  * Remaining fields mirror `annotateKey` extras.
  *
- * **Example** (Borrowed vocabulary term option)
+ * **Example** (Borrow a vocabulary predicate)
  *
  * ```ts
  * import type { OntologyKeyOptions } from "@beep/identity"
@@ -682,8 +685,8 @@ export type SkosClassification = "concept" | "conceptScheme";
  * console.log(options.term)
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
   KeyAnnotationExtras<unknown>,
@@ -704,7 +707,7 @@ export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
  * Extends the `annote` extras with an optional SKOS classification marker;
  * the marker is written to the `skosClassification` annotation channel.
  *
- * **Example** (Class extras with SKOS marker)
+ * **Example** (Describe and classify a schema class)
  *
  * ```ts
  * import type { OntologyClassExtras } from "@beep/identity"
@@ -713,8 +716,8 @@ export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
  * console.log(extras.skos)
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type OntologyClassExtras<
   SchemaType = unknown,
@@ -735,7 +738,7 @@ declare module "effect/Schema" {
 /**
  * Deprecated compatibility alias for Effect's request payload encoding metadata.
  *
- * **Example** (JSON payload encoding alias)
+ * **Example** (Describe a JSON payload encoding)
  *
  * ```ts
  * import type { HttpApiEncoding } from "@beep/identity"
@@ -756,7 +759,7 @@ export type HttpApiEncoding = PayloadEncoding;
  *
  * Supports optional `httpApiStatus` and `~httpApiEncoding` for Effect HTTP API annotations.
  *
- * **Example** (HTTP annotation extras type)
+ * **Example** (Name the extras an HTTP annotation accepts)
  *
  * ```ts
  * import type { HttpAnnotationExtras } from "@beep/identity"
@@ -764,8 +767,8 @@ export type HttpApiEncoding = PayloadEncoding;
  * type Extras = HttpAnnotationExtras<string>
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type HttpAnnotationExtras<
   SchemaType,
@@ -782,7 +785,7 @@ export type HttpAnnotationExtras<
  *
  * Combines key-level and HTTP-level annotation fields into a single constraint.
  *
- * **Example** (Union annotation extras type)
+ * **Example** (Name the combined annotation extras)
  *
  * ```ts
  * import type { IdentityAnyAnnotationExtras } from "@beep/identity"
@@ -790,8 +793,8 @@ export type HttpAnnotationExtras<
  * type Extras = IdentityAnyAnnotationExtras<string>
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type IdentityAnyAnnotationExtras<
   SchemaType,
@@ -804,9 +807,11 @@ export type IdentityAnyAnnotationExtras<
  * **Details**
  *
  * Contains a full-path `identifier` string, an interned `schemaId` symbol, and a
- * human-readable `title` derived from the local identifier segment.
+ * human-readable `title` derived from the local identifier segment. The `iri`
+ * and `curie` members are present only when the composer was bound to an
+ * authority and prefix.
  *
- * **Example** (Resolved identity annotation type)
+ * **Example** (Name a resolved annotation record)
  *
  * ```ts
  * import type { IdentityAnnotation } from "@beep/identity"
@@ -814,8 +819,8 @@ export type IdentityAnyAnnotationExtras<
  * type Ann = IdentityAnnotation<"@beep/utils/User", "User">
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type IdentityAnnotation<
   Value extends string,
@@ -861,7 +866,7 @@ type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri
  * Result of calling `annote` -- the identity annotation merged with any caller-supplied extras,
  * with identity metadata keys taking precedence.
  *
- * **Example** (Annotation result with extras)
+ * **Example** (Name a merged annotation result)
  *
  * ```ts
  * import type { IdentityAnnotationResult } from "@beep/identity"
@@ -869,8 +874,8 @@ type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri
  * type Result = IdentityAnnotationResult<"@beep/utils/User", "User">
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type IdentityAnnotationResult<
   Value extends string,
@@ -897,7 +902,7 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
  * produced by calling `compose` with one or more module segment names.
  *
- * **Example** (Tagged child composer record)
+ * **Example** (Name the record `compose` returns)
  *
  * ```ts
  * import type { TaggedModuleRecord } from "@beep/identity"
@@ -905,8 +910,8 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export type TaggedModuleRecord<
   Value extends string,
@@ -928,12 +933,13 @@ export type TaggedModuleRecord<
  *
  * **Details**
  *
- * An `IdentityComposer` holds a current identity path and provides methods to:
- * - Extend the path with child segments (`create`, `make`, template tag)
- * - Produce annotation records for Effect schemas (`annote`, `annoteClass`, `annoteSchema`, `annoteHttp`, `annoteKey`)
- * - Batch-create named child composers (`compose`)
+ * A composer holds a current identity path and provides methods to extend the
+ * path with child segments (`create`, `make`, template tag), produce annotation
+ * records for Effect schemas (`annote`, `annoteClass`, `annoteSchema`,
+ * `annoteHttp`, `annoteKey`), and batch-create named child composers
+ * (`compose`).
  *
- * **Example** (Composer nesting and annotations)
+ * **Example** (Walk the composer surface)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -967,8 +973,8 @@ export type TaggedModuleRecord<
  * console.log(annotation.title)// "UserSchema"
  * ```
  *
- * @category models
  * @since 0.0.0
+ * @category models
  */
 export interface IdentityComposer<
   Value extends string,
@@ -979,13 +985,17 @@ export interface IdentityComposer<
   /**
    * Produce an identity annotation record for an Effect schema.
    *
+   * **When to use**
+   *
+   * Use with `S.Class`, `S.TaggedError`, or similar constructors that accept an
+   * annotation record.
+   *
    * **Details**
    *
-   * Returns an object containing `schemaId`, `identifier`, `title`, and any
-   * caller-supplied extras. Use this with `S.Class`, `S.TaggedErrorClass`, or
-   * similar constructors that accept an annotation record.
+   * The result carries `schemaId`, `identifier`, and `title` alongside any
+   * caller-supplied extras; identity metadata wins on key collisions.
    *
-   * **Example** (Schema annotation with description)
+   * **Example** (Annotate a domain event)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -998,8 +1008,8 @@ export interface IdentityComposer<
    * console.log(ann.description)// "A user was created."
    * ```
    *
-   * @category combinators
    * @since 0.0.0
+   * @category combinators
    */
   annote<
     const Next extends TString.NonEmpty = TString.NonEmpty,
@@ -1018,7 +1028,7 @@ export interface IdentityComposer<
    * declaration-only hooks such as `toArbitrary` and `toEquivalence` receive
    * their real contextual types.
    *
-   * **Example** (Class annotation with equivalence)
+   * **Example** (Supply a declaration-only equivalence hook)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1048,6 +1058,8 @@ export interface IdentityComposer<
   /**
    * Produce a schema annotation function with HTTP API metadata.
    *
+   * **Details**
+   *
    * Returns a function that annotates an Effect schema with identity metadata
    * plus optional `httpApiStatus` and encoding fields.
    *
@@ -1067,7 +1079,7 @@ export interface IdentityComposer<
    * When called with zero arguments, returns a curried builder that constrains
    * the identifier to valid paths within `Parent`.
    *
-   * **Example** (Struct key annotation builder)
+   * **Example** (Annotate a struct field by path)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1083,8 +1095,8 @@ export interface IdentityComposer<
    * })
    * ```
    *
-   * @category combinators
    * @since 0.0.0
+   * @category combinators
    */
   annoteKey<Parent extends object>(): <
     const Next extends TString.NonEmpty = TString.NonEmpty,
@@ -1110,6 +1122,8 @@ export interface IdentityComposer<
   /**
    * Produce a generic schema annotation function.
    *
+   * **Details**
+   *
    * Returns a function that calls `self.annotate(...)` with identity metadata
    * merged with any caller-supplied extras.
    *
@@ -1131,7 +1145,7 @@ export interface IdentityComposer<
    * entrypoint for the ontology fold; membership in a fold comes from the
    * fold's `schemas` list, not from this marker.
    *
-   * **Example** (Ontology class with SKOS marker)
+   * **Example** (Annotate an ontology concept)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1144,8 +1158,8 @@ export interface IdentityComposer<
    * console.log(ann.skosClassification)// "concept"
    * ```
    *
-   * @category combinators
    * @since 0.0.0
+   * @category combinators
    */
   class<const Next extends TString.NonEmpty = TString.NonEmpty, const Extras extends OntologyClassExtras = {}>(
     identifier: SegmentValue<Next>,
@@ -1166,7 +1180,7 @@ export interface IdentityComposer<
    * Returns a record whose keys are `$`-prefixed PascalCase accessors (e.g. `$AuthId`)
    * mapped to child composers rooted at `{Value}/{segment}`.
    *
-   * **Example** (Batch child module composers)
+   * **Example** (Create module composers in one call)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1178,8 +1192,8 @@ export interface IdentityComposer<
    * console.log(authId)// "@beep/my-pkg/auth/Session"
    * ```
    *
-   * @category constructors
    * @since 0.0.0
+   * @category constructors
    */
   compose<
     const Segments extends readonly [ModuleSegmentValue<TString.NonEmpty>, ...ModuleSegmentValue<TString.NonEmpty>[]],
@@ -1193,7 +1207,7 @@ export interface IdentityComposer<
    * Unlike `make` (which returns a plain string), `create` returns a full
    * composer that supports further nesting, annotation, and composition.
    *
-   * **Example** (Nested child composer creation)
+   * **Example** (Nest a child composer)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1204,8 +1218,8 @@ export interface IdentityComposer<
    * console.log(entityId)// "@beep/my-pkg/domain/Entity"
    * ```
    *
-   * @category constructors
    * @since 0.0.0
+   * @category constructors
    */
   create<const Next extends TString.NonEmpty>(
     segment: SegmentValue<Next>
@@ -1214,7 +1228,7 @@ export interface IdentityComposer<
   /**
    * CURIE projection for this composer's current path, or `undefined` when unbound.
    *
-   * **Example** (Bound composer CURIE projection)
+   * **Example** (Read a bound CURIE)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1224,8 +1238,8 @@ export interface IdentityComposer<
    * console.log(curie) // "beep:schema"
    * ```
    *
-   * @category getters
    * @since 0.0.0
+   * @category getters
    */
   readonly curie: BoundComposerCurie<Prefix, Value>;
 
@@ -1246,7 +1260,7 @@ export interface IdentityComposer<
    * callers must handle `undefined` there. Root-bound package composers derive
    * exact literals from the configured authority.
    *
-   * **Example** (Bound composer IRI projection)
+   * **Example** (Read a bound IRI)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1256,8 +1270,8 @@ export interface IdentityComposer<
    * console.log(iri) // "https://ns.beep.sh/schema"
    * ```
    *
-   * @category getters
    * @since 0.0.0
+   * @category getters
    */
   readonly iri: BoundComposerIri<Authority, Value>;
 
@@ -1273,7 +1287,7 @@ export interface IdentityComposer<
    * fold defaults the local name from the struct key. Borrowed vocabulary
    * never rides the owned `identifier` channel.
    *
-   * **Example** (Borrowed and owned key terms)
+   * **Example** (Borrow, reverse, and own predicates)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1291,8 +1305,8 @@ export interface IdentityComposer<
    * console.log(S.resolveAnnotationsKey(Claim.fields.prefLabel)?.ontologyTerm)// "skos:prefLabel"
    * ```
    *
-   * @category combinators
    * @since 0.0.0
+   * @category combinators
    */
   key(term: Predicate<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
   key(options: OntologyKeyOptions<Vocab>): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
@@ -1300,7 +1314,7 @@ export interface IdentityComposer<
   /**
    * Create a child identity string by appending one segment.
    *
-   * **Example** (Child identity string creation)
+   * **Example** (Append one segment)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1310,8 +1324,8 @@ export interface IdentityComposer<
    * console.log(id)// "@beep/my-pkg/UserModel"
    * ```
    *
-   * @category constructors
    * @since 0.0.0
+   * @category constructors
    */
   make<const Next extends TString.NonEmpty>(
     segment: SegmentValue<Next>
@@ -1320,7 +1334,7 @@ export interface IdentityComposer<
   /**
    * Rebind IRI and CURIE projections without changing the identity path or symbol.
    *
-   * **Example** (Rebinding IRI and CURIE)
+   * **Example** (Rebase onto a foreign namespace)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1331,8 +1345,8 @@ export interface IdentityComposer<
    * console.log(rebased.iri) // "https://opip.law/ns/patent#ontology/patent"
    * ```
    *
-   * @category combinators
    * @since 0.0.0
+   * @category combinators
    */
   rebase<const Iri extends string, const NextPrefix extends string>(options: {
     readonly iri: Iri;
@@ -1342,7 +1356,7 @@ export interface IdentityComposer<
   /**
    * Kebab-case slug projection for this composer's current path.
    *
-   * **Example** (Nested path slug projection)
+   * **Example** (Slug a nested composer path)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1352,8 +1366,8 @@ export interface IdentityComposer<
    * console.log(slug) // "beep-ontology-models-http-url"
    * ```
    *
-   * @category getters
    * @since 0.0.0
+   * @category getters
    */
   readonly slug: SlugFromIdentifier<Value>;
 
@@ -1386,7 +1400,7 @@ export interface IdentityComposer<
    * composer is unbound or bound without a vocabulary extension (consumers
    * default to the core registry).
    *
-   * **Example** (Bound vocabulary registry access)
+   * **Example** (Read the bound vocabulary)
    *
    * ```ts
    * import { CoreVocab, make } from "@beep/identity"
@@ -1395,19 +1409,20 @@ export interface IdentityComposer<
    * console.log($BeepId.vocabRegistry === CoreVocab) // true
    * ```
    *
-   * @category getters
    * @since 0.0.0
+   * @category getters
    */
   readonly vocabRegistry: Vocab | undefined;
 
   /**
    * Template tag call signature for creating child identity strings.
    *
-   * **Details**
+   * **Gotchas**
    *
-   * Must be called with a single static string literal and no interpolations.
+   * Must be called with a single static string literal and no interpolations;
+   * either violation throws at call time rather than failing to type-check.
    *
-   * **Example** (Static template tag identity)
+   * **Example** (Derive a service identity)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1417,8 +1432,8 @@ export interface IdentityComposer<
    * console.log(id)// "@beep/my-pkg/UserService"
    * ```
    *
-   * @category constructors
    * @since 0.0.0
+   * @category constructors
    */
   (strings: TemplateStringsArray, ...values: ReadonlyArray<unknown>): IdentityString<`${Value}/${string}`>;
 }
@@ -1509,7 +1524,12 @@ const normalizeBaseValue = (value: string): string => {
 /**
  * Schema for package identity constructor input after `@beep` prefix normalization.
  *
- * **Example** (Decoding normalized package base)
+ * **Details**
+ *
+ * Decoding strips an accepted `@beep/`, `@beep`, or bare `@` prefix, so
+ * `"@beep/my-pkg"` and `"my-pkg"` normalize to the same base segment.
+ *
+ * **Example** (Normalize a scoped package name)
  *
  * ```ts
  * import * as O from "effect/Option"
@@ -1540,7 +1560,7 @@ export const BaseIdentityInput = S.String.pipe(
 /**
  * Runtime type for {@link BaseIdentityInput}.
  *
- * **Example** (Bare package base type)
+ * **Example** (Hold a normalized base segment)
  *
  * ```ts
  * import type { BaseIdentityInput } from "@beep/identity"
@@ -2013,9 +2033,11 @@ type MakeReturn<
  *
  * Accepts a base string (with or without the `@beep/` prefix) and returns
  * a record containing a single `$`-prefixed PascalCase accessor mapped to
- * the root {@link IdentityComposer} for that package.
+ * the root {@link IdentityComposer} for that package. The one-argument form
+ * leaves the composer unbound, so its `iri` and `curie` projections are
+ * `undefined` until an authority and prefix are supplied.
  *
- * **Example** (Bare package name composer)
+ * **Example** (Compose from a bare package name)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -2026,7 +2048,7 @@ type MakeReturn<
  * console.log(id)// "@beep/my-pkg/Service"
  * ```
  *
- * **Example** (Scoped package name composer)
+ * **Example** (Compose from a fully scoped name)
  *
  * ```ts
  * import { make } from "@beep/identity"
@@ -2037,8 +2059,8 @@ type MakeReturn<
  * console.log(sym)// Symbol.for("@beep/utils")
  * ```
  *
- * @category constructors
  * @since 0.0.0
+ * @category constructors
  */
 export function make<const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base, undefined, undefined>;
 export function make<

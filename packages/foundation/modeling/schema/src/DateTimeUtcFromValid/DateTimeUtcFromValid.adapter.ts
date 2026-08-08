@@ -138,4 +138,6 @@ export const createDateTimeWithTimezone: {
  * @category constructors
  * @since 0.0.0
  */
-export const createInvalidDateTime = (): DateTime.DateTime => DateTime.makeUnsafe({ epochMilliseconds: Number.NaN });
+// makeUnsafe rejects NaN since effect 4.0.0-beta.104; fromEpochSeconds still admits it, and the
+// MUI picker adapter contract requires an invalid-date sentinel rather than null.
+export const createInvalidDateTime = (): DateTime.DateTime => DateTime.fromEpochSeconds(Number.NaN);

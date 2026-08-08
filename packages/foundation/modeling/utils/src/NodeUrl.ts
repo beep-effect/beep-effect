@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("NodeUrl");
 
-class NodeUrlUnavailableError extends S.TaggedErrorClass<NodeUrlUnavailableError>($I`NodeUrlUnavailableError`)(
+class NodeUrlUnavailableError extends S.TaggedError<NodeUrlUnavailableError>($I`NodeUrlUnavailableError`)(
   "NodeUrlUnavailableError",
   {
     module: S.Literal("node:url"),

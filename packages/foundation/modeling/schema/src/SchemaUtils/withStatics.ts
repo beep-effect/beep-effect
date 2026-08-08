@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("SchemaUtils/withStatics");
 
-class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsStaticRedefinitionError>(
+class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStaticRedefinitionError>(
   $I`WithStaticsStaticRedefinitionError`
 )(
   "WithStaticsStaticRedefinitionError",

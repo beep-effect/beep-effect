@@ -44,7 +44,7 @@ const $I = $ObservabilityId.create("Observed");
  * @category models
  * @since 0.0.0
  */
-export const ObservedError = S.Error().pipe(
+export const ObservedError = S.ErrorInstance().pipe(
   $I.annoteSchema("ObservedError", {
     description: "A transport-safe schema for expected errors.",
   })
@@ -84,7 +84,7 @@ export type ObservedError = typeof ObservedError.Type;
  * @category models
  * @since 0.0.0
  */
-export const ObservedErrorWithStack = S.Error({ includeStack: true }).pipe(
+export const ObservedErrorWithStack = S.ErrorInstance({ includeStack: true }).pipe(
   $I.annoteSchema("ObservedErrorWithStack", {
     description: "A transport-safe schema for expected errors that preserves stacks.",
   })
