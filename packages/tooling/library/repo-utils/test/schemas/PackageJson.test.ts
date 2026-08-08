@@ -341,6 +341,24 @@ describe("PackageJson schema", () => {
       );
     });
 
+    it("decodes Bun trusted dependencies", () => {
+      const result = decodePackageJson({
+        name: "@beep/infra",
+        trustedDependencies: ["@pulumi/ghaRunners"],
+      });
+
+      expect(result.trustedDependencies).toEqual(O.some(["@pulumi/ghaRunners"]));
+    });
+
+    it("decodes Sherif configuration", () => {
+      const result = decodePackageJson({
+        name: "@beep/root",
+        sherif: { ignorePackage: ["infra/ci-runners/sdks/**"] },
+      });
+
+      expect(result.sherif).toEqual(O.some({ ignorePackage: ["infra/ci-runners/sdks/**"] }));
+    });
+
     it("decodes repo-local beep package metadata", () => {
       const driverResult = decodePackageJson({
         name: "@beep/drizzle",

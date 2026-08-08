@@ -435,6 +435,11 @@
     "ui-add": "bunx --bun shadcn@latest add --cwd packages/foundation/ui-system/ui",
     "version-sync": "bun run beep version-sync"
   },
+  "sherif": {
+    "ignorePackage": [
+      "infra/ci-runners/sdks/**"
+    ]
+  },
   "type": "module",
   "workspaces": [
     "infra",
