@@ -7,11 +7,13 @@
 
 import { FaceDetection, FaceDetectionConfidence, FaceDetectionPercentage } from "@beep/face-detection";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PositiveMediaDimension } from "./Media.schemas.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/DetectFaces.schemas");
 
@@ -272,7 +274,10 @@ export class DetectFacesReport extends S.Class<DetectFacesReport>($I`DetectFaces
  * @category codecs
  * @since 0.0.0
  */
-export const decodeDetectFacesOptions = S.decodeUnknownEffect(DetectFacesOptions);
+export const decodeDetectFacesOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<DetectFacesOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<DetectFacesOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(DetectFacesOptions));
 
 /**
  * Encode a face detection report into its JSON-safe shape.
@@ -286,4 +291,7 @@ export const decodeDetectFacesOptions = S.decodeUnknownEffect(DetectFacesOptions
  * @category codecs
  * @since 0.0.0
  */
-export const encodeDetectFacesReport = S.encodeUnknownEffect(DetectFacesReport);
+export const encodeDetectFacesReport: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof DetectFacesReport.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof DetectFacesReport.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(DetectFacesReport));

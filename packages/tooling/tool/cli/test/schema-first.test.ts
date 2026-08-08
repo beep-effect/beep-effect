@@ -36,7 +36,7 @@ const committedPolicyText = O.getOrElse(
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
-    const decoded = S.decodeUnknownSync(FileGenerationPlanInput)({
+    const decoded = S.decodeSync(FileGenerationPlanInput)({
       outputDir: "/tmp/demo",
       directories: ["src"],
       files: [{ relativePath: "src/index.ts", content: "export {};\n" }],

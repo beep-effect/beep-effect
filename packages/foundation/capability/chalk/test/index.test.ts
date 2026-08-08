@@ -201,73 +201,52 @@ describe("@beep/chalk", () => {
 describe("supportsColor detection", () => {
   it("honors force-color, no-color, tty, and CI rules", () => {
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { TERM: "xterm-256color" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { TERM: "xterm-256color" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { FORCE_COLOR: "3", NO_COLOR: "" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "3", NO_COLOR: "" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 3 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { NO_COLOR: "1", TERM: "xterm-256color" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { NO_COLOR: "1", TERM: "xterm-256color" } },
+        stream: { isTTY: true },
+      })
     ).toBe(false);
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "2", NO_COLOR: "1" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "2", NO_COLOR: "1" } },
+        stream: { isTTY: false },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "definitely-not-a-level" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "definitely-not-a-level" } },
+        stream: { isTTY: false },
+      })
     ).toBe(false);
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "2" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "2" } },
+        stream: { isTTY: false },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { CI: "1", GITHUB_ACTIONS: "1" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { CI: "1", GITHUB_ACTIONS: "1" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 3 });
   });
 
@@ -281,11 +260,15 @@ describe("supportsColor detection", () => {
         readonly sniffFlags?: boolean;
       } = {}
     ) =>
-      createSupportsColor({ isTTY: true }, options.sniffFlags === undefined ? {} : { sniffFlags: options.sniffFlags }, {
-        argv: options.argv ?? [],
-        env,
-        platform: options.platform ?? "linux",
-        ...(options.osRelease === undefined ? {} : { osRelease: options.osRelease }),
+      createSupportsColor({
+        options: options.sniffFlags === undefined ? {} : { sniffFlags: options.sniffFlags },
+        runtimeProcessLike: {
+          argv: options.argv ?? [],
+          env,
+          platform: options.platform ?? "linux",
+          ...(options.osRelease === undefined ? {} : { osRelease: options.osRelease }),
+        },
+        stream: { isTTY: true },
       });
 
     expect(detect({}, { argv: ["--no-color"] })).toBe(false);

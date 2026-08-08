@@ -42,6 +42,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -476,22 +477,27 @@ const settledAction = (
  * @category utilities
  * @since 0.0.0
  */
-export const findReplyThread = (
-  threads: ReadonlyArray<ReplyLiveThread>,
-  draft: ReplyDraft
-): O.Option<ReplyLiveThread> =>
-  pipe(
-    draft.threadId,
-    O.flatMap((threadId) => A.findFirst(threads, (thread) => thread.id === threadId)),
-    O.orElse(() =>
-      pipe(
-        draft.commentId,
-        O.flatMap((commentId) =>
-          A.findFirst(threads, (thread) => A.some(thread.comments.nodes, (comment) => comment.databaseId === commentId))
+export const findReplyThread: {
+  (draft: ReplyDraft): (threads: ReadonlyArray<ReplyLiveThread>) => O.Option<ReplyLiveThread>;
+  (threads: ReadonlyArray<ReplyLiveThread>, draft: ReplyDraft): O.Option<ReplyLiveThread>;
+} = dual(
+  2,
+  (threads: ReadonlyArray<ReplyLiveThread>, draft: ReplyDraft): O.Option<ReplyLiveThread> =>
+    pipe(
+      draft.threadId,
+      O.flatMap((threadId) => A.findFirst(threads, (thread) => thread.id === threadId)),
+      O.orElse(() =>
+        pipe(
+          draft.commentId,
+          O.flatMap((commentId) =>
+            A.findFirst(threads, (thread) =>
+              A.some(thread.comments.nodes, (comment) => comment.databaseId === commentId)
+            )
+          )
         )
       )
     )
-  );
+);
 
 const classifyReplyDraft = (
   prNumber: number,
@@ -576,17 +582,20 @@ const classifyReplyDraft = (
  * @category utilities
  * @since 0.0.0
  */
-export const planReplyActions = (
-  drafts: ReplyDrafts,
-  threads: ReadonlyArray<ReplyLiveThread>
-): ReadonlyArray<ReplyAction> =>
-  A.reduce(drafts.drafts, { actions: A.empty<ReplyAction>(), claimed: HashSet.empty<string>() }, (state, draft) => {
-    const action = classifyReplyDraft(drafts.prNumber, threads, state.claimed, draft);
-    return {
-      actions: [...state.actions, action],
-      claimed: action._tag === "post" ? HashSet.add(state.claimed, action.threadId) : state.claimed,
-    };
-  }).actions;
+export const planReplyActions: {
+  (threads: ReadonlyArray<ReplyLiveThread>): (drafts: ReplyDrafts) => ReadonlyArray<ReplyAction>;
+  (drafts: ReplyDrafts, threads: ReadonlyArray<ReplyLiveThread>): ReadonlyArray<ReplyAction>;
+} = dual(
+  2,
+  (drafts: ReplyDrafts, threads: ReadonlyArray<ReplyLiveThread>): ReadonlyArray<ReplyAction> =>
+    A.reduce(drafts.drafts, { actions: A.empty<ReplyAction>(), claimed: HashSet.empty<string>() }, (state, draft) => {
+      const action = classifyReplyDraft(drafts.prNumber, threads, state.claimed, draft);
+      return {
+        actions: [...state.actions, action],
+        claimed: action._tag === "post" ? HashSet.add(state.claimed, action.threadId) : state.claimed,
+      };
+    }).actions
+);
 
 /**
  * The single `gh` command that resolves one review thread.

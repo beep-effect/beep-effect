@@ -7,9 +7,12 @@
 
 import { ExtractFramesResult, PositiveFrameRate } from "@beep/ffmpeg";
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Image/Image.schemas");
 
@@ -282,7 +285,10 @@ export class ExtractFramesDirResult extends S.Class<ExtractFramesDirResult>($I`E
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesOptions = S.decodeUnknownEffect(ExtractFramesOptions);
+export const decodeExtractFramesOptions: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractFramesOptions, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractFramesOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractFramesOptions));
 
 /**
  * Decode unknown directory frame extraction options.
@@ -298,4 +304,7 @@ export const decodeExtractFramesOptions = S.decodeUnknownEffect(ExtractFramesOpt
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesDirOptions = S.decodeUnknownEffect(ExtractFramesDirOptions);
+export const decodeExtractFramesDirOptions: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractFramesDirOptions, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractFramesDirOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractFramesDirOptions));

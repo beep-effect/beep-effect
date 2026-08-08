@@ -30,7 +30,9 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
     const receivedIndex = Graph_.addNode(mutable, node);
 
     if (receivedIndex !== expectedIndex) {
-      return yield* Effect.fail(makeGraphConstructionIssue("node", expectedIndex, receivedIndex));
+      return yield* Effect.fail(
+        makeGraphConstructionIssue({ entity: "node", expected: expectedIndex, received: receivedIndex })
+      );
     }
   }
 
@@ -41,7 +43,9 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
     });
 
     if (receivedIndex !== index) {
-      return yield* Effect.fail(makeGraphConstructionIssue("edge", index, receivedIndex));
+      return yield* Effect.fail(
+        makeGraphConstructionIssue({ entity: "edge", expected: index, received: receivedIndex })
+      );
     }
   }
 

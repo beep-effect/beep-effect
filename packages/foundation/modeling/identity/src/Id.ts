@@ -130,7 +130,7 @@ const $I = {
  * @since 0.0.0
  * @category error-handling
  */
-export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInterpolationError>(
+export class IdentityInterpolationError extends S.TaggedError<IdentityInterpolationError>(
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
@@ -161,7 +161,7 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
  * @since 0.0.0
  * @category error-handling
  */
-export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmentCountError>(
+export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCountError>(
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
@@ -913,7 +913,7 @@ export interface IdentityComposer<
    * Produce an identity annotation record for an Effect schema.
    *
    * Returns an object containing `schemaId`, `identifier`, `title`, and any
-   * caller-supplied extras. Use this with `S.Class`, `S.TaggedErrorClass`, or
+   * caller-supplied extras. Use this with `S.Class`, `S.TaggedError`, or
    * similar constructors that accept an annotation record.
    *
    * @example

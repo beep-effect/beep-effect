@@ -694,7 +694,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     O.flatMap((result) => O.fromUndefinedOr(result.output)),
     O.getOrElse(() => Str.empty)
   );
-  const pullRequestNumber = yield* S.decodeUnknownEffect(S.fromJsonString(GhPrView))(contextOutput).pipe(
+  const pullRequestNumber = yield* S.decodeEffect(S.fromJsonString(GhPrView))(contextOutput).pipe(
     Effect.map((pullRequest) => pullRequest.number),
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
@@ -977,7 +977,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   }
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const attemptId = yield* S.decodeUnknownEffect(UUID)(randomUUID()).pipe(
+  const attemptId = yield* S.decodeEffect(UUID)(randomUUID()).pipe(
     Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id."))
   );
   const attempt = YeetAttemptStarted.make({

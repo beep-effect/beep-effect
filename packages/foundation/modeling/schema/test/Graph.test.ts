@@ -12,22 +12,22 @@ const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind);
 
 describe("Graph indices", () => {
   it("brands non-negative integer node and edge indices", () => {
-    expect(S.decodeUnknownSync(GraphSchema.NodeIndex)(0)).toBe(0);
-    expect(S.decodeUnknownSync(GraphSchema.NodeIndexFromString)("2")).toBe(2);
-    expect(S.decodeUnknownSync(GraphSchema.EdgeIndex)(1)).toBe(1);
-    expect(S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("3")).toBe(3);
+    expect(S.decodeSync(GraphSchema.NodeIndex)(0)).toBe(0);
+    expect(S.decodeSync(GraphSchema.NodeIndexFromString)("2")).toBe(2);
+    expect(S.decodeSync(GraphSchema.EdgeIndex)(1)).toBe(1);
+    expect(S.decodeSync(GraphSchema.EdgeIndexFromString)("3")).toBe(3);
   });
 
   it("rejects invalid indices", () => {
-    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
-    expect(() => S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
+    expect(() => S.decodeSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
+    expect(() => S.decodeSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
       "Expected a value greater than or equal to 0"
     );
   });
 
   it("decodes graph kind discriminators", () => {
-    expect(S.decodeUnknownSync(GraphSchema.GraphKind)("directed")).toBe("directed");
-    expect(S.decodeUnknownSync(GraphSchema.GraphKind)("undirected")).toBe("undirected");
+    expect(S.decodeSync(GraphSchema.GraphKind)("directed")).toBe("directed");
+    expect(S.decodeSync(GraphSchema.GraphKind)("undirected")).toBe("undirected");
   });
 
   it("derives valid graph primitives from their source schemas", () => {
@@ -72,7 +72,7 @@ describe("Graph edge schemas", () => {
 
   it("validates existing Graph.Edge instances with nested transforms", () => {
     const schema = GraphSchema.EdgeFromSelf(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: "1" }));
+    const decoded = S.decodeSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: "1" }));
 
     expect(decoded).toBeInstanceOf(Graph_.Edge);
     expect(decoded.data).toBe(1);
@@ -164,7 +164,7 @@ describe("DirectedGraph", () => {
     });
 
     expect(() =>
-      S.decodeUnknownSync(schema)({
+      S.decodeSync(schema)({
         _tag: "Graph",
         type: "undirected",
         nodes: [],
@@ -238,7 +238,7 @@ describe("UndirectedGraph", () => {
       Graph_.addEdge(mutable, a, b, "x");
     });
 
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
@@ -260,7 +260,7 @@ describe("Graph FromSelf schemas", () => {
       const b = Graph_.addNode(mutable, "2");
       Graph_.addEdge(mutable, a, b, "x");
     });
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(false);
@@ -311,7 +311,7 @@ describe("Graph FromSelf schemas", () => {
     const b = Graph_.addNode(graph, "2");
     Graph_.addEdge(graph, a, b, "x");
 
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(true);
@@ -339,8 +339,8 @@ describe("Graph FromSelf schemas", () => {
     const b = Graph_.addNode(graph, "2");
     Graph_.addEdge(graph, a, b, "x");
 
-    const generic = S.decodeUnknownSync(genericSchema)(graph);
-    const undirected = S.decodeUnknownSync(undirectedSchema)(graph);
+    const generic = S.decodeSync(genericSchema)(graph);
+    const undirected = S.decodeSync(undirectedSchema)(graph);
 
     expect(generic.type).toBe("undirected");
     expect(generic.mutable).toBe(true);

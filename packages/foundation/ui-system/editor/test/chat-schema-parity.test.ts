@@ -64,31 +64,26 @@ describe("@beep/editor schema crispening parity", () => {
   it("round-trips pure chat schemas with schema-derived arbitraries", () => {
     fc.assert(
       fc.property(S.toArbitrary(SendOn), (value) => {
-        expect(Equal.equals(S.decodeUnknownSync(SendOn)(S.encodeSync(SendOn)(value)), value)).toBe(true);
+        expect(Equal.equals(S.decodeSync(SendOn)(S.encodeSync(SendOn)(value)), value)).toBe(true);
       })
     );
     fc.assert(
       fc.property(S.toArbitrary(ImageAttachmentMimeType), (value) => {
         expect(
-          Equal.equals(
-            S.decodeUnknownSync(ImageAttachmentMimeType)(S.encodeSync(ImageAttachmentMimeType)(value)),
-            value
-          )
+          Equal.equals(S.decodeSync(ImageAttachmentMimeType)(S.encodeSync(ImageAttachmentMimeType)(value)), value)
         ).toBe(true);
       })
     );
     fc.assert(
       fc.property(S.toArbitrary(ComposerFeatures), (value) => {
-        expect(Equal.equals(S.decodeUnknownSync(ComposerFeatures)(S.encodeSync(ComposerFeatures)(value)), value)).toBe(
-          true
-        );
+        expect(Equal.equals(S.decodeSync(ComposerFeatures)(S.encodeSync(ComposerFeatures)(value)), value)).toBe(true);
       })
     );
     fc.assert(
       fc.property(S.toArbitrary(AttachmentRejection), (value) => {
-        expect(
-          Equal.equals(S.decodeUnknownSync(AttachmentRejection)(S.encodeSync(AttachmentRejection)(value)), value)
-        ).toBe(true);
+        expect(Equal.equals(S.decodeSync(AttachmentRejection)(S.encodeSync(AttachmentRejection)(value)), value)).toBe(
+          true
+        );
       })
     );
   });
@@ -96,17 +91,17 @@ describe("@beep/editor schema crispening parity", () => {
   it("rejects empty menu identity and display fields at the schema boundary", () => {
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(SlashItem)({
+        S.decodeResult(SlashItem)({
           key: "",
           label: "Heading",
           onSelect: () => undefined,
         })
       )
     ).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(MentionOption)({ id: "", label: "Ada" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(MentionOption)({ id: "", label: "Ada" }))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(SlashItems)([
+        S.decodeResult(SlashItems)([
           { key: "paragraph", label: "Paragraph", onSelect: () => undefined },
           { key: "", label: "Broken", onSelect: () => undefined },
         ])
@@ -114,7 +109,7 @@ describe("@beep/editor schema crispening parity", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(MentionOptions)([
+        S.decodeResult(MentionOptions)([
           { id: "ada", label: "Ada" },
           { id: "", label: "Broken" },
         ])
@@ -123,11 +118,11 @@ describe("@beep/editor schema crispening parity", () => {
   });
 
   it("rejects duplicate collection identities at their exact field paths", () => {
-    const duplicateSlashItems = S.decodeUnknownResult(SlashItems)([
+    const duplicateSlashItems = S.decodeResult(SlashItems)([
       { key: "same", label: "First", onSelect: () => undefined },
       { key: "same", label: "Second", onSelect: () => undefined },
     ]);
-    const duplicateMentions = S.decodeUnknownResult(MentionOptions)([
+    const duplicateMentions = S.decodeResult(MentionOptions)([
       { id: "same", label: "First" },
       { id: "same", label: "Second" },
     ]);

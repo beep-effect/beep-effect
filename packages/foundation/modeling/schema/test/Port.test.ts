@@ -81,7 +81,7 @@ describe("PortFromString", () => {
   it.effect(
     "encodes branded transport ports back to decimal strings",
     Effect.fnUntraced(function* () {
-      const value = yield* S.decodeUnknownEffect(Port)(443);
+      const value = yield* S.decodeEffect(Port)(443);
 
       expect(yield* encode(value)).toBe("443");
     })

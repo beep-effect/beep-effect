@@ -102,9 +102,6 @@ const filterSlashItems = (items: ReadonlyArray<SlashItem>, query: string): Reado
 const slashQueryAtom = Atom.family((_editor: LexicalEditor) => Atom.make<string>(""));
 
 const decodeMentionOptions = S.decodeUnknownEffect(MentionOptions);
-const isImmediateMentionOptions = (result: ReturnType<MentionSource>): result is ReadonlyArray<MentionOption> =>
-  A.isArray(result);
-
 const mentionSourceFailure = (cause: unknown): MentionLookupError =>
   MentionLookupError.make({
     reason: "source-failed",
@@ -123,16 +120,13 @@ const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
     }>()(
       Effect.fnUntraced(
         function* ({ query, source }) {
-          const sourceResult = yield* Effect.try({
-            try: () => source(query),
+          // `Promise.resolve` adopts a promise-returning source and lifts an
+          // immediate result; a synchronous throw from `source` is routed to
+          // `catch` by `Effect.tryPromise`, matching the previous Effect.try.
+          const raw = yield* Effect.tryPromise({
+            try: () => Promise.resolve(source(query)),
             catch: mentionSourceFailure,
           });
-          const raw = yield* isImmediateMentionOptions(sourceResult)
-            ? Effect.succeed(sourceResult)
-            : Effect.tryPromise({
-                try: () => sourceResult,
-                catch: mentionSourceFailure,
-              });
           return yield* decodeMentionOptions(raw).pipe(
             Effect.mapError((cause) =>
               MentionLookupError.make({

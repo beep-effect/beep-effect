@@ -218,14 +218,14 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     });
 
     it("ExtensionKey rejects canonical keywords and accepts extension names", () => {
-      expect(O.isNone(S.decodeUnknownOption(ExtensionKey)("type"))).toBe(true);
-      expect(O.isSome(S.decodeUnknownOption(ExtensionKey)("x-vendor"))).toBe(true);
+      expect(O.isNone(S.decodeOption(ExtensionKey)("type"))).toBe(true);
+      expect(O.isSome(S.decodeOption(ExtensionKey)("x-vendor"))).toBe(true);
     });
 
     it.effect(
       "preserves a hostile __proto__ wire key without prototype pollution",
       Effect.fnUntraced(function* () {
-        const wire: unknown = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(
+        const wire: unknown = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
           '{"__proto__": {"polluted": 1}, "x-a": 2}'
         );
         const node = yield* decodeNode(wire);

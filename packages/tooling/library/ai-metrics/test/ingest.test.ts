@@ -94,8 +94,23 @@ import { Effect, Encoding, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Re
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
+
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -1087,14 +1102,16 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "rejects relative timer executable paths",
     Effect.fn(function* () {
-      expect(() =>
-        AiMetricsForwarderTimerInput.make({
-          command: ["bun", "run", "beep"],
-          lockPath: "%t/beep-ai-metrics-forwarder.lock",
-          statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
-          workingDirectory: "/repo/beep-effect",
-        })
-      ).toThrow("absolute executable path");
+      expectSchemaMakeToFail(
+        () =>
+          AiMetricsForwarderTimerInput.make({
+            command: ["bun", "run", "beep"],
+            lockPath: "%t/beep-ai-metrics-forwarder.lock",
+            statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
+            workingDirectory: "/repo/beep-effect",
+          }),
+        "absolute executable path"
+      );
     })
   );
 

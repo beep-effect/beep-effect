@@ -111,7 +111,7 @@ describe("WorkItem UI view model", () => {
     fc.assert(
       fc.property(WorkItemVisibleActionArbitrary, (value) => {
         expect(
-          Equal.equals(S.decodeUnknownSync(WorkItemVisibleAction)(S.encodeSync(WorkItemVisibleAction)(value)), value)
+          Equal.equals(S.decodeSync(WorkItemVisibleAction)(S.encodeSync(WorkItemVisibleAction)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)
@@ -120,10 +120,7 @@ describe("WorkItem UI view model", () => {
     fc.assert(
       fc.property(WorkItemSummaryViewModelArbitrary, (value) => {
         expect(
-          Equal.equals(
-            S.decodeUnknownSync(WorkItemSummaryViewModel)(S.encodeSync(WorkItemSummaryViewModel)(value)),
-            value
-          )
+          Equal.equals(S.decodeSync(WorkItemSummaryViewModel)(S.encodeSync(WorkItemSummaryViewModel)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)

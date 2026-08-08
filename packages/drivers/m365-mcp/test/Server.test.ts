@@ -209,16 +209,14 @@ describe("M365 MCP server", () => {
       fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
         assert.isTrue(
           sameM365ToolError(
-            Result.getOrThrow(
-              S.decodeUnknownResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))
-            ),
+            Result.getOrThrow(S.decodeResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))),
             failure
           )
         );
         assert.isTrue(
           sameM365McpServerConfig(
             Result.getOrThrow(
-              S.decodeUnknownResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
+              S.decodeResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
             ),
             config
           )

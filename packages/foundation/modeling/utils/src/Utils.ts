@@ -35,16 +35,22 @@ export const structuralRegionState = GlobalValue.globalValue(
 /**
  * Runs `body` with structural comparison hooks temporarily enabled.
  *
- * @remarks
+ * **Details**
+ *
  * The previous enabled state and tester are restored in a `finally` block, so
  * nested or throwing bodies do not leak the temporary structural region.
  *
- * @example
+ * `body` and the optional `tester` travel in a single options struct: both are
+ * functions, so a two-argument form could never be dispatched at runtime
+ * between data-first and data-last calls.
+ *
+ * **Example** (Run a body inside a structural region)
+ *
  * ```ts
  * import { structuralRegion, structuralRegionState } from "@beep/utils/Utils"
  *
  * const before = structuralRegionState.enabled
- * const inside = structuralRegion(() => structuralRegionState.enabled)
+ * const inside = structuralRegion({ body: () => structuralRegionState.enabled })
  * const after = structuralRegionState.enabled
  *
  * console.log([before, inside, after])
@@ -53,7 +59,13 @@ export const structuralRegionState = GlobalValue.globalValue(
  * @category utilities
  * @since 0.0.0
  */
-export const structuralRegion = <A>(body: () => A, tester?: (a: unknown, b: unknown) => boolean): A => {
+export const structuralRegion = <A>({
+  body,
+  tester,
+}: {
+  readonly body: () => A;
+  readonly tester?: ((a: unknown, b: unknown) => boolean) | undefined;
+}): A => {
   const current = structuralRegionState.enabled;
   const currentTester = structuralRegionState.tester;
   structuralRegionState.enabled = true;

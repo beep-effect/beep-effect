@@ -44,8 +44,8 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
   const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-" });
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(pstPath);
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)(path.basename(pstPath));
+  const locatorValue = yield* S.decodeEffect(PosixPath)(pstPath);
+  const relativePath = yield* S.decodeEffect(PosixPath)(path.basename(pstPath));
 
   const operation = ExportArchiveOperation.make({
     format: "pst",
@@ -165,7 +165,7 @@ describe("@beep/libpff live pffexport", () => {
           ...operation.source,
           locator: ArtifactLocator.make({
             kind: "file",
-            value: yield* S.decodeUnknownEffect(PosixPath)("/nonexistent/beep-live-missing.pst"),
+            value: yield* S.decodeEffect(PosixPath)("/nonexistent/beep-live-missing.pst"),
           }),
         });
         const error = yield* engine

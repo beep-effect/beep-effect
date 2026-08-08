@@ -522,17 +522,17 @@ export function ThunkOf<Output extends S.Top>(output: Output): FnSchema<typeof S
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
- * const GetCount = ThunkOf(S.Finite, S.String)
+ * const GetCount = ThunkOf({ output: S.Finite, error: S.String })
  * console.log(S.isSchema(GetCount.errorSchema))
  * ```
  *
  * @since 0.0.0
  * @category validation
  */
-export function ThunkOf<Output extends S.Top, Error extends S.Top>(
-  output: Output,
-  error: Error
-): FnSchema<typeof S.Never, Output, Error>;
+export function ThunkOf<Output extends S.Top, Error extends S.Top>(options: {
+  readonly output: Output;
+  readonly error: Error;
+}): FnSchema<typeof S.Never, Output, Error>;
 /**
  * Creates a thunk schema from an output schema and optional error schema.
  *
@@ -549,7 +549,13 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(
  * @since 0.0.0
  * @category validation
  */
-export function ThunkOf<Output extends S.Top, Error extends S.Top>(output: Output, error?: Error) {
+export function ThunkOf<Output extends S.Top, Error extends S.Top>(
+  outputOrOptions: Output | { readonly output: Output; readonly error: Error }
+) {
+  const { output, error } = S.isSchema(outputOrOptions)
+    ? { output: outputOrOptions, error: undefined }
+    : outputOrOptions;
+
   return makeNoArgFnSchema(S.Never, output, error ?? S.Never);
 }
 

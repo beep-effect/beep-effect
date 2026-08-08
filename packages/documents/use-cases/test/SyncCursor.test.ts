@@ -31,7 +31,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
 const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 
 const cursorSeed = (streamPosition: string) =>

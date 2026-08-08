@@ -219,13 +219,13 @@ describe("LiteralKit (string-only)", () => {
 });
 
 describe("LiteralKit (manual Enum mapping)", () => {
-  const Status = LiteralKit(
-    ["one", "two"],
-    [
+  const Status = LiteralKit({
+    literals: ["one", "two"],
+    enumMapping: [
       ["one", "ONE"],
       ["two", "TWO"],
-    ]
-  );
+    ],
+  });
 
   it("maps Enum keys from the provided manual names", () => {
     expect(Status.Enum.ONE).toBe("one");
@@ -258,13 +258,13 @@ describe("LiteralKit (manual Enum mapping)", () => {
   });
 
   it("uses mapped keys for branded string helper objects", () => {
-    const RepoPkg = LiteralKit(
-      [$RepoCliId.identifier, $SchemaId.identifier],
-      [
+    const RepoPkg = LiteralKit({
+      literals: [$RepoCliId.identifier, $SchemaId.identifier],
+      enumMapping: [
         [$RepoCliId.identifier, "@beep/repo-cli"],
         [$SchemaId.identifier, "@beep/schema"],
-      ]
-    );
+      ],
+    });
 
     expect(RepoPkg.Enum["@beep/repo-cli"]).toBe("@beep/repo-cli");
     expect(RepoPkg.thunk["@beep/repo-cli"]()).toBe("@beep/repo-cli");
@@ -298,14 +298,14 @@ describe("LiteralKit (manual Enum mapping)", () => {
   });
 
   it("supports mixed source literal types", () => {
-    const Mixed = LiteralKit(
-      [1, true, "two"],
-      [
+    const Mixed = LiteralKit({
+      literals: [1, true, "two"],
+      enumMapping: [
         [1, "ONE"],
         [true, "TRUE"],
         ["two", "TWO"],
-      ]
-    );
+      ],
+    });
 
     expect(Mixed.Enum.ONE).toBe(1);
     expect(Mixed.Enum.TRUE).toBe(true);

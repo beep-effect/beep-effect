@@ -325,6 +325,77 @@ export const formatSql: {
 );
 
 /**
+ * Renderer that turns an unknown Postgres failure into diagnostic text.
+ *
+ * @example
+ * ```ts
+ * import type { PostgresErrorFormatter } from "@beep/postgres"
+ * import { formatPostgresError } from "@beep/postgres"
+ *
+ * const render: PostgresErrorFormatter = formatPostgresError
+ * console.log(render(new Error("failed")))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export type PostgresErrorFormatter = (error: unknown) => string;
+
+/**
+ * Build a Postgres failure renderer bound to a specific terminal palette.
+ *
+ * @example
+ * ```ts
+ * import { createColors } from "@beep/colors"
+ * import { formatPostgresErrorWith, PostgresError } from "@beep/postgres"
+ *
+ * const renderPlain = formatPostgresErrorWith(createColors(false))
+ * console.log(renderPlain(PostgresError.fromUnknown("query", new Error("failed"))))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const formatPostgresErrorWith =
+  (palette: Colors): PostgresErrorFormatter =>
+  (error) => {
+    const normalized = normalizePostgresError(error);
+    const detailLines = A.getSomes([
+      O.map(normalized.message, (message) => `${palette.dim("message")}   ${message}`),
+      O.map(normalized.sqlState, (code) => {
+        const name = O.match(normalized.sqlStateName, {
+          onNone: () => "",
+          onSome: (value) => palette.dim(` (${value})`),
+        });
+        return `${palette.dim("sqlstate")}  ${palette.yellow(code)}${name}`;
+      }),
+      O.map(normalized.severity, (severity) => `${palette.dim("severity")}  ${palette.red(severity)}`),
+      O.map(normalized.schemaName, (schema) => `${palette.dim("schema")}    ${palette.cyan(schema)}`),
+      O.map(normalized.tableName, (table) => `${palette.dim("table")}     ${palette.cyan(table)}`),
+      O.map(normalized.columnName, (column) => `${palette.dim("column")}    ${palette.cyan(column)}`),
+      O.map(normalized.constraintName, (constraint) => `${palette.dim("constraint")} ${palette.magenta(constraint)}`),
+      O.map(normalized.detail, (detail) => `${palette.dim("detail")}    ${detail}`),
+      O.map(normalized.hint, (hint) => `${palette.dim("hint")}      ${palette.green(hint)}`),
+      O.map(normalized.where, (where) => `${palette.dim("where")}     ${palette.gray(where)}`),
+      O.map(normalized.sourceLocation, (location) => `${palette.dim("source")}    ${palette.underline(location)}`),
+    ]);
+    const queryLines = O.match(normalized.query, {
+      onNone: A.empty<string>,
+      onSome: (query) => {
+        const parameters = O.getOrElse(normalized.params, A.empty<unknown>);
+        return ["", palette.bold(queryType(query)), formatSql(query, parameters, palette)];
+      },
+    });
+
+    return pipe(
+      [palette.red(palette.bold("POSTGRES ERROR")), `${palette.dim("operation")} ${normalized.operation}`],
+      A.appendAll(detailLines),
+      A.appendAll(queryLines),
+      A.join("\n")
+    );
+  };
+
+/**
  * Render a Postgres failure with diagnostics and formatted SQL.
  *
  * @example
@@ -338,42 +409,7 @@ export const formatSql: {
  * @category utilities
  * @since 0.0.0
  */
-export const formatPostgresError = (error: unknown, palette: Colors = colors): string => {
-  const normalized = normalizePostgresError(error);
-  const detailLines = A.getSomes([
-    O.map(normalized.message, (message) => `${palette.dim("message")}   ${message}`),
-    O.map(normalized.sqlState, (code) => {
-      const name = O.match(normalized.sqlStateName, {
-        onNone: () => "",
-        onSome: (value) => palette.dim(` (${value})`),
-      });
-      return `${palette.dim("sqlstate")}  ${palette.yellow(code)}${name}`;
-    }),
-    O.map(normalized.severity, (severity) => `${palette.dim("severity")}  ${palette.red(severity)}`),
-    O.map(normalized.schemaName, (schema) => `${palette.dim("schema")}    ${palette.cyan(schema)}`),
-    O.map(normalized.tableName, (table) => `${palette.dim("table")}     ${palette.cyan(table)}`),
-    O.map(normalized.columnName, (column) => `${palette.dim("column")}    ${palette.cyan(column)}`),
-    O.map(normalized.constraintName, (constraint) => `${palette.dim("constraint")} ${palette.magenta(constraint)}`),
-    O.map(normalized.detail, (detail) => `${palette.dim("detail")}    ${detail}`),
-    O.map(normalized.hint, (hint) => `${palette.dim("hint")}      ${palette.green(hint)}`),
-    O.map(normalized.where, (where) => `${palette.dim("where")}     ${palette.gray(where)}`),
-    O.map(normalized.sourceLocation, (location) => `${palette.dim("source")}    ${palette.underline(location)}`),
-  ]);
-  const queryLines = O.match(normalized.query, {
-    onNone: A.empty<string>,
-    onSome: (query) => {
-      const parameters = O.getOrElse(normalized.params, A.empty<unknown>);
-      return ["", palette.bold(queryType(query)), formatSql(query, parameters, palette)];
-    },
-  });
-
-  return pipe(
-    [palette.red(palette.bold("POSTGRES ERROR")), `${palette.dim("operation")} ${normalized.operation}`],
-    A.appendAll(detailLines),
-    A.appendAll(queryLines),
-    A.join("\n")
-  );
-};
+export const formatPostgresError: PostgresErrorFormatter = formatPostgresErrorWith(colors);
 
 /**
  * Log a formatted Postgres failure to stderr.

@@ -274,7 +274,7 @@ const layoutOfSessionDir = Effect.fnUntraced(function* (
         })
       ),
     onSome: (value) =>
-      S.decodeUnknownEffect(RoundNumber)(value).pipe(
+      S.decodeEffect(RoundNumber)(value).pipe(
         QaCommandError.mapError(`qa --session directory "${resolved}" has an invalid round number.`)
       ),
   });

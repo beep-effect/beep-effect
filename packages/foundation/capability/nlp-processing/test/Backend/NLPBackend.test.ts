@@ -88,7 +88,7 @@ describe("Failure constructors", () => {
   });
 
   it("notSupported honors an explicit message", () => {
-    const err = Backend.notSupported("wink", "extractRelations", "lite model has no RE");
+    const err = Backend.notSupported("wink", "extractRelations", { message: "lite model has no RE" });
     expect(err.message).toBe("lite model has no RE");
   });
 

@@ -80,7 +80,7 @@ describe("Yaml", () => {
   it.effect(
     "maps invalid YAML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(YamlTextToUnknown)("name: [Ada"));
+      const result = yield* Effect.exit(S.decodeEffect(YamlTextToUnknown)("name: [Ada"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {

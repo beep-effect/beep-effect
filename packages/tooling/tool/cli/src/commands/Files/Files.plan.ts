@@ -171,34 +171,21 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
  * @param stem - Source file stem.
  * @param format - Normalize output format.
  * @param usedTargetNames - Names already allocated in this plan.
- * @returns Target name plus the updated allocation set.
+ * @returns The allocated target name; callers add it to their allocation set.
  * @example
  * ```ts
  * import { HashSet } from "effect"
  * import { uniqueNormalizeTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueNormalizeTargetName("image", "png", HashSet.empty())
+ * const targetName = uniqueNormalizeTargetName("image", "png", HashSet.empty())
  * ```
  * @category utilities
  * @since 0.0.0
  */
 export const uniqueNormalizeTargetName: {
-  (
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>) => {
+  (format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string => {
   const extension = `.${format}`;
   let suffix = 0;
   let targetName = `${stem}${extension}`;
@@ -208,10 +195,7 @@ export const uniqueNormalizeTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**
@@ -220,34 +204,21 @@ export const uniqueNormalizeTargetName: {
  * @param stem - Source file stem.
  * @param extension - Source extension, including the leading dot.
  * @param usedTargetNames - Names already allocated in this plan.
- * @returns Target name plus the updated allocation set.
+ * @returns The allocated target name; callers add it to their allocation set.
  * @example
  * ```ts
  * import { HashSet } from "effect"
  * import { uniqueArchiveTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
+ * const targetName = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
  * ```
  * @category utilities
  * @since 0.0.0
  */
 export const uniqueArchiveTargetName: {
-  (
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>) => {
+  (extension: string, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string => {
   let suffix = 0;
   let targetName = `${stem}${extension}`;
 
@@ -256,10 +227,7 @@ export const uniqueArchiveTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**

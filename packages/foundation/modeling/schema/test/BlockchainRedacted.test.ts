@@ -19,10 +19,10 @@ const transactionHash = "0xababababababababababababababababababababababababababa
 
 describe("blockchain redacted schemas", () => {
   it("decode canonical blockchain identifiers into redacted values", () => {
-    const walletAddress = S.decodeUnknownSync(CryptoWalletAddressRedacted)(bitcoinAddress);
-    const decodedEvmAddress = S.decodeUnknownSync(EvmAddressRedacted)(evmAddress);
-    const decodedValidatorPublicKey = S.decodeUnknownSync(EthereumValidatorPublicKeyRedacted)(validatorPublicKey);
-    const decodedTransactionHash = S.decodeUnknownSync(CryptoTxnHashRedacted)(transactionHash);
+    const walletAddress = S.decodeSync(CryptoWalletAddressRedacted)(bitcoinAddress);
+    const decodedEvmAddress = S.decodeSync(EvmAddressRedacted)(evmAddress);
+    const decodedValidatorPublicKey = S.decodeSync(EthereumValidatorPublicKeyRedacted)(validatorPublicKey);
+    const decodedTransactionHash = S.decodeSync(CryptoTxnHashRedacted)(transactionHash);
 
     expect(String(walletAddress)).toBe("<redacted>");
     expect(String(decodedEvmAddress)).toBe("<redacted>");

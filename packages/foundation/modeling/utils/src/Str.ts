@@ -10,7 +10,7 @@ import { cast, dual, flow } from "effect/Function";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
 import type { LazyArg } from "effect/Function";
-import type * as Order from "effect/Order";
+import type * as Ordering from "effect/Ordering";
 import type * as TF from "type-fest";
 
 /**
@@ -46,19 +46,46 @@ export const equivalence: {
 /**
  * Ascending lexicographic order for strings.
  *
+ * **Details**
+ *
+ * The data-first signature is `Order.Order<string>`, so `orderAsc` stays usable
+ * wherever an `effect/Order` comparator is expected. The data-last signature
+ * partially applies `that` for pipeable comparisons.
+ *
  * **Example** (Call `orderAsc`)
  *
  * ```ts
+ * import { pipe } from "effect"
  * import { A, Str } from "@beep/utils"
  *
  * const sorted = A.sort(["b", "a"], Str.orderAsc)
+ * const compared = pipe("a", Str.orderAsc("b"))
+ *
  * console.log(sorted)
+ * console.log(compared)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const orderAsc: Order.Order<string> = Str.Order;
+export const orderAsc: {
+  (that: string): (self: string) => Ordering.Ordering;
+  (self: string, that: string): Ordering.Ordering;
+} = dual(2, Str.Order);
+
+/**
+ * Selects the template-literal result of {@link prefix}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link prefix} share a single named return type. Every concrete
+ * instantiation resolves back to `` `${Pre}${S}` ``.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Prefixed<Pre extends string, S extends string> = Pre extends string ? `${Pre}${S}` : never;
 
 /**
  * Prepends `prefix` to a string, preserving template-literal types.
@@ -89,11 +116,12 @@ export const orderAsc: Order.Order<string> = Str.Order;
  * @since 0.0.0
  */
 export const prefix: {
-  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => `${Pre}${S}`;
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): `${Pre}${S}`;
+  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => Prefixed<Pre, S>;
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): Prefixed<Pre, S>;
 } = dual(
   2,
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): `${Pre}${S}` => `${prefix}${str}` as const
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): Prefixed<Pre, S> =>
+    cast(`${prefix}${str}` as const)
 );
 
 /**
@@ -138,6 +166,20 @@ export const prefixThunk: {
 );
 
 /**
+ * Selects the template-literal result of {@link postfix}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link postfix} share a single named return type. Every
+ * concrete instantiation resolves back to `` `${S}${Post}` ``.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Postfixed<S extends string, Post extends string> = Post extends string ? `${S}${Post}` : never;
+
+/**
  * Appends `postfix` to a string, preserving template-literal types.
  *
  * **Details**
@@ -166,12 +208,12 @@ export const prefixThunk: {
  * @since 0.0.0
  */
 export const postfix: {
-  <const Post extends string>(postfix: Post): <S extends string>(str: S) => `${S}${Post}`;
-  <const Post extends string, const S extends string>(str: S, postfix: Post): `${S}${Post}`;
+  <const Post extends string>(postfix: Post): <S extends string>(str: S) => Postfixed<S, Post>;
+  <const Post extends string, const S extends string>(str: S, postfix: Post): Postfixed<S, Post>;
 } = dual(
   2,
-  <const Post extends string, const S extends string>(str: S, postfix: Post): `${S}${Post}` =>
-    `${str}${postfix}` as const
+  <const Post extends string, const S extends string>(str: S, postfix: Post): Postfixed<S, Post> =>
+    cast(`${str}${postfix}` as const)
 );
 
 /**

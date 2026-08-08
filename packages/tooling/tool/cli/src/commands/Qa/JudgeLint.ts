@@ -61,7 +61,7 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
         `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round ${options.round} --from <file>\` first.`
       )
     );
-  const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw).pipe(
+  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(raw).pipe(
     QaCommandError.mapError(`qa judge-lint could not parse ${inventoryPath} as JSON.`)
   );
   const inventory = yield* decodeQaInventory(parsed).pipe(

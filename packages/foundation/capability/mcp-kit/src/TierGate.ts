@@ -31,6 +31,7 @@ import * as McpSchema from "effect/unstable/ai/McpSchema";
 import * as AiTool from "effect/unstable/ai/Tool";
 import type * as O from "effect/Option";
 import type * as P from "effect/Predicate";
+import type { AnnotatedTool } from "./ToolAnnotations.ts";
 
 const $I = $McpKitId.create("TierGate");
 
@@ -615,9 +616,9 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  * @since 0.0.0
  */
 export const withEnabledWhenApprovedTool: {
-  (policy: TierGatePolicy): <T extends AiTool.Any>(tool: T) => T;
-  <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T;
-} = dual(2, <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T => {
+  (policy: TierGatePolicy): <T extends AiTool.Any>(tool: T) => AnnotatedTool<T>;
+  <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): AnnotatedTool<T>;
+} = dual(2, <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): AnnotatedTool<T> => {
   const predicate: P.Predicate<unknown> = () => isPolicyApproved(policy, tool);
   // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
   // shape rather than the caller's specific `T`; the annotation itself does

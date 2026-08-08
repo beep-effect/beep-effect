@@ -45,6 +45,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Console, Duration, Effect, flow, HashSet, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -409,7 +410,10 @@ export const emptyYeetMonitorRerunBudget: YeetMonitorRerunBudget = HashSet.empty
  * @category constructors
  * @since 0.0.0
  */
-export const yeetMonitorRerunKey = (headSha: string, jobName: string): string => `${headSha}#${jobName}`;
+export const yeetMonitorRerunKey: {
+  (jobName: string): (headSha: string) => string;
+  (headSha: string, jobName: string): string;
+} = dual(2, (headSha: string, jobName: string): string => `${headSha}#${jobName}`);
 
 /**
  * Build the job-scoped rerun command for one failing job.
@@ -480,45 +484,50 @@ interface YeetMonitorRerunPlan {
  * @category planning
  * @since 0.0.0
  */
-export const planYeetMonitorReruns = (
-  budget: YeetMonitorRerunBudget,
-  headSha: string,
-  jobs: ReadonlyArray<YeetMonitorFailedJob>
-): YeetMonitorRerunPlan =>
-  A.reduce(jobs, { budget, decisions: A.empty<YeetMonitorJobDecision>() }, (plan, job) =>
-    O.match(job.flakeClass, {
-      onNone: () => ({
-        budget: plan.budget,
-        decisions: A.append(
-          plan.decisions,
-          YeetMonitorNeedsCodeFix.make({ databaseId: job.databaseId, name: job.name })
-        ),
-      }),
-      onSome: (flakeClass) => {
-        const key = yeetMonitorRerunKey(headSha, job.name);
-        return HashSet.has(plan.budget, key)
-          ? {
-              budget: plan.budget,
-              decisions: A.append(
-                plan.decisions,
-                YeetMonitorRerunSpent.make({ databaseId: job.databaseId, flakeClass, name: job.name })
-              ),
-            }
-          : {
-              budget: HashSet.add(plan.budget, key),
-              decisions: A.append(
-                plan.decisions,
-                YeetMonitorRerunJob.make({
-                  command: yeetMonitorRerunCommand(job.databaseId),
-                  databaseId: job.databaseId,
-                  flakeClass,
-                  name: job.name,
-                })
-              ),
-            };
-      },
-    })
-  );
+export const planYeetMonitorReruns: {
+  (
+    headSha: string,
+    jobs: ReadonlyArray<YeetMonitorFailedJob>
+  ): (budget: YeetMonitorRerunBudget) => YeetMonitorRerunPlan;
+  (budget: YeetMonitorRerunBudget, headSha: string, jobs: ReadonlyArray<YeetMonitorFailedJob>): YeetMonitorRerunPlan;
+} = dual(
+  3,
+  (budget: YeetMonitorRerunBudget, headSha: string, jobs: ReadonlyArray<YeetMonitorFailedJob>): YeetMonitorRerunPlan =>
+    A.reduce(jobs, { budget, decisions: A.empty<YeetMonitorJobDecision>() }, (plan, job) =>
+      O.match(job.flakeClass, {
+        onNone: () => ({
+          budget: plan.budget,
+          decisions: A.append(
+            plan.decisions,
+            YeetMonitorNeedsCodeFix.make({ databaseId: job.databaseId, name: job.name })
+          ),
+        }),
+        onSome: (flakeClass) => {
+          const key = yeetMonitorRerunKey(headSha, job.name);
+          return HashSet.has(plan.budget, key)
+            ? {
+                budget: plan.budget,
+                decisions: A.append(
+                  plan.decisions,
+                  YeetMonitorRerunSpent.make({ databaseId: job.databaseId, flakeClass, name: job.name })
+                ),
+              }
+            : {
+                budget: HashSet.add(plan.budget, key),
+                decisions: A.append(
+                  plan.decisions,
+                  YeetMonitorRerunJob.make({
+                    command: yeetMonitorRerunCommand(job.databaseId),
+                    databaseId: job.databaseId,
+                    flakeClass,
+                    name: job.name,
+                  })
+                ),
+              };
+        },
+      })
+    )
+);
 
 /**
  * Render one merge-loop job decision as an operator line.

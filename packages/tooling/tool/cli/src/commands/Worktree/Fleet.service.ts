@@ -23,7 +23,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { A, O, Str } from "@beep/utils";
+import { A, O, P, Str } from "@beep/utils";
 import {
   Clock,
   Context,
@@ -38,6 +38,7 @@ import {
   Path,
   Result,
 } from "effect";
+import { dual } from "effect/Function";
 import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
 import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
@@ -118,30 +119,33 @@ export const FLEET_SURFACE_EXCLUDE_PREFIXES = [".repos/", "node_modules/", ".git
  * @category utilities
  * @since 0.0.0
  */
-export const classifyFleetLiveness = (
-  readings: FleetLivenessReadings,
-  windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS
-): FleetLivenessVerdict => {
-  const evidence: Array<FleetLivenessProbe> = [];
-  if (readings.processMatches > 0) {
-    evidence.push("process-cwd");
+export const classifyFleetLiveness: {
+  (windowSeconds?: number): (readings: FleetLivenessReadings) => FleetLivenessVerdict;
+  (readings: FleetLivenessReadings, windowSeconds?: number): FleetLivenessVerdict;
+} = dual(
+  (args: IArguments) => args.length >= 2 || (args.length === 1 && !P.isNumber(args[0])),
+  (readings: FleetLivenessReadings, windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS): FleetLivenessVerdict => {
+    const evidence: Array<FleetLivenessProbe> = [];
+    if (readings.processMatches > 0) {
+      evidence.push("process-cwd");
+    }
+    if (readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds) {
+      evidence.push("transcript-mtime");
+    }
+    if (readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds) {
+      evidence.push("worktree-mtime");
+    }
+    if (evidence.length > 0) {
+      return FleetLivenessVerdict.make({ status: "live", evidence });
+    }
+    const transcriptNegative = readings.transcript._tag !== "failed";
+    const worktreeNegative = readings.worktreeMtime._tag === "measured";
+    if (readings.processScanComplete && transcriptNegative && worktreeNegative) {
+      return FleetLivenessVerdict.make({ status: "dormant", evidence: [] });
+    }
+    return FleetLivenessVerdict.make({ status: "unknown", evidence: [] });
   }
-  if (readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds) {
-    evidence.push("transcript-mtime");
-  }
-  if (readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds) {
-    evidence.push("worktree-mtime");
-  }
-  if (evidence.length > 0) {
-    return FleetLivenessVerdict.make({ status: "live", evidence });
-  }
-  const transcriptNegative = readings.transcript._tag !== "failed";
-  const worktreeNegative = readings.worktreeMtime._tag === "measured";
-  if (readings.processScanComplete && transcriptNegative && worktreeNegative) {
-    return FleetLivenessVerdict.make({ status: "dormant", evidence: [] });
-  }
-  return FleetLivenessVerdict.make({ status: "unknown", evidence: [] });
-};
+);
 
 const RENAME_OR_COPY_STATUS = /[RC]/;
 

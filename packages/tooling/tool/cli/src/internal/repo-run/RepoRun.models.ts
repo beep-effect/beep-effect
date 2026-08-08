@@ -13,6 +13,7 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { Ordering } from "effect/Ordering";
 
 const $I = $RepoCliId.create("internal/repo-run/RepoRun.models");
 
@@ -435,9 +436,15 @@ const phaseOrderValue = (phase: RepoPlanPhase): number =>
  * @category ordering
  * @since 0.0.0
  */
-export const byRepoPlanStepAscending: Order.Order<RepoPlanStep> = Order.combine(
-  Order.mapInput(Order.Number, (step: RepoPlanStep) => phaseOrderValue(step.phase)),
-  Order.mapInput(Order.String, (step: RepoPlanStep) => step.id)
+export const byRepoPlanStepAscending: {
+  (that: RepoPlanStep): (self: RepoPlanStep) => Ordering;
+  (self: RepoPlanStep, that: RepoPlanStep): Ordering;
+} = dual(
+  2,
+  Order.combine(
+    Order.mapInput(Order.Number, (step: RepoPlanStep) => phaseOrderValue(step.phase)),
+    Order.mapInput(Order.String, (step: RepoPlanStep) => step.id)
+  )
 );
 
 const shellSafeArgPattern = /^[A-Za-z0-9_@%+=:,./-]+$/u;

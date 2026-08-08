@@ -147,8 +147,8 @@ const fixture = Effect.fn(function* (stubScript: string) {
   const exportRoot = path.join(dir, "out");
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(sourcePath);
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)("mailbox.pst");
+  const locatorValue = yield* S.decodeEffect(PosixPath)(sourcePath);
+  const relativePath = yield* S.decodeEffect(PosixPath)("mailbox.pst");
 
   const operation = ExportArchiveOperation.make({
     format: "pst",
@@ -418,7 +418,7 @@ describe("makePffexportFileProcessingEngine", () => {
       function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
         const engine = yield* makePffexportFileProcessingEngine(
-          yield* S.decodeUnknownEffect(PffexportEngineConfig)({
+          yield* S.decodeEffect(PffexportEngineConfig)({
             exportRoot,
             pffexportPath: stubPath,
             timeoutMillis: 250,

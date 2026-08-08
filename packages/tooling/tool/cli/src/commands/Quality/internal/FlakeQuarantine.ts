@@ -33,6 +33,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -372,14 +373,20 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  * @category constructors
  * @since 0.0.0
  */
-export const standaloneQuarantineRerunStep = (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep =>
-  QualityTaskStep.make({
-    label: `${step.label}:flake-rerun:${task.packageName}`,
-    command: step.command,
-    args: [...step.args, "--", `--filter=${task.packageName}`],
-    cwd: step.cwd,
-    ...optionalProp("env", O.fromUndefinedOr(step.env)),
-  });
+export const standaloneQuarantineRerunStep: {
+  (task: FlakeQuarantineTask): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep =>
+    QualityTaskStep.make({
+      label: `${step.label}:flake-rerun:${task.packageName}`,
+      command: step.command,
+      args: [...step.args, "--", `--filter=${task.packageName}`],
+      cwd: step.cwd,
+      ...optionalProp("env", O.fromUndefinedOr(step.env)),
+    })
+);
 
 /**
  * Build the full lane rerun step that arbitrates a quarantine attempt.

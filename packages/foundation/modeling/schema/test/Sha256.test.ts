@@ -75,7 +75,7 @@ describe("Sha256HexFromBytes", () => {
 
   it.effect("forbids encoding the digest back to source bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
     })
@@ -104,7 +104,7 @@ describe("Sha256HexFromHexBytes", () => {
 
   it.effect("forbids encoding the digest back to source hex bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
     })

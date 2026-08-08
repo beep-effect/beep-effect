@@ -12,9 +12,9 @@ describe("Model optional helpers", () => {
       value: Model.optionalOption(S.String),
     });
 
-    expect(S.decodeUnknownSync(Struct)({}).value).toEqual(O.none());
-    expect(S.decodeUnknownSync(Struct)({ value: null }).value).toEqual(O.none());
-    expect(S.decodeUnknownSync(Struct)({ value: "kept" }).value).toEqual(O.some("kept"));
+    expect(S.decodeSync(Struct)({}).value).toEqual(O.none());
+    expect(S.decodeSync(Struct)({ value: null }).value).toEqual(O.none());
+    expect(S.decodeSync(Struct)({ value: "kept" }).value).toEqual(O.some("kept"));
 
     expect(S.encodeSync(Struct)({ value: O.none() })).toEqual({});
     expect(S.encodeSync(Struct)({ value: O.some("encoded") })).toEqual({
@@ -55,7 +55,7 @@ describe("Model projection helpers", () => {
     const select = Model.extract(Fields, "select");
     const json = Model.extract(Fields, "json");
 
-    expect(S.decodeUnknownSync(select)({ payload: '{"enabled":true}' })).toEqual({
+    expect(S.decodeSync(select)({ payload: '{"enabled":true}' })).toEqual({
       payload: {
         enabled: true,
       },

@@ -21,6 +21,7 @@
 import { $EditorId } from "@beep/identity";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
+import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
@@ -145,7 +146,7 @@ const AttachmentCaptureLimitBytes = S.Finite.pipe(
 );
 
 const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
-  Result.getOrElse(S.decodeUnknownResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
+  Result.getOrElse(S.decodeResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.
@@ -511,10 +512,16 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  * @category utilities
  * @since 0.0.0
  */
-export const fileToAttachment = (
-  file: File,
-  maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES
-): Result.Result<ComposerAttachment, AttachmentRejection> => ComposerAttachment.fromFile(file, maxBytes);
+export const fileToAttachment: {
+  (maxBytes?: number): (file: File) => Result.Result<ComposerAttachment, AttachmentRejection>;
+  (file: File, maxBytes?: number): Result.Result<ComposerAttachment, AttachmentRejection>;
+} = dual(
+  (args) => P.isNotUndefined(args[0]) && !P.isNumber(args[0]),
+  (
+    file: File,
+    maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES
+  ): Result.Result<ComposerAttachment, AttachmentRejection> => ComposerAttachment.fromFile(file, maxBytes)
+);
 
 /**
  * Release the object URL backing an attachment thumbnail.

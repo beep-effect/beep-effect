@@ -6,9 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { NonNegativePixelOffset, PositiveMediaDimension, RgbChannel } from "./Media.schemas.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/Borders.schemas");
 
@@ -562,7 +565,10 @@ export class CropBordersSummary extends S.Class<CropBordersSummary>($I`CropBorde
  * @category decoding
  * @since 0.0.0
  */
-export const decodeDetectBordersOptions = S.decodeUnknownEffect(DetectBordersOptions);
+export const decodeDetectBordersOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<DetectBordersOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<DetectBordersOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(DetectBordersOptions));
 
 /**
  * Decode unknown border cropping options.
@@ -576,7 +582,10 @@ export const decodeDetectBordersOptions = S.decodeUnknownEffect(DetectBordersOpt
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCropBordersOptions = S.decodeUnknownEffect(CropBordersOptions);
+export const decodeCropBordersOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CropBordersOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CropBordersOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CropBordersOptions));
 
 /**
  * Encode a detect-borders report into its JSON-safe shape.
@@ -590,4 +599,7 @@ export const decodeCropBordersOptions = S.decodeUnknownEffect(CropBordersOptions
  * @category encoding
  * @since 0.0.0
  */
-export const encodeDetectBordersReport = S.encodeUnknownEffect(DetectBordersReport);
+export const encodeDetectBordersReport: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof DetectBordersReport.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof DetectBordersReport.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(DetectBordersReport));

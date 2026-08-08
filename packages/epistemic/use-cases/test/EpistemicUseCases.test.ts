@@ -31,7 +31,7 @@ const evidence: Evidence = S.decodeUnknownSync(Evidence)({
 
 const candidate = makeCandidate(1, "claim.patentability", "candidate");
 const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
-const admittedVerdict = S.decodeUnknownSync(ClaimGateResult)({ verdict: "admitted" });
+const admittedVerdict = S.decodeSync(ClaimGateResult)({ verdict: "admitted" });
 
 describe("@beep/epistemic-use-cases", () => {
   // Boots only the bounded SHACL capability layer — no other slice, no runtime.
@@ -117,7 +117,7 @@ describe("@beep/epistemic-use-cases", () => {
       fc.property(ClaimProjectionAuthorityArbitrary, (authority) => {
         const view = projectClaims(authority);
         const encoded = S.encodeSync(ClaimProjection.outputSchema)(view);
-        const decoded = S.decodeUnknownSync(ClaimProjection.outputSchema)(encoded);
+        const decoded = S.decodeSync(ClaimProjection.outputSchema)(encoded);
 
         expect(encoded.total).toBe(A.length(authority));
         for (const state of ClaimLifecycle.Options) {

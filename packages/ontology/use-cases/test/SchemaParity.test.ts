@@ -30,8 +30,8 @@ import { Equal, Option as O, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const sessionId = Result.getOrThrow(S.decodeUnknownResult(SessionId)("session-1"));
-const fixturePath = Result.getOrThrow(S.decodeUnknownResult(OntologyFilePath)("fixtures/demo.ttl"));
+const sessionId = Result.getOrThrow(S.decodeResult(SessionId)("session-1"));
+const fixturePath = Result.getOrThrow(S.decodeResult(OntologyFilePath)("fixtures/demo.ttl"));
 const quad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),
@@ -135,24 +135,18 @@ describe("@beep/ontology-use-cases schema parity", () => {
     const parsed = ParseTurtleResult.make({ dataset });
 
     expect(
-      Result.getOrThrow(
-        S.decodeUnknownResult(TurtleCodecError)(Result.getOrThrow(S.encodeResult(TurtleCodecError)(error)))
-      )
+      Result.getOrThrow(S.decodeResult(TurtleCodecError)(Result.getOrThrow(S.encodeResult(TurtleCodecError)(error))))
     ).toEqual(error);
     expect(
       Result.getOrThrow(
-        S.decodeUnknownResult(SerializeTurtleRequest)(
-          Result.getOrThrow(S.encodeResult(SerializeTurtleRequest)(command))
-        )
+        S.decodeResult(SerializeTurtleRequest)(Result.getOrThrow(S.encodeResult(SerializeTurtleRequest)(command)))
       )
     ).toEqual(command);
     expect(
-      Result.getOrThrow(
-        S.decodeUnknownResult(ParseTurtleResult)(Result.getOrThrow(S.encodeResult(ParseTurtleResult)(parsed)))
-      )
+      Result.getOrThrow(S.decodeResult(ParseTurtleResult)(Result.getOrThrow(S.encodeResult(ParseTurtleResult)(parsed))))
     ).toEqual(parsed);
     expect(
-      Result.getOrThrow(S.decodeUnknownResult(WorkerResult)(Result.getOrThrow(S.encodeResult(WorkerResult)(result))))
+      Result.getOrThrow(S.decodeResult(WorkerResult)(Result.getOrThrow(S.encodeResult(WorkerResult)(result))))
     ).toEqual(result);
   });
 });

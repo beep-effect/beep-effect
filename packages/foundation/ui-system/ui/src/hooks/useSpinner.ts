@@ -136,9 +136,13 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * console.log(useSpinner)
  * ```
  *
+ * The two callbacks are co-equal, so there is no honest data-last argument to
+ * curry on — and a React hook must never be applied in pipe position anyway.
+ * They travel together in a single `actions` bag instead of as two positional
+ * parameters.
+ *
  * @category components
- * @param increment - Callback invoked for upward spinner movement.
- * @param decrement - Callback invoked for downward spinner movement.
+ * @param actions - Upward and downward spinner callbacks.
  * @returns Spinner controls for starting and stopping repeated actions.
  * @since 0.0.0
  */
@@ -155,7 +159,11 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * @category components
  * @since 0.0.0
  */
-export function useSpinner<T>(increment: (params?: T) => void, decrement: (params?: T) => void) {
+export function useSpinner<T>(actions: {
+  readonly increment: (params?: T) => void;
+  readonly decrement: (params?: T) => void;
+}) {
+  const { increment, decrement } = actions;
   const scope = useId();
   const dispatch = useAtomSet(spinnerCommandAtom(scope));
 

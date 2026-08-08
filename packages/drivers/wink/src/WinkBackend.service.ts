@@ -126,11 +126,15 @@ const makeWinkBackend = Effect.gen(function* () {
     }),
 
     parseDependencies: Effect.fn("WinkBackend.parseDependencies")(function* (_sentence: string) {
-      return yield* notSupported(BACKEND_NAME, "parseDependencies", "wink-nlp does not support dependency parsing");
+      return yield* notSupported(BACKEND_NAME, "parseDependencies", {
+        message: "wink-nlp does not support dependency parsing",
+      });
     }),
 
     extractRelations: Effect.fn("WinkBackend.extractRelations")(function* (_text: string) {
-      return yield* notSupported(BACKEND_NAME, "extractRelations", "wink-nlp does not support relation extraction");
+      return yield* notSupported(BACKEND_NAME, "extractRelations", {
+        message: "wink-nlp does not support relation extraction",
+      });
     }),
   });
 });

@@ -38,9 +38,9 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const syncItemId = S.decodeUnknownSync(Documents.SyncItemId)(1);
-const zero = S.decodeUnknownSync(NonNegativeInt)(0);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const syncItemId = S.decodeSync(Documents.SyncItemId)(1);
+const zero = S.decodeSync(NonNegativeInt)(0);
 const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
 const encodeSyncOperation = S.encodeSync(DomainSyncOperation.SyncOperation);
 
@@ -54,7 +54,7 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
     status: "queued",
     syncItemId,
     targetName: "complaint.pdf",
-    targetRelPath: S.decodeUnknownSync(VaultRelPath)(targetRelPath),
+    targetRelPath: S.decodeSync(VaultRelPath)(targetRelPath),
     workspaceId,
   });
 

@@ -6,8 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
 
@@ -393,7 +396,10 @@ export const isKnowledgeFinding = S.is(KnowledgeFinding);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeKnowledgeFinding = S.decodeUnknownEffect(KnowledgeFinding);
+export const decodeKnowledgeFinding: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<KnowledgeFinding, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<KnowledgeFinding, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(KnowledgeFinding));
 
 /**
  * Encodes a {@link KnowledgeFinding} back to its JSON wire shape.
@@ -431,7 +437,10 @@ export const decodeKnowledgeFinding = S.decodeUnknownEffect(KnowledgeFinding);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeKnowledgeFinding = S.encodeUnknownEffect(KnowledgeFinding);
+export const encodeKnowledgeFinding: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof KnowledgeFinding.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof KnowledgeFinding.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(KnowledgeFinding));
 
 /**
  * One tracked Git-tree entry backing the archive-local path oracle.
@@ -814,6 +823,7 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
  * @category encoding
  * @since 0.0.0
  */
-export const encodeKnowledgeSemanticDeltaReportJson = S.encodeUnknownEffect(
-  S.fromJsonString(KnowledgeSemanticDeltaReport)
-);
+export const encodeKnowledgeSemanticDeltaReportJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(KnowledgeSemanticDeltaReport)));

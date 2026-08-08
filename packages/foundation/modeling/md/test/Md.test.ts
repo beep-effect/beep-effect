@@ -246,7 +246,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
           Md.h5("Five"),
           Md.h6("Six"),
           Md.p([
-            Md.img("/logo.png", "Logo", { title: "Logo title" }),
+            Md.img("/logo.png", { alt: "Logo", title: "Logo title" }),
             Md.br,
             Md.inlineMath("a+b"),
             Md.footnoteRef("note"),
@@ -303,7 +303,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     const incompatible = [
       Md.make([Md.embed("link", " ")]),
       Md.make([Md.p("a\u0000b")]),
-      Md.make([Md.p(Md.img("/logo.png", "\uD800"))]),
+      Md.make([Md.p(Md.img("/logo.png", { alt: "\uD800" }))]),
     ];
 
     for (const document of incompatible) {
@@ -374,22 +374,22 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       const pre = Md.pre("code");
       const doc = Md.make([Md.p([text]), pre]);
 
-      expect(yield* S.decodeUnknownEffect(Inline)(text)).toEqual(text);
+      expect(yield* S.decodeEffect(Inline)(text)).toEqual(text);
       // Pre.language is a codec field (OptionFromNullOr: Option<string> <-> string
       // | null), so Pre's encoded form differs from a constructed instance. Decode
       // through the encoded form rather than feeding a decoded instance back in.
-      expect(yield* S.decodeUnknownEffect(Block)(yield* S.encodeEffect(Block)(pre))).toEqual(pre);
-      expect(yield* S.decodeUnknownEffect(Document)(yield* S.encodeEffect(Document)(doc))).toEqual(doc);
+      expect(yield* S.decodeEffect(Block)(yield* S.encodeEffect(Block)(pre))).toEqual(pre);
+      expect(yield* S.decodeEffect(Document)(yield* S.encodeEffect(Document)(doc))).toEqual(doc);
       const tsPre = Pre.make({ value: "x", language: O.some("ts") });
-      expect(yield* S.decodeUnknownEffect(Pre)(yield* S.encodeEffect(Pre)(tsPre))).toEqual(tsPre);
-      expect(yield* S.decodeUnknownEffect(CodeFenceLanguage)("ts")).toBe("ts");
-      expect(() => S.decodeUnknownSync(CodeFenceLanguage)("ts bad")).toThrow();
+      expect(yield* S.decodeEffect(Pre)(yield* S.encodeEffect(Pre)(tsPre))).toEqual(tsPre);
+      expect(yield* S.decodeEffect(CodeFenceLanguage)("ts")).toBe("ts");
+      expect(() => S.decodeSync(CodeFenceLanguage)("ts bad")).toThrow();
       // Pre.language now folds non-conforming legacy info strings to None at decode,
       // so a free-form "ts bad" token drops out instead of being preserved.
-      expect(yield* S.decodeUnknownEffect(Pre)({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
+      expect(yield* S.decodeEffect(Pre)({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
         Pre.make({ value: "x", language: O.none() })
       );
-      expect(yield* S.decodeUnknownEffect(Text)(Text.make({ value: "Hello" }))).toEqual(text);
+      expect(yield* S.decodeEffect(Text)(Text.make({ value: "Hello" }))).toEqual(text);
     })
   );
 
@@ -397,13 +397,11 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     fc.assert(
       fc.property(InlineArbitrary, BlockArbitrary, DocumentArbitrary, (inline, block, document) => {
         const decodedInline = Result.getOrThrow(
-          S.decodeUnknownResult(Inline)(Result.getOrThrow(S.encodeResult(Inline)(inline)))
+          S.decodeResult(Inline)(Result.getOrThrow(S.encodeResult(Inline)(inline)))
         );
-        const decodedBlock = Result.getOrThrow(
-          S.decodeUnknownResult(Block)(Result.getOrThrow(S.encodeResult(Block)(block)))
-        );
+        const decodedBlock = Result.getOrThrow(S.decodeResult(Block)(Result.getOrThrow(S.encodeResult(Block)(block))));
         const decodedDocument = Result.getOrThrow(
-          S.decodeUnknownResult(Document)(Result.getOrThrow(S.encodeResult(Document)(document)))
+          S.decodeResult(Document)(Result.getOrThrow(S.encodeResult(Document)(document)))
         );
 
         expect(decodedInline).toEqual(inline);
@@ -498,12 +496,12 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     expect(renderMarkdownInline(Md.a("https://example.com", Md.a("/child", "C")))).toBe(
       "[[C](/child)](https://example.com)"
     );
-    expect(renderMarkdownInline(Md.a("https://example.com", Md.img("/img.png", "Alt")))).toBe(
+    expect(renderMarkdownInline(Md.a("https://example.com", Md.img("/img.png", { alt: "Alt" })))).toBe(
       "[![Alt](/img.png)](https://example.com)"
     );
     expect(renderMarkdownInline(Md.a("https://example.com", Md.br))).toBe("[<br/>](https://example.com)");
-    expect(renderMarkdownInline(Md.img("/a)b.png", "Alt #"))).toBe("![Alt \\#](/a\\)b.png)");
-    expect(renderMarkdownInline(Md.img("data:image/png;base64,x", "Alt"))).toBe("![Alt](#)");
+    expect(renderMarkdownInline(Md.img("/a)b.png", { alt: "Alt #" }))).toBe("![Alt \\#](/a\\)b.png)");
+    expect(renderMarkdownInline(Md.img("data:image/png;base64,x", { alt: "Alt" }))).toBe("![Alt](#)");
     expect(renderMarkdownInline(Md.br)).toBe("<br/>");
 
     expect(renderHtmlInline(Md.text("<script>&'"))).toBe("&lt;script&gt;&amp;&#39;");
@@ -535,7 +533,9 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     expect(renderHtmlInline(Md.a("%26%23x6a%3Bavascript:alert(1)", "Example"))).toBe('<a href="#">Example</a>');
     expect(renderHtmlInline(Md.a("a%20b", "Example"))).toBe('<a href="a%20b">Example</a>');
     expect(renderHtmlInline(Md.img("/logo.png"))).toBe('<img src="/logo.png" alt="" />');
-    expect(renderHtmlInline(Md.img("/logo.png", '"Logo"'))).toBe('<img src="/logo.png" alt="&quot;Logo&quot;" />');
+    expect(renderHtmlInline(Md.img("/logo.png", { alt: '"Logo"' }))).toBe(
+      '<img src="/logo.png" alt="&quot;Logo&quot;" />'
+    );
     expect(renderHtmlInline(Md.br)).toBe("<br />");
   });
 
@@ -632,7 +632,7 @@ ${Md.h3("Inside")}
     expect(renderPlainTextInline(Md.del("Del"))).toBe("Del");
     expect(renderPlainTextInline(Md.code("code"))).toBe("code");
     expect(renderPlainTextInline(Md.a("https://example.com", [Md.text("Example"), Md.code("1")]))).toBe("Example1");
-    expect(renderPlainTextInline(Md.img("/img.png", "Alt"))).toBe("Alt");
+    expect(renderPlainTextInline(Md.img("/img.png", { alt: "Alt" }))).toBe("Alt");
     expect(renderPlainTextInline(Md.br)).toBe("\n");
     expect(renderPlainTextInline(Md.inlineMath("a+b"))).toBe("a+b");
     expect(renderPlainTextInline(Md.footnoteRef("note"))).toBe("note");
@@ -749,7 +749,7 @@ Demo video`);
     expect(renderHtmlInline(Md.a("https://example.com", "Example", { title: '"Title"' }))).toBe(
       '<a href="https://example.com" title="&quot;Title&quot;">Example</a>'
     );
-    expect(renderMarkdownInline(Md.img("/logo.png", "Logo", { title: '"Logo"' }))).toBe(
+    expect(renderMarkdownInline(Md.img("/logo.png", { alt: "Logo", title: '"Logo"' }))).toBe(
       '![Logo](/logo.png "\\"Logo\\"")'
     );
     expect(renderHtmlBlock(Md.ol(["Three"], { start: 3 }))).toBe('<ol start="3"><li>Three</li></ol>');
@@ -817,7 +817,7 @@ Demo video`);
       '<blockquote><ul><li><p><a href="tel:+15551234567">Call</a> <a href="#">Web</a></p></li></ul></blockquote>'
     );
 
-    const normalizedPolicy = S.decodeUnknownSync(UrlPolicySpec)({
+    const normalizedPolicy = S.decodeSync(UrlPolicySpec)({
       _tag: "AllowList",
       schemes: [" HTTPS: "],
       allowRelative: false,
@@ -861,7 +861,7 @@ Demo video`);
         Md.em("Emphasis"),
         Md.del("Deleted"),
         Md.code("code"),
-        Md.img("https://example.com/image.png", "Image", { title: "Image title" }),
+        Md.img("https://example.com/image.png", { alt: "Image", title: "Image title" }),
         Md.br,
         Md.inlineMath("a+b"),
         Md.footnoteRef("note"),
@@ -929,7 +929,7 @@ Demo video`);
   });
 
   it("refines user-authored documents without changing their encoded wire", () => {
-    const document = Md.make([Md.p([Md.a("https://example.com", "Safe"), Md.img("/logo.png", "Logo")])]);
+    const document = Md.make([Md.p([Md.a("https://example.com", "Safe"), Md.img("/logo.png", { alt: "Logo" })])]);
     const safe = Result.getOrThrow(refineSafeDocument(document));
     const encodedSafe = Result.getOrThrow(S.encodeResult(Document)(document));
 
@@ -941,7 +941,7 @@ Demo video`);
       Md.p([
         Md.rawHtml("<script>alert(1)</script>"),
         Md.a("http://example.com", "Insecure"),
-        Md.img("//example.com/tracker.png", "Tracker"),
+        Md.img("//example.com/tracker.png", { alt: "Tracker" }),
       ]),
     ]);
     const encodedHostile = Result.getOrThrow(S.encodeResult(Document)(hostile));

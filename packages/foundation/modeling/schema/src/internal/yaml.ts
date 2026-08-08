@@ -33,6 +33,19 @@ export type YamlParseResult = Result.Result<unknown, ReadonlyArray<string>>;
 type YamlModuleLoader = () => YamlModule;
 
 /**
+ * Parses a YAML document into an untyped value.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the data-first and data-last returns of {@link makeParseYaml}.
+ */
+export type YamlParser = (input: string) => unknown;
+
+/**
+ * Parses a YAML document into a `Result` carrying the document's errors.
+ */
+type YamlSchemaParser = (input: string) => YamlParseResult;
+
+/**
  * Public schema module export.
  *
  * @category schemas
@@ -94,11 +107,11 @@ export const getGlobalYamlRuntime = (): YamlRuntime =>
  * @since 0.0.0
  */
 export const makeParseYaml: {
-  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): (input: string) => unknown;
-  (loadYaml: YamlModuleLoader): (runtime: YamlRuntime) => (input: string) => unknown;
+  (loadYaml: YamlModuleLoader): (runtime: YamlRuntime) => YamlParser;
+  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): YamlParser;
 } = dual(
   2,
-  (runtime: YamlRuntime, loadYaml: YamlModuleLoader) =>
+  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): YamlParser =>
     (input: string): unknown =>
       getBunRuntime(runtime).pipe(
         O.map(({ YAML }) => YAML.parse(input)),
@@ -113,11 +126,11 @@ export const makeParseYaml: {
  * @since 0.0.0
  */
 export const makeParseYamlForSchema: {
-  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): (input: string) => YamlParseResult;
-  (loadYaml: YamlModuleLoader): (runtime: YamlRuntime) => (input: string) => YamlParseResult;
+  (loadYaml: YamlModuleLoader): (runtime: YamlRuntime) => YamlSchemaParser;
+  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): YamlSchemaParser;
 } = dual(
   2,
-  (runtime: YamlRuntime, loadYaml: YamlModuleLoader) =>
+  (runtime: YamlRuntime, loadYaml: YamlModuleLoader): YamlSchemaParser =>
     (input: string): YamlParseResult =>
       getBunRuntime(runtime).pipe(
         O.match({

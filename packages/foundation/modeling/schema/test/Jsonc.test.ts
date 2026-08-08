@@ -35,7 +35,7 @@ describe("Jsonc", () => {
   it.effect(
     "maps invalid JSONC into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(JsoncTextToUnknown)(`{ "name": }`));
+      const result = yield* Effect.exit(S.decodeEffect(JsoncTextToUnknown)(`{ "name": }`));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {

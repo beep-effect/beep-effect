@@ -60,7 +60,7 @@ describe("CSV", () => {
     "decodes headered CSV text into typed row arrays",
     Effect.fnUntraced(function* () {
       const csv = CSV(UserRow);
-      const rows = yield* S.decodeUnknownEffect(csv)(
+      const rows = yield* S.decodeEffect(csv)(
         "id,first_name,last_name,address\n1,Ada,Lovelace,London\n2,Grace,Hopper,New York"
       );
 
@@ -75,7 +75,7 @@ describe("CSV", () => {
     "maps input columns by header name even when the file order differs",
     Effect.fnUntraced(function* () {
       const csv = CSV(UserRow);
-      const rows = yield* S.decodeUnknownEffect(csv)(
+      const rows = yield* S.decodeEffect(csv)(
         "address,last_name,id,first_name\nLondon,Lovelace,1,Ada\nNew York,Hopper,2,Grace"
       );
 
@@ -97,7 +97,7 @@ describe("CSV", () => {
         trim: true,
       });
 
-      const rows = yield* S.decodeUnknownEffect(csv)(
+      const rows = yield* S.decodeEffect(csv)(
         '# comment to skip entirely\nid;first_name;last_name;address\n1; Ada ;Lovelace;"London, UK"\n2;Grace;Hopper;"New\nYork"'
       );
 
@@ -112,9 +112,9 @@ describe("CSV", () => {
     Effect.fnUntraced(function* () {
       const csv = CSV({ trim: true })(OptionalUserRow);
 
-      expect(yield* S.decodeUnknownEffect(csv)("")).toEqual([]);
+      expect(yield* S.decodeEffect(csv)("")).toEqual([]);
 
-      const rows = yield* S.decodeUnknownEffect(csv)("id, first_name, nickname\n1, Ada");
+      const rows = yield* S.decodeEffect(csv)("id, first_name, nickname\n1, Ada");
 
       expect(rows).toHaveLength(1);
       const [row] = rows as ReadonlyArray<OptionalUserRow>;
@@ -145,7 +145,7 @@ describe("CSV", () => {
 
       expect(encoded).toBe('id,first_name,last_name,address\n1,Ada,Lovelace,"London, UK"');
 
-      const roundTrip = yield* S.decodeUnknownEffect(csv)(encoded);
+      const roundTrip = yield* S.decodeEffect(csv)(encoded);
       expect(roundTrip[0].address).toBe("London, UK");
       expect(roundTrip[0].id).toBe(1);
     })
@@ -157,7 +157,7 @@ describe("CSV", () => {
     fc.assert(
       fc.property(fc.array(userRowArbitrary, { maxLength: 5 }), (rows) => {
         const encoded = S.encodeSync(csv)(rows);
-        const decoded = S.decodeUnknownSync(csv)(encoded);
+        const decoded = S.decodeSync(csv)(encoded);
 
         expect(decoded).toEqual(rows);
       }),
@@ -202,9 +202,7 @@ describe("CSV", () => {
   it.effect(
     "rejects duplicate headers",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow))("id,id,last_name,address\n1,2,Lovelace,London")
-      );
+      const result = yield* Effect.exit(S.decodeEffect(CSV(UserRow))("id,id,last_name,address\n1,2,Lovelace,London"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
@@ -218,7 +216,7 @@ describe("CSV", () => {
     "rejects missing or unexpected headers",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow))("id,first_name,address,unexpected\n1,Ada,London,nope")
+        S.decodeEffect(CSV(UserRow))("id,first_name,address,unexpected\n1,Ada,London,nope")
       );
 
       expect(Exit.isFailure(result)).toBe(true);
@@ -234,11 +232,9 @@ describe("CSV", () => {
   it.effect(
     "reports missing-only and unexpected-only header mismatches",
     Effect.fnUntraced(function* () {
-      const missingOnly = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow))("id,first_name,last_name\n1,Ada,Lovelace")
-      );
+      const missingOnly = yield* Effect.exit(S.decodeEffect(CSV(UserRow))("id,first_name,last_name\n1,Ada,Lovelace"));
       const unexpectedOnly = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow))("id,first_name,last_name,address,unexpected\n1,Ada,Lovelace,London,nope")
+        S.decodeEffect(CSV(UserRow))("id,first_name,last_name,address,unexpected\n1,Ada,Lovelace,London,nope")
       );
 
       expect(Exit.isFailure(missingOnly)).toBe(true);
@@ -261,9 +257,7 @@ describe("CSV", () => {
     "rejects row length mismatches when strict column handling is enabled",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow, { strictColumnHandling: true }))(
-          "id,first_name,last_name,address\n1,Ada,Lovelace"
-        )
+        S.decodeEffect(CSV(UserRow, { strictColumnHandling: true }))("id,first_name,last_name,address\n1,Ada,Lovelace")
       );
 
       expect(Exit.isFailure(result)).toBe(true);
@@ -278,7 +272,7 @@ describe("CSV", () => {
     "rejects extra row cells even without strict column handling",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.decodeUnknownEffect(CSV(UserRow))("id,first_name,last_name,address\n1,Ada,Lovelace,London,extra")
+        S.decodeEffect(CSV(UserRow))("id,first_name,last_name,address\n1,Ada,Lovelace,London,extra")
       );
 
       expect(Exit.isFailure(result)).toBe(true);
@@ -292,7 +286,7 @@ describe("CSV", () => {
   it.effect(
     "fails when the row schema does not model a CSV text boundary",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(CSV(InvalidNumberRow))("id,name\n1,Ada"));
+      const result = yield* Effect.exit(S.decodeEffect(CSV(InvalidNumberRow))("id,name\n1,Ada"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {

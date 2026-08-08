@@ -478,7 +478,7 @@ const JSDocCategoryNormalizationFromString = S.String.pipe(
  * @since 0.0.0
  */
 export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalization =>
-  Result.getOrThrow(S.decodeUnknownResult(JSDocCategoryNormalizationFromString)(value));
+  Result.getOrThrow(S.decodeResult(JSDocCategoryNormalizationFromString)(value));
 
 /**
  * Return true when a category is canonical or accepted as a migration alias.

@@ -73,6 +73,12 @@ class RuntimeProcessLikeModel extends S.Class<RuntimeProcessLikeModel>($I`Runtim
 
 type RuntimeProcessLike = typeof RuntimeProcessLikeModel.Encoded;
 
+type CreateSupportsColorInput = {
+  readonly options?: SupportsColorOptions;
+  readonly runtimeProcessLike?: RuntimeProcessLike;
+  readonly stream?: StreamLike;
+};
+
 class SupportsColorDecisionInputModel extends S.Class<SupportsColorDecisionInputModel>($I`SupportsColorDecisionInput`)(
   {
     argv: S.Array(S.String),
@@ -526,18 +532,21 @@ const supportsColorLevel = ({
  * ```ts
  * import { createSupportsColor } from "./SupportsColor.ts"
  *
- * const support = createSupportsColor({ isTTY: true }, {}, { argv: [], env: { FORCE_COLOR: "1" } })
+ * const support = createSupportsColor({
+ *   stream: { isTTY: true },
+ *   runtimeProcessLike: { argv: [], env: { FORCE_COLOR: "1" } }
+ * })
  * console.log(support)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const createSupportsColor = (
-  stream: StreamLike = {},
-  options: SupportsColorOptions = {},
-  runtimeProcessLike: RuntimeProcessLike = currentRuntimeProcessLike
-): ColorInfo => {
+export const createSupportsColor = ({
+  options = {},
+  runtimeProcessLike = currentRuntimeProcessLike,
+  stream = {},
+}: CreateSupportsColorInput = {}): ColorInfo => {
   const normalizedStream = normalizeStreamLike(stream);
   const normalizedOptions = normalizeSupportsColorOptions(options);
   const normalizedRuntimeProcessLike = normalizeRuntimeProcessLike(runtimeProcessLike);
@@ -570,6 +579,6 @@ export const createSupportsColor = (
  * @since 0.0.0
  */
 export const detectedSupportsColor = {
-  stderr: createSupportsColor({ isTTY: tty.isatty(2) }),
-  stdout: createSupportsColor({ isTTY: tty.isatty(1) }),
+  stderr: createSupportsColor({ stream: { isTTY: tty.isatty(2) } }),
+  stdout: createSupportsColor({ stream: { isTTY: tty.isatty(1) } }),
 };

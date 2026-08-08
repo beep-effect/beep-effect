@@ -72,7 +72,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
   });
 
   it("round-trips EdgeAsOfQuery on both axes", () => {
-    const decoded = S.decodeUnknownSync(EdgeAsOfQuery)(asOfEncoded);
+    const decoded = S.decodeSync(EdgeAsOfQuery)(asOfEncoded);
 
     expect(S.encodeSync(EdgeAsOfQuery)(decoded)).toStrictEqual(asOfEncoded);
   });
@@ -89,7 +89,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     fc.assert(
       fc.property(EdgeAsOfQueryArbitrary, (query) => {
         const encoded = S.encodeSync(EdgeAsOfQuery)(query);
-        const decoded = S.decodeUnknownSync(EdgeAsOfQuery)(encoded);
+        const decoded = S.decodeSync(EdgeAsOfQuery)(encoded);
 
         // Both axes survive the millis boundary for every generated instant, not just the fixture.
         expect(S.encodeSync(EdgeAsOfQuery)(decoded)).toStrictEqual(encoded);

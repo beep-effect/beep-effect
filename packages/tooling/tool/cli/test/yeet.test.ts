@@ -1254,7 +1254,7 @@ describe("yeet quality issue index", () => {
           );
 
           const emittedText = yield* fs.readFileString(emitPath);
-          const index = yield* S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
 
           expect(index.issues).toHaveLength(1);
           expect(index.issues[0]).toMatchObject({
@@ -1306,7 +1306,7 @@ describe("yeet quality issue index", () => {
           expect(yield* fs.exists(envelopePath)).toBe(false);
 
           const emittedText = yield* fs.readFileString(emitPath);
-          const index = yield* S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
           expect(index.issues).toEqual([]);
         })
       )
@@ -1764,7 +1764,7 @@ describe("yeet status helpers", () => {
           unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
         });
         const encoded = yield* S.encodeEffect(YeetStatusRemote)(remote);
-        const decoded = yield* S.decodeUnknownEffect(YeetStatusRemote)(encoded);
+        const decoded = yield* S.decodeEffect(YeetStatusRemote)(encoded);
 
         expect(decoded.unresolvedReviewThreadCount).toBe(1);
         expect(decoded.rerunFailedCommand).toBe(yeetRerunJobListingCommand(123));
@@ -1859,7 +1859,7 @@ describe("yeet attempt journal", () => {
   it("schema-decodes repository step timing fields", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const result = yield* S.decodeUnknownEffect(RepoStepRunResult)({
+        const result = yield* S.decodeEffect(RepoStepRunResult)({
           stepId: "feedback:check",
           commandText: "bun run check",
           exitCode: 0,
@@ -1988,8 +1988,8 @@ describe("yeet publish scope helpers", () => {
   it("decodes both publish intent states", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const staged = yield* S.decodeUnknownEffect(YeetPublishIntent)({ kind: "staged", paths: ["src/a.ts"] });
-        const existing = yield* S.decodeUnknownEffect(YeetPublishIntent)({
+        const staged = yield* S.decodeEffect(YeetPublishIntent)({ kind: "staged", paths: ["src/a.ts"] });
+        const existing = yield* S.decodeEffect(YeetPublishIntent)({
           commitSha: "abc123",
           kind: "existing-commit",
           paths: ["src/a.ts"],
@@ -2270,7 +2270,7 @@ describe("yeet publish scope helpers", () => {
 
         expect(verdict.pushed).toBe(true);
         const encoded = yield* S.encodeEffect(YeetVerdict)(verdict);
-        const decoded = yield* S.decodeUnknownEffect(YeetVerdict)(encoded);
+        const decoded = yield* S.decodeEffect(YeetVerdict)(encoded);
         expect(decoded.lanes[0]?.status).toBe("passed");
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
@@ -2323,7 +2323,7 @@ describe("yeet publish scope helpers", () => {
     fc.assert(
       fc.property(VerdictArbitrary, (verdict) => {
         const encoded = S.encodeSync(YeetVerdict)(verdict);
-        const decoded = S.decodeUnknownSync(YeetVerdict)(encoded);
+        const decoded = S.decodeSync(YeetVerdict)(encoded);
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
         expect(decoded.lanes.length).toBe(verdict.lanes.length);
         expect(decoded.outcome).toBe(verdict.outcome);
@@ -2471,7 +2471,7 @@ describe("yeet publish scope helpers", () => {
   it("decodes closeout reports without writeActions for backwards compatibility", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const decoded = yield* S.decodeUnknownEffect(PrCloseoutReport)({
+        const decoded = yield* S.decodeEffect(PrCloseoutReport)({
           actionableReviewThreadCount: 0,
           botCommentCount: 0,
           greptile: {},

@@ -9,7 +9,7 @@ import { $MdId } from "@beep/identity";
 import { HtmlFragment, Markdown, TaggedErrorClass } from "@beep/schema";
 import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue } from "effect";
-import { dual, pipe } from "effect/Function";
+import { cast, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -821,6 +821,26 @@ export const renderHtmlUnsafe = (document: Document): HtmlFragment => renderWith
 export const renderPlainTextUnsafe = (document: Document): string => renderWithUnsafe(PlainTextAdapter, document);
 
 /**
+ * Selects the output a {@link PureRenderAdapter} produces for a document.
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link renderWithUnsafe} share a single named return type.
+ * Every concrete instantiation resolves back to `Output`.
+ *
+ * @example
+ * ```ts
+ * import type { RenderOutputOf } from "@beep/md/Md.render"
+ *
+ * const acceptPlainText = (value: RenderOutputOf<string>) => value
+ * console.log(acceptPlainText)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RenderOutputOf<Output> = Output extends unknown ? Output : never;
+
+/**
  * Renders a document with a custom pure adapter and returns the output directly.
  *
  * Prefer {@link renderWith} when callers should handle adapter failure explicitly.
@@ -838,9 +858,13 @@ export const renderPlainTextUnsafe = (document: Document): string => renderWithU
  * @since 0.0.0
  */
 export const renderWithUnsafe: {
-  <Output>(adapter: PureRenderAdapter<Output>, document: Document): Output;
-  <Output>(document: Document): (adapter: PureRenderAdapter<Output>) => Output;
-} = dual(2, <Output>(adapter: PureRenderAdapter<Output>, document: Document): Output => adapter.render(document));
+  <Output>(document: Document): (adapter: PureRenderAdapter<Output>) => RenderOutputOf<Output>;
+  <Output>(adapter: PureRenderAdapter<Output>, document: Document): RenderOutputOf<Output>;
+} = dual(
+  2,
+  <Output>(adapter: PureRenderAdapter<Output>, document: Document): RenderOutputOf<Output> =>
+    cast(adapter.render(document))
+);
 
 /**
  * Starts an effectful render adapter and returns its effect directly.

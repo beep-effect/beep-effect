@@ -40,7 +40,7 @@ describe("OptionFromOptionalNullishKey", () => {
 
   it("can encode None as null when requested", () => {
     const Payload = S.Struct({
-      homepage: OptionFromOptionalNullishKey(S.URLFromString, { onNoneEncoding: null }),
+      homepage: OptionFromOptionalNullishKey({ schema: S.URLFromString, onNoneEncoding: null }),
     });
 
     const encode = S.encodeSync(Payload);

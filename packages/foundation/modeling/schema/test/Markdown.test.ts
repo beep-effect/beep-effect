@@ -75,7 +75,7 @@ describe("Markdown", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.acquireUseRelease(
         replaceGlobalBunMarkdownHtml(() => 1),
-        () => Effect.exit(S.decodeUnknownEffect(Markdown)("# Hello")),
+        () => Effect.exit(S.decodeEffect(Markdown)("# Hello")),
         restoreGlobalBunMarkdownHtml
       );
 
@@ -93,7 +93,7 @@ describe("Markdown", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.acquireUseRelease(
         replaceGlobalBunMarkdownHtml(undefined),
-        () => Effect.exit(S.decodeUnknownEffect(MarkdownTextToHtml())("# Hello")),
+        () => Effect.exit(S.decodeEffect(MarkdownTextToHtml())("# Hello")),
         restoreGlobalBunMarkdownHtml
       );
 
@@ -113,14 +113,14 @@ describe("Markdown", () => {
         replaceGlobalBunMarkdownHtml(() => {
           throw new Error("renderer failed");
         }),
-        () => Effect.exit(S.decodeUnknownEffect(MarkdownTextToHtml())("# Hello")),
+        () => Effect.exit(S.decodeEffect(MarkdownTextToHtml())("# Hello")),
         restoreGlobalBunMarkdownHtml
       );
       const unknownResult = yield* Effect.acquireUseRelease(
         replaceGlobalBunMarkdownHtml(() => {
           throw "renderer failed";
         }),
-        () => Effect.exit(S.decodeUnknownEffect(MarkdownTextToHtml())("# Hello")),
+        () => Effect.exit(S.decodeEffect(MarkdownTextToHtml())("# Hello")),
         restoreGlobalBunMarkdownHtml
       );
 

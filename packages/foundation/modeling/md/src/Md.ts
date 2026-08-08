@@ -8,7 +8,7 @@
 import { PosInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, Match } from "effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -350,6 +350,20 @@ const blockTemplateFormattingLinePattern = /[\r\n]/;
 const isTemplateStringsArray = (input: unknown): input is TemplateStringsArray =>
   A.isArray(input) && P.hasProperty(input, "raw");
 
+// Constructor content is always a string, an array of children, or a tagged
+// node; the trailing options object of the same constructors never is. That
+// gap is what makes the data-first / data-last dispatch below decidable.
+const isContentArgument = (input: unknown): boolean =>
+  P.isString(input) || A.isArray(input) || P.hasProperty(input, "_tag");
+
+// Data-first when the leading argument carries the content, e.g. `pre(value)`
+// and `pre(value, options)` against the data-last `pre(options)`.
+const isLeadingContentCall = (args: IArguments): boolean => isContentArgument(args[0]);
+
+// Data-first when the content follows a keying argument (href, kind), e.g.
+// `a(href, children)` against the data-last `a(children, options)`.
+const isKeyedContentCall = (args: IArguments): boolean => args.length >= 2 && isContentArgument(args[1]);
+
 const isInlineInputArray = (input: InlineContent): input is ReadonlyArray<InlineInput> => A.isArray(input);
 
 const isBlockInputArray = (input: BlockContent): input is ReadonlyArray<BlockInput> => A.isArray(input);
@@ -664,25 +678,40 @@ export const code = (value: string): Code => Code.make({ value });
  * @category constructors
  * @since 0.0.0
  */
-export const a = (href: string, children: InlineContent, options: { readonly title?: string } = {}): ANode =>
-  ANode.make({ href, children: asInlineArray(children), title: O.fromUndefinedOr(options.title) });
+export const a: {
+  (children: InlineContent, options?: { readonly title?: string }): (href: string) => ANode;
+  (href: string, children: InlineContent, options?: { readonly title?: string }): ANode;
+} = dual(
+  isKeyedContentCall,
+  (href: string, children: InlineContent, options: { readonly title?: string } = {}): ANode =>
+    ANode.make({ href, children: asInlineArray(children), title: O.fromUndefinedOr(options.title) })
+);
 
 /**
  * Creates an inline image.
+ *
+ * Alternate text lives in the options object so the constructor keeps a single
+ * positional argument; omitting it yields the empty alt text.
  *
  * @example
  * ```ts
  * import { Md } from "@beep/md"
  *
- * const node = Md.img("/logo.png", "Logo")
+ * const node = Md.img("/logo.png", { alt: "Logo" })
  * console.log(node._tag) // "img"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const img = (src: string, alt = "", options: { readonly title?: string } = {}): Img =>
-  Img.make({ src, alt, title: O.fromUndefinedOr(options.title) });
+export const img: {
+  (options?: { readonly alt?: string; readonly title?: string }): (src: string) => Img;
+  (src: string, options?: { readonly alt?: string; readonly title?: string }): Img;
+} = dual(
+  isLeadingContentCall,
+  (src: string, options: { readonly alt?: string; readonly title?: string } = {}): Img =>
+    Img.make({ src, alt: options.alt ?? "", title: O.fromUndefinedOr(options.title) })
+);
 
 /**
  * Creates an inline line break.
@@ -890,11 +919,17 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
  * @category constructors
  * @since 0.0.0
  */
-export const ol = (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
-  Ol.make({
-    children: A.map(children, asListItem),
-    ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
-  });
+export const ol: {
+  (options?: { readonly start?: number }): (children: ReadonlyArray<ListItemInput>) => Ol;
+  (children: ReadonlyArray<ListItemInput>, options?: { readonly start?: number }): Ol;
+} = dual(
+  isLeadingContentCall,
+  (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
+    Ol.make({
+      children: A.map(children, asListItem),
+      ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
+    })
+);
 
 /**
  * Creates a GFM task list item.
@@ -910,11 +945,17 @@ export const ol = (children: ReadonlyArray<ListItemInput>, options: { readonly s
  * @category constructors
  * @since 0.0.0
  */
-export const taskItem = (children: ListItemContent, options: { readonly checked?: boolean } = {}): TaskItem =>
-  TaskItem.make({
-    children: asListItemChildren(children),
-    ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
-  });
+export const taskItem: {
+  (options?: { readonly checked?: boolean }): (children: ListItemContent) => TaskItem;
+  (children: ListItemContent, options?: { readonly checked?: boolean }): TaskItem;
+} = dual(
+  isLeadingContentCall,
+  (children: ListItemContent, options: { readonly checked?: boolean } = {}): TaskItem =>
+    TaskItem.make({
+      children: asListItemChildren(children),
+      ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
+    })
+);
 
 const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInput>): TaskList =>
   TaskList.make({ children: A.map(children, asTaskItem) });
@@ -986,8 +1027,14 @@ export const blockquote = makeBlockContentBuilder((children): BlockQuote => Bloc
  * @category constructors
  * @since 0.0.0
  */
-export const pre = (value: string, options: { readonly language?: string } = {}): Pre =>
-  Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), CodeFenceLanguage.decodeOption) });
+export const pre: {
+  (options?: { readonly language?: string }): (value: string) => Pre;
+  (value: string, options?: { readonly language?: string }): Pre;
+} = dual(
+  isLeadingContentCall,
+  (value: string, options: { readonly language?: string } = {}): Pre =>
+    Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), CodeFenceLanguage.decodeOption) })
+);
 
 /**
  * Creates a table cell with inline content.
@@ -1036,15 +1083,27 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
  * @category constructors
  * @since 0.0.0
  */
-export const table = (
-  children: ReadonlyArray<TableRowInput>,
-  options: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> } = {}
-): Table =>
-  Table.make({
-    children: A.map(children, asTableRow),
-    align: options.align ?? [],
-    ...(P.isBoolean(options.headerRow) ? { headerRow: options.headerRow } : {}),
-  });
+export const table: {
+  (options?: {
+    readonly headerRow?: boolean;
+    readonly align?: ReadonlyArray<TableAlignment>;
+  }): (children: ReadonlyArray<TableRowInput>) => Table;
+  (
+    children: ReadonlyArray<TableRowInput>,
+    options?: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> }
+  ): Table;
+} = dual(
+  isLeadingContentCall,
+  (
+    children: ReadonlyArray<TableRowInput>,
+    options: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> } = {}
+  ): Table =>
+    Table.make({
+      children: A.map(children, asTableRow),
+      align: options.align ?? [],
+      ...(P.isBoolean(options.headerRow) ? { headerRow: options.headerRow } : {}),
+    })
+);
 
 /**
  * Creates a display TeX math block.
@@ -1076,8 +1135,14 @@ export const mathBlock = (value: string): MathBlock => MathBlock.make({ value })
  * @category constructors
  * @since 0.0.0
  */
-export const footnoteDef = (identifier: string, children: BlockContent): FootnoteDefinition =>
-  FootnoteDefinition.make({ identifier: FootnoteIdentifier.make(identifier), children: asBlockArray(children) });
+export const footnoteDef: {
+  (children: BlockContent): (identifier: string) => FootnoteDefinition;
+  (identifier: string, children: BlockContent): FootnoteDefinition;
+} = dual(
+  2,
+  (identifier: string, children: BlockContent): FootnoteDefinition =>
+    FootnoteDefinition.make({ identifier: FootnoteIdentifier.make(identifier), children: asBlockArray(children) })
+);
 
 /**
  * Creates a typed admonition block.
@@ -1093,11 +1158,14 @@ export const footnoteDef = (identifier: string, children: BlockContent): Footnot
  * @category constructors
  * @since 0.0.0
  */
-export const admonition = (
-  kind: AdmonitionKind,
-  children: BlockContent,
-  options: { readonly title?: string } = {}
-): Admonition => Admonition.make({ kind, title: O.fromUndefinedOr(options.title), children: asBlockArray(children) });
+export const admonition: {
+  (children: BlockContent, options?: { readonly title?: string }): (kind: AdmonitionKind) => Admonition;
+  (kind: AdmonitionKind, children: BlockContent, options?: { readonly title?: string }): Admonition;
+} = dual(
+  isKeyedContentCall,
+  (kind: AdmonitionKind, children: BlockContent, options: { readonly title?: string } = {}): Admonition =>
+    Admonition.make({ kind, title: O.fromUndefinedOr(options.title), children: asBlockArray(children) })
+);
 
 /**
  * Creates a safe generalized block embed.
@@ -1113,17 +1181,19 @@ export const admonition = (
  * @category constructors
  * @since 0.0.0
  */
-export const embed = (
-  kind: EmbedKind,
-  src: string,
-  options: { readonly title?: string; readonly description?: string } = {}
-): Embed =>
-  Embed.make({
-    kind,
-    src,
-    title: O.fromUndefinedOr(options.title),
-    description: O.fromUndefinedOr(options.description),
-  });
+export const embed: {
+  (src: string, options?: { readonly title?: string; readonly description?: string }): (kind: EmbedKind) => Embed;
+  (kind: EmbedKind, src: string, options?: { readonly title?: string; readonly description?: string }): Embed;
+} = dual(
+  isKeyedContentCall,
+  (kind: EmbedKind, src: string, options: { readonly title?: string; readonly description?: string } = {}): Embed =>
+    Embed.make({
+      kind,
+      src,
+      title: O.fromUndefinedOr(options.title),
+      description: O.fromUndefinedOr(options.description),
+    })
+);
 
 /**
  * Creates the encoded YouTube embed payload decoded by public constructors.
@@ -1158,7 +1228,7 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
  * @since 0.0.0
  */
 export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> =>
-  S.decodeUnknownResult(YouTube)(youtubeInput(videoId));
+  S.decodeResult(YouTube)(youtubeInput(videoId));
 
 /**
  * Effectful YouTube embed constructor.
@@ -1176,7 +1246,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  * @since 0.0.0
  */
 export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: string) {
-  return yield* S.decodeUnknownEffect(YouTube)(youtubeInput(videoId));
+  return yield* S.decodeEffect(YouTube)(youtubeInput(videoId));
 });
 
 /**
@@ -1226,10 +1296,16 @@ export const hr: Hr = Hr.make({});
  * @category constructors
  * @since 0.0.0
  */
-export const make = (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
-  P.isUndefined(options.frontmatter)
-    ? Document.make({ children })
-    : Document.make({ children, frontmatter: O.some(options.frontmatter) });
+export const make: {
+  (options?: { readonly frontmatter?: JsonObject }): (children: ReadonlyArray<Block>) => Document;
+  (children: ReadonlyArray<Block>, options?: { readonly frontmatter?: JsonObject }): Document;
+} = dual(
+  isLeadingContentCall,
+  (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
+    P.isUndefined(options.frontmatter)
+      ? Document.make({ children })
+      : Document.make({ children, frontmatter: O.some(options.frontmatter) })
+);
 
 /**
  * Namespace-style public Markdown DSL.

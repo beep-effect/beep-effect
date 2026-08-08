@@ -51,7 +51,7 @@ describe("FileName", () => {
       fileName: FileName,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ fileName: "bad/name.txt" })).toThrow(`at ["fileName"]`);
+    expect(() => S.decodeSync(Payload)({ fileName: "bad/name.txt" })).toThrow(`at ["fileName"]`);
   });
 
   it("decodes object schemas with a fileName property", () => {

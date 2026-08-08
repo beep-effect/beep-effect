@@ -78,7 +78,7 @@ const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(
  * ```tsx
  * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
- * console.log($createCodeBlockNode("export {}", "typescript").getType()) // "codeblock"
+ * console.log($createCodeBlockNode({ code: "export {}", language: "typescript" }).getType()) // "codeblock"
  * ```
  *
  * @category components
@@ -104,7 +104,7 @@ export class CodeBlockNode extends DecoratorBlockNode {
 
   static override importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): CodeBlockNode {
     const decoded = Result.getOrThrowWith(decodeSerializedCodeBlockNode(serializedNode), schemaIssueToError);
-    return $createCodeBlockNode(decoded.code, decoded.language);
+    return $createCodeBlockNode({ code: decoded.code, language: decoded.language });
   }
 
   override exportJSON(): SerializedCodeBlockNode {
@@ -134,14 +134,14 @@ export class CodeBlockNode extends DecoratorBlockNode {
  * ```ts
  * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
  *
- * console.log($createCodeBlockNode("export {}", "ts").getTextContent()) // "export {}"
+ * console.log($createCodeBlockNode({ code: "export {}", language: "ts" }).getTextContent()) // "export {}"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const $createCodeBlockNode = (code: string, language: string): CodeBlockNode =>
-  new CodeBlockNode(code, language);
+export const $createCodeBlockNode = (options: { readonly code: string; readonly language: string }): CodeBlockNode =>
+  new CodeBlockNode(options.code, options.language);
 
 /**
  * Type guard for {@link CodeBlockNode}.
@@ -150,7 +150,7 @@ export const $createCodeBlockNode = (code: string, language: string): CodeBlockN
  * ```ts
  * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor/code-block-node"
  *
- * console.log($isCodeBlockNode($createCodeBlockNode("x", "ts"))) // true
+ * console.log($isCodeBlockNode($createCodeBlockNode({ code: "x", language: "ts" }))) // true
  * ```
  *
  * @category guards

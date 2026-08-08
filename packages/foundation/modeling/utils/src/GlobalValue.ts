@@ -14,12 +14,26 @@
  */
 
 import { HashMap } from "effect";
-import { dual } from "effect/Function";
+import { cast, dual } from "effect/Function";
 import * as O from "effect/Option";
 import type { TUnsafe } from "@beep/types";
 
 const globalStoreId = `effect/GlobalValue`;
 type GlobalStore = HashMap.HashMap<unknown, TUnsafe.Any>;
+
+/**
+ * Selects the value {@link globalValue} stores for an id.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link globalValue} share a single named return type. Every
+ * concrete instantiation resolves back to `A`.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GlobalValueOf<A> = A extends unknown ? A : never;
 
 /**
  * Retrieves or computes a global value associated with the given `id`. If the value for this `id`
@@ -54,16 +68,16 @@ type GlobalStore = HashMap.HashMap<unknown, TUnsafe.Any>;
  * @since 0.0.0
  */
 export const globalValue: {
-  <A>(compute: () => A): (id: unknown) => A;
-  <A>(id: unknown, compute: () => A): A;
-} = dual(2, <A>(id: unknown, compute: () => A): A => {
+  <A>(compute: () => A): (id: unknown) => GlobalValueOf<A>;
+  <A>(id: unknown, compute: () => A): GlobalValueOf<A>;
+} = dual(2, <A>(id: unknown, compute: () => A): GlobalValueOf<A> => {
   const globalScope = globalThis as typeof globalThis & Record<string, GlobalStore | undefined>;
   const store = globalScope[globalStoreId] ?? HashMap.empty<unknown, TUnsafe.Any>();
   const existing = HashMap.get(store, id);
   if (O.isSome(existing)) {
-    return existing.value as A;
+    return cast(existing.value);
   }
   const value = compute();
   globalScope[globalStoreId] = HashMap.set(store, id, value);
-  return value;
+  return cast(value);
 });

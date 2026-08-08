@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import { PosInt } from "../Int.ts";
 import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";
+import type * as Ordering from "effect/Ordering";
 
 const $I = $SchemaId.create("Timestamp");
 
@@ -423,11 +424,17 @@ export const nowEffect: Effect.Effect<Timestamp> = Effect.map(
  * @since 0.0.0
  * @category utilities
  */
-export const Order: Order_.Order<Timestamp> = Order_.make((a, b) => {
-  if (a.epochMillis < b.epochMillis) return -1;
-  if (a.epochMillis > b.epochMillis) return 1;
-  return 0;
-});
+export const Order: {
+  (that: Timestamp): (self: Timestamp) => Ordering.Ordering;
+  (self: Timestamp, that: Timestamp): Ordering.Ordering;
+} = dual(
+  2,
+  Order_.make<Timestamp>((a, b) => {
+    if (a.epochMillis < b.epochMillis) return -1;
+    if (a.epochMillis > b.epochMillis) return 1;
+    return 0;
+  })
+);
 
 /**
  * Dual predicate returning `true` when `self` is chronologically before `that`.

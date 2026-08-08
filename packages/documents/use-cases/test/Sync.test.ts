@@ -60,9 +60,9 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(1);
 
-const idleStatus = S.decodeUnknownSync(VaultSyncStatus)({
+const idleStatus = S.decodeSync(VaultSyncStatus)({
   conflictItems: 0,
   connected: false,
   currentItems: 0,
@@ -80,7 +80,7 @@ describe("DmsMirror port models", () => {
     const item = DmsRemoteItem.make({
       itemKind: "folder",
       name: "matters",
-      remoteId: S.decodeUnknownSync(RemoteItemId)("9000"),
+      remoteId: S.decodeSync(RemoteItemId)("9000"),
     });
     expect(O.isNone(item.parentRemoteId)).toBe(true);
 
@@ -167,15 +167,15 @@ describe("VaultSyncEngine port", () => {
   });
 
   it("decodes and guards the vault sync error union", () => {
-    const scanFailed = S.decodeUnknownSync(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
+    const scanFailed = S.decodeSync(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
     expect(scanFailed._tag).toBe("VaultScanFailed");
 
-    const mirrorDown = S.decodeUnknownSync(VaultSyncError)(
+    const mirrorDown = S.decodeSync(VaultSyncError)(
       DmsMirrorUnavailable.make({ provider: "box", reason: "remote rate limit exceeded", retryable: true })
     );
     expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
-    const repositoryDown = S.decodeUnknownSync(VaultSyncError)(
+    const repositoryDown = S.decodeSync(VaultSyncError)(
       SyncItemRepositoryUnavailable.make({ reason: "database connection closed" })
     );
     expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");

@@ -33,7 +33,7 @@ const toError = (cause: unknown) => new Error(String(cause));
 
 describe("internal/cli/RunMode", () => {
   it("decodes the shared run-mode literals", () => {
-    expect(S.decodeUnknownSync(RunMode)("dry-run")).toBe("dry-run");
+    expect(S.decodeSync(RunMode)("dry-run")).toBe("dry-run");
     expect(RunModeIs.write("write")).toBe(true);
     expect(RunModeIs.write("check")).toBe(false);
   });

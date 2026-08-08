@@ -91,7 +91,9 @@ export class Source extends Context.Service<Source, SourceShape>()($I`Source`) {
   }
 }
 
-const sortModulesByPath: <A extends Domain.Module>(self: Iterable<A>) => Array<A> = A.sort(Domain.ByPath);
+const sortModulesByPath: <A extends Domain.Module>(self: Iterable<A>) => Array<A> = A.sort<Domain.Module>(
+  Domain.ByPath
+);
 
 const getJSDocText: (jsdocs: ReadonlyArray<ast.JSDoc>) => string = A.matchRight({
   onEmpty: thunkEmptyStr,

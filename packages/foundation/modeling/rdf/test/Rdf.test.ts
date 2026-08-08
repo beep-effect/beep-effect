@@ -498,7 +498,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
 
   it("supports direct and curried literal, quad, and dataset helpers", () => {
     const languageLiteral = makeLiteral(XSD_STRING.value, { language: "EN" })("Alice");
-    const directLanguageLiteral = makeLiteral("Alice", XSD_STRING.value, "EN");
+    const directLanguageLiteral = makeLiteral("Alice", XSD_STRING.value, { language: "EN" });
     const defaultGraphQuad = makeQuad(alice, RDF_TYPE, typed);
     const curriedQuad = makeQuad(RDF_TYPE, { object: person, graph })(alice);
     const directOptionsQuad = makeQuad(alice, RDF_TYPE, { object: blank });

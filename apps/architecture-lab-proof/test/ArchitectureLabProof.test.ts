@@ -42,10 +42,7 @@ describe("architecture lab proof app", () => {
     fc.assert(
       fc.property(S.toArbitrary(ArchitectureLabProofResult), (value) => {
         expect(
-          Equal.equals(
-            S.decodeUnknownSync(ArchitectureLabProofResult)(S.encodeSync(ArchitectureLabProofResult)(value)),
-            value
-          )
+          Equal.equals(S.decodeSync(ArchitectureLabProofResult)(S.encodeSync(ArchitectureLabProofResult)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)

@@ -10,6 +10,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -946,10 +947,10 @@ const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemo
  * @category diagnostics
  * @since 0.0.0
  */
-export const deriveYeetMergeReady = (
-  closeout: YeetStatusArtifact,
-  remote: YeetStatusRemote
-): O.Option<YeetMergeReady> => {
+export const deriveYeetMergeReady: {
+  (remote: YeetStatusRemote): (closeout: YeetStatusArtifact) => O.Option<YeetMergeReady>;
+  (closeout: YeetStatusArtifact, remote: YeetStatusRemote): O.Option<YeetMergeReady>;
+} = dual(2, (closeout: YeetStatusArtifact, remote: YeetStatusRemote): O.Option<YeetMergeReady> => {
   if (!remote.checked || !remote.available) {
     return O.none();
   }
@@ -971,7 +972,7 @@ export const deriveYeetMergeReady = (
       }),
     })
   );
-};
+});
 
 const nextCommandForRemote = (
   verdict: YeetStatusArtifact,
@@ -1240,4 +1241,16 @@ export const yeetStatusPathForTesting = statusPathForContext;
  * @category testing
  * @since 0.0.0
  */
-export const yeetStatusNextCommandForTesting = nextCommandForStatus;
+export const yeetStatusNextCommandForTesting: {
+  (
+    verdict: YeetStatusArtifact,
+    closeout: YeetStatusArtifact,
+    remote: YeetStatusRemote
+  ): (worktree: YeetStatusWorktree) => string;
+  (
+    worktree: YeetStatusWorktree,
+    verdict: YeetStatusArtifact,
+    closeout: YeetStatusArtifact,
+    remote: YeetStatusRemote
+  ): string;
+} = dual(4, nextCommandForStatus);

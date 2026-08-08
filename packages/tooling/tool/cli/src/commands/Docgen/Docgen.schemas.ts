@@ -9,7 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Match, Order } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Ordering from "effect/Ordering";
 
 const $I = $RepoCliId.create("commands/Docgen/Docgen.schemas");
 
@@ -446,9 +448,12 @@ export const isDocgenWorkspacePackage = S.is(DocgenWorkspacePackage);
  * @category utilities
  * @since 0.0.0
  */
-export const byRelativePathAscending: Order.Order<DocgenWorkspacePackage> = Order.mapInput(
-  Order.String,
-  (pkg: DocgenWorkspacePackage) => pkg.relativePath
+export const byRelativePathAscending: {
+  (that: DocgenWorkspacePackage): (self: DocgenWorkspacePackage) => Ordering.Ordering;
+  (self: DocgenWorkspacePackage, that: DocgenWorkspacePackage): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Order.String, (pkg: DocgenWorkspacePackage) => pkg.relativePath)
 );
 
 /**
@@ -468,9 +473,12 @@ export const byRelativePathAscending: Order.Order<DocgenWorkspacePackage> = Orde
  * @category utilities
  * @since 0.0.0
  */
-export const byDocsOutputPathAscending: Order.Order<DocgenWorkspacePackage> = Order.mapInput(
-  Order.String,
-  (pkg: DocgenWorkspacePackage) => pkg.docsOutputPath
+export const byDocsOutputPathAscending: {
+  (that: DocgenWorkspacePackage): (self: DocgenWorkspacePackage) => Ordering.Ordering;
+  (self: DocgenWorkspacePackage, that: DocgenWorkspacePackage): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Order.String, (pkg: DocgenWorkspacePackage) => pkg.docsOutputPath)
 );
 
 /**
@@ -490,12 +498,18 @@ export const byDocsOutputPathAscending: Order.Order<DocgenWorkspacePackage> = Or
  * @category utilities
  * @since 0.0.0
  */
-export const byIssueAscending: Order.Order<DocgenExportAnalysis> = Order.mapInput(
-  Order.String,
-  (analysis: DocgenExportAnalysis) =>
-    `${Match.value(analysis.priority).pipe(
-      Match.when("high", () => "0"),
-      Match.when("medium", () => "1"),
-      Match.orElse(() => "2")
-    )}:${analysis.filePath}:${analysis.line}:${analysis.name}`
+export const byIssueAscending: {
+  (that: DocgenExportAnalysis): (self: DocgenExportAnalysis) => Ordering.Ordering;
+  (self: DocgenExportAnalysis, that: DocgenExportAnalysis): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(
+    Order.String,
+    (analysis: DocgenExportAnalysis) =>
+      `${Match.value(analysis.priority).pipe(
+        Match.when("high", () => "0"),
+        Match.when("medium", () => "1"),
+        Match.orElse(() => "2")
+      )}:${analysis.filePath}:${analysis.line}:${analysis.name}`
+  )
 );

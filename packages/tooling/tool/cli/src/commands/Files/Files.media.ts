@@ -43,6 +43,7 @@ import {
   classifyBorderSides as classifyBorderSidesImpl,
   rgbToHex as rgbToHexImpl,
 } from "./internal/BorderDetection.ts";
+import type * as Ordering from "effect/Ordering";
 import type { FfprobeStream, MediaKind, NormalizeImageFormat, SortableFile } from "./Files.schemas.ts";
 
 /**
@@ -435,9 +436,15 @@ export const isSupportedMetadataImageExtension = S.is(SupportedMetadataImageExte
  * @category utilities
  * @since 0.0.0
  */
-export const bySizeDescendingThenNameAscending: Order.Order<SortableFile> = Order.combine(
-  Order.flip(Order.mapInput(Order.BigInt, (file: SortableFile) => file.size)),
-  Order.mapInput(Str.orderAsc, (file: SortableFile) => file.name)
+export const bySizeDescendingThenNameAscending: {
+  (that: SortableFile): (self: SortableFile) => Ordering.Ordering;
+  (self: SortableFile, that: SortableFile): Ordering.Ordering;
+} = dual(
+  2,
+  Order.combine(
+    Order.flip(Order.mapInput(Order.BigInt, (file: SortableFile) => file.size)),
+    Order.mapInput(Str.orderAsc, (file: SortableFile) => file.name)
+  )
 );
 
 /**
@@ -452,9 +459,12 @@ export const bySizeDescendingThenNameAscending: Order.Order<SortableFile> = Orde
  * @category utilities
  * @since 0.0.0
  */
-export const byNameAscending: Order.Order<SortableFile> = Order.mapInput(
-  Str.orderAsc,
-  (file: SortableFile) => file.name
+export const byNameAscending: {
+  (that: SortableFile): (self: SortableFile) => Ordering.Ordering;
+  (self: SortableFile, that: SortableFile): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Str.orderAsc, (file: SortableFile) => file.name)
 );
 
 /**

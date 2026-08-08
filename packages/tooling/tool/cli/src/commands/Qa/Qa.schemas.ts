@@ -14,7 +14,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CaptureLane, CollectorBindPort, ExtractionRuleSet, RoundNumber } from "@beep/qa-capture";
 import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Qa/Qa.schemas");
 
@@ -298,7 +300,10 @@ export class QaJudgeLintOptions extends S.Class<QaJudgeLintOptions>($I`QaJudgeLi
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaRecordOptions = S.decodeUnknownEffect(QaRecordOptions);
+export const decodeQaRecordOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaRecordOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaRecordOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaRecordOptions));
 
 /**
  * Decode raw `beep qa extract` flags.
@@ -313,7 +318,10 @@ export const decodeQaRecordOptions = S.decodeUnknownEffect(QaRecordOptions);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaExtractOptions = S.decodeUnknownEffect(QaExtractOptions);
+export const decodeQaExtractOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaExtractOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaExtractOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaExtractOptions));
 
 /**
  * Decode raw `beep qa report` flags.
@@ -328,7 +336,10 @@ export const decodeQaExtractOptions = S.decodeUnknownEffect(QaExtractOptions);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaReportOptions = S.decodeUnknownEffect(QaReportOptions);
+export const decodeQaReportOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaReportOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaReportOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaReportOptions));
 
 /**
  * Decode raw `beep qa mark` flags and arguments.
@@ -343,7 +354,10 @@ export const decodeQaReportOptions = S.decodeUnknownEffect(QaReportOptions);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaMarkOptions = S.decodeUnknownEffect(QaMarkOptions);
+export const decodeQaMarkOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaMarkOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaMarkOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaMarkOptions));
 
 /**
  * Decode raw `beep qa judge-pack` flags.
@@ -358,7 +372,10 @@ export const decodeQaMarkOptions = S.decodeUnknownEffect(QaMarkOptions);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaJudgePackOptions = S.decodeUnknownEffect(QaJudgePackOptions);
+export const decodeQaJudgePackOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaJudgePackOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaJudgePackOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaJudgePackOptions));
 
 /**
  * Decode raw `beep qa judge-ingest` flags.
@@ -373,7 +390,10 @@ export const decodeQaJudgePackOptions = S.decodeUnknownEffect(QaJudgePackOptions
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaJudgeIngestOptions = S.decodeUnknownEffect(QaJudgeIngestOptions);
+export const decodeQaJudgeIngestOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaJudgeIngestOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaJudgeIngestOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaJudgeIngestOptions));
 
 /**
  * Decode raw `beep qa judge-lint` flags.
@@ -388,4 +408,7 @@ export const decodeQaJudgeIngestOptions = S.decodeUnknownEffect(QaJudgeIngestOpt
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaJudgeLintOptions = S.decodeUnknownEffect(QaJudgeLintOptions);
+export const decodeQaJudgeLintOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaJudgeLintOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaJudgeLintOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaJudgeLintOptions));

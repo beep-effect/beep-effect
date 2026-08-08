@@ -6,8 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GhActor, GhComment, GhPageInfo, GhPrView } from "../../../../internal/github/index.ts";
+import type * as Effect from "effect/Effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Gh.schemas");
 
@@ -776,7 +780,10 @@ export class GhReviewsDocument extends S.Class<GhReviewsDocument>($I`GhReviewsDo
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGhPrView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
+export const decodeGhPrView: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<GhPrView, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<GhPrView, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(GhPrView)));
 
 /**
  * Decode `gh repo view` JSON into repository metadata for GraphQL variables.
@@ -793,7 +800,10 @@ export const decodeGhPrView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGhRepoView = S.decodeUnknownEffect(S.fromJsonString(GhRepoView));
+export const decodeGhRepoView: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<GhRepoView, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<GhRepoView, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(GhRepoView)));
 
 /**
  * Decode the closeout comments GraphQL document.
@@ -819,7 +829,10 @@ export const decodeGhRepoView = S.decodeUnknownEffect(S.fromJsonString(GhRepoVie
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGhCommentsDocument = S.decodeUnknownEffect(S.fromJsonString(GhCommentsDocument));
+export const decodeGhCommentsDocument: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<GhCommentsDocument, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<GhCommentsDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(GhCommentsDocument)));
 
 /**
  * Decode the closeout review-thread GraphQL document.
@@ -845,7 +858,10 @@ export const decodeGhCommentsDocument = S.decodeUnknownEffect(S.fromJsonString(G
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGhReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(GhReviewThreadsDocument));
+export const decodeGhReviewThreadsDocument: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<GhReviewThreadsDocument, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<GhReviewThreadsDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(GhReviewThreadsDocument)));
 
 /**
  * Decode the closeout reviews GraphQL document.
@@ -871,7 +887,10 @@ export const decodeGhReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonStr
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGhReviewsDocument = S.decodeUnknownEffect(S.fromJsonString(GhReviewsDocument));
+export const decodeGhReviewsDocument: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<GhReviewsDocument, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<GhReviewsDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(GhReviewsDocument)));
 
 /**
  * GraphQL query for paginating top-level pull request comments.

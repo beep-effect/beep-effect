@@ -103,29 +103,25 @@ describe("@beep/ai-provider-cli", () => {
         (provider, status, exitCode, processResult, authProbe, error) => {
           expect(
             Result.getOrThrow(
-              S.decodeUnknownResult(AiProviderCliProvider)(
-                Result.getOrThrow(S.encodeResult(AiProviderCliProvider)(provider))
-              )
+              S.decodeResult(AiProviderCliProvider)(Result.getOrThrow(S.encodeResult(AiProviderCliProvider)(provider)))
             )
           ).toBe(provider);
           expect(
             Result.getOrThrow(
-              S.decodeUnknownResult(AiProviderCliAuthStatus)(
+              S.decodeResult(AiProviderCliAuthStatus)(
                 Result.getOrThrow(S.encodeResult(AiProviderCliAuthStatus)(status))
               )
             )
           ).toBe(status);
           expect(
             Result.getOrThrow(
-              S.decodeUnknownResult(AiProviderCliExitCode)(
-                Result.getOrThrow(S.encodeResult(AiProviderCliExitCode)(exitCode))
-              )
+              S.decodeResult(AiProviderCliExitCode)(Result.getOrThrow(S.encodeResult(AiProviderCliExitCode)(exitCode)))
             )
           ).toBe(exitCode);
           expect(
             sameProcessResult(
               Result.getOrThrow(
-                S.decodeUnknownResult(AiProviderCliProcessResult)(
+                S.decodeResult(AiProviderCliProcessResult)(
                   Result.getOrThrow(S.encodeResult(AiProviderCliProcessResult)(processResult))
                 )
               ),
@@ -135,7 +131,7 @@ describe("@beep/ai-provider-cli", () => {
           expect(
             sameAuthProbe(
               Result.getOrThrow(
-                S.decodeUnknownResult(AiProviderCliAuthProbe)(
+                S.decodeResult(AiProviderCliAuthProbe)(
                   Result.getOrThrow(S.encodeResult(AiProviderCliAuthProbe)(authProbe))
                 )
               ),
@@ -145,7 +141,7 @@ describe("@beep/ai-provider-cli", () => {
           expect(
             sameError(
               Result.getOrThrow(
-                S.decodeUnknownResult(AiProviderCliError)(Result.getOrThrow(S.encodeResult(AiProviderCliError)(error)))
+                S.decodeResult(AiProviderCliError)(Result.getOrThrow(S.encodeResult(AiProviderCliError)(error)))
               ),
               error
             )

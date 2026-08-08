@@ -35,7 +35,7 @@ const expectEpochMillis = (actual: DateTime.Utc, expected: number) => {
 
 describe("DateTimeInputKind", () => {
   it("decodes supported discriminator values", () => {
-    expect(S.decodeUnknownSync(DateTimeInputKind)("Instant")).toBe("Instant");
+    expect(S.decodeSync(DateTimeInputKind)("Instant")).toBe("Instant");
   });
 });
 
@@ -92,22 +92,20 @@ describe("DateTimeInput primitive schemas", () => {
     const numberInput = DateTimeInputNumber.makeTagged(epochMilliseconds);
     const dateInput = DateTimeInputDate.makeTagged(DateTime.toDateUtc(DateTime.makeUnsafe(iso)));
 
-    expect(S.decodeUnknownSync(DateTimeInputString.Tagged)(stringInput)).toEqual(stringInput);
-    expect(S.decodeUnknownSync(DateTimeInputNumber.Tagged)(numberInput)).toEqual(numberInput);
-    expect(S.decodeUnknownSync(DateTimeInputDate.Tagged)(dateInput)).toEqual(dateInput);
+    expect(S.decodeSync(DateTimeInputString.Tagged)(stringInput)).toEqual(stringInput);
+    expect(S.decodeSync(DateTimeInputNumber.Tagged)(numberInput)).toEqual(numberInput);
+    expect(S.decodeSync(DateTimeInputDate.Tagged)(dateInput)).toEqual(dateInput);
     expect(DateTimeInputString.Tagged.is(stringInput)).toBe(true);
     expect(DateTimeInputNumber.Tagged.is(numberInput)).toBe(true);
     expect(DateTimeInputDate.Tagged.is(dateInput)).toBe(true);
   });
 
   it("rejects invalid primitive inputs", () => {
-    expect(() => S.decodeUnknownSync(DateTimeInputString)("not-a-date")).toThrow(
+    expect(() => S.decodeSync(DateTimeInputString)("not-a-date")).toThrow(
       "Expected a string that can be converted into a DateTime.Utc"
     );
-    expect(() => S.decodeUnknownSync(DateTimeInputNumber)(Number.POSITIVE_INFINITY)).toThrow();
-    expect(() =>
-      S.decodeUnknownSync(DateTimeInputDate)(Reflect.construct(NativeDate, ["not-a-date"]) as Date)
-    ).toThrow();
+    expect(() => S.decodeSync(DateTimeInputNumber)(Number.POSITIVE_INFINITY)).toThrow();
+    expect(() => S.decodeSync(DateTimeInputDate)(Reflect.construct(NativeDate, ["not-a-date"]) as Date)).toThrow();
   });
 });
 
@@ -133,7 +131,7 @@ describe("DateTimeInput tagged object schemas", () => {
 
   it("rejects invalid InstantWithZone time zone identifiers", () => {
     expect(() =>
-      S.decodeUnknownSync(DateTimeInputInstantWithZone)({
+      S.decodeSync(DateTimeInputInstantWithZone)({
         _tag: "InstantWithZone",
         epochMilliseconds,
         timeZoneId: "Not/AZone",

@@ -147,7 +147,7 @@ describe("ContradictionTriage RPC contract", () => {
         expect(highlight.startChar).toBeLessThan(highlight.endChar);
         expect(
           Result.isFailure(
-            S.decodeUnknownResult(EvidenceSourceHighlight)({
+            S.decodeResult(EvidenceSourceHighlight)({
               ...highlight,
               endChar: highlight.startChar,
             })
@@ -155,7 +155,7 @@ describe("ContradictionTriage RPC contract", () => {
         ).toBe(true);
         expect(
           Result.isFailure(
-            S.decodeUnknownResult(EvidenceSourceHighlight)({
+            S.decodeResult(EvidenceSourceHighlight)({
               ...highlight,
               endChar: highlight.startChar,
               startChar: highlight.endChar,
@@ -180,7 +180,7 @@ describe("ContradictionTriage RPC contract", () => {
 
         expect(
           Result.isFailure(
-            S.decodeUnknownResult(EvidenceSourcePage)({
+            S.decodeResult(EvidenceSourcePage)({
               ...sourcePage,
               page: otherPage,
             })
@@ -196,7 +196,7 @@ describe("ContradictionTriage RPC contract", () => {
         expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
         expect(
           Result.isFailure(
-            S.decodeUnknownResult(EvidenceSourcePage)({
+            S.decodeResult(EvidenceSourcePage)({
               ...sourcePage,
               highlight: {
                 ...sourcePage.highlight,

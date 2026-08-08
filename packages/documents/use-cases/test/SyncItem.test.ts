@@ -37,10 +37,10 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const localRelPath = S.decodeUnknownSync(VaultRelPath)("matters/client-default/complaint.pdf");
-const localGeneration = S.decodeUnknownSync(NonNegativeInt)(1);
-const remoteId9001 = S.decodeUnknownSync(RemoteItemId)("9001");
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const localRelPath = S.decodeSync(VaultRelPath)("matters/client-default/complaint.pdf");
+const localGeneration = S.decodeSync(NonNegativeInt)(1);
+const remoteId9001 = S.decodeSync(RemoteItemId)("9001");
 const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
 const decodeSyncItemEffect = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 const encodeSyncItemEffect = S.encodeEffect(DomainSyncItem.SyncItem);

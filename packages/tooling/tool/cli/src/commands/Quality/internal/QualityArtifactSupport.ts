@@ -615,6 +615,21 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
   return O.none();
 };
 
+const fenceState = (line: string, openFence: string | undefined): readonly [string | undefined, boolean] => {
+  const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+  const fence = match === null ? undefined : match[1];
+  if (openFence === undefined) {
+    return [fence, fence !== undefined];
+  }
+  if (fence === undefined) {
+    return [openFence, true];
+  }
+  if (fence[0] === openFence[0] && fence.length >= openFence.length && Str.isEmpty(Str.trim(match?.[2] ?? ""))) {
+    return [undefined, true];
+  }
+  return [openFence, true];
+};
+
 /**
  * Advance the fenced-code-block scanner state by one stripped comment line.
  *
@@ -641,23 +656,10 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
  * @category jsdoc
  * @since 0.0.0
  */
-export const fencedLineState = (
-  line: string,
-  openFence: string | undefined
-): readonly [string | undefined, boolean] => {
-  const match = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
-  const fence = match === null ? undefined : match[1];
-  if (openFence === undefined) {
-    return [fence, fence !== undefined];
-  }
-  if (fence === undefined) {
-    return [openFence, true];
-  }
-  if (fence[0] === openFence[0] && fence.length >= openFence.length && Str.isEmpty(Str.trim(match?.[2] ?? ""))) {
-    return [undefined, true];
-  }
-  return [openFence, true];
-};
+export const fencedLineState: {
+  (openFence: string | undefined): (line: string) => readonly [string | undefined, boolean];
+  (line: string, openFence: string | undefined): readonly [string | undefined, boolean];
+} = dual(2, fenceState);
 
 const jsdocCommentEnd = (sourceText: string, start: number): number => {
   let cursor = start + 3;

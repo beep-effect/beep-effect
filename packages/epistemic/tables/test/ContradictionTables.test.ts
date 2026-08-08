@@ -41,7 +41,9 @@ import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
@@ -236,6 +238,20 @@ const tamperedSecondAssessment = ContradictionAssessment.make({
   proposals: [firstProposal, tamperedSecondProposal],
 });
 
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
+
 describe("Contradiction candidate row converters", () => {
   it("round-trips schema-derived canonical belief pairs used by candidate JSONB rows", () => {
     const encode = S.encodeResult(CanonicalContradictionBeliefPair);
@@ -400,15 +416,17 @@ describe("Contradiction candidate row converters", () => {
       validTo: unorderedValidTo,
     });
 
-    expect(() =>
-      ContradictionCandidateContent.make({
-        assessment,
-        matchBasis,
-        pair,
-        validFrom,
-        validTo: unorderedValidTo,
-      })
-    ).toThrow("Expected validFrom to be earlier than validTo when validTo is present.");
+    expectSchemaMakeToFail(
+      () =>
+        ContradictionCandidateContent.make({
+          assessment,
+          matchBasis,
+          pair,
+          validFrom,
+          validTo: unorderedValidTo,
+        }),
+      "Expected validFrom to be earlier than validTo when validTo is present."
+    );
     expect(Result.isFailure(toContradictionCandidateInsert(unorderedCandidate))).toBe(true);
   });
 

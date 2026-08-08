@@ -238,7 +238,7 @@ describe("FilePath", () => {
       filePath: FilePathSchema.FilePath,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ filePath: "foo/" })).toThrow(`at ["filePath"]`);
+    expect(() => S.decodeSync(Payload)({ filePath: "foo/" })).toThrow(`at ["filePath"]`);
   });
 
   it("decodes object schemas with a filePath property", () => {
@@ -247,6 +247,6 @@ describe("FilePath", () => {
     });
     const input = { filePath: "./folder/file.txt" };
 
-    expect(S.decodeUnknownSync(Payload)(input)).toEqual(input);
+    expect(S.decodeSync(Payload)(input)).toEqual(input);
   });
 });

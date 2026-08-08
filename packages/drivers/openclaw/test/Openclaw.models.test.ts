@@ -101,7 +101,7 @@ describe("@beep/openclaw models", () => {
 
   it("decodes the exact observed secrets reload success JSON", () => {
     const output = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawSecretsReloadOutput))('{ "ok": true, "warningCount": 0 }')
+      S.decodeResult(S.fromJsonString(OpenclawSecretsReloadOutput))('{ "ok": true, "warningCount": 0 }')
     );
 
     expect(output.ok).toBe(true);
@@ -113,9 +113,7 @@ describe("@beep/openclaw models", () => {
       '{"accountId":"default","enabled":true,"configured":true,"running":true,"lastStartAt":1753600000000,' +
       '"lastStopAt":null,"lastError":null,"connected":true,"restartPending":false,"reconnectAttempts":0,' +
       '"tokenSource":"config","tokenStatus":"available","mode":"polling","probe":{"ok":true}}';
-    const account = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawChannelAccountStatus))(accountJson)
-    );
+    const account = Result.getOrThrow(S.decodeResult(S.fromJsonString(OpenclawChannelAccountStatus))(accountJson));
 
     expect(account.accountId).toBe("default");
     expect(account.enabled).toBe(true);
@@ -130,7 +128,7 @@ describe("@beep/openclaw models", () => {
 
   it("tolerantly decodes channel health subsets of the gateway health document", () => {
     const channel = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawChannelHealth))(
+      S.decodeResult(S.fromJsonString(OpenclawChannelHealth))(
         '{"running":true,"connected":true,"restartPending":false,"tokenSource":"config","tokenStatus":"available"}'
       )
     );
@@ -144,7 +142,7 @@ describe("@beep/openclaw models", () => {
 
   it("tolerantly decodes agent turn projections with unmodeled keys", () => {
     const turn = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawAgentTurn))(
+      S.decodeResult(S.fromJsonString(OpenclawAgentTurn))(
         '{"status":"ok","runId":"run-1753","stopReason":"stop","aborted":false,"text":"PONG",' +
           '"provider":"ollama","model":"gemma3:4b","executionTrace":{"runner":"embedded"}}'
       )
@@ -161,14 +159,14 @@ describe("@beep/openclaw models", () => {
 
   it("decodes sanitized pinned skill-list and Telegram-send shapes", () => {
     const inventory = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawSkillInventory))(
+      S.decodeResult(S.fromJsonString(OpenclawSkillInventory))(
         '{"workspaceDir":"/etc/beep/openclaw/current/workspace","skills":[' +
           '{"name":"beep-proof-ping","description":"Return one fixed synthetic sentinel for the P3 declarative-skill proof.",' +
           '"eligible":true,"source":"openclaw-workspace"}]}'
       )
     );
     const send = Result.getOrThrow(
-      S.decodeUnknownResult(S.fromJsonString(OpenclawTelegramSendResult))(
+      S.decodeResult(S.fromJsonString(OpenclawTelegramSendResult))(
         '{"action":"send","channel":"telegram","dryRun":false,"handledBy":"plugin",' +
           '"messageId":"synthetic-message-id","payload":{"ok":true,"messageId":"synthetic-message-id"}}'
       )

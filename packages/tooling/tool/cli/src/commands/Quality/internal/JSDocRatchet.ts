@@ -12,6 +12,7 @@ import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -753,4 +754,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
  * @category testing
  * @since 0.0.0
  */
-export const compareJSDocTotalsForTesting = compareTotals;
+export const compareJSDocTotalsForTesting: {
+  (baselineTotals: JSDocTrackedTotals): (currentTotals: JSDocTrackedTotals) => JSDocTotalsComparison;
+  (currentTotals: JSDocTrackedTotals, baselineTotals: JSDocTrackedTotals): JSDocTotalsComparison;
+} = dual(2, compareTotals);

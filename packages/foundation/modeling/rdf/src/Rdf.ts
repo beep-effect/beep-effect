@@ -933,18 +933,16 @@ export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiter
 
 const isMakeLiteralDataFirst = (args: IArguments): boolean => args.length >= 2 && P.isString(args[1]);
 
-const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptions | string = {}): Literal => {
-  const language = P.isString(options) ? options : options.language;
-  return pipe(
+const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptions = {}): Literal =>
+  pipe(
     Literal.decodeUnknownResult({
       termType: "Literal",
       value,
       datatype: makeNamedNode(datatype),
-      ...O.getSomesStruct({ language: O.fromUndefinedOr(language) }),
+      ...O.getSomesStruct({ language: O.fromUndefinedOr(options.language) }),
     }),
     Result.getOrThrow
   );
-};
 
 /**
  * Build an RDF literal.
@@ -960,7 +958,8 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
  *
  * @param value - Lexical form.
  * @param datatype - Datatype IRI.
- * @param options - Optional literal settings.
+ * @param options - Optional literal settings; pass the language tag as
+ * `{ language }` rather than a bare string.
  * @returns Decoded RDF literal.
  * @since 0.0.0
  * @category utilities
@@ -968,7 +967,6 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
 export const makeLiteral: {
   (value: string, datatype: string): Literal;
   (value: string, datatype: string, options: MakeLiteralOptions): Literal;
-  (value: string, datatype: string, language: string): Literal;
   (datatype: string): (value: string) => Literal;
   (datatype: string, options: MakeLiteralOptions): (value: string) => Literal;
 } = dual(isMakeLiteralDataFirst, makeLiteralInternal);

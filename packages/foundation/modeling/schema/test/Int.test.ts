@@ -82,7 +82,7 @@ describe("Int64FromString", () => {
   it.effect(
     "encodes signed 64-bit BigInts back to decimal strings",
     Effect.fnUntraced(function* () {
-      const value = yield* S.decodeUnknownEffect(Int64)(int64Maximum);
+      const value = yield* S.decodeEffect(Int64)(int64Maximum);
 
       expect(yield* encode(value)).toBe("9223372036854775807");
     })

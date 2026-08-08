@@ -27,6 +27,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import type * as Ordering from "effect/Ordering";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("LocalDate");
@@ -351,18 +352,24 @@ export const fromDateTime = (dateTime: DateTime.DateTime): LocalDate => {
  * @since 0.0.0
  * @category utilities
  */
-export const Order: Order_.Order<LocalDate> = Order_.make((a, b) => {
-  if (a.year !== b.year) {
-    return a.year < b.year ? -1 : 1;
-  }
-  if (a.month !== b.month) {
-    return a.month < b.month ? -1 : 1;
-  }
-  if (a.day !== b.day) {
-    return a.day < b.day ? -1 : 1;
-  }
-  return 0;
-});
+export const Order: {
+  (that: LocalDate): (self: LocalDate) => Ordering.Ordering;
+  (self: LocalDate, that: LocalDate): Ordering.Ordering;
+} = dual(
+  2,
+  Order_.make<LocalDate>((a, b) => {
+    if (a.year !== b.year) {
+      return a.year < b.year ? -1 : 1;
+    }
+    if (a.month !== b.month) {
+      return a.month < b.month ? -1 : 1;
+    }
+    if (a.day !== b.day) {
+      return a.day < b.day ? -1 : 1;
+    }
+    return 0;
+  })
+);
 
 /**
  * Dual predicate returning `true` when `self` is chronologically before `that`.

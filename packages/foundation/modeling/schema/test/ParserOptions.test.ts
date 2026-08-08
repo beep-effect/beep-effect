@@ -54,7 +54,7 @@ describe("ParserOptions", () => {
   });
 
   it("still supports direct schema decoding from unknown input", () => {
-    const options = S.decodeUnknownSync(ParserOptions)({
+    const options = S.decodeSync(ParserOptions)({
       delimiter: ";",
       headers: true,
       quote: null,

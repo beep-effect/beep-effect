@@ -94,7 +94,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   });
 
   it("preserves the spike EntityInput encoded audit envelope", () => {
-    const decoded = S.decodeUnknownSync(EntityInput)({
+    const decoded = S.decodeSync(EntityInput)({
       createdAt: 1,
       createdByPrincipal: { component: "Runtime", kind: "System" },
       entityType: "LawPracticeClaim",

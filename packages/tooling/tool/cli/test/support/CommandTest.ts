@@ -1,4 +1,4 @@
-import { A } from "@beep/utils";
+import { A, dual } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import * as O from "effect/Option";
@@ -57,16 +57,22 @@ export const writeDefaultTsconfig = writeProjectFile(
   A.join(["{", '  "compilerOptions": {', '    "target": "ES2022",', '    "module": "ESNext"', "  }", "}"], "\n")
 );
 
-export const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
-  const failure = Exit.match(exit, {
-    onFailure: (cause) => O.some(Cause.squash(cause)),
-    onSuccess: () => O.none(),
-  });
+export const expectReportedExit: {
+  (exitCode?: number): (exit: Exit.Exit<unknown, unknown>) => void;
+  (exit: Exit.Exit<unknown, unknown>, exitCode?: number): void;
+} = dual(
+  (args) => Exit.isExit(args[0]),
+  (exit: Exit.Exit<unknown, unknown>, exitCode = 1): void => {
+    const failure = Exit.match(exit, {
+      onFailure: (cause) => O.some(Cause.squash(cause)),
+      onSuccess: () => O.none(),
+    });
 
-  expect(O.isSome(failure)).toBe(true);
-  if (O.isSome(failure)) {
-    const error = failure.value;
-    expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
-    expect(Runtime.getErrorReported(error)).toBe(false);
+    expect(O.isSome(failure)).toBe(true);
+    if (O.isSome(failure)) {
+      const error = failure.value;
+      expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
+      expect(Runtime.getErrorReported(error)).toBe(false);
+    }
   }
-};
+);

@@ -733,10 +733,10 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * const event = S.decodeUnknownSync(Event)({ kind: "created", id: "evt_1" })
  * console.log(event.kind)
  *
- * const StatusKeys = LiteralKit(
- *   ["one", "two"],
- *   [["one", "ONE"], ["two", "TWO"]]
- * );
+ * const StatusKeys = LiteralKit({
+ *   literals: ["one", "two"],
+ *   enumMapping: [["one", "ONE"], ["two", "TWO"]]
+ * });
  *
  * StatusKeys.Enum.ONE; // "one"
  * ```
@@ -752,10 +752,10 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
- * const StatusKeys = LiteralKit(
- *   ["one", "two"],
- *   [["one", "ONE"], ["two", "TWO"]]
- * )
+ * const StatusKeys = LiteralKit({
+ *   literals: ["one", "two"],
+ *   enumMapping: [["one", "ONE"], ["two", "TWO"]]
+ * })
  *
  * console.log(StatusKeys.Enum.ONE) // "one"
  * ```
@@ -763,10 +763,10 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
  * @category models
  * @since 0.0.0
  */
-export function LiteralKit<const L extends Literals, const M extends EnumMappings<L>>(
-  literals: L,
-  enumMapping: M & ValidEnumMapping<L, M>
-): LiteralKit<L, M>;
+export function LiteralKit<const L extends Literals, const M extends EnumMappings<L>>(options: {
+  readonly literals: L;
+  readonly enumMapping: M & ValidEnumMapping<L, M>;
+}): LiteralKit<L, M>;
 /**
  * Implementation signature for {@link LiteralKit}; see the overloads above for
  * the public call shapes.
@@ -783,9 +783,17 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
  * @since 0.0.0
  */
 export function LiteralKit<const L extends Literals, const M extends EnumMappings<L> | undefined = undefined>(
-  literals: L,
-  enumMapping?: M extends EnumMappings<L> ? ValidEnumMapping<L, M> : never
+  literalsOrOptions:
+    | L
+    | {
+        readonly literals: L;
+        readonly enumMapping: M extends EnumMappings<L> ? ValidEnumMapping<L, M> : never;
+      }
 ): LiteralKit<L, M> {
+  const { literals, enumMapping } = P.hasProperty(literalsOrOptions, "literals")
+    ? literalsOrOptions
+    : { literals: literalsOrOptions, enumMapping: undefined };
+
   validateLiteralKeys(literals);
   const validatedEnumMapping = enumMapping === undefined ? undefined : validateEnumMapping(literals, enumMapping);
   const base = S.Literals(literals);

@@ -246,7 +246,7 @@ const makeProcessEngineResolver = Effect.fn("Files.makeProcessEngineResolver")(f
           })
         ).pipe(Effect.provide(runtimeContext))
       : tikaUrl !== undefined
-        ? S.decodeUnknownEffect(TikaServerEngineConfig)({ baseUrl: tikaUrl }).pipe(
+        ? S.decodeEffect(TikaServerEngineConfig)({ baseUrl: tikaUrl }).pipe(
             Effect.mapError((cause) =>
               FilesCommandError.make({ cause, exitCode: 2, message: `Invalid --tika-url "${tikaUrl}"` })
             ),
@@ -291,7 +291,7 @@ const processHashBytes = Effect.fn("Files.processHashBytes")(function* (
   bytes: Uint8Array,
   label: string
 ): Effect.fn.Return<string, FilesCommandError, Crypto.Crypto> {
-  return yield* S.decodeUnknownEffect(Sha256HexFromBytes)(bytes).pipe(
+  return yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
     FilesCommandError.mapError(`Failed to compute SHA-256 for ${label}`)
   );
 });

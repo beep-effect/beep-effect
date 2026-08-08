@@ -131,6 +131,17 @@ type StatusCauseErrorInput = StatusCauseContext & {
   readonly cause: unknown;
 };
 type StatusCauseErrorCauseHandler<Error> = (cause: unknown) => Error;
+/**
+ * The constructed error returned by the data-first {@link makeStatusCauseError}
+ * forms.
+ *
+ * Spelled through a deferred (no-op distributive) conditional rather than a
+ * naked `Error` type parameter: a naked parameter resolves eagerly, so the
+ * pipeable-signature analysis cannot relate the data-first return to its
+ * data-last partner. `Error extends unknown ? Error : never` is `Error` for
+ * every instantiation.
+ */
+type StatusCauseErrorResult<Error> = Error extends unknown ? Error : never;
 type StatusCauseErrorBuilder<Error> = {
   (input: StatusCauseContext): StatusCauseErrorCauseHandler<Error>;
   (input: StatusCauseErrorInput): Error;
@@ -199,7 +210,7 @@ export const makeStatusCauseError: {
   <Input extends StatusCauseInput, Error>(
     ctor: StatusCauseErrorCtor<Input, Error>,
     input: StatusCauseErrorInput
-  ): Error;
+  ): StatusCauseErrorResult<Error>;
   (
     input: StatusCauseContext
   ): <Input extends StatusCauseInput, Error>(
@@ -207,7 +218,7 @@ export const makeStatusCauseError: {
   ) => StatusCauseErrorCauseHandler<Error>;
   (
     input: StatusCauseErrorInput
-  ): <Input extends StatusCauseInput, Error>(ctor: StatusCauseErrorCtor<Input, Error>) => Error;
+  ): <Input extends StatusCauseInput, Error>(ctor: StatusCauseErrorCtor<Input, Error>) => StatusCauseErrorResult<Error>;
 } = dual(
   (args) => P.isFunction(args[0]),
   function <Input extends StatusCauseInput, Error>(

@@ -43,7 +43,7 @@ describe("Glob", () => {
       glob: Glob,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ glob: "src\\**\\*.ts" })).toThrow(`at ["glob"]`);
+    expect(() => S.decodeSync(Payload)({ glob: "src\\**\\*.ts" })).toThrow(`at ["glob"]`);
   });
 
   it("derives portable glob patterns from the source schema arbitrary", () => {
@@ -60,7 +60,7 @@ describe("Glob", () => {
   });
 
   it("exposes the canonical namespace module schema role", () => {
-    expect(S.decodeUnknownSync(GlobModule.Schema)("src/**/*.ts")).toBe("src/**/*.ts");
+    expect(S.decodeSync(GlobModule.Schema)("src/**/*.ts")).toBe("src/**/*.ts");
     expect(GlobModule.Glob).toBe(GlobModule.Schema);
   });
 });

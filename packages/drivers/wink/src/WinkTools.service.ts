@@ -710,7 +710,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
             mode: mode ?? "append",
             ...countAttribute("entity_definition_count", A.length(entities)),
           });
-          yield* S.decodeUnknownEffect(S.NonEmptyArray(BracketStringToPatternElement))(
+          yield* S.decodeEffect(S.NonEmptyArray(BracketStringToPatternElement))(
             pipe(
               entities,
               A.flatMap((entity) => entity.patterns)

@@ -392,6 +392,30 @@ export const findNodes: {
 // =============================================================================
 
 /**
+ * The accumulated result of a fold over an accumulator type `B`.
+ *
+ * **Details**
+ *
+ * `FoldResult<B>` distributes to `B` for every instantiation, so it denotes
+ * exactly the accumulator type it is applied to. Spelling a fold's result
+ * through it keeps the accumulator a deferred, named reference in both halves
+ * of a data-first / data-last pair, which is what relates the two signatures.
+ *
+ * **Example** (Naming a fold result)
+ *
+ * ```ts
+ * import type { FoldResult } from "@beep/nlp/Graph/GraphOps"
+ *
+ * const total: FoldResult<number> = 4
+ * console.log(total) // 4
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type FoldResult<B> = B extends unknown ? B : never;
+
+/**
  * Fold all node payloads in the backing graph's iteration order.
  *
  * @example
@@ -406,8 +430,8 @@ export const findNodes: {
  * @category folding
  */
 export const foldNodes: {
-  <A, E, B>(graph: DirectedGraph<A, E>, initial: B, f: (acc: B, node: A) => B): B;
-  <A, E, B>(initial: B, f: (acc: B, node: A) => B): (graph: DirectedGraph<A, E>) => B;
+  <A, E, B>(graph: DirectedGraph<A, E>, initial: B, f: (acc: B, node: A) => B): FoldResult<B>;
+  <A, E, B>(initial: B, f: (acc: B, node: A) => B): (graph: DirectedGraph<A, E>) => FoldResult<B>;
 } = dual(
   3,
   <A, E, B>(graph: DirectedGraph<A, E>, initial: B, f: (acc: B, node: A) => B): B =>
@@ -434,11 +458,11 @@ export const foldTraversal: {
     graph: DirectedGraph<A, E>,
     options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
-  ): B;
+  ): FoldResult<B>;
   <A, E, B>(
     options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
-  ): (graph: DirectedGraph<A, E>) => B;
+  ): (graph: DirectedGraph<A, E>) => FoldResult<B>;
 } = dual(
   3,
   <A, E, B>(

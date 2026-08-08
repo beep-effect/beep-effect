@@ -91,7 +91,10 @@ export const makeOption = (input: CalendarParts): O.Option<LocalDate.Model> => L
  * @since 0.0.0
  */
 export const makeEffect = (input: CalendarParts): Effect.Effect<LocalDate.Model, S.SchemaError> =>
-  LocalDate.Model.makeEffect(input);
+  pipe(
+    LocalDate.Model.makeEffect(input),
+    Effect.mapError((issue) => new S.SchemaError(issue))
+  );
 
 /**
  * Type guard for `LocalDate` model instances.

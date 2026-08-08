@@ -395,7 +395,7 @@ type SpinParamsValue = {
  * @returns The parsed numeric value when available.
  * @since 0.0.0
  */
-export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
+export const toNumber: (input: unknown) => O.Option<number> = S.decodeUnknownOption(NumberInputFiniteFromText);
 
 /**
  * Format an optional numeric value using a fixed decimal precision.
@@ -422,8 +422,8 @@ export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
  */
 export const numberToString: {
   (precision: number): (value: number | undefined) => string;
-  (value: number | undefined, precision?: number): string;
-} = dual(2, (value: number | undefined, precision = 0): string =>
+  (value: number | undefined, precision: number): string;
+} = dual(2, (value: number | undefined, precision: number): string =>
   pipe(
     O.fromUndefinedOr(value),
     O.map((numberValue) => numberValue.toFixed(precision)),
@@ -709,14 +709,14 @@ const effectiveStep = (provided: number | undefined, params: SpinParamsValue): n
  * ```
  *
  * @category components
- * @param options - Number-input boundary and formatting options.
+ * @param options - Boundary and formatting options, plus an optional `scope` atom-family key.
  * @returns Managed numeric and interface state helpers.
  * @since 0.0.0
  * @category components
  */
-export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: string | undefined) => {
+export const useNumberBoundary = (options: UseNumberInputOptions & { readonly scope?: string | undefined } = {}) => {
   const generatedScope = useId();
-  const boundaryScope = scope ?? generatedScope;
+  const boundaryScope = options.scope ?? generatedScope;
   const boundaryParams = makeBoundaryParams(options);
   const spinParams = makeSpinParams(options);
   const { defaultValue, value, keepWithinRange = true, formatter = identity, parser = identity } = options;
@@ -817,10 +817,10 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   const step = effectiveStep(options.step, spinParams);
 
   const { interfaceValueAtom, interfaceValue, setInterfaceValue, numberValue, increment, decrement } =
-    useNumberBoundary(options, scope);
+    useNumberBoundary({ ...options, scope });
   const tempInterfaceValue = useAtomValue(numberInputTempInterfaceValueAtom(scope));
   const setTempInterfaceValue = useAtomSet(numberInputTempInterfaceValueAtom(scope));
-  const spinner = useSpinner(increment, decrement);
+  const spinner = useSpinner({ increment, decrement });
 
   useAtomInitialValues([[numberInputTempInterfaceValueAtom(scope), interfaceValue]]);
 

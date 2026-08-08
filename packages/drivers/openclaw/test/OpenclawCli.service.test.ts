@@ -580,13 +580,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
           const reloadWire = Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload));
           expect(
             validationEquivalence(
-              Result.getOrThrow(S.decodeUnknownResult(OpenclawConfigValidation)(validationWire)),
+              Result.getOrThrow(S.decodeResult(OpenclawConfigValidation)(validationWire)),
               validation
             )
           ).toBe(true);
-          expect(
-            reloadEquivalence(Result.getOrThrow(S.decodeUnknownResult(OpenclawSecretsReload)(reloadWire)), reload)
-          ).toBe(true);
+          expect(reloadEquivalence(Result.getOrThrow(S.decodeResult(OpenclawSecretsReload)(reloadWire)), reload)).toBe(
+            true
+          );
         }
       ),
       fcRuns(50)

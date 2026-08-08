@@ -33,8 +33,8 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const unknownConflictId = S.decodeUnknownSync(Documents.SyncConflictId)(99);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const unknownConflictId = S.decodeSync(Documents.SyncConflictId)(99);
 const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
 const encodeSyncConflict = S.encodeSync(DomainSyncConflict.SyncConflict);
 

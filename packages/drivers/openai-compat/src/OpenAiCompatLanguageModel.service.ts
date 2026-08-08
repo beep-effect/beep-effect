@@ -699,13 +699,18 @@ const streamToolCallName = (
     ? (activeToolCall?.name ?? toolNameMapper.getCustomName("unknown_tool"))
     : toolNameMapper.getCustomName(toolCall.function.name);
 
+type ToolCallDeltaAccumulator = readonly [
+  Readonly<Record<string, ActiveToolCall>>,
+  ReadonlyArray<Response.StreamPartEncoded>,
+];
+
 const makeToolCallDeltaParts = (
   toolNameMapper: Tool.NameMapper<ReadonlyArray<Tool.Any>>,
   chunk: OpenAiCompatChatCompletionChunk,
   activeToolCalls: Readonly<Record<string, ActiveToolCall>>,
   toolCall: OpenAiCompatToolCallDelta,
   indexInChunk: number
-): readonly [Readonly<Record<string, ActiveToolCall>>, ReadonlyArray<Response.StreamPartEncoded>] => {
+): ToolCallDeltaAccumulator => {
   const toolIndex = streamToolCallIndex(toolCall, indexInChunk);
   const activeToolCall = activeToolCalls[toolIndex];
   const id = streamToolCallId(chunk, toolIndex, activeToolCall, toolCall);
@@ -838,13 +843,17 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
             ],
           })
         );
+        const toolCallDeltaSeed: ToolCallDeltaAccumulator = Tuple.make(
+          activeToolCalls,
+          A.empty<Response.StreamPartEncoded>()
+        );
         const [nextActiveToolCalls, toolDeltaParts] = pipe(
           choice.delta,
           O.flatMap((delta) => delta.tool_calls),
           O.getOrElse(A.empty<OpenAiCompatToolCallDelta>),
           A.reduce(
-            Tuple.make(activeToolCalls, A.empty<Response.StreamPartEncoded>()),
-            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk) => {
+            toolCallDeltaSeed,
+            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk): ToolCallDeltaAccumulator => {
               const [updatedActiveToolCalls, deltaParts] = makeToolCallDeltaParts(
                 toolNameMapper,
                 chunk,

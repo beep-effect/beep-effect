@@ -6,11 +6,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order } from "effect";
+import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import type { Ordering } from "effect/Ordering";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Lint/Lint.schemas");
 
@@ -496,7 +499,15 @@ export class LiteralKitConstAssertionViolation extends S.Class<LiteralKitConstAs
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSchemaFirstInventoryDocument = S.encodeUnknownEffect(SchemaFirstInventoryDocument);
+export const encodeSchemaFirstInventoryDocument: {
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SchemaFirstInventoryDocument));
 
 /**
  * Stable key used to reconcile live schema-first scan results with the baseline.
@@ -545,10 +556,10 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
  * @category utilities
  * @since 0.0.0
  */
-export const schemaFirstEntryOrder: Order.Order<SchemaFirstInventoryEntry> = Order.mapInput(
-  Order.String,
-  makeSchemaFirstEntryKey
-);
+export const schemaFirstEntryOrder: {
+  (that: SchemaFirstInventoryEntry): (self: SchemaFirstInventoryEntry) => Ordering;
+  (self: SchemaFirstInventoryEntry, that: SchemaFirstInventoryEntry): Ordering;
+} = dual(2, Order.mapInput(Order.String, makeSchemaFirstEntryKey));
 
 /**
  * Sort schema-first inventory entries in committed baseline order.

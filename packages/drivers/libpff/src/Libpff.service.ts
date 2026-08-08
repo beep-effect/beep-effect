@@ -69,7 +69,7 @@ const decodeLibpffArtifactPath = (
   path: string,
   operation: ExportArchiveOperation
 ): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  S.decodeUnknownEffect(PosixPath)(path).pipe(
+  S.decodeEffect(PosixPath)(path).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {
         artifactId: operation.source.id,

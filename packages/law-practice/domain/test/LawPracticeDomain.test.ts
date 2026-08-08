@@ -395,40 +395,40 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes sparse citation values and materializes definitive defaults when encoded", () => {
     const baseWire = citationBaseWire("citation");
-    const base = S.decodeUnknownSync(CitationBase)(baseWire);
-    const fullCase = S.decodeUnknownSync(FullCaseCitation)({
+    const base = S.decodeSync(CitationBase)(baseWire);
+    const fullCase = S.decodeSync(FullCaseCitation)({
       ...baseWire,
       type: "case",
       volume: 410,
       reporter: "U.S.",
     });
-    const id = S.decodeUnknownSync(IdCitation)({ ...baseWire, type: "id" });
-    const supra = S.decodeUnknownSync(SupraCitation)({ ...baseWire, type: "supra" });
-    const shortForm = S.decodeUnknownSync(ShortFormCaseCitation)({
+    const id = S.decodeSync(IdCitation)({ ...baseWire, type: "id" });
+    const supra = S.decodeSync(SupraCitation)({ ...baseWire, type: "supra" });
+    const shortForm = S.decodeSync(ShortFormCaseCitation)({
       ...baseWire,
       type: "shortFormCase",
       volume: 410,
       reporter: "U.S.",
     });
-    const neutral = S.decodeUnknownSync(NeutralCitation)({
+    const neutral = S.decodeSync(NeutralCitation)({
       ...baseWire,
       type: "neutral",
       year: 2023,
       documentNumber: "128749",
     });
-    const statute = S.decodeUnknownSync(StatuteCitation)({ ...baseWire, type: "statute" });
-    const regulation = S.decodeUnknownSync(RegulationCitation)({ ...baseWire, type: "regulation" });
-    const statutesAtLarge = S.decodeUnknownSync(StatutesAtLargeCitation)({
+    const statute = S.decodeSync(StatuteCitation)({ ...baseWire, type: "statute" });
+    const regulation = S.decodeSync(RegulationCitation)({ ...baseWire, type: "regulation" });
+    const statutesAtLarge = S.decodeSync(StatutesAtLargeCitation)({
       ...baseWire,
       type: "statutesAtLarge",
       volume: 100,
       page: 3743,
     });
-    const parenthetical = S.decodeUnknownSync(Parenthetical)({ text: "holding", type: "holding" });
-    const pincite = S.decodeUnknownSync(PinciteInfo)({ isRange: false, raw: "570" });
-    const resolution = S.decodeUnknownSync(ResolutionResult)({ confidence: 1 });
-    const context = S.decodeUnknownSync(ContextOptions)({});
-    const locator = S.decodeUnknownSync(DurableLocatorOptions)({});
+    const parenthetical = S.decodeSync(Parenthetical)({ text: "holding", type: "holding" });
+    const pincite = S.decodeSync(PinciteInfo)({ isRange: false, raw: "570" });
+    const resolution = S.decodeSync(ResolutionResult)({ confidence: 1 });
+    const context = S.decodeSync(ContextOptions)({});
+    const locator = S.decodeSync(DurableLocatorOptions)({});
 
     expect(S.encodeSync(CitationBase)(base).warnings).toStrictEqual([]);
     expect(S.encodeSync(FullCaseCitation)(fullCase)).toMatchObject({
@@ -659,6 +659,6 @@ describe("@beep/law-practice-domain", () => {
 
     // encode -> decode is identity across the S.suspend recursion knot
     const equivalent = S.toEquivalence(Citation);
-    expect(equivalent(S.decodeUnknownSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
+    expect(equivalent(S.decodeSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
   });
 });

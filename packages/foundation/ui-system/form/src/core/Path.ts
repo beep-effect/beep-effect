@@ -284,6 +284,13 @@ export const getNestedValue: {
   return current;
 });
 
+// `setNestedValue` returns the caller's own shape, and a naked type parameter
+// resolves away before `missingPipeableSignature` can relate the data-first
+// return to the data-last inner return. This distributive conditional stays
+// deferred while being the identity for every instantiation, so the two
+// overloads relate without changing a single caller's result type.
+type SetNestedValueResult<T> = T extends unknown ? T : never;
+
 /**
  * Sets a value at a dot-and-bracket path while copying touched containers.
  *
@@ -302,8 +309,8 @@ export const getNestedValue: {
  * @since 0.0.0
  */
 export const setNestedValue: {
-  (options: { readonly path: string; readonly value: unknown }): <T>(obj: T) => T;
-  <T>(obj: T, options: { readonly path: Paths<NoInfer<T>>; readonly value: unknown }): T;
+  (options: { readonly path: string; readonly value: unknown }): <T>(obj: T) => SetNestedValueResult<T>;
+  <T>(obj: T, options: { readonly path: Paths<NoInfer<T>>; readonly value: unknown }): SetNestedValueResult<T>;
 } = dual(2, <T>(obj: T, options: { readonly path: string; readonly value: unknown }): T => {
   const { path, value } = options;
   if (path === "") return value as T;

@@ -15,7 +15,9 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 const sessionId = S.decodeSync(SessionId)("session-1");
 const nameQuad = makeQuad(
@@ -41,6 +43,20 @@ const ontologyGraphQuad = makeQuad(
     graph: makeNamedNode(graphPartitionIri("ontologies")),
   }
 );
+
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
 
 describe("Ontology Session aggregate", () => {
   it("derives asserted and authored partitions from base plus change log", () => {
@@ -121,13 +137,15 @@ describe("Ontology Session aggregate", () => {
   });
 
   it("rejects change operations whose named quad graph diverges from the partition", () => {
-    expect(() =>
-      ChangeOperation.make({
-        kind: "addQuad",
-        partition: "asserted",
-        quad: ontologyGraphQuad,
-      })
-    ).toThrow("Change operation quad graph must match the declared session partition");
+    expectSchemaMakeToFail(
+      () =>
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "asserted",
+          quad: ontologyGraphQuad,
+        }),
+      "Change operation quad graph must match the declared session partition"
+    );
   });
 
   it("keeps one shared reasoning-exclusion rule across named graphs", () => {

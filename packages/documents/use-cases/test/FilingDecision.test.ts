@@ -9,7 +9,7 @@ import { FastCheck as fc } from "effect/testing";
 describe("@beep/documents-use-cases FilingDecision port", () => {
   it("defaults the text excerpt to none so filename-only callers stay valid", () => {
     const input = FilingDecisionInput.make({
-      contentDigest: S.decodeUnknownSync(FilingDecisionInput.fields.contentDigest)("abc123"),
+      contentDigest: S.decodeSync(FilingDecisionInput.fields.contentDigest)("abc123"),
       originalFileName: "complaint.pdf",
     });
 

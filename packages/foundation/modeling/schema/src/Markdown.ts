@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, flow, Result, SchemaGetter, SchemaIssue } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -16,6 +17,7 @@ import {
   loadMarkdownModule,
   makeParseMarkdownForSchema,
 } from "./internal/markdown.ts";
+import type { SchemaAST } from "effect";
 import type * as R from "effect/Record";
 import type { MarkdownParseResult } from "./internal/markdown.ts";
 
@@ -23,6 +25,18 @@ const $I = $SchemaId.create("Markdown");
 
 type MarkdownRenderOptions = R.ReadonlyRecord<string, unknown>;
 type MarkdownHtmlRender = (content: string, options?: undefined | MarkdownRenderOptions) => unknown;
+
+/**
+ * Decoder produced by {@link decodeMarkdownTextAs}: renders Markdown text to
+ * HTML and decodes the rendered HTML through the target schema.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the factory's return type.
+ */
+type MarkdownTextDecoder<Schema extends S.Top> = (
+  input: unknown,
+  options?: SchemaAST.ParseOptions | undefined
+) => Effect.Effect<Schema["Type"], S.SchemaError, Schema["DecodingServices"]>;
 
 const MarkdownBrand = S.String.pipe(S.brand("Markdown"));
 const defaultMarkdownRenderOptions = { tagFilter: true } satisfies MarkdownRenderOptions;
@@ -196,12 +210,18 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  * @category utilities
  * @since 0.0.0
  */
-export const decodeMarkdownTextAs = <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions) => {
-  const decodeMarkdownHtmlText = S.decodeUnknownEffect(MarkdownTextToHtml(options));
-  const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
+export const decodeMarkdownTextAs: {
+  (options?: MarkdownRenderOptions): <Schema extends S.Top>(schema: Schema) => MarkdownTextDecoder<Schema>;
+  <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions): MarkdownTextDecoder<Schema>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions): MarkdownTextDecoder<Schema> => {
+    const decodeMarkdownHtmlText = S.decodeUnknownEffect(MarkdownTextToHtml(options));
+    const decodeTargetSchema = S.decodeUnknownEffect(schema);
+    const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
+      return yield* decodeTargetSchema(input);
+    });
 
-  return flow(decodeMarkdownHtmlText, Effect.flatMap(decodeTarget));
-};
+    return flow(decodeMarkdownHtmlText, Effect.flatMap(decodeTarget));
+  }
+);

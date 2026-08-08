@@ -9,10 +9,27 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("SchemaUtils/withStatics");
 
-class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsStaticRedefinitionError>(
+/**
+ * The schema object returned by {@link withStatics}: the original schema with
+ * its companion statics attached.
+ *
+ * Spelled as a named alias (rather than an inline `Schema & Statics`) so the
+ * pipeable-signature analysis can relate the data-first and data-last returns.
+ */
+type WithStatics<Schema extends object, Statics extends Record<string, unknown>> = Schema & Statics;
+
+/**
+ * The data-last application step produced by {@link withStatics}.
+ */
+type WithStaticsTransform<Schema extends object, Statics extends Record<string, unknown>> = (
+  schema: Schema
+) => WithStatics<Schema, Statics>;
+
+class WithStaticsStaticRedefinitionError extends TaggedErrorClass<WithStaticsStaticRedefinitionError>(
   $I`WithStaticsStaticRedefinitionError`
 )(
   "WithStaticsStaticRedefinitionError",
@@ -28,7 +45,7 @@ class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsS
 const attachStatics = <S extends object, M extends Record<string, unknown>>(
   schema: S,
   methods: (schema: S) => M
-): S & M => {
+): WithStatics<S, M> => {
   const originalAnnotate = Reflect.get(schema, "annotate");
   const statics = methods(schema);
 
@@ -101,6 +118,6 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  * @category constructors
  */
 export const withStatics: {
-  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): (schema: S) => S & M;
-  <S extends object, M extends Record<string, unknown>>(schema: S, methods: (schema: S) => M): S & M;
+  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): WithStaticsTransform<S, M>;
+  <S extends object, M extends Record<string, unknown>>(schema: S, methods: (schema: S) => M): WithStatics<S, M>;
 } = dual(2, attachStatics);

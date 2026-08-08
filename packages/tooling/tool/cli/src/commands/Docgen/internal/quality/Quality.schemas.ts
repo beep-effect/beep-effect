@@ -9,7 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Struct } from "@beep/utils";
 import { Order } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Ordering from "effect/Ordering";
 import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.schemas");
@@ -572,9 +574,12 @@ export class DocgenQualitySubjectCandidate extends S.Class<DocgenQualitySubjectC
  * @category utilities
  * @since 0.0.0
  */
-export const byPackagePathAscending: Order.Order<DocgenWorkspacePackage> = Order.mapInput(
-  Order.String,
-  (pkg: DocgenWorkspacePackage) => pkg.relativePath
+export const byPackagePathAscending: {
+  (that: DocgenWorkspacePackage): (self: DocgenWorkspacePackage) => Ordering.Ordering;
+  (self: DocgenWorkspacePackage, that: DocgenWorkspacePackage): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Order.String, (pkg: DocgenWorkspacePackage) => pkg.relativePath)
 );
 
 /**
@@ -590,7 +595,10 @@ export const byPackagePathAscending: Order.Order<DocgenWorkspacePackage> = Order
  * @category utilities
  * @since 0.0.0
  */
-export const bySubjectIdentityAscending: Order.Order<DocgenQualitySubject> = Order.mapInput(
-  Order.String,
-  (subject: DocgenQualitySubject) => subject.stableIdentity
+export const bySubjectIdentityAscending: {
+  (that: DocgenQualitySubject): (self: DocgenQualitySubject) => Ordering.Ordering;
+  (self: DocgenQualitySubject, that: DocgenQualitySubject): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Order.String, (subject: DocgenQualitySubject) => subject.stableIdentity)
 );
