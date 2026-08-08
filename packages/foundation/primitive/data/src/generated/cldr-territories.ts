@@ -11,8 +11,9 @@
 /**
  * Stable source metadata for the Unicode CLDR territory data release.
  *
- * @example
- * ```typescript
+ * **Example** (Read the CLDR release metadata)
+ *
+ * ```ts
  * import { TerritoryDataMetadata } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataMetadata.releaseTag === "48.2.0")
@@ -29,7 +30,7 @@ export const TerritoryDataMetadata = {
     {
       id: "cldr-latest-release",
       url: "https://api.github.com/repos/unicode-org/cldr-json/releases/latest",
-      sha256: "d20d3ed71a13291f3327c22a36f3e5e73b30c61d59733064fa762cba29cedce3",
+      sha256: "6a8717fc1e4823c2d98911695435e96113ab3bb4f9ef53912c65e408fd33e285",
       version: "48.2.0",
       published: "2026-03-17T00:27:05Z"
     },
@@ -57,8 +58,9 @@ export const TerritoryDataMetadata = {
 /**
  * CLDR JSON release tag used for this generated module.
  *
- * @example
- * ```typescript
+ * **Example** (Read the CLDR release tag)
+ *
+ * ```ts
  * import { TerritoryDataReleaseTag } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataReleaseTag === "48.2.0")
@@ -72,8 +74,9 @@ export const TerritoryDataReleaseTag = "48.2.0" as const;
 /**
  * Normalized CLDR territory entries.
  *
- * @example
- * ```typescript
+ * **Example** (Find a territory entry by code)
+ *
+ * ```ts
  * import { TerritoryDataValues } from "@beep/data/generated/cldr-territories"
  *
  * const sample = TerritoryDataValues.find((entry) => entry.code === "AC")
@@ -1637,8 +1640,9 @@ export const TerritoryDataValues = [
 /**
  * Normalized CLDR territory entries keyed by territory code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a territory entry by code)
+ *
+ * ```ts
  * import { TerritoryDataByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataByCode.AC.name === "Ascension Island")
@@ -3201,8 +3205,9 @@ export const TerritoryDataByCode = {
 /**
  * CLDR territory code literals.
  *
- * @example
- * ```typescript
+ * **Example** (Check a territory code literal)
+ *
+ * ```ts
  * import { TerritoryCodeValues } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryCodeValues.includes("AC"))
@@ -3475,8 +3480,9 @@ export const TerritoryCodeValues = [
 /**
  * CLDR territory names keyed by territory code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a territory name by code)
+ *
+ * ```ts
  * import { TerritoryDataNameByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataNameByCode.AC === "Ascension Island")
@@ -3749,8 +3755,9 @@ export const TerritoryDataNameByCode = {
 /**
  * CLDR territory code to English display-name literal pairs.
  *
- * @example
- * ```typescript
+ * **Example** (Find a territory code and name pair)
+ *
+ * ```ts
  * import { TerritoryDataCodeNamePairs } from "@beep/data/generated/cldr-territories"
  *
  * const sample = TerritoryDataCodeNamePairs.find(([code]) => code === "AC")
@@ -4798,8 +4805,9 @@ export const TerritoryDataCodeNamePairs = [
 /**
  * Normalized CLDR continent entries.
  *
- * @example
- * ```typescript
+ * **Example** (Find a continent entry by code)
+ *
+ * ```ts
  * import { ContinentDataValues } from "@beep/data/generated/cldr-territories"
  *
  * const sample = ContinentDataValues.find((entry) => entry.code === "002")
@@ -4835,8 +4843,9 @@ export const ContinentDataValues = [
 /**
  * Normalized CLDR continent entries keyed by CLDR region code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a continent entry by region code)
+ *
+ * ```ts
  * import { ContinentDataByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentDataByCode["002"].name === "Africa")
@@ -4871,8 +4880,9 @@ export const ContinentDataByCode = {
 /**
  * CLDR continent code literals.
  *
- * @example
- * ```typescript
+ * **Example** (Check a continent code literal)
+ *
+ * ```ts
  * import { ContinentCodeValues } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentCodeValues.includes("002"))
@@ -4892,8 +4902,9 @@ export const ContinentCodeValues = [
 /**
  * CLDR continent names keyed by CLDR region code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a continent name by region code)
+ *
+ * ```ts
  * import { ContinentDataNameByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentDataNameByCode["002"] === "Africa")
@@ -4913,8 +4924,9 @@ export const ContinentDataNameByCode = {
 /**
  * CLDR continent code to English display-name literal pairs.
  *
- * @example
- * ```typescript
+ * **Example** (Find a continent code and name pair)
+ *
+ * ```ts
  * import { ContinentDataCodeNamePairs } from "@beep/data/generated/cldr-territories"
  *
  * const sample = ContinentDataCodeNamePairs.find(([code]) => code === "002")

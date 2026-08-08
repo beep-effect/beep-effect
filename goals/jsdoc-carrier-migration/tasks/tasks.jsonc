@@ -75,7 +75,7 @@
       "id": "jcm-008",
       "rank": 8,
       "phase": "P2",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-001"],
       "title": "Fix the 9 repo-owned generator templates",
       "detail": "Emit **Example** (Title) sections instead of @example. Mechanical titles are acceptable in generated output. Targets: drivers/{box,acp,runpod,ecfr,gov-legal-mcp} (bun run generate), foundation/primitive/data and foundation/modeling/rdf (beep sync-data-to-ts), foundation/modeling/html (bun run generate), tooling/library/ai-sync (package-local emitter). Then regenerate the 18 files. Independent of P1 — can run in parallel."

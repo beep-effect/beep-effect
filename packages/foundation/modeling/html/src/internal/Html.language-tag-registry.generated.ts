@@ -22,7 +22,8 @@ type GeneratedLanguageTagRegistry = Readonly<{
 /**
  * Compact registered-subtag membership data for BCP 47 validation.
  *
- * @example
+ * **Example** (Read the IANA registry file date)
+ *
  * ```ts
  * import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated"
  *

@@ -10,7 +10,8 @@
 /**
  * RDFS namespace IRI generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the RDFS namespace IRI)
+ *
  * ```ts
  * import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/generated/Rdfs.terms"
  *
@@ -25,7 +26,8 @@ export const RDFS_NAMESPACE = "http://www.w3.org/2000/01/rdf-schema#" as const;
 /**
  * RDFS local-name inventory generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the RDFS term inventory)
+ *
  * ```ts
  * import { RDFS_TERMS } from "@beep/rdf/Vocab/generated/Rdfs.terms"
  *
