@@ -47,7 +47,8 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
 /**
  * Schema topology lint violation.
  *
- * @example
+ * **Example** (Make topology violation)
+ *
  * ```ts
  * import { SchemaTopologyViolation } from "@beep/repo-cli/commands/Lint"
  *
@@ -57,6 +58,7 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
  * })
  * console.log(violation.detail)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -417,7 +419,8 @@ const collectTsconfigViolations = Effect.fn("SchemaTopology.collectTsconfigViola
 /**
  * Collect schema topology violations without mutating process state.
  *
- * @example
+ * **Example** (Collect topology violations)
+ *
  * ```ts
  * import { collectSchemaTopologyViolations } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -428,6 +431,7 @@ const collectTsconfigViolations = Effect.fn("SchemaTopology.collectTsconfigViola
  * })
  * console.log(program) // example value
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -456,10 +460,12 @@ export const collectSchemaTopologyViolations = Effect.fn("SchemaTopology.collect
 /**
  * Run the schema topology lint command.
  *
- * @example
+ * **Example** (Invoke schema topology lint)
+ *
  * ```ts
  * console.log("bun run beep lint schema-topology")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -482,10 +488,12 @@ export const runSchemaTopologyLint = Effect.fn("SchemaTopology.runSchemaTopology
 /**
  * Lint command for enforcing canonical `@beep/schema` topology.
  *
- * @example
+ * **Example** (Run schema topology command)
+ *
  * ```ts
  * console.log("bun run beep lint schema-topology")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

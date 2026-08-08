@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Permissions-Policy schemas.
  *
- * @example
+ * **Example** (Import namespace and check Header)
+ *
  * ```ts
  * import * as PermissionsPolicy from "@beep/schema/PermissionsPolicy"
  *

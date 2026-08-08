@@ -25,7 +25,8 @@ import type * as SqlClient from "effect/unstable/sql/SqlClient";
  * reach PGlite-specific capabilities (the raw `pglite` instance,
  * `dumpDataDir`, `listen`/`notify`) beyond the generic SQL client surface.
  *
- * @example
+ * **Example** (Yield PgliteClient service tag)
+ *
  * ```ts
  * import { PgliteClient } from "@beep/pglite"
  *
@@ -41,7 +42,8 @@ export const PgliteClient = Pglite.PgliteClient;
 /**
  * PGlite client value type re-exported from `@effect/sql-pglite`.
  *
- * @example
+ * **Example** (Access raw pglite instance)
+ *
  * ```ts
  * import type { PgliteClientValue } from "@beep/pglite"
  *
@@ -59,7 +61,8 @@ export type PgliteClientValue = Pglite.PgliteClient;
  * `dataDir` makes PGlite file-backed (durable); omitting it yields an in-memory
  * instance suited to tests.
  *
- * @example
+ * **Example** (File-backed dataDir options)
+ *
  * ```ts
  * import type { PgliteClientOptions } from "@beep/pglite"
  *
@@ -76,7 +79,8 @@ export type PgliteClientOptions = Pglite.PgliteClientConfig.Create;
  * Acquire a managed in-process PGlite client, normalizing connection failures
  * into a {@link PgliteError}.
  *
- * @example
+ * **Example** (Create managed PGlite client)
+ *
  * ```ts
  * import { make } from "@beep/pglite"
  *
@@ -107,7 +111,8 @@ const asPgClient = (client: PgliteClientValue): Pg.PgClient => client as unknown
  * {@link SqlClient.SqlClient}, and the `@effect/sql-pg` {@link Pg.PgClient} tags
  * (via the tag-shim), so Drizzle-backed repositories run unchanged.
  *
- * @example
+ * **Example** (Provision multi-tag PGlite layer)
+ *
  * ```ts
  * import { makeLayer } from "@beep/pglite"
  *

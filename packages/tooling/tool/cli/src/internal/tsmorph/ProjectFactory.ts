@@ -15,7 +15,8 @@ type RepoTsMorphProjectInput = {
 /**
  * Create a semantic ts-morph project and load the requested source globs.
  *
- * @example
+ * **Example** (Load project from source globs)
+ *
  * ```ts
  * import { createRepoTsMorphProject } from "@beep/repo-cli/internal/tsmorph/ProjectFactory"
  *
@@ -25,6 +26,7 @@ type RepoTsMorphProjectInput = {
  * })
  * console.log(project.getSourceFiles().length >= 0)
  * ```
+ *
  * @category factories
  * @since 0.0.0
  */
@@ -42,7 +44,8 @@ export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Projec
 /**
  * Create an in-memory ts-morph project for single-source fixtures.
  *
- * @example
+ * **Example** (Build in-memory fixture project)
+ *
  * ```ts
  * import { createInMemoryTsMorphProject } from "@beep/repo-cli/internal/tsmorph/ProjectFactory"
  *
@@ -50,6 +53,7 @@ export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Projec
  * project.createSourceFile("fixture.ts", "export const value = 1")
  * console.log(project.getSourceFileOrThrow("fixture.ts").getBaseName())
  * ```
+ *
  * @category factories
  * @since 0.0.0
  */

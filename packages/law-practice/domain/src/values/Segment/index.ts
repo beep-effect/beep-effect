@@ -9,7 +9,8 @@
 /**
  * Segment model exports.
  *
- * @example
+ * **Example** (Import Segment export)
+ *
  * ```ts
  * import { Segment } from "@beep/law-practice-domain/values";
  * ```

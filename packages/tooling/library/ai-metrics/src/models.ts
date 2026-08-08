@@ -15,11 +15,13 @@ const $I = $RepoAiMetricsId.create("models");
 /**
  * Supported deployment targets for the AI metrics stack.
  *
- * @example
+ * **Example** (Log deploy target enum)
+ *
  * ```ts
  * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsDeployTarget.Enum.dankserver)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -32,12 +34,14 @@ export const AiMetricsDeployTarget = LiteralKit(["local", "dankserver"]).pipe(
 /**
  * Runtime type for {@link AiMetricsDeployTarget}.
  *
- * @example
+ * **Example** (Assign local deploy target)
+ *
  * ```ts
  * import type { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
  * const target: AiMetricsDeployTarget = "local"
  * console.log(target)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -46,11 +50,13 @@ export type AiMetricsDeployTarget = typeof AiMetricsDeployTarget.Type;
 /**
  * Candidate LLM-observability tool identifiers used in the bakeoff.
  *
- * @example
+ * **Example** (Log metrics tool enum)
+ *
  * ```ts
  * import { AiMetricsTool } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsTool.Enum.langfuse)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -63,12 +69,14 @@ export const AiMetricsTool = LiteralKit(["langfuse", "phoenix", "opik", "posthog
 /**
  * Runtime type for {@link AiMetricsTool}.
  *
- * @example
+ * **Example** (Assign phoenix tool type)
+ *
  * ```ts
  * import type { AiMetricsTool } from "@beep/repo-ai-metrics"
  * const tool: AiMetricsTool = "phoenix"
  * console.log(tool)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,11 +85,13 @@ export type AiMetricsTool = typeof AiMetricsTool.Type;
 /**
  * Transcript source kind normalized by the ingest layer.
  *
- * @example
+ * **Example** (Log transcript source enum)
+ *
  * ```ts
  * import { AiMetricsTranscriptSource } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsTranscriptSource.Enum.codex)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -94,12 +104,14 @@ export const AiMetricsTranscriptSource = LiteralKit(["codex", "claude", "opencla
 /**
  * Runtime type for {@link AiMetricsTranscriptSource}.
  *
- * @example
+ * **Example** (Assign codex source type)
+ *
  * ```ts
  * import type { AiMetricsTranscriptSource } from "@beep/repo-ai-metrics"
  * const source: AiMetricsTranscriptSource = "codex"
  * console.log(source)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,11 +120,13 @@ export type AiMetricsTranscriptSource = typeof AiMetricsTranscriptSource.Type;
 /**
  * Role of a discovered source file within the source's local storage.
  *
- * @example
+ * **Example** (Log source role enum)
+ *
  * ```ts
  * import { AiMetricsSourceRole } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsSourceRole.Enum.primary)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -125,12 +139,14 @@ export const AiMetricsSourceRole = LiteralKit(["primary", "subagent", "gateway_m
 /**
  * Runtime type for {@link AiMetricsSourceRole}.
  *
- * @example
+ * **Example** (Assign primary source role)
+ *
  * ```ts
  * import type { AiMetricsSourceRole } from "@beep/repo-ai-metrics"
  * const role: AiMetricsSourceRole = "primary"
  * console.log(role)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,11 +155,13 @@ export type AiMetricsSourceRole = typeof AiMetricsSourceRole.Type;
 /**
  * Privacy-preserving source attribution derived from transcript metadata.
  *
- * @example
+ * **Example** (Create source attribution)
+ *
  * ```ts
  * import { AiMetricsSourceAttribution } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsSourceAttribution.make({ sourceRole: "primary" }).sourceRole)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -166,11 +184,13 @@ export class AiMetricsSourceAttribution extends S.Class<AiMetricsSourceAttributi
 /**
  * Raw transcript retention and derived-dashboard privacy posture.
  *
- * @example
+ * **Example** (Log privacy mode enum)
+ *
  * ```ts
  * import { AiMetricsPrivacyMode } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -183,12 +203,14 @@ export const AiMetricsPrivacyMode = LiteralKit(["encrypted_raw_redacted_ui", "ra
 /**
  * Runtime type for {@link AiMetricsPrivacyMode}.
  *
- * @example
+ * **Example** (Assign encrypted privacy mode)
+ *
  * ```ts
  * import type { AiMetricsPrivacyMode } from "@beep/repo-ai-metrics"
  * const mode: AiMetricsPrivacyMode = "encrypted_raw_redacted_ui"
  * console.log(mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,11 +219,13 @@ export type AiMetricsPrivacyMode = typeof AiMetricsPrivacyMode.Type;
 /**
  * OTLP protocol variants supported by the P3 AI metrics backend contract.
  *
- * @example
+ * **Example** (Log OTLP protocol enum)
+ *
  * ```ts
  * import { AiMetricsOtlpProtocol } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsOtlpProtocol.Enum["http/protobuf"])
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -214,12 +238,14 @@ export const AiMetricsOtlpProtocol = LiteralKit(["http/protobuf"]).pipe(
 /**
  * Runtime type for {@link AiMetricsOtlpProtocol}.
  *
- * @example
+ * **Example** (Assign HTTP protobuf protocol)
+ *
  * ```ts
  * import type { AiMetricsOtlpProtocol } from "@beep/repo-ai-metrics"
  * const protocol: AiMetricsOtlpProtocol = "http/protobuf"
  * console.log(protocol)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -228,11 +254,13 @@ export type AiMetricsOtlpProtocol = typeof AiMetricsOtlpProtocol.Type;
 /**
  * Telemetry signal scope exported to the P3 Phoenix backend.
  *
- * @example
+ * **Example** (Log signal scope enum)
+ *
  * ```ts
  * import { AiMetricsOtlpSignalScope } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsOtlpSignalScope.Enum.traces_only)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -245,12 +273,14 @@ export const AiMetricsOtlpSignalScope = LiteralKit(["traces_only"]).pipe(
 /**
  * Runtime type for {@link AiMetricsOtlpSignalScope}.
  *
- * @example
+ * **Example** (Assign traces-only signal scope)
+ *
  * ```ts
  * import type { AiMetricsOtlpSignalScope } from "@beep/repo-ai-metrics"
  * const scope: AiMetricsOtlpSignalScope = "traces_only"
  * console.log(scope)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -259,11 +289,13 @@ export type AiMetricsOtlpSignalScope = typeof AiMetricsOtlpSignalScope.Type;
 /**
  * Quality-gate outcome recorded for a labeled task or benchmark run.
  *
- * @example
+ * **Example** (Log quality gate status)
+ *
  * ```ts
  * import { AiMetricsQualityGateStatus } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsQualityGateStatus.Enum.passed)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -276,12 +308,14 @@ export const AiMetricsQualityGateStatus = LiteralKit(["passed", "failed", "not_r
 /**
  * Runtime type for {@link AiMetricsQualityGateStatus}.
  *
- * @example
+ * **Example** (Assign passed gate status)
+ *
  * ```ts
  * import type { AiMetricsQualityGateStatus } from "@beep/repo-ai-metrics"
  * const status: AiMetricsQualityGateStatus = "passed"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -290,7 +324,8 @@ export type AiMetricsQualityGateStatus = typeof AiMetricsQualityGateStatus.Type;
 /**
  * Install-owned OTLP endpoint contract consumed by CLI, local smoke, and IaC.
  *
- * @example
+ * **Example** (Create OTLP endpoint spec)
+ *
  * ```ts
  * import { AiMetricsOtlpEndpointSpec } from "@beep/repo-ai-metrics"
  *
@@ -303,6 +338,7 @@ export type AiMetricsQualityGateStatus = typeof AiMetricsQualityGateStatus.Type;
  * })
  * console.log(endpoint.signalScope)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -322,11 +358,13 @@ export class AiMetricsOtlpEndpointSpec extends S.Class<AiMetricsOtlpEndpointSpec
 /**
  * Outcome-heavy scorecard weights for coding-agent performance.
  *
- * @example
+ * **Example** (Create default score weights)
+ *
  * ```ts
  * import { AiMetricsScoreWeights } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsScoreWeights.make({}).outcome)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -347,7 +385,8 @@ export class AiMetricsScoreWeights extends S.Class<AiMetricsScoreWeights>($I`AiM
 /**
  * Versioned snapshot of agent-facing repository configuration.
  *
- * @example
+ * **Example** (Create config snapshot)
+ *
  * ```ts
  * import { ConfigSnapshot } from "@beep/repo-ai-metrics"
  *
@@ -359,6 +398,7 @@ export class AiMetricsScoreWeights extends S.Class<AiMetricsScoreWeights>($I`AiM
  * })
  * console.log(snapshot.changedPaths.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -383,7 +423,8 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
 /**
  * Canonical unit of analysis for coding-agent metrics.
  *
- * @example
+ * **Example** (Create agent task)
+ *
  * ```ts
  * import { AgentTask } from "@beep/repo-ai-metrics"
  *
@@ -397,6 +438,7 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
  * })
  * console.log(task.sourceRole)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -424,7 +466,8 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
 /**
  * Session-level transcript metadata under an agent task.
  *
- * @example
+ * **Example** (Create agent session)
+ *
  * ```ts
  * import { AgentSession } from "@beep/repo-ai-metrics"
  *
@@ -435,6 +478,7 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
  * })
  * console.log(session.sourceRole)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -466,7 +510,8 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
 /**
  * Turn-level transcript event normalized from local agent logs.
  *
- * @example
+ * **Example** (Create agent turn)
+ *
  * ```ts
  * import { AgentTurn } from "@beep/repo-ai-metrics"
  *
@@ -478,6 +523,7 @@ export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
  * })
  * console.log(turn.eventName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -501,7 +547,8 @@ export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
 /**
  * Model or provider call measured under an agent task.
  *
- * @example
+ * **Example** (Create model call)
+ *
  * ```ts
  * import { ModelCall } from "@beep/repo-ai-metrics"
  *
@@ -514,6 +561,7 @@ export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
  * })
  * console.log(call.totalTokens)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -533,7 +581,8 @@ export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
 /**
  * Tool or shell command invocation measured under an agent task.
  *
- * @example
+ * **Example** (Create tool invocation)
+ *
  * ```ts
  * import { ToolInvocation } from "@beep/repo-ai-metrics"
  *
@@ -545,6 +594,7 @@ export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
  * })
  * console.log(invocation.exitCode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -563,7 +613,8 @@ export class ToolInvocation extends S.Class<ToolInvocation>($I`ToolInvocation`)(
 /**
  * Human label used by the weekly outcome-heavy scorecard.
  *
- * @example
+ * **Example** (Create outcome label)
+ *
  * ```ts
  * import { OutcomeLabel } from "@beep/repo-ai-metrics"
  *
@@ -579,6 +630,7 @@ export class ToolInvocation extends S.Class<ToolInvocation>($I`ToolInvocation`)(
  * })
  * console.log(label.rating)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -602,7 +654,8 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
 /**
  * Repeatable benchmark case for comparing agent configurations.
  *
- * @example
+ * **Example** (Create benchmark case)
+ *
  * ```ts
  * import { BenchmarkCase } from "@beep/repo-ai-metrics"
  *
@@ -614,6 +667,7 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
  * })
  * console.log(benchmark.expectedChecks.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -633,7 +687,8 @@ export class BenchmarkCase extends S.Class<BenchmarkCase>($I`BenchmarkCase`)(
 /**
  * Benchmark run result under one config snapshot.
  *
- * @example
+ * **Example** (Create benchmark run)
+ *
  * ```ts
  * import { BenchmarkRun } from "@beep/repo-ai-metrics"
  *
@@ -648,6 +703,7 @@ export class BenchmarkCase extends S.Class<BenchmarkCase>($I`BenchmarkCase`)(
  * })
  * console.log(run.elapsedMs)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -670,7 +726,8 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
 /**
  * Derived scorecard for weekly or config-impact review.
  *
- * @example
+ * **Example** (Create weekly scorecard)
+ *
  * ```ts
  * import { Scorecard } from "@beep/repo-ai-metrics"
  *
@@ -691,6 +748,7 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
  * })
  * console.log(scorecard.completionReady)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -722,7 +780,8 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
 /**
  * Summary produced by transcript ingestion.
  *
- * @example
+ * **Example** (Create ingest summary)
+ *
  * ```ts
  * import { TranscriptIngestSummary } from "@beep/repo-ai-metrics"
  *
@@ -736,6 +795,7 @@ export class Scorecard extends S.Class<Scorecard>($I`Scorecard`)(
  * })
  * console.log(summary.eventNames)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -758,12 +818,14 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
 /**
  * Minimal external Codex JSONL shape.
  *
- * @example
+ * **Example** (Create Codex transcript line)
+ *
  * ```ts
  * import { CodexTranscriptLine } from "@beep/repo-ai-metrics"
  * const line = CodexTranscriptLine.make({ type: "session_meta" })
  * console.log(line.type)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -783,12 +845,14 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
 /**
  * Minimal external Claude JSONL shape.
  *
- * @example
+ * **Example** (Create Claude transcript line)
+ *
  * ```ts
  * import { ClaudeTranscriptLine } from "@beep/repo-ai-metrics"
  * const line = ClaudeTranscriptLine.make({ type: "message" })
  * console.log(line.type)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -810,12 +874,14 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
 /**
  * Minimal external OpenClaw JSONL shape.
  *
- * @example
+ * **Example** (Create OpenClaw transcript line)
+ *
  * ```ts
  * import { OpenClawTranscriptLine } from "@beep/repo-ai-metrics"
  * const line = OpenClawTranscriptLine.make({ event: "gateway_metadata" })
  * console.log(line.event)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

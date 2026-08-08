@@ -22,7 +22,8 @@ const SimilarityMethodKit = LiteralKit(["vector.cosine", "set.tversky", "bow.cos
 /**
  * Similarity method identifiers exposed by NLP comparison services.
  *
- * @example
+ * **Example** (Check vector cosine method)
+ *
  * ```ts
  * import { SimilarityMethod } from "@beep/nlp/Core/Similarity"
  *
@@ -42,7 +43,8 @@ export const SimilarityMethod = SimilarityMethodKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link SimilarityMethod}.
  *
- * @example
+ * **Example** (Assign cosine method literal)
+ *
  * ```ts
  * import type { SimilarityMethod } from "@beep/nlp/Core/Similarity"
  *
@@ -58,7 +60,8 @@ export type SimilarityMethod = typeof SimilarityMethod.Type;
 /**
  * Weights controlling the asymmetric Tversky set similarity index.
  *
- * @example
+ * **Example** (Create weighted Tversky params)
+ *
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { TverskyParams } from "@beep/nlp/Core/Similarity"
@@ -86,7 +89,8 @@ export class TverskyParams extends S.Class<TverskyParams>($I`TverskyParams`)(
 /**
  * Normalized terms for one document in set-based similarity comparisons.
  *
- * @example
+ * **Example** (Build document term set)
+ *
  * ```ts
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentTermSet } from "@beep/nlp/Core/Similarity"
@@ -115,7 +119,8 @@ export class DocumentTermSet extends S.Class<DocumentTermSet>($I`DocumentTermSet
 /**
  * Normalized similarity score returned from an NLP comparison.
  *
- * @example
+ * **Example** (Create scored comparison result)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { UnitInterval } from "@beep/schema/UnitInterval"

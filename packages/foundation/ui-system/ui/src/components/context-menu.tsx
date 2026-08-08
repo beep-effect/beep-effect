@@ -14,7 +14,8 @@ import type * as React from "react";
 /**
  * Context menu component.
  *
- * @example
+ * **Example** (Import ContextMenu component)
+ *
  * ```tsx
  * import { ContextMenu } from "@beep/ui/components/context-menu"
  *
@@ -31,7 +32,8 @@ function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
 /**
  * Context menu portal component.
  *
- * @example
+ * **Example** (Import ContextMenuPortal component)
+ *
  * ```tsx
  * import { ContextMenuPortal } from "@beep/ui/components/context-menu"
  *
@@ -48,7 +50,8 @@ function ContextMenuPortal({ ...props }: ContextMenuPrimitive.Portal.Props) {
 /**
  * Context menu trigger component.
  *
- * @example
+ * **Example** (Import ContextMenuTrigger component)
+ *
  * ```tsx
  * import { ContextMenuTrigger } from "@beep/ui/components/context-menu"
  *
@@ -71,7 +74,8 @@ function ContextMenuTrigger({ className, ...props }: ContextMenuPrimitive.Trigge
 /**
  * Context menu content component.
  *
- * @example
+ * **Example** (Import ContextMenuContent component)
+ *
  * ```tsx
  * import { ContextMenuContent } from "@beep/ui/components/context-menu"
  *
@@ -115,7 +119,8 @@ function ContextMenuContent({
 /**
  * Context menu group component.
  *
- * @example
+ * **Example** (Import ContextMenuGroup component)
+ *
  * ```tsx
  * import { ContextMenuGroup } from "@beep/ui/components/context-menu"
  *
@@ -132,7 +137,8 @@ function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
 /**
  * Context menu label component.
  *
- * @example
+ * **Example** (Import ContextMenuLabel component)
+ *
  * ```tsx
  * import { ContextMenuLabel } from "@beep/ui/components/context-menu"
  *
@@ -162,7 +168,8 @@ function ContextMenuLabel({
 /**
  * Context menu item component.
  *
- * @example
+ * **Example** (Import ContextMenuItem component)
+ *
  * ```tsx
  * import { ContextMenuItem } from "@beep/ui/components/context-menu"
  *
@@ -198,7 +205,8 @@ function ContextMenuItem({
 /**
  * Context menu sub component.
  *
- * @example
+ * **Example** (Import ContextMenuSub component)
+ *
  * ```tsx
  * import { ContextMenuSub } from "@beep/ui/components/context-menu"
  *
@@ -215,7 +223,8 @@ function ContextMenuSub({ ...props }: ContextMenuPrimitive.SubmenuRoot.Props) {
 /**
  * Context menu sub trigger component.
  *
- * @example
+ * **Example** (Import ContextMenuSubTrigger component)
+ *
  * ```tsx
  * import { ContextMenuSubTrigger } from "@beep/ui/components/context-menu"
  *
@@ -252,7 +261,8 @@ function ContextMenuSubTrigger({
 /**
  * Context menu sub content component.
  *
- * @example
+ * **Example** (Import ContextMenuSubContent component)
+ *
  * ```tsx
  * import { ContextMenuSubContent } from "@beep/ui/components/context-menu"
  *
@@ -269,7 +279,8 @@ function ContextMenuSubContent({ ...props }: React.ComponentProps<typeof Context
 /**
  * Context menu checkbox item component.
  *
- * @example
+ * **Example** (Import ContextMenuCheckboxItem component)
+ *
  * ```tsx
  * import { ContextMenuCheckboxItem } from "@beep/ui/components/context-menu"
  *
@@ -303,7 +314,8 @@ function ContextMenuCheckboxItem({ className, children, checked, ...props }: Con
 /**
  * Context menu radio group component.
  *
- * @example
+ * **Example** (Import ContextMenuRadioGroup component)
+ *
  * ```tsx
  * import { ContextMenuRadioGroup } from "@beep/ui/components/context-menu"
  *
@@ -320,7 +332,8 @@ function ContextMenuRadioGroup({ ...props }: ContextMenuPrimitive.RadioGroup.Pro
 /**
  * Context menu radio item component.
  *
- * @example
+ * **Example** (Import ContextMenuRadioItem component)
+ *
  * ```tsx
  * import { ContextMenuRadioItem } from "@beep/ui/components/context-menu"
  *
@@ -353,7 +366,8 @@ function ContextMenuRadioItem({ className, children, ...props }: ContextMenuPrim
 /**
  * Context menu separator component.
  *
- * @example
+ * **Example** (Import ContextMenuSeparator component)
+ *
  * ```tsx
  * import { ContextMenuSeparator } from "@beep/ui/components/context-menu"
  *
@@ -376,7 +390,8 @@ function ContextMenuSeparator({ className, ...props }: ContextMenuPrimitive.Sepa
 /**
  * Context menu shortcut component.
  *
- * @example
+ * **Example** (Import ContextMenuShortcut component)
+ *
  * ```tsx
  * import { ContextMenuShortcut } from "@beep/ui/components/context-menu"
  *

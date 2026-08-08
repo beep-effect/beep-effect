@@ -417,7 +417,8 @@ const listWhere = (query: ListContradictionCandidates) => {
 /**
  * Build the Drizzle contradiction-triage repository.
  *
- * @example
+ * **Example** (Factory returns Effect)
+ *
  * ```ts
  * import { makeDrizzleContradictionTriageRepository } from "@beep/epistemic-server"
  * import { Effect } from "effect"

@@ -36,7 +36,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * Streaming serialize request.
  *
- * @example
+ * **Example** (Decode serialize request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -73,7 +74,8 @@ export class JsonLdStreamSerializeRequest extends S.Class<JsonLdStreamSerializeR
 /**
  * Streaming serialize result.
  *
- * @example
+ * **Example** (Decode serialize result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -108,7 +110,8 @@ export class JsonLdStreamSerializeResult extends S.Class<JsonLdStreamSerializeRe
 /**
  * Streaming serialize error reason.
  *
- * @example
+ * **Example** (Decode error reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -130,7 +133,8 @@ export const JsonLdStreamSerializeErrorReason = LiteralKit(["serializeFailure", 
 /**
  * Type for {@link JsonLdStreamSerializeErrorReason}.
  *
- * @example
+ * **Example** (Check reason type guard)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdStreamSerializeErrorReason } from "@beep/semantic-web/services/jsonld-stream-serialize"
@@ -147,7 +151,8 @@ export type JsonLdStreamSerializeErrorReason = typeof JsonLdStreamSerializeError
 /**
  * Typed streaming serialize error.
  *
- * @example
+ * **Example** (Make serialize error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdStreamSerializeError } from "@beep/semantic-web/services/jsonld-stream-serialize"
@@ -182,7 +187,8 @@ export class JsonLdStreamSerializeError extends TaggedErrorClass<JsonLdStreamSer
 /**
  * JSON-LD streaming serialize service contract shape.
  *
- * @example
+ * **Example** (Accept service shape)
+ *
  * ```ts
  * import type { JsonLdStreamSerializeServiceShape } from "@beep/semantic-web/services/jsonld-stream-serialize"
  *
@@ -190,8 +196,8 @@ export class JsonLdStreamSerializeError extends TaggedErrorClass<JsonLdStreamSer
  * console.log(acceptJsonLdStreamSerializeServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface JsonLdStreamSerializeServiceShape {
   readonly serialize: (
@@ -202,7 +208,8 @@ export interface JsonLdStreamSerializeServiceShape {
 /**
  * JSON-LD streaming serialize service tag.
  *
- * @example
+ * **Example** (Provide mock serialize service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

@@ -19,7 +19,8 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<"span"> {
 /**
  * Circular avatar frame for an image with fallback content.
  *
- * @example
+ * **Example** (Avatar with image fallback)
+ *
  * ```tsx
  * import { Avatar, AvatarFallback, AvatarImage } from "@beep/ui/components/avatar"
  *
@@ -90,11 +91,13 @@ const avatarImageStatusAtom = Atom.family((src: string | undefined) =>
 /**
  * Avatar image that renders only after the source loads successfully.
  *
- * @remarks
+ * **Details**
+ *
  * `onLoadingStatusChange` is notified for terminal `loaded` and `error`
  * states so callers can coordinate external fallback behavior.
  *
- * @example
+ * **Example** (Profile avatar image)
+ *
  * ```tsx
  * import { Avatar, AvatarFallback, AvatarImage } from "@beep/ui/components/avatar"
  *
@@ -139,7 +142,8 @@ function AvatarImage({ className, src, alt, onLoadingStatusChange, ...props }: A
 /**
  * Fallback initials or icon shown when no avatar image is available.
  *
- * @example
+ * **Example** (Initials-only avatar)
+ *
  * ```tsx
  * import { Avatar, AvatarFallback } from "@beep/ui/components/avatar"
  *

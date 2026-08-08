@@ -9,9 +9,8 @@
 /**
  * History-signal model exports.
  *
- * **Example**
+ * **Example** (Importing HistorySignal)
  *
- * @example
  * ```ts
  * import { HistorySignal } from "@beep/law-practice-domain/values";
  * ```

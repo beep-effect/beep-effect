@@ -15,10 +15,13 @@ import type * as React from "react";
 /**
  * Props for {@link VerifiedSourceTextViewer}.
  *
+ * **Details**
+ *
  * Offsets are absolute, half-open UTF-16 code-unit positions in the canonical
  * extracted source. `pageText` begins at `pageStartOffset`.
  *
- * @example
+ * **Example** (Highlight agreement in excerpt)
+ *
  * ```tsx
  * import { VerifiedSourceTextViewer } from "@beep/ui/components/verified-source-text-viewer"
  *
@@ -54,11 +57,14 @@ const scrollAnchorIntoView = (node: HTMLElement | null): void => {
  * Render one canonical source-text page and mark the exact portion intersecting
  * the verified anchor.
  *
+ * **Details**
+ *
  * The component never normalizes or searches the text. It slices the supplied
  * page using JavaScript's native UTF-16 indexing semantics, preserving the
  * server-verified `source.slice(start, end) === quote` contract.
  *
- * @example
+ * **Example** (Paged source with highlight)
+ *
  * ```tsx
  * import { VerifiedSourceTextViewer } from "@beep/ui/components/verified-source-text-viewer"
  *

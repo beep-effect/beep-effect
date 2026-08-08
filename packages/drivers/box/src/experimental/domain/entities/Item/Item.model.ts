@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Item/Item.model");
 /**
  * Experimental schema anchor for generic Box item resources shared by files, folders, and web links.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty Item)
+ *
  * ```ts
  * import { Item } from "@beep/box/experimental/domain/entities/Item/Item.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Item extends S.Class<Item>($I`Item`)(
 /**
  * Type-level companion namespace for {@link Item} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Item)
+ *
  * ```ts
  * import { Item } from "@beep/box/experimental/domain/entities/Item/Item.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Item {
   /**
    * Encoded payload accepted by the {@link Item} entity schema.
    *
-   * @example
+   * **Example** (Encode Item to Encoded)
+   *
    * ```ts
    * import { Item } from "@beep/box/experimental/domain/entities/Item/Item.model";
    * import * as S from "effect/Schema";

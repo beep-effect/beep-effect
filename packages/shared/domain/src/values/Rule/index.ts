@@ -8,14 +8,15 @@
 /**
  * Rule effect schemas and tagged union value objects.
  *
- * @example
+ * **Example** (Import Rule and log AST)
+ *
  * ```ts
  * import { Rule } from "@beep/shared-domain/values/Rule/Rule.model"
  *
  * console.log(Rule.ast)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./Rule.model.ts";

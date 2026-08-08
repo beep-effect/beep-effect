@@ -8,7 +8,8 @@
 /**
  * Named query catalog kept separate from handler orchestration.
  *
- * @example
+ * **Example** (Check clients includes kg_node)
+ *
  * ```ts
  * import { PracticeKgQueries } from "@beep/law-practice-server"
  *

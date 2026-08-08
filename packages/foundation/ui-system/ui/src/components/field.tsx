@@ -22,7 +22,8 @@ const hasRenderableNode = (node: React.ReactNode): boolean =>
 /**
  * Field set component.
  *
- * @example
+ * **Example** (Import FieldSet component)
+ *
  * ```tsx
  * import { FieldSet } from "@beep/ui/components/field"
  *
@@ -48,7 +49,8 @@ function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
 /**
  * Field legend component.
  *
- * @example
+ * **Example** (Import FieldLegend component)
+ *
  * ```tsx
  * import { FieldLegend } from "@beep/ui/components/field"
  *
@@ -76,7 +78,8 @@ function FieldLegend({
 /**
  * Field group component.
  *
- * @example
+ * **Example** (Import FieldGroup component)
+ *
  * ```tsx
  * import { FieldGroup } from "@beep/ui/components/field"
  *
@@ -117,7 +120,8 @@ const fieldVariants = cva("data-[invalid=true]:text-destructive gap-2 group/fiel
 /**
  * Field component.
  *
- * @example
+ * **Example** (Import Field component)
+ *
  * ```tsx
  * import { Field } from "@beep/ui/components/field"
  *
@@ -146,7 +150,8 @@ function Field({
 /**
  * Field content component.
  *
- * @example
+ * **Example** (Import FieldContent component)
+ *
  * ```tsx
  * import { FieldContent } from "@beep/ui/components/field"
  *
@@ -169,7 +174,8 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Field label component.
  *
- * @example
+ * **Example** (Import FieldLabel component)
+ *
  * ```tsx
  * import { FieldLabel } from "@beep/ui/components/field"
  *
@@ -196,7 +202,8 @@ function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>)
 /**
  * Field title component.
  *
- * @example
+ * **Example** (Import FieldTitle component)
+ *
  * ```tsx
  * import { FieldTitle } from "@beep/ui/components/field"
  *
@@ -222,7 +229,8 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Field description component.
  *
- * @example
+ * **Example** (Import FieldDescription component)
+ *
  * ```tsx
  * import { FieldDescription } from "@beep/ui/components/field"
  *
@@ -250,7 +258,8 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
 /**
  * Field separator component.
  *
- * @example
+ * **Example** (Import FieldSeparator component)
+ *
  * ```tsx
  * import { FieldSeparator } from "@beep/ui/components/field"
  *
@@ -291,7 +300,8 @@ function FieldSeparator({
 /**
  * Field error component.
  *
- * @example
+ * **Example** (Import FieldError component)
+ *
  * ```tsx
  * import { FieldError } from "@beep/ui/components/field"
  *

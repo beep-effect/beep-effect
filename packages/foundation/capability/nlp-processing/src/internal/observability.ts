@@ -59,7 +59,8 @@ const causeLogAttributes = <E>(cause: Cause.Cause<E>): Record<string, string> =>
 /**
  * Annotate the current span with package-scoped NLP attributes.
  *
- * @example
+ * **Example** (Annotate span then succeed)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { annotateNlpSpan } from "./observability"
@@ -80,7 +81,8 @@ export const annotateNlpSpan = (attributes: Record<string, string>): Effect.Effe
 /**
  * Observe a full NLP workflow with shared counters, duration metrics, and a span.
  *
- * @example
+ * **Example** (Observe workflow around effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { observeNlpWorkflow } from "./observability"
@@ -124,7 +126,8 @@ export const observeNlpWorkflow: {
 /**
  * Track the duration of one NLP operation with shared metric naming.
  *
- * @example
+ * **Example** (Track duration of effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { trackNlpDuration } from "./observability"
@@ -162,7 +165,8 @@ export const trackNlpDuration: {
 /**
  * Record an NLP cache lookup as a hit or miss.
  *
- * @example
+ * **Example** (Record cache hit lookup)
+ *
  * ```ts
  * import { recordNlpCacheLookup } from "./observability"
  *
@@ -190,7 +194,8 @@ export const recordNlpCacheLookup: {
 /**
  * Record and log a backend fallback event.
  *
- * @example
+ * **Example** (Record backend fallback event)
+ *
  * ```ts
  * import { Cause } from "effect"
  * import { recordNlpBackendFallback } from "./observability"
@@ -231,7 +236,8 @@ export const recordNlpBackendFallback: {
 /**
  * Record and log an NLP failure cause.
  *
- * @example
+ * **Example** (Record failure with cause)
+ *
  * ```ts
  * import { Cause } from "effect"
  * import { recordNlpFailure } from "./observability"

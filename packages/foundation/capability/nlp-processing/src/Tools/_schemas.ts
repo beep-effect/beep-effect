@@ -27,7 +27,8 @@ const AiEntitySourceKit = LiteralKit(["builtin", "custom"]).annotate(
 /**
  * LiteralKit backing schema for AI phonetic algorithm values.
  *
- * @example
+ * **Example** (Validating soundex membership)
+ *
  * ```ts
  * import { AiPhoneticAlgorithmKit } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -46,7 +47,8 @@ export const AiPhoneticAlgorithmKit = LiteralKit(["soundex", "phonetize"]).annot
 /**
  * Type for {@link AiPhoneticAlgorithmKit}.
  *
- * @example
+ * **Example** (Typing a phonetic algorithm)
+ *
  * ```ts
  * import type { AiPhoneticAlgorithmKit } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -69,7 +71,8 @@ const AiEntitySource = AiEntitySourceKit.pipe(
 /**
  * Phonetic encoding algorithm used to compare text.
  *
- * @example
+ * **Example** (Validating phonetize membership)
+ *
  * ```ts
  * import { AiPhoneticAlgorithm } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -89,10 +92,13 @@ export const AiPhoneticAlgorithm = AiPhoneticAlgorithmKit.pipe(
 /**
  * Output schema for one token emitted by tokenization-oriented tools.
  *
+ * **Details**
+ *
  * The model keeps both linguistic annotations and source offsets so callers can
  * map normalized NLP data back to the original text.
  *
- * @example
+ * **Example** (Decoding an annotated token)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiToken } from "@beep/nlp-processing/Tools/_schemas"
@@ -135,11 +141,14 @@ export class AiToken extends S.Class<AiToken>($I`AiToken`)(
 /**
  * Output schema for a composite linguistic analysis of a text.
  *
+ * **Details**
+ *
  * The model bundles document-level counts, detected sentence texts, and the
  * full annotated token stream so a single tool call can return the data that
  * tokenization, sentence, and statistics tools would otherwise produce.
  *
- * @example
+ * **Example** (Decoding composite analysis)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiAnalysis } from "@beep/nlp-processing/Tools/_schemas"
@@ -187,10 +196,13 @@ export class AiAnalysis extends S.Class<AiAnalysis>($I`AiAnalysis`)(
 /**
  * Output schema for a detected sentence with source offsets and token count.
  *
+ * **Details**
+ *
  * Use this model when an NLP result needs sentence text plus enough metadata to
  * preserve ordering and trace each sentence back to the source document.
  *
- * @example
+ * **Example** (Decoding a sentence)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiSentence } from "@beep/nlp-processing/Tools/_schemas"
@@ -225,10 +237,13 @@ export class AiSentence extends S.Class<AiSentence>($I`AiSentence`)(
 /**
  * Output schema for a keyword candidate and its importance score.
  *
+ * **Details**
+ *
  * Higher scores represent stronger keyword relevance within the extraction
  * result returned by `ExtractKeywords`.
  *
- * @example
+ * **Example** (Decoding a keyword score)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiKeyword } from "@beep/nlp-processing/Tools/_schemas"
@@ -257,10 +272,13 @@ export class AiKeyword extends S.Class<AiKeyword>($I`AiKeyword`)(
 /**
  * Output schema for high-level document statistics.
  *
+ * **Details**
+ *
  * The counts are intended for routing and sizing decisions, such as deciding
  * whether a text should be chunked before retrieval or summarization.
  *
- * @example
+ * **Example** (Decoding document statistics)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiDocumentStats } from "@beep/nlp-processing/Tools/_schemas"
@@ -293,10 +311,13 @@ export class AiDocumentStats extends S.Class<AiDocumentStats>($I`AiDocumentStats
 /**
  * Output schema for a sentence-aligned text chunk.
  *
+ * **Details**
+ *
  * Chunk boundaries are expressed in sentence indexes so callers can preserve
  * document order and avoid slicing through a sentence.
  *
- * @example
+ * **Example** (Decoding a sentence chunk)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiSentenceChunk } from "@beep/nlp-processing/Tools/_schemas"
@@ -331,10 +352,13 @@ export class AiSentenceChunk extends S.Class<AiSentenceChunk>($I`AiSentenceChunk
 /**
  * Output schema for one ranked text candidate.
  *
+ * **Details**
+ *
  * The `index` points back to the caller-provided candidate array and `score`
  * ranks the candidate relative to the query.
  *
- * @example
+ * **Example** (Decoding ranked text)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiRankedText } from "@beep/nlp-processing/Tools/_schemas"
@@ -363,10 +387,13 @@ export class AiRankedText extends S.Class<AiRankedText>($I`AiRankedText`)(
 /**
  * Output schema for an extracted named entity.
  *
+ * **Details**
+ *
  * The model carries entity text, type labels, token boundaries, character
  * offsets, and whether the match came from built-in or custom entity logic.
  *
- * @example
+ * **Example** (Decoding a named entity)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiEntity } from "@beep/nlp-processing/Tools/_schemas"
@@ -405,10 +432,13 @@ export class AiEntity extends S.Class<AiEntity>($I`AiEntity`)(
 /**
  * Output schema for an extracted n-gram and its frequency count.
  *
+ * **Details**
+ *
  * Use this model for entries returned by the `NGrams` tool in bag, edge, or
  * set modes.
  *
- * @example
+ * **Example** (Decoding an n-gram)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiNGram } from "@beep/nlp-processing/Tools/_schemas"
@@ -437,10 +467,13 @@ export class AiNGram extends S.Class<AiNGram>($I`AiNGram`)(
 /**
  * Output schema for phonetic overlap between two text inputs.
  *
+ * **Details**
+ *
  * The code arrays show which phonetic keys were generated for each side and
  * which keys contributed to the overlap score.
  *
- * @example
+ * **Example** (Decoding phonetic match)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiPhoneticMatch } from "@beep/nlp-processing/Tools/_schemas"
@@ -475,11 +508,14 @@ export class AiPhoneticMatch extends S.Class<AiPhoneticMatch>($I`AiPhoneticMatch
 /**
  * Structured failure schema returned by AI-facing NLP tools.
  *
+ * **Details**
+ *
  * Tool implementations should fail with this model for expected operational
  * failures so AI clients can inspect the tool, operation, stable reason, and
  * retry hint without parsing logs or natural-language exception text.
  *
- * @example
+ * **Example** (Creating a tool error)
+ *
  * ```ts
  * import { AiToolError } from "@beep/nlp-processing/Tools/_schemas"
  *
@@ -514,10 +550,13 @@ export class AiToolError extends S.Class<AiToolError>($I`AiToolError`)(
 /**
  * Output schema for the resolved BM25 configuration of a managed corpus.
  *
+ * **Details**
+ *
  * The values reflect the configuration actually used by the corpus after
  * defaults and caller overrides are applied.
  *
- * @example
+ * **Example** (Decoding BM25 configuration)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusConfig } from "@beep/nlp-processing/Tools/_schemas"
@@ -550,10 +589,13 @@ export class AiCorpusConfig extends S.Class<AiCorpusConfig>($I`AiCorpusConfig`)(
 /**
  * Output schema for a managed corpus session summary.
  *
+ * **Details**
+ *
  * Returned by corpus creation and useful for confirming the stable corpus id,
  * resolved BM25 config, current document count, and vocabulary size.
  *
- * @example
+ * **Example** (Decoding corpus summary)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusSummary } from "@beep/nlp-processing/Tools/_schemas"
@@ -588,10 +630,13 @@ export class AiCorpusSummary extends S.Class<AiCorpusSummary>($I`AiCorpusSummary
 /**
  * Output schema for one ranked document returned from a corpus query.
  *
+ * **Details**
+ *
  * The optional `text` field is present only when the query requested source
  * text inclusion.
  *
- * @example
+ * **Example** (Decoding ranked document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusRankedDocument } from "@beep/nlp-processing/Tools/_schemas"
@@ -624,9 +669,12 @@ export class AiCorpusRankedDocument extends S.Class<AiCorpusRankedDocument>($I`A
 /**
  * Output schema for an inverse document frequency value in a corpus.
  *
+ * **Details**
+ *
  * IDF entries help explain why specific terms influence retrieval scores.
  *
- * @example
+ * **Example** (Decoding an IDF entry)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusIdf } from "@beep/nlp-processing/Tools/_schemas"
@@ -655,10 +703,13 @@ export class AiCorpusIdf extends S.Class<AiCorpusIdf>($I`AiCorpusIdf`)(
 /**
  * Output schema for the dimensions of an optional document-term matrix.
  *
+ * **Details**
+ *
  * Rows correspond to learned documents and columns correspond to vocabulary
  * terms in the matrix payload.
  *
- * @example
+ * **Example** (Decoding matrix dimensions)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusMatrixShape } from "@beep/nlp-processing/Tools/_schemas"
@@ -687,10 +738,13 @@ export class AiCorpusMatrixShape extends S.Class<AiCorpusMatrixShape>($I`AiCorpu
 /**
  * Output schema for detailed corpus diagnostics and retrieval statistics.
  *
+ * **Details**
+ *
  * Use this model for corpus inspection responses that may include vocabulary,
  * IDF values, and the optional document-term matrix.
  *
- * @example
+ * **Example** (Decoding corpus statistics)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiCorpusStats } from "@beep/nlp-processing/Tools/_schemas"

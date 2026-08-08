@@ -14,11 +14,18 @@ const $I = $SchemaId.create("SchemaUtils/withEncodeDefault");
 /**
  * Apply a decoding default to an optional encoded key.
  *
+ * **Details**
+ *
  * This helper makes the encoded key optional and fills in a decoded value when
  * the key is missing. Encoding remains strict and still requires the decoded
  * value to be present.
  *
- * @example
+ * This is the decoded-value counterpart to Effect's
+ * `Schema.withDecodingDefaultKey`: the default thunk returns the schema's
+ * decoded `Type`, not its encoded representation.
+ *
+ * **Example** (Default for missing encoded key)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { withEncodeDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
@@ -28,11 +35,6 @@ const $I = $SchemaId.create("SchemaUtils/withEncodeDefault");
  *
  * console.log(S.decodeUnknownSync(Settings)({}).status) // "draft"
  * ```
- *
- * @remarks
- * This is the decoded-value counterpart to Effect's
- * `Schema.withDecodingDefaultKey`: the default thunk returns the schema's
- * decoded `Type`, not its encoded representation.
  *
  * @typeParam TSchema - Schema receiving the decoding default.
  * @param self - Schema receiving the decoding default.
@@ -69,7 +71,8 @@ export const withEncodeDefault: {
 /**
  * Create a boolean schema field with a lazy decoding default.
  *
- * @example
+ * **Example** (Boolean field with default)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { boolWithDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
@@ -90,7 +93,8 @@ export const boolWithDefault = (defaultValue: boolean) => withEncodeDefault(S.Bo
 /**
  * Boolean schema field that decodes missing keys as `false`.
  *
- * @example
+ * **Example** (Missing key decodes false)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
@@ -111,15 +115,6 @@ export const BoolDefaultFalse = boolWithDefault(false).pipe(
 
 /**
  * {@inheritDoc BoolDefaultFalse}
- *
- * @example
- * ```ts
- * import type { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
- *
- * const visible: BoolDefaultFalse = false
- * console.log(visible)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -128,7 +123,8 @@ export type BoolDefaultFalse = typeof BoolDefaultFalse.Type;
 /**
  * Boolean schema field that decodes missing keys as `true`.
  *
- * @example
+ * **Example** (Missing key decodes true)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
@@ -149,15 +145,6 @@ export const BoolDefaultTrue = boolWithDefault(true).pipe(
 
 /**
  * {@inheritDoc BoolDefaultTrue}
- *
- * @example
- * ```ts
- * import type { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
- *
- * const enabled: BoolDefaultTrue = true
- * console.log(enabled)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

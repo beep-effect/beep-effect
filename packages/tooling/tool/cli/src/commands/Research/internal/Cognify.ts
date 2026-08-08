@@ -46,7 +46,8 @@ interface CognifyUpload {
 /**
  * Push pending research cards into Cognee datasets.
  *
- * @example
+ * **Example** (Cognify vault dry-run)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { cognifyImpl } from "@beep/repo-cli/commands/Research/internal/Cognify"
@@ -55,6 +56,7 @@ interface CognifyUpload {
  * const program = cognifyImpl(ResearchCognifyOptions.make({ dryRun: true, vaultRoot: "/repo/.research" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

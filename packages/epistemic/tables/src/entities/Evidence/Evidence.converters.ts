@@ -21,7 +21,8 @@ const $I = $EpistemicTablesId.create("entities/Evidence/Evidence.converters");
 /**
  * Selected epistemic Evidence row.
  *
- * @example
+ * **Example** (Sample EvidenceRow fixture)
+ *
  * ```ts
  * import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
  *
@@ -58,7 +59,8 @@ export type EvidenceRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic Evidence row.
  *
- * @example
+ * **Example** (Sample EvidenceInsert fixture)
+ *
  * ```ts
  * import type { EvidenceInsert } from "@beep/epistemic-tables/entities/Evidence"
  *
@@ -148,11 +150,14 @@ const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.Sc
 /**
  * Convert an Evidence entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the
  * snake_case column shape produced by {@link Table}. The database-managed
  * `id` (SERIAL) is dropped so the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert omits database id)
+ *
  * ```ts
  * import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence"
  * import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
@@ -194,7 +199,8 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
 /**
  * Convert a selected persistence row into an Evidence entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import { fromEvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
  * import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence"

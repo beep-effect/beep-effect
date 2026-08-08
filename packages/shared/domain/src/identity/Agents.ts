@@ -14,7 +14,8 @@ const make = EntityId.factory("agents", $I);
 /**
  * Agent entity identifier.
  *
- * @example
+ * **Example** (Log AgentId entityType)
+ *
  * ```ts
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  *
@@ -31,7 +32,8 @@ export const AgentId = make("agent", {
 /**
  * Runtime type for {@link AgentId}.
  *
- * @example
+ * **Example** (Decode AgentId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
@@ -52,7 +54,8 @@ export type AgentId = typeof AgentId.Type;
 /**
  * Provider instance entity identifier.
  *
- * @example
+ * **Example** (Log ProviderInstanceId entityType)
+ *
  * ```ts
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  *
@@ -69,7 +72,8 @@ export const ProviderInstanceId = make("provider_instance", {
 /**
  * Runtime type for {@link ProviderInstanceId}.
  *
- * @example
+ * **Example** (Decode ProviderInstanceId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
@@ -90,7 +94,8 @@ export type ProviderInstanceId = typeof ProviderInstanceId.Type;
 /**
  * Skill entity identifier.
  *
- * @example
+ * **Example** (Log SkillId entityType)
+ *
  * ```ts
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  *
@@ -107,7 +112,8 @@ export const SkillId = make("skill", {
 /**
  * Runtime type for {@link SkillId}.
  *
- * @example
+ * **Example** (Decode SkillId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Agents from "@beep/shared-domain/identity/Agents"

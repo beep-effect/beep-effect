@@ -16,7 +16,8 @@ import type * as Struct_ from "effect/Struct";
 /**
  * Runtime marker used to identify variant-aware struct values.
  *
- * @example
+ * **Example** (TypeId membership check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TypeId, make } from "@beep/schema/VariantSchema"
@@ -36,7 +37,8 @@ const cacheSymbol = Symbol.for(`${TypeId}/cache`);
 /**
  * Variant-aware struct descriptor used by `make`.
  *
- * @example
+ * **Example** (Typed variant struct)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { fields, make, type Struct } from "@beep/schema/VariantSchema"
@@ -46,8 +48,8 @@ const cacheSymbol = Symbol.for(`${TypeId}/cache`);
  * console.log(Object.keys(fields(struct)))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Struct<in out A extends Field.Fields> extends Pipeable {
   readonly [TypeId]: A;
@@ -58,7 +60,8 @@ export interface Struct<in out A extends Field.Fields> extends Pipeable {
 /**
  * Guard for variant-aware struct descriptors.
  *
- * @example
+ * **Example** (isStruct guard usage)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isStruct, make } from "@beep/schema/VariantSchema"
@@ -67,15 +70,16 @@ export interface Struct<in out A extends Field.Fields> extends Pipeable {
  * console.log(isStruct(Variant.Struct({ id: S.String }))) // true
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isStruct = (u: unknown): u is AnyStruct => P.hasProperty(u, TypeId);
 
 /**
  * Type helpers for variant-aware struct descriptors.
  *
- * @example
+ * **Example** (Struct.Fields type helper)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { Struct } from "@beep/schema/VariantSchema"
@@ -84,8 +88,8 @@ export const isStruct = (u: unknown): u is AnyStruct => P.hasProperty(u, TypeId)
  * console.log({ id: S.String } satisfies Fields)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export declare namespace Struct {
   /**
@@ -122,7 +126,8 @@ const FieldTypeId = "~effect/schema/VariantSchema/Field";
 /**
  * Variant-specific field descriptor.
  *
- * @example
+ * **Example** (Typed variant field)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isField, make, type Field } from "@beep/schema/VariantSchema"
@@ -132,8 +137,8 @@ const FieldTypeId = "~effect/schema/VariantSchema/Field";
  * console.log(isField(field))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Field<in out A extends Field.Config> extends Pipeable {
   readonly schemas: A;
@@ -143,7 +148,8 @@ export interface Field<in out A extends Field.Config> extends Pipeable {
 /**
  * Guard for variant-specific field descriptors.
  *
- * @example
+ * **Example** (isField guard usage)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isField, make } from "@beep/schema/VariantSchema"
@@ -152,14 +158,15 @@ export interface Field<in out A extends Field.Config> extends Pipeable {
  * console.log(isField(Variant.Field({ write: S.String }))) // true
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isField = (u: unknown): u is AnyField => P.hasProperty(u, FieldTypeId);
 /**
  * Type helpers for variant-specific field descriptors.
  *
- * @example
+ * **Example** (Field.Config type helper)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { Field } from "@beep/schema/VariantSchema"
@@ -168,8 +175,8 @@ export const isField = (u: unknown): u is AnyField => P.hasProperty(u, FieldType
  * console.log({ read: S.String } satisfies Config)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export declare namespace Field {
   /**
@@ -224,7 +231,8 @@ type SchemaClassFactory = (identifier: string) => (schema: S.Top, annotations?: 
 /**
  * Extracts the field map for a single variant from variant-aware fields.
  *
- * @example
+ * **Example** (ExtractFields for one variant)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { ExtractFields } from "@beep/schema/VariantSchema"
@@ -233,8 +241,8 @@ type SchemaClassFactory = (identifier: string) => (schema: S.Top, annotations?: 
  * console.log({ id: S.String } satisfies ReadFields)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type ExtractFields<V extends string, Fields extends Struct.Fields, IsDefault = false> = {
   readonly [K in keyof Fields as [Fields[K]] extends [Field<infer Config>]
@@ -255,7 +263,8 @@ export type ExtractFields<V extends string, Fields extends Struct.Fields, IsDefa
 /**
  * Extracts a schema for one variant from a variant-aware struct.
  *
- * @example
+ * **Example** (Extract schema for variant)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { make, type Extract } from "@beep/schema/VariantSchema"
@@ -266,8 +275,8 @@ export type ExtractFields<V extends string, Fields extends Struct.Fields, IsDefa
  * console.log(S.isSchema(Variant.extract(struct, "read") satisfies ReadSchema))
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type Extract<V extends string, A extends AnyStruct, IsDefault = false> = [A] extends [Struct<infer Fields>]
   ? IsDefault extends true
@@ -330,7 +339,8 @@ const extract: {
 /**
  * Returns the raw field map stored on a variant-aware struct.
  *
- * @example
+ * **Example** (Get raw field map)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { fields, make } from "@beep/schema/VariantSchema"
@@ -347,7 +357,8 @@ export const fields = <A extends AnyStruct>(self: A): A[typeof TypeId] => self[T
 /**
  * Variant-aware schema class shape produced by `make().Class`.
  *
- * @example
+ * **Example** (Variant-aware schema class)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { make } from "@beep/schema/VariantSchema"
@@ -357,8 +368,8 @@ export const fields = <A extends AnyStruct>(self: A): A[typeof TypeId] => self[T
  * console.log(S.isSchema(Account.read))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Class<
   Self,
@@ -468,7 +479,8 @@ type ClassShape<
 /**
  * Variant-aware union schema with per-variant schema projections.
  *
- * @example
+ * **Example** (Variant-aware union schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { make } from "@beep/schema/VariantSchema"
@@ -479,8 +491,8 @@ type ClassShape<
  * console.log(S.isSchema(union))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface Union<Members extends ReadonlyArray<AnyStruct>>
   extends S.Union<{
@@ -490,7 +502,8 @@ export interface Union<Members extends ReadonlyArray<AnyStruct>>
 /**
  * Type helpers for variant-aware union schemas.
  *
- * @example
+ * **Example** (Union type helpers keys)
+ *
  * ```ts
  * import { make } from "@beep/schema/VariantSchema"
  *
@@ -499,8 +512,8 @@ export interface Union<Members extends ReadonlyArray<AnyStruct>>
  * console.log(Object.keys(Variant.Union([Account])))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export declare namespace Union {
   /**
@@ -596,7 +609,8 @@ type MakeApi<Variants extends string, Default extends Variants> = {
 /**
  * Creates a variant schema API for a fixed set of variant names.
  *
- * @example
+ * **Example** (Create variant schema API)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { make } from "@beep/schema/VariantSchema"
@@ -606,8 +620,8 @@ type MakeApi<Variants extends string, Default extends Variants> = {
  * console.log(Object.keys(Variant.extract(Account, "write").fields))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const make = <const Variants extends ReadonlyArray<string>, const Default extends Variants[number]>(options: {
   readonly variants: Variants;

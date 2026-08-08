@@ -24,7 +24,8 @@ const $I = $OntologyConfigId.create("McpConfig");
 /**
  * Ontology MCP mutation-registration configuration declaration.
  *
- * @example
+ * **Example** (Provide mutations-enabled config)
+ *
  * ```ts
  * import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server"
  * import { ConfigProvider, Effect } from "effect"
@@ -50,7 +51,8 @@ export const OntologyMcpMutationsEnabledConfig = Config.boolean("ONTOLOGY_MCP_MU
 /**
  * Server-only ontology MCP surface settings.
  *
- * @example
+ * **Example** (Make MCP server config)
+ *
  * ```ts
  * import { OntologyMcpServerConfig } from "@beep/ontology-config/server"
  *
@@ -76,7 +78,8 @@ export class OntologyMcpServerConfig extends S.Class<OntologyMcpServerConfig>($I
 /**
  * Resolved ontology MCP configuration service shape.
  *
- * @example
+ * **Example** (Type MCP config shape)
+ *
  * ```ts
  * import { OntologyMcpServerConfig } from "@beep/ontology-config/server"
  * import type { OntologyMcpConfigShape } from "@beep/ontology-config/server"
@@ -95,7 +98,8 @@ export type OntologyMcpConfigShape = OntologyMcpServerConfig;
 /**
  * Context service supplying resolved server-only ontology MCP configuration.
  *
- * @example
+ * **Example** (Map mutationsEnabled from service)
+ *
  * ```ts
  * import { OntologyMcpConfig } from "@beep/ontology-config/server"
  * import { Effect } from "effect"

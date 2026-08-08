@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for reusable secure HTTP header schemas.
  *
- * @example
+ * **Example** (Import secure headers module)
+ *
  * ```ts
  * import * as HttpHeaders from "@beep/schema/HttpHeaders"
  *

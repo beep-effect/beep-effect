@@ -19,7 +19,8 @@ const $I = $SchemaId.create("Http/headers");
 /**
  * Schema for a single string header value or repeated string values.
  *
- * @example
+ * **Example** (Decode string array headers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfStrOrStr } from "../../src/Http/Http.headers.shared.ts"
@@ -39,7 +40,8 @@ export const ArrayOfStrOrStr = S.Union([S.String, S.Array(S.String)]).pipe(
 /**
  * Type for a single string header value or repeated string values.
  *
- * @example
+ * **Example** (Annotate string array values)
+ *
  * ```ts
  * import type { ArrayOfStrOrStr } from "../../src/Http/Http.headers.shared.ts"
  *
@@ -55,7 +57,8 @@ export type ArrayOfStrOrStr = typeof ArrayOfStrOrStr.Type;
 /**
  * Schema for values accepted where a URL-like header value is expected.
  *
- * @example
+ * **Example** (Decode URL header value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { StringOrUrl } from "../../src/Http/Http.headers.shared.ts"
@@ -75,7 +78,8 @@ export const StringOrUrl = S.Union([S.String, S.URL]).pipe(
 /**
  * Type for values accepted where a URL-like header value is expected.
  *
- * @example
+ * **Example** (Annotate URL header value)
+ *
  * ```ts
  * import type { StringOrUrl } from "../../src/Http/Http.headers.shared.ts"
  *
@@ -91,7 +95,8 @@ export type StringOrUrl = typeof StringOrUrl.Type;
 /**
  * Schema for non-negative integer HTTP `max-age` values measured in seconds.
  *
- * @example
+ * **Example** (Decode max-age seconds)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HeaderMaxAgeSeconds } from "../../src/Http/Http.headers.shared.ts"
@@ -112,7 +117,8 @@ export const HeaderMaxAgeSeconds = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe
 /**
  * Type for non-negative integer HTTP `max-age` values.
  *
- * @example
+ * **Example** (Annotate max-age seconds)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HeaderMaxAgeSeconds } from "../../src/Http/Http.headers.shared.ts"
@@ -130,7 +136,8 @@ export type HeaderMaxAgeSeconds = typeof HeaderMaxAgeSeconds.Type;
 /**
  * Schema that normalizes a string or URL into an encoded absolute URL string.
  *
- * @example
+ * **Example** (Decode encoded absolute URI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EncodedStrictURIFromStrOrURL } from "../../src/Http/Http.headers.shared.ts"
@@ -168,7 +175,8 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
 /**
  * Type for encoded absolute URL strings.
  *
- * @example
+ * **Example** (Annotate encoded absolute URI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EncodedStrictURIFromStrOrURL } from "../../src/Http/Http.headers.shared.ts"
@@ -191,7 +199,8 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 /**
  * Encodes a string or URL as a normalized absolute URL string.
  *
- * @example
+ * **Example** (Encode absolute URL string)
+ *
  * ```ts
  * import { encodeStrictURI } from "../../src/Http/Http.headers.shared.ts"
  *
@@ -207,7 +216,8 @@ export const encodeStrictURI = (value: StringOrUrl): EncodedStrictURIFromStrOrUR
 /**
  * Wraps a single value in an array while preserving arrays.
  *
- * @example
+ * **Example** (Wrap single value array)
+ *
  * ```ts
  * import { wrapArray } from "../../src/Http/Http.headers.shared.ts"
  *
@@ -223,7 +233,8 @@ export const wrapArray = <T>(value: T | ReadonlyArray<T>): readonly T[] =>
 /**
  * Model for a rendered HTTP response header.
  *
- * @example
+ * **Example** (Make response header model)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ResponseHeader } from "../../src/Http/Http.headers.shared.ts"
@@ -248,7 +259,8 @@ export class ResponseHeader extends S.Class<ResponseHeader>($I`ResponseHeader`)(
 /**
  * Creates an encoder that always fails for one-way header schemas.
  *
- * @example
+ * **Example** (Forbidden encode always fails)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeHeaderEncodeForbidden } from "../../src/Http/Http.headers.shared.ts"
@@ -288,7 +300,8 @@ const makeResponseHeader: {
 /**
  * Creates a response header when a value is present.
  *
- * @example
+ * **Example** (Make optional response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { makeResponseHeaderOption } from "../../src/Http/Http.headers.shared.ts"

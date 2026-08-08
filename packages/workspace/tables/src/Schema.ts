@@ -19,7 +19,8 @@ type DbSchemaShape = {
 /**
  * Metadata-only workspace Drizzle schema aggregate.
  *
- * @example
+ * **Example** (Read table and storage kinds)
+ *
  * ```ts
  * import { DbSchema } from "@beep/workspace-tables"
  *
@@ -44,7 +45,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type for {@link DbSchema}.
  *
- * @example
+ * **Example** (Type DbSchema and read turn)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/workspace-tables"
  *

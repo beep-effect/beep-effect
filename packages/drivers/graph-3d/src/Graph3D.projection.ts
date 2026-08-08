@@ -28,11 +28,14 @@ const Uint16Arr = S.instanceOf<globalThis.Uint16ArrayConstructor, globalThis.Uin
 /**
  * Typed-array projection consumed by the 3D graph renderer.
  *
+ * **Details**
+ *
  * `pointPositions` stores interleaved xyz coordinates with stride 3. Community
  * ordinals are renderer palette inputs, while importance and weight channels
  * are normalized to the inclusive range from zero to one.
  *
- * @example
+ * **Example** (Construct two-node projection)
+ *
  * ```ts
  * import { Graph3DProjection } from "@beep/graph-3d"
  *
@@ -129,10 +132,13 @@ const hasCoherentLinkIndices = (projection: Graph3DProjection): boolean => {
 /**
  * Options for deterministic synthetic 3D graph generation.
  *
+ * **Details**
+ *
  * Every field has a constructor default, so an empty input produces the
  * standard 2,500-node, 5,000-edge fixture used by renderer examples.
  *
- * @example
+ * **Example** (Create default synthetic options)
+ *
  * ```ts
  * import { SyntheticGraph3DOptions } from "@beep/graph-3d"
  *
@@ -177,11 +183,14 @@ const makeRandom = (seed: number): (() => number) => {
 /**
  * Generates a deterministic, community-clustered 3D graph projection.
  *
+ * **Details**
+ *
  * Positions use golden-angle sphere centers plus Gaussian scatter. Importance
  * and edge weights are normalized after generation, and endpoint sampling is
  * biased toward nodes with greater generated importance.
  *
- * @example
+ * **Example** (Generate seeded synthetic projection)
+ *
  * ```ts
  * import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d"
  *

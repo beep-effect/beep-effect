@@ -17,7 +17,8 @@ import type { Table } from "./EdgeVersion.table.ts";
 /**
  * Selected epistemic EdgeVersion row.
  *
- * @example
+ * **Example** (Satisfies EdgeVersionRow shape)
+ *
  * ```ts
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
  *
@@ -68,7 +69,8 @@ export type EdgeVersionRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic EdgeVersion row.
  *
- * @example
+ * **Example** (Satisfies EdgeVersionInsert shape)
+ *
  * ```ts
  * import type { EdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion"
  *
@@ -121,11 +123,14 @@ const decodeEdgeVersionRow = S.decodeUnknownSync(EdgeVersion);
 /**
  * Convert an EdgeVersion entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the
  * snake_case column shape produced by {@link Table}. The database-managed
  * `id` (SERIAL) is dropped so the insert defers to the sequence.
  *
- * @example
+ * **Example** (Drops id from insert)
+ *
  * ```ts
  * import { fromEdgeVersionRow, toEdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
@@ -181,7 +186,8 @@ export const toEdgeVersionInsert = (edgeVersion: EdgeVersion): EdgeVersionInsert
 /**
  * Convert a selected persistence row into an EdgeVersion entity.
  *
- * @example
+ * **Example** (Row to entity conversion)
+ *
  * ```ts
  * import { fromEdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"

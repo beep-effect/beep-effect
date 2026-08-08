@@ -16,13 +16,15 @@ const $I = $SchemaId.create("SchemaUtils/optional");
  * Creates an optional encoded object key whose decoded value may be
  * `undefined`.
  *
- * @remarks
+ * **Details**
+ *
  * Use this for wire objects where absent fields should stay as plain
  * `T | undefined` values in the decoded model. Prefer
  * `S.OptionFromOptionalKey` when the decoded domain should carry an explicit
  * `Option`.
  *
- * @example
+ * **Example** (Optional key decoding to undefined)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

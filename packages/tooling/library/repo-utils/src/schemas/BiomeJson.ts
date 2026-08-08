@@ -32,14 +32,14 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
 /**
  * Render JSON with the same Biome config that repository lint uses.
  *
- * @remarks
+ * **Details**
+ *
  * The `filePath` is passed to Biome as the stdin filename, so formatting follows
  * the same parser and indentation rules Biome would choose for that target on
  * disk. Invalid JSON-compatible values fail before the child process is spawned.
- * @effects
- * Locates the repository root, launches the workspace Biome binary, writes the
- * encoded JSON to stdin, and reads stdout/stderr from the child process.
- * @example
+ *
+ * **Example** (Format JSON via Biome)
+ *
  * ```ts
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
@@ -51,6 +51,10 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  * )
  * console.log(formatted.endsWith("\n")) // true
  * ```
+ *
+ * @effects
+ * Locates the repository root, launches the workspace Biome binary, writes the
+ * encoded JSON to stdin, and reads stdout/stderr from the child process.
  * @category utilities
  * @since 0.0.0
  */

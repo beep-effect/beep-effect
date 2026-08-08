@@ -16,7 +16,8 @@ const HttpMethodBase = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEA
 /**
  * Base literal kit for all supported HTTP method tokens.
  *
- * @example
+ * **Example** (Check GET in options)
+ *
  * ```ts
  * import { Literal } from "@beep/schema/HttpMethod"
  *
@@ -60,7 +61,8 @@ const hasBody: (method: HttpMethodValue) => method is WithBody = S.is(WithBody);
 /**
  * HTTP method schema with static helpers for body support and common aliases.
  *
- * @example
+ * **Example** (Check method has body)
+ *
  * ```ts
  * import { HttpMethod } from "@beep/schema/HttpMethod"
  *
@@ -99,7 +101,8 @@ export const HttpMethod = HttpMethod_.pipe(
 /**
  * Runtime type for supported HTTP method tokens.
  *
- * @example
+ * **Example** (Type method and check body)
+ *
  * ```ts
  * import { HttpMethod } from "@beep/schema/HttpMethod"
  *

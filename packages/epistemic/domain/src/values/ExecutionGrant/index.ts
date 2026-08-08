@@ -8,13 +8,14 @@
 /**
  * Execution grant model exports.
  *
- * @example
+ * **Example** (Access SinkClass enum value)
+ *
  * ```ts
  * import { SinkClass } from "@beep/epistemic-domain/values/ExecutionGrant"
  *
  * console.log(SinkClass.Enum["mcp-write"])
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

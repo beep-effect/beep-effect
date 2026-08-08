@@ -19,7 +19,8 @@ const $I = $WorkspaceDomainId.create("entities/Turn/Turn.model");
 /**
  * Message item in a turn aggregate.
  *
- * @example
+ * **Example** (Decode message item)
+ *
  * ```ts
  * import { MessageItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -47,7 +48,8 @@ export class MessageItem extends S.Class<MessageItem>($I`MessageItem`)(
 /**
  * Tool call item in a turn aggregate.
  *
- * @example
+ * **Example** (Decode tool call item)
+ *
  * ```ts
  * import { ToolCallItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -79,7 +81,8 @@ export class ToolCallItem extends S.Class<ToolCallItem>($I`ToolCallItem`)(
 /**
  * Tool result item in a turn aggregate.
  *
- * @example
+ * **Example** (Decode tool result item)
+ *
  * ```ts
  * import { ToolResultItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -109,7 +112,8 @@ export class ToolResultItem extends S.Class<ToolResultItem>($I`ToolResultItem`)(
 /**
  * Artifact reference item in a turn aggregate.
  *
- * @example
+ * **Example** (Decode artifact ref item)
+ *
  * ```ts
  * import { ArtifactRefItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -137,7 +141,8 @@ export class ArtifactRefItem extends S.Class<ArtifactRefItem>($I`ArtifactRefItem
 /**
  * Activity reference item in a turn aggregate.
  *
- * @example
+ * **Example** (Decode activity item)
+ *
  * ```ts
  * import { ActivityItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -167,7 +172,8 @@ const TurnItemTag = LiteralKit(["message", "tool_call", "tool_result", "artifact
 /**
  * Ordered typed item held by a turn aggregate.
  *
- * @example
+ * **Example** (Decode turn item union)
+ *
  * ```ts
  * import { TurnItem } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -197,7 +203,8 @@ export const TurnItem = TurnItemTag.mapMembers(
 /**
  * Runtime type for {@link TurnItem}.
  *
- * @example
+ * **Example** (Annotate turn item type)
+ *
  * ```ts
  * import type { TurnItem } from "@beep/workspace-domain/entities/Turn"
  *
@@ -217,7 +224,8 @@ export type TurnItem = typeof TurnItem.Type;
 /**
  * Ordered turn item list.
  *
- * @example
+ * **Example** (Decode turn items list)
+ *
  * ```ts
  * import { TurnItems } from "@beep/workspace-domain/entities/Turn"
  * import * as S from "effect/Schema"
@@ -246,7 +254,8 @@ export const TurnItems = S.NonEmptyArray(TurnItem).pipe(
 /**
  * Runtime type for {@link TurnItems}.
  *
- * @example
+ * **Example** (Annotate turn items type)
+ *
  * ```ts
  * import type { TurnItems } from "@beep/workspace-domain/entities/Turn"
  *
@@ -269,7 +278,8 @@ export type TurnItems = typeof TurnItems.Type;
 /**
  * Workspace turn aggregate with parent-turn lineage for branching.
  *
- * @example
+ * **Example** (Log turn table name)
+ *
  * ```ts
  * import { Turn } from "@beep/workspace-domain"
  *

@@ -14,12 +14,14 @@ const firstCapture = (pattern: RegExp, input: string): O.Option<string> =>
 /**
  * Canonicalize a free-form user question for deterministic matching.
  *
- * @remarks
+ * **Details**
+ *
  * The helper trims only boundary whitespace and collapses internal whitespace.
  * It intentionally preserves punctuation, casing, and path-like separators so
  * downstream extractors can still distinguish prose from literal references.
  *
- * @example
+ * **Example** (Collapse question whitespace)
+ *
  * ```typescript
  * import * as QueryText from "@beep/nlp/QueryText"
  *
@@ -35,12 +37,14 @@ export const normalizeQuestion: (input: string) => string = flow(Str.trim, Str.r
 /**
  * Normalize a short extracted phrase after it has been pulled from prose.
  *
- * @remarks
+ * **Details**
+ *
  * Boundary quotes, brackets, and trailing sentence punctuation are discarded,
  * while whitespace around `/`, `.`, `_`, and `-` is collapsed. This keeps
  * package names, file paths, and symbol-ish phrases stable across user wording.
  *
- * @example
+ * **Example** (Strip phrase quotes and spaces)
+ *
  * ```typescript
  * import * as QueryText from "@beep/nlp/QueryText"
  *
@@ -62,7 +66,8 @@ export const normalizePhrase: (input: string) => string = flow(
 /**
  * Extract the first value enclosed in backticks from a user question.
  *
- * @example
+ * **Example** (Extract first backtick value)
+ *
  * ```typescript
  * import * as O from "effect/Option"
  * import * as QueryText from "@beep/nlp/QueryText"

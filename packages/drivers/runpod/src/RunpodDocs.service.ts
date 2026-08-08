@@ -30,7 +30,8 @@ const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
 /**
  * One Markdown documentation link parsed from Runpod's `llms.txt` index.
  *
- * @example
+ * **Example** (Make index entry)
+ *
  * ```ts
  * import { RunpodDocsIndexEntry } from "@beep/runpod"
  *
@@ -60,7 +61,8 @@ export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`Runpo
 /**
  * Parsed Runpod documentation index.
  *
- * @example
+ * **Example** (Make docs index)
+ *
  * ```ts
  * import { RunpodDocsIndex, RunpodDocsIndexEntry } from "@beep/runpod"
  *
@@ -217,7 +219,8 @@ const parseLine = (state: DocsParseState, rawLine: string): DocsParseState => {
 /**
  * Schema contract for parsing Runpod's `llms.txt` Markdown index.
  *
- * @example
+ * **Example** (Inspect parser schema)
+ *
  * ```ts
  * import { RunpodDocsIndexParser } from "@beep/runpod"
  *
@@ -260,7 +263,8 @@ const mapParserContractError = (cause: RunpodDocsError | SchemaIssue.Issue): Run
 /**
  * Parse Runpod's `llms.txt` Markdown index into a structured schema model.
  *
- * @example
+ * **Example** (Parse markdown index)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { parseRunpodDocsIndex } from "@beep/runpod"
@@ -271,7 +275,6 @@ const mapParserContractError = (cause: RunpodDocsError | SchemaIssue.Issue): Run
  * ```
  *
  * @effects Parses text into a schema model and fails with `RunpodDocsError` when the index contains no entries.
- *
  * @category parsing
  * @since 0.1.0
  */
@@ -346,7 +349,8 @@ const makeRunpodDocsFromEnvironment = Effect.fn("RunpodDocs.makeRunpodDocsFromEn
 /**
  * Effect service for the Runpod LLM documentation index.
  *
- * @example
+ * **Example** (Create service layer)
+ *
  * ```ts
  * import { RunpodDocs, RunpodDocsConfigInput } from "@beep/runpod"
  *

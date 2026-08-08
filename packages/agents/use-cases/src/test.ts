@@ -8,7 +8,8 @@
 /**
  * Test-facing re-export of deterministic proof helpers.
  *
- * @example
+ * **Example** (Create in-memory SDK)
+ *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/test"
  *

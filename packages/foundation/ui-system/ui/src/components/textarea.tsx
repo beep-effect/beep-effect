@@ -10,7 +10,8 @@ import type * as React from "react";
 /**
  * Textarea component.
  *
- * @example
+ * **Example** (Import Textarea component)
+ *
  * ```tsx
  * import { Textarea } from "@beep/ui/components/textarea"
  *

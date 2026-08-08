@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Separator component.
  *
- * @example
+ * **Example** (Import and log Separator)
+ *
  * ```tsx
  * import { Separator } from "@beep/ui/components/separator"
  *

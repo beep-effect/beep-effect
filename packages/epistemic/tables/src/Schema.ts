@@ -33,7 +33,8 @@ type DbSchemaShape = {
 /**
  * Metadata-only epistemic Drizzle schema aggregate.
  *
- * @example
+ * **Example** (Log usageRecord table name)
+ *
  * ```ts
  * import { DbSchema } from "@beep/epistemic-tables"
  *
@@ -60,7 +61,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type for {@link DbSchema}.
  *
- * @example
+ * **Example** (Satisfy DbSchema type shape)
+ *
  * ```ts
  * import { DbSchema } from "@beep/epistemic-tables"
  * import type { DbSchema as DbSchemaShape } from "@beep/epistemic-tables"

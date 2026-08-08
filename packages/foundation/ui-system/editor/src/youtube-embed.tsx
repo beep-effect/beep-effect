@@ -17,7 +17,8 @@ const youtubeWatchPrefix = "https://www.youtube.com/watch?v=";
 /**
  * Constructs the privacy-enhanced embed URL for an already validated video id.
  *
- * @example
+ * **Example** (Privacy-enhanced embed URL)
+ *
  * ```ts
  * import { youtubeEmbedUrl } from "@beep/editor/youtube-embed"
  *
@@ -33,7 +34,8 @@ export const youtubeEmbedUrl = (videoID: string): string => `https://www.youtube
 /**
  * Constructs the canonical watch URL for an already validated video id.
  *
- * @example
+ * **Example** (Canonical watch URL)
+ *
  * ```ts
  * import { youtubeWatchUrl } from "@beep/editor/youtube-embed"
  *
@@ -68,7 +70,8 @@ const canonicalYouTubeWatchUrl = S.makeFilter<string>(
 /**
  * Exact canonical watch URL for a schema-validated YouTube video id.
  *
- * @example
+ * **Example** (Schema validates watch URL)
+ *
  * ```ts
  * import { YouTubeWatchUrl } from "@beep/editor/youtube-embed"
  * import * as S from "effect/Schema"
@@ -88,7 +91,8 @@ export const YouTubeWatchUrl = S.String.check(canonicalYouTubeWatchUrl).pipe(
 /**
  * Type for {@link YouTubeWatchUrl}.
  *
- * @example
+ * **Example** (Typed watch URL value)
+ *
  * ```ts
  * import type { YouTubeWatchUrl } from "@beep/editor/youtube-embed"
  *
@@ -106,7 +110,8 @@ export type YouTubeWatchUrl = typeof YouTubeWatchUrl.Type;
  * window. Desktop shells can intercept this event with an Atom-owned listener
  * and delegate to a scoped native opener.
  *
- * @example
+ * **Example** (Cancelable watch event type)
+ *
  * ```ts
  * import { YOUTUBE_WATCH_EVENT } from "@beep/editor/youtube-embed"
  *
@@ -122,7 +127,8 @@ export const YOUTUBE_WATCH_EVENT = "beep:youtube-watch";
 /**
  * Typed detail carried by {@link YOUTUBE_WATCH_EVENT}.
  *
- * @example
+ * **Example** (Make watch request detail)
+ *
  * ```ts
  * import { YouTubeWatchRequest } from "@beep/editor/youtube-embed"
  *
@@ -147,7 +153,8 @@ export class YouTubeWatchRequest extends S.Class<YouTubeWatchRequest>($I`YouTube
 /**
  * Props for {@link YouTubeEmbed}.
  *
- * @example
+ * **Example** (Embed props with videoID)
+ *
  * ```ts
  * import type { YouTubeEmbedProps } from "@beep/editor/youtube-embed"
  *
@@ -168,7 +175,8 @@ export interface YouTubeEmbedProps {
  * YouTube's, not ours), and bounded popup escape for playback links. It cannot
  * navigate the top-level page or submit forms.
  *
- * @example
+ * **Example** (Sandbox denies top navigation)
+ *
  * ```ts
  * import { YOUTUBE_EMBED_SANDBOX } from "@beep/editor/youtube-embed"
  *
@@ -183,13 +191,15 @@ export const YOUTUBE_EMBED_SANDBOX = "allow-scripts allow-same-origin allow-popu
 /**
  * Renders a privacy-enhanced YouTube iframe from a bare video id.
  *
- * @remarks
+ * **Details**
+ *
  * A watch link sits under the player because an embed can refuse to play for
  * reasons the app cannot see or fix — an uploader who disabled embedding, a
  * region block, or an origin the video does not accept — and an iframe reading
  * only "Video unavailable" leaves the viewer with nothing to click.
  *
- * @example
+ * **Example** (Render embed from video id)
+ *
  * ```tsx
  * import { YouTubeEmbed } from "@beep/editor/youtube-embed"
  *

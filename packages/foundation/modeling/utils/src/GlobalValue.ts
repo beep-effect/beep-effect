@@ -26,11 +26,14 @@ type GlobalStore = HashMap.HashMap<unknown, TUnsafe.Any>;
  * has already been computed, it will be returned from the global store. If it does not exist yet,
  * the provided `compute` function will be executed to compute the value, store it, and then return it.
  *
+ * **Details**
+ *
  * This ensures that even in cases where the module is imported multiple times (e.g., in mixed environments
  * like CommonJS and ESM, or during hot-reloading in development), the value is computed only once and reused
  * thereafter.
  *
- * @example
+ * **Example** (Cached compute across imports)
+ *
  * ```ts
  * import { globalValue } from "@beep/utils"
  *

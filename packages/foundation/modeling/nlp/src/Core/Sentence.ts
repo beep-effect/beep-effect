@@ -22,7 +22,8 @@ const getRangeEnd = (options: { readonly end: number } | number): number =>
 /**
  * Zero-based position of a sentence within a document.
  *
- * @example
+ * **Example** (Type-safe index increment)
+ *
  * ```ts
  * import type { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
@@ -38,7 +39,8 @@ export type SentenceIndex = Brand.Branded<NonNegativeInt, "SentenceIndex">;
 /**
  * Construct a branded sentence index after validating it is non-negative.
  *
- * @example
+ * **Example** (Construct zero sentence index)
+ *
  * ```ts
  * import { sentenceIndex } from "@beep/nlp/Core/Sentence"
  *
@@ -56,7 +58,8 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
 /**
  * Schema that decodes non-negative numbers into {@link SentenceIndex} values.
  *
- * @example
+ * **Example** (Decode non-negative index)
+ *
  * ```ts
  * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
@@ -78,12 +81,14 @@ export const SentenceIndex = NonNegativeInt.pipe(
 /**
  * Immutable sentence with its document token range and optional scoring data.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `start` and `end` are token indices in the surrounding document, not
  * character offsets. Use the contained token models when character spans are
  * needed.
  *
- * @example
+ * **Example** (Construct empty sentence model)
+ *
  * ```ts
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"

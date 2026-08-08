@@ -1,7 +1,8 @@
 /**
  * Schema-first Microsoft 365 MCP tool declarations.
  *
- * @remarks
+ * **Details**
+ *
  * The toolkit mirrors the read side of `@beep/m365`. No write, mutation, or
  * ingestion verbs are exposed here.
  *
@@ -45,7 +46,8 @@ const $I = $M365McpId.create("M365Tools");
 /**
  * Structured failure returned by Microsoft 365 MCP tools.
  *
- * @example
+ * **Example** (Constructing a tool error)
+ *
  * ```ts
  * import { M365ToolError } from "@beep/m365-mcp"
  * import * as O from "effect/Option"
@@ -91,7 +93,8 @@ export class M365ToolError extends S.Class<M365ToolError>($I`M365ToolError`)(
 /**
  * Lists SharePoint and OneDrive drives visible through the configured tenant.
  *
- * @example
+ * **Example** (Reading list drives name)
+ *
  * ```ts
  * import { M365ListDrivesTool } from "@beep/m365-mcp"
  *
@@ -116,7 +119,8 @@ export const M365ListDrivesTool = annotateFourHints(
 /**
  * Lists SharePoint sites visible through the configured tenant.
  *
- * @example
+ * **Example** (Reading list sites name)
+ *
  * ```ts
  * import { M365ListSitesTool } from "@beep/m365-mcp"
  *
@@ -141,7 +145,8 @@ export const M365ListSitesTool = annotateFourHints(
 /**
  * Loads a single SharePoint site by id or path.
  *
- * @example
+ * **Example** (Reading get site name)
+ *
  * ```ts
  * import { M365GetSiteTool } from "@beep/m365-mcp"
  *
@@ -166,7 +171,8 @@ export const M365GetSiteTool = annotateFourHints(
 /**
  * Reads a drive delta feed for changed drive items.
  *
- * @example
+ * **Example** (Reading delta drive items name)
+ *
  * ```ts
  * import { M365DeltaDriveItemsTool } from "@beep/m365-mcp"
  *
@@ -191,7 +197,8 @@ export const M365DeltaDriveItemsTool = annotateFourHints(
 /**
  * Downloads drive item bytes or reports that an encrypted item was skipped.
  *
- * @example
+ * **Example** (Reading download content name)
+ *
  * ```ts
  * import { M365DownloadDriveItemContentTool } from "@beep/m365-mcp"
  *
@@ -216,7 +223,8 @@ export const M365DownloadDriveItemContentTool = annotateFourHints(
 /**
  * Loads a drive item's SharePoint list item fields.
  *
- * @example
+ * **Example** (Reading get list item name)
+ *
  * ```ts
  * import { M365GetListItemTool } from "@beep/m365-mcp"
  *
@@ -241,7 +249,8 @@ export const M365GetListItemTool = annotateFourHints(
 /**
  * Lists versions for a drive item.
  *
- * @example
+ * **Example** (Reading list versions name)
+ *
  * ```ts
  * import { M365ListDriveItemVersionsTool } from "@beep/m365-mcp"
  *
@@ -266,7 +275,8 @@ export const M365ListDriveItemVersionsTool = annotateFourHints(
 /**
  * Lists Outlook mail messages.
  *
- * @example
+ * **Example** (Reading list messages name)
+ *
  * ```ts
  * import { M365ListMessagesTool } from "@beep/m365-mcp"
  *
@@ -291,7 +301,8 @@ export const M365ListMessagesTool = annotateFourHints(
 /**
  * Loads a single Outlook mail message.
  *
- * @example
+ * **Example** (Reading get message name)
+ *
  * ```ts
  * import { M365GetMessageTool } from "@beep/m365-mcp"
  *
@@ -316,7 +327,8 @@ export const M365GetMessageTool = annotateFourHints(
 /**
  * Lists Outlook calendar events.
  *
- * @example
+ * **Example** (Reading list events name)
+ *
  * ```ts
  * import { M365ListEventsTool } from "@beep/m365-mcp"
  *
@@ -341,7 +353,8 @@ export const M365ListEventsTool = annotateFourHints(
 /**
  * Loads a single Outlook calendar event.
  *
- * @example
+ * **Example** (Reading get event name)
+ *
  * ```ts
  * import { M365GetEventTool } from "@beep/m365-mcp"
  *
@@ -366,7 +379,8 @@ export const M365GetEventTool = annotateFourHints(
 /**
  * Read-only Microsoft 365 MCP toolkit.
  *
- * @example
+ * **Example** (Checking toolkit tool keys)
+ *
  * ```ts
  * import { M365Toolkit } from "@beep/m365-mcp"
  *
@@ -394,7 +408,8 @@ export const M365Toolkit = Toolkit.make(
 /**
  * Read-only Microsoft 365 MCP toolkit type.
  *
- * @example
+ * **Example** (Typing the toolkit value)
+ *
  * ```ts
  * import { M365Toolkit } from "@beep/m365-mcp"
  *

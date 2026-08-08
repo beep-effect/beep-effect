@@ -116,11 +116,13 @@ type ColumnBuilderWithNullability<
 /**
  * Drizzle column builder type derived from one persisted descriptor.
  *
- * @remarks
+ * **Details**
+ *
  * The descriptor controls the runtime builder family, encoded TypeScript data
  * type, generated primary-key handling, and nullable/not-null column shape.
  *
- * @example
+ * **Example** (Derive builder from descriptor)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { EntityTable } from "@beep/drizzle"
@@ -133,8 +135,8 @@ type ColumnBuilderWithNullability<
  * strictEqual(derivesColumnBuilder, true)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type ColumnBuilderFor<Descriptor extends FieldDescriptor, Encoded> = ColumnBuilderWithNullability<
   Descriptor,
@@ -145,7 +147,8 @@ export type ColumnBuilderFor<Descriptor extends FieldDescriptor, Encoded> = Colu
 /**
  * Drizzle column-builder map derived from an entity definition.
  *
- * @example
+ * **Example** (Map builders from entity)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { EntityTable } from "@beep/drizzle"
@@ -166,8 +169,8 @@ export type ColumnBuilderFor<Descriptor extends FieldDescriptor, Encoded> = Colu
  * strictEqual(hasNameColumn, true)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type ColumnBuilderMapFor<Definition extends EntitySchema.Definition> = {
   readonly [K in keyof Definition["persisted"] & string]: K extends keyof Definition["fields"]
@@ -178,11 +181,13 @@ export type ColumnBuilderMapFor<Definition extends EntitySchema.Definition> = {
 /**
  * Drizzle table type derived from a schema-first entity class.
  *
- * @remarks
+ * **Details**
+ *
  * Values of this type carry both Drizzle's `PgTableWithColumns` metadata and
  * the original schema-first entity definition attached by {@link pgTableFrom}.
  *
- * @example
+ * **Example** (Typed table from entity class)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { EntityTable } from "@beep/drizzle"
@@ -202,8 +207,8 @@ export type ColumnBuilderMapFor<Definition extends EntitySchema.Definition> = {
  * strictEqual(table.entitySchema, Widget)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type TableFor<Entity extends EntitySchema.EntityClass.Any> = PgTableWithColumns<{
   name: EntitySchema.EntityClass.DefinitionOf<Entity>["tableName"];
@@ -467,12 +472,14 @@ const hasAttachedTableMetadata = <const Entity extends EntitySchema.EntityClass.
 /**
  * Project a schema-first entity class into a typed Postgres Drizzle table.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Projection is metadata-only: this does not create a physical table, run DDL,
  * or execute migrations. Unsupported index hints are ignored during Drizzle
  * metadata construction.
  *
- * @example
+ * **Example** (Project entity into table)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { EntityTable } from "@beep/drizzle"
@@ -496,8 +503,8 @@ const hasAttachedTableMetadata = <const Entity extends EntitySchema.EntityClass.
  * strictEqual(EntityTable.columns(table).name.name, "name")
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const pgTableFrom = <const Entity extends EntitySchema.EntityClass.Any>(entity: Entity): TableFor<Entity> => {
   const definition = EntitySchema.getDefinition(entity);
@@ -512,12 +519,14 @@ export const pgTableFrom = <const Entity extends EntitySchema.EntityClass.Any>(e
 /**
  * Get projected table columns using Drizzle metadata.
  *
- * @remarks
+ * **Details**
+ *
  * For tables returned by {@link pgTableFrom}, the columns preserve Drizzle
  * column metadata while the table itself also retains the source entity
  * definition.
  *
- * @example
+ * **Example** (Read projected column metadata)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { EntityTable } from "@beep/drizzle"
@@ -541,7 +550,7 @@ export const pgTableFrom = <const Entity extends EntitySchema.EntityClass.Any>(e
  * strictEqual(columns.name.name, "name")
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const columns = getColumns;

@@ -30,7 +30,8 @@ export * from "./Sanity.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/sanity"
  *

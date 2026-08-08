@@ -29,13 +29,16 @@ const $I = $McpKitId.create("SourceAuth");
 /**
  * Gate policy applied to a credential-backed source.
  *
+ * **Details**
+ *
  * - `none` — the source needs no credential; it is always mounted.
  * - `soft` — the credential is optional; the source stays registered and
  *   degrades at call time (see `ApiKeyRequired`) when the key is absent.
  * - `hard` — the credential is required; the source vanishes at composition
  *   time when the key is absent (see `ToolkitComposition`).
  *
- * @example
+ * **Example** (Soft gate enum member)
+ *
  * ```ts
  * import { SourceAuthGate } from "@beep/mcp-kit"
  *
@@ -57,7 +60,8 @@ export const SourceAuthGate = LiteralKit(["none", "soft", "hard"]).pipe(
 /**
  * Runtime type for {@link SourceAuthGate}.
  *
- * @example
+ * **Example** (Hard gate type satisfaction)
+ *
  * ```ts
  * import type { SourceAuthGate } from "@beep/mcp-kit"
  *
@@ -73,7 +77,8 @@ export type SourceAuthGate = typeof SourceAuthGate.Type;
 /**
  * Schema-first per-source credential-gate registration.
  *
- * @example
+ * **Example** (Soft registration construction)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { SourceAuthRegistration } from "@beep/mcp-kit"
@@ -118,7 +123,8 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
  * `Config.redacted(envVar).pipe(Config.option)`. Missing environment
  * variables decode to `Option.none()` rather than failing.
  *
- * @example
+ * **Example** (Missing credential resolves none)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -150,7 +156,8 @@ export const resolveSourceCredential = (
  * source's credential is absent and the source must not be registered at
  * all.
  *
- * @example
+ * **Example** (Mount decision with none)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { SourceAuthDecision as SourceAuthDecisionValue } from "@beep/mcp-kit"
@@ -174,7 +181,8 @@ export type SourceAuthDecision = Data.TaggedEnum<{
 /**
  * Tagged-enum constructors and matchers for {@link SourceAuthDecision}.
  *
- * @example
+ * **Example** (Vanish decision constructor)
+ *
  * ```ts
  * import { SourceAuthDecision } from "@beep/mcp-kit"
  *
@@ -194,7 +202,8 @@ export const SourceAuthDecision = Data.taggedEnum<SourceAuthDecision>();
  * and `soft` always mount (and carry whatever credential — if any — was
  * resolved, so callers can degrade at call time).
  *
- * @example
+ * **Example** (Hard gate vanish decision)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"

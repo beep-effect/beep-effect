@@ -17,7 +17,8 @@ const $I = $AcpId.create("errors");
 /**
  * Failure raised when an ACP child process cannot be spawned.
  *
- * @example
+ * **Example** (Make spawn error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AcpSpawnError } from "@beep/acp/errors"
@@ -56,7 +57,8 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
 /**
  * Failure raised when an ACP process exits before the protocol completes.
  *
- * @example
+ * **Example** (Make process exited error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AcpProcessExitedError } from "@beep/acp/errors"
@@ -97,7 +99,8 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
 /**
  * Failure raised when ACP wire data cannot be encoded or decoded.
  *
- * @example
+ * **Example** (Make protocol parse error)
+ *
  * ```ts
  * import { AcpProtocolParseError } from "@beep/acp/errors"
  *
@@ -144,7 +147,8 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
 /**
  * Failure raised by the ACP transport boundary.
  *
- * @example
+ * **Example** (Make transport error)
+ *
  * ```ts
  * import { AcpTransportError } from "@beep/acp/errors"
  *
@@ -175,7 +179,8 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
 /**
  * JSON-RPC request failure returned by an ACP peer.
  *
- * @example
+ * **Example** (Method not found error)
+ *
  * ```ts
  * import { AcpRequestError } from "@beep/acp/errors"
  *
@@ -212,7 +217,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Convert an ACP protocol error payload into a typed driver error.
    *
-   * @example
+   * **Example** (From protocol error payload)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -237,7 +243,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC parse error.
    *
-   * @example
+   * **Example** (Create parse error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -259,7 +266,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC invalid request error.
    *
-   * @example
+   * **Example** (Create invalid request error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -281,7 +289,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC method-not-found error.
    *
-   * @example
+   * **Example** (Create method not found)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -302,7 +311,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC invalid params error.
    *
-   * @example
+   * **Example** (Create invalid params error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -324,7 +334,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC internal error.
    *
-   * @example
+   * **Example** (Create internal error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -346,7 +357,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create an ACP authentication-required request error.
    *
-   * @example
+   * **Example** (Create auth required error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -368,7 +380,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create an ACP resource-not-found request error.
    *
-   * @example
+   * **Example** (Create resource not found)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -390,7 +403,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Convert this driver error to the ACP protocol error payload.
    *
-   * @example
+   * **Example** (Convert to protocol payload)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -415,7 +429,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
 /**
  * Union of typed technical failures emitted by the ACP driver.
  *
- * @example
+ * **Example** (Check AcpError membership)
+ *
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
  *
@@ -442,7 +457,8 @@ export const AcpError = S.Union([
 /**
  * Type for {@link AcpError}.
  *
- * @example
+ * **Example** (Inspect AcpError tag)
+ *
  * ```ts
  * import type { AcpError } from "@beep/acp/errors"
  *

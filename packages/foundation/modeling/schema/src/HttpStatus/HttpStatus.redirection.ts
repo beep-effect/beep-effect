@@ -19,15 +19,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * your browser to download files and you are given a choice of file extension,
  * or when you are presented with options for word-sense disambiguation.
  *
- * @example
+ * **Example** (Log MultipleChoices literal)
+ *
  * ```ts
  * import { MultipleChoices } from "@beep/schema/HttpStatus"
  *
  * console.log(MultipleChoices.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MultipleChoices = S.Literal(300).pipe(
   $I.annoteSchema("MultipleChoices", {
@@ -43,17 +44,8 @@ export const MultipleChoices = S.Literal(300).pipe(
 
 /**
  * {@inheritDoc MultipleChoices}
- *
- * @example
- * ```ts
- * import type { MultipleChoices } from "@beep/schema/HttpStatus"
- *
- * const status: MultipleChoices = 300
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type MultipleChoices = typeof MultipleChoices.Type;
 
@@ -61,15 +53,16 @@ export type MultipleChoices = typeof MultipleChoices.Type;
  * 301 “Moved Permanently” – This is the code for a permanent redirect. It means that the URL of the requested resource is permanently replaced with a new address, and search engines should update the URL in their databases.
  * You learn more about it from our article on 301 redirects.
  *
- * @example
+ * **Example** (Log MovedPermanently literal)
+ *
  * ```ts
  * import { MovedPermanently } from "@beep/schema/HttpStatus"
  *
  * console.log(MovedPermanently.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MovedPermanently = S.Literal(301).pipe(
   $I.annoteSchema("MovedPermanently", {
@@ -81,17 +74,8 @@ export const MovedPermanently = S.Literal(301).pipe(
 
 /**
  * {@inheritDoc MovedPermanently}
- *
- * @example
- * ```ts
- * import type { MovedPermanently } from "@beep/schema/HttpStatus"
- *
- * const status: MovedPermanently = 301
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type MovedPermanently = typeof MovedPermanently.Type;
 
@@ -102,15 +86,16 @@ export type MovedPermanently = typeof MovedPermanently.Type;
  * original URL should still be used by the client. The code is used for
  * temporary redirects.
  *
- * @example
+ * **Example** (Log Found literal)
+ *
  * ```ts
  * import { Found } from "@beep/schema/HttpStatus"
  *
  * console.log(Found.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Found = S.Literal(302).pipe(
   $I.annoteSchema("Found", {
@@ -122,17 +107,8 @@ export const Found = S.Literal(302).pipe(
 
 /**
  * {@inheritDoc Found}
- *
- * @example
- * ```ts
- * import type { Found } from "@beep/schema/HttpStatus"
- *
- * const status: Found = 302
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Found = typeof Found.Type;
 
@@ -140,15 +116,16 @@ export type Found = typeof Found.Type;
  * 303 “See Other” – The server instructs the client that it found the
  * resource, but it has to be retrieved on another URL with a GET request.
  *
- * @example
+ * **Example** (Log SeeOther literal)
+ *
  * ```ts
  * import { SeeOther } from "@beep/schema/HttpStatus"
  *
  * console.log(SeeOther.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SeeOther = S.Literal(303).pipe(
   $I.annoteSchema("SeeOther", {
@@ -160,17 +137,8 @@ export const SeeOther = S.Literal(303).pipe(
 
 /**
  * {@inheritDoc SeeOther}
- *
- * @example
- * ```ts
- * import type { SeeOther } from "@beep/schema/HttpStatus"
- *
- * const status: SeeOther = 303
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SeeOther = typeof SeeOther.Type;
 
@@ -180,15 +148,16 @@ export type SeeOther = typeof SeeOther.Type;
  * keep using the cached version it already stores locally. Clearing the
  * browser cache usually solves this error.
  *
- * @example
+ * **Example** (Log NotModified literal)
+ *
  * ```ts
  * import { NotModified } from "@beep/schema/HttpStatus"
  *
  * console.log(NotModified.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NotModified = S.Literal(304).pipe(
   $I.annoteSchema("NotModified", {
@@ -200,17 +169,8 @@ export const NotModified = S.Literal(304).pipe(
 
 /**
  * {@inheritDoc NotModified}
- *
- * @example
- * ```ts
- * import type { NotModified } from "@beep/schema/HttpStatus"
- *
- * const status: NotModified = 304
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NotModified = typeof NotModified.Type;
 
@@ -218,15 +178,16 @@ export type NotModified = typeof NotModified.Type;
  * 305 “Use Proxy” – The requested resource is available only through a proxy.
  * This code is now deprecated and browsers disregard it.
  *
- * @example
+ * **Example** (Log UseProxy literal)
+ *
  * ```ts
  * import { UseProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(UseProxy.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UseProxy = S.Literal(305).pipe(
   $I.annoteSchema("UseProxy", {
@@ -238,17 +199,8 @@ export const UseProxy = S.Literal(305).pipe(
 
 /**
  * {@inheritDoc UseProxy}
- *
- * @example
- * ```ts
- * import type { UseProxy } from "@beep/schema/HttpStatus"
- *
- * const status: UseProxy = 305
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UseProxy = typeof UseProxy.Type;
 
@@ -256,15 +208,16 @@ export type UseProxy = typeof UseProxy.Type;
  * 306 “Switch Proxy” – This code is no longer in use. It means that the
  * following requests should use the specified proxy.
  *
- * @example
+ * **Example** (Log SwitchProxy literal)
+ *
  * ```ts
  * import { SwitchProxy } from "@beep/schema/HttpStatus"
  *
  * console.log(SwitchProxy.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SwitchProxy = S.Literal(306).pipe(
   $I.annoteSchema("SwitchProxy", {
@@ -276,17 +229,8 @@ export const SwitchProxy = S.Literal(306).pipe(
 
 /**
  * {@inheritDoc SwitchProxy}
- *
- * @example
- * ```ts
- * import type { SwitchProxy } from "@beep/schema/HttpStatus"
- *
- * const status: SwitchProxy = 306
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SwitchProxy = typeof SwitchProxy.Type;
 
@@ -297,15 +241,16 @@ export type SwitchProxy = typeof SwitchProxy.Type;
  * allow the HTTP method to be changed. For example, if the first request was
  * GET, the second request should be GET as well.
  *
- * @example
+ * **Example** (Log TemporaryRedirect literal)
+ *
  * ```ts
  * import { TemporaryRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(TemporaryRedirect.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const TemporaryRedirect = S.Literal(307).pipe(
   $I.annoteSchema("TemporaryRedirect", {
@@ -317,17 +262,8 @@ export const TemporaryRedirect = S.Literal(307).pipe(
 
 /**
  * {@inheritDoc TemporaryRedirect}
- *
- * @example
- * ```ts
- * import type { TemporaryRedirect } from "@beep/schema/HttpStatus"
- *
- * const status: TemporaryRedirect = 307
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type TemporaryRedirect = typeof TemporaryRedirect.Type;
 
@@ -337,15 +273,16 @@ export type TemporaryRedirect = typeof TemporaryRedirect.Type;
  * The code is similar to the HTTP 302 code, the only difference being that it
  * doesn’t allow browsers to change the type of HTTP request.
  *
- * @example
+ * **Example** (Log PermanentRedirect literal)
+ *
  * ```ts
  * import { PermanentRedirect } from "@beep/schema/HttpStatus"
  *
  * console.log(PermanentRedirect.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PermanentRedirect = S.Literal(308).pipe(
   $I.annoteSchema("PermanentRedirect", {
@@ -357,17 +294,8 @@ export const PermanentRedirect = S.Literal(308).pipe(
 
 /**
  * {@inheritDoc PermanentRedirect}
- *
- * @example
- * ```ts
- * import type { PermanentRedirect } from "@beep/schema/HttpStatus"
- *
- * const status: PermanentRedirect = 308
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PermanentRedirect = typeof PermanentRedirect.Type;
 
@@ -377,15 +305,16 @@ export type PermanentRedirect = typeof PermanentRedirect.Type;
  * used when a resource is moved to a new address. The different 3XX codes instruct
  * browsers on how the redirect must be performed.
  *
- * @example
+ * **Example** (Count 3XX status pairs)
+ *
  * ```ts
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus3XX.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatus3XX = MappedLiteralKit([
   ["MultipleChoices", MultipleChoices.literal],
@@ -406,24 +335,16 @@ export const HttpStatus3XX = MappedLiteralKit([
 
 /**
  * {@inheritDoc HttpStatus3XX}
- *
- * @example
- * ```ts
- * import type { HttpStatus3XX } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatus3XX = 300
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type HttpStatus3XX = typeof HttpStatus3XX.Type;
 
 /**
  * A namespace for {@link HttpStatus3XX} to contain the Encoded type
  *
- * @example
+ * **Example** (Decode encoded 3XX name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpStatus3XX } from "@beep/schema/HttpStatus"

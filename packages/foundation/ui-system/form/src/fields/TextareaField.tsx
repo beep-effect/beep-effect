@@ -13,7 +13,8 @@ import type React from "react";
 /**
  * Props for {@link TextareaField}.
  *
- * @example
+ * **Example** (Textarea props with rows)
+ *
  * ```ts
  * import type { TextareaFieldProps } from "@beep/form/fields/TextareaField"
  *
@@ -38,7 +39,8 @@ export interface TextareaFieldProps
 /**
  * Schema-bound multi-line text input.
  *
- * @example
+ * **Example** (Profile bio textarea field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { TextareaField } from "@beep/form/fields/TextareaField"

@@ -19,7 +19,8 @@ const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.model")
 /**
  * Entity identifier for a persisted documents SyncConflict.
  *
- * @example
+ * **Example** (Decode SyncConflictId value)
+ *
  * ```ts
  * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const SyncConflictId = Documents.SyncConflictId;
 /**
  * Runtime type for {@link SyncConflictId}.
  *
- * @example
+ * **Example** (Type SyncConflictId array)
+ *
  * ```ts
  * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
  * import * as S from "effect/Schema"
@@ -60,7 +62,8 @@ export type SyncConflictId = typeof SyncConflictId.Type;
 /**
  * Kind of remote drift detected against the one-way mirror.
  *
- * @example
+ * **Example** (Check remoteEdit kind)
+ *
  * ```ts
  * import { SyncConflictKind } from "@beep/documents-domain/entities/SyncConflict"
  *
@@ -90,7 +93,8 @@ export const SyncConflictKind = LiteralKit([
 /**
  * Runtime type for {@link SyncConflictKind}.
  *
- * @example
+ * **Example** (Assign remoteDelete kind)
+ *
  * ```ts
  * import type { SyncConflictKind } from "@beep/documents-domain/entities/SyncConflict"
  *
@@ -106,7 +110,8 @@ export type SyncConflictKind = typeof SyncConflictKind.Type;
 /**
  * Review status for a surfaced remote-drift record.
  *
- * @example
+ * **Example** (Check open resolution)
+ *
  * ```ts
  * import { SyncConflictResolution } from "@beep/documents-domain/entities/SyncConflict"
  *
@@ -129,7 +134,8 @@ export const SyncConflictResolution = LiteralKit(["open", "reviewed"]).pipe(
 /**
  * Runtime type for {@link SyncConflictResolution}.
  *
- * @example
+ * **Example** (Assign reviewed resolution)
+ *
  * ```ts
  * import type { SyncConflictResolution } from "@beep/documents-domain/entities/SyncConflict"
  *
@@ -145,7 +151,8 @@ export type SyncConflictResolution = typeof SyncConflictResolution.Type;
 /**
  * Remote-drift record surfaced for review; v1 never auto-merges or mutates local vault content (SPEC D4).
  *
- * @example
+ * **Example** (Decode SyncConflict entity)
+ *
  * ```ts
  * import { SyncConflict, SyncConflictId } from "@beep/documents-domain/entities/SyncConflict"
  * import * as S from "effect/Schema"

@@ -1,7 +1,8 @@
 /**
  * Claude and Codex CLI status-probe driver.
  *
- * @remarks
+ * **Details**
+ *
  * The public entry point exposes redacted models, typed errors, and the
  * `AiProviderCli` service used to check local CLI authentication without
  * returning raw account or token output.
@@ -13,7 +14,8 @@
 /**
  * Redacted provider CLI error exports.
  *
- * @example
+ * **Example** (Construct redacted CLI error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliError } from "@beep/ai-provider-cli"
@@ -36,7 +38,8 @@ export * from "./AiProviderCli.errors.ts";
 /**
  * Schema-backed provider CLI probe model exports.
  *
- * @example
+ * **Example** (Make auth probe model)
+ *
  * ```ts
  * import { AiProviderCliAuthProbe } from "@beep/ai-provider-cli"
  *
@@ -56,7 +59,8 @@ export * from "./AiProviderCli.models.ts";
 /**
  * Effect service exports for Claude and Codex auth probes.
  *
- * @example
+ * **Example** (Probe auth with mock runner)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
@@ -86,7 +90,8 @@ export * from "./AiProviderCli.service.ts";
 /**
  * Provider CLI home-layout error exports.
  *
- * @example
+ * **Example** (Make home path conflict error)
+ *
  * ```ts
  * import { AiProviderCliHomePathConflictError } from "@beep/ai-provider-cli"
  *
@@ -105,7 +110,8 @@ export * from "./AiProviderCliHome.errors.ts";
 /**
  * Provider CLI home-layout model exports.
  *
- * @example
+ * **Example** (Make Codex home layout)
+ *
  * ```ts
  * import { AiProviderCliCodexHomeLayout } from "@beep/ai-provider-cli"
  *
@@ -124,7 +130,8 @@ export * from "./AiProviderCliHome.models.ts";
 /**
  * Effect service exports for provider CLI home isolation mechanics.
  *
- * @example
+ * **Example** (Resolve Claude home path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"

@@ -647,7 +647,8 @@ const filesStripMetadataCommand = Command.make(
 /**
  * File curation command group.
  *
- * @example
+ * **Example** (Run files command group)
+ *
  * ```ts
  * import { filesCommand } from "@beep/repo-cli/commands/Files"
  * import { Command } from "effect/unstable/cli"
@@ -656,6 +657,7 @@ const filesStripMetadataCommand = Command.make(
  * const run = Command.run(filesCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

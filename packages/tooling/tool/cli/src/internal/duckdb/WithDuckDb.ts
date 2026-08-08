@@ -23,13 +23,15 @@ import type { DuckDbConnectionOptions } from "@beep/duckdb";
 /**
  * Run an effect against a scoped DuckDB connection.
  *
- * @remarks
+ * **Details**
+ *
  * Builds {@link DuckDb.makeNodeLayer} for `options`, provides the resulting
  * {@link DuckDb} service to `effect`, and discharges the connection scope when
  * `effect` completes. The `DuckDb` requirement is removed from the returned
  * effect; the error channel and every other requirement pass through unchanged.
  *
- * @example
+ * **Example** (Scoped DuckDB query effect)
+ *
  * ```ts
  * import { withDuckDb } from "@beep/repo-cli/internal/duckdb"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
@@ -43,6 +45,7 @@ import type { DuckDbConnectionOptions } from "@beep/duckdb";
  * const program = withDuckDb(rows, DuckDbConnectionOptions.make({ databasePath: ".beep/corpus/catalog.duckdb" }))
  * console.log(program)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -11,11 +11,13 @@ import { ContentEditable } from "../../editor/editor-ui/content-editable.tsx";
 /**
  * Rich-text plugin stack for the editor block.
  *
- * @remarks
+ * **Details**
+ *
  * Render this inside a `LexicalComposer`. The higher-level {@link Editor}
  * component wires that provider for normal use.
  *
- * @example
+ * **Example** (Plugins inside LexicalComposer)
+ *
  * ```tsx
  * import { LexicalComposer } from "@lexical/react/LexicalComposer"
  * import { Plugins } from "@beep/ui/components/blocks/editor-00/plugins"

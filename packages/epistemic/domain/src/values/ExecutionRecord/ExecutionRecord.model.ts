@@ -48,7 +48,8 @@ const outcomeEncodingVersion = "epistemic-execution-outcome/v1";
  * Derived at run open from session inputs; deliberately a digest so the
  * ledger key carries no session detail.
  *
- * @example
+ * **Example** (Make run key length)
+ *
  * ```ts
  * import { ExecutionRunKey } from "@beep/epistemic-domain"
  *
@@ -70,7 +71,8 @@ export const ExecutionRunKey = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ExecutionRunKey}.
  *
- * @example
+ * **Example** (Typed run key usage)
+ *
  * ```ts
  * import { ExecutionRunKey } from "@beep/epistemic-domain"
  *
@@ -88,7 +90,8 @@ export type ExecutionRunKey = typeof ExecutionRunKey.Type;
  * encoding of the record's own content (prevHash included), which is what
  * chains the run.
  *
- * @example
+ * **Example** (Make decision hash length)
+ *
  * ```ts
  * import { DecisionRecordHash } from "@beep/epistemic-domain"
  *
@@ -110,7 +113,8 @@ export const DecisionRecordHash = Sha256Hex.pipe(
 /**
  * Runtime type for {@link DecisionRecordHash}.
  *
- * @example
+ * **Example** (Typed decision hash usage)
+ *
  * ```ts
  * import { DecisionRecordHash } from "@beep/epistemic-domain"
  *
@@ -126,7 +130,8 @@ export type DecisionRecordHash = typeof DecisionRecordHash.Type;
 /**
  * Seal hash of one outcome record.
  *
- * @example
+ * **Example** (Make outcome hash length)
+ *
  * ```ts
  * import { OutcomeRecordHash } from "@beep/epistemic-domain"
  *
@@ -148,7 +153,8 @@ export const OutcomeRecordHash = Sha256Hex.pipe(
 /**
  * Runtime type for {@link OutcomeRecordHash}.
  *
- * @example
+ * **Example** (Typed outcome hash usage)
+ *
  * ```ts
  * import { OutcomeRecordHash } from "@beep/epistemic-domain"
  *
@@ -166,7 +172,8 @@ export type OutcomeRecordHash = typeof OutcomeRecordHash.Type;
  * never enters the ledger; operators correlate by recomputing digests from
  * the configured allowlist.
  *
- * @example
+ * **Example** (Make destination digest length)
+ *
  * ```ts
  * import { SinkDestinationDigest } from "@beep/epistemic-domain"
  *
@@ -188,7 +195,8 @@ export const SinkDestinationDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link SinkDestinationDigest}.
  *
- * @example
+ * **Example** (Typed destination digest usage)
+ *
  * ```ts
  * import { SinkDestinationDigest } from "@beep/epistemic-domain"
  *
@@ -206,7 +214,8 @@ export type SinkDestinationDigest = typeof SinkDestinationDigest.Type;
  * quasi-bounded but schema-unbounded text, so it enters the ledger only as a
  * digest, keeping every ledger column inside the no-payload allowlist.
  *
- * @example
+ * **Example** (Make operation digest length)
+ *
  * ```ts
  * import { GrantOperationDigest } from "@beep/epistemic-domain"
  *
@@ -228,7 +237,8 @@ export const GrantOperationDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link GrantOperationDigest}.
  *
- * @example
+ * **Example** (Typed operation digest usage)
+ *
  * ```ts
  * import { GrantOperationDigest } from "@beep/epistemic-domain"
  *
@@ -249,7 +259,8 @@ export type GrantOperationDigest = typeof GrantOperationDigest.Type;
  * so member equality between the two is asserted by a test in
  * `epistemic/server`, which may import both.
  *
- * @example
+ * **Example** (Settlement enum interrupted value)
+ *
  * ```ts
  * import { ExecutionSettlement } from "@beep/epistemic-domain"
  *
@@ -269,7 +280,8 @@ export const ExecutionSettlement = LiteralKit(["completed", "failed", "interrupt
 /**
  * Runtime type for {@link ExecutionSettlement}.
  *
- * @example
+ * **Example** (Typed settlement assignment)
+ *
  * ```ts
  * import type { ExecutionSettlement } from "@beep/epistemic-domain"
  *
@@ -327,7 +339,8 @@ const DecisionVerdictTag = LiteralKit(["allowed", "denied"]);
  * allowed variant carries none, because "allowed" is its own complete
  * statement.
  *
- * @example
+ * **Example** (Decode denied decision record)
+ *
  * ```ts
  * import { ExecutionDecisionRecord } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -366,7 +379,8 @@ export const ExecutionDecisionRecord = DecisionVerdictTag.toTaggedUnion("verdict
 /**
  * Runtime type for {@link ExecutionDecisionRecord}.
  *
- * @example
+ * **Example** (Typed allowed decision record)
+ *
  * ```ts
  * import type { ExecutionDecisionRecord } from "@beep/epistemic-domain"
  * import { ExecutionDecisionRecord as Schema } from "@beep/epistemic-domain"
@@ -400,7 +414,8 @@ export type ExecutionDecisionRecord = typeof ExecutionDecisionRecord.Type;
  * is no execution to report — which is why the derived "decided, outcome
  * unknown" query must be scoped to allowed decisions.
  *
- * @example
+ * **Example** (Decode outcome record)
+ *
  * ```ts
  * import { ExecutionOutcomeRecord } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -456,7 +471,8 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
  * Content of a decision record before sealing: everything but the hash,
  * distributed over both verdict variants.
  *
- * @example
+ * **Example** (Access decision content seq)
+ *
  * ```ts
  * import type { ExecutionDecisionContent } from "@beep/epistemic-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -494,7 +510,8 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  * The chain property follows: alter any sealed field and the seal breaks;
  * alter the seal and the next record's prevHash breaks.
  *
- * @example
+ * **Example** (Seal allowed decision record)
+ *
  * ```ts
  * import { sealExecutionDecision } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -534,7 +551,8 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  * Re-verifies one decision record's seal by recomputing its hash from its own
  * content.
  *
- * @example
+ * **Example** (Verify sealed decision hash)
+ *
  * ```ts
  * import { sealExecutionDecision, verifyExecutionDecisionHash } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -573,7 +591,8 @@ const ChainVerificationTag = LiteralKit(["chain-intact", "chain-broken"]);
  * first failing zero-based index — where "failing" means a bad seal, a seq
  * gap, or a prevHash that does not equal the previous record's hash.
  *
- * @example
+ * **Example** (Decode chain-broken result)
+ *
  * ```ts
  * import { ChainVerification } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -601,7 +620,8 @@ export const ChainVerification = ChainVerificationTag.toTaggedUnion("result")({
 /**
  * Runtime type for {@link ChainVerification}.
  *
- * @example
+ * **Example** (Typed chain-intact result)
+ *
  * ```ts
  * import type { ChainVerification } from "@beep/epistemic-domain"
  *
@@ -621,6 +641,8 @@ export type ChainVerification = typeof ChainVerification.Type;
  * zero, and that each later `prevHash` equals the previous record's hash.
  * Total: returns a value for every input, including the empty chain (intact).
  *
+ * **Details**
+ *
  * The run check is not redundant with the caller's query. Seals are plain
  * SHA-256 with no secret key, so anyone able to write rows can seal a record
  * carrying a foreign
@@ -638,7 +660,8 @@ export type ChainVerification = typeof ChainVerification.Type;
  * not ship (anchoring is a separate candidate packet). Read it as "these
  * records are mutually consistent," never as "nothing was removed."
  *
- * @example
+ * **Example** (Empty chain verifies intact)
+ *
  * ```ts
  * import { verifyExecutionDecisionChain } from "@beep/epistemic-domain"
  *
@@ -679,12 +702,15 @@ export const verifyExecutionDecisionChain = (
  * an outcome recorded against the wrong run or against a *denied* decision —
  * which never executes and therefore can never settle.
  *
+ * **Details**
+ *
  * This is a domain-level check, not an enforcement mechanism: uniqueness of
  * outcomes per decision is a database constraint that a later slice adds, so
  * until then two conflicting outcomes for one decision can both self-verify
  * and this function will accept either.
  *
- * @example
+ * **Example** (Check binding function type)
+ *
  * ```ts
  * import { verifyOutcomeBinding } from "@beep/epistemic-domain"
  *
@@ -720,7 +746,8 @@ const encodeOutcomeContent = (content: ExecutionOutcomeContent): Record<string, 
 /**
  * Content of an outcome record before sealing: everything but the hash.
  *
- * @example
+ * **Example** (Access outcome content settlement)
+ *
  * ```ts
  * import type { ExecutionOutcomeContent } from "@beep/epistemic-domain"
  *
@@ -738,7 +765,8 @@ export type ExecutionOutcomeContent = Omit<ExecutionOutcomeRecord, "hash">;
  * content, decisionHash included — binding settlement to exactly one allowed
  * decision.
  *
- * @example
+ * **Example** (Seal completed outcome record)
+ *
  * ```ts
  * import { DecisionRecordHash, ExecutionRunKey, sealExecutionOutcome } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -766,7 +794,8 @@ export const sealExecutionOutcome = (content: ExecutionOutcomeContent): Executio
  * Re-verifies one outcome record's seal by recomputing its hash from its own
  * content.
  *
- * @example
+ * **Example** (Verify sealed outcome hash)
+ *
  * ```ts
  * import { DecisionRecordHash, ExecutionRunKey, sealExecutionOutcome, verifyExecutionOutcomeHash } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
@@ -792,7 +821,8 @@ export const verifyExecutionOutcomeHash = (record: ExecutionOutcomeRecord): bool
  * bridge between grant-side raw values and record-side digests, kept here so
  * every caller hashes identically.
  *
- * @example
+ * **Example** (Digest raw destination string)
+ *
  * ```ts
  * import { digestForLedger } from "@beep/epistemic-domain"
  *
@@ -809,7 +839,8 @@ export const digestForLedger = (raw: string): string => bytesToHex(sha256(utf8To
  * Digests a granted operation for ledger storage, so a raw tool name never
  * reaches a record column.
  *
- * @example
+ * **Example** (Digest granted operation name)
+ *
  * ```ts
  * import { GrantOperation, operationDigestOf } from "@beep/epistemic-domain"
  *
@@ -827,7 +858,8 @@ export const operationDigestOf = (operation: GrantOperation): GrantOperationDige
  * Digests a sink destination for ledger storage, so a raw destination never
  * reaches a record column.
  *
- * @example
+ * **Example** (Digest sink destination value)
+ *
  * ```ts
  * import { destinationDigestOf, SinkDestination } from "@beep/epistemic-domain"
  *

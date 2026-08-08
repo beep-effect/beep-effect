@@ -8,7 +8,8 @@
 /**
  * AssistantContent Markdown projection helpers.
  *
- * @example
+ * **Example** (Convert content to document)
+ *
  * ```ts
  * import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -25,7 +26,8 @@ export * from "./AssistantContent.behavior.ts";
 /**
  * AssistantContent schema model exports.
  *
- * @example
+ * **Example** (Decode empty AssistantContent)
+ *
  * ```ts
  * import { AssistantContent } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"

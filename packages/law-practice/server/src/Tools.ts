@@ -24,7 +24,8 @@ import type { PracticeKgBundle } from "./PracticeKg.host.ts";
  * lanes derive tool names from the served surface instead of hand-copied
  * lists.
  *
- * @example
+ * **Example** (Count toolkit tool keys)
+ *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-server"
  * import * as R from "effect/Record"
@@ -42,7 +43,8 @@ const $I = $LawPracticeServerId.create("Tools");
 /**
  * Credential-free source registration for the local practice KG bundle.
  *
- * @example
+ * **Example** (Log source auth gate)
+ *
  * ```ts
  * import { PracticeKgSourceAuthRegistration } from "@beep/law-practice-server"
  *
@@ -61,7 +63,8 @@ export const PracticeKgSourceAuthRegistration = SourceAuthRegistration.make({
 /**
  * MCP identity advertised by the practice KG stdio server.
  *
- * @example
+ * **Example** (Make MCP server config)
+ *
  * ```ts
  * import { PracticeKgMcpServerConfig } from "@beep/law-practice-server"
  *
@@ -85,7 +88,8 @@ export class PracticeKgMcpServerConfig extends S.Class<PracticeKgMcpServerConfig
 /**
  * Compose the sanitized, credential-free toolkit registration.
  *
- * @example
+ * **Example** (Check toolkit layer type)
+ *
  * ```ts
  * import { PracticeKgToolkitLayer } from "@beep/law-practice-server"
  * import { Layer } from "effect"
@@ -106,7 +110,8 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 /**
  * Compose the stdio MCP server while leaving both databases host-injected.
  *
- * @example
+ * **Example** (Compose host-injected server layer)
+ *
  * ```ts
  * import { makePracticeKgServerLayer, PracticeKgMcpServerConfig } from "@beep/law-practice-server"
  * import { Layer } from "effect"

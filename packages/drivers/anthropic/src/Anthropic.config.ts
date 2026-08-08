@@ -16,12 +16,14 @@ const AnthropicTokenPriceUsd = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 /**
  * Environment binding used by {@link AnthropicLive} for the redacted API key.
  *
- * @remarks
+ * **Details**
+ *
  * Store secret-reference strings in local configuration and let Effect Config
  * plus the process environment resolve the actual value; this package never
  * needs callers to pass a raw API key directly.
  *
- * @example
+ * **Example** (Secret reference env binding)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_API_KEY_ENV } from "@beep/anthropic"
@@ -41,12 +43,14 @@ export const ANTHROPIC_API_KEY_ENV = "AI_ANTHROPIC_API_KEY" as const;
 /**
  * Environment binding overriding the model used by the default language-model layer.
  *
- * @remarks
+ * **Details**
+ *
  * When unset, {@link ANTHROPIC_DEFAULT_MODEL} applies. The identifier must be
  * accepted by the generated `@effect/ai-anthropic` catalog, which validates
  * streamed response model ids.
  *
- * @example
+ * **Example** (Override model via env)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_MODEL_ENV } from "@beep/anthropic"
@@ -66,12 +70,14 @@ export const ANTHROPIC_MODEL_ENV = "AI_ANTHROPIC_MODEL" as const;
 /**
  * Claude model used by the default language-model layer.
  *
- * @remarks
+ * **Details**
+ *
  * The generated `@effect/ai-anthropic` catalog validates streamed response
  * model ids. Keep this pinned until the upstream catalog accepts newer model
  * identifiers.
  *
- * @example
+ * **Example** (Default Claude model id)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic"
@@ -89,7 +95,8 @@ export const ANTHROPIC_DEFAULT_MODEL = "claude-opus-4-6" as const;
 /**
  * Default maximum output-token budget for rich assistant turns.
  *
- * @example
+ * **Example** (Default max tokens option)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
@@ -110,7 +117,8 @@ export const ANTHROPIC_DEFAULT_MAX_TOKENS = 16_384 as const;
 /**
  * Maximum acquisition attempts in the default turn execution plan.
  *
- * @example
+ * **Example** (Default exponential backoff schedule)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_RETRY_ATTEMPTS, ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS } from "@beep/anthropic"
@@ -131,7 +139,8 @@ export const ANTHROPIC_DEFAULT_RETRY_ATTEMPTS = 4 as const;
 /**
  * Initial delay, in milliseconds, for the default exponential retry schedule.
  *
- * @example
+ * **Example** (Second retry delay calculation)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS } from "@beep/anthropic"
@@ -149,11 +158,13 @@ export const ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS = 250 as const;
 /**
  * Static model-price row used for approximate usage attribution.
  *
- * @remarks
+ * **Details**
+ *
  * Values are intentionally marked approximate; `UsageRecord` rows should use
  * them for product attribution, while OTLP remains observability-only.
  *
- * @example
+ * **Example** (Build approximate price row)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicApproximatePrice, ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic"
@@ -190,7 +201,8 @@ export class AnthropicApproximatePrice extends S.Class<AnthropicApproximatePrice
 /**
  * Approximate default price row paired with {@link ANTHROPIC_DEFAULT_MODEL}.
  *
- * @example
+ * **Example** (Default model price values)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_APPROXIMATE_PRICE, ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic"
@@ -211,11 +223,13 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
 /**
  * Schema-backed options accepted by Anthropic language-model layer helpers.
  *
- * @remarks
+ * **Details**
+ *
  * Missing fields are normalized by schema defaults before callers build the
  * fully materialized provider config.
  *
- * @example
+ * **Example** (Make language model options)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions } from "@beep/anthropic"

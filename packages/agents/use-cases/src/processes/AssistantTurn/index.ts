@@ -9,7 +9,8 @@
 /**
  * Assistant-turn DTO contracts.
  *
- * @example
+ * **Example** (Decode turn history item)
+ *
  * ```ts
  * import { TurnHistoryItem } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -25,7 +26,8 @@ export * from "./AssistantTurn.contracts.ts";
 /**
  * Assistant-turn public errors.
  *
- * @example
+ * **Example** (Make turn generation error)
+ *
  * ```ts
  * import { TurnGenerationError } from "@beep/agents-use-cases/public"
  *
@@ -40,7 +42,8 @@ export * from "./AssistantTurn.errors.ts";
 /**
  * Assistant-turn generation kernel port.
  *
- * @example
+ * **Example** (Stream turn with kernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"

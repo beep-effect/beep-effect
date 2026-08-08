@@ -326,7 +326,8 @@ const createBuilder = (
 /**
  * Create a Chalk instance factory from detected default color support.
  *
- * @example
+ * **Example** (Create chalk with level zero)
+ *
  * ```ts
  * import { makeCreateChalk } from "@beep/chalk/Chalk"
  *

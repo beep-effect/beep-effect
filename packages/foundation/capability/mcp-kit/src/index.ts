@@ -83,7 +83,8 @@ export * from "./ToolkitComposition.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/mcp-kit"
  *

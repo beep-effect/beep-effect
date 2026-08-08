@@ -28,15 +28,16 @@ const $I = $NlpId.create("Graph/Schema");
 /**
  * Structural text-node kind vocabulary.
  *
- * @example
+ * **Example** (Validate sentence node kind)
+ *
  * ```ts
  * import { TextNodeType } from "@beep/nlp/Graph/Schema"
  *
  * console.log(TextNodeType.is.sentence("sentence")) // true
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "document"]).annotate(
   $I.annote("TextNodeType", {
@@ -47,7 +48,8 @@ export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "docum
 /**
  * Runtime TypeScript union decoded by {@link TextNodeType}.
  *
- * @example
+ * **Example** (Assign TextNodeType union)
+ *
  * ```ts
  * import type { TextNodeType } from "@beep/nlp/Graph/Schema"
  *
@@ -63,15 +65,16 @@ export type TextNodeType = typeof TextNodeType.Type;
 /**
  * Edge-relation vocabulary (structural + linguistic-annotation relations).
  *
- * @example
+ * **Example** (Validate contains edge relation)
+ *
  * ```ts
  * import { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
  *
  * console.log(TextEdgeRelation.is.contains("contains")) // true
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TextEdgeRelation = LiteralKit([
   // Structural relations
@@ -95,7 +98,8 @@ export const TextEdgeRelation = LiteralKit([
 /**
  * Runtime TypeScript union decoded by {@link TextEdgeRelation}.
  *
- * @example
+ * **Example** (Assign TextEdgeRelation union)
+ *
  * ```ts
  * import type { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
  *
@@ -119,7 +123,8 @@ const textNodeFields = <T extends TextNodeType>(literal: S.Literal<T>) => ({
 /**
  * Text node stored in the graph: a piece of text with processing metadata.
  *
- * @example
+ * **Example** (Decode TextNode schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
@@ -132,8 +137,8 @@ const textNodeFields = <T extends TextNodeType>(literal: S.Literal<T>) => ({
  * console.log(node.type) // "sentence"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const TextNode = TextNodeType.mapMembers(
   Tuple.evolve([
@@ -180,7 +185,8 @@ export const TextNode = TextNodeType.mapMembers(
 /**
  * Runtime type for text-graph nodes.
  *
- * @example
+ * **Example** (Read TextNode type field)
+ *
  * ```ts
  * import type { TextNode } from "@beep/nlp/Graph/Schema"
  *
@@ -207,7 +213,8 @@ const textEdgeMember =
 /**
  * Edge between text nodes, labeled with a structural or linguistic relation.
  *
- * @example
+ * **Example** (Decode TextEdge schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextEdge } from "@beep/nlp/Graph/Schema"
@@ -216,8 +223,8 @@ const textEdgeMember =
  * console.log(edge.relation) // "contains"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const TextEdge = TextEdgeRelation.mapMembers(
   Tuple.evolve([
@@ -242,7 +249,8 @@ export const TextEdge = TextEdgeRelation.mapMembers(
 /**
  * Runtime type for text-graph edges.
  *
- * @example
+ * **Example** (Read TextEdge relation field)
+ *
  * ```ts
  * import type { TextEdge } from "@beep/nlp/Graph/Schema"
  *
@@ -258,7 +266,8 @@ export type TextEdge = typeof TextEdge.Type;
 /**
  * Summary result of analyzing a piece of text.
  *
- * @example
+ * **Example** (Build NLPAnalysis summary)
+ *
  * ```ts
  * import { NLPAnalysis } from "@beep/nlp/Graph/Schema"
  *
@@ -271,8 +280,8 @@ export type TextEdge = typeof TextEdge.Type;
  * console.log(analysis.wordCount) // 2
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NLPAnalysis extends S.Class<NLPAnalysis>($I`NLPAnalysis`)(
   {
@@ -290,7 +299,8 @@ export class NLPAnalysis extends S.Class<NLPAnalysis>($I`NLPAnalysis`)(
 /**
  * Part-of-speech annotation for a token (a functor `Token -> POS`).
  *
- * @example
+ * **Example** (Build POS annotation node)
+ *
  * ```ts
  * import { POSNode } from "@beep/nlp/Graph/Schema"
  *
@@ -298,8 +308,8 @@ export class NLPAnalysis extends S.Class<NLPAnalysis>($I`NLPAnalysis`)(
  * console.log(node.tag) // "NOUN"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class POSNode extends S.Class<POSNode>($I`POSNode`)(
   {
@@ -318,7 +328,8 @@ export class POSNode extends S.Class<POSNode>($I`POSNode`)(
 /**
  * Character span (start/end offsets) within a piece of text.
  *
- * @example
+ * **Example** (Build character span)
+ *
  * ```ts
  * import { Span } from "@beep/nlp/Graph/Schema"
  *
@@ -326,8 +337,8 @@ export class POSNode extends S.Class<POSNode>($I`POSNode`)(
  * console.log(span.end - span.start) // 9
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Span extends S.Class<Span>($I`Span`)(
   { start: S.Finite, end: S.Finite },
@@ -339,7 +350,8 @@ export class Span extends S.Class<Span>($I`Span`)(
 /**
  * Named entity extracted from text (a functor `Text -> Entity`).
  *
- * @example
+ * **Example** (Build named entity node)
+ *
  * ```ts
  * import { EntityNode } from "@beep/nlp/Graph/Schema"
  *
@@ -352,8 +364,8 @@ export class Span extends S.Class<Span>($I`Span`)(
  * console.log(node.entityType) // "ORG"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class EntityNode extends S.Class<EntityNode>($I`EntityNode`)(
   {
@@ -373,7 +385,8 @@ export class EntityNode extends S.Class<EntityNode>($I`EntityNode`)(
 /**
  * Lemmatized (canonical) form of a token (a forgetful functor `Token -> Lemma`).
  *
- * @example
+ * **Example** (Build lemma annotation node)
+ *
  * ```ts
  * import { LemmaNode } from "@beep/nlp/Graph/Schema"
  *
@@ -381,8 +394,8 @@ export class EntityNode extends S.Class<EntityNode>($I`EntityNode`)(
  * console.log(node.lemma) // "run"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LemmaNode extends S.Class<LemmaNode>($I`LemmaNode`)(
   {
@@ -401,7 +414,8 @@ export class LemmaNode extends S.Class<LemmaNode>($I`LemmaNode`)(
 /**
  * Token reference (text + sentence position) used by dependency-arc endpoints.
  *
- * @example
+ * **Example** (Build dependency token ref)
+ *
  * ```ts
  * import { DependencyToken } from "@beep/nlp/Graph/Schema"
  *
@@ -409,8 +423,8 @@ export class LemmaNode extends S.Class<LemmaNode>($I`LemmaNode`)(
  * console.log(token.position) // 2
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DependencyToken extends S.Class<DependencyToken>($I`DependencyToken`)(
   { text: S.String, position: S.Finite },
@@ -422,7 +436,8 @@ export class DependencyToken extends S.Class<DependencyToken>($I`DependencyToken
 /**
  * Syntactic dependency relation between two tokens.
  *
- * @example
+ * **Example** (Build dependency arc node)
+ *
  * ```ts
  * import { DependencyNode } from "@beep/nlp/Graph/Schema"
  *
@@ -436,8 +451,8 @@ export class DependencyToken extends S.Class<DependencyToken>($I`DependencyToken
  * console.log(node.relation) // "nsubj"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DependencyNode extends S.Class<DependencyNode>($I`DependencyNode`)(
   {
@@ -456,7 +471,8 @@ export class DependencyNode extends S.Class<DependencyNode>($I`DependencyNode`)(
 /**
  * Entity participant (text, type, and character span) referenced by a semantic relation.
  *
- * @example
+ * **Example** (Build relation participant)
+ *
  * ```ts
  * import { RelationParticipant } from "@beep/nlp/Graph/Schema"
  *
@@ -468,8 +484,8 @@ export class DependencyNode extends S.Class<DependencyNode>($I`DependencyNode`)(
  * console.log(participant.entityType) // "ORG"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class RelationParticipant extends S.Class<RelationParticipant>($I`RelationParticipant`)(
   { text: S.String, entityType: S.String, span: Span },
@@ -481,7 +497,8 @@ export class RelationParticipant extends S.Class<RelationParticipant>($I`Relatio
 /**
  * Semantic relation between two entities.
  *
- * @example
+ * **Example** (Build semantic relation node)
+ *
  * ```ts
  * import { RelationNode } from "@beep/nlp/Graph/Schema"
  *
@@ -494,8 +511,8 @@ export class RelationParticipant extends S.Class<RelationParticipant>($I`Relatio
  * console.log(node.relationType) // "acquired"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class RelationNode extends S.Class<RelationNode>($I`RelationNode`)(
   {

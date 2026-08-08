@@ -94,14 +94,16 @@ const packageReportForKey = (issues: ReadonlyArray<QualityIssue>, key: string): 
 /**
  * Build a schema-first issue index from normalized issues.
  *
- * @param issues - Issues discovered during a yeet run.
- * @returns Stable issue index with package grouping.
- * @example
+ * **Example** (Index empty issues list)
+ *
  * ```ts
  * import { buildQualityIssueIndex } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(buildQualityIssueIndex([]).schemaVersion)
  * ```
+ *
+ * @param issues - Issues discovered during a yeet run.
+ * @returns Stable issue index with package grouping.
  * @category constructors
  * @since 0.0.0
  */

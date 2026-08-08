@@ -15,7 +15,8 @@ const make = EntityId.factory("epistemic", $I);
 /**
  * Identifier for one immutable contradiction candidate.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { ContradictionCandidateId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -32,7 +33,8 @@ export const ContradictionCandidateId = make("contradiction_candidate", {
 /**
  * Runtime type for {@link ContradictionCandidateId}.
  *
- * @example
+ * **Example** (Type empty id array)
+ *
  * ```ts
  * import type { ContradictionCandidateId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -48,7 +50,8 @@ export type ContradictionCandidateId = typeof ContradictionCandidateId.Type;
 /**
  * Identifier for one contradiction-submission receipt.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { ContradictionReceiptId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -65,7 +68,8 @@ export const ContradictionReceiptId = make("contradiction_receipt", {
 /**
  * Runtime type for {@link ContradictionReceiptId}.
  *
- * @example
+ * **Example** (Type empty id array)
+ *
  * ```ts
  * import type { ContradictionReceiptId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -81,7 +85,8 @@ export type ContradictionReceiptId = typeof ContradictionReceiptId.Type;
 /**
  * Identifier for one recorded contradiction disposition.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { ContradictionDispositionId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -98,7 +103,8 @@ export const ContradictionDispositionId = make("contradiction_disposition", {
 /**
  * Runtime type for {@link ContradictionDispositionId}.
  *
- * @example
+ * **Example** (Type empty id array)
+ *
  * ```ts
  * import type { ContradictionDispositionId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -114,7 +120,8 @@ export type ContradictionDispositionId = typeof ContradictionDispositionId.Type;
 /**
  * Identifier for one immutable evidence-verification sidecar row.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { EvidenceVerificationId } from "@beep/epistemic-domain/identity/Epistemic"
  *
@@ -131,7 +138,8 @@ export const EvidenceVerificationId = make("evidence_verification", {
 /**
  * Runtime type for {@link EvidenceVerificationId}.
  *
- * @example
+ * **Example** (Type empty id array)
+ *
  * ```ts
  * import type { EvidenceVerificationId } from "@beep/epistemic-domain/identity/Epistemic"
  *

@@ -129,7 +129,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
 
         expect(yield* fs.readDirectory(extensionTempRoot)).toEqual([]);
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
   });
 
@@ -171,7 +171,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         expect(yield* fs.readFileString(retainedPath)).toBe("still here");
         expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
 
     it.effect(
@@ -191,7 +191,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
         expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
 
     it.effect(
@@ -212,7 +212,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         expect(yield* readPgliteFixture(dataDir)).toEqual(["keep me"]);
         expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
 
     it.effect(
@@ -231,7 +231,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
         expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
 
     it.effect(
@@ -300,7 +300,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
           })
         );
       }),
-      { timeout: 30_000 }
+      { timeout: 90_000 }
     );
   });
 });

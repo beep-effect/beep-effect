@@ -8,7 +8,8 @@
 /**
  * Message model exports.
  *
- * @example
+ * **Example** (Import Message module)
+ *
  * ```ts
  * import * as Message from "@beep/workspace-domain/entities/Message"
  *

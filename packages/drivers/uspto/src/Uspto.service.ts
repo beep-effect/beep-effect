@@ -30,7 +30,8 @@ const $I = $UsptoId.create("Uspto.service");
 /**
  * Runtime shape exposed by the {@link Uspto} service.
  *
- * @example
+ * **Example** (Stub UsptoShape service object)
+ *
  * ```ts
  * import type { UsptoShape } from "@beep/uspto"
  * import { Effect } from "effect"
@@ -356,7 +357,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
 /**
  * Effect service for product-neutral USPTO Open Data Portal access.
  *
- * @example
+ * **Example** (Import Uspto service tag)
+ *
  * ```ts
  * import { Uspto } from "@beep/uspto"
  *
@@ -370,7 +372,8 @@ export class Uspto extends Context.Service<Uspto, UsptoShape>()($I`Uspto`) {
   /**
    * Build a layer from explicit configuration.
    *
-   * @example
+   * **Example** (Layer from explicit config)
+   *
    * ```ts
    * import { Uspto, UsptoConfigInput } from "@beep/uspto"
    *
@@ -393,7 +396,8 @@ export class Uspto extends Context.Service<Uspto, UsptoShape>()($I`Uspto`) {
   /**
    * Live layer backed by `USPTO_API_KEY` and `USPTO_API_URL` configuration.
    *
-   * @example
+   * **Example** (Access live Uspto layer)
+   *
    * ```ts
    * import { Uspto } from "@beep/uspto"
    *

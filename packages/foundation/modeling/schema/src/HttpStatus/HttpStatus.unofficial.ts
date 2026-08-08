@@ -17,15 +17,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * too many URLs are requested at the same time. It is similar to the HTTP code
  * 429 “Too many requests”.
  *
- * @example
+ * **Example** (Log Shopify 430 literal)
+ *
  * ```ts
  * import { RequestHeaderFieldsTooLargeShopify } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderFieldsTooLargeShopify.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RequestHeaderFieldsTooLargeShopify = S.Literal(430).pipe(
   $I.annoteSchema("RequestHeaderFieldsTooLargeShopify", {
@@ -37,17 +38,8 @@ export const RequestHeaderFieldsTooLargeShopify = S.Literal(430).pipe(
 
 /**
  * {@inheritDoc RequestHeaderFieldsTooLargeShopify}
- *
- * @example
- * ```ts
- * import type { RequestHeaderFieldsTooLargeShopify } from "@beep/schema/HttpStatus"
- *
- * const status: RequestHeaderFieldsTooLargeShopify = 430
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type RequestHeaderFieldsTooLargeShopify = typeof RequestHeaderFieldsTooLargeShopify.Type;
 
@@ -56,15 +48,16 @@ export type RequestHeaderFieldsTooLargeShopify = typeof RequestHeaderFieldsTooLa
  * Information Services). The client’s login session has expired and they must
  * log in again.
  *
- * @example
+ * **Example** (Log LoginTimeout literal)
+ *
  * ```ts
  * import { LoginTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(LoginTimeout.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const LoginTimeout = S.Literal(440).pipe(
   $I.annoteSchema("LoginTimeout", {
@@ -76,17 +69,8 @@ export const LoginTimeout = S.Literal(440).pipe(
 
 /**
  * {@inheritDoc LoginTimeout}
- *
- * @example
- * ```ts
- * import type { LoginTimeout } from "@beep/schema/HttpStatus"
- *
- * const status: LoginTimeout = 440
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type LoginTimeout = typeof LoginTimeout.Type;
 
@@ -94,15 +78,16 @@ export type LoginTimeout = typeof LoginTimeout.Type;
  * 494 “Request header too large” – used by NGINX. The client has sent too
  * large of a request or too long of a header line.
  *
- * @example
+ * **Example** (Log header too large)
+ *
  * ```ts
  * import { RequestHeaderTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderTooLarge.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RequestHeaderTooLarge = S.Literal(494).pipe(
   $I.annoteSchema("RequestHeaderTooLarge", {
@@ -114,17 +99,8 @@ export const RequestHeaderTooLarge = S.Literal(494).pipe(
 
 /**
  * {@inheritDoc RequestHeaderTooLarge}
- *
- * @example
- * ```ts
- * import type { RequestHeaderTooLarge } from "@beep/schema/HttpStatus"
- *
- * const status: RequestHeaderTooLarge = 494
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type RequestHeaderTooLarge = typeof RequestHeaderTooLarge.Type;
 
@@ -132,15 +108,16 @@ export type RequestHeaderTooLarge = typeof RequestHeaderTooLarge.Type;
  * 495 “SSL Certificate Error” – This is also a status code used by NGINX
  * signaling that the client has provided an invalid SSL certificate.
  *
- * @example
+ * **Example** (Log SSL certificate error)
+ *
  * ```ts
  * import { SslCertificateError } from "@beep/schema/HttpStatus"
  *
  * console.log(SslCertificateError.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SslCertificateError = S.Literal(495).pipe(
   $I.annoteSchema("SslCertificateError", {
@@ -152,17 +129,8 @@ export const SslCertificateError = S.Literal(495).pipe(
 
 /**
  * {@inheritDoc SslCertificateError}
- *
- * @example
- * ```ts
- * import type { SslCertificateError } from "@beep/schema/HttpStatus"
- *
- * const status: SslCertificateError = 495
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SslCertificateError = typeof SslCertificateError.Type;
 
@@ -170,15 +138,16 @@ export type SslCertificateError = typeof SslCertificateError.Type;
  * 496 “SSL Certificate Required” – used by NGINX. A client certificate is
  * required but is not provided.
  *
- * @example
+ * **Example** (Log SSL certificate required)
+ *
  * ```ts
  * import { SslCertificateRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(SslCertificateRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SslCertificateRequired = S.Literal(496).pipe(
   $I.annoteSchema("SslCertificateRequired", {
@@ -190,17 +159,8 @@ export const SslCertificateRequired = S.Literal(496).pipe(
 
 /**
  * {@inheritDoc SslCertificateRequired}
- *
- * @example
- * ```ts
- * import type { SslCertificateRequired } from "@beep/schema/HttpStatus"
- *
- * const status: SslCertificateRequired = 496
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SslCertificateRequired = typeof SslCertificateRequired.Type;
 
@@ -208,15 +168,16 @@ export type SslCertificateRequired = typeof SslCertificateRequired.Type;
  * 499 “Client Closed Request” – The client terminated the request before the
  * server could send a response. Another code used by NGINX.
  *
- * @example
+ * **Example** (Log client closed request)
+ *
  * ```ts
  * import { ClientClosedRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(ClientClosedRequest.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ClientClosedRequest = S.Literal(499).pipe(
   $I.annoteSchema("ClientClosedRequest", {
@@ -228,17 +189,8 @@ export const ClientClosedRequest = S.Literal(499).pipe(
 
 /**
  * {@inheritDoc ClientClosedRequest}
- *
- * @example
- * ```ts
- * import type { ClientClosedRequest } from "@beep/schema/HttpStatus"
- *
- * const status: ClientClosedRequest = 499
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ClientClosedRequest = typeof ClientClosedRequest.Type;
 
@@ -247,15 +199,16 @@ export type ClientClosedRequest = typeof ClientClosedRequest.Type;
  * Cloudflare. It specifies that the origin server returned an unexpected or
  * unknown response to Cloudflare.
  *
- * @example
+ * **Example** (Log unknown server error)
+ *
  * ```ts
  * import { WebServerReturnedAnUnknownError } from "@beep/schema/HttpStatus"
  *
  * console.log(WebServerReturnedAnUnknownError.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WebServerReturnedAnUnknownError = S.Literal(520).pipe(
   $I.annoteSchema("WebServerReturnedAnUnknownError", {
@@ -267,17 +220,8 @@ export const WebServerReturnedAnUnknownError = S.Literal(520).pipe(
 
 /**
  * {@inheritDoc WebServerReturnedAnUnknownError}
- *
- * @example
- * ```ts
- * import type { WebServerReturnedAnUnknownError } from "@beep/schema/HttpStatus"
- *
- * const status: WebServerReturnedAnUnknownError = 520
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type WebServerReturnedAnUnknownError = typeof WebServerReturnedAnUnknownError.Type;
 
@@ -286,15 +230,16 @@ export type WebServerReturnedAnUnknownError = typeof WebServerReturnedAnUnknownE
  * origin server refused the connection to Cloudflare. This error could be
  * caused by the origin’s firewall blocking Cloudflare’s IPs.
  *
- * @example
+ * **Example** (Log web server down)
+ *
  * ```ts
  * import { WebServerIsDown } from "@beep/schema/HttpStatus"
  *
  * console.log(WebServerIsDown.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WebServerIsDown = S.Literal(521).pipe(
   $I.annoteSchema("WebServerIsDown", {
@@ -306,17 +251,8 @@ export const WebServerIsDown = S.Literal(521).pipe(
 
 /**
  * {@inheritDoc WebServerIsDown}
- *
- * @example
- * ```ts
- * import type { WebServerIsDown } from "@beep/schema/HttpStatus"
- *
- * const status: WebServerIsDown = 521
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type WebServerIsDown = typeof WebServerIsDown.Type;
 
@@ -324,15 +260,16 @@ export type WebServerIsDown = typeof WebServerIsDown.Type;
  * 525 “SSL Handshake Failed” – Used by Cloudflare. Cloudflare is unable to
  * establish an SSL/TLS handshake with the origin server.
  *
- * @example
+ * **Example** (Log SSL handshake failed)
+ *
  * ```ts
  * import { SslHandshakeFailed } from "@beep/schema/HttpStatus"
  *
  * console.log(SslHandshakeFailed.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SslHandshakeFailed = S.Literal(525).pipe(
   $I.annoteSchema("SslHandshakeFailed", {
@@ -344,17 +281,8 @@ export const SslHandshakeFailed = S.Literal(525).pipe(
 
 /**
  * {@inheritDoc SslHandshakeFailed}
- *
- * @example
- * ```ts
- * import type { SslHandshakeFailed } from "@beep/schema/HttpStatus"
- *
- * const status: SslHandshakeFailed = 525
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type SslHandshakeFailed = typeof SslHandshakeFailed.Type;
 
@@ -364,15 +292,16 @@ export type SslHandshakeFailed = typeof SslHandshakeFailed.Type;
  * Usually, caused by invalid or missing SSL on the origin server. Read this
  * guide on how to install Let’s Encrypt for your SiteGround-hosted website.
  *
- * @example
+ * **Example** (Log invalid SSL certificate)
+ *
  * ```ts
  * import { InvalidSslCertificate } from "@beep/schema/HttpStatus"
  *
  * console.log(InvalidSslCertificate.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const InvalidSslCertificate = S.Literal(526).pipe(
   $I.annoteSchema("InvalidSslCertificate", {
@@ -384,16 +313,7 @@ export const InvalidSslCertificate = S.Literal(526).pipe(
 
 /**
  * {@inheritDoc InvalidSslCertificate}
- *
- * @example
- * ```ts
- * import type { InvalidSslCertificate } from "@beep/schema/HttpStatus"
- *
- * const status: InvalidSslCertificate = 526
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type InvalidSslCertificate = typeof InvalidSslCertificate.Type;

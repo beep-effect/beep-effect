@@ -16,13 +16,15 @@ const $I = $RepoCliId.create("commands/Qa/Qa.errors");
 /**
  * Error raised by `beep qa` capture, extraction, and judge commands.
  *
- * @example
+ * **Example** (Create QA command error)
+ *
  * ```ts
  * import { QaCommandError } from "@beep/repo-cli/commands/Qa/index"
  *
  * const error = QaCommandError.make({ message: "No live QA session" })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

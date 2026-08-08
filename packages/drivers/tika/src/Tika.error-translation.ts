@@ -24,7 +24,8 @@ const extractionFailedMessage = "Tika extraction failed inside the driver bounda
 /**
  * Message reported when a live Tika runtime cannot be reached.
  *
- * @example
+ * **Example** (Log unavailable engine message)
+ *
  * ```ts
  * import { TIKA_ENGINE_UNAVAILABLE_MESSAGE } from "@beep/tika"
  *
@@ -39,10 +40,13 @@ export const TIKA_ENGINE_UNAVAILABLE_MESSAGE = "The Tika runtime is not availabl
 /**
  * Message reported by the P1 scaffold engine when extraction is deferred.
  *
+ * **Details**
+ *
  * The scaffold predates the live engines and keeps its own wording so its
  * emitted errors stay byte-identical across the shared-translator migration.
  *
- * @example
+ * **Example** (Check scaffold deferred message)
+ *
  * ```ts
  * import { TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE } from "@beep/tika"
  *
@@ -101,17 +105,16 @@ const translate = (error: TikaError, engineUnavailableMessage: string): Translat
 /**
  * Translate a technical {@link TikaError} into a file-processing operation error.
  *
+ * **Details**
+ *
  * Transport, configuration, and reachability failures surface as
  * `engine-unavailable`; a `415` response surfaces as `unsupported-file-format`;
  * timeouts surface as `operation-timed-out`; budget overruns surface as
  * `output-limit-exceeded`; everything else surfaces as `file-extraction-failed`
  * carrying the sanitized cause in `details`.
  *
- * @param operation - Extraction operation whose artifact, format, and operation id annotate the error.
- * @param error - Technical driver failure being translated.
- * @param options - Wording overrides; engines that predate the live runners supply their own `engineUnavailableMessage`.
- * @returns The sanitized operation error for this failure.
- * @example
+ * **Example** (Translate timeout to operation error)
+ *
  * ```ts
  * import { makeTikaError, tikaOperationError } from "@beep/tika"
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
@@ -142,6 +145,10 @@ const translate = (error: TikaError, engineUnavailableMessage: string): Translat
  * Effect.runPromise(program).then(console.log) // "operation-timed-out"
  * ```
  *
+ * @param operation - Extraction operation whose artifact, format, and operation id annotate the error.
+ * @param error - Technical driver failure being translated.
+ * @param options - Wording overrides; engines that predate the live runners supply their own `engineUnavailableMessage`.
+ * @returns The sanitized operation error for this failure.
  * @category constructors
  * @since 0.0.0
  */

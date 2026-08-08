@@ -8,13 +8,14 @@
 /**
  * Epistemic entity model exports.
  *
- * @example
+ * **Example** (Import Activity table name)
+ *
  * ```ts
  * import { Activity } from "@beep/epistemic-domain"
  *
  * console.log(Activity.definition.entityId.tableName)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
@@ -22,7 +23,8 @@ export * from "./entities/index.ts";
 /**
  * Epistemic slice-local identity exports.
  *
- * @example
+ * **Example** (Log ContradictionCandidateId table name)
+ *
  * ```ts
  * import { Identity } from "@beep/epistemic-domain"
  *
@@ -36,7 +38,8 @@ export * as Identity from "./identity/index.ts";
 /**
  * Epistemic value model exports.
  *
- * @example
+ * **Example** (Decode ClaimGateSeverity warning value)
+ *
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -44,7 +47,7 @@ export * as Identity from "./identity/index.ts";
  * const severity = S.decodeUnknownSync(ClaimGateSeverity)("warning")
  * console.log(severity)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

@@ -76,7 +76,8 @@ class RetiredChangesetPackages extends S.Class<RetiredChangesetPackages>($I`Reti
 /**
  * A package name referenced by a changeset file.
  *
- * @example
+ * **Example** (Make package reference)
+ *
  * ```ts
  * import { ChangesetGraphPackageReference } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -86,6 +87,7 @@ class RetiredChangesetPackages extends S.Class<RetiredChangesetPackages>($I`Reti
  * })
  * console.log(reference.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,7 +106,8 @@ export class ChangesetGraphPackageReference extends S.Class<ChangesetGraphPackag
 /**
  * Summary emitted by the changeset package graph guard.
  *
- * @example
+ * **Example** (Make graph summary)
+ *
  * ```ts
  * import { ChangesetGraphSummary } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -116,6 +119,7 @@ export class ChangesetGraphPackageReference extends S.Class<ChangesetGraphPackag
  * })
  * console.log(summary.workspacePackages)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -332,7 +336,8 @@ const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(
 /**
  * Parse package references from one changeset Markdown document.
  *
- * @example
+ * **Example** (Parse references from Markdown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { changesetPackageReferencesFromText } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
@@ -343,6 +348,7 @@ const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(
  * )
  * Effect.runPromise(program)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -423,10 +429,8 @@ const collectChangesetPackageReferences = Effect.fn("ChangesetGraph.collectChang
 /**
  * Find changeset package references that are not in the workspace graph.
  *
- * @param workspacePackageNames - Current workspace package names.
- * @param references - Package references parsed from changeset files.
- * @returns References that do not resolve to a workspace package.
- * @example
+ * **Example** (Find missing package references)
+ *
  * ```ts
  * import { ChangesetGraphPackageReference, findMissingChangesetPackageReferences } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -436,6 +440,10 @@ const collectChangesetPackageReferences = Effect.fn("ChangesetGraph.collectChang
  * )
  * console.log(missing.length)
  * ```
+ *
+ * @param workspacePackageNames - Current workspace package names.
+ * @param references - Package references parsed from changeset files.
+ * @returns References that do not resolve to a workspace package.
  * @category utilities
  * @since 0.0.0
  */
@@ -498,13 +506,15 @@ const makeSummary = (
 /**
  * Build a changeset graph summary from already-collected inputs.
  *
- * @example
+ * **Example** (Build summary from inputs)
+ *
  * ```ts
  * import { makeChangesetGraphSummary } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
  * const summary = makeChangesetGraphSummary(["@beep/schema"], [".changeset/demo.md"], [])
  * console.log(summary.changesetFiles)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -513,13 +523,15 @@ export const makeChangesetGraphSummary = makeSummary;
 /**
  * Run the non-mutating changeset package graph guard.
  *
- * @example
+ * **Example** (Run changeset graph check)
+ *
  * ```ts
  * import { runChangesetGraphCheck } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
  * const program = runChangesetGraphCheck(process.cwd())
  * console.log(program) // example value
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

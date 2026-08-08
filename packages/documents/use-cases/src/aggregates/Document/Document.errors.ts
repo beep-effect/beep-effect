@@ -15,7 +15,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
 /**
  * Raised when the FilingDecision port cannot classify a document.
  *
- * @example
+ * **Example** (Make FilingDecisionUnavailable error)
+ *
  * ```ts
  * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
  *
@@ -41,7 +42,8 @@ export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUn
 /**
  * Raised when workspace vault materialization fails.
  *
- * @example
+ * **Example** (Make materialization failed error)
+ *
  * ```ts
  * import { DocumentMaterializationFailed } from "@beep/documents-use-cases/public"
  *
@@ -67,7 +69,8 @@ export class DocumentMaterializationFailed extends TaggedErrorClass<DocumentMate
 /**
  * Internal typed failure raised by document intake.
  *
- * @example
+ * **Example** (Decode DocumentIntakeError schema)
+ *
  * ```ts
  * import { DocumentIntakeError, FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -92,7 +95,8 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
 /**
  * Internal typed failure raised by document intake.
  *
- * @example
+ * **Example** (Type annotate DocumentIntakeError)
+ *
  * ```ts
  * import type { DocumentIntakeError } from "@beep/documents-use-cases/public"
  * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
@@ -109,7 +113,8 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
 /**
  * Client-safe failure raised when dropped-file intake cannot complete.
  *
- * @example
+ * **Example** (Create action error message)
+ *
  * ```ts
  * import { DocumentIntakeActionError } from "@beep/documents-use-cases/public"
  *

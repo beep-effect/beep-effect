@@ -10,7 +10,8 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Read package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/editor"
  *

@@ -18,7 +18,8 @@ const isFFmpegDefect = S.is(FFmpegDefect);
 /**
  * Non-negative integer process exit status.
  *
- * @example
+ * **Example** (Make process exit code)
+ *
  * ```ts
  * import { ProcessExitCode } from "@beep/ffmpeg"
  *
@@ -46,7 +47,8 @@ export const ProcessExitCode = S.Int.check(
 /**
  * Non-negative integer process exit status.
  *
- * @example
+ * **Example** (Typed ProcessExitCode value)
+ *
  * ```ts
  * import { ProcessExitCode } from "@beep/ffmpeg"
  * import type { ProcessExitCode as ProcessExitCodeValue } from "@beep/ffmpeg"
@@ -83,7 +85,8 @@ const optionsFromInput = (options: FFmpegErrorContextInput): FFmpegErrorFromUnkn
 /**
  * Additional process context captured for an FFmpeg failure.
  *
- * @example
+ * **Example** (Make FFmpeg error context)
+ *
  * ```ts
  * import { FFmpegErrorContext } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -133,7 +136,8 @@ const existingFfmpegError = (cause: unknown): O.Option<FFmpegError> =>
 /**
  * Options used when normalizing unknown FFmpeg boundary failures.
  *
- * @example
+ * **Example** (Make fromUnknown options)
+ *
  * ```ts
  * import { FFmpegErrorFromUnknownOptions } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -192,7 +196,8 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
 /**
  * Technical failure raised by the `@beep/ffmpeg` driver boundary.
  *
- * @example
+ * **Example** (Make FFmpegError instance)
+ *
  * ```ts
  * import { FFmpegError } from "@beep/ffmpeg"
  *
@@ -256,7 +261,8 @@ export class FFmpegError extends TaggedErrorClass<FFmpegError>($I`FFmpegError`)(
   /**
    * Normalize an unknown process or platform failure into a {@link FFmpegError}.
    *
-   * @example
+   * **Example** (Normalize unknown failure)
+   *
    * ```ts
    * import { FFmpegError } from "@beep/ffmpeg"
    *

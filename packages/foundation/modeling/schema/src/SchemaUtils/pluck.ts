@@ -18,6 +18,8 @@ import type { TUnsafe } from "@beep/types";
  * Project a struct schema down to one field and expose that field as the
  * decoded value.
  *
+ * **Details**
+ *
  * This helper follows the manual v4 migration pattern described in the Effect
  * Schema migration guide. It is not the old v3 `Schema.pluck` API. Instead, it
  * is a local utility that:
@@ -30,7 +32,8 @@ import type { TUnsafe } from "@beep/types";
  * returned schema no longer describes the whole original struct, only the
  * selected field and its one-property encoded representation.
  *
- * @example
+ * **Example** (Plucking one struct field)
+ *
  * ```ts
  * import * as S from "effect/Schema";
  * import { pluck } from "@beep/schema/SchemaUtils/pluck";

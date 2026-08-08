@@ -65,7 +65,8 @@ const materializeAtomically = (
 /**
  * Builds the document intake service from filesystem, path, and filing-decision dependencies.
  *
- * @example
+ * **Example** (Provide Bun layers and verify)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
@@ -153,7 +154,8 @@ export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* ()
 /**
  * Layer providing the document intake service.
  *
- * @example
+ * **Example** (Inspect DocumentIntakeLayer)
+ *
  * ```ts
  * import { DocumentIntakeLayer } from "@beep/documents-server/aggregates/Document"
  *
@@ -168,7 +170,8 @@ export const DocumentIntakeLayer = Layer.effect(DocumentIntake, makeDocumentInta
 /**
  * Documents server layer with deterministic P1 filing decisions.
  *
- * @example
+ * **Example** (Inspect DocumentsServerLayer)
+ *
  * ```ts
  * import { DocumentsServerLayer } from "@beep/documents-server/aggregates/Document"
  *
@@ -187,7 +190,8 @@ export const DocumentsServerLayer = pipe(
  * Documents server layer with live LLM filing and optional file-processing extraction.
  * The app runtime supplies its Anthropic LanguageModel and file-processing driver layers.
  *
- * @example
+ * **Example** (Inspect DocumentsServerLlmLayer)
+ *
  * ```ts
  * import { DocumentsServerLlmLayer } from "@beep/documents-server/aggregates/Document"
  *

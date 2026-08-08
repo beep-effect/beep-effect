@@ -17,13 +17,16 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
  * Epistemic execution ledger migration target used to prove the write-ahead
  * decision chain and post-settlement outcome persistence.
  *
+ * **Details**
+ *
  * The append-only invariants these tables rely on — the chain primary key, the
  * outcome-per-decision primary key, the composite decision foreign key, the
  * reason-iff-denied CHECK, and the `BEFORE UPDATE`/`BEFORE DELETE` triggers —
  * are owned by the raw-SQL migration rather than by Drizzle metadata, so this
  * target publishes the table set while the migration publishes the invariants.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { EpistemicExecutionLedgerMigrationTarget } from "@beep/db-admin/migrations/EpistemicExecutionLedger"
  *

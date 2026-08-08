@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import EmailArtifact module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/EmailArtifact"
  *
@@ -22,7 +23,8 @@ export * from "./EmailArtifact.model.ts";
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import EmailArtifact module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/EmailArtifact"
  *

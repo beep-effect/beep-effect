@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Alert theme theme value.
  *
- * @example
+ * **Example** (Import alert theme)
+ *
  * ```ts
  * import { alertTheme } from "@beep/ui/themes/components/alert"
  *

@@ -14,7 +14,8 @@ const $I = $DockId.create("Dock.ids");
 /**
  * Branded stable identity for one panel instance.
  *
- * @example
+ * **Example** (Make and check PanelId)
+ *
  * ```ts
  * import { PanelId } from "@beep/dock"
  *
@@ -38,7 +39,8 @@ export const PanelId = S.NonEmptyString.pipe(
 /**
  * Decoded panel identifier.
  *
- * @example
+ * **Example** (Typed PanelId assignment)
+ *
  * ```ts
  * import { PanelId } from "@beep/dock"
  *
@@ -54,7 +56,8 @@ export type PanelId = typeof PanelId.Type;
 /**
  * Branded stable identity for a non-empty tab group.
  *
- * @example
+ * **Example** (Make and check GroupId)
+ *
  * ```ts
  * import { GroupId } from "@beep/dock"
  *
@@ -78,7 +81,8 @@ export const GroupId = S.NonEmptyString.pipe(
 /**
  * Decoded tab-group identifier.
  *
- * @example
+ * **Example** (Typed GroupId assignment)
+ *
  * ```ts
  * import { GroupId } from "@beep/dock"
  *
@@ -94,7 +98,8 @@ export type GroupId = typeof GroupId.Type;
 /**
  * Branded stable identity for a binary layout split.
  *
- * @example
+ * **Example** (Make and check SplitId)
+ *
  * ```ts
  * import { SplitId } from "@beep/dock"
  *
@@ -118,7 +123,8 @@ export const SplitId = S.NonEmptyString.pipe(
 /**
  * Decoded binary-split identifier.
  *
- * @example
+ * **Example** (Typed SplitId assignment)
+ *
  * ```ts
  * import { SplitId } from "@beep/dock"
  *
@@ -134,7 +140,8 @@ export type SplitId = typeof SplitId.Type;
 /**
  * Branded causal identity for a top-level command and its events.
  *
- * @example
+ * **Example** (Make and check CommandId)
+ *
  * ```ts
  * import { CommandId } from "@beep/dock"
  *
@@ -158,7 +165,8 @@ export const CommandId = S.NonEmptyString.pipe(
 /**
  * Decoded command identifier.
  *
- * @example
+ * **Example** (Typed CommandId assignment)
+ *
  * ```ts
  * import { CommandId } from "@beep/dock"
  *
@@ -174,7 +182,8 @@ export type CommandId = typeof CommandId.Type;
 /**
  * Branded host-registry key for a framework-specific panel renderer.
  *
- * @example
+ * **Example** (Make and check RendererKey)
+ *
  * ```ts
  * import { RendererKey } from "@beep/dock"
  *
@@ -198,7 +207,8 @@ export const RendererKey = S.NonEmptyString.pipe(
 /**
  * Decoded renderer registry key.
  *
- * @example
+ * **Example** (Typed RendererKey assignment)
+ *
  * ```ts
  * import { RendererKey } from "@beep/dock"
  *
@@ -214,7 +224,8 @@ export type RendererKey = typeof RendererKey.Type;
 /**
  * Integer basis-point share for one child of a binary split.
  *
- * @example
+ * **Example** (Complement split ratio shares)
+ *
  * ```ts
  * import { SplitRatio } from "@beep/dock"
  *
@@ -245,7 +256,8 @@ export const SplitRatio = S.Int.check(
 /**
  * Decoded split share in integer basis points.
  *
- * @example
+ * **Example** (Typed SplitRatio assignment)
+ *
  * ```ts
  * import { SplitRatio } from "@beep/dock"
  *

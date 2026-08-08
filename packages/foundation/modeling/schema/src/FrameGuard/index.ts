@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for frame guard schemas.
  *
- * @example
+ * **Example** (Verify Header export)
+ *
  * ```ts
  * import * as FrameGuard from "@beep/schema/FrameGuard"
  *

@@ -21,7 +21,8 @@ const optionalEnvEntry = (name: string, value: O.Option<string>): Record<string,
 /**
  * Maximum time allowed for `openclaw --version`.
  *
- * @example
+ * **Example** (Log version timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_VERSION_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -37,9 +38,12 @@ export const OPENCLAW_VERSION_TIMEOUT = Duration.seconds(10);
 /**
  * Maximum time allowed for `openclaw config validate`.
  *
+ * **Details**
+ *
  * Matches the 45-second bound the P0 spikes used for hermetic validation.
  *
- * @example
+ * **Example** (Log validate timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_VALIDATE_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -55,7 +59,8 @@ export const OPENCLAW_VALIDATE_TIMEOUT = Duration.seconds(45);
 /**
  * Maximum time allowed for `openclaw config schema`.
  *
- * @example
+ * **Example** (Log schema timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_SCHEMA_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -71,7 +76,8 @@ export const OPENCLAW_SCHEMA_TIMEOUT = Duration.seconds(45);
 /**
  * Maximum time allowed for `openclaw doctor --non-interactive`.
  *
- * @example
+ * **Example** (Log doctor timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_DOCTOR_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -87,7 +93,8 @@ export const OPENCLAW_DOCTOR_TIMEOUT = Duration.seconds(60);
 /**
  * Maximum time allowed for `openclaw secrets reload`.
  *
- * @example
+ * **Example** (Log reload timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_RELOAD_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -103,7 +110,8 @@ export const OPENCLAW_RELOAD_TIMEOUT = Duration.seconds(30);
 /**
  * Maximum time allowed for `openclaw gateway call health`.
  *
- * @example
+ * **Example** (Log health timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_HEALTH_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -119,7 +127,8 @@ export const OPENCLAW_HEALTH_TIMEOUT = Duration.seconds(15);
 /**
  * Maximum time allowed for `openclaw channels status --probe`.
  *
- * @example
+ * **Example** (Log channel probe timeout)
+ *
  * ```ts
  * import { OPENCLAW_CHANNEL_PROBE_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -135,7 +144,8 @@ export const OPENCLAW_CHANNEL_PROBE_TIMEOUT = Duration.seconds(20);
 /**
  * Maximum time allowed for an HTTP liveness or readiness probe.
  *
- * @example
+ * **Example** (Log HTTP probe timeout)
+ *
  * ```ts
  * import { OPENCLAW_HTTP_PROBE_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -151,7 +161,8 @@ export const OPENCLAW_HTTP_PROBE_TIMEOUT = Duration.millis(2_500);
 /**
  * Maximum time allowed for a `systemctl --user` operation.
  *
- * @example
+ * **Example** (Log systemctl timeout seconds)
+ *
  * ```ts
  * import { OPENCLAW_SYSTEMCTL_TIMEOUT } from "@beep/openclaw/Openclaw.config"
  * import * as Duration from "effect/Duration"
@@ -167,7 +178,8 @@ export const OPENCLAW_SYSTEMCTL_TIMEOUT = Duration.seconds(30);
 /**
  * Environment variable naming the active `openclaw.json` path.
  *
- * @example
+ * **Example** (Print config path env name)
+ *
  * ```ts
  * import { OPENCLAW_CONFIG_PATH } from "@beep/openclaw/Openclaw.config"
  *
@@ -182,7 +194,8 @@ export const OPENCLAW_CONFIG_PATH = "OPENCLAW_CONFIG_PATH";
 /**
  * Environment variable naming the OpenClaw state root directory.
  *
- * @example
+ * **Example** (Print state dir env name)
+ *
  * ```ts
  * import { OPENCLAW_STATE_DIR } from "@beep/openclaw/Openclaw.config"
  *
@@ -197,10 +210,13 @@ export const OPENCLAW_STATE_DIR = "OPENCLAW_STATE_DIR";
 /**
  * Environment variable enabling OpenClaw's application-layer write guard.
  *
+ * **Details**
+ *
  * With `OPENCLAW_NIX_MODE=1` the binary treats `openclaw.json` as immutable
  * and refuses config mutations with a typed `NixModeConfigMutationError`.
  *
- * @example
+ * **Example** (Print nix mode env name)
+ *
  * ```ts
  * import { OPENCLAW_NIX_MODE } from "@beep/openclaw/Openclaw.config"
  *
@@ -215,10 +231,13 @@ export const OPENCLAW_NIX_MODE = "OPENCLAW_NIX_MODE";
 /**
  * Environment variable carrying the gateway auth token.
  *
+ * **Details**
+ *
  * Tokens travel exclusively through this environment variable — never argv,
  * unit text, or logs.
  *
- * @example
+ * **Example** (Print gateway token env name)
+ *
  * ```ts
  * import { OPENCLAW_GATEWAY_TOKEN } from "@beep/openclaw/Openclaw.config"
  *
@@ -233,13 +252,16 @@ export const OPENCLAW_GATEWAY_TOKEN = "OPENCLAW_GATEWAY_TOKEN";
 /**
  * Build the hermetic child-process environment for an OpenClaw invocation.
  *
+ * **Details**
+ *
  * The result is the complete environment (`env -i` equivalent — spawn with
  * `extendEnv: false`): a minimal PATH optionally prefixed with the pinned
  * Node bin directory, HOME/config/state paths when present, the nix-mode
  * write guard, and finally `extraEnv`, which wins on collision — that is how
  * the gateway token is injected.
  *
- * @example
+ * **Example** (Build hermetic spawn environment)
+ *
  * ```ts
  * import { hermeticOpenclawEnv } from "@beep/openclaw/Openclaw.config"
  * import { OpenclawInvocationContext } from "@beep/openclaw/Openclaw.models"
@@ -273,11 +295,14 @@ export const hermeticOpenclawEnv = (ctx: OpenclawInvocationContext): Record<stri
 /**
  * The pinned Node/OpenClaw/adapter compatibility set this driver targets.
  *
+ * **Details**
+ *
  * OpenClaw `2026.7.1-2` (`0790d9f`) from the npm registry, verified against
  * the recorded dist shasum and integrity, running under Node `24.16.0`, with
  * render-adapter version `1`.
  *
- * @example
+ * **Example** (Read pinned compatibility versions)
+ *
  * ```ts
  * import { OPENCLAW_COMPATIBILITY_SET } from "@beep/openclaw/Openclaw.config"
  *

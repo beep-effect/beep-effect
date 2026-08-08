@@ -12,10 +12,12 @@ const $I = $BoxId.create("values/Classification/Classification.model");
 /**
  * Experimental value object for Box classification metadata attached to governed content.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { Classification } from "@beep/box/experimental/domain/values/Classification/Classification.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Classification extends S.Class<Classification>($I`Classification`)(
 /**
  * Type-level companion namespace for {@link Classification} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode payload)
+ *
  * ```ts
  * import { Classification } from "@beep/box/experimental/domain/values/Classification/Classification.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Classification {
   /**
    * Encoded payload accepted by the {@link Classification} value-object schema.
    *
-   * @example
+   * **Example** (Encode made Classification)
+   *
    * ```ts
    * import { Classification } from "@beep/box/experimental/domain/values/Classification/Classification.model";
    * import * as S from "effect/Schema";

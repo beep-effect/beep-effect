@@ -23,10 +23,12 @@ const dependencyNames = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
  * CLI command that builds the workspace dependency graph and prints package names
  * in topological order (leaf dependencies first, dependents last).
  *
- * @example
+ * **Example** (Reference topo sort command)
+ *
  * ```ts
  * console.log("topoSortCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

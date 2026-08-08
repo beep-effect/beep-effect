@@ -15,7 +15,8 @@ import type { JSX } from "react";
 /**
  * Read-only Turtle source for the open ontology document.
  *
- * @example
+ * **Example** (Import OntologySourceRegion)
+ *
  * ```tsx
  * import { OntologySourceRegion } from "@beep/ontology-ui"
  *

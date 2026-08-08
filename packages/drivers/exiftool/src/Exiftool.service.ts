@@ -43,7 +43,8 @@ type ExiftoolConfigInputOptions = (typeof ExiftoolConfigInput)["~type.make.in"];
 /**
  * Runtime shape exposed by the {@link Exiftool} service.
  *
- * @example
+ * **Example** (Stub ExiftoolShape service)
+ *
  * ```ts
  * import type { ExiftoolShape } from "@beep/exiftool"
  * import { Effect } from "effect"
@@ -164,7 +165,8 @@ const metadataFromRaw = (raw: Readonly<Record<string, unknown>>): ExifMetadata =
 /**
  * Options for building native exiftool read-tags arguments.
  *
- * @example
+ * **Example** (Make read-tags options)
+ *
  * ```ts
  * import { BuildReadTagsArgsOptions } from "@beep/exiftool"
  *
@@ -214,7 +216,8 @@ const BuildReadTagsArgs = Fn({
 /**
  * Build exiftool arguments for the read-tags operation.
  *
- * @example
+ * **Example** (Build read-tags args)
+ *
  * ```ts
  * import { buildReadTagsArgs } from "@beep/exiftool"
  *
@@ -242,7 +245,8 @@ export const buildReadTagsArgs: (options: BuildReadTagsArgsOptions) => ReadonlyA
 /**
  * Options for building native exiftool write-tags arguments.
  *
- * @example
+ * **Example** (Make write-tags options)
+ *
  * ```ts
  * import { BuildWriteTagsArgsOptions, TagAssignment } from "@beep/exiftool"
  *
@@ -298,7 +302,8 @@ const BuildWriteTagsArgs = Fn({
 /**
  * Build exiftool arguments for the temp-then-commit write-tags operation.
  *
- * @example
+ * **Example** (Build write-tags args)
+ *
  * ```ts
  * import { buildWriteTagsArgs, TagAssignment } from "@beep/exiftool"
  *
@@ -327,7 +332,8 @@ export const buildWriteTagsArgs: (options: BuildWriteTagsArgsOptions) => Readonl
 /**
  * Arguments for the exiftool version probe.
  *
- * @example
+ * **Example** (Inspect version probe args)
+ *
  * ```ts
  * import { exiftoolVersionArgs } from "@beep/exiftool"
  *
@@ -554,7 +560,8 @@ const makeService = Effect.fn("Exiftool.make")(function* (configInput?: Exiftool
 /**
  * Effect service for native ExifTool execution.
  *
- * @example
+ * **Example** (Reference Exiftool service)
+ *
  * ```ts
  * import { Exiftool } from "@beep/exiftool"
  *
@@ -569,10 +576,13 @@ export class Exiftool extends Context.Service<Exiftool, ExiftoolShape>()($I`Exif
   /**
    * Build the native ExifTool service layer.
    *
+   * **Details**
+   *
    * The layer never probes the exiftool binary at build time; a missing
    * binary surfaces as an actionable {@link ExiftoolError} on the first call.
    *
-   * @example
+   * **Example** (Create service layer)
+   *
    * ```ts
    * import { Exiftool } from "@beep/exiftool"
    *

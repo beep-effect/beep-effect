@@ -11,7 +11,8 @@ import { makeNamedNode } from "../Rdf.ts";
 /**
  * OA namespace IRI.
  *
- * @example
+ * **Example** (Build Annotation IRI)
+ *
  * ```ts
  * import { OA_NAMESPACE } from "@beep/rdf/Vocab/Oa"
  *
@@ -19,15 +20,16 @@ import { makeNamedNode } from "../Rdf.ts";
  * console.log(annotationIri) // "http://www.w3.org/ns/oa#Annotation"
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const OA_NAMESPACE = "http://www.w3.org/ns/oa#" as const;
 
 /**
  * `oa:Annotation`
  *
- * @example
+ * **Example** (Inspect Annotation NamedNode)
+ *
  * ```ts
  * import { OA_ANNOTATION } from "@beep/rdf/Vocab/Oa"
  *
@@ -35,15 +37,16 @@ export const OA_NAMESPACE = "http://www.w3.org/ns/oa#" as const;
  * console.log(OA_ANNOTATION.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const OA_ANNOTATION = makeNamedNode(`${OA_NAMESPACE}Annotation`);
 
 /**
  * `oa:hasTarget`
  *
- * @example
+ * **Example** (Inspect hasTarget NamedNode)
+ *
  * ```ts
  * import { OA_HAS_TARGET } from "@beep/rdf/Vocab/Oa"
  *
@@ -51,15 +54,16 @@ export const OA_ANNOTATION = makeNamedNode(`${OA_NAMESPACE}Annotation`);
  * console.log(OA_HAS_TARGET.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const OA_HAS_TARGET = makeNamedNode(`${OA_NAMESPACE}hasTarget`);
 
 /**
  * `oa:hasSelector`
  *
- * @example
+ * **Example** (Inspect hasSelector NamedNode)
+ *
  * ```ts
  * import { OA_HAS_SELECTOR } from "@beep/rdf/Vocab/Oa"
  *
@@ -67,7 +71,7 @@ export const OA_HAS_TARGET = makeNamedNode(`${OA_NAMESPACE}hasTarget`);
  * console.log(OA_HAS_SELECTOR.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const OA_HAS_SELECTOR = makeNamedNode(`${OA_NAMESPACE}hasSelector`);

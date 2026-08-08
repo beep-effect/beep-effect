@@ -19,7 +19,8 @@ const $I = $BoxId.create("experimental/Box.schemas");
 /**
  * Schema class describing an outgoing Box API request: method, URL, query params, headers, and body.
  *
- * @example
+ * **Example** (Create RequestInfo with make)
+ *
  * ```ts
  * import * as BoxSchemas from "@beep/box/experimental/Box.schemas"
  *
@@ -52,7 +53,8 @@ export class RequestInfo extends S.Class<RequestInfo>($I`RequestInfo`)(
 /**
  * Schema class describing a Box API response: status code, headers, body, and error context fields.
  *
- * @example
+ * **Example** (Validate ResponseInfo with Schema)
+ *
  * ```ts
  * import * as BoxSchemas from "@beep/box/experimental/Box.schemas"
  * import * as S from "effect/Schema"
@@ -83,7 +85,8 @@ export class ResponseInfo extends S.Class<ResponseInfo>($I`ResponseInfo`)(
 /**
  * Schema matching instances of the Box SDK's `BoxSdkError`.
  *
- * @example
+ * **Example** (Test BoxSdkError schema match)
+ *
  * ```ts
  * import * as BoxSchemas from "@beep/box/experimental/Box.schemas"
  * import * as S from "effect/Schema"
@@ -104,16 +107,6 @@ export const BoxSdkError = S.instanceOf(Box.BoxSdkError).pipe(
 
 /**
  * {@inheritDoc BoxSdkError}
- *
- * @example
- * ```ts
- * import * as Box from "box-node-sdk/box"
- * import type { BoxSdkError } from "@beep/box/experimental/Box.schemas"
- *
- * const error: BoxSdkError = new Box.BoxSdkError({ message: "Box SDK error" })
- * console.log(error.message)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -122,7 +115,8 @@ export type BoxSdkError = typeof BoxSdkError.Type;
 /**
  * Schema matching instances of the Box SDK's `BoxApiError` returned by the Box API.
  *
- * @example
+ * **Example** (Test BoxApiError schema match)
+ *
  * ```ts
  * import * as BoxSchemas from "@beep/box/experimental/Box.schemas"
  * import * as S from "effect/Schema"
@@ -143,20 +137,6 @@ export const BoxApiError = S.instanceOf(Box.BoxApiError).pipe(
 
 /**
  * {@inheritDoc BoxApiError}
- *
- * @example
- * ```ts
- * import * as Box from "box-node-sdk/box"
- * import type { BoxApiError } from "@beep/box/experimental/Box.schemas"
- *
- * const error: BoxApiError = new Box.BoxApiError({
- *   message: "Box API error",
- *   requestInfo: { method: "GET", url: "https://api.box.com/2.0/files/1", queryParams: {}, headers: {} },
- *   responseInfo: { statusCode: 404, headers: {} }
- * })
- * console.log(error.responseInfo.statusCode)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -165,7 +145,8 @@ export type BoxApiError = typeof BoxApiError.Type;
 /**
  * Schema matching instances of the Box SDK's `AiAgentAsk` AI-agent request configuration.
  *
- * @example
+ * **Example** (Validate AiAgentAsk instance)
+ *
  * ```ts
  * import * as BoxSchemas from "@beep/box/experimental/Box.schemas"
  * import * as S from "effect/Schema"

@@ -35,7 +35,8 @@ import type { ThemeOptions } from "./types.ts";
 /**
  * Theme options theme value.
  *
- * @example
+ * **Example** (Import and log themeOptions)
+ *
  * ```ts
  * import { themeOptions } from "@beep/ui/themes/theme"
  *
@@ -82,7 +83,8 @@ export const themeOptions: ThemeOptions = {
 /**
  * Create app theme export.
  *
- * @example
+ * **Example** (Import and log createAppTheme)
+ *
  * ```ts
  * import { createAppTheme } from "@beep/ui/themes/theme"
  *
@@ -97,7 +99,8 @@ export const createAppTheme = (overrides: ThemeOptions = {}): Theme => createThe
 /**
  * Theme theme value.
  *
- * @example
+ * **Example** (Import and log theme)
+ *
  * ```ts
  * import { theme } from "@beep/ui/themes/theme"
  *

@@ -29,7 +29,8 @@ const normalizeInstructionText = flow(Str.split("\n"), A.map(Str.trimEnd), A.joi
 /**
  * Agent instruction markdown document.
  *
- * @example
+ * **Example** (Decode agent instruction document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AgentInstructionDocument } from "@beep/ai-sync"
@@ -37,6 +38,7 @@ const normalizeInstructionText = flow(Str.split("\n"), A.map(Str.trimEnd), A.joi
  * const document = S.decodeUnknownSync(AgentInstructionDocument)("# Rules")
  * console.log(document.startsWith("#"))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -54,12 +56,14 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link AgentInstructionDocument}.
  *
- * @example
+ * **Example** (Annotate instruction document type)
+ *
  * ```ts
  * import type { AgentInstructionDocument } from "@beep/ai-sync"
  * const document: AgentInstructionDocument = "# Instructions"
  * console.log(document)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -68,7 +72,8 @@ export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
 /**
  * Normalized agent instruction markdown document.
  *
- * @example
+ * **Example** (Decode normalized document with Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
@@ -76,6 +81,7 @@ export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
  * const program = NormalizedAgentInstructionDocument.decodeEffect("# Rules  ")
  * Effect.runPromise(program).then((document) => console.log(document))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -100,13 +106,15 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
 /**
  * Runtime type for {@link NormalizedAgentInstructionDocument}.
  *
- * @example
+ * **Example** (Annotate normalized document type)
+ *
  * ```ts
  * import type { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
  *
  * const document: NormalizedAgentInstructionDocument = "# Instructions"
  * console.log(document)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -115,7 +123,8 @@ export type NormalizedAgentInstructionDocument = typeof NormalizedAgentInstructi
 /**
  * Generic agent skill frontmatter shared by compatible agents.
  *
- * @example
+ * **Example** (Make agent skill frontmatter)
+ *
  * ```ts
  * import { AgentSkillFrontmatter } from "@beep/ai-sync"
  *
@@ -125,6 +134,7 @@ export type NormalizedAgentInstructionDocument = typeof NormalizedAgentInstructi
  * })
  * console.log(frontmatter.name)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -147,7 +157,8 @@ export class AgentSkillFrontmatter extends S.Class<AgentSkillFrontmatter>($I`Age
 /**
  * Unknown native schema marker for documented-but-undisclosed surfaces.
  *
- * @example
+ * **Example** (Make unknown native schema cell)
+ *
  * ```ts
  * import { UnknownNativeSchemaCell } from "@beep/ai-sync"
  * const cell = UnknownNativeSchemaCell.make({
@@ -157,6 +168,7 @@ export class AgentSkillFrontmatter extends S.Class<AgentSkillFrontmatter>($I`Age
  * })
  * console.log(cell.reason)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -174,12 +186,14 @@ export class UnknownNativeSchemaCell extends S.Class<UnknownNativeSchemaCell>($I
 /**
  * Documentation-backed generic command metadata.
  *
- * @example
+ * **Example** (Make agent command metadata)
+ *
  * ```ts
  * import { AgentCommandMetadata } from "@beep/ai-sync"
  * const command = AgentCommandMetadata.make({ name: "review", description: "Review the repo" })
  * console.log(command.name)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -197,12 +211,14 @@ export class AgentCommandMetadata extends S.Class<AgentCommandMetadata>($I`Agent
 /**
  * Generic package/plugin manifest metadata used only where a native schema is known.
  *
- * @example
+ * **Example** (Make plugin manifest metadata)
+ *
  * ```ts
  * import { AgentPluginManifestMetadata } from "@beep/ai-sync"
  * const manifest = AgentPluginManifestMetadata.make({ name: "example", version: "0.0.0" })
  * console.log(manifest.version)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

@@ -9,9 +9,8 @@
 /**
  * RegulationCitation model exports.
  *
- * **Example**
+ * **Example** (Import RegulationCitation export)
  *
- * @example
  * ```ts
  * import { RegulationCitation } from "@beep/law-practice-domain/values";
  * ```

@@ -13,7 +13,8 @@ import type * as React from "react";
 /**
  * Drawer component.
  *
- * @example
+ * **Example** (Import Drawer component)
+ *
  * ```tsx
  * import { Drawer } from "@beep/ui/components/drawer"
  *
@@ -30,7 +31,8 @@ function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>)
 /**
  * Drawer trigger component.
  *
- * @example
+ * **Example** (Import DrawerTrigger component)
+ *
  * ```tsx
  * import { DrawerTrigger } from "@beep/ui/components/drawer"
  *
@@ -47,7 +49,8 @@ function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive
 /**
  * Drawer portal component.
  *
- * @example
+ * **Example** (Import DrawerPortal component)
+ *
  * ```tsx
  * import { DrawerPortal } from "@beep/ui/components/drawer"
  *
@@ -64,7 +67,8 @@ function DrawerPortal({ ...props }: React.ComponentProps<typeof DrawerPrimitive.
 /**
  * Drawer close component.
  *
- * @example
+ * **Example** (Import DrawerClose component)
+ *
  * ```tsx
  * import { DrawerClose } from "@beep/ui/components/drawer"
  *
@@ -81,7 +85,8 @@ function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.C
 /**
  * Drawer overlay component.
  *
- * @example
+ * **Example** (Import DrawerOverlay component)
+ *
  * ```tsx
  * import { DrawerOverlay } from "@beep/ui/components/drawer"
  *
@@ -107,7 +112,8 @@ function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof Draw
 /**
  * Drawer content component.
  *
- * @example
+ * **Example** (Import DrawerContent component)
+ *
  * ```tsx
  * import { DrawerContent } from "@beep/ui/components/drawer"
  *
@@ -139,7 +145,8 @@ function DrawerContent({ className, children, ...props }: React.ComponentProps<t
 /**
  * Drawer header component.
  *
- * @example
+ * **Example** (Import DrawerHeader component)
+ *
  * ```tsx
  * import { DrawerHeader } from "@beep/ui/components/drawer"
  *
@@ -165,7 +172,8 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Drawer footer component.
  *
- * @example
+ * **Example** (Import DrawerFooter component)
+ *
  * ```tsx
  * import { DrawerFooter } from "@beep/ui/components/drawer"
  *
@@ -182,7 +190,8 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Drawer title component.
  *
- * @example
+ * **Example** (Import DrawerTitle component)
+ *
  * ```tsx
  * import { DrawerTitle } from "@beep/ui/components/drawer"
  *
@@ -205,7 +214,8 @@ function DrawerTitle({ className, ...props }: React.ComponentProps<typeof Drawer
 /**
  * Drawer description component.
  *
- * @example
+ * **Example** (Import DrawerDescription component)
+ *
  * ```tsx
  * import { DrawerDescription } from "@beep/ui/components/drawer"
  *

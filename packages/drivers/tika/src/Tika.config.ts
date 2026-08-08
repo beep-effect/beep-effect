@@ -85,7 +85,8 @@ const TikaServerBaseUrl = URLStr.pipe(
 /**
  * Engine name reported by every Tika engine descriptor and operation error.
  *
- * @example
+ * **Example** (Log engine name constant)
+ *
  * ```ts
  * import { TIKA_ENGINE_NAME } from "@beep/tika"
  *
@@ -100,10 +101,13 @@ export const TIKA_ENGINE_NAME = "apache-tika";
 /**
  * Default Tika Server base URL.
  *
+ * **Details**
+ *
  * Tika Server is an external sidecar listening on its stock port, not a repo
  * dev server, so the portless naming convention does not apply to it.
  *
- * @example
+ * **Example** (Log default server URL)
+ *
  * ```ts
  * import { TIKA_SERVER_URL } from "@beep/tika"
  *
@@ -118,7 +122,8 @@ export const TIKA_SERVER_URL = "http://localhost:9998";
 /**
  * Environment variable read for the Tika Server base URL.
  *
- * @example
+ * **Example** (Log base URL env name)
+ *
  * ```ts
  * import { BEEP_TIKA_BASE_URL_ENV } from "@beep/tika"
  *
@@ -133,7 +138,8 @@ export const BEEP_TIKA_BASE_URL_ENV = "BEEP_TIKA_BASE_URL";
 /**
  * Environment variable read for the per-file Tika Server extraction timeout.
  *
- * @example
+ * **Example** (Log timeout env name)
+ *
  * ```ts
  * import { BEEP_TIKA_TIMEOUT_MILLIS_ENV } from "@beep/tika"
  *
@@ -148,7 +154,8 @@ export const BEEP_TIKA_TIMEOUT_MILLIS_ENV = "BEEP_TIKA_TIMEOUT_MILLIS";
 /**
  * Environment variable read for the Tika Server materialized-text budget.
  *
- * @example
+ * **Example** (Log max output env name)
+ *
  * ```ts
  * import { BEEP_TIKA_MAX_OUTPUT_BYTES_ENV } from "@beep/tika"
  *
@@ -163,12 +170,15 @@ export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
 /**
  * Configuration for the Tika Server HTTP engine.
  *
+ * **Details**
+ *
  * `maxOutputBytes` is the driver-level ceiling on the Tika Server response
  * body — JSON envelope, metadata, and extracted text together — enforced while
  * the body streams. An absent value means unbounded, and a per-operation
  * `maxMaterializedBytes` narrows it further.
  *
- * @example
+ * **Example** (Make default engine config)
+ *
  * ```ts
  * import { TikaServerEngineConfig } from "@beep/tika"
  *

@@ -66,7 +66,8 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
 /**
  * Capture a URL as a knowledge card through Firecrawl.
  *
- * @example
+ * **Example** (Capture tagged URL card)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { captureUrlImpl } from "@beep/repo-cli/commands/Research/internal/Capture"
@@ -77,6 +78,7 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

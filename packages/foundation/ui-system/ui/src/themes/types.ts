@@ -9,7 +9,8 @@ import type { createTheme } from "@mui/material/styles";
 /**
  * Theme options type.
  *
- * @example
+ * **Example** (Describe ThemeOptions keys)
+ *
  * ```ts
  * import type { ThemeOptions } from "@beep/ui/themes/types"
  *
@@ -26,7 +27,8 @@ export type ThemeOptions = NonNullable<Parameters<typeof createTheme>[0]>;
 /**
  * Theme components type.
  *
- * @example
+ * **Example** (Describe ThemeComponents keys)
+ *
  * ```ts
  * import type { ThemeComponents } from "@beep/ui/themes/types"
  *

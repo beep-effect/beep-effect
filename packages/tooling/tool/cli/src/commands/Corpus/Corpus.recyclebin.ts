@@ -71,11 +71,13 @@ const v2Path = (bytes: Uint8Array, view: DataView): Effect.Effect<string, Corpus
 /**
  * Parse one `$I` recycle-bin metadata file into its recovered original facts.
  *
+ * **Details**
+ *
  * Supports format v1 (Windows Vista-8.1, fixed 520-byte path) and v2
  * (Windows 10+, length-prefixed path).
  *
- * @effects Parses the supplied bytes in memory and fails with `CorpusCommandError` for invalid metadata; it does not read or write files.
- * @example
+ * **Example** (Parse recycle-bin metadata bytes)
+ *
  * ```ts
  * import { parseRecycleBinMetadata } from "@beep/repo-cli/commands/Corpus"
  * import { Effect } from "effect"
@@ -91,6 +93,8 @@ const v2Path = (bytes: Uint8Array, view: DataView): Effect.Effect<string, Corpus
  *
  * Effect.runPromise(parseRecycleBinMetadata(bytes)).then((original) => console.log(original.originalName)) // "spec.docx"
  * ```
+ *
+ * @effects Parses the supplied bytes in memory and fails with `CorpusCommandError` for invalid metadata; it does not read or write files.
  * @category parsing
  * @since 0.0.0
  */
@@ -133,13 +137,14 @@ export const parseRecycleBinMetadata = Effect.fn("Corpus.parseRecycleBinMetadata
 /**
  * Classify a file name as a `$I` metadata or `$R` content artifact.
  *
+ * **Details**
+ *
  * The pair key is the shared suffix after the `$I`/`$R` prefix (random token
  * plus original extension), which is what Windows keeps identical across a
  * deleted file's metadata/content pair.
  *
- * @param fileName - Base file name to classify.
- * @returns The artifact kind and pair key, or none for non-recycle-bin names.
- * @example
+ * **Example** (Classify recycle-bin file names)
+ *
  * ```ts
  * import { classifyRecycleBinName } from "@beep/repo-cli/commands/Corpus"
  * import * as O from "effect/Option"
@@ -147,6 +152,9 @@ export const parseRecycleBinMetadata = Effect.fn("Corpus.parseRecycleBinMetadata
  * console.log(O.isSome(classifyRecycleBinName("$I0CB4M9.docx"))) // true
  * console.log(O.isNone(classifyRecycleBinName("README.md"))) // true
  * ```
+ *
+ * @param fileName - Base file name to classify.
+ * @returns The artifact kind and pair key, or none for non-recycle-bin names.
  * @category parsing
  * @since 0.0.0
  */
@@ -165,13 +173,14 @@ export const classifyRecycleBinName = (
 /**
  * Pair `$I` metadata entries with `$R` content entries on their pair key.
  *
+ * **Details**
+ *
  * Entries sharing a pair key with both kinds present join into a matched
  * pair; leftovers land in the unmatched buckets. Callers scope pair keys
  * (for example by parent directory) before invoking.
  *
- * @param entries - Scan entries to pair.
- * @returns Matched pairs plus unmatched metadata and content leftovers.
- * @example
+ * **Example** (Pair recycle-bin scan entries)
+ *
  * ```ts
  * import { pairRecycleBinEntries, RecycleBinScanEntry } from "@beep/repo-cli/commands/Corpus"
  *
@@ -183,6 +192,9 @@ export const classifyRecycleBinName = (
  *
  * console.log(`${pairing.matched.length},${pairing.unmatchedContent.length}`) // "1,1"
  * ```
+ *
+ * @param entries - Scan entries to pair.
+ * @returns Matched pairs plus unmatched metadata and content leftovers.
  * @category parsing
  * @since 0.0.0
  */

@@ -25,12 +25,14 @@ class PrefetchInliningConfigComplex extends S.Class<PrefetchInliningConfigComple
  * Resolved form of the prefetchInlining config after normalization in
  * config.ts. User input (true, partial objects) is converted to this shape.
  *
- * @example
+ * **Example** (Import and log schema)
+ *
  * ```ts
  * import { PrefetchInliningConfig } from "@beep/repo-configs/next/models/PrefetchInliningConfig.schema"
  * const schema = PrefetchInliningConfig
  * console.log(schema)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -44,12 +46,14 @@ export const PrefetchInliningConfig = S.Union([S.Literal(false), PrefetchInlinin
 /**
  * Companion type for {@link PrefetchInliningConfig} schema
  *
- * @example
+ * **Example** (Type-check false config)
+ *
  * ```ts
  * import type { PrefetchInliningConfig } from "@beep/repo-configs/next/models/PrefetchInliningConfig.schema"
  * const config = false satisfies PrefetchInliningConfig
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

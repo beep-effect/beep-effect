@@ -13,18 +13,22 @@ const $I = $RepoUtilsId.create("JSDoc/models/ASTDerivability.model");
 /**
  * Whether this tag's content can be deterministically derived from the TypeScript AST.
  *
+ * **Details**
+ *
  * This is the KEY field for the knowledge graph pipeline:
  *   - "full"    → Layer 1 (certainty=1.0): 100% derivable from AST, no human input needed
  *   - "partial" → Layer 2 (certainty=0.85-0.95): Structurally derivable but may need human context
  *   - "none"    → Layer 3 (certainty=0.6-0.85): Requires human authoring or LLM inference
  *
- * @example
+ * **Example** (Assert full derivability)
+ *
  * ```ts
  * import { ASTDerivability } from "@beep/repo-utils/JSDoc/models/ASTDerivability.model"
  *
  * const derivability = ASTDerivability.Enum.full
  * console.log(ASTDerivability.is.full(derivability))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,7 +43,8 @@ export const ASTDerivability = LiteralKit(["full", "partial", "none"]).pipe(
 /**
  * JSDoc model export.
  *
- * @example
+ * **Example** (Constrain generic parameter)
+ *
  * ```ts
  * import type { ASTDerivability } from "@beep/repo-utils/JSDoc/models/ASTDerivability.model"
  *
@@ -47,6 +52,7 @@ export const ASTDerivability = LiteralKit(["full", "partial", "none"]).pipe(
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

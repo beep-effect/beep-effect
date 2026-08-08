@@ -8,7 +8,8 @@
 /**
  * Shared identity namespace exports.
  *
- * @example
+ * **Example** (Import identity namespace)
+ *
  * ```ts
  * import * as Identity from "@beep/shared-domain/identity"
  *

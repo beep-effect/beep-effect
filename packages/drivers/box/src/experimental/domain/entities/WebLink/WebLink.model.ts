@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/WebLink/WebLink.model");
 /**
  * Experimental schema anchor for Box web link resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { WebLink } from "@beep/box/experimental/domain/entities/WebLink/WebLink.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class WebLink extends S.Class<WebLink>($I`WebLink`)(
 /**
  * Type-level companion namespace for {@link WebLink} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode payload)
+ *
  * ```ts
  * import { WebLink } from "@beep/box/experimental/domain/entities/WebLink/WebLink.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace WebLink {
   /**
    * Encoded payload accepted by the {@link WebLink} entity schema.
    *
-   * @example
+   * **Example** (Encode made WebLink)
+   *
    * ```ts
    * import { WebLink } from "@beep/box/experimental/domain/entities/WebLink/WebLink.model";
    * import * as S from "effect/Schema";

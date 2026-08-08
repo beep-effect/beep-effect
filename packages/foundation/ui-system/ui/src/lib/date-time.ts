@@ -1,7 +1,8 @@
 /**
  * Date-time presentation helpers for UI components.
  *
- * @example
+ * **Example** (Format short UTC date)
+ *
  * ```ts
  * import { formatShortDate, toUtcDateTime } from "@beep/ui/lib/date-time"
  *
@@ -9,9 +10,9 @@
  * console.log(formatShortDate(dateTime))
  * ```
  *
+ * @packageDocumentation
  * @category utilities
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { DateTime, flow } from "effect";
@@ -24,16 +25,17 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
 /**
  * Parse a date-like UI value into a UTC `DateTime`.
  *
- * @example
+ * **Example** (Parse string to UTC DateTime)
+ *
  * ```ts
  * import { toUtcDateTime } from "@beep/ui/lib/date-time"
  *
  * console.log(toUtcDateTime("2024-01-02T00:00:00.000Z")._tag)
  * ```
  *
- * @category utilities
  * @param value - JavaScript date or date string accepted by Effect `DateTime`.
  * @returns The value normalized to UTC.
+ * @category utilities
  * @since 0.0.0
  */
 export const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTime.makeUnsafe, DateTime.toUtc);
@@ -41,16 +43,17 @@ export const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTi
 /**
  * Format a UTC date-time as a short month/day label.
  *
- * @example
+ * **Example** (Format short month day)
+ *
  * ```ts
  * import { formatShortDate, toUtcDateTime } from "@beep/ui/lib/date-time"
  *
  * console.log(formatShortDate(toUtcDateTime("2024-01-02T00:00:00.000Z")))
  * ```
  *
- * @category utilities
  * @param dateTime - UTC date-time to format.
  * @returns Short month/day display text.
+ * @category utilities
  * @since 0.0.0
  */
 export const formatShortDate = (dateTime: DateTime.Utc): string =>

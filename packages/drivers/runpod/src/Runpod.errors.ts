@@ -28,7 +28,8 @@ const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decod
 /**
  * Numeric HTTP status code emitted by Runpod driver boundaries.
  *
- * @example
+ * **Example** (Checking status code membership)
+ *
  * ```ts
  * import { RunpodHttpStatusCode } from "@beep/runpod"
  *
@@ -48,7 +49,8 @@ export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maxi
 /**
  * Type for {@link RunpodHttpStatusCode}.
  *
- * @example
+ * **Example** (Annotating status code type)
+ *
  * ```ts
  * import type { RunpodHttpStatusCode } from "@beep/runpod"
  *
@@ -64,7 +66,8 @@ export type RunpodHttpStatusCode = typeof RunpodHttpStatusCode.Type;
 /**
  * Technical error reasons emitted by the Runpod REST API driver.
  *
- * @example
+ * **Example** (Inspecting error reason AST)
+ *
  * ```ts
  * import { RunpodErrorReason } from "@beep/runpod"
  *
@@ -88,7 +91,8 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
 /**
  * Type for {@link RunpodErrorReason}.
  *
- * @example
+ * **Example** (Assigning transport error reason)
+ *
  * ```ts
  * import type { RunpodErrorReason } from "@beep/runpod"
  *
@@ -104,7 +108,8 @@ export type RunpodErrorReason = typeof RunpodErrorReason.Type;
 /**
  * Technical error reasons emitted by the Runpod documentation index driver.
  *
- * @example
+ * **Example** (Inspecting docs reason AST)
+ *
  * ```ts
  * import { RunpodDocsErrorReason } from "@beep/runpod"
  *
@@ -128,7 +133,8 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
 /**
  * Type for {@link RunpodDocsErrorReason}.
  *
- * @example
+ * **Example** (Assigning parse error reason)
+ *
  * ```ts
  * import type { RunpodDocsErrorReason } from "@beep/runpod"
  *
@@ -144,7 +150,8 @@ export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 /**
  * Technical failure raised by the Runpod REST API driver boundary.
  *
- * @example
+ * **Example** (Creating config RunpodError)
+ *
  * ```ts
  * import { RunpodError } from "@beep/runpod"
  *
@@ -229,7 +236,8 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
 /**
  * Technical failure raised by the Runpod documentation index driver boundary.
  *
- * @example
+ * **Example** (Building docs error from reason)
+ *
  * ```ts
  * import { RunpodDocsError } from "@beep/runpod"
  *
@@ -273,7 +281,8 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
 /**
  * Options used when constructing Runpod driver errors.
  *
- * @example
+ * **Example** (Making options with cause)
+ *
  * ```ts
  * import { RunpodErrorOptions } from "@beep/runpod"
  * import * as O from "effect/Option"
@@ -311,7 +320,8 @@ class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`Runpod
 /**
  * Options used when constructing Runpod driver errors for raw requests.
  *
- * @example
+ * **Example** (Making raw request options)
+ *
  * ```ts
  * import { RunpodRawErrorOptions } from "@beep/runpod"
  *
@@ -342,7 +352,8 @@ export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`Run
 /**
  * Options used when constructing Runpod documentation driver errors.
  *
- * @example
+ * **Example** (Making docs error options)
+ *
  * ```ts
  * import { RunpodDocsErrorOptions } from "@beep/runpod"
  * import * as O from "effect/Option"

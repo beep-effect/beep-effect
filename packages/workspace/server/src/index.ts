@@ -9,7 +9,8 @@
 /**
  * Package version for the workspace server role.
  *
- * @example
+ * **Example** (Import workspace server version)
+ *
  * ```ts
  * import { VERSION } from "@beep/workspace-server"
  *

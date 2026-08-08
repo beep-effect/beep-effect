@@ -20,11 +20,14 @@ const NEXT_GEN_CSO_TOKEN_LENGTH = 128;
 /**
  * The opaque 128-character PACER `nextGenCSO` authentication token.
  *
+ * **Details**
+ *
  * Branded so it can never be confused with an ordinary string; the service
  * layer wraps it in a redacted value before it is stored or
  * threaded onto downstream PCL requests.
  *
- * @example
+ * **Example** (Make branded CSO token)
+ *
  * ```ts
  * import { NextGenCsoToken } from "@beep/pacer"
  * import * as Str from "effect/String"
@@ -58,7 +61,8 @@ export const NextGenCsoToken = S.String.pipe(
 /**
  * Type for {@link NextGenCsoToken}.
  *
- * @example
+ * **Example** (Annotate token variable type)
+ *
  * ```ts
  * import { NextGenCsoToken } from "@beep/pacer"
  * import type { NextGenCsoToken as NextGenCsoTokenType } from "@beep/pacer"
@@ -76,12 +80,15 @@ export type NextGenCsoToken = typeof NextGenCsoToken.Type;
 /**
  * Documented PACER `loginResult` codes from the Authentication API.
  *
+ * **Details**
+ *
  * `"0"` = a token was issued (note: a non-empty `errorDescription` can still
  * accompany `"0"` as a non-fatal search-privilege warning); `"1"` = a registered
  * filer omitted the redaction flag; `"13"` = invalid username, password, or OTP.
  * Any non-`"0"` value means authentication failed and `nextGenCSO` is empty.
  *
- * @example
+ * **Example** (Lookup invalid credentials code)
+ *
  * ```ts
  * import { LoginResult } from "@beep/pacer"
  *
@@ -101,7 +108,8 @@ export const LoginResult = LiteralKit(["0", "1", "13"]).pipe(
 /**
  * Type for {@link LoginResult}.
  *
- * @example
+ * **Example** (Annotate login result type)
+ *
  * ```ts
  * import { LoginResult } from "@beep/pacer"
  * import type { LoginResult as LoginResultType } from "@beep/pacer"
@@ -120,7 +128,8 @@ export type LoginResult = typeof LoginResult.Type;
  * criminal, civil, and multidistrict litigation. Note the PCL *response* spells
  * jurisdiction out (e.g. `"Civil"`), so responses keep a plain string.
  *
- * @example
+ * **Example** (Access civil jurisdiction code)
+ *
  * ```ts
  * import { JurisdictionType } from "@beep/pacer"
  *
@@ -139,7 +148,8 @@ export const JurisdictionType = LiteralKit(["ap", "bk", "cr", "cv", "mdl"]).pipe
 /**
  * Type for {@link JurisdictionType}.
  *
- * @example
+ * **Example** (Annotate jurisdiction type)
+ *
  * ```ts
  * import { JurisdictionType } from "@beep/pacer"
  * import type { JurisdictionType as JurisdictionTypeType } from "@beep/pacer"
@@ -156,12 +166,15 @@ export type JurisdictionType = typeof JurisdictionType.Type;
 /**
  * A PCL "full" case number, e.g. `1:2002bk20340`.
  *
+ * **Details**
+ *
  * Plain `string` at the type level, but it carries a custom `toArbitrary`
  * annotation so any schema-derived generation (`Schema.toArbitrary` for mock
  * bodies and property tests) produces realistic case numbers instead of random
  * unicode — exercising the real shape rather than hardcoded fixtures.
  *
- * @example
+ * **Example** (Make full case number)
+ *
  * ```ts
  * import { CaseNumberFull } from "@beep/pacer"
  *
@@ -184,7 +197,8 @@ export const CaseNumberFull = S.String.pipe(
 /**
  * Type for {@link CaseNumberFull}.
  *
- * @example
+ * **Example** (Annotate case number type)
+ *
  * ```ts
  * import { CaseNumberFull } from "@beep/pacer"
  * import type { CaseNumberFull as CaseNumberFullType } from "@beep/pacer"
@@ -202,7 +216,8 @@ export type CaseNumberFull = typeof CaseNumberFull.Type;
  * Which PACER environment the POC targets. QA is non-billable test data; prod
  * is the real, billable service.
  *
- * @example
+ * **Example** (Access QA environment value)
+ *
  * ```ts
  * import { PacerEnvironment } from "@beep/pacer"
  *
@@ -221,7 +236,8 @@ export const PacerEnvironment = LiteralKit(["qa", "prod"]).pipe(
 /**
  * Type for {@link PacerEnvironment}.
  *
- * @example
+ * **Example** (Annotate environment type)
+ *
  * ```ts
  * import { PacerEnvironment } from "@beep/pacer"
  * import type { PacerEnvironment as PacerEnvironmentType } from "@beep/pacer"
@@ -238,7 +254,8 @@ export type PacerEnvironment = typeof PacerEnvironment.Type;
 /**
  * Status of a PCL asynchronous batch/download report job.
  *
- * @example
+ * **Example** (Access completed report status)
+ *
  * ```ts
  * import { ReportStatus } from "@beep/pacer"
  *
@@ -257,7 +274,8 @@ export const ReportStatus = LiteralKit(["WAITING", "RUNNING", "COMPLETED", "FAIL
 /**
  * Type for {@link ReportStatus}.
  *
- * @example
+ * **Example** (Annotate report status type)
+ *
  * ```ts
  * import { ReportStatus } from "@beep/pacer"
  * import type { ReportStatus as ReportStatusType } from "@beep/pacer"

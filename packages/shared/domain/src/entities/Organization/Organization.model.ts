@@ -19,7 +19,8 @@ const $I = $SharedDomainId.create("entities/Organization/Organization.model");
 /**
  * Shared-kernel Organization entity schema.
  *
- * @example
+ * **Example** (Access organization table name)
+ *
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  *

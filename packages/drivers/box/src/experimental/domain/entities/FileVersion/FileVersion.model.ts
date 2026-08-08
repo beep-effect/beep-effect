@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/FileVersion/FileVersion.m
 /**
  * Experimental schema anchor for historical versions of Box files.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { FileVersion } from "@beep/box/experimental/domain/entities/FileVersion/FileVersion.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class FileVersion extends S.Class<FileVersion>($I`FileVersion`)(
 /**
  * Type-level companion namespace for {@link FileVersion} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { FileVersion } from "@beep/box/experimental/domain/entities/FileVersion/FileVersion.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace FileVersion {
   /**
    * Encoded payload accepted by the {@link FileVersion} entity schema.
    *
-   * @example
+   * **Example** (Encode empty FileVersion)
+   *
    * ```ts
    * import { FileVersion } from "@beep/box/experimental/domain/entities/FileVersion/FileVersion.model";
    * import * as S from "effect/Schema";

@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for HTTP status schemas.
  *
- * @example
+ * **Example** (Decode HTTP status schema)
+ *
  * ```ts
  * import * as HttpStatus from "@beep/schema/HttpStatus"
  * import * as S from "effect/Schema"
