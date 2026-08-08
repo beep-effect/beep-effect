@@ -10,12 +10,14 @@
 /**
  * Generated source metadata with content hashes for Tier-1 sources.
  *
- * @example
+ * **Example** (Read the generated Tier-1 source metadata)
+ *
  * ```ts
  * import { GENERATED_TIER_ONE_SOURCE_METADATA } from "@beep/ai-sync/_generated/source-metadata.gen"
  *
  * console.log(GENERATED_TIER_ONE_SOURCE_METADATA.length)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -57,7 +59,7 @@ export const GENERATED_TIER_ONE_SOURCE_METADATA = [
     domain: "settings",
     tier: "tier_1",
     url: "https://json.schemastore.org/claude-code-settings.json",
-    contentHash: "288891440e366ac4459210370f9e76a16612587cde3c32eaa69f116f268aa2fe",
+    contentHash: "6d4a6e3c7adedffce8079ccaef0a4bab5f5718b054421b4475c788a0ae4bedfe",
     isOfficial: false,
     driftMechanism: "hash",
   },
@@ -90,7 +92,7 @@ export const GENERATED_TIER_ONE_SOURCE_METADATA = [
     tier: "tier_1",
     url: "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/schema/2025-11-25/schema.json",
     versionPin: "2025-11-25",
-    contentHash: "7b2d96fd95efd2216aa953606b83f5a740ddeaa5ebd3a5d27b45a8296545a118",
+    contentHash: "268a5f82ba70fd7e4b6dc4aa1e64f116f74b4d0edcb69dc046829c79dd4e97e7",
     isOfficial: true,
     driftMechanism: "version_and_hash",
   },
@@ -100,7 +102,7 @@ export const GENERATED_TIER_ONE_SOURCE_METADATA = [
     domain: "unified-config",
     tier: "tier_1",
     url: "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
-    contentHash: "f41b757318fadfbaebff3d94bed8efbcd1251879a33106469d432633355eb356",
+    contentHash: "3f6ec1d741fd073cb05cdd892ab518585b3dc3b3c191e57583ba0613fdc2867c",
     isOfficial: false,
     driftMechanism: "hash",
   },
@@ -110,7 +112,7 @@ export const GENERATED_TIER_ONE_SOURCE_METADATA = [
     domain: "mcp-servers",
     tier: "tier_1",
     url: "https://github.com/dyoshikawa/rulesync/releases/latest/download/mcp-schema.json",
-    contentHash: "9d7c500303d8c90b6788c9c5ffe5e758fddc3e8aaaea15c80feb0c03d681bf48",
+    contentHash: "6de6245e9a76476a8e8de6ded9f3b5ab35db4c9f6abe5a8e8269594109404ab9",
     isOfficial: false,
     driftMechanism: "hash",
   },

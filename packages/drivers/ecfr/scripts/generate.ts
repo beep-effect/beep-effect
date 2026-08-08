@@ -119,7 +119,7 @@ const exampleValueExpr = (
 /**
  * Example `.make({...})` field literal covering only the required fields, so
  * every generated example is minimal but always valid. Single-line so it can
- * be embedded in a `@example` fence without breaking the JSDoc `* ` prefix on
+ * be embedded in an Example fence without breaking the JSDoc `* ` prefix on
  * continuation lines.
  */
 const exampleFieldsLiteral = (schema: JsonSchema, definitions: Record<string, JsonSchema>): string => {
@@ -172,7 +172,7 @@ const renderModelFields = (schema: JsonSchema, required: MutableHashSet.MutableH
 const modelDescription = (name: string, schema: JsonSchema): string =>
   schema.description ?? `The ${name} eCFR value model.`;
 
-/** The first required field name, used to pick a field to log in the generated `@example`. */
+/** The first required field name, used to pick a field to log in the generated Example section. */
 const firstRequiredFieldName = (
   schema: JsonSchema,
   required: MutableHashSet.MutableHashSet<string>
@@ -189,7 +189,8 @@ const renderObjectModel = (name: string, schema: JsonSchema, definitions: Record
   return `/**
  * ${description}
  *
- * @example
+ * **Example** (Construct the ${name})
+ *
  * \`\`\`ts
  * import { ${exampleImports.join(", ")} } from "@beep/ecfr"
  *
@@ -217,7 +218,8 @@ const renderArrayModel = (name: string, schema: JsonSchema, definitions: Record<
   return `/**
  * ${description}
  *
- * @example
+ * **Example** (Decode a ${name})
+ *
  * \`\`\`ts
  * import { ${exampleImports.join(", ")} } from "@beep/ecfr"
  * import * as S from "effect/Schema"
@@ -237,7 +239,8 @@ export const ${name} = ${schemaExpr(item)}.pipe(
 /**
  * Type for {@link ${name}}.
  *
- * @example
+ * **Example** (Type a ${name} value)
+ *
  * \`\`\`ts
  * import type { ${name} } from "@beep/ecfr"
  *
@@ -279,7 +282,8 @@ const renderOperationConst = (entry: {
   `/**
  * The \`${entry.op.operationId}\` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the ${entry.op.operationId} operation path)
+ *
  * \`\`\`ts
  * import { ${entry.op.operationId}Operation } from "@beep/ecfr"
  *
@@ -329,7 +333,8 @@ ${models}
 /**
  * Descriptor for a single eCFR REST operation.
  *
- * @example
+ * **Example** (Build an operation descriptor)
+ *
  * \`\`\`ts
  * import { EcfrOperationDescriptor } from "@beep/ecfr"
  *
@@ -356,7 +361,8 @@ ${operationConsts}
 /**
  * All generated eCFR operation descriptors keyed by operation id.
  *
- * @example
+ * **Example** (Look up an operation descriptor)
+ *
  * \`\`\`ts
  * import { ECFR_OPERATIONS } from "@beep/ecfr"
  *

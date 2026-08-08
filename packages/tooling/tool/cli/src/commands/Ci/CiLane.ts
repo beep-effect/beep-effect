@@ -820,13 +820,10 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      // Serial by lane-level override: two concurrent beta.104 giants
-      // (epistemic/server + tooling/tool/cli) OOM-killed a 16 GB runner even
-      // at the CI cap of 2. The lane's 120-minute timeout absorbs serial.
-      check: () => [
-        ...hostedSwapSteps(repoRoot, "check"),
-        turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options),
-      ],
+      // The two heaviest package checks (repo-cli, epistemic-server) OOM a 16GB
+      // hosted runner when their tsgo processes overlap, so the check lane runs
+      // serial; the smaller tasks dominate the count, not the wall clock.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
           label: "ci:codegen:generate",
@@ -875,12 +872,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      // Serial like check/test-integration: the epistemic client+server build
-      // pair OOM-killed the lane at 2 on the beta.104 tree.
-      coverage: () => [
-        ...hostedSwapSteps(repoRoot, "coverage"),
-        turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=1"], options),
-      ],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
