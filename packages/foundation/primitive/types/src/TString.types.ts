@@ -8,10 +8,13 @@
 /**
  * Matches any non-empty string at the type level.
  *
+ * **Details**
+ *
  * Returns `never` when instantiated with an empty string or when an empty string
  * is a subtype of the instantiated type (e.g. `string`, `Uppercase<string>`).
  *
- * @example
+ * **Example** (Non-empty string type filtering)
+ *
  * ```typescript
  * import type { TString } from "@beep/types"
  *
@@ -32,12 +35,14 @@ export type NonEmpty<T extends string = string> = T extends "" ? never : T;
 /**
  * Filters out empty string literals and string literals with a leading or trailing `/`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Interior slashes are permitted. Like {@link NonEmpty}, this only rejects
  * constraints visible in the input type, so broad `string` remains `string`;
  * validate runtime strings separately.
  *
- * @example
+ * **Example** (Filtering empty and slash strings)
+ *
  * ```typescript
  * import type { TString } from "@beep/types"
  *
@@ -64,7 +69,8 @@ export type NonEmptyTrimmed<T extends string = string> = T extends `/${string}` 
 /**
  * Splits a string literal type into a union of its individual characters.
  *
- * @example
+ * **Example** (Splitting string into characters)
+ *
  * ```typescript
  * import type { TString } from "@beep/types"
  *
@@ -93,13 +99,15 @@ type IsDotPropertyNameRest<S extends string> = S extends ""
 /**
  * Filters string literals to ASCII property names that can be used after `.`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The first character must be an ASCII letter, `_`, or `$`; later characters
  * may also be decimal digits. Reserved words are permitted because JavaScript
  * member access accepts identifier names. Broad `string` remains `string`;
  * validate runtime strings separately.
  *
- * @example
+ * **Example** (Validating dot property names)
+ *
  * ```typescript
  * import type { TString } from "@beep/types"
  *

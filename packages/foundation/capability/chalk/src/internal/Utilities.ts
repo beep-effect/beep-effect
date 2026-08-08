@@ -63,7 +63,8 @@ const renderLineBreakSliceEnd = (nextIndex: number, gotCR: boolean): number => (
 /**
  * Replace every later occurrence of a substring while preserving the first occurrence.
  *
- * @example
+ * **Example** (Replace hyphens with pluses)
+ *
  * ```ts
  * import { stringReplaceAll } from "./Utilities.ts"
  *
@@ -100,7 +101,8 @@ export const stringReplaceAll: {
 /**
  * Encase each line break with close and reopen ANSI sequences.
  *
- * @example
+ * **Example** (Encase line breaks with sequences)
+ *
  * ```ts
  * import { stringEncaseCRLFWithFirstIndex } from "./Utilities.ts"
  *

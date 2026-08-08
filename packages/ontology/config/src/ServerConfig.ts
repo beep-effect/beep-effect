@@ -14,7 +14,8 @@ const $I = $OntologyConfigId.create("ServerConfig");
 /**
  * Required ontology workspace-root configuration declaration.
  *
- * @example
+ * **Example** (Provide workspace-root config)
+ *
  * ```ts
  * import { OntologyWorkspaceRootConfig } from "@beep/ontology-config/server"
  * import { ConfigProvider, Effect } from "effect"
@@ -38,7 +39,8 @@ export const OntologyWorkspaceRootConfig = Config.nonEmptyString("ONTOLOGY_WORKS
 /**
  * Server-only ontology filesystem authority settings.
  *
- * @example
+ * **Example** (Make server config)
+ *
  * ```ts
  * import { OntologyServerConfig } from "@beep/ontology-config/server"
  *
@@ -64,7 +66,8 @@ export class OntologyServerConfig extends S.Class<OntologyServerConfig>($I`Ontol
 /**
  * Resolved ontology configuration service shape.
  *
- * @example
+ * **Example** (Type ontology config shape)
+ *
  * ```ts
  * import { OntologyServerConfig } from "@beep/ontology-config/server"
  * import type { OntologyConfigShape } from "@beep/ontology-config/server"
@@ -83,7 +86,8 @@ export type OntologyConfigShape = OntologyServerConfig;
 /**
  * Context service supplying resolved server-only ontology configuration.
  *
- * @example
+ * **Example** (Map workspaceRoot from service)
+ *
  * ```ts
  * import { OntologyConfig } from "@beep/ontology-config/server"
  * import { Effect } from "effect"

@@ -36,6 +36,8 @@ const $I = $ApiTransportId.create("Transport");
 /**
  * Auth strategy attached to each outgoing request by the shared transformer.
  *
+ * **Details**
+ *
  * Covers the three gov/legal auth families plus the keyless case:
  * `ApiKeyQueryAuth` (api.data.gov `api_key` query param — GovInfo/DOL by data.gov),
  * `TokenHeaderAuth` (`Authorization: Token <key>` — CourtListener, DRF token auth),
@@ -43,7 +45,8 @@ const $I = $ApiTransportId.create("Transport");
  * Only the query-param and keyless branches are exercised in P0–P1; the header
  * branches are designed in but not verified until the P2 authed drivers.
  *
- * @example
+ * **Example** (Create ApiKeyQueryAuth instance)
+ *
  * ```ts
  * import { ApiAuth } from "@beep/api-transport"
  * import * as Redacted from "effect/Redacted"
@@ -90,7 +93,8 @@ export const ApiAuth = S.TaggedUnion({
 /**
  * Runtime authentication strategy represented by {@link ApiAuth}.
  *
- * @example
+ * **Example** (Type NoAuth as ApiAuth)
+ *
  * ```ts
  * import { ApiAuth } from "@beep/api-transport"
  *
@@ -146,11 +150,14 @@ const fromRateLimitHeaders = (headers: Headers.Headers): O.Option<RateLimitSnaps
 /**
  * Observable snapshot of the latest parsed `X-RateLimit-*` response headers.
  *
+ * **Details**
+ *
  * The shared transformer records this after every completed response so callers
  * (and offline tests) can observe that rate-limit headers were honored, without
  * reaching into the native limiter's private state.
  *
- * @example
+ * **Example** (Make RateLimitSnapshot values)
+ *
  * ```ts
  * import { RateLimitSnapshot } from "@beep/api-transport"
  *
@@ -237,12 +244,15 @@ const ApiTransportDurationInput = S.Union([
 /**
  * Options accepted by {@link makeApiTransport}.
  *
+ * **Details**
+ *
  * `auth` selects the auth family, `key` is the rate-limit bucket key, and
  * `rateLimit` seeds the initial window/limit (the native limiter refines these
  * from response headers). `retryTimes`/`retryBaseDelay` tune the jittered
  * exponential retry over transient transport errors.
  *
- * @example
+ * **Example** (Build ApiTransportOptions object)
+ *
  * ```ts
  * import { ApiAuth, type ApiTransportOptions } from "@beep/api-transport"
  *
@@ -301,11 +311,14 @@ export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTran
 /**
  * The shared transport transformer plus its observable rate-limit accessor.
  *
+ * **Details**
+ *
  * `transformClient` is fed to `HttpApiClient.make`'s `transformClient` seam
  * (keyed drivers) or applied to a raw `HttpClient` alongside `HttpClient.mapRequest`
  * (keyless drivers). `rateLimit` reads the latest {@link RateLimitSnapshot}.
  *
- * @example
+ * **Example** (Read rate-limit from transport)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
@@ -336,13 +349,16 @@ export interface ApiTransport {
 /**
  * Build the shared transport transformer over a backing `RateLimiterStore`.
  *
+ * **Details**
+ *
  * Composes auth → native rate limiting (which parses `X-RateLimit-*` and retries
  * `429`) → jittered exponential retry of transient transport errors → an
  * observable rate-limit snapshot. The resulting `transformClient` preserves the
  * `HttpClient.HttpClient` shape: the (in-memory-store) `RateLimiterError` is an
  * unrecoverable defect rather than a widened error channel.
  *
- * @example
+ * **Example** (Build transport transformClient)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"

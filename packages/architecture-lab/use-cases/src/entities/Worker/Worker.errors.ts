@@ -16,7 +16,8 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
 /**
  * Generic public reason used when internal Worker repository details are redacted.
  *
- * @example
+ * **Example** (Create error with redacted reason)
+ *
  * ```ts
  * import {
  *   WORKER_ACTION_UNAVAILABLE_REASON,
@@ -36,7 +37,8 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
 /**
  * Public failure raised when a requested Worker is absent.
  *
- * @example
+ * **Example** (Create WorkerNotFound with id)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerNotFound } from "@beep/architecture-lab-use-cases/entities/Worker"
@@ -66,7 +68,8 @@ export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNo
 /**
  * Public failure raised when a Worker command conflicts with persisted state.
  *
- * @example
+ * **Example** (Create conflict with reason)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerConflict } from "@beep/architecture-lab-use-cases/entities/Worker"
@@ -102,7 +105,8 @@ export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerCo
 /**
  * Public failure raised when a Worker action cannot be completed.
  *
- * @example
+ * **Example** (Create failed action error)
+ *
  * ```ts
  * import { WorkerActionFailed } from "@beep/architecture-lab-use-cases/entities/Worker"
  *
@@ -130,7 +134,8 @@ export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`
 /**
  * Public Worker use-case failure schema.
  *
- * @example
+ * **Example** (Check error with is)
+ *
  * ```ts
  * import {
  *   WorkerActionError,
@@ -157,7 +162,8 @@ export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, Worker
 /**
  * Runtime type for {@link WorkerActionError}.
  *
- * @example
+ * **Example** (Annotate error variable type)
+ *
  * ```ts
  * import {
  *   WorkerActionFailed,

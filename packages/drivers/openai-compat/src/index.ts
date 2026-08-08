@@ -8,7 +8,8 @@
 /**
  * OpenAI-compatible driver package version.
  *
- * @example
+ * **Example** (Import package VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/openai-compat"
  *
@@ -25,7 +26,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * OpenAI-compatible schema model exports.
  *
- * @example
+ * **Example** (Build chat completion request)
+ *
  * ```ts
  * import { OpenAiCompatChatCompletionRequest, OpenAiCompatUserChatMessage } from "@beep/openai-compat"
  *
@@ -43,7 +45,8 @@ export * from "./OpenAiCompat.models.ts";
 /**
  * OpenAI-compatible HTTP client exports.
  *
- * @example
+ * **Example** (Import OpenAiCompatClient)
+ *
  * ```ts
  * import { OpenAiCompatClient } from "@beep/openai-compat"
  *
@@ -58,7 +61,8 @@ export * from "./OpenAiCompatClient.service.ts";
 /**
  * Effect AI language-model adapter exports for OpenAI-compatible chat completions.
  *
- * @example
+ * **Example** (Create language model adapter)
+ *
  * ```ts
  * import { model } from "@beep/openai-compat"
  *

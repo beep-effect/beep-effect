@@ -28,7 +28,8 @@ const PhoenixCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 /**
  * Driver health states returned by {@link Phoenix.doctor}.
  *
- * @example
+ * **Example** (Access passed status enum)
+ *
  * ```ts
  * import { PhoenixDoctorStatus } from "@beep/phoenix"
  *
@@ -47,7 +48,8 @@ export const PhoenixDoctorStatus = LiteralKit(["passed", "unavailable"]).pipe(
 /**
  * Type for {@link PhoenixDoctorStatus}.
  *
- * @example
+ * **Example** (Type-check passed status)
+ *
  * ```ts
  * import { PhoenixDoctorStatus } from "@beep/phoenix"
  *
@@ -64,7 +66,8 @@ export type PhoenixDoctorStatus = typeof PhoenixDoctorStatus.Type;
 /**
  * Selector kinds used when addressing Phoenix datasets.
  *
- * @example
+ * **Example** (Access dataset-name kind enum)
+ *
  * ```ts
  * import { PhoenixDatasetSelectorKind } from "@beep/phoenix"
  *
@@ -83,7 +86,8 @@ export const PhoenixDatasetSelectorKind = LiteralKit(["dataset-id", "dataset-nam
 /**
  * Type for {@link PhoenixDatasetSelectorKind}.
  *
- * @example
+ * **Example** (Type-check dataset-name kind)
+ *
  * ```ts
  * import { PhoenixDatasetSelectorKind } from "@beep/phoenix"
  *
@@ -100,7 +104,8 @@ export type PhoenixDatasetSelectorKind = typeof PhoenixDatasetSelectorKind.Type;
 /**
  * Phoenix annotation target kind.
  *
- * @example
+ * **Example** (Access trace target kind)
+ *
  * ```ts
  * import { PhoenixAnnotationTargetKind } from "@beep/phoenix"
  *
@@ -119,7 +124,8 @@ export const PhoenixAnnotationTargetKind = LiteralKit(["span", "session", "trace
 /**
  * Type for {@link PhoenixAnnotationTargetKind}.
  *
- * @example
+ * **Example** (Type-check trace target kind)
+ *
  * ```ts
  * import { PhoenixAnnotationTargetKind } from "@beep/phoenix"
  *
@@ -136,7 +142,8 @@ export type PhoenixAnnotationTargetKind = typeof PhoenixAnnotationTargetKind.Typ
 /**
  * Phoenix annotator kind.
  *
- * @example
+ * **Example** (Access CODE annotator kind)
+ *
  * ```ts
  * import { PhoenixAnnotatorKind } from "@beep/phoenix"
  *
@@ -155,7 +162,8 @@ export const PhoenixAnnotatorKind = LiteralKit(["CODE", "HUMAN", "LLM"]).pipe(
 /**
  * Type for {@link PhoenixAnnotatorKind}.
  *
- * @example
+ * **Example** (Type-check CODE annotator kind)
+ *
  * ```ts
  * import { PhoenixAnnotatorKind } from "@beep/phoenix"
  *
@@ -172,7 +180,8 @@ export type PhoenixAnnotatorKind = typeof PhoenixAnnotatorKind.Type;
 /**
  * Primitive annotation value accepted by repo-owned Phoenix annotations.
  *
- * @example
+ * **Example** (Log annotation value schema)
+ *
  * ```ts
  * import { PhoenixAnnotationValue } from "@beep/phoenix"
  *
@@ -192,7 +201,8 @@ export const PhoenixAnnotationValue = S.Union([S.Boolean, S.Finite, S.String]).p
 /**
  * Type for {@link PhoenixAnnotationValue}.
  *
- * @example
+ * **Example** (Decode string annotation value)
+ *
  * ```ts
  * import { PhoenixAnnotationValue } from "@beep/phoenix"
  * import * as S from "effect/Schema"
@@ -210,7 +220,8 @@ export type PhoenixAnnotationValue = typeof PhoenixAnnotationValue.Type;
 /**
  * Prompt chat roles accepted by repo-owned Phoenix prompt templates.
  *
- * @example
+ * **Example** (Access system chat role)
+ *
  * ```ts
  * import { PhoenixPromptChatRole } from "@beep/phoenix"
  *
@@ -237,7 +248,8 @@ export const PhoenixPromptChatRole = LiteralKit([
 /**
  * Type for {@link PhoenixPromptChatRole}.
  *
- * @example
+ * **Example** (Type-check system chat role)
+ *
  * ```ts
  * import { PhoenixPromptChatRole } from "@beep/phoenix"
  *
@@ -254,7 +266,8 @@ export type PhoenixPromptChatRole = typeof PhoenixPromptChatRole.Type;
 /**
  * Prompt template format accepted by repo-owned Phoenix prompt templates.
  *
- * @example
+ * **Example** (Access MUSTACHE format enum)
+ *
  * ```ts
  * import { PhoenixPromptTemplateFormat } from "@beep/phoenix"
  *
@@ -273,7 +286,8 @@ export const PhoenixPromptTemplateFormat = LiteralKit(["F_STRING", "MUSTACHE"]).
 /**
  * Type for {@link PhoenixPromptTemplateFormat}.
  *
- * @example
+ * **Example** (Type-check MUSTACHE format)
+ *
  * ```ts
  * import { PhoenixPromptTemplateFormat } from "@beep/phoenix"
  *
@@ -290,7 +304,8 @@ export type PhoenixPromptTemplateFormat = typeof PhoenixPromptTemplateFormat.Typ
 /**
  * Prompt model providers supported by the Phoenix SDK helper without extra invocation parameters.
  *
- * @example
+ * **Example** (Access GOOGLE provider enum)
+ *
  * ```ts
  * import { PhoenixPromptModelProvider } from "@beep/phoenix"
  *
@@ -317,7 +332,8 @@ export const PhoenixPromptModelProvider = LiteralKit([
 /**
  * Type for {@link PhoenixPromptModelProvider}.
  *
- * @example
+ * **Example** (Type-check GOOGLE provider)
+ *
  * ```ts
  * import { PhoenixPromptModelProvider } from "@beep/phoenix"
  *
@@ -334,7 +350,8 @@ export type PhoenixPromptModelProvider = typeof PhoenixPromptModelProvider.Type;
 /**
  * Phoenix driver doctor result.
  *
- * @example
+ * **Example** (Build doctor result object)
+ *
  * ```ts
  * import { PhoenixDoctorResult } from "@beep/phoenix"
  *
@@ -373,7 +390,8 @@ export class PhoenixDoctorResult extends S.Class<PhoenixDoctorResult>($I`Phoenix
 /**
  * Phoenix dataset selector.
  *
- * @example
+ * **Example** (Build dataset name selector)
+ *
  * ```ts
  * import { PhoenixDatasetSelector } from "@beep/phoenix"
  *
@@ -407,7 +425,8 @@ export class PhoenixDatasetSelector extends S.Class<PhoenixDatasetSelector>($I`P
 /**
  * Phoenix dataset example.
  *
- * @example
+ * **Example** (Build dataset example object)
+ *
  * ```ts
  * import { PhoenixDatasetExample } from "@beep/phoenix"
  *
@@ -454,7 +473,8 @@ export class PhoenixDatasetExample extends S.Class<PhoenixDatasetExample>($I`Pho
 /**
  * Input for creating or replacing a Phoenix dataset.
  *
- * @example
+ * **Example** (Build dataset create input)
+ *
  * ```ts
  * import { PhoenixDatasetCreateInput, PhoenixDatasetExample } from "@beep/phoenix"
  *
@@ -489,7 +509,8 @@ export class PhoenixDatasetCreateInput extends S.Class<PhoenixDatasetCreateInput
 /**
  * Result from creating a Phoenix dataset.
  *
- * @example
+ * **Example** (Build dataset create result)
+ *
  * ```ts
  * import { PhoenixDatasetCreateResult } from "@beep/phoenix"
  *
@@ -514,7 +535,8 @@ export class PhoenixDatasetCreateResult extends S.Class<PhoenixDatasetCreateResu
 /**
  * Input for appending examples to a Phoenix dataset.
  *
- * @example
+ * **Example** (Build dataset append input)
+ *
  * ```ts
  * import { PhoenixDatasetAppendInput, PhoenixDatasetExample, PhoenixDatasetSelector } from "@beep/phoenix"
  *
@@ -545,7 +567,8 @@ export class PhoenixDatasetAppendInput extends S.Class<PhoenixDatasetAppendInput
 /**
  * Result from appending Phoenix dataset examples.
  *
- * @example
+ * **Example** (Build dataset append result)
+ *
  * ```ts
  * import { PhoenixDatasetAppendResult } from "@beep/phoenix"
  *
@@ -573,7 +596,8 @@ export class PhoenixDatasetAppendResult extends S.Class<PhoenixDatasetAppendResu
 /**
  * Readback summary for a Phoenix dataset.
  *
- * @example
+ * **Example** (Build dataset info result)
+ *
  * ```ts
  * import { PhoenixDatasetInfoResult } from "@beep/phoenix"
  *
@@ -607,7 +631,8 @@ export class PhoenixDatasetInfoResult extends S.Class<PhoenixDatasetInfoResult>(
 /**
  * Readback result for Phoenix dataset examples.
  *
- * @example
+ * **Example** (Build dataset examples result)
+ *
  * ```ts
  * import { PhoenixDatasetExamplesResult } from "@beep/phoenix"
  *
@@ -637,7 +662,8 @@ export class PhoenixDatasetExamplesResult extends S.Class<PhoenixDatasetExamples
 /**
  * Phoenix prompt chat message.
  *
- * @example
+ * **Example** (Build prompt chat message)
+ *
  * ```ts
  * import { PhoenixPromptChatMessage } from "@beep/phoenix"
  *
@@ -665,7 +691,8 @@ export class PhoenixPromptChatMessage extends S.Class<PhoenixPromptChatMessage>(
 /**
  * Input for creating a repo-owned Phoenix prompt version.
  *
- * @example
+ * **Example** (Build prompt create input)
+ *
  * ```ts
  * import { PhoenixPromptChatMessage, PhoenixPromptCreateInput } from "@beep/phoenix"
  *
@@ -720,7 +747,8 @@ export class PhoenixPromptCreateInput extends S.Class<PhoenixPromptCreateInput>(
 /**
  * Result from creating a Phoenix prompt version.
  *
- * @example
+ * **Example** (Build prompt write result)
+ *
  * ```ts
  * import { PhoenixPromptWriteResult } from "@beep/phoenix"
  *
@@ -748,7 +776,8 @@ export class PhoenixPromptWriteResult extends S.Class<PhoenixPromptWriteResult>(
 /**
  * Phoenix prompt selector by name, id, version id, or tag.
  *
- * @example
+ * **Example** (Build prompt name selector)
+ *
  * ```ts
  * import { PhoenixPromptSelector } from "@beep/phoenix"
  *
@@ -782,7 +811,8 @@ export class PhoenixPromptSelector extends S.Class<PhoenixPromptSelector>($I`Pho
 /**
  * Readback result for a Phoenix prompt selector.
  *
- * @example
+ * **Example** (Build prompt read result)
+ *
  * ```ts
  * import { PhoenixPromptReadResult } from "@beep/phoenix"
  *
@@ -810,7 +840,8 @@ export class PhoenixPromptReadResult extends S.Class<PhoenixPromptReadResult>($I
 /**
  * Input for creating a Phoenix experiment record.
  *
- * @example
+ * **Example** (Build experiment create input)
+ *
  * ```ts
  * import { PhoenixExperimentCreateInput } from "@beep/phoenix"
  *
@@ -858,7 +889,8 @@ export class PhoenixExperimentCreateInput extends S.Class<PhoenixExperimentCreat
 /**
  * Readback summary for a Phoenix experiment.
  *
- * @example
+ * **Example** (Build experiment info result)
+ *
  * ```ts
  * import { PhoenixExperimentInfoResult } from "@beep/phoenix"
  *
@@ -919,7 +951,8 @@ export class PhoenixExperimentInfoResult extends S.Class<PhoenixExperimentInfoRe
 /**
  * Input for writing one Phoenix annotation.
  *
- * @example
+ * **Example** (Build annotation write input)
+ *
  * ```ts
  * import { PhoenixAnnotationInput } from "@beep/phoenix"
  *
@@ -976,7 +1009,8 @@ export class PhoenixAnnotationInput extends S.Class<PhoenixAnnotationInput>($I`P
 /**
  * Result from writing one Phoenix annotation.
  *
- * @example
+ * **Example** (Build annotation write result)
+ *
  * ```ts
  * import { PhoenixAnnotationWriteResult } from "@beep/phoenix"
  *

@@ -16,7 +16,8 @@ const $I = $WorkspaceDomainId.create("entities/Thread/Thread.model");
 /**
  * Durable workspace conversation thread.
  *
- * @example
+ * **Example** (Log Thread table name)
+ *
  * ```ts
  * import { Thread } from "@beep/workspace-domain"
  *

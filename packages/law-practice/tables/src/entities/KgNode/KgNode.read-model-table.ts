@@ -12,12 +12,14 @@ import type { UnknownRecord } from "@beep/schema";
 /**
  * Physical table name for practice knowledge-graph nodes.
  *
- * @remarks
+ * **Details**
+ *
  * Exported separately from {@link kgNodeTable} so that hand-written DDL and
  * projection SQL name the table through one constant rather than a string
  * literal repeated per call site.
  *
- * @example
+ * **Example** (Build truncate SQL statement)
+ *
  * ```ts
  * import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode"
  *
@@ -33,12 +35,14 @@ export const KG_NODE_TABLE_NAME = "kg_node" as const;
 /**
  * Drizzle declaration for the packet-owned node projection.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `iri` is the primary key and the join target for both endpoints of
  * {@link kgEdgeTable}, so nodes must be inserted before the edges that
  * reference them.
  *
- * @example
+ * **Example** (Infer node insert shape)
+ *
  * ```ts
  * import { kgNodeTable } from "@beep/law-practice-tables/entities/KgNode"
  * import { getTableName } from "drizzle-orm"

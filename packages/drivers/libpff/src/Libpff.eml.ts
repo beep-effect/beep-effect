@@ -58,7 +58,8 @@ const daysInMonth = (month: string, year: number): number =>
 /**
  * File name of the EML artifact assembled inside each exported item directory.
  *
- * @example
+ * **Example** (EML artifact file name)
+ *
  * ```ts
  * import { PFFEXPORT_EML_FILE_NAME } from "@beep/libpff"
  *
@@ -92,6 +93,8 @@ const octetLength = (value: string): number => textEncoder.encode(value).length;
 /**
  * Fold one physical header line to RFC 5322's 998-octet line limit.
  *
+ * **Details**
+ *
  * Verbatim transport headers can carry lines over the limit (DKIM signatures,
  * long `Received` chains), and flattening a folded Outlook value into a single
  * line manufactures them. Folding breaks only at existing spaces and indents
@@ -100,7 +103,8 @@ const octetLength = (value: string): number => textEncoder.encode(value).length;
  * is returned untouched, so header blocks that arrived correctly folded stay as
  * they are.
  *
- * @remarks
+ * **Gotchas**
+ *
  * An unbroken run of 998+ octets — a message-id, a DKIM `b=` tag — has no space
  * to promote to an indent, so it is emitted intact and over-long rather than
  * split. For an archival exporter, preserving the original header value byte
@@ -108,9 +112,8 @@ const octetLength = (value: string): number => textEncoder.encode(value).length;
  * recoverable by any consumer, whereas a token mutated by inserted continuation
  * whitespace (which survives unfolding) is not.
  *
- * @param line - One physical header line.
- * @returns The line when it fits or cannot be folded losslessly, otherwise its folded continuation lines.
- * @example
+ * **Example** (Fold long header line)
+ *
  * ```ts
  * import { foldHeaderLine } from "@beep/libpff"
  *
@@ -122,6 +125,8 @@ const octetLength = (value: string): number => textEncoder.encode(value).length;
  * console.log(folded.join("") === long) // true
  * ```
  *
+ * @param line - One physical header line.
+ * @returns The line when it fits or cannot be folded losslessly, otherwise its folded continuation lines.
  * @category utilities
  * @since 0.0.0
  */
@@ -143,6 +148,8 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
 /**
  * Convert a pffexport timestamp into an RFC 5322 date.
  *
+ * **Details**
+ *
  * pffexport renders MAPI times as `Nov 26, 2020 22:18:29.446000000 UTC`. The
  * sub-second precision and the `UTC` suffix are dropped in favor of a `+0000`
  * offset, and the optional day-of-week is omitted so no calendar arithmetic is
@@ -152,9 +159,8 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
  * does not validate drops the `Date` header rather than emitting a malformed
  * one.
  *
- * @param value - Timestamp text taken from an `OutlookHeaders.txt` field.
- * @returns The RFC 5322 rendering when the timestamp is recognized and in range.
- * @example
+ * **Example** (Convert Outlook timestamp)
+ *
  * ```ts
  * import { rfc5322DateFromOutlookTimestamp } from "@beep/libpff"
  * import { O } from "@beep/utils"
@@ -165,6 +171,8 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
  * console.log(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 2021 00:00:00 UTC"))) // true
  * ```
  *
+ * @param value - Timestamp text taken from an `OutlookHeaders.txt` field.
+ * @returns The RFC 5322 rendering when the timestamp is recognized and in range.
  * @category utilities
  * @since 0.0.0
  */
@@ -194,13 +202,16 @@ export const rfc5322DateFromOutlookTimestamp = (value: string): O.Option<string>
 /**
  * Normalize a verbatim transport-header block for reuse in an assembled EML.
  *
+ * **Details**
+ *
  * The block is truncated at its first blank line (the RFC 5322 header
  * terminator), MIME-structural headers and their folded continuation lines
  * are removed, line endings are normalized to CRLF, and any physical line over
  * the 998-octet limit is folded. Lines that already fit are passed through
  * unchanged, so a block that arrived correctly folded is preserved as-is.
  *
- * @example
+ * **Example** (Strip MIME structural headers)
+ *
  * ```ts
  * import { stripMimeStructuralHeaders } from "@beep/libpff"
  *
@@ -245,11 +256,14 @@ export const stripMimeStructuralHeaders = (headerBlock: string): string => {
 /**
  * Parse a pffexport `OutlookHeaders.txt` document into a key/value record.
  *
+ * **Details**
+ *
  * Lines split on their first colon; keys and values are trimmed, values are
  * flattened to single lines, and the first occurrence of a repeated key wins
  * so the result is deterministic.
  *
- * @example
+ * **Example** (Parse Outlook headers text)
+ *
  * ```ts
  * import { parseOutlookHeaders } from "@beep/libpff"
  *
@@ -281,6 +295,8 @@ export const parseOutlookHeaders = (text: string): Record<string, string> => {
 /**
  * Synthesize a minimal EML header block from parsed Outlook headers.
  *
+ * **Details**
+ *
  * Emits `From:` (only when a sender email address is present), `Subject:`, and
  * `Date:` parsed from the Outlook client-submit time. A submit time that does
  * not parse is omitted rather than emitted malformed; its verbatim value stays
@@ -289,7 +305,8 @@ export const parseOutlookHeaders = (text: string): Record<string, string> => {
  * 998-octet limit, which matters here because flattening a folded Outlook
  * value produces a single long line.
  *
- * @example
+ * **Example** (Synthesize minimal EML headers)
+ *
  * ```ts
  * import { synthesizeEmlHeaderBlock } from "@beep/libpff"
  *
@@ -382,12 +399,15 @@ const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
 /**
  * Assemble a deterministic EML document from pre-read message parts.
  *
+ * **Details**
+ *
  * Without attachments the message is single-part with the body's content
  * type; with attachments it becomes `multipart/mixed` with the body as the
  * first part and one base64 part per attachment. A missing body yields an
  * empty `text/plain` part. Output is byte-stable given identical inputs.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Body parts follow RFC 5322's 998-octet physical-line limit: a part whose
  * lines all fit is emitted verbatim as 8bit, while a part with any longer
  * line is emitted as base64. That switch is a cliff — a one-octet difference
@@ -398,7 +418,8 @@ const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
  * string exactly, while the raw body file beside the EML remains the
  * authoritative byte-for-byte artifact.
  *
- * @example
+ * **Example** (Assemble deterministic EML)
+ *
  * ```ts
  * import { assembleEml } from "@beep/libpff"
  * import { O } from "@beep/utils"

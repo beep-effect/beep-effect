@@ -15,13 +15,14 @@ const $I = $LawPracticeDomainId.create("values/LocalOrdinanceCitation/LocalOrdin
 /**
  * Local / municipal ordinance citation (#778).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `localOrdinance`
  * discriminant along with the ordinance code abbreviation and cited section.
  * Clark County Code/Ordinance (CCCO § 2.12.010(1)) is the first member.
  *
- * **Example**
+ * **Example** (Make local ordinance citation)
  *
- * @example
  * ```ts
  * import { LocalOrdinanceCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -74,7 +75,8 @@ export class LocalOrdinanceCitation extends S.Class<LocalOrdinanceCitation>($I`L
 /**
  * Companion namespace for `LocalOrdinanceCitation`.
  *
- * @example
+ * **Example** (Alias Encoded companion type)
+ *
  * ```ts
  * import type { LocalOrdinanceCitation } from "@beep/law-practice-domain"
  *
@@ -88,9 +90,8 @@ export declare namespace LocalOrdinanceCitation {
   /**
    * Wire-encoded representation of a decoded {@link LocalOrdinanceCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { LocalOrdinanceCitation } from "@beep/law-practice-domain"
    *

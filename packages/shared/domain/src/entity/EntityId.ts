@@ -69,7 +69,8 @@ const EntityIdDescription = S.NonEmptyString.pipe(
 /**
  * Storage-neutral positive integer used by every v1 persisted entity id.
  *
- * @example
+ * **Example** (Decode entity id value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
@@ -82,8 +83,8 @@ const EntityIdDescription = S.NonEmptyString.pipe(
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const EntityIdValue = PosInt.check(
   S.isBetween(
@@ -107,7 +108,8 @@ export const EntityIdValue = PosInt.check(
 /**
  * Runtime type for {@link EntityIdValue}.
  *
- * @example
+ * **Example** (Type annotated entity id)
+ *
  * ```ts
  * import { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
  * import * as S from "effect/Schema"
@@ -116,15 +118,16 @@ export const EntityIdValue = PosInt.check(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityIdValue = typeof EntityIdValue.Type;
 
 /**
  * Entity id value branded with the concrete entity-id brand.
  *
- * @example
+ * **Example** (Branded organization id value)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity/packages"
  * import * as EntityId from "@beep/shared-domain/entity/EntityId"
@@ -136,15 +139,16 @@ export type EntityIdValue = typeof EntityIdValue.Type;
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdValue, TBrand>;
 
 /**
  * Constrained metadata overrides accepted by {@link factory}.
  *
- * @example
+ * **Example** (Make options with tableName)
+ *
  * ```ts
  * import { Options } from "@beep/shared-domain/entity/EntityId"
  * import * as O from "effect/Option"
@@ -153,8 +157,8 @@ export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdVa
  * console.log(O.getOrThrow(options.tableName))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Options extends S.Class<Options>($I`Options`)(
   {
@@ -187,7 +191,8 @@ export class Options extends S.Class<Options>($I`Options`)(
 /**
  * Default SQL table name derived from a slice and entity segment.
  *
- * @example
+ * **Example** (Default shared organization table)
+ *
  * ```ts
  * import type { TableName } from "@beep/shared-domain/entity/EntityId"
  *
@@ -195,15 +200,16 @@ export class Options extends S.Class<Options>($I`Options`)(
  * console.log(tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TableName<Slice extends string, Name extends string> = `${Slice}_${Name}`;
 
 /**
  * Default permission resource derived from a slice and entity segment.
  *
- * @example
+ * **Example** (Default shared organization resource)
+ *
  * ```ts
  * import type { Resource } from "@beep/shared-domain/entity/EntityId"
  *
@@ -211,8 +217,8 @@ export type TableName<Slice extends string, Name extends string> = `${Slice}_${N
  * console.log(resource)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Resource<Slice extends string, Name extends string> = `${Slice}.${Name}`;
 
@@ -222,7 +228,8 @@ type SnakeToPascal<S extends string> = ReturnType<typeof Str.snakeToPascal<Snake
 /**
  * Default entity type derived from a slice and entity segment.
  *
- * @example
+ * **Example** (Default SharedOrganization type)
+ *
  * ```ts
  * import type { EntityType } from "@beep/shared-domain/entity/EntityId"
  *
@@ -230,15 +237,16 @@ type SnakeToPascal<S extends string> = ReturnType<typeof Str.snakeToPascal<Snake
  * console.log(entityType)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityType<Slice extends string, Name extends string> = `${SnakeToPascal<Slice>}${SnakeToPascal<Name>}`;
 
 /**
  * Default schema brand derived from a slice and entity segment.
  *
- * @example
+ * **Example** (Default SharedOrganizationId brand)
+ *
  * ```ts
  * import type { Brand } from "@beep/shared-domain/entity/EntityId"
  *
@@ -246,15 +254,16 @@ export type EntityType<Slice extends string, Name extends string> = `${SnakeToPa
  * console.log(brand)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Brand<Slice extends string, Name extends string> = `${EntityType<Slice, Name>}Id`;
 
 /**
  * Constructor input for {@link Options}.
  *
- * @example
+ * **Example** (Options input with tableName)
+ *
  * ```ts
  * import type { OptionsInput } from "@beep/shared-domain/entity/EntityId"
  *
@@ -262,8 +271,8 @@ export type Brand<Slice extends string, Name extends string> = `${EntityType<Sli
  * console.log(input.tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type OptionsInput = typeof Options.Encoded;
 
@@ -299,7 +308,8 @@ type ResolvedBrand<Slice extends string, Name extends string, Overrides> = Overr
 /**
  * Materialized entity-id definition metadata.
  *
- * @example
+ * **Example** (Make full definition metadata)
+ *
  * ```ts
  * import { Definition, Options } from "@beep/shared-domain/entity/EntityId"
  *
@@ -316,8 +326,8 @@ type ResolvedBrand<Slice extends string, Name extends string, Overrides> = Overr
  * console.log(definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Definition extends S.Class<Definition>($I`Definition`)(
   {
@@ -342,7 +352,8 @@ export class Definition extends S.Class<Definition>($I`Definition`)(
 /**
  * Literal-preserving entity-id definition metadata.
  *
- * @example
+ * **Example** (Literal organization definition type)
+ *
  * ```ts
  * import type { DefinitionFor } from "@beep/shared-domain/entity/EntityId"
  *
@@ -352,8 +363,8 @@ export class Definition extends S.Class<Definition>($I`Definition`)(
  * console.log(tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DefinitionFor<
   Slice extends string,
@@ -374,7 +385,8 @@ export type DefinitionFor<
 /**
  * Branded schema with deterministic entity metadata statics.
  *
- * @example
+ * **Example** (Factory branded organization schema)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity/packages"
  * import * as EntityId from "@beep/shared-domain/entity/EntityId"
@@ -384,8 +396,8 @@ export type DefinitionFor<
  * console.log(OrganizationId.tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityId<
   Slice extends string = string,
@@ -422,7 +434,8 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
 /**
  * Any entity id schema produced by {@link factory}.
  *
- * @example
+ * **Example** (Any factory entity id)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity/packages"
  * import * as EntityId from "@beep/shared-domain/entity/EntityId"
@@ -432,8 +445,8 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
  * console.log(entityId.resource)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Any = EntityId<string, string, string, string, string, string>;
 
@@ -544,7 +557,8 @@ const buildDefinition = <
 /**
  * Build a slice-scoped entity id maker.
  *
- * @example
+ * **Example** (Build slice-scoped id maker)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity/packages"
  * import * as EntityId from "@beep/shared-domain/entity/EntityId"
@@ -556,8 +570,8 @@ const buildDefinition = <
  * console.log(OrganizationId.tableName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const factory: Factory = dual(
   2,

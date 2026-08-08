@@ -21,7 +21,8 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 /**
  * Identity composer for every schema in the JSONSchema module.
  *
- * @example
+ * **Example** (Create identity composer)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  *
@@ -40,7 +41,8 @@ export const $I = $SchemaId.create("JSONSchema");
  * vocabulary. Wire keys outside this set are preserved verbatim in the
  * node's `extensions` bag rather than dropped or rejected.
  *
- * @example
+ * **Example** (Decode canonical keyword)
+ *
  * ```ts
  * import { CanonicalKeyword } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -119,7 +121,8 @@ export const CanonicalKeyword = LiteralKit([
 /**
  * Type for {@link CanonicalKeyword}.
  *
- * @example
+ * **Example** (Annotate keyword type)
+ *
  * ```ts
  * import type { CanonicalKeyword } from "@beep/schema/JSONSchema"
  *
@@ -135,7 +138,8 @@ export type CanonicalKeyword = typeof CanonicalKeyword.Type;
 /**
  * Guard for {@link CanonicalKeyword}.
  *
- * @example
+ * **Example** (Guard keyword values)
+ *
  * ```ts
  * import { isCanonicalKeyword } from "@beep/schema/JSONSchema"
  *
@@ -151,7 +155,8 @@ export const isCanonicalKeyword = S.is(CanonicalKeyword);
 /**
  * The seven draft-2020-12 primitive type names accepted by the `type` keyword.
  *
- * @example
+ * **Example** (Decode type name)
+ *
  * ```ts
  * import { TypeName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -172,7 +177,8 @@ export const TypeName = LiteralKit(["array", "boolean", "integer", "null", "numb
 /**
  * Type for {@link TypeName}.
  *
- * @example
+ * **Example** (Annotate type name)
+ *
  * ```ts
  * import type { TypeName } from "@beep/schema/JSONSchema"
  *
@@ -197,7 +203,8 @@ const TypeNameListUniqueCheck = S.isUnique({
  * {@link TypeName} values, per the draft-2020-12 meta-schema
  * (`minItems: 1, uniqueItems: true`).
  *
- * @example
+ * **Example** (Decode type name list)
+ *
  * ```ts
  * import { TypeNameList } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -220,7 +227,8 @@ export const TypeNameList = S.NonEmptyArray(TypeName)
 /**
  * Type for {@link TypeNameList}.
  *
- * @example
+ * **Example** (Annotate type name list)
+ *
  * ```ts
  * import type { TypeNameList } from "@beep/schema/JSONSchema"
  *
@@ -237,7 +245,8 @@ export type TypeNameList = typeof TypeNameList.Type;
  * The full value space of the `type` keyword: a single {@link TypeName} or a
  * non-empty unique {@link TypeNameList}.
  *
- * @example
+ * **Example** (Decode single or list types)
+ *
  * ```ts
  * import { Types } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -259,7 +268,8 @@ export const Types = S.Union([TypeName, TypeNameList]).pipe(
 /**
  * Type for {@link Types}.
  *
- * @example
+ * **Example** (Annotate types union)
+ *
  * ```ts
  * import type { Types } from "@beep/schema/JSONSchema"
  *
@@ -284,7 +294,8 @@ const NonNegativeCountCheck = S.isGreaterThanOrEqualTo(0, {
  * A non-negative integer, the value space the spec mandates for every count
  * bound (`maxLength`, `minItems`, `maxContains`, `minProperties`, ...).
  *
- * @example
+ * **Example** (Decode non-negative count)
+ *
  * ```ts
  * import { NonNegativeCount } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -306,7 +317,8 @@ export const NonNegativeCount = S.Int.check(NonNegativeCountCheck).pipe(
 /**
  * Type for {@link NonNegativeCount}.
  *
- * @example
+ * **Example** (Annotate non-negative count)
+ *
  * ```ts
  * import type { NonNegativeCount } from "@beep/schema/JSONSchema"
  *
@@ -330,7 +342,8 @@ const PositiveNumberCheck = S.isGreaterThan(0, {
  * A finite number strictly greater than zero — the spec-mandated value space
  * of `multipleOf`.
  *
- * @example
+ * **Example** (Decode positive number)
+ *
  * ```ts
  * import { PositiveNumber } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -352,7 +365,8 @@ export const PositiveNumber = S.Finite.check(PositiveNumberCheck).pipe(
 /**
  * Type for {@link PositiveNumber}.
  *
- * @example
+ * **Example** (Annotate positive number)
+ *
  * ```ts
  * import type { PositiveNumber } from "@beep/schema/JSONSchema"
  *
@@ -394,7 +408,8 @@ const RegexCompilesCheck = S.makeFilter<string>(
  * itself because this effect version does not apply key-schema checks inside
  * `S.Record`.
  *
- * @example
+ * **Example** (Filter regex record keys)
+ *
  * ```ts
  * import * as R from "effect/Record"
  * import * as S from "effect/Schema"
@@ -446,7 +461,8 @@ const safeRegexSources = [
  * of `pattern` and the key space of `patternProperties`. Kept as a string
  * rather than transformed to `RegExp` so schema equivalence stays structural.
  *
- * @example
+ * **Example** (Decode regex pattern string)
+ *
  * ```ts
  * import { RegexPatternString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -468,7 +484,8 @@ export const RegexPatternString = S.String.check(RegexCompilesCheck).pipe(
 /**
  * Type for {@link RegexPatternString}.
  *
- * @example
+ * **Example** (Annotate regex pattern string)
+ *
  * ```ts
  * import type { RegexPatternString } from "@beep/schema/JSONSchema"
  *
@@ -494,7 +511,8 @@ const AnchorNameCheck = S.isPattern(anchorNamePattern, {
  * A plain-name fragment for `$anchor` and `$dynamicAnchor`, constrained to the
  * grammar the draft-2020-12 core spec mandates.
  *
- * @example
+ * **Example** (Decode anchor name)
+ *
  * ```ts
  * import { AnchorName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -516,7 +534,8 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
 /**
  * Type for {@link AnchorName}.
  *
- * @example
+ * **Example** (Annotate anchor name)
+ *
  * ```ts
  * import type { AnchorName } from "@beep/schema/JSONSchema"
  *
@@ -650,7 +669,8 @@ const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(valu
  * structure, invalid characters, and invalid percent encoding are rejected.
  * `$id` additionally uses {@link IdUriReferenceString}.
  *
- * @example
+ * **Example** (Decode URI reference)
+ *
  * ```ts
  * import { UriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -681,7 +701,8 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
 /**
  * Type for {@link UriReferenceString}.
  *
- * @example
+ * **Example** (Annotate URI reference)
+ *
  * ```ts
  * import type { UriReferenceString } from "@beep/schema/JSONSchema"
  *
@@ -733,7 +754,8 @@ const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
 /**
  * A normalized absolute URI string for dialect and vocabulary identifiers.
  *
- * @example
+ * **Example** (Decode absolute URI)
+ *
  * ```ts
  * import { AbsoluteUriString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -760,7 +782,8 @@ export const AbsoluteUriString = UriReferenceString.check(AbsoluteUriCheck).pipe
 /**
  * Type for {@link AbsoluteUriString}.
  *
- * @example
+ * **Example** (Annotate absolute URI)
+ *
  * ```ts
  * import type { AbsoluteUriString } from "@beep/schema/JSONSchema"
  *
@@ -785,7 +808,8 @@ const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
  * {@link UriReferenceString} and additionally rejects non-empty fragments; a
  * trailing empty `#` remains backward-compatible.
  *
- * @example
+ * **Example** (Decode $id URI reference)
+ *
  * ```ts
  * import { IdUriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -808,7 +832,8 @@ export const IdUriReferenceString = UriReferenceString.check(IdUriReferenceCheck
 /**
  * Type for {@link IdUriReferenceString}.
  *
- * @example
+ * **Example** (Annotate $id URI reference)
+ *
  * ```ts
  * import type { IdUriReferenceString } from "@beep/schema/JSONSchema"
  *
@@ -836,7 +861,8 @@ const NotCanonicalKeywordCheck = S.makeFilter<string>(
  * {@link CanonicalKeyword}. The constraint makes wire-merge collisions
  * unrepresentable.
  *
- * @example
+ * **Example** (Decode extension key)
+ *
  * ```ts
  * import { ExtensionKey } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -858,7 +884,8 @@ export const ExtensionKey = S.String.check(NotCanonicalKeywordCheck).pipe(
 /**
  * Type for {@link ExtensionKey}.
  *
- * @example
+ * **Example** (Annotate extension key)
+ *
  * ```ts
  * import type { ExtensionKey } from "@beep/schema/JSONSchema"
  *
@@ -876,7 +903,8 @@ export type ExtensionKey = typeof ExtensionKey.Type;
  * `enum` and `examples`. Identical to `S.Json` at decode time; generation is
  * depth-bounded so schema-derived documents stay tractable.
  *
- * @example
+ * **Example** (Decode nested JSON value)
+ *
  * ```ts
  * import { JsonValue } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -898,7 +926,8 @@ export const JsonValue = S.Json.pipe(
 /**
  * Type for {@link JsonValue}.
  *
- * @example
+ * **Example** (Annotate JSON value type)
+ *
  * ```ts
  * import type { JsonValue } from "@beep/schema/JSONSchema"
  *
@@ -929,12 +958,15 @@ const ExtensionsBagKeysCheck = S.makeFilter<{ readonly [key: string]: unknown }>
  * canonical vocabulary decode into this record and are merged back inline on
  * encode, so foreign documents round-trip losslessly.
  *
+ * **Details**
+ *
  * The record key schema stays plain `S.String` because this effect version
  * skips all record checks (including record-level ones) when the key schema
  * itself carries checks; the {@link ExtensionKey} constraint is enforced by a
  * record-level check instead.
  *
- * @example
+ * **Example** (Decode extensions bag)
+ *
  * ```ts
  * import { ExtensionsBag } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
@@ -965,7 +997,8 @@ export const ExtensionsBag = S.Record(S.String, S.Unknown)
 /**
  * Type for {@link ExtensionsBag}.
  *
- * @example
+ * **Example** (Annotate extensions bag)
+ *
  * ```ts
  * import type { ExtensionsBag } from "@beep/schema/JSONSchema"
  *

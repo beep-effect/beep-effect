@@ -12,7 +12,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Date picker theme theme value.
  *
- * @example
+ * **Example** (Import date picker theme)
+ *
  * ```ts
  * import { datePickerTheme } from "@beep/ui/themes/components/date-picker"
  *

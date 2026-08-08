@@ -21,7 +21,8 @@ import type { PathLookup as InternalPathLookup, PathInput } from "./internal/Str
 /**
  * Schema for dot-delimited paths or path segment arrays accepted by struct lookup helpers.
  *
- * @example
+ * **Example** (PathInput from segments)
+ *
  * ```ts
  * import { PathInput } from "@beep/utils/Struct"
  *
@@ -43,7 +44,8 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
 /**
  * Thrown when a struct expected to have at least one string key is empty.
  *
- * @example
+ * **Example** (EmptyStructError instance)
+ *
  * ```ts
  * import { EmptyStructError } from "@beep/utils/Struct"
  *
@@ -54,7 +56,7 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
  * @category error-handling
  * @since 0.0.0
  */
-export class EmptyStructError extends S.TaggedErrorClass<EmptyStructError>($I`EmptyStructError`)(
+export class EmptyStructError extends S.TaggedError<EmptyStructError>($I`EmptyStructError`)(
   "EmptyStructError",
   {
     input: S.Unknown,
@@ -104,7 +106,8 @@ const isBlockedObjectKey = (key: PropertyKey): boolean =>
 /**
  * Result of a runtime struct path lookup.
  *
- * @example
+ * **Example** (Check PathLookup found)
+ *
  * ```ts
  * import type { PathLookup } from "@beep/utils/Struct"
  *
@@ -120,6 +123,8 @@ export type PathLookup = InternalPathLookup;
 /**
  * Retrieves a value from a struct by a dot-delimited or tuple path.
  *
+ * **Details**
+ *
  * Uses type-fest `Paths` for path validation and `Get` for value resolution.
  *
  * Supports a dual API:
@@ -127,7 +132,8 @@ export type PathLookup = InternalPathLookup;
  * - Data-first: `dotGet(self, "attributes.name")`
  * - Tuple paths: `dotGet(["attributes", "name"](self)`
  *
- * @example
+ * **Example** (Data-first and data-last)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
@@ -162,10 +168,13 @@ export const dotGet: {
 /**
  * Retrieves a value as an `Option` by a dot-delimited or tuple path.
  *
+ * **Details**
+ *
  * Missing paths return `Option.none()`. Existing paths always return
  * `Option.some(value)`, including when `value === undefined`.
  *
- * @example
+ * **Example** (Found and missing paths)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
@@ -205,6 +214,8 @@ export const dotGetOption: {
 /**
  * Applies a unary function to a value retrieved from a struct by path.
  *
+ * **Details**
+ *
  * Uses {@link dotGet} under the hood, so string paths are type-validated and
  * tuple paths resolve via `type-fest` `Get`.
  *
@@ -216,7 +227,8 @@ export const dotGetOption: {
  * If the runtime value does not actually satisfy the statically-declared path,
  * `undefined` is forwarded to `f`, matching {@link dotGet}.
  *
- * @example
+ * **Example** (Uppercase path value)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
@@ -281,6 +293,8 @@ export const mapPath: {
  * Returns a thunk that applies a unary function to a value retrieved from a
  * struct by path.
  *
+ * **Details**
+ *
  * Mirrors {@link mapPath}, but delays both the path lookup and the function
  * application until the returned zero-argument function is invoked.
  *
@@ -292,7 +306,8 @@ export const mapPath: {
  * If the runtime value does not actually satisfy the statically-declared path,
  * `undefined` is forwarded to `f`, matching {@link dotGet}.
  *
- * @example
+ * **Example** (Lazy uppercase path value)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -356,6 +371,8 @@ export const mapPathLazy: {
 /**
  * Returns a thunk that reads a value from a struct by key.
  *
+ * **Details**
+ *
  * Mirrors `effect/Struct.get`, but delays the property access until the
  * returned zero-argument function is invoked.
  *
@@ -363,7 +380,8 @@ export const mapPathLazy: {
  * - Data-last: `pipe(self, Struct.getLazy("name"))()`
  * - Data-first: `Struct.getLazy(self, "name")()`
  *
- * @example
+ * **Example** (Lazy key access dual API)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Struct } from "@beep/utils"
@@ -401,10 +419,13 @@ export const getLazy: {
  * Returns all type-level `Paths` of a struct as a `NonEmptyReadonlyArray` of
  * literal strings.
  *
+ * **Details**
+ *
  * Recursively walks the object at runtime, collecting every dot-delimited path
  * that `Paths<S>` would generate at the type level.
  *
- * @example
+ * **Example** (Collect nested struct paths)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -441,7 +462,8 @@ export const pathsOf = <const S extends Record<string, unknown>>(
 /**
  * A single `[key, value]` pair for a string key of `T`, preserving per-key correlation.
  *
- * @example
+ * **Example** (Correlated key-value entry)
+ *
  * ```ts
  * import type { StringKeyEntry } from "@beep/utils/Struct"
  *
@@ -458,11 +480,14 @@ export type StringKeyEntry<T> = { [K in keyof T & string]: [K, T[K]] }[keyof T &
 /**
  * An array of `[key, value]` pairs for all string keys of `T`, preserving per-key correlation.
  *
+ * **Details**
+ *
  * Unlike type-fest's `Entries<T>`, this narrows each entry so that the value type
  * is correlated with its key — `["a", string] | ["b", number]` rather than
  * `["a" | "b", string | number]`.
  *
- * @example
+ * **Example** (Correlated string key entries)
+ *
  * ```ts
  * import type { StringKeyEntries } from "@beep/utils/Struct"
  *
@@ -480,11 +505,14 @@ export type StringKeyEntries<T> = Array<StringKeyEntry<T>>;
  * Retrieves the entries (key-value pairs) of an object, where keys are strings,
  * in a type-safe manner. Symbol keys are excluded from the result.
  *
+ * **Details**
+ *
  * Each entry preserves per-key correlation: for `{ a: string; b: number }`,
  * the return type is `Array<["a", string] | ["b", number]>` rather than
  * `Array<["a" | "b", string | number]>`.
  *
- * @example
+ * **Example** (Type-safe string key entries)
+ *
  * ```typescript
  * import * as Struct from "@beep/utils/Struct"
  *
@@ -511,10 +539,13 @@ export const entries = <const R extends object>(obj: R): StringKeyEntries<R> =>
 /**
  * Returns the string-key entries of a non-empty object in a type-safe manner.
  *
+ * **Details**
+ *
  * Empty struct types are rejected at compile time. A runtime empty value still
  * fails fast with {@link EmptyStructError} to protect the invariant.
  *
- * @example
+ * **Example** (Non-empty object entries)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -540,9 +571,12 @@ export const entriesNonEmpty = <const R extends object>(
 /**
  * Returns the string keys of an object in a type-safe manner.
  *
+ * **Details**
+ *
  * Symbol keys are excluded from the result.
  *
- * @example
+ * **Example** (Type-safe string keys)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -562,10 +596,13 @@ export const keys = <const R extends object>(obj: R): Array<keyof R & string> =>
 /**
  * Returns the string keys of a non-empty object in a type-safe manner.
  *
+ * **Details**
+ *
  * Empty struct types are rejected at compile time. A runtime empty value still
  * fails fast with {@link EmptyStructError} to protect the invariant.
  *
- * @example
+ * **Example** (Non-empty object keys)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -591,10 +628,13 @@ export const keysNonEmpty = <const R extends object>(
 /**
  * Type-safe `Object.fromEntries` that preserves per-key value types.
  *
+ * **Details**
+ *
  * Accepts an iterable of `[key, value]` pairs and produces an object
  * whose type is the simplified union of all entries.
  *
- * @example
+ * **Example** (Object from typed entries)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -632,7 +672,8 @@ export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(
 /**
  * Re-export of all helpers from `effect/Struct`.
  *
- * @example
+ * **Example** (Import effect Struct helpers)
+ *
  * ```ts
  * import * as Struct from "@beep/utils/Struct"
  *
@@ -647,7 +688,8 @@ export * from "effect/Struct";
 /**
  * Struct shape accepted by {@link reverse}.
  *
- * @example
+ * **Example** (Reverseable mapping shape)
+ *
  * ```ts
  * import type { ReverseableStruct } from "@beep/utils/Struct"
  *
@@ -666,10 +708,13 @@ export type ReverseableStruct = Readonly<{
 /**
  * Type-level inversion of a struct where each value becomes a key.
  *
+ * **Details**
+ *
  * When multiple keys share the same value, the reversed key type is the union
  * of all matching original keys.
  *
- * @example
+ * **Example** (Inverted direction mapping)
+ *
  * ```ts
  * import type { ReverseStruct } from "@beep/utils/Struct"
  *
@@ -691,13 +736,16 @@ export type ReverseStruct<T extends ReverseableStruct> = {
  * Reverses a struct mapping, producing a new struct where original values
  * become keys and original keys become values.
  *
+ * **Details**
+ *
  * Supports a dual API:
  * - Data-last: `reverse()(self)`
  * - Data-first: `reverse(self)`
  *
  * When duplicate values exist, the last encountered key wins at runtime.
  *
- * @example
+ * **Example** (Reverse error code mapping)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -737,6 +785,8 @@ export const reverse: {
 /**
  * A utility type for constructing a recursive partial of a given object type.
  *
+ * **Details**
+ *
  * This type works by traversing the structure of the input type `T` and transforming
  * each property into an optional property. If the property is an array, the transformation
  * is applied recursively to the array's element type. If the property is an object, the
@@ -753,7 +803,8 @@ export const reverse: {
  * - Objects are transformed into objects with optional recursively partial properties.
  * - Primitive types like string, number, and boolean aren't altered.
  *
- * @example
+ * **Example** (Partial nested user profile)
+ *
  * ```ts
  * import type { DeepPartial } from "@beep/utils/Struct"
  *
@@ -778,8 +829,8 @@ export const reverse: {
  * ```
  *
  * @typeParam T - The original type for which a recursive partial should be constructed.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export type DeepPartial<T> = T extends readonly (infer U)[]
   ? readonly DeepPartial<U>[]
@@ -792,11 +843,14 @@ export type DeepPartial<T> = T extends readonly (infer U)[]
  * struct of the same shape. Nested plain objects are merged key-by-key,
  * `undefined` patch values are skipped, and non-object values overwrite.
  *
+ * **Details**
+ *
  * Supports a dual API:
  * - Data-first: `deepMerge(current, patch)`
  * - Data-last: `pipe(current, deepMerge(patch))`
  *
- * @example
+ * **Example** (Merge nested server config)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -811,8 +865,8 @@ export type DeepPartial<T> = T extends readonly (infer U)[]
  * console.log(merged)
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const deepMerge: {
   <T extends Record<string, unknown>>(current: T, patch: DeepPartial<T>): T;

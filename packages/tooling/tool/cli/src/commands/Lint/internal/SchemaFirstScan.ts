@@ -449,10 +449,12 @@ const schemaFirstLintHasFailures = (
 /**
  * Run schema-first inventory verification against the committed baseline.
  *
- * @example
+ * **Example** (Log schema-first lint name)
+ *
  * ```ts
  * console.log("runSchemaFirstLint")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

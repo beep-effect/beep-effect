@@ -24,7 +24,8 @@ const getEntityNameOption = (options: { readonly entityName?: string | undefined
 /**
  * Typed failure for initializing or reading from the wink runtime.
  *
- * @example
+ * **Example** (Create engine error from cause)
+ *
  * ```ts
  * import { WinkEngineError } from "@beep/wink"
  *
@@ -70,7 +71,8 @@ export class WinkEngineError extends TaggedErrorClass<WinkEngineError>($I`WinkEn
 /**
  * Typed failure for wink document reads, token collection, and token counts.
  *
- * @example
+ * **Example** (Create tokenization error with text)
+ *
  * ```ts
  * import { WinkTokenizationError } from "@beep/wink"
  *
@@ -123,7 +125,8 @@ export class WinkTokenizationError extends TaggedErrorClass<WinkTokenizationErro
 /**
  * Typed failure for learning or updating wink custom entity patterns.
  *
- * @example
+ * **Example** (Create entity error with name)
+ *
  * ```ts
  * import { WinkEntityError } from "@beep/wink"
  *
@@ -176,7 +179,8 @@ export class WinkEntityError extends TaggedErrorClass<WinkEntityError>($I`WinkEn
 /**
  * Tagged schema union for all wink runtime failures exposed by this module.
  *
- * @example
+ * **Example** (Check error against WinkError union)
+ *
  * ```ts
  * import { WinkEngineError, WinkError } from "@beep/wink"
  *
@@ -199,7 +203,8 @@ export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokeniza
 /**
  * Type-level companion for the {@link WinkError} schema union.
  *
- * @example
+ * **Example** (Assign WinkError schema type)
+ *
  * ```ts
  * import { WinkError } from "@beep/wink"
  * import type { WinkError as WinkErrorSchema } from "@beep/wink"

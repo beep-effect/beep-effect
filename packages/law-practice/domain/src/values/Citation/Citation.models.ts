@@ -85,6 +85,8 @@ const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Cita
 /**
  * An extracted explanatory parenthetical from a case citation.
  *
+ * **Details**
+ *
  * Not a citation subtype — it does not spread {@link CitationBase} and carries
  * no `type` discriminant of the citation family. Its `type` field is instead a
  * {@link ParentheticalType} signal-word classification. A parenthetical may nest
@@ -92,9 +94,8 @@ const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Cita
  * `(quoting Doe v. City, 100 F.2d 1)`), so `citations` is a self/mutually
  * recursive field resolved through `S.suspend`.
  *
- * **Example**
+ * **Example** (Making a holding parenthetical)
  *
- * @example
  * ```ts
  * import { Parenthetical } from "@beep/law-practice-domain"
  *
@@ -134,7 +135,8 @@ export class Parenthetical extends S.Class<Parenthetical>($I`Parenthetical`)(
 /**
  * Companion namespace for `Parenthetical`.
  *
- * @example
+ * **Example** (Accessing parenthetical type field)
+ *
  * ```ts
  * import type { Parenthetical } from "@beep/law-practice-domain"
  *
@@ -149,14 +151,15 @@ export declare namespace Parenthetical {
   /**
    * Decoded representation of a {@link Parenthetical}.
    *
+   * **Details**
+   *
    * Hand-written (rather than `typeof Parenthetical.Type`) so the mutually
    * recursive `citations` field can name {@link Citation.Type} through an
    * interface boundary without making the {@link Parenthetical} class base
    * expression circular.
    *
-   * **Example**
+   * **Example** (Aliasing decoded parenthetical type)
    *
-   * @example
    * ```ts
    * import type { Parenthetical } from "@beep/law-practice-domain"
    *
@@ -176,9 +179,8 @@ export declare namespace Parenthetical {
   /**
    * Wire-encoded representation of a decoded {@link Parenthetical}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded parenthetical type)
    *
-   * @example
    * ```ts
    * import type { Parenthetical } from "@beep/law-practice-domain"
    *
@@ -199,6 +201,8 @@ export declare namespace Parenthetical {
 /**
  * A parsed full case citation (type: `case`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `case`
  * discriminant plus the volume/reporter/page anatomy of a reporter citation,
  * parallel-citation grouping, explanatory {@link Parenthetical}s, subsequent
@@ -207,9 +211,8 @@ export declare namespace Parenthetical {
  * citation fields use `Option`, while definitive flags and zero-or-more
  * collections receive schema-owned defaults.
  *
- * **Example**
+ * **Example** (Making a full case citation)
  *
- * @example
  * ```ts
  * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -524,11 +527,13 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
   /**
    * Reconstruct a canonical Bluebook-style citation string from structured fields.
    *
-   * @remarks
+   * **Details**
+   *
    * Best-effort formatting for a full case citation using the available party
    * name, reporter, page, pincite, court, and year fields.
    *
-   * **Example**
+   * **Example** (Format a Bluebook citation)
+   *
    * ```ts
    * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
    * import { NonNegativeInt } from "@beep/schema"
@@ -588,7 +593,8 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
 /**
  * Companion namespace for `FullCaseCitation`.
  *
- * @example
+ * **Example** (Accessing case citation type field)
+ *
  * ```ts
  * import type { FullCaseCitation } from "@beep/law-practice-domain"
  *
@@ -603,9 +609,8 @@ export declare namespace FullCaseCitation {
   /**
    * Wire-encoded representation of a decoded {@link FullCaseCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded case citation)
    *
-   * @example
    * ```ts
    * import type { FullCaseCitation } from "@beep/law-practice-domain"
    *
@@ -759,15 +764,16 @@ export declare namespace FullCaseCitation {
 /**
  * A parsed `Id.` short-form citation (type: `id`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `id` discriminant.
  * Sparse own fields use `Option`: an `Id.` reference inherits most of its
  * anatomy (pincite, party names) from the antecedent citation it resolves to,
  * and may carry a trailing {@link Parenthetical}. `pinciteInherited` defaults
  * to `false`.
  *
- * **Example**
+ * **Example** (Making an Id citation)
  *
- * @example
  * ```ts
  * import { IdCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -914,7 +920,8 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
 /**
  * Companion namespace for `IdCitation`.
  *
- * @example
+ * **Example** (Accessing Id citation type field)
+ *
  * ```ts
  * import type { IdCitation } from "@beep/law-practice-domain"
  *
@@ -929,9 +936,8 @@ export declare namespace IdCitation {
   /**
    * Wire-encoded representation of a decoded {@link IdCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded Id citation)
    *
-   * @example
    * ```ts
    * import type { IdCitation } from "@beep/law-practice-domain"
    *
@@ -999,14 +1005,15 @@ export declare namespace IdCitation {
 /**
  * A parsed `supra` short-form citation (type: `supra`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `supra`
  * discriminant. A `supra` reference points back to an earlier citation by party
  * name; sparse own fields use `Option`, while `pinciteInherited` defaults to
  * `false`.
  *
- * **Example**
+ * **Example** (Making a supra citation)
  *
- * @example
  * ```ts
  * import { SupraCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -1109,7 +1116,8 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
 /**
  * Companion namespace for `SupraCitation`.
  *
- * @example
+ * **Example** (Accessing supra citation type field)
+ *
  * ```ts
  * import type { SupraCitation } from "@beep/law-practice-domain"
  *
@@ -1124,9 +1132,8 @@ export declare namespace SupraCitation {
   /**
    * Wire-encoded representation of a decoded {@link SupraCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded supra citation)
    *
-   * @example
    * ```ts
    * import type { SupraCitation } from "@beep/law-practice-domain"
    *
@@ -1182,15 +1189,16 @@ export declare namespace SupraCitation {
 /**
  * A parsed short-form case citation (type: `shortFormCase`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `shortFormCase`
  * discriminant. An abbreviated reference to an earlier full citation,
  * distinguished from a full case by the lack of a case name. Only `volume` and
  * `reporter` are required as constructor input; sparse own fields use `Option`,
  * while `pinciteInherited` defaults to `false`.
  *
- * **Example**
+ * **Example** (Making a short-form case citation)
  *
- * @example
  * ```ts
  * import { ShortFormCaseCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -1374,7 +1382,8 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
 /**
  * Companion namespace for `ShortFormCaseCitation`.
  *
- * @example
+ * **Example** (Accessing short-form type field)
+ *
  * ```ts
  * import type { ShortFormCaseCitation } from "@beep/law-practice-domain"
  *
@@ -1389,9 +1398,8 @@ export declare namespace ShortFormCaseCitation {
   /**
    * Wire-encoded representation of a decoded {@link ShortFormCaseCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded short-form citation)
    *
-   * @example
    * ```ts
    * import type { ShortFormCaseCitation } from "@beep/law-practice-domain"
    *
@@ -1479,13 +1487,14 @@ export declare namespace ShortFormCaseCitation {
 /**
  * Union type of all citation types.
  *
+ * **Details**
+ *
  * Discriminated on the `type` field, so downstream code can branch exhaustively
  * across every parsed legal-authority kind — full case, short-form, statute,
  * regulation, and the rest of the Tier-C family.
  *
- * **Example**
+ * **Example** (Aliasing all citation types)
  *
- * @example
  * ```ts
  * import { Citation } from "@beep/law-practice-domain"
  *
@@ -1529,9 +1538,8 @@ export const Citation = S.Union([
 /**
  * The decoded union of every citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded citation union)
  *
- * @example
  * ```ts
  * import { Citation } from "@beep/law-practice-domain"
  *
@@ -1546,14 +1554,15 @@ export type Citation = typeof Citation.Type;
 /**
  * Companion namespace for {@link Citation}.
  *
+ * **Details**
+ *
  * The decoded and encoded shapes are named here so the mutually-recursive
  * {@link ParentheticalCitations} suspend can reference them without forcing the
  * {@link Parenthetical} class base expression to evaluate the {@link Citation}
  * union value (which would be circular).
  *
- * **Example**
+ * **Example** (Aliasing Citation.Type union)
  *
- * @example
  * ```ts
  * import type { Citation } from "@beep/law-practice-domain"
  *
@@ -1628,12 +1637,13 @@ export declare namespace Citation {
 /**
  * Union of all full citation types (not short-form references).
  *
+ * **Details**
+ *
  * Excludes the `id`, `supra`, and `shortFormCase` back-references, leaving only
  * the citation kinds that stand on their own as a complete authority.
  *
- * **Example**
+ * **Example** (Aliasing full citation types)
  *
- * @example
  * ```ts
  * import { FullCitation } from "@beep/law-practice-domain"
  *
@@ -1674,9 +1684,8 @@ export const FullCitation = S.Union([
 /**
  * The decoded union of every full (non-short-form) citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded full citations)
  *
- * @example
  * ```ts
  * import { FullCitation } from "@beep/law-practice-domain"
  *
@@ -1691,12 +1700,13 @@ export type FullCitation = typeof FullCitation.Type;
 /**
  * Union of all short-form citation types (Id., supra, short-form case).
  *
+ * **Details**
+ *
  * These are back-references to an earlier full citation rather than
  * free-standing authorities.
  *
- * **Example**
+ * **Example** (Aliasing short-form citation types)
  *
- * @example
  * ```ts
  * import { ShortFormCitation } from "@beep/law-practice-domain"
  *
@@ -1716,9 +1726,8 @@ export const ShortFormCitation = S.Union([IdCitation, SupraCitation, ShortFormCa
 /**
  * The decoded union of every short-form citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded short-form citations)
  *
- * @example
  * ```ts
  * import { ShortFormCitation } from "@beep/law-practice-domain"
  *

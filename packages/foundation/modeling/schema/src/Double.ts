@@ -34,12 +34,14 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
 /**
  * Branded schema for protobuf `double` values.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Protobufjs writes `double` as IEEE-754 binary64 and exposes the JavaScript
  * value as a `number`. IEEE-754 special values are valid protobuf scalar
  * payloads, so this schema accepts `NaN`, `Infinity`, and `-Infinity`.
  *
- * @example
+ * **Example** (Decode double number value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -73,7 +75,8 @@ export const Double = ProtobufNumber.annotate({
 /**
  * Type-level value inferred from {@link Double}.
  *
- * @example
+ * **Example** (Narrow unknown to Double)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"

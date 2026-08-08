@@ -19,7 +19,8 @@ const $I = $SharedDomainId.create("entity/PublicEntityId");
 /**
  * Public id brand derived from an entity type token.
  *
- * @example
+ * **Example** (Brand from entity type)
+ *
  * ```ts
  * import type { Brand } from "@beep/shared-domain/entity/PublicEntityId"
  *
@@ -27,15 +28,16 @@ const $I = $SharedDomainId.create("entity/PublicEntityId");
  * console.log(brand)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Brand<EntityType extends string> = `${EntityType}PublicId`;
 
 /**
  * Public id brand derived from an entity-id schema.
  *
- * @example
+ * **Example** (Brand from entity-id schema)
+ *
  * ```ts
  * import type { BrandFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -44,15 +46,16 @@ export type Brand<EntityType extends string> = `${EntityType}PublicId`;
  * console.log(brand)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BrandFor<Entity extends EntityId.Any> = Brand<Entity["entityType"]>;
 
 /**
  * Public id prefix derived from an entity-id schema.
  *
- * @example
+ * **Example** (Prefix from entity-id schema)
+ *
  * ```ts
  * import type { PrefixFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -61,15 +64,16 @@ export type BrandFor<Entity extends EntityId.Any> = Brand<Entity["entityType"]>;
  * console.log(prefix)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
 
 /**
  * Branded public id value for one entity prefix and schema brand.
  *
- * @example
+ * **Example** (Value via fromCuid)
+ *
  * ```ts
  * import { Cuid } from "@beep/schema/Cuid"
  * import type { PublicEntityIdValueFor } from "@beep/shared-domain/entity/PublicEntityId"
@@ -83,8 +87,8 @@ export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string> = BrandNS.Branded<
   `${Prefix}_${string}`,
@@ -94,7 +98,8 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
 /**
  * Public id value narrowed to a concrete entity-id schema.
  *
- * @example
+ * **Example** (Id for entity schema)
+ *
  * ```ts
  * import { Cuid } from "@beep/schema/Cuid"
  * import type { PublicEntityIdFor } from "@beep/shared-domain/entity/PublicEntityId"
@@ -105,8 +110,8 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PublicEntityIdFor<Entity extends EntityId.Any> = PublicEntityIdValueFor<
   PrefixFor<Entity>,
@@ -135,7 +140,8 @@ type PublicEntityIdStatics<
 /**
  * Branded schema for a concrete entity's public id.
  *
- * @example
+ * **Example** (Schema from factory)
+ *
  * ```ts
  * import type { PublicEntityId } from "@beep/shared-domain/entity/PublicEntityId"
  * import { factory } from "@beep/shared-domain/entity/PublicEntityId"
@@ -145,8 +151,8 @@ type PublicEntityIdStatics<
  * console.log(schema.prefix)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PublicEntityId<
   Entity extends EntityId.Any = EntityId.Any,
@@ -161,7 +167,8 @@ type PublicEntityIdEquivalence<Prefix extends string, TBrand extends string> = {
 /**
  * Any public entity id schema produced by {@link factory}.
  *
- * @example
+ * **Example** (Any factory-produced schema)
+ *
  * ```ts
  * import type { Any } from "@beep/shared-domain/entity/PublicEntityId"
  * import { factory } from "@beep/shared-domain/entity/PublicEntityId"
@@ -171,8 +178,8 @@ type PublicEntityIdEquivalence<Prefix extends string, TBrand extends string> = {
  * console.log(schema.entityType)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Any = PublicEntityId<EntityId.Any, string, string>;
 
@@ -194,7 +201,8 @@ const attachPublicEntityIdStatics = <
 /**
  * Build a public id schema from an existing numeric entity-id schema.
  *
- * @example
+ * **Example** (Build public id schema)
+ *
  * ```ts
  * import { factory } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -203,8 +211,8 @@ const attachPublicEntityIdStatics = <
  * console.log(OrganizationPublicId.prefix)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const factory = <const Entity extends EntityId.Any>(
   entityId: Entity
@@ -232,7 +240,8 @@ export const factory = <const Entity extends EntityId.Any>(
 /**
  * Build a public entity id from an entity schema and CUID value.
  *
- * @example
+ * **Example** (Build id from CUID)
+ *
  * ```ts
  * import { Cuid } from "@beep/schema/Cuid"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
@@ -242,8 +251,8 @@ export const factory = <const Entity extends EntityId.Any>(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const fromCuid = <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity> =>
   factory(entityId).fromUnknown(`${entityId.tableName}_${id}`);
@@ -251,7 +260,8 @@ export const fromCuid = <const Entity extends EntityId.Any>(entityId: Entity, id
 /**
  * Generate a public entity id for an entity schema.
  *
- * @example
+ * **Example** (Generate public entity id)
+ *
  * ```ts
  * import { generate } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -263,9 +273,8 @@ export const fromCuid = <const Entity extends EntityId.Any>(entityId: Entity, id
  * @effects
  * Uses the existing `@beep/schema/Cuid` generator and therefore requires
  * `CuidState` and platform crypto services.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const generate = <const Entity extends EntityId.Any>(entityId: Entity) =>
   Effect.map(cuid, (id) => fromCuid(entityId, id));

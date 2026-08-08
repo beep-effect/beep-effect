@@ -27,7 +27,8 @@ const FrameGuardModeBase = LiteralKit(["deny", "sameorigin"]);
 /**
  * Schema for direct `X-Frame-Options` policy modes.
  *
- * @example
+ * **Example** (Validate deny mode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FrameGuardMode } from "@beep/schema/FrameGuard"
@@ -48,7 +49,8 @@ export const FrameGuardMode = FrameGuardModeBase.pipe(
 /**
  * Type for direct `X-Frame-Options` policy modes.
  *
- * @example
+ * **Example** (Assign deny mode type)
+ *
  * ```ts
  * import type { FrameGuardMode } from "@beep/schema/FrameGuard"
  *
@@ -64,7 +66,8 @@ export type FrameGuardMode = typeof FrameGuardMode.Type;
 /**
  * Configuration for the deprecated `allow-from` frame guard mode.
  *
- * @example
+ * **Example** (Make allow-from config)
+ *
  * ```ts
  * import { FrameGuardAllowFromConfig } from "@beep/schema/FrameGuard"
  *
@@ -87,7 +90,8 @@ export class FrameGuardAllowFromConfig extends S.Class<FrameGuardAllowFromConfig
 /**
  * Schema for tuple-based `allow-from` frame guard configuration.
  *
- * @example
+ * **Example** (Decode allow-from tuple)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FrameGuardAllowFrom, FrameGuardAllowFromConfig } from "@beep/schema/FrameGuard"
@@ -111,7 +115,8 @@ export const FrameGuardAllowFrom = S.Tuple([S.Literal("allow-from"), FrameGuardA
 /**
  * Type for tuple-based `allow-from` frame guard configuration.
  *
- * @example
+ * **Example** (Type allow-from tuple)
+ *
  * ```ts
  * import { FrameGuardAllowFromConfig, type FrameGuardAllowFrom } from "@beep/schema/FrameGuard"
  *
@@ -127,7 +132,8 @@ export type FrameGuardAllowFrom = typeof FrameGuardAllowFrom.Type;
 /**
  * Schema for enabled, disabled, or `allow-from` frame guard options.
  *
- * @example
+ * **Example** (Decode sameorigin option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FrameGuardOption } from "@beep/schema/FrameGuard"
@@ -147,7 +153,8 @@ export const FrameGuardOption = S.Union([S.Literal(false), FrameGuardMode, Frame
 /**
  * Type for enabled, disabled, or `allow-from` frame guard options.
  *
- * @example
+ * **Example** (Assign sameorigin option)
+ *
  * ```ts
  * import type { FrameGuardOption } from "@beep/schema/FrameGuard"
  *
@@ -163,7 +170,8 @@ export type FrameGuardOption = typeof FrameGuardOption.Type;
 /**
  * Model for a rendered `X-Frame-Options` response header.
  *
- * @example
+ * **Example** (Make response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader } from "@beep/schema/FrameGuard"
@@ -219,7 +227,8 @@ const formatFrameGuardValue = Effect.fn("FrameGuard.formatFrameGuardValue")(func
 /**
  * Schema that renders frame guard options into a response header.
  *
- * @example
+ * **Example** (Decode deny header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FrameGuardHeader } from "@beep/schema/FrameGuard"
@@ -304,7 +313,8 @@ export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
 /**
  * Type for rendered `X-Frame-Options` response headers.
  *
- * @example
+ * **Example** (Type response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader, type FrameGuardHeader } from "@beep/schema/FrameGuard"
@@ -329,7 +339,8 @@ export { FrameGuardMode as Mode, FrameGuardResponseHeader as ResponseHeader };
 /**
  * Concise alias for {@link FrameGuardOption}.
  *
- * @example
+ * **Example** (Decode via Option alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/FrameGuard"
@@ -345,7 +356,8 @@ export const Option = FrameGuardOption;
 /**
  * Type-level representation of {@link Option}.
  *
- * @example
+ * **Example** (Assign Option alias type)
+ *
  * ```ts
  * import type { Option } from "@beep/schema/FrameGuard"
  *
@@ -361,7 +373,8 @@ export type Option = typeof Option.Type;
 /**
  * Concise alias for {@link FrameGuardHeader}.
  *
- * @example
+ * **Example** (Decode via Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/FrameGuard"
@@ -378,7 +391,8 @@ export const Header = FrameGuardHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Type Header alias)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { FrameGuardResponseHeader, type Header } from "@beep/schema/FrameGuard"

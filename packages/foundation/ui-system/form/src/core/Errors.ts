@@ -21,7 +21,8 @@ const $I = $FormId.create("core/Errors");
  * A single renderable field error, structurally compatible with `@beep/ui`'s
  * `FieldError` `errors` entries.
  *
- * @example
+ * **Example** (Make field error)
+ *
  * ```ts
  * import { FieldErrorEntry } from "@beep/form/core/Errors"
  *
@@ -57,7 +58,8 @@ const toEntries = (error: unknown): ReadonlyArray<FieldErrorEntry> => {
  * Normalizes a TanStack `field.state.meta.errors` list into `FieldError`
  * entries, dropping anything without a string message.
  *
- * @example
+ * **Example** (Normalize mixed errors)
+ *
  * ```ts
  * import { toFieldErrors } from "@beep/form/core/Errors"
  *

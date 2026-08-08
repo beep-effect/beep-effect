@@ -8,7 +8,8 @@
 /**
  * EvidenceVerification row converter exports.
  *
- * @example
+ * **Example** (Import converter export type)
+ *
  * ```ts
  * import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification"
  *
@@ -22,7 +23,8 @@ export * from "./EvidenceVerification.converters.ts";
 /**
  * EvidenceVerification table metadata exports.
  *
- * @example
+ * **Example** (Access table entity name)
+ *
  * ```ts
  * import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification"
  *

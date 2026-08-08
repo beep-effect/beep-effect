@@ -14,7 +14,8 @@ import type * as React from "react";
 /**
  * Vertical stack for chat bubbles or message fragments.
  *
- * @example
+ * **Example** (Stacked conversation bubbles)
+ *
  * ```tsx
  * import { Bubble, BubbleContent, BubbleGroup } from "@beep/ui/components/bubble"
  *
@@ -65,7 +66,8 @@ const bubbleVariants = cva(
 /**
  * Chat bubble wrapper with alignment and color variants.
  *
- * @example
+ * **Example** (Outbound bubble with reactions)
+ *
  * ```tsx
  * import { Bubble, BubbleContent, BubbleReactions } from "@beep/ui/components/bubble"
  *
@@ -105,7 +107,8 @@ function Bubble({
 /**
  * Renderable content surface inside a chat bubble.
  *
- * @example
+ * **Example** (Linked matter content)
+ *
  * ```tsx
  * import { Bubble, BubbleContent } from "@beep/ui/components/bubble"
  *
@@ -163,7 +166,8 @@ const bubbleReactionsVariants = cva(
 /**
  * Floating reaction strip anchored to a bubble.
  *
- * @example
+ * **Example** (Top-aligned reaction strip)
+ *
  * ```tsx
  * import { Bubble, BubbleContent, BubbleReactions } from "@beep/ui/components/bubble"
  *

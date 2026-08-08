@@ -5,25 +5,18 @@
  * @since 0.0.0
  */
 
-import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect, FileSystem, Path, pipe } from "effect";
+import { Console, DateTime, Effect, FileSystem, MutableHashSet, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
-import {
-  collectChangedPathsSinceBase,
-  collectDirtyPaths,
-  runGitLines,
-  sortedUniquePaths,
-} from "../../../internal/repo-run/index.ts";
+import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -57,21 +50,35 @@ const JSDocRatchetedTotalName = LiteralKit([
   })
 );
 
-const JSDocTouchedFileLegacyTag = LiteralKit(["@remarks", "@example"]).pipe(
-  $I.annoteSchema("JSDocTouchedFileLegacyTag", {
-    description: "Legacy JSDoc carriers forbidden by the cleanup-on-touch gate.",
+const JSDocLegacyTag = LiteralKit(["@remarks", "@example"]).pipe(
+  $I.annoteSchema("JSDocLegacyTag", {
+    description: "Legacy JSDoc carriers forbidden by the zero-legacy gate.",
   })
 );
 
-class JSDocTouchedFileFinding extends S.Class<JSDocTouchedFileFinding>($I`JSDocTouchedFileFinding`)(
+class JSDocLegacyFileFinding extends S.Class<JSDocLegacyFileFinding>($I`JSDocLegacyFileFinding`)(
   {
     filePath: S.String,
-    tag: JSDocTouchedFileLegacyTag,
+    tag: JSDocLegacyTag,
   },
-  $I.annote("JSDocTouchedFileFinding", {
-    description: "Legacy JSDoc tag found in a changed package source file.",
+  $I.annote("JSDocLegacyFileFinding", {
+    description: "Legacy JSDoc tag found in a package source file under the zero-legacy scan.",
   })
 ) {}
+
+/**
+ * Generated residual paths still carrying legacy tags after P2 emitter conversion.
+ *
+ * Documented in goals/jsdoc-carrier-migration progress C5 (acp schema.gen.ts
+ * regeneration is a separate acp-resync; the emitter itself already emits titled sections).
+ * Only consulted when `--include-generated` is set.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [
+  "packages/drivers/acp/src/_generated/schema.gen.ts",
+];
 
 /**
  * Repo-relative path to the generated JSDoc documentation inventory.
@@ -532,129 +539,106 @@ export const isPackageSourceFile = (filePath: string): boolean =>
   !isGeneratedSourceFile(filePath);
 
 /**
- * Whether a diff line adds or removes part of a JSDoc comment.
+ * Whether a repo-relative path is any package source file, including generated.
  *
- * Matches the framing and continuation forms, so a change confined to code
- * lines does not register.
+ * Used by the zero-legacy scan when `--include-generated` is set so generator
+ * outputs get their own compliance proof (non-generated scope cannot prove them).
  *
- * @param line - One line of unified diff output, including its +/- marker.
- * @returns `true` when the line edits a JSDoc comment.
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` for package source files under packages/…/src, including generated.
+ * @category predicates
+ * @since 0.0.0
  */
-const isJSDocDiffLine = (line: string): boolean =>
-  /^[+-]\s*(?:\/\*\*|\*\/|\*(?:\s|$))/.test(line) && !Str.startsWith("+++")(line) && !Str.startsWith("---")(line);
+export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean =>
+  Str.startsWith("packages/")(filePath) &&
+  Str.includes("/src/")(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
-/**
- * Whether this branch actually edited a JSDoc comment in `filePath`.
- *
- * The cleanup-on-touch gate used to fire whenever a changed file contained a
- * legacy carrier anywhere, which made any repo-wide mechanical edit — dropping a
- * removed argument, renaming an API — inherit an unrelated documentation
- * refactor across every file it swept. Narrowing the trigger to files whose
- * JSDoc the change itself touched keeps the gate's intent ("clean up the docs
- * you are already editing") without that trap.
- */
-const hasTouchedJSDocLines = Effect.fn("JSDocRatchet.hasTouchedJSDocLines")(function* (
+const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
   repoRoot: string,
-  filePath: string
-): Effect.fn.Return<boolean, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const ranges: ReadonlyArray<ReadonlyArray<string>> = [
-    ["diff", "--unified=0", "origin/main...HEAD", "--", filePath],
-    ["diff", "--unified=0", "--", filePath],
-  ];
-  const diffs = yield* Effect.forEach(ranges, (args) => runGitLines(repoRoot, args, jsdocGitErrorAdapter));
-  return pipe(diffs, A.flatten, A.some(isJSDocDiffLine));
+  includeGenerated: boolean
+): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages"], jsdocGitErrorAdapter);
+  const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
+  return A.filter(lines, predicate);
 });
 
-const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(function* (
-  repoRoot: string
+const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function* (
+  repoRoot: string,
+  includeGenerated: boolean
 ): Effect.fn.Return<
-  ReadonlyArray<JSDocTouchedFileFinding>,
+  ReadonlyArray<JSDocLegacyFileFinding>,
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const canonicalRepoRoot = yield* fs
-    .realPath(repoRoot)
-    .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Failed to resolve repository root.")));
-  const changedSinceBase = yield* collectChangedPathsSinceBase(repoRoot, "origin/main...HEAD", jsdocGitErrorAdapter);
-  const dirty = yield* collectDirtyPaths(repoRoot, jsdocGitErrorAdapter);
-  const touchedSourceFiles = A.filter(sortedUniquePaths(A.appendAll(changedSinceBase, dirty)), isPackageSourceFile);
-  const existingSourceFiles = yield* Effect.filter(touchedSourceFiles, (filePath) => {
-    const candidate = path.resolve(canonicalRepoRoot, filePath);
-    return resolvePathWithinCanonicalRoot({ canonicalRoot: canonicalRepoRoot, candidate: filePath }).pipe(
-      Effect.filterOrFail(
-        (canonical) => Eq.equals(candidate, canonical),
-        () =>
-          QualityScriptCommandError.make({
-            message: `Refused linked changed source path ${filePath}.`,
-            command: "bun run beep quality jsdoc-ratchet",
-            exitCode: 1,
-          })
-      ),
-      Effect.flatMap((canonical) => fs.stat(canonical)),
-      Effect.map((info) => Eq.equals(info.type, "File")),
-      Effect.orElseSucceed(() => false)
-    );
-  });
+  const files = yield* zeroLegacyCorpusFiles(repoRoot, includeGenerated);
+  const residualAllow = includeGenerated
+    ? MutableHashSet.fromIterable(jsdocZeroLegacyGeneratedResiduals)
+    : MutableHashSet.empty<string>();
 
   return yield* Effect.forEach(
-    existingSourceFiles,
-    (filePath) =>
-      Effect.all({
-        sourceText: fs
-          .readFileString(path.join(canonicalRepoRoot, filePath))
-          .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`))),
-        touchedDoc: hasTouchedJSDocLines(repoRoot, filePath),
-      }).pipe(
-        Effect.map(({ sourceText, touchedDoc }) => {
-          if (hasGeneratedFileHeader(sourceText) || !touchedDoc) {
-            return A.empty<JSDocTouchedFileFinding>();
+    files,
+    (filePath) => {
+      if (MutableHashSet.has(residualAllow, filePath)) {
+        return Effect.succeed(A.empty<JSDocLegacyFileFinding>());
+      }
+      return fs.readFileString(path.join(repoRoot, filePath)).pipe(
+        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
+        Effect.map((sourceText) => {
+          if (!includeGenerated && hasGeneratedFileHeader(sourceText)) {
+            return A.empty<JSDocLegacyFileFinding>();
+          }
+          if (!Str.includes("@example")(sourceText) && !Str.includes("@remarks")(sourceText)) {
+            return A.empty<JSDocLegacyFileFinding>();
           }
           const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
-          return A.flatMap(JSDocTouchedFileLegacyTag.Options, (tag) =>
-            A.contains(tags, tag) ? [JSDocTouchedFileFinding.make({ filePath, tag })] : []
+          return A.flatMap(JSDocLegacyTag.Options, (tag) =>
+            A.contains(tags, tag) ? [JSDocLegacyFileFinding.make({ filePath, tag })] : []
           );
         })
-      ),
-    { concurrency: 16 }
+      );
+    },
+    { concurrency: 32 }
   ).pipe(Effect.map(A.flatten));
 });
 
-const enforceTouchedFileCleanup = Effect.fn("JSDocRatchet.enforceTouchedFileCleanup")(function* (
-  repoRoot: string
+const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* (
+  repoRoot: string,
+  includeGenerated: boolean
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const findings = yield* touchedFileFindings(repoRoot);
+  const findings = yield* zeroLegacyFindings(repoRoot, includeGenerated);
+  const scope = includeGenerated ? "include-generated" : "non-generated";
   yield* enforceRatchet({
     regressions: [
       {
         present: A.isReadonlyArrayNonEmpty(findings),
         lines: [
-          `[jsdoc-ratchet] cleanup-on-touch: ${A.length(findings)} changed source file/tag finding(s)`,
+          `[jsdoc-ratchet] zero-legacy (${scope}): ${A.length(findings)} source file/tag finding(s)`,
           ...renderTruncatedLines({
             items: findings,
-            render: (finding) => `  - ${finding.filePath}: migrate ${finding.tag}`,
+            render: (finding) => `  - ${finding.filePath}: remove ${finding.tag}`,
             limit: 25,
           }),
-          "[jsdoc-ratchet] changed package source files must use titled Example sections and Details/Gotchas.",
-          "[jsdoc-ratchet] migrate each legacy carrier in place:",
+          "[jsdoc-ratchet] every package source file must use titled Example sections and Details/Gotchas.",
           "  `@example` + loose ts fence  ->  a `**Example** (Short Title)` prose section holding exactly one ts fence",
           "  `@remarks <text>`            ->  a `**Details**` (or `**Gotchas**`) prose section above the tag block",
           "  section order: lead paragraph, **When to use**, **Details**, **Gotchas**, **Example** (Title) blocks, then @category/@since tags",
-          "[jsdoc-ratchet] binding law: .patterns/jsdoc-documentation.md (worked before/after: .claude/skills/jsdoc-annotation-specialist/references/conventions.md)",
+          "[jsdoc-ratchet] binding law: .patterns/jsdoc-documentation.md",
         ],
         error: QualityScriptCommandError.make({
-          message: "JSDoc cleanup-on-touch gate failed.",
+          message: "JSDoc zero-legacy gate failed.",
           command: "bun run beep quality jsdoc-ratchet",
           exitCode: 1,
         }),
       },
     ],
-    okLine: `[jsdoc-ratchet] cleanup-on-touch ok: files=${A.length(findings)}`,
+    okLine: `[jsdoc-ratchet] zero-legacy (${scope}) ok: findings=${A.length(findings)}`,
     tighten: O.none(),
   });
 });
@@ -683,9 +667,11 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
     baselinePath: S.String,
     inventoryPath: S.String,
     writeBaseline: S.Boolean,
+    includeGenerated: S.optionalKey(S.Boolean),
   },
   $I.annote("RunJSDocRatchetOptions", {
-    description: "Options accepted by runJSDocRatchet: inventory source, baseline location, and write mode.",
+    description:
+      "Options accepted by runJSDocRatchet: inventory source, baseline location, write mode, and generated-inclusive zero-legacy scope.",
   })
 ) {}
 
@@ -713,6 +699,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
   baselinePath,
   inventoryPath,
   writeBaseline: shouldWriteBaseline,
+  includeGenerated = false,
 }: RunJSDocRatchetOptions): Effect.fn.Return<
   void,
   QualityScriptCommandError,
@@ -732,7 +719,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 
   const baseline = yield* readBaseline(repoRoot, baselinePath);
   yield* enforceComparison(compareTotals(currentTotals, baseline.tracked_totals), baselinePath);
-  yield* enforceTouchedFileCleanup(repoRoot);
+  yield* enforceZeroLegacy(repoRoot, includeGenerated);
 });
 
 /**

@@ -8,7 +8,8 @@
 /**
  * CandidateClaim table metadata namespace.
  *
- * @example
+ * **Example** (Log CandidateClaim table name)
+ *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-tables/entities"
  *
@@ -22,7 +23,8 @@ export * as CandidateClaim from "./CandidateClaim/index.ts";
 /**
  * ClaimDisposition table metadata namespace.
  *
- * @example
+ * **Example** (Log ClaimDisposition table name)
+ *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-tables/entities"
  *
@@ -36,7 +38,8 @@ export * as ClaimDisposition from "./ClaimDisposition/index.ts";
 /**
  * Contradiction table metadata namespace.
  *
- * @example
+ * **Example** (Log Contradiction candidate table)
+ *
  * ```ts
  * import { Contradiction } from "@beep/epistemic-tables/entities"
  *
@@ -50,7 +53,8 @@ export * as Contradiction from "./Contradiction/index.ts";
 /**
  * EdgeVersion table metadata namespace.
  *
- * @example
+ * **Example** (Log EdgeVersion table name)
+ *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-tables/entities"
  *
@@ -64,7 +68,8 @@ export * as EdgeVersion from "./EdgeVersion/index.ts";
 /**
  * Evidence table metadata namespace.
  *
- * @example
+ * **Example** (Log Evidence table name)
+ *
  * ```ts
  * import { Evidence } from "@beep/epistemic-tables/entities"
  *
@@ -78,7 +83,8 @@ export * as Evidence from "./Evidence/index.ts";
 /**
  * EvidenceVerification table metadata namespace.
  *
- * @example
+ * **Example** (Log EvidenceVerification table name)
+ *
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-tables/entities"
  *
@@ -92,7 +98,8 @@ export * as EvidenceVerification from "./EvidenceVerification/index.ts";
 /**
  * UsageRecord table metadata namespace.
  *
- * @example
+ * **Example** (Log UsageRecord table name)
+ *
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-tables/entities"
  *

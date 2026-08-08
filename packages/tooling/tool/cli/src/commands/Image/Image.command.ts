@@ -124,7 +124,8 @@ const imageExtractFramesDirCommand = Command.make(
 /**
  * Image and video curation command group.
  *
- * @example
+ * **Example** (Run image command group)
+ *
  * ```ts
  * import { imageCommand } from "@beep/repo-cli"
  * import { Command } from "effect/unstable/cli"
@@ -133,6 +134,7 @@ const imageExtractFramesDirCommand = Command.make(
  * const run = Command.run(imageCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

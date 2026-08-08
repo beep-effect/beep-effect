@@ -78,7 +78,8 @@ const withAlphaValue = ({ color, alpha }: WithAlphaInput): RgbaColorString => {
 /**
  * CSS rgba color string produced by with-alpha helpers.
  *
- * @example
+ * **Example** (Decode rgba color string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RgbaColorString } from "@beep/schema/Color"
@@ -86,8 +87,8 @@ const withAlphaValue = ({ color, alpha }: WithAlphaInput): RgbaColorString => {
  * console.log(S.decodeUnknownSync(RgbaColorString)("rgba(255, 255, 255, 1)"))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
   S.brand("RgbaColorString"),
@@ -102,7 +103,8 @@ export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
 /**
  * Type for {@link RgbaColorString}.
  *
- * @example
+ * **Example** (Typed rgba color value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RgbaColorString } from "@beep/schema/Color"
@@ -111,15 +113,16 @@ export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RgbaColorString = typeof RgbaColorString.Type;
 
 /**
  * Shared finite amount used by color helper request schemas.
  *
- * @example
+ * **Example** (Decode color amount)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ColorAmount } from "@beep/schema/Color"
@@ -127,8 +130,8 @@ export type RgbaColorString = typeof RgbaColorString.Type;
  * console.log(S.decodeUnknownSync(ColorAmount)(0.25))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ColorAmount = S.Finite.check(
   S.isBetween(
@@ -150,7 +153,8 @@ export const ColorAmount = S.Finite.check(
 /**
  * Type for {@link ColorAmount}.
  *
- * @example
+ * **Example** (Typed color amount value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ColorAmount } from "@beep/schema/Color"
@@ -159,15 +163,16 @@ export const ColorAmount = S.Finite.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ColorAmount = typeof ColorAmount.Type;
 
 /**
  * Request schema for mixing two colors.
  *
- * @example
+ * **Example** (Decode mix colors input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MixColorsInput } from "@beep/schema/Color"
@@ -176,8 +181,8 @@ export type ColorAmount = typeof ColorAmount.Type;
  * console.log(input.amount)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class MixColorsInput extends S.Class<MixColorsInput>($I`MixColorsInput`)(
   {
@@ -193,7 +198,8 @@ export class MixColorsInput extends S.Class<MixColorsInput>($I`MixColorsInput`)(
 /**
  * One-way schema for mixing two colors.
  *
- * @example
+ * **Example** (Mix two colors)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MixColors } from "@beep/schema/Color"
@@ -202,8 +208,8 @@ export class MixColorsInput extends S.Class<MixColorsInput>($I`MixColorsInput`)(
  * console.log(color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MixColors = MixColorsInput.pipe(
   S.decodeTo(HexColor, {
@@ -218,7 +224,8 @@ export const MixColors = MixColorsInput.pipe(
 /**
  * Type for {@link MixColors}.
  *
- * @example
+ * **Example** (Typed mixed color value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MixColors } from "@beep/schema/Color"
@@ -227,15 +234,16 @@ export const MixColors = MixColorsInput.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MixColors = typeof MixColors.Type;
 
 /**
  * Request schema for lightening a color.
  *
- * @example
+ * **Example** (Decode lighten input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LightenInput } from "@beep/schema/Color"
@@ -244,8 +252,8 @@ export type MixColors = typeof MixColors.Type;
  * console.log(input.color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class LightenInput extends S.Class<LightenInput>($I`LightenInput`)(
   {
@@ -260,7 +268,8 @@ export class LightenInput extends S.Class<LightenInput>($I`LightenInput`)(
 /**
  * One-way schema for lightening a color.
  *
- * @example
+ * **Example** (Lighten a color)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Lighten } from "@beep/schema/Color"
@@ -269,8 +278,8 @@ export class LightenInput extends S.Class<LightenInput>($I`LightenInput`)(
  * console.log(color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Lighten = LightenInput.pipe(
   S.decodeTo(HexColor, {
@@ -285,7 +294,8 @@ export const Lighten = LightenInput.pipe(
 /**
  * Type for {@link Lighten}.
  *
- * @example
+ * **Example** (Typed lightened color value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Lighten } from "@beep/schema/Color"
@@ -294,15 +304,16 @@ export const Lighten = LightenInput.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Lighten = typeof Lighten.Type;
 
 /**
  * Request schema for darkening a color.
  *
- * @example
+ * **Example** (Decode darken input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DarkenInput } from "@beep/schema/Color"
@@ -311,8 +322,8 @@ export type Lighten = typeof Lighten.Type;
  * console.log(input.amount)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class DarkenInput extends S.Class<DarkenInput>($I`DarkenInput`)(
   {
@@ -327,7 +338,8 @@ export class DarkenInput extends S.Class<DarkenInput>($I`DarkenInput`)(
 /**
  * One-way schema for darkening a color.
  *
- * @example
+ * **Example** (Darken a color)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Darken } from "@beep/schema/Color"
@@ -336,8 +348,8 @@ export class DarkenInput extends S.Class<DarkenInput>($I`DarkenInput`)(
  * console.log(color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Darken = DarkenInput.pipe(
   S.decodeTo(HexColor, {
@@ -352,7 +364,8 @@ export const Darken = DarkenInput.pipe(
 /**
  * Type for {@link Darken}.
  *
- * @example
+ * **Example** (Typed darkened color value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Darken } from "@beep/schema/Color"
@@ -361,15 +374,16 @@ export const Darken = DarkenInput.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Darken = typeof Darken.Type;
 
 /**
  * Request schema for converting a color plus alpha to an rgba string.
  *
- * @example
+ * **Example** (Decode with-alpha input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WithAlphaInput } from "@beep/schema/Color"
@@ -378,8 +392,8 @@ export type Darken = typeof Darken.Type;
  * console.log(input.alpha)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class WithAlphaInput extends S.Class<WithAlphaInput>($I`WithAlphaInput`)(
   {
@@ -394,7 +408,8 @@ export class WithAlphaInput extends S.Class<WithAlphaInput>($I`WithAlphaInput`)(
 /**
  * One-way schema for rendering an rgba string.
  *
- * @example
+ * **Example** (Render rgba with alpha)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WithAlpha } from "@beep/schema/Color"
@@ -403,8 +418,8 @@ export class WithAlphaInput extends S.Class<WithAlphaInput>($I`WithAlphaInput`)(
  * console.log(rgba)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WithAlpha = WithAlphaInput.pipe(
   S.decodeTo(RgbaColorString, {
@@ -419,7 +434,8 @@ export const WithAlpha = WithAlphaInput.pipe(
 /**
  * Type for {@link WithAlpha}.
  *
- * @example
+ * **Example** (Typed rgba with alpha)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WithAlpha } from "@beep/schema/Color"
@@ -428,7 +444,7 @@ export const WithAlpha = WithAlphaInput.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WithAlpha = typeof WithAlpha.Type;

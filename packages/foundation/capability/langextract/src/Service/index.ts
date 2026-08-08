@@ -36,7 +36,8 @@ interface LangExtractRemotePolicyShape {
 /**
  * Provider-neutral LangExtract service tag.
  *
- * @example
+ * **Example** (Mock service extract layer)
+ *
  * ```ts
  * import { LangExtractService } from "@beep/langextract/Service"
  * import { LangExtractDiagnostics, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction"
@@ -104,7 +105,8 @@ export class LangExtractService extends Context.Service<LangExtractService, Lang
  * Policy service consulted before source text is sent to the injected language
  * model. Absence of this service denies remote extraction by default.
  *
- * @example
+ * **Example** (Allow remote policy layer)
+ *
  * ```ts
  * import { LangExtractRemotePolicy, allowRemoteExtractionPolicy } from "@beep/langextract/Service"
  * import { Layer } from "effect"
@@ -123,7 +125,8 @@ export class LangExtractRemotePolicy extends Context.Service<LangExtractRemotePo
 /**
  * Policy instance that permits remote LangExtract generation.
  *
- * @example
+ * **Example** (Permit remote extraction request)
+ *
  * ```ts
  * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { allowRemoteExtractionPolicy } from "@beep/langextract/Service"
@@ -152,7 +155,8 @@ export const allowRemoteExtractionPolicy = LangExtractRemotePolicy.of({
 /**
  * Layer that permits remote LangExtract generation.
  *
- * @example
+ * **Example** (Log allow remote layer)
+ *
  * ```ts
  * import { allowRemoteExtractionPolicyLayer } from "@beep/langextract/Service"
  *
@@ -168,7 +172,8 @@ export const allowRemoteExtractionPolicyLayer = Layer.succeed(LangExtractRemoteP
  * Config-driven policy layer. `BEEP_LANGEXTRACT_ALLOW_REMOTE=true` is required
  * before request text may be sent to the injected language model.
  *
- * @example
+ * **Example** (Log config policy layer)
+ *
  * ```ts
  * import { remoteExtractionPolicyFromConfig } from "@beep/langextract/Service"
  *
@@ -228,7 +233,8 @@ const renderExamples = (request: LangExtractRequest): string => {
 /**
  * Build the deterministic provider-neutral extraction prompt.
  *
- * @example
+ * **Example** (Build extraction prompt)
+ *
  * ```ts
  * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { buildPrompt } from "@beep/langextract/Service"
@@ -261,7 +267,8 @@ ${request.text}`;
 /**
  * Construct the service implementation from an injected language model.
  *
- * @example
+ * **Example** (Construct service from model)
+ *
  * ```ts
  * import { make } from "@beep/langextract/Service"
  *
@@ -332,7 +339,8 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
 /**
  * Layer that provides {@link LangExtractService} from an injected language model.
  *
- * @example
+ * **Example** (Provide service with test model)
+ *
  * ```ts
  * import { LangExtractService, layer } from "@beep/langextract/Service"
  * import { ExtractionTarget } from "@beep/langextract/Target"

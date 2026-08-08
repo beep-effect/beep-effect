@@ -11,7 +11,8 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 /**
  * Render a transport or decoding cause into a stable, non-secret diagnostic.
  *
- * @example
+ * **Example** (Log network error diagnostic)
+ *
  * ```ts
  * import { pacerCauseMessage } from "@beep/pacer/Pacer.http"
  *

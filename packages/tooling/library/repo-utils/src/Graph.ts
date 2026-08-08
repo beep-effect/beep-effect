@@ -80,12 +80,15 @@ const fromAdjacencyList = (
  * Compute a topological ordering (dependency-first build order) of packages
  * described by the given adjacency list using Kahn's algorithm.
  *
+ * **Details**
+ *
  * Dependencies appear **before** their dependents in the returned array so
  * that every package is built after all of its dependencies.
  *
  * Fails with {@link CyclicDependencyError} when the graph contains cycles.
  *
- * @example
+ * **Example** (Sort two-package dependency graph)
+ *
  * ```typescript
  * import { Effect, HashMap, HashSet } from "effect"
  * import { topologicalSort } from "@beep/repo-utils/Graph"
@@ -94,6 +97,7 @@ const fromAdjacencyList = (
  * const program = topologicalSort(adj)
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -127,15 +131,16 @@ export const topologicalSort: (
 /**
  * Detect all cycles in a directed dependency graph.
  *
+ * **Details**
+ *
  * Uses strongly connected components (Kosaraju's algorithm via the built-in
  * `Graph.stronglyConnectedComponents`) and then reconstructs explicit cycle
  * paths of the form `[pkg1, pkg2, ..., pkg1]`.
  *
  * Returns an empty array when the graph is acyclic.
  *
- * @param adjacencyList - Package dependency adjacency list.
- * @returns Effect producing all detected cycle paths.
- * @example
+ * **Example** (Detect cycles on acyclic graph)
+ *
  * ```typescript
  * import { Effect, HashMap, HashSet } from "effect"
  * import { detectCycles } from "@beep/repo-utils/Graph"
@@ -144,6 +149,9 @@ export const topologicalSort: (
  * const program = detectCycles(adj)
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
+ * @param adjacencyList - Package dependency adjacency list.
+ * @returns Effect producing all detected cycle paths.
  * @category services
  * @since 0.0.0
  */
@@ -273,16 +281,16 @@ const buildCyclePath = (
 /**
  * Compute the transitive closure of dependencies for a single package.
  *
+ * **Details**
+ *
  * Returns a `HashSet` of all packages that the given package depends on,
  * directly or transitively.  The starting package itself is **not** included
  * unless it participates in a cycle.
  *
  * Uses BFS traversal via the built-in `Graph.bfs`.
  *
- * @param adjacencyList - Package dependency adjacency list.
- * @param pkg - Package name whose dependency closure should be computed.
- * @returns Effect producing all transitively reachable dependencies.
- * @example
+ * **Example** (Transitive deps of one package)
+ *
  * ```typescript
  * import { Effect, HashMap, HashSet } from "effect"
  * import { computeTransitiveClosure } from "@beep/repo-utils/Graph"
@@ -291,6 +299,10 @@ const buildCyclePath = (
  * const program = computeTransitiveClosure(adj, "app")
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
+ * @param adjacencyList - Package dependency adjacency list.
+ * @param pkg - Package name whose dependency closure should be computed.
+ * @returns Effect producing all transitively reachable dependencies.
  * @category services
  * @since 0.0.0
  */

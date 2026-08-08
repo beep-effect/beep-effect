@@ -13,14 +13,16 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 /**
  * Convert an arbitrary branch or step name into a stable artifact file segment.
  *
- * @param value - Branch, package, or step name to sanitize.
- * @returns A non-empty artifact-safe path segment.
- * @example
+ * **Example** (Sanitize branch name segment)
+ *
  * ```ts
  * import { safeArtifactName } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  *
  * console.log(safeArtifactName("feature/status work"))
  * ```
+ *
+ * @param value - Branch, package, or step name to sanitize.
+ * @returns A non-empty artifact-safe path segment.
  * @category utilities
  * @since 0.0.0
  */
@@ -35,9 +37,8 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
 /**
  * Return the stable Yeet run id for a repo run context.
  *
- * @param context - Repo run context carrying the current branch.
- * @returns Sanitized run id for branch-scoped Yeet artifacts.
- * @example
+ * **Example** (Derive run id from context)
+ *
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
@@ -54,6 +55,9 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * })
  * console.log(runIdForContext(context)) // e.g. "feature-status-work-1a2b3c4d"
  * ```
+ *
+ * @param context - Repo run context carrying the current branch.
+ * @returns Sanitized run id for branch-scoped Yeet artifacts.
  * @category utilities
  * @since 0.0.0
  */
@@ -63,9 +67,8 @@ export const runIdForContext = (context: RepoRunContext): string =>
 /**
  * Resolve the Yeet artifact directory for a repo run context.
  *
- * @param context - Repo run context carrying `repoRoot` and `packetDir`.
- * @returns Absolute Yeet artifact directory path.
- * @example
+ * **Example** (Resolve artifact directory path)
+ *
  * ```ts
  * import { artifactDirForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { Effect } from "effect"
@@ -73,6 +76,9 @@ export const runIdForContext = (context: RepoRunContext): string =>
  * const program = Effect.succeed(artifactDirForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param context - Repo run context carrying `repoRoot` and `packetDir`.
+ * @returns Absolute Yeet artifact directory path.
  * @category utilities
  * @since 0.0.0
  */
@@ -86,10 +92,8 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
 /**
  * Resolve a file path inside the current Yeet run directory.
  *
- * @param context - Repo run context carrying the artifact directory and branch.
- * @param fileName - File name within `.beep/yeet/runs/<run-id>/`.
- * @returns Absolute path to the named run artifact.
- * @example
+ * **Example** (Resolve run artifact file path)
+ *
  * ```ts
  * import { runArtifactPathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { Effect } from "effect"
@@ -97,6 +101,10 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
  * const program = Effect.succeed(runArtifactPathForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param context - Repo run context carrying the artifact directory and branch.
+ * @param fileName - File name within `.beep/yeet/runs/<run-id>/`.
+ * @returns Absolute path to the named run artifact.
  * @category utilities
  * @since 0.0.0
  */
@@ -112,9 +120,8 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
 /**
  * Resolve the state artifact path for the current Yeet run.
  *
- * @param context - Repo run context carrying the artifact directory and branch.
- * @returns Absolute path to the branch-scoped `state.json`.
- * @example
+ * **Example** (Resolve run state.json path)
+ *
  * ```ts
  * import { runStatePathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { Effect } from "effect"
@@ -122,6 +129,9 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  * const program = Effect.succeed(runStatePathForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param context - Repo run context carrying the artifact directory and branch.
+ * @returns Absolute path to the branch-scoped `state.json`.
  * @category utilities
  * @since 0.0.0
  */

@@ -31,7 +31,8 @@ const $I = $EditorId.create("chat/config");
  * inserts a newline); `"modifierEnter"` sends on Cmd/Ctrl+Enter (plain Enter
  * inserts a newline). Enter-to-send is always suppressed during IME composition.
  *
- * @example
+ * **Example** (Check enter send mode)
+ *
  * ```ts
  * import { SendOn } from "@beep/editor/chat/config"
  *
@@ -50,7 +51,8 @@ export const SendOn = LiteralKit(["enter", "modifierEnter"]).pipe(
 /**
  * The keystroke that submits the message.
  *
- * @example
+ * **Example** (Assign modifierEnter value)
+ *
  * ```ts
  * import type { SendOn } from "@beep/editor/chat/config"
  *
@@ -69,7 +71,8 @@ export type SendOn = typeof SendOn.Type;
  * the {@link ChatComposer} passes the consumer's partial `features` object
  * straight through `ComposerFeatures.make` to resolve defaults.
  *
- * @example
+ * **Example** (Partial features with defaults)
+ *
  * ```ts
  * import { ComposerFeatures } from "@beep/editor/chat/config"
  *
@@ -117,7 +120,8 @@ export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatu
 /**
  * Typed callback applied to the editor when a slash/mention option is selected.
  *
- * @example
+ * **Example** (Focus editor effect callback)
+ *
  * ```ts
  * import type { EditorEffect } from "@beep/editor/chat/config"
  *
@@ -148,7 +152,8 @@ const EditorEffectSchema = S.declare<EditorEffect>(isEditorEffect).pipe(
  * text has been removed and receives the editor so the item can mutate the
  * current selection (e.g. set a heading or insert a list).
  *
- * @example
+ * **Example** (Make heading slash item)
+ *
  * ```ts
  * import { SlashItem } from "@beep/editor/chat/config"
  *
@@ -211,7 +216,8 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
  * {@link ChatComposer}. Decoding the collection at the mount boundary prevents
  * malformed plain-object entries from reaching Lexical callbacks.
  *
- * @example
+ * **Example** (Decode slash items array)
+ *
  * ```ts
  * import { SlashItem, SlashItems } from "@beep/editor/chat/config"
  * import { Result } from "effect"
@@ -237,7 +243,8 @@ export const SlashItems = S.Array(SlashItem)
 /**
  * Companion type for {@link SlashItems}.
  *
- * @example
+ * **Example** (Type empty slash items)
+ *
  * ```ts
  * import type { SlashItems } from "@beep/editor/chat/config"
  *
@@ -254,7 +261,8 @@ export type SlashItems = typeof SlashItems.Type;
  * A single `@` mention candidate. Mentions are ephemeral composer affordances:
  * on select they serialize to plain text (`@label`), never a persisted node.
  *
- * @example
+ * **Example** (Make mention option)
+ *
  * ```ts
  * import { MentionOption } from "@beep/editor/chat/config"
  *
@@ -307,7 +315,8 @@ const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
  * may cross an async boundary, so every response is decoded before its values
  * are exposed to the typeahead menu.
  *
- * @example
+ * **Example** (Decode mention options array)
+ *
  * ```ts
  * import { MentionOptions } from "@beep/editor/chat/config"
  * import { Result } from "effect"
@@ -331,7 +340,8 @@ export const MentionOptions = S.Array(MentionOption)
 /**
  * Companion type for {@link MentionOptions}.
  *
- * @example
+ * **Example** (Type empty mention options)
+ *
  * ```ts
  * import type { MentionOptions } from "@beep/editor/chat/config"
  *
@@ -349,7 +359,8 @@ export type MentionOptions = typeof MentionOptions.Type;
  * async; the composer races stale responses out by request order. Modeled as a
  * typed function schema so the composer can hold it as schema-backed config.
  *
- * @example
+ * **Example** (Validate mention source function)
+ *
  * ```ts
  * import { MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
@@ -368,7 +379,8 @@ const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
 /**
  * Schema for {@link MentionSource}.
  *
- * @example
+ * **Example** (Check source against schema)
+ *
  * ```ts
  * import { MentionOption, MentionSource } from "@beep/editor/chat/config"
  * import * as S from "effect/Schema"
@@ -394,7 +406,8 @@ export const MentionSource = S.declare<MentionSource>(isMentionSource).pipe(
  * Promise-returning ports are awaited; rejection rolls the current batch back
  * and surfaces a typed inline failure.
  *
- * @example
+ * **Example** (Async attachment port handler)
+ *
  * ```ts
  * import type { AttachmentPort } from "@beep/editor/chat/config"
  *
@@ -412,7 +425,8 @@ export type AttachmentPort = (files: ReadonlyArray<File>) => void | Promise<void
  * Consumer port invoked with the live, schema-decoded editor state when the
  * composer dispatches a send.
  *
- * @example
+ * **Example** (Define send port callback)
+ *
  * ```ts
  * import type { SendPort } from "@beep/editor/chat/config"
  *

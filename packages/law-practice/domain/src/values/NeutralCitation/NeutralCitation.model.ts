@@ -19,13 +19,14 @@ const $I = $LawPracticeDomainId.create("values/NeutralCitation/NeutralCitation.m
  * A vendor-neutral (medium-neutral) court citation identified by year, court,
  * and document number.
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `neutral`
  * discriminant tag plus its own year, document number, and optional court,
  * database, pincite, date, and component-span metadata.
  *
- * **Example**
+ * **Example** (Make neutral citation)
  *
- * @example
  * ```ts
  * import { NeutralCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -127,7 +128,8 @@ export class NeutralCitation extends S.Class<NeutralCitation>($I`NeutralCitation
 /**
  * Companion namespace for `NeutralCitation`.
  *
- * @example
+ * **Example** (Alias Encoded companion type)
+ *
  * ```ts
  * import type { NeutralCitation } from "@beep/law-practice-domain"
  *
@@ -141,9 +143,8 @@ export declare namespace NeutralCitation {
   /**
    * Wire-encoded representation of a decoded {@link NeutralCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { NeutralCitation } from "@beep/law-practice-domain"
    *

@@ -307,11 +307,13 @@ const projectNode = (
 /**
  * Projects a dock tree into exact-partition group and sash boxes.
  *
- * @remarks
+ * **Details**
+ *
  * Rounding assigns the integer remainder to the trailing child, so child
  * extents plus the gap always equal the parent extent.
  *
- * @example
+ * **Example** (Project split into boxes)
+ *
  * ```ts
  * import { DockBox, GeometryOptions, GroupId, Panel, PanelId, SplitId, SplitLayout, SplitNode, TabsNode, TextPanelView, project } from "@beep/dock"
  *
@@ -336,7 +338,8 @@ export const project: Dual2<DockNode, GeometryProjectionContext, DockGeometry> =
 /**
  * Projects docked, maximized, and floating workspace geometry.
  *
- * @example
+ * **Example** (Project empty workspace geometry)
+ *
  * ```ts
  * import { DockBox, DockWorkspace, projectWorkspace } from "@beep/dock"
  *
@@ -423,7 +426,8 @@ export const rows = (node: DockNode): ReadonlyArray<DockRow> =>
 /**
  * Builds reactive geometry projections from host-owned workspace and container atoms.
  *
- * @example
+ * **Example** (Reactive geometry from atoms)
+ *
  * ```ts
  * import { DockBox, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockGeometryAtoms } from "@beep/dock"
  * import { Atom, AtomRegistry } from "effect/unstable/reactivity"

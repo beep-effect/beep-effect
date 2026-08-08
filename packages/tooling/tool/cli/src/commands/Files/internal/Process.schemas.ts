@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/Files/internal/Process.schemas");
 /**
  * Failure policy for `files process`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProcessFilesFailurePolicy } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ProcessFilesFailurePolicy)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -42,13 +44,15 @@ export type ProcessFilesFailurePolicy = typeof ProcessFilesFailurePolicy.Type;
 /**
  * Validated options used by `files process`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProcessFilesOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ProcessFilesOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -74,13 +78,15 @@ export class ProcessFilesOptions extends S.Class<ProcessFilesOptions>($I`Process
 /**
  * Summary counts returned by `files process`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProcessFilesSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(ProcessFilesSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -33,7 +33,8 @@ const MAX_REQUEST_EXAMPLES = 64;
 /**
  * Maximum extraction candidates accepted at any LangExtract boundary.
  *
- * @example
+ * **Example** (Log candidate limit constant)
+ *
  * ```ts
  * import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction"
  *
@@ -48,7 +49,8 @@ export const MAX_EXTRACTION_CANDIDATES = 1_024;
 /**
  * Machine-readable LangExtract failure reasons.
  *
- * @example
+ * **Example** (Check alignment-failed reason)
+ *
  * ```ts
  * import { LangExtractErrorReason } from "@beep/langextract/Extraction"
  *
@@ -74,15 +76,6 @@ export const LangExtractErrorReason = LiteralKit([
 
 /**
  * {@inheritDoc LangExtractErrorReason}
- *
- * @example
- * ```ts
- * import type { LangExtractErrorReason } from "@beep/langextract/Extraction"
- *
- * const reason: LangExtractErrorReason = "model-output-parse-failed"
- * console.log(reason)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -91,7 +84,8 @@ export type LangExtractErrorReason = typeof LangExtractErrorReason.Type;
 /**
  * Sanitized LangExtract capability error.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { LangExtractError } from "@beep/langextract/Extraction"
  *
@@ -130,7 +124,8 @@ export class LangExtractError extends TaggedErrorClass<LangExtractError>($I`Lang
 /**
  * Alignment status assigned to a parsed extraction candidate.
  *
- * @example
+ * **Example** (Check match_exact status)
+ *
  * ```ts
  * import { AlignmentStatus } from "@beep/langextract/Extraction"
  *
@@ -148,15 +143,6 @@ export const AlignmentStatus = LiteralKit(["match_exact", "match_lesser", "match
 
 /**
  * {@inheritDoc AlignmentStatus}
- *
- * @example
- * ```ts
- * import type { AlignmentStatus } from "@beep/langextract/Extraction"
- *
- * const status: AlignmentStatus = "match_exact"
- * console.log(status)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -165,7 +151,8 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
 /**
  * Options controlling provider-neutral extraction and alignment.
  *
- * @example
+ * **Example** (Build extraction options)
+ *
  * ```ts
  * import { LangExtractOptions } from "@beep/langextract/Extraction"
  * import { UnitInterval } from "@beep/nlp/Handoff"
@@ -193,7 +180,8 @@ export class LangExtractOptions extends S.Class<LangExtractOptions>($I`LangExtra
 /**
  * Candidate extraction decoded from model output before source alignment.
  *
- * @example
+ * **Example** (Create extraction candidate)
+ *
  * ```ts
  * import { ExtractionCandidate } from "@beep/langextract/Extraction"
  * import { UnitInterval } from "@beep/nlp/Handoff"
@@ -237,7 +225,8 @@ export class ExtractionCandidate extends S.Class<ExtractionCandidate>($I`Extract
 /**
  * Extraction after deterministic source alignment.
  *
- * @example
+ * **Example** (Create grounded extraction)
+ *
  * ```ts
  * import { GroundedExtraction } from "@beep/langextract/Extraction"
  * import { Contract } from "@beep/nlp/Handoff"
@@ -292,7 +281,8 @@ export class GroundedExtraction extends S.Class<GroundedExtraction>($I`GroundedE
 /**
  * Provider-neutral extraction request.
  *
- * @example
+ * **Example** (Build extraction request)
+ *
  * ```ts
  * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { ExtractionTarget } from "@beep/langextract/Target"
@@ -336,7 +326,8 @@ export class LangExtractRequest extends S.Class<LangExtractRequest>($I`LangExtra
 /**
  * Counts emitted with a completed extraction result.
  *
- * @example
+ * **Example** (Create diagnostics counts)
+ *
  * ```ts
  * import { LangExtractDiagnostics } from "@beep/langextract/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -367,7 +358,8 @@ export class LangExtractDiagnostics extends S.Class<LangExtractDiagnostics>($I`L
 /**
  * Provider-neutral extraction result plus NLP handoff document.
  *
- * @example
+ * **Example** (Build extraction result)
+ *
  * ```ts
  * import { LangExtractDiagnostics, LangExtractResult } from "@beep/langextract/Extraction"
  * import { Contract } from "@beep/nlp/Handoff"
@@ -445,7 +437,8 @@ const outputToCandidates = (output: ParsedModelOutput): ReadonlyArray<Extraction
 /**
  * Decode a model text response into extraction candidates.
  *
- * @example
+ * **Example** (Parse model JSON output)
+ *
  * ```ts
  * import { parseModelOutput } from "@beep/langextract/Extraction"
  * import { Effect } from "effect"

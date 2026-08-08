@@ -10,7 +10,8 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
 /**
  * Selected-row schema field map attached to entity definitions.
  *
- * @example
+ * **Example** (Declare selected-row fields)
+ *
  * ```ts
  * import type { Fields } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -19,15 +20,16 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  * console.log(Object.keys(fields))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Fields = Readonly<Record<string, S.Top>>;
 
 /**
  * Explicit variant field accepted by {@link ClassFactory}.
  *
- * @example
+ * **Example** (Satisfy variant field input)
+ *
  * ```ts
  * import type { EntityVariantFieldInput } from "@beep/schema/EntitySchema"
  * import * as Model from "@beep/schema/Model"
@@ -44,8 +46,8 @@ export type Fields = Readonly<Record<string, S.Top>>;
  * console.log(S.isSchema(field.schemas.select))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityVariantFieldInput = VariantSchema.Field.Any & {
   readonly schemas: VariantSchema.Field.ConfigWithKeys<Model.Variant> & {
@@ -56,7 +58,8 @@ export type EntityVariantFieldInput = VariantSchema.Field.Any & {
 /**
  * Field input accepted by {@link ClassFactory}.
  *
- * @example
+ * **Example** (Satisfy simple field input)
+ *
  * ```ts
  * import type { EntityFieldInput } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -65,15 +68,16 @@ export type EntityVariantFieldInput = VariantSchema.Field.Any & {
  * console.log(S.isSchema(field))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityFieldInput = S.Top | EntityVariantFieldInput;
 
 /**
  * Entity field input map accepted by {@link ClassFactory}.
  *
- * @example
+ * **Example** (Satisfy field input map)
+ *
  * ```ts
  * import type { EntityFieldInputs } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -82,15 +86,16 @@ export type EntityFieldInput = S.Top | EntityVariantFieldInput;
  * console.log(S.isSchema(fields.name))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityFieldInputs = Readonly<Record<string, EntityFieldInput>>;
 
 /**
  * Extract the selected-row schema from one entity field input.
  *
- * @example
+ * **Example** (Extract selected-row schema)
+ *
  * ```ts
  * import type { SelectedFieldOf } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -100,8 +105,8 @@ export type EntityFieldInputs = Readonly<Record<string, EntityFieldInput>>;
  * console.log(S.isSchema(selected))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SelectedFieldOf<Field extends EntityFieldInput> = Field extends {
   readonly schemas: {
@@ -116,7 +121,8 @@ export type SelectedFieldOf<Field extends EntityFieldInput> = Field extends {
 /**
  * Extract selected-row schemas from an entity field input map.
  *
- * @example
+ * **Example** (Extract selected field map)
+ *
  * ```ts
  * import type { SelectedFieldsOf } from "@beep/schema/EntitySchema"
  * import * as S from "effect/Schema"
@@ -126,8 +132,8 @@ export type SelectedFieldOf<Field extends EntityFieldInput> = Field extends {
  * console.log(S.isSchema(fields.name))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SelectedFieldsOf<FieldMap extends EntityFieldInputs> = {
   readonly [K in keyof FieldMap]: SelectedFieldOf<FieldMap[K]>;

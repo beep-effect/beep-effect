@@ -15,14 +15,15 @@ const $I = $LawPracticeDomainId.create("values/ParallelGroup/ParallelGroup.model
  * A parallel-citation group (#850): the same case reported in multiple
  * reporters.
  *
+ * **Details**
+ *
  * Every member references all members of the group — including itself — by
  * stable {@link CitationId}, in document order. Because each member carries the
  * full roster, a consumer holding any one citation can recover the entire
  * parallel set without re-scanning the source text.
  *
- * **Example**
+ * **Example** (Build parallel citation group)
  *
- * @example
  * ```ts
  * import { CitationId, ParallelGroup } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -55,7 +56,8 @@ export class ParallelGroup extends S.Class<ParallelGroup>($I`ParallelGroup`)(
 /**
  * Companion namespace for `ParallelGroup`.
  *
- * @example
+ * **Example** (Reference Encoded wire type)
+ *
  * ```ts
  * import type { ParallelGroup } from "@beep/law-practice-domain"
  *
@@ -69,9 +71,8 @@ export declare namespace ParallelGroup {
   /**
    * Wire-encoded representation of a decoded {@link ParallelGroup}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { ParallelGroup } from "@beep/law-practice-domain"
    *

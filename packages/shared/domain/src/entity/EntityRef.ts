@@ -30,7 +30,8 @@ class EntityRefInvariantError extends TaggedErrorClass<EntityRefInvariantError>(
 /**
  * Entity type grammar used by polymorphic references.
  *
- * @example
+ * **Example** (Decode EntityType schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -43,8 +44,8 @@ class EntityRefInvariantError extends TaggedErrorClass<EntityRefInvariantError>(
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const EntityType = S.NonEmptyString.check(
   S.isPattern(entityTypePattern, {
@@ -63,7 +64,8 @@ export const EntityType = S.NonEmptyString.check(
 /**
  * Runtime type for {@link EntityType}.
  *
- * @example
+ * **Example** (Annotate EntityType parameter)
+ *
  * ```ts
  * import type { EntityType } from "@beep/shared-domain/entity/EntityRef"
  *
@@ -71,15 +73,16 @@ export const EntityType = S.NonEmptyString.check(
  * console.log(printEntityType)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityType = typeof EntityType.Type;
 
 /**
  * Persisted polymorphic reference encoded as entity type plus numeric id.
  *
- * @example
+ * **Example** (Make EntityRef value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -96,8 +99,8 @@ export type EntityType = typeof EntityType.Type;
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
   {
@@ -112,7 +115,8 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
 /**
  * Entity reference narrowed to a known entity-id schema.
  *
- * @example
+ * **Example** (Narrow to OrganizationId)
+ *
  * ```ts
  * import type { EntityRefFor } from "@beep/shared-domain/entity/EntityRef"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
@@ -120,8 +124,8 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
  * type OrganizationRef = EntityRefFor<typeof OrganizationId>
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityRefFor<Entity extends EntityId.Any> = Omit<EntityRef, "entityType" | "id"> & {
   readonly entityType: Entity["entityType"] & EntityType;
@@ -154,7 +158,8 @@ function assertEntityRefFor<const Entity extends EntityId.Any>(
 /**
  * Build a polymorphic reference result for a known entity id schema.
  *
- * @example
+ * **Example** (Build Result reference)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Result from "effect/Result"
@@ -170,8 +175,8 @@ function assertEntityRefFor<const Entity extends EntityId.Any>(
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeResult: {
   <const Entity extends EntityId.Any>(
@@ -203,7 +208,8 @@ export const makeResult: {
 /**
  * Build a polymorphic reference for a known entity id schema.
  *
- * @example
+ * **Example** (Build typed reference)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -218,8 +224,8 @@ export const makeResult: {
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const make: {
   <const Entity extends EntityId.Any>(entityId: Entity, id: Entity["Type"]): EntityRefFor<Entity>;

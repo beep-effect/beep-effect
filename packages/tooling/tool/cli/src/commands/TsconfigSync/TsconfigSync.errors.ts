@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.errors");
 /**
  * Drift error raised in check mode when changes are required.
  *
- * @example
+ * **Example** (Make tsconfig drift error)
+ *
  * ```ts
  * import { TsconfigSyncDriftError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncDriftError.make({ fileCount: 2, summary: "2 config files need updates" })
  * console.log(error.summary.includes("updates")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -61,13 +63,15 @@ export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftEr
 /**
  * Cycle error raised when workspace dependency cycles are detected.
  *
- * @example
+ * **Example** (Make workspace cycle error)
+ *
  * ```ts
  * import { TsconfigSyncCycleError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncCycleError.make({ cycles: [["@beep/a", "@beep/b"]], message: "Workspace cycle detected" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -107,13 +111,15 @@ export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleEr
 /**
  * Filter error raised when `--filter` does not match any workspace package.
  *
- * @example
+ * **Example** (Make filter match error)
+ *
  * ```ts
  * import { TsconfigSyncFilterError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncFilterError.make({ filter: "@beep/missing", message: "No workspace matched filter" })
  * console.log(error.filter === "@beep/missing") // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

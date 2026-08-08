@@ -13,11 +13,13 @@ const $I = $LawPracticeDomainId.create("values/KgEdgePredicate");
 /**
  * Predicates admitted to deterministic practice knowledge-graph edges.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The set is closed: an edge whose predicate is absent here cannot be projected,
  * which is what keeps the graph spine reconcilable against the corpus catalog.
  *
- * @example
+ * **Example** (Decode and guard predicates)
+ *
  * ```ts
  * import { KgEdgePredicate } from "@beep/law-practice-domain/values"
  * import * as S from "effect/Schema"
@@ -30,7 +32,6 @@ const $I = $LawPracticeDomainId.create("values/KgEdgePredicate");
  * ```
  *
  * @see {@link KgNodeKind} for the node kinds these predicates connect.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -53,7 +54,8 @@ export const KgEdgePredicate = LiteralKit([
 /**
  * Runtime type for {@link KgEdgePredicate}.
  *
- * @example
+ * **Example** (Type document edge predicates)
+ *
  * ```ts
  * import type { KgEdgePredicate } from "@beep/law-practice-domain/values"
  *

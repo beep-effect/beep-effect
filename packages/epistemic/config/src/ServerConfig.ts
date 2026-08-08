@@ -21,7 +21,8 @@ const $I = $EpistemicConfigId.create("ServerConfig");
 /**
  * Policy revision applied when `EPISTEMIC_POLICY_REVISION` is unset.
  *
- * @example
+ * **Example** (Log default policy revision)
+ *
  * ```ts
  * import { defaultPolicyRevision } from "@beep/epistemic-config/server"
  *
@@ -36,6 +37,8 @@ export const defaultPolicyRevision = PolicyRevision.fromUnknown("1.0.0");
 /**
  * Destination allowlist configuration declaration.
  *
+ * **Details**
+ *
  * Absent or empty means the empty allowlist, which denies every governed egress
  * and keeps `ontology_publish_provenance` unregistered — the fail-closed
  * default. A present-but-malformed entry (a blank between commas, a
@@ -43,7 +46,8 @@ export const defaultPolicyRevision = PolicyRevision.fromUnknown("1.0.0");
  * because a silently discarded entry is indistinguishable from a denial the
  * operator did not intend.
  *
- * @example
+ * **Example** (Load allowlist from provider)
+ *
  * ```ts
  * import { EpistemicDestinationAllowlistConfig } from "@beep/epistemic-config/server"
  * import { ConfigProvider, Effect } from "effect"
@@ -72,7 +76,8 @@ export const EpistemicDestinationAllowlistConfig = Config.schema(
 /**
  * Pinned policy revision configuration declaration.
  *
- * @example
+ * **Example** (Load pinned policy revision)
+ *
  * ```ts
  * import { EpistemicPolicyRevisionConfig } from "@beep/epistemic-config/server"
  * import { ConfigProvider, Effect } from "effect"
@@ -98,7 +103,8 @@ export const EpistemicPolicyRevisionConfig = Config.schema(PolicyRevision, "EPIS
 /**
  * Server-only execution-authority settings.
  *
- * @example
+ * **Example** (Make server config instance)
+ *
  * ```ts
  * import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server"
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
@@ -131,7 +137,8 @@ export class EpistemicServerConfig extends S.Class<EpistemicServerConfig>($I`Epi
 /**
  * Resolved execution-authority configuration service shape.
  *
- * @example
+ * **Example** (Annotate resolved config shape)
+ *
  * ```ts
  * import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server"
  * import type { EpistemicConfigShape } from "@beep/epistemic-config/server"
@@ -151,7 +158,8 @@ export type EpistemicConfigShape = EpistemicServerConfig;
 /**
  * Context service supplying resolved server-only execution-authority configuration.
  *
- * @example
+ * **Example** (Read allowlist from service)
+ *
  * ```ts
  * import { EpistemicConfig } from "@beep/epistemic-config/server"
  * import { Effect } from "effect"

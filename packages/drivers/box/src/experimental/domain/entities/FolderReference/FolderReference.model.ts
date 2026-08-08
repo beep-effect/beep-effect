@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/FolderReference/FolderRef
 /**
  * Experimental schema anchor for lightweight Box folder references embedded in other payloads.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty payload)
+ *
  * ```ts
  * import { FolderReference } from "@beep/box/experimental/domain/entities/FolderReference/FolderReference.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class FolderReference extends S.Class<FolderReference>($I`FolderReference
 /**
  * Type-level companion namespace for {@link FolderReference} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { FolderReference } from "@beep/box/experimental/domain/entities/FolderReference/FolderReference.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace FolderReference {
   /**
    * Encoded payload accepted by the {@link FolderReference} entity schema.
    *
-   * @example
+   * **Example** (Encode made empty payload)
+   *
    * ```ts
    * import { FolderReference } from "@beep/box/experimental/domain/entities/FolderReference/FolderReference.model";
    * import * as S from "effect/Schema";

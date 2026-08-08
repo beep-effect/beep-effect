@@ -23,7 +23,8 @@ const $I = $ArchitectureLabConfigId.create("WorkItemConfigLayer");
 /**
  * Fully resolved WorkItem configuration value grouped by visibility boundary.
  *
- * @example
+ * **Example** (Construct config with defaults)
+ *
  * ```ts
  * import {
  *   defaultWorkItemPublicConfig,
@@ -65,7 +66,8 @@ export class WorkItemConfigValue extends S.Class<WorkItemConfigValue>($I`WorkIte
 /**
  * Service shape exposed by {@link WorkItemConfig}.
  *
- * @example
+ * **Example** (Type fixture as shape)
+ *
  * ```ts
  * import { testWorkItemConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  * import type { WorkItemConfigShape } from "@beep/architecture-lab-config/aggregates/WorkItem"
@@ -83,7 +85,8 @@ export type WorkItemConfigShape = WorkItemConfigValue;
 /**
  * Context service that supplies resolved WorkItem configuration.
  *
- * @example
+ * **Example** (Read config via Effect)
+ *
  * ```ts
  * import {
  *   testWorkItemConfig,
@@ -133,7 +136,8 @@ const readWorkItemConfig = Effect.fn("ArchitectureLab.WorkItemConfig.read")(func
 /**
  * In-memory WorkItem configuration value used by tests and examples.
  *
- * @example
+ * **Example** (Inspect test fixture values)
+ *
  * ```ts
  * import { testWorkItemConfig } from "@beep/architecture-lab-config/aggregates/WorkItem"
  *
@@ -152,7 +156,8 @@ export const testWorkItemConfig = WorkItemConfigValue.make({
 /**
  * Live WorkItem configuration layer backed by Effect `Config` providers.
  *
- * @example
+ * **Example** (Override via ConfigProvider)
+ *
  * ```ts
  * import {
  *   ArchitectureLabConfigLive,
@@ -187,7 +192,8 @@ export const ArchitectureLabConfigLive = Layer.effect(WorkItemConfig, readWorkIt
 /**
  * Test WorkItem configuration layer backed by {@link testWorkItemConfig}.
  *
- * @example
+ * **Example** (Provide test config layer)
+ *
  * ```ts
  * import {
  *   ArchitectureLabConfigTest,

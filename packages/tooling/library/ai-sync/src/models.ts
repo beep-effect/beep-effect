@@ -16,11 +16,13 @@ const $I = $AiSyncId.create("models");
 /**
  * V1 agent identifiers.
  *
- * @example
+ * **Example** (Logging codex agent enum)
+ *
  * ```ts
  * import { AiSyncAgentId } from "@beep/ai-sync"
  * console.log(AiSyncAgentId.Enum.codex)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,12 +44,14 @@ export const AiSyncAgentId = LiteralKit([
 /**
  * Runtime type for {@link AiSyncAgentId}.
  *
- * @example
+ * **Example** (Typing agent id string)
+ *
  * ```ts
  * import type { AiSyncAgentId } from "@beep/ai-sync"
  * const agent: AiSyncAgentId = "codex"
  * console.log(agent)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -56,11 +60,13 @@ export type AiSyncAgentId = typeof AiSyncAgentId.Type;
 /**
  * V1 configuration domains.
  *
- * @example
+ * **Example** (Logging mcp-servers domain enum)
+ *
  * ```ts
  * import { AiSyncDomainId } from "@beep/ai-sync"
  * console.log(AiSyncDomainId.Enum["mcp-servers"])
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,12 +92,14 @@ export const AiSyncDomainId = LiteralKit([
 /**
  * Runtime type for {@link AiSyncDomainId}.
  *
- * @example
+ * **Example** (Typing domain id string)
+ *
  * ```ts
  * import type { AiSyncDomainId } from "@beep/ai-sync"
  * const domain: AiSyncDomainId = "skills"
  * console.log(domain)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,11 +108,13 @@ export type AiSyncDomainId = typeof AiSyncDomainId.Type;
 /**
  * Source evidence tiers.
  *
- * @example
+ * **Example** (Logging tier_1 source enum)
+ *
  * ```ts
  * import { AiSyncSourceTier } from "@beep/ai-sync"
  * console.log(AiSyncSourceTier.Enum.tier_1)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -117,12 +127,14 @@ export const AiSyncSourceTier = LiteralKit(["tier_1", "tier_2", "tier_3", "tier_
 /**
  * Runtime type for {@link AiSyncSourceTier}.
  *
- * @example
+ * **Example** (Typing source tier string)
+ *
  * ```ts
  * import type { AiSyncSourceTier } from "@beep/ai-sync"
  * const tier: AiSyncSourceTier = "tier_1"
  * console.log(tier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,11 +143,13 @@ export type AiSyncSourceTier = typeof AiSyncSourceTier.Type;
 /**
  * Support state for an agent/domain cell.
  *
- * @example
+ * **Example** (Logging unknown_schema status)
+ *
  * ```ts
  * import { AiSyncSupportStatus } from "@beep/ai-sync"
  * console.log(AiSyncSupportStatus.Enum.unknown_schema)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,12 +162,14 @@ export const AiSyncSupportStatus = LiteralKit(["supported", "na", "unknown_schem
 /**
  * Runtime type for {@link AiSyncSupportStatus}.
  *
- * @example
+ * **Example** (Typing support status string)
+ *
  * ```ts
  * import type { AiSyncSupportStatus } from "@beep/ai-sync"
  * const status: AiSyncSupportStatus = "supported"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -162,11 +178,13 @@ export type AiSyncSupportStatus = typeof AiSyncSupportStatus.Type;
 /**
  * Drift check strategy for a source.
  *
- * @example
+ * **Example** (Logging hash drift mechanism)
+ *
  * ```ts
  * import { AiSyncDriftMechanism } from "@beep/ai-sync"
  * console.log(AiSyncDriftMechanism.Enum.hash)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -186,12 +204,14 @@ export const AiSyncDriftMechanism = LiteralKit([
 /**
  * Runtime type for {@link AiSyncDriftMechanism}.
  *
- * @example
+ * **Example** (Typing drift mechanism string)
+ *
  * ```ts
  * import type { AiSyncDriftMechanism } from "@beep/ai-sync"
  * const mechanism: AiSyncDriftMechanism = "hash"
  * console.log(mechanism)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -200,11 +220,13 @@ export type AiSyncDriftMechanism = typeof AiSyncDriftMechanism.Type;
 /**
  * Transform proof status.
  *
- * @example
+ * **Example** (Logging lossless transform status)
+ *
  * ```ts
  * import { AiSyncTransformStatus } from "@beep/ai-sync"
  * console.log(AiSyncTransformStatus.Enum.lossless)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -217,12 +239,14 @@ export const AiSyncTransformStatus = LiteralKit(["lossless", "lossy", "declined"
 /**
  * Runtime type for {@link AiSyncTransformStatus}.
  *
- * @example
+ * **Example** (Typing transform status string)
+ *
  * ```ts
  * import type { AiSyncTransformStatus } from "@beep/ai-sync"
  * const status: AiSyncTransformStatus = "lossless"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -231,13 +255,15 @@ export type AiSyncTransformStatus = typeof AiSyncTransformStatus.Type;
 /**
  * Stable source-map identifier.
  *
- * @example
+ * **Example** (Creating branded source id)
+ *
  * ```ts
  * import { AiSyncSourceId } from "@beep/ai-sync"
  *
  * const sourceId = AiSyncSourceId.make("codex-config")
  * console.log(sourceId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -259,7 +285,8 @@ export const AiSyncSourceId = S.String.check(
 /**
  * Runtime type for {@link AiSyncSourceId}.
  *
- * @example
+ * **Example** (Typing branded source id)
+ *
  * ```ts
  * import { AiSyncSourceId } from "@beep/ai-sync"
  * import type { AiSyncSourceId as AiSyncSourceIdType } from "@beep/ai-sync"
@@ -267,6 +294,7 @@ export const AiSyncSourceId = S.String.check(
  * const sourceId: AiSyncSourceIdType = AiSyncSourceId.make("codex-config")
  * console.log(sourceId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -275,13 +303,15 @@ export type AiSyncSourceId = typeof AiSyncSourceId.Type;
 /**
  * HTTP(S) source URL.
  *
- * @example
+ * **Example** (Creating HTTPS source URL)
+ *
  * ```ts
  * import { AiSyncSourceUrl } from "@beep/ai-sync"
  *
  * const url = AiSyncSourceUrl.make("https://example.com/schema.json")
  * console.log(url.startsWith("https://"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -303,7 +333,8 @@ export const AiSyncSourceUrl = S.String.check(
 /**
  * Runtime type for {@link AiSyncSourceUrl}.
  *
- * @example
+ * **Example** (Typing branded source URL)
+ *
  * ```ts
  * import { AiSyncSourceUrl } from "@beep/ai-sync"
  * import type { AiSyncSourceUrl as AiSyncSourceUrlType } from "@beep/ai-sync"
@@ -311,6 +342,7 @@ export const AiSyncSourceUrl = S.String.check(
  * const url: AiSyncSourceUrlType = AiSyncSourceUrl.make("https://example.com/schema.json")
  * console.log(url)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -319,13 +351,15 @@ export type AiSyncSourceUrl = typeof AiSyncSourceUrl.Type;
 /**
  * Upstream release or schema version pin.
  *
- * @example
+ * **Example** (Creating version pin value)
+ *
  * ```ts
  * import { AiSyncVersionPin } from "@beep/ai-sync"
  *
  * const pin = AiSyncVersionPin.make("rust-v0.133.0")
  * console.log(pin)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -339,7 +373,8 @@ export const AiSyncVersionPin = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link AiSyncVersionPin}.
  *
- * @example
+ * **Example** (Typing branded version pin)
+ *
  * ```ts
  * import { AiSyncVersionPin } from "@beep/ai-sync"
  * import type { AiSyncVersionPin as AiSyncVersionPinType } from "@beep/ai-sync"
@@ -347,6 +382,7 @@ export const AiSyncVersionPin = S.NonEmptyString.pipe(
  * const pin: AiSyncVersionPinType = AiSyncVersionPin.make("2025-11-25")
  * console.log(pin)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -355,7 +391,8 @@ export type AiSyncVersionPin = typeof AiSyncVersionPin.Type;
 /**
  * Source content SHA-256 hash.
  *
- * @example
+ * **Example** (Creating SHA-256 content hash)
+ *
  * ```ts
  * import { AiSyncContentHash } from "@beep/ai-sync"
  *
@@ -364,6 +401,7 @@ export type AiSyncVersionPin = typeof AiSyncVersionPin.Type;
  * )
  * console.log(hash.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -376,7 +414,8 @@ export const AiSyncContentHash = Sha256Hex.pipe(
 /**
  * Runtime type for {@link AiSyncContentHash}.
  *
- * @example
+ * **Example** (Typing branded content hash)
+ *
  * ```ts
  * import { AiSyncContentHash } from "@beep/ai-sync"
  * import type { AiSyncContentHash as AiSyncContentHashType } from "@beep/ai-sync"
@@ -386,6 +425,7 @@ export const AiSyncContentHash = Sha256Hex.pipe(
  * )
  * console.log(hash)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -410,7 +450,8 @@ class AiSyncSourceMetadataIdentity extends S.Class<AiSyncSourceMetadataIdentity>
 /**
  * Metadata for one upstream source.
  *
- * @example
+ * **Example** (Building source metadata object)
+ *
  * ```ts
  * import { AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl, AiSyncVersionPin } from "@beep/ai-sync"
  * import * as O from "effect/Option"
@@ -426,6 +467,7 @@ class AiSyncSourceMetadataIdentity extends S.Class<AiSyncSourceMetadataIdentity>
  * })
  * console.log(source.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -474,7 +516,8 @@ export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyn
 /**
  * Support matrix cell.
  *
- * @example
+ * **Example** (Creating support matrix cell)
+ *
  * ```ts
  * import { AiSyncSchemaCell } from "@beep/ai-sync"
  * const cell = AiSyncSchemaCell.make({
@@ -485,6 +528,7 @@ export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyn
  * })
  * console.log(cell.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -504,7 +548,8 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
 /**
  * Drift difference for one upstream source.
  *
- * @example
+ * **Example** (Building drift finding object)
+ *
  * ```ts
  * import { AiSyncContentHash, AiSyncDriftFinding, AiSyncSourceId } from "@beep/ai-sync"
  * import * as O from "effect/Option"
@@ -518,6 +563,7 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
  * })
  * console.log(finding.sourceId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -536,12 +582,14 @@ export class AiSyncDriftFinding extends S.Class<AiSyncDriftFinding>($I`AiSyncDri
 /**
  * Validated repo-local config path.
  *
- * @example
+ * **Example** (Logging validated config path)
+ *
  * ```ts
  * import { AiSyncValidatedConfigPath } from "@beep/ai-sync"
  *
  * console.log(AiSyncValidatedConfigPath.Enum[".codex/config.toml"])
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -560,13 +608,15 @@ export const AiSyncValidatedConfigPath = LiteralKit([
 /**
  * Runtime type for {@link AiSyncValidatedConfigPath}.
  *
- * @example
+ * **Example** (Typing validated config path)
+ *
  * ```ts
  * import type { AiSyncValidatedConfigPath } from "@beep/ai-sync"
  *
  * const path: AiSyncValidatedConfigPath = ".codex/config.toml"
  * console.log(path)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -575,12 +625,14 @@ export type AiSyncValidatedConfigPath = typeof AiSyncValidatedConfigPath.Type;
 /**
  * Validation schema identifiers.
  *
- * @example
+ * **Example** (Logging validation schema id)
+ *
  * ```ts
  * import { AiSyncValidationSchemaId } from "@beep/ai-sync"
  *
  * console.log(AiSyncValidationSchemaId.Enum["codex-config"])
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -598,13 +650,15 @@ export const AiSyncValidationSchemaId = LiteralKit([
 /**
  * Runtime type for {@link AiSyncValidationSchemaId}.
  *
- * @example
+ * **Example** (Typing validation schema id)
+ *
  * ```ts
  * import type { AiSyncValidationSchemaId } from "@beep/ai-sync"
  *
  * const schemaId: AiSyncValidationSchemaId = "codex-config"
  * console.log(schemaId)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -613,7 +667,8 @@ export type AiSyncValidationSchemaId = typeof AiSyncValidationSchemaId.Type;
 /**
  * Input for the repo config validation contract.
  *
- * @example
+ * **Example** (Building validation input object)
+ *
  * ```ts
  * import { ValidateRepoConfigInput } from "@beep/ai-sync"
  *
@@ -623,6 +678,7 @@ export type AiSyncValidationSchemaId = typeof AiSyncValidationSchemaId.Type;
  * })
  * console.log(input.config)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -639,12 +695,14 @@ export class ValidateRepoConfigInput extends S.Class<ValidateRepoConfigInput>($I
 /**
  * Drift check report.
  *
- * @example
+ * **Example** (Creating empty drift report)
+ *
  * ```ts
  * import { AiSyncDriftReport } from "@beep/ai-sync"
  * const report = AiSyncDriftReport.make({ mode: "local", findings: [] })
  * console.log(report.findings.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -661,7 +719,8 @@ export class AiSyncDriftReport extends S.Class<AiSyncDriftReport>($I`AiSyncDrift
 /**
  * Transform proof metadata.
  *
- * @example
+ * **Example** (Building transform evidence object)
+ *
  * ```ts
  * import { AiSyncTransformEvidence } from "@beep/ai-sync"
  * const evidence = AiSyncTransformEvidence.make({
@@ -674,6 +733,7 @@ export class AiSyncDriftReport extends S.Class<AiSyncDriftReport>($I`AiSyncDrift
  * })
  * console.log(evidence.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -694,7 +754,8 @@ export class AiSyncTransformEvidence extends S.Class<AiSyncTransformEvidence>($I
 /**
  * Validation success record for a repo-local config file.
  *
- * @example
+ * **Example** (Creating validation result record)
+ *
  * ```ts
  * import { AiSyncValidationResult } from "@beep/ai-sync"
  * const result = AiSyncValidationResult.make({
@@ -703,6 +764,7 @@ export class AiSyncTransformEvidence extends S.Class<AiSyncTransformEvidence>($I
  * })
  * console.log(result.relativePath)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -719,12 +781,14 @@ export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`A
 /**
  * Typed AI sync operational error.
  *
- * @example
+ * **Example** (Creating typed sync error)
+ *
  * ```ts
  * import { AiSyncError } from "@beep/ai-sync"
  * const error = AiSyncError.make({ message: "Validation failed" })
  * console.log(error._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -745,12 +809,14 @@ export class AiSyncError extends TaggedErrorClass<AiSyncError>($I`AiSyncError`)(
 /**
  * Schema contract for {@link validateRepoConfig}.
  *
- * @example
+ * **Example** (Inspecting input schema AST)
+ *
  * ```ts
  * import { ValidateRepoConfig } from "@beep/ai-sync"
  *
  * console.log(ValidateRepoConfig.inputSchema.ast)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -767,7 +833,8 @@ export const ValidateRepoConfig = Fn({
 /**
  * Runtime type for {@link ValidateRepoConfig}.
  *
- * @example
+ * **Example** (Implementing validate function type)
+ *
  * ```ts
  * import { AiSyncValidationResult } from "@beep/ai-sync"
  * import type { ValidateRepoConfig } from "@beep/ai-sync"
@@ -776,6 +843,7 @@ export const ValidateRepoConfig = Fn({
  *   AiSyncValidationResult.make({ relativePath: ".codex/config.toml", schemaId: "codex-config" })
  * console.log(validate)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */

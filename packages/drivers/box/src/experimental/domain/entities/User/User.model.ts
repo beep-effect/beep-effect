@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/User/User.model");
 /**
  * Experimental schema anchor for Box user resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty User)
+ *
  * ```ts
  * import { User } from "@beep/box/experimental/domain/entities/User/User.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class User extends S.Class<User>($I`User`)(
 /**
  * Type-level companion namespace for {@link User} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode User)
+ *
  * ```ts
  * import { User } from "@beep/box/experimental/domain/entities/User/User.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace User {
   /**
    * Encoded payload accepted by the {@link User} entity schema.
    *
-   * @example
+   * **Example** (Encode User to Encoded)
+   *
    * ```ts
    * import { User } from "@beep/box/experimental/domain/entities/User/User.model";
    * import * as S from "effect/Schema";

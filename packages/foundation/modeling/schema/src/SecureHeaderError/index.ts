@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for secure HTTP header errors.
  *
- * @example
+ * **Example** (Import SecureHeaderError namespace)
+ *
  * ```ts
  * import * as SecureHeaderError from "@beep/schema/SecureHeaderError"
  *

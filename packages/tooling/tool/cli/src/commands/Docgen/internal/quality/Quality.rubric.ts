@@ -216,9 +216,8 @@ const exampleFindings = (subject: DocgenQualitySubject): ReadonlyArray<DocgenQua
 /**
  * Score one exported-symbol JSDoc subject with the deterministic v1 rubric.
  *
- * @param subject - Subject packet collected from package source.
- * @returns Review result with score, tier, findings, and rationale.
- * @example
+ * **Example** (Score subject with rubric)
+ *
  * ```ts
  * import { scoreSubject } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.rubric"
  * import { DocgenQualitySubject } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
@@ -248,6 +247,9 @@ const exampleFindings = (subject: DocgenQualitySubject): ReadonlyArray<DocgenQua
  * })
  * console.log(scoreSubject(subject).tier)
  * ```
+ *
+ * @param subject - Subject packet collected from package source.
+ * @returns Review result with score, tier, findings, and rationale.
  * @category validation
  * @since 0.0.0
  */

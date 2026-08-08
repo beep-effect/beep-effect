@@ -8,7 +8,8 @@
 /**
  * Common blockchain network ticker metadata.
  *
- * @example
+ * **Example** (Access network ticker values)
+ *
  * ```typescript
  * import { Blockchain } from "@beep/data"
  *

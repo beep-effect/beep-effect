@@ -19,7 +19,8 @@ import type React from "react";
 /**
  * Agent state type.
  *
- * @example
+ * **Example** (Describe thinking agent state)
+ *
  * ```ts
  * import type { AgentState } from "@beep/ui/components/orb"
  *
@@ -71,7 +72,8 @@ type OrbUniforms = {
 /**
  * Orb component.
  *
- * @example
+ * **Example** (Import and log Orb)
+ *
  * ```tsx
  * import { Orb } from "@beep/ui/components/orb"
  *

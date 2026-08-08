@@ -11,7 +11,8 @@ import type * as React from "react";
 /**
  * Input component.
  *
- * @example
+ * **Example** (Import Input component)
+ *
  * ```tsx
  * import { Input } from "@beep/ui/components/input"
  *

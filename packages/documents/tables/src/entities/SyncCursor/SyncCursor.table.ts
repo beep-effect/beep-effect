@@ -12,7 +12,8 @@ import { EntityTable } from "@beep/drizzle";
 /**
  * Drizzle table projection for documents SyncCursor entities.
  *
- * @example
+ * **Example** (Validate SyncCursor table projection)
+ *
  * ```ts
  * import { syncCursorTable } from "@beep/documents-tables/entities/SyncCursor"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -34,7 +35,8 @@ export const syncCursorTable = EntityTable.pgTableFrom(DomainSyncCursor.SyncCurs
 /**
  * Physical Postgres table name derived from the SyncCursor entity definition.
  *
- * @example
+ * **Example** (Validate SyncCursor table name)
+ *
  * ```ts
  * import { SYNC_CURSOR_TABLE_NAME } from "@beep/documents-tables/entities/SyncCursor"
  *

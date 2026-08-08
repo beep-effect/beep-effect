@@ -8,7 +8,8 @@
 /**
  * Bitemporal edge version entity exports.
  *
- * @example
+ * **Example** (Import EdgeVersion entity)
+ *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion"
  *

@@ -9,9 +9,8 @@
 /**
  * ParentheticalType model exports.
  *
- * **Example**
+ * **Example** (Import ParentheticalType model)
  *
- * @example
  * ```ts
  * import { ParentheticalType } from "@beep/law-practice-domain/values";
  * ```

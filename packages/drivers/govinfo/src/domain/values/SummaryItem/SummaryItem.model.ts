@@ -13,11 +13,13 @@ const $I = $GovinfoId.create("domain/values/SummaryItem/SummaryItem.model");
 /**
  * GovInfo collection summary row with collection identifiers and counts.
  *
- * @remarks
+ * **Details**
+ *
  * `collectionCode` is the short GovInfo collection identifier used in API
  * paths and search filters, such as `CREC`, `FR`, `BILLS`, or `USCOURTS`.
  *
- * @example
+ * **Example** (Decode FR collection summary)
+ *
  * ```ts
  * import { SummaryItem } from "@beep/govinfo/domain/values/SummaryItem/SummaryItem.model";
  * import * as S from "effect/Schema";
@@ -67,7 +69,8 @@ export class SummaryItem extends S.Class<SummaryItem>($I`SummaryItem`)(
 /**
  * Companion namespace for {@link SummaryItem} encoded helpers.
  *
- * @example
+ * **Example** (Type-annotated SummaryItem decode)
+ *
  * ```ts
  * import { SummaryItem } from "@beep/govinfo/domain/values/SummaryItem/SummaryItem.model";
  * import * as S from "effect/Schema";
@@ -89,7 +92,8 @@ export declare namespace SummaryItem {
   /**
    * Encoded JSON shape accepted by {@link SummaryItem}.
    *
-   * @example
+   * **Example** (Round-trip encode SummaryItem)
+   *
    * ```ts
    * import { SummaryItem } from "@beep/govinfo/domain/values/SummaryItem/SummaryItem.model";
    * import * as S from "effect/Schema";

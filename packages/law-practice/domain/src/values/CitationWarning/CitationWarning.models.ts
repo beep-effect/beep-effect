@@ -18,12 +18,13 @@ const $I = $LawPracticeDomainId.create("values/CitationWarning/CitationWarning.m
 /**
  * Severity level of a {@link CitationWarning}.
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit}, so callers get `WarningLevel.Enum` for typed
  * literal access and `WarningLevel.is` for per-level guards.
  *
- * **Example**
+ * **Example** (Decode value and Enum)
  *
- * @example
  * ```ts
  * import { WarningLevel } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -45,9 +46,8 @@ export const WarningLevel = LiteralKit(["error", "warning", "info"]).pipe(
  * The decoded literal type for {@link WarningLevel}:
  * `"error" | "warning" | "info"`.
  *
- * **Example**
+ * **Example** (Assign typed warning level)
  *
- * @example
  * ```ts
  * import type { WarningLevel } from "@beep/law-practice-domain"
  *
@@ -64,9 +64,8 @@ export type WarningLevel = typeof WarningLevel.Type;
  * Character range within the source text that a {@link CitationWarning} refers
  * to — the `[start, end)` offsets of the problematic region.
  *
- * **Example**
+ * **Example** (Create character range)
  *
- * @example
  * ```ts
  * import { WarningPosition } from "@beep/law-practice-domain"
  *
@@ -94,13 +93,14 @@ export class WarningPosition extends S.Class<WarningPosition>($I`WarningPosition
 /**
  * A diagnostic emitted while parsing a citation.
  *
+ * **Details**
+ *
  * Pairs a severity {@link WarningLevel} with a human-readable `message`, the
  * {@link WarningPosition} of the offending region, and optional free-form
  * `context`.
  *
- * **Example**
+ * **Example** (Build warning with position)
  *
- * @example
  * ```ts
  * import { CitationWarning, WarningPosition } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
@@ -145,7 +145,8 @@ export class CitationWarning extends S.Class<CitationWarning>($I`CitationWarning
 /**
  * Companion namespace for `CitationWarning`.
  *
- * @example
+ * **Example** (Access Encoded level type)
+ *
  * ```ts
  * import type { CitationWarning } from "@beep/law-practice-domain"
  *
@@ -160,9 +161,8 @@ export declare namespace CitationWarning {
   /**
    * Wire-encoded representation of a decoded {@link CitationWarning}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { CitationWarning } from "@beep/law-practice-domain"
    *

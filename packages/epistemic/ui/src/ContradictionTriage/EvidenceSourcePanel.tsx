@@ -17,7 +17,8 @@ import type { JSX } from "react";
 /**
  * Props for {@link EvidenceSourcePanel}.
  *
- * @example
+ * **Example** (Render with typed props)
+ *
  * ```tsx
  * import {
  *   EvidenceSourcePanel,
@@ -44,11 +45,14 @@ const shortDigest = (digest: string): string => `${Str.slice(0, 18)(digest)}…`
  * Display one verified source page, its immutable manifestation metadata, and
  * adjacent-page navigation.
  *
+ * **Details**
+ *
  * The panel delegates highlighting to `VerifiedSourceTextViewer`, which uses
  * the anchor's absolute half-open UTF-16 offsets without normalization or
  * fuzzy relocation.
  *
- * @example
+ * **Example** (Basic wrapper component)
+ *
  * ```tsx
  * import {
  *   EvidenceSourcePanel,

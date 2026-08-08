@@ -48,13 +48,15 @@ const makeSkillsCommandError = (cause: unknown, message: string, file?: string, 
 /**
  * Operational error while reading, fetching, hashing, or writing repo-local skills.
  *
- * @example
+ * **Example** (Make skills command error)
+ *
  * ```ts
  * import { SkillsCommandError } from "@beep/repo-cli/commands/Skills"
  *
  * const error = SkillsCommandError.make({ message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -93,13 +95,15 @@ export class SkillsCommandError extends TaggedErrorClass<SkillsCommandError>($I`
 /**
  * Drift detected while running skills update in check mode.
  *
- * @example
+ * **Example** (Make skills drift error)
+ *
  * ```ts
  * import { SkillsDriftError } from "@beep/repo-cli/commands/Skills"
  *
  * const error = SkillsDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

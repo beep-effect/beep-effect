@@ -17,7 +17,8 @@ const isTraceContextDataFirst = (args: IArguments): boolean => args.length >= 2 
 /**
  * Extract an incoming parent span from trace headers.
  *
- * @example
+ * **Example** (Extract from traceparent header)
+ *
  * ```typescript
  * import { extractTraceContextHeaders } from "@beep/observability/server"
  *
@@ -25,8 +26,8 @@ const isTraceContextDataFirst = (args: IArguments): boolean => args.length >= 2 
  * console.log(parentSpan)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const extractTraceContextHeaders = (headers?: Headers.Input): O.Option<Tracer.ExternalSpan> =>
   HttpTraceContext.fromHeaders(Headers.fromInput(headers));
@@ -34,7 +35,8 @@ export const extractTraceContextHeaders = (headers?: Headers.Input): O.Option<Tr
 /**
  * Inject the current Effect span into outbound trace headers.
  *
- * @example
+ * **Example** (Inject current span headers)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { injectTraceContextHeaders } from "@beep/observability/server"
@@ -46,9 +48,8 @@ export const extractTraceContextHeaders = (headers?: Headers.Input): O.Option<Tr
  * ```
  *
  * @effects Reads the current span when available and returns headers with W3C trace context fields.
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const injectTraceContextHeaders = Effect.fn("injectTraceContextHeaders")(function* (
   headers?: Headers.Input
@@ -62,7 +63,8 @@ export const injectTraceContextHeaders = Effect.fn("injectTraceContextHeaders")(
 /**
  * Apply an incoming parent span, if present, to one effect.
  *
- * @example
+ * **Example** (Apply parent span to effect)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { withIncomingTraceContext } from "@beep/observability/server"
@@ -75,9 +77,8 @@ export const injectTraceContextHeaders = Effect.fn("injectTraceContextHeaders")(
  * ```
  *
  * @effects Applies an extracted parent span to the wrapped effect when incoming trace headers are present.
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const withIncomingTraceContextImpl = Effect.fn("withIncomingTraceContextImpl")(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>,
@@ -94,7 +95,8 @@ const withIncomingTraceContextImpl = Effect.fn("withIncomingTraceContextImpl")(f
 /**
  * Runs an Effect with trace context extracted from incoming headers.
  *
- * @example
+ * **Example** (Run effect with headers)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { withIncomingTraceContext } from "@beep/observability/server"
@@ -107,7 +109,6 @@ const withIncomingTraceContextImpl = Effect.fn("withIncomingTraceContextImpl")(f
  * ```
  *
  * @effects Applies an extracted parent span to the wrapped effect when incoming trace headers are present.
- *
  * @category observability
  * @since 0.0.0
  */

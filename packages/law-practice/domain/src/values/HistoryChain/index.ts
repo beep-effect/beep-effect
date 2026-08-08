@@ -9,9 +9,8 @@
 /**
  * HistoryChain model exports.
  *
- * **Example**
+ * **Example** (Importing HistoryChain)
  *
- * @example
  * ```ts
  * import { HistoryChain } from "@beep/law-practice-domain/values";
  * ```

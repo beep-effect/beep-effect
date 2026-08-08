@@ -64,11 +64,13 @@ const passesIdentityComposerSmokeTest = (value: IdentityComposerCandidate, ident
 /**
  * Guard for runtime identity composer values.
  *
- * @remarks
+ * **Details**
+ *
  * Identity composers are callable functions decorated with composer methods,
  * so validation uses a runtime declaration rather than an object struct.
  *
- * @example
+ * **Example** (Check composer versus object)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  * import { isIdentityComposer } from "@beep/shared-domain/identity"
@@ -100,7 +102,8 @@ export const isIdentityComposer = (value: unknown): value is IdentityComposerTyp
 /**
  * Effect Schema for validating any runtime {@link IdentityComposerType} value.
  *
- * @example
+ * **Example** (Schema-check identity composers)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  * import { AnyIdentityComposer } from "@beep/shared-domain/identity"
@@ -124,7 +127,8 @@ export const AnyIdentityComposer = S.declare<IdentityComposerType<string>>(isIde
 /**
  * Runtime type for {@link AnyIdentityComposer}.
  *
- * @example
+ * **Example** (Read composer identifier)
+ *
  * ```ts
  * import type { AnyIdentityComposer } from "@beep/shared-domain/identity"
  *
@@ -140,7 +144,8 @@ export type AnyIdentityComposer = typeof AnyIdentityComposer.Type;
 /**
  * Agents entity-id registry namespace.
  *
- * @example
+ * **Example** (Log AgentId table name)
+ *
  * ```ts
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  *
@@ -154,7 +159,8 @@ export * as Agents from "./Agents.ts";
 /**
  * Epistemic entity-id registry namespace.
  *
- * @example
+ * **Example** (Log CandidateClaimId table name)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -168,7 +174,8 @@ export * as Epistemic from "./Epistemic.ts";
 /**
  * Law-practice entity-id registry namespace.
  *
- * @example
+ * **Example** (Log LegalClientId table name)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -182,7 +189,8 @@ export * as LawPractice from "./LawPractice.ts";
 /**
  * Shared entity-id registry namespace.
  *
- * @example
+ * **Example** (Log OrganizationId table name)
+ *
  * ```ts
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  *
@@ -196,7 +204,8 @@ export * as Shared from "./Shared.ts";
 /**
  * Workspace entity-id registry namespace.
  *
- * @example
+ * **Example** (Log WorkspaceId table name)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *

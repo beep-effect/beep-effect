@@ -66,10 +66,12 @@ const aggregateDocs = Effect.fn(function* (selector: O.Option<string>, clean: bo
 /**
  * Aggregate generated package docs into the root `docs/generated/` layout.
  *
- * @example
+ * **Example** (Log aggregate command name)
+ *
  * ```ts
  * console.log("docsAggregateCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

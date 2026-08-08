@@ -31,7 +31,8 @@ const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety 
  * Typed Mermaid load, parse, or render failure. The optional defect is retained
  * for runtime diagnostics; only the user-safe message is rendered.
  *
- * @example
+ * **Example** (Make mermaid render error)
+ *
  * ```ts
  * import { MermaidRenderError } from "@beep/editor/mermaid-view"
  *
@@ -763,7 +764,8 @@ const renderPending = (): JSX.Element => (
  * failure. Async lifecycle is owned by an interruptible Atom runtime rather
  * than app-authored React state/effect hooks.
  *
- * @example
+ * **Example** (Render mermaid diagram)
+ *
  * ```tsx
  * import { MermaidView } from "@beep/editor/mermaid-view"
  *

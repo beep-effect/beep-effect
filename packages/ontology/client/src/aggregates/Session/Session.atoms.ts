@@ -75,7 +75,8 @@ const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
 /**
  * Default HTTP protocol used by browser and non-IPC desktop sessions.
  *
- * @example
+ * **Example** (Log default HTTP protocol)
+ *
  * ```ts
  * import { HttpOntologyProtocolLive } from "@beep/ontology-client/aggregates/Session"
  *
@@ -90,7 +91,8 @@ export const HttpOntologyProtocolLive: Layer.Layer<RpcClient.Protocol> = HttpCha
 /**
  * Writable transport selector consumed by {@link OntologyClient}.
  *
- * @example
+ * **Example** (Log protocol layer atom)
+ *
  * ```ts
  * import { ontologyProtocolLayerAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -105,7 +107,8 @@ export const ontologyProtocolLayerAtom: Atom.Writable<Layer.Layer<RpcClient.Prot
 /**
  * Flattened RPC client for {@link OntologyRpcs}, integrated with atom reactivity.
  *
- * @example
+ * **Example** (Log OntologyClient export)
+ *
  * ```ts
  * import { OntologyClient } from "@beep/ontology-client/aggregates/Session"
  *
@@ -134,7 +137,8 @@ const NO_SHAPES_DETECTED_MESSAGE = "No SHACL shapes detected in this document.";
 /**
  * Open ontology document payload for the client atom.
  *
- * @example
+ * **Example** (Make open document input)
+ *
  * ```ts
  * import { OpenOntologyDocumentInput } from "@beep/ontology-client/aggregates/Session"
  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
@@ -166,7 +170,8 @@ export class OpenOntologyDocumentInput extends S.Class<OpenOntologyDocumentInput
 /**
  * Save ontology document payload for the client atom.
  *
- * @example
+ * **Example** (Make save document input)
+ *
  * ```ts
  * import { SaveOntologyDocumentInput } from "@beep/ontology-client/aggregates/Session"
  * import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
@@ -194,7 +199,8 @@ export class SaveOntologyDocumentInput extends S.Class<SaveOntologyDocumentInput
 /**
  * Batch operation payload for the client mutation atom.
  *
- * @example
+ * **Example** (Make batch operations input)
+ *
  * ```ts
  * import { ApplyOntologyBatchInput } from "@beep/ontology-client/aggregates/Session"
  * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"
@@ -232,7 +238,8 @@ export class ApplyOntologyBatchInput extends S.Class<ApplyOntologyBatchInput>($I
 /**
  * Graph gesture payload for the client mutation atom.
  *
- * @example
+ * **Example** (Make graph gesture input)
+ *
  * ```ts
  * import { ApplyOntologyGraphGestureInput } from "@beep/ontology-client/aggregates/Session"
  * import { OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session"
@@ -265,7 +272,8 @@ export class ApplyOntologyGraphGestureInput extends S.Class<ApplyOntologyGraphGe
 /**
  * Inspector-facing resource read model re-exported through the client boundary.
  *
- * @example
+ * **Example** (Log inspector resource fields)
+ *
  * ```ts
  * import { OntologyInspectorResource } from "@beep/ontology-client/aggregates/Session"
  *
@@ -280,7 +288,8 @@ export const OntologyInspectorResource = OntologyResourceSummary;
 /**
  * Runtime type for {@link OntologyInspectorResource}.
  *
- * @example
+ * **Example** (Read resource iri property)
+ *
  * ```ts
  * import type { OntologyInspectorResource } from "@beep/ontology-client/aggregates/Session"
  *
@@ -296,7 +305,8 @@ export type OntologyInspectorResource = typeof OntologyInspectorResource.Type;
 /**
  * RDF object term variants supported by the inspector form.
  *
- * @example
+ * **Example** (Guard iri object kind)
+ *
  * ```ts
  * import { OntologyInspectorObjectKind } from "@beep/ontology-client/aggregates/Session"
  *
@@ -315,7 +325,8 @@ export const OntologyInspectorObjectKind = LiteralKit(["iri", "literal"]).pipe(
 /**
  * Runtime type for {@link OntologyInspectorObjectKind}.
  *
- * @example
+ * **Example** (Type literal object kind)
+ *
  * ```ts
  * import type { OntologyInspectorObjectKind } from "@beep/ontology-client/aggregates/Session"
  *
@@ -331,7 +342,8 @@ export type OntologyInspectorObjectKind = typeof OntologyInspectorObjectKind.Typ
 /**
  * User intents emitted by inspector controls.
  *
- * @example
+ * **Example** (Guard addTriple action)
+ *
  * ```ts
  * import { OntologyInspectorAction } from "@beep/ontology-client/aggregates/Session"
  *
@@ -350,7 +362,8 @@ export const OntologyInspectorAction = LiteralKit(["addTriple", "connect", "dele
 /**
  * Runtime type for {@link OntologyInspectorAction}.
  *
- * @example
+ * **Example** (Type expand action value)
+ *
  * ```ts
  * import type { OntologyInspectorAction } from "@beep/ontology-client/aggregates/Session"
  *
@@ -366,7 +379,8 @@ export type OntologyInspectorAction = typeof OntologyInspectorAction.Type;
 /**
  * Validated display state for the inspector triple form.
  *
- * @example
+ * **Example** (Log form state fields)
+ *
  * ```ts
  * import { OntologyInspectorFormState } from "@beep/ontology-client/aggregates/Session"
  *
@@ -400,7 +414,8 @@ const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "fail
 /**
  * Current lifecycle state for ontology validation workbench actions.
  *
- * @example
+ * **Example** (Type idle validation status)
+ *
  * ```ts
  * import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session"
  *
@@ -438,7 +453,9 @@ const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialV
 /**
  * Workspace-relative path entered in the ontology document toolbar.
  *
- * @remarks Deliberately NOT `workbenchState`/keep-alive, matching its
+ * **Gotchas**
+ *
+ * Deliberately NOT `workbenchState`/keep-alive, matching its
  * behavior before relocation from the UI file: this is a form draft, not
  * session truth (`ontologyPathAtom` holds the open document's path), so it
  * may reset to the seed default after the idle TTL when the workbench
@@ -446,7 +463,8 @@ const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialV
  * unmount-reset path; revisit lifetimes then if the draft should survive
  * a panel close.
  *
- * @example
+ * **Example** (Log open path input)
+ *
  * ```ts
  * import { openPathInputAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -461,7 +479,8 @@ export const openPathInputAtom = Atom.make("tmp/ontology-workbench/pizza-tutoria
 /**
  * Subject IRI entered in the ontology Add Triple form.
  *
- * @example
+ * **Example** (Log subject input atom)
+ *
  * ```ts
  * import { subjectInputAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -476,7 +495,8 @@ export const subjectInputAtom = Atom.make("https://example.org/pizza#Pizza");
 /**
  * Predicate IRI entered in the ontology Add Triple form.
  *
- * @example
+ * **Example** (Log predicate input atom)
+ *
  * ```ts
  * import { predicateInputAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -491,7 +511,8 @@ export const predicateInputAtom = Atom.make("http://www.w3.org/2000/01/rdf-schem
 /**
  * Object value entered in the ontology Add Triple form.
  *
- * @example
+ * **Example** (Log object input atom)
+ *
  * ```ts
  * import { objectInputAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -506,7 +527,8 @@ export const objectInputAtom = Atom.make("Pizza");
 /**
  * Inspector draft fields whose writes are owned by runtime actions.
  *
- * @example
+ * **Example** (Guard subject input field)
+ *
  * ```ts
  * import { OntologyInspectorInputField } from "@beep/ontology-client/aggregates/Session"
  *
@@ -525,7 +547,8 @@ export const OntologyInspectorInputField = LiteralKit(["subject", "predicate", "
 /**
  * Runtime type for {@link OntologyInspectorInputField}.
  *
- * @example
+ * **Example** (Type predicate input field)
+ *
  * ```ts
  * import type { OntologyInspectorInputField } from "@beep/ontology-client/aggregates/Session"
  *
@@ -541,7 +564,8 @@ export type OntologyInspectorInputField = typeof OntologyInspectorInputField.Typ
 /**
  * Object term kind selected in the ontology Add Triple form.
  *
- * @example
+ * **Example** (Log object kind atom)
+ *
  * ```ts
  * import { objectKindAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -558,7 +582,8 @@ const decodeOntologyInspectorIri = flow(Str.trim, S.decodeUnknownOption(IRI));
 /**
  * Schema-derived inspector form values and validation flags.
  *
- * @example
+ * **Example** (Log form state atom)
+ *
  * ```ts
  * import { ontologyInspectorFormStateAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -604,7 +629,8 @@ export const ontologyInspectorFormStateAtom = Atom.make((get) => {
 /**
  * Runtime action family for inspector text-field updates.
  *
- * @example
+ * **Example** (Select subject input setter)
+ *
  * ```ts
  * import { setOntologyInspectorInputAtoms } from "@beep/ontology-client/aggregates/Session"
  *
@@ -632,7 +658,8 @@ const decodeOntologyInspectorObjectKind = S.decodeUnknownOption(OntologyInspecto
  * Runtime setter that accepts a DOM select value and retains only supported
  * inspector object kinds.
  *
- * @example
+ * **Example** (Log object kind setter)
+ *
  * ```ts
  * import { setOntologyInspectorObjectKindAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -654,7 +681,8 @@ export const setOntologyInspectorObjectKindAtom = ontologyBrowserRuntime.fn<stri
 /**
  * Current open ontology session, if any.
  *
- * @example
+ * **Example** (Log session atom)
+ *
  * ```ts
  * import { ontologySessionAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -669,7 +697,8 @@ export const ontologySessionAtom = workbenchState<O.Option<Session>>(O.none());
 /**
  * Current open ontology path, if any.
  *
- * @example
+ * **Example** (Log path atom)
+ *
  * ```ts
  * import { ontologyPathAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -684,7 +713,8 @@ export const ontologyPathAtom = workbenchState<O.Option<OntologyFilePath>>(O.non
 /**
  * Latest Turtle source shown by the source view.
  *
- * @example
+ * **Example** (Log source atom)
+ *
  * ```ts
  * import { ontologySourceAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -699,7 +729,8 @@ export const ontologySourceAtom = workbenchState("");
 /**
  * Change-log length after the last successful save/open.
  *
- * @example
+ * **Example** (Log saved change count)
+ *
  * ```ts
  * import { ontologySavedChangeCountAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -739,7 +770,8 @@ const STALE_READ_MESSAGE = "The ontology changed while this was running. Run it 
 /**
  * Change-log signature after the last successful save/open.
  *
- * @example
+ * **Example** (Log change log signature)
+ *
  * ```ts
  * import { ontologySavedChangeLogSignatureAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -754,7 +786,8 @@ export const ontologySavedChangeLogSignatureAtom = workbenchState(changeLogSigna
 /**
  * Redo stack for client-local undo/redo.
  *
- * @example
+ * **Example** (Log redo stack atom)
+ *
  * ```ts
  * import { ontologyRedoStackAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -769,7 +802,8 @@ export const ontologyRedoStackAtom = workbenchState<ReadonlyArray<ChangeOperatio
 /**
  * Current explorer view mode.
  *
- * @example
+ * **Example** (Log view mode atom)
+ *
  * ```ts
  * import { ontologyViewModeAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -784,7 +818,8 @@ export const ontologyViewModeAtom = workbenchState<OntologyViewMode>("all");
 /**
  * Current visualizer fold level.
  *
- * @example
+ * **Example** (Log fold level atom)
+ *
  * ```ts
  * import { ontologyFoldLevelAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -799,7 +834,8 @@ export const ontologyFoldLevelAtom = workbenchState<OntologyFoldLevel>("L2");
 /**
  * Whether explorer projections include the derived inferred graph partition.
  *
- * @example
+ * **Example** (Log inferred view atom)
+ *
  * ```ts
  * import { ontologyInferredViewAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -814,7 +850,8 @@ export const ontologyInferredViewAtom = workbenchState(false);
 /**
  * Latest structural inference result for the open session.
  *
- * @example
+ * **Example** (Log inference result atom)
+ *
  * ```ts
  * import { ontologyInferenceResultAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -831,7 +868,8 @@ const ontologyInferenceInputSignatureAtom = workbenchState<O.Option<string>>(O.n
 /**
  * Latest structural inference failure, if any.
  *
- * @example
+ * **Example** (Log inference error atom)
+ *
  * ```ts
  * import { ontologyInferenceErrorAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -949,7 +987,8 @@ const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
 /**
  * Current SPARQL panel profile.
  *
- * @example
+ * **Example** (Log SPARQL profile atom)
+ *
  * ```ts
  * import { ontologySparqlProfileAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -964,7 +1003,8 @@ export const ontologySparqlProfileAtom = workbenchState<OntologySparqlPanelProfi
 /**
  * Current SPARQL query text.
  *
- * @example
+ * **Example** (Log SPARQL query atom)
+ *
  * ```ts
  * import { ontologySparqlQueryAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -979,7 +1019,8 @@ export const ontologySparqlQueryAtom = workbenchState("SELECT ?s ?p ?o WHERE {\n
 /**
  * Built-in SPARQL example library for the workbench panel.
  *
- * @example
+ * **Example** (Log SPARQL examples atom)
+ *
  * ```ts
  * import { ontologySparqlExamplesAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -994,7 +1035,8 @@ export const ontologySparqlExamplesAtom = Atom.make(ontologySparqlExamples());
 /**
  * Latest safeguarded SPARQL query result.
  *
- * @example
+ * **Example** (Log SPARQL result atom)
+ *
  * ```ts
  * import { ontologySparqlResultAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1009,7 +1051,8 @@ export const ontologySparqlResultAtom = workbenchState<O.Option<RunOntologySparq
 /**
  * Latest SPARQL query failure, if any.
  *
- * @example
+ * **Example** (Log SPARQL error atom)
+ *
  * ```ts
  * import { ontologySparqlErrorAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1024,12 +1067,15 @@ export const ontologySparqlErrorAtom = workbenchState<O.Option<string>>(O.none()
 /**
  * Latest open/save/preview failure, if any.
  *
+ * **Details**
+ *
  * Document operations are the workbench's entry gate: with nowhere to render
  * their failures, a rejected path or an unreadable file made Open look like a
  * dead button, and a failed Save left the "Saved" badge asserting a write that
  * never landed.
  *
- * @example
+ * **Example** (Log document error atom)
+ *
  * ```ts
  * import { ontologyDocumentErrorAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1044,7 +1090,8 @@ export const ontologyDocumentErrorAtom = workbenchState<O.Option<string>>(O.none
 /**
  * Latest SHACL validation result, if one has been requested.
  *
- * @example
+ * **Example** (Log validation result atom)
+ *
  * ```ts
  * import { ontologyValidationResultAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1059,7 +1106,8 @@ export const ontologyValidationResultAtom = workbenchState<O.Option<RunOntologyV
 /**
  * Current SHACL validation panel state.
  *
- * @example
+ * **Example** (Log validation status atom)
+ *
  * ```ts
  * import { ontologyValidationStatusAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1074,7 +1122,8 @@ export const ontologyValidationStatusAtom = workbenchState<OntologyValidationSta
 /**
  * Latest SHACL validation failure, if any.
  *
- * @example
+ * **Example** (Log validation error atom)
+ *
  * ```ts
  * import { ontologyValidationErrorAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1089,7 +1138,8 @@ export const ontologyValidationErrorAtom = workbenchState<O.Option<string>>(O.no
 /**
  * Latest provenance export result, if one has been produced.
  *
- * @example
+ * **Example** (Log provenance export atom)
+ *
  * ```ts
  * import { ontologyProvenanceExportAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1104,7 +1154,8 @@ export const ontologyProvenanceExportAtom = Atom.make<O.Option<ExportOntologyPro
 /**
  * Current resource search query.
  *
- * @example
+ * **Example** (Log search query atom)
+ *
  * ```ts
  * import { ontologySearchQueryAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1119,7 +1170,8 @@ export const ontologySearchQueryAtom = Atom.make("");
 /**
  * Selected resource IRI for inspector focus.
  *
- * @example
+ * **Example** (Log selected resource IRI)
+ *
  * ```ts
  * import { selectedOntologyResourceIriAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1134,7 +1186,8 @@ export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.non
 /**
  * Supported ontology graph renderers.
  *
- * @example
+ * **Example** (Guard cosmos renderer kind)
+ *
  * ```ts
  * import { OntologyGraphRenderer } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1153,7 +1206,8 @@ export const OntologyGraphRenderer = LiteralKit(["cosmos", "graph3d"]).pipe(
 /**
  * Runtime type for {@link OntologyGraphRenderer}.
  *
- * @example
+ * **Example** (Type graph3d renderer)
+ *
  * ```ts
  * import type { OntologyGraphRenderer } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1169,7 +1223,8 @@ export type OntologyGraphRenderer = typeof OntologyGraphRenderer.Type;
 /**
  * Workbench toggle selecting the 2D cosmos or 3D graph renderer.
  *
- * @example
+ * **Example** (Log graph renderer atom)
+ *
  * ```ts
  * import { ontologyGraphRendererAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1184,7 +1239,8 @@ export const ontologyGraphRendererAtom = Atom.make<OntologyGraphRenderer>("cosmo
 /**
  * Runtime action that maps the graph toggle to its renderer state.
  *
- * @example
+ * **Example** (Log renderer setter atom)
+ *
  * ```ts
  * import { setOntologyGraphRendererAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1203,7 +1259,8 @@ export const setOntologyGraphRendererAtom = ontologyBrowserRuntime.fn<boolean>()
 /**
  * Latest worker graph projection, if one has completed.
  *
- * @example
+ * **Example** (Log graph projection atom)
+ *
  * ```ts
  * import { ontologyGraphProjectionAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1218,7 +1275,8 @@ export const ontologyGraphProjectionAtom = Atom.make<O.Option<OntologyGraphProje
 /**
  * Latest session delta available for incremental graph projection.
  *
- * @example
+ * **Example** (Log graph delta atom)
+ *
  * ```ts
  * import { ontologyGraphDeltaAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1233,7 +1291,8 @@ export const ontologyGraphDeltaAtom = Atom.make<O.Option<SessionChangeDelta>>(O.
 /**
  * Visualizer mount container supplied by the UI package.
  *
- * @example
+ * **Example** (Log graph container atom)
+ *
  * ```ts
  * import { ontologyGraphContainerAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1250,7 +1309,8 @@ const ontologyGraphContainerElementAtom = Atom.make<O.Option<HTMLElement>>(O.non
 /**
  * Runtime action used as the graph container's React callback ref.
  *
- * @example
+ * **Example** (Bind container callback ref)
+ *
  * ```tsx
  * import { setOntologyGraphContainerElementAtom } from "@beep/ontology-client/aggregates/Session"
  * import { useAtomSet } from "@effect/atom-react"
@@ -1272,7 +1332,8 @@ export const setOntologyGraphContainerElementAtom = ontologyBrowserRuntime.fn<HT
  * Mounted lifecycle that publishes a measurable graph container and releases
  * its `ResizeObserver` when the element changes or the graph UI unmounts.
  *
- * @example
+ * **Example** (Mount container binding atom)
+ *
  * ```tsx
  * import { ontologyGraphContainerBindingAtom } from "@beep/ontology-client/aggregates/Session"
  * import { useAtomMount } from "@effect/atom-react"
@@ -1314,7 +1375,8 @@ export const ontologyGraphContainerBindingAtom = ontologyBrowserRuntime.atom((ge
 /**
  * Current visualizer backend selected by capability detection.
  *
- * @example
+ * **Example** (Log graph backend atom)
+ *
  * ```ts
  * import { ontologyGraphBackendAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1329,7 +1391,8 @@ export const ontologyGraphBackendAtom = Atom.make<O.Option<CosmosBackend>>(O.non
 /**
  * Latest visualizer worker failure, if worker setup or message transfer failed.
  *
- * @example
+ * **Example** (Log graph error atom)
+ *
  * ```ts
  * import { ontologyGraphErrorAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1344,7 +1407,8 @@ export const ontologyGraphErrorAtom = Atom.make<O.Option<string>>(O.none());
 /**
  * Empty ontology snapshot used before a document is opened.
  *
- * @example
+ * **Example** (Create empty snapshot)
+ *
  * ```ts
  * import { emptyOntologySnapshot } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1377,7 +1441,8 @@ export const emptyOntologySnapshot = (): OntologySnapshot =>
 /**
  * Current ontology snapshot derived from the open session.
  *
- * @example
+ * **Example** (Log snapshot atom)
+ *
  * ```ts
  * import { ontologySnapshotAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1403,7 +1468,8 @@ export const ontologySnapshotAtom = Atom.make((get) =>
 /**
  * Whether the current session has unsaved authored changes.
  *
- * @example
+ * **Example** (Log dirty flag atom)
+ *
  * ```ts
  * import { ontologyDirtyAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1426,7 +1492,8 @@ export const ontologyDirtyAtom = Atom.make((get) =>
 /**
  * Search results filtered through the shared ABox/TBox view rule.
  *
- * @example
+ * **Example** (Log search results atom)
+ *
  * ```ts
  * import { ontologySearchResultsAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1446,7 +1513,8 @@ export const ontologySearchResultsAtom = Atom.make((get) =>
 /**
  * Selected resource summary, if a resource is selected.
  *
- * @example
+ * **Example** (Log selected resource atom)
+ *
  * ```ts
  * import { selectedOntologyResourceAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1471,7 +1539,8 @@ export const selectedOntologyResourceAtom = Atom.make((get) =>
 /**
  * Resources visible in the current explorer mode.
  *
- * @example
+ * **Example** (Log visible resources atom)
+ *
  * ```ts
  * import { visibleOntologyResourcesAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1491,7 +1560,8 @@ export const visibleOntologyResourcesAtom = Atom.make((get) =>
 /**
  * Worker graph projection options derived from current viewport state.
  *
- * @example
+ * **Example** (Log projection options atom)
+ *
  * ```ts
  * import { ontologyGraphProjectionOptionsAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1513,7 +1583,8 @@ export const ontologyGraphProjectionOptionsAtom = Atom.make((get) =>
 /**
  * Predicate suggestions for graph halo autocomplete.
  *
- * @example
+ * **Example** (Log predicate suggestions)
+ *
  * ```ts
  * import { ontologyPredicateSuggestionsAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1630,7 +1701,8 @@ const runGraphWorkerBoundaryAtom = ontologyBrowserRuntime.atom((get) =>
 /**
  * Side-effect atom that owns the visualizer projection worker.
  *
- * @example
+ * **Example** (Log worker bridge atom)
+ *
  * ```ts
  * import { ontologyGraphWorkerBridgeAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -1831,7 +1903,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 /**
  * Maps the worker's ontology projection onto the renderer's projection.
  *
- * @example
+ * **Example** (Inspect cosmos projection mapper)
+ *
  * ```ts
  * import { cosmosProjectionFromOntology } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2173,7 +2246,8 @@ const graph3dProjectionChannels = (
 /**
  * Maps an ontology worker projection into the deterministic 3D renderer contract.
  *
- * @example
+ * **Example** (Inspect 3D projection mapper)
+ *
  * ```ts
  * import { graph3dProjectionFromOntology } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2410,7 +2484,8 @@ const disposeOntologyGraphRenderersAtom = ontologyBrowserRuntime.fn<void>()(
 /**
  * Side-effect atom that mounts and updates the selected graph viewport.
  *
- * @example
+ * **Example** (Log render bridge atom)
+ *
  * ```ts
  * import { ontologyGraphRenderBridgeAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2484,7 +2559,8 @@ const sessionMutationSemaphore = Semaphore.makeUnsafe(1);
 /**
  * Toggle inferred view and refresh inference when enabling it.
  *
- * @example
+ * **Example** (Log inferred view toggle)
+ *
  * ```ts
  * import { toggleOntologyInferredViewAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2514,7 +2590,8 @@ export const toggleOntologyInferredViewAtom = OntologyClient.runtime.fn<boolean>
 /**
  * Apply a built-in SPARQL example to the query editor.
  *
- * @example
+ * **Example** (Log SPARQL example applier)
+ *
  * ```ts
  * import { applyOntologySparqlExampleAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2546,7 +2623,8 @@ export const applyOntologySparqlExampleAtom = OntologyClient.runtime.fn<string>(
 /**
  * Execute the current SPARQL query through the sidecar safeguards.
  *
- * @example
+ * **Example** (Log SPARQL runner atom)
+ *
  * ```ts
  * import { runOntologySparqlAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2607,7 +2685,8 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Run SHACL validation over asserted and inferred graphs.
  *
- * @example
+ * **Example** (Log validation runner atom)
+ *
  * ```ts
  * import { runOntologyValidationAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2672,7 +2751,8 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Apply one verified SHACL repair through the standard batch change pipeline.
  *
- * @example
+ * **Example** (Log repair applier atom)
+ *
  * ```ts
  * import { applyOntologyRepairAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2736,7 +2816,8 @@ export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairP
 /**
  * Export PROV-O journal and VoID/DCAT dataset description files.
  *
- * @example
+ * **Example** (Log provenance exporter atom)
+ *
  * ```ts
  * import { exportOntologyProvenanceAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2782,7 +2863,8 @@ export const exportOntologyProvenanceAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Open a Turtle document through the sidecar.
  *
- * @example
+ * **Example** (Log open document atom)
+ *
  * ```ts
  * import { openOntologyDocumentAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2837,7 +2919,8 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
 /**
  * Save the current ontology session through the sidecar.
  *
- * @example
+ * **Example** (Log save document atom)
+ *
  * ```ts
  * import { saveOntologyDocumentAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2881,7 +2964,8 @@ export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDo
 /**
  * Refresh the Turtle source view from the current session without saving.
  *
- * @example
+ * **Example** (Log turtle preview atom)
+ *
  * ```ts
  * import { previewOntologyTurtleAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2913,7 +2997,8 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Apply typed ontology changes through the sidecar batch endpoint.
  *
- * @example
+ * **Example** (Log batch applier atom)
+ *
  * ```ts
  * import { applyOntologyBatchAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2954,7 +3039,8 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
 /**
  * Apply a graph halo gesture through the same batch change pipeline as inspector edits.
  *
- * @example
+ * **Example** (Log gesture applier atom)
+ *
  * ```ts
  * import { applyOntologyGraphGestureAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -2996,7 +3082,8 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
  * Converts one inspector UI intent into schema-owned batch or graph-gesture
  * input after normalizing and validating the current draft.
  *
- * @example
+ * **Example** (Log inspector action atom)
+ *
  * ```ts
  * import { applyOntologyInspectorActionAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -3089,7 +3176,8 @@ export const applyOntologyInspectorActionAtom = OntologyClient.runtime.fn<Ontolo
 /**
  * Undo the last authored session change locally.
  *
- * @example
+ * **Example** (Log undo change atom)
+ *
  * ```ts
  * import { undoOntologyChangeAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -3138,7 +3226,8 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Redo the most recently undone authored change locally.
  *
- * @example
+ * **Example** (Log redo change atom)
+ *
  * ```ts
  * import { redoOntologyChangeAtom } from "@beep/ontology-client/aggregates/Session"
  *
@@ -3182,7 +3271,8 @@ export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
 /**
  * Invert a change operation for UI preview labels.
  *
- * @example
+ * **Example** (Invert addQuad operation)
+ *
  * ```ts
  * import { invertOntologyChange } from "@beep/ontology-client/aggregates/Session"
  * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"

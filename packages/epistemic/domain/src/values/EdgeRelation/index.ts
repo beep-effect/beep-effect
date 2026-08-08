@@ -8,7 +8,8 @@
 /**
  * Edge relation vocabulary exports.
  *
- * @example
+ * **Example** (Import and log EdgeRelation)
+ *
  * ```ts
  * import { EdgeRelation } from "@beep/epistemic-domain/values/EdgeRelation"
  *

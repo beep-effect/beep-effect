@@ -60,7 +60,8 @@ const DrizzleMigrationSchema = S.Unknown.pipe(
 /**
  * db-admin migration target metadata.
  *
- * @example
+ * **Example** (Make target with tables)
+ *
  * ```ts
  * import { DbAdminMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab"
  *
@@ -100,7 +101,8 @@ export class DbAdminMigrationTarget extends S.Class<DbAdminMigrationTarget>($I`D
 /**
  * Architecture lab migration target used to prove current db-admin aggregation.
  *
- * @example
+ * **Example** (Log schema and table count)
+ *
  * ```ts
  * import { ArchitectureLabMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab"
  *

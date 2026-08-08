@@ -14,7 +14,8 @@ import * as PrometheusMetrics from "effect/unstable/observability/PrometheusMetr
 /**
  * Strip duplicate terminal histogram buckets from Prometheus exposition text.
  *
- * @example
+ * **Example** (Strip duplicate histogram buckets)
+ *
  * ```typescript
  * import { sanitizePrometheusMetrics } from "@beep/observability/server"
  *
@@ -23,8 +24,8 @@ import * as PrometheusMetrics from "effect/unstable/observability/PrometheusMetr
  * console.log(clean)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const sanitizePrometheusMetrics: (text: string) => string = flow(
   Str.split("\n"),
@@ -35,7 +36,8 @@ export const sanitizePrometheusMetrics: (text: string) => string = flow(
 /**
  * Create a sanitized Prometheus metrics route.
  *
- * @example
+ * **Example** (Create metrics HTTP layer)
+ *
  * ```typescript
  * import { layerPrometheusMetricsHttp } from "@beep/observability/server"
  *
@@ -43,8 +45,8 @@ export const sanitizePrometheusMetrics: (text: string) => string = flow(
  * console.log(PrometheusLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerPrometheusMetricsHttp = (
   options?: PrometheusMetrics.HttpOptions | undefined

@@ -8,7 +8,8 @@
 /**
  * Evidence row converter exports.
  *
- * @example
+ * **Example** (Log toEvidenceInsert converter)
+ *
  * ```ts
  * import * as Evidence from "@beep/epistemic-tables/entities/Evidence"
  *
@@ -22,7 +23,8 @@ export * from "./Evidence.converters.ts";
 /**
  * Evidence table exports.
  *
- * @example
+ * **Example** (Log table entity type)
+ *
  * ```ts
  * import * as Evidence from "@beep/epistemic-tables/entities/Evidence"
  *

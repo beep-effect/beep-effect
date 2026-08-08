@@ -16,7 +16,8 @@ const $I = $SchemaId.create("Email");
 /**
  * Regular expression used by the internal email schema.
  *
- * @example
+ * **Example** (Test email regex)
+ *
  * ```ts
  * import { emailRegex } from "@beep/schema/internal/email"
  *
@@ -57,7 +58,8 @@ const EmailBranded = NormalizedString.check(emailChecks).pipe(S.brand("Email"));
 /**
  * Internal normalized, branded, non-redacted email string schema.
  *
- * @example
+ * **Example** (Decode and normalize email)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EmailString } from "@beep/schema/internal/email"
@@ -78,7 +80,8 @@ export const EmailString = EmailBranded.pipe(
 /**
  * Internal branded, non-redacted email string type.
  *
- * @example
+ * **Example** (Typed decoded email value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { EmailString } from "@beep/schema/internal/email"
@@ -98,7 +101,8 @@ export type EmailString = typeof EmailString.Type;
 /**
  * Internal normalized, branded, and redacted email schema.
  *
- * @example
+ * **Example** (Decode redacted email)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Email } from "@beep/schema/internal/email"
@@ -119,7 +123,8 @@ export const Email = S.RedactedFromValue(EmailString, { label: "Email" }).pipe(
 /**
  * Internal branded, redacted email value type.
  *
- * @example
+ * **Example** (Typed redacted email value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Email, type Email as EmailValue } from "@beep/schema/internal/email"

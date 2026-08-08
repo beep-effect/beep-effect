@@ -17,13 +17,15 @@ import { vocabTermsTarget } from "./VocabTerms.ts";
 /**
  * All checked-in sync targets supported by sync-data-to-ts.
  *
- * @example
+ * **Example** (List all target ids)
+ *
  * ```ts
  * import { syncDataTargets } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * const result = syncDataTargets.map((target) => target.id)
  * console.log(result) // rendered command output
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

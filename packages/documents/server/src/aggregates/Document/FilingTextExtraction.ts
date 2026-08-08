@@ -22,7 +22,8 @@ const $I = $DocumentsServerId.create("aggregates/Document/FilingTextExtraction")
 /**
  * Input supplied to the optional filing text-extraction seam.
  *
- * @example
+ * **Example** (Construct extraction input)
+ *
  * ```ts
  * import { FilingTextExtractionInput } from "@beep/documents-server/aggregates/Document"
  * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
@@ -52,7 +53,8 @@ export class FilingTextExtractionInput extends S.Class<FilingTextExtractionInput
 /**
  * Optional text extraction service shape used by document intake.
  *
- * @example
+ * **Example** (Stub extraction service)
+ *
  * ```ts
  * import type { FilingTextExtractionShape } from "@beep/documents-server/aggregates/Document"
  * import { Effect } from "effect"
@@ -72,7 +74,8 @@ export interface FilingTextExtractionShape {
 /**
  * Optional text extraction service used before filing classification.
  *
- * @example
+ * **Example** (Log service key)
+ *
  * ```ts
  * import { FilingTextExtraction } from "@beep/documents-server/aggregates/Document"
  *
@@ -89,7 +92,8 @@ export class FilingTextExtraction extends Context.Service<FilingTextExtraction, 
 /**
  * No-op extraction layer used by deterministic fixture mode.
  *
- * @example
+ * **Example** (Inspect noop layer)
+ *
  * ```ts
  * import { FilingTextExtractionNoopLayer } from "@beep/documents-server/aggregates/Document"
  *
@@ -137,7 +141,8 @@ const extractedText = (result: ProcessFileResult, maxExcerptChars: number) =>
 /**
  * Live extraction layer backed by the file-processing capability service.
  *
- * @example
+ * **Example** (Inspect live layer)
+ *
  * ```ts
  * import { FilingTextExtractionLiveLayer } from "@beep/documents-server/aggregates/Document"
  *

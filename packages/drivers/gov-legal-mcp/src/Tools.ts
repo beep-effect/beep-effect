@@ -50,7 +50,8 @@ const ecfrGetStructureToolName = productionToolName("ecfr", getStructureOperatio
 /**
  * Empty object accepted by the upstream `listTitles` operation.
  *
- * @example
+ * **Example** (Decode empty params object)
+ *
  * ```ts
  * import { EcfrListTitlesParams } from "@beep/gov-legal-mcp/Tools"
  * import * as S from "effect/Schema"
@@ -74,7 +75,8 @@ export class EcfrListTitlesParams extends S.Class<EcfrListTitlesParams>($I`EcfrL
  * Sanitized GovInfo search failure returned across the MCP host boundary.
  * Raw driver causes and request URLs are deliberately omitted.
  *
- * @example
+ * **Example** (Make transport failure)
+ *
  * ```ts
  * import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools"
  *
@@ -98,7 +100,8 @@ export class GovinfoSearchFailure extends TaggedErrorClass<GovinfoSearchFailure>
  * Search GovInfo's official corpus with the public `Search.Payload` contract.
  * Preserves upstream operationId `search` in the tool description.
  *
- * @example
+ * **Example** (Print search tool name)
+ *
  * ```ts
  * import { GovinfoSearchTool } from "@beep/gov-legal-mcp/Tools"
  *
@@ -123,7 +126,8 @@ export const GovinfoSearchTool = annotateFourHints(
 /**
  * List the official CFR title catalog through eCFR operationId `listTitles`.
  *
- * @example
+ * **Example** (Print list titles tool name)
+ *
  * ```ts
  * import { EcfrListTitlesTool } from "@beep/gov-legal-mcp/Tools"
  *
@@ -148,7 +152,8 @@ export const EcfrListTitlesTool = annotateFourHints(
 /**
  * Search paginated eCFR content through operationId `searchResults`.
  *
- * @example
+ * **Example** (Print search results tool name)
+ *
  * ```ts
  * import { EcfrSearchResultsTool } from "@beep/gov-legal-mcp/Tools"
  *
@@ -173,7 +178,8 @@ export const EcfrSearchResultsTool = annotateFourHints(
 /**
  * Fetch a dated CFR title hierarchy through operationId `getStructure`.
  *
- * @example
+ * **Example** (Print get structure tool name)
+ *
  * ```ts
  * import { EcfrGetStructureTool } from "@beep/gov-legal-mcp/Tools"
  *
@@ -198,7 +204,8 @@ export const EcfrGetStructureTool = annotateFourHints(
 /**
  * Hard-gated GovInfo toolkit containing only the official search operation.
  *
- * @example
+ * **Example** (Access nested search tool)
+ *
  * ```ts
  * import { GovinfoToolkit } from "@beep/gov-legal-mcp/Tools"
  *
@@ -214,7 +221,8 @@ export const GovinfoToolkit = Toolkit.make(GovinfoSearchTool);
 /**
  * Type for {@link GovinfoToolkit}.
  *
- * @example
+ * **Example** (Assign typed toolkit value)
+ *
  * ```ts
  * import { GovinfoToolkit } from "@beep/gov-legal-mcp/Tools"
  * import type { GovinfoToolkit as GovinfoToolkitType } from "@beep/gov-legal-mcp/Tools"
@@ -231,7 +239,8 @@ export type GovinfoToolkit = typeof GovinfoToolkit;
 /**
  * Always-mounted eCFR toolkit containing the three frozen keyless operations.
  *
- * @example
+ * **Example** (Access nested list titles tool)
+ *
  * ```ts
  * import { EcfrToolkit } from "@beep/gov-legal-mcp/Tools"
  *
@@ -247,7 +256,8 @@ export const EcfrToolkit = Toolkit.make(EcfrListTitlesTool, EcfrSearchResultsToo
 /**
  * Type for {@link EcfrToolkit}.
  *
- * @example
+ * **Example** (Assign typed toolkit value)
+ *
  * ```ts
  * import { EcfrToolkit } from "@beep/gov-legal-mcp/Tools"
  * import type { EcfrToolkit as EcfrToolkitType } from "@beep/gov-legal-mcp/Tools"

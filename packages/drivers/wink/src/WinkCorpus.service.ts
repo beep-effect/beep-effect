@@ -320,7 +320,8 @@ const removeCorpusSession = (
 /**
  * Typed failure for creating, learning, querying, or inspecting a managed corpus.
  *
- * @example
+ * **Example** (Create error from message)
+ *
  * ```ts
  * import { CorpusManagerError } from "@beep/wink"
  *
@@ -801,11 +802,13 @@ const makeWinkCorpusManager = Effect.gen(function* () {
 /**
  * Service for managing stateful BM25 corpora and query sessions.
  *
- * @remarks
+ * **Details**
+ *
  * Each corpus is stored in memory by `corpusId`. Learning documents invalidates
  * the compiled vector index; the next stats or query call recompiles it.
  *
- * @example
+ * **Example** (Create corpus via service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkLayerAllLive } from "@beep/wink"
@@ -831,7 +834,8 @@ export class WinkCorpusManager extends Context.Service<WinkCorpusManager, WinkCo
 /**
  * Live corpus manager layer requiring the wink engine and similarity services.
  *
- * @example
+ * **Example** (Provide with dependency layers)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkEngineLive } from "@beep/wink"

@@ -45,7 +45,8 @@ const errorOptionsFromInput = (options: OnePasswordCliErrorContextInput): OnePas
 /**
  * Options captured while normalizing unknown 1Password CLI failures.
  *
- * @example
+ * **Example** (Import and log options)
+ *
  * ```ts
  * import { OnePasswordCliErrorOptions } from "@beep/onepassword-cli/OnePasswordCli.errors"
  *
@@ -81,7 +82,8 @@ export class OnePasswordCliErrorOptions extends S.Class<OnePasswordCliErrorOptio
 /**
  * Technical failure raised by the `@beep/onepassword-cli` driver boundary.
  *
- * @example
+ * **Example** (Import and log error)
+ *
  * ```ts
  * import { OnePasswordCliError } from "@beep/onepassword-cli/OnePasswordCli.errors"
  *

@@ -9,64 +9,69 @@
 /**
  * Algebraic structures (monoids) for NLP aggregation.
  *
- * @example
+ * **Example** (Fold number sum monoid)
+ *
  * ```typescript
  * import { Algebra } from "@beep/nlp"
  *
  * console.log(Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3])) // 6
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export * as Algebra from "./Algebra/index.ts";
 /**
  * Core NLP models, tokenization, and pattern utilities.
  *
- * @example
+ * **Example** (Make document identifier)
+ *
  * ```typescript
  * import { Core } from "@beep/nlp"
  *
  * console.log(Core.DocumentId.make("doc-a"))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * as Core from "./Core/index.ts";
 /**
  * Text-graph IR: node/edge schema classes (the handoff-contract basis).
  *
- * @example
+ * **Example** (Log text node schema)
+ *
  * ```typescript
  * import { Graph } from "@beep/nlp"
  *
  * console.log(Graph.Schema.TextNode)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * as Graph from "./Graph/index.ts";
 /**
  * The product-neutral generic IR handoff contract emitted for downstream
  * consumers (chunks/mentions/entities/relations + spans + PROV-O provenance).
  *
- * @example
+ * **Example** (Log annotated document contract)
+ *
  * ```typescript
  * import { Handoff } from "@beep/nlp"
  *
  * console.log(Handoff.Contract.AnnotatedDocument)
  * ```
  *
- * @since 0.0.0
  * @category interop
+ * @since 0.0.0
  */
 export * as Handoff from "./Handoff/index.ts";
 /**
  * Deterministic identifier tokenization and variant helpers.
  *
- * @example
+ * **Example** (Tokenize identifier text)
+ *
  * ```typescript
  * import { IdentifierText } from "@beep/nlp"
  *
@@ -74,28 +79,30 @@ export * as Handoff from "./Handoff/index.ts";
  * console.log(result) // ["my", "variable"]
  * ```
  *
- * @since 0.0.0
  * @category parsing
+ * @since 0.0.0
  */
 export * as IdentifierText from "./IdentifierText.ts";
 /**
  * Type-level ontology of text strata (kinds) and the containment poset.
  *
- * @example
+ * **Example** (Check kind containment)
+ *
  * ```typescript
  * import { Ontology } from "@beep/nlp"
  *
  * console.log(Ontology.Kind.canContain("Document", "Sentence")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * as Ontology from "./Ontology/index.ts";
 /**
  * Deterministic path and module-specifier normalization helpers.
  *
- * @example
+ * **Example** (Normalize path phrase)
+ *
  * ```typescript
  * import { PathText } from "@beep/nlp"
  *
@@ -103,14 +110,15 @@ export * as Ontology from "./Ontology/index.ts";
  * console.log(normalized) // "src/utils"
  * ```
  *
- * @since 0.0.0
  * @category normalization
+ * @since 0.0.0
  */
 export * as PathText from "./PathText.ts";
 /**
  * Deterministic query-text normalization helpers.
  *
- * @example
+ * **Example** (Normalize question text)
+ *
  * ```typescript
  * import { QueryText } from "@beep/nlp"
  *
@@ -118,14 +126,15 @@ export * as PathText from "./PathText.ts";
  * console.log(normalized) // "hello world"
  * ```
  *
- * @since 0.0.0
  * @category normalization
+ * @since 0.0.0
  */
 export * as QueryText from "./QueryText.ts";
 /**
  * Ordered string-variant deduplication helpers.
  *
- * @example
+ * **Example** (Ordered dedupe variants)
+ *
  * ```typescript
  * import { VariantText } from "@beep/nlp"
  *
@@ -133,7 +142,7 @@ export * as QueryText from "./QueryText.ts";
  * console.log(deduped) // ["foo", "bar"]
  * ```
  *
- * @since 0.0.0
  * @category normalization
+ * @since 0.0.0
  */
 export * as VariantText from "./VariantText.ts";

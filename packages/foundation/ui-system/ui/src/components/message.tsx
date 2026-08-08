@@ -10,7 +10,8 @@ import type * as React from "react";
 /**
  * Message group component.
  *
- * @example
+ * **Example** (Import MessageGroup)
+ *
  * ```tsx
  * import { MessageGroup } from "@beep/ui/components/message"
  *
@@ -27,7 +28,8 @@ function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Message component.
  *
- * @example
+ * **Example** (Import Message)
+ *
  * ```tsx
  * import { Message } from "@beep/ui/components/message"
  *
@@ -54,7 +56,8 @@ function Message({ className, align = "start", ...props }: React.ComponentProps<
 /**
  * Message avatar component.
  *
- * @example
+ * **Example** (Import MessageAvatar)
+ *
  * ```tsx
  * import { MessageAvatar } from "@beep/ui/components/message"
  *
@@ -80,7 +83,8 @@ function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Message content component.
  *
- * @example
+ * **Example** (Import MessageContent)
+ *
  * ```tsx
  * import { MessageContent } from "@beep/ui/components/message"
  *
@@ -106,7 +110,8 @@ function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Message header component.
  *
- * @example
+ * **Example** (Import MessageHeader)
+ *
  * ```tsx
  * import { MessageHeader } from "@beep/ui/components/message"
  *
@@ -132,7 +137,8 @@ function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Message footer component.
  *
- * @example
+ * **Example** (Import MessageFooter)
+ *
  * ```tsx
  * import { MessageFooter } from "@beep/ui/components/message"
  *

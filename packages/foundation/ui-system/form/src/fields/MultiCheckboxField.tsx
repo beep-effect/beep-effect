@@ -15,7 +15,8 @@ import type { FieldOption } from "../core/Options.ts";
  * Props for {@link MultiCheckboxField}: label/description/options. The bound
  * value is the array of checked option values.
  *
- * @example
+ * **Example** (Options with disabled item)
+ *
  * ```ts
  * import type { MultiCheckboxFieldProps } from "@beep/form/fields/MultiCheckboxField"
  *
@@ -42,7 +43,8 @@ export interface MultiCheckboxFieldProps {
 /**
  * Schema-bound checkbox list: the value is the array of checked option values.
  *
- * @example
+ * **Example** (Toppings checkbox list form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { MultiCheckboxField } from "@beep/form/fields/MultiCheckboxField"

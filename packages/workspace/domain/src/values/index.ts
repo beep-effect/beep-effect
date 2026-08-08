@@ -8,13 +8,14 @@
 /**
  * ApprovalDecision value exports.
  *
- * @example
+ * **Example** (Import ApprovalDecision exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/values"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -22,13 +23,14 @@ export * from "./ApprovalDecision/index.ts";
 /**
  * CandidateLifecycle value exports.
  *
- * @example
+ * **Example** (Import CandidateLifecycle exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/values"
  *
  * console.log(Module)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

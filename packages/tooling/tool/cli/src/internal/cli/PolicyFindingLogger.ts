@@ -7,7 +7,8 @@ const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
 /**
  * Builds the shared human-readable and machine-readable logger used by policy lints.
  *
- * @example
+ * **Example** (Construct finding logger)
+ *
  * ```ts
  * import { Effect } from "effect"
  *
@@ -18,6 +19,7 @@ const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
  * })
  * console.log(Effect.isEffect(logger.render({ message: "example" })))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -14,7 +14,8 @@ const $I = $N3Id.create("N3.errors");
 /**
  * N3 Turtle codec failure reason.
  *
- * @example
+ * **Example** (Decode serializeFailed reason)
+ *
  * ```ts
  * import { N3TurtleCodecErrorReason } from "@beep/n3"
  * import * as S from "effect/Schema"
@@ -24,8 +25,8 @@ const $I = $N3Id.create("N3.errors");
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFailed", "unsupportedGraph"]).pipe(
   $I.annoteSchema("N3TurtleCodecErrorReason", {
@@ -36,7 +37,8 @@ export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFai
 /**
  * Type for {@link N3TurtleCodecErrorReason}.
  *
- * @example
+ * **Example** (Annotate unsupportedGraph reason)
+ *
  * ```ts
  * import { N3TurtleCodecErrorReason } from "@beep/n3"
  *
@@ -45,15 +47,16 @@ export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFai
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type N3TurtleCodecErrorReason = typeof N3TurtleCodecErrorReason.Type;
 
 /**
  * Typed N3 Turtle codec error.
  *
- * @example
+ * **Example** (Create parseFailed codec error)
+ *
  * ```ts
  * import { N3TurtleCodecError } from "@beep/n3"
  *
@@ -65,8 +68,8 @@ export type N3TurtleCodecErrorReason = typeof N3TurtleCodecErrorReason.Type;
  * console.log(error.reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export class N3TurtleCodecError extends TaggedErrorClass<N3TurtleCodecError>($I`N3TurtleCodecError`)(
   "N3TurtleCodecError",

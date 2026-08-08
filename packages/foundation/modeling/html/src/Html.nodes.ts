@@ -22,7 +22,8 @@ const $I = $HtmlId.create("Html.nodes");
 /**
  * A character-data text node.
  *
- * @example
+ * **Example** (Make a text node)
+ *
  * ```ts
  * import { Text } from "@beep/html/Html.nodes"
  *
@@ -46,7 +47,8 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
 /**
  * Companion namespace for {@link Text}.
  *
- * @example
+ * **Example** (Encoded text shape)
+ *
  * ```ts
  * import { Text } from "@beep/html/Html.nodes"
  *
@@ -70,7 +72,8 @@ export declare namespace Text {
 /**
  * Comment data that can be represented without changing its parsed value.
  *
- * @example
+ * **Example** (Validate comment data)
+ *
  * ```ts
  * import { HtmlCommentData } from "@beep/html/Html.nodes"
  * import * as S from "effect/Schema"
@@ -137,7 +140,8 @@ export const HtmlCommentData = S.String.check(
 /**
  * Decoded type of {@link HtmlCommentData}.
  *
- * @example
+ * **Example** (Typed comment value)
+ *
  * ```ts
  * import type { HtmlCommentData } from "@beep/html/Html.nodes"
  *
@@ -153,7 +157,8 @@ export type HtmlCommentData = typeof HtmlCommentData.Type;
 /**
  * An HTML comment node (`<!-- ... -->`).
  *
- * @example
+ * **Example** (Make a comment node)
+ *
  * ```ts
  * import { Comment } from "@beep/html/Html.nodes"
  *
@@ -177,7 +182,8 @@ export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
 /**
  * Companion namespace for {@link Comment}.
  *
- * @example
+ * **Example** (Encoded comment shape)
+ *
  * ```ts
  * import { Comment } from "@beep/html/Html.nodes"
  *
@@ -201,7 +207,8 @@ export declare namespace Comment {
 /**
  * A document type declaration (`<!DOCTYPE html>`).
  *
- * @example
+ * **Example** (Create HTML doctype)
+ *
  * ```ts
  * import { Doctype } from "@beep/html/Html.nodes"
  *
@@ -233,7 +240,8 @@ export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
 /**
  * Companion namespace for {@link Doctype}.
  *
- * @example
+ * **Example** (Encoded doctype shape)
+ *
  * ```ts
  * import { Doctype } from "@beep/html/Html.nodes"
  *

@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/ZipDownload/ZipDownload.m
 /**
  * Experimental schema anchor for Box zip download resources and status payloads.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty payload)
+ *
  * ```ts
  * import { ZipDownload } from "@beep/box/experimental/domain/entities/ZipDownload/ZipDownload.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class ZipDownload extends S.Class<ZipDownload>($I`ZipDownload`)(
 /**
  * Type-level companion namespace for {@link ZipDownload} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode ZipDownload)
+ *
  * ```ts
  * import { ZipDownload } from "@beep/box/experimental/domain/entities/ZipDownload/ZipDownload.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace ZipDownload {
   /**
    * Encoded payload accepted by the {@link ZipDownload} entity schema.
    *
-   * @example
+   * **Example** (Encode empty ZipDownload payload)
+   *
    * ```ts
    * import { ZipDownload } from "@beep/box/experimental/domain/entities/ZipDownload/ZipDownload.model";
    * import * as S from "effect/Schema";

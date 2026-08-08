@@ -11,7 +11,8 @@ import type { IconProps } from "@phosphor-icons/react";
 /**
  * Border all icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderAllIcon } from "@beep/ui/components/table-icons"
  *
@@ -55,7 +56,8 @@ export function BorderAllIcon(props: IconProps) {
 /**
  * Border bottom icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderBottomIcon } from "@beep/ui/components/table-icons"
  *
@@ -111,7 +113,8 @@ export function BorderBottomIcon(props: IconProps) {
 /**
  * Border left icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderLeftIcon } from "@beep/ui/components/table-icons"
  *
@@ -167,7 +170,8 @@ export function BorderLeftIcon(props: IconProps) {
 /**
  * Border none icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderNoneIcon } from "@beep/ui/components/table-icons"
  *
@@ -229,7 +233,8 @@ export function BorderNoneIcon(props: IconProps) {
 /**
  * Border right icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderRightIcon } from "@beep/ui/components/table-icons"
  *
@@ -285,7 +290,8 @@ export function BorderRightIcon(props: IconProps) {
 /**
  * Border top icon component.
  *
- * @example
+ * **Example** (Import and log icon)
+ *
  * ```tsx
  * import { BorderTopIcon } from "@beep/ui/components/table-icons"
  *

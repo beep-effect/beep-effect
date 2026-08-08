@@ -112,7 +112,8 @@ class FfprobeOutput extends S.Class<FfprobeOutput>($I`FfprobeOutput`)(
 /**
  * Effectful sink for structured FFmpeg events.
  *
- * @example
+ * **Example** (Void effect sink)
+ *
  * ```ts
  * import type { FFmpegEventSink } from "@beep/ffmpeg"
  * import { Effect } from "effect"
@@ -129,7 +130,8 @@ export type FFmpegEventSink = (event: FFmpegEvent) => Effect.Effect<void>;
 /**
  * Runtime shape exposed by the {@link FFmpeg} service.
  *
- * @example
+ * **Example** (Stub service shape)
+ *
  * ```ts
  * import type { FFmpegShape } from "@beep/ffmpeg"
  * import { Effect } from "effect"
@@ -213,7 +215,8 @@ class TempFrame extends S.Class<TempFrame>($I`TempFrame`)(
 /**
  * Planned file-system move for a staged extracted frame.
  *
- * @example
+ * **Example** (Make planned frame commit)
+ *
  * ```ts
  * import { PlannedFrameCommit } from "@beep/ffmpeg"
  *
@@ -246,7 +249,8 @@ export class PlannedFrameCommit extends S.Class<PlannedFrameCommit>($I`PlannedFr
 /**
  * Buffered ffmpeg progress output accumulated while parsing progress blocks.
  *
- * @example
+ * **Example** (Make progress state)
+ *
  * ```ts
  * import { ProgressState } from "@beep/ffmpeg"
  *
@@ -400,7 +404,8 @@ const formatFps = (fps: number): string => `${fps}`;
 /**
  * Options for formatting one generated PNG frame filename.
  *
- * @example
+ * **Example** (Make filename options)
+ *
  * ```ts
  * import { FormatFrameFileNameOptions } from "@beep/ffmpeg"
  *
@@ -446,7 +451,8 @@ const FormatFrameFileName = Fn({
 /**
  * Format a generated PNG frame filename.
  *
- * @example
+ * **Example** (Format padded frame name)
+ *
  * ```ts
  * import { formatFrameFileName } from "@beep/ffmpeg"
  *
@@ -464,7 +470,8 @@ export const formatFrameFileName: (options: FormatFrameFileNameOptions) => strin
 /**
  * Build ffprobe arguments for the video-probe operation.
  *
- * @example
+ * **Example** (Build probe video args)
+ *
  * ```ts
  * import { buildFfprobeArgs, ProbeVideoRequest } from "@beep/ffmpeg"
  *
@@ -492,7 +499,8 @@ export const buildFfprobeArgs = (request: ProbeVideoRequest): ReadonlyArray<stri
 /**
  * Options for building native ffmpeg frame extraction arguments.
  *
- * @example
+ * **Example** (Make extract frames options)
+ *
  * ```ts
  * import { BuildExtractFramesArgsOptions } from "@beep/ffmpeg"
  *
@@ -544,7 +552,8 @@ const BuildExtractFramesArgs = Fn({
 /**
  * Build ffmpeg arguments for extracting PNG frames.
  *
- * @example
+ * **Example** (Build extract frames args)
+ *
  * ```ts
  * import { buildExtractFramesArgs } from "@beep/ffmpeg"
  *
@@ -581,7 +590,8 @@ export const buildExtractFramesArgs: (options: BuildExtractFramesArgsOptions) =>
 /**
  * Options for building single-frame timestamp extraction arguments.
  *
- * @example
+ * **Example** (Make frame-at options)
+ *
  * ```ts
  * import { BuildExtractFrameAtArgsOptions } from "@beep/ffmpeg"
  *
@@ -640,12 +650,15 @@ const BuildExtractFrameAtArgs = Fn({
 /**
  * Build ffmpeg arguments for extracting one frame at an exact timestamp.
  *
+ * **Details**
+ *
  * Uses input-side `-ss` before `-i` (keyframe seek plus decode-discard) with
  * `-frames:v 1`, which is both fast and frame-accurate. A `maxWidth` bound
  * adds a `scale` filter that shrinks wider sources while leaving narrower
  * ones untouched, keeping strip frames inside downstream byte budgets.
  *
- * @example
+ * **Example** (Build single-frame args)
+ *
  * ```ts
  * import { buildExtractFrameAtArgs } from "@beep/ffmpeg"
  *
@@ -689,7 +702,8 @@ const clipCodecArgs: Record<ClipCodec, ReadonlyArray<string>> = {
 /**
  * Options for building clip extraction arguments.
  *
- * @example
+ * **Example** (Make extract clip options)
+ *
  * ```ts
  * import { BuildExtractClipArgsOptions } from "@beep/ffmpeg"
  * import * as O from "effect/Option"
@@ -753,11 +767,14 @@ const BuildExtractClipArgs = Fn({
 /**
  * Build ffmpeg arguments for cutting a re-encoded clip.
  *
+ * **Details**
+ *
  * Input-side `-ss` plus output `-t` (never `-to`) so the clip's timestamps
  * restart at zero — downstream frame extraction depends on that reset. When no
  * duration is supplied `-t` is omitted and the clip runs to the source end.
  *
- * @example
+ * **Example** (Build extract clip args)
+ *
  * ```ts
  * import { buildExtractClipArgs } from "@beep/ffmpeg"
  *
@@ -797,7 +814,8 @@ const gifDitherFragment = (dither: GifDither): string =>
 /**
  * Options for building palette-optimized GIF rendering arguments.
  *
- * @example
+ * **Example** (Make render GIF options)
+ *
  * ```ts
  * import { BuildRenderGifArgsOptions } from "@beep/ffmpeg"
  *
@@ -871,10 +889,13 @@ const BuildRenderGifArgs = Fn({
 /**
  * Build ffmpeg arguments for rendering a palette-optimized GIF.
  *
+ * **Details**
+ *
  * Single-command two-pass palette flow: `palettegen=stats_mode=diff` feeds
  * `paletteuse` inside one `-filter_complex` graph.
  *
- * @example
+ * **Example** (Build palette GIF args)
+ *
  * ```ts
  * import { buildRenderGifArgs } from "@beep/ffmpeg"
  *
@@ -914,7 +935,8 @@ export const buildRenderGifArgs: (options: BuildRenderGifArgsOptions) => Readonl
 /**
  * Options for building contact-sheet rendering arguments.
  *
- * @example
+ * **Example** (Make contact sheet options)
+ *
  * ```ts
  * import { BuildRenderContactSheetArgsOptions } from "@beep/ffmpeg"
  *
@@ -990,7 +1012,8 @@ const BuildRenderContactSheetArgs = Fn({
 /**
  * Build ffmpeg arguments for rendering a tiled contact sheet.
  *
- * @example
+ * **Example** (Build contact sheet args)
+ *
  * ```ts
  * import { buildRenderContactSheetArgs } from "@beep/ffmpeg"
  *
@@ -1028,7 +1051,8 @@ export const buildRenderContactSheetArgs: (options: BuildRenderContactSheetArgsO
 /**
  * Options for building container metadata remux arguments.
  *
- * @example
+ * **Example** (Make metadata remux options)
+ *
  * ```ts
  * import { BuildWriteContainerMetadataArgsOptions, MetadataPair } from "@beep/ffmpeg"
  *
@@ -1086,10 +1110,13 @@ const BuildWriteContainerMetadataArgs = Fn({
 /**
  * Build ffmpeg arguments for a metadata-writing remux.
  *
+ * **Details**
+ *
  * Streams are copied verbatim (`-map 0 -c copy`); each pair becomes a single
  * `-metadata KEY=value` argv element so values never pass through a shell.
  *
- * @example
+ * **Example** (Build metadata remux args)
+ *
  * ```ts
  * import { buildWriteContainerMetadataArgs, MetadataPair } from "@beep/ffmpeg"
  *
@@ -1125,7 +1152,8 @@ export const buildWriteContainerMetadataArgs: (
 /**
  * Options for building region luminance probe arguments.
  *
- * @example
+ * **Example** (Make luminance probe options)
+ *
  * ```ts
  * import { BuildProbeRegionLuminanceArgsOptions } from "@beep/ffmpeg"
  *
@@ -1189,11 +1217,14 @@ const BuildProbeRegionLuminanceArgs = Fn({
 /**
  * Build ffmpeg arguments for the signalstats region luminance probe.
  *
+ * **Details**
+ *
  * Crops the region, runs `signalstats`, and prints per-frame
  * `lavfi.signalstats.YAVG` metadata to stdout while discarding video output
  * through the null muxer.
  *
- * @example
+ * **Example** (Build luminance probe args)
+ *
  * ```ts
  * import { buildProbeRegionLuminanceArgs } from "@beep/ffmpeg"
  *
@@ -2500,7 +2531,8 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
 /**
  * Effect service for native FFmpeg and ffprobe execution.
  *
- * @example
+ * **Example** (Reference FFmpeg service)
+ *
  * ```ts
  * import { FFmpeg } from "@beep/ffmpeg"
  *
@@ -2515,7 +2547,8 @@ export class FFmpeg extends Context.Service<FFmpeg, FFmpegShape>()($I`FFmpeg`) {
   /**
    * Build the native FFmpeg service layer.
    *
-   * @example
+   * **Example** (Build FFmpeg layer)
+   *
    * ```ts
    * import { FFmpeg } from "@beep/ffmpeg"
    *

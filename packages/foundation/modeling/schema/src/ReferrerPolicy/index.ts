@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Referrer-Policy schemas.
  *
- * @example
+ * **Example** (Import ReferrerPolicy namespace)
+ *
  * ```ts
  * import * as ReferrerPolicy from "@beep/schema/ReferrerPolicy"
  *

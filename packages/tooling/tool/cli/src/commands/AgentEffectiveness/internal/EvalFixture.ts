@@ -116,12 +116,14 @@ const listSourceFiles = Effect.fn("AgentEffectivenessEvalScorer.listSourceFiles"
 /**
  * Read every source-file snapshot under a fixture directory, sorted by path.
  *
- * @example
+ * **Example** (Read snapshots from fixture)
+ *
  * ```ts
  * import { readSourceSnapshots } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalFixture"
  *
  * const snapshots = readSourceSnapshots("/tmp/fixture")
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

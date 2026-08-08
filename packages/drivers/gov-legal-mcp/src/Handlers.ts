@@ -72,7 +72,8 @@ const makeEcfrToolkitHandlers = Effect.fn("GovLegalMcp.EcfrToolkitHandlersLive")
 /**
  * Live handlers for the hard-gated GovInfo toolkit.
  *
- * @example
+ * **Example** (Verify Layer instance)
+ *
  * ```ts
  * import { GovinfoToolkitHandlersLive } from "@beep/gov-legal-mcp/Handlers"
  * import { Layer } from "effect"
@@ -93,7 +94,8 @@ export const GovinfoToolkitHandlersLive: Layer.Layer<
 /**
  * Live handlers for the three keyless eCFR tools.
  *
- * @example
+ * **Example** (Verify Layer instance)
+ *
  * ```ts
  * import { EcfrToolkitHandlersLive } from "@beep/gov-legal-mcp/Handlers"
  * import { Layer } from "effect"

@@ -12,7 +12,8 @@ import type React from "react";
 /**
  * Empty component.
  *
- * @example
+ * **Example** (Import Empty component)
+ *
  * ```tsx
  * import { Empty } from "@beep/ui/components/empty"
  *
@@ -38,7 +39,8 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Empty header component.
  *
- * @example
+ * **Example** (Import EmptyHeader component)
+ *
  * ```tsx
  * import { EmptyHeader } from "@beep/ui/components/empty"
  *
@@ -76,7 +78,8 @@ const emptyMediaVariants = cva(
 /**
  * Empty media component.
  *
- * @example
+ * **Example** (Import EmptyMedia component)
+ *
  * ```tsx
  * import { EmptyMedia } from "@beep/ui/components/empty"
  *
@@ -104,7 +107,8 @@ function EmptyMedia({
 /**
  * Empty title component.
  *
- * @example
+ * **Example** (Import EmptyTitle component)
+ *
  * ```tsx
  * import { EmptyTitle } from "@beep/ui/components/empty"
  *
@@ -121,7 +125,8 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Empty description component.
  *
- * @example
+ * **Example** (Import EmptyDescription component)
+ *
  * ```tsx
  * import { EmptyDescription } from "@beep/ui/components/empty"
  *
@@ -147,7 +152,8 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
 /**
  * Empty content component.
  *
- * @example
+ * **Example** (Import EmptyContent component)
+ *
  * ```tsx
  * import { EmptyContent } from "@beep/ui/components/empty"
  *

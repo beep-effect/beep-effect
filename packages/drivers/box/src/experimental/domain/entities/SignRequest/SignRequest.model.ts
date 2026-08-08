@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/SignRequest/SignRequest.m
 /**
  * Experimental schema anchor for Box Sign request resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { SignRequest } from "@beep/box/experimental/domain/entities/SignRequest/SignRequest.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class SignRequest extends S.Class<SignRequest>($I`SignRequest`)(
 /**
  * Type-level companion namespace for {@link SignRequest} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode payload)
+ *
  * ```ts
  * import { SignRequest } from "@beep/box/experimental/domain/entities/SignRequest/SignRequest.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace SignRequest {
   /**
    * Encoded payload accepted by the {@link SignRequest} entity schema.
    *
-   * @example
+   * **Example** (Encode made SignRequest)
+   *
    * ```ts
    * import { SignRequest } from "@beep/box/experimental/domain/entities/SignRequest/SignRequest.model";
    * import * as S from "effect/Schema";

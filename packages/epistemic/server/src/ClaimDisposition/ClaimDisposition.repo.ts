@@ -48,12 +48,15 @@ const repositoryUnavailable =
 /**
  * Build the in-memory claim disposition repository.
  *
+ * **Details**
+ *
  * It exists so the gate-outcome story can be proved without a database where
  * SQL is not what is under test — the durable-row proof runs against the Drizzle
  * variant, and this one keeps the resolver's admitted/rejected branching honest
  * at unit speed.
  *
- * @example
+ * **Example** (List empty claim dispositions)
+ *
  * ```ts
  * import { makeInMemoryClaimDispositionRepository } from "@beep/epistemic-server/ClaimDisposition"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -94,7 +97,8 @@ export const makeInMemoryClaimDispositionRepository = Effect.fn("Epistemic.Claim
 /**
  * Build the Drizzle-backed claim disposition repository.
  *
- * @example
+ * **Example** (Drizzle repository as Effect)
+ *
  * ```ts
  * import { makeDrizzleClaimDispositionRepository } from "@beep/epistemic-server/ClaimDisposition"
  * import { Effect } from "effect"

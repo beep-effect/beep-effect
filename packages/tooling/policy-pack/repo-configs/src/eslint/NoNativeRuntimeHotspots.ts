@@ -10,15 +10,19 @@ import { A } from "@beep/utils";
 /**
  * Files that currently receive blocking `no-native-runtime` severity in the legacy ESLint surface.
  *
+ * **Details**
+ *
  * Keep this list aligned with the legacy rollback lane so the repo-local checker preserves
  * the old warn-vs-error split while P3 is active.
  *
- * @example
+ * **Example** (Read first error file path)
+ *
  * ```ts
  * import { NO_NATIVE_RUNTIME_ERROR_FILES } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots"
  * const firstPath = NO_NATIVE_RUNTIME_ERROR_FILES[0]
  * console.log(firstPath)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -32,12 +36,14 @@ export const NO_NATIVE_RUNTIME_ERROR_FILES = [
 /**
  * Paths that enable the stricter hotspot-only runtime checks inside the ESLint rule logic.
  *
- * @example
+ * **Example** (Read first check pattern)
+ *
  * ```ts
  * import { NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots"
  * const firstPattern = NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS[0]
  * console.log(firstPattern)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -56,14 +62,16 @@ export const NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS = [
 /**
  * Check whether a file path matches the native runtime error file allowlist.
  *
- * @param relativeFilePath - Repo-relative file path to test against the explicit allowlist.
- * @returns `true` when the file is allowlisted for native runtime tagged errors.
- * @example
+ * **Example** (Match error file allowlist)
+ *
  * ```ts
  * import { isNoNativeRuntimeErrorFile } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots"
  * const matches = isNoNativeRuntimeErrorFile("packages/tooling/tool/cli/src/commands/Lint/index.ts")
  * console.log(matches)
  * ```
+ *
+ * @param relativeFilePath - Repo-relative file path to test against the explicit allowlist.
+ * @returns `true` when the file is allowlisted for native runtime tagged errors.
  * @category predicates
  * @since 0.0.0
  */
@@ -73,14 +81,16 @@ export const isNoNativeRuntimeErrorFile = (relativeFilePath: string): boolean =>
 /**
  * Check whether a file path matches a native runtime extra-check hotspot pattern.
  *
- * @param relativeFilePath - Repo-relative file path to test against hotspot patterns.
- * @returns `true` when the file path matches a native runtime hotspot pattern.
- * @example
+ * **Example** (Match hotspot pattern)
+ *
  * ```ts
  * import { isNoNativeRuntimeExtraCheckHotspot } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots"
  * const matches = isNoNativeRuntimeExtraCheckHotspot("packages/tooling/tool/cli/src/commands/Laws/index.ts")
  * console.log(matches)
  * ```
+ *
+ * @param relativeFilePath - Repo-relative file path to test against hotspot patterns.
+ * @returns `true` when the file path matches a native runtime hotspot pattern.
  * @category predicates
  * @since 0.0.0
  */

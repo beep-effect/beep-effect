@@ -24,15 +24,16 @@ import type { PretextCaptureRequest } from "./PretextCapture.service.ts";
  * captured 2026-07-12 against a live DOM oracle. Engine profile mirrors
  * upstream pretext v0.0.8's Chromium fences.
  *
- * @example
+ * **Example** (Log encoded fixture font)
+ *
  * ```ts
  * import { chromeLinuxArial16Encoded } from "@beep/pretext"
  *
  * console.log(chromeLinuxArial16Encoded.metrics.font)
  * ```
  *
- * @since 0.0.0
  * @category fixtures
+ * @since 0.0.0
  */
 export const chromeLinuxArial16Encoded: FontMetricsSnapshotV1Encoded = {
   version: 1,
@@ -77,7 +78,8 @@ export const chromeLinuxArial16Encoded: FontMetricsSnapshotV1Encoded = {
 /**
  * The built-in fixture decoded against the v1 contract.
  *
- * @example
+ * **Example** (Decode fixture and log font)
+ *
  * ```ts
  * import { chromeLinuxArial16 } from "@beep/pretext"
  * import * as Effect from "effect/Effect"
@@ -87,8 +89,8 @@ export const chromeLinuxArial16Encoded: FontMetricsSnapshotV1Encoded = {
  * console.log(snapshot.metrics.font)
  * ```
  *
- * @since 0.0.0
  * @category fixtures
+ * @since 0.0.0
  */
 export const chromeLinuxArial16 = FontMetricsSnapshotV1.decode(chromeLinuxArial16Encoded);
 
@@ -124,7 +126,8 @@ const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
  * is a typed {@link PretextMeasurementError}, exactly as fidelity demands —
  * and returns the fixture's own captured values.
  *
- * @example
+ * **Example** (Build layer from fixture)
+ *
  * ```ts
  * import { chromeLinuxArial16, makePretextCaptureFixture } from "@beep/pretext"
  * import * as Effect from "effect/Effect"
@@ -134,8 +137,8 @@ const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
  * console.log(String(layer))
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const makePretextCaptureFixture = (snapshot: FontMetricsSnapshotV1): Layer.Layer<PretextCapture> =>
   Layer.succeed(
@@ -149,15 +152,16 @@ export const makePretextCaptureFixture = (snapshot: FontMetricsSnapshotV1): Laye
  * {@link PretextCapture} served from the built-in Chrome/150 · Linux ·
  * 16px Arial fixture — the default DOM-free test layer.
  *
- * @example
+ * **Example** (Stringify default test layer)
+ *
  * ```ts
  * import { PretextCaptureFixture } from "@beep/pretext"
  *
  * console.log(String(PretextCaptureFixture))
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const PretextCaptureFixture = Layer.effect(
   PretextCapture,

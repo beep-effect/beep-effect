@@ -73,7 +73,8 @@ const countryCodeToEmojiFlag: (code: string) => string = flow(
 /**
  * Country code schema backed by generated CLDR territory codes.
  *
- * @example
+ * **Example** (Decode country code value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CountryCode } from "@beep/schema/CountryCode"
@@ -82,8 +83,8 @@ const countryCodeToEmojiFlag: (code: string) => string = flow(
  * console.log(code) // "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryCode: CountryCodeWithStatics = TerritoryCodeSchema.pipe(
   SchemaUtils.withStatics(() => ({
@@ -96,25 +97,16 @@ export const CountryCode: CountryCodeWithStatics = TerritoryCodeSchema.pipe(
 
 /**
  * {@inheritDoc CountryCode}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { CountryCode } from "@beep/schema/CountryCode"
- *
- * const code: CountryCode = S.decodeUnknownSync(CountryCode)("US")
- * console.log(code) // "US"
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CountryCode = TerritoryCodeType;
 
 /**
  * Reverse codec from country display name to country code.
  *
- * @example
+ * **Example** (Decode code from name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CountryCodeFromName } from "@beep/schema/CountryCode"
@@ -123,8 +115,8 @@ export type CountryCode = TerritoryCodeType;
  * console.log(code) // "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = TerritoryCodeFromNameSchema.pipe(
   SchemaUtils.withStatics(() => ({
@@ -138,7 +130,8 @@ export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = Territory
 /**
  * Reversible country code/name codec.
  *
- * @example
+ * **Example** (Decode name from code)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CountryNameFromCode } from "@beep/schema/CountryCode"
@@ -147,8 +140,8 @@ export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = Territory
  * console.log(name) // "United States"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryNameFromCode: typeof TerritoryNameFromCodeSchema = TerritoryNameFromCodeSchema.pipe(
   SchemaUtils.withStatics(() => ({

@@ -44,10 +44,13 @@ const byEntryName = Order.mapInput(Str.Order, ([name]: readonly [string, unknown
 /**
  * Serialized HTML that has not passed the safe-output policy.
  *
+ * **Details**
+ *
  * The brand distinguishes well-formed serialization from a browser-safe value;
  * it is not a trust marker.
  *
- * @example
+ * **Example** (Making untrusted HTML)
+ *
  * ```ts
  * import { UntrustedHtml } from "@beep/html/Html.serialize"
  *
@@ -67,7 +70,8 @@ export const UntrustedHtml = S.String.pipe(
 /**
  * Decoded type of {@link UntrustedHtml}.
  *
- * @example
+ * **Example** (Decoding untrusted HTML)
+ *
  * ```ts
  * import { UntrustedHtml } from "@beep/html/Html.serialize"
  * import { Result } from "effect"
@@ -108,10 +112,13 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
 /**
  * Opaque, runtime-issued HTML string accepted by the safe-output policy.
  *
+ * **Details**
+ *
  * Unlike a structural brand, callers cannot manufacture this value from an
  * arbitrary string through a public constructor or schema decode.
  *
- * @example
+ * **Example** (Typing safeHtmlValue parameter)
+ *
  * ```ts
  * import { safeHtmlValue } from "@beep/html/Html.serialize"
  *
@@ -131,7 +138,8 @@ export const SafeHtml = S.declare(isSafeHtmlValue).pipe(
 /**
  * Decoded type of {@link SafeHtml}.
  *
- * @example
+ * **Example** (Producing SafeHtml value)
+ *
  * ```ts
  * import {
  *   conform,
@@ -160,7 +168,8 @@ export type SafeHtml = typeof SafeHtml.Type;
 /**
  * Rules reported when canonical serialization cannot preserve an AST.
  *
- * @example
+ * **Example** (Checking serialize rule)
+ *
  * ```ts
  * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
  *
@@ -187,7 +196,8 @@ export const HtmlSerializeRule = LiteralKit([
 /**
  * Decoded type of {@link HtmlSerializeRule}.
  *
- * @example
+ * **Example** (Decoding serialize rule)
+ *
  * ```ts
  * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
  * import { Result } from "effect"
@@ -208,7 +218,8 @@ export type HtmlSerializeRule = typeof HtmlSerializeRule.Type;
 /**
  * Typed canonical-serialization failure.
  *
- * @example
+ * **Example** (Constructing serialize error)
+ *
  * ```ts
  * import { HtmlSerializeError } from "@beep/html/Html.serialize"
  *
@@ -553,10 +564,13 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
 /**
  * Canonically serializes an arbitrary modeled HTML root.
  *
+ * **Details**
+ *
  * The result is deliberately marked untrusted. Use {@link serializeSafe} when
  * the output is intended for an HTML injection sink.
  *
- * @example
+ * **Example** (Serializing empty fragment)
+ *
  * ```ts
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
@@ -577,7 +591,8 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
 /**
  * Canonically serializes a conformance proof as untrusted HTML.
  *
- * @example
+ * **Example** (Serializing conformance proof)
+ *
  * ```ts
  * import { conform, Fragment, serializeConformant, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
@@ -616,7 +631,8 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
 /**
  * Canonically serializes a safe-AST proof and issues opaque {@link SafeHtml}.
  *
- * @example
+ * **Example** (Issuing opaque SafeHtml)
+ *
  * ```ts
  * import {
  *   conform,
@@ -648,7 +664,8 @@ export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, Html
 /**
  * Extracts the string from an untrusted canonical serialization.
  *
- * @example
+ * **Example** (Extracting untrusted string)
+ *
  * ```ts
  * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
  * import { Effect } from "effect"
@@ -665,10 +682,13 @@ export const untrustedHtmlValue = (value: UntrustedHtml): string => value;
 /**
  * Extracts the string from opaque, policy-proven HTML.
  *
+ * **Details**
+ *
  * Keep the {@link SafeHtml} wrapper until the final browser or framework sink
  * so trust provenance remains visible in intermediate APIs.
  *
- * @example
+ * **Example** (Extracting safe HTML string)
+ *
  * ```ts
  * import {
  *   conform,

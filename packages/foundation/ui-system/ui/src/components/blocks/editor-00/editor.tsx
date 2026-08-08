@@ -30,7 +30,8 @@ const editorConfig: InitialConfigType = {
 /**
  * Lexical rich-text editor shell with serialized-state change callbacks.
  *
- * @example
+ * **Example** (Serialized change callback)
+ *
  * ```tsx
  * import { Editor } from "@beep/ui/components/blocks/editor-00/editor"
  *

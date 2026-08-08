@@ -14,12 +14,15 @@ const $I = $LawPracticeDomainId.create("values/OfficeCode/OfficeCode");
 /**
  * WIPO ST.3 two-letter office, state, entity, or organization code.
  *
+ * **Details**
+ *
  * The set is sourced from WIPO Standard ST.3 Annex I, Section 2, plus the
  * standard's recommended `XX` code for unknown states, entities, or
  * organizations. Private/provisional combinations from ST.3 paragraph 11 are
  * intentionally excluded because they are not assigned office identifiers.
  *
- * @example
+ * **Example** (Check ST.3 office codes)
+ *
  * ```ts
  * import { OfficeCode } from "@beep/law-practice-domain"
  *
@@ -279,7 +282,8 @@ export const OfficeCode = LiteralKit([
 /**
  * Type-level literal union produced by {@link OfficeCode}.
  *
- * @example
+ * **Example** (Satisfy OfficeCode literal)
+ *
  * ```ts
  * import type { OfficeCode } from "@beep/law-practice-domain"
  *

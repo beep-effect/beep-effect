@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -22,15 +22,15 @@ reproduce the pattern that trips it.
 
 ## State
 
-Active. P0 in progress. Nothing has landed.
+Completed and retained. P0–P4 shipped on PR #608 (`feat/jsdoc-carrier-migration-p3`).
 
 | phase | what | PR |
 | --- | --- | --- |
 | P0 | Law contradiction fix + this packet | docs-only |
 | P1 | `beep quality jsdoc-migrate` codemod | own PR |
 | P2 | Generator templates for the 18 generated files | own PR |
-| P3 | The 1,935-file migration + gate swap + baseline | mega-PR |
-| P4 | Close | with P3 |
+| P3 | The 1,935-file migration + gate swap + baseline | #608 |
+| P4 | Close (reflection + completed-retained) | #608 |
 
 ## Read in this order
 

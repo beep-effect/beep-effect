@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/StoragePolicy/StoragePoli
 /**
  * Experimental schema anchor for Box storage policy resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty policy)
+ *
  * ```ts
  * import { StoragePolicy } from "@beep/box/experimental/domain/entities/StoragePolicy/StoragePolicy.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class StoragePolicy extends S.Class<StoragePolicy>($I`StoragePolicy`)(
 /**
  * Type-level companion namespace for {@link StoragePolicy} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty policy)
+ *
  * ```ts
  * import { StoragePolicy } from "@beep/box/experimental/domain/entities/StoragePolicy/StoragePolicy.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace StoragePolicy {
   /**
    * Encoded payload accepted by the {@link StoragePolicy} entity schema.
    *
-   * @example
+   * **Example** (Encode empty StoragePolicy payload)
+   *
    * ```ts
    * import { StoragePolicy } from "@beep/box/experimental/domain/entities/StoragePolicy/StoragePolicy.model";
    * import * as S from "effect/Schema";

@@ -67,11 +67,13 @@ class DocsSectionPolicies extends S.Class<DocsSectionPolicies>($I`DocsSectionPol
 /**
  * Documentation section model.
  *
- * @returns Tagged union schema keyed by `name`.
- * @example
+ * **Example** (Log DocsSection model)
+ *
  * ```ts
  * console.log("DocsSection")
  * ```
+ *
+ * @returns Tagged union schema keyed by `name`.
  * @category models
  * @since 0.0.0
  */
@@ -86,10 +88,12 @@ export const DocsSection = DocsSectionName.mapMembers(
 /**
  * Documentation section model.
  *
- * @example
+ * **Example** (Log DocsSection type)
+ *
  * ```ts
  * console.log("DocsSection")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -234,10 +238,12 @@ const docsFindCommand = Command.make(
 /**
  * Command-first docs discovery entrypoint used by agent config surfaces.
  *
- * @example
+ * **Example** (Log docs command name)
+ *
  * ```ts
  * console.log("docsCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -29,12 +29,14 @@ const $I = $QaCaptureId.create("SessionStore.service");
 /**
  * Directory name of one QA round (`round-N`).
  *
- * @example
+ * **Example** (Make round directory name)
+ *
  * ```ts
  * import { RoundDirName } from "@beep/qa-capture"
  * const name = RoundDirName.make("round-3")
  * console.log(name)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -54,13 +56,15 @@ export const RoundDirName = S.String.check(
 /**
  * Directory name of one QA round (`round-N`).
  *
- * @example
+ * **Example** (Type a RoundDirName value)
+ *
  * ```ts
  * import { RoundDirName } from "@beep/qa-capture"
  * import type { RoundDirName as RoundDirNameValue } from "@beep/qa-capture"
  * const name: RoundDirNameValue = RoundDirName.make("round-3")
  * console.log(name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -71,7 +75,8 @@ const isRoundDirName = S.is(RoundDirName);
 /**
  * Resolved file-system layout of one QA round directory.
  *
- * @example
+ * **Example** (Construct full round layout)
+ *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * const layout = RoundLayout.make({
@@ -87,6 +92,7 @@ const isRoundDirName = S.is(RoundDirName);
  * })
  * console.log(layout.root)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,12 +152,14 @@ export class RoundLayout extends S.Class<RoundLayout>($I`RoundLayout`)(
 /**
  * Runtime shape exposed by the {@link SessionStore} service.
  *
- * @example
+ * **Example** (Use SessionStoreShape methods)
+ *
  * ```ts
  * import type { SessionStoreShape } from "@beep/qa-capture"
  * const use = (store: SessionStoreShape) => store.collectorHandlePath("/repo/.beep/qa")
  * console.log(use)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -397,12 +405,14 @@ const makeService = Effect.fnUntraced(function* () {
 /**
  * Effect service owning the `.beep/qa` session directory layout.
  *
- * @example
+ * **Example** (Get SessionStore layer)
+ *
  * ```ts
  * import { SessionStore } from "@beep/qa-capture"
  * const layer = SessionStore.layer
  * console.log(layer)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -410,12 +420,14 @@ export class SessionStore extends Context.Service<SessionStore, SessionStoreShap
   /**
    * Live session store layer over file-system and path services.
    *
-   * @example
+   * **Example** (Reference live session layer)
+   *
    * ```ts
    * import { SessionStore } from "@beep/qa-capture"
    * const layer = SessionStore.layer
    * console.log(layer)
    * ```
+   *
    * @category layers
    * @since 0.0.0
    */

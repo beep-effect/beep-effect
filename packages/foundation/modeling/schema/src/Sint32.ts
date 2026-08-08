@@ -45,11 +45,13 @@ const Sint32Checks = S.makeFilterGroup(
 /**
  * Branded schema for protobuf `sint32` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes `sint32` as a zig-zag encoded 32-bit varint and exposes the
  * JavaScript value as a `number`.
  *
- * @example
+ * **Example** (Decode negative sint32 value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -77,7 +79,8 @@ export const Sint32 = S.Finite.annotate({
 /**
  * Type-level value inferred from {@link Sint32}.
  *
- * @example
+ * **Example** (Narrow unknown to Sint32)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Sint32 } from "@beep/schema/Sint32"

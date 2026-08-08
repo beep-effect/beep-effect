@@ -37,7 +37,8 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Types");
 /**
  * Conservative upper bound the executor enforces on parallel concurrency.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `ExecutionStrategy.Parallel(concurrency)` accepts any finite number, but an
  * untrusted or buggy caller could request excessive parallelism and exhaust
  * CPU, memory, fibers, or downstream resources. The executor clamps the
@@ -47,7 +48,8 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Types");
  * cap. Trusted operators that genuinely need more parallelism should raise this
  * bound deliberately rather than passing larger values from request input.
  *
- * @example
+ * **Example** (Clamp requested parallel concurrency)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { MAX_PARALLEL_CONCURRENCY } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -58,15 +60,16 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Types");
  * strictEqual(bounded, 64)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_PARALLEL_CONCURRENCY = 64;
 
 /**
  * Strategy describing how an operation is scheduled across the current leaf set.
  *
- * @remarks
+ * **Details**
+ *
  * The executor currently honors sequential execution and parallel execution with
  * bounded concurrency: the requested `Parallel(concurrency)` value is clamped to
  * `[1, MAX_PARALLEL_CONCURRENCY]` before scheduling, so callers cannot request
@@ -74,7 +77,8 @@ export const MAX_PARALLEL_CONCURRENCY = 64;
  * model so callers can persist intent, but execution falls back to the sequential
  * behavior until dedicated schedulers are introduced.
  *
- * @example
+ * **Example** (Create parallel execution strategy)
+ *
  * ```ts
  * import { ExecutionStrategy } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -82,8 +86,8 @@ export const MAX_PARALLEL_CONCURRENCY = 64;
  * console.log(strategy.concurrency) // 4
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ExecutionStrategy = S.TaggedUnion({
   Sequential: {},
@@ -111,7 +115,8 @@ export const ExecutionStrategy = S.TaggedUnion({
 /**
  * Runtime type represented by {@link ExecutionStrategy}.
  *
- * @example
+ * **Example** (Annotate sequential strategy type)
+ *
  * ```ts
  * import { ExecutionStrategy } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -131,12 +136,14 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
 /**
  * Metrics accumulated while applying an operation to graph leaves.
  *
- * @remarks
+ * **Details**
+ *
  * Metrics form a monoid: `empty` is the identity and `combine` adds counters
  * and durations. Executors use this to aggregate per-leaf applications into one
  * run summary.
  *
- * @example
+ * **Example** (Combine empty metrics monoid)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -149,8 +156,8 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  * console.log(combined.nodesProcessed) // 2
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetrics`)(
   {
@@ -202,15 +209,16 @@ export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetr
 /**
  * Asymptotic complexity vocabulary used when scaling operation cost estimates.
  *
- * @example
+ * **Example** (Check O(n) complexity tag)
+ *
  * ```ts
  * import { Complexity } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * console.log(Complexity.is["O(n)"]("O(n)")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Complexity = LiteralKit(["O(1)", "O(n)", "O(n log n)", "O(n^2)"]).pipe(
   $I.annoteSchema("Complexity", {
@@ -221,7 +229,8 @@ export const Complexity = LiteralKit(["O(1)", "O(n)", "O(n log n)", "O(n^2)"]).p
 /**
  * Runtime type represented by {@link Complexity}.
  *
- * @example
+ * **Example** (Assign linearithmic complexity type)
+ *
  * ```ts
  * import type { Complexity } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -237,7 +246,8 @@ export type Complexity = typeof Complexity.Type;
 /**
  * Cost estimate for an operation whose time does not grow with leaf count.
  *
- * @example
+ * **Example** (Make constant operation cost)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { ConstantOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -252,8 +262,8 @@ export type Complexity = typeof Complexity.Type;
  * console.log(cost.complexity) // "O(1)"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`ConstantOperationCost`)(
   {
@@ -276,7 +286,8 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
 /**
  * Cost estimate for work that grows linearly with leaf count.
  *
- * @example
+ * **Example** (Make linear operation cost)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { LinearOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -291,8 +302,8 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
  * console.log(cost.tokenCost) // 4
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearOperationCost`)(
   {
@@ -315,7 +326,8 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
 /**
  * Cost estimate for work that grows at `n log n`.
  *
- * @example
+ * **Example** (Make linearithmic operation cost)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { LinearithmicOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -330,8 +342,8 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
  * console.log(cost.memoryCost) // 256
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost>($I`LinearithmicOperationCost`)(
   {
@@ -354,7 +366,8 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
 /**
  * Cost estimate for pairwise or otherwise quadratic graph work.
  *
- * @example
+ * **Example** (Make quadratic operation cost)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { QuadraticOperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -369,8 +382,8 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
  * console.log(cost.complexity) // "O(n^2)"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`QuadraticOperationCost`)(
   {
@@ -393,12 +406,14 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
 /**
  * Tagged union of operation cost estimates with scaling helpers.
  *
- * @remarks
+ * **Details**
+ *
  * `scale` multiplies the estimate for the number of leaves the executor will
  * process. Time uses the selected complexity class, while memory and token costs
  * are currently scaled linearly by leaf count.
  *
- * @example
+ * **Example** (Scale linear cost by leaves)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -412,8 +427,8 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
  * console.log(OperationCost.scale(cost, 3).memoryCost) // 30
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const OperationCost = Complexity.mapMembers(
   Tuple.evolve([
@@ -461,7 +476,8 @@ export const OperationCost = Complexity.mapMembers(
 /**
  * Companion type for {@link OperationCost}.
  *
- * @example
+ * **Example** (Type constant operation cost)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { OperationCost } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -474,6 +490,7 @@ export const OperationCost = Complexity.mapMembers(
  *
  * console.log(cost.complexity) // "O(1)"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -486,11 +503,13 @@ export type OperationCost = typeof OperationCost.Type;
 /**
  * Result of checking whether an operation may run against graph leaves.
  *
- * @remarks
+ * **Details**
+ *
  * `valid` is false when any errors are present. Warnings preserve non-blocking
  * diagnostics, such as running against a graph with no leaves.
  *
- * @example
+ * **Example** (Attach non-blocking validation warnings)
+ *
  * ```ts
  * import { ValidationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -502,8 +521,8 @@ export type OperationCost = typeof OperationCost.Type;
  * console.log(result.warnings.length) // 1
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ValidationResult extends S.Class<ValidationResult>($I`ValidationResult`)(
   {
@@ -545,15 +564,16 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
 /**
  * Operation category vocabulary describing a graph morphism's shape.
  *
- * @example
+ * **Example** (Check expansion category tag)
+ *
  * ```ts
  * import { OperationCategory } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * console.log(OperationCategory.is.expansion("expansion")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const OperationCategory = LiteralKit([
   "transformation",
@@ -571,7 +591,8 @@ export const OperationCategory = LiteralKit([
 /**
  * Runtime type represented by {@link OperationCategory}.
  *
- * @example
+ * **Example** (Assign transformation category type)
+ *
  * ```ts
  * import type { OperationCategory } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -591,7 +612,8 @@ export type OperationCategory = typeof OperationCategory.Type;
 /**
  * Options controlling one executor run.
  *
- * @remarks
+ * **Details**
+ *
  * `cache` toggles result-store lookup and write-through. `strategy` controls
  * scheduling over the current leaf set. When `timeout` is set, the executor
  * bounds each per-leaf `operation.apply` invocation by that duration and records
@@ -599,7 +621,8 @@ export type OperationCategory = typeof OperationCategory.Type;
  * operation run unbounded. `trace` is retained for orchestration layers that emit
  * diagnostics around execution.
  *
- * @example
+ * **Example** (Build parallel execution options)
+ *
  * ```ts
  * import { ExecutionOptions } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -607,8 +630,8 @@ export type OperationCategory = typeof OperationCategory.Type;
  * console.log(options.strategy._tag) // "Parallel"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ExecutionOptions extends S.Class<ExecutionOptions>($I`ExecutionOptions`)(
   {
@@ -639,15 +662,17 @@ export class ExecutionOptions extends S.Class<ExecutionOptions>($I`ExecutionOpti
 /**
  * Branded identifier for one graph-operation execution.
  *
- * @example
+ * **Example** (Make branded execution id)
+ *
  * ```ts
  * import { ExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const id: ExecutionId = ExecutionId.make("exec-1")
  * console.log(id)
  * ```
- * @since 0.0.0
+ *
  * @category models
+ * @since 0.0.0
  */
 export const ExecutionId = S.String.pipe(
   S.brand("ExecutionId"),
@@ -660,22 +685,25 @@ export const ExecutionId = S.String.pipe(
 /**
  * Runtime type represented by {@link ExecutionId}.
  *
- * @example
+ * **Example** (Type branded execution id)
+ *
  * ```ts
  * import { ExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const id: ExecutionId = ExecutionId.make("exec-1")
  * console.log(id)
  * ```
- * @since 0.0.0
+ *
  * @category models
+ * @since 0.0.0
  */
 export type ExecutionId = typeof ExecutionId.Type;
 
 /**
  * Generate a fresh execution id from the Effect clock and random service.
  *
- * @example
+ * **Example** (Generate fresh execution id)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { generateExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -701,13 +729,15 @@ export const generateExecutionId: Effect.Effect<ExecutionId> = Effect.gen(functi
 /**
  * Result of applying one operation to the sampled graph leaves.
  *
- * @remarks
+ * **Details**
+ *
  * `newNodes` contains only nodes emitted by the operation, not a rewritten graph.
  * `errors` contains per-leaf operation failures captured during application.
  * `originalGraph` is intentionally opaque so callers can carry provenance
  * without forcing this type to know the graph's payload type.
  *
- * @example
+ * **Example** (Count newly emitted nodes)
+ *
  * ```ts
  * import type { OperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
@@ -715,8 +745,8 @@ export const generateExecutionId: Effect.Effect<ExecutionId> = Effect.gen(functi
  * console.log(createdCount)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface OperationResult<B, E> {
   readonly errors: ReadonlyArray<E>;
@@ -731,7 +761,8 @@ export interface OperationResult<B, E> {
 /**
  * Build an operation result and stamp it with the current Effect clock time.
  *
- * @example
+ * **Example** (Stamp result with clock time)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ExecutionId, ExecutionMetrics, makeOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
@@ -746,8 +777,8 @@ export interface OperationResult<B, E> {
  * console.log(Effect.runSync(program).newNodes.length) // 0
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeOperationResult: {
   <B, E>(

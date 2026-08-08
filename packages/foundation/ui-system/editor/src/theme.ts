@@ -9,7 +9,8 @@
 /**
  * The `@beep/ui` Lexical theme: maps node types to Tailwind classes.
  *
- * @example
+ * **Example** (Read paragraph theme class)
+ *
  * ```ts
  * import { editorTheme } from "@beep/editor/theme"
  *

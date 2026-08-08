@@ -20,7 +20,8 @@ const patentNumberPattern = /^(?:RE|PP|D|H|T)?\d{5,8}$/;
 /**
  * Normalized eight-digit USPTO application number.
  *
- * @example
+ * **Example** (Log application number schema)
+ *
  * ```ts
  * import { UsptoApplicationNumber } from "@beep/uspto"
  *
@@ -48,7 +49,8 @@ export const UsptoApplicationNumber = S.String.check(
 /**
  * Type for {@link UsptoApplicationNumber}.
  *
- * @example
+ * **Example** (Decode application number)
+ *
  * ```ts
  * import { UsptoApplicationNumber } from "@beep/uspto"
  * import * as S from "effect/Schema"
@@ -82,7 +84,8 @@ const encodeUsptoApplicationNumberToText = (value: string): Effect.Effect<string
 /**
  * Boundary codec for free-text USPTO application number input.
  *
- * @example
+ * **Example** (Decode free-text application number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UsptoApplicationNumberFromText } from "@beep/uspto"
@@ -108,7 +111,8 @@ export const UsptoApplicationNumberFromText = S.String.pipe(
 /**
  * Type for {@link UsptoApplicationNumberFromText}.
  *
- * @example
+ * **Example** (Type free-text application number)
+ *
  * ```ts
  * import { UsptoApplicationNumberFromText } from "@beep/uspto"
  * import * as S from "effect/Schema"
@@ -125,7 +129,8 @@ export type UsptoApplicationNumberFromText = typeof UsptoApplicationNumberFromTe
 /**
  * Normalized USPTO patent number with optional kind prefix.
  *
- * @example
+ * **Example** (Log patent number schema)
+ *
  * ```ts
  * import { UsptoPatentNumber } from "@beep/uspto"
  *
@@ -153,7 +158,8 @@ export const UsptoPatentNumber = S.String.check(
 /**
  * Type for {@link UsptoPatentNumber}.
  *
- * @example
+ * **Example** (Decode patent number)
+ *
  * ```ts
  * import { UsptoPatentNumber } from "@beep/uspto"
  * import * as S from "effect/Schema"
@@ -190,7 +196,8 @@ const encodeUsptoPatentNumberToText = (value: string): Effect.Effect<string> => 
 /**
  * Boundary codec for free-text USPTO patent number input.
  *
- * @example
+ * **Example** (Decode free-text patent number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UsptoPatentNumberFromText } from "@beep/uspto"
@@ -216,7 +223,8 @@ export const UsptoPatentNumberFromText = S.String.pipe(
 /**
  * Type for {@link UsptoPatentNumberFromText}.
  *
- * @example
+ * **Example** (Type free-text patent number)
+ *
  * ```ts
  * import { UsptoPatentNumberFromText } from "@beep/uspto"
  * import * as S from "effect/Schema"
@@ -233,12 +241,13 @@ export type UsptoPatentNumberFromText = typeof UsptoPatentNumberFromText.Type;
 /**
  * Normalize free-text into a USPTO application number candidate.
  *
+ * **Details**
+ *
  * Strips separators such as `/`, `,`, `.`, and spaces (for example
  * `16/123,456` becomes `16123456`).
  *
- * @param text - Free-text application number candidate.
- * @returns The normalized eight-digit form, or none.
- * @example
+ * **Example** (Normalize application number text)
+ *
  * ```ts
  * import { normalizeUsptoApplicationNumber } from "@beep/uspto"
  * import * as O from "effect/Option"
@@ -247,6 +256,8 @@ export type UsptoPatentNumberFromText = typeof UsptoPatentNumberFromText.Type;
  * console.log(O.isNone(normalizeUsptoApplicationNumber("not a number"))) // true
  * ```
  *
+ * @param text - Free-text application number candidate.
+ * @returns The normalized eight-digit form, or none.
  * @category parsers
  * @since 0.0.0
  */
@@ -259,12 +270,13 @@ export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> 
 /**
  * Normalize free-text into a USPTO patent number candidate.
  *
+ * **Details**
+ *
  * Strips `US` prefixes, kind codes (for example `B2`), commas, and spaces
  * (for example `US 10,772,255 B2` becomes `10772255`).
  *
- * @param text - Free-text patent number candidate.
- * @returns The normalized form, or none.
- * @example
+ * **Example** (Normalize patent number text)
+ *
  * ```ts
  * import { normalizeUsptoPatentNumber } from "@beep/uspto"
  * import * as O from "effect/Option"
@@ -272,6 +284,8 @@ export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> 
  * console.log(O.isSome(normalizeUsptoPatentNumber("US 10,772,255 B2"))) // true
  * ```
  *
+ * @param text - Free-text patent number candidate.
+ * @returns The normalized form, or none.
  * @category parsers
  * @since 0.0.0
  */
@@ -317,7 +331,8 @@ const optionalUsptoMetadataText = (description: string) =>
 /**
  * Official application metadata resolved from the Open Data Portal.
  *
- * @example
+ * **Example** (Log application metadata schema)
+ *
  * ```ts
  * import { UsptoApplicationMetadata } from "@beep/uspto"
  *
@@ -357,7 +372,8 @@ export class UsptoApplicationMetadata extends S.Class<UsptoApplicationMetadata>(
 /**
  * Parent and child continuity application numbers for one application.
  *
- * @example
+ * **Example** (Create empty continuity)
+ *
  * ```ts
  * import { UsptoContinuity } from "@beep/uspto"
  *
@@ -387,7 +403,8 @@ export class UsptoContinuity extends S.Class<UsptoContinuity>($I`UsptoContinuity
 /**
  * Reference to one document in an application file wrapper.
  *
- * @example
+ * **Example** (Log document reference schema)
+ *
  * ```ts
  * import { UsptoDocumentReference } from "@beep/uspto"
  *

@@ -12,7 +12,8 @@ import type { TString } from "@beep/types";
 /**
  * Re-export of the Effect SSE encoder/decoder primitives.
  *
- * @example
+ * **Example** (Import SSE re-exports)
+ *
  * ```ts
  * import * as Sse from "@beep/utils/Event"
  *
@@ -37,7 +38,8 @@ type EventShape<TTag extends TString.NonEmpty, TFields extends S.Struct.Fields> 
 /**
  * Builds a typed server-sent event envelope schema.
  *
- * @example
+ * **Example** (Decode Progress event)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { makeEvent } from "@beep/utils/Event"
@@ -79,7 +81,8 @@ type MakeEventSchema<TTag extends TString.NonEmpty, TFields extends S.Struct.Fie
 /**
  * Creates a typed server-sent event schema.
  *
- * @example
+ * **Example** (Construct Progress event)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { makeEvent } from "@beep/utils/Event"

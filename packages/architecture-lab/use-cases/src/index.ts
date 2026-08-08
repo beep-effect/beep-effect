@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab use-case role.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-use-cases"
  *

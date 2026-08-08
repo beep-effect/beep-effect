@@ -1,7 +1,8 @@
 /**
  * Shared write/check lifecycle for deterministic generated files.
  *
- * @remarks
+ * **Details**
+ *
  * Commands that own a committed generated file (`Lint/SchemaCatalog`,
  * `Fallow` boundaries) share one skeleton: reject the mutually-exclusive
  * `--write`/`--check` combination, then either render-and-write the file or
@@ -26,9 +27,8 @@ import { Effect, FileSystem, Path } from "effect";
 /**
  * Reject the mutually-exclusive `--write` / `--check` flag combination.
  *
- * @param input - The two mode flags and the conflict failure effect.
- * @returns Effect that fails with `onConflict` when both flags are set.
- * @example
+ * **Example** (Validate exclusive mode flags)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { assertExclusiveModeFlags } from "@beep/repo-cli/test/Artifacts"
@@ -40,6 +40,9 @@ import { Effect, FileSystem, Path } from "effect";
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - The two mode flags and the conflict failure effect.
+ * @returns Effect that fails with `onConflict` when both flags are set.
  * @category validation
  * @since 0.0.0
  */
@@ -53,10 +56,8 @@ export const assertExclusiveModeFlags = <E, R>(input: {
  * Make the parent directory, write rendered content, then run the caller's
  * success effect.
  *
- * @param input - Absolute path, rendered content, a post-write effect (for
- * example the `wrote ...` log), and an fs error factory.
- * @returns Effect that writes the generated file.
- * @example
+ * **Example** (Write then run success)
+ *
  * ```ts
  * import { Console, Effect } from "effect"
  * import { writeGeneratedFile } from "@beep/repo-cli/test/Artifacts"
@@ -69,6 +70,10 @@ export const assertExclusiveModeFlags = <E, R>(input: {
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - Absolute path, rendered content, a post-write effect (for
+ * example the `wrote ...` log), and an fs error factory.
+ * @returns Effect that writes the generated file.
  * @category filesystem
  * @since 0.0.0
  */
@@ -89,11 +94,8 @@ export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFi
  * Compare a committed generated file against freshly rendered content and route
  * to the missing, stale, or current branch.
  *
- * @param input - Absolute path, expected content, the three outcome effects,
- * and an fs read error factory.
- * @returns Effect that fails stale (or missing) with the caller's failure
- * effect, or succeeds when the committed file matches.
- * @example
+ * **Example** (Route missing stale current)
+ *
  * ```ts
  * import { Console, Effect } from "effect"
  * import { checkGeneratedFile } from "@beep/repo-cli/test/Artifacts"
@@ -109,6 +111,11 @@ export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFi
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - Absolute path, expected content, the three outcome effects,
+ * and an fs read error factory.
+ * @returns Effect that fails stale (or missing) with the caller's failure
+ * effect, or succeeds when the committed file matches.
  * @category filesystem
  * @since 0.0.0
  */
@@ -138,9 +145,8 @@ export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFi
  * Dispatch a single generated file to {@link writeGeneratedFile} in write mode
  * or {@link checkGeneratedFile} otherwise.
  *
- * @param input - The `write` flag plus the write-mode and check-mode fields.
- * @returns Effect running the selected branch.
- * @example
+ * **Example** (Check mode without write)
+ *
  * ```ts
  * import { Console, Effect } from "effect"
  * import { syncGeneratedFile } from "@beep/repo-cli/test/Artifacts"
@@ -157,6 +163,9 @@ export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFi
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - The `write` flag plus the write-mode and check-mode fields.
+ * @returns Effect running the selected branch.
  * @category filesystem
  * @since 0.0.0
  */

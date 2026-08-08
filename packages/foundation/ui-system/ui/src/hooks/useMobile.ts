@@ -1,23 +1,25 @@
 /**
  * Responsive mobile-state helpers for `@beep/ui`.
  *
- * @example
+ * **Example** (Import resolveIsMobile helper)
+ *
  * ```ts
  * import { resolveIsMobile } from "@beep/ui/hooks/useMobile"
  *
  * console.log(resolveIsMobile)
  * ```
  *
- * @example
+ * **Example** (Import useIsMobile hook)
+ *
  * ```ts
  * import { useIsMobile } from "@beep/ui/hooks/useMobile"
  *
  * console.log(useIsMobile)
  * ```
  *
+ * @packageDocumentation
  * @category hooks
  * @since 0.0.0
- * @packageDocumentation
  */
 import { Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
@@ -31,7 +33,8 @@ const mobileMediaQuery = Str.replace(/^@media\s*/, "")(TOUCH_MEDIA_QUERY);
 /**
  * Resolve is mobile export.
  *
- * @example
+ * **Example** (Import resolveIsMobile export)
+ *
  * ```ts
  * import { resolveIsMobile } from "@beep/ui/hooks/useMobile"
  *
@@ -46,7 +49,8 @@ export const resolveIsMobile = (isMobile: O.Option<boolean>): boolean => O.getOr
 /**
  * Use is mobile hook.
  *
- * @example
+ * **Example** (Import useIsMobile export)
+ *
  * ```ts
  * import { useIsMobile } from "@beep/ui/hooks/useMobile"
  *

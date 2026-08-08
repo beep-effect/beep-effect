@@ -101,7 +101,8 @@ const formatDate = (date: Date | string): string => {
 /**
  * Todo item component.
  *
- * @example
+ * **Example** (Import TodoItem component)
+ *
  * ```tsx
  * import { TodoItem } from "@beep/ui/components/todo-item"
  *

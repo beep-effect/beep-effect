@@ -27,7 +27,8 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
 /**
  * File-diff summary for a newly added file.
  *
- * @example
+ * **Example** (Decode added file-diff)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -60,7 +61,8 @@ export class Added extends InfoBase.extend<Added>($I`Added`)(
 /**
  * File-diff summary for a removed file.
  *
- * @example
+ * **Example** (Decode deleted file-diff)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -93,7 +95,8 @@ export class Deleted extends InfoBase.extend<Deleted>($I`Deleted`)(
 /**
  * File-diff summary for an existing file with changed content.
  *
- * @example
+ * **Example** (Decode modified file-diff)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -127,7 +130,8 @@ export class Modified extends InfoBase.extend<Modified>($I`Modified`)(
 /**
  * Tagged union of all supported file-diff summary variants.
  *
- * @example
+ * **Example** (Decode file-diff union)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -158,7 +162,8 @@ export const Info = S.Union([Added, Deleted, Modified]).pipe(
 /**
  * Type for parsed file-diff information.
  *
- * @example
+ * **Example** (Access Info status type)
+ *
  * ```ts
  * import type { FileDiff } from "@beep/schema"
  *
@@ -174,7 +179,8 @@ export type Info = typeof Info.Type;
 /**
  * Encoded companion types for {@link Info}.
  *
- * @example
+ * **Example** (Use Encoded Info type)
+ *
  * ```ts
  * import type { FileDiff } from "@beep/schema"
  *
@@ -190,7 +196,8 @@ export declare namespace Info {
   /**
    * Encoded wire shape accepted and emitted by {@link Info}.
    *
-   * @example
+   * **Example** (Assign encoded Info value)
+   *
    * ```ts
    * import type { FileDiff } from "@beep/schema"
    *
