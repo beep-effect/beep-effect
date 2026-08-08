@@ -10,13 +10,19 @@
  *
  * **Details**
  *
- * A red wave is triaged, not surrendered to. Each failed job's failing-step log
- * is matched against the two flake fingerprints this repo has evidence for —
- * the no-location TS2589 native-compiler flake (detection reused verbatim from
- * `commands/Quality/internal/FlakeQuarantine`) and the CI-timeout class — and a
- * match buys exactly one rerun per job per head SHA. Anything else is reported
- * as "needs code fix" and the loop keeps following, so the operator sees the
- * classification instead of a dead session.
+ * A red wave is triaged, not surrendered to. Each failed job is matched against
+ * the flake fingerprints this repo has evidence for and a match buys exactly one
+ * rerun per job per head SHA. Anything else is reported as "needs code fix" and
+ * the loop keeps following, so the operator sees the classification instead of a
+ * dead session.
+ *
+ * Fingerprints come in two families, and the cheap family is consulted first.
+ * *Shape* fingerprints (`setup-5xx`, `runner-loss`) read only the job record the
+ * loop already fetched, so they cost no extra request; *log* fingerprints
+ * (`ts2589-no-location`, `ci-timeout`) need the failing-step log. Ordering them
+ * shape-first is not only a saving: a job the control plane killed before any
+ * step concluded frequently has no fetchable log at all, so a log-first loop
+ * classifies exactly the failures it can most safely rerun as "needs code fix".
  *
  * **Gotchas**
  *
@@ -48,6 +54,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  detectGithubJobShapeClass,
+  GithubJobRecord,
+  GithubJobShapeClass,
+  githubConclusion,
+  githubJobShapeEvidence,
+} from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
@@ -73,15 +86,31 @@ const mergeLoopPollInterval = Duration.seconds(30);
  *
  * **Details**
  *
- * Both members are evidence-backed classes, not guesses. `ts2589-no-location`
+ * Every member is an evidence-backed class, not a guess. `ts2589-no-location`
  * is the Effect-patched native compiler counting instantiations across parallel
  * checker threads and tipping a near-ceiling package over the limit — it emits
  * `error TS2589` with no file location and never reproduces standalone.
  * `ci-timeout` is a heavy or property-based suite exceeding a runner limit that
- * it clears locally in seconds.
+ * it clears locally in seconds. The remaining three are shape classes shared
+ * with the lane-timings collector and defined in `internal/github/JobShape`:
+ * `setup-5xx`, `runner-loss`, and `install-failure`.
  *
  * Anything outside this domain is a code failure by default. Widening it is a
  * decision, not a convenience: every member is a licence to spend a rerun.
+ *
+ * **Gotchas**
+ *
+ * `setup-5xx` and `runner-loss` are the *safest* members despite being newer
+ * than the log fingerprints, because both describe a job in which zero
+ * repository commands executed — there is no branch state a rerun could paper
+ * over. That is a stronger argument than the TS2589 fingerprint has, which
+ * reruns a compiler that did run.
+ *
+ * `install-failure` is the weakest member and is admitted on population
+ * grounds rather than proof: a broken lockfile matches it and no rerun will fix
+ * that. The bound is what makes it safe to admit — one rerun per job per head
+ * SHA, after which the second occurrence reports `rerun-spent` and the operator
+ * sees a real signal instead of a loop.
  *
  * **Example** (List the fingerprinted flake classes)
  *
@@ -94,7 +123,13 @@ const mergeLoopPollInterval = Duration.seconds(30);
  * @category models
  * @since 0.0.0
  */
-export const YeetMonitorFlakeClass = LiteralKit(["ts2589-no-location", "ci-timeout"]).pipe(
+export const YeetMonitorFlakeClass = LiteralKit([
+  "ts2589-no-location",
+  "ci-timeout",
+  "setup-5xx",
+  "runner-loss",
+  "install-failure",
+]).pipe(
   $I.annoteSchema("YeetMonitorFlakeClass", {
     title: "Yeet Monitor Flake Class",
     description: "One environment-only failure signature the merge loop may rerun once per job per head SHA.",
@@ -520,6 +555,19 @@ export const planYeetMonitorReruns = (
     })
   );
 
+const isGithubJobShapeClass = S.is(GithubJobShapeClass);
+
+/**
+ * Append the observed mechanism when the matched class is a shape class.
+ *
+ * The class name says what shape was seen; the evidence says what that shape
+ * has historically meant, which is what decides whether an operator
+ * investigates or waits out the rerun. Log fingerprints carry their evidence in
+ * the log the operator can already read, so they get no suffix.
+ */
+const flakeEvidenceSuffix = (flakeClass: YeetMonitorFlakeClass): string =>
+  isGithubJobShapeClass(flakeClass) ? ` (${githubJobShapeEvidence(flakeClass)})` : Str.empty;
+
 /**
  * Render one merge-loop job decision as an operator line.
  *
@@ -540,7 +588,7 @@ export const renderYeetMonitorJobDecision = (decision: YeetMonitorJobDecision): 
   Match.value(decision).pipe(
     Match.discriminatorsExhaustive("status")({
       rerun: (value) =>
-        `[yeet] ${value.name}: ${value.flakeClass} flake fingerprint matched; rerunning once -> ${value.command}`,
+        `[yeet] ${value.name}: ${value.flakeClass} flake fingerprint matched${flakeEvidenceSuffix(value.flakeClass)}; rerunning once -> ${value.command}`,
       "rerun-spent": (value) =>
         `[yeet] ${value.name}: ${value.flakeClass} matched again at this SHA; rerun budget spent, needs attention`,
       "needs-code-fix": (value) => `[yeet] ${value.name}: red with no known flake fingerprint; needs code fix`,
@@ -575,34 +623,22 @@ export const yeetMonitorTerminalState: (state: O.Option<string>) => O.Option<Yee
   )
 );
 
-class GhMonitorJob extends S.Class<GhMonitorJob>($I`GhMonitorJob`)(
-  {
-    conclusion: S.NullOr(S.String),
-    databaseId: S.Finite,
-    name: S.String,
-    status: S.String,
-  },
-  $I.annote("GhMonitorJob", { description: "One job of a workflow run as returned by gh run view --json jobs." })
-) {}
-
 class GhMonitorRunJobs extends S.Class<GhMonitorRunJobs>($I`GhMonitorRunJobs`)(
-  { jobs: S.Array(GhMonitorJob) },
+  { jobs: S.Array(GithubJobRecord) },
   $I.annote("GhMonitorRunJobs", { description: "Job list of one workflow run used by the yeet merge loop." })
 ) {}
 
 const decodeGhMonitorRunJobs = S.decodeUnknownEffect(S.fromJsonString(GhMonitorRunJobs));
 
-const jobIsRed = (job: GhMonitorJob): boolean =>
-  pipe(
-    O.fromNullishOr(job.conclusion),
-    O.map(Str.toLowerCase),
-    O.exists((conclusion) => A.contains(["failure", "timed_out", "cancelled"], conclusion))
+const jobIsRed = (job: GithubJobRecord): boolean =>
+  O.exists(githubConclusion(job.conclusion), (conclusion) =>
+    A.contains(["failure", "timed_out", "cancelled"], conclusion)
   );
 
 const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
   context: RepoRunContext,
   runDatabaseId: number
-): Effect.fn.Return<ReadonlyArray<GhMonitorJob>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<GithubJobRecord>, never, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "view", `${runDatabaseId}`, "--json", "jobs"],
@@ -613,22 +649,31 @@ const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
   }
   return yield* decodeGhMonitorRunJobs(result.output).pipe(
     Effect.map((payload) => payload.jobs),
-    Effect.orElseSucceed(A.empty<GhMonitorJob>)
+    Effect.orElseSucceed(A.empty<GithubJobRecord>)
   );
 });
 
 /**
- * Fetch and classify one failed job's failing-step log.
+ * Classify one failed job, reading its record before reaching for its log.
  *
- * `--log-failed` rather than `--log`: only the failing steps are relevant, and
- * a whole-job log routinely overruns the repo-run capture bound. A truncated or
- * unavailable capture yields `None`, which the planner reads as "needs code
- * fix" — the conservative direction.
+ * The shape fingerprints are consulted first because they are free — the record
+ * is already in hand — and because a job the control plane killed before any
+ * step concluded often has no fetchable log to classify from at all.
+ *
+ * When the shape proves nothing, the failing-step log decides. `--log-failed`
+ * rather than `--log`: only the failing steps are relevant, and a whole-job log
+ * routinely overruns the repo-run capture bound. A truncated or unavailable
+ * capture yields `None`, which the planner reads as "needs code fix" — the
+ * conservative direction.
  */
 const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
   context: RepoRunContext,
-  job: GhMonitorJob
+  job: GithubJobRecord
 ): Effect.fn.Return<YeetMonitorFailedJob, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const shapeClass = detectGithubJobShapeClass(job);
+  if (O.isSome(shapeClass)) {
+    return YeetMonitorFailedJob.make({ databaseId: job.databaseId, flakeClass: shapeClass, name: job.name });
+  }
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "view", "--job", `${job.databaseId}`, "--log-failed"],
