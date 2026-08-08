@@ -1,23 +1,31 @@
 /**
- * `beep knowledge semantic-delta` command definitions.
+ * `beep knowledge` command definitions: the Stage-1 semantic delta and the phase-0 reference census.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { NonNegativeInt } from "@beep/schema";
-import { Console, Effect } from "effect";
+import { Console, Effect, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { KnowledgeIntroducedFindingsError, KnowledgeOperationalError } from "./Knowledge.errors.ts";
+import {
+  encodeKnowledgeRefsReportJson,
+  KnowledgeRefClassification,
+  KnowledgeRefSurface,
+  KnowledgeRefSurfaceFilter,
+} from "./Knowledge.refs.ts";
 import {
   encodeKnowledgeSemanticDeltaReportJson,
   KNOWLEDGE_PROBE_DEPENDENT_KINDS,
   KnowledgeProbePolicy,
 } from "./Knowledge.schemas.ts";
 import { KnowledgeService, KnowledgeServiceLive } from "./Knowledge.service.ts";
+import type { KnowledgeRef, KnowledgeRefObservation, KnowledgeRefsReport } from "./Knowledge.refs.ts";
 import type { KnowledgeFinding, KnowledgeSemanticDeltaReport } from "./Knowledge.schemas.ts";
 
 const baseFlag = Flag.string("base").pipe(
@@ -25,6 +33,19 @@ const baseFlag = Flag.string("base").pipe(
   Flag.withDefault("origin/main")
 );
 const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the semantic delta as JSON"));
+const treeFlag = Flag.string("tree").pipe(
+  Flag.withDescription("Commit-ish whose tracked tree is censused; the command never fetches"),
+  Flag.withDefault("HEAD")
+);
+const surfaceFlag = Flag.choiceWithValue("surface", [
+  ["all", KnowledgeRefSurfaceFilter.Enum.all],
+  ["live", KnowledgeRefSurfaceFilter.Enum.live],
+  ["archival", KnowledgeRefSurfaceFilter.Enum.archival],
+]).pipe(
+  Flag.withDefault(KnowledgeRefSurfaceFilter.Enum.all),
+  Flag.withDescription("Narrow the detailed listing; summary counts stay whole-corpus")
+);
+const refsJsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the whole census as JSON"));
 
 const renderFinding = (finding: KnowledgeFinding): string =>
   `  ${finding.findingId} ${finding.kind} ${finding.location.path}: ${finding.message}`;
@@ -163,6 +184,132 @@ export const knowledgeSemanticDeltaCommand = Command.make(
   Command.provide(KnowledgeServiceLive)
 );
 
+const TOP_DOCUMENT_COUNT = 10;
+
+const refSubject = (ref: KnowledgeRef): string =>
+  Match.value(ref).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      "repo-path": (repoPath) => repoPath.normalized,
+      "host-path": (hostPath) => `${hostPath.anchor} ${hostPath.raw}`,
+      "goal-uri": (goalUri) => `repo://goal/${goalUri.slug}`,
+    })
+  );
+
+const renderObservation = (observation: KnowledgeRefObservation): string => {
+  const line = O.getOrElse(O.fromNullishOr(observation.location.line), () => 0);
+  const column = O.getOrElse(O.fromNullishOr(observation.location.column), () => 0);
+  return `  ${observation.classification} ${observation.location.path}:${line}:${column} ${refSubject(observation.ref)}`;
+};
+
+const classificationCounts = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
+  A.map(KnowledgeRefClassification.Options, (classification) => {
+    const count = A.length(
+      A.filter(report.observations, (observation) => observation.classification === classification)
+    );
+    return `  ${Str.padEnd(26)(classification)} ${count}`;
+  });
+
+/** Highest observation density first, then path, so the census listing is stable across runs. */
+type DocumentDensity = {
+  readonly documentId: string;
+  readonly count: number;
+};
+
+const densityOrder: Order.Order<DocumentDensity> = Order.combine(
+  Order.mapInput(Order.Number, (row: DocumentDensity) => -row.count),
+  Order.mapInput(Order.String, (row: DocumentDensity) => row.documentId)
+);
+
+const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
+  pipe(
+    A.groupBy(report.observations, (observation) => observation.documentId),
+    R.toEntries,
+    A.map(([documentId, group]): DocumentDensity => ({ documentId, count: A.length(group) })),
+    A.sort(densityOrder),
+    A.take(TOP_DOCUMENT_COUNT),
+    A.map((row) => `  ${row.count} ${row.documentId}`)
+  );
+
+const renderRefsReport = (report: KnowledgeRefsReport, surface: KnowledgeRefSurfaceFilter): string => {
+  const live = A.length(
+    A.filter(report.observations, (observation) => KnowledgeRefSurface.is.live(observation.surface))
+  );
+  const archival = A.length(report.observations) - live;
+  const listed = KnowledgeRefSurfaceFilter.is.all(surface)
+    ? report.observations
+    : A.filter(report.observations, (observation) => observation.surface === surface);
+  return A.join(
+    [
+      `knowledge refs @ ${report.treeish} (${report.commit})`,
+      `observations: ${A.length(report.observations)} (live ${live}, archival ${archival})`,
+      `skipped: ${A.length(report.skipped)}`,
+      ...A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`),
+      "classification:",
+      ...classificationCounts(report),
+      "top documents:",
+      ...topDocuments(report),
+      `observations (${surface}) (${A.length(listed)}):`,
+      ...A.map(listed, renderObservation),
+    ],
+    "\n"
+  );
+};
+
+const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
+  readonly tree: string;
+  readonly surface: KnowledgeRefSurfaceFilter;
+  readonly json: boolean;
+}) {
+  const knowledge = yield* KnowledgeService;
+  const report = yield* knowledge.refsTree(options.tree);
+  if (options.json) {
+    const json = yield* encodeKnowledgeRefsReportJson(report).pipe(
+      KnowledgeOperationalError.mapError("Failed to encode the reference census JSON report.")
+    );
+    yield* Console.log(json);
+  } else {
+    yield* Console.log(renderRefsReport(report, options.surface));
+  }
+});
+
+/**
+ * The `beep knowledge refs` subcommand.
+ *
+ * **Details**
+ *
+ * A read-only census of every reference in the agent-facing corpus of one Git tree, resolved against
+ * that tree's tracked entries rather than against the working filesystem. `--tree` accepts any
+ * commit-ish and defaults to `HEAD`; no fetch ever occurs. Human output prints the whole-corpus
+ * totals, the count of every one of the twelve classes including the empty ones, the highest-density
+ * documents, and then the per-observation listing. `--json` emits the complete report on one line.
+ *
+ * **Gotchas**
+ *
+ * `--surface` narrows the detailed listing only — the totals and the class table stay whole-corpus,
+ * and `--json` always carries every observation — so a filtered run can never be mistaken for a
+ * smaller census. The command exits zero for every observation mix: it measures the corpus and gates
+ * nothing, which is what keeps it out of the policy lane until its false-positive rate is known.
+ *
+ * **Example** (Read the subcommand identity)
+ *
+ * ```ts
+ * import { knowledgeRefsCommand } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
+ *
+ * console.log(knowledgeRefsCommand.name) // "refs"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const knowledgeRefsCommand = Command.make(
+  "refs",
+  { tree: treeFlag, surface: surfaceFlag, json: refsJsonFlag },
+  runRefs
+).pipe(
+  Command.withDescription("Census every reference in one tracked tree without gating on the result"),
+  Command.provide(KnowledgeServiceLive)
+);
+
 /**
  * The `beep knowledge` command family root.
  *
@@ -171,7 +318,7 @@ export const knowledgeSemanticDeltaCommand = Command.make(
  * Running it without a subcommand lists the available knowledge-surface verifications rather than
  * scanning, so the family root stays cheap and side-effect free.
  *
- * **Example** (Reach the semantic-delta subcommand from the family root)
+ * **Example** (Reach the subcommands from the family root)
  *
  * ```ts
  * import { knowledgeCommand } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
@@ -180,16 +327,19 @@ export const knowledgeSemanticDeltaCommand = Command.make(
  * const subcommands = A.flatMap(knowledgeCommand.subcommands, (group) => group.commands)
  *
  * console.log(knowledgeCommand.name) // "knowledge"
- * console.log(A.map(subcommands, (command) => command.name)) // [ "semantic-delta" ]
+ * console.log(A.map(subcommands, (command) => command.name)) // [ "refs", "semantic-delta" ]
  * ```
  *
- * @see {@link knowledgeSemanticDeltaCommand} for the only Stage-1 subcommand it exposes.
+ * @see {@link knowledgeRefsCommand} for the read-only phase-0 census.
+ * @see {@link knowledgeSemanticDeltaCommand} for the gating Stage-1 comparison.
  * @category cli-commands
  * @since 0.0.0
  */
 export const knowledgeCommand = Command.make("knowledge", {}, () =>
-  Console.log("Knowledge commands: semantic-delta [--base <ref>] [--json]")
+  Console.log(
+    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json], semantic-delta [--base <ref>] [--json]"
+  )
 ).pipe(
   Command.withDescription("Knowledge-surface verification commands"),
-  Command.withSubcommands([knowledgeSemanticDeltaCommand])
+  Command.withSubcommands([knowledgeRefsCommand, knowledgeSemanticDeltaCommand])
 );

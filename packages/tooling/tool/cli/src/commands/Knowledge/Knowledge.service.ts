@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -30,6 +30,20 @@ import {
   KnowledgeProbeBootError,
 } from "./Knowledge.errors.ts";
 import {
+  decodeKnowledgeUtf8,
+  isKnowledgeArchivalPath,
+  isKnowledgeCommandSpan,
+  isKnowledgeScopedPath,
+  KNOWLEDGE_SCANNER_SCOPE,
+  knowledgeDocumentLines,
+  knowledgeInlineSpans,
+  knowledgeLengthPrefix,
+  knowledgeLineMatches,
+  knowledgeSha256Hex,
+  normalizeKnowledgeRepoPath,
+  scanKnowledgeRefsTree,
+} from "./Knowledge.refs.ts";
+import {
   KnowledgeCommandOccurrence,
   KnowledgeCommandResolved,
   KnowledgeCommandUnknown,
@@ -46,70 +60,33 @@ import {
 import type { Crypto } from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
+import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 import type { KnowledgeCommandProbeResult } from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
+
+/**
+ * Everything the reference census may read from one Git tree.
+ *
+ * **Details**
+ *
+ * Re-exported here because the tree oracle is the census counterpart of {@link KnowledgeArchiveOracle}
+ * and callers reach for both from one module. It is declared in `Knowledge.refs.ts`, which owns the
+ * evaluator that consumes it, so the runtime dependency graph stays acyclic.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export type { KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 
 const NORMALIZATION_VERSION = "knowledge-normalization/v1";
 const FINDING_ID_PREFIX = "knowledge-finding/v1:";
 const INDEX_PATH = "goals/INDEX.md";
 const COMMAND_PREFIX = "bun run beep";
+const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
 const textEncoder = new TextEncoder();
-const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true });
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
-const decodeSha256 = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
-
-const SCANNER_SCOPE: ReadonlyArray<string> = [
-  "AGENTS.md",
-  "CLAUDE.md",
-  "goals",
-  "explorations",
-  "docs",
-  ".claude",
-  ".agents",
-  ".codex",
-  "standards",
-  ".github",
-];
-
-const SCANNER_PREFIXES = A.map(A.drop(SCANNER_SCOPE, 2), (root) => `${root}/`);
-const ARCHIVAL_SEGMENTS = HashSet.make(
-  "history",
-  "research",
-  "reviews",
-  "synthesis",
-  "findings",
-  "outputs",
-  "reflections",
-  "logs",
-  ".proofs"
-);
-const GOVERNED_BARE_ROOTS = HashSet.make(
-  ".agents",
-  ".claude",
-  ".codex",
-  ".github",
-  "apps",
-  "docs",
-  "explorations",
-  "goals",
-  "infra",
-  "packages",
-  "plugins",
-  "scripts",
-  "standards",
-  "tools"
-);
-const GOVERNED_ROOT_FILES = HashSet.make(
-  "AGENTS.md",
-  "CLAUDE.md",
-  "README.md",
-  "package.json",
-  "bun.lock",
-  "turbo.json",
-  "tsconfig.json"
-);
 
 /**
  * Everything the scanner may read from one side of a comparison.
@@ -172,13 +149,16 @@ export interface KnowledgePairedOracleInput {
  * **Details**
  *
  * `scanPair` takes an already-materialized comparison boundary and stays pure; `semanticDelta` builds
- * that boundary from local Git history for a base ref and then delegates to it.
+ * that boundary from local Git history for a base ref and then delegates to it. `refsTree` is the
+ * single-tree read-only census: it shares the archive plumbing but compares nothing, so it gates
+ * nothing either.
  *
  * @see {@link KnowledgeService} for the service tag that carries this shape.
  * @category services
  * @since 0.0.0
  */
 export interface KnowledgeServiceShape {
+  readonly refsTree: (treeish: string) => Effect.Effect<KnowledgeRefsReport, KnowledgeOperationalError>;
   readonly scanPair: (
     input: KnowledgePairedOracleInput
   ) => Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError>;
@@ -213,16 +193,7 @@ export class KnowledgeService extends Context.Service<KnowledgeService, Knowledg
 
 const nfc = Str.normalize("NFC");
 
-const sha256 = Effect.fn("Knowledge.sha256")(function* (bytes: Uint8Array) {
-  return yield* decodeSha256(bytes).pipe(
-    KnowledgeOperationalError.mapError("Failed to compute a semantic-delta SHA-256 digest.")
-  );
-});
-
-const lengthPrefix = (value: string): string => {
-  const normalized = nfc(value);
-  return `${textEncoder.encode(normalized).byteLength}:${normalized}`;
-};
+const sha256 = (bytes: Uint8Array) => knowledgeSha256Hex(bytes, SEMANTIC_DELTA_DIGEST_FAILURE);
 
 /**
  * Computes the ratified v1 finding identity from its exact length-prefixed preimage.
@@ -261,7 +232,7 @@ export const makeKnowledgeFindingId = Effect.fn("Knowledge.makeFindingId")(funct
   occurrence: number
 ) {
   const preimage = A.join(
-    A.map([NORMALIZATION_VERSION, kind, nfc(documentId), nfc(subject), `${occurrence}`], lengthPrefix),
+    A.map([NORMALIZATION_VERSION, kind, nfc(documentId), nfc(subject), `${occurrence}`], knowledgeLengthPrefix),
     ""
   );
   const digest = yield* sha256(textEncoder.encode(preimage));
@@ -270,21 +241,10 @@ export const makeKnowledgeFindingId = Effect.fn("Knowledge.makeFindingId")(funct
   );
 });
 
-const isScannerMarkdownPath = (repoPath: string): boolean => {
-  if (!Str.endsWith(".md")(repoPath)) {
-    return false;
-  }
-  if (repoPath === "AGENTS.md" || repoPath === "CLAUDE.md") {
-    return true;
-  }
-  if (!A.some(SCANNER_PREFIXES, (prefix) => Str.startsWith(prefix)(repoPath))) {
-    return false;
-  }
-  if (Str.startsWith("docs/generated/")(repoPath) || Str.startsWith("docs/_internal/")(repoPath)) {
-    return false;
-  }
-  return !A.some(Str.split("/")(repoPath), (segment) => HashSet.has(ARCHIVAL_SEGMENTS, segment));
-};
+// Stage-1 enforcement scans the census scope narrowed twice: Markdown only, and never below an
+// archival directory segment.
+const isScannerMarkdownPath = (repoPath: string): boolean =>
+  Str.endsWith(".md")(repoPath) && isKnowledgeScopedPath(repoPath) && !isKnowledgeArchivalPath(repoPath);
 
 const isRegularBlob = (entry: KnowledgeTrackedEntry): boolean => entry.mode === "100644" || entry.mode === "100755";
 
@@ -293,115 +253,8 @@ const trackedPathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPa
   return A.some(entries, (entry) => entry.path === repoPath || Str.startsWith(directoryPrefix)(entry.path));
 };
 
-const stripQueryAndFragment = Str.replace(/[?#].*$/u, "");
-
-/**
- * Spellings a governed path may never contain: whitespace, glob and shell syntax, ellipses, absolute
- * roots, URLs.
- *
- * @param value - Query-and-fragment-stripped, NFC-normalized spelling read from a document.
- * @returns True when the spelling carries syntax no tracked repository path can legitimately use.
- */
-const hasUngovernedPathSyntax = (value: string): boolean =>
-  /[\s\\]/u.test(value) ||
-  /[*[\]{}<>|:]/u.test(value) ||
-  /(?:^|\/)\.\.\.(?:\/|$)/u.test(value) ||
-  Str.includes("…")(value) ||
-  Str.startsWith("/")(value) ||
-  Str.includes("://")(value);
-
-const isRelativePathSpelling = (value: string): boolean => Str.startsWith("./")(value) || Str.startsWith("../")(value);
-
-const isGovernedPathSpelling = (raw: string): boolean => {
-  const value = stripQueryAndFragment(nfc(raw));
-  if (Str.isEmpty(value) || hasUngovernedPathSyntax(value)) {
-    return false;
-  }
-  if (isRelativePathSpelling(value)) {
-    return true;
-  }
-  return O.match(A.head(Str.split("/")(value)), {
-    onNone: () => false,
-    onSome: (segment) => HashSet.has(GOVERNED_BARE_ROOTS, segment) || HashSet.has(GOVERNED_ROOT_FILES, value),
-  });
-};
-
-/**
- * Applies one path segment to the resolved stack, or `O.none()` when `..` escapes the repository
- * root.
- *
- * @param segments - Segments resolved so far, always rooted at the repository root.
- * @param segment - Next raw segment; empty and `.` segments leave the stack untouched.
- * @returns The extended stack, or `O.none()` when `..` would step above the repository root.
- */
-const applyPathSegment = (segments: ReadonlyArray<string>, segment: string): O.Option<ReadonlyArray<string>> => {
-  if (segment === "" || segment === ".") {
-    return O.some(segments);
-  }
-  if (segment !== "..") {
-    return O.some(A.append(segments, segment));
-  }
-  return A.isReadonlyArrayEmpty(segments) ? O.none() : O.some(A.dropRight(segments, 1));
-};
-
-const resolvePathSegments = (base: ReadonlyArray<string>, value: string): O.Option<ReadonlyArray<string>> => {
-  let segments = base;
-  for (const segment of Str.split("/")(value)) {
-    const next = applyPathSegment(segments, segment);
-    if (O.isNone(next)) {
-      return O.none();
-    }
-    segments = next.value;
-  }
-  return O.some(segments);
-};
-
-/**
- * Normalizes one governed path spelling to a safe POSIX repository-relative path.
- *
- * **Details**
- *
- * Only spellings the repo governs survive: a bare governed root, a governed root file, or a `./` and
- * `../` path resolved against the containing document. URLs, globs, whitespace, ellipses, and
- * absolute paths return `O.none()`, and so does any relative path that escapes the repository root.
- *
- * **Example** (Resolve a relative link and reject a URL)
- *
- * ```ts
- * import { normalizeKnowledgeRepoPath } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import * as O from "effect/Option"
- *
- * console.log(O.getOrNull(normalizeKnowledgeRepoPath("docs/README.md", "./guides/intro.md")))
- * // "docs/guides/intro.md"
- * console.log(O.isNone(normalizeKnowledgeRepoPath("docs/README.md", "https://example.com/a.md")))
- * // true
- * ```
- *
- * @param documentPath - Repository-relative path of the document containing the spelling.
- * @param raw - Path spelling exactly as written inside the document.
- * @returns The normalized path when the spelling is governed and stays inside the repository.
- * @category normalization
- * @since 0.0.0
- */
-export const normalizeKnowledgeRepoPath = (documentPath: string, raw: string): O.Option<string> => {
-  if (!isGovernedPathSpelling(raw)) {
-    return O.none();
-  }
-  const value = stripQueryAndFragment(nfc(raw));
-  const base = isRelativePathSpelling(value) ? A.dropRight(Str.split("/")(nfc(documentPath)), 1) : A.empty<string>();
-
-  return pipe(
-    resolvePathSegments(base, value),
-    O.filter(A.isReadonlyArrayNonEmpty),
-    O.map((segments) => nfc(A.join(segments, "/")))
-  );
-};
-
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
-  Effect.try({
-    try: () => strictUtf8Decoder.decode(bytes),
-    catch: KnowledgeOperationalError.new(`Malformed UTF-8 in tracked Markdown file "${repoPath}".`),
-  });
+  decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked Markdown file "${repoPath}".`);
 
 const documentIdForBase = (repoPath: string): string => nfc(`base:${repoPath}`);
 
@@ -465,55 +318,9 @@ const failedAssertionCandidate = (
     remediation: "Update the assertion or add the tracked target.",
   });
 
-const isEligibleCommandSpan = (span: string): boolean =>
-  /^bun run beep(?:$|[ \t])/u.test(span) && !/[|;&<>]|\$\(|(?:^|[ \t])#/u.test(span);
-
 const commandWords = (span: string): ReadonlyArray<string> => {
   const tail = Str.trim(Str.slice(Str.length(COMMAND_PREFIX))(span));
   return Str.isEmpty(tail) ? A.empty<string>() : Str.split(/\s+/u)(tail);
-};
-
-/**
- * Drains a global pattern over one line, preserving `exec` order.
- *
- * @param pattern - Global pattern whose `lastIndex` advances across the whole drain.
- * @param text - One line of document prose, already excluded from any fenced block.
- * @returns Every match in source order, which is what keeps duplicate occurrence indices stable.
- */
-const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray> => {
-  let matches = A.empty<RegExpExecArray>();
-  let match = pattern.exec(text);
-  while (match !== null) {
-    matches = A.append(matches, match);
-    match = pattern.exec(text);
-  }
-  return matches;
-};
-
-/** An inline code span and the 1-based column its opening backtick run starts at. */
-type InlineSpan = {
-  readonly span: string;
-  readonly column: number;
-};
-
-/**
- * Removes CommonMark inline-code padding: one leading and one trailing space, stripped only when both
- * are present and the content is not entirely spaces.
- *
- * @param content - Raw text between the opening and closing backtick runs.
- * @returns The span content a path or command reader sees.
- */
-const stripInlineCodePadding = (content: string): string =>
-  Str.startsWith(" ")(content) && Str.endsWith(" ")(content) && !/^ +$/u.test(content)
-    ? Str.slice(1, -1)(content)
-    : content;
-
-const inlineSpanOf = (match: RegExpExecArray): O.Option<InlineSpan> => {
-  const prefix = match[1];
-  const content = match[3];
-  return P.isString(prefix) && P.isString(content)
-    ? O.some({ span: stripInlineCodePadding(content), column: match.index + Str.length(prefix) + 1 })
-    : O.none();
 };
 
 /**
@@ -551,39 +358,33 @@ const assertionCandidate = (
 };
 
 const commandOccurrence = (
-  match: RegExpExecArray,
+  inline: KnowledgeInlineSpan,
   lineNumber: number,
   documentPath: string,
   documentId: string
 ): O.Option<KnowledgeCommandOccurrence> =>
-  pipe(
-    inlineSpanOf(match),
-    O.filter(({ span }) => isEligibleCommandSpan(span)),
-    O.map(({ column, span }) =>
-      KnowledgeCommandOccurrence.make({
-        documentId,
-        location: findingLocation(documentPath, lineNumber, column),
-        words: commandWords(span),
-      })
-    )
-  );
+  isKnowledgeCommandSpan(inline.span)
+    ? O.some(
+        KnowledgeCommandOccurrence.make({
+          documentId,
+          location: findingLocation(documentPath, lineNumber, inline.column),
+          words: commandWords(inline.span),
+        })
+      )
+    : O.none();
 
 const inlinePathCandidate = (
-  match: RegExpExecArray,
+  inline: KnowledgeInlineSpan,
   lineNumber: number,
   documentPath: string,
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>
 ): O.Option<KnowledgeFindingCandidate> =>
-  pipe(
-    inlineSpanOf(match),
-    O.filter(({ span }) => !isEligibleCommandSpan(span)),
-    O.flatMap((inline) =>
-      O.map(brokenPathAt(inline.span, documentPath, entries), (repoPath) =>
+  isKnowledgeCommandSpan(inline.span)
+    ? O.none()
+    : O.map(brokenPathAt(inline.span, documentPath, entries), (repoPath) =>
         missingPathCandidate(documentId, documentPath, repoPath, lineNumber, inline.column)
-      )
-    )
-  );
+      );
 
 const extractLineFindings = (
   lineText: string,
@@ -592,95 +393,18 @@ const extractLineFindings = (
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
-  const assertions = matchesOf(/<!-- beep:assert path-exists ([^\s]+) -->/gu, lineText);
-  // Equal-length backtick runs: an opening run of N closes on the next run of N, so `` `x` `` and
-  // ```` ```x``` ```` are extracted the same way a single-backtick span is.
-  const inlines = matchesOf(/(^|[^`\\])(`+)([^\r\n]*?)\2(?!`)/gu, lineText);
+  const assertions = knowledgeLineMatches(/<!-- beep:assert path-exists ([^\s]+) -->/gu, lineText);
+  const inlines = knowledgeInlineSpans(lineText);
   const candidates = A.appendAll(
     A.getSomes(A.map(assertions, (match) => assertionCandidate(match, lineNumber, documentPath, documentId, entries))),
-    A.getSomes(A.map(inlines, (match) => inlinePathCandidate(match, lineNumber, documentPath, documentId, entries)))
+    A.getSomes(A.map(inlines, (inline) => inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries)))
   );
   const commands = A.getSomes(
-    A.map(inlines, (match) => commandOccurrence(match, lineNumber, documentPath, documentId))
+    A.map(inlines, (inline) => commandOccurrence(inline, lineNumber, documentPath, documentId))
   );
 
   return [candidates, commands];
 };
-
-const FENCE_PATTERN = /^(`{3,}|~{3,})(.*)$/u;
-const QUOTE_PREFIX_PATTERN = /^(?:[ \t]*>[ \t]?)+/u;
-const LIST_PREFIX_PATTERN = /^[ \t]*(?:(?:[-+*]|[0-9]{1,9}[.)])[ \t]+)?/u;
-const stripListPrefix = Str.replace(LIST_PREFIX_PATTERN, "");
-
-/** One line split into the Markdown container it sits in and the body a fence delimiter is read from. */
-type ContainerLine = {
-  readonly depth: number;
-  readonly body: string;
-};
-
-/**
- * Strips the Markdown container prefix so a fence nested in a blockquote or a list item is still
- * recognized as a fence.
- *
- * **Details**
- *
- * Blockquote markers are removed first and counted, then list-item indentation and an optional
- * bullet or ordered marker. Indentation is stripped without a depth limit, which is what makes a
- * fence inside a deeply nested list item visible; the trade is that a four-space indented code block
- * showing a literal fence now opens one, suppressing scanning rather than inventing findings.
- *
- * @param line - Raw document line.
- * @returns The blockquote depth the prefix carried and the body the fence matcher reads.
- */
-const containerLine = (line: string): ContainerLine => {
-  const quote = QUOTE_PREFIX_PATTERN.exec(line);
-  const quoted = quote === null ? "" : quote[0];
-  return {
-    depth: A.length(Str.split(">")(quoted)) - 1,
-    body: stripListPrefix(Str.slice(Str.length(quoted))(line)),
-  };
-};
-
-/** The open fence a line is inside: its container depth, marker character, and closing run length. */
-type OpenFence = {
-  readonly marker: string;
-  readonly length: number;
-  readonly depth: number;
-};
-
-const openedFence = (line: ContainerLine): O.Option<OpenFence> => {
-  const fence = FENCE_PATTERN.exec(line.body);
-  if (fence === null || !P.isString(fence[1]) || !P.isString(fence[1][0])) {
-    return O.none();
-  }
-  return O.some({ marker: fence[1][0], length: Str.length(fence[1]), depth: line.depth });
-};
-
-const closesFence = (line: ContainerLine, open: OpenFence): boolean => {
-  const fence = FENCE_PATTERN.exec(line.body);
-  return (
-    fence !== null &&
-    P.isString(fence[1]) &&
-    P.isString(fence[2]) &&
-    line.depth === open.depth &&
-    fence[1][0] === open.marker &&
-    Str.length(fence[1]) >= open.length &&
-    /^\s*$/u.test(fence[2])
-  );
-};
-
-/**
- * Fence state after one line: `O.none()` outside a fence, `O.some` while inside one.
- *
- * @param fence - Fence state carried in from the preceding line.
- * @param line - Container-stripped line whose delimiter may open or close the surrounding block.
- * @returns The fence state the next line starts from.
- */
-const advanceFence = (fence: O.Option<OpenFence>, line: ContainerLine): O.Option<OpenFence> =>
-  O.match(fence, {
-    onNone: () => openedFence(line),
-    onSome: (open) => (closesFence(line, open) ? O.none() : O.some(open)),
-  });
 
 const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   oracle: KnowledgeArchiveOracle,
@@ -688,25 +412,16 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   documentId: string
 ) {
   const text = yield* oracle.readBytes(entry.path).pipe(Effect.flatMap((bytes) => decodeUtf8(bytes, entry.path)));
-  const lines = Str.split(/\r?\n/u)(text);
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
-  let fence = O.none<OpenFence>();
 
-  for (let index = 0; index < A.length(lines); index += 1) {
-    const line = lines[index];
-    if (!P.isString(line)) {
+  for (const line of knowledgeDocumentLines(text)) {
+    if (!line.prose) {
       continue;
     }
-    const nextFence = advanceFence(fence, containerLine(line));
-    // Prose only: fence delimiters and fenced content alike stay out of the scan.
-    const scannable = O.isNone(fence) && O.isNone(nextFence);
-    fence = nextFence;
-    if (scannable) {
-      const extracted = extractLineFindings(line, index + 1, entry.path, documentId, oracle.trackedEntries);
-      candidates = A.appendAll(candidates, extracted[0]);
-      commands = A.appendAll(commands, extracted[1]);
-    }
+    const extracted = extractLineFindings(line.text, line.number, entry.path, documentId, oracle.trackedEntries);
+    candidates = A.appendAll(candidates, extracted[0]);
+    commands = A.appendAll(commands, extracted[1]);
   }
 
   return { candidates, commands };
@@ -881,7 +596,7 @@ const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(fun
 });
 
 const candidateGroupKey = (candidate: KnowledgeFindingCandidate): string =>
-  A.join(A.map([candidate.kind, candidate.documentId, candidate.subject], lengthPrefix), "");
+  A.join(A.map([candidate.kind, candidate.documentId, candidate.subject], knowledgeLengthPrefix), "");
 
 const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(function* (
   candidates: ReadonlyArray<KnowledgeFindingCandidate>
@@ -1014,6 +729,18 @@ const historyGitAdapter = (baseRef: string): GitCommandErrorAdapter<KnowledgeOpe
   onNonZeroExit: ({ commandLine, exitCode, output }) =>
     KnowledgeOperationalError.make({
       message: `Cannot resolve semantic-delta history with ${commandLine} (exit ${exitCode}). ${KNOWLEDGE_HISTORY_REMEDIATION}${Str.isEmpty(output) ? "" : `\n${output}`}`,
+    }),
+  onTruncated: O.none(),
+});
+
+const treeGitAdapter = (treeish: string): GitCommandErrorAdapter<KnowledgeOperationalError> => ({
+  onSpawnFailure: (commandLine) =>
+    KnowledgeOperationalError.new(
+      `Failed to spawn ${commandLine} while resolving census tree "${treeish}". ${KNOWLEDGE_HISTORY_REMEDIATION}`
+    ),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    KnowledgeOperationalError.make({
+      message: `Cannot resolve census tree "${treeish}" with ${commandLine} (exit ${exitCode}). ${KNOWLEDGE_HISTORY_REMEDIATION}${Str.isEmpty(output) ? "" : `\n${output}`}`,
     }),
   onTruncated: O.none(),
 });
@@ -1399,8 +1126,13 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       const headTree = yield* readGitTree(repoRoot, headCommit, gitAdapter, () =>
         KnowledgeOperationalError.make({ message: "Malformed NUL-delimited HEAD ls-tree output." })
       );
-      const gitRenames = yield* readGitRenames(repoRoot, baseCommit, headCommit, SCANNER_SCOPE, gitAdapter, () =>
-        KnowledgeOperationalError.make({ message: "Malformed NUL-delimited rename-table output." })
+      const gitRenames = yield* readGitRenames(
+        repoRoot,
+        baseCommit,
+        headCommit,
+        KNOWLEDGE_SCANNER_SCOPE,
+        gitAdapter,
+        () => KnowledgeOperationalError.make({ message: "Malformed NUL-delimited rename-table output." })
       );
       const baseEntries = A.map(baseTree, (entry) =>
         KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
@@ -1422,6 +1154,76 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
   );
 });
 
+/**
+ * Materializes one commit-ish as an injectable census oracle, scoped to a temporary archive root.
+ *
+ * **Details**
+ *
+ * The tree-ish is resolved to a verified commit, archived, and extracted, and the tracked-entry
+ * oracle is read from `git ls-tree` rather than from the extracted tree. That separation is what
+ * keeps the census honest: extraction drops links and other non-readable entry types, while the
+ * entry list still reports every tracked mode so symlinks and gitlinks can be recorded as skipped.
+ *
+ * **Gotchas**
+ *
+ * The archive root lives inside a scoped temporary directory, so the returned oracle is only valid
+ * inside the `Effect.scoped` region that built it. Reading through it afterwards fails on a missing
+ * file rather than returning stale bytes.
+ *
+ * **Example** (Build a census oracle for the working commit)
+ *
+ * ```ts
+ * import { makeKnowledgeTreeOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(makeKnowledgeTreeOracle("HEAD")))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish; no fetch ever occurs.
+ * @returns The tree oracle the census evaluator scans.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const makeKnowledgeTreeOracle = Effect.fn("Knowledge.makeTreeOracle")(function* (treeish: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+  const repoRoot = yield* findRepoRoot().pipe(
+    KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
+  );
+  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
+  const tempRoot = yield* fs
+    .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
+    .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
+  const archiveRoot = path.join(tempRoot, "tree");
+  const archivePath = path.join(tempRoot, "tree.tar");
+  yield* fs
+    .makeDirectory(archiveRoot)
+    .pipe(KnowledgeOperationalError.mapError("Failed to create the reference-census archive root."));
+  yield* writeGitArchive(repoRoot, commit, archivePath, gitAdapter);
+  yield* extractArchive(archivePath, archiveRoot);
+  const tree = yield* readGitTree(repoRoot, commit, gitAdapter, () =>
+    KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
+  );
+  const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
+    return yield* fs
+      .readFile(path.join(archiveRoot, repoPath))
+      .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
+  });
+
+  return {
+    treeish,
+    commit,
+    trackedEntries: A.map(tree, (entry) =>
+      KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
+    ),
+    readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
+  } satisfies KnowledgeTreeOracle;
+});
+
+const refsTreeLive = (treeish: string) =>
+  Effect.scoped(Effect.flatMap(makeKnowledgeTreeOracle(treeish), scanKnowledgeRefsTree));
+
 type KnowledgeServiceRequirements =
   | Crypto
   | FileSystem.FileSystem
@@ -1435,6 +1237,7 @@ const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
     semanticDelta: Effect.fn("KnowledgeService.semanticDelta")((baseRef) =>
       semanticDeltaLive(baseRef).pipe(Effect.provide(runtime))
     ),
+    refsTree: Effect.fn("KnowledgeService.refsTree")((treeish) => refsTreeLive(treeish).pipe(Effect.provide(runtime))),
   });
 });
 
