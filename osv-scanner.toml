@@ -28,6 +28,16 @@ id = "GHSA-xcpc-8h2w-3j85"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
 
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size 2.0.2 advisory (CVSS 8.7) with no fixed version released yet. image-size is a direct catalog dependency of @beep/repo-cli only, consumed by the internal media tooling (src/commands/Files/internal/MediaExec.ts) that reads dimensions of locally produced, trusted QA capture frames — it never parses untrusted or network-supplied images and ships in no product artifact. Newly published advisory, not introduced by the current PR (identical version present on main). Remove on the first image-size release that carries the fix."
+
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Companion image-size 2.0.2 advisory (CVSS 8.7), same publication batch and no fixed version released yet. Same exposure analysis as GHSA-5p2g-fcmc-qvqq: direct catalog dependency of @beep/repo-cli's internal media tooling operating on locally produced trusted QA frames only, no product artifact ships it. Remove on the first image-size release that carries the fix."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
