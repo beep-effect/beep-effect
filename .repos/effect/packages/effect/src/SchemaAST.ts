@@ -16,7 +16,7 @@ import * as Cause from "./Cause.ts"
 import * as Effect from "./Effect.ts"
 import * as Exit from "./Exit.ts"
 import { format, formatPropertyKey } from "./Formatter.ts"
-import { identity, memoize } from "./Function.ts"
+import { identity, memoize, memoizeIdempotent } from "./Function.ts"
 import { effectIsExit, iterateEager } from "./internal/effect.ts"
 import * as InternalRecord from "./internal/record.ts"
 import * as InternalAnnotations from "./internal/schema/annotations.ts"
@@ -450,6 +450,8 @@ export type Encoding = readonly [Link, ...Array<Link>]
  *   transformations.
  * - `concurrency` — maximum number of async parse effects to run concurrently;
  *   defaults to `1`, or use `"unbounded"`.
+ * - `reportInput` — includes rejected input values in value-bearing schema
+ *   issues.
  *
  * @category options
  * @since 3.10.0
@@ -516,6 +518,35 @@ export interface ParseOptions {
    * @default 1
    */
   readonly concurrency?: number | "unbounded" | undefined
+
+  /**
+   * Whether schema issues should retain and report rejected input values.
+   *
+   * **Details**
+   *
+   * When enabled, value-bearing issues created by the parser expose an `input`
+   * field. Built-in formatters may include reported input in default messages.
+   * The input is retained by reference rather than copied.
+   *
+   * **Gotchas**
+   *
+   * Enabling this option can retain or disclose secrets, personally
+   * identifiable information, and large object graphs. The `input` field is
+   * enumerable and may be included by object enumeration, spread, or
+   * serialization. Disabling it on a nested schema does not redact that value
+   * from an ancestor issue whose input reporting remains enabled. Issues
+   * returned directly by user-defined declarations, checks, transformations,
+   * and middleware are not modified; their authors decide whether to retain an
+   * input. To respect this option, pass the callback's input and parse options
+   * directly to a value-bearing issue constructor. Custom messages and
+   * annotations remain the caller's responsibility regardless of this option.
+   * Formatting an issue with `SchemaIssue.makeFormatterDefault()`, reading
+   * `SchemaError.message`, or formatting a Standard Schema failure can disclose
+   * retained input.
+   *
+   * @default false
+   */
+  readonly reportInput?: boolean | undefined
 }
 
 /** @internal */
@@ -1151,7 +1182,7 @@ export class TemplateLiteral extends Base {
       }
       return Effect.mapBothEager(result, {
         onSuccess: () => input,
-        onFailure: (issue) => new SchemaIssue.Composite(this, [issue])
+        onFailure: (issue) => new SchemaIssue.Composite(this, [issue], input, options)
       })
     }
   }
@@ -1174,9 +1205,11 @@ export class TemplateLiteral extends Base {
           const segments = segmentTemplateLiteralParts(this, s, options)
           if (segments) return Effect.succeed(segments)
           return Effect.fail(
-            new SchemaIssue.InvalidValue({
-              message: "Expected a string matching template literal parts"
-            })
+            new SchemaIssue.InvalidValue(
+              { expected: "a string matching template literal parts" },
+              s,
+              options
+            )
           )
         }),
         SchemaGetter.transform((parts) => parts.join(""))
@@ -1715,7 +1748,7 @@ export class Arrays extends Base {
 
       // If the input is not an array, return early with an error
       if (!Array.isArray(input)) {
-        return yield* Effect.fail(new SchemaIssue.InvalidType(ast))
+        return yield* Effect.fail(new SchemaIssue.InvalidType(ast, input, options))
       }
       if (!elements) {
         elements = ast.elements.map((ast) => ({ ast, parser: compileConstructorDefault(ast) }))
@@ -1745,20 +1778,21 @@ export class Arrays extends Base {
       // ---------------------------------------------
       if (ast.rest.length === 0 && len > elementLen) {
         for (let i = elementLen; i <= len - 1; i++) {
-          const issue = new SchemaIssue.Pointer([i], new SchemaIssue.UnexpectedKey(ast))
+          const unexpected = new SchemaIssue.UnexpectedKey(ast, input[i], options)
+          const issue = new SchemaIssue.Pointer([i], unexpected)
           if (options.errors === "all") {
             if (state.issues) state.issues.push(issue)
             else state.issues = [issue]
           } else {
             return yield* Effect.fail(
-              new SchemaIssue.Composite(ast, [issue])
+              new SchemaIssue.Composite(ast, [issue], input, options)
             )
           }
         }
       }
       if (state.issues) {
         return yield* Effect.fail(
-          new SchemaIssue.Composite(ast, state.issues)
+          new SchemaIssue.Composite(ast, state.issues, input, options)
         )
       }
       return state.output
@@ -1829,7 +1863,7 @@ const parseArray = iterateEager<{
         else s.issues = [issue]
       } else {
         return Exit.fail(
-          new SchemaIssue.Composite(s.ast, [issue])
+          new SchemaIssue.Composite(s.ast, [issue], s.input, s.options)
         )
       }
     }
@@ -1862,7 +1896,9 @@ const wrapPropertyKeyIssue = (
         (issue) =>
           new SchemaIssue.Composite(
             ast,
-            [new SchemaIssue.Pointer([key], issue)]
+            [new SchemaIssue.Pointer([key], issue)],
+            s.input,
+            s.options
           )
       )
     )
@@ -1873,7 +1909,7 @@ const wrapPropertyKeyIssue = (
     else s.issues = [pointer]
   } else {
     return Exit.fail(
-      new SchemaIssue.Composite(ast, [pointer])
+      new SchemaIssue.Composite(ast, [pointer], s.input, s.options)
     )
   }
 }
@@ -2177,7 +2213,7 @@ export class Objects extends Base {
 
       // If the input is not a record, return early with an error
       if (!(typeof input === "object" && input !== null && !Array.isArray(input))) {
-        return yield* Effect.fail(new SchemaIssue.InvalidType(ast))
+        return yield* Effect.fail(new SchemaIssue.InvalidType(ast, input, options))
       }
       if (!properties) {
         properties = ast.propertySignatures.map((ps) => ({
@@ -2219,7 +2255,8 @@ export class Objects extends Base {
           if (!expectedKeysSet.has(key)) {
             // key is unexpected
             if (onExcessPropertyError) {
-              const issue = new SchemaIssue.Pointer([key], new SchemaIssue.UnexpectedKey(ast))
+              const unexpected = new SchemaIssue.UnexpectedKey(ast, record[key], options)
+              const issue = new SchemaIssue.Pointer([key], unexpected)
               if (errorsAllOption) {
                 if (state.issues) {
                   state.issues.push(issue)
@@ -2229,7 +2266,7 @@ export class Objects extends Base {
                 continue
               } else {
                 return yield* Effect.fail(
-                  new SchemaIssue.Composite(ast, [issue])
+                  new SchemaIssue.Composite(ast, [issue], input, options)
                 )
               }
             } else {
@@ -2281,7 +2318,7 @@ export class Objects extends Base {
 
       if (state.issues) {
         return yield* Effect.fail(
-          new SchemaIssue.Composite(ast, state.issues)
+          new SchemaIssue.Composite(ast, state.issues, input, options)
         )
       }
       if (options.propertyOrder === "original") {
@@ -2387,7 +2424,7 @@ const parseProperties = iterateEager<ObjectParserState, ParsedProperty>()({
         return
       } else {
         return Exit.fail(
-          new SchemaIssue.Composite(s.ast, [issue])
+          new SchemaIssue.Composite(s.ast, [issue], s.input, s.options)
         )
       }
     }
@@ -2480,7 +2517,7 @@ export type Sentinel = {
   readonly literal: LiteralValue | symbol
 }
 
-const toCandidate = memoize((ast: AST): AST => {
+const toCandidate = memoizeIdempotent((ast: AST): AST => {
   while (true) {
     if (isSuspend(ast)) return unknown
     const encoding = ast.encoding
@@ -2544,7 +2581,7 @@ function getCandidateTypes(ast: AST): ReadonlyArray<Type> {
 }
 
 /** @internal */
-export function collectSentinels(ast: AST): Array<Sentinel> {
+export function collectSentinels(ast: AST): ReadonlyArray<Sentinel> {
   switch (ast._tag) {
     default:
       return []
@@ -2779,8 +2816,8 @@ export class Union<A extends AST = AST> extends Base {
         const result = compile(candidates[0])(input, options)
         if ((result as Exit.Exit<unknown, SchemaIssue.Issue>)._tag === "Success") return result
         return effectIsExit(result)
-          ? failSingleUnionCandidate(ast, (result as Exit.Failure<unknown, SchemaIssue.Issue>).cause)
-          : Effect.catchCause(result, (cause) => failSingleUnionCandidate(ast, cause))
+          ? failSingleUnionCandidate(ast, (result as Exit.Failure<unknown, SchemaIssue.Issue>).cause, input, options)
+          : Effect.catchCause(result, (cause) => failSingleUnionCandidate(ast, cause, input, options))
       }
 
       const state = {
@@ -2795,12 +2832,13 @@ export class Union<A extends AST = AST> extends Base {
       const concurrency = resolveConcurrency(options?.concurrency)
       const eff = parseUnion(state, candidates, concurrency ? { ...concurrency, orderedStep: true } : undefined)
       if (!eff) {
-        return state.out ?? Effect.fail(new SchemaIssue.AnyOf(ast, state.issues ?? []))
+        if (state.out) return state.out
+        return Effect.fail(new SchemaIssue.AnyOf(ast, state.issues ?? [], input, options))
       }
       return Effect.flatMapEager(eff, (_) => {
-        return state.out === InternalParser.sameExit
-          ? Effect.succeed(input)
-          : state.out ?? Effect.fail(new SchemaIssue.AnyOf(ast, state.issues ?? []))
+        if (state.out === InternalParser.sameExit) return Effect.succeed(input)
+        if (state.out) return state.out
+        return Effect.fail(new SchemaIssue.AnyOf(ast, state.issues ?? [], input, options))
       })
     }
   }
@@ -2867,12 +2905,13 @@ export class Union<A extends AST = AST> extends Base {
 
 function failSingleUnionCandidate(
   ast: Union,
-  cause: Cause.Cause<SchemaIssue.Issue>
+  cause: Cause.Cause<SchemaIssue.Issue>,
+  input: unknown,
+  options: ParseOptions
 ) {
   const issue = InternalSchemaCause.getSchemaIssue(cause)
-  return issue
-    ? Exit.fail(new SchemaIssue.AnyOf(ast, [issue]))
-    : Exit.failCause(cause)
+  if (!issue) return Exit.failCause(cause)
+  return Exit.fail(new SchemaIssue.AnyOf(ast, [issue], input, options))
 }
 
 const parseUnion = iterateEager<{
@@ -2899,7 +2938,7 @@ const parseUnion = iterateEager<{
     } else {
       if (s.out && s.successes) {
         s.successes.push(candidate)
-        return Exit.fail(new SchemaIssue.OneOf(s.ast, s.successes))
+        return Exit.fail(new SchemaIssue.OneOf(s.ast, s.successes, s.input, s.options))
       }
       s.out = exit
       if (s.successes) {
@@ -3125,7 +3164,7 @@ export function makeFilter<T>(
   aborted: boolean = false
 ): Filter<T> {
   return new Filter(
-    (input, ast, options) => SchemaIssue.normalizeFilterOutput(ast, filter(input, ast, options)),
+    (input, ast, options) => SchemaIssue.normalizeFilterOutput(ast, filter(input, ast, options), input, options),
     annotations,
     aborted
   )
@@ -3137,7 +3176,7 @@ export function makeFilterByGuard<T extends E, E>(
   annotations?: Schema.Annotations.Filter
 ): Filter<any> {
   return new Filter(
-    (input: E) => is(input) ? undefined : new SchemaIssue.InvalidValue(),
+    (input: E, _ast, options) => is(input) ? undefined : new SchemaIssue.InvalidValue(undefined, input, options),
     annotations,
     true // after a guard, we always want to abort
   )
@@ -3241,6 +3280,13 @@ function modifyOwnPropertyDescriptors<A extends AST>(
   return Object.create(Object.getPrototypeOf(ast), d)
 }
 
+const contextOwners = new WeakMap<AST, AST>()
+
+/** @internal */
+export function getContextOwner(ast: AST): AST {
+  return contextOwners.get(ast) ?? ast
+}
+
 /** @internal */
 export function replaceEncoding<A extends AST>(ast: A, encoding: Encoding | undefined): A {
   if (ast.encoding === encoding) {
@@ -3256,9 +3302,15 @@ export function replaceContext<A extends AST>(ast: A, context: Context | undefin
   if (ast.context === context) {
     return ast
   }
-  return modifyOwnPropertyDescriptors(ast, (d) => {
+  const owner = getContextOwner(ast)
+  if (owner.context === context) {
+    return owner as A
+  }
+  const out = modifyOwnPropertyDescriptors(ast, (d) => {
     d.context.value = context
   })
+  contextOwners.set(out, owner)
+  return out
 }
 
 /** @internal */
@@ -3324,6 +3376,21 @@ export function applyToSelfOrLastLinkEncoding(f: (ast: AST) => AST) {
     return ast.encoding ? replaceEncoding(ast, updateLastLink(ast.encoding, out)) : f(ast)
   }
   return memoize(out)
+}
+
+/** @internal */
+export function applyToSelfOrLastLinkEncodingIdempotent(
+  f: (ast: AST) => AST,
+  options?: { readonly stopAt?: (link: Link) => boolean }
+) {
+  function out(ast: AST): AST {
+    if (ast.encoding) {
+      const last = ast.encoding[ast.encoding.length - 1]
+      return options?.stopAt?.(last) ? ast : replaceEncoding(ast, updateLastLink(ast.encoding, out))
+    }
+    return f(ast)
+  }
+  return memoizeIdempotent(out)
 }
 
 /** @internal */
@@ -3393,42 +3460,34 @@ export function annotateKey<A extends AST>(ast: A, annotations: Schema.Annotatio
   return replaceContext(ast, context)
 }
 
-const optionalKeyLastLink = applyToLastLink(optionalKey)
-
-/**
- * Marks an AST node's property key as optional by setting
- * {@link Context.isOptional} to `true`.
- *
- * **Details**
- *
- * Also propagates the optional flag through the last link of the encoding
- * chain if present.
- *
- * @see {@link isOptional}
- * @see {@link Context}
- * @category transforming
- * @since 4.0.0
- */
-export function optionalKey<A extends AST>(ast: A): A {
+/** @internal */
+export const optionalKey: <A extends AST>(ast: A) => A = memoizeIdempotent(<A extends AST>(ast: A): A => {
   const context = ast.context ?
     ast.context.isOptional === false ?
       new Context(true, ast.context.isMutable, ast.context.constructorDefault, ast.context.annotations) :
       ast.context :
     new Context(true, false)
   return optionalKeyLastLink(replaceContext(ast, context))
-}
+})
 
-const mutableKeyLastLink = applyToLastLink(mutableKey)
+const optionalKeyLastLink = applyToLastLink(optionalKey)
 
 /** @internal */
-export function mutableKey<A extends AST>(ast: A): A {
+export const optional = memoize(<A extends AST>(ast: A): Union<A | Undefined> =>
+  optionalKey(new Union([ast, undefined_], "anyOf"))
+)
+
+/** @internal */
+export const mutableKey = memoizeIdempotent(<A extends AST>(ast: A): A => {
   const context = ast.context ?
     ast.context.isMutable === false ?
       new Context(ast.context.isOptional, true, ast.context.constructorDefault, ast.context.annotations) :
       ast.context :
     new Context(false, true)
   return mutableKeyLastLink(replaceContext(ast, context))
-}
+})
+
+const mutableKeyLastLink = applyToLastLink(mutableKey)
 
 /** @internal */
 export function withConstructorDefault<A extends AST>(
@@ -3577,7 +3636,7 @@ function extractStructuralChecks(checks: Checks): Checks | undefined {
  * @category transforming
  * @since 4.0.0
  */
-export const toType = memoize(<A extends AST>(ast: A): A => {
+export const toType = memoizeIdempotent(<A extends AST>(ast: A): A => {
   if (ast.encoding) {
     return toType(replaceEncoding(ast, undefined))
   }
@@ -3624,7 +3683,7 @@ export const toType = memoize(<A extends AST>(ast: A): A => {
  * @category transforming
  * @since 4.0.0
  */
-export const toEncoded = memoize((ast: AST): AST => {
+export const toEncoded = memoizeIdempotent((ast: AST): AST => {
   return toType(flip(ast))
 })
 
@@ -3688,13 +3747,10 @@ function fromConst<const T>(
   value: T
 ): SchemaParser.Parser {
   const succeed = InternalParser.succeed(value)
-  return (input) => {
+  return (input, options) => {
     if (input === InternalParser.missing) return InternalParser.missingExit
-    return input === value
-      ? succeed
-      : Effect.fail(
-        new SchemaIssue.InvalidType(ast)
-      )
+    if (input === value) return succeed
+    return Effect.fail(new SchemaIssue.InvalidType(ast, input, options))
   }
 }
 
@@ -3702,13 +3758,10 @@ function fromRefinement<T>(
   ast: AST,
   refinement: (input: unknown) => input is T
 ): SchemaParser.Parser {
-  return (input) => {
+  return (input, options) => {
     if (input === InternalParser.missing) return InternalParser.missingExit
-    return refinement(input)
-      ? InternalParser.sameExit
-      : Effect.fail(
-        new SchemaIssue.InvalidType(ast)
-      )
+    if (refinement(input)) return InternalParser.sameExit
+    return Effect.fail(new SchemaIssue.InvalidType(ast, input, options))
   }
 }
 
@@ -3774,7 +3827,7 @@ export const enumsToLiterals = memoize((ast: Enum): Union<Literal> => {
   )
 })
 
-const parameterFromPropertyKey = applyToSelfOrLastLinkEncoding((ast) => {
+const parameterFromPropertyKey = applyToSelfOrLastLinkEncodingIdempotent((ast) => {
   switch (ast._tag) {
     default:
       return ast
@@ -3786,7 +3839,7 @@ const parameterFromPropertyKey = applyToSelfOrLastLinkEncoding((ast) => {
 })
 
 /** @internal */
-export const parameterFromString = applyToSelfOrLastLinkEncoding((ast) => {
+export const parameterFromString = applyToSelfOrLastLinkEncodingIdempotent((ast) => {
   switch (ast._tag) {
     default:
       return ast
@@ -3798,7 +3851,7 @@ export const parameterFromString = applyToSelfOrLastLinkEncoding((ast) => {
   }
 })
 
-const partFromString = applyToSelfOrLastLinkEncoding((ast) => {
+const partFromString = applyToSelfOrLastLinkEncodingIdempotent((ast) => {
   switch (ast._tag) {
     default:
       return ast
@@ -3896,13 +3949,17 @@ const symbolToString = new Link(
   symbolString,
   new SchemaTransformation.Transformation(
     SchemaGetter.transform((description) => globalThis.Symbol.for(isStringSymbolRegExp.exec(description)![1])),
-    SchemaGetter.transformOrFail((sym: symbol) => {
+    SchemaGetter.transformOrFail((sym: symbol, options) => {
       const key = globalThis.Symbol.keyFor(sym)
       if (key !== undefined) {
         return Effect.succeed(globalThis.String(sym))
       }
       return Effect.fail(
-        new SchemaIssue.Forbidden({ message: "cannot serialize to string, Symbol is not registered" })
+        new SchemaIssue.Forbidden(
+          { message: "cannot serialize to string, Symbol is not registered" },
+          sym,
+          options
+        )
       )
     })
   )
@@ -3945,7 +4002,7 @@ export function collectIssues<T>(
     } else {
       const issue = check.run(value, ast, options)
       if (issue) {
-        const filter = new SchemaIssue.Filter(check, issue)
+        const filter = new SchemaIssue.Filter(check, issue, value, options)
         if (issues) issues.push(filter)
         else issues = [filter]
         if (options.errors !== "all" || check.aborted) {
@@ -4154,10 +4211,10 @@ export function isJson(u: unknown): u is Schema.Json {
 /** @internal */
 export const Json = new Declaration(
   [],
-  () => (input, ast) =>
+  () => (input, ast, options) =>
     isJson(input) ?
       InternalParser.sameExit :
-      Effect.fail(new SchemaIssue.InvalidType(ast)),
+      Effect.fail(new SchemaIssue.InvalidType(ast, input, options)),
   {
     representation: {
       id: "effect/schema/Json",
@@ -4206,10 +4263,10 @@ export function isStringTree(u: unknown): u is Schema.StringTree {
 
 const StringTree = new Declaration(
   [],
-  () => (input, ast) =>
+  () => (input, ast, options) =>
     isStringTree(input) ?
       InternalParser.sameExit :
-      Effect.fail(new SchemaIssue.InvalidType(ast)),
+      Effect.fail(new SchemaIssue.InvalidType(ast, input, options)),
   { expected: "StringTree", toCodecStringTree: () => undefined }
 )
 
