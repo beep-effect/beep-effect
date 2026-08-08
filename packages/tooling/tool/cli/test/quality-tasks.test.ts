@@ -219,7 +219,7 @@ const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): Reado
     A.some(args, isTurboConcurrencyArg)
       ? args
       : Bun.env.CI === "true"
-        ? ["--concurrency=2", ...args]
+        ? ["--concurrency=4", ...args]
         : ["--concurrency=3", ...args]
   );
 const bunScriptStep = (label: string, source: string) =>
@@ -338,7 +338,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=2",
+        "--concurrency=4",
         "--force",
         "--filter=@beep/schema",
         "--dry=json",
@@ -357,7 +357,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=2",
+        "--concurrency=4",
         "--cache=local:rw",
         "--filter=@beep/schema",
       ]);
@@ -902,7 +902,7 @@ describe("quality task adapter", () => {
       "turbo",
       "run",
       "check",
-      ...(Bun.env.CI === "true" ? ["--concurrency=2"] : ["--cache=local:rw", "--concurrency=3"]),
+      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
       "--affected",
       "--summarize",
     ]);
