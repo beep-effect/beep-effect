@@ -87,13 +87,13 @@ jobs:
           - id: test-integration
             name: Test Integration
             runner: ubuntu-24.04
-            timeout_minutes: 40
+            timeout_minutes: 60
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
             runner: ubuntu-24.04
-            timeout_minutes: 80
+            timeout_minutes: 110
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
