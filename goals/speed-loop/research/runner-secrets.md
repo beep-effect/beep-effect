@@ -83,3 +83,17 @@ only for the credentials that must exist at all. Suggested vault: a dedicated
   (scoped to BEEP_CI).
 - Pending: op://BEEP_CI/github-runner-registration/credential (fine-grained
   PAT, Administration RW on beep-effect/beep-effect — operator minting).
+
+## Account-state changes (2026-08-08, live)
+
+- `beep-ci-runner-role` / `beep-ci-runner-profile`: DELETED (workers carry no
+  instance profile; the no-credentials gate is enforced at the IAM layer).
+- `beep-ci-runner-launcher`: `iam:PassRole` statement removed from
+  `beep-ci-launch`; new inline policy `beep-ci-runner-launch-guardrails`
+  denies RunInstances with any instance profile, without IMDSv2
+  (httpTokens=required), or without the `beep-ci=runner` request tag.
+- One-time account bootstrap: EC2 Spot service-linked role
+  `AWSServiceRoleForEC2Spot` created (first spot launch required it).
+- Pulumi stack `production` (project beep-ci-runners) deployed; state in
+  s3://oip-law-pulumi-state; passphrase at
+  op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE.
