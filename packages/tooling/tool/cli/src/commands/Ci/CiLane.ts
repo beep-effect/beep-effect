@@ -769,7 +769,10 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
+      // The two heaviest package checks (repo-cli, epistemic-server) OOM a 16GB
+      // hosted runner when their tsgo processes overlap, so the check lane runs
+      // serial; the smaller tasks dominate the count, not the wall clock.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
           label: "ci:codegen:generate",
@@ -818,7 +821,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=3"], options)],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",

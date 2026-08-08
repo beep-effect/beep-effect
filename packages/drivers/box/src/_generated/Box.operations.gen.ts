@@ -16,7 +16,8 @@ import * as M from "./Box.models.gen.ts";
 /**
  * Shared generated operation runner supplied by {@link Box}.
  *
- * @example
+ * **Example** (Reference the BoxRunSdkCall type)
+ *
  * ```ts
  * import type { BoxRunSdkCall } from "@beep/box/Box.operations.gen"
  *
@@ -39,7 +40,8 @@ export type BoxRunSdkCall = <Payload, Success>(
 /**
  * Generated JSON operation groups for the Box SDK.
  *
- * @example
+ * **Example** (Reference the BoxGeneratedOperations type)
+ *
  * ```ts
  * import type { BoxGeneratedOperations } from "@beep/box/Box.operations.gen"
  *
@@ -168,7 +170,8 @@ const invokeSdkMethod = (
 /**
  * Build generated Box SDK operation groups from a SDK client and shared runner.
  *
- * @example
+ * **Example** (Inspect the generated operations factory)
+ *
  * ```ts
  * import { makeGeneratedOperations } from "@beep/box/Box.operations.gen"
  *

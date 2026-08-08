@@ -16,7 +16,8 @@ const $I = $EcfrId.create("_generated/Ecfr.generated");
 /**
  * A CFR title and chapter reference associated with an agency.
  *
- * @example
+ * **Example** (Construct the CfrReference)
+ *
  * ```ts
  * import { CfrReference } from "@beep/ecfr"
  *
@@ -42,7 +43,8 @@ export class CfrReference extends S.Class<CfrReference>($I`CfrReference`)(
 /**
  * A child agency represented in the CFR agency roster.
  *
- * @example
+ * **Example** (Construct the AgencyChild)
+ *
  * ```ts
  * import { AgencyChild } from "@beep/ecfr"
  *
@@ -76,7 +78,8 @@ export class AgencyChild extends S.Class<AgencyChild>($I`AgencyChild`)(
 /**
  * A top-level agency represented in the CFR, including child agencies and CFR references.
  *
- * @example
+ * **Example** (Construct the Agency)
+ *
  * ```ts
  * import { Agency } from "@beep/ecfr"
  *
@@ -111,7 +114,8 @@ export class Agency extends S.Class<Agency>($I`Agency`)(
 /**
  * Response envelope containing the agency roster.
  *
- * @example
+ * **Example** (Construct the AgenciesResponse)
+ *
  * ```ts
  * import { AgenciesResponse, Agency } from "@beep/ecfr"
  *
@@ -136,7 +140,8 @@ export class AgenciesResponse extends S.Class<AgenciesResponse>($I`AgenciesRespo
 /**
  * A CFR hierarchy node returned in an ancestry response.
  *
- * @example
+ * **Example** (Construct the HierarchyNode)
+ *
  * ```ts
  * import { HierarchyNode } from "@beep/ecfr"
  *
@@ -169,7 +174,8 @@ export class HierarchyNode extends S.Class<HierarchyNode>($I`HierarchyNode`)(
 /**
  * Ordered CFR hierarchy nodes from title through the requested leaf.
  *
- * @example
+ * **Example** (Decode a AncestryResponse)
+ *
  * ```ts
  * import { AncestryResponse, HierarchyNode } from "@beep/ecfr"
  * import * as S from "effect/Schema"
@@ -191,7 +197,8 @@ export const AncestryResponse = HierarchyNode.pipe(
 /**
  * Type for {@link AncestryResponse}.
  *
- * @example
+ * **Example** (Type a AncestryResponse value)
+ *
  * ```ts
  * import type { AncestryResponse } from "@beep/ecfr"
  *
@@ -207,7 +214,8 @@ export type AncestryResponse = typeof AncestryResponse.Type;
 /**
  * A dated version of one CFR section or appendix.
  *
- * @example
+ * **Example** (Construct the ContentVersion)
+ *
  * ```ts
  * import { ContentVersion } from "@beep/ecfr"
  *
@@ -246,7 +254,8 @@ export class ContentVersion extends S.Class<ContentVersion>($I`ContentVersion`)(
 /**
  * Known CFR hierarchy identifiers locating corrected content.
  *
- * @example
+ * **Example** (Construct the CorrectionHierarchy)
+ *
  * ```ts
  * import { CorrectionHierarchy } from "@beep/ecfr"
  *
@@ -278,7 +287,8 @@ export class CorrectionHierarchy extends S.Class<CorrectionHierarchy>($I`Correct
 /**
  * Human-readable and structured CFR location for a correction.
  *
- * @example
+ * **Example** (Construct the CorrectionReference)
+ *
  * ```ts
  * import { CorrectionHierarchy, CorrectionReference } from "@beep/ecfr"
  *
@@ -306,7 +316,8 @@ export class CorrectionReference extends S.Class<CorrectionReference>($I`Correct
 /**
  * An eCFR editorial correction and its affected CFR locations.
  *
- * @example
+ * **Example** (Construct the Correction)
+ *
  * ```ts
  * import { Correction } from "@beep/ecfr"
  *
@@ -351,7 +362,8 @@ export class Correction extends S.Class<Correction>($I`Correction`)(
 /**
  * Response envelope containing eCFR correction records.
  *
- * @example
+ * **Example** (Construct the CorrectionsResponse)
+ *
  * ```ts
  * import { Correction, CorrectionsResponse } from "@beep/ecfr"
  *
@@ -376,7 +388,8 @@ export class CorrectionsResponse extends S.Class<CorrectionsResponse>($I`Correct
 /**
  * Search-result count associated with one date.
  *
- * @example
+ * **Example** (Construct the DailyCount)
+ *
  * ```ts
  * import { DailyCount } from "@beep/ecfr"
  *
@@ -402,7 +415,8 @@ export class DailyCount extends S.Class<DailyCount>($I`DailyCount`)(
 /**
  * Search-result count associated with one CFR hierarchy node.
  *
- * @example
+ * **Example** (Construct the HierarchyCount)
+ *
  * ```ts
  * import { HierarchyCount } from "@beep/ecfr"
  *
@@ -429,7 +443,8 @@ export class HierarchyCount extends S.Class<HierarchyCount>($I`HierarchyCount`)(
 /**
  * Conservative envelope for the eCFR search count endpoint.
  *
- * @example
+ * **Example** (Construct the SearchCountResponse)
+ *
  * ```ts
  * import { SearchCountResponse } from "@beep/ecfr"
  *
@@ -459,7 +474,8 @@ export class SearchCountResponse extends S.Class<SearchCountResponse>($I`SearchC
 /**
  * Conservative envelope for daily eCFR search counts.
  *
- * @example
+ * **Example** (Construct the SearchDailyCountsResponse)
+ *
  * ```ts
  * import { SearchDailyCountsResponse } from "@beep/ecfr"
  *
@@ -486,7 +502,8 @@ export class SearchDailyCountsResponse extends S.Class<SearchDailyCountsResponse
 /**
  * Conservative envelope for hierarchy-level eCFR search counts.
  *
- * @example
+ * **Example** (Construct the SearchHierarchyCountsResponse)
+ *
  * ```ts
  * import { SearchHierarchyCountsResponse } from "@beep/ecfr"
  *
@@ -515,7 +532,8 @@ export class SearchHierarchyCountsResponse extends S.Class<SearchHierarchyCounts
 /**
  * Pagination and score metadata for eCFR search results.
  *
- * @example
+ * **Example** (Construct the SearchMeta)
+ *
  * ```ts
  * import { SearchMeta } from "@beep/ecfr"
  *
@@ -548,7 +566,8 @@ export class SearchMeta extends S.Class<SearchMeta>($I`SearchMeta`)(
 /**
  * A section or appendix matching an eCFR search.
  *
- * @example
+ * **Example** (Construct the SearchResult)
+ *
  * ```ts
  * import { SearchResult } from "@beep/ecfr"
  *
@@ -584,7 +603,8 @@ export class SearchResult extends S.Class<SearchResult>($I`SearchResult`)(
 /**
  * Paginated eCFR search-results envelope.
  *
- * @example
+ * **Example** (Construct the SearchResultsResponse)
+ *
  * ```ts
  * import { SearchMeta, SearchResult, SearchResultsResponse } from "@beep/ecfr"
  *
@@ -610,7 +630,8 @@ export class SearchResultsResponse extends S.Class<SearchResultsResponse>($I`Sea
 /**
  * Conservative envelope for eCFR search suggestions.
  *
- * @example
+ * **Example** (Construct the SearchSuggestionsResponse)
+ *
  * ```ts
  * import { SearchSuggestionsResponse } from "@beep/ecfr"
  *
@@ -637,7 +658,8 @@ export class SearchSuggestionsResponse extends S.Class<SearchSuggestionsResponse
 /**
  * Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.
  *
- * @example
+ * **Example** (Construct the SearchSummaryResponse)
+ *
  * ```ts
  * import { SearchSummaryResponse } from "@beep/ecfr"
  *
@@ -664,7 +686,8 @@ export class SearchSummaryResponse extends S.Class<SearchSummaryResponse>($I`Sea
 /**
  * Search-result count associated with one CFR title.
  *
- * @example
+ * **Example** (Construct the TitleCount)
+ *
  * ```ts
  * import { TitleCount } from "@beep/ecfr"
  *
@@ -690,7 +713,8 @@ export class TitleCount extends S.Class<TitleCount>($I`TitleCount`)(
 /**
  * Conservative envelope for per-title eCFR search counts.
  *
- * @example
+ * **Example** (Construct the SearchTitleCountsResponse)
+ *
  * ```ts
  * import { SearchTitleCountsResponse } from "@beep/ecfr"
  *
@@ -717,7 +741,8 @@ export class SearchTitleCountsResponse extends S.Class<SearchTitleCountsResponse
 /**
  * A direct child in an eCFR structure tree.
  *
- * @example
+ * **Example** (Construct the StructureChild)
+ *
  * ```ts
  * import { StructureChild } from "@beep/ecfr"
  *
@@ -748,7 +773,8 @@ export class StructureChild extends S.Class<StructureChild>($I`StructureChild`)(
 /**
  * Root of a CFR title structure tree without regulation text.
  *
- * @example
+ * **Example** (Construct the StructureNode)
+ *
  * ```ts
  * import { StructureNode } from "@beep/ecfr"
  *
@@ -782,7 +808,8 @@ export class StructureNode extends S.Class<StructureNode>($I`StructureNode`)(
 /**
  * A CFR title with currency and processing metadata.
  *
- * @example
+ * **Example** (Construct the Title)
+ *
  * ```ts
  * import { Title } from "@beep/ecfr"
  *
@@ -817,7 +844,8 @@ export class Title extends S.Class<Title>($I`Title`)(
 /**
  * Import status metadata accompanying the CFR titles catalog.
  *
- * @example
+ * **Example** (Construct the TitlesMeta)
+ *
  * ```ts
  * import { TitlesMeta } from "@beep/ecfr"
  *
@@ -845,7 +873,8 @@ export class TitlesMeta extends S.Class<TitlesMeta>($I`TitlesMeta`)(
 /**
  * Response envelope containing the CFR titles catalog and import metadata.
  *
- * @example
+ * **Example** (Construct the TitlesResponse)
+ *
  * ```ts
  * import { Title, TitlesResponse } from "@beep/ecfr"
  *
@@ -871,7 +900,8 @@ export class TitlesResponse extends S.Class<TitlesResponse>($I`TitlesResponse`)(
 /**
  * Query and currency metadata for a content-version response.
  *
- * @example
+ * **Example** (Construct the VersionsMeta)
+ *
  * ```ts
  * import { VersionsMeta } from "@beep/ecfr"
  *
@@ -905,7 +935,8 @@ export class VersionsMeta extends S.Class<VersionsMeta>($I`VersionsMeta`)(
 /**
  * Response envelope containing CFR content versions and query metadata.
  *
- * @example
+ * **Example** (Construct the VersionsResponse)
+ *
  * ```ts
  * import { ContentVersion, VersionsMeta, VersionsResponse } from "@beep/ecfr"
  *
@@ -933,7 +964,8 @@ export class VersionsResponse extends S.Class<VersionsResponse>($I`VersionsRespo
 /**
  * Descriptor for a single eCFR REST operation.
  *
- * @example
+ * **Example** (Build an operation descriptor)
+ *
  * ```ts
  * import { EcfrOperationDescriptor } from "@beep/ecfr"
  *
@@ -958,7 +990,8 @@ export class EcfrOperationDescriptor extends S.Class<EcfrOperationDescriptor>($I
 /**
  * The `getAncestry` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the getAncestry operation path)
+ *
  * ```ts
  * import { getAncestryOperation } from "@beep/ecfr"
  *
@@ -977,7 +1010,8 @@ export const getAncestryOperation = EcfrOperationDescriptor.make({
 /**
  * The `getFullTitleXml` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the getFullTitleXml operation path)
+ *
  * ```ts
  * import { getFullTitleXmlOperation } from "@beep/ecfr"
  *
@@ -996,7 +1030,8 @@ export const getFullTitleXmlOperation = EcfrOperationDescriptor.make({
 /**
  * The `getStructure` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the getStructure operation path)
+ *
  * ```ts
  * import { getStructureOperation } from "@beep/ecfr"
  *
@@ -1015,7 +1050,8 @@ export const getStructureOperation = EcfrOperationDescriptor.make({
 /**
  * The `listAgencies` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the listAgencies operation path)
+ *
  * ```ts
  * import { listAgenciesOperation } from "@beep/ecfr"
  *
@@ -1034,7 +1070,8 @@ export const listAgenciesOperation = EcfrOperationDescriptor.make({
 /**
  * The `listCorrections` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the listCorrections operation path)
+ *
  * ```ts
  * import { listCorrectionsOperation } from "@beep/ecfr"
  *
@@ -1053,7 +1090,8 @@ export const listCorrectionsOperation = EcfrOperationDescriptor.make({
 /**
  * The `listTitleCorrections` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the listTitleCorrections operation path)
+ *
  * ```ts
  * import { listTitleCorrectionsOperation } from "@beep/ecfr"
  *
@@ -1072,7 +1110,8 @@ export const listTitleCorrectionsOperation = EcfrOperationDescriptor.make({
 /**
  * The `listTitles` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the listTitles operation path)
+ *
  * ```ts
  * import { listTitlesOperation } from "@beep/ecfr"
  *
@@ -1091,7 +1130,8 @@ export const listTitlesOperation = EcfrOperationDescriptor.make({
 /**
  * The `listVersions` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the listVersions operation path)
+ *
  * ```ts
  * import { listVersionsOperation } from "@beep/ecfr"
  *
@@ -1110,7 +1150,8 @@ export const listVersionsOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchCount` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchCount operation path)
+ *
  * ```ts
  * import { searchCountOperation } from "@beep/ecfr"
  *
@@ -1129,7 +1170,8 @@ export const searchCountOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchDailyCounts` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchDailyCounts operation path)
+ *
  * ```ts
  * import { searchDailyCountsOperation } from "@beep/ecfr"
  *
@@ -1148,7 +1190,8 @@ export const searchDailyCountsOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchHierarchyCounts` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchHierarchyCounts operation path)
+ *
  * ```ts
  * import { searchHierarchyCountsOperation } from "@beep/ecfr"
  *
@@ -1167,7 +1210,8 @@ export const searchHierarchyCountsOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchResults` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchResults operation path)
+ *
  * ```ts
  * import { searchResultsOperation } from "@beep/ecfr"
  *
@@ -1186,7 +1230,8 @@ export const searchResultsOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchSuggestions` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchSuggestions operation path)
+ *
  * ```ts
  * import { searchSuggestionsOperation } from "@beep/ecfr"
  *
@@ -1205,7 +1250,8 @@ export const searchSuggestionsOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchSummary` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchSummary operation path)
+ *
  * ```ts
  * import { searchSummaryOperation } from "@beep/ecfr"
  *
@@ -1224,7 +1270,8 @@ export const searchSummaryOperation = EcfrOperationDescriptor.make({
 /**
  * The `searchTitleCounts` eCFR operation descriptor.
  *
- * @example
+ * **Example** (Read the searchTitleCounts operation path)
+ *
  * ```ts
  * import { searchTitleCountsOperation } from "@beep/ecfr"
  *
@@ -1243,7 +1290,8 @@ export const searchTitleCountsOperation = EcfrOperationDescriptor.make({
 /**
  * All generated eCFR operation descriptors keyed by operation id.
  *
- * @example
+ * **Example** (Look up an operation descriptor)
+ *
  * ```ts
  * import { ECFR_OPERATIONS } from "@beep/ecfr"
  *

@@ -10,7 +10,8 @@
 /**
  * RDF namespace IRI generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the RDF namespace IRI)
+ *
  * ```ts
  * import { RDF_NAMESPACE } from "@beep/rdf/Vocab/generated/Rdf.terms"
  *
@@ -25,7 +26,8 @@ export const RDF_NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#" as co
 /**
  * RDF local-name inventory generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the RDF term inventory)
+ *
  * ```ts
  * import { RDF_TERMS } from "@beep/rdf/Vocab/generated/Rdf.terms"
  *

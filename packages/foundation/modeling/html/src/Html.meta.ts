@@ -20,7 +20,8 @@ const $I = $HtmlId.create("Html.meta");
 /**
  * Exact generated HTML element-tag domain.
  *
- * @example
+ * **Example** (Check an HtmlTag value)
+ *
  * ```ts
  * import { HtmlTag } from "@beep/html/Html.meta"
  *
@@ -178,7 +179,8 @@ export const HtmlTag = LiteralKit([
 /**
  * Decoded HTML element tag.
  *
- * @example
+ * **Example** (Annotate an HtmlTag value)
+ *
  * ```ts
  * import type { HtmlTag } from "@beep/html/Html.meta"
  *
@@ -194,7 +196,8 @@ export type HtmlTag = typeof HtmlTag.Type;
 /**
  * Advisory content-category values emitted by the WHATWG element index.
  *
- * @example
+ * **Example** (Check an HtmlCategory value)
+ *
  * ```ts
  * import { HtmlCategory } from "@beep/html/Html.meta"
  *
@@ -224,7 +227,8 @@ export const HtmlCategory = LiteralKit([
 /**
  * Decoded advisory content category.
  *
- * @example
+ * **Example** (Annotate an HtmlCategory value)
+ *
  * ```ts
  * import type { HtmlCategory } from "@beep/html/Html.meta"
  *
@@ -240,7 +244,8 @@ export type HtmlCategory = typeof HtmlCategory.Type;
 /**
  * Content-model tokens emitted by the pinned WHATWG element index.
  *
- * @example
+ * **Example** (Check an HtmlContentToken value)
+ *
  * ```ts
  * import { HtmlContentToken } from "@beep/html/Html.meta"
  *
@@ -306,7 +311,8 @@ export const HtmlContentToken = LiteralKit([
 /**
  * Decoded HTML content-model token.
  *
- * @example
+ * **Example** (Annotate an HtmlContentToken value)
+ *
  * ```ts
  * import type { HtmlContentToken } from "@beep/html/Html.meta"
  *
@@ -323,7 +329,8 @@ export type HtmlContentToken = typeof HtmlContentToken.Type;
  * Reviewed grammar profiles for HTML elements whose child rules include
  * ordering, cardinality, alternatives, or attribute-dependent branches.
  *
- * @example
+ * **Example** (Check an HtmlChildGrammar value)
+ *
  * ```ts
  * import { HtmlChildGrammar } from "@beep/html/Html.meta"
  *
@@ -356,7 +363,8 @@ export const HtmlChildGrammar = LiteralKit([
 /**
  * Decoded HTML special-child grammar profile.
  *
- * @example
+ * **Example** (Annotate an HtmlChildGrammar value)
+ *
  * ```ts
  * import type { HtmlChildGrammar } from "@beep/html/Html.meta"
  *
@@ -372,7 +380,8 @@ export type HtmlChildGrammar = typeof HtmlChildGrammar.Type;
 /**
  * One attribute-dependent content-category membership rule.
  *
- * @example
+ * **Example** (Build a conditional category rule)
+ *
  * ```ts
  * import { HtmlConditionalCategoryRule } from "@beep/html/Html.meta"
  *
@@ -402,7 +411,8 @@ export class HtmlConditionalCategoryRule extends S.Class<HtmlConditionalCategory
 /**
  * WHATWG SVG element-name adjustments keyed by tokenizer-lowercased input.
  *
- * @example
+ * **Example** (Look up an SVG element-name adjustment)
+ *
  * ```ts
  * import { SVG_ELEMENT_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
@@ -454,7 +464,8 @@ export const SVG_ELEMENT_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = Ob
 /**
  * WHATWG SVG attribute-name adjustments keyed by tokenizer-lowercased input.
  *
- * @example
+ * **Example** (Look up an SVG attribute-name adjustment)
+ *
  * ```ts
  * import { SVG_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
@@ -528,7 +539,8 @@ export const SVG_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>> = 
 /**
  * WHATWG MathML attribute-name adjustments keyed by tokenizer-lowercased input.
  *
- * @example
+ * **Example** (Look up a MathML attribute-name adjustment)
+ *
  * ```ts
  * import { MATHML_ATTRIBUTE_NAME_ADJUSTMENTS } from "@beep/html/Html.meta"
  *
@@ -546,7 +558,8 @@ export const MATHML_ATTRIBUTE_NAME_ADJUSTMENTS: Readonly<Record<string, string>>
  * Foreign qualified attributes whose HTML parser adjustment assigns an XML,
  * XMLNS, or XLink namespace while preserving this serialized name.
  *
- * @example
+ * **Example** (Check a foreign XML attribute name)
+ *
  * ```ts
  * import { XML_FOREIGN_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
@@ -576,7 +589,8 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * Per-element metadata reuses this frozen inventory and appends only its
  * element-specific current attributes.
  *
- * @example
+ * **Example** (Check a global attribute name)
+ *
  * ```ts
  * import { HTML_GLOBAL_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
@@ -753,7 +767,8 @@ export const HTML_GLOBAL_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
  * Reviewed expansions for context-sensitive content-model tokens emitted by
  * the non-normative WHATWG element index.
  *
- * @example
+ * **Example** (Expand a content-model token)
+ *
  * ```ts
  * import { HTML_CONTENT_TOKEN_EXPANSIONS } from "@beep/html/Html.meta"
  *
@@ -785,7 +800,8 @@ export const HTML_CONTENT_TOKEN_EXPANSIONS: Readonly<Record<string, ReadonlyArra
 /**
  * Generator-owned autocomplete field groups from the WHATWG control table.
  *
- * @example
+ * **Example** (Read an autocomplete field group)
+ *
  * ```ts
  * import { HTML_AUTOCOMPLETE_FIELD_GROUPS } from "@beep/html/Html.meta"
  *
@@ -849,7 +865,8 @@ export const HTML_AUTOCOMPLETE_FIELD_GROUPS: Readonly<Record<string, ReadonlyArr
 /**
  * Generator-owned input-state compatibility for autocomplete field groups.
  *
- * @example
+ * **Example** (Read an autocomplete input-state group)
+ *
  * ```ts
  * import { HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS } from "@beep/html/Html.meta"
  *
@@ -887,7 +904,8 @@ export const HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS: Readonly<Record<string, Reado
 /**
  * Autocomplete fields that may carry a contact-recipient hint.
  *
- * @example
+ * **Example** (Check an autocomplete contact field)
+ *
  * ```ts
  * import { HTML_AUTOCOMPLETE_CONTACT_FIELDS } from "@beep/html/Html.meta"
  *
@@ -913,7 +931,8 @@ export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.fr
 /**
  * Exact conditional attribute applicability for every input type state.
  *
- * @example
+ * **Example** (Read input attribute applicability)
+ *
  * ```ts
  * import { HTML_INPUT_ATTRIBUTE_APPLICABILITY } from "@beep/html/Html.meta"
  *
@@ -1038,7 +1057,8 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
 /**
  * Conditional input attributes covered by the applicability table.
  *
- * @example
+ * **Example** (Check a conditional input attribute)
+ *
  * ```ts
  * import { HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES } from "@beep/html/Html.meta"
  *
@@ -1083,7 +1103,8 @@ export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Obj
 /**
  * Button attributes permitted only for effective submit buttons.
  *
- * @example
+ * **Example** (Check a submit-only button attribute)
+ *
  * ```ts
  * import { HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES } from "@beep/html/Html.meta"
  *
@@ -1104,7 +1125,8 @@ export const HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES: ReadonlyArray<string> = Object.
 /**
  * Reviewed icon relation tokens used by link-specific attributes.
  *
- * @example
+ * **Example** (Check an icon link relation)
+ *
  * ```ts
  * import { HTML_ICON_LINK_RELATIONS } from "@beep/html/Html.meta"
  *
@@ -1119,7 +1141,8 @@ export const HTML_ICON_LINK_RELATIONS: ReadonlyArray<string> = Object.freeze(["i
 /**
  * Element/attribute keys using the HTML ID-reference-list microsyntax.
  *
- * @example
+ * **Example** (Check an ID-reference-list attribute)
+ *
  * ```ts
  * import { HTML_ID_REFERENCE_LIST_ATTRIBUTES } from "@beep/html/Html.meta"
  *
@@ -1138,7 +1161,8 @@ export const HTML_ID_REFERENCE_LIST_ATTRIBUTES: ReadonlyArray<string> = Object.f
 /**
  * Element/attribute keys containing one case-sensitive HTML ID reference.
  *
- * @example
+ * **Example** (Check an ID-reference attribute)
+ *
  * ```ts
  * import { HTML_ID_REFERENCE_ATTRIBUTES } from "@beep/html/Html.meta"
  *
@@ -1153,7 +1177,8 @@ export const HTML_ID_REFERENCE_ATTRIBUTES: ReadonlyArray<string> = Object.freeze
 /**
  * Text parsing and serialization mode of an HTML element.
  *
- * @example
+ * **Example** (Check an HtmlTextMode value)
+ *
  * ```ts
  * import { HtmlTextMode } from "@beep/html/Html.meta"
  *
@@ -1170,7 +1195,8 @@ export const HtmlTextMode = LiteralKit(["normal", "raw-text", "rcdata", "plainte
 /**
  * Decoded HTML text mode.
  *
- * @example
+ * **Example** (Annotate an HtmlTextMode value)
+ *
  * ```ts
  * import type { HtmlTextMode } from "@beep/html/Html.meta"
  *
@@ -1186,7 +1212,8 @@ export type HtmlTextMode = typeof HtmlTextMode.Type;
 /**
  * Authoritative generated domain of HTML boolean attribute names.
  *
- * @example
+ * **Example** (Check a boolean attribute name)
+ *
  * ```ts
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
  *
@@ -1245,7 +1272,8 @@ export const HtmlBooleanAttributeName = LiteralKit([
 /**
  * Decoded HTML boolean attribute name.
  *
- * @example
+ * **Example** (Decode a boolean attribute name)
+ *
  * ```ts
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
  * import { Result } from "effect"
@@ -1267,7 +1295,8 @@ export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
  * Reviewed HTML attribute microsyntaxes that require conformance inspection
  * beyond their lossless wire schemas.
  *
- * @example
+ * **Example** (Check an HtmlAttributeSyntax value)
+ *
  * ```ts
  * import { HtmlAttributeSyntax } from "@beep/html/Html.meta"
  *
@@ -1286,7 +1315,8 @@ export const HtmlAttributeSyntax = LiteralKit(["icon-sizes", "language-tag", "so
 /**
  * Decoded reviewed HTML attribute microsyntax.
  *
- * @example
+ * **Example** (Annotate an HtmlAttributeSyntax value)
+ *
  * ```ts
  * import type { HtmlAttributeSyntax } from "@beep/html/Html.meta"
  *
@@ -1303,7 +1333,8 @@ export type HtmlAttributeSyntax = typeof HtmlAttributeSyntax.Type;
  * Exact generator-owned mapping from element/attribute pairs to specialized
  * conformance microsyntaxes.
  *
- * @example
+ * **Example** (Look up an attribute microsyntax)
+ *
  * ```ts
  * import { HTML_ATTRIBUTE_SYNTAXES } from "@beep/html/Html.meta"
  *
@@ -1327,7 +1358,8 @@ export const HTML_ATTRIBUTE_SYNTAXES: Readonly<Record<string, HtmlAttributeSynta
 /**
  * Generated same-value relationship between two HTML attributes.
  *
- * @example
+ * **Example** (Build an attribute equality)
+ *
  * ```ts
  * import { HtmlAttributeEquality } from "@beep/html/Html.meta"
  *
@@ -1391,7 +1423,8 @@ const HtmlAttributeRequirementPredicate = S.Union([
 /**
  * Generated conditional requirement or exclusion for HTML attributes.
  *
- * @example
+ * **Example** (Build an attribute requirement)
+ *
  * ```ts
  * import { HtmlAttributeRequirement } from "@beep/html/Html.meta"
  *
@@ -1425,7 +1458,8 @@ export class HtmlAttributeRequirement extends S.Class<HtmlAttributeRequirement>(
 /**
  * Generated less-than-or-equal relationship between numeric attributes.
  *
- * @example
+ * **Example** (Build a numeric attribute relationship)
+ *
  * ```ts
  * import { HtmlNumericAttributeRelationship } from "@beep/html/Html.meta"
  *
@@ -1459,7 +1493,8 @@ export class HtmlNumericAttributeRelationship extends S.Class<HtmlNumericAttribu
 /**
  * Generated exclusions that apply to every descendant of one HTML element.
  *
- * @example
+ * **Example** (Build a forbidden-descendants rule)
+ *
  * ```ts
  * import { HtmlForbiddenDescendants } from "@beep/html/Html.meta"
  *
@@ -1488,7 +1523,8 @@ export class HtmlForbiddenDescendants extends S.Class<HtmlForbiddenDescendants>(
 /**
  * Generated exclusion for an ancestor with an author-provided accessible name.
  *
- * @example
+ * **Example** (Build a forbidden named-ancestor rule)
+ *
  * ```ts
  * import { HtmlForbiddenNamedAncestor } from "@beep/html/Html.meta"
  *
@@ -1515,7 +1551,8 @@ export class HtmlForbiddenNamedAncestor extends S.Class<HtmlForbiddenNamedAncest
 /**
  * Generated document-wide visibility-aware element limit.
  *
- * @example
+ * **Example** (Build a document visibility limit)
+ *
  * ```ts
  * import { HtmlDocumentVisibilityLimit } from "@beep/html/Html.meta"
  *
@@ -1539,7 +1576,8 @@ export class HtmlDocumentVisibilityLimit extends S.Class<HtmlDocumentVisibilityL
 /**
  * Generated element-specific conformance rules absent from the tabular WHATWG index.
  *
- * @example
+ * **Example** (Build element conformance rules)
+ *
  * ```ts
  * import { HtmlElementConformanceRules } from "@beep/html/Html.meta"
  *
@@ -1566,7 +1604,8 @@ export class HtmlElementConformanceRules extends S.Class<HtmlElementConformanceR
 /**
  * Schema describing one HTML element kind's metadata.
  *
- * @example
+ * **Example** (Match ELEMENT_META against HtmlElementMeta)
+ *
  * ```ts
  * import { ELEMENT_META, HtmlElementMeta } from "@beep/html/Html.meta"
  * import * as S from "effect/Schema"
@@ -4760,7 +4799,8 @@ const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): Html
 /**
  * Metadata for every generated HTML element, keyed by tag name.
  *
- * @example
+ * **Example** (Read metadata for div)
+ *
  * ```ts
  * import { ELEMENT_META } from "@beep/html/Html.meta"
  *
