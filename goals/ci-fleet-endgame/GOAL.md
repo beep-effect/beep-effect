@@ -34,8 +34,9 @@ Sequence strictly:
 6. Drive the PR mergeable through Yeet, write the closeout reflection, and
    flip the packet lifecycle.
 
-Use the authorized 1Password Developer Environment flow for `op://BEEP_CI`;
-never request, reveal, print, or persist raw secret values. Keep all runner
+Use the authorized 1Password Developer Environment named `BEEP_CI`; route each
+required secret through a complete `op://BEEP_CI/<item>/<field>` reference.
+Never request, reveal, print, or persist raw secret values. Keep all runner
 operations behind `beep runners` porcelain. Stop on any signed tripwire,
 authority gap, unexpected standing cost, dual-writer infrastructure state, or
 security-boundary regression.

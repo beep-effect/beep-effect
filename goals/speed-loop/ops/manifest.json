@@ -18,7 +18,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the stop rule fires (two consecutive sub-30s cycles) and the closing cycle's work ships as a PR driven to mergeable via /yeet, citing speed-loop.",
+    "statement": "Achieved when either the stop rule fires (two consecutive sub-30s cycles) or signed operator decisions 54-55 graduate the remaining program and disposition the residual work; in either path, the closing work must ship as a PR driven to mergeable via /yeet, citing speed-loop.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [

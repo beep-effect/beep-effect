@@ -1,11 +1,13 @@
 # Runner endgame — decision record (2026-08-08)
 
 Synthesis of the runner-endgame research workflow (5 agents: philips-lineage
-deep-read, alternatives survey, our-stack gap audit, cache/AMI design,
-decision synthesizer; full output archived in the session task
-`wg7t66mm1.output`) plus the post-research grill (operator signatures below).
-This file is the charter input for `goals/ci-fleet-endgame`; the speed-loop
-closeout PR graduates it into that packet.
+deep-read, alternatives survey, our-stack gap audit, cache/AMI design, and
+decision synthesis) plus the post-research grill (operator signatures below).
+The raw investigator outputs remained session-local and were not committed, so
+they are not durable evidence; this record, its in-repo citations, and the
+signed grill decisions are the retained basis for execution. This file is the
+charter input for `goals/ci-fleet-endgame`; the speed-loop closeout PR graduates
+it into that packet.
 
 ## Charter (operator-worded, co-primary)
 
@@ -60,8 +62,10 @@ module in production before.
    module's lambda-release artifacts or provider surface.
 3. **GitHub App: repo-scoped, KMS, 1Password (signed).** App installed on
    beep-effect only. Private key + webhook secret in SSM SecureString under
-   KMS; source-of-truth copy in 1Password (`op://BEEP_CI`). A future repo
-   re-runs the install step rather than widening blast radius now.
+   KMS; source-of-truth copy in the 1Password vault/Developer Environment
+   named `BEEP_CI`, with each secret addressed by a complete
+   `op://BEEP_CI/<item>/<field>` reference. A future repo re-runs the install
+   step rather than widening blast radius now.
 4. **Cost gates: $100/mo projection, $200/mo absolute ceiling (signed).**
    The standing 20%-over-projection rule stops expansion; ceiling breach is
    a hard stop + re-decision. (~1/7th of the Blacksmith run-rate.)
