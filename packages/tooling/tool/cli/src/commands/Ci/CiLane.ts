@@ -580,10 +580,16 @@ const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 // processes and the kernel OOM-kills a rotating 2-4 package set (exit 137:
 // epistemic-server, db-admin, epistemic-ui, editor, workspace-server...) or
 // loses the runner entirely, while the same tree passes every lane locally.
-// Only the lanes that actually die pin 2; the rest stay at the shared cap.
+// Only the lanes that actually die pin this; the rest stay at the shared cap.
 // Both injection sites (`boundedRootTurboArgs` and `coverageTurboArgs` in
 // Quality/Tasks.ts) keep caller-provided concurrency, so this pin wins.
-const CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG = "--concurrency=2";
+// Pinned to 1, not 2: at 2-wide an epistemic-server-class tsc build plus any
+// neighbor still OOM-killed the runner (Test Integration died in 8 minutes;
+// Check lost its whole runner 55 minutes in with zero concluded steps). A
+// single task fits — the green Test Unit lane builds the same packages —
+// so full serialization is the only setting these machines survive. Revisit
+// when the owned beep-* runners land.
+const CI_LANE_MEMORY_BOUND_CONCURRENCY_ARG = "--concurrency=1";
 
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
