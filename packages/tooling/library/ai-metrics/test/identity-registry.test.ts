@@ -12,10 +12,10 @@ import {
   readAiMetricsIdentityRegistry,
   upsertAiMetricsIdentityRegistry,
 } from "@beep/repo-ai-metrics";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path } from "effect";
+import { Effect, FileSystem, Layer, Order, Path, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -70,6 +70,31 @@ const makeLinkedWorktree = Effect.fn("identityRegistryTest.makeLinkedWorktree")(
   yield* writeText(pathApi.join(worktreeGitDir, "HEAD"), `${detachedSha}\n`);
   return worktreeGitDir;
 });
+
+// Records every `writeFileString` target so a test can assert on the temporary
+// file names the upsert chooses, which are otherwise renamed away before it ends.
+const recordingFileSystem = (writesRef: Ref.Ref<ReadonlyArray<string>>) =>
+  Layer.effect(
+    FileSystem.FileSystem,
+    Effect.map(FileSystem.FileSystem, (fs) => ({
+      ...fs,
+      writeFileString: (path: string, data: string, options?: { readonly flag?: FileSystem.OpenFlag | undefined }) =>
+        Ref.update(writesRef, (paths) => A.append(paths, path)).pipe(
+          Effect.andThen(fs.writeFileString(path, data, options))
+        ),
+    }))
+  ).pipe(Layer.provide(NodeServices.layer));
+
+const upsertRoot = (dataRoot: string, rootPath: string, homeDir: string) =>
+  upsertAiMetricsIdentityRegistry(
+    AiMetricsIdentityRegistryUpsertInput.make({
+      dataRoot,
+      hashSalt,
+      homeDir,
+      rootPath,
+      sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+    })
+  );
 
 describe("@beep/repo-ai-metrics identity registry", () => {
   it.effect("derives a primary clone as its own canonical root", () =>
@@ -421,6 +446,96 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         expect(failure.message).toContain("Failed to read");
         // The unreadable entry is still there: nothing was clobbered on the way out.
         expect((yield* fs.stat(pathApi.join(dataRoot, "identity/registry.json"))).type).toBe("Directory");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // Greptile P1 on PR #614: two runs against one data root each read the pre-merge snapshot,
+  // merge independently, and the later rename discards the earlier writer's roots entirely.
+  // Several clones, or a forwarder timer firing while an operator runs the command by hand,
+  // produce exactly this.
+  it.live("keeps every concurrent writer's root instead of letting the last rename win", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const homeDir = pathApi.join(tmpDir, "home");
+        const clonePaths = A.map(A.range(1, 5), (index) => pathApi.join(tmpDir, `clone-${index}`));
+        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { discard: true });
+
+        // Seed the first clone alone so it has a firstSeen predating the burst.
+        const seeded = yield* upsertRoot(dataRoot, clonePaths[0] ?? "", homeDir);
+        const seededRootId = seeded.roots[0]?.rootId;
+        const seededFirstSeen = seeded.roots[0]?.firstSeenAtEpochMillis;
+
+        yield* Effect.forEach(clonePaths, (clonePath) => upsertRoot(dataRoot, clonePath, homeDir), {
+          concurrency: "unbounded",
+        });
+
+        const finalRegistry = yield* readAiMetricsIdentityRegistry(dataRoot);
+
+        expect(A.length(finalRegistry.roots)).toBe(A.length(clonePaths));
+        expect(A.length(finalRegistry.sourceInstances)).toBe(A.length(clonePaths));
+        // firstSeen survives the concurrent merges rather than being reset by a racing writer.
+        expect(
+          pipe(
+            finalRegistry.roots,
+            A.findFirst((root) => root.rootId === seededRootId),
+            O.map((root) => root.firstSeenAtEpochMillis),
+            O.getOrElse(() => -1)
+          )
+        ).toBe(seededFirstSeen);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // A single fixed `registry.json.tmp` lets one writer promote another's half-written bytes or
+  // lose the rename. The lock narrows the window but does not close it: an operator clearing a
+  // stale lock by hand can leave two writers briefly overlapping.
+  it.effect("writes through a temporary file unique to each writer", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const homeDir = pathApi.join(tmpDir, "home");
+        const writesRef = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+        const clonePaths = A.map(A.range(1, 3), (index) => pathApi.join(tmpDir, `clone-${index}`));
+        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { discard: true });
+
+        yield* Effect.forEach(clonePaths, (clonePath) => upsertRoot(dataRoot, clonePath, homeDir), {
+          discard: true,
+        }).pipe(provideScopedLayer(recordingFileSystem(writesRef)));
+
+        const tmpWrites = pipe(yield* Ref.get(writesRef), A.filter(Str.endsWith(".tmp")));
+
+        expect(A.length(tmpWrites)).toBe(A.length(clonePaths));
+        expect(A.length(A.dedupe(tmpWrites))).toBe(A.length(tmpWrites));
+        expect(A.some(tmpWrites, (path) => Str.endsWith(path, "registry.json.tmp"))).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // A holder that died without releasing must not hang every later run. The wait is bounded and
+  // then fails loudly: silently skipping the upsert would leave a store whose recorded
+  // provenance does not match its data, which is the whole failure this registry exists to rule out.
+  it.live("fails loudly rather than hanging when a stale lock is never released", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const pathApi = yield* Path.Path;
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const clonePath = pathApi.join(tmpDir, "clone");
+        yield* makeClone(clonePath);
+
+        // A lock left behind by a holder that died mid-upsert.
+        yield* writeText(pathApi.join(dataRoot, "identity/registry.lock"), "dead-holder\n");
+
+        const failure = yield* Effect.flip(upsertRoot(dataRoot, clonePath, pathApi.join(tmpDir, "home")));
+
+        expect(failure).toBeInstanceOf(AiMetricsIdentityRegistryError);
+        expect(failure.message).toContain("Timed out waiting");
+        // The upsert failed instead of quietly doing nothing, and wrote no registry.
+        expect(yield* fs.exists(pathApi.join(dataRoot, "identity/registry.json"))).toBe(false);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

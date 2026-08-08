@@ -28,6 +28,16 @@ id = "GHSA-xcpc-8h2w-3j85"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
 
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; no fixed release exists yet (OSV fixed version '--', bun audit reports 0 fixable). image-size is a direct dependency of @beep/repo-cli used by repo tooling against first-party image files, never untrusted uploads, so the DoS surface is local tooling only. Newly published advisory, not introduced by the current PR (identical version resolves on main). Revisit when image-size publishes a release >2.0.2 and replace this ignore with a catalog bump."
+
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same advisory batch, same package, same rationale and exit condition as GHSA-w3rx-r6r6-pgpr above."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"

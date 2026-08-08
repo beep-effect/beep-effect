@@ -25,7 +25,12 @@ neither `dataRoot` nor `homeDir`/`stateHome` can resolve a root.
 `Option.none()` rather than a store anchored at `/.local/state/beep/ai-metrics`.
 The identity registry hashes the home directory as its resolved path, matching
 source discovery byte for byte so a trailing slash cannot fork the digest and
-break the join; and only a not-found error reads as "no registry" — an existing
+break the join. The whole read-merge-write now runs under an advisory lock at
+`identity/registry.lock` and promotes through a per-writer temporary file, so
+concurrent runs against one data root serialize rather than losing each other's
+roots to the last rename; waiting on the lock is bounded, so a lock left behind
+by a run that died fails the upsert with a message naming the file to remove
+instead of hanging. Only a not-found error reads as "no registry" — an existing
 but unreadable `identity/registry.json` now fails the upsert loudly instead of
 being treated as absent and overwritten, which would have discarded every other
 canonical root and its `firstSeen` history. Config snapshots enumerate the
