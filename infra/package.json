@@ -41,7 +41,7 @@
     "@pulumi/aws": "catalog:",
     "@pulumi/cloudflare": "catalog:",
     "@pulumi/command": "catalog:",
-    "@pulumi/ghaRunners": "file:ci-runners/sdks/ghaRunners",
+    "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
     "@pulumi/pulumi": "catalog:",
     "@pulumiverse/vercel": "catalog:"
   },
@@ -54,6 +54,6 @@
     "vitest": "catalog:"
   },
   "trustedDependencies": [
-    "@pulumi/ghaRunners"
+    "@pulumi/gharunners"
   ]
 }

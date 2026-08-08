@@ -40,8 +40,15 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { GOALS_DOCTOR_BASELINE_PATH } from "../../Goals/Doctor.ts";
-import { coverageRegressionBaselinePath } from "../../Quality/internal/CoverageRegression.ts";
-import { defaultJSDocTotalsBaselinePath } from "../../Quality/internal/JSDocRatchet.ts";
+import {
+  coverageRegressionBaselinePath,
+  coverageRegressionRegenerationCommand,
+} from "../../Quality/internal/CoverageRegression.ts";
+import {
+  defaultJSDocTotalsBaselinePath,
+  jsdocInventoryRegenerationCommand,
+  jsdocTotalsSnapshotCommand,
+} from "../../Quality/internal/JSDocRatchet.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -242,6 +249,7 @@ export const GateStalenessVerdict = S.Union([GateFresh, GateStale, GateUnproven]
 export type GateStalenessVerdict = typeof GateStalenessVerdict.Type;
 
 const isGateStale = S.is(GateStale);
+const isGateUnproven = S.is(GateUnproven);
 
 /**
  * The cached gate artifacts yeet knows how to judge for staleness.
@@ -269,25 +277,25 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     artifactPath: coverageRegressionBaselinePath,
     gateId: "coverage-regression",
     kind: "baseline",
-    regenerateCommand: "bun run beep quality coverage",
+    regenerateCommand: coverageRegressionRegenerationCommand,
   }),
   GateArtifactDescriptor.make({
     artifactPath: defaultJSDocTotalsBaselinePath,
     gateId: "jsdoc-totals-ratchet",
     kind: "baseline",
-    regenerateCommand: "bun run beep quality jsdoc-ratchet",
+    regenerateCommand: `${jsdocInventoryRegenerationCommand} && ${jsdocTotalsSnapshotCommand}`,
   }),
   GateArtifactDescriptor.make({
     artifactPath: "standards/knip.regression-baseline.jsonc",
     gateId: "knip-ratchet",
     kind: "baseline",
-    regenerateCommand: "bun run beep quality knip-ratchet",
+    regenerateCommand: "bun run beep quality knip --write-baseline",
   }),
   GateArtifactDescriptor.make({
     artifactPath: "standards/test-typecheck.blindspot-baseline.jsonc",
     gateId: "test-typecheck-blindspot",
     kind: "baseline",
-    regenerateCommand: "bun run beep lint package-test-typecheck",
+    regenerateCommand: "bun run beep lint package-test-typecheck --write-baseline",
   }),
   GateArtifactDescriptor.make({
     artifactPath: GOALS_DOCTOR_BASELINE_PATH,
@@ -385,6 +393,25 @@ export const staleGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdict>)
   A.filter(verdicts, isGateStale);
 
 /**
+ * Keep only verdicts whose proof artifact or comparison input is absent.
+ *
+ * **Example** (Filter an unproven verdict)
+ *
+ * ```ts
+ * import { GateUnproven, unprovenGateVerdicts } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(unprovenGateVerdicts([GateUnproven.make({ gateId: "coverage-regression", detail: "artifact not found" })]).length)
+ * ```
+ *
+ * @param verdicts - Every verdict produced by one staleness pass.
+ * @returns Only unproven verdicts, in the order they were produced.
+ * @category detection
+ * @since 0.0.0
+ */
+export const unprovenGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdict>): ReadonlyArray<GateUnproven> =>
+  A.filter(verdicts, isGateUnproven);
+
+/**
  * Render the gate-staleness line of a yeet status summary.
  *
  * **Details**
@@ -402,21 +429,26 @@ export const staleGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdict>)
  * ```
  *
  * @param stale - Stale verdicts from one staleness pass.
+ * @param unproven - Verdicts whose proof artifact or comparison input is absent.
  * @returns The `gate staleness:` line plus one indented line per stale gate.
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetGateStalenessBlock = (stale: ReadonlyArray<GateStale>): string =>
-  A.isReadonlyArrayEmpty(stale)
+export const renderYeetGateStalenessBlock = (
+  stale: ReadonlyArray<GateStale>,
+  unproven: ReadonlyArray<GateUnproven> = []
+): string =>
+  A.isReadonlyArrayEmpty(stale) && A.isReadonlyArrayEmpty(unproven)
     ? "gate staleness: none"
     : A.join(
         [
-          `gate staleness: ${A.length(stale)} artifact(s) predate this branch's newest change`,
+          `gate staleness: ${A.length(stale)} stale, ${A.length(unproven)} unproven`,
           ...A.map(
             stale,
             (verdict) =>
               `  - ${verdict.gateId} (${verdict.kind}): ${verdict.artifactPath} is older than ${verdict.newestInputPath}; regenerate with \`${verdict.regenerateCommand}\``
           ),
+          ...A.map(unproven, (verdict) => `  - ${verdict.gateId} (unproven): ${verdict.detail}`),
         ],
         "\n"
       );

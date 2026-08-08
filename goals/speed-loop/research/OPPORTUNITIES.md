@@ -1546,7 +1546,13 @@ fixes was the deterministic repair.
   closeout; a future packet may revive one only by citing its evidence and
   grill outcome.
 
-## Closeout friction receipts (2026-08-08)
+## Retrospective closeout friction receipts (2026-08-08)
+
+These incidents were reconstructed as a batch during closeout, not recorded at
+the moment each friction event occurred. They therefore preserve historical
+evidence but do not satisfy the contemporaneous-receipt rule in `AGENTS.md`.
+Future incidents must enter the active ledger when they happen so they can
+shape the work in flight.
 
 Generated-file auto-merge is wrong in both directions — third confirmed
 instance. `goals/INDEX.md` regenerated to 122 packets / 33 active; HEAD said

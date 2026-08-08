@@ -29,10 +29,11 @@ Turbo cache and lockfile-keyed baked AMI remain repo-owned performance work.
 1. Operator charter and decisions 57–63 in
    `goals/speed-loop/research/GRILL-DECISIONS.md`.
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
-3. `research/runner-endgame-decision-record.md`.
-4. Governing infrastructure, security, and package standards.
-5. This `SPEC.md`.
-6. `PLAN.md` and `GOAL.md`.
+3. Governing infrastructure, security, and package standards.
+4. This `SPEC.md`.
+5. `PLAN.md` and `GOAL.md`.
+6. Supporting research, including
+   `research/runner-endgame-decision-record.md`.
 
 Higher sources outrank lower sources when they conflict.
 
@@ -53,8 +54,9 @@ Higher sources outrank lower sources when they conflict.
   self-referential runner role ratified in decision 57; the single-use JIT
   token is deleted at registration.
 - GitHub App scope stays beep-effect-only. Secret material uses SSM
-  SecureString under KMS with `op://BEEP_CI` as source-of-truth reference;
-  never expose raw values.
+  SecureString under KMS, sourced through the 1Password vault/Developer
+  Environment named `BEEP_CI`; each secret must use a complete reference of
+  the form `op://BEEP_CI/<item>/<field>`. Never expose raw values.
 - Preserve scale-to-zero cost gates, diversified spot posture, capacity-error
   on-demand fallback, reaper TTL authority, and fork-PR trust boundaries from
   the decision record.

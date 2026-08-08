@@ -14,7 +14,7 @@ import { $InfraId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as aws from "@pulumi/aws";
-import * as ghaRunners from "@pulumi/ghaRunners";
+import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
 import * as S from "effect/Schema";
 import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";

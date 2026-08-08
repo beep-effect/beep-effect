@@ -5,13 +5,18 @@ import {
   ciLaneTimingsReport,
   ciRunnerClassForLabels,
   ciTimestampSpanSeconds,
+  collectCiLaneTimings,
+  decodeCiWorkflowJobsPage,
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   withCiLanePeakRss,
 } from "@beep/repo-cli/commands/Ci";
-import { A } from "@beep/utils";
+import { provideScopedLayer } from "@beep/test-utils";
+import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect, Exit, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
@@ -45,7 +50,51 @@ const job = (overrides: Partial<CiWorkflowJob> = {}) =>
     ...overrides,
   });
 
+const encoder = new TextEncoder();
+
+const stubHandle = (output: string) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(encoder.encode(output)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.make(encoder.encode(output)),
+    unref: Effect.succeed(Effect.void),
+  });
+
+const laneTimingsSpawnerLayer = Layer.effect(
+  ChildProcessSpawner.ChildProcessSpawner,
+  Effect.succeed(
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("lane timings never spawns a piped command");
+      }
+      const rendered = A.join([command.command, ...command.args], " ");
+      const output = Str.includes("actions/runs?per_page=1")(rendered)
+        ? '{"workflow_runs":[{"id":42}]}'
+        : Str.includes("per_page=100&page=1")(rendered)
+          ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
+          : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
+      return Effect.succeed(stubHandle(output));
+    })
+  )
+);
+
 describe("ci lane timings attempt filter", () => {
+  it.effect("collects every page of all-attempt jobs", () =>
+    Effect.gen(function* () {
+      const report = yield* collectCiLaneTimings(".", 1);
+
+      expect(report.jobCount).toBe(2);
+      expect(A.map(report.rows, (row) => row.jobId)).toStrictEqual([991, 992]);
+    }).pipe(provideScopedLayer(laneTimingsSpawnerLayer))
+  );
+
   it("reports job-level pickup latency on the first attempt", () => {
     expect(attemptOnePickupSeconds(job())).toStrictEqual(O.some(30));
   });
@@ -72,6 +121,27 @@ describe("ci lane timings attempt filter", () => {
     expect(report.attemptOneJobCount).toBe(1);
     expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(30));
   });
+
+  it("computes the midpoint for an even number of pickup samples", () => {
+    const report = ciLaneTimingsReport([
+      ciLaneTimingRow(job({ id: 991, started_at: "2026-08-06T12:00:01Z" })),
+      ciLaneTimingRow(job({ id: 992, started_at: "2026-08-06T12:01:39Z" })),
+    ]);
+
+    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(50));
+  });
+
+  it.effect("rejects a jobs payload that omits run_attempt", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        decodeCiWorkflowJobsPage(
+          '{"jobs":[{"completed_at":null,"conclusion":null,"created_at":"2026-08-06T12:00:00Z","id":991,"name":"Test Unit","run_id":42,"started_at":null,"status":"queued"}]}'
+        )
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
   it("renders an absent pickup as an empty TSV cell, never as zero", () => {
     // A zero would drag a spreadsheet average toward zero; an empty cell is

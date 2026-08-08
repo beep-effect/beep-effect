@@ -11,14 +11,14 @@
   "packetPath": "goals/speed-loop",
   "lifecycle": "completed-retained",
   "statusNote": "Closed by operator decisions 54-55: the distinct fleet program graduated to ci-fleet-endgame and earlier unshipped widgets remain parked; the original numeric stop rule was overtaken by that explicit adoption and graduation decision.",
-  "mission": "Standing research→probe→grill→ship→harvest loop over repo speed/quality/performance; terminates when two consecutive cycles' best probe-gated wins each fall under ~30s of full-sweep saving.",
+  "mission": "Standing research\u2192probe\u2192grill\u2192ship\u2192harvest loop over repo speed/quality/performance; terminates when two consecutive cycles' best probe-gated wins each fall under ~30s of full-sweep saving. Superseded 2026-08-08: decisions 54-55 closed the packet by graduating the runner endgame and parking residual work (see SPEC supersession note).",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the stop rule fires (two consecutive sub-30s cycles) and the closing cycle's work ships as a PR driven to mergeable via /yeet, citing speed-loop.",
+    "statement": "Achieved when either the stop rule fires (two consecutive sub-30s cycles) or signed operator decisions 54-55 graduate the remaining program and disposition the residual work; in either path, the closing work must ship as a PR driven to mergeable via /yeet, citing speed-loop.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [

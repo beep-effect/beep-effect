@@ -5,6 +5,7 @@ import {
   RepoRunContext,
   renderYeetMergePreviewConflict,
   validateMonitorGuards,
+  YEET_MERGED_PREVIEW_DIR_NAME,
   YeetMergePreview,
   YeetMergeTreeConflicted,
   yeetMergedPreviewContext,
@@ -125,6 +126,10 @@ describe("yeet merge-tree parsing", () => {
 });
 
 describe("yeet merged preview context", () => {
+  it("isolates the preview directory by process", () => {
+    expect(YEET_MERGED_PREVIEW_DIR_NAME).toBe(`merged-preview-${process.pid}`);
+  });
+
   it("moves the tree the proof runs on without moving the run identity", () => {
     const derived = yeetMergedPreviewContext(context, preview, "/repo/.beep/yeet");
 
