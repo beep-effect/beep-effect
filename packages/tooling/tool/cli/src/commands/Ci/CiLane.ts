@@ -818,7 +818,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=3"], options)],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
