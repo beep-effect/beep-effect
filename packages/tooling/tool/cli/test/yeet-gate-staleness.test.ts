@@ -124,7 +124,7 @@ describe("gate staleness reporting", () => {
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
       "bun run coverage:baseline:write",
-      "bun run beep quality jsdoc-ratchet --write-baseline",
+      "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
       "bun run beep quality knip --write-baseline",
       "bun run beep lint package-test-typecheck --write-baseline",
       "bun run beep goals doctor --write-baseline",

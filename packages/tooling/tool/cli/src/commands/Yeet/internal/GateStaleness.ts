@@ -44,7 +44,11 @@ import {
   coverageRegressionBaselinePath,
   coverageRegressionRegenerationCommand,
 } from "../../Quality/internal/CoverageRegression.ts";
-import { defaultJSDocTotalsBaselinePath, jsdocTotalsSnapshotCommand } from "../../Quality/internal/JSDocRatchet.ts";
+import {
+  defaultJSDocTotalsBaselinePath,
+  jsdocInventoryRegenerationCommand,
+  jsdocTotalsSnapshotCommand,
+} from "../../Quality/internal/JSDocRatchet.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -279,7 +283,7 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     artifactPath: defaultJSDocTotalsBaselinePath,
     gateId: "jsdoc-totals-ratchet",
     kind: "baseline",
-    regenerateCommand: jsdocTotalsSnapshotCommand,
+    regenerateCommand: `${jsdocInventoryRegenerationCommand} && ${jsdocTotalsSnapshotCommand}`,
   }),
   GateArtifactDescriptor.make({
     artifactPath: "standards/knip.regression-baseline.jsonc",

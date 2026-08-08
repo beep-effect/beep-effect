@@ -689,6 +689,30 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   return result.output;
 });
 
+const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(function* (
+  repoRoot: string,
+  runId: number,
+  pageNumber: number,
+  collected: ReadonlyArray<CiWorkflowJob>
+): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const endpoint = `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=100&page=${pageNumber}`;
+  const json = yield* ghApiJson(repoRoot, endpoint);
+  const page = yield* decodeCiWorkflowJobsPage(json).pipe(
+    CiCommandError.mapError(`Failed to decode jobs page ${pageNumber} for run ${runId}.`)
+  );
+  const jobs = A.appendAll(collected, page.jobs);
+  if (A.length(jobs) >= page.total_count) {
+    return jobs;
+  }
+  return yield* A.match(page.jobs, {
+    onEmpty: () =>
+      CiCommandError.make({
+        message: `Jobs pagination for run ${runId} ended after ${A.length(jobs)} of ${page.total_count} jobs.`,
+      }),
+    onNonEmpty: () => collectCiWorkflowJobPages(repoRoot, runId, pageNumber + 1, jobs),
+  });
+});
+
 /**
  * Collect lane timings for the most recent workflow runs.
  *
@@ -736,18 +760,9 @@ export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(functio
     Effect.map((page) => page.workflow_runs),
     CiCommandError.mapError("Failed to decode the workflow-runs response.")
   );
-  const jobPages = yield* Effect.forEach(
-    runs,
-    Effect.fnUntraced(function* (run: CiWorkflowRun) {
-      const endpoint = `repos/{owner}/{repo}/actions/runs/${run.id}/jobs?filter=all&per_page=100`;
-      const json = yield* ghApiJson(repoRoot, endpoint);
-      return yield* decodeCiWorkflowJobsPage(json).pipe(
-        Effect.map((page) => page.jobs),
-        CiCommandError.mapError(`Failed to decode the jobs response for run ${run.id}.`)
-      );
-    }),
-    { concurrency: 4 }
-  );
+  const jobPages = yield* Effect.forEach(runs, (run) => collectCiWorkflowJobPages(repoRoot, run.id, 1, A.empty()), {
+    concurrency: 4,
+  });
   return ciLaneTimingsReport(A.map(A.flatten(jobPages), ciLaneTimingRow));
 });
 

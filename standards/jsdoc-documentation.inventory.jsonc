@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-08T18:09:07.891Z",
+  "generatedAt": "2026-08-08T19:51:02.055Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -40725,8 +40725,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 727,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-727-collectcilanetimings",
+          "line": 751,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-751-collectcilanetimings",
           "currentTags": [
             "@param",
             "@returns",
@@ -40749,8 +40749,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 777,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-777-cilanetimingscommand",
+          "line": 792,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-792-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
