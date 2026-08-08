@@ -23,12 +23,13 @@ import { ChatActionError } from "./Chat.errors.ts";
 /**
  * Lists the threads in a workspace, most recent activity first.
  *
- * @remarks
+ * **Details**
+ *
  * The request payload is a workspace id, the response is the workspace's
  * thread read model array, and all handler-side failures are translated to
  * {@link ChatActionError} before crossing the wire.
  *
- * @example
+ * **Example** (Registered request)
  * ```ts
  * import { ChatRpcs, ListThreadsRpc } from "@beep/agents-use-cases/public"
  *
@@ -48,12 +49,13 @@ export const ListThreadsRpc = Rpc.make("ListThreads", {
 /**
  * Creates a new thread in a workspace.
  *
- * @remarks
+ * **Details**
+ *
  * The payload carries the target workspace and initial title. The sidecar owns
  * persistence and returns the created thread or a client-safe
  * {@link ChatActionError}.
  *
- * @example
+ * **Example** (Registered request)
  * ```ts
  * import { ChatRpcs, CreateThreadRpc } from "@beep/agents-use-cases/public"
  *
@@ -76,11 +78,12 @@ export const CreateThreadRpc = Rpc.make("CreateThread", {
 /**
  * Reads the persisted timeline read-model for a thread.
  *
- * @remarks
+ * **Details**
+ *
  * This query reads already-persisted timeline state; assistant turn generation
  * happens through {@link SendMessageRpc} and {@link EditMessageRpc}.
  *
- * @example
+ * **Example** (Registered request)
  * ```ts
  * import { ChatRpcs, GetTimelineRpc } from "@beep/agents-use-cases/public"
  *
@@ -102,11 +105,12 @@ export const GetTimelineRpc = Rpc.make("GetTimeline", {
  * the user row committed, while terminal `user_persisted` means stream unwind
  * finished without an assistant commit.
  *
- * @example
+ * **Example** (Status membership)
  * ```ts
  * import { TurnRequestStatus } from "@beep/agents-use-cases/public"
  * console.log(TurnRequestStatus.Options.includes("persisted"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -125,12 +129,13 @@ export const TurnRequestStatus = LiteralKit([
 /**
  * Runtime type for {@link TurnRequestStatus}.
  *
- * @example
+ * **Example** (Typed status value)
  * ```ts
  * import type { TurnRequestStatus } from "@beep/agents-use-cases/public"
  * const status: TurnRequestStatus = "persisted"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,11 +144,12 @@ export type TurnRequestStatus = typeof TurnRequestStatus.Type;
 /**
  * Reads persistence evidence for one exact client request id.
  *
- * @example
+ * **Example** (Registered request)
  * ```ts
  * import { ChatRpcs, GetTurnRequestStatusRpc } from "@beep/agents-use-cases/public"
  * console.log(ChatRpcs.requests.get("GetTurnRequestStatus") === GetTurnRequestStatusRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -157,11 +163,12 @@ export const GetTurnRequestStatusRpc = Rpc.make("GetTurnRequestStatus", {
  * Sends a message to a thread and streams the assistant turn back, one
  * rich-text block at a time as each finishes generating.
  *
- * @remarks
+ * **Details**
+ *
  * The declaration marks success as a stream of {@link AssistantBlock} values.
  * Every request failure uses the typed {@link ChatActionError} channel.
  *
- * @example
+ * **Example** (Streaming declaration)
  * ```ts
  * import { ChatRpcs, SendMessageRpc } from "@beep/agents-use-cases/public"
  * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
@@ -187,12 +194,13 @@ export const SendMessageRpc = Rpc.make("SendMessage", {
  * Edits an existing turn's message and re-streams the regenerated assistant
  * turn back, one rich-text block at a time.
  *
- * @remarks
+ * **Details**
+ *
  * The payload identifies both the thread and the turn being edited. Like
  * {@link SendMessageRpc}, success is a stream and failures are normalized to
  * {@link ChatActionError}.
  *
- * @example
+ * **Example** (Streaming declaration)
  * ```ts
  * import { ChatRpcs, EditMessageRpc } from "@beep/agents-use-cases/public"
  * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
@@ -225,7 +233,7 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
  * reconciliation via {@link GetTurnRequestStatusRpc}, and the two streaming
  * message turns ({@link SendMessageRpc}, {@link EditMessageRpc}).
  *
- * @example
+ * **Example** (Protocol surface)
  * ```ts
  * import { ChatRpcs } from "@beep/agents-use-cases/public"
  *

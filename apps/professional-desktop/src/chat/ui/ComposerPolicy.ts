@@ -1,11 +1,9 @@
 /**
- * Pure send/confirm decision policy for the desktop chat composer.
+ * Pure send decision policy for the desktop chat composer.
  *
  * The composer's editor contract demands synchronous boolean answers, so the
  * policy is a synchronous pure service: handlers gather registry inputs, ask
- * for one {@link ComposerSendDecision}, and apply it with a single match. The
- * duplicated refusal branches that previously drifted between the send and
- * confirm closures exist here exactly once.
+ * for one {@link ComposerSendDecision}, and apply it with a single match.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -17,7 +15,7 @@ import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
 import { LiteralKit } from "@beep/schema";
-import { A, flow, O, Str } from "@beep/utils";
+import { A, flow, Str } from "@beep/utils";
 import { Context, Layer, Match, Result, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -28,6 +26,13 @@ const $I = $ProfessionalDesktopId.create("chat/ui/ComposerPolicy");
 
 /**
  * Maximum characters one sent message may carry.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MESSAGE_CHARACTERS } from "@/chat/ui/ComposerPolicy"
+ *
+ * console.log(MAX_MESSAGE_CHARACTERS) // 16000
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -130,17 +135,10 @@ export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`Com
 /**
  * Per-category presence flags for a set of document safety violations.
  *
- * @example
- * ```ts
- * import { DocumentViolationFlags } from "@/chat/ui/ComposerPolicy"
- *
- * console.log(DocumentViolationFlags.empty.raw) // false
- * ```
- *
  * @category models
  * @since 0.0.0
  */
-export class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
+class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
   {
     footnote: S.Boolean,
     raw: S.Boolean,
@@ -165,7 +163,7 @@ export class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`D
  * @category validation
  * @since 0.0.0
  */
-export const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>): DocumentViolationFlags =>
+const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>): DocumentViolationFlags =>
   A.reduce(issues, DocumentViolationFlags.empty, (flags, issue) =>
     Match.value(issue).pipe(
       Match.tagsExhaustive({
@@ -206,6 +204,13 @@ const documentViolationReason = flow(
 
 /**
  * The refusal copy shown when a still-unsafe document blocks the editor.
+ *
+ * @example
+ * ```ts
+ * import { unsafeDocumentMessage } from "@/chat/ui/ComposerPolicy"
+ *
+ * console.log(unsafeDocumentMessage([])) // "This draft contains trusted raw Markdown or HTML. Edit or replace that content before sending."
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -250,45 +255,9 @@ export const composerDocumentFromEditorState: {
 });
 
 /**
- * Selects the document submitted by the composer. A confirmed normalized
- * payload wins over Lexical's projection so lossy nodes such as images retain
- * the exact semantics shown in the confirmation preview. Ordinary projection
- * preserves the seed's persistence-owned frontmatter.
- *
- * @example
- * ```ts
- * import { composerDocumentForSend } from "@/chat/ui/ComposerPolicy"
- * import { documentToEditorState } from "@beep/lexical-schema"
- * import * as Md from "@beep/md/Md.model"
- * import { refineSafeDocument } from "@beep/md/Md.safe"
- * import { Effect, Result } from "effect"
- * import * as O from "effect/Option"
- *
- * const program = Effect.gen(function* () {
- *   const seed = Md.Document.make({ children: [] })
- *   const state = yield* documentToEditorState(seed)
- *   const confirmed = Result.getOrThrow(refineSafeDocument(seed))
- *   console.log(composerDocumentForSend(seed, state, O.some(confirmed)) === confirmed) // true
- * })
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const composerDocumentForSend: {
-  (state: SerializedEditorState, confirmed: O.Option<SafeDocument>): (seed: Md.Document) => Md.Document;
-  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document;
-} = dual(
-  3,
-  (seed: Md.Document, state: SerializedEditorState, confirmed: O.Option<SafeDocument>): Md.Document =>
-    O.getOrElse(confirmed, () => composerDocumentFromEditorState(seed, state))
-);
-
-/**
- * The composer's send/confirm decision as data: silently gated, refused with a
- * notice, refused with an inline safety refusal, or accepted with the safe
- * content to dispatch. The handler that asked decides what acceptance means —
- * submit for the send path, stash-and-confirm for the normalization path.
+ * The composer's send decision as data: silently gated, refused with a notice,
+ * refused with an inline safety refusal, or accepted with the safe content to
+ * dispatch.
  *
  * @example
  * ```ts
@@ -310,7 +279,7 @@ export const ComposerSendDecision = LiteralKit(["gated", "refuse", "send", "unsa
   })
   .pipe(
     $I.annoteSchema("ComposerSendDecision", {
-      description: "Outcome of one composer send or confirm-normalization policy decision.",
+      description: "Outcome of one composer send policy decision.",
     })
   );
 
@@ -329,23 +298,9 @@ export type ComposerSendDecision = typeof ComposerSendDecision.Type;
  * @since 0.0.0
  */
 interface ComposerSendInput {
-  readonly confirmed: O.Option<SafeDocument>;
   readonly gateOpen: boolean;
   readonly seed: Md.Document;
   readonly state: SerializedEditorState;
-  readonly turnActive: boolean;
-}
-
-/**
- * Inputs to the confirm-normalization decision. `normalized` carries the
- * escaped copy retained by a raw-normalization gate, `None` when no gate is
- * open or the gate is a non-confirmable unsafe-document refusal.
- *
- * @category models
- * @since 0.0.0
- */
-interface ComposerConfirmInput {
-  readonly normalized: O.Option<SafeDocument>;
   readonly turnActive: boolean;
 }
 
@@ -357,7 +312,6 @@ interface ComposerConfirmInput {
  */
 export type ComposerPolicyShape = {
   readonly decideSend: (input: ComposerSendInput) => ComposerSendDecision;
-  readonly decideConfirmNormalization: (input: ComposerConfirmInput) => ComposerSendDecision;
 };
 
 /**
@@ -390,12 +344,6 @@ const emptyProjectionRefusal = refuseWith(
   })
 );
 
-const emptyEscapedCopyRefusal = refuseWith(
-  ComposerNotice.cases.error.make({
-    message: "The escaped copy contains no visible text. Edit the draft before sending.",
-  })
-);
-
 const characterLimitRefusal = (length: number): ComposerSendDecision =>
   refuseWith(
     ComposerNotice.cases.error.make({
@@ -416,26 +364,20 @@ const acceptWithinLimit = (content: SafeDocument, plainText: string): ComposerSe
  * @example
  * ```ts
  * import { composerPolicy } from "@/chat/ui/ComposerPolicy"
- * import * as O from "effect/Option"
  *
- * const decision = composerPolicy.decideConfirmNormalization({ normalized: O.none(), turnActive: false })
- * console.log(decision.kind) // "gated"
+ * console.log(typeof composerPolicy.decideSend) // "function"
  * ```
  *
  * @category services
  * @since 0.0.0
  */
 export const composerPolicy: ComposerPolicyShape = ComposerPolicy.of({
-  decideSend: ({ confirmed, gateOpen, seed, state, turnActive }) => {
-    if (O.isNone(confirmed) && gateOpen) return ComposerSendDecision.cases.gated.make({});
+  decideSend: ({ gateOpen, seed, state, turnActive }) => {
+    if (gateOpen) return ComposerSendDecision.cases.gated.make({});
     if (turnActive) return streamingRefusal;
-    const content = composerDocumentForSend(seed, state, confirmed);
+    const content = composerDocumentFromEditorState(seed, state);
     if (A.isReadonlyArrayEmpty(content.children)) return emptyProjectionRefusal;
-    const safeContent = O.match(confirmed, {
-      onNone: () => refineSafeDocument(content),
-      onSome: Result.succeed,
-    });
-    return Result.match(safeContent, {
+    return Result.match(refineSafeDocument(content), {
       onFailure: (issues) =>
         ComposerSendDecision.cases.unsafe.make({
           refusal: ComposerSafetyRefusal.make({
@@ -444,16 +386,6 @@ export const composerPolicy: ComposerPolicyShape = ComposerPolicy.of({
           }),
         }),
       onSuccess: (safe) => acceptWithinLimit(safe, renderPlainTextUnsafe(safe)),
-    });
-  },
-  decideConfirmNormalization: ({ normalized, turnActive }) => {
-    if (turnActive) return streamingRefusal;
-    return O.match(normalized, {
-      onNone: () => ComposerSendDecision.cases.gated.make({}),
-      onSome: (content) => {
-        const plainText = renderPlainTextUnsafe(content);
-        return Str.isEmpty(Str.trim(plainText)) ? emptyEscapedCopyRefusal : acceptWithinLimit(content, plainText);
-      },
     });
   },
 });

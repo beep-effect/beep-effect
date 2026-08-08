@@ -1,4 +1,3 @@
-import { draftAtoms } from "@beep/agents-client/Chat.atoms";
 import {
   attachmentFailureAtom,
   attachmentSweepBindingAtom,
@@ -21,7 +20,7 @@ import { documentSafetyIssues, refineSafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
-import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
 import { it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -32,16 +31,12 @@ import { FastCheck as fc } from "effect/testing";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
-import { Composer, ComposerSafetyWarning } from "@/chat/ui/Composer";
 import {
-  composerConfirmedNormalizationAtoms,
-  composerConfirmNormalizationHandlerAtoms,
   composerDocumentSafetyGateAtoms,
   composerSerializedChangeHandlerAtoms,
-  normalizeLegacyRawDocument,
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
-import { composerDocumentForSend, composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
+import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
 import type { Atom } from "effect/unstable/reactivity";
 
 function SeedEditor({ label, text }: { readonly label: string; readonly text: string }) {
@@ -66,17 +61,6 @@ function SeedEditor({ label, text }: { readonly label: string; readonly text: st
       Seed
     </button>
   );
-}
-
-function ConfirmationProbe({
-  document,
-  threadId,
-}: {
-  readonly document: Md.Document;
-  readonly threadId: WorkspaceIdentity.ThreadId;
-}) {
-  const confirmed = useAtomValue(composerConfirmedNormalizationAtoms(threadId)(document));
-  return <output data-testid="normalization-confirmation">{O.isSome(confirmed) ? "confirmed" : "pending"}</output>;
 }
 
 function CaptureRuntimeKeeper(): null {
@@ -1264,118 +1248,13 @@ describe("editor contract hardening", { concurrent: false }, () => {
 
     expect(documentSafetyIssues(lexicalProjection)).toEqual([]);
     const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(legacy));
-    expect(gate._tag).toBe("RawNormalization");
-    if (gate._tag !== "RawNormalization") return;
-    expect(gate.preview).toContain(rawValue);
-    expect(Result.isSuccess(refineSafeDocument(gate.normalized))).toBe(true);
+    expect(gate.issueCount).toBe(1);
+    expect(gate.message).toMatch(/trusted raw Markdown or HTML/u);
     expect(legacy.children[0]).toHaveProperty("children.0.children.0.children.0._tag", "rawHtml");
   });
 
-  it("normalizes nested raw nodes to escaped text without approving unsafe URLs", () => {
-    const legacy = Md.Document.make({
-      children: [
-        Md.Table.make({
-          children: [
-            Md.TableRow.make({
-              children: [
-                Md.TableCell.make({
-                  children: [Md.RawMarkdown.make({ value: "**literal**" })],
-                }),
-              ],
-            }),
-          ],
-        }),
-        Md.P.make({
-          children: [
-            Md.A.make({
-              href: "javascript:alert(1)",
-              children: [Md.RawHtml.make({ value: "<script>alert(1)</script>" })],
-            }),
-          ],
-        }),
-      ],
-    });
-    const normalized = normalizeLegacyRawDocument(legacy);
-
-    expect(normalized.children[0]).toHaveProperty("children.0.children.0.children.0._tag", "text");
-    expect(documentSafetyIssues(normalized).map((issue) => issue._tag)).toEqual(["UnsafeUrl"]);
-    const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(legacy));
-    expect(gate._tag).toBe("UnsafeDocument");
-    if (gate._tag === "UnsafeDocument") expect(gate.rawNormalizationPending).toBe(true);
-  });
-
   it.effect(
-    "preserves mixed raw provenance until the corrected safe document is explicitly confirmed",
-    Effect.fnUntraced(function* () {
-      const duplicateIdentifier = Md.FootnoteIdentifier.make("duplicate");
-      const duplicateFootnote = (value: string) =>
-        Md.FootnoteDefinition.make({
-          identifier: duplicateIdentifier,
-          children: [Md.P.make({ children: [Md.Text.make({ value })] })],
-        });
-      const rawText = () => Md.RawHtml.make({ value: "<strong>legacy literal</strong>" });
-      const legacyDocuments = [
-        Md.Document.make({
-          children: [
-            Md.P.make({
-              children: [
-                rawText(),
-                Md.A.make({ href: "javascript:alert(1)", children: [Md.Text.make({ value: "unsafe link" })] }),
-              ],
-            }),
-          ],
-        }),
-        Md.Document.make({
-          children: [Md.P.make({ children: [rawText(), Md.Text.make({ value: "invalid\u0000scalar" })] })],
-        }),
-        Md.Document.make({
-          children: [Md.P.make({ children: [rawText()] }), duplicateFootnote("first"), duplicateFootnote("second")],
-        }),
-      ];
-      const corrected = Md.Document.make({
-        children: [Md.P.make({ children: [Md.Text.make({ value: "current edited literal" })] })],
-      });
-      const expected = Result.getOrThrow(refineSafeDocument(corrected));
-      const correctedState = yield* documentToEditorState(corrected);
-
-      for (const [index, legacy] of legacyDocuments.entries()) {
-        const threadId = WorkspaceIdentity.ThreadId.make(8_100 + index);
-        const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
-        const gateAtom = composerDocumentSafetyGateAtoms(threadId)(legacy);
-        const confirmedAtom = composerConfirmedNormalizationAtoms(threadId)(legacy);
-        const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(legacy);
-        const confirmHandlerAtom = composerConfirmNormalizationHandlerAtoms(threadId)(legacy);
-        registry.mount(gateAtom);
-        registry.mount(confirmedAtom);
-        registry.mount(changeHandlerAtom);
-        registry.mount(confirmHandlerAtom);
-
-        const initialGate = O.getOrThrow(registry.get(gateAtom));
-        expect(initialGate._tag).toBe("UnsafeDocument");
-        if (initialGate._tag === "UnsafeDocument") expect(initialGate.rawNormalizationPending).toBe(true);
-
-        registry.get(changeHandlerAtom)(correctedState);
-        yield* Effect.promise(() =>
-          waitFor(() => {
-            const gate = O.getOrThrow(registry.get(gateAtom));
-            expect(gate._tag).toBe("RawNormalization");
-            if (gate._tag === "RawNormalization") {
-              expect(gate.normalized).toEqual(expected);
-              expect(gate.preview).toContain("current edited literal");
-            }
-          })
-        );
-        expect(O.isNone(registry.get(confirmedAtom))).toBe(true);
-
-        expect(registry.get(confirmHandlerAtom)()).toBe(true);
-        expect(registry.get(confirmedAtom)).toEqual(O.some(expected));
-        registry.dispose();
-      }
-    })
-  );
-
-  it.effect(
-    "clears a corrected non-raw safety refusal without adding a normalization confirmation",
+    "clears a corrected safety refusal once the draft is edited safe",
     Effect.fnUntraced(function* () {
       const threadId = WorkspaceIdentity.ThreadId.make(8_104);
       const unsafe = Md.Document.make({
@@ -1394,19 +1273,15 @@ describe("editor contract hardening", { concurrent: false }, () => {
       });
       const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(unsafe);
-      const confirmedAtom = composerConfirmedNormalizationAtoms(threadId)(unsafe);
       const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(unsafe);
       registry.mount(gateAtom);
-      registry.mount(confirmedAtom);
       registry.mount(changeHandlerAtom);
 
       const initialGate = O.getOrThrow(registry.get(gateAtom));
-      expect(initialGate._tag).toBe("UnsafeDocument");
-      if (initialGate._tag === "UnsafeDocument") expect(initialGate.rawNormalizationPending).toBe(false);
+      expect(initialGate.message).toMatch(/link or embedded URL outside the safe destination policy/u);
 
       registry.get(changeHandlerAtom)(yield* documentToEditorState(corrected));
       yield* Effect.promise(() => waitFor(() => expect(O.isNone(registry.get(gateAtom))).toBe(true)));
-      expect(O.isNone(registry.get(confirmedAtom))).toBe(true);
       registry.dispose();
     })
   );
@@ -1418,7 +1293,6 @@ describe("editor contract hardening", { concurrent: false }, () => {
     });
     const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(document));
 
-    expect(gate._tag).toBe("UnsafeDocument");
     expect(gate.message).toMatch(/NUL character or lone UTF-16 surrogate/u);
     expect(gate.message).not.toMatch(/link|URL|private|payload/u);
   });
@@ -1433,113 +1307,21 @@ describe("editor contract hardening", { concurrent: false }, () => {
     const document = Md.Document.make({ children: [footnote("private first"), footnote("private second")] });
     const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(document));
 
-    expect(gate._tag).toBe("UnsafeDocument");
     expect(gate.message).toMatch(/duplicate footnote definitions/u);
     expect(gate.message).not.toMatch(/private|first|second/u);
   });
 
-  it("renders an escaped normalization preview and requires the explicit confirmation button", () => {
-    const confirm = vi.fn();
-    const source = `</pre><script data-normalization-xss="no">alert(1)</script>`;
-    const view = render(
-      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag -- Intentional hostile preview fixture; assertions prove it remains escaped and creates no script node.
-      <ComposerSafetyWarning message="Review the escaped literal copy." preview={source} onConfirm={confirm} />
-    );
-
-    expect(view.container.querySelector("script")).toBeNull();
-    expect(screen.getByRole("alert")).toHaveTextContent("<script");
-    fireEvent.click(screen.getByRole("button", { name: "Send escaped literal copy" }));
-    expect(confirm).toHaveBeenCalledTimes(1);
-  });
-
   it.effect(
-    "sends the exact normalized payload through the normal cleanup transaction",
+    "preserves persistence-owned seed frontmatter through the editor projection",
     Effect.fnUntraced(function* () {
-      const threadId = WorkspaceIdentity.ThreadId.make(8_081);
-      const source = "<strong>send me literally</strong>";
-      const legacy = Md.Document.make({
-        children: [
-          Md.P.make({
-            children: [
-              Md.RawHtml.make({ value: source }),
-              Md.Img.make({
-                alt: "Lossy diagram",
-                src: "https://example.com/lossy-diagram.png",
-              }),
-            ],
-          }),
-        ],
+      const seed = Md.Document.make({
+        children: [Md.P.make({ children: [Md.Text.make({ value: "persisted draft" })] })],
         frontmatter: O.some({ source: "legacy-import" }),
       });
-      const normalized = Result.getOrThrow(refineSafeDocument(normalizeLegacyRawDocument(legacy)));
-      const lexicalState = yield* documentToEditorState(legacy);
-      expect(editorStateToDocument(lexicalState)).not.toEqual(normalized);
-      expect(composerDocumentForSend(legacy, lexicalState, O.some(normalized))).toBe(normalized);
-      expect(composerDocumentForSend(lexicalState, O.some(normalized))(legacy)).toBe(normalized);
-      expect(composerDocumentForSend(legacy, lexicalState, O.none()).frontmatter).toEqual(legacy.frontmatter);
-      expect(composerDocumentFromEditorState(legacy, lexicalState).frontmatter).toEqual(legacy.frontmatter);
-      expect(composerDocumentFromEditorState(lexicalState)(legacy).frontmatter).toEqual(legacy.frontmatter);
+      const lexicalState = yield* documentToEditorState(seed);
 
-      const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:normalization-attachment");
-      const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
-      const view = render(
-        <RegistryProvider initialValues={[[draftAtoms(threadId), O.some(legacy)]]}>
-          <Composer threadId={threadId} />
-          <ConfirmationProbe document={legacy} threadId={threadId} />
-        </RegistryProvider>
-      );
-
-      yield* Effect.promise(() => screen.findAllByText(source));
-      const input = view.container.querySelector<HTMLInputElement>('input[type="file"]');
-      expect(input).not.toBeNull();
-      fireEvent.change(input!, {
-        target: {
-          files: [new File(["png"], "legacy.png", { type: "image/png" })],
-        },
-      });
-      yield* Effect.promise(() => screen.findByRole("button", { name: "Remove legacy.png" }));
-      const attachmentStatus = screen.getByText(/^Captured 1 attachment/);
-      expect(attachmentStatus).toHaveAttribute("role", "status");
-      expect(attachmentStatus).toHaveTextContent("Captured 1 attachment");
-      expect(attachmentStatus).toHaveTextContent("attachments are previewed locally and aren't sent to the model yet");
-      expect(attachmentStatus.closest('[data-testid="composer"]')).not.toBeNull();
-
-      fireEvent.click(screen.getByRole("button", { name: "Send escaped literal copy" }));
-
-      yield* Effect.promise(() =>
-        waitFor(() => expect(screen.queryByRole("button", { name: "Remove legacy.png" })).not.toBeInTheDocument())
-      );
-      yield* Effect.promise(() =>
-        waitFor(() => expect(screen.getByRole("combobox", { name: "Message composer" })).not.toHaveTextContent(source))
-      );
-      expect(screen.queryByText(/^Captured 1 attachment/)).not.toBeInTheDocument();
-      expect(createObjectUrl).toHaveBeenCalledTimes(1);
-      expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
-
-      view.unmount();
-      expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
-    })
-  );
-
-  it.effect(
-    "keeps whitespace-only raw normalization pending instead of dispatching an empty send",
-    Effect.fnUntraced(function* () {
-      const threadId = WorkspaceIdentity.ThreadId.make(8_082);
-      const legacy = Md.Document.make({
-        children: [Md.P.make({ children: [Md.RawMarkdown.make({ value: " \t " })] })],
-      });
-      render(
-        <RegistryProvider initialValues={[[draftAtoms(threadId), O.some(legacy)]]}>
-          <Composer threadId={threadId} />
-          <ConfirmationProbe document={legacy} threadId={threadId} />
-        </RegistryProvider>
-      );
-
-      yield* Effect.promise(() => screen.findByRole("button", { name: "Send escaped literal copy" }));
-      expect(screen.getByTestId("normalization-confirmation")).toHaveTextContent("pending");
-      fireEvent.click(screen.getByRole("button", { name: "Send escaped literal copy" }));
-      expect(screen.getByTestId("normalization-confirmation")).toHaveTextContent("pending");
-      expect(screen.getByRole("button", { name: "Send escaped literal copy" })).toBeInTheDocument();
+      expect(composerDocumentFromEditorState(seed, lexicalState).frontmatter).toEqual(seed.frontmatter);
+      expect(composerDocumentFromEditorState(lexicalState)(seed).frontmatter).toEqual(seed.frontmatter);
     })
   );
 });

@@ -992,6 +992,20 @@ const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
   })
 );
 
+/**
+ * One read for the document-intake surface: intake state, vault configuration
+ * flags, and the stable action record, keyed by workspace.
+ *
+ * @example
+ * ```ts
+ * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
 export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   Atom.make((get): DocumentIntakeSurface => {
     const vaultConfig = get(workspaceVaultConfigAtom(workspaceId));

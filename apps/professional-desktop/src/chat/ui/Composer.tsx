@@ -26,7 +26,6 @@
 import { reportDecodeFailureAtom, runTurnAtom } from "@beep/agents-client/Chat.atoms";
 import { attachmentsAtom } from "@beep/editor/chat/atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
-import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
 import { MentionOption } from "@beep/editor/chat/config";
 import { defaultChatSlashItems } from "@beep/editor/chat/slash-items";
 import * as Md from "@beep/md/Md.model";
@@ -35,13 +34,14 @@ import { A, O, Str, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { ComposerDocumentSafetyGate, composerShellAtoms, composerSurfaceAtoms } from "./Composer.atoms.ts";
+import { composerShellAtoms, composerSurfaceAtoms } from "./Composer.atoms.ts";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer";
 import type { MentionSource } from "@beep/editor/chat/config";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { JSX } from "react";
+import type { ComposerSafetyRefusal } from "./ComposerPolicy.ts";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
 
@@ -61,77 +61,16 @@ const mentionSource: MentionSource = (query) => {
 
 const emptyDocument = Md.Document.make({ children: [] });
 
-/**
- * Visible safety gate shared by send-time refusals and legacy raw-document
- * normalization. Preview content is rendered as React text in a `<pre>`, never
- * as HTML.
- *
- * @example
- * ```tsx
- * import { ComposerSafetyWarning } from "@/chat/ui/Composer"
- *
- * function LegacyDraftWarning() {
- *   return (
- *     <ComposerSafetyWarning
- *       message="Review the escaped literal copy before sending."
- *       preview="<strong>literal text</strong>"
- *       onConfirm={() => console.log("confirmed")}
- *     />
- *   )
- * }
- * ```
- *
- * @category components
- * @since 0.0.0
- */
-export function ComposerSafetyWarning({
-  message,
-  onConfirm,
-  preview,
-}: {
-  readonly message: string;
-  readonly onConfirm?: (() => void) | undefined;
-  readonly preview?: string | undefined;
-}): JSX.Element {
+// Visible safety refusal banner shared by the seed-time gate and send-time
+// refusals. Message-only; refused content itself is never echoed back.
+function ComposerSafetyWarning({ message }: { readonly message: string }): JSX.Element {
   return (
     <div
       className="mb-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive"
       role="alert"
     >
       <p>{message}</p>
-      {preview === undefined ? null : (
-        <>
-          <p className="mt-2 font-medium">Escaped literal preview</p>
-          <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded border bg-background p-2 text-foreground">
-            {preview}
-          </pre>
-          <Button className="mt-2" size="sm" type="button" onClick={onConfirm}>
-            Send escaped literal copy
-          </Button>
-        </>
-      )}
     </div>
-  );
-}
-
-function ComposerRawNormalizationWarning({
-  message,
-  onConfirm,
-  preview,
-}: {
-  readonly message: string;
-  readonly onConfirm: () => boolean;
-  readonly preview: string;
-}): JSX.Element {
-  const [editor] = useLexicalComposerContext();
-  return (
-    <ComposerSafetyWarning
-      message={message}
-      preview={preview}
-      onConfirm={() => {
-        if (onConfirm()) editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
-      }}
-    />
   );
 }
 
@@ -195,21 +134,10 @@ interface ThreadComposerProps {
   readonly threadId: ThreadId;
 }
 
-function ComposerSafetyGateNotice({
-  gate,
-  onConfirm,
-}: {
-  readonly gate: O.Option<ComposerDocumentSafetyGate>;
-  readonly onConfirm: () => boolean;
-}): JSX.Element | null {
+function ComposerSafetyGateNotice({ gate }: { readonly gate: O.Option<ComposerSafetyRefusal> }): JSX.Element | null {
   return O.match(gate, {
     onNone: thunkNull,
-    onSome: ComposerDocumentSafetyGate.match({
-      UnsafeDocument: ({ message }) => <ComposerSafetyWarning message={message} />,
-      RawNormalization: ({ message, preview }) => (
-        <ComposerRawNormalizationWarning message={message} preview={preview} onConfirm={onConfirm} />
-      ),
-    }),
+    onSome: (refusal) => <ComposerSafetyWarning message={refusal.message} />,
   });
 }
 
@@ -268,7 +196,7 @@ function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: Thr
       mentionSource={mentionSource}
     >
       <AttachmentTransportNotice />
-      <ComposerSafetyGateNotice gate={surface.safetyGate} onConfirm={surface.confirmNormalization} />
+      <ComposerSafetyGateNotice gate={surface.safetyGate} />
     </ChatComposer>
   );
 }

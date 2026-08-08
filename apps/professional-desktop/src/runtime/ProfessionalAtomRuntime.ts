@@ -37,22 +37,8 @@ const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
  */
 export const professionalBrowserRuntime = professionalAtomRuntimeFactory(ProfessionalDesktopServicesLive);
 
-/**
- * Browser-local persistence service shared by the runtime and bootstrap
- * migrations that must complete before persisted atoms mount.
- *
- * @example
- * ```ts
- * import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime"
- * import { Layer } from "effect"
- *
- * console.log(Layer.isLayer(ProfessionalStorageLive)) // true
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);
+// Browser-local persistence service backing the storage runtime.
+const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);
 
 /**
  * Shared browser-storage runtime for app-owned persisted atoms.

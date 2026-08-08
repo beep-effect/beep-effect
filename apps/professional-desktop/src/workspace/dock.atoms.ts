@@ -325,21 +325,6 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
 export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v2";
 
 /**
- * Retired snapshot keys removed at boot.
- *
- * @example
- * ```ts
- * import { LEGACY_DOCK_SNAPSHOT_KEYS } from "@/workspace/dock.atoms"
- *
- * console.log(LEGACY_DOCK_SNAPSHOT_KEYS[0]) // "desktop:dock-workspace:v1"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const LEGACY_DOCK_SNAPSHOT_KEYS = ["desktop:dock-workspace:v1"] as const;
-
-/**
  * Builds the runtime action that clears the saved layout before executing an
  * injected reload effect.
  *
@@ -441,8 +426,8 @@ const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make();
  * console.log(typeof dockGraphAtom === "object") // true
  * ```
  *
- * @effects Allocates a dock atom registry, removes retired localStorage keys,
- * restores a valid persisted workspace, and clears an invalid snapshot.
+ * @effects Allocates a dock atom registry, restores a valid persisted
+ * workspace, and clears an invalid snapshot.
  * @category constructors
  * @since 0.0.0
  */
@@ -451,13 +436,6 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
     Layer.mergeAll(DockEngineLive, DockSnapshotStoreLocalStorage),
     defaultDesktopWorkspace
   );
-  // Retired-key hygiene: a v1 snapshot decodes but references the retired
-  // coarse `ontology` renderer, so it must never restore — delete stale keys
-  // before looking for the current one (failures never fail the boot).
-  yield* Effect.try({
-    try: () => A.forEach(LEGACY_DOCK_SNAPSHOT_KEYS, (key) => globalThis.localStorage.removeItem(key)),
-    catch: () => storageFailure("save"),
-  }).pipe(Effect.ignore);
   // Storage access is guarded end to end: an unreadable store means "nothing
   // to restore", and a failed poison cleanup must not fail the boot either.
   const persisted = yield* Effect.try({

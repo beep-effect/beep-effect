@@ -1,9 +1,7 @@
 import { documentToEditorState } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
-import { refineSafeDocument } from "@beep/md/Md.safe";
 import { it, layer } from "@effect/vitest";
-import { Effect, Result } from "effect";
-import * as O from "effect/Option";
+import { Effect } from "effect";
 import * as Str from "effect/String";
 import { describe, expect } from "vitest";
 import {
@@ -23,8 +21,6 @@ const textDocument = (value: string): Md.Document =>
 // editor projection sanitizes unsafe hrefs before the policy ever sees them.
 const unsafeScalarDocument = textDocument("bad\u0000scalar");
 
-const safeTextDocument = (value: string) => Result.getOrThrow(refineSafeDocument(textDocument(value)));
-
 // Exhaustive by construction: adding a ComposerSendDecision variant fails these
 // tests at compile time instead of silently falling through a `.kind ===` guard.
 const decisionSummary = (decision: ComposerSendDecision): string =>
@@ -36,11 +32,10 @@ const decisionSummary = (decision: ComposerSendDecision): string =>
   });
 
 describe("composerPolicy.decideSend", () => {
-  it.effect("silently gates when a safety gate is open and nothing is confirmed", () =>
+  it.effect("silently gates while a seed-time safety gate is open", () =>
     Effect.gen(function* () {
       const state = yield* documentToEditorState(textDocument("hello"));
       const decision = composerPolicy.decideSend({
-        confirmed: O.none(),
         gateOpen: true,
         seed: textDocument("hello"),
         state,
@@ -54,7 +49,6 @@ describe("composerPolicy.decideSend", () => {
     Effect.gen(function* () {
       const state = yield* documentToEditorState(textDocument("hello"));
       const decision = composerPolicy.decideSend({
-        confirmed: O.none(),
         gateOpen: false,
         seed: textDocument("hello"),
         state,
@@ -69,7 +63,6 @@ describe("composerPolicy.decideSend", () => {
       const state = yield* documentToEditorState(textDocument("hello"));
       const emptyRootState: SerializedEditorState = { ...state, root: { ...state.root, children: [] } };
       const decision = composerPolicy.decideSend({
-        confirmed: O.none(),
         gateOpen: false,
         seed: textDocument("hello"),
         state: emptyRootState,
@@ -83,7 +76,6 @@ describe("composerPolicy.decideSend", () => {
     Effect.gen(function* () {
       const state = yield* documentToEditorState(unsafeScalarDocument);
       const decision = composerPolicy.decideSend({
-        confirmed: O.none(),
         gateOpen: false,
         seed: unsafeScalarDocument,
         state,
@@ -97,7 +89,6 @@ describe("composerPolicy.decideSend", () => {
     Effect.gen(function* () {
       const state = yield* documentToEditorState(textDocument("hello world"));
       const decision = composerPolicy.decideSend({
-        confirmed: O.none(),
         gateOpen: false,
         seed: textDocument("hello world"),
         state,
@@ -107,14 +98,13 @@ describe("composerPolicy.decideSend", () => {
     })
   );
 
-  it.effect("refuses an over-limit confirmed payload with an error notice", () =>
+  it.effect("refuses an over-limit draft with an error notice", () =>
     Effect.gen(function* () {
-      const oversized = safeTextDocument(Str.repeat(MAX_MESSAGE_CHARACTERS + 1)("a"));
-      const state = yield* documentToEditorState(textDocument("short"));
+      const oversized = textDocument(Str.repeat(MAX_MESSAGE_CHARACTERS + 1)("a"));
+      const state = yield* documentToEditorState(oversized);
       const decision = composerPolicy.decideSend({
-        confirmed: O.some(oversized),
         gateOpen: false,
-        seed: textDocument("short"),
+        seed: oversized,
         state,
         turnActive: false,
       });
@@ -123,53 +113,17 @@ describe("composerPolicy.decideSend", () => {
   );
 });
 
-describe("composerPolicy.decideConfirmNormalization", () => {
-  it("silently gates when no confirmable escaped copy exists", () => {
-    const decision = composerPolicy.decideConfirmNormalization({
-      normalized: O.none(),
-      turnActive: false,
-    });
-    expect(decisionSummary(decision)).toBe("gated");
-  });
-
-  it("refuses with an info notice while a turn is streaming", () => {
-    const decision = composerPolicy.decideConfirmNormalization({
-      normalized: O.some(safeTextDocument("escaped copy")),
-      turnActive: true,
-    });
-    expect(decisionSummary(decision)).toBe("refuse:info");
-  });
-
-  it("refuses an escaped copy with no visible text", () => {
-    const decision = composerPolicy.decideConfirmNormalization({
-      normalized: O.some(safeTextDocument("   ")),
-      turnActive: false,
-    });
-    expect(decisionSummary(decision)).toBe("refuse:error");
-  });
-
-  it("refuses an over-limit escaped copy with the shared character-limit notice", () => {
-    const decision = composerPolicy.decideConfirmNormalization({
-      normalized: O.some(safeTextDocument(Str.repeat(MAX_MESSAGE_CHARACTERS + 1)("a"))),
-      turnActive: false,
-    });
-    expect(decisionSummary(decision)).toBe("refuse:error");
-  });
-
-  it("accepts a visible, in-limit escaped copy", () => {
-    const decision = composerPolicy.decideConfirmNormalization({
-      normalized: O.some(safeTextDocument("escaped copy")),
-      turnActive: false,
-    });
-    expect(decisionSummary(decision)).toBe("send");
-  });
-});
-
 layer(ComposerPolicyLive)("ComposerPolicy service", (it) => {
   it.effect("resolves the live policy through ComposerPolicyLive", () =>
     Effect.gen(function* () {
       const policy = yield* ComposerPolicy;
-      const decision = policy.decideConfirmNormalization({ normalized: O.none(), turnActive: false });
+      const state = yield* documentToEditorState(textDocument("hello"));
+      const decision = policy.decideSend({
+        gateOpen: true,
+        seed: textDocument("hello"),
+        state,
+        turnActive: false,
+      });
       expect(decisionSummary(decision)).toBe("gated");
     })
   );

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-04T12:13:58.294Z
+Generated: 2026-08-08T06:00:14.290Z
 
 ## Scope
 
@@ -14,10 +14,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 20 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 111 |
-| publicModules | 2361 |
-| publicExports | 15513 |
-| openModules | 443 |
-| openExports | 1379 |
+| publicModules | 2415 |
+| publicExports | 15873 |
+| openModules | 453 |
+| openExports | 1350 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 22 |
-| multiple-description-paragraphs | 1338 |
+| multiple-description-paragraphs | 1336 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 2 |
@@ -39,7 +39,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | malformed-example | 85 |
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
-| forbidden-remarks | 467 |
+| forbidden-remarks | 450 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -66,16 +66,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 9 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 6 |
 | 10 | `@beep/workspace-tables` | `packages/workspace/tables` | needs-remediation | 19 | 42 | 0 | 3 |
 | 11 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 61 | 8 | 7 |
-| 12 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 13 | 59 | 1 | 25 |
-| 13 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 11 | 30 | 3 | 2 |
-| 14 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 243 | 3 | 14 |
+| 12 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 16 | 65 | 1 | 23 |
+| 13 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 12 | 34 | 3 | 2 |
+| 14 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 249 | 3 | 14 |
 | 15 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 6 |
 | 16 | `@beep/face-detection` | `packages/drivers/face-detection` | needs-remediation | 4 | 33 | 1 | 2 |
 | 17 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 0 |
-| 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 2 | 6 |
+| 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 2 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 3 | 3 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 9 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 153 | 984 | 33 | 58 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 171 | 1213 | 42 | 46 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 1 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 2 |
@@ -83,7 +83,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 1 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 25 | 145 | 13 | 13 |
 | 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 14 |
-| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 148 | 372 | 9 | 103 |
+| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 161 | 424 | 9 | 103 |
 | 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 82 | 0 | 6 |
 | 31 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 9 | 112 | 1 | 13 |
 | 32 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 19 | 1 | 1 |
@@ -92,7 +92,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 35 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
 | 36 | `@beep/ontology-server` | `packages/ontology/server` | needs-remediation | 8 | 24 | 0 | 4 |
 | 37 | `@beep/colors` | `packages/foundation/capability/colors` | needs-remediation | 1 | 9 | 1 | 4 |
-| 38 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 127 | 2 | 8 |
+| 38 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 127 | 2 | 3 |
 | 39 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 21 | 3 | 0 |
 | 40 | `@beep/cosmos` | `packages/drivers/cosmos` | needs-remediation | 6 | 22 | 0 | 1 |
 | 41 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 32 | 0 | 0 |
@@ -100,8 +100,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 43 | `@beep/epistemic-client` | `packages/epistemic/client` | needs-remediation | 4 | 25 | 0 | 6 |
 | 44 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 26 | 0 | 2 |
 | 45 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 50 | 0 | 0 |
-| 46 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 30 |
-| 47 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 10 | 25 | 1 | 11 |
+| 46 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 29 |
+| 47 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 19 | 49 | 1 | 6 |
 | 48 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 35 | 1 | 6 |
 | 49 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 4 |
 | 50 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 83 | 0 | 5 |
@@ -112,16 +112,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 119 | 4 | 7 |
 | 56 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 7 | 50 | 0 | 6 |
 | 57 | `@beep/shared-tables` | `packages/shared/tables` | needs-remediation | 11 | 14 | 0 | 4 |
-| 58 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 802 | 51 | 36 |
+| 58 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 803 | 51 | 36 |
 | 59 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 251 | 4 | 29 |
 | 60 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 5 | 10 | 0 | 2 |
 | 61 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
-| 62 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 14 | 59 | 4 | 2 |
+| 62 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 22 | 85 | 4 | 2 |
 | 63 | `@beep/epistemic-ui` | `packages/epistemic/ui` | needs-remediation | 5 | 12 | 0 | 3 |
 | 64 | `@beep/workspace-domain` | `packages/workspace/domain` | needs-remediation | 28 | 62 | 0 | 1 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 202 | 5 | 63 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 19 | 281 | 1 | 5 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 19 | 287 | 1 | 5 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 8 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 11 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 81 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 4 | 6 |
 | 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 96 |
 | 83 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 13 |
-| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 54 | 176 | 25 | 22 |
+| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 182 | 26 | 21 |
 | 85 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 14 |
 | 86 | `@beep/ontology-client` | `packages/ontology/client` | needs-remediation | 3 | 89 | 0 | 2 |
 | 87 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 8 |
@@ -227,15 +227,15 @@ Module findings:
 - `src/Ontology.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Fold.assembly.ts:66` `BoundComposer` (type) - 1 documentation section/link violation(s)
-- `src/Fold.assembly.ts:884` `fold` (const) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:65` `SchemaHandle` (type) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:116` `TypedLiteral` (type) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:155` `Triple` (type) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:276` `TripleValue` (const) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:351` `AssembledPredicateKind` (const) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:460` `AssembledFact` (class) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:603` `OntologyValidationWarning` (class) - 1 documentation section/link violation(s)
+- `src/Fold.assembly.ts:67` `BoundComposer` (type) - 1 documentation section/link violation(s)
+- `src/Fold.assembly.ts:886` `fold` (const) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:66` `SchemaHandle` (type) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:117` `TypedLiteral` (type) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:156` `Triple` (type) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:277` `TripleValue` (const) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:352` `AssembledPredicateKind` (const) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:461` `AssembledFact` (class) - 1 documentation section/link violation(s)
+- `src/Fold.models.ts:604` `OntologyValidationWarning` (class) - 1 documentation section/link violation(s)
 - `src/Fold.projections.ts:227` `toContext` (const) - 1 documentation section/link violation(s)
 - `src/Fold.projections.ts:383` `toJsonLd` (const) - 1 documentation section/link violation(s)
 - `src/Fold.projections.ts:623` `toTurtle` (const) - 1 documentation section/link violation(s)
@@ -319,7 +319,6 @@ Module findings:
 
 Export findings:
 - `src/Layer.ts:71` `LawPracticeServerLive` (const) - 1 documentation section/link violation(s)
-- `src/PracticeKg.emails.ts:157` `readEmailRows` (const) - 1 documentation section/link violation(s)
 - `src/PracticeKg.errors.ts:48` `PracticeKgProjectionError` (class) - 1 documentation section/link violation(s)
 - `src/PracticeKg.fts.ts:269` `buildDuckDb` (const) - 1 documentation section/link violation(s)
 - `src/PracticeKg.projections.ts:570` `buildPracticeKgBundleImpl` (const) - 1 documentation section/link violation(s)
@@ -342,7 +341,6 @@ Export findings:
 - `src/PracticeKg.schemas.ts:510` `encodePracticeKgBundleManifestJson` (const) - 1 documentation section/link violation(s)
 - `src/PracticeKg.schemas.ts:559` `encodePracticeKgNodePayloadJson` (const) - 1 documentation section/link violation(s)
 - `src/PracticeKg.schemas.ts:596` `encodePracticeKgSummaryJson` (const) - 1 documentation section/link violation(s)
-- `src/PracticeKg.tool-handlers.ts:123` `PracticeKgToolkitHandlersLive` (const) - 1 documentation section/link violation(s)
 
 ### @beep/db-admin
 
@@ -426,12 +424,9 @@ Module findings:
 - `src/tools/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/aggregates/Session/Session.worker-protocol.ts:280` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:315` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:350` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
-- `src/tools/OntologyToolkit.ts:608` `PublishProvenanceRequest` (class) - 1 documentation section/link violation(s)
-- `src/tools/OntologyToolkit.ts:837` `PublishProvenanceTool` (const) - 1 documentation section/link violation(s)
-- `src/tools/OntologyToolkit.ts:924` `OntologyPublishToolkit` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:288` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:325` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:362` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
 
 ### @beep/architecture-lab-client
 
@@ -469,12 +464,21 @@ Path: `packages/tooling/tool/cli`
 Module findings:
 - `src/commands/Ci/CiLane.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Codegen/Codegen.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.capture.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.csv.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.errors.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.normalize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.packet.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.scan.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.triage.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Codex/Findings.write.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Docgen/Docgen.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Docs/Docs.aggregate.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Doctor.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Goals.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Inventory.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Migration.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/PortfolioIndex.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -511,22 +515,11 @@ Export findings:
 - `src/commands/Goals/Doctor.ts:154` `GoalDoctorFinding` (class) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Doctor.ts:248` `classifyGoalDoctorFindings` (const) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Goals.errors.ts:141` `GoalsGitError` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:41` `GoalStatus` (const) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:94` `GoalPhaseStatus` (const) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:146` `GoalManifestSchemaVersion` (const) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:190` `GoalCompletionGate` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:221` `GoalInitiative` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:251` `GoalPhase` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Goals.schemas.ts:291` `GoalManifest` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Inventory.ts:76` `GoalPacketRecord` (class) - 1 documentation section/link violation(s)
-- `src/commands/Goals/Inventory.ts:292` `readmeMissionLine` (const) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Migration.ts:55` `GOAL_STATUS_MIGRATIONS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Migration.ts:321` `GoalPacketMigration` (class) - 1 documentation section/link violation(s)
 - `src/commands/Goals/Migration.ts:521` `planGoalPacketMigration` (const) - 1 documentation section/link violation(s)
-- `src/commands/Goals/PortfolioIndex.ts:113` `renderPortfolioIndex` (const) - 1 documentation section/link violation(s)
-- `src/commands/Laws/FrozenGrantSet.ts:322` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
-- `src/commands/Laws/NoNativeRuntime.ts:551` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
-- `src/commands/Lint/PackageTestTypecheck.ts:194` `TestTypecheckBlindSpotBaseline` (class) - 1 documentation section/link violation(s)
+- `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
+- `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Lint/ReflectionArtifact.ts:196` `reflectionFrontmatterIsValid` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Control.ts:112` `markLiveSession` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Doctor.ts:276` `runQaDoctor` (const) - 1 documentation section/link violation(s)
@@ -539,10 +532,10 @@ Export findings:
 - `src/commands/Qa/Inventory.schemas.ts:38` `QaSeverity` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Inventory.schemas.ts:74` `QaLens` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Inventory.schemas.ts:229` `QaEvidenceRef` (class) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:324` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:373` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgePack.ts:525` `renderTimeline` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgePack.ts:624` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:342` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:393` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Qa.command.ts:61` `QaCommandLayers` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Qa.render.ts:313` `renderInventoryMarkdown` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Qa.session.ts:173` `resolveCaptureTarget` (const) - 1 documentation section/link violation(s)
@@ -551,10 +544,9 @@ Export findings:
 - `src/commands/Qa/Qa.session.ts:580` `discoverRecordedVideo` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Record.ts:159` `harnessEnv` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/Record.ts:231` `requireCapturedEvents` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:582` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:595` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:146` `activeOsvIgnoreIdsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Research/Research.schemas.ts:146` `KnowledgeCardFrontmatter` (class) - 1 documentation section/link violation(s)
-- `src/commands/Root.ts:51` `rootCommand` (const) - 1 documentation section/link violation(s)
 - `src/commands/Worktree/Worktree.command.ts:46` `WORKTREE_LOCAL_FILE_ENTRIES` (const) - 1 documentation section/link violation(s)
 - `src/commands/Worktree/Worktree.command.ts:435` `resolveWorktreeContext` (const) - 1 documentation section/link violation(s)
 - `src/commands/Worktree/Worktree.command.ts:481` `addWorktree` (const) - 1 documentation section/link violation(s)
@@ -603,7 +595,7 @@ Module findings:
 - `src/aggregates/Thread/ThreadStore.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/aggregates/Thread/ThreadTimeline.ts:273` `activeBranchTurns` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Thread/ThreadTimeline.ts:277` `activeBranchTurns` (const) - 1 documentation section/link violation(s)
 
 ### @beep/editor
 
@@ -654,8 +646,8 @@ Module findings:
 - `src/bin.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Server.ts:102` `makeServerLayer` (const) - 1 documentation section/link violation(s)
-- `src/Streaming/DatasetLoader.ts:631` `loadJsonl` (const) - 1 documentation section/link violation(s)
+- `src/Server.ts:103` `makeServerLayer` (const) - 1 documentation section/link violation(s)
+- `src/Streaming/DatasetLoader.ts:647` `loadJsonl` (const) - 1 documentation section/link violation(s)
 - `src/Streaming/Jsonl.ts:188` `streamJsonl` (const) - 1 documentation section/link violation(s)
 - `src/Streaming/Jsonl.ts:217` `streamJsonlResults` (const) - 1 documentation section/link violation(s)
 - `src/Streaming/Jsonl.ts:334` `sampleJsonl` (const) - 1 documentation section/link violation(s)
@@ -912,11 +904,6 @@ Module findings:
 
 Export findings:
 - `src/processes/AssistantTurn/AssistantTurn.fixture.ts:56` `fixtureBlocksFor` (const) - 1 documentation section/link violation(s)
-- `src/processes/Chat/Chat.rpc.ts:41` `ListThreadsRpc` (const) - 1 documentation section/link violation(s)
-- `src/processes/Chat/Chat.rpc.ts:66` `CreateThreadRpc` (const) - 1 documentation section/link violation(s)
-- `src/processes/Chat/Chat.rpc.ts:93` `GetTimelineRpc` (const) - 1 documentation section/link violation(s)
-- `src/processes/Chat/Chat.rpc.ts:178` `SendMessageRpc` (const) - 1 documentation section/link violation(s)
-- `src/processes/Chat/Chat.rpc.ts:209` `EditMessageRpc` (const) - 1 documentation section/link violation(s)
 - `src/processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts:246` `makeInMemoryProfessionalRuntimeSdk` (const) - 1 documentation section/link violation(s)
 - `src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts:741` `runRuntimeFixture` (const) - 1 documentation section/link violation(s)
 
@@ -1006,20 +993,19 @@ Export findings:
 - `src/Openclaw.errors.ts:191` `OpenclawOutputParseError` (class) - 1 documentation section/link violation(s)
 - `src/Openclaw.models.ts:123` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
 - `src/Openclaw.models.ts:176` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:339` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:412` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:447` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:512` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1176` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1264` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1351` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1422` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:342` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:415` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:450` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:515` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1179` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1267` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1354` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1425` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawCli.service.ts:403` `OpenclawCliRunner` (type) - 1 documentation section/link violation(s)
-- `src/OpenclawCli.service.ts:750` `OpenclawCli` (class) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:51` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:99` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1050` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1150` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:52` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:100` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1058` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1158` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawProbe.service.ts:113` `probeOpenclawReadiness` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawRender.ts:264` `OpenclawSha256Hex` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawRender.ts:319` `RenderedOpenclawConfig` (class) - 1 documentation section/link violation(s)
@@ -1036,11 +1022,6 @@ Module findings:
 - `src/Tables.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ReadModels.ts:31` `DbSchema` (const) - 1 documentation section/link violation(s)
-- `src/ReadModels.ts:84` `KgNodeReadModel` (type) - 1 documentation section/link violation(s)
-- `src/ReadModels.ts:114` `KgNodeInsert` (type) - 1 documentation section/link violation(s)
-- `src/ReadModels.ts:167` `KgEdgeInsert` (type) - 1 documentation section/link violation(s)
-- `src/ReadModels.ts:194` `KgBuildReadModel` (type) - 1 documentation section/link violation(s)
 - `src/entities/KgBuild/KgBuild.read-model-table.ts:30` `KG_BUILD_TABLE_NAME` (const) - 1 documentation section/link violation(s)
 - `src/entities/KgBuild/KgBuild.read-model-table.ts:59` `kgBuildTable` (const) - 1 documentation section/link violation(s)
 - `src/entities/KgEdge/KgEdge.read-model-table.ts:31` `KG_EDGE_TABLE_NAME` (const) - 1 documentation section/link violation(s)
@@ -1247,7 +1228,7 @@ Export findings:
 - `claudecode/Mcp/JsonFile.ts:567` `loadJson` (const) - 1 documentation section/link violation(s)
 - `claudecode/Mcp/JsonFile.ts:631` `loadManagedMcp` (const) - 1 documentation section/link violation(s)
 - `claudecode/Mcp/JsonFile.ts:725` `loadEffective` (const) - 1 documentation section/link violation(s)
-- `claudecode/Plugin/Define.ts:867` `write` (const) - 1 documentation section/link violation(s)
+- `claudecode/Plugin/Define.ts:872` `write` (const) - 1 documentation section/link violation(s)
 - `claudecode/Settings/Loader.ts:332` `load` (const) - 1 documentation section/link violation(s)
 - `claudecode/Settings/Schema.ts:1722` `SettingsFile` (class) - 1 documentation section/link violation(s)
 - `claudecode/Testing.ts:283` `runHookWithMockStdin` (const) - 1 documentation section/link violation(s)
@@ -1440,8 +1421,8 @@ Export findings:
 - `src/Tika.error-translation.ts:55` `TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE` (const) - 1 documentation section/link violation(s)
 - `src/Tika.error-translation.ts:148` `tikaOperationError` (const) - 1 documentation section/link violation(s)
 - `src/Tika.response.ts:133` `stringifyTikaMetadata` (const) - 1 documentation section/link violation(s)
-- `src/Tika.server.ts:164` `makeTikaServerFileProcessingEngine` (const) - 1 documentation section/link violation(s)
-- `src/Tika.server.ts:320` `makeTikaServerFileProcessingEngineFromEnv` (const) - 1 documentation section/link violation(s)
+- `src/Tika.server.ts:165` `makeTikaServerFileProcessingEngine` (const) - 1 documentation section/link violation(s)
+- `src/Tika.server.ts:311` `makeTikaServerFileProcessingEngineFromEnv` (const) - 1 documentation section/link violation(s)
 - `src/Tika.tikaapp.ts:89` `makeTikaAppFileProcessingEngine` (const) - 1 documentation section/link violation(s)
 
 ### @beep/libpff
@@ -1465,7 +1446,7 @@ Export findings:
 - `src/Libpff.error-translation.ts:163` `libpffOperationError` (const) - 1 documentation section/link violation(s)
 - `src/Libpff.messages.ts:46` `PFFEXPORT_MESSAGES_SUFFIX` (const) - 1 documentation section/link violation(s)
 - `src/Libpff.messages.ts:76` `PffexportMessageRecord` (class) - 1 documentation section/link violation(s)
-- `src/Libpff.pffexport.ts:459` `makePffexportFileProcessingEngine` (const) - 1 documentation section/link violation(s)
+- `src/Libpff.pffexport.ts:464` `makePffexportFileProcessingEngine` (const) - 1 documentation section/link violation(s)
 
 ### @beep/venice-ai
 
@@ -1821,6 +1802,7 @@ Module findings:
 - `src/chat/UsageRecordSink.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/ChatApp.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/Composer.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/chat/ui/ComposerPolicy.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/MessageView.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/Sidebar.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/StreamingBlocks.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -1844,26 +1826,25 @@ Module findings:
 
 Export findings:
 - `src/chat/UsageRecordSink.ts:119` `UsageRecordSinkInMemory` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/Composer.atoms.ts:184` `normalizeLegacyRawDocument` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:123` `sidebarPercentAtom` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:179` `clampSidebarPercent` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:201` `sidebarSize` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:139` `sidebarPercentAtom` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:196` `clampSidebarPercent` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:218` `sidebarSize` (const) - 1 documentation section/link violation(s)
 - `src/contradiction/ContradictionQaSeed.ts:150` `CONTRADICTION_QA_ANCHOR_START` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:956` `seedContradictionQaFixtures` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1055` `ContradictionQaSeedLive` (const) - 1 documentation section/link violation(s)
+- `src/contradiction/ContradictionQaSeed.ts:1008` `seedContradictionQaFixtures` (const) - 1 documentation section/link violation(s)
+- `src/contradiction/ContradictionQaSeed.ts:1109` `ContradictionQaSeedLive` (const) - 1 documentation section/link violation(s)
 - `src/intake/Intake.atoms.ts:48` `DesktopIntakeClient` (class) - 1 documentation section/link violation(s)
 - `src/ontology/OntologyWorkspaceSeed.ts:70` `seedPizzaTutorial` (const) - 1 documentation section/link violation(s)
 - `src/ontology/OntologyWorkspaceSeed.ts:124` `OntologyWorkspaceSeedLive` (const) - 1 documentation section/link violation(s)
 - `src/runtime/BrowserFailure.atoms.ts:132` `reportedBrowserFailureAtoms` (const) - 1 documentation section/link violation(s)
 - `src/runtime/Migrations.ts:113` `SidecarReadyMarker` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Pglite.ts:91` `ChatDbCompatibilityMarker` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Pglite.ts:222` `ensureCompatibleChatDbDataDir` (const) - 1 documentation section/link violation(s)
-- `src/runtime/ProfessionalAtomRuntime.ts:84` `professionalAtomRegistryAtom` (const) - 1 documentation section/link violation(s)
+- `src/runtime/Pglite.ts:90` `ChatDbCompatibilityMarker` (const) - 1 documentation section/link violation(s)
+- `src/runtime/Pglite.ts:221` `ensureCompatibleChatDbDataDir` (const) - 1 documentation section/link violation(s)
+- `src/runtime/ProfessionalAtomRuntime.ts:75` `professionalAtomRegistryAtom` (const) - 1 documentation section/link violation(s)
+- `src/runtime/RendererObservabilityConfig.ts:38` `RendererObservabilityConfig` (class) - 1 documentation section/link violation(s)
 - `src/sync/Sync.atoms.ts:240` `vaultSyncStatusAtom` (const) - 1 documentation section/link violation(s)
 - `src/sync/Sync.atoms.ts:381` `vaultSyncCommandAtoms` (const) - 1 documentation section/link violation(s)
 - `src/sync/VaultSyncOrchestrator.ts:74` `VaultSyncHandlersLive` (const) - 1 documentation section/link violation(s)
 - `src/sync/VaultSyncPanel.tsx:185` `VaultSyncPanel` (function) - 1 documentation section/link violation(s)
-- `src/theme/Theme.atoms.ts:59` `migrateWorkbenchThemeMode` (const) - 1 documentation section/link violation(s)
 - `src/workspace/ProfessionalWorkspace.ts:26` `DEFAULT_PROFESSIONAL_WORKSPACE_ID` (const) - 1 documentation section/link violation(s)
 
 ### @beep/epistemic-domain
@@ -1893,8 +1874,8 @@ Export findings:
 - `src/values/ExecutionGrant/ExecutionGrant.model.ts:86` `SinkAudience` (const) - 1 documentation section/link violation(s)
 - `src/values/ExecutionRecord/ExecutionRecord.model.ts:652` `verifyExecutionDecisionChain` (const) - 1 documentation section/link violation(s)
 - `src/values/ExecutionRecord/ExecutionRecord.model.ts:698` `verifyOutcomeBinding` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:281` `addGrant` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:486` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:282` `addGrant` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:490` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
 
 ### @beep/ontology-client
 
@@ -1995,25 +1976,25 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/OpenClaw.ts:400` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:563` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:757` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:817` `OpenClawGeneration` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1151` `makeOpenClawGeneration` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1227` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1298` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1397` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1460` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1588` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1717` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1836` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1984` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2037` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2109` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2206` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2270` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2354` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2557` `OpenClawStack` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:401` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:571` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:765` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:825` `OpenClawGeneration` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1159` `makeOpenClawGeneration` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1235` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1306` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1405` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1468` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1596` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1725` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1844` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1992` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2045` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2117` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2214` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2278` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2362` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2565` `OpenClawStack` (class) - 1 documentation section/link violation(s)
 
 ### @beep/fc-runs
 
@@ -2211,10 +2192,10 @@ Export findings:
 - `src/JSONSchema/JSONSchema.shared.ts:949` `ExtensionsBag` (const) - 1 documentation section/link violation(s)
 - `src/LiteralKit/LiteralKit.schema.ts:47` `LiteralToKey` (type) - 1 documentation section/link violation(s)
 - `src/LocalDate/LocalDate.schema.ts:52` `LocalDate` (class) - 1 documentation section/link violation(s)
-- `src/LocalDate/LocalDate.schema.ts:667` `LocalDateFromString` (const) - 1 documentation section/link violation(s)
+- `src/LocalDate/LocalDate.schema.ts:662` `LocalDateFromString` (const) - 1 documentation section/link violation(s)
 - `src/MappedLiteralKit/MappedLiteralKit.schema.ts:350` `MappedLiteralKit` (function) - 1 documentation section/link violation(s)
-- `src/Markdown.ts:123` `Markdown` (const) - 1 documentation section/link violation(s)
-- `src/Markdown.ts:174` `MarkdownTextToHtml` (const) - 1 documentation section/link violation(s)
+- `src/Markdown.ts:111` `Markdown` (const) - 1 documentation section/link violation(s)
+- `src/Markdown.ts:162` `MarkdownTextToHtml` (const) - 1 documentation section/link violation(s)
 - `src/Model/Model.codecs.ts:58` `JsonFromString` (const) - 1 documentation section/link violation(s)
 - `src/Model/Model.datetime.ts:168` `DateTimeInsert` (const) - 1 documentation section/link violation(s)
 - `src/Model/Model.datetime.ts:215` `DateTimeInsertFromDate` (const) - 1 documentation section/link violation(s)
@@ -2235,9 +2216,9 @@ Export findings:
 - `src/Port.ts:68` `Port` (const) - 1 documentation section/link violation(s)
 - `src/Port.ts:118` `PortFromString` (const) - 1 documentation section/link violation(s)
 - `src/PromiseSchema.ts:64` `isPromise` (const) - 1 documentation section/link violation(s)
-- `src/SafeObject/SafeObject.schema.ts:39` `SafeObject` (const) - 1 documentation section/link violation(s)
-- `src/SafeObject/SafeObject.schema.ts:89` `SafeObjectFromObjectKeyword` (const) - 1 documentation section/link violation(s)
-- `src/SafeObject/SafeObject.schema.ts:39` `Schema` (const) - 1 documentation section/link violation(s)
+- `src/SafeObject/SafeObject.schema.ts:38` `SafeObject` (const) - 1 documentation section/link violation(s)
+- `src/SafeObject/SafeObject.schema.ts:88` `SafeObjectFromObjectKeyword` (const) - 1 documentation section/link violation(s)
+- `src/SafeObject/SafeObject.schema.ts:38` `Schema` (const) - 1 documentation section/link violation(s)
 - `src/SafeRemoteHost.ts:86` `BlockedHostError` (class) - 1 documentation section/link violation(s)
 - `src/SafeRemoteHost.ts:269` `isBlockedRemoteHost` (const) - 1 documentation section/link violation(s)
 - `src/SafeRemoteHost.ts:309` `assertAllowedRemoteHost` (const) - 1 documentation section/link violation(s)
@@ -2269,7 +2250,7 @@ Export findings:
 - `src/TerritoryCode.ts:114` `TerritoryNameFromCode` (const) - 1 documentation section/link violation(s)
 - `src/Timestamp/Timestamp.schema.ts:45` `ISOStr` (const) - 1 documentation section/link violation(s)
 - `src/Timestamp/Timestamp.schema.ts:233` `Timestamp` (class) - 1 documentation section/link violation(s)
-- `src/Transformations.ts:47` `destructiveTransform` (const) - 1 documentation section/link violation(s)
+- `src/Transformations.ts:46` `destructiveTransform` (const) - 1 documentation section/link violation(s)
 - `src/Uint32.ts:66` `Uint32` (const) - 1 documentation section/link violation(s)
 - `src/Uint64.ts:56` `Uint64` (const) - 1 documentation section/link violation(s)
 
@@ -2460,7 +2441,7 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Server.ts:83` `makeServerLayer` (const) - 1 documentation section/link violation(s)
+- `src/Server.ts:84` `makeServerLayer` (const) - 1 documentation section/link violation(s)
 
 ### @beep/epistemic-config
 
@@ -2596,7 +2577,7 @@ Export findings:
 - `src/Html.serialize.ts:125` `SafeHtml` (const) - 1 documentation section/link violation(s)
 - `src/Html.serialize.ts:574` `serialize` (const) - 1 documentation section/link violation(s)
 - `src/Html.serialize.ts:694` `safeHtmlValue` (const) - 1 documentation section/link violation(s)
-- `src/Html.source-size.ts:823` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
+- `src/Html.source-size.ts:825` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
 - `src/Html.srcset.ts:249` `inspectSrcset` (const) - 1 documentation section/link violation(s)
 - `src/index.ts:61` `Html` (const) - 1 documentation section/link violation(s)
 
@@ -2744,7 +2725,7 @@ Export findings:
 - `src/entities/Contradiction/Contradiction.table.ts:69` `dispositionTable` (const) - 1 documentation section/link violation(s)
 - `src/entities/EdgeVersion/EdgeVersion.converters.ts:176` `toEdgeVersionInsert` (const) - 1 documentation section/link violation(s)
 - `src/entities/Evidence/Evidence.converters.ts:189` `toEvidenceInsert` (const) - 1 documentation section/link violation(s)
-- `src/entities/EvidenceVerification/EvidenceVerification.converters.ts:102` `toEvidenceVerificationInsert` (const) - 1 documentation section/link violation(s)
+- `src/entities/EvidenceVerification/EvidenceVerification.converters.ts:101` `toEvidenceVerificationInsert` (const) - 1 documentation section/link violation(s)
 - `src/entities/EvidenceVerification/EvidenceVerification.table.ts:27` `Table` (const) - 1 documentation section/link violation(s)
 - `src/entities/UsageRecord/UsageRecord.converters.ts:142` `toUsageRecordInsert` (const) - 1 documentation section/link violation(s)
 - `src/values/ExecutionRecord/ExecutionRecord.converters.ts:145` `fromExecutionDecisionRow` (const) - 1 documentation section/link violation(s)

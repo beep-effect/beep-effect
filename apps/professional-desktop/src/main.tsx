@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import "./styles/globals.css";
 import "./styles/dock.css";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
@@ -9,9 +8,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { ProfessionalAtomProvider } from "./runtime/ProfessionalAtomProvider.tsx";
-import { ProfessionalStorageLive } from "./runtime/ProfessionalAtomRuntime.ts";
 import { RendererObservabilityConfig } from "./runtime/RendererObservabilityConfig.ts";
-import { migrateWorkbenchThemeMode } from "./theme/Theme.atoms.ts";
 import { WorkbenchThemeProvider } from "./theme/WorkbenchThemeProvider.tsx";
 
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
@@ -60,21 +57,6 @@ const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
     ),
     Effect.withSpan("professional_desktop.bootstrap.renderer_observability")
   );
-  yield* migrateWorkbenchThemeMode().pipe(
-    Effect.catchCause(
-      logRedactedCause(
-        LogRedactedCauseOptions.make({
-          message: "professional desktop theme preference migration failed",
-          level: "Warn",
-          attributes: {
-            "professional_desktop.bootstrap.phase": "theme_preference_migration",
-            "professional_desktop.subsystem": "bootstrap",
-          },
-        })
-      )
-    ),
-    Effect.withSpan("professional_desktop.bootstrap.theme_preference_migration")
-  );
   if (P.isNull(root)) return;
 
   createRoot(root).render(
@@ -88,4 +70,4 @@ const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
   );
 });
 
-Effect.runFork(render().pipe(Effect.provide(ProfessionalStorageLive)));
+Effect.runFork(render());
