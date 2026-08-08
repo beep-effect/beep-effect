@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-08T06:00:14.290Z
+Generated: 2026-08-08T06:44:22.236Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 20 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 111 |
-| publicModules | 2415 |
-| publicExports | 15873 |
-| openModules | 453 |
+| publicModules | 2416 |
+| publicExports | 15889 |
+| openModules | 454 |
 | openExports | 1350 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 22 |
-| multiple-description-paragraphs | 1336 |
+| multiple-description-paragraphs | 1337 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 2 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 81 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 4 | 6 |
 | 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 96 |
 | 83 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 13 |
-| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 182 | 26 | 21 |
+| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 181 | 26 | 21 |
 | 85 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 14 |
 | 86 | `@beep/ontology-client` | `packages/ontology/client` | needs-remediation | 3 | 89 | 0 | 2 |
 | 87 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 8 |
@@ -147,7 +147,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 90 | `@beep/oxigraph` | `packages/drivers/oxigraph` | needs-remediation | 3 | 6 | 0 | 1 |
 | 91 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
 | 92 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 310 | 9 | 37 |
-| 93 | `@beep/infra` | `infra` | needs-remediation | 7 | 72 | 1 | 19 |
+| 93 | `@beep/infra` | `infra` | needs-remediation | 8 | 89 | 2 | 19 |
 | 94 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 95 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 2 | 3 |
 | 96 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 54 |
@@ -1973,6 +1973,7 @@ Export findings:
 Path: `infra`
 
 Module findings:
+- `src/CiRunners.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:

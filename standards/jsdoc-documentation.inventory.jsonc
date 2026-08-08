@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-08T06:00:14.290Z",
+  "generatedAt": "2026-08-08T06:44:22.236Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,9 +65,9 @@
     "cleanPackages": 20,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 111,
-    "publicModules": 2415,
-    "publicExports": 15873,
-    "openModules": 453,
+    "publicModules": 2416,
+    "publicExports": 15889,
+    "openModules": 454,
     "openExports": 1350,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 22,
-    "multiple-description-paragraphs": 1336,
+    "multiple-description-paragraphs": 1337,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 2,
@@ -39503,8 +39503,8 @@
           "exportKind": "const",
           "filePath": "src/commands/AIMetrics/AIMetrics.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
-          "line": 1196,
-          "anchor": "packages-tooling-tool-cli-src-commands-aimetrics-aimetrics-command-ts-1196-aimetricscommand",
+          "line": 1190,
+          "anchor": "packages-tooling-tool-cli-src-commands-aimetrics-aimetrics-command-ts-1190-aimetricscommand",
           "currentTags": [
             "@example",
             "@category",
@@ -174609,8 +174609,8 @@
           "exportKind": "class",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 574,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-574-aimetricsderivedstorageerror",
+          "line": 678,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-678-aimetricsderivedstorageerror",
           "currentTags": [
             "@category",
             "@since"
@@ -174631,8 +174631,8 @@
           "exportKind": "class",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 641,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-641-aimetricsderivedtranscriptrecord",
+          "line": 745,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-745-aimetricsderivedtranscriptrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -174653,8 +174653,8 @@
           "exportKind": "class",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 691,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-691-aimetricsderivedstoragewriteinput",
+          "line": 795,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-795-aimetricsderivedstoragewriteinput",
           "currentTags": [
             "@category",
             "@since"
@@ -174675,8 +174675,8 @@
           "exportKind": "class",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 735,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-735-aimetricsderivedstoragewriteresult",
+          "line": 839,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-839-aimetricsderivedstoragewriteresult",
           "currentTags": [
             "@category",
             "@since"
@@ -174697,8 +174697,8 @@
           "exportKind": "const",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 888,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-888-ensureaimetricsderivedstorage",
+          "line": 992,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-992-ensureaimetricsderivedstorage",
           "currentTags": [
             "@effects",
             "@category",
@@ -174720,8 +174720,8 @@
           "exportKind": "const",
           "filePath": "src/derived-storage.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-          "line": 1359,
-          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-1359-writeaimetricsderivedstorage",
+          "line": 1467,
+          "anchor": "packages-tooling-library-ai-metrics-src-derived-storage-ts-1467-writeaimetricsderivedstorage",
           "currentTags": [
             "@effects",
             "@category",
@@ -177774,8 +177774,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 210,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-210-aimetricsotlpspanprojection",
+          "line": 209,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-209-aimetricsotlpspanprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -177796,8 +177796,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 259,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-259-aimetricsotlpspanprojectionbatch",
+          "line": 257,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-257-aimetricsotlpspanprojectionbatch",
           "currentTags": [
             "@category",
             "@since"
@@ -177818,8 +177818,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 301,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-301-aimetricsotlpexportresult",
+          "line": 297,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-297-aimetricsotlpexportresult",
           "currentTags": [
             "@category",
             "@since"
@@ -177840,8 +177840,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 647,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-647-readaimetricsotlpspanprojections",
+          "line": 589,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-589-readaimetricsotlpspanprojections",
           "currentTags": [
             "@effects",
             "@category",
@@ -177863,8 +177863,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 699,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-699-markaimetricsotlpturnsexported",
+          "line": 640,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-640-markaimetricsotlpturnsexported",
           "currentTags": [
             "@effects",
             "@category",
@@ -177886,8 +177886,8 @@
           "exportKind": "interface",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 867,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-867-aimetricsotlpspansendershape",
+          "line": 808,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-808-aimetricsotlpspansendershape",
           "currentTags": [
             "@category",
             "@since"
@@ -177908,8 +177908,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 902,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-902-aimetricsotlpspansender",
+          "line": 843,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-843-aimetricsotlpspansender",
           "currentTags": [
             "@category",
             "@since"
@@ -177930,8 +177930,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1005,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1005-runaimetricsotlpprojectionbatchexport",
+          "line": 944,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-944-runaimetricsotlpprojectionbatchexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -177953,8 +177953,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1069,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1069-runaimetricsotlpexport",
+          "line": 1008,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1008-runaimetricsotlpexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -177976,8 +177976,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1119,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1119-otlpexportresulttojson",
+          "line": 1057,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1057-otlpexportresulttojson",
           "currentTags": [
             "@category",
             "@since"
@@ -178655,8 +178655,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 929,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-929-enforceaimetricsretentionpolicy",
+          "line": 951,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-951-enforceaimetricsretentionpolicy",
           "currentTags": [
             "@effects",
             "@example",
@@ -178679,8 +178679,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1046,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1046-runaimetricsretentiondelete",
+          "line": 1068,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1068-runaimetricsretentiondelete",
           "currentTags": [
             "@effects",
             "@example",
@@ -178703,8 +178703,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1087,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1087-runaimetricsretentioncompact",
+          "line": 1109,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1109-runaimetricsretentioncompact",
           "currentTags": [
             "@effects",
             "@example",
@@ -178727,8 +178727,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1135,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1135-runaimetricsretentionrestoredrill",
+          "line": 1157,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1157-runaimetricsretentionrestoredrill",
           "currentTags": [
             "@effects",
             "@example",
@@ -178751,8 +178751,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1287,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1287-aimetricsretentioninventorytojson",
+          "line": 1309,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1309-aimetricsretentioninventorytojson",
           "currentTags": [
             "@effects",
             "@example",
@@ -178775,8 +178775,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1318,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1318-aimetricsretentionenforcementtojson",
+          "line": 1340,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1340-aimetricsretentionenforcementtojson",
           "currentTags": [
             "@effects",
             "@example",
@@ -178799,8 +178799,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1350,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1350-aimetricsretentionmutationtojson",
+          "line": 1372,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1372-aimetricsretentionmutationtojson",
           "currentTags": [
             "@effects",
             "@example",
@@ -178823,8 +178823,8 @@
           "exportKind": "const",
           "filePath": "src/retention.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/retention.ts",
-          "line": 1381,
-          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1381-aimetricsretentionrestoredrilltojson",
+          "line": 1403,
+          "anchor": "packages-tooling-library-ai-metrics-src-retention-ts-1403-aimetricsretentionrestoredrilltojson",
           "currentTags": [
             "@effects",
             "@example",
@@ -227287,7 +227287,7 @@
         "srcDir": "src",
         "sourceFileCount": 58,
         "publicModuleCount": 56,
-        "publicExportCount": 182
+        "publicExportCount": 181
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -227723,7 +227723,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -228691,8 +228691,8 @@
           "exportKind": "function",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 874,
-          "anchor": "apps-professional-desktop-src-app-tsx-874-app",
+          "line": 913,
+          "anchor": "apps-professional-desktop-src-app-tsx-913-app",
           "currentTags": [
             "@example",
             "@category",
@@ -229770,29 +229770,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ThreadTranscriptView",
-          "exportKind": "interface",
-          "filePath": "src/chat/ui/Thread.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 211,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-211-threadtranscriptview",
-          "currentTags": [
-            "@example",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "visibleThreadTurnsAtoms",
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
@@ -230539,8 +230516,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 384,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-384-documentintakestateatoms",
+          "line": 390,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-390-documentintakestateatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230562,8 +230539,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 401,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-401-intakefileinputatoms",
+          "line": 407,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-407-intakefileinputatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230585,8 +230562,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 420,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-420-workspacevaultconfigatom",
+          "line": 426,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-426-workspacevaultconfigatom",
           "currentTags": [
             "@example",
             "@category",
@@ -230608,8 +230585,8 @@
           "exportKind": "class",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 445,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-445-droppeddocumentinput",
+          "line": 451,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-451-droppeddocumentinput",
           "currentTags": [
             "@example",
             "@category",
@@ -230631,8 +230608,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 480,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-480-intakedroppedfilepayload",
+          "line": 486,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-486-intakedroppedfilepayload",
           "currentTags": [
             "@example",
             "@category",
@@ -230654,8 +230631,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 568,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-568-chooseworkspacevaultatoms",
+          "line": 574,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-574-chooseworkspacevaultatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230677,8 +230654,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 788,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-788-intakefilesatoms",
+          "line": 794,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-794-intakefilesatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230700,8 +230677,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 810,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-810-intakedomeventatoms",
+          "line": 816,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-816-intakedomeventatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230723,8 +230700,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 881,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-881-setintakefileinputatoms",
+          "line": 887,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-887-setintakefileinputatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230746,8 +230723,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 902,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-902-openintakefilepickeratoms",
+          "line": 908,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-908-openintakefilepickeratoms",
           "currentTags": [
             "@example",
             "@category",
@@ -230769,8 +230746,8 @@
           "exportKind": "interface",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 932,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-932-documentintakesurface",
+          "line": 938,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-938-documentintakesurface",
           "currentTags": [
             "@example",
             "@category",
@@ -230792,8 +230769,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 1009,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-1009-documentintakesurfaceatoms",
+          "line": 1015,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-1015-documentintakesurfaceatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -269906,9 +269883,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 7,
-        "publicModuleCount": 7,
-        "publicExportCount": 72
+        "sourceFileCount": 8,
+        "publicModuleCount": 8,
+        "publicExportCount": 89
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -269917,7 +269894,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 1,
+        "openModules": 2,
         "openExports": 19,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -269930,7 +269907,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 20,
+          "multiple-description-paragraphs": 21,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -269967,6 +269944,32 @@
           "documentationShapeViolations": [],
           "exportCount": 7,
           "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 1,
+          "anchor": "infra-src-cirunners-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 16,
+          "remediationStatus": "open"
         },
         {
           "docKind": "packageDocumentation",
@@ -270100,7 +270103,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         }
       ],
@@ -270252,6 +270255,358 @@
           "anchor": "infra-src-aimetrics-ts-495-aimetricsstack",
           "currentTags": [
             "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersRunnerTagKey",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 93,
+          "anchor": "infra-src-cirunners-ts-93-cirunnersrunnertagkey",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersRunnerTagValue",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 109,
+          "anchor": "infra-src-cirunners-ts-109-cirunnersrunnertagvalue",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersInfraTagValue",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 127,
+          "anchor": "infra-src-cirunners-ts-127-cirunnersinfratagvalue",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersLaunchTemplateName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 144,
+          "anchor": "infra-src-cirunners-ts-144-cirunnerslaunchtemplatename",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersWorkerSecurityGroupName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 160,
+          "anchor": "infra-src-cirunners-ts-160-cirunnersworkersecuritygroupname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciRunnersReaperFunctionName",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 176,
+          "anchor": "infra-src-cirunners-ts-176-cirunnersreaperfunctionname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersPulumiConfigValues",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 362,
+          "anchor": "infra-src-cirunners-ts-362-cirunnerspulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersPulumiConfigValues",
+          "exportKind": "type",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 399,
+          "anchor": "infra-src-cirunners-ts-399-cirunnerspulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersNetworkConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 494,
+          "anchor": "infra-src-cirunners-ts-494-cirunnersnetworkconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersImageConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 524,
+          "anchor": "infra-src-cirunners-ts-524-cirunnersimageconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersWorkerConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 549,
+          "anchor": "infra-src-cirunners-ts-549-cirunnersworkerconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersReaperConfig",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 575,
+          "anchor": "infra-src-cirunners-ts-575-cirunnersreaperconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersStackArgs",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 598,
+          "anchor": "infra-src-cirunners-ts-598-cirunnersstackargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCiRunnersStackArgsFromConfigValues",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 640,
+          "anchor": "infra-src-cirunners-ts-640-makecirunnersstackargsfromconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "loadCiRunnersStackArgs",
+          "exportKind": "const",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 697,
+          "anchor": "infra-src-cirunners-ts-697-loadcirunnersstackargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRunnersStack",
+          "exportKind": "class",
+          "filePath": "src/CiRunners.ts",
+          "repoPath": "infra/src/CiRunners.ts",
+          "line": 896,
+          "anchor": "infra-src-cirunners-ts-896-cirunnersstack",
+          "currentTags": [
             "@category",
             "@since"
           ],
@@ -271700,12 +272055,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./CiRunners.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "infra/src/index.ts",
+          "line": 58,
+          "anchor": "infra-src-index-ts-58-export-from-cirunners-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./OipWeb.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 57,
-          "anchor": "infra-src-index-ts-57-export-from-oipweb-ts",
+          "line": 72,
+          "anchor": "infra-src-index-ts-72-export-from-oipweb-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -271727,8 +272104,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 71,
-          "anchor": "infra-src-index-ts-71-export-from-openclaw-ts",
+          "line": 86,
+          "anchor": "infra-src-index-ts-86-export-from-openclaw-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -271750,8 +272127,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 85,
-          "anchor": "infra-src-index-ts-85-export-from-openclawartifacts-ts",
+          "line": 100,
+          "anchor": "infra-src-index-ts-100-export-from-openclawartifacts-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -271773,8 +272150,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 99,
-          "anchor": "infra-src-index-ts-99-export-from-storybook-ts",
+          "line": 114,
+          "anchor": "infra-src-index-ts-114-export-from-storybook-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -271796,8 +272173,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 113,
-          "anchor": "infra-src-index-ts-113-export-from-vercel-ts",
+          "line": 128,
+          "anchor": "infra-src-index-ts-128-export-from-vercel-ts",
           "currentTags": [
             "@example",
             "@category",
