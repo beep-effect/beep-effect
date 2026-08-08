@@ -28,6 +28,16 @@ id = "GHSA-xcpc-8h2w-3j85"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
 
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2 (2.0.2 present); no fixed version published yet (OSV lists no fix). image-size is a direct dependency of @beep/repo-cli used on repo-generated PNG/JPEG QA frames, never on attacker-controlled ICNS/JXL/HEIF input, so the DoS precondition is not reachable from any product surface. Newly published advisory, not introduced by the current PR (identical version present on main). Revisit when image-size publishes a fixed release; drop this entry and bump instead."
+
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2 (2.0.2 present); same advisory batch, package, exposure, and disposition as GHSA-w3rx-r6r6-pgpr above — repo-cli feeds it only repo-generated PNG/JPEG frames. Newly published, not introduced by the current PR. Revisit when image-size publishes a fixed release."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
