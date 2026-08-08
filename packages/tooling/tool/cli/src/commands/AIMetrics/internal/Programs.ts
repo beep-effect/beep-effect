@@ -1454,10 +1454,16 @@ const forwarderRunCommandToJson = Effect.fn("AIMetrics.forwarderRunCommandToJson
   });
 });
 
-const forwarderOtlpExported = (result: AiMetricsOtlpExportResult): AiMetricsForwarderOtlpExported =>
+// The run id comes from the forwarder pass, not from the export result. Export no longer
+// carries one: it drains every pending turn regardless of which run committed it, so a run
+// id on the result would have described the request rather than the batch.
+const forwarderOtlpExported = (
+  ingestRunId: string,
+  result: AiMetricsOtlpExportResult
+): AiMetricsForwarderOtlpExported =>
   AiMetricsForwarderOtlpExported.make({
     endpointTraceUrl: result.endpointTraceUrl,
-    ingestRunId: result.ingestRunId,
+    ingestRunId,
     sessionSpanCount: result.sessionSpanCount,
     spanCount: result.spanCount,
     status: "exported",
@@ -1545,7 +1551,6 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
     AiMetricsOtlpExportInput.make({
       duckDbPath: forwarderResult.duckDbPath,
       endpoint,
-      ingestRunId: forwarderResult.ingestRunId,
       target,
     })
   ).pipe(
@@ -1561,7 +1566,7 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
           target,
         });
       }),
-      onSuccess: (result) => Effect.succeed(forwarderOtlpExported(result)),
+      onSuccess: (result) => Effect.succeed(forwarderOtlpExported(forwarderResult.ingestRunId, result)),
     })
   );
 });
@@ -1900,21 +1905,19 @@ class MakeOtlpExportProgramOptions extends S.Class<MakeOtlpExportProgramOptions>
   {
     dataRoot: S.Option(S.String),
     hashSaltSecretRef: S.Option(S.String),
-    ingestRunId: S.String,
     json: S.Boolean,
     otlpBaseUrl: S.Option(S.String),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeOtlpExportProgramOptions", {
-    description: "CLI flags for exporting one derived ingest run to the configured OTLP endpoint.",
+    description: "CLI flags for exporting every pending derived AI metrics turn to the configured OTLP endpoint.",
   })
 ) {}
 
 const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
-  ingestRunId,
   json,
   otlpBaseUrl,
   rawArchiveKeySecretRef,
@@ -1930,7 +1933,6 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
   const input = AiMetricsOtlpExportInput.make({
     duckDbPath: spec.storage.duckDbPath,
     endpoint,
-    ingestRunId,
     target,
   });
   // The same entry point the forwarder uses. Reading, delivering, and marking used to be
@@ -1952,7 +1954,6 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
 
   yield* printLines([
     `ai-metrics otlp export: target=${target}`,
-    `ingest run: ${result.ingestRunId}`,
     `spans: ${result.spanCount}`,
     `sessions: ${result.sessionSpanCount}`,
     `turns: ${result.turnSpanCount}`,

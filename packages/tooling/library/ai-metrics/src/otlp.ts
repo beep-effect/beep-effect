@@ -140,7 +140,7 @@ export class AiMetricsOtlpExportError extends TaggedErrorClass<AiMetricsOtlpExpo
 ) {}
 
 /**
- * Input for exporting one derived ingest run as OTLP spans.
+ * Input for exporting every derived turn still awaiting OTLP export.
  *
  * **Example** (Construct AiMetricsOtlpExportInput)
  *
@@ -168,7 +168,6 @@ export class AiMetricsOtlpExportInput extends S.Class<AiMetricsOtlpExportInput>(
   {
     duckDbPath: S.String,
     endpoint: AiMetricsOtlpEndpointSpec,
-    ingestRunId: S.optionalKey(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("AiMetricsOtlpExportInput", {
@@ -226,7 +225,7 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
 ) {}
 
 /**
- * Span projection batch resolved for one derived ingest run.
+ * Span projections for every derived turn still awaiting OTLP export.
  *
  * **Example** (Construct AiMetricsOtlpSpanProjectionBatch)
  *
@@ -237,7 +236,6 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
  * } from "@beep/repo-ai-metrics"
  *
  * const batch = AiMetricsOtlpSpanProjectionBatch.make({
- *   ingestRunId: "forwarder-1",
  *   projections: [
  *     AiMetricsOtlpSpanProjection.make({
  *       attributes: { "ai_metrics.event_name": "codex.event_msg" },
@@ -260,7 +258,6 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
   $I`AiMetricsOtlpSpanProjectionBatch`
 )(
   {
-    ingestRunId: S.String,
     projections: S.Array(AiMetricsOtlpSpanProjection),
     sessionSpanCount: S.Finite,
     /**
@@ -272,7 +269,7 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
     turnSpanCount: S.Finite,
   },
   $I.annote("AiMetricsOtlpSpanProjectionBatch", {
-    description: "Redacted OTLP span projections grouped by one AI metrics ingest run.",
+    description: "Redacted OTLP span projections for every AI metrics turn still awaiting export.",
   })
 ) {}
 
@@ -286,7 +283,6 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
  *
  * const result = AiMetricsOtlpExportResult.make({
  *   endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
- *   ingestRunId: "forwarder-1",
  *   sessionSpanCount: 2,
  *   spanCount: 12,
  *   target: "local",
@@ -301,7 +297,6 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
 export class AiMetricsOtlpExportResult extends S.Class<AiMetricsOtlpExportResult>($I`AiMetricsOtlpExportResult`)(
   {
     endpointTraceUrl: S.String,
-    ingestRunId: S.String,
     sessionSpanCount: S.Finite,
     spanCount: S.Finite,
     target: AiMetricsDeployTarget,
@@ -309,15 +304,6 @@ export class AiMetricsOtlpExportResult extends S.Class<AiMetricsOtlpExportResult
   },
   $I.annote("AiMetricsOtlpExportResult", {
     description: "Safe counts returned after emitting redacted AI metrics spans to the active tracer.",
-  })
-) {}
-
-class LatestIngestRunRow extends S.Class<LatestIngestRunRow>($I`LatestIngestRunRow`)(
-  {
-    ingestRunId: S.String,
-  },
-  $I.annote("LatestIngestRunRow", {
-    description: "Latest AI metrics ingest run selected from derived DuckDB storage.",
   })
 ) {}
 
@@ -347,7 +333,6 @@ class AiMetricsOtlpTurnExportRow extends S.Class<AiMetricsOtlpTurnExportRow>($I`
   })
 ) {}
 
-const decodeLatestRows = S.decodeUnknownEffect(S.Array(LatestIngestRunRow));
 const decodeTurnRows = S.decodeUnknownEffect(S.Array(AiMetricsOtlpTurnExportRow));
 const encodeOtlpExportJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 
@@ -391,34 +376,6 @@ const openInferenceSpanKindFor = (row: AiMetricsOtlpTurnExportRow): string => {
   const eventName = Str.toLowerCase(row.eventName);
   return A.some(llmEventNameFragments, (fragment) => Str.includes(fragment)(eventName)) ? "LLM" : "CHAIN";
 };
-
-const resolveIngestRunId = Effect.fn("AiMetrics.otlp.resolveIngestRunId")(function* (ingestRunId: string | undefined) {
-  if (ingestRunId !== undefined && Str.trim(ingestRunId) !== "latest") {
-    return ingestRunId;
-  }
-
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT ingest_run_id AS "ingestRunId"
-       FROM ai_metrics_ingest_runs
-       ORDER BY started_at_epoch_ms DESC
-       LIMIT 1`
-    )
-    .pipe(Effect.mapError((cause) => exportFailure("Failed to select the latest AI metrics ingest run.", cause)));
-  const decoded = yield* decodeLatestRows(rows).pipe(
-    Effect.mapError((cause) => exportFailure("Failed to decode the latest AI metrics ingest run row.", cause))
-  );
-  const latest = A.head(decoded);
-
-  if (O.isNone(latest)) {
-    return yield* exportFailure("No AI metrics ingest runs are available for OTLP export.", {
-      ingestRunId: ingestRunId ?? "latest",
-    });
-  }
-
-  return latest.value.ingestRunId;
-});
 
 // Selects every turn that has not yet been exported, rather than the turns belonging
 // to one ingest run. Run-scoping silently dropped work: a run that committed turns and
@@ -480,16 +437,16 @@ const otlpIdFor = Effect.fnUntraced(function* (seed: string, hexLength: number) 
   return otlpIdFrom(digest, hexLength);
 });
 
-// Seeded from the transcript the session belongs to, NOT from `agent_session_id`.
-// That column still embeds the ingest run (`rowId("session", [ingestRunId, ...])`),
-// so a transcript that grows between runs mints a fresh session row every time. Seeding
-// trace identity from it would hand each run its own trace id, and one long agent
-// session would arrive in Phoenix as N disconnected roots -- with ids that differ
-// genuinely, so `uq_spans_span_id` could not reunite them either.
+// Seeded from the transcript, NOT read off `agent_session_id`. That column is now
+// content-addressed too, but a store migrated in place is not guaranteed to be uniform:
+// until `ai-metrics-agent-session-id-v2` has run, rows still carry per-run ids. Deriving
+// trace identity from the transcript keeps a half-migrated store tracing correctly, and
+// keeps trace ids stable across the migration itself.
 //
-// These three fields are what `agent_session_id` hashes minus the run id, and they are
-// already on the export row, so one transcript keeps one trace across every run at no
-// cost. Fixing the column itself needs a migration and is deliberately left alone.
+// This seed also carries `sourceRole`, which the session row key deliberately does not.
+// They are allowed to diverge: dropping it here would change the trace id of every
+// transcript and detach future spans from traces Phoenix already holds, which costs far
+// more than the rare role flip it would tidy up.
 const sessionSeed = (row: AiMetricsOtlpTurnExportRow): string =>
   `${row.sourceKind}\u0000${row.sourceRole}\u0000${row.sourcePathHash}`;
 
@@ -587,22 +544,18 @@ const sessionGroupProjections = Effect.fnUntraced(function* (
 // ids are digested once and shared by every turn beneath it. A run can carry tens of
 // thousands of turns, and `crypto.subtle` is not free.
 //
-// The key is the content seed, not `agent_session_id`. One drain can hold turns from
-// several session rows for the same transcript -- that column embeds the ingest run, so
-// a growing transcript mints one per run. Grouping on it would emit that many session
-// projections all carrying the same content-addressed span id, and a single OTLP request
-// containing a duplicate span id is one the collector may reject outright rather than
-// deduplicate.
-const spanProjectionsFor = Effect.fnUntraced(function* (
-  ingestRunId: string,
-  rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>
-) {
+// The key is the content seed, not `agent_session_id`. Grouping must not depend on that
+// column, because a store migrated in place can still hold legacy per-run ids alongside
+// content-addressed ones until `ai-metrics-agent-session-id-v2` has run. On such a store,
+// grouping by the column would emit one session projection per legacy row, all carrying
+// the same content-addressed span id -- and a single OTLP request containing a duplicate
+// span id is one the collector may reject outright rather than deduplicate.
+const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>) {
   const groups = yield* Effect.forEach(R.values(A.groupBy(rows, sessionSeed)), sessionGroupProjections);
   const sessionProjections = A.map(groups, (group) => group.session);
   const turnProjections = A.flatMap(groups, (group) => group.turns);
 
   return AiMetricsOtlpSpanProjectionBatch.make({
-    ingestRunId,
     projections: A.appendAll(sessionProjections, turnProjections),
     sessionSpanCount: A.length(sessionProjections),
     turnIds: A.map(rows, (row) => row.turnId),
@@ -613,29 +566,18 @@ const spanProjectionsFor = Effect.fnUntraced(function* (
 /**
  * Read derived DuckDB rows and build redacted OTLP span projections.
  *
- * **Example** (Construct AiMetricsOtlpExportInput)
+ * **Example** (Read every pending projection)
  *
  * ```ts
- * import {
- *   AiMetricsOtlpEndpointSpec,
- *   AiMetricsOtlpExportInput,
- *   readAiMetricsOtlpSpanProjections
- * } from "@beep/repo-ai-metrics"
+ * import { readAiMetricsOtlpSpanProjections } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
  * import { Effect } from "effect"
- * const input = AiMetricsOtlpExportInput.make({
- *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *   endpoint: AiMetricsOtlpEndpointSpec.make({
- *     baseUrl: "http://127.0.0.1:6006",
- *     protocol: "http/protobuf",
- *     resourceAttributes: {},
- *     signalScope: "traces_only",
- *     traceUrl: "http://127.0.0.1:6006/projects/default/traces"
- *   }),
- *   target: "local"
- * })
- * const program = readAiMetricsOtlpSpanProjections(input).pipe(
- *   Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: input.duckDbPath })))
+ * const program = readAiMetricsOtlpSpanProjections.pipe(
+ *   Effect.provide(
+ *     DuckDb.makeNodeLayer(
+ *       DuckDbConnectionOptions.make({ databasePath: ".beep/ai-metrics/derived/ai-metrics.duckdb" })
+ *     )
+ *   )
  * )
  * console.log(program)
  * ```
@@ -644,11 +586,11 @@ const spanProjectionsFor = Effect.fnUntraced(function* (
  * @category services
  * @since 0.0.0
  */
-export const readAiMetricsOtlpSpanProjections: (
-  input: AiMetricsOtlpExportInput
-) => Effect.Effect<AiMetricsOtlpSpanProjectionBatch, AiMetricsOtlpExportError, DuckDb> = Effect.fn(
-  "AiMetrics.readAiMetricsOtlpSpanProjections"
-)(function* (input) {
+export const readAiMetricsOtlpSpanProjections: Effect.Effect<
+  AiMetricsOtlpSpanProjectionBatch,
+  AiMetricsOtlpExportError,
+  DuckDb
+> = Effect.gen(function* () {
   // The export path has to migrate the store itself. It reads
   // `otlp_exported_at_epoch_ms`, a column added by the schema migration rather than by
   // the base DDL, and the only other caller of the migration is the ingest write. A
@@ -662,10 +604,9 @@ export const readAiMetricsOtlpSpanProjections: (
       )
     )
   );
-  const ingestRunId = yield* resolveIngestRunId(input.ingestRunId);
   const rows = yield* readTurnRows();
 
-  return yield* spanProjectionsFor(ingestRunId, rows);
+  return yield* spanProjectionsFor(rows);
 });
 
 /**
@@ -946,7 +887,6 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
 
   return AiMetricsOtlpExportResult.make({
     endpointTraceUrl: input.endpoint.traceUrl,
-    ingestRunId: batch.ingestRunId,
     sessionSpanCount: batch.sessionSpanCount,
     spanCount: A.length(batch.projections),
     target: input.target,
@@ -986,7 +926,6 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
  *   target: "local"
  * })
  * const batch = AiMetricsOtlpSpanProjectionBatch.make({
- *   ingestRunId: "forwarder-1",
  *   projections: [],
  *   sessionSpanCount: 0,
  *   turnIds: [],
@@ -1072,7 +1011,7 @@ export const runAiMetricsOtlpExport: (
   "AiMetrics.runAiMetricsOtlpExport"
 )(
   function* (input) {
-    const batch = yield* readAiMetricsOtlpSpanProjections(input);
+    const batch = yield* readAiMetricsOtlpSpanProjections;
     // Ordering is the whole point: delivery first, and only an acknowledged delivery
     // reaches the mark. A rejected batch fails here, leaving the watermark open so the
     // next run re-reads exactly these turns. Marking before or without confirmation is
@@ -1102,7 +1041,6 @@ export const runAiMetricsOtlpExport: (
  *   otlpExportResultToJson(
  *     AiMetricsOtlpExportResult.make({
  *       endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
- *       ingestRunId: "forwarder-1",
  *       sessionSpanCount: 0,
  *       spanCount: 0,
  *       target: "local",
