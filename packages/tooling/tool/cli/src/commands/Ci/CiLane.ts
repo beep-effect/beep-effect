@@ -690,6 +690,10 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
   DocgenLaneMode.$match(options.mode, {
     none: A.empty<QualityTaskStep>,
     affected: () => [
+      // Two example-compiler workers fit 16 GB only marginally on the
+      // beta.104 tree — the lane's runner still died mid-run twice; swap
+      // absorbs the spikes.
+      ...hostedSwapSteps(repoRoot, "docgen"),
       rootScriptStep(repoRoot, "ci:docgen", "docgen:local", [
         "--base",
         options.base,
