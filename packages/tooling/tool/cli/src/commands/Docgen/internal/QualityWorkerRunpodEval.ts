@@ -631,7 +631,10 @@ const waitForOllamaReady = Effect.fn("DocgenQualityWorkerRunpodEval.waitForOllam
         ? Effect.succeed(true)
         : Effect.fail(DomainError.make({ message: `Ollama model "${model}" is not ready at ${baseUrl}.` }))
     ),
-    Effect.retry(Schedule.max([Schedule.spaced(Duration.seconds(5)), Schedule.recurs(attempts)])),
+    // Schedule.max continues while ANY sub-schedule continues, so the old
+    // `max([spaced, recurs])` form was unbounded and only the outer timeout saved it;
+    // the delay must ride on `recurs` itself for the attempt cap to be real.
+    Effect.retry(Schedule.recurs(attempts).pipe(Schedule.addDelay(() => Effect.succeed(Duration.seconds(5))))),
     Effect.timeoutOrElse({
       duration: timeout,
       orElse: () =>
