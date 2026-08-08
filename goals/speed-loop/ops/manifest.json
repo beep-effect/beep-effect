@@ -3,13 +3,14 @@
   "initiative": {
     "id": "speed-loop",
     "title": "Speed Loop",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-04",
-    "updated": "2026-08-04",
+    "updated": "2026-08-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/speed-loop",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "statusNote": "Closed by operator decisions 54-55: the distinct fleet program graduated to ci-fleet-endgame and earlier unshipped widgets remain parked; the original numeric stop rule was overtaken by that explicit adoption and graduation decision.",
   "mission": "Standing research→probe→grill→ship→harvest loop over repo speed/quality/performance; terminates when two consecutive cycles' best probe-gated wins each fall under ~30s of full-sweep saving.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -53,12 +54,12 @@
     {
       "id": "C2",
       "name": "Cycle 2 (PR-A/B/C/D wave)",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "CN",
-      "name": "Further cycles until the stop rule fires",
-      "status": "pending"
+      "name": "Closeout, dispositions, and endgame graduation",
+      "status": "complete"
     }
   ],
   "verificationCommands": [
