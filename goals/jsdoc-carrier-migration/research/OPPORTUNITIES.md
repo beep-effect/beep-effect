@@ -159,3 +159,28 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   `--include-generated` (superset scope: everything the non-generated scan catches, plus
   generated files minus the one allowlisted residual). The `apps/**` scope gap is a
   candidate follow-up: extend the corpus or add an apps-scoped totals metric.
+
+### Follow-ups closed: acp resync, apps corpus, inheritDoc quarantine, fleet re-tuning
+
+- **What happened:** the four receipted follow-ups landed in one PR after #606/#608 merged.
+  (1) acp `schema.gen.ts` regenerated with the converted emitter — the feared staleness bomb
+  reduced to one real defect class: the upstream openapi-generator emits `S.Number`, which
+  the schemaNumber governance rule rejects (45 sites); OpenAPI numbers are JSON numbers
+  (always finite), so the repo-owned script now rewrites them to `S.Finite`. The predicted
+  `Acp.errors.ts` S.Json break never materialized post-beta.104. acp check, tests, and
+  docgen all green; the last 342 legacy carriers are gone and the
+  `jsdocZeroLegacyGeneratedResiduals` allowlist is EMPTY — SPEC DoD item 2 now closes
+  without vacuity. (2) apps/** joined both zero-legacy scopes and its 272 blocks migrated
+  through the frozen-data pipeline (272 conserved, 0 residue; data under `data/apps/`).
+  (3) jsdoc-migrate now quarantines `{@inheritDoc}` blocks carrying legacy carriers
+  (`inheritdoc-summary-content`) instead of emitting TSDoc-illegal summary content.
+  (4) CI lane concurrency restored to 8vCPU tuning for the beep-ec2-heavy fleet.
+- **Evidence:** `jsdoc-ratchet --include-generated` findings=0 with an empty allowlist;
+  `jsdoc-migrate verify` 272 conserved / 0 residue on post-biome bytes; acp `bun run check`
+  exit 0 with 45 `S.Finite`, 0 `S.Number`.
+- **Residual friction:** `bunx --bun oxfmt` still resolves the mise shim with no configured
+  version on this workstation (P2 receipt stands) — worked around via
+  `mise x oxfmt@0.50.0`; the generate script's format step should probably prefer a
+  repo-pinned formatter. `jsdoc-migrate verify` defaults to the P3 frozen data paths, so a
+  scoped rerun must pass --extract/--titles/--overrides explicitly or it reports the P3
+  records as orphans.

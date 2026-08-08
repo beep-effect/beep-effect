@@ -738,6 +738,14 @@ describe("JSDoc zero-legacy path predicates", () => {
     expect(isPackageSourceFile(generated)).toBe(false);
     expect(isPackageSourceFileIncludingGenerated(hand)).toBe(true);
     expect(isPackageSourceFileIncludingGenerated(generated)).toBe(true);
-    expect(jsdocZeroLegacyGeneratedResiduals).toContain(generated);
+    expect(jsdocZeroLegacyGeneratedResiduals).toHaveLength(0);
+  });
+
+  it("includes apps source files in both zero-legacy scopes", () => {
+    const appHand = "apps/professional-desktop/src/sync/Sync.atoms.ts";
+    const appGenerated = "apps/professional-desktop/src/runtime/Migrations.gen.ts";
+    expect(isPackageSourceFile(appHand)).toBe(true);
+    expect(isPackageSourceFileIncludingGenerated(appHand)).toBe(true);
+    expect(isPackageSourceFileIncludingGenerated(appGenerated)).toBe(true);
   });
 });

@@ -67,18 +67,15 @@ class JSDocLegacyFileFinding extends S.Class<JSDocLegacyFileFinding>($I`JSDocLeg
 ) {}
 
 /**
- * Generated residual paths still carrying legacy tags after P2 emitter conversion.
+ * Generated residual paths still carrying legacy tags, allowed under `--include-generated`.
  *
- * Documented in goals/jsdoc-carrier-migration progress C5 (acp schema.gen.ts
- * regeneration is a separate acp-resync; the emitter itself already emits titled sections).
- * Only consulted when `--include-generated` is set.
+ * Empty since the acp resync regenerated `schema.gen.ts` with the converted
+ * emitter; kept as the documented channel for any future generated residual.
  *
  * @category constants
  * @since 0.0.0
  */
-export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [
-  "packages/drivers/acp/src/_generated/schema.gen.ts",
-];
+export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [];
 
 /**
  * Repo-relative path to the generated JSDoc documentation inventory.
