@@ -5,12 +5,14 @@ import {
   ciLaneTimingsReport,
   ciRunnerClassForLabels,
   ciTimestampSpanSeconds,
+  decodeCiWorkflowJobsPage,
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   withCiLanePeakRss,
 } from "@beep/repo-cli/commands/Ci";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
@@ -72,6 +74,27 @@ describe("ci lane timings attempt filter", () => {
     expect(report.attemptOneJobCount).toBe(1);
     expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(30));
   });
+
+  it("computes the midpoint for an even number of pickup samples", () => {
+    const report = ciLaneTimingsReport([
+      ciLaneTimingRow(job({ id: 991, started_at: "2026-08-06T12:00:01Z" })),
+      ciLaneTimingRow(job({ id: 992, started_at: "2026-08-06T12:01:39Z" })),
+    ]);
+
+    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(50));
+  });
+
+  it.effect("rejects a jobs payload that omits run_attempt", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        decodeCiWorkflowJobsPage(
+          '{"jobs":[{"completed_at":null,"conclusion":null,"created_at":"2026-08-06T12:00:00Z","id":991,"name":"Test Unit","run_id":42,"started_at":null,"status":"queued"}]}'
+        )
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
   it("renders an absent pickup as an empty TSV cell, never as zero", () => {
     // A zero would drag a spreadsheet average toward zero; an empty cell is

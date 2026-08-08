@@ -21,8 +21,10 @@ import { PrCloseoutReport } from "./Closeout.ts";
 import {
   collectYeetGateStaleness,
   GateStale,
+  GateUnproven,
   renderYeetGateStalenessBlock,
   staleGateVerdicts,
+  unprovenGateVerdicts,
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetMergeReady, YeetMergeReadyCriteria, YeetMergeReadyCriterion, YeetVerdict } from "./Verdict.ts";
@@ -256,6 +258,7 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     worktree: YeetStatusWorktree,
     mergeReady: YeetMergeReady.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
+    unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
@@ -1066,6 +1069,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
     worktree,
     mergeReady: deriveYeetMergeReady(closeout, remoteStatus),
     staleGates: staleGateVerdicts(gateVerdicts),
+    unprovenGates: unprovenGateVerdicts(gateVerdicts),
   });
 });
 
@@ -1197,7 +1201,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- ${renderCheckLine(snapshot.remote)}`,
       `- ${renderYeetReviewThreadBlock(snapshot.remote)}`,
       `- ${renderMergeReadyLine(snapshot)}`,
-      `- ${renderYeetGateStalenessBlock(snapshot.staleGates)}`,
+      `- ${renderYeetGateStalenessBlock(snapshot.staleGates, snapshot.unprovenGates)}`,
       `- rerun-failed: ${snapshot.remote.rerunFailedDecision ?? "not checked"}`,
       `- status artifact: ${snapshot.statusPath}`,
       `- next: ${snapshot.nextCommand}`,
