@@ -491,6 +491,13 @@ const isTurboCacheControlArg = (arg: string): boolean =>
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
 
+// The serial integration phase always pins --concurrency=1 (shared-SQL tests
+// serialize by design); a caller-supplied concurrency flag would reach turbo
+// twice, which it rejects as a duplicate argument.
+const withoutTurboConcurrencyArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
+  (arg) => !isTurboConcurrencyArg(arg)
+);
+
 const isExplicitTurboScopeArg = (arg: string): boolean =>
   Str.startsWith("--filter")(arg) || Str.startsWith("--since")(arg);
 
@@ -1230,7 +1237,7 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
 
 const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...args]),
+  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)]),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -1438,7 +1445,12 @@ const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
     ...optionalQualityTaskStep({
       enabled: lanes.integration,
       step: () =>
-        turboStep(repoRoot, "test:integration:serial", ["test:integration:serial"], ["--concurrency=1", ...lanes.args]),
+        turboStep(
+          repoRoot,
+          "test:integration:serial",
+          ["test:integration:serial"],
+          ["--concurrency=1", ...withoutTurboConcurrencyArgs(lanes.args)]
+        ),
     }),
   ];
 };
