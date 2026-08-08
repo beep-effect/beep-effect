@@ -28,6 +28,16 @@ id = "GHSA-xcpc-8h2w-3j85"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
 
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2, which is the latest published release — no fixed version exists to bump to. image-size is a direct @beep/repo-cli dependency used only by the files media pipeline (imageSizeFromFile in commands/Files/internal/MediaExec.ts) on operator-supplied local media, never on network- or attacker-controlled input, and the affected ICNS format is not part of that pipeline. Newly published advisory, not introduced by the current PR. Revisit when image-size publishes a fixed release."
+
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2, which is the latest published release — no fixed version exists to bump to. Same exposure assessment as GHSA-w3rx-r6r6-pgpr: direct @beep/repo-cli dependency confined to the local files media pipeline on operator-supplied media. Newly published advisory, not introduced by the current PR. Revisit when image-size publishes a fixed release."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
