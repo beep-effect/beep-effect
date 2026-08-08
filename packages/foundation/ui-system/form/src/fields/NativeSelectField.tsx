@@ -16,7 +16,8 @@ import type { FieldOption } from "../core/Options.ts";
  * label/description/options; binding props (`value`/`onChange`/`onBlur`/`name`/
  * `id`) are owned by the field.
  *
- * @example
+ * **Example** (Priority select props)
+ *
  * ```ts
  * import type { NativeSelectFieldProps } from "@beep/form/fields/NativeSelectField"
  *
@@ -44,7 +45,8 @@ export interface NativeSelectFieldProps
 /**
  * Schema-bound native `<select>` dropdown.
  *
- * @example
+ * **Example** (Priority select form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { NativeSelectField } from "@beep/form/fields/NativeSelectField"

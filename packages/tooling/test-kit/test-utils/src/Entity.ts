@@ -24,12 +24,14 @@ type BaseEntityFixtureInput = {
 /**
  * Runtime system principal used by deterministic entity fixture rows.
  *
- * @example
+ * **Example** (System principal kind field)
+ *
  * ```ts
  * import { systemPrincipal } from "@beep/test-utils"
  *
  * console.log(systemPrincipal.kind)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -44,14 +46,16 @@ const publicIdFor = (entityType: string, id: number) =>
 /**
  * Build the common BaseEntity fields used by model decode tests.
  *
- * @param entityType - Stable entity type tag expected by the decoded model.
- * @param id - Deterministic numeric entity id for the fixture row.
- * @example
+ * **Example** (Build base entity fixture)
+ *
  * ```ts
  * import { baseEntityFixtureInput } from "@beep/test-utils"
  *
  * console.log(baseEntityFixtureInput("ExampleEntity", 1).entityType)
  * ```
+ *
+ * @param entityType - Stable entity type tag expected by the decoded model.
+ * @param id - Deterministic numeric entity id for the fixture row.
  * @category testing
  * @since 0.0.0
  */

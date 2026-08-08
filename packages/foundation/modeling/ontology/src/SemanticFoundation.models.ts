@@ -27,7 +27,8 @@ const isSafeFilingSegment = (segment: string): boolean =>
  * vault or Box mirror path must pass this check, so path traversal is
  * rejected at decode time instead of reaching a storage adapter.
  *
- * @example
+ * **Example** (Reject path traversal decode)
+ *
  * ```ts
  * import { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  * import * as S from "effect/Schema"
@@ -54,7 +55,8 @@ export const FilingSegment = S.NonEmptyString.check(
 /**
  * Runtime type for {@link FilingSegment}.
  *
- * @example
+ * **Example** (Type a filing segment)
+ *
  * ```ts
  * import type { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -70,7 +72,8 @@ export type FilingSegment = typeof FilingSegment.Type;
 /**
  * Derived guard for {@link FilingSegment}.
  *
- * @example
+ * **Example** (Guard valid filing segment)
+ *
  * ```ts
  * import { isFilingSegment } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -85,7 +88,8 @@ export const isFilingSegment = S.is(FilingSegment);
 /**
  * Exact document-class vocabulary locked by the M1 specification.
  *
- * @example
+ * **Example** (Check received document class)
+ *
  * ```ts
  * import { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -111,7 +115,8 @@ export const DocumentClass = LiteralKit([
 /**
  * Runtime type for {@link DocumentClass}.
  *
- * @example
+ * **Example** (Type a document class)
+ *
  * ```ts
  * import type { DocumentClass } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -127,7 +132,8 @@ export type DocumentClass = typeof DocumentClass.Type;
 /**
  * Supported SKOS mapping relationship for a vetted external alignment.
  *
- * @example
+ * **Example** (Check closeMatch mapping)
+ *
  * ```ts
  * import { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -146,7 +152,8 @@ export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
 /**
  * Runtime type for {@link SkosMappingKind}.
  *
- * @example
+ * **Example** (Type a mapping kind)
+ *
  * ```ts
  * import type { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -162,7 +169,8 @@ export type SkosMappingKind = typeof SkosMappingKind.Type;
 /**
  * Vetted external mapping attached to a repo-owned SKOS concept.
  *
- * @example
+ * **Example** (Make concept alignment)
+ *
  * ```ts
  * import { ConceptAlignment } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
@@ -192,7 +200,8 @@ export class ConceptAlignment extends S.Class<ConceptAlignment>($I`ConceptAlignm
 /**
  * One repo-owned concept in an intake taxonomy scheme.
  *
- * @example
+ * **Example** (Make taxonomy concept)
+ *
  * ```ts
  * import { TaxonomyConcept } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
@@ -226,7 +235,8 @@ export class TaxonomyConcept extends S.Class<TaxonomyConcept>($I`TaxonomyConcept
 /**
  * Storage root kind exposed as filing vocabulary data.
  *
- * @example
+ * **Example** (Check box-mirror root kind)
+ *
  * ```ts
  * import { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  *
@@ -242,13 +252,17 @@ export const FilingRootKind = LiteralKit(["local-vault", "box-mirror"]).pipe(
   })
 );
 
-/** Runtime type for {@link FilingRootKind}.
- * @example
+/**
+ *  Runtime type for {@link FilingRootKind}.
+ *
+ * **Example** (Type a filing root kind)
+ *
  * ```ts
  * import type { FilingRootKind } from "@beep/ontology/SemanticFoundation.models"
  * const kind: FilingRootKind = "local-vault"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -257,7 +271,8 @@ export type FilingRootKind = typeof FilingRootKind.Type;
 /**
  * Filing root and path-template metadata exposed to downstream consumers.
  *
- * @example
+ * **Example** (Make filing root)
+ *
  * ```ts
  * import { FilingRoot } from "@beep/ontology/SemanticFoundation.models"
  * import { IRIReference } from "@beep/rdf"
@@ -265,6 +280,7 @@ export type FilingRootKind = typeof FilingRootKind.Type;
  * const root = FilingRoot.make({ iri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/filing-root/local-vault"), kind: "local-vault", rootSegment: "vault" })
  * console.log(root.rootSegment)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -276,11 +292,13 @@ export class FilingRoot extends S.Class<FilingRoot>($I`FilingRoot`)(
 /**
  * Complete schema-first taxonomy registry seed.
  *
- * @example
+ * **Example** (Count seed concepts)
+ *
  * ```ts
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSeed.concepts.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

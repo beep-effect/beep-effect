@@ -8,7 +8,8 @@
 /**
  * Skill entity schema exports.
  *
- * @example
+ * **Example** (Import Skill and log tableName)
+ *
  * ```ts
  * import { Skill } from "@beep/agents-domain/entities/Skill"
  *

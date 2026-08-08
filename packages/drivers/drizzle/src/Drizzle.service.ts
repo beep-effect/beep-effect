@@ -17,11 +17,13 @@ const $I = $DrizzleId.create("Drizzle.service");
 /**
  * Schema for opaque row arrays returned by a product-neutral Drizzle adapter.
  *
- * @remarks
+ * **Details**
+ *
  * The driver validates only the array boundary. Product repositories should
  * decode row objects with their own schemas after execution.
  *
- * @example
+ * **Example** (Decode opaque row array)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { DrizzleRows } from "@beep/drizzle"
@@ -43,7 +45,8 @@ export const DrizzleRows = S.Array(S.Unknown).pipe(
 /**
  * Runtime row-array type decoded by {@link DrizzleRows}.
  *
- * @example
+ * **Example** (Annotate decoded row array)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import type { DrizzleRows } from "@beep/drizzle"
@@ -60,12 +63,14 @@ export type DrizzleRows = typeof DrizzleRows.Type;
 /**
  * Narrow adapter contract accepted by {@link Drizzle.makeLayer}.
  *
- * @remarks
+ * **Details**
+ *
  * Implementations own connection management, SQL execution, and transaction
  * callback scoping. This package wraps that adapter without binding it to a
  * concrete database runtime.
  *
- * @example
+ * **Example** (Stub client execute methods)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import type { DrizzleClient } from "@beep/drizzle"
@@ -84,7 +89,6 @@ export type DrizzleRows = typeof DrizzleRows.Type;
  * - `execute` delegates SQL execution to the backing adapter and may read or
  *   write database state depending on the statement.
  * - `withTransaction` delegates transaction scoping to the backing adapter.
- *
  * @category models
  * @since 0.0.0
  */
@@ -98,11 +102,13 @@ export interface DrizzleClient {
 /**
  * Service API exposed after yielding the {@link Drizzle} service.
  *
- * @remarks
+ * **Details**
+ *
  * Transaction callbacks receive another `DrizzleShape` so call sites stay
  * independent of native transaction handles.
  *
- * @example
+ * **Example** (Nested transaction execute call)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import type { DrizzleShape } from "@beep/drizzle"
@@ -123,7 +129,6 @@ export interface DrizzleClient {
  * @effects
  * - `execute` performs adapter-backed SQL execution.
  * - `withTransaction` runs the callback in the adapter's transaction scope.
- *
  * @category services
  * @since 0.0.0
  */
@@ -143,7 +148,8 @@ const makeService = (client: DrizzleClient): DrizzleShape =>
 /**
  * Effect service tag for product-neutral Drizzle execution.
  *
- * @example
+ * **Example** (Provide layer and execute)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Drizzle, type DrizzleClient } from "@beep/drizzle"
@@ -170,11 +176,13 @@ export class Drizzle extends Context.Service<Drizzle, DrizzleShape>()($I`Drizzle
   /**
    * Build a Layer from a narrow product-neutral Drizzle adapter.
    *
-   * @remarks
+   * **Details**
+   *
    * The layer is pure and does not acquire a database connection. Adapter
    * side effects occur only when service methods are invoked.
    *
-   * @example
+   * **Example** (Layer with transaction execute)
+   *
    * ```ts
    * import { deepStrictEqual } from "node:assert"
    * import { Drizzle, type DrizzleClient } from "@beep/drizzle"

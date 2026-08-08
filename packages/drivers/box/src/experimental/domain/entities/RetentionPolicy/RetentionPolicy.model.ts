@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/RetentionPolicy/Retention
 /**
  * Experimental schema anchor for Box retention policy resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty policy)
+ *
  * ```ts
  * import { RetentionPolicy } from "@beep/box/experimental/domain/entities/RetentionPolicy/RetentionPolicy.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class RetentionPolicy extends S.Class<RetentionPolicy>($I`RetentionPolicy
 /**
  * Type-level companion namespace for {@link RetentionPolicy} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty policy)
+ *
  * ```ts
  * import { RetentionPolicy } from "@beep/box/experimental/domain/entities/RetentionPolicy/RetentionPolicy.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace RetentionPolicy {
   /**
    * Encoded payload accepted by the {@link RetentionPolicy} entity schema.
    *
-   * @example
+   * **Example** (Encode empty retention policy)
+   *
    * ```ts
    * import { RetentionPolicy } from "@beep/box/experimental/domain/entities/RetentionPolicy/RetentionPolicy.model";
    * import * as S from "effect/Schema";

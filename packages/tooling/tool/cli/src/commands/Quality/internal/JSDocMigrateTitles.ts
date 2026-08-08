@@ -7,7 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Console, Effect, MutableHashMap, Order, pipe } from "effect";
+import { Config, Console, Effect, MutableHashMap, Order, pipe, Semaphore } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -34,6 +35,32 @@ const migrateTitlesError = (message: string): QualityScriptCommandError =>
     message,
     command: "bun run beep quality jsdoc-migrate titles",
     exitCode: 1,
+  });
+
+/**
+ * Env keys that may hold the local CLIProxyAPI bearer (OpenAI-compatible
+ * clients use `OPENAI_API_KEY`; Claude Code shells often export
+ * `ANTHROPIC_AUTH_TOKEN` to the same client-token).
+ */
+const proxyAuthEnvKeys = ["OPENAI_API_KEY", "CLI_PROXY_API_KEY", "ANTHROPIC_AUTH_TOKEN"] as const;
+
+const resolveProxyAuthToken: Effect.Effect<O.Option<string>> = Effect.gen(function* () {
+  for (const key of proxyAuthEnvKeys) {
+    const value = yield* Config.string(key).pipe(Config.option, Effect.orDie);
+    if (O.isSome(value) && Str.isNonEmpty(value.value)) {
+      return O.some(value.value);
+    }
+  }
+  return O.none<string>();
+});
+
+const authorizeProxyRequest = (
+  request: HttpClientRequest.HttpClientRequest,
+  token: O.Option<string>
+): HttpClientRequest.HttpClientRequest =>
+  O.match(token, {
+    onNone: () => request,
+    onSome: (value) => HttpClientRequest.setHeader(request, "Authorization", `Bearer ${value}`),
   });
 
 const TitleSuggestion = S.Struct({
@@ -335,6 +362,57 @@ const pendingTitleFileGroups = (
 };
 
 /**
+ * Pack small single-file groups into multi-file proxy requests to cut round-trips.
+ *
+ * @param fileGroups - Per-file pending extract groups to pack.
+ * @param maxRecords - Maximum extract records allowed in one packed request.
+ * @param maxChars - Maximum combined blockText characters allowed in one request.
+ * @returns Packed request groups (one multi-file batch may replace many tiny files).
+ */
+const packTitleRequestGroups = (
+  fileGroups: ReadonlyArray<PendingTitleFileGroup>,
+  maxRecords = 12,
+  maxChars = 14_000
+): ReadonlyArray<PendingTitleFileGroup> => {
+  const packed: Array<PendingTitleFileGroup> = [];
+  let currentRecords: Array<JSDocMigrateExtractRecord> = [];
+  let currentChars = 0;
+  let currentFiles: Array<string> = [];
+  const flush = () => {
+    if (currentRecords.length === 0) {
+      return;
+    }
+    A.appendInPlace(packed, {
+      filePath: currentFiles.length === 1 ? (currentFiles[0] ?? "batch") : `batch(${currentFiles.length} files)`,
+      records: currentRecords,
+    });
+    currentRecords = [];
+    currentChars = 0;
+    currentFiles = [];
+  };
+  for (const group of fileGroups) {
+    const groupChars = A.reduce(group.records, 0, (sum, record) => sum + record.blockText.length);
+    const alone = group.records.length > 6 || groupChars > maxChars / 2;
+    if (alone) {
+      flush();
+      A.appendInPlace(packed, group);
+      continue;
+    }
+    if (
+      currentRecords.length > 0 &&
+      (currentRecords.length + group.records.length > maxRecords || currentChars + groupChars > maxChars)
+    ) {
+      flush();
+    }
+    A.appendAllInPlace(currentRecords, group.records);
+    currentChars += groupChars;
+    A.appendInPlace(currentFiles, group.filePath);
+  }
+  flush();
+  return packed;
+};
+
+/**
  * Options accepted by {@link runJSDocMigrateTitles}.
  *
  * **Example** (Configure a bounded title run)
@@ -358,29 +436,49 @@ export class RunJSDocMigrateTitlesOptions extends S.Class<RunJSDocMigrateTitlesO
     proxyUrl: S.optionalKey(S.String),
     model: S.optionalKey(S.String),
     limitFiles: S.optionalKey(S.Int),
+    concurrency: S.optionalKey(S.Int),
   },
   $I.annote("RunJSDocMigrateTitlesOptions", {
     description: "Options for the jsdoc-migrate titles stage: data files, proxy endpoint, model, and file cap.",
   })
 ) {}
 
+/**
+ * Default concurrent proxy requests for the titles stage (one request per packed group).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const defaultJSDocMigrateTitlesConcurrency = 4;
+
 const chatCompletionContent = (
   client: HttpClient.HttpClient,
   request: HttpClientRequest.HttpClientRequest
 ): Effect.Effect<string, QualityScriptCommandError> =>
   client.execute(request).pipe(
-    Effect.filterOrFail(
-      (candidate) => candidate.status >= 200 && candidate.status < 300,
-      (candidate) => migrateTitlesError(`Proxy returned HTTP ${candidate.status}.`)
-    ),
-    Effect.flatMap((candidate) => candidate.json),
     Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Failed to call the local model proxy.")),
-    Effect.flatMap((body) =>
-      decodeChatCompletion(body).pipe(
-        Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response is not a chat completion."))
+    Effect.flatMap((candidate) =>
+      candidate.text.pipe(
+        Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Failed to read proxy response body.")),
+        Effect.flatMap((bodyText) => {
+          if (candidate.status < 200 || candidate.status >= 300) {
+            const snippet = Str.slice(0, 240)(bodyText);
+            return Effect.fail(migrateTitlesError(`Proxy returned HTTP ${candidate.status}: ${snippet}`));
+          }
+          return S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(bodyText).pipe(
+            Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response body is not JSON.")),
+            Effect.flatMap((body) =>
+              decodeChatCompletion(body).pipe(
+                Effect.mapError((cause) =>
+                  QualityScriptCommandError.new(cause, "Proxy response is not a chat completion.")
+                )
+              )
+            ),
+            Effect.map((response) => response.choices[0]?.message.content ?? "")
+          );
+        })
       )
-    ),
-    Effect.map((response) => response.choices[0]?.message.content ?? "")
+    )
   );
 
 const titlesPromptWithRetryNote = (
@@ -391,31 +489,48 @@ const titlesPromptWithRetryNote = (
     ? jsdocMigrateTitlesPrompt(pending)
     : `${jsdocMigrateTitlesPrompt(pending)}\nYour previous response was rejected: ${previousProblem}. Return only the corrected JSON array.`;
 
+const errorMessage = (error: QualityScriptCommandError): string =>
+  P.isString(error.message) ? error.message : String(error);
+
+const titleRetryBackoffMs = (message: string, tryIndex: number): number => {
+  const authCooldown = message.includes("auth_unavailable") || message.includes("HTTP 5");
+  return (authCooldown ? 2_000 : 400) * (tryIndex + 1);
+};
+
 const requestTitlesForFile = Effect.fn("JSDocMigrateTitles.requestTitlesForFile")(function* (
   proxyUrl: string,
   model: string,
   pending: ReadonlyArray<JSDocMigrateExtractRecord>
 ): Effect.fn.Return<ReadonlyArray<JSDocMigrateTitleRecord>, QualityScriptCommandError, HttpClient.HttpClient> {
   const client = yield* HttpClient.HttpClient;
+  const proxyToken = yield* resolveProxyAuthToken;
   const attempt = Effect.fnUntraced(function* (previousProblem: string | undefined) {
-    const request = HttpClientRequest.post(`${proxyUrl}/v1/chat/completions`).pipe(
-      HttpClientRequest.bodyJsonUnsafe({
-        model,
-        messages: [{ role: "user", content: titlesPromptWithRetryNote(pending, previousProblem) }],
-        temperature: 0,
-      })
+    const request = authorizeProxyRequest(
+      HttpClientRequest.post(`${proxyUrl}/v1/chat/completions`).pipe(
+        HttpClientRequest.bodyJsonUnsafe({
+          model,
+          messages: [{ role: "user", content: titlesPromptWithRetryNote(pending, previousProblem) }],
+          temperature: 0,
+        })
+      ),
+      proxyToken
     );
     const content = yield* chatCompletionContent(client, request);
     return yield* jsdocMigrateTitleRecordsFromResponse(content, pending);
   });
 
+  // More attempts than the schema-only path: proxy auth cooldowns and rate limits
+  // show up as transient HTTP failures under concurrent title traffic.
   let lastError: QualityScriptCommandError | undefined;
-  for (let tryIndex = 0; tryIndex < 3; tryIndex += 1) {
-    const outcome = yield* attempt(lastError?.message).pipe(Effect.result);
+  for (let tryIndex = 0; tryIndex < 6; tryIndex += 1) {
+    const outcome = yield* attempt(
+      tryIndex === 0 ? undefined : errorMessage(lastError ?? migrateTitlesError("previous attempt failed"))
+    ).pipe(Effect.result);
     if (outcome._tag === "Success") {
       return outcome.success;
     }
     lastError = outcome.failure;
+    yield* Effect.sleep(`${titleRetryBackoffMs(errorMessage(lastError), tryIndex)} millis`);
   }
   return yield* lastError ?? migrateTitlesError("Title request failed.");
 });
@@ -462,7 +577,11 @@ export const runJSDocMigrateTitles = Effect.fn("JSDocMigrateTitles.run")(functio
 
   const pending = pendingTitleRecords(extract, existingByAnchor);
   const fileGroups = pendingTitleFileGroups(pending);
-  const limited = options.limitFiles === undefined ? fileGroups : A.take(fileGroups, options.limitFiles);
+  const limitedFiles = options.limitFiles === undefined ? fileGroups : A.take(fileGroups, options.limitFiles);
+  // Pack many tiny files into fewer proxy round-trips (still one logical batch
+  // of extract records with fail-closed per-anchor validation).
+  const requestGroups = packTitleRequestGroups(limitedFiles);
+  const concurrency = Math.max(1, options.concurrency ?? defaultJSDocMigrateTitlesConcurrency);
 
   yield* fs
     .makeDirectory(path.dirname(titlesPath), { recursive: true })
@@ -470,21 +589,31 @@ export const runJSDocMigrateTitles = Effect.fn("JSDocMigrateTitles.run")(functio
       Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to create ${path.dirname(titlesPath)}.`))
     );
 
+  // Fully concurrent proxy calls; appends are mutexed so titles.jsonl stays
+  // append-only and resume-safe under partial failure. Slow multi-block files
+  // must not stall the rest of the pipeline (batch-of-N waits did that).
+  const appendGate = yield* Semaphore.make(1);
   let appended = 0;
-  for (const group of limited) {
+  const appendTitlesForGroup = Effect.fnUntraced(function* (group: {
+    readonly filePath: string;
+    readonly records: ReadonlyArray<JSDocMigrateExtractRecord>;
+  }) {
     const records = yield* requestTitlesForFile(proxyUrl, model, group.records);
     const lines = yield* Effect.forEach(records, (record) =>
       jsdocMigrateTitleCodec
         .encode(record)
         .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to encode ${record.anchor}.`)))
     );
-    yield* fs
-      .writeFileString(titlesPath, `${A.join(lines, "\n")}\n`, { flag: "a" })
-      .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to append to ${titlesPath}.`)));
+    yield* appendGate.withPermits(1)(
+      fs
+        .writeFileString(titlesPath, `${A.join(lines, "\n")}\n`, { flag: "a" })
+        .pipe(Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to append to ${titlesPath}.`)))
+    );
     appended += records.length;
     yield* Console.log(`[jsdoc-migrate] titles: ${group.filePath} -> ${records.length} record(s)`);
-  }
+  });
+  yield* Effect.forEach(requestGroups, appendTitlesForGroup, { concurrency });
   yield* Console.log(
-    `[jsdoc-migrate] titles ok: pendingBlocks=${pending.length} files=${limited.length} appended=${appended} -> ${titlesPath}`
+    `[jsdoc-migrate] titles ok: pendingBlocks=${pending.length} files=${limitedFiles.length} requests=${requestGroups.length} appended=${appended} concurrency=${concurrency} -> ${titlesPath}`
   );
 });

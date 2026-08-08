@@ -16,7 +16,8 @@ import type * as React from "react";
 /**
  * Command component.
  *
- * @example
+ * **Example** (Importing Command component)
+ *
  * ```tsx
  * import { Command } from "@beep/ui/components/command"
  *
@@ -42,7 +43,8 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
 /**
  * Command dialog component.
  *
- * @example
+ * **Example** (Importing CommandDialog component)
+ *
  * ```tsx
  * import { CommandDialog } from "@beep/ui/components/command"
  *
@@ -82,7 +84,8 @@ function CommandDialog({
 /**
  * Command input component.
  *
- * @example
+ * **Example** (Importing CommandInput component)
+ *
  * ```tsx
  * import { CommandInput } from "@beep/ui/components/command"
  *
@@ -112,7 +115,8 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
 /**
  * Command list component.
  *
- * @example
+ * **Example** (Importing CommandList component)
+ *
  * ```tsx
  * import { CommandList } from "@beep/ui/components/command"
  *
@@ -135,7 +139,8 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
 /**
  * Command empty component.
  *
- * @example
+ * **Example** (Importing CommandEmpty component)
+ *
  * ```tsx
  * import { CommandEmpty } from "@beep/ui/components/command"
  *
@@ -158,7 +163,8 @@ function CommandEmpty({ className, ...props }: React.ComponentProps<typeof Comma
 /**
  * Command group component.
  *
- * @example
+ * **Example** (Importing CommandGroup component)
+ *
  * ```tsx
  * import { CommandGroup } from "@beep/ui/components/command"
  *
@@ -184,7 +190,8 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
 /**
  * Command separator component.
  *
- * @example
+ * **Example** (Importing CommandSeparator component)
+ *
  * ```tsx
  * import { CommandSeparator } from "@beep/ui/components/command"
  *
@@ -207,7 +214,8 @@ function CommandSeparator({ className, ...props }: React.ComponentProps<typeof C
 /**
  * Command item component.
  *
- * @example
+ * **Example** (Importing CommandItem component)
+ *
  * ```tsx
  * import { CommandItem } from "@beep/ui/components/command"
  *
@@ -236,7 +244,8 @@ function CommandItem({ className, children, ...props }: React.ComponentProps<typ
 /**
  * Command shortcut component.
  *
- * @example
+ * **Example** (Importing CommandShortcut component)
+ *
  * ```tsx
  * import { CommandShortcut } from "@beep/ui/components/command"
  *

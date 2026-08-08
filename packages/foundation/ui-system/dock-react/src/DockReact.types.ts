@@ -18,7 +18,8 @@ import type { RatioOverride, TabDrag } from "./internal/Gesture.models.ts";
 /**
  * Atom graph consumed by the React dock adapter.
  *
- * @example
+ * **Example** (Access workspace atom)
+ *
  * ```ts
  * import type { DockAtomGraph } from "@beep/dock-react"
  *
@@ -36,7 +37,8 @@ const $I = $DockReactId.create("DockReact.types");
 /**
  * Renderer-facing API for one dock panel.
  *
- * @example
+ * **Example** (Make panel API)
+ *
  * ```ts
  * import { DockPanelApi } from "@beep/dock-react"
  * import { PanelId } from "@beep/dock"
@@ -59,7 +61,8 @@ export class DockPanelApi extends S.Class<DockPanelApi>($I`DockPanelApi`)(
 /**
  * Properties supplied to a dock panel renderer.
  *
- * @example
+ * **Example** (Read panel id)
+ *
  * ```ts
  * import type { DockPanelProps } from "@beep/dock-react"
  *
@@ -79,7 +82,8 @@ export type DockPanelProps = {
 /**
  * Panel-renderer properties extended with the tab title.
  *
- * @example
+ * **Example** (Read tab title)
+ *
  * ```ts
  * import type { DockTabProps } from "@beep/dock-react"
  *
@@ -95,7 +99,8 @@ export type DockTabProps = DockPanelProps & { readonly title: string };
 /**
  * React component contract for rendering panel content.
  *
- * @example
+ * **Example** (Null panel renderer)
+ *
  * ```ts
  * import type { DockRenderer } from "@beep/dock-react"
  *
@@ -111,7 +116,8 @@ export type DockRenderer = React.FunctionComponent<DockPanelProps>;
 /**
  * React component contract for rendering a panel tab.
  *
- * @example
+ * **Example** (Title tab renderer)
+ *
  * ```ts
  * import type { DockTabRenderer } from "@beep/dock-react"
  *
@@ -127,7 +133,8 @@ export type DockTabRenderer = React.FunctionComponent<DockTabProps>;
 /**
  * Imperative adapter surface exposed to panel renderers and `onReady` handlers.
  *
- * @example
+ * **Example** (Access awaitIdle)
+ *
  * ```ts
  * import type { DockviewAdapterApi } from "@beep/dock-react"
  *
@@ -153,6 +160,8 @@ export type DockviewAdapterApi = {
 /**
  * Browser-side title measurement used to clamp docked group widths.
  *
+ * **Details**
+ *
  * A custom `captureLayer` must carry a `captureKey` — the provider's stable
  * semantic identity. Adapter state is cached per graph and measurement
  * configuration (gap, font, line height, chrome, captureKey), so layers
@@ -160,7 +169,8 @@ export type DockviewAdapterApi = {
  * stable, while switching providers under a new key gets fresh state
  * instead of stale metrics. The default live provider needs no key.
  *
- * @example
+ * **Example** (Font and line height)
+ *
  * ```ts
  * import type { DockTitleMinimaOptions } from "@beep/dock-react"
  *
@@ -183,7 +193,8 @@ export type DockTitleMinimaOptions = {
 /**
  * Configuration and renderer registry accepted by {@link DockviewReact}.
  *
- * @example
+ * **Example** (Access components registry)
+ *
  * ```ts
  * import type { DockviewReactProps } from "@beep/dock-react"
  *

@@ -18,7 +18,8 @@ import type React from "react";
  * props (`value`/`onChange`/`onBlur`/`name`/`id`/`render`/`children`) are owned
  * by the field.
  *
- * @example
+ * **Example** (OTP verification props)
+ *
  * ```ts
  * import type { OTPFieldProps } from "@beep/form/fields/OTPField"
  *
@@ -46,7 +47,8 @@ export interface OTPFieldProps
 /**
  * Schema-bound one-time-code input rendered as a row of single-character slots.
  *
- * @example
+ * **Example** (OTP verification form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { OTPField } from "@beep/form/fields/OTPField"

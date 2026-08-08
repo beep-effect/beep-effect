@@ -25,7 +25,8 @@ type TokenizationShape = {
 /**
  * Tokenization error.
  *
- * @example
+ * **Example** (Make tokenization error)
+ *
  * ```ts
  * import { TokenizationError } from "@beep/nlp-processing/Core/Tokenization"
  *
@@ -36,8 +37,8 @@ type TokenizationShape = {
  * console.log(error.operation) // "tokenize"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export class TokenizationError extends TaggedErrorClass<TokenizationError>($I`TokenizationError`)(
   "TokenizationError",
@@ -53,22 +54,24 @@ export class TokenizationError extends TaggedErrorClass<TokenizationError>($I`To
 /**
  * Tokenization service.
  *
- * @example
+ * **Example** (Log service key)
+ *
  * ```ts
  * import { Tokenization } from "@beep/nlp-processing/Core/Tokenization"
  *
  * console.log(Tokenization.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class Tokenization extends Context.Service<Tokenization, TokenizationShape>()($I`Tokenization`) {}
 
 /**
  * Tokenize text into tokens using the configured service.
  *
- * @example
+ * **Example** (Provide mock tokenize service)
+ *
  * ```ts
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
@@ -94,9 +97,8 @@ export class Tokenization extends Context.Service<Tokenization, TokenizationShap
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
  * tokenizer effect for the supplied text.
- *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const tokenize = Effect.fn("Nlp.Core.Tokenization.tokenize")(function* (text: string) {
   const tokenization = yield* Tokenization;
@@ -106,7 +108,8 @@ export const tokenize = Effect.fn("Nlp.Core.Tokenization.tokenize")(function* (t
 /**
  * Split text into sentences using the configured service.
  *
- * @example
+ * **Example** (Provide mock sentences service)
+ *
  * ```ts
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
@@ -132,9 +135,8 @@ export const tokenize = Effect.fn("Nlp.Core.Tokenization.tokenize")(function* (t
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
  * sentence-splitting effect for the supplied text.
- *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* (text: string) {
   const tokenization = yield* Tokenization;
@@ -144,7 +146,8 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
 /**
  * Build a document using the configured service.
  *
- * @example
+ * **Example** (Build document with mock)
+ *
  * ```ts
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
@@ -173,9 +176,8 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
  * document-building effect for the supplied text and optional id.
- *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDocument")(function* (
   text: string,
@@ -188,7 +190,8 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
 /**
  * Count tokens using the configured service.
  *
- * @example
+ * **Example** (Count tokens with mock)
+ *
  * ```ts
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
@@ -214,9 +217,8 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
  *
  * @effects Requires a {@link Tokenization} service and executes that service's
  * counting effect for the supplied text.
- *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const tokenCount = Effect.fn("Nlp.Core.Tokenization.tokenCount")(function* (text: string) {
   const tokenization = yield* Tokenization;

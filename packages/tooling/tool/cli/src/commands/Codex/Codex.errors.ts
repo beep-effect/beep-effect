@@ -23,11 +23,13 @@ type CodexCommandErrorOptions =
 /**
  * Typed failure for Codex helper commands.
  *
- * @example
+ * **Example** (Construct Codex command error)
+ *
  * ```ts
  * import { CodexCommandError } from "@beep/repo-cli/commands/Codex"
  * const error = new CodexCommandError({ message: "failed" })
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

@@ -1,6 +1,8 @@
 /**
  * Version component.
  *
+ * **Details**
+ *
  * \@beep/ui — Shared UI component library.
  *
  * Provides shadcn components, theme tokens, and utilities
@@ -11,22 +13,24 @@
  * - `@beep/ui/lib/utils` — cn() utility
  * - `@beep/ui/styles/globals.css` — Theme tokens
  *
- * @example
+ * **Example** (Import package VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/ui"
  *
  * console.log(VERSION)
  * ```
  *
+ * @packageDocumentation
  * @category components
  * @since 0.0.0
- * @packageDocumentation
  */
 
 /**
  * Version export.
  *
- * @example
+ * **Example** (Log package VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/ui"
  *

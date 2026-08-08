@@ -33,11 +33,14 @@ import type { GovernedEgressOptions } from "./GovernedEgress.fetch.ts";
 /**
  * Build the governed egress `Fetch` layer from composition-root options.
  *
+ * **Details**
+ *
  * `baseFetch` exists for tests, which need to observe what the boundary let
  * through without reaching the network. Production omits it and the platform
  * `fetch` is used.
  *
- * @example
+ * **Example** (Build egress layer with options)
+ *
  * ```ts
  * import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"

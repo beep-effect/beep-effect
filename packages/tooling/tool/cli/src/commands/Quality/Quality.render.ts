@@ -16,9 +16,8 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
 /**
  * Render quality profile configuration as stable `key=value` lines.
  *
- * @param config - Resolved quality profile whose fields are serialized into lines.
- * @returns Stable `key=value` lines describing the profile configuration.
- * @example
+ * **Example** (Serialize config key-value lines)
+ *
  * ```ts
  * import { renderQualityProfileConfigLines } from "@beep/repo-cli/test/Quality"
  *
@@ -31,6 +30,9 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
  *   notes: []
  * }))
  * ```
+ *
+ * @param config - Resolved quality profile whose fields are serialized into lines.
+ * @returns Stable `key=value` lines describing the profile configuration.
  * @category formatting
  * @since 0.0.0
  */
@@ -46,7 +48,8 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
 /**
  * Print a quality profile config as JSON or stable text lines.
  *
- * @example
+ * **Example** (Print config as Effect)
+ *
  * ```ts
  * import { printQualityProfileConfig } from "@beep/repo-cli/test/Quality"
  * import { Effect } from "effect"
@@ -61,6 +64,7 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
  * }, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -81,7 +85,8 @@ export const printQualityProfileConfig: {
 /**
  * Print a detected quality profile as JSON or stable text lines.
  *
- * @example
+ * **Example** (Print detection as Effect)
+ *
  * ```ts
  * import { printQualityProfileDetection } from "@beep/repo-cli/test/Quality"
  * import { Effect } from "effect"
@@ -101,6 +106,7 @@ export const printQualityProfileConfig: {
  * }, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */

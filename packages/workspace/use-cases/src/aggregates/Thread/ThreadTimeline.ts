@@ -27,7 +27,8 @@ const CostMicros = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 /**
  * Timeline item projecting a turn's message reference to resolved content.
  *
- * @example
+ * **Example** (Decode message timeline item)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -70,7 +71,8 @@ const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn
 /**
  * Timeline item placeholder for a tool-call turn item.
  *
- * @example
+ * **Example** (Decode tool-call timeline item)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -107,7 +109,8 @@ export class TimelineToolCallItem extends S.Class<TimelineToolCallItem>($I`Timel
 /**
  * Resolved timeline item for a turn.
  *
- * @example
+ * **Example** (Decode union timeline item)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -136,7 +139,8 @@ export const TimelineItem = S.Union([TimelineMessageItem, TimelineToolCallItem])
 /**
  * Runtime type for {@link TimelineItem}.
  *
- * @example
+ * **Example** (Satisfy TimelineItem type)
+ *
  * ```ts
  * import type { TimelineItem } from "@beep/workspace-use-cases/aggregates/Thread"
  *
@@ -152,7 +156,8 @@ export type TimelineItem = typeof TimelineItem.Type;
 /**
  * Projected turn within a thread timeline.
  *
- * @example
+ * **Example** (Decode projected timeline turn)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -199,7 +204,8 @@ export class TimelineTurn extends S.Class<TimelineTurn>($I`TimelineTurn`)(
 /**
  * Read model projecting a thread's ordered turns and resolved items.
  *
- * @example
+ * **Example** (Decode thread timeline model)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -242,6 +248,8 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
 /**
  * The turns still part of the conversation, with every superseded branch removed.
  *
+ * **Details**
+ *
  * Editing a turn appends a replacement whose `parentTurnId` points at the turn it
  * replaces. The replacement therefore supersedes that turn *and* everything
  * recorded after it — the answers, and any follow-up exchange, that the old
@@ -254,7 +262,8 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
  * prompt. Both the renderer and the history projection read the conversation
  * through here so they agree on what the thread now says.
  *
- * @example
+ * **Example** (Filter superseded branch turns)
+ *
  * ```ts
  * import { activeBranchTurns, ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
  * import * as S from "effect/Schema"

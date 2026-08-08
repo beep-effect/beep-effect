@@ -1,7 +1,8 @@
 /**
  * Shared `S.decodeUnknownOption`-backed narrowing for unknown JSON-ish values.
  *
- * @remarks
+ * **Details**
+ *
  * Reproduces the verbatim `unknownRecordProperty` / `unknownRecordKeys`
  * helpers in the quality command adapters, the `asRecord` narrowing in the
  * research internals, and the `isReadonlyUnknownRecord` guard in tsconfig-sync.
@@ -22,9 +23,8 @@ const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unk
 /**
  * Narrow an unknown value to a non-array, string-keyed record.
  *
- * @param value - The unknown value to narrow.
- * @returns `Some` record when `value` is a non-null, non-array object.
- * @example
+ * **Example** (Object Some array None)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { asRecord } from "@beep/repo-cli/internal/cli/UnknownProbe"
@@ -32,6 +32,9 @@ const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unk
  * console.log(O.isSome(asRecord({ a: 1 })))
  * console.log(O.isSome(asRecord([1, 2])))
  * ```
+ *
+ * @param value - The unknown value to narrow.
+ * @returns `Some` record when `value` is a non-null, non-array object.
  * @category guards
  * @since 0.0.0
  */
@@ -40,15 +43,17 @@ export const asRecord: (value: unknown) => O.Option<Record<string, unknown>> = O
 /**
  * Type guard narrowing an unknown value to a readonly, non-array record.
  *
- * @param value - The unknown value to test.
- * @returns `true` when `value` is a non-null, non-array object.
- * @example
+ * **Example** (Object true array false)
+ *
  * ```ts
  * import { isUnknownRecord } from "@beep/repo-cli/internal/cli/UnknownProbe"
  *
  * console.log(isUnknownRecord({ a: 1 }))
  * console.log(isUnknownRecord([1, 2]))
  * ```
+ *
+ * @param value - The unknown value to test.
+ * @returns `true` when `value` is a non-null, non-array object.
  * @category guards
  * @since 0.0.0
  */
@@ -58,7 +63,8 @@ export const isUnknownRecord = (value: unknown): value is Readonly<Record<string
  * Read a single property from an unknown record, rejecting arrays and
  * `undefined` values.
  *
- * @example
+ * **Example** (Property lookup rejects arrays)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { unknownRecordProperty } from "@beep/repo-cli/internal/cli/UnknownProbe"
@@ -66,6 +72,7 @@ export const isUnknownRecord = (value: unknown): value is Readonly<Record<string
  * console.log(unknownRecordProperty({ name: "beep" }, "name"))
  * console.log(O.isNone(unknownRecordProperty([1, 2], "name")))
  * ```
+ *
  * @category access
  * @since 0.0.0
  */
@@ -87,15 +94,17 @@ export const unknownRecordProperty: {
  * List the sorted string keys of an unknown record, treating arrays and
  * non-objects as empty.
  *
- * @param value - The unknown value whose keys are read.
- * @returns The ascending-sorted own string keys, or an empty array.
- * @example
+ * **Example** (Sorted keys empty arrays)
+ *
  * ```ts
  * import { unknownRecordKeys } from "@beep/repo-cli/internal/cli/UnknownProbe"
  *
  * console.log(unknownRecordKeys({ b: 1, a: 2 }))
  * console.log(unknownRecordKeys([1, 2]))
  * ```
+ *
+ * @param value - The unknown value whose keys are read.
+ * @returns The ascending-sorted own string keys, or an empty array.
  * @category access
  * @since 0.0.0
  */

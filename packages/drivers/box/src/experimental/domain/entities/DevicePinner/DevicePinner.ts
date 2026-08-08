@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/DevicePinner/DevicePinner
 /**
  * Experimental schema anchor for Box device pin records associated with managed users.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty payload)
+ *
  * ```ts
  * import { DevicePinner } from "@beep/box/experimental/domain/entities/DevicePinner/DevicePinner";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class DevicePinner extends S.Class<DevicePinner>($I`DevicePinner`)(
 /**
  * Type-level companion namespace for {@link DevicePinner} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode instance)
+ *
  * ```ts
  * import { DevicePinner } from "@beep/box/experimental/domain/entities/DevicePinner/DevicePinner";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace DevicePinner {
   /**
    * Encoded payload accepted by the {@link DevicePinner} entity schema.
    *
-   * @example
+   * **Example** (Encode to Encoded type)
+   *
    * ```ts
    * import { DevicePinner } from "@beep/box/experimental/domain/entities/DevicePinner/DevicePinner";
    * import * as S from "effect/Schema";

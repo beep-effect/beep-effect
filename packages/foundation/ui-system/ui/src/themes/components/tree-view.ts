@@ -10,7 +10,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Tree view theme theme value.
  *
- * @example
+ * **Example** (Import and log theme)
+ *
  * ```ts
  * import { treeViewTheme } from "@beep/ui/themes/components/tree-view"
  *

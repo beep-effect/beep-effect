@@ -28,7 +28,8 @@ import type { JSX } from "react";
 /**
  * Serialized wire shape of {@link YouTubeNode}.
  *
- * @example
+ * **Example** (Serialized wire payload)
+ *
  * ```ts
  * import type { SerializedYouTubeNode } from "@beep/editor/youtube-node"
  *
@@ -63,7 +64,8 @@ const youtubeWrapperAttribute = "data-lexical-youtube-wrapper";
 /**
  * Block-level Lexical decorator node for YouTube embeds.
  *
- * @example
+ * **Example** (Create node getType)
+ *
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
@@ -196,7 +198,8 @@ export class YouTubeNode extends DecoratorBlockNode {
 /**
  * Create a YouTube embed node.
  *
- * @example
+ * **Example** (Create node with ID)
+ *
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
@@ -216,7 +219,8 @@ export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): Y
 /**
  * Type guard for {@link YouTubeNode}.
  *
- * @example
+ * **Example** (Type guard returns true)
+ *
  * ```tsx
  * import { $createYouTubeNode, $isYouTubeNode } from "@beep/editor/youtube-node"
  *

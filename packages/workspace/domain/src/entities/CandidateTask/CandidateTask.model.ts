@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/CandidateTask/CandidateTask.model
 /**
  * Candidate task proposed by an agent.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { CandidateTask } from "@beep/workspace-domain"
  *

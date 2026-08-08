@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Progress theme theme value.
  *
- * @example
+ * **Example** (Import and log progressTheme)
+ *
  * ```ts
  * import { progressTheme } from "@beep/ui/themes/components/progress"
  *

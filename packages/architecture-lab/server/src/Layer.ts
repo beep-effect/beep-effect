@@ -14,7 +14,8 @@ import { WorkerServerLayer } from "./entities/Worker/index.ts";
 /**
  * Live architecture lab server layer.
  *
- * @example
+ * **Example** (Provide live layer for listing)
+ *
  * ```ts
  * import { WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { ArchitectureLabServerLive } from "@beep/architecture-lab-server/layer"

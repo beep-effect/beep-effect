@@ -25,12 +25,14 @@ const defaultBarWidth = 28;
 /**
  * Shared concurrency caps for Files command phases.
  *
- * @example
+ * **Example** (Import concurrency caps)
+ *
  * ```ts
  * import { FilesConcurrency } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof FilesConcurrency = FilesConcurrency
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -74,14 +76,16 @@ const progressConcurrency = (total: number, concurrency: number): number =>
 /**
  * Return true when live Files progress should be rendered.
  *
- * @param enabled - Explicit caller opt-in for live progress rendering.
- * @returns True when progress is enabled and stdout is attached to a TTY.
- * @example
+ * **Example** (Check progress enabled)
+ *
  * ```ts
  * import { isFilesProgressEnabled } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isFilesProgressEnabled = isFilesProgressEnabled
  * ```
+ *
+ * @param enabled - Explicit caller opt-in for live progress rendering.
+ * @returns True when progress is enabled and stdout is attached to a TTY.
  * @category utilities
  * @since 0.0.0
  */
@@ -90,14 +94,16 @@ export const isFilesProgressEnabled = isProgressEnabled;
 /**
  * Render a single-line ASCII progress bar.
  *
- * @param options - Progress bar rendering options.
- * @returns Rendered single-line progress text.
- * @example
+ * **Example** (Render progress bar)
+ *
  * ```ts
  * import { renderFilesProgressBar } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderFilesProgressBar = renderFilesProgressBar
  * ```
+ *
+ * @param options - Progress bar rendering options.
+ * @returns Rendered single-line progress text.
  * @category utilities
  * @since 0.0.0
  */
@@ -121,12 +127,14 @@ export const renderFilesProgressBar = (options: FilesProgressRenderOptions): str
 /**
  * Run an array of effects with bounded concurrency and optional TTY progress.
  *
- * @example
+ * **Example** (Run effects with progress)
+ *
  * ```ts
  * import { runFilesProgressAll } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof runFilesProgressAll = runFilesProgressAll
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -195,12 +203,14 @@ export const runFilesProgressAll: {
 /**
  * Map items to effects, then run them with bounded concurrency and optional TTY progress.
  *
- * @example
+ * **Example** (Map and run with progress)
+ *
  * ```ts
  * import { runFilesProgressForEach } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof runFilesProgressForEach = runFilesProgressForEach
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -28,7 +28,8 @@ type ContradictionDispositionInsertContext = {
 /**
  * Selected contradiction-candidate row.
  *
- * @example
+ * **Example** (Empty candidate row array)
+ *
  * ```ts
  * import type { ContradictionCandidateRow } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -44,7 +45,8 @@ export type ContradictionCandidateRow = typeof candidateTable.$inferSelect;
 /**
  * Insertable contradiction-candidate row.
  *
- * @example
+ * **Example** (Empty candidate insert array)
+ *
  * ```ts
  * import type { ContradictionCandidateInsert } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -60,7 +62,8 @@ export type ContradictionCandidateInsert = typeof candidateTable.$inferInsert;
 /**
  * Selected contradiction-receipt row.
  *
- * @example
+ * **Example** (Empty receipt row array)
+ *
  * ```ts
  * import type { ContradictionReceiptRow } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -76,7 +79,8 @@ export type ContradictionReceiptRow = typeof receiptTable.$inferSelect;
 /**
  * Insertable contradiction-receipt row.
  *
- * @example
+ * **Example** (Empty receipt insert array)
+ *
  * ```ts
  * import type { ContradictionReceiptInsert } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -92,7 +96,8 @@ export type ContradictionReceiptInsert = typeof receiptTable.$inferInsert;
 /**
  * Selected contradiction-disposition row.
  *
- * @example
+ * **Example** (Empty disposition row array)
+ *
  * ```ts
  * import type { ContradictionDispositionRow } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -108,7 +113,8 @@ export type ContradictionDispositionRow = typeof dispositionTable.$inferSelect;
 /**
  * Insertable contradiction-disposition row.
  *
- * @example
+ * **Example** (Empty disposition insert array)
+ *
  * ```ts
  * import type { ContradictionDispositionInsert } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -224,11 +230,13 @@ const validateReceiptCandidate = (
 /**
  * Convert a contradiction candidate to a database insert.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Candidates with a non-canonical pair or stale payload seals are rejected.
  * Successful inserts omit the database-generated numeric identifier.
  *
- * @example
+ * **Example** (Map candidate to insert)
+ *
  * ```ts
  * import type { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction"
  * import { toContradictionCandidateInsert } from "@beep/epistemic-tables/entities/Contradiction"
@@ -259,11 +267,13 @@ export const toContradictionCandidateInsert = (
 /**
  * Decode a selected contradiction candidate row.
  *
- * @remarks
+ * **Details**
+ *
  * Decoding validates both the row shape and every digest/key seal before
  * returning the domain entity.
  *
- * @example
+ * **Example** (Decode empty candidate row)
+ *
  * ```ts
  * import { fromContradictionCandidateRow } from "@beep/epistemic-tables/entities/Contradiction"
  * import * as Result from "effect/Result"
@@ -281,11 +291,13 @@ export const fromContradictionCandidateRow = (row: unknown): Result.Result<Contr
 /**
  * Convert a contradiction receipt to a database insert.
  *
- * @remarks
+ * **Details**
+ *
  * The referenced candidate is required so identity, organization, and
  * transaction-time ordering are checked before the append-only write.
  *
- * @example
+ * **Example** (Inspect receipt insert mapper)
+ *
  * ```ts
  * import { toContradictionReceiptInsert } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -316,7 +328,8 @@ export const toContradictionReceiptInsert: {
 /**
  * Decode a selected contradiction receipt row.
  *
- * @example
+ * **Example** (Inspect receipt row decoder)
+ *
  * ```ts
  * import { fromContradictionReceiptRow } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -332,12 +345,14 @@ export const fromContradictionReceiptRow = (row: unknown): Result.Result<Contrad
 /**
  * Convert a contradiction disposition to a database insert.
  *
- * @remarks
+ * **Details**
+ *
  * The referenced candidate and edge context are required so identity,
  * organization, transaction-time ordering, and any selected supersession
  * proposal and edge chain are checked before the append-only write.
  *
- * @example
+ * **Example** (Inspect disposition insert mapper)
+ *
  * ```ts
  * import { toContradictionDispositionInsert } from "@beep/epistemic-tables/entities/Contradiction"
  *
@@ -371,7 +386,8 @@ export const toContradictionDispositionInsert: {
 /**
  * Decode a selected contradiction disposition row.
  *
- * @example
+ * **Example** (Inspect disposition row decoder)
+ *
  * ```ts
  * import { fromContradictionDispositionRow } from "@beep/epistemic-tables/entities/Contradiction"
  *

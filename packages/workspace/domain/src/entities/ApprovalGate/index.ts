@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import ApprovalGate module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/ApprovalGate"
  *
@@ -22,7 +23,8 @@ export * from "./ApprovalGate.model.ts";
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import ApprovalGate module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/ApprovalGate"
  *

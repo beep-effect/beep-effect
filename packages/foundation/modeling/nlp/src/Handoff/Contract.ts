@@ -30,15 +30,16 @@ const $I = $NlpId.create("Handoff/Contract");
 /**
  * Stable identifier for a {@link TextChunk}.
  *
- * @example
+ * **Example** (Make ChunkId value)
+ *
  * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(ChunkId.make("chunk-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const ChunkId = S.String.pipe(
   S.brand("ChunkId"),
@@ -49,7 +50,8 @@ export const ChunkId = S.String.pipe(
 /**
  * Runtime type of {@link ChunkId}.
  *
- * @example
+ * **Example** (Type a ChunkId)
+ *
  * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
@@ -57,23 +59,24 @@ export const ChunkId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type ChunkId = typeof ChunkId.Type;
 
 /**
  * Stable identifier for a {@link Mention}.
  *
- * @example
+ * **Example** (Make MentionId value)
+ *
  * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(MentionId.make("mention-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const MentionId = S.String.pipe(
   S.brand("MentionId"),
@@ -84,7 +87,8 @@ export const MentionId = S.String.pipe(
 /**
  * Runtime type of {@link MentionId}.
  *
- * @example
+ * **Example** (Type a MentionId)
+ *
  * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
@@ -92,23 +96,24 @@ export const MentionId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type MentionId = typeof MentionId.Type;
 
 /**
  * Stable identifier for an {@link Entity}.
  *
- * @example
+ * **Example** (Make EntityId value)
+ *
  * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(EntityId.make("entity-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const EntityId = S.String.pipe(
   S.brand("EntityId"),
@@ -119,7 +124,8 @@ export const EntityId = S.String.pipe(
 /**
  * Runtime type of {@link EntityId}.
  *
- * @example
+ * **Example** (Type an EntityId)
+ *
  * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
@@ -127,23 +133,24 @@ export const EntityId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type EntityId = typeof EntityId.Type;
 
 /**
  * Stable identifier for a {@link Relation}.
  *
- * @example
+ * **Example** (Make RelationId value)
+ *
  * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(RelationId.make("relation-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const RelationId = S.String.pipe(
   S.brand("RelationId"),
@@ -154,7 +161,8 @@ export const RelationId = S.String.pipe(
 /**
  * Runtime type of {@link RelationId}.
  *
- * @example
+ * **Example** (Type a RelationId)
+ *
  * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
@@ -162,23 +170,24 @@ export const RelationId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type RelationId = typeof RelationId.Type;
 
 /**
  * Closed vocabulary of {@link TextChunk} granularities.
  *
- * @example
+ * **Example** (Check sentence kind)
+ *
  * ```ts
  * import { ChunkKind } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(ChunkKind.is.sentence("sentence")) // true
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token"]).annotate(
   $I.annote("ChunkKind", { description: "Granularity of a text chunk (document/paragraph/sentence/token)." })
@@ -187,7 +196,8 @@ export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token
 /**
  * Runtime TypeScript union decoded by {@link ChunkKind}.
  *
- * @example
+ * **Example** (Assign ChunkKind union)
+ *
  * ```ts
  * import type { ChunkKind } from "@beep/nlp/Handoff/Contract"
  *
@@ -195,8 +205,8 @@ export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type ChunkKind = typeof ChunkKind.Type;
 
@@ -213,7 +223,8 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
 /**
  * A half-open character span `[start, end)` into the source text.
  *
- * @example
+ * **Example** (Make half-open span)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
@@ -221,8 +232,8 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
  * console.log(Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) }))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Span = SpanFields.check(
   S.makeFilter((span: { readonly end: number; readonly start: number }) =>
@@ -253,7 +264,8 @@ export const Span = SpanFields.check(
 /**
  * Runtime type of {@link Span}.
  *
- * @example
+ * **Example** (Compute span length)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
@@ -262,8 +274,8 @@ export const Span = SpanFields.check(
  * console.log(span.end - span.start) // 5
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Span = typeof Span.Type;
 
@@ -273,15 +285,16 @@ export type Span = typeof Span.Type;
  * when (`timestamp` ~ `prov:generatedAtTime`, epoch ms), and an optional
  * producer confidence in `[0, 1]`.
  *
- * @example
+ * **Example** (Make provenance record)
+ *
  * ```ts
  * import { Provenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(Provenance.make({ source: "doc-1", generatedBy: "wink-nlp", timestamp: 0 }))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Provenance extends S.Class<Provenance>($I`Provenance`)(
   {
@@ -300,7 +313,8 @@ export class Provenance extends S.Class<Provenance>($I`Provenance`)(
  * A contiguous chunk of source text at a given granularity, with its span and
  * provenance. The atomic unit of the handoff IR.
  *
- * @example
+ * **Example** (Make sentence TextChunk)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { ChunkId, Provenance, Span, TextChunk } from "@beep/nlp/Handoff/Contract"
@@ -315,8 +329,8 @@ export class Provenance extends S.Class<Provenance>($I`Provenance`)(
  * console.log(chunk.kind) // "sentence"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
   {
@@ -335,7 +349,8 @@ export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
  * A surface mention occurrence: where a span of text within a chunk refers to
  * something nameable.
  *
- * @example
+ * **Example** (Make surface mention)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { ChunkId, Mention, MentionId, Provenance, Span } from "@beep/nlp/Handoff/Contract"
@@ -350,8 +365,8 @@ export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
  * console.log(mention.chunkId) // "chunk-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Mention extends S.Class<Mention>($I`Mention`)(
   {
@@ -371,7 +386,8 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  * `type` is a GENERIC discriminant a downstream mapping turns into a concrete
  * knowledge-graph node type.
  *
- * @example
+ * **Example** (Make ORG entity)
+ *
  * ```ts
  * import { Entity, EntityId, MentionId, Provenance } from "@beep/nlp/Handoff/Contract"
  *
@@ -385,8 +401,8 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  * console.log(entity.type) // "ORG"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Entity extends S.Class<Entity>($I`Entity`)(
   {
@@ -407,7 +423,8 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  * A directed relation between two {@link Entity}s. Its `type` is a GENERIC
  * predicate a downstream mapping turns into a concrete knowledge-graph edge type.
  *
- * @example
+ * **Example** (Make ACQUIRED relation)
+ *
  * ```ts
  * import { EntityId, Provenance, Relation, RelationId } from "@beep/nlp/Handoff/Contract"
  *
@@ -421,8 +438,8 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  * console.log(relation.subject) // "entity-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Relation extends S.Class<Relation>($I`Relation`)(
   {
@@ -445,7 +462,8 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
  * entities, and relations — emitted by `@beep/nlp` for downstream consumption.
  * The `version` pins the contract revision.
  *
- * @example
+ * **Example** (Make empty document)
+ *
  * ```ts
  * import { AnnotatedDocument, Provenance } from "@beep/nlp/Handoff/Contract"
  *
@@ -460,8 +478,8 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
  * console.log(document.version) // "nlp-ir/1.0"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class AnnotatedDocument extends S.Class<AnnotatedDocument>($I`AnnotatedDocument`)(
   {
@@ -479,15 +497,16 @@ export class AnnotatedDocument extends S.Class<AnnotatedDocument>($I`AnnotatedDo
 /**
  * Build a {@link Provenance} from an explicit timestamp.
  *
- * @example
+ * **Example** (Build timed provenance)
+ *
  * ```ts
  * import { makeProvenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(makeProvenance("doc-1", "wink-nlp", 0))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeProvenance: {
   (source: string, generatedBy: string, timestamp: number, confidence?: number): Provenance;

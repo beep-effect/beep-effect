@@ -33,12 +33,15 @@ const hostOf = (destination: string): string => {
 /**
  * Classify a destination's audience.
  *
+ * **Details**
+ *
  * Loopback destinations resolve to `local-workspace`; every other destination,
  * including anything unparseable, resolves to `external-network`. Unparseable
  * input deliberately takes the stricter branch so a malformed destination can
  * never buy a weaker classification.
  *
- * @example
+ * **Example** (Local versus external destinations)
+ *
  * ```ts
  * import { resolveSinkAudience } from "@beep/epistemic-config/server"
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"

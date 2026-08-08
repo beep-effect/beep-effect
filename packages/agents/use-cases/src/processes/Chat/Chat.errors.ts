@@ -18,7 +18,8 @@ const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
  * client-safe shape before they reach the wire, so the desktop client never
  * sees internal error detail.
  *
- * @example
+ * **Example** (Creating ChatActionError with message)
+ *
  * ```ts
  * import { ChatActionError } from "@beep/agents-use-cases/public"
  *

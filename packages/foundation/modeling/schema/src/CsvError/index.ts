@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for CSV errors.
  *
- * @example
+ * **Example** (Import CsvError namespace)
+ *
  * ```ts
  * import * as CsvError from "@beep/schema/CsvError"
  *

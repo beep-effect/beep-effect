@@ -88,7 +88,8 @@ const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(t
 /**
  * Typed failure for wink-backed vector, set, or bag-of-words similarity.
  *
- * @example
+ * **Example** (Create from cause)
+ *
  * ```ts
  * import { SimilarityError } from "@beep/wink"
  *
@@ -264,7 +265,8 @@ const makeWinkSimilarity = Effect.gen(function* () {
 /**
  * Service for computing cosine and Tversky scores using wink similarity helpers.
  *
- * @example
+ * **Example** (Compute set Tversky score)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
@@ -297,7 +299,8 @@ export class WinkSimilarity extends Context.Service<WinkSimilarity, WinkSimilari
 /**
  * Live layer for wink similarity utilities.
  *
- * @example
+ * **Example** (Provide live layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UnitInterval } from "@beep/schema/UnitInterval"

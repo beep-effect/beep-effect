@@ -35,7 +35,8 @@ const $I = $EpistemicDomainId.create("values/Contradiction/Contradiction.model")
  * Digest identifying one contradiction candidate independent of submission
  * order.
  *
- * @example
+ * **Example** (Validate candidate key string)
+ *
  * ```ts
  * import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -56,7 +57,8 @@ export const ContradictionCandidateKey = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionCandidateKey}.
  *
- * @example
+ * **Example** (Annotate candidate key array)
+ *
  * ```ts
  * import type { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -72,7 +74,8 @@ export type ContradictionCandidateKey = typeof ContradictionCandidateKey.Type;
 /**
  * Caller-owned idempotency key for one contradiction submission receipt.
  *
- * @example
+ * **Example** (Validate receipt key string)
+ *
  * ```ts
  * import { ContradictionReceiptKey } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -93,7 +96,8 @@ export const ContradictionReceiptKey = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionReceiptKey}.
  *
- * @example
+ * **Example** (Annotate receipt key array)
+ *
  * ```ts
  * import type { ContradictionReceiptKey } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -109,7 +113,8 @@ export type ContradictionReceiptKey = typeof ContradictionReceiptKey.Type;
 /**
  * Digest of the immutable payload stored under a candidate identity.
  *
- * @example
+ * **Example** (Make and check digest)
+ *
  * ```ts
  * import { ContradictionCandidateDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
@@ -132,7 +137,8 @@ export const ContradictionCandidateDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionCandidateDigest}.
  *
- * @example
+ * **Example** (Type alias digest value)
+ *
  * ```ts
  * import {
  *   ContradictionCandidateDigest,
@@ -152,7 +158,8 @@ export type ContradictionCandidateDigest = typeof ContradictionCandidateDigest.T
 /**
  * Digest of the exact evidence sets used as a contradiction match basis.
  *
- * @example
+ * **Example** (Make and check digest)
+ *
  * ```ts
  * import { ContradictionEvidenceDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
@@ -175,7 +182,8 @@ export const ContradictionEvidenceDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionEvidenceDigest}.
  *
- * @example
+ * **Example** (Type alias digest value)
+ *
  * ```ts
  * import {
  *   ContradictionEvidenceDigest,
@@ -195,7 +203,8 @@ export type ContradictionEvidenceDigest = typeof ContradictionEvidenceDigest.Typ
 /**
  * Stable proposal identifier persisted before human review.
  *
- * @example
+ * **Example** (Make and check proposal id)
+ *
  * ```ts
  * import { ContradictionProposalId } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
@@ -218,7 +227,8 @@ export const ContradictionProposalId = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionProposalId}.
  *
- * @example
+ * **Example** (Type alias proposal id)
+ *
  * ```ts
  * import {
  *   ContradictionProposalId,
@@ -238,7 +248,8 @@ export type ContradictionProposalId = typeof ContradictionProposalId.Type;
 /**
  * Digest guarding the complete authority-changing content of a proposal.
  *
- * @example
+ * **Example** (Make and check digest)
+ *
  * ```ts
  * import { ContradictionProposalDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
@@ -261,7 +272,8 @@ export const ContradictionProposalDigest = Sha256Hex.pipe(
 /**
  * Runtime type for {@link ContradictionProposalDigest}.
  *
- * @example
+ * **Example** (Type alias digest value)
+ *
  * ```ts
  * import {
  *   ContradictionProposalDigest,
@@ -281,7 +293,8 @@ export type ContradictionProposalDigest = typeof ContradictionProposalDigest.Typ
 /**
  * Exact immutable edge version observed as one side of a contradiction.
  *
- * @example
+ * **Example** (Inspect version field)
+ *
  * ```ts
  * import { BeliefVersionRef } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -344,12 +357,15 @@ const ContradictionBeliefPairSchema = ContradictionBeliefPairStruct.mapFields(id
 /**
  * Submission-order pair of exact conflicting belief versions.
  *
+ * **Details**
+ *
  * Public submissions may present either side first. Persisted candidates use
  * {@link CanonicalContradictionBeliefPair} after
  * {@link canonicalizeContradiction} has kept each evidence set attached to its
  * corresponding belief.
  *
- * @example
+ * **Example** (Inspect left field)
+ *
  * ```ts
  * import { ContradictionBeliefPair } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -400,7 +416,8 @@ const CanonicalContradictionBeliefPairSchema = ContradictionBeliefPair.mapFields
 /**
  * Canonically ordered pair persisted inside a contradiction candidate.
  *
- * @example
+ * **Example** (Inspect left field)
+ *
  * ```ts
  * import { CanonicalContradictionBeliefPair } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -422,7 +439,8 @@ export class CanonicalContradictionBeliefPair extends S.Class<CanonicalContradic
 /**
  * Evidence and detector revision that form the repeatable match basis.
  *
- * @example
+ * **Example** (Inspect evidence digest field)
+ *
  * ```ts
  * import { ContradictionMatchBasis } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -437,7 +455,8 @@ const ContradictionMatchBasisKindBase = LiteralKit(["same-source-overlap", "inde
 /**
  * Bounded semantic basis on which a detector may assert a contradiction.
  *
- * @example
+ * **Example** (Read independent-evidence enum)
+ *
  * ```ts
  * import { ContradictionMatchBasisKind } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -458,7 +477,8 @@ export const ContradictionMatchBasisKind = ContradictionMatchBasisKindBase.pipe(
 /**
  * Runtime type for {@link ContradictionMatchBasisKind}.
  *
- * @example
+ * **Example** (Type match basis kind)
+ *
  * ```ts
  * import {
  *   ContradictionMatchBasisKind,
@@ -483,7 +503,8 @@ const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>):
 /**
  * Maximum evidence identifiers retained on either side of one contradiction.
  *
- * @example
+ * **Example** (Print max evidence count)
+ *
  * ```ts
  * import { CONTRADICTION_EVIDENCE_SET_MAX_COUNT } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -498,7 +519,8 @@ export const CONTRADICTION_EVIDENCE_SET_MAX_COUNT = 32;
 /**
  * Maximum UTF-16 length accepted for a contradiction detector identity.
  *
- * @example
+ * **Example** (Print detector max length)
+ *
  * ```ts
  * import { CONTRADICTION_DETECTOR_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -635,7 +657,8 @@ const ContradictionMatchBasisSchema = ContradictionMatchBasisStruct.mapFields(id
 /**
  * Evidence and detector revision that form the repeatable match basis.
  *
- * @example
+ * **Example** (Inspect kind field)
+ *
  * ```ts
  * import { ContradictionMatchBasis } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -655,7 +678,8 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
 /**
  * Maximum length accepted for a detector-supplied proposal rationale.
  *
- * @example
+ * **Example** (Print rationale max length)
+ *
  * ```ts
  * import { CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -670,7 +694,8 @@ export const CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH = 2_000;
 /**
  * Maximum canonical UTF-8 bytes accepted for one replacement fact.
  *
- * @example
+ * **Example** (Print fact max bytes)
+ *
  * ```ts
  * import { CONTRADICTION_PROPOSAL_FACT_MAX_BYTES } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -827,7 +852,8 @@ const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStr
 /**
  * Human-reviewable replacement proposed for one conflicting lineage.
  *
- * @example
+ * **Example** (Inspect proposal digest field)
+ *
  * ```ts
  * import { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -856,7 +882,8 @@ const hasUniqueProposalIds = (proposals: ReadonlyArray<ContradictionResolutionPr
 /**
  * Maximum proposals retained for one contradiction candidate.
  *
- * @example
+ * **Example** (Print proposal max count)
+ *
  * ```ts
  * import { CONTRADICTION_PROPOSAL_MAX_COUNT } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -900,7 +927,8 @@ const UniqueNonEmptyContradictionProposals = S.NonEmptyArray(ContradictionResolu
 /**
  * Detector confidence and explicit human-reviewable resolution proposals.
  *
- * @example
+ * **Example** (Inspect proposals field)
+ *
  * ```ts
  * import { ContradictionAssessment } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -929,10 +957,13 @@ const ContradictionDispositionStatusBase = LiteralKit(["rejected", "superseded"]
 /**
  * Slice-local disposition vocabulary for contradiction review.
  *
+ * **Details**
+ *
  * Absence of a disposition means unresolved; a recorded disposition either
  * rejects the candidate or records the atomic supersession it caused.
  *
- * @example
+ * **Example** (Read superseded enum value)
+ *
  * ```ts
  * import { ContradictionDispositionStatus } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -952,7 +983,8 @@ export const ContradictionDispositionStatus = ContradictionDispositionStatusBase
 /**
  * Runtime type for {@link ContradictionDispositionStatus}.
  *
- * @example
+ * **Example** (Annotate rejected status)
+ *
  * ```ts
  * import type { ContradictionDispositionStatus } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -968,7 +1000,8 @@ export type ContradictionDispositionStatus = typeof ContradictionDispositionStat
 /**
  * Maximum normalized length accepted for a contradiction review reason.
  *
- * @example
+ * **Example** (Print reason max length)
+ *
  * ```ts
  * import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -983,11 +1016,14 @@ export const CONTRADICTION_REVIEW_REASON_MAX_LENGTH = 2_000;
 /**
  * Normalized human rationale attached to a contradiction review decision.
  *
+ * **Details**
+ *
  * Review text is trimmed before validation, must remain non-empty, and is
  * capped at 2,000 characters so immutable authority records stay bounded while
  * still allowing a multi-paragraph explanation.
  *
- * @example
+ * **Example** (Decode trimmed review reason)
+ *
  * ```ts
  * import { ContradictionReviewReason } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Result from "effect/Result"
@@ -1018,7 +1054,8 @@ export const ContradictionReviewReason = TrimmedNonEmptyText.check(
 /**
  * Runtime type for {@link ContradictionReviewReason}.
  *
- * @example
+ * **Example** (Annotate review reason string)
+ *
  * ```ts
  * import type { ContradictionReviewReason } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1059,7 +1096,8 @@ const ContradictionDispositionDecisionBase = ContradictionDispositionStatusBase.
 /**
  * Typed durable outcome of a contradiction review.
  *
- * @example
+ * **Example** (Make rejected decision)
+ *
  * ```ts
  * import { ContradictionDispositionDecision } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1081,7 +1119,8 @@ export const ContradictionDispositionDecision = ContradictionDispositionDecision
 /**
  * Runtime type for {@link ContradictionDispositionDecision}.
  *
- * @example
+ * **Example** (Annotate decision object)
+ *
  * ```ts
  * import type { ContradictionDispositionDecision } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1154,11 +1193,14 @@ type CanonicalizeContradiction = {
 /**
  * Put a belief pair and its side-bound evidence into canonical order.
  *
+ * **Details**
+ *
  * Reversing both input beliefs yields byte-identical output and swaps the
  * evidence arrays with them, so symmetric candidate identity never detaches
  * evidence from the belief it grounds.
  *
- * @example
+ * **Example** (Inspect function typeof)
+ *
  * ```ts
  * import { canonicalizeContradiction } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1201,11 +1243,14 @@ type ContradictionEvidenceDigestFn = {
 /**
  * Digest the exact side-specific evidence-id sets of one match basis.
  *
+ * **Details**
+ *
  * Each partition remains bound to its named side. Canonicalize the belief pair
  * and match basis together when presentation-order-independent identity is
  * required.
  *
- * @example
+ * **Example** (Digest side evidence sets)
+ *
  * ```ts
  * import {
  *   ContradictionEvidenceDigest,
@@ -1239,7 +1284,8 @@ type ContradictionCandidateKeyFn = {
 /**
  * Compute the duplicate-suppression key for a canonical contradiction basis.
  *
- * @example
+ * **Example** (Inspect function typeof)
+ *
  * ```ts
  * import { contradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1272,7 +1318,8 @@ export const contradictionCandidateKey: ContradictionCandidateKeyFn = dual(
 /**
  * Digest-bearing proposal content before its digest is attached.
  *
- * @example
+ * **Example** (Inspect content fields)
+ *
  * ```ts
  * import { ContradictionProposalContent } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1316,7 +1363,8 @@ const encodeProposalContent = S.encodeResult(ContradictionProposalContent.mapFie
 /**
  * Compute the digest a public proposal selection must echo.
  *
- * @example
+ * **Example** (Compute proposal digest)
+ *
  * ```ts
  * import {
  *   BeliefVersionRef,
@@ -1360,7 +1408,8 @@ export const contradictionProposalDigest = (
 /**
  * Structural candidate content before its validity interval is checked.
  *
- * @example
+ * **Example** (Inspect validFrom field)
+ *
  * ```ts
  * import { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1425,7 +1474,8 @@ const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.
 /**
  * Immutable candidate payload with a validated half-open validity interval.
  *
- * @example
+ * **Example** (Inspect validFrom field)
+ *
  * ```ts
  * import { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction"
  *
@@ -1449,7 +1499,8 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
 /**
  * Compute the immutable candidate payload digest used to reject key collisions.
  *
- * @example
+ * **Example** (Compute candidate payload digest)
+ *
  * ```ts
  * import {
  *   BeliefVersionRef,

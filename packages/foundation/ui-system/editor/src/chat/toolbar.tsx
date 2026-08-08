@@ -61,7 +61,8 @@ const $I = $EditorId.create("chat/toolbar");
 /**
  * Schema for the block families represented by the fixed toolbar.
  *
- * @example
+ * **Example** (Check code block type)
+ *
  * ```ts
  * import { BlockType } from "@beep/editor/chat/toolbar"
  *
@@ -93,7 +94,8 @@ export const BlockType = LiteralKit([
 /**
  * Block family represented by the fixed toolbar.
  *
- * @example
+ * **Example** (Assign selected block type)
+ *
  * ```ts
  * import type { BlockType } from "@beep/editor/chat/toolbar"
  *
@@ -153,10 +155,13 @@ const blockTypeFromNode = Match.type<LexicalNode>().pipe(
  * Classifies the nearest supported block ancestor of the live range
  * selection, stopping at a table-cell boundary.
  *
+ * **Details**
+ *
  * Must run inside a Lexical read/update scope. Exported so custom toolbars and
  * selection-focused tests share the exact same classification semantics.
  *
- * @example
+ * **Example** (Read selection block type)
+ *
  * ```ts
  * import { $selectionBlockType } from "@beep/editor/chat/toolbar"
  * import { createEditor } from "lexical"
@@ -282,7 +287,8 @@ function ToolbarDivider(): JSX.Element {
 /**
  * Fixed formatting toolbar plugin. Mount inside a `LexicalComposer`.
  *
- * @example
+ * **Example** (Mount fixed toolbar plugin)
+ *
  * ```tsx
  * import { FixedToolbarPlugin } from "@beep/editor/chat/toolbar"
  *

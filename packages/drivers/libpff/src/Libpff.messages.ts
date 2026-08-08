@@ -30,10 +30,13 @@ type JsonEncodeEffect<Input> = {
 /**
  * File-name suffix of the per-archive messages JSONL artifact.
  *
+ * **Details**
+ *
  * The pffexport engine writes `<source-artifact-id><suffix>` beside the
  * exported target trees under the configured export root.
  *
- * @example
+ * **Example** (Log messages suffix constant)
+ *
  * ```ts
  * import { PFFEXPORT_MESSAGES_SUFFIX } from "@beep/libpff"
  *
@@ -48,13 +51,16 @@ export const PFFEXPORT_MESSAGES_SUFFIX = ".messages.jsonl";
 /**
  * JSONL-safe metadata record for one pffexport-exported item.
  *
+ * **Details**
+ *
  * `folderPath` is the item's folder chain relative to its target tree root,
  * `messagePath` locates the item directory relative to the export root (so it
  * also encodes which target tree the item came from), and `body`, `eml`, and
  * `attachments` reference the same child artifacts reported on the archive
  * export result.
  *
- * @example
+ * **Example** (Decode message record schema)
+ *
  * ```ts
  * import { PffexportMessageRecord } from "@beep/libpff"
  * import { Effect } from "effect"
@@ -96,7 +102,8 @@ export class PffexportMessageRecord extends S.Class<PffexportMessageRecord>($I`P
 /**
  * JSONL encoder for {@link PffexportMessageRecord}.
  *
- * @example
+ * **Example** (Encode record to JSONL)
+ *
  * ```ts
  * import { encodePffexportMessageRecordJson, PffexportMessageRecord } from "@beep/libpff"
  * import { Effect } from "effect"

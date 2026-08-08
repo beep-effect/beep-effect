@@ -35,7 +35,8 @@ type PostgresDrizzleSchemaPhantom<TSchema> = {
 /**
  * Native Drizzle Effect Postgres database value.
  *
- * @example
+ * **Example** (Access underlying client)
+ *
  * ```ts
  * import type { PostgresDrizzleDatabase } from "@beep/postgres"
  *
@@ -57,7 +58,8 @@ export type PostgresDrizzleDatabase<
 /**
  * Configuration accepted by {@link makeDrizzle}.
  *
- * @example
+ * **Example** (Empty config object)
+ *
  * ```ts
  * import type { PostgresDrizzleConfig } from "@beep/postgres"
  *
@@ -76,7 +78,8 @@ export type PostgresDrizzleConfig<
 /**
  * Service key for a default-typed Postgres-backed Drizzle database.
  *
- * @example
+ * **Example** (Reference service key)
+ *
  * ```ts
  * import { PostgresDrizzle } from "@beep/postgres"
  *
@@ -92,7 +95,8 @@ export class PostgresDrizzle extends Context.Service<PostgresDrizzle, PostgresDr
 /**
  * Create a Postgres-backed Drizzle Effect database from a provided PgClient.
  *
- * @example
+ * **Example** (Create drizzle effect)
+ *
  * ```ts
  * import { makeDrizzle } from "@beep/postgres"
  *
@@ -117,7 +121,8 @@ export const makeDrizzle = <
 /**
  * Build a Layer for a default-typed Postgres-backed Drizzle database.
  *
- * @example
+ * **Example** (Build drizzle layer)
+ *
  * ```ts
  * import { makeDrizzleLayer } from "@beep/postgres"
  *
@@ -183,7 +188,8 @@ const runPgEffectMigrations = <TSchema extends Record<string, unknown>, TRelatio
 /**
  * Run Drizzle Effect Postgres migrations and normalize failures.
  *
- * @example
+ * **Example** (Run folder migrations)
+ *
  * ```ts
  * import { migrate } from "@beep/postgres"
  * import type { PostgresDrizzleDatabase } from "@beep/postgres"
@@ -233,7 +239,8 @@ const MigrationBundleEntryName = S.String.check(
  * One migration of an in-memory bundle: the timestamped drizzle folder name
  * and the byte-exact `migration.sql` content.
  *
- * @example
+ * **Example** (Make bundle entry)
+ *
  * ```ts
  * import { MigrationBundleEntry } from "@beep/postgres"
  *
@@ -260,7 +267,8 @@ export class MigrationBundleEntry extends S.Class<MigrationBundleEntry>($I`Migra
 /**
  * Configuration accepted by {@link migrateBundle}.
  *
- * @example
+ * **Example** (Bundle config with migrations)
+ *
  * ```ts
  * import type { MigrationBundleConfig } from "@beep/postgres"
  *
@@ -316,7 +324,8 @@ const InMemoryBundleFolderSentinel = "<in-memory-bundle>";
  * exactly as drizzle's `readMigrationFiles` derives them, so a database
  * previously migrated from a folder continues seamlessly from a bundle.
  *
- * @example
+ * **Example** (Run in-memory migrations)
+ *
  * ```ts
  * import { migrateBundle } from "@beep/postgres"
  * import type { PostgresDrizzleDatabase } from "@beep/postgres"

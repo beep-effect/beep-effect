@@ -9,7 +9,8 @@
 /**
  * Package version for the law-practice server role.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/law-practice-server"
  *

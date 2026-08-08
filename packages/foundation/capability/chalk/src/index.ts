@@ -1,11 +1,14 @@
 /**
  * Public entrypoint for `@beep/chalk`.
  *
+ * **Details**
+ *
  * Re-exports all symbols from the `./Chalk.ts` module, including the
  * default shared `chalk` instance, the `Chalk` constructor, schema-backed
  * color models, and compatibility arrays.
  *
- * @example
+ * **Example** (Shared and isolated chalk)
+ *
  * ```ts
  * import chalk, { Chalk, ColorSupportLevel } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -21,8 +24,8 @@
  * console.log(S.decodeUnknownSync(ColorSupportLevel)(2))
  * ```
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 /**
  * @since 0.0.0

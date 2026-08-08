@@ -31,7 +31,8 @@ const withLiteralKitHelpers =
 /**
  * Supported numeric color support levels.
  *
- * @example
+ * **Example** (Access truecolor level value)
+ *
  * ```ts
  * import { colorSupportLevelValues } from "@beep/chalk/Chalk"
  *
@@ -47,7 +48,8 @@ export const colorSupportLevelValues = [0, 1, 2, 3] as const;
 /**
  * Supported modifier style names.
  *
- * @example
+ * **Example** (Access bold modifier name)
+ *
  * ```ts
  * import { modifierNameValues } from "@beep/chalk/Chalk"
  *
@@ -73,7 +75,8 @@ export const modifierNameValues = [
 /**
  * Supported foreground color names.
  *
- * @example
+ * **Example** (Access red foreground name)
+ *
  * ```ts
  * import { foregroundColorNameValues } from "@beep/chalk/Chalk"
  *
@@ -108,7 +111,8 @@ export const foregroundColorNameValues = [
 /**
  * Supported background color names.
  *
- * @example
+ * **Example** (Access red background name)
+ *
  * ```ts
  * import { backgroundColorNameValues } from "@beep/chalk/Chalk"
  *
@@ -143,7 +147,8 @@ export const backgroundColorNameValues = [
 /**
  * Supported foreground and background color names.
  *
- * @example
+ * **Example** (Read first color name)
+ *
  * ```ts
  * import { colorNameValues } from "@beep/chalk/Chalk"
  *
@@ -159,7 +164,8 @@ export const colorNameValues = [...foregroundColorNameValues, ...backgroundColor
 /**
  * Supported Chalk style names.
  *
- * @example
+ * **Example** (Read first style name)
+ *
  * ```ts
  * import { styleNameValues } from "@beep/chalk/internal/ChalkSchema"
  *
@@ -199,7 +205,8 @@ export const styleChannelValues = ["color", "bgColor"] as const;
 /**
  * Supported Chalk color support levels.
  *
- * @example
+ * **Example** (Decode color support level)
+ *
  * ```ts
  * import { ColorSupportLevel } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -225,7 +232,8 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
 /**
  * Runtime type for {@link ColorSupportLevel}.
  *
- * @example
+ * **Example** (Annotate color support level)
+ *
  * ```ts
  * import type { ColorSupportLevel } from "@beep/chalk"
  *
@@ -241,7 +249,8 @@ export type ColorSupportLevel = typeof ColorSupportLevel.Type;
 /**
  * Color support metadata for an enabled Chalk output stream.
  *
- * @example
+ * **Example** (Create color support metadata)
+ *
  * ```ts
  * import { ColorSupport } from "@beep/chalk"
  *
@@ -267,7 +276,8 @@ export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
 /**
  * Schema for exported Chalk color support info values.
  *
- * @example
+ * **Example** (Decode disabled color info)
+ *
  * ```ts
  * import { ColorInfo } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -289,7 +299,8 @@ export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
 /**
  * Runtime type for {@link ColorInfo}.
  *
- * @example
+ * **Example** (Annotate disabled color info)
+ *
  * ```ts
  * import type { ColorInfo } from "@beep/chalk"
  *
@@ -305,7 +316,8 @@ export type ColorInfo = typeof ColorInfo.Type;
 /**
  * Constructor options for isolated Chalk instances.
  *
- * @example
+ * **Example** (Create chalk options)
+ *
  * ```ts
  * import { ChalkOptions } from "@beep/chalk"
  *
@@ -328,7 +340,8 @@ export class ChalkOptions extends S.Class<ChalkOptions>($I`ChalkOptions`)(
 /**
  * Supported Chalk modifier names.
  *
- * @example
+ * **Example** (Decode bold modifier name)
+ *
  * ```ts
  * import { ModifierName } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -353,7 +366,8 @@ export const ModifierName = S.Literals(modifierNameValues).pipe(
 /**
  * Runtime type for {@link ModifierName}.
  *
- * @example
+ * **Example** (Annotate italic modifier name)
+ *
  * ```ts
  * import type { ModifierName } from "@beep/chalk"
  *
@@ -369,7 +383,8 @@ export type ModifierName = typeof ModifierName.Type;
 /**
  * Supported Chalk foreground color names.
  *
- * @example
+ * **Example** (Decode green foreground name)
+ *
  * ```ts
  * import { ForegroundColorName } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -394,7 +409,8 @@ export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
 /**
  * Runtime type for {@link ForegroundColorName}.
  *
- * @example
+ * **Example** (Annotate cyan foreground name)
+ *
  * ```ts
  * import type { ForegroundColorName } from "@beep/chalk"
  *
@@ -410,7 +426,8 @@ export type ForegroundColorName = typeof ForegroundColorName.Type;
 /**
  * Supported Chalk background color names.
  *
- * @example
+ * **Example** (Decode blue background name)
+ *
  * ```ts
  * import { BackgroundColorName } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -435,7 +452,8 @@ export const BackgroundColorName = S.Literals(backgroundColorNameValues).pipe(
 /**
  * Runtime type for {@link BackgroundColorName}.
  *
- * @example
+ * **Example** (Annotate magenta background name)
+ *
  * ```ts
  * import type { BackgroundColorName } from "@beep/chalk"
  *
@@ -451,7 +469,8 @@ export type BackgroundColorName = typeof BackgroundColorName.Type;
 /**
  * Supported Chalk color names.
  *
- * @example
+ * **Example** (Decode red color name)
+ *
  * ```ts
  * import { ColorName } from "@beep/chalk"
  * import * as S from "effect/Schema"
@@ -476,7 +495,8 @@ export const ColorName = S.Literals(colorNameValues).pipe(
 /**
  * Runtime type for {@link ColorName}.
  *
- * @example
+ * **Example** (Annotate yellow background name)
+ *
  * ```ts
  * import type { ColorName } from "@beep/chalk"
  *

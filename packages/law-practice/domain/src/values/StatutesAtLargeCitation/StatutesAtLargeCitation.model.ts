@@ -15,13 +15,14 @@ const $I = $LawPracticeDomainId.create("values/StatutesAtLargeCitation/StatutesA
 /**
  * Citation to the Statutes at Large (session law compilation).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `statutesAtLarge`
  * discriminant tag plus the volume/page locators, pincite range metadata, and
  * optional component spans specific to Statutes at Large references.
  *
- * **Example**
+ * **Example** (Make Statutes at Large citation)
  *
- * @example
  * ```ts
  * import { StatutesAtLargeCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -101,7 +102,8 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
 /**
  * Companion namespace for `StatutesAtLargeCitation`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { StatutesAtLargeCitation } from "@beep/law-practice-domain"
  *
@@ -115,9 +117,8 @@ export declare namespace StatutesAtLargeCitation {
   /**
    * Wire-encoded representation of a decoded {@link StatutesAtLargeCitation}.
    *
-   * **Example**
+   * **Example** (Wire Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { StatutesAtLargeCitation } from "@beep/law-practice-domain"
    *

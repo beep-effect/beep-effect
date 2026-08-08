@@ -35,7 +35,8 @@ const $I = $LibpffId.create("Libpff.service");
 /**
  * libpff file-processing engine descriptor.
  *
- * @example
+ * **Example** (Log descriptor name)
+ *
  * ```ts
  * import { LibpffFileProcessingEngineDescriptor } from "@beep/libpff"
  *
@@ -100,7 +101,8 @@ const deriveLibpffChildArtifactId = (
 /**
  * Options for the P1 libpff engine scaffold.
  *
- * @example
+ * **Example** (Make options with syntheticExport)
+ *
  * ```ts
  * import { LibpffFileProcessingEngineOptions } from "@beep/libpff"
  *
@@ -127,7 +129,8 @@ export class LibpffFileProcessingEngineOptions extends S.Class<LibpffFileProcess
 /**
  * Create the P1 libpff file-processing engine.
  *
- * @example
+ * **Example** (Create file-processing engine)
+ *
  * ```ts
  * import { makeLibpffFileProcessingEngine } from "@beep/libpff"
  *
@@ -197,7 +200,8 @@ export const makeLibpffFileProcessingEngine = (
 /**
  * P1 libpff file-processing engine value with typed unavailable deferrals.
  *
- * @example
+ * **Example** (Log engine descriptor field)
+ *
  * ```ts
  * import { LibpffFileProcessingEngine } from "@beep/libpff"
  *

@@ -22,7 +22,8 @@ export { SKOS_NAMESPACE, SKOS_TERMS } from "./generated/Skos.terms.ts";
 /**
  * `skos:Concept`
  *
- * @example
+ * **Example** (Access concept IRI)
+ *
  * ```ts
  * import { SKOS_CONCEPT } from "@beep/rdf/Vocab/Skos"
  *
@@ -31,15 +32,16 @@ export { SKOS_NAMESPACE, SKOS_TERMS } from "./generated/Skos.terms.ts";
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}Concept`);
 
 /**
  * `skos:ConceptScheme`
  *
- * @example
+ * **Example** (Access concept scheme IRI)
+ *
  * ```ts
  * import { SKOS_CONCEPT_SCHEME } from "@beep/rdf/Vocab/Skos"
  *
@@ -48,15 +50,16 @@ export const SKOS_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}Concept`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_CONCEPT_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}ConceptScheme`);
 
 /**
  * `skos:prefLabel`
  *
- * @example
+ * **Example** (Access prefLabel IRI)
+ *
  * ```ts
  * import { SKOS_PREF_LABEL } from "@beep/rdf/Vocab/Skos"
  *
@@ -65,15 +68,16 @@ export const SKOS_CONCEPT_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}ConceptScheme
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_PREF_LABEL = makeNamedNode(`${SKOS_NAMESPACE}prefLabel`);
 
 /**
  * `skos:altLabel`
  *
- * @example
+ * **Example** (Access altLabel IRI)
+ *
  * ```ts
  * import { SKOS_ALT_LABEL } from "@beep/rdf/Vocab/Skos"
  *
@@ -82,15 +86,16 @@ export const SKOS_PREF_LABEL = makeNamedNode(`${SKOS_NAMESPACE}prefLabel`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_ALT_LABEL = makeNamedNode(`${SKOS_NAMESPACE}altLabel`);
 
 /**
  * `skos:hiddenLabel`
  *
- * @example
+ * **Example** (Access hiddenLabel IRI)
+ *
  * ```ts
  * import { SKOS_HIDDEN_LABEL } from "@beep/rdf/Vocab/Skos"
  *
@@ -99,15 +104,16 @@ export const SKOS_ALT_LABEL = makeNamedNode(`${SKOS_NAMESPACE}altLabel`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_HIDDEN_LABEL = makeNamedNode(`${SKOS_NAMESPACE}hiddenLabel`);
 
 /**
  * `skos:definition`
  *
- * @example
+ * **Example** (Access definition IRI)
+ *
  * ```ts
  * import { SKOS_DEFINITION } from "@beep/rdf/Vocab/Skos"
  *
@@ -116,15 +122,16 @@ export const SKOS_HIDDEN_LABEL = makeNamedNode(`${SKOS_NAMESPACE}hiddenLabel`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_DEFINITION = makeNamedNode(`${SKOS_NAMESPACE}definition`);
 
 /**
  * `skos:scopeNote`
  *
- * @example
+ * **Example** (Access scopeNote IRI)
+ *
  * ```ts
  * import { SKOS_SCOPE_NOTE } from "@beep/rdf/Vocab/Skos"
  *
@@ -133,15 +140,16 @@ export const SKOS_DEFINITION = makeNamedNode(`${SKOS_NAMESPACE}definition`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_SCOPE_NOTE = makeNamedNode(`${SKOS_NAMESPACE}scopeNote`);
 
 /**
  * `skos:editorialNote`
  *
- * @example
+ * **Example** (Access editorialNote IRI)
+ *
  * ```ts
  * import { SKOS_EDITORIAL_NOTE } from "@beep/rdf/Vocab/Skos"
  *
@@ -150,15 +158,16 @@ export const SKOS_SCOPE_NOTE = makeNamedNode(`${SKOS_NAMESPACE}scopeNote`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_EDITORIAL_NOTE = makeNamedNode(`${SKOS_NAMESPACE}editorialNote`);
 
 /**
  * `skos:historyNote`
  *
- * @example
+ * **Example** (Access historyNote IRI)
+ *
  * ```ts
  * import { SKOS_HISTORY_NOTE } from "@beep/rdf/Vocab/Skos"
  *
@@ -167,15 +176,16 @@ export const SKOS_EDITORIAL_NOTE = makeNamedNode(`${SKOS_NAMESPACE}editorialNote
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_HISTORY_NOTE = makeNamedNode(`${SKOS_NAMESPACE}historyNote`);
 
 /**
  * `skos:broader`
  *
- * @example
+ * **Example** (Access broader IRI)
+ *
  * ```ts
  * import { SKOS_BROADER } from "@beep/rdf/Vocab/Skos"
  *
@@ -184,15 +194,16 @@ export const SKOS_HISTORY_NOTE = makeNamedNode(`${SKOS_NAMESPACE}historyNote`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_BROADER = makeNamedNode(`${SKOS_NAMESPACE}broader`);
 
 /**
  * `skos:narrower`
  *
- * @example
+ * **Example** (Access narrower IRI)
+ *
  * ```ts
  * import { SKOS_NARROWER } from "@beep/rdf/Vocab/Skos"
  *
@@ -201,15 +212,16 @@ export const SKOS_BROADER = makeNamedNode(`${SKOS_NAMESPACE}broader`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_NARROWER = makeNamedNode(`${SKOS_NAMESPACE}narrower`);
 
 /**
  * `skos:related`
  *
- * @example
+ * **Example** (Access related IRI)
+ *
  * ```ts
  * import { SKOS_RELATED } from "@beep/rdf/Vocab/Skos"
  *
@@ -218,15 +230,16 @@ export const SKOS_NARROWER = makeNamedNode(`${SKOS_NAMESPACE}narrower`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_RELATED = makeNamedNode(`${SKOS_NAMESPACE}related`);
 
 /**
  * `skos:exactMatch`
  *
- * @example
+ * **Example** (Access exactMatch IRI)
+ *
  * ```ts
  * import { SKOS_EXACT_MATCH } from "@beep/rdf/Vocab/Skos"
  *
@@ -235,15 +248,16 @@ export const SKOS_RELATED = makeNamedNode(`${SKOS_NAMESPACE}related`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_EXACT_MATCH = makeNamedNode(`${SKOS_NAMESPACE}exactMatch`);
 
 /**
  * `skos:closeMatch`
  *
- * @example
+ * **Example** (Access closeMatch IRI)
+ *
  * ```ts
  * import { SKOS_CLOSE_MATCH } from "@beep/rdf/Vocab/Skos"
  *
@@ -252,15 +266,16 @@ export const SKOS_EXACT_MATCH = makeNamedNode(`${SKOS_NAMESPACE}exactMatch`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_CLOSE_MATCH = makeNamedNode(`${SKOS_NAMESPACE}closeMatch`);
 
 /**
  * `skos:broadMatch`
  *
- * @example
+ * **Example** (Access broadMatch IRI)
+ *
  * ```ts
  * import { SKOS_BROAD_MATCH } from "@beep/rdf/Vocab/Skos"
  *
@@ -269,15 +284,16 @@ export const SKOS_CLOSE_MATCH = makeNamedNode(`${SKOS_NAMESPACE}closeMatch`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_BROAD_MATCH = makeNamedNode(`${SKOS_NAMESPACE}broadMatch`);
 
 /**
  * `skos:narrowMatch`
  *
- * @example
+ * **Example** (Access narrowMatch IRI)
+ *
  * ```ts
  * import { SKOS_NARROW_MATCH } from "@beep/rdf/Vocab/Skos"
  *
@@ -286,15 +302,16 @@ export const SKOS_BROAD_MATCH = makeNamedNode(`${SKOS_NAMESPACE}broadMatch`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_NARROW_MATCH = makeNamedNode(`${SKOS_NAMESPACE}narrowMatch`);
 
 /**
  * `skos:relatedMatch`
  *
- * @example
+ * **Example** (Access relatedMatch IRI)
+ *
  * ```ts
  * import { SKOS_RELATED_MATCH } from "@beep/rdf/Vocab/Skos"
  *
@@ -303,15 +320,16 @@ export const SKOS_NARROW_MATCH = makeNamedNode(`${SKOS_NAMESPACE}narrowMatch`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_RELATED_MATCH = makeNamedNode(`${SKOS_NAMESPACE}relatedMatch`);
 
 /**
  * `skos:inScheme`
  *
- * @example
+ * **Example** (Access inScheme IRI)
+ *
  * ```ts
  * import { SKOS_IN_SCHEME } from "@beep/rdf/Vocab/Skos"
  *
@@ -320,15 +338,16 @@ export const SKOS_RELATED_MATCH = makeNamedNode(`${SKOS_NAMESPACE}relatedMatch`)
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_IN_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}inScheme`);
 
 /**
  * `skos:hasTopConcept`
  *
- * @example
+ * **Example** (Access hasTopConcept IRI)
+ *
  * ```ts
  * import { SKOS_HAS_TOP_CONCEPT } from "@beep/rdf/Vocab/Skos"
  *
@@ -337,15 +356,16 @@ export const SKOS_IN_SCHEME = makeNamedNode(`${SKOS_NAMESPACE}inScheme`);
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_HAS_TOP_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}hasTopConcept`);
 
 /**
  * `skos:topConceptOf`
  *
- * @example
+ * **Example** (Access topConceptOf IRI)
+ *
  * ```ts
  * import { SKOS_TOP_CONCEPT_OF } from "@beep/rdf/Vocab/Skos"
  *
@@ -354,7 +374,7 @@ export const SKOS_HAS_TOP_CONCEPT = makeNamedNode(`${SKOS_NAMESPACE}hasTopConcep
  * console.log(termType, iri)
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const SKOS_TOP_CONCEPT_OF = makeNamedNode(`${SKOS_NAMESPACE}topConceptOf`);

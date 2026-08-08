@@ -15,13 +15,15 @@ const $I = $RepoUtilsId.create("JSDoc/models/ArchitecturalLayer.model");
  * Enables cross-framework queries such as "show me all code in the
  * domain core that depends on infrastructure".
  *
- * @example
+ * **Example** (Assert domain entity layer)
+ *
  * ```ts
  * import { ArchitecturalLayer } from "@beep/repo-utils/JSDoc/models/ArchitecturalLayer.model"
  *
  * const layer = ArchitecturalLayer.Enum.DomainEntity
  * console.log(ArchitecturalLayer.is.DomainEntity(layer))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -44,7 +46,8 @@ export const ArchitecturalLayer = LiteralKit([
 /**
  * Inferred type for {@link ArchitecturalLayer}.
  *
- * @example
+ * **Example** (Constrain generic parameter)
+ *
  * ```ts
  * import type { ArchitecturalLayer } from "@beep/repo-utils/JSDoc/models/ArchitecturalLayer.model"
  *
@@ -52,6 +55,7 @@ export const ArchitecturalLayer = LiteralKit([
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

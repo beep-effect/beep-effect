@@ -12,7 +12,8 @@ const $I = $SchemaId.create("Age");
 /**
  * The age of a person in years.
  *
- * @example
+ * **Example** (Decode age value)
+ *
  * ```ts
  * import { Age } from "@beep/schema/Age"
  * import * as S from "effect/Schema"
@@ -21,8 +22,8 @@ const $I = $SchemaId.create("Age");
  * console.log(age)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Age = S.Int.check(
   S.isBetween({
@@ -38,16 +39,6 @@ export const Age = S.Int.check(
 
 /**
  * {@inheritDoc Age}
- *
- * @example
- * ```ts
- * import { Age } from "@beep/schema/Age"
- * import * as S from "effect/Schema"
- *
- * const age: Age = S.decodeUnknownSync(Age)(42)
- * console.log(age)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

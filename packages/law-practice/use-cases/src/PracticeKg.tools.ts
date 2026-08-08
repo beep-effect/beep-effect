@@ -138,7 +138,8 @@ class ProvenanceParams extends S.Class<ProvenanceParams>($I`ProvenanceParams`)(
 /**
  * Safe structured failure returned by a practice KG tool.
  *
- * @example
+ * **Example** (Make tool error instance)
+ *
  * ```ts
  * import { PracticeKgToolError } from "@beep/law-practice-use-cases/server"
  *
@@ -162,7 +163,8 @@ export class PracticeKgToolError extends S.Class<PracticeKgToolError>($I`Practic
 /**
  * Budgeted columnar response shared by the eight live practice KG tools.
  *
- * @example
+ * **Example** (Make budgeted tool result)
+ *
  * ```ts
  * import { PracticeKgToolResult } from "@beep/law-practice-use-cases/server"
  * import { ColumnarEnvelope } from "@beep/mcp-kit"
@@ -200,7 +202,8 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
 /**
  * Typed empty response returned when a bundle has no claims batch.
  *
- * @example
+ * **Example** (Make not-loaded claims result)
+ *
  * ```ts
  * import { PracticeKgCandidateClaimsNotLoadedResult } from "@beep/law-practice-use-cases/server"
  *
@@ -234,7 +237,8 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKg
  * Candidate-claims response: either a budgeted loaded result or the typed
  * not-loaded state used by bundles built before the claims batch.
  *
- * @example
+ * **Example** (Check not-loaded claims union)
+ *
  * ```ts
  * import { PracticeKgCandidateClaimsNotLoadedResult, PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
  *
@@ -263,7 +267,8 @@ export const PracticeKgCandidateClaimsResult = S.Union([
 /**
  * Runtime type for {@link PracticeKgCandidateClaimsResult}.
  *
- * @example
+ * **Example** (Type claims result parameter)
+ *
  * ```ts
  * import type { PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
  *
@@ -279,7 +284,8 @@ export type PracticeKgCandidateClaimsResult = typeof PracticeKgCandidateClaimsRe
 /**
  * PGlite graph row shared by decoding and field-tier projection.
  *
- * @example
+ * **Example** (Inspect graph row fields)
+ *
  * ```ts
  * import { PracticeKgGraphToolRow } from "@beep/law-practice-use-cases/server"
  *
@@ -308,7 +314,8 @@ export class PracticeKgGraphToolRow extends S.Class<PracticeKgGraphToolRow>($I`P
 /**
  * Docket-family aggregate row shared by decoding and field-tier projection.
  *
- * @example
+ * **Example** (Inspect family row fields)
+ *
  * ```ts
  * import { PracticeKgFamilyToolRow } from "@beep/law-practice-use-cases/server"
  *
@@ -336,7 +343,8 @@ export class PracticeKgFamilyToolRow extends S.Class<PracticeKgFamilyToolRow>($I
 /**
  * Corpus document row shared by decoding and field-tier projection.
  *
- * @example
+ * **Example** (Inspect document row fields)
+ *
  * ```ts
  * import { PracticeKgDocumentToolRow } from "@beep/law-practice-use-cases/server"
  *
@@ -366,7 +374,8 @@ export class PracticeKgDocumentToolRow extends S.Class<PracticeKgDocumentToolRow
 /**
  * Email header row shared by decoding and field-tier projection.
  *
- * @example
+ * **Example** (Inspect email row fields)
+ *
  * ```ts
  * import { PracticeKgEmailToolRow } from "@beep/law-practice-use-cases/server"
  *
@@ -395,7 +404,8 @@ export class PracticeKgEmailToolRow extends S.Class<PracticeKgEmailToolRow>($I`P
 /**
  * Candidate claim with one resolvable evidence span.
  *
- * @example
+ * **Example** (Inspect claim row fields)
+ *
  * ```ts
  * import { PracticeKgCandidateClaimToolRow } from "@beep/law-practice-use-cases/server"
  *
@@ -428,7 +438,8 @@ export class PracticeKgCandidateClaimToolRow extends S.Class<PracticeKgCandidate
 /**
  * Progressive fields for PGlite graph-node and relationship query rows.
  *
- * @example
+ * **Example** (List minimal graph fields)
+ *
  * ```ts
  * import { practiceKgGraphFieldTiers } from "@beep/law-practice-use-cases/server"
  *
@@ -462,7 +473,8 @@ export const practiceKgGraphFieldTiers = defineFieldTiers({
 /**
  * Progressive fields for docket-family aggregate rows.
  *
- * @example
+ * **Example** (Check complete family fields)
+ *
  * ```ts
  * import { practiceKgFamilyFieldTiers } from "@beep/law-practice-use-cases/server"
  *
@@ -495,7 +507,8 @@ export const practiceKgFamilyFieldTiers = defineFieldTiers({
 /**
  * Progressive fields for DuckDB corpus document rows.
  *
- * @example
+ * **Example** (List minimal document fields)
+ *
  * ```ts
  * import { practiceKgDocumentFieldTiers } from "@beep/law-practice-use-cases/server"
  *
@@ -528,7 +541,8 @@ export const practiceKgDocumentFieldTiers = defineFieldTiers({
 /**
  * Progressive fields for DuckDB email-header rows.
  *
- * @example
+ * **Example** (List minimal email fields)
+ *
  * ```ts
  * import { practiceKgEmailFieldTiers } from "@beep/law-practice-use-cases/server"
  *
@@ -590,7 +604,8 @@ class PracticeKgCandidateClaimBalancedRow extends S.Class<PracticeKgCandidateCla
 /**
  * Progressive fields for grounded candidate claim rows.
  *
- * @example
+ * **Example** (Check complete claim fields)
+ *
  * ```ts
  * import { practiceKgCandidateClaimFieldTiers } from "@beep/law-practice-use-cases/server"
  *
@@ -638,7 +653,8 @@ const readTool = <Name extends string, Parameters extends S.Top, Success extends
 /**
  * Lists sparse client attribution and unattributed docket-family counts.
  *
- * @example
+ * **Example** (Log clients tool name)
+ *
  * ```ts
  * import { KgClientsTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgClientsTool.name) // "kg_clients"
@@ -657,7 +673,8 @@ export const KgClientsTool = readTool(
 /**
  * Resolves one docket family and its dockets, applications, patents, and documents.
  *
- * @example
+ * **Example** (Log docket family tool name)
+ *
  * ```ts
  * import { KgDocketFamilyTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgDocketFamilyTool.name)
@@ -676,7 +693,8 @@ export const KgDocketFamilyTool = readTool(
 /**
  * Looks up an application chain by application number, patent number, or docket.
  *
- * @example
+ * **Example** (Log application lookup name)
+ *
  * ```ts
  * import { KgApplicationLookupTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgApplicationLookupTool.name)
@@ -695,7 +713,8 @@ export const KgApplicationLookupTool = readTool(
 /**
  * Finds graph nodes by label or natural-key fragment.
  *
- * @example
+ * **Example** (Log find tool name)
+ *
  * ```ts
  * import { KgFindTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgFindTool.name)
@@ -714,7 +733,8 @@ export const KgFindTool = readTool(
 /**
  * Searches extracted corpus text using the bundle's deterministic BM25 index.
  *
- * @example
+ * **Example** (Log corpus search tool name)
+ *
  * ```ts
  * import { CorpusSearchTextTool } from "@beep/law-practice-use-cases/server"
  * console.log(CorpusSearchTextTool.name)
@@ -733,7 +753,8 @@ export const CorpusSearchTextTool = readTool(
 /**
  * Gets document text or a corpus pointer by digest or organized path.
  *
- * @example
+ * **Example** (Log get document tool name)
+ *
  * ```ts
  * import { CorpusGetDocumentTool } from "@beep/law-practice-use-cases/server"
  * console.log(CorpusGetDocumentTool.name)
@@ -752,7 +773,8 @@ export const CorpusGetDocumentTool = readTool(
 /**
  * Searches header-only email metadata with archive-level family confidence.
  *
- * @example
+ * **Example** (Log email search tool name)
+ *
  * ```ts
  * import { EmailSearchTool } from "@beep/law-practice-use-cases/server"
  * console.log(EmailSearchTool.name)
@@ -771,7 +793,8 @@ export const EmailSearchTool = readTool(
 /**
  * Declares candidate-claims lookup with a typed fallback for older bundles.
  *
- * @example
+ * **Example** (Log candidate claims tool name)
+ *
  * ```ts
  * import { KgCandidateClaimsTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgCandidateClaimsTool.name)
@@ -790,7 +813,8 @@ export const KgCandidateClaimsTool = readTool(
 /**
  * Resolves graph or document provenance, or bundle status when called without a key.
  *
- * @example
+ * **Example** (Log provenance tool name)
+ *
  * ```ts
  * import { KgProvenanceTool } from "@beep/law-practice-use-cases/server"
  * console.log(KgProvenanceTool.name)

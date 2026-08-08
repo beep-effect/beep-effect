@@ -29,12 +29,14 @@ const existingQaCaptureError = (cause: unknown): O.Option<QaCaptureError> =>
 /**
  * Technical failure raised by the `@beep/qa-capture` pipeline boundary.
  *
- * @example
+ * **Example** (Make error with operation)
+ *
  * ```ts
  * import { QaCaptureError } from "@beep/qa-capture"
  * const error = QaCaptureError.make({ message: "collector failed to bind", operation: "collectorServe" })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -73,7 +75,8 @@ export class QaCaptureError extends TaggedErrorClass<QaCaptureError>($I`QaCaptur
   /**
    * Normalize an unknown platform failure into a {@link QaCaptureError}.
    *
-   * @example
+   * **Example** (Normalize unknown with cause)
+   *
    * ```ts
    * import { QaCaptureError } from "@beep/qa-capture"
    * const error = QaCaptureError.fromUnknown("sessionStore", "could not read session.json", {
@@ -81,6 +84,7 @@ export class QaCaptureError extends TaggedErrorClass<QaCaptureError>($I`QaCaptur
    * })
    * console.log(error)
    * ```
+   *
    * @category errors
    * @since 0.0.0
    */

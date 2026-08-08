@@ -138,7 +138,8 @@ type StatusCauseTaggedErrorExtendMethod<
 /**
  * Tagged error class returned by {@link StatusCauseTaggedErrorClass}, including dual status/cause helpers.
  *
- * @example
+ * **Example** (noCause via statics type)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import {
@@ -189,7 +190,8 @@ export type StatusCauseTaggedErrorClassWithStatics<
 /**
  * Factory returned by {@link StatusCauseTaggedErrorClass} after an identity namespace has been selected.
  *
- * @example
+ * **Example** (Factory type after identity)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import {
@@ -236,7 +238,8 @@ export interface StatusCauseTaggedErrorClassFactory<Self, Brand = {}> {
 /**
  * Callable constructor for creating status-cause tagged error class factories.
  *
- * @example
+ * **Example** (Constructor type class creation)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import {
@@ -466,12 +469,15 @@ const attachStatusCauseTaggedErrorStatics = <
 /**
  * Create a tagged error class that carries `message`, `status`, and optional defect `cause`.
  *
+ * **Details**
+ *
  * `StatusCauseTaggedErrorClass` is a pipe-friendly offshoot of {@link TaggedErrorClass}
  * for the existing {@link StatusCauseFields} shape. It attaches dual static
  * `new` and `mapError` helpers plus a `noCause` constructor for status-only
  * failures. Raw causes are normalized into `Option` values.
  *
- * @example
+ * **Example** (mapError and noCause helpers)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import { Effect, pipe } from "effect"
@@ -497,7 +503,8 @@ const attachStatusCauseTaggedErrorStatics = <
  * console.log(notFound)
  * ```
  *
- * @example
+ * **Example** (Extra fields with new)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
@@ -522,8 +529,8 @@ const attachStatusCauseTaggedErrorStatics = <
  * console.log(error)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const StatusCauseTaggedErrorClass: StatusCauseTaggedErrorClassConstructor = (identifier?: undefined | string) =>
   ((tag: string, fieldsOrAnnotations?: TUnsafe.Any, annotations?: TUnsafe.Any) => {

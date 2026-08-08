@@ -8,7 +8,8 @@
 /**
  * Shared aggregate exports.
  *
- * @example
+ * **Example** (Import shared aggregates module)
+ *
  * ```ts
  * import * as Aggregates from "@beep/shared-domain/aggregates"
  *

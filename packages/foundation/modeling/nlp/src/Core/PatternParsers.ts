@@ -85,7 +85,8 @@ const decodePatternElement = (input: string) =>
 /**
  * Decode a POS bracket string into a pattern element.
  *
- * @example
+ * **Example** (Decode POS alternatives)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BracketStringToPOSPatternElement } from "@beep/nlp/Core/PatternParsers"
@@ -94,8 +95,8 @@ const decodePatternElement = (input: string) =>
  * console.log(element.value) // ["ADJ", "NOUN"]
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BracketStringToPOSPatternElement = S.String.pipe(
   S.decodeTo(POSPatternElement, {
@@ -116,22 +117,24 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
 /**
  * Runtime type for {@link BracketStringToPOSPatternElement}.
  *
- * @example
+ * **Example** (POS element type alias)
+ *
  * ```ts
  * import type { BracketStringToPOSPatternElement } from "@beep/nlp/Core/PatternParsers"
  *
  * type Example = BracketStringToPOSPatternElement
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternElement.Type;
 
 /**
  * Decode an entity bracket string into a pattern element.
  *
- * @example
+ * **Example** (Decode entity alternatives)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BracketStringToEntityPatternElement } from "@beep/nlp/Core/PatternParsers"
@@ -140,8 +143,8 @@ export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternE
  * console.log(element._tag) // "EntityPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BracketStringToEntityPatternElement = S.String.pipe(
   S.decodeTo(EntityPatternElement, {
@@ -162,22 +165,24 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
 /**
  * Runtime type for {@link BracketStringToEntityPatternElement}.
  *
- * @example
+ * **Example** (Entity element type alias)
+ *
  * ```ts
  * import type { BracketStringToEntityPatternElement } from "@beep/nlp/Core/PatternParsers"
  *
  * type Example = BracketStringToEntityPatternElement
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPatternElement.Type;
 
 /**
  * Decode a literal bracket string into a pattern element.
  *
- * @example
+ * **Example** (Decode literal alternatives)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BracketStringToLiteralPatternElement } from "@beep/nlp/Core/PatternParsers"
@@ -186,8 +191,8 @@ export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPa
  * console.log(element.value[0]) // "Effect"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BracketStringToLiteralPatternElement = S.String.pipe(
   S.decodeTo(LiteralPatternElement, {
@@ -208,22 +213,24 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
 /**
  * Runtime type for {@link BracketStringToLiteralPatternElement}.
  *
- * @example
+ * **Example** (Literal element type alias)
+ *
  * ```ts
  * import type { BracketStringToLiteralPatternElement } from "@beep/nlp/Core/PatternParsers"
  *
  * type Example = BracketStringToLiteralPatternElement
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteralPatternElement.Type;
 
 /**
  * Decode any supported bracket string element.
  *
- * @example
+ * **Example** (Decode any bracket element)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BracketStringToPatternElement } from "@beep/nlp/Core/PatternParsers"
@@ -232,8 +239,8 @@ export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteral
  * console.log(element._tag) // "POSPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BracketStringToPatternElement = S.String.pipe(
   S.decodeTo(PatternElement, {
@@ -248,22 +255,24 @@ export const BracketStringToPatternElement = S.String.pipe(
 /**
  * Runtime type for {@link BracketStringToPatternElement}.
  *
- * @example
+ * **Example** (Pattern element type alias)
+ *
  * ```ts
  * import type { BracketStringToPatternElement } from "@beep/nlp/Core/PatternParsers"
  *
  * type Example = BracketStringToPatternElement
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BracketStringToPatternElement = typeof BracketStringToPatternElement.Type;
 
 /**
  * Decode a non-empty string array into ordered pattern elements.
  *
- * @example
+ * **Example** (Parse string array elements)
+ *
  * ```ts
  * import { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
  *
@@ -271,8 +280,8 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
  * console.log(elements[0]?._tag) // "POSPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternElement).pipe(
   $I.annoteSchema("PatternElementsFromString", {
@@ -284,22 +293,24 @@ export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternE
 /**
  * Runtime type for {@link PatternElementsFromString}.
  *
- * @example
+ * **Example** (Elements from string type)
+ *
  * ```ts
  * import type { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
  *
  * type Example = PatternElementsFromString
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PatternElementsFromString = typeof PatternElementsFromString.Type;
 
 /**
  * Decode a string array into ordered pattern elements.
  *
- * @example
+ * **Example** (Decode mixed bracket patterns)
+ *
  * ```ts
  * import { PatternFromString } from "@beep/nlp/Core/PatternParsers"
  *
@@ -307,7 +318,7 @@ export type PatternElementsFromString = typeof PatternElementsFromString.Type;
  * console.log(elements[1]?._tag) // "LiteralPatternElement"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PatternFromString = (input: unknown) => PatternElementsFromString.fromUnknown(input);

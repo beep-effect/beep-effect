@@ -12,7 +12,8 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 /**
  * Epistemic usage migration target used to prove usage-record persistence.
  *
- * @example
+ * **Example** (Logging migration target tables)
+ *
  * ```ts
  * import { EpistemicUsageMigrationTarget } from "@beep/db-admin/migrations/EpistemicUsage"
  *

@@ -64,7 +64,8 @@ class RuntimeFixtureSeedInput extends S.Class<RuntimeFixtureSeedInput>($I`Runtim
 /**
  * Parsed fixture inputs for one runtime data-loop scenario.
  *
- * @example
+ * **Example** (Make RuntimeFixtureInput with seed)
+ *
  * ```ts
  * import { RuntimeFixtureInput } from "@beep/agents-use-cases/proof"
  *
@@ -694,12 +695,14 @@ const fixtureRunnerForScenario: (
 /**
  * Run one deterministic runtime data-loop fixture.
  *
- * @remarks
+ * **Details**
+ *
  * Dispatches by `input.email.scenarioId`, verifies that seed and email
  * scenario ids match, and checks that the fixture body contains every source
  * span required by the selected scenario.
  *
- * @example
+ * **Example** (Run multi-span law fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { Effect } from "effect"
@@ -734,7 +737,6 @@ const fixtureRunnerForScenario: (
  * storage, or model services are required. Fails with
  * {@link ProfessionalRuntimeValidationError} for unknown scenarios, mismatched
  * scenario ids, or missing source-span markers.
- *
  * @category testing
  * @since 0.0.0
  */

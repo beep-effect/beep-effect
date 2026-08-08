@@ -16,7 +16,8 @@ const $I = $EpistemicDomainId.create("values/EdgeEndpoint/EdgeEndpoint.model");
  * Entity endpoints deliberately carry no foreign key: the referenced entity may
  * live in any slice, so the edge stores the caller's stable token verbatim.
  *
- * @example
+ * **Example** (Make entity reference)
+ *
  * ```ts
  * import { EdgeEntityRef } from "@beep/epistemic-domain"
  *
@@ -37,7 +38,8 @@ export const EdgeEntityRef = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EdgeEntityRef}.
  *
- * @example
+ * **Example** (Type entity reference value)
+ *
  * ```ts
  * import { EdgeEntityRef } from "@beep/epistemic-domain"
  * import type { EdgeEntityRef as EdgeEntityRefValue } from "@beep/epistemic-domain"
@@ -56,7 +58,8 @@ export type EdgeEntityRef = typeof EdgeEntityRef.Type;
  * distinct from {@link EdgeEntityRef} so the two reference namespaces can never
  * be substituted for one another.
  *
- * @example
+ * **Example** (Make observation reference)
+ *
  * ```ts
  * import { EdgeObservationRef } from "@beep/epistemic-domain"
  *
@@ -77,7 +80,8 @@ export const EdgeObservationRef = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EdgeObservationRef}.
  *
- * @example
+ * **Example** (Type observation reference value)
+ *
  * ```ts
  * import { EdgeObservationRef } from "@beep/epistemic-domain"
  * import type { EdgeObservationRef as EdgeObservationRefValue } from "@beep/epistemic-domain"
@@ -96,7 +100,8 @@ const EdgeEndpointKindBase = LiteralKit(["claim", "evidence", "entity", "observa
 /**
  * Bounded vocabulary of what a bitemporal epistemic edge may point at.
  *
- * @example
+ * **Example** (Decode endpoint kind)
+ *
  * ```ts
  * import { EdgeEndpointKind } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -118,7 +123,8 @@ export const EdgeEndpointKind = EdgeEndpointKindBase.pipe(
 /**
  * Runtime type for {@link EdgeEndpointKind}.
  *
- * @example
+ * **Example** (Satisfy endpoint kind type)
+ *
  * ```ts
  * import type { EdgeEndpointKind } from "@beep/epistemic-domain"
  *
@@ -162,7 +168,8 @@ const edgeEndpointStatics = () => ({
  * at the schema boundary: an unknown `kind` cannot decode, and each known kind
  * must carry exactly the reference its kind requires.
  *
- * @example
+ * **Example** (Decode claim endpoint)
+ *
  * ```ts
  * import { EdgeEndpoint } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -185,7 +192,8 @@ export const EdgeEndpoint = EdgeEndpointBase.pipe(
 /**
  * Runtime type for {@link EdgeEndpoint}.
  *
- * @example
+ * **Example** (Type entity endpoint)
+ *
  * ```ts
  * import type { EdgeEndpoint } from "@beep/epistemic-domain"
  * import { EdgeEntityRef } from "@beep/epistemic-domain"
@@ -204,7 +212,8 @@ export type EdgeEndpoint = typeof EdgeEndpoint.Type;
  * component by the logical-edge identity. The kind prefix is what keeps a claim
  * and an entity that happen to share a reference token in different partitions.
  *
- * @example
+ * **Example** (Encode claim endpoint key)
+ *
  * ```ts
  * import { encodeEdgeEndpointKey, EdgeEndpoint } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"

@@ -15,7 +15,8 @@ const make = EntityId.factory("documents", $I);
 /**
  * Documents SyncItem entity identifier.
  *
- * @example
+ * **Example** (Decode SyncItemId value)
+ *
  * ```ts
  * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -37,7 +38,8 @@ export const SyncItemId = make("sync_item", {
 /**
  * Runtime type for {@link SyncItemId}.
  *
- * @example
+ * **Example** (Type SyncItemId array)
+ *
  * ```ts
  * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -58,7 +60,8 @@ export type SyncItemId = typeof SyncItemId.Type;
 /**
  * Documents SyncOperation entity identifier.
  *
- * @example
+ * **Example** (Decode SyncOperationId value)
+ *
  * ```ts
  * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -80,7 +83,8 @@ export const SyncOperationId = make("sync_operation", {
 /**
  * Runtime type for {@link SyncOperationId}.
  *
- * @example
+ * **Example** (Type SyncOperationId array)
+ *
  * ```ts
  * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -101,7 +105,8 @@ export type SyncOperationId = typeof SyncOperationId.Type;
 /**
  * Documents SyncCursor entity identifier.
  *
- * @example
+ * **Example** (Decode SyncCursorId value)
+ *
  * ```ts
  * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -123,7 +128,8 @@ export const SyncCursorId = make("sync_cursor", {
 /**
  * Runtime type for {@link SyncCursorId}.
  *
- * @example
+ * **Example** (Type SyncCursorId array)
+ *
  * ```ts
  * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -144,7 +150,8 @@ export type SyncCursorId = typeof SyncCursorId.Type;
 /**
  * Documents SyncConflict entity identifier.
  *
- * @example
+ * **Example** (Decode SyncConflictId value)
+ *
  * ```ts
  * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"
@@ -166,7 +173,8 @@ export const SyncConflictId = make("sync_conflict", {
 /**
  * Runtime type for {@link SyncConflictId}.
  *
- * @example
+ * **Example** (Type SyncConflictId array)
+ *
  * ```ts
  * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/identity/Documents"
  * import * as S from "effect/Schema"

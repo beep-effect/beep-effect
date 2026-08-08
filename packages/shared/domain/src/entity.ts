@@ -8,7 +8,8 @@
 /**
  * Shared entity constructor and utility exports.
  *
- * @example
+ * **Example** (Import entity constructors)
+ *
  * ```ts
  * import * as Entity from "@beep/shared-domain/entity"
  *

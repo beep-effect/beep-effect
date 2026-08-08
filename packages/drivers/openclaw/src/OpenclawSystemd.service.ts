@@ -186,7 +186,8 @@ const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSys
 /**
  * Effect service for `systemctl --user` control of OpenClaw units.
  *
- * @remarks
+ * **Details**
+ *
  * All verbs are forced through `--user`; the executable is configurable for
  * tests only. Lifecycle verbs (`daemon-reload`, `enable`, `disable`, `start`,
  * `stop`, `restart`, `reset-failed`) fail with redacted
@@ -194,7 +195,8 @@ const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSys
  * models its nonzero exit as the reported state string and `show` parses
  * `Key=Value` property lines into {@link OpenclawSystemdUnitState}.
  *
- * @example
+ * **Example** (Mock runner isActive check)
+ *
  * ```ts
  * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service"
@@ -216,7 +218,6 @@ const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSys
  * Live layers spawn `systemctl --user` with the inherited environment through
  * `ChildProcessSpawner`; injected-runner layers perform only the effects
  * encoded by the supplied runner.
- *
  * @category services
  * @since 0.0.0
  */
@@ -224,7 +225,8 @@ export class OpenclawSystemd extends Context.Service<OpenclawSystemd, OpenclawSy
   /**
    * Build a live systemd control layer backed by native child processes.
    *
-   * @example
+   * **Example** (Create live systemd layer)
+   *
    * ```ts
    * import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service"
    *
@@ -249,7 +251,8 @@ export class OpenclawSystemd extends Context.Service<OpenclawSystemd, OpenclawSy
   /**
    * Build a deterministic test layer from an injected process runner.
    *
-   * @example
+   * **Example** (Layer from injected runner)
+   *
    * ```ts
    * import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models"
    * import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service"

@@ -14,7 +14,8 @@ const $I = $ArchitectureLabDomainId.create("values/WorkPriority/WorkPriority.mod
 /**
  * Closed priority vocabulary shared by WorkItem creation and ranking behavior.
  *
- * @example
+ * **Example** (Decode high priority value)
+ *
  * ```ts
  * import { WorkPriority, type WorkPriority as WorkPriorityValue } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const WorkPriority = LiteralKit(["low", "normal", "high"]).pipe(
 /**
  * Runtime type for {@link WorkPriority}.
  *
- * @example
+ * **Example** (Use normal priority enum)
+ *
  * ```ts
  * import { WorkPriority, type WorkPriority as WorkPriorityValue } from "@beep/architecture-lab-domain/values/WorkPriority"
  *

@@ -14,7 +14,8 @@ import type React from "react";
  * Props for {@link ColorField}: `ColorPicker` props plus label/description;
  * binding props are owned by the field.
  *
- * @example
+ * **Example** (Satisfy color field props)
+ *
  * ```ts
  * import type { ColorFieldProps } from "@beep/form/fields/ColorField"
  *
@@ -50,7 +51,8 @@ type ColorControlProps = {
 /**
  * Schema-bound color picker whose value is a canonical hex color string.
  *
- * @example
+ * **Example** (Theme form color picker)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { ColorField } from "@beep/form/fields/ColorField"

@@ -14,7 +14,8 @@ import "./editor-theme.css";
 /**
  * Lexical theme class map shared by the editor block.
  *
- * @example
+ * **Example** (Log paragraph theme class)
+ *
  * ```ts
  * import { editorTheme } from "@beep/ui/components/editor/themes/editor-theme"
  *

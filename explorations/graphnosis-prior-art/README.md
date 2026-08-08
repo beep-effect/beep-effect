@@ -2,10 +2,15 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated 2026-08-06 into
+[`goals/epistemic-contradiction-detection`](../../goals/epistemic-contradiction-detection/README.md)
+and [`goals/agentic-governance-laws`](../../goals/agentic-governance-laws/README.md); the packet
+remains as provenance for the 26 amendments and the mining corpus.
 
 ## Spark
 
@@ -18,23 +23,22 @@ own, plus a handful of rules that cost one SPEC sentence today and a migration l
 
 ## Next Open Question
 
-None — align closed 2026-08-06 with **Q1–Q10 all resolved, each as recommended**
-([`DECISIONS.md`](./DECISIONS.md) is the log). Next work at shape:
-
-1. `BRIEF.md` for the two graduations decided in Q1 — `epistemic-contradiction-detection` and
-   the repo-law bundle (Rule 5, declared loop caps, law-scanner non-vacuity).
-2. The amendment-application pass over [`research/AMENDMENTS.json`](./research/AMENDMENTS.json),
-   now unblocked: Q2/Q7 settle the fusion-core wording, Q4 the retirement-reason wording, Q9 the
-   modality placement, Q10 the standards paragraph.
+None — the packet is graduated. The remaining exploration-owned work is the
+**amendment-application pass** over [`research/AMENDMENTS.json`](./research/AMENDMENTS.json),
+which travels as its own PR ladder (spec-delta docs-PR carrying the Q10 standards paragraph,
+then the three code-change PRs: WinkCorpus tie-break, DocText bracket, LawScan non-vacuity fix)
+— Q2/Q7 settle the fusion-core wording, Q4 the retirement-reason wording, Q9 the modality
+placement. Implementation questions now belong to the two graduated goal packets.
 
 ## What came out of it
 
 Two decision-ready outputs, per Benjamin's ask for graduation candidates *and* amendments to what
 is already built or planned:
 
-- **26 concrete amendments** ([`research/AMENDMENTS.json`](./research/AMENDMENTS.json)) — 12
-  `spec-delta`/`plan-delta` against open packets, 8 `code-change`/`schema-change` against shipped
-  `packages/**`, each with the target file quoted at `path:line` before the change was proposed.
+- **26 concrete amendments** ([`research/AMENDMENTS.json`](./research/AMENDMENTS.json)) — 14
+  `spec-delta`/`plan-delta` against open packets, 10 `code-change`/`schema-change` against shipped
+  `packages/**`, 2 `doc-change`, each with the target file quoted at `path:line` before the change
+  was proposed.
   Reasoning and the 14 rejected candidates:
   [`research/amendments-open-goals.md`](./research/amendments-open-goals.md),
   [`research/amendments-shipped-code.md`](./research/amendments-shipped-code.md).
@@ -43,8 +47,9 @@ is already built or planned:
   against rebuilding, and a *do not copy* section.
 
 Three live defects in shipped code fell out of the mining: an insertion-order tie-break in
-`WinkCorpus`, a pdfjs `WorkerTransport` leak on the **success** path in `DocText`, and seven law
-scanners that never assert their own scan matched a file.
+`WinkCorpus`, a pdfjs `WorkerTransport` leak on the **success** path in `DocText`, and law
+scanners that never assert their own scan matched a file (four independent scan paths — the
+mining's "seven through one choke point" was an error; see the RESEARCH.md addendum).
 
 ## Read This First
 
@@ -84,3 +89,19 @@ scanners that never assert their own scan matched a file.
   belief-view-owned readmission; egress sensitivity gate; determinism tiers only with golden
   vectors; typed fusion intent now with the floor off; caps before adherence; MATRES modality on
   belief-view revision; envelope doctrine as one standards paragraph. Stage → shape.
+- 2026-08-06 (shape): BRIEF drafted for the two Q1 graduations; contention with a parallel
+  crispening branch moved the packet to a sibling git worktree (directory name
+  beep-effect15-graphnosis) on branch `explore/graphnosis-prior-art` (based on main @
+  `4aa421d9d3`). An adversarial verification
+  pass then corrected the BRIEF: LawScan blast-radius mining error disclosed (2 of 7 scanners
+  route through `runLawScan`, not 7 — RESEARCH.md addendum), packet A rewritten to produce
+  against the shipped sealed `ContradictionCandidate` contract (required `confidence` ⇒
+  per-class constants), per-edge cap specificity restored, belief-view-revision capture-stage
+  dependency turned into a stated v1 default, Q6 routed to packet B's standards edit, Q2 schema
+  naming corrected in DECISIONS.md. All six mined code/spec citations verified intact on
+  current main.
+- 2026-08-06 (graduate): Benjamin confirmed the BRIEF (finish-up instruction); MAP.md decomposed
+  the two Q1 graduations; `goals/epistemic-contradiction-detection` and
+  `goals/agentic-governance-laws` scaffolded from `goals/_template` with provenance back-links;
+  manifest → `graduate`/`graduated`; ATLAS entry moved Active → Graduated. The
+  amendment-application pass stays exploration-owned and ships as its own PR ladder.

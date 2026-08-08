@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/law-practice-tables`.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/law-practice-tables"
  *

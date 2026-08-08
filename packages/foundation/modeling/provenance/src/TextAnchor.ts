@@ -29,7 +29,8 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
  * them into a richer value object (e.g. an evidence span that adds a confidence)
  * without re-declaring the offset shape.
  *
- * @example
+ * **Example** (Spreading fields into schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import {
@@ -71,7 +72,8 @@ const hasConsistentTextAnchorWidth = (anchor: {
 /**
  * Reusable cross-field check for schemas that flatten {@link TextAnchorFields}.
  *
- * @example
+ * **Example** (Checking flattened anchor schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor"
@@ -93,10 +95,13 @@ export const TextAnchorWidthCheck = S.makeFilter(hasConsistentTextAnchorWidth, {
 /**
  * Tests whether an offset falls between complete UTF-16 code points.
  *
+ * **Details**
+ *
  * Zero and the source-text length are valid boundaries. An offset between the
  * high and low surrogates of one supplementary code point is not.
  *
- * @example
+ * **Example** (Surrogate pair boundary checks)
+ *
  * ```ts
  * import { isUtf16Boundary } from "@beep/provenance/TextAnchor"
  *
@@ -135,7 +140,8 @@ const TextAnchorSchema = TextAnchorStruct.mapFields(identity)
 /**
  * A half-open character-offset anchor into a source document.
  *
- * @example
+ * **Example** (Decoding a TextAnchor)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { TextAnchor } from "@beep/provenance/TextAnchor"
@@ -162,7 +168,8 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
   /**
    * Whether an anchor is well-ordered: `startChar <= endChar`.
    *
-   * @example
+   * **Example** (Checking well-ordered range)
+   *
    * ```ts
    * import { TextAnchor } from "@beep/provenance/TextAnchor"
    *
@@ -179,7 +186,8 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
    * Whether an anchor is internally consistent without needing the source text:
    * a non-empty half-open range whose width equals the quote length.
    *
-   * @example
+   * **Example** (Checking internal consistency)
+   *
    * ```ts
    * import { TextAnchor } from "@beep/provenance/TextAnchor"
    *
@@ -198,7 +206,8 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
  * Whether an anchor is well-ordered: `startChar <= endChar`. A malformed anchor
  * (start after end) is a defect at the producing boundary.
  *
- * @example
+ * **Example** (Valid and inverted ranges)
+ *
  * ```ts
  * import { isWellOrdered } from "@beep/provenance/TextAnchor"
  *
@@ -214,7 +223,8 @@ export const isWellOrdered = TextAnchor.isWellOrdered;
 /**
  * Whether an anchor is internally consistent without needing the source text.
  *
- * @example
+ * **Example** (Matching width and quote)
+ *
  * ```ts
  * import { isInternallyConsistent } from "@beep/provenance/TextAnchor"
  *

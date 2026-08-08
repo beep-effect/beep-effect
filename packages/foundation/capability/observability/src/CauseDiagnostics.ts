@@ -1,11 +1,14 @@
 /**
  * Diagnostic utilities for inspecting, classifying, and summarizing Effect causes and exits.
  *
+ * **Details**
+ *
  * Provides transport-safe schemas and pure functions for converting runtime
  * failure information into structured diagnostics suitable for logging,
  * metrics, and error reporting.
  *
- * @example
+ * **Example** (Classify and summarize cause)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { classifyCause, summarizeCause } from "@beep/observability"
@@ -35,9 +38,12 @@ const $I = $ObservabilityId.create("CauseDiagnostics");
 /**
  * High-level classification for a full Effect cause.
  *
+ * **Details**
+ *
  * One of `"empty"`, `"failure"`, `"defect"`, `"interrupted"`, or `"mixed"`.
  *
- * @example
+ * **Example** (Classify empty failure defect)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { classifyCause } from "@beep/observability"
@@ -47,8 +53,8 @@ const $I = $ObservabilityId.create("CauseDiagnostics");
  * console.log(classifyCause(Cause.die("bug"))) // "defect"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const CauseClassification = LiteralKit(["empty", "failure", "defect", "interrupted", "mixed"]).pipe(
   $I.annoteSchema("CauseClassification", {
@@ -59,7 +65,8 @@ export const CauseClassification = LiteralKit(["empty", "failure", "defect", "in
 /**
  * Runtime type for {@link CauseClassification}.
  *
- * @example
+ * **Example** (Assign classification type)
+ *
  * ```typescript
  * import type { CauseClassification } from "@beep/observability"
  *
@@ -75,7 +82,8 @@ export type CauseClassification = typeof CauseClassification.Type;
 /**
  * High-level classification for an exit: `"success"` or `"failure"`.
  *
- * @example
+ * **Example** (Read success exit outcome)
+ *
  * ```typescript
  * import { Exit } from "effect"
  * import { summarizeExit } from "@beep/observability"
@@ -84,8 +92,8 @@ export type CauseClassification = typeof CauseClassification.Type;
  * console.log(outcome) // "success"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ExitOutcome = LiteralKit(["success", "failure"]).pipe(
   $I.annoteSchema("ExitOutcome", {
@@ -96,7 +104,8 @@ export const ExitOutcome = LiteralKit(["success", "failure"]).pipe(
 /**
  * Runtime type for {@link ExitOutcome}.
  *
- * @example
+ * **Example** (Assign exit outcome type)
+ *
  * ```typescript
  * import type { ExitOutcome } from "@beep/observability"
  *
@@ -112,7 +121,8 @@ export type ExitOutcome = typeof ExitOutcome.Type;
 /**
  * Deterministic string fingerprint for a cause, useful for deduplication and grouping.
  *
- * @example
+ * **Example** (Make cause fingerprint value)
+ *
  * ```typescript
  * import { CauseFingerprint } from "@beep/observability"
  *
@@ -120,8 +130,8 @@ export type ExitOutcome = typeof ExitOutcome.Type;
  * console.log(fp.value) // "failure:fail:1:error:boom"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerprint`)(
   {
@@ -135,7 +145,8 @@ export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerpr
 /**
  * Transport-safe summary of a full Effect cause with classification, fingerprint, and counts.
  *
- * @example
+ * **Example** (Summarize cause field counts)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { summarizeCause } from "@beep/observability"
@@ -147,8 +158,8 @@ export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerpr
  * console.log(summary.defectCount) // 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 const CauseSummaryFields = {
   fingerprint: CauseFingerprint,
@@ -177,7 +188,8 @@ const CauseSummary = CauseSummaryTagged.pipe(
 /**
  * Type of {@link CauseSummary}
  *
- * @example
+ * **Example** (Read summary classification)
+ *
  * ```typescript
  * import type { CauseSummary } from "@beep/observability"
  *
@@ -193,7 +205,8 @@ export type CauseSummary = typeof CauseSummary.Type;
 /**
  * Transport-safe summary of an exit with outcome, classification, and fingerprint.
  *
- * @example
+ * **Example** (Summarize success and failure)
+ *
  * ```typescript
  * import { Exit, Cause } from "effect"
  * import { summarizeExit } from "@beep/observability"
@@ -206,8 +219,8 @@ export type CauseSummary = typeof CauseSummary.Type;
  * console.log(failure.classification) // "failure"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 const ObservedExitSummaryFields = {
   fingerprint: CauseFingerprint,
@@ -242,7 +255,8 @@ const ObservedExitSummaryTagged = CauseClassification.toTaggedUnion("classificat
 /**
  * Summary of an observed Effect exit including outcome classification and cause analysis.
  *
- * @example
+ * **Example** (Decode observed exit summary)
+ *
  * ```typescript
  * import { Exit } from "effect"
  * import * as S from "effect/Schema"
@@ -253,8 +267,8 @@ const ObservedExitSummaryTagged = CauseClassification.toTaggedUnion("classificat
  * console.log(decoded.outcome) // "failure"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ObservedExitSummary = ObservedExitSummaryTagged.pipe(
   $I.annoteSchema("ObservedExitSummary", {
@@ -265,7 +279,8 @@ export const ObservedExitSummary = ObservedExitSummaryTagged.pipe(
 /**
  * Type of {@link ObservedExitSummary}
  *
- * @example
+ * **Example** (Read summary outcome field)
+ *
  * ```typescript
  * import type { ObservedExitSummary } from "@beep/observability"
  *
@@ -387,10 +402,13 @@ const classifyReasonCounts = flow(
 /**
  * Classify a cause by its reason makeup into a single {@link CauseClassification} label.
  *
+ * **Details**
+ *
  * Returns `"empty"` for empty causes, `"mixed"` when multiple reason kinds are
  * present, or the single kind (`"failure"`, `"defect"`, `"interrupted"`) otherwise.
  *
- * @example
+ * **Example** (Classify empty failure defect)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { classifyCause } from "@beep/observability"
@@ -400,18 +418,21 @@ const classifyReasonCounts = flow(
  * console.log(classifyCause(Cause.die("bug"))) // "defect"
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const classifyCause = flow(summarizeReasonCounts, classifyReasonCounts);
 
 /**
  * Generate a deterministic fingerprint for a cause.
  *
+ * **Details**
+ *
  * The fingerprint combines the classification, reason tags, reason count,
  * and a truncated primary message chunk for grouping similar failures.
  *
- * @example
+ * **Example** (Fingerprint failed cause)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { fingerprintCause } from "@beep/observability"
@@ -420,8 +441,8 @@ export const classifyCause = flow(summarizeReasonCounts, classifyReasonCounts);
  * console.log(fp.value) // "failure:fail:1:error:connection refused"
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const fingerprintCause = (cause: Cause.Cause<unknown>): CauseFingerprint =>
   CauseFingerprint.make({
@@ -432,7 +453,8 @@ export const fingerprintCause = (cause: Cause.Cause<unknown>): CauseFingerprint 
  * Summarize a cause into a transport-safe {@link CauseSummary} with classification,
  * fingerprint, reason counts, primary message, and pretty-printed output.
  *
- * @example
+ * **Example** (Summarize failed cause fields)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { summarizeCause } from "@beep/observability"
@@ -444,8 +466,8 @@ export const fingerprintCause = (cause: Cause.Cause<unknown>): CauseFingerprint 
  * console.log(summary.primaryMessage) // "timeout"
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const summarizeCause = (cause: Cause.Cause<unknown>): CauseSummary => {
   const counts = summarizeReasonCounts(cause);
@@ -477,10 +499,13 @@ export const summarizeCause = (cause: Cause.Cause<unknown>): CauseSummary => {
 /**
  * Summarize an exit into a transport-safe {@link ObservedExitSummary}.
  *
+ * **Details**
+ *
  * For successful exits the outcome is `"success"` with an empty classification.
  * For failed exits the cause is analyzed via {@link summarizeCause}.
  *
- * @example
+ * **Example** (Summarize success and failure)
+ *
  * ```typescript
  * import { Exit } from "effect"
  * import { summarizeExit } from "@beep/observability"
@@ -492,8 +517,8 @@ export const summarizeCause = (cause: Cause.Cause<unknown>): CauseSummary => {
  * console.log(err.outcome) // "failure"
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const summarizeExit = <A, E>(exit: Exit.Exit<A, E>): ObservedExitSummary =>
   Exit.match(exit, {
@@ -533,10 +558,13 @@ export const summarizeExit = <A, E>(exit: Exit.Exit<A, E>): ObservedExitSummary 
 /**
  * Render a compact human-readable representation of a cause.
  *
+ * **Details**
+ *
  * Combines the classification, fingerprint, and pretty-printed cause into
  * a single multiline string suitable for console or log output.
  *
- * @example
+ * **Example** (Render compact cause string)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { renderObservedCause } from "@beep/observability"
@@ -548,8 +576,8 @@ export const summarizeExit = <A, E>(exit: Exit.Exit<A, E>): ObservedExitSummary 
  * // ...
  * ```
  *
- * @since 0.0.0
  * @category diagnostics
+ * @since 0.0.0
  */
 export const renderObservedCause = flow(
   summarizeCause,

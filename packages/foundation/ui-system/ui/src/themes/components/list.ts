@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * List theme theme value.
  *
- * @example
+ * **Example** (Import list theme)
+ *
  * ```ts
  * import { listTheme } from "@beep/ui/themes/components/list"
  *

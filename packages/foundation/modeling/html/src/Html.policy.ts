@@ -39,10 +39,13 @@ const {
 /**
  * Pure schema field bundle for attributes accepted by the safe-HTML policy.
  *
+ * **Details**
+ *
  * Event handlers, `style`, `srcdoc`, and CSP nonce data are intentionally not
  * present. Element-specific attributes are checked by {@link inspectSafeHtml}.
  *
- * @example
+ * **Example** (Empty attributes schema check)
+ *
  * ```ts
  * import { SafeHtmlAttributes } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
@@ -72,7 +75,8 @@ export const SafeHtmlAttributes = {
 /**
  * Safe global-attribute object schema.
  *
- * @example
+ * **Example** (Make empty attributes object)
+ *
  * ```ts
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
  *
@@ -92,10 +96,13 @@ export class SafeHtmlAttributesStruct extends S.Class<SafeHtmlAttributesStruct>(
 /**
  * Elements accepted by the conservative safe-HTML policy.
  *
+ * **Details**
+ *
  * Active-content, form, embedded-document, media, and foreign-content
  * integration elements are excluded.
  *
- * @example
+ * **Example** (Allowed versus denied tags)
+ *
  * ```ts
  * import { SafeHtmlElement } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
@@ -191,7 +198,8 @@ export const SafeHtmlElement = LiteralKit([
 /**
  * Decoded type of {@link SafeHtmlElement}.
  *
- * @example
+ * **Example** (Typed safe element tag)
+ *
  * ```ts
  * import type { SafeHtmlElement } from "@beep/html/Html.policy"
  *
@@ -227,11 +235,14 @@ const isSafeImageUrlAttribute = isSafeUrlAttributeWith(hasAllowedImageScheme);
 /**
  * URL attribute accepted by the conservative browser-output policy.
  *
+ * **Details**
+ *
  * Relative references and `https`, `mailto`, and `tel` URLs are accepted.
  * Protocol-relative, backslash-prefixed, control-character, and all other
  * scheme-bearing values are rejected.
  *
- * @example
+ * **Example** (Safe versus javascript URLs)
+ *
  * ```ts
  * import { SafeUrlAttribute } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
@@ -259,7 +270,8 @@ export const SafeUrlAttribute = S.String.check(
 /**
  * Decoded type of {@link SafeUrlAttribute}.
  *
- * @example
+ * **Example** (Typed relative URL value)
+ *
  * ```ts
  * import type { SafeUrlAttribute } from "@beep/html/Html.policy"
  *
@@ -275,7 +287,8 @@ export type SafeUrlAttribute = typeof SafeUrlAttribute.Type;
 /**
  * URL accepted for image `src`: a relative reference or `https` URL.
  *
- * @example
+ * **Example** (Image src URL validation)
+ *
  * ```ts
  * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
  * import * as S from "effect/Schema"
@@ -303,7 +316,8 @@ export const SafeImageUrlAttribute = S.String.check(
 /**
  * Decoded type of {@link SafeImageUrlAttribute}.
  *
- * @example
+ * **Example** (Decode HTTPS image URL)
+ *
  * ```ts
  * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
  * import { Result } from "effect"
@@ -324,7 +338,8 @@ export type SafeImageUrlAttribute = typeof SafeImageUrlAttribute.Type;
 /**
  * Rules reported by safe-HTML policy validation.
  *
- * @example
+ * **Example** (Check deniedElement rule tag)
+ *
  * ```ts
  * import { HtmlPolicyRule } from "@beep/html/Html.policy"
  *
@@ -350,7 +365,8 @@ export const HtmlPolicyRule = LiteralKit([
 /**
  * Decoded type of {@link HtmlPolicyRule}.
  *
- * @example
+ * **Example** (Decode unsafeUrl rule value)
+ *
  * ```ts
  * import { HtmlPolicyRule } from "@beep/html/Html.policy"
  * import { Result } from "effect"
@@ -371,7 +387,8 @@ export type HtmlPolicyRule = typeof HtmlPolicyRule.Type;
 /**
  * One path-addressed safe-HTML policy violation.
  *
- * @example
+ * **Example** (Make path-addressed issue)
+ *
  * ```ts
  * import { HtmlPolicyIssue } from "@beep/html/Html.policy"
  *
@@ -400,7 +417,8 @@ export class HtmlPolicyIssue extends S.Class<HtmlPolicyIssue>($I`HtmlPolicyIssue
 /**
  * Failure returned when conformant HTML does not satisfy the safe policy.
  *
- * @example
+ * **Example** (Make error with issues)
+ *
  * ```ts
  * import { HtmlPolicyError, HtmlPolicyIssue } from "@beep/html/Html.policy"
  *
@@ -452,7 +470,8 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
 /**
  * Runtime-issued proof that conformant HTML passed the safe-output policy.
  *
- * @example
+ * **Example** (Issue and check safe proof)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlAst } from "@beep/html"
  * import { Effect } from "effect"
@@ -476,7 +495,8 @@ export const SafeHtmlAst = S.declare(isSafeHtmlAstValue).pipe(
 /**
  * Decoded type of {@link SafeHtmlAst}.
  *
- * @example
+ * **Example** (Typed frozen safe proof)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
  * import type { SafeHtmlAst } from "@beep/html/Html.policy"
@@ -496,7 +516,8 @@ export type SafeHtmlAst = typeof SafeHtmlAst.Type;
 /**
  * Canonical schema alias for a safe-policy-proven HTML node or root.
  *
- * @example
+ * **Example** (Check safe node schema)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlNode } from "@beep/html"
  * import { Effect } from "effect"
@@ -516,7 +537,8 @@ export const SafeHtmlNode = SafeHtmlAst;
 /**
  * Decoded type of {@link SafeHtmlNode}.
  *
- * @example
+ * **Example** (Root tag from safe node)
+ *
  * ```ts
  * import { safeHtmlAstRoot } from "@beep/html/Html.policy"
  * import type { SafeHtmlNode } from "@beep/html/Html.policy"
@@ -751,7 +773,8 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
 /**
  * Returns every conservative-policy issue in a conformance proof.
  *
- * @example
+ * **Example** (Inspect empty fragment issues)
+ *
  * ```ts
  * import { conform, inspectSafeHtml } from "@beep/html"
  * import { Fragment } from "@beep/html/Html.model"
@@ -778,7 +801,8 @@ export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicy
 /**
  * Applies the conservative safe-output policy and issues an opaque proof.
  *
- * @example
+ * **Example** (Enforce policy on fragment)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
  * import { Effect } from "effect"
@@ -806,7 +830,8 @@ export const enforceSafeHtml: (value: ConformantHtml) => Effect.Effect<SafeHtmlA
 /**
  * Extracts the conformance proof from a safe-HTML AST proof.
  *
- * @example
+ * **Example** (Extract conformance proof)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, safeHtmlAstConformant } from "@beep/html"
  * import { Effect } from "effect"
@@ -834,7 +859,8 @@ export const safeHtmlAstConformant = (value: SafeHtmlAst): ConformantHtml =>
 /**
  * Extracts the validated AST root from a safe-HTML AST proof.
  *
- * @example
+ * **Example** (Extract validated AST root)
+ *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, safeHtmlAstRoot } from "@beep/html"
  * import { Effect } from "effect"

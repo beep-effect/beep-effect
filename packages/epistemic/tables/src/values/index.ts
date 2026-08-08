@@ -8,7 +8,8 @@
 /**
  * Execution ledger table metadata namespace.
  *
- * @example
+ * **Example** (Access execution table name)
+ *
  * ```ts
  * import { ExecutionRecord } from "@beep/epistemic-tables/values"
  *

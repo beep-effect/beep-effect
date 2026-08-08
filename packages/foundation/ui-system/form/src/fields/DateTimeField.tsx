@@ -16,7 +16,8 @@ import type React from "react";
  * Props for {@link DateTimeField}: `EffectDateTimePicker` props plus
  * label/description; binding props are owned by the field.
  *
- * @example
+ * **Example** (Props with ampm flag)
+ *
  * ```ts
  * import type { DateTimeFieldProps } from "@beep/form/fields/DateTimeField"
  *
@@ -44,7 +45,8 @@ export interface DateTimeFieldProps
 /**
  * Schema-bound date-time picker whose canonical value is Effect `DateTime`.
  *
- * @example
+ * **Example** (Event form date-time field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { DateTimeField } from "@beep/form/fields/DateTimeField"

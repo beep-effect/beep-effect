@@ -16,13 +16,15 @@ const $I = $RepoCliId.create("commands/Docgen/Docgen.schemas");
 /**
  * Options for resolving a workspace package selector.
  *
- * @example
+ * **Example** (Make resolve options)
+ *
  * ```ts
  * import { ResolveDocgenWorkspacePackageOptions } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  *
  * const options = ResolveDocgenWorkspacePackageOptions.make({ rootDir: "/repo" })
  * console.log(options.rootDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -40,12 +42,14 @@ export class ResolveDocgenWorkspacePackageOptions extends S.Class<ResolveDocgenW
 /**
  * Workspace docgen status derived from config and generated output presence.
  *
- * @example
+ * **Example** (Check status membership)
+ *
  * ```ts
  * import { DocgenPackageStatus } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  *
  * console.log(DocgenPackageStatus.is["configured-and-generated"]("configured-and-generated"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,12 +65,14 @@ export const DocgenPackageStatus = LiteralKit([
 /**
  * Workspace docgen status derived from config and generated output presence.
  *
- * @example
+ * **Example** (Assign status type)
+ *
  * ```ts
  * import type { DocgenPackageStatus } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const status: DocgenPackageStatus = "configured-not-generated"
  * console.log(status) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -81,7 +87,8 @@ const DocgenJsonObject = S.Json.pipe(
 /**
  * Parsed `docgen.json` document used by the command suite.
  *
- * @example
+ * **Example** (Make config document)
+ *
  * ```ts
  * import { DocgenConfigDocument } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const config = DocgenConfigDocument.make({
@@ -91,6 +98,7 @@ const DocgenJsonObject = S.Json.pipe(
  * })
  * console.log(config.srcDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -121,7 +129,8 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
 /**
  * Workspace package metadata used by docgen commands.
  *
- * @example
+ * **Example** (Make workspace package)
+ *
  * ```ts
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const pkg = DocgenWorkspacePackage.make({
@@ -135,6 +144,7 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
  * })
  * console.log(pkg.docsOutputPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -156,11 +166,13 @@ export class DocgenWorkspacePackage extends S.Class<DocgenWorkspacePackage>($I`D
 /**
  * Issue priority used by analysis findings.
  *
- * @example
+ * **Example** (Check priority membership)
+ *
  * ```ts
  * import { DocgenIssuePriority } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * console.log(DocgenIssuePriority.is.high("high"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -172,12 +184,14 @@ export const DocgenIssuePriority = LiteralKit(["high", "medium", "low"]).pipe(
 /**
  * Issue priority used by analysis findings.
  *
- * @example
+ * **Example** (Assign priority type)
+ *
  * ```ts
  * import type { DocgenIssuePriority } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const priority: DocgenIssuePriority = "medium"
  * console.log(priority) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -186,11 +200,13 @@ export type DocgenIssuePriority = typeof DocgenIssuePriority.Type;
 /**
  * Export kind surfaced by analysis.
  *
- * @example
+ * **Example** (Check export kind)
+ *
  * ```ts
  * import { DocgenExportKind } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * console.log(DocgenExportKind.is["module-fileoverview"]("module-fileoverview"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -212,12 +228,14 @@ export const DocgenExportKind = LiteralKit([
 /**
  * Export kind surfaced by analysis.
  *
- * @example
+ * **Example** (Assign export kind)
+ *
  * ```ts
  * import type { DocgenExportKind } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const kind: DocgenExportKind = "class"
  * console.log(kind) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -226,7 +244,8 @@ export type DocgenExportKind = typeof DocgenExportKind.Type;
 /**
  * Analysis finding for a single export or module-level doc requirement.
  *
- * @example
+ * **Example** (Make export analysis)
+ *
  * ```ts
  * import { DocgenExportAnalysis } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const finding = DocgenExportAnalysis.make({
@@ -244,6 +263,7 @@ export type DocgenExportKind = typeof DocgenExportKind.Type;
  * })
  * console.log(finding.priority)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -270,7 +290,8 @@ export class DocgenExportAnalysis extends S.Class<DocgenExportAnalysis>($I`Docge
 /**
  * Summary counts for a package analysis run.
  *
- * @example
+ * **Example** (Make analysis summary)
+ *
  * ```ts
  * import { DocgenAnalysisSummary } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const summary = DocgenAnalysisSummary.make({
@@ -284,6 +305,7 @@ export class DocgenExportAnalysis extends S.Class<DocgenExportAnalysis>($I`Docge
  * })
  * console.log(summary.missingDocumentation)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -305,7 +327,8 @@ export class DocgenAnalysisSummary extends S.Class<DocgenAnalysisSummary>($I`Doc
 /**
  * Package-level analysis document written by `docgen analyze`.
  *
- * @example
+ * **Example** (Make package analysis)
+ *
  * ```ts
  * import {
  *   DocgenAnalysisSummary,
@@ -328,6 +351,7 @@ export class DocgenAnalysisSummary extends S.Class<DocgenAnalysisSummary>($I`Doc
  * })
  * console.log(analysis.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -347,7 +371,8 @@ export class DocgenPackageAnalysis extends S.Class<DocgenPackageAnalysis>($I`Doc
 /**
  * Per-package docgen generation result.
  *
- * @example
+ * **Example** (Make generation result)
+ *
  * ```ts
  * import { DocgenGenerationResult } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const result = DocgenGenerationResult.make({
@@ -358,6 +383,7 @@ export class DocgenPackageAnalysis extends S.Class<DocgenPackageAnalysis>($I`Doc
  * })
  * console.log(result.moduleCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -378,7 +404,8 @@ export class DocgenGenerationResult extends S.Class<DocgenGenerationResult>($I`D
 /**
  * Per-package generated documentation aggregation result.
  *
- * @example
+ * **Example** (Make aggregate result)
+ *
  * ```ts
  * import { DocgenAggregateResult } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  *
@@ -390,6 +417,7 @@ export class DocgenGenerationResult extends S.Class<DocgenGenerationResult>($I`D
  * })
  * console.log(result.fileCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -408,7 +436,8 @@ export class DocgenAggregateResult extends S.Class<DocgenAggregateResult>($I`Doc
 /**
  * Runtime guard for workspace package values.
  *
- * @example
+ * **Example** (Guard workspace package)
+ *
  * ```ts
  * import { DocgenWorkspacePackage, isDocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  *
@@ -424,6 +453,7 @@ export class DocgenAggregateResult extends S.Class<DocgenAggregateResult>($I`Doc
  *
  * console.log(isDocgenWorkspacePackage(pkg))
  * ```
+ *
  * @category guards
  * @since 0.0.0
  */
@@ -432,7 +462,8 @@ export const isDocgenWorkspacePackage = S.is(DocgenWorkspacePackage);
 /**
  * Stable ordering by workspace-relative package path.
  *
- * @example
+ * **Example** (Sort by relative path)
+ *
  * ```ts
  * import { byRelativePathAscending, DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * import * as A from "effect/Array"
@@ -443,6 +474,7 @@ export const isDocgenWorkspacePackage = S.is(DocgenWorkspacePackage);
  * ]
  * console.log(A.sort(packages, byRelativePathAscending)[0]?.relativePath)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -454,7 +486,8 @@ export const byRelativePathAscending: Order.Order<DocgenWorkspacePackage> = Orde
 /**
  * Stable ordering by generated documentation output path.
  *
- * @example
+ * **Example** (Sort by docs path)
+ *
  * ```ts
  * import { byDocsOutputPathAscending, DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * import * as A from "effect/Array"
@@ -465,6 +498,7 @@ export const byRelativePathAscending: Order.Order<DocgenWorkspacePackage> = Orde
  * ]
  * console.log(A.sort(packages, byDocsOutputPathAscending)[0]?.docsOutputPath)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -476,7 +510,8 @@ export const byDocsOutputPathAscending: Order.Order<DocgenWorkspacePackage> = Or
 /**
  * Stable ordering for analysis findings by priority and source location.
  *
- * @example
+ * **Example** (Sort findings by priority)
+ *
  * ```ts
  * import { byIssueAscending, DocgenExportAnalysis } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * import * as A from "effect/Array"
@@ -487,6 +522,7 @@ export const byDocsOutputPathAscending: Order.Order<DocgenWorkspacePackage> = Or
  * ]
  * console.log(A.sort(findings, byIssueAscending)[0]?.name)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

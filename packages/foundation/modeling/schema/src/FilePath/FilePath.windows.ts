@@ -30,7 +30,8 @@ const isValidWindowsUncSegments = ValidWindowsUncSegments.is;
 /**
  * Branded schema for Windows drive paths with a leaf segment.
  *
- * @example
+ * **Example** (Decode Windows drive path)
+ *
  * ```ts
  * import { WindowsDrivePath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -39,8 +40,8 @@ const isValidWindowsUncSegments = ValidWindowsUncSegments.is;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsDrivePath = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -87,7 +88,8 @@ export const WindowsDrivePath = S.NonEmptyString.check(
 /**
  * Type for {@link WindowsDrivePath}.
  *
- * @example
+ * **Example** (Annotate WindowsDrivePath value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsDrivePath } from "@beep/schema/FilePath"
@@ -96,8 +98,8 @@ export const WindowsDrivePath = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsDrivePath = typeof WindowsDrivePath.Type;
 
@@ -105,7 +107,8 @@ export type WindowsDrivePath = typeof WindowsDrivePath.Type;
  * Branded schema for Windows UNC file paths with server, share, and leaf
  * segments.
  *
- * @example
+ * **Example** (Decode Windows UNC path)
+ *
  * ```ts
  * import { WindowsUncPath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -114,8 +117,8 @@ export type WindowsDrivePath = typeof WindowsDrivePath.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsUncPath = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -168,7 +171,8 @@ export const WindowsUncPath = S.NonEmptyString.check(
 /**
  * Type for {@link WindowsUncPath}.
  *
- * @example
+ * **Example** (Annotate WindowsUncPath value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsUncPath } from "@beep/schema/FilePath"
@@ -177,8 +181,8 @@ export const WindowsUncPath = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsUncPath = typeof WindowsUncPath.Type;
 
@@ -186,7 +190,8 @@ export type WindowsUncPath = typeof WindowsUncPath.Type;
  * Branded schema for Windows relative paths that use backslash separators and
  * include a leaf segment.
  *
- * @example
+ * **Example** (Decode Windows relative path)
+ *
  * ```ts
  * import { WindowsRelativePath } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -195,8 +200,8 @@ export type WindowsUncPath = typeof WindowsUncPath.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsRelativePath = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -261,7 +266,8 @@ export const WindowsRelativePath = S.NonEmptyString.check(
 /**
  * Type for {@link WindowsRelativePath}.
  *
- * @example
+ * **Example** (Annotate WindowsRelativePath value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsRelativePath } from "@beep/schema/FilePath"
@@ -270,7 +276,7 @@ export const WindowsRelativePath = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsRelativePath = typeof WindowsRelativePath.Type;

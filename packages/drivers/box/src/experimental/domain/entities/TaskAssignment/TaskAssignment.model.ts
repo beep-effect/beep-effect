@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/TaskAssignment/TaskAssign
 /**
  * Experimental schema anchor for assignments of Box tasks to principals.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty assignment)
+ *
  * ```ts
  * import { TaskAssignment } from "@beep/box/experimental/domain/entities/TaskAssignment/TaskAssignment.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class TaskAssignment extends S.Class<TaskAssignment>($I`TaskAssignment`)(
 /**
  * Type-level companion namespace for {@link TaskAssignment} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { TaskAssignment } from "@beep/box/experimental/domain/entities/TaskAssignment/TaskAssignment.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace TaskAssignment {
   /**
    * Encoded payload accepted by the {@link TaskAssignment} entity schema.
    *
-   * @example
+   * **Example** (Encode empty assignment payload)
+   *
    * ```ts
    * import { TaskAssignment } from "@beep/box/experimental/domain/entities/TaskAssignment/TaskAssignment.model";
    * import * as S from "effect/Schema";

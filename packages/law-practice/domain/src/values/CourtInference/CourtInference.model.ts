@@ -18,13 +18,14 @@ const $I = $LawPracticeDomainId.create("values/CourtInference/CourtInference.mod
 /**
  * Court level classification inferred from a reporter series.
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `CourtLevel.Enum` for typed literal access, `CourtLevel.is` for
  * per-literal guards, and `CourtLevel.Options` for the full literal list.
  *
- * **Example**
+ * **Example** (Decode and use helpers)
  *
- * @example
  * ```ts
  * import { CourtLevel } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -48,9 +49,8 @@ export const CourtLevel = LiteralKit(["supreme", "appellate", "trial", "unknown"
  * The decoded literal type for {@link CourtLevel} — a union of every court
  * level classification (`"supreme" | "appellate" | "trial" | "unknown"`).
  *
- * **Example**
+ * **Example** (Assign court level type)
  *
- * @example
  * ```ts
  * import type { CourtLevel } from "@beep/law-practice-domain"
  *
@@ -66,14 +66,15 @@ export type CourtLevel = typeof CourtLevel.Type;
 /**
  * Jurisdiction classification inferred from a reporter series.
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `CourtJurisdiction.Enum` for typed literal access,
  * `CourtJurisdiction.is` for per-literal guards, and `CourtJurisdiction.Options`
  * for the full literal list.
  *
- * **Example**
+ * **Example** (Decode and use helpers)
  *
- * @example
  * ```ts
  * import { CourtJurisdiction } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -97,9 +98,8 @@ export const CourtJurisdiction = LiteralKit(["federal", "state", "unknown"]).pip
  * The decoded literal type for {@link CourtJurisdiction} — a union of every
  * jurisdiction classification (`"federal" | "state" | "unknown"`).
  *
- * **Example**
+ * **Example** (Assign jurisdiction type)
  *
- * @example
  * ```ts
  * import type { CourtJurisdiction } from "@beep/law-practice-domain"
  *
@@ -115,13 +115,14 @@ export type CourtJurisdiction = typeof CourtJurisdiction.Type;
 /**
  * Court level and jurisdiction inferred from a reporter series.
  *
+ * **Details**
+ *
  * Populated independently of the parenthetical-extracted `court` field, so a
  * citation may carry both a reporter-derived inference and an explicitly parsed
  * court. The optional `state` code is present only for state-specific reporters.
  *
- * **Example**
+ * **Example** (Make inference with state)
  *
- * @example
  * ```ts
  * import { CourtInference } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
@@ -167,7 +168,8 @@ export class CourtInference extends S.Class<CourtInference>($I`CourtInference`)(
 /**
  * Companion namespace for `CourtInference`.
  *
- * @example
+ * **Example** (Access Encoded level type)
+ *
  * ```ts
  * import type { CourtInference } from "@beep/law-practice-domain"
  *
@@ -182,9 +184,8 @@ export declare namespace CourtInference {
   /**
    * Wire-encoded representation of a decoded {@link CourtInference}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { CourtInference } from "@beep/law-practice-domain"
    *

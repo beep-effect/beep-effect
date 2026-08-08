@@ -12,10 +12,12 @@ const $I = $BoxId.create("values/Resource/Resource.model");
 /**
  * Experimental value object for compact Box resource references embedded in payloads.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty Resource payload)
+ *
  * ```ts
  * import { Resource } from "@beep/box/experimental/domain/values/Resource/Resource.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Resource extends S.Class<Resource>($I`Resource`)(
 /**
  * Type-level companion namespace for {@link Resource} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Resource)
+ *
  * ```ts
  * import { Resource } from "@beep/box/experimental/domain/values/Resource/Resource.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Resource {
   /**
    * Encoded payload accepted by the {@link Resource} value-object schema.
    *
-   * @example
+   * **Example** (Encode Resource to Encoded)
+   *
    * ```ts
    * import { Resource } from "@beep/box/experimental/domain/values/Resource/Resource.model";
    * import * as S from "effect/Schema";

@@ -11,12 +11,14 @@ import type { UnknownRecord } from "@beep/schema";
 /**
  * Physical table name for practice knowledge-graph build provenance.
  *
- * @remarks
+ * **Details**
+ *
  * Exported separately from {@link kgBuildTable} so that hand-written DDL and
  * projection SQL name the table through one constant rather than a string
  * literal repeated per call site.
  *
- * @example
+ * **Example** (Build truncate SQL statement)
+ *
  * ```ts
  * import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild"
  *
@@ -32,12 +34,14 @@ export const KG_BUILD_TABLE_NAME = "kg_build" as const;
 /**
  * Drizzle declaration for the packet-owned build-provenance projection.
  *
- * @remarks
+ * **Details**
+ *
  * One row per bundle build, recording which source runs were folded in and the
  * counts the build settled on. It is what lets a bundle handed to a reader be
  * traced back to the corpus snapshot it was projected from.
  *
- * @example
+ * **Example** (Infer insert row shape)
+ *
  * ```ts
  * import { kgBuildTable } from "@beep/law-practice-tables/entities/KgBuild"
  * import { getTableName } from "drizzle-orm"

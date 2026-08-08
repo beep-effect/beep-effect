@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Layout theme theme value.
  *
- * @example
+ * **Example** (Import layout theme)
+ *
  * ```ts
  * import { layoutTheme } from "@beep/ui/themes/components/layout"
  *

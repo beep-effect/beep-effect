@@ -13,7 +13,8 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 /**
  * Fixture scenario ids supported by the deterministic professional runtime proof.
  *
- * @example
+ * **Example** (Validate fixture scenario id)
+ *
  * ```ts
  * import { RuntimeFixtureScenarioId } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -34,7 +35,8 @@ export const RuntimeFixtureScenarioId = LiteralKit(["law-patent-intake", "wealth
 /**
  * Runtime type for {@link RuntimeFixtureScenarioId}.
  *
- * @example
+ * **Example** (Type scenario id value)
+ *
  * ```ts
  * import type { RuntimeFixtureScenarioId } from "@beep/agents-use-cases/public"
  *
@@ -50,7 +52,8 @@ export type RuntimeFixtureScenarioId = typeof RuntimeFixtureScenarioId.Type;
 /**
  * Candidate lifecycle vocabulary used by runtime output sections.
  *
- * @example
+ * **Example** (Validate candidate lifecycle)
+ *
  * ```ts
  * import { RuntimeCandidateLifecycle } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -71,7 +74,8 @@ export const RuntimeCandidateLifecycle = LiteralKit(["candidate"]).annotate(
 /**
  * Runtime type for {@link RuntimeCandidateLifecycle}.
  *
- * @example
+ * **Example** (Type lifecycle value)
+ *
  * ```ts
  * import type { RuntimeCandidateLifecycle } from "@beep/agents-use-cases/public"
  *
@@ -87,7 +91,8 @@ export type RuntimeCandidateLifecycle = typeof RuntimeCandidateLifecycle.Type;
 /**
  * Confidence vocabulary for candidate claims.
  *
- * @example
+ * **Example** (Validate claim confidence)
+ *
  * ```ts
  * import { RuntimeClaimConfidence } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -108,7 +113,8 @@ export const RuntimeClaimConfidence = LiteralKit(["high", "medium", "low"]).anno
 /**
  * Runtime type for {@link RuntimeClaimConfidence}.
  *
- * @example
+ * **Example** (Type confidence value)
+ *
  * ```ts
  * import type { RuntimeClaimConfidence } from "@beep/agents-use-cases/public"
  *
@@ -124,7 +130,8 @@ export type RuntimeClaimConfidence = typeof RuntimeClaimConfidence.Type;
 /**
  * Approval decision vocabulary for candidate approval gates.
  *
- * @example
+ * **Example** (Validate approval decision)
+ *
  * ```ts
  * import { RuntimeApprovalDecision } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -145,7 +152,8 @@ export const RuntimeApprovalDecision = LiteralKit(["pending"]).annotate(
 /**
  * Runtime type for {@link RuntimeApprovalDecision}.
  *
- * @example
+ * **Example** (Type decision value)
+ *
  * ```ts
  * import type { RuntimeApprovalDecision } from "@beep/agents-use-cases/public"
  *
@@ -161,7 +169,8 @@ export type RuntimeApprovalDecision = typeof RuntimeApprovalDecision.Type;
 /**
  * Runtime request kinds represented in context packets.
  *
- * @example
+ * **Example** (Validate request kind)
+ *
  * ```ts
  * import { RuntimeRequestKind } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -182,7 +191,8 @@ export const RuntimeRequestKind = LiteralKit(["email_to_candidate_work"]).annota
 /**
  * Runtime type for {@link RuntimeRequestKind}.
  *
- * @example
+ * **Example** (Type request kind value)
+ *
  * ```ts
  * import type { RuntimeRequestKind } from "@beep/agents-use-cases/public"
  *
@@ -198,7 +208,8 @@ export type RuntimeRequestKind = typeof RuntimeRequestKind.Type;
 /**
  * Source artifact kinds represented in context packets.
  *
- * @example
+ * **Example** (Validate source kind)
+ *
  * ```ts
  * import { RuntimeSourceKind } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -219,7 +230,8 @@ export const RuntimeSourceKind = LiteralKit(["email"]).annotate(
 /**
  * Runtime type for {@link RuntimeSourceKind}.
  *
- * @example
+ * **Example** (Type source kind value)
+ *
  * ```ts
  * import type { RuntimeSourceKind } from "@beep/agents-use-cases/public"
  *
@@ -235,7 +247,8 @@ export type RuntimeSourceKind = typeof RuntimeSourceKind.Type;
 /**
  * Activity types emitted by deterministic runtime fixtures.
  *
- * @example
+ * **Example** (Validate activity type)
+ *
  * ```ts
  * import { RuntimeActivityType } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -256,7 +269,8 @@ export const RuntimeActivityType = LiteralKit(["artifact_ingested", "candidate_w
 /**
  * Runtime type for {@link RuntimeActivityType}.
  *
- * @example
+ * **Example** (Type activity type value)
+ *
  * ```ts
  * import type { RuntimeActivityType } from "@beep/agents-use-cases/public"
  *
@@ -272,7 +286,8 @@ export type RuntimeActivityType = typeof RuntimeActivityType.Type;
 /**
  * Usage modes emitted by deterministic runtime fixtures.
  *
- * @example
+ * **Example** (Validate usage mode)
+ *
  * ```ts
  * import { RuntimeUsageMode } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -293,7 +308,8 @@ export const RuntimeUsageMode = LiteralKit(["deterministic_fixture"]).annotate(
 /**
  * Runtime type for {@link RuntimeUsageMode}.
  *
- * @example
+ * **Example** (Type usage mode value)
+ *
  * ```ts
  * import type { RuntimeUsageMode } from "@beep/agents-use-cases/public"
  *

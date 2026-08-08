@@ -230,3 +230,22 @@ Recorded so nobody re-proposes them. Full rejection tables with reasons:
   `SPEC.md:138-139` makes that a stop-and-re-scope condition and `SPEC.md:23-26` an explicit
   Non-Goal. Detection graduates separately.
 - **Do NOT quote Chronocept's quantitative results, or Graphnosis's LongMemEval numbers.**
+
+## 2026-08-06 addendum — a second mining defect (LawScan blast radius), caught at shape
+
+The shape-stage verification pass (run against main @ `4aa421d9d3`) found a second error in this
+packet's own mining, alongside the id-collision recorded above: the claim that
+`LawScan.ts` is "the single choke point every repo law goes through (7 scanners, 3,714 lines)"
+**was wrong at mining time**, not stale. Ground truth: `runLawScan` is called by exactly two
+scanners (`EffectFn.ts:396`, `FrozenGrantSet.ts:331`). `EffectImports` and `TerseEffect` filter
+`project.getSourceFiles()` directly, `NoNativeRuntime` runs its own accumulation loop, and two of
+the named seven are not source scanners at all — `AllowlistCheck` validates the allowlist file
+and `SchemaDiagnostics` is diagnostic formatting helpers.
+
+What survives: the non-vacuity gap itself is real and verified — `LawScan.ts:175` computes
+`scannedFiles` and returns it unguarded, and nothing in the repo asserts it is non-zero
+(`Laws.command.ts` only logs it). What changes: the fix is one assertion per scan path (four
+paths), not one edit; the repo-law bundle's appetite moved from small to medium accordingly, and
+`BRIEF.md` carries the corrected scope. Lesson, same family as the id-collision: a miner's claim
+about *routing topology* ("everything goes through X") needs the same proof discipline as a gap
+claim — the challenge phase that would have caught it was the one the id-collision disabled.

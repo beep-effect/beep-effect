@@ -18,12 +18,14 @@ import { goalsSetStatusCommand } from "./SetStatus.ts";
 /**
  * `bun run beep goals` — goal-packet lifecycle command group.
  *
- * @example
+ * **Example** (Log command name)
+ *
  * ```ts
  * import { goalsCommand } from "@beep/repo-cli/commands/Goals/Goals.command"
  *
  * console.log(goalsCommand.name)
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

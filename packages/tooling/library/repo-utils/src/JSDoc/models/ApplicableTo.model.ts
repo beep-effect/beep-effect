@@ -12,13 +12,15 @@ const $I = $RepoUtilsId.create("JSDoc/models/ApplicableTo.model");
 /**
  * AST-level attachment surface for a documentation tag.
  *
- * @example
+ * **Example** (Assert function target)
+ *
  * ```ts
  * import { ApplicableTo } from "@beep/repo-utils/JSDoc/models/ApplicableTo.model"
  *
  * const target = ApplicableTo.Enum.function
  * console.log(ApplicableTo.is.function(target))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,7 +62,8 @@ export const ApplicableTo = LiteralKit([
 /**
  * JSDoc model export.
  *
- * @example
+ * **Example** (Constrain generic parameter)
+ *
  * ```ts
  * import type { ApplicableTo } from "@beep/repo-utils/JSDoc/models/ApplicableTo.model"
  *
@@ -68,6 +71,7 @@ export const ApplicableTo = LiteralKit([
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

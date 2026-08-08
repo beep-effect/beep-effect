@@ -31,7 +31,8 @@ const textAnchorEquivalent = S.toEquivalence(TextAnchor);
  * Extraction confidence in the unit interval `[0, 1]` — the epistemic semantic
  * name for the domain-agnostic {@link UnitInterval} primitive.
  *
- * **Example** (Decode a confidence)
+ * **Example** (Decode confidence value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Confidence } from "@beep/epistemic-domain"
@@ -53,7 +54,8 @@ export const Confidence = UnitInterval.pipe(
 /**
  * Runtime type for {@link Confidence}.
  *
- * **Example** (Typed confidence value)
+ * **Example** (Typed confidence decode)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Confidence } from "@beep/epistemic-domain"
@@ -72,7 +74,8 @@ export type Confidence = typeof Confidence.Type;
 /**
  * Maximum UTF-16 code-unit length retained by one evidence quote.
  *
- * **Example** (Quote length bound)
+ * **Example** (Log max quote length)
+ *
  * ```ts
  * import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH } from "@beep/epistemic-domain/values/EvidenceSpan"
  *
@@ -137,7 +140,8 @@ const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity)
  * plus a `Confidence` — the confidence is the epistemic judgement layered on top
  * of the pure provenance anchor.
  *
- * **Example** (Decode a span)
+ * **Example** (Decode evidence span)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { EvidenceSpan } from "@beep/epistemic-domain"
@@ -161,15 +165,6 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
     description: "Char-offset evidence span wrapping a @beep/provenance TextAnchor with an extraction confidence.",
   })
 ) {
-  /**
-   * Structural equivalence over the span's offsets, quote, and confidence,
-   * derived from the schema so consumers never re-derive it.
-   *
-   * @category comparisons
-   * @since 0.0.0
-   */
-  static readonly equivalence = S.toEquivalence(EvidenceSpan);
-
   /**
    * Whether the span is internally consistent before source-text re-slicing:
    * non-empty range, non-empty quote, and quote length matching the range width.
@@ -205,7 +200,8 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
 /**
  * Whether an evidence span is internally consistent before source-text re-slicing.
  *
- * **Example** (Consistency check)
+ * **Example** (Check span consistency)
+ *
  * ```ts
  * import { Confidence, EvidenceSpan, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { NonNegativeInt } from "@beep/schema"

@@ -50,7 +50,8 @@ const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
  * the built-in fixture (revisit trigger recorded in the
  * computable-workspace-geometry DECISIONS log).
  *
- * @example
+ * **Example** (Log lineFitEpsilon value)
+ *
  * ```ts
  * import { detectEngineProfile } from "@beep/pretext/browser"
  *
@@ -173,15 +174,16 @@ const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (re
  * in the current runtime. Capability gaps and rejected fonts surface as
  * typed failures on each capture call.
  *
- * @example
+ * **Example** (Stringify PretextCaptureLive layer)
+ *
  * ```ts
  * import { PretextCaptureLive } from "@beep/pretext/browser"
  *
  * console.log(String(PretextCaptureLive))
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const PretextCaptureLive: Layer.Layer<PretextCapture> = Layer.succeed(
   PretextCapture,

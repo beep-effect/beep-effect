@@ -25,7 +25,8 @@ import type { JSX } from "react";
 /**
  * Search controls and resource tree for the ontology workbench.
  *
- * @example
+ * **Example** (Import OntologyExplorerRegion)
+ *
  * ```tsx
  * import { OntologyExplorerRegion } from "@beep/ontology-ui"
  *

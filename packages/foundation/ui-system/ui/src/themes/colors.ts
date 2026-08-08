@@ -30,7 +30,8 @@ declare module "@mui/material/styles" {
 /**
  * Colors theme value.
  *
- * @example
+ * **Example** (Import colors theme)
+ *
  * ```ts
  * import { colors } from "@beep/ui/themes/colors"
  *

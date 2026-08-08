@@ -15,7 +15,8 @@ import type * as React from "react";
 /**
  * Sheet component.
  *
- * @example
+ * **Example** (Importing Sheet component)
+ *
  * ```tsx
  * import { Sheet } from "@beep/ui/components/sheet"
  *
@@ -32,7 +33,8 @@ function Sheet({ ...props }: SheetPrimitive.Root.Props) {
 /**
  * Sheet trigger component.
  *
- * @example
+ * **Example** (Importing SheetTrigger component)
+ *
  * ```tsx
  * import { SheetTrigger } from "@beep/ui/components/sheet"
  *
@@ -49,7 +51,8 @@ function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
 /**
  * Sheet close component.
  *
- * @example
+ * **Example** (Importing SheetClose component)
+ *
  * ```tsx
  * import { SheetClose } from "@beep/ui/components/sheet"
  *
@@ -83,7 +86,8 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
 /**
  * Sheet content component.
  *
- * @example
+ * **Example** (Importing SheetContent component)
+ *
  * ```tsx
  * import { SheetContent } from "@beep/ui/components/sheet"
  *
@@ -133,7 +137,8 @@ function SheetContent({
 /**
  * Sheet header component.
  *
- * @example
+ * **Example** (Importing SheetHeader component)
+ *
  * ```tsx
  * import { SheetHeader } from "@beep/ui/components/sheet"
  *
@@ -150,7 +155,8 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Sheet footer component.
  *
- * @example
+ * **Example** (Importing SheetFooter component)
+ *
  * ```tsx
  * import { SheetFooter } from "@beep/ui/components/sheet"
  *
@@ -167,7 +173,8 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Sheet title component.
  *
- * @example
+ * **Example** (Importing SheetTitle component)
+ *
  * ```tsx
  * import { SheetTitle } from "@beep/ui/components/sheet"
  *
@@ -190,7 +197,8 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
 /**
  * Sheet description component.
  *
- * @example
+ * **Example** (Importing SheetDescription component)
+ *
  * ```tsx
  * import { SheetDescription } from "@beep/ui/components/sheet"
  *

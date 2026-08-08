@@ -12,7 +12,8 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 /**
  * Workspace thread migration target used to prove conversation persistence.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { WorkspaceThreadMigrationTarget } from "@beep/db-admin/migrations/WorkspaceThread"
  *

@@ -40,16 +40,20 @@ const decodedAllowlistSnapshot = pipe(
 /**
  * Reset memoized allowlist state.
  *
+ * **Details**
+ *
  * Snapshot-backed runtime has no mutable cache, so this is a compatibility no-op.
  *
- * @returns `undefined` because snapshot-backed runtime has no mutable cache.
- * @example
+ * **Example** (Reset returns undefined)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { resetAllowlistCache } from "@beep/repo-configs/eslint/EffectLawsAllowlist"
  *
  * strictEqual(resetAllowlistCache(), undefined)
  * ```
+ *
+ * @returns `undefined` because snapshot-backed runtime has no mutable cache.
  * @category utilities
  * @since 0.0.0
  */
@@ -58,13 +62,15 @@ export const resetAllowlistCache = (): void => undefined;
 /**
  * Retrieve allowlist decode diagnostics.
  *
- * @returns Read-only diagnostic messages produced while loading/decoding the allowlist document.
- * @example
+ * **Example** (Log allowlist diagnostics)
+ *
  * ```ts
  * import { getAllowlistDiagnostics } from "@beep/repo-configs/eslint/EffectLawsAllowlist"
  * const diagnostics = getAllowlistDiagnostics()
  * console.log(diagnostics)
  * ```
+ *
+ * @returns Read-only diagnostic messages produced while loading/decoding the allowlist document.
  * @category utilities
  * @since 0.0.0
  */
@@ -73,13 +79,15 @@ export const getAllowlistDiagnostics = (): ReadonlyArray<string> => decodedAllow
 /**
  * Retrieve normalized allowlist entries from the generated snapshot.
  *
- * @returns Read-only allowlist entries available to repository law checkers.
- * @example
+ * **Example** (Log allowlist entries)
+ *
  * ```ts
  * import { getAllowlistEntries } from "@beep/repo-configs/eslint/EffectLawsAllowlist"
  * const entries = getAllowlistEntries()
  * console.log(entries)
  * ```
+ *
+ * @returns Read-only allowlist entries available to repository law checkers.
  * @category utilities
  * @since 0.0.0
  */
@@ -88,9 +96,8 @@ export const getAllowlistEntries = () => decodedAllowlistSnapshot.entries;
 /**
  * Check whether a normalized violation key appears in the effect-laws allowlist.
  *
- * @param input - Candidate violation identity payload.
- * @returns `true` when an allowlist entry exactly matches the normalized lookup key.
- * @example
+ * **Example** (Check violation allowlist match)
+ *
  * ```ts
  * import { isViolationAllowlisted } from "@beep/repo-configs/eslint/EffectLawsAllowlist"
  * const allowlisted = isViolationAllowlisted({
@@ -100,6 +107,9 @@ export const getAllowlistEntries = () => decodedAllowlistSnapshot.entries;
  * })
  * console.log(allowlisted)
  * ```
+ *
+ * @param input - Candidate violation identity payload.
+ * @returns `true` when an allowlist entry exactly matches the normalized lookup key.
  * @category utilities
  * @since 0.0.0
  */

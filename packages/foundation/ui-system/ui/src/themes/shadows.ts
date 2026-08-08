@@ -9,7 +9,8 @@ import type { ThemeOptions } from "./types.ts";
 /**
  * Shadows theme value.
  *
- * @example
+ * **Example** (Import and log shadows)
+ *
  * ```ts
  * import { shadows } from "@beep/ui/themes/shadows"
  *

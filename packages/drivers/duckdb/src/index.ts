@@ -1,7 +1,8 @@
 /**
  * DuckDB driver package for local analytical storage and Parquet exports.
  *
- * @remarks
+ * **Details**
+ *
  * The public surface combines schema-first request/error models with an Effect
  * service boundary. Domain packages own SQL shape, retention policy, and
  * projection semantics; this package owns native DuckDB connection management,

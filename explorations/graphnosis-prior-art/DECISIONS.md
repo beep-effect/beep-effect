@@ -191,3 +191,34 @@ to `shape` with two work products ahead: (a) BRIEF.md for the two graduations
 [`research/AMENDMENTS.json`](./research/AMENDMENTS.json), now unblocked — Q2/Q7 settle the
 fusion-core wording, Q4 the retirement-reason wording, Q9 the modality placement, Q10 the
 standards paragraph.
+
+## 2026-08-06 — correction to Q2's schema naming (verification pass)
+
+**Correction, not a reversal.** Q2's answer names `startChar` as a `SourceTextIdentity` field.
+It is not one — `SourceTextIdentity` carries `scopeRef`, `sourceRef`, `locator`, `sourceDigest`,
+`textDigest`, `extractor`, `normalizationVersion` (`SourceTextIdentity.ts:119-140`); `startChar`
+lives on `TextAnchor` (`TextAnchor.ts:48`). The decided **mechanism** stands unchanged
+(provenance-keyed, field-at-a-time, EntityId terminal for totality only); the comparator simply
+spans the anchor schemas, which is exactly where the two provenance code-change amendments
+already put it (new `AnchorOrder.ts` / `SourceSpanOrder.ts`). The fusion-core SPEC amendment
+should cite anchor-bearing provenance fields, not `SourceTextIdentity` alone.
+
+## 2026-08-06 — shape confirmed; graduation executed
+
+**Question:** Does `BRIEF.md` match the picture in Benjamin's head (the shape-stage exit gate)?
+
+**Answer:** **Confirmed.** Benjamin's instruction to finish the exploration and drive the packet
+PR to mergeable closes the gate on the adversarially-verified BRIEF as written. Stage advances
+shape → decompose → graduate in one motion: `MAP.md` decomposes the two Q1 graduations, and both
+goal packets are scaffolded from `goals/_template` —
+[`goals/epistemic-contradiction-detection`](../../goals/epistemic-contradiction-detection/README.md)
+and [`goals/agentic-governance-laws`](../../goals/agentic-governance-laws/README.md) (the
+BRIEF's working slug, kept). Status flips to `graduated`; the packet remains as provenance.
+
+**Rationale:** The definition-of-ready held — BRIEF complete and verified against main,
+`openQuestions` empty, MAP names both goals with capability citations, every major component
+cites shipped code or is marked NET-NEW. The amendment-application pass over
+[`research/AMENDMENTS.json`](./research/AMENDMENTS.json) is deliberately **not** part of this
+graduation: it edits other packets' specs and shipped code, so it travels as its own PR ladder
+(spec-delta docs-PR carrying the Q10 standards paragraph, then the three code-change PRs), per
+the BRIEF's Sequencing and the repo's grill-outcomes-are-docs-PRs-first practice.

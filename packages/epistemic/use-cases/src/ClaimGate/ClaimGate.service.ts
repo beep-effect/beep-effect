@@ -86,7 +86,8 @@ const toVerdict = (result: ShaclValidationResult): ClaimGateResult =>
  * value ({@link ClaimGateResult}), never an error; the bounded engine is total,
  * so an (impossible) engine failure is treated as a defect.
  *
- * @example
+ * **Example** (Admit claim with conforming SHACL)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CandidateClaim } from "@beep/epistemic-domain"

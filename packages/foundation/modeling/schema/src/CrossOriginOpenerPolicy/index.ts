@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Cross-Origin-Opener-Policy schemas.
  *
- * @example
+ * **Example** (Import and verify Header export)
+ *
  * ```ts
  * import * as CrossOriginOpenerPolicy from "@beep/schema/CrossOriginOpenerPolicy"
  *

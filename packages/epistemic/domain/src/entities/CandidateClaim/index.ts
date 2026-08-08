@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import CandidateClaim entity)
+ *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim"
  *

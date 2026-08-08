@@ -26,11 +26,13 @@ type OntologyTreeItem = {
 /**
  * Build a tree-safe hierarchy view from the ontology snapshot.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Inferred subclass closure can make the hierarchy a DAG. MUI tree items need
  * unique ids, so each resource is emitted once and path cycles are skipped.
  *
- * @example
+ * **Example** (Build tree items from snapshot)
+ *
  * ```ts
  * import { ontologyTreeItemsFor } from "@beep/ontology-ui/aggregates/Session"
  * import { OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"

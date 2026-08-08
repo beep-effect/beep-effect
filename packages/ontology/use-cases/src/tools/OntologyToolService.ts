@@ -304,13 +304,17 @@ const capabilities = [
   OntologyToolCapability.make({ name: "ontology_capability_metadata", mutating: false }),
 ];
 
-/** Service shape implemented by real ontology agent tool orchestration.
- * @example
+/**
+ *  Service shape implemented by real ontology agent tool orchestration.
+ *
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { OntologyToolServiceShape } from "@beep/ontology-use-cases/tools"
  * const accept = (service: OntologyToolServiceShape) => service
  * console.log(accept)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -338,14 +342,18 @@ export interface OntologyToolServiceShape {
   readonly validate: (request: ValidateOntologyRequest) => Effect.Effect<ValidateOntologyResponse, OntologyToolFailure>;
 }
 
-/** Stateless ontology agent tool orchestration service.
- * @example
+/**
+ *  Stateless ontology agent tool orchestration service.
+ *
+ * **Example** (Yield service in Effect)
+ *
  * ```ts
  * import { OntologyToolService } from "@beep/ontology-use-cases/tools"
  * import { Effect } from "effect"
  * const program = Effect.gen(function* () { return yield* OntologyToolService })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -593,12 +601,16 @@ const makeOntologyToolService = Effect.gen(function* () {
   });
 }).pipe(Effect.withSpan("Ontology.Tools.makeService"));
 
-/** Live ontology tool orchestration layer over real ontology service ports.
- * @example
+/**
+ *  Live ontology tool orchestration layer over real ontology service ports.
+ *
+ * **Example** (Inspect live layer export)
+ *
  * ```ts
  * import { OntologyToolServiceLive } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyToolServiceLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

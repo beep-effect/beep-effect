@@ -11,7 +11,6 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { SafeDocument } from "@beep/md/Md.safe";
-import { LiteralKit } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Thread } from "@beep/workspace-domain";
 import { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
@@ -29,7 +28,8 @@ import { ChatActionError } from "./Chat.errors.ts";
  * thread read model array, and all handler-side failures are translated to
  * {@link ChatActionError} before crossing the wire.
  *
- * **Example** (Registered request)
+ * **Example** (Verify ListThreads registration)
+ *
  * ```ts
  * import { ChatRpcs, ListThreadsRpc } from "@beep/agents-use-cases/public"
  *
@@ -55,7 +55,8 @@ export const ListThreadsRpc = Rpc.make("ListThreads", {
  * persistence and returns the created thread or a client-safe
  * {@link ChatActionError}.
  *
- * **Example** (Registered request)
+ * **Example** (Verify CreateThread registration)
+ *
  * ```ts
  * import { ChatRpcs, CreateThreadRpc } from "@beep/agents-use-cases/public"
  *
@@ -83,7 +84,8 @@ export const CreateThreadRpc = Rpc.make("CreateThread", {
  * This query reads already-persisted timeline state; assistant turn generation
  * happens through {@link SendMessageRpc} and {@link EditMessageRpc}.
  *
- * **Example** (Registered request)
+ * **Example** (Verify GetTimeline registration)
+ *
  * ```ts
  * import { ChatRpcs, GetTimelineRpc } from "@beep/agents-use-cases/public"
  *
@@ -105,16 +107,17 @@ export const GetTimelineRpc = Rpc.make("GetTimeline", {
  * the user row committed, while terminal `user_persisted` means stream unwind
  * finished without an assistant commit.
  *
- * **Example** (Status membership)
+ * **Example** (Check status literal membership)
+ *
  * ```ts
  * import { TurnRequestStatus } from "@beep/agents-use-cases/public"
- * console.log(TurnRequestStatus.Options.includes("persisted"))
+ * console.log(TurnRequestStatus.literals.includes("persisted"))
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const TurnRequestStatus = LiteralKit([
+export const TurnRequestStatus = S.Literals([
   "pending",
   "accepted",
   "persisted",
@@ -129,7 +132,8 @@ export const TurnRequestStatus = LiteralKit([
 /**
  * Runtime type for {@link TurnRequestStatus}.
  *
- * **Example** (Typed status value)
+ * **Example** (Assign status type value)
+ *
  * ```ts
  * import type { TurnRequestStatus } from "@beep/agents-use-cases/public"
  * const status: TurnRequestStatus = "persisted"
@@ -144,7 +148,8 @@ export type TurnRequestStatus = typeof TurnRequestStatus.Type;
 /**
  * Reads persistence evidence for one exact client request id.
  *
- * **Example** (Registered request)
+ * **Example** (Verify status RPC registration)
+ *
  * ```ts
  * import { ChatRpcs, GetTurnRequestStatusRpc } from "@beep/agents-use-cases/public"
  * console.log(ChatRpcs.requests.get("GetTurnRequestStatus") === GetTurnRequestStatusRpc)
@@ -168,7 +173,8 @@ export const GetTurnRequestStatusRpc = Rpc.make("GetTurnRequestStatus", {
  * The declaration marks success as a stream of {@link AssistantBlock} values.
  * Every request failure uses the typed {@link ChatActionError} channel.
  *
- * **Example** (Streaming declaration)
+ * **Example** (Confirm streaming success schema)
+ *
  * ```ts
  * import { ChatRpcs, SendMessageRpc } from "@beep/agents-use-cases/public"
  * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
@@ -200,7 +206,8 @@ export const SendMessageRpc = Rpc.make("SendMessage", {
  * {@link SendMessageRpc}, success is a stream and failures are normalized to
  * {@link ChatActionError}.
  *
- * **Example** (Streaming declaration)
+ * **Example** (Confirm edit stream schema)
+ *
  * ```ts
  * import { ChatRpcs, EditMessageRpc } from "@beep/agents-use-cases/public"
  * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
@@ -233,7 +240,8 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
  * reconciliation via {@link GetTurnRequestStatusRpc}, and the two streaming
  * message turns ({@link SendMessageRpc}, {@link EditMessageRpc}).
  *
- * **Example** (Protocol surface)
+ * **Example** (List registered request keys)
+ *
  * ```ts
  * import { ChatRpcs } from "@beep/agents-use-cases/public"
  *

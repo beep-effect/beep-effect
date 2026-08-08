@@ -30,7 +30,8 @@
  * Each entry names the demand that keeps it: removing a manager whose demand
  * disappears is as valid as adding one, and both require a re-measurement.
  *
- * @example
+ * **Example** (Filter discovered managers to the wrapped surface)
+ *
  * ```ts
  * import { GENERATED_MANAGERS } from "./box.surface.ts"
  * import * as A from "effect/Array"

@@ -247,10 +247,13 @@ const surfaceReason = (schemaExport: unknown, surface: string): O.Option<Opencla
 /**
  * Lowercase 64-character hexadecimal SHA-256 digest.
  *
+ * **Details**
+ *
  * Identifies rendered config content: the digest of the canonical JSON bytes
  * is the generation directory name used by content-addressed deployments.
  *
- * @example
+ * **Example** (Make SHA-256 hex digest)
+ *
  * ```ts
  * import { OpenclawSha256Hex } from "@beep/openclaw/OpenclawRender"
  *
@@ -279,7 +282,8 @@ export const OpenclawSha256Hex = S.String.check(
 /**
  * Runtime type for {@link OpenclawSha256Hex}.
  *
- * @example
+ * **Example** (Type a SHA-256 hex)
+ *
  * ```ts
  * import { OpenclawSha256Hex } from "@beep/openclaw/OpenclawRender"
  *
@@ -297,11 +301,14 @@ export type OpenclawSha256Hex = typeof OpenclawSha256Hex.Type;
 /**
  * A rendered canonical `openclaw.json` document for one pinned version.
  *
+ * **Details**
+ *
  * `canonicalJson` is byte-stable `jq -S`-equivalent JSON (recursively sorted
  * keys, two-space indent, trailing newline) and `contentHash` is the SHA-256
  * of its UTF-8 bytes.
  *
- * @example
+ * **Example** (Construct rendered config object)
+ *
  * ```ts
  * import { OpenclawSha256Hex, RenderedOpenclawConfig } from "@beep/openclaw/OpenclawRender"
  *
@@ -336,6 +343,8 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
 /**
  * Render a deployment intent into the canonical `openclaw.json` document.
  *
+ * **Details**
+ *
  * Total and pure: dispatch is keyed on `intent.openclawVersion` over the
  * pinned version domain, so every valid intent renders without failure.
  * Adapter invariants for `2026.7.1-2`: `gateway.mode` is `"local"`,
@@ -344,7 +353,8 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  * `meta` key is ever emitted. Secrets render exclusively as exec secret
  * references; op:// references appear only inside `secrets.providers.*.args`.
  *
- * @example
+ * **Example** (Render deployment intent config)
+ *
  * ```ts
  * import {
  *   OpenclawAgentIntent,
@@ -408,12 +418,15 @@ export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): Rendered
 /**
  * List the extension surfaces a deployment intent declares.
  *
+ * **Details**
+ *
  * Surfaces are dotted config paths (`channels.telegram` when Telegram is
  * enabled, `models.providers.<api>` per declared provider API family). The
  * lossy schema-export guard resolves each declared surface against the pinned
  * binary's `config schema` export via {@link findLossySchemaPlaceholders}.
  *
- * @example
+ * **Example** (List declared extension surfaces)
+ *
  * ```ts
  * import {
  *   OpenclawAgentIntent,
@@ -474,13 +487,16 @@ export const declaredExtensionSurfaces = (intent: OpenclawDeploymentIntent): Rea
  * Detect declared extension surfaces the exported config schema cannot
  * validate.
  *
+ * **Details**
+ *
  * Walks a `config schema` JSON-schema export: a declared surface is lossy
  * when its resolved schema node is missing, or when it collapses to an
  * `additionalProperties: true` placeholder without declared properties (the
  * shape upstream substitutes once per-extension or aggregate schema caps are
  * exceeded). Pure and total over any export document shape.
  *
- * @example
+ * **Example** (Detect lossy schema placeholders)
+ *
  * ```ts
  * import { findLossySchemaPlaceholders } from "@beep/openclaw/OpenclawRender"
  *

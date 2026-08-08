@@ -14,13 +14,16 @@ import type { PostgresDrizzle } from "@beep/postgres";
 /**
  * Drizzle-backed execution ledger repository layer.
  *
+ * **Details**
+ *
  * There is no in-memory sibling here, and that is deliberate: the append-only
  * property this repository sells — the chain primary key, the
  * outcome-per-decision primary key, the triggers that reject UPDATE and DELETE
  * — is enforced by the database, so an in-memory stand-in would be proving a
  * different thing than the one callers depend on.
  *
- * @example
+ * **Example** (Import ExecutionLedgerDrizzle layer)
+ *
  * ```ts
  * import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger"
  *

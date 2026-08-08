@@ -180,7 +180,8 @@ interface PclClientShape {
 /**
  * Typed PCL client service derived from {@link PclHttpApi}.
  *
- * @example
+ * **Example** (Creating mock pacer layers)
+ *
  * ```ts
  * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
  *

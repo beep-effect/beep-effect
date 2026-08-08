@@ -26,10 +26,12 @@ const $I = $RepoCliId.create("commands/Laws/AllowlistCheck");
 /**
  * Relative path to the effect laws allowlist.
  *
- * @example
+ * **Example** (Log allowlist path label)
+ *
  * ```ts
  * console.log("ALLOWLIST_PATH")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -111,10 +113,12 @@ const decodeEffectLawsAllowlist = S.decodeUnknownEffect(EffectLawsAllowlistDocum
 /**
  * Runtime options for allowlist integrity checks.
  *
- * @example
+ * **Example** (Log options type label)
+ *
  * ```ts
  * console.log("AllowlistCheckOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -130,10 +134,12 @@ export class AllowlistCheckOptions extends S.Class<AllowlistCheckOptions>($I`All
 /**
  * Result of an allowlist integrity check.
  *
- * @example
+ * **Example** (Log summary type label)
+ *
  * ```ts
  * console.log("AllowlistCheckSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -276,10 +282,12 @@ const validateGeneratedSnapshotSync = Effect.fn(function* (repoRoot: string, all
 /**
  * Run the effect laws allowlist integrity check.
  *
- * @example
+ * **Example** (Log check function label)
+ *
  * ```ts
  * console.log("runAllowlistCheck")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -344,10 +352,12 @@ export const runAllowlistCheck = Effect.fn(function* (options: AllowlistCheckOpt
 /**
  * Print allowlist integrity diagnostics to the console.
  *
- * @example
+ * **Example** (Log report function label)
+ *
  * ```ts
  * console.log("reportAllowlistCheckSummary")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

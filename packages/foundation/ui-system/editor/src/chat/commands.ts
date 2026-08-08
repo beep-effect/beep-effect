@@ -20,7 +20,8 @@ import type { LexicalCommand } from "lexical";
  * Dispatched when the user requests to send the current message (Enter, per the
  * configured `sendOn`, or the send button).
  *
- * @example
+ * **Example** (Dispatch send message command)
+ *
  * ```ts
  * import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands"
  * import type { LexicalEditor } from "lexical"
@@ -40,7 +41,8 @@ export const SEND_MESSAGE_COMMAND: LexicalCommand<void> = createCommand("SEND_ME
  * Dispatched when the user requests to stop an in-flight (streaming) turn via
  * the composer's stop button.
  *
- * @example
+ * **Example** (Dispatch stop message command)
+ *
  * ```ts
  * import { STOP_MESSAGE_COMMAND } from "@beep/editor/chat/commands"
  * import type { LexicalEditor } from "lexical"

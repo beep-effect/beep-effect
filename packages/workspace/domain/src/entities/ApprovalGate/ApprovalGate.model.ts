@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/ApprovalGate/ApprovalGate.model")
 /**
  * Human approval gate for candidate work.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import { ApprovalGate } from "@beep/workspace-domain"
  *

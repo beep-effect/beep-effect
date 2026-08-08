@@ -15,7 +15,8 @@ import type { FieldOption } from "../core/Options.ts";
  * Props for {@link MultiSwitchField}: label/description/options. The bound value
  * is the array of switched-on option values.
  *
- * @example
+ * **Example** (Notification multi-switch props)
+ *
  * ```ts
  * import type { MultiSwitchFieldProps } from "@beep/form/fields/MultiSwitchField"
  *
@@ -42,7 +43,8 @@ export interface MultiSwitchFieldProps {
 /**
  * Schema-bound switch list: the value is the array of switched-on option values.
  *
- * @example
+ * **Example** (Channels multi-switch form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { MultiSwitchField } from "@beep/form/fields/MultiSwitchField"

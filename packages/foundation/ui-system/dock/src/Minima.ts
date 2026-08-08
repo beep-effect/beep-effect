@@ -48,7 +48,8 @@ interface MakeTitleMinimaAtomInput {
 /**
  * Pixel allowances surrounding measured tab titles.
  *
- * @example
+ * **Example** (Make tab chrome allowances)
+ *
  * ```ts
  * import { TabChrome } from "@beep/dock"
  *
@@ -70,7 +71,8 @@ export class TabChrome extends S.Class<TabChrome>($I`TabChrome`)(
 /**
  * Returns distinct sorted words from all docked and floating panel titles.
  *
- * @example
+ * **Example** (Collect distinct title words)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, titleWords } from "@beep/dock"
  *
@@ -95,9 +97,12 @@ export const titleWords = (workspace: DockWorkspace): ReadonlyArray<string> =>
 /**
  * Computes per-group no-truncation title floors from font metrics.
  *
- * @remarks The computation uses an existing font-metrics snapshot.
+ * **Details**
  *
- * @example
+ * The computation uses an existing font-metrics snapshot.
+ *
+ * **Example** (Compute group title floors)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabChrome, TabsNode, TextPanelView, titleMinima } from "@beep/dock"
  * import { EngineProfile, FontMetrics } from "@beep/pretext"
@@ -162,7 +167,8 @@ export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMini
 /**
  * Composes a reactive title-minima projection with headless font capture.
  *
- * @example
+ * **Example** (Reactive title minima atom)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeTitleMinimaAtom } from "@beep/dock"
  * import { PretextCaptureFixture } from "@beep/pretext"

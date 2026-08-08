@@ -20,7 +20,8 @@ const isHubSpotUrl = (value: unknown): value is string => P.isString(value) && U
 /**
  * HubSpot-compatible absolute URL string.
  *
- * @example
+ * **Example** (Decode HubSpot absolute URL)
+ *
  * ```ts
  * import { HubSpotUrl } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -47,7 +48,8 @@ export const HubSpotUrl = S.NonEmptyString.check(
 /**
  * HubSpot API base URL normalized without trailing slashes.
  *
- * @example
+ * **Example** (Normalize trailing slash URL)
+ *
  * ```ts
  * import { HubSpotBaseUrl } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -77,7 +79,8 @@ export const HubSpotBaseUrl = S.String.pipe(
 /**
  * Type for {@link HubSpotBaseUrl}.
  *
- * @example
+ * **Example** (Type annotated base URL)
+ *
  * ```ts
  * import { HubSpotBaseUrl } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -94,7 +97,8 @@ export type HubSpotBaseUrl = typeof HubSpotBaseUrl.Type;
 /**
  * Non-empty HubSpot account identifier.
  *
- * @example
+ * **Example** (Decode HubSpot account ID)
+ *
  * ```ts
  * import { HubSpotAccountId } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -116,7 +120,8 @@ export const HubSpotAccountId = S.NonEmptyString.pipe(
 /**
  * Default HubSpot Forms API base URL.
  *
- * @example
+ * **Example** (Log Forms API URL)
+ *
  * ```ts
  * import { HUBSPOT_FORMS_API_URL } from "@beep/hubspot"
  *
@@ -131,7 +136,8 @@ export const HUBSPOT_FORMS_API_URL = "https://api.hsforms.com";
 /**
  * Default HubSpot CRM API base URL.
  *
- * @example
+ * **Example** (Log CRM API URL)
+ *
  * ```ts
  * import { HUBSPOT_CRM_API_URL } from "@beep/hubspot"
  *
@@ -146,7 +152,8 @@ export const HUBSPOT_CRM_API_URL = "https://api.hubapi.com";
 /**
  * Runtime configuration accepted by {@link HubSpot.makeLayer}.
  *
- * @example
+ * **Example** (Create config with make)
+ *
  * ```ts
  * import { HubSpotConfigInput } from "@beep/hubspot"
  *

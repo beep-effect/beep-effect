@@ -18,7 +18,8 @@ const $I = $ObservabilityId.create("server/DevTools");
 /**
  * Predicate used to decide whether a span should be mirrored to Effect devtools.
  *
- * @example
+ * **Example** (HTTP prefix span filter)
+ *
  * ```typescript
  * import { Str } from "@beep/utils"
  * import type { DevToolsSpanFilter } from "@beep/observability/server"
@@ -27,8 +28,8 @@ const $I = $ObservabilityId.create("server/DevTools");
  * console.log(filter("Http.server"))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const DevToolsSpanFilter = Fn({
   input: S.String,
@@ -42,7 +43,8 @@ export const DevToolsSpanFilter = Fn({
 /**
  * Runtime type for {@link DevToolsSpanFilter}.
  *
- * @example
+ * **Example** (Typed HTTP span filter)
+ *
  * ```typescript
  * import { Str } from "@beep/utils"
  * import type { DevToolsSpanFilter } from "@beep/observability/server"
@@ -52,15 +54,16 @@ export const DevToolsSpanFilter = Fn({
  * // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type;
 
 /**
  * Options for mirroring selected spans to the Effect devtools websocket.
  *
- * @example
+ * **Example** (Make filtered options)
+ *
  * ```typescript
  * import { LayerFilteredDevToolsOptions } from "@beep/observability/server"
  *
@@ -72,8 +75,8 @@ export type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type;
  * // "ws://localhost:34437"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LayerFilteredDevToolsOptions extends S.Class<LayerFilteredDevToolsOptions>(
   $I`LayerFilteredDevToolsOptions`
@@ -137,7 +140,8 @@ const toDevToolsSpan = (span: Tracer.Span): DevToolsSchema.Span => ({
 /**
  * Mirror only selected spans to the Effect devtools websocket.
  *
- * @example
+ * **Example** (Layer publishing all spans)
+ *
  * ```typescript
  * import { layerFilteredDevTools } from "@beep/observability/server"
  *
@@ -148,8 +152,8 @@ const toDevToolsSpan = (span: Tracer.Span): DevToolsSchema.Span => ({
  * console.log(DevToolsLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerFilteredDevTools = (options: LayerFilteredDevToolsOptions): Layer.Layer<never> => {
   const socketClientLayer = DevToolsClient.layer.pipe(

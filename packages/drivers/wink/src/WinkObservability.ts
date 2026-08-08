@@ -56,10 +56,13 @@ const mergeAttributes = (left: Record<string, string>, right: Record<string, str
 /**
  * Workflow observation options shared by wink services and tool handlers.
  *
+ * **Details**
+ *
  * Use `attributes` for span/log detail and `metricAttributes` for
  * low-cardinality metric dimensions.
  *
- * @example
+ * **Example** (Observe named workflow effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { observeWinkWorkflow } from "@beep/wink"
@@ -90,7 +93,8 @@ export class WinkWorkflowObservationOptions extends S.Class<WinkWorkflowObservat
 /**
  * Tool observation options used when mapping driver failures to AI tool errors.
  *
- * @example
+ * **Example** (Create tool observation options)
+ *
  * ```ts
  * import { WinkToolObservationOptions } from "@beep/wink"
  *
@@ -123,7 +127,8 @@ type WinkToolObservationOptionsInput = Exclude<(typeof WinkToolObservationOption
 /**
  * Build a span-safe text length annotation without recording raw text.
  *
- * @example
+ * **Example** (Annotate text length safely)
+ *
  * ```ts
  * import { textLengthAttribute } from "@beep/wink"
  *
@@ -146,7 +151,8 @@ export const textLengthAttribute: {
 /**
  * Merge extra string attributes into a wink observability attribute record.
  *
- * @example
+ * **Example** (Merge extra string attributes)
+ *
  * ```ts
  * import { withWinkAttributes } from "@beep/wink"
  *
@@ -173,7 +179,8 @@ export const withWinkAttributes: {
 /**
  * Observe a wink workflow with standard metrics and span annotations.
  *
- * @example
+ * **Example** (Observe workflow with metrics)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { observeWinkWorkflow } from "@beep/wink"
@@ -236,7 +243,8 @@ const makeWinkToolErrorInternal = (
 /**
  * Convert an expected wink driver failure into an AI tool error payload.
  *
- * @example
+ * **Example** (Convert failure to tool error)
+ *
  * ```ts
  * import { makeWinkToolError } from "@beep/wink"
  *
@@ -282,7 +290,8 @@ const logWinkToolFailure =
 /**
  * Map the error channel of a wink-backed tool effect to {@link AiToolError}.
  *
- * @example
+ * **Example** (Map effect error channel)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { mapWinkToolError } from "@beep/wink"
@@ -323,7 +332,8 @@ export const mapWinkToolError: {
  * Observe a wink-backed AI tool and surface expected failures as structured
  * tool errors.
  *
- * @example
+ * **Example** (Observe tool with structured errors)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { observeWinkTool } from "@beep/wink"

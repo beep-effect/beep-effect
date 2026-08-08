@@ -3,12 +3,15 @@
   "exploration": {
     "slug": "graphnosis-prior-art",
     "title": "Graphnosis Prior Art — Mining a Dual-Graph Agent Memory Engine",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/epistemic-contradiction-detection",
+        "goals/agentic-governance-laws"
+      ],
       "docs": [],
       "supersededBy": null
     },

@@ -21,7 +21,8 @@ const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repos
 /**
  * Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.
  *
- * @example
+ * **Example** (Make remote-edit seed)
+ *
  * ```ts
  * import { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -78,7 +79,8 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
 /**
  * Persistence failure raised when a SyncConflict row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { SyncConflictRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncConflict/server"
@@ -113,7 +115,8 @@ export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflic
 /**
  * Persistence failure raised when the SyncConflict repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncConflictRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncConflict/server"
  *
@@ -144,7 +147,8 @@ export class SyncConflictRepositoryUnavailable extends TaggedErrorClass<SyncConf
 /**
  * Listing input addressing the open drift records of one workspace mirror.
  *
- * @example
+ * **Example** (Build list-open input)
+ *
  * ```ts
  * import { ListOpenSyncConflictsInput } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -177,7 +181,8 @@ export class ListOpenSyncConflictsInput extends S.Class<ListOpenSyncConflictsInp
 /**
  * Review input addressing one drift record by identity.
  *
- * @example
+ * **Example** (Build mark-reviewed input)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { MarkSyncConflictReviewedInput } from "@beep/documents-use-cases/entities/SyncConflict/server"
@@ -208,13 +213,15 @@ export class MarkSyncConflictReviewedInput extends S.Class<MarkSyncConflictRevie
 /**
  * SyncConflict repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * `record` deduplicates by provider event: when the seed's `remoteEventId` is
  * `Some` and a row already exists for the same `provider` and `remoteEventId`,
  * that existing row is returned unchanged instead of inserting a duplicate.
  * `markReviewed` flips the record's `resolutionStatus` to `reviewed`.
  *
- * @example
+ * **Example** (Stub repository shape)
+ *
  * ```ts
  * import {
  *   ListOpenSyncConflictsInput,
@@ -260,7 +267,8 @@ export interface SyncConflictRepositoryShape {
 /**
  * Context tag for the SyncConflict repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   SyncConflictRepository,

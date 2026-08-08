@@ -187,12 +187,14 @@ const validateOutputSet = (
 /**
  * Create an in-memory SDK facade over deterministic runtime fixture inputs.
  *
- * @remarks
+ * **Details**
+ *
  * The facade looks up fixtures by scenario id, validates requested scope and
  * artifact ids, and only accepts proposed output sets that exactly match the
  * deterministic fixture output.
  *
- * @example
+ * **Example** (In-memory SDK fixture lookup)
+ *
  * ```ts
  * import {
  *   RuntimeFixtureInput,

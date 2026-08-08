@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for ETH amount schemas.
  *
- * @example
+ * **Example** (Import EthAmount namespace)
+ *
  * ```ts
  * import * as EthAmount from "@beep/schema/EthAmount"
  * import * as S from "effect/Schema"

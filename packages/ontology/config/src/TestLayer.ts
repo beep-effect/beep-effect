@@ -14,7 +14,8 @@ import type { OntologyServerConfig } from "./ServerConfig.ts";
 /**
  * Build a static ontology configuration layer for tests.
  *
- * @example
+ * **Example** (Build ontology config test layer)
+ *
  * ```ts
  * import { OntologyServerConfig } from "@beep/ontology-config/server"
  * import { makeOntologyConfigTest } from "@beep/ontology-config/test"
@@ -33,7 +34,8 @@ export const makeOntologyConfigTest = (config: OntologyServerConfig) => Layer.su
 /**
  * Build a static ontology MCP surface configuration layer for tests.
  *
- * @example
+ * **Example** (Build MCP config test layer)
+ *
  * ```ts
  * import { OntologyMcpServerConfig } from "@beep/ontology-config/server"
  * import { makeOntologyMcpConfigTest } from "@beep/ontology-config/test"

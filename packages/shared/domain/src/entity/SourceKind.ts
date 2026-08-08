@@ -15,15 +15,16 @@ const SourceKindBase = LiteralKit(["User", "Agent", "Admin", "Application", "Sys
 /**
  * Denormalized source facet used by BaseEntity rows and audit filters.
  *
- * @example
+ * **Example** (Check is.Agent predicate)
+ *
  * ```ts
  * import { SourceKind } from "@beep/shared-domain/entity/SourceKind"
  *
  * console.log(SourceKind.is.Agent("Agent"))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const SourceKind = SourceKindBase.pipe(
   $I.annoteSchema("SourceKind", {
@@ -39,7 +40,8 @@ export const SourceKind = SourceKindBase.pipe(
 /**
  * Runtime type for {@link SourceKind}.
  *
- * @example
+ * **Example** (Annotate System source value)
+ *
  * ```ts
  * import type { SourceKind } from "@beep/shared-domain/entity/SourceKind"
  *
@@ -47,7 +49,7 @@ export const SourceKind = SourceKindBase.pipe(
  * console.log(source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SourceKind = typeof SourceKind.Type;

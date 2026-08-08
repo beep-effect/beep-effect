@@ -22,7 +22,8 @@ const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.rep
 /**
  * Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.
  *
- * @example
+ * **Example** (Make uploadFile seed)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
@@ -99,7 +100,8 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
 /**
  * Persistence failure raised when an enqueue replays an existing idempotency key.
  *
- * @example
+ * **Example** (Construct conflict error)
+ *
  * ```ts
  * import { SyncOperationRepositoryConflict } from "@beep/documents-use-cases/entities/SyncOperation/server"
  *
@@ -136,7 +138,8 @@ export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperat
 /**
  * Persistence failure raised when a SyncOperation row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { SyncOperationRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncOperation/server"
@@ -171,7 +174,8 @@ export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperat
 /**
  * Persistence failure raised when the SyncOperation repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncOperationRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncOperation/server"
  *
@@ -202,7 +206,8 @@ export class SyncOperationRepositoryUnavailable extends TaggedErrorClass<SyncOpe
 /**
  * Listing input addressing the queued operations of one workspace mirror.
  *
- * @example
+ * **Example** (Build list-queued input)
+ *
  * ```ts
  * import { ListQueuedSyncOperationsInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -237,7 +242,8 @@ export class ListQueuedSyncOperationsInput extends S.Class<ListQueuedSyncOperati
 /**
  * Listing input addressing the queued operations of one sync-tracking row.
  *
- * @example
+ * **Example** (Build list-for-item input)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { ListQueuedSyncOperationsForItemInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
@@ -273,7 +279,8 @@ export class ListQueuedSyncOperationsForItemInput extends S.Class<ListQueuedSync
 /**
  * Recovery input addressing the leased operations of one workspace mirror.
  *
- * @example
+ * **Example** (Build requeue-leased input)
+ *
  * ```ts
  * import { RequeueLeasedSyncOperationsInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -308,7 +315,8 @@ export class RequeueLeasedSyncOperationsInput extends S.Class<RequeueLeasedSyncO
 /**
  * Listing input addressing the operations of one workspace mirror by status.
  *
- * @example
+ * **Example** (Build list-by-status input)
+ *
  * ```ts
  * import { ListSyncOperationsByStatusInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -347,14 +355,16 @@ export class ListSyncOperationsByStatusInput extends S.Class<ListSyncOperationsB
 /**
  * SyncOperation repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * `enqueue` fails with {@link SyncOperationRepositoryConflict} when the seed's
  * `idempotencyKey` is already enqueued. `listQueued` and `listQueuedForItem`
  * return queued operations in FIFO order (ascending entity id). `requeueLeased`
  * is boot recovery: it flips every `leased` operation of the workspace mirror
  * back to `queued` and returns the number of operations it requeued.
  *
- * @example
+ * **Example** (Stub repository implementation)
+ *
  * ```ts
  * import {
  *   ListQueuedSyncOperationsInput,
@@ -414,7 +424,8 @@ export interface SyncOperationRepositoryShape {
 /**
  * Context tag for the SyncOperation repository port.
  *
- * @example
+ * **Example** (Provide repository context)
+ *
  * ```ts
  * import {
  *   SyncOperationRepository,

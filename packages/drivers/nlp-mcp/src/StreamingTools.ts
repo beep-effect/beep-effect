@@ -49,7 +49,8 @@ const PipelineErrorOutput = PipelineError.mapFields((fields) => fields).pipe(
 /**
  * Output schema for line-returning streaming tools.
  *
- * @example
+ * **Example** (Decode lines output schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LinesOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -58,8 +59,8 @@ const PipelineErrorOutput = PipelineError.mapFields((fields) => fields).pipe(
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const LinesOutput = S.Class<{
   readonly count: number;
@@ -92,7 +93,8 @@ export const LinesOutput = S.Class<{
 /**
  * Type for {@link LinesOutput}.
  *
- * @example
+ * **Example** (Annotate lines output value)
+ *
  * ```ts
  * import type { LinesOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -100,15 +102,16 @@ export const LinesOutput = S.Class<{
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LinesOutput = typeof LinesOutput.Type;
 
 /**
  * Output schema for file existence and size metadata.
  *
- * @example
+ * **Example** (Decode file info schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FileInfoOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -117,8 +120,8 @@ export type LinesOutput = typeof LinesOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const FileInfoOutput = S.Class<{
   readonly exists: boolean;
@@ -151,7 +154,8 @@ export const FileInfoOutput = S.Class<{
 /**
  * Type for {@link FileInfoOutput}.
  *
- * @example
+ * **Example** (Annotate file info value)
+ *
  * ```ts
  * import type { FileInfoOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -159,15 +163,16 @@ export const FileInfoOutput = S.Class<{
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FileInfoOutput = typeof FileInfoOutput.Type;
 
 /**
  * Output schema for aggregate text statistics.
  *
- * @example
+ * **Example** (Decode text stats schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextStatsOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -183,8 +188,8 @@ export type FileInfoOutput = typeof FileInfoOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pipe(
   $I.annoteSchema("TextStatsOutput", {
@@ -196,7 +201,8 @@ export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pip
 /**
  * Type for {@link TextStatsOutput}.
  *
- * @example
+ * **Example** (Annotate text stats value)
+ *
  * ```ts
  * import type { TextStatsOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -211,15 +217,16 @@ export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pip
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextStatsOutput = typeof TextStatsOutput.Type;
 
 /**
  * Output schema for JSONL record reads, with optional collected errors.
  *
- * @example
+ * **Example** (Decode JSONL output schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonlOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -228,8 +235,8 @@ export type TextStatsOutput = typeof TextStatsOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const JsonlOutput = S.Class<{
   readonly count: number;
@@ -266,7 +273,8 @@ export const JsonlOutput = S.Class<{
 /**
  * Type for {@link JsonlOutput}.
  *
- * @example
+ * **Example** (Annotate JSONL output value)
+ *
  * ```ts
  * import type { JsonlOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -274,15 +282,16 @@ export const JsonlOutput = S.Class<{
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type JsonlOutput = typeof JsonlOutput.Type;
 
 /**
  * Output schema for JSONL parse statistics.
  *
- * @example
+ * **Example** (Decode JSONL stats schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { JsonlStatsOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -296,8 +305,8 @@ export type JsonlOutput = typeof JsonlOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pipe(
   $I.annoteSchema("JsonlStatsOutput", {
@@ -309,7 +318,8 @@ export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pi
 /**
  * Type for {@link JsonlStatsOutput}.
  *
- * @example
+ * **Example** (Annotate JSONL stats value)
+ *
  * ```ts
  * import type { JsonlStatsOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -322,15 +332,16 @@ export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pi
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type JsonlStatsOutput = typeof JsonlStatsOutput.Type;
 
 /**
  * Output schema for dataset provenance metadata.
  *
- * @example
+ * **Example** (Decode dataset meta schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DatasetMetaOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -344,8 +355,8 @@ export type JsonlStatsOutput = typeof JsonlStatsOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
   $I.annoteSchema("DatasetMetaOutput", {
@@ -357,7 +368,8 @@ export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
 /**
  * Type for {@link DatasetMetaOutput}.
  *
- * @example
+ * **Example** (Annotate dataset meta value)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import type { DatasetMetaOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -372,15 +384,16 @@ export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DatasetMetaOutput = typeof DatasetMetaOutput.Type;
 
 /**
  * Output schema pairing loaded data with its {@link DatasetMetaOutput}.
  *
- * @example
+ * **Example** (Decode data with meta)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DataOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -392,8 +405,8 @@ export type DatasetMetaOutput = typeof DatasetMetaOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DataOutput = S.Class<{
   readonly data: unknown;
@@ -422,7 +435,8 @@ export const DataOutput = S.Class<{
 /**
  * Type for {@link DataOutput}.
  *
- * @example
+ * **Example** (Annotate data output value)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import type { DataOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -434,15 +448,16 @@ export const DataOutput = S.Class<{
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DataOutput = typeof DataOutput.Type;
 
 /**
  * Output schema for line-transform pipeline runs.
  *
- * @example
+ * **Example** (Decode pipeline output schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PipelineOutput } from "@beep/nlp-mcp/StreamingTools"
@@ -458,8 +473,8 @@ export type DataOutput = typeof DataOutput.Type;
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const PipelineOutput = PipelineResult.mapFields((fields) => ({
   ...fields,
@@ -474,7 +489,8 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
 /**
  * Type for {@link PipelineOutput}.
  *
- * @example
+ * **Example** (Annotate pipeline output value)
+ *
  * ```ts
  * import type { PipelineOutput } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -489,8 +505,8 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
  * console.log(output)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PipelineOutput = typeof PipelineOutput.Type;
 
@@ -536,7 +552,8 @@ const CountWithErrorsOutput = S.Class<{ readonly count: number; readonly errors?
 /**
  * Optional windowing, encoding, and trimming controls for {@link ReadLines}.
  *
- * @example
+ * **Example** (Make maxLines options)
+ *
  * ```ts
  * import { ReadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -544,8 +561,8 @@ const CountWithErrorsOutput = S.Class<{ readonly count: number; readonly errors?
  * console.log(options.maxLines)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ReadLinesOptions = S.Class<{
   readonly encoding?: TextEncoding | undefined;
@@ -577,7 +594,8 @@ export const ReadLinesOptions = S.Class<{
 /**
  * Type for {@link ReadLinesOptions}.
  *
- * @example
+ * **Example** (Type windowed read options)
+ *
  * ```ts
  * import type { ReadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -585,8 +603,8 @@ export const ReadLinesOptions = S.Class<{
  * console.log(windowed.maxLines)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ReadLinesOptions = typeof ReadLinesOptions.Type;
 
@@ -615,7 +633,8 @@ const FileInfoParameters = S.Class<{ readonly path: string }>($I`FileInfoParamet
 /**
  * Optional line-normalization controls for {@link TextStats}.
  *
- * @example
+ * **Example** (Make trim stats options)
+ *
  * ```ts
  * import { TextStatsOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -623,8 +642,8 @@ const FileInfoParameters = S.Class<{ readonly path: string }>($I`FileInfoParamet
  * console.log(options.trim)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TextStatsOptions = S.Class<{
   readonly skipEmpty?: boolean | undefined;
@@ -646,7 +665,8 @@ export const TextStatsOptions = S.Class<{
 /**
  * Type for {@link TextStatsOptions}.
  *
- * @example
+ * **Example** (Type normalized stats options)
+ *
  * ```ts
  * import type { TextStatsOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -654,8 +674,8 @@ export const TextStatsOptions = S.Class<{
  * console.log(normalized.trim)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextStatsOptions = typeof TextStatsOptions.Type;
 
@@ -675,7 +695,8 @@ const TextStatsParameters = S.Class<{
 /**
  * Optional line-normalization controls for {@link SampleLines}.
  *
- * @example
+ * **Example** (Make sample trim options)
+ *
  * ```ts
  * import { SampleLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -683,8 +704,8 @@ const TextStatsParameters = S.Class<{
  * console.log(options.trim)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const SampleLinesOptions = S.Class<{
   readonly skipEmpty?: boolean | undefined;
@@ -706,7 +727,8 @@ export const SampleLinesOptions = S.Class<{
 /**
  * Type for {@link SampleLinesOptions}.
  *
- * @example
+ * **Example** (Type sampled lines options)
+ *
  * ```ts
  * import type { SampleLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -714,8 +736,8 @@ export const SampleLinesOptions = S.Class<{
  * console.log(sampled.trim)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SampleLinesOptions = typeof SampleLinesOptions.Type;
 
@@ -737,7 +759,8 @@ const SampleLinesParameters = S.Class<{
 /**
  * Optional controls for {@link ReadJsonl}.
  *
- * @example
+ * **Example** (Make skipInvalid options)
+ *
  * ```ts
  * import { ReadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -745,8 +768,8 @@ const SampleLinesParameters = S.Class<{
  * console.log(options.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ReadJsonlOptions = S.Class<{
   readonly collectErrors?: boolean | undefined;
@@ -766,7 +789,8 @@ export const ReadJsonlOptions = S.Class<{
 /**
  * Type for {@link ReadJsonlOptions}.
  *
- * @example
+ * **Example** (Type lenient JSONL options)
+ *
  * ```ts
  * import type { ReadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -774,8 +798,8 @@ export const ReadJsonlOptions = S.Class<{
  * console.log(lenient.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ReadJsonlOptions = typeof ReadJsonlOptions.Type;
 
@@ -804,7 +828,8 @@ const JsonlStatsParameters = S.Class<{ readonly path: string }>($I`JsonlStatsPar
 /**
  * Optional caps for {@link ValidateJsonl}.
  *
- * @example
+ * **Example** (Make maxErrors options)
+ *
  * ```ts
  * import { ValidateJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -812,8 +837,8 @@ const JsonlStatsParameters = S.Class<{ readonly path: string }>($I`JsonlStatsPar
  * console.log(options.maxErrors)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ValidateJsonlOptions = S.Class<{
   readonly maxErrors?: number | undefined;
@@ -831,7 +856,8 @@ export const ValidateJsonlOptions = S.Class<{
 /**
  * Type for {@link ValidateJsonlOptions}.
  *
- * @example
+ * **Example** (Type capped error options)
+ *
  * ```ts
  * import type { ValidateJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -839,8 +865,8 @@ export const ValidateJsonlOptions = S.Class<{
  * console.log(capped.maxErrors)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ValidateJsonlOptions = typeof ValidateJsonlOptions.Type;
 
@@ -860,7 +886,8 @@ const ValidateJsonlParameters = S.Class<{
 /**
  * Optional controls for {@link SampleJsonl}.
  *
- * @example
+ * **Example** (Make sample JSONL options)
+ *
  * ```ts
  * import { SampleJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -868,8 +895,8 @@ const ValidateJsonlParameters = S.Class<{
  * console.log(options.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const SampleJsonlOptions = S.Class<{
   readonly skipInvalid?: boolean | undefined;
@@ -885,7 +912,8 @@ export const SampleJsonlOptions = S.Class<{
 /**
  * Type for {@link SampleJsonlOptions}.
  *
- * @example
+ * **Example** (Type sampled JSONL options)
+ *
  * ```ts
  * import type { SampleJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -893,8 +921,8 @@ export const SampleJsonlOptions = S.Class<{
  * console.log(sampled.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SampleJsonlOptions = typeof SampleJsonlOptions.Type;
 
@@ -916,7 +944,8 @@ const SampleJsonlParameters = S.Class<{
 /**
  * Optional controls for {@link LoadText}.
  *
- * @example
+ * **Example** (Make encoding load options)
+ *
  * ```ts
  * import { LoadTextOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -924,8 +953,8 @@ const SampleJsonlParameters = S.Class<{
  * console.log(options.encoding)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const LoadTextOptions = S.Class<{
   readonly encoding?: TextEncoding | undefined;
@@ -943,7 +972,8 @@ export const LoadTextOptions = S.Class<{
 /**
  * Type for {@link LoadTextOptions}.
  *
- * @example
+ * **Example** (Type load text options)
+ *
  * ```ts
  * import type { LoadTextOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -951,8 +981,8 @@ export const LoadTextOptions = S.Class<{
  * console.log(loaded.encoding)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LoadTextOptions = typeof LoadTextOptions.Type;
 
@@ -972,7 +1002,8 @@ const LoadTextParameters = S.Class<{
 /**
  * Optional controls for {@link LoadLines}.
  *
- * @example
+ * **Example** (Make skipEmpty options)
+ *
  * ```ts
  * import { LoadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -980,8 +1011,8 @@ const LoadTextParameters = S.Class<{
  * console.log(options.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const LoadLinesOptions = S.Class<{
   readonly maxLines?: number | undefined;
@@ -1005,7 +1036,8 @@ export const LoadLinesOptions = S.Class<{
 /**
  * Type for {@link LoadLinesOptions}.
  *
- * @example
+ * **Example** (Type load lines options)
+ *
  * ```ts
  * import type { LoadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1013,8 +1045,8 @@ export const LoadLinesOptions = S.Class<{
  * console.log(loaded.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LoadLinesOptions = typeof LoadLinesOptions.Type;
 
@@ -1034,7 +1066,8 @@ const LoadLinesParameters = S.Class<{
 /**
  * Optional controls for {@link LoadJsonl}.
  *
- * @example
+ * **Example** (Make load JSONL options)
+ *
  * ```ts
  * import { LoadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1042,8 +1075,8 @@ const LoadLinesParameters = S.Class<{
  * console.log(options.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const LoadJsonlOptions = S.Class<{
   readonly maxRecords?: number | undefined;
@@ -1065,7 +1098,8 @@ export const LoadJsonlOptions = S.Class<{
 /**
  * Type for {@link LoadJsonlOptions}.
  *
- * @example
+ * **Example** (Type load JSONL options)
+ *
  * ```ts
  * import type { LoadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1073,8 +1107,8 @@ export const LoadJsonlOptions = S.Class<{
  * console.log(loaded.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LoadJsonlOptions = typeof LoadJsonlOptions.Type;
 
@@ -1094,7 +1128,8 @@ const LoadJsonlParameters = S.Class<{
 /**
  * Optional controls for {@link LoadJson}.
  *
- * @example
+ * **Example** (Make timeout load options)
+ *
  * ```ts
  * import { LoadJsonOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1102,8 +1137,8 @@ const LoadJsonlParameters = S.Class<{
  * console.log(options.timeout)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const LoadJsonOptions = S.Class<{
   readonly timeout?: number | undefined;
@@ -1119,7 +1154,8 @@ export const LoadJsonOptions = S.Class<{
 /**
  * Type for {@link LoadJsonOptions}.
  *
- * @example
+ * **Example** (Type load JSON options)
+ *
  * ```ts
  * import type { LoadJsonOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1127,8 +1163,8 @@ export const LoadJsonOptions = S.Class<{
  * console.log(loaded.timeout)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LoadJsonOptions = typeof LoadJsonOptions.Type;
 
@@ -1148,7 +1184,8 @@ const LoadJsonParameters = S.Class<{
 /**
  * Optional controls for {@link ProcessFile}.
  *
- * @example
+ * **Example** (Make process file options)
+ *
  * ```ts
  * import { ProcessFileOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1156,8 +1193,8 @@ const LoadJsonParameters = S.Class<{
  * console.log(options.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ProcessFileOptions = S.Class<{
   readonly maxLines?: number | undefined;
@@ -1182,7 +1219,8 @@ export const ProcessFileOptions = S.Class<{
 /**
  * Type for {@link ProcessFileOptions}.
  *
- * @example
+ * **Example** (Type process pipeline options)
+ *
  * ```ts
  * import type { ProcessFileOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1190,8 +1228,8 @@ export const ProcessFileOptions = S.Class<{
  * console.log(pipeline.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ProcessFileOptions = typeof ProcessFileOptions.Type;
 
@@ -1213,7 +1251,8 @@ const ProcessFileParameters = S.Class<{
 /**
  * Optional controls for {@link FilterLines}.
  *
- * @example
+ * **Example** (Make invert filter options)
+ *
  * ```ts
  * import { FilterLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1221,8 +1260,8 @@ const ProcessFileParameters = S.Class<{
  * console.log(options.invert)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const FilterLinesOptions = S.Class<{
   readonly caseInsensitive?: boolean | undefined;
@@ -1244,7 +1283,8 @@ export const FilterLinesOptions = S.Class<{
 /**
  * Type for {@link FilterLinesOptions}.
  *
- * @example
+ * **Example** (Type inverted filter options)
+ *
  * ```ts
  * import type { FilterLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1252,8 +1292,8 @@ export const FilterLinesOptions = S.Class<{
  * console.log(filtered.invert)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FilterLinesOptions = typeof FilterLinesOptions.Type;
 
@@ -1275,7 +1315,8 @@ const FilterLinesParameters = S.Class<{
 /**
  * Optional controls for {@link ExtractMatches}.
  *
- * @example
+ * **Example** (Make fullLines options)
+ *
  * ```ts
  * import { ExtractMatchesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1283,8 +1324,8 @@ const FilterLinesParameters = S.Class<{
  * console.log(options.fullLines)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ExtractMatchesOptions = S.Class<{
   readonly caseInsensitive?: boolean | undefined;
@@ -1308,7 +1349,8 @@ export const ExtractMatchesOptions = S.Class<{
 /**
  * Type for {@link ExtractMatchesOptions}.
  *
- * @example
+ * **Example** (Type extract matches options)
+ *
  * ```ts
  * import type { ExtractMatchesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1316,8 +1358,8 @@ export const ExtractMatchesOptions = S.Class<{
  * console.log(extracted.fullLines)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ExtractMatchesOptions = typeof ExtractMatchesOptions.Type;
 
@@ -1341,7 +1383,8 @@ const ExtractMatchesParameters = S.Class<{
 /**
  * Optional controls for {@link CountLines}.
  *
- * @example
+ * **Example** (Make count lines options)
+ *
  * ```ts
  * import { CountLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1349,8 +1392,8 @@ const ExtractMatchesParameters = S.Class<{
  * console.log(options.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountLinesOptions = S.Class<{
   readonly skipEmpty?: boolean | undefined;
@@ -1366,7 +1409,8 @@ export const CountLinesOptions = S.Class<{
 /**
  * Type for {@link CountLinesOptions}.
  *
- * @example
+ * **Example** (Type count lines options)
+ *
  * ```ts
  * import type { CountLinesOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1374,8 +1418,8 @@ export const CountLinesOptions = S.Class<{
  * console.log(counted.skipEmpty)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CountLinesOptions = typeof CountLinesOptions.Type;
 
@@ -1395,7 +1439,8 @@ const CountLinesParameters = S.Class<{
 /**
  * Optional controls for {@link CountJsonl}.
  *
- * @example
+ * **Example** (Make count JSONL options)
+ *
  * ```ts
  * import { CountJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1403,8 +1448,8 @@ const CountLinesParameters = S.Class<{
  * console.log(options.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountJsonlOptions = S.Class<{
   readonly skipInvalid?: boolean | undefined;
@@ -1422,7 +1467,8 @@ export const CountJsonlOptions = S.Class<{
 /**
  * Type for {@link CountJsonlOptions}.
  *
- * @example
+ * **Example** (Type count JSONL options)
+ *
  * ```ts
  * import type { CountJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1430,8 +1476,8 @@ export const CountJsonlOptions = S.Class<{
  * console.log(counted.skipInvalid)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CountJsonlOptions = typeof CountJsonlOptions.Type;
 
@@ -1451,15 +1497,16 @@ const CountJsonlParameters = S.Class<{
 /**
  * Tool: read lines from a text file with optional head/tail windowing.
  *
- * @example
+ * **Example** (Log ReadLines tool name)
+ *
  * ```ts
  * import { ReadLines } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(ReadLines.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const ReadLines = annotateFourHints(
   Tool.make("stream_read_lines", {
@@ -1476,15 +1523,16 @@ export const ReadLines = annotateFourHints(
 /**
  * Tool: report whether a file exists plus its size and line count.
  *
- * @example
+ * **Example** (Log FileInfo tool name)
+ *
  * ```ts
  * import { FileInfo } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(FileInfo.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const FileInfo = annotateFourHints(
   Tool.make("stream_file_info", {
@@ -1500,15 +1548,16 @@ export const FileInfo = annotateFourHints(
 /**
  * Tool: compute aggregate line-length and byte statistics for a file.
  *
- * @example
+ * **Example** (Log TextStats tool name)
+ *
  * ```ts
  * import { TextStats } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(TextStats.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const TextStats = annotateFourHints(
   Tool.make("stream_text_stats", {
@@ -1524,15 +1573,16 @@ export const TextStats = annotateFourHints(
 /**
  * Tool: sample random lines from a text file.
  *
- * @example
+ * **Example** (Log SampleLines tool name)
+ *
  * ```ts
  * import { SampleLines } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(SampleLines.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const SampleLines = annotateFourHints(
   Tool.make("stream_sample_lines", {
@@ -1548,15 +1598,16 @@ export const SampleLines = annotateFourHints(
 /**
  * Tool: read JSONL/NDJSON records from a file.
  *
- * @example
+ * **Example** (Log ReadJsonl tool name)
+ *
  * ```ts
  * import { ReadJsonl } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(ReadJsonl.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const ReadJsonl = annotateFourHints(
   Tool.make("stream_read_jsonl", {
@@ -1572,15 +1623,16 @@ export const ReadJsonl = annotateFourHints(
 /**
  * Tool: compute JSONL parse statistics for a file.
  *
- * @example
+ * **Example** (Log JsonlStats tool name)
+ *
  * ```ts
  * import { JsonlStats } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(JsonlStats.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const JsonlStats = annotateFourHints(
   Tool.make("stream_jsonl_stats", {
@@ -1596,15 +1648,16 @@ export const JsonlStats = annotateFourHints(
 /**
  * Tool: validate a JSONL file and collect parse errors.
  *
- * @example
+ * **Example** (Log ValidateJsonl tool name)
+ *
  * ```ts
  * import { ValidateJsonl } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(ValidateJsonl.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const ValidateJsonl = annotateFourHints(
   Tool.make("stream_validate_jsonl", {
@@ -1620,15 +1673,16 @@ export const ValidateJsonl = annotateFourHints(
 /**
  * Tool: sample random JSONL records from a file.
  *
- * @example
+ * **Example** (Log SampleJsonl tool name)
+ *
  * ```ts
  * import { SampleJsonl } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(SampleJsonl.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const SampleJsonl = annotateFourHints(
   Tool.make("stream_sample_jsonl", {
@@ -1644,15 +1698,16 @@ export const SampleJsonl = annotateFourHints(
 /**
  * Tool: load text from a local file or remote URL.
  *
- * @example
+ * **Example** (Log LoadText tool name)
+ *
  * ```ts
  * import { LoadText } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(LoadText.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const LoadText = annotateFourHints(
   Tool.make("stream_load_text", {
@@ -1668,15 +1723,16 @@ export const LoadText = annotateFourHints(
 /**
  * Tool: load lines from a local file or remote URL.
  *
- * @example
+ * **Example** (Log LoadLines tool name)
+ *
  * ```ts
  * import { LoadLines } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(LoadLines.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const LoadLines = annotateFourHints(
   Tool.make("stream_load_lines", {
@@ -1692,15 +1748,16 @@ export const LoadLines = annotateFourHints(
 /**
  * Tool: load JSONL records from a local file or remote URL.
  *
- * @example
+ * **Example** (Log LoadJsonl tool name)
+ *
  * ```ts
  * import { LoadJsonl } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(LoadJsonl.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const LoadJsonl = annotateFourHints(
   Tool.make("stream_load_jsonl", {
@@ -1716,15 +1773,16 @@ export const LoadJsonl = annotateFourHints(
 /**
  * Tool: load and parse JSON from a local file or remote URL.
  *
- * @example
+ * **Example** (Log LoadJson tool name)
+ *
  * ```ts
  * import { LoadJson } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(LoadJson.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const LoadJson = annotateFourHints(
   Tool.make("stream_load_json", {
@@ -1740,15 +1798,16 @@ export const LoadJson = annotateFourHints(
 /**
  * Tool: run a line-transform pipeline over a file.
  *
- * @example
+ * **Example** (Log ProcessFile tool name)
+ *
  * ```ts
  * import { ProcessFile } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(ProcessFile.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const ProcessFile = annotateFourHints(
   Tool.make("stream_process_file", {
@@ -1764,15 +1823,16 @@ export const ProcessFile = annotateFourHints(
 /**
  * Tool: filter file lines by a regex pattern.
  *
- * @example
+ * **Example** (Log FilterLines tool name)
+ *
  * ```ts
  * import { FilterLines } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(FilterLines.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const FilterLines = annotateFourHints(
   Tool.make("stream_filter_lines", {
@@ -1788,15 +1848,16 @@ export const FilterLines = annotateFourHints(
 /**
  * Tool: extract regex matches from a file.
  *
- * @example
+ * **Example** (Log ExtractMatches tool name)
+ *
  * ```ts
  * import { ExtractMatches } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(ExtractMatches.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const ExtractMatches = annotateFourHints(
   Tool.make("stream_extract_matches", {
@@ -1812,15 +1873,16 @@ export const ExtractMatches = annotateFourHints(
 /**
  * Tool: count total lines in a file.
  *
- * @example
+ * **Example** (Log CountLines tool name)
+ *
  * ```ts
  * import { CountLines } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(CountLines.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const CountLines = annotateFourHints(
   Tool.make("stream_count_lines", {
@@ -1836,15 +1898,16 @@ export const CountLines = annotateFourHints(
 /**
  * Tool: count valid JSONL records in a file.
  *
- * @example
+ * **Example** (Log CountJsonl tool name)
+ *
  * ```ts
  * import { CountJsonl } from "@beep/nlp-mcp/StreamingTools"
  *
  * console.log(CountJsonl.name)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const CountJsonl = annotateFourHints(
   Tool.make("stream_count_jsonl", {
@@ -1860,7 +1923,8 @@ export const CountJsonl = annotateFourHints(
 /**
  * The complete streaming toolkit grouping all 17 streaming tools.
  *
- * @example
+ * **Example** (List toolkit tool names)
+ *
  * ```ts
  * import { StreamingToolkit } from "@beep/nlp-mcp/StreamingTools"
  *
@@ -1868,8 +1932,8 @@ export const CountJsonl = annotateFourHints(
  * console.log(names.length)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export const StreamingToolkit = Toolkit.make(
   ReadLines,
@@ -1894,7 +1958,8 @@ export const StreamingToolkit = Toolkit.make(
 /**
  * Type of the {@link StreamingToolkit}.
  *
- * @example
+ * **Example** (Type StreamingToolkit instance)
+ *
  * ```ts
  * import { StreamingToolkit } from "@beep/nlp-mcp/StreamingTools"
  * import type { StreamingToolkit as StreamingToolkitType } from "@beep/nlp-mcp/StreamingTools"
@@ -1903,7 +1968,7 @@ export const StreamingToolkit = Toolkit.make(
  * console.log(toolkit.tools)
  * ```
  *
- * @since 0.0.0
  * @category tools
+ * @since 0.0.0
  */
 export type StreamingToolkit = typeof StreamingToolkit;

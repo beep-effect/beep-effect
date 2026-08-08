@@ -9,7 +9,8 @@
 /**
  * Anthropic provider-adaptation codecs for the assistant-turn output.
  *
- * @example
+ * **Example** (Decode assistant block output)
+ *
  * ```ts
  * import { assistantBlockOutput } from "@beep/agents-server/AssistantTurn"
  * import * as S from "effect/Schema"
@@ -26,7 +27,8 @@ export * from "./AnthropicTurnCodec.ts";
 /**
  * Anthropic streaming kernel Layer satisfying the `AgentTurnKernel` port.
  *
- * @example
+ * **Example** (Provide Anthropic turn kernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AssistantTurn"
@@ -50,7 +52,8 @@ export * from "./AnthropicTurnKernel.ts";
 /**
  * Assistant-turn invalid-block repair adapter.
  *
- * @example
+ * **Example** (Repair invalid assistant blocks)
+ *
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
@@ -79,7 +82,8 @@ export * from "./BlockRepair.ts";
 /**
  * Incremental completed-block extractor and its carry state.
  *
- * @example
+ * **Example** (Scan chunk for completed blocks)
+ *
  * ```ts
  * import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn"
  *

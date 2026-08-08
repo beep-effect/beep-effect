@@ -33,7 +33,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * SHACL report severity.
  *
- * @example
+ * **Example** (Decode violation severity)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -55,7 +56,8 @@ export const ShaclSeverity = LiteralKit(["info", "warning", "violation"]).pipe(
 /**
  * Type for {@link ShaclSeverity}.
  *
- * @example
+ * **Example** (Narrow violation severity type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation"
@@ -72,7 +74,8 @@ export type ShaclSeverity = typeof ShaclSeverity.Type;
 /**
  * SHACL property shape used by the bounded service contract.
  *
- * @example
+ * **Example** (Decode property shape)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -110,7 +113,8 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
 /**
  * SHACL node shape used by the bounded service contract.
  *
- * @example
+ * **Example** (Decode node shape)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -150,7 +154,8 @@ export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
 /**
  * SHACL validation violation.
  *
- * @example
+ * **Example** (Decode validation violation)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -191,7 +196,8 @@ export class ShaclValidationViolation extends S.Class<ShaclValidationViolation>(
 /**
  * SHACL validation request.
  *
- * @example
+ * **Example** (Decode validation request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -227,7 +233,8 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
 /**
  * SHACL validation result.
  *
- * @example
+ * **Example** (Make conforming result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation"
@@ -258,7 +265,8 @@ export class ShaclValidationResult extends S.Class<ShaclValidationResult>($I`Sha
 /**
  * SHACL validation error reason.
  *
- * @example
+ * **Example** (Decode invalidShape reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -281,7 +289,8 @@ export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFai
 /**
  * Type for {@link ShaclValidationErrorReason}.
  *
- * @example
+ * **Example** (Narrow invalidShape reason type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ShaclValidationErrorReason } from "@beep/semantic-web/services/shacl-validation"
@@ -298,7 +307,8 @@ export type ShaclValidationErrorReason = typeof ShaclValidationErrorReason.Type;
 /**
  * Typed SHACL validation error.
  *
- * @example
+ * **Example** (Make invalidShape error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation"
@@ -328,7 +338,8 @@ export class ShaclValidationError extends TaggedErrorClass<ShaclValidationError>
 /**
  * SHACL validation service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation"
  *
@@ -336,8 +347,8 @@ export class ShaclValidationError extends TaggedErrorClass<ShaclValidationError>
  * console.log(acceptShaclValidationServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface ShaclValidationServiceShape {
   readonly validate: (request: ShaclValidationRequest) => Effect.Effect<ShaclValidationResult, ShaclValidationError>;
@@ -346,7 +357,8 @@ export interface ShaclValidationServiceShape {
 /**
  * SHACL validation service tag.
  *
- * @example
+ * **Example** (Validate with mock service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

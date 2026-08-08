@@ -135,7 +135,8 @@ type CauseTaggedErrorExtendMethod<
 /**
  * Tagged error class returned by {@link CauseTaggedError}, including dual construction helpers.
  *
- * @example
+ * **Example** (Construct error via statics)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import { CauseTaggedError, type CauseTaggedErrorWithStatics } from "@beep/schema/CauseTaggedError"
@@ -183,7 +184,8 @@ export type CauseTaggedErrorWithStatics<
 /**
  * Factory returned by {@link CauseTaggedError} after an identity namespace has been selected.
  *
- * @example
+ * **Example** (Use factory and construct)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import { CauseTaggedError, type CauseTaggedErrorFactory } from "@beep/schema/CauseTaggedError"
@@ -223,7 +225,8 @@ export interface CauseTaggedErrorFactory<Self, Brand = {}> {
 /**
  * Callable constructor for creating cause-tagged error class factories.
  *
- * @example
+ * **Example** (Build class via constructor)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import { CauseTaggedError, type CauseTaggedErrorConstructor } from "@beep/schema/CauseTaggedError"
@@ -451,11 +454,14 @@ const attachCauseTaggedErrorStatics = <
 /**
  * Create a tagged error class that always carries a `message` and required defect `cause`.
  *
+ * **Details**
+ *
  * `CauseTaggedError` is a pipe-friendly offshoot of {@link TaggedErrorClass}.
  * It prepends `message: S.String` and `cause: S.Defect({ includeStack: true })` to every
  * generated class and attaches dual static `new` and `mapError` helpers.
  *
- * @example
+ * **Example** (Map Effect failure to error)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import { Effect, pipe } from "effect"
@@ -479,7 +485,8 @@ const attachCauseTaggedErrorStatics = <
  * console.log(exit._tag)
  * ```
  *
- * @example
+ * **Example** (Create error with extra fields)
+ *
  * ```ts
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
@@ -504,8 +511,8 @@ const attachCauseTaggedErrorStatics = <
  * console.log(error)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const CauseTaggedError = ((identifier?: undefined | string) => {
   const taggedErrorFactory = TaggedErrorClass<unknown, unknown>(identifier) as unknown as UnsafeTaggedErrorFactory;

@@ -16,7 +16,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.error
 /**
  * Generic public reason used when internal WorkItem repository details are redacted.
  *
- * @example
+ * **Example** (Create error with constant)
+ *
  * ```ts
  * import {
  *   WORK_ITEM_ACTION_UNAVAILABLE_REASON,
@@ -36,7 +37,8 @@ export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavaila
 /**
  * Public failure raised when a requested WorkItem is absent.
  *
- * @example
+ * **Example** (Make WorkItemNotFound error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemNotFound } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -66,7 +68,8 @@ export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`Work
 /**
  * Public failure raised when a command conflicts with persisted state.
  *
- * @example
+ * **Example** (Make WorkItemConflict error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemConflict } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -102,7 +105,8 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
 /**
  * Public failure raised when the domain rejects a WorkItem action.
  *
- * @example
+ * **Example** (Make action rejected error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemActionRejected } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -138,7 +142,8 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
 /**
  * Public failure raised when an action cannot be completed.
  *
- * @example
+ * **Example** (Make action failed error)
+ *
  * ```ts
  * import { WorkItemActionFailed } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  *
@@ -166,7 +171,8 @@ export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>
 /**
  * Public WorkItem use-case failure schema.
  *
- * @example
+ * **Example** (Guard with ActionError.is)
+ *
  * ```ts
  * import {
  *   WorkItemActionError,
@@ -198,7 +204,8 @@ export const WorkItemActionError = S.Union([
 /**
  * Runtime type for {@link WorkItemActionError}.
  *
- * @example
+ * **Example** (Type WorkItemActionError value)
+ *
  * ```ts
  * import {
  *   WorkItemActionFailed,

@@ -21,7 +21,8 @@ const writeErrorLine = (line: string): void => {
 /**
  * Options for the console-backed error reporter.
  *
- * @example
+ * **Example** (Make options without cause)
+ *
  * ```typescript
  * import { ConsoleErrorReporterOptions } from "@beep/observability/server"
  *
@@ -30,8 +31,8 @@ const writeErrorLine = (line: string): void => {
  * // false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOptions>($I`ConsoleErrorReporterOptions`)(
   {
@@ -47,7 +48,8 @@ export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOpt
 /**
  * Options for registering the console-backed error reporter layer.
  *
- * @example
+ * **Example** (Make options without merge)
+ *
  * ```typescript
  * import { ErrorReporterLayerOptions } from "@beep/observability/server"
  *
@@ -56,8 +58,8 @@ export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOpt
  * // false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ErrorReporterLayerOptions extends S.Class<ErrorReporterLayerOptions>($I`ErrorReporterLayerOptions`)(
   {
@@ -76,7 +78,8 @@ export class ErrorReporterLayerOptions extends S.Class<ErrorReporterLayerOptions
 /**
  * Create a console-backed error reporter with cause fingerprints and pretty rendering.
  *
- * @example
+ * **Example** (Create console error reporter)
+ *
  * ```typescript
  * import { makeConsoleErrorReporter } from "@beep/observability/server"
  *
@@ -84,8 +87,8 @@ export class ErrorReporterLayerOptions extends S.Class<ErrorReporterLayerOptions
  * console.log(reporter)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeConsoleErrorReporter = (options?: ConsoleErrorReporterOptions): ErrorReporter.ErrorReporter => {
   const resolvedOptions = ConsoleErrorReporterOptions.make(options ?? {});
@@ -119,7 +122,8 @@ export const makeConsoleErrorReporter = (options?: ConsoleErrorReporterOptions):
 /**
  * Register a console-backed error reporter.
  *
- * @example
+ * **Example** (Register console error reporter)
+ *
  * ```typescript
  * import { Layer } from "effect"
  * import { ErrorReporterLayerOptions, layerErrorReporter } from "@beep/observability/server"
@@ -128,8 +132,8 @@ export const makeConsoleErrorReporter = (options?: ConsoleErrorReporterOptions):
  * console.log(ErrorReporterLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerErrorReporter = (options?: ErrorReporterLayerOptions) => {
   const resolvedOptions = ErrorReporterLayerOptions.make(options ?? {});

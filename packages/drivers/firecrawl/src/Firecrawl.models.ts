@@ -93,7 +93,8 @@ const FirecrawlFormatTypeBase = LiteralKit([
 /**
  * Output formats accepted by Firecrawl scrape endpoints.
  *
- * @example
+ * **Example** (Check markdown format type)
+ *
  * ```ts
  * import { FirecrawlFormatType } from "@beep/firecrawl"
  *
@@ -113,7 +114,8 @@ export const FirecrawlFormatType = FirecrawlFormatTypeBase.pipe(
 /**
  * Type for {@link FirecrawlFormatType}.
  *
- * @example
+ * **Example** (Assign markdown format type)
+ *
  * ```ts
  * import type { FirecrawlFormatType } from "@beep/firecrawl"
  *
@@ -141,7 +143,8 @@ const FirecrawlScrapeActionTypeBase = LiteralKit([
 /**
  * Firecrawl scrape-browser action types.
  *
- * @example
+ * **Example** (Check click action type)
+ *
  * ```ts
  * import { FirecrawlScrapeActionType } from "@beep/firecrawl"
  *
@@ -161,7 +164,8 @@ export const FirecrawlScrapeActionType = FirecrawlScrapeActionTypeBase.pipe(
 /**
  * Type for {@link FirecrawlScrapeActionType}.
  *
- * @example
+ * **Example** (Assign click action type)
+ *
  * ```ts
  * import type { FirecrawlScrapeActionType } from "@beep/firecrawl"
  *
@@ -179,7 +183,8 @@ const FirecrawlSearchSourceTypeBase = LiteralKit(["web", "news", "images"]);
 /**
  * Firecrawl search source types.
  *
- * @example
+ * **Example** (Check web source type)
+ *
  * ```ts
  * import { FirecrawlSearchSourceType } from "@beep/firecrawl"
  *
@@ -199,7 +204,8 @@ export const FirecrawlSearchSourceType = FirecrawlSearchSourceTypeBase.pipe(
 /**
  * Type for {@link FirecrawlSearchSourceType}.
  *
- * @example
+ * **Example** (Assign web source type)
+ *
  * ```ts
  * import type { FirecrawlSearchSourceType } from "@beep/firecrawl"
  *
@@ -217,7 +223,8 @@ const FirecrawlJobStatusBase = LiteralKit(["scraping", "completed", "failed", "c
 /**
  * Firecrawl crawl and batch status values.
  *
- * @example
+ * **Example** (Check completed job status)
+ *
  * ```ts
  * import { FirecrawlJobStatus } from "@beep/firecrawl"
  *
@@ -237,7 +244,8 @@ export const FirecrawlJobStatus = FirecrawlJobStatusBase.pipe(
 /**
  * Type for {@link FirecrawlJobStatus}.
  *
- * @example
+ * **Example** (Assign completed job status)
+ *
  * ```ts
  * import type { FirecrawlJobStatus } from "@beep/firecrawl"
  *
@@ -255,7 +263,8 @@ const FirecrawlAgentStatusBase = LiteralKit(["processing", "completed", "failed"
 /**
  * Firecrawl agent status values.
  *
- * @example
+ * **Example** (Check processing agent status)
+ *
  * ```ts
  * import { FirecrawlAgentStatus } from "@beep/firecrawl"
  *
@@ -275,7 +284,8 @@ export const FirecrawlAgentStatus = FirecrawlAgentStatusBase.pipe(
 /**
  * Type for {@link FirecrawlAgentStatus}.
  *
- * @example
+ * **Example** (Assign processing agent status)
+ *
  * ```ts
  * import type { FirecrawlAgentStatus } from "@beep/firecrawl"
  *
@@ -293,7 +303,8 @@ const FirecrawlBrowserLanguageBase = LiteralKit(["python", "node", "bash"]);
 /**
  * Firecrawl browser execution languages.
  *
- * @example
+ * **Example** (Check node browser language)
+ *
  * ```ts
  * import { FirecrawlBrowserLanguage } from "@beep/firecrawl"
  *
@@ -313,7 +324,8 @@ export const FirecrawlBrowserLanguage = FirecrawlBrowserLanguageBase.pipe(
 /**
  * Type for {@link FirecrawlBrowserLanguage}.
  *
- * @example
+ * **Example** (Assign node browser language)
+ *
  * ```ts
  * import type { FirecrawlBrowserLanguage } from "@beep/firecrawl"
  *
@@ -331,7 +343,8 @@ const FirecrawlWatcherKindBase = LiteralKit(["crawl", "batch"]);
 /**
  * Firecrawl watcher job kinds.
  *
- * @example
+ * **Example** (Check crawl watcher kind)
+ *
  * ```ts
  * import { FirecrawlWatcherKind } from "@beep/firecrawl"
  *
@@ -351,7 +364,8 @@ export const FirecrawlWatcherKind = FirecrawlWatcherKindBase.pipe(
 /**
  * Type for {@link FirecrawlWatcherKind}.
  *
- * @example
+ * **Example** (Assign crawl watcher kind)
+ *
  * ```ts
  * import type { FirecrawlWatcherKind } from "@beep/firecrawl"
  *
@@ -369,7 +383,8 @@ const FirecrawlWatcherEventTypeBase = LiteralKit(["document", "snapshot", "done"
 /**
  * Firecrawl watcher event types.
  *
- * @example
+ * **Example** (Check document event type)
+ *
  * ```ts
  * import { FirecrawlWatcherEventType } from "@beep/firecrawl"
  *
@@ -389,7 +404,8 @@ export const FirecrawlWatcherEventType = FirecrawlWatcherEventTypeBase.pipe(
 /**
  * Type for {@link FirecrawlWatcherEventType}.
  *
- * @example
+ * **Example** (Assign document event type)
+ *
  * ```ts
  * import type { FirecrawlWatcherEventType } from "@beep/firecrawl"
  *
@@ -405,7 +421,8 @@ export type FirecrawlWatcherEventType = typeof FirecrawlWatcherEventType.Type;
 /**
  * Opaque Firecrawl scrape options accepted by the SDK.
  *
- * @example
+ * **Example** (Log scrape options schema)
+ *
  * ```ts
  * import { FirecrawlScrapeOptions } from "@beep/firecrawl"
  *
@@ -422,7 +439,8 @@ export const FirecrawlScrapeOptions = typedUnknown<ScrapeOptions>(
 /**
  * Type for {@link FirecrawlScrapeOptions}.
  *
- * @example
+ * **Example** (Type optional scrape options)
+ *
  * ```ts
  * import type { FirecrawlScrapeOptions } from "@beep/firecrawl"
  *
@@ -438,7 +456,8 @@ export type FirecrawlScrapeOptions = typeof FirecrawlScrapeOptions.Type;
 /**
  * Opaque Firecrawl parse file accepted by the SDK.
  *
- * @example
+ * **Example** (Log parse file schema)
+ *
  * ```ts
  * import { FirecrawlParseFile } from "@beep/firecrawl"
  *
@@ -455,7 +474,8 @@ export const FirecrawlParseFile = typedUnknown<ParseFile>(
 /**
  * Type for {@link FirecrawlParseFile}.
  *
- * @example
+ * **Example** (Type optional parse file)
+ *
  * ```ts
  * import type { FirecrawlParseFile } from "@beep/firecrawl"
  *
@@ -471,7 +491,8 @@ export type FirecrawlParseFile = typeof FirecrawlParseFile.Type;
 /**
  * Opaque Firecrawl parse options accepted by the SDK.
  *
- * @example
+ * **Example** (Log parse options schema)
+ *
  * ```ts
  * import { FirecrawlParseOptions } from "@beep/firecrawl"
  *
@@ -488,7 +509,8 @@ export const FirecrawlParseOptions = typedUnknown<ParseOptions>(
 /**
  * Type for {@link FirecrawlParseOptions}.
  *
- * @example
+ * **Example** (Type optional parse options)
+ *
  * ```ts
  * import type { FirecrawlParseOptions } from "@beep/firecrawl"
  *
@@ -504,7 +526,8 @@ export type FirecrawlParseOptions = typeof FirecrawlParseOptions.Type;
 /**
  * Firecrawl Search Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log search options schema)
+ *
  * ```ts
  * import { FirecrawlSearchOptions } from "@beep/firecrawl"
  *
@@ -521,7 +544,8 @@ export const FirecrawlSearchOptions = typedUnknown<Omit<SearchRequest, "query">>
 /**
  * Type for {@link FirecrawlSearchOptions}.
  *
- * @example
+ * **Example** (Type optional search options)
+ *
  * ```ts
  * import type { FirecrawlSearchOptions } from "@beep/firecrawl"
  *
@@ -537,7 +561,8 @@ export type FirecrawlSearchOptions = typeof FirecrawlSearchOptions.Type;
 /**
  * Firecrawl Map Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log map options schema)
+ *
  * ```ts
  * import { FirecrawlMapOptions } from "@beep/firecrawl"
  *
@@ -554,7 +579,8 @@ export const FirecrawlMapOptions = typedUnknown<MapOptions>(
 /**
  * Type for {@link FirecrawlMapOptions}.
  *
- * @example
+ * **Example** (Type optional map options)
+ *
  * ```ts
  * import type { FirecrawlMapOptions } from "@beep/firecrawl"
  *
@@ -570,7 +596,8 @@ export type FirecrawlMapOptions = typeof FirecrawlMapOptions.Type;
 /**
  * Firecrawl Crawl Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log crawl options schema)
+ *
  * ```ts
  * import { FirecrawlCrawlOptions } from "@beep/firecrawl"
  *
@@ -587,7 +614,8 @@ export const FirecrawlCrawlOptions = typedUnknown<CrawlOptions>(
 /**
  * Type for {@link FirecrawlCrawlOptions}.
  *
- * @example
+ * **Example** (Type optional crawl options)
+ *
  * ```ts
  * import type { FirecrawlCrawlOptions } from "@beep/firecrawl"
  *
@@ -603,7 +631,8 @@ export type FirecrawlCrawlOptions = typeof FirecrawlCrawlOptions.Type;
 /**
  * Firecrawl Crawl Wait Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log crawl wait options)
+ *
  * ```ts
  * import { FirecrawlCrawlWaitOptions } from "@beep/firecrawl"
  *
@@ -619,7 +648,8 @@ export const FirecrawlCrawlWaitOptions = typedUnknown<
 /**
  * Type for {@link FirecrawlCrawlWaitOptions}.
  *
- * @example
+ * **Example** (Type optional crawl wait options)
+ *
  * ```ts
  * import type { FirecrawlCrawlWaitOptions } from "@beep/firecrawl"
  *
@@ -635,7 +665,8 @@ export type FirecrawlCrawlWaitOptions = typeof FirecrawlCrawlWaitOptions.Type;
 /**
  * Firecrawl Pagination Config schema.
  *
- * @example
+ * **Example** (Log pagination config schema)
+ *
  * ```ts
  * import { FirecrawlPaginationConfig } from "@beep/firecrawl"
  *
@@ -652,7 +683,8 @@ export const FirecrawlPaginationConfig = typedUnknown<PaginationConfig>(
 /**
  * Type for {@link FirecrawlPaginationConfig}.
  *
- * @example
+ * **Example** (Type optional pagination config)
+ *
  * ```ts
  * import type { FirecrawlPaginationConfig } from "@beep/firecrawl"
  *
@@ -668,7 +700,8 @@ export type FirecrawlPaginationConfig = typeof FirecrawlPaginationConfig.Type;
 /**
  * Firecrawl Create Monitor Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log create monitor request)
+ *
  * ```ts
  * import { FirecrawlCreateMonitorRequest } from "@beep/firecrawl"
  *
@@ -685,7 +718,8 @@ export const FirecrawlCreateMonitorRequest = typedUnknown<CreateMonitorRequest>(
 /**
  * Type for {@link FirecrawlCreateMonitorRequest}.
  *
- * @example
+ * **Example** (Type optional create monitor request)
+ *
  * ```ts
  * import type { FirecrawlCreateMonitorRequest } from "@beep/firecrawl"
  *
@@ -701,7 +735,8 @@ export type FirecrawlCreateMonitorRequest = typeof FirecrawlCreateMonitorRequest
 /**
  * Firecrawl Update Monitor Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log update monitor request)
+ *
  * ```ts
  * import { FirecrawlUpdateMonitorRequest } from "@beep/firecrawl"
  *
@@ -718,7 +753,8 @@ export const FirecrawlUpdateMonitorRequest = typedUnknown<UpdateMonitorRequest>(
 /**
  * Type for {@link FirecrawlUpdateMonitorRequest}.
  *
- * @example
+ * **Example** (Type optional update monitor request)
+ *
  * ```ts
  * import type { FirecrawlUpdateMonitorRequest } from "@beep/firecrawl"
  *
@@ -734,7 +770,8 @@ export type FirecrawlUpdateMonitorRequest = typeof FirecrawlUpdateMonitorRequest
 /**
  * Firecrawl List Monitors Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log list monitors options)
+ *
  * ```ts
  * import { FirecrawlListMonitorsOptions } from "@beep/firecrawl"
  *
@@ -751,7 +788,8 @@ export const FirecrawlListMonitorsOptions = typedUnknown<ListMonitorsOptions>(
 /**
  * Type for {@link FirecrawlListMonitorsOptions}.
  *
- * @example
+ * **Example** (Type optional list monitors options)
+ *
  * ```ts
  * import type { FirecrawlListMonitorsOptions } from "@beep/firecrawl"
  *
@@ -767,7 +805,8 @@ export type FirecrawlListMonitorsOptions = typeof FirecrawlListMonitorsOptions.T
 /**
  * Firecrawl List Monitor Checks Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log list monitor checks options)
+ *
  * ```ts
  * import { FirecrawlListMonitorChecksOptions } from "@beep/firecrawl"
  *
@@ -784,7 +823,8 @@ export const FirecrawlListMonitorChecksOptions = typedUnknown<ListMonitorChecksO
 /**
  * Type for {@link FirecrawlListMonitorChecksOptions}.
  *
- * @example
+ * **Example** (Type optional list monitor checks options)
+ *
  * ```ts
  * import type { FirecrawlListMonitorChecksOptions } from "@beep/firecrawl"
  *
@@ -800,7 +840,8 @@ export type FirecrawlListMonitorChecksOptions = typeof FirecrawlListMonitorCheck
 /**
  * Firecrawl Get Monitor Check Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log get monitor check options)
+ *
  * ```ts
  * import { FirecrawlGetMonitorCheckOptions } from "@beep/firecrawl"
  *
@@ -817,7 +858,8 @@ export const FirecrawlGetMonitorCheckOptions = typedUnknown<GetMonitorCheckOptio
 /**
  * Type for {@link FirecrawlGetMonitorCheckOptions}.
  *
- * @example
+ * **Example** (Type optional get monitor check options)
+ *
  * ```ts
  * import type { FirecrawlGetMonitorCheckOptions } from "@beep/firecrawl"
  *
@@ -833,7 +875,8 @@ export type FirecrawlGetMonitorCheckOptions = typeof FirecrawlGetMonitorCheckOpt
 /**
  * Firecrawl Batch Scrape Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log batch scrape options)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeOptions } from "@beep/firecrawl"
  *
@@ -850,7 +893,8 @@ export const FirecrawlBatchScrapeOptions = typedUnknown<BatchScrapeOptions>(
 /**
  * Type for {@link FirecrawlBatchScrapeOptions}.
  *
- * @example
+ * **Example** (Type optional batch scrape options)
+ *
  * ```ts
  * import type { FirecrawlBatchScrapeOptions } from "@beep/firecrawl"
  *
@@ -866,7 +910,8 @@ export type FirecrawlBatchScrapeOptions = typeof FirecrawlBatchScrapeOptions.Typ
 /**
  * Firecrawl Batch Scrape Wait Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log batch scrape wait options)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeWaitOptions } from "@beep/firecrawl"
  *
@@ -882,7 +927,8 @@ export const FirecrawlBatchScrapeWaitOptions = typedUnknown<
 /**
  * Type for {@link FirecrawlBatchScrapeWaitOptions}.
  *
- * @example
+ * **Example** (Type optional batch scrape wait options)
+ *
  * ```ts
  * import type { FirecrawlBatchScrapeWaitOptions } from "@beep/firecrawl"
  *
@@ -898,7 +944,8 @@ export type FirecrawlBatchScrapeWaitOptions = typeof FirecrawlBatchScrapeWaitOpt
 /**
  * Firecrawl Agent Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log agent request schema)
+ *
  * ```ts
  * import { FirecrawlAgentRequest } from "@beep/firecrawl"
  *
@@ -915,7 +962,8 @@ export const FirecrawlAgentRequest = typedUnknown<FirecrawlSdkAgentRequest>(
 /**
  * Type for {@link FirecrawlAgentRequest}.
  *
- * @example
+ * **Example** (Type optional agent request)
+ *
  * ```ts
  * import type { FirecrawlAgentRequest } from "@beep/firecrawl"
  *
@@ -931,7 +979,8 @@ export type FirecrawlAgentRequest = typeof FirecrawlAgentRequest.Type;
 /**
  * Firecrawl Agent Wait Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log agent wait request)
+ *
  * ```ts
  * import { FirecrawlAgentWaitRequest } from "@beep/firecrawl"
  *
@@ -948,7 +997,8 @@ export const FirecrawlAgentWaitRequest = typedUnknown<FirecrawlSdkAgentWaitReque
 /**
  * Type for {@link FirecrawlAgentWaitRequest}.
  *
- * @example
+ * **Example** (Type optional agent wait request)
+ *
  * ```ts
  * import type { FirecrawlAgentWaitRequest } from "@beep/firecrawl"
  *
@@ -964,7 +1014,8 @@ export type FirecrawlAgentWaitRequest = typeof FirecrawlAgentWaitRequest.Type;
 /**
  * Firecrawl Browser Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log browser options schema)
+ *
  * ```ts
  * import { FirecrawlBrowserOptions } from "@beep/firecrawl"
  *
@@ -981,7 +1032,8 @@ export const FirecrawlBrowserOptions = typedUnknown<Parameters<import("firecrawl
 /**
  * Type for {@link FirecrawlBrowserOptions}.
  *
- * @example
+ * **Example** (Type optional browser options)
+ *
  * ```ts
  * import type { FirecrawlBrowserOptions } from "@beep/firecrawl"
  *
@@ -997,7 +1049,8 @@ export type FirecrawlBrowserOptions = typeof FirecrawlBrowserOptions.Type;
 /**
  * Firecrawl Interact Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log interact request schema)
+ *
  * ```ts
  * import { FirecrawlInteractRequest } from "@beep/firecrawl"
  *
@@ -1014,7 +1067,8 @@ export const FirecrawlInteractRequest = typedUnknown<ScrapeExecuteRequest>(
 /**
  * Type for {@link FirecrawlInteractRequest}.
  *
- * @example
+ * **Example** (Type optional interact request)
+ *
  * ```ts
  * import type { FirecrawlInteractRequest } from "@beep/firecrawl"
  *
@@ -1030,7 +1084,8 @@ export type FirecrawlInteractRequest = typeof FirecrawlInteractRequest.Type;
 /**
  * Firecrawl Browser Execute Request opaque SDK request schema.
  *
- * @example
+ * **Example** (Log browser execute request)
+ *
  * ```ts
  * import { FirecrawlBrowserExecuteRequest } from "@beep/firecrawl"
  *
@@ -1046,7 +1101,8 @@ export const FirecrawlBrowserExecuteRequest = typedUnknown<
 /**
  * Type for {@link FirecrawlBrowserExecuteRequest}.
  *
- * @example
+ * **Example** (Type optional browser execute request)
+ *
  * ```ts
  * import type { FirecrawlBrowserExecuteRequest } from "@beep/firecrawl"
  *
@@ -1062,7 +1118,8 @@ export type FirecrawlBrowserExecuteRequest = typeof FirecrawlBrowserExecuteReque
 /**
  * Firecrawl List Browsers Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log list browsers options)
+ *
  * ```ts
  * import { FirecrawlListBrowsersOptions } from "@beep/firecrawl"
  *
@@ -1078,7 +1135,8 @@ export const FirecrawlListBrowsersOptions = typedUnknown<
 /**
  * Type for {@link FirecrawlListBrowsersOptions}.
  *
- * @example
+ * **Example** (Type optional list browsers options)
+ *
  * ```ts
  * import type { FirecrawlListBrowsersOptions } from "@beep/firecrawl"
  *
@@ -1094,7 +1152,8 @@ export type FirecrawlListBrowsersOptions = typeof FirecrawlListBrowsersOptions.T
 /**
  * Firecrawl Watcher Options opaque SDK options schema.
  *
- * @example
+ * **Example** (Log watcher options schema)
+ *
  * ```ts
  * import { FirecrawlWatcherOptions } from "@beep/firecrawl"
  *
@@ -1111,7 +1170,8 @@ export const FirecrawlWatcherOptions = typedUnknown<WatcherOptions>(
 /**
  * Type for {@link FirecrawlWatcherOptions}.
  *
- * @example
+ * **Example** (Type optional watcher options)
+ *
  * ```ts
  * import type { FirecrawlWatcherOptions } from "@beep/firecrawl"
  *
@@ -1127,7 +1187,8 @@ export type FirecrawlWatcherOptions = typeof FirecrawlWatcherOptions.Type;
 /**
  * Firecrawl Document schema.
  *
- * @example
+ * **Example** (Log document schema)
+ *
  * ```ts
  * import { FirecrawlDocument } from "@beep/firecrawl"
  *
@@ -1141,7 +1202,8 @@ export const FirecrawlDocument = Response.FirecrawlDocument;
 /**
  * Type for {@link FirecrawlDocument}.
  *
- * @example
+ * **Example** (Type optional document)
+ *
  * ```ts
  * import type { FirecrawlDocument } from "@beep/firecrawl"
  *
@@ -1156,7 +1218,8 @@ export type FirecrawlDocument = typeof FirecrawlDocument.Type;
 /**
  * Structurally validated Firecrawl search response schema.
  *
- * @example
+ * **Example** (Log search data schema)
+ *
  * ```ts
  * import { FirecrawlSearchData } from "@beep/firecrawl"
  *
@@ -1170,7 +1233,8 @@ export const FirecrawlSearchData = Response.FirecrawlSearchData;
 /**
  * Type for {@link FirecrawlSearchData}.
  *
- * @example
+ * **Example** (Type optional search data)
+ *
  * ```ts
  * import type { FirecrawlSearchData } from "@beep/firecrawl"
  *
@@ -1185,7 +1249,8 @@ export type FirecrawlSearchData = typeof FirecrawlSearchData.Type;
 /**
  * Structurally validated Firecrawl map response schema.
  *
- * @example
+ * **Example** (Log map data schema)
+ *
  * ```ts
  * import { FirecrawlMapData } from "@beep/firecrawl"
  *
@@ -1199,7 +1264,8 @@ export const FirecrawlMapData = Response.FirecrawlMapData;
 /**
  * Type for {@link FirecrawlMapData}.
  *
- * @example
+ * **Example** (Type optional map data)
+ *
  * ```ts
  * import type { FirecrawlMapData } from "@beep/firecrawl"
  *
@@ -1214,7 +1280,8 @@ export type FirecrawlMapData = typeof FirecrawlMapData.Type;
 /**
  * Structurally validated Firecrawl crawl-start response schema.
  *
- * @example
+ * **Example** (Log crawl response data)
+ *
  * ```ts
  * import { FirecrawlCrawlResponseData } from "@beep/firecrawl"
  *
@@ -1228,7 +1295,8 @@ export const FirecrawlCrawlResponseData = Response.FirecrawlCrawlResponseData;
 /**
  * Type for {@link FirecrawlCrawlResponseData}.
  *
- * @example
+ * **Example** (Type optional crawl response data)
+ *
  * ```ts
  * import type { FirecrawlCrawlResponseData } from "@beep/firecrawl"
  *
@@ -1243,7 +1311,8 @@ export type FirecrawlCrawlResponseData = typeof FirecrawlCrawlResponseData.Type;
 /**
  * Structurally validated Firecrawl crawl-job response schema.
  *
- * @example
+ * **Example** (Log crawl job data)
+ *
  * ```ts
  * import { FirecrawlCrawlJobData } from "@beep/firecrawl"
  *
@@ -1257,7 +1326,8 @@ export const FirecrawlCrawlJobData = Response.FirecrawlCrawlJobData;
 /**
  * Type for {@link FirecrawlCrawlJobData}.
  *
- * @example
+ * **Example** (Type optional crawl job data)
+ *
  * ```ts
  * import type { FirecrawlCrawlJobData } from "@beep/firecrawl"
  *
@@ -1272,7 +1342,8 @@ export type FirecrawlCrawlJobData = typeof FirecrawlCrawlJobData.Type;
 /**
  * Structurally validated Firecrawl crawl-errors response schema.
  *
- * @example
+ * **Example** (Log crawl errors data)
+ *
  * ```ts
  * import { FirecrawlCrawlErrorsData } from "@beep/firecrawl"
  *
@@ -1286,7 +1357,8 @@ export const FirecrawlCrawlErrorsData = Response.FirecrawlCrawlErrorsData;
 /**
  * Type for {@link FirecrawlCrawlErrorsData}.
  *
- * @example
+ * **Example** (Type optional crawl errors data)
+ *
  * ```ts
  * import type { FirecrawlCrawlErrorsData } from "@beep/firecrawl"
  *
@@ -1301,7 +1373,8 @@ export type FirecrawlCrawlErrorsData = typeof FirecrawlCrawlErrorsData.Type;
 /**
  * Structurally validated Firecrawl active-crawls response schema.
  *
- * @example
+ * **Example** (Log active crawls data)
+ *
  * ```ts
  * import { FirecrawlActiveCrawlsData } from "@beep/firecrawl"
  *
@@ -1315,7 +1388,8 @@ export const FirecrawlActiveCrawlsData = Response.FirecrawlActiveCrawlsData;
 /**
  * Type for {@link FirecrawlActiveCrawlsData}.
  *
- * @example
+ * **Example** (Type optional active crawls data)
+ *
  * ```ts
  * import type { FirecrawlActiveCrawlsData } from "@beep/firecrawl"
  *
@@ -1330,7 +1404,8 @@ export type FirecrawlActiveCrawlsData = typeof FirecrawlActiveCrawlsData.Type;
 /**
  * Structurally validated Firecrawl monitor response schema.
  *
- * @example
+ * **Example** (Log monitor data schema)
+ *
  * ```ts
  * import { FirecrawlMonitorData } from "@beep/firecrawl"
  *
@@ -1344,7 +1419,8 @@ export const FirecrawlMonitorData = Response.FirecrawlMonitorData;
 /**
  * Type for {@link FirecrawlMonitorData}.
  *
- * @example
+ * **Example** (Type optional monitor data)
+ *
  * ```ts
  * import type { FirecrawlMonitorData } from "@beep/firecrawl"
  *
@@ -1359,7 +1435,8 @@ export type FirecrawlMonitorData = typeof FirecrawlMonitorData.Type;
 /**
  * Structurally validated Firecrawl monitor-list response schema.
  *
- * @example
+ * **Example** (Log monitor list data)
+ *
  * ```ts
  * import { FirecrawlMonitorListData } from "@beep/firecrawl"
  *
@@ -1373,7 +1450,8 @@ export const FirecrawlMonitorListData = Response.FirecrawlMonitorListData;
 /**
  * Type for {@link FirecrawlMonitorListData}.
  *
- * @example
+ * **Example** (Type optional monitor list data)
+ *
  * ```ts
  * import type { FirecrawlMonitorListData } from "@beep/firecrawl"
  *
@@ -1388,7 +1466,8 @@ export type FirecrawlMonitorListData = typeof FirecrawlMonitorListData.Type;
 /**
  * Structurally validated Firecrawl monitor-check response schema.
  *
- * @example
+ * **Example** (Log monitor check data)
+ *
  * ```ts
  * import { FirecrawlMonitorCheckData } from "@beep/firecrawl"
  *
@@ -1402,7 +1481,8 @@ export const FirecrawlMonitorCheckData = Response.FirecrawlMonitorCheckData;
 /**
  * Type for {@link FirecrawlMonitorCheckData}.
  *
- * @example
+ * **Example** (Type optional monitor check data)
+ *
  * ```ts
  * import type { FirecrawlMonitorCheckData } from "@beep/firecrawl"
  *
@@ -1417,7 +1497,8 @@ export type FirecrawlMonitorCheckData = typeof FirecrawlMonitorCheckData.Type;
 /**
  * Structurally validated Firecrawl monitor-check-list response schema.
  *
- * @example
+ * **Example** (Log monitor check list data)
+ *
  * ```ts
  * import { FirecrawlMonitorCheckListData } from "@beep/firecrawl"
  *
@@ -1431,7 +1512,8 @@ export const FirecrawlMonitorCheckListData = Response.FirecrawlMonitorCheckListD
 /**
  * Type for {@link FirecrawlMonitorCheckListData}.
  *
- * @example
+ * **Example** (Type optional monitor check list data)
+ *
  * ```ts
  * import type { FirecrawlMonitorCheckListData } from "@beep/firecrawl"
  *
@@ -1446,7 +1528,8 @@ export type FirecrawlMonitorCheckListData = typeof FirecrawlMonitorCheckListData
 /**
  * Structurally validated Firecrawl monitor-check-detail response schema.
  *
- * @example
+ * **Example** (Log monitor check detail data)
+ *
  * ```ts
  * import { FirecrawlMonitorCheckDetailData } from "@beep/firecrawl"
  *
@@ -1460,7 +1543,8 @@ export const FirecrawlMonitorCheckDetailData = Response.FirecrawlMonitorCheckDet
 /**
  * Type for {@link FirecrawlMonitorCheckDetailData}.
  *
- * @example
+ * **Example** (Type optional monitor check detail data)
+ *
  * ```ts
  * import type { FirecrawlMonitorCheckDetailData } from "@beep/firecrawl"
  *
@@ -1475,7 +1559,8 @@ export type FirecrawlMonitorCheckDetailData = typeof FirecrawlMonitorCheckDetail
 /**
  * Structurally validated Firecrawl batch-scrape-start response schema.
  *
- * @example
+ * **Example** (Log batch scrape response data)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeResponseData } from "@beep/firecrawl"
  *
@@ -1489,7 +1574,8 @@ export const FirecrawlBatchScrapeResponseData = Response.FirecrawlBatchScrapeRes
 /**
  * Type for {@link FirecrawlBatchScrapeResponseData}.
  *
- * @example
+ * **Example** (Type optional batch scrape response data)
+ *
  * ```ts
  * import type { FirecrawlBatchScrapeResponseData } from "@beep/firecrawl"
  *
@@ -1504,7 +1590,8 @@ export type FirecrawlBatchScrapeResponseData = typeof FirecrawlBatchScrapeRespon
 /**
  * Structurally validated Firecrawl batch-scrape-job response schema.
  *
- * @example
+ * **Example** (Log batch scrape job data)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeJobData } from "@beep/firecrawl"
  *
@@ -1518,7 +1605,8 @@ export const FirecrawlBatchScrapeJobData = Response.FirecrawlBatchScrapeJobData;
 /**
  * Type for {@link FirecrawlBatchScrapeJobData}.
  *
- * @example
+ * **Example** (Type optional batch scrape job data)
+ *
  * ```ts
  * import type { FirecrawlBatchScrapeJobData } from "@beep/firecrawl"
  *
@@ -1533,7 +1621,8 @@ export type FirecrawlBatchScrapeJobData = typeof FirecrawlBatchScrapeJobData.Typ
 /**
  * Structurally validated Firecrawl agent-start response schema.
  *
- * @example
+ * **Example** (Log agent response data)
+ *
  * ```ts
  * import { FirecrawlAgentResponseData } from "@beep/firecrawl"
  *
@@ -1547,7 +1636,8 @@ export const FirecrawlAgentResponseData = Response.FirecrawlAgentResponseData;
 /**
  * Type for {@link FirecrawlAgentResponseData}.
  *
- * @example
+ * **Example** (Type optional agent response data)
+ *
  * ```ts
  * import type { FirecrawlAgentResponseData } from "@beep/firecrawl"
  *
@@ -1562,7 +1652,8 @@ export type FirecrawlAgentResponseData = typeof FirecrawlAgentResponseData.Type;
 /**
  * Structurally validated Firecrawl agent-status response schema.
  *
- * @example
+ * **Example** (Log agent status data)
+ *
  * ```ts
  * import { FirecrawlAgentStatusData } from "@beep/firecrawl"
  *
@@ -1576,7 +1667,8 @@ export const FirecrawlAgentStatusData = Response.FirecrawlAgentStatusData;
 /**
  * Type for {@link FirecrawlAgentStatusData}.
  *
- * @example
+ * **Example** (Type optional agent status data)
+ *
  * ```ts
  * import type { FirecrawlAgentStatusData } from "@beep/firecrawl"
  *
@@ -1591,7 +1683,8 @@ export type FirecrawlAgentStatusData = typeof FirecrawlAgentStatusData.Type;
 /**
  * Structurally validated Firecrawl browser-create response schema.
  *
- * @example
+ * **Example** (Log browser create data)
+ *
  * ```ts
  * import { FirecrawlBrowserCreateData } from "@beep/firecrawl"
  *
@@ -1605,7 +1698,8 @@ export const FirecrawlBrowserCreateData = Response.FirecrawlBrowserCreateData;
 /**
  * Type for {@link FirecrawlBrowserCreateData}.
  *
- * @example
+ * **Example** (Type optional browser create data)
+ *
  * ```ts
  * import type { FirecrawlBrowserCreateData } from "@beep/firecrawl"
  *
@@ -1620,7 +1714,8 @@ export type FirecrawlBrowserCreateData = typeof FirecrawlBrowserCreateData.Type;
 /**
  * Structurally validated Firecrawl browser-execute response schema.
  *
- * @example
+ * **Example** (Log browser execute data)
+ *
  * ```ts
  * import { FirecrawlBrowserExecuteData } from "@beep/firecrawl"
  *
@@ -1634,7 +1729,8 @@ export const FirecrawlBrowserExecuteData = Response.FirecrawlBrowserExecuteData;
 /**
  * Type for {@link FirecrawlBrowserExecuteData}.
  *
- * @example
+ * **Example** (Type optional browser execute data)
+ *
  * ```ts
  * import type { FirecrawlBrowserExecuteData } from "@beep/firecrawl"
  *
@@ -1649,7 +1745,8 @@ export type FirecrawlBrowserExecuteData = typeof FirecrawlBrowserExecuteData.Typ
 /**
  * Structurally validated Firecrawl browser-delete response schema.
  *
- * @example
+ * **Example** (Log browser delete data)
+ *
  * ```ts
  * import { FirecrawlBrowserDeleteData } from "@beep/firecrawl"
  *
@@ -1663,7 +1760,8 @@ export const FirecrawlBrowserDeleteData = Response.FirecrawlBrowserDeleteData;
 /**
  * Type for {@link FirecrawlBrowserDeleteData}.
  *
- * @example
+ * **Example** (Type optional browser delete data)
+ *
  * ```ts
  * import type { FirecrawlBrowserDeleteData } from "@beep/firecrawl"
  *
@@ -1678,7 +1776,8 @@ export type FirecrawlBrowserDeleteData = typeof FirecrawlBrowserDeleteData.Type;
 /**
  * Structurally validated Firecrawl browser-list response schema.
  *
- * @example
+ * **Example** (Log browser list data)
+ *
  * ```ts
  * import { FirecrawlBrowserListData } from "@beep/firecrawl"
  *
@@ -1692,7 +1791,8 @@ export const FirecrawlBrowserListData = Response.FirecrawlBrowserListData;
 /**
  * Type for {@link FirecrawlBrowserListData}.
  *
- * @example
+ * **Example** (Type optional browser list data)
+ *
  * ```ts
  * import type { FirecrawlBrowserListData } from "@beep/firecrawl"
  *
@@ -1707,7 +1807,8 @@ export type FirecrawlBrowserListData = typeof FirecrawlBrowserListData.Type;
 /**
  * Structurally validated Firecrawl concurrency response schema.
  *
- * @example
+ * **Example** (Log concurrency data schema)
+ *
  * ```ts
  * import { FirecrawlConcurrencyData } from "@beep/firecrawl"
  *
@@ -1721,7 +1822,8 @@ export const FirecrawlConcurrencyData = Response.FirecrawlConcurrencyData;
 /**
  * Type for {@link FirecrawlConcurrencyData}.
  *
- * @example
+ * **Example** (Type optional concurrency data)
+ *
  * ```ts
  * import type { FirecrawlConcurrencyData } from "@beep/firecrawl"
  *
@@ -1736,7 +1838,8 @@ export type FirecrawlConcurrencyData = typeof FirecrawlConcurrencyData.Type;
 /**
  * Structurally validated Firecrawl credit-usage response schema.
  *
- * @example
+ * **Example** (Log credit usage data)
+ *
  * ```ts
  * import { FirecrawlCreditUsageData } from "@beep/firecrawl"
  *
@@ -1750,7 +1853,8 @@ export const FirecrawlCreditUsageData = Response.FirecrawlCreditUsageData;
 /**
  * Type for {@link FirecrawlCreditUsageData}.
  *
- * @example
+ * **Example** (Type optional credit usage data)
+ *
  * ```ts
  * import type { FirecrawlCreditUsageData } from "@beep/firecrawl"
  *
@@ -1765,7 +1869,8 @@ export type FirecrawlCreditUsageData = typeof FirecrawlCreditUsageData.Type;
 /**
  * Structurally validated Firecrawl token-usage response schema.
  *
- * @example
+ * **Example** (Log token usage data)
+ *
  * ```ts
  * import { FirecrawlTokenUsageData } from "@beep/firecrawl"
  *
@@ -1779,7 +1884,8 @@ export const FirecrawlTokenUsageData = Response.FirecrawlTokenUsageData;
 /**
  * Type for {@link FirecrawlTokenUsageData}.
  *
- * @example
+ * **Example** (Type optional token usage data)
+ *
  * ```ts
  * import type { FirecrawlTokenUsageData } from "@beep/firecrawl"
  *
@@ -1794,7 +1900,8 @@ export type FirecrawlTokenUsageData = typeof FirecrawlTokenUsageData.Type;
 /**
  * Structurally validated Firecrawl historical credit-usage response schema.
  *
- * @example
+ * **Example** (Log historical credit usage data)
+ *
  * ```ts
  * import { FirecrawlCreditUsageHistoricalData } from "@beep/firecrawl"
  *
@@ -1808,7 +1915,8 @@ export const FirecrawlCreditUsageHistoricalData = Response.FirecrawlCreditUsageH
 /**
  * Type for {@link FirecrawlCreditUsageHistoricalData}.
  *
- * @example
+ * **Example** (Type optional historical credit usage data)
+ *
  * ```ts
  * import type { FirecrawlCreditUsageHistoricalData } from "@beep/firecrawl"
  *
@@ -1823,7 +1931,8 @@ export type FirecrawlCreditUsageHistoricalData = typeof FirecrawlCreditUsageHist
 /**
  * Structurally validated Firecrawl historical token-usage response schema.
  *
- * @example
+ * **Example** (Log historical token usage data)
+ *
  * ```ts
  * import { FirecrawlTokenUsageHistoricalData } from "@beep/firecrawl"
  *
@@ -1837,7 +1946,8 @@ export const FirecrawlTokenUsageHistoricalData = Response.FirecrawlTokenUsageHis
 /**
  * Type for {@link FirecrawlTokenUsageHistoricalData}.
  *
- * @example
+ * **Example** (Type optional historical token usage data)
+ *
  * ```ts
  * import type { FirecrawlTokenUsageHistoricalData } from "@beep/firecrawl"
  *
@@ -1852,7 +1962,8 @@ export type FirecrawlTokenUsageHistoricalData = typeof FirecrawlTokenUsageHistor
 /**
  * Structurally validated Firecrawl queue-status response schema.
  *
- * @example
+ * **Example** (Log queue status data)
+ *
  * ```ts
  * import { FirecrawlQueueStatusData } from "@beep/firecrawl"
  *
@@ -1866,7 +1977,8 @@ export const FirecrawlQueueStatusData = Response.FirecrawlQueueStatusData;
 /**
  * Type for {@link FirecrawlQueueStatusData}.
  *
- * @example
+ * **Example** (Type optional queue status data)
+ *
  * ```ts
  * import type { FirecrawlQueueStatusData } from "@beep/firecrawl"
  *
@@ -1881,7 +1993,8 @@ export type FirecrawlQueueStatusData = typeof FirecrawlQueueStatusData.Type;
 /**
  * Structurally validated Firecrawl interaction response schema.
  *
- * @example
+ * **Example** (Log interact data schema)
+ *
  * ```ts
  * import { FirecrawlInteractData } from "@beep/firecrawl"
  *
@@ -1895,7 +2008,8 @@ export const FirecrawlInteractData = Response.FirecrawlInteractData;
 /**
  * Type for {@link FirecrawlInteractData}.
  *
- * @example
+ * **Example** (Type optional interact data)
+ *
  * ```ts
  * import type { FirecrawlInteractData } from "@beep/firecrawl"
  *
@@ -1910,7 +2024,8 @@ export type FirecrawlInteractData = typeof FirecrawlInteractData.Type;
 /**
  * Structurally validated Firecrawl stop-interaction response schema.
  *
- * @example
+ * **Example** (Log stop interaction data)
+ *
  * ```ts
  * import { FirecrawlStopInteractionData } from "@beep/firecrawl"
  *
@@ -1924,7 +2039,8 @@ export const FirecrawlStopInteractionData = Response.FirecrawlStopInteractionDat
 /**
  * Type for {@link FirecrawlStopInteractionData}.
  *
- * @example
+ * **Example** (Type optional stop interaction data)
+ *
  * ```ts
  * import type { FirecrawlStopInteractionData } from "@beep/firecrawl"
  *
@@ -1948,7 +2064,8 @@ const failureFields = {
 /**
  * Firecrawl Scrape Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log scrape payload schema)
+ *
  * ```ts
  * import { FirecrawlScrapePayload } from "@beep/firecrawl"
  *
@@ -1970,7 +2087,8 @@ export class FirecrawlScrapePayload extends S.Class<FirecrawlScrapePayload>($I`F
 /**
  * Firecrawl Scrape Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log scrape success schema)
+ *
  * ```ts
  * import { FirecrawlScrapeSuccess } from "@beep/firecrawl"
  *
@@ -1987,7 +2105,8 @@ export class FirecrawlScrapeSuccess extends S.Class<FirecrawlScrapeSuccess>($I`F
 /**
  * Firecrawl Scrape Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log scrape failure schema)
+ *
  * ```ts
  * import { FirecrawlScrapeFailure } from "@beep/firecrawl"
  *
@@ -2005,7 +2124,8 @@ export class FirecrawlScrapeFailure extends S.Class<FirecrawlScrapeFailure>($I`F
 /**
  * Firecrawl Interact Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log interact payload schema)
+ *
  * ```ts
  * import { FirecrawlInteractPayload } from "@beep/firecrawl"
  *
@@ -2022,7 +2142,8 @@ export class FirecrawlInteractPayload extends S.Class<FirecrawlInteractPayload>(
 /**
  * Firecrawl Interact Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log interact success schema)
+ *
  * ```ts
  * import { FirecrawlInteractSuccess } from "@beep/firecrawl"
  *
@@ -2039,7 +2160,8 @@ export class FirecrawlInteractSuccess extends S.Class<FirecrawlInteractSuccess>(
 /**
  * Firecrawl Interact Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log interact failure schema)
+ *
  * ```ts
  * import { FirecrawlInteractFailure } from "@beep/firecrawl"
  *
@@ -2057,7 +2179,8 @@ export class FirecrawlInteractFailure extends S.Class<FirecrawlInteractFailure>(
 /**
  * Firecrawl Stop Interaction Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log stop interaction payload)
+ *
  * ```ts
  * import { FirecrawlStopInteractionPayload } from "@beep/firecrawl"
  *
@@ -2078,7 +2201,8 @@ export class FirecrawlStopInteractionPayload extends S.Class<FirecrawlStopIntera
 /**
  * Firecrawl Stop Interaction Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log stop interaction success)
+ *
  * ```ts
  * import { FirecrawlStopInteractionSuccess } from "@beep/firecrawl"
  *
@@ -2099,7 +2223,8 @@ export class FirecrawlStopInteractionSuccess extends S.Class<FirecrawlStopIntera
 /**
  * Firecrawl Stop Interaction Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log stop interaction failure)
+ *
  * ```ts
  * import { FirecrawlStopInteractionFailure } from "@beep/firecrawl"
  *
@@ -2121,7 +2246,8 @@ export class FirecrawlStopInteractionFailure extends S.Class<FirecrawlStopIntera
 /**
  * Firecrawl Parse Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log parse payload schema)
+ *
  * ```ts
  * import { FirecrawlParsePayload } from "@beep/firecrawl"
  *
@@ -2143,7 +2269,8 @@ export class FirecrawlParsePayload extends S.Class<FirecrawlParsePayload>($I`Fir
 /**
  * Firecrawl Parse Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log parse success schema)
+ *
  * ```ts
  * import { FirecrawlParseSuccess } from "@beep/firecrawl"
  *
@@ -2160,7 +2287,8 @@ export class FirecrawlParseSuccess extends S.Class<FirecrawlParseSuccess>($I`Fir
 /**
  * Firecrawl Parse Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log parse failure schema)
+ *
  * ```ts
  * import { FirecrawlParseFailure } from "@beep/firecrawl"
  *
@@ -2178,7 +2306,8 @@ export class FirecrawlParseFailure extends S.Class<FirecrawlParseFailure>($I`Fir
 /**
  * Firecrawl Search Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log search payload schema)
+ *
  * ```ts
  * import { FirecrawlSearchPayload } from "@beep/firecrawl"
  *
@@ -2200,7 +2329,8 @@ export class FirecrawlSearchPayload extends S.Class<FirecrawlSearchPayload>($I`F
 /**
  * Firecrawl Search Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log search success schema)
+ *
  * ```ts
  * import { FirecrawlSearchSuccess } from "@beep/firecrawl"
  *
@@ -2217,7 +2347,8 @@ export class FirecrawlSearchSuccess extends S.Class<FirecrawlSearchSuccess>($I`F
 /**
  * Firecrawl Search Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log search failure schema)
+ *
  * ```ts
  * import { FirecrawlSearchFailure } from "@beep/firecrawl"
  *
@@ -2235,7 +2366,8 @@ export class FirecrawlSearchFailure extends S.Class<FirecrawlSearchFailure>($I`F
 /**
  * Firecrawl Map Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log map payload schema)
+ *
  * ```ts
  * import { FirecrawlMapPayload } from "@beep/firecrawl"
  *
@@ -2257,7 +2389,8 @@ export class FirecrawlMapPayload extends S.Class<FirecrawlMapPayload>($I`Firecra
 /**
  * Firecrawl Map Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log map success schema)
+ *
  * ```ts
  * import { FirecrawlMapSuccess } from "@beep/firecrawl"
  *
@@ -2274,7 +2407,8 @@ export class FirecrawlMapSuccess extends S.Class<FirecrawlMapSuccess>($I`Firecra
 /**
  * Firecrawl Map Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log map failure schema)
+ *
  * ```ts
  * import { FirecrawlMapFailure } from "@beep/firecrawl"
  *
@@ -2292,7 +2426,8 @@ export class FirecrawlMapFailure extends S.Class<FirecrawlMapFailure>($I`Firecra
 /**
  * Firecrawl Start Crawl Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log start crawl payload)
+ *
  * ```ts
  * import { FirecrawlStartCrawlPayload } from "@beep/firecrawl"
  *
@@ -2314,7 +2449,8 @@ export class FirecrawlStartCrawlPayload extends S.Class<FirecrawlStartCrawlPaylo
 /**
  * Firecrawl Start Crawl Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log start crawl success)
+ *
  * ```ts
  * import { FirecrawlStartCrawlSuccess } from "@beep/firecrawl"
  *
@@ -2331,7 +2467,8 @@ export class FirecrawlStartCrawlSuccess extends S.Class<FirecrawlStartCrawlSucce
 /**
  * Firecrawl Start Crawl Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log start crawl failure)
+ *
  * ```ts
  * import { FirecrawlStartCrawlFailure } from "@beep/firecrawl"
  *
@@ -2349,7 +2486,8 @@ export class FirecrawlStartCrawlFailure extends S.Class<FirecrawlStartCrawlFailu
 /**
  * Firecrawl Get Crawl Status Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get crawl status payload)
+ *
  * ```ts
  * import { FirecrawlGetCrawlStatusPayload } from "@beep/firecrawl"
  *
@@ -2375,7 +2513,8 @@ export class FirecrawlGetCrawlStatusPayload extends S.Class<FirecrawlGetCrawlSta
 /**
  * Firecrawl Get Crawl Status Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get crawl status success)
+ *
  * ```ts
  * import { FirecrawlGetCrawlStatusSuccess } from "@beep/firecrawl"
  *
@@ -2396,7 +2535,8 @@ export class FirecrawlGetCrawlStatusSuccess extends S.Class<FirecrawlGetCrawlSta
 /**
  * Firecrawl Get Crawl Status Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get crawl status failure)
+ *
  * ```ts
  * import { FirecrawlGetCrawlStatusFailure } from "@beep/firecrawl"
  *
@@ -2418,7 +2558,8 @@ export class FirecrawlGetCrawlStatusFailure extends S.Class<FirecrawlGetCrawlSta
 /**
  * Firecrawl Cancel Crawl Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log cancel crawl payload)
+ *
  * ```ts
  * import { FirecrawlCancelCrawlPayload } from "@beep/firecrawl"
  *
@@ -2435,7 +2576,8 @@ export class FirecrawlCancelCrawlPayload extends S.Class<FirecrawlCancelCrawlPay
 /**
  * Firecrawl Cancel Crawl Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log cancel crawl success)
+ *
  * ```ts
  * import { FirecrawlCancelCrawlSuccess } from "@beep/firecrawl"
  *
@@ -2452,7 +2594,8 @@ export class FirecrawlCancelCrawlSuccess extends S.Class<FirecrawlCancelCrawlSuc
 /**
  * Firecrawl Cancel Crawl Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log cancel crawl failure)
+ *
  * ```ts
  * import { FirecrawlCancelCrawlFailure } from "@beep/firecrawl"
  *
@@ -2470,7 +2613,8 @@ export class FirecrawlCancelCrawlFailure extends S.Class<FirecrawlCancelCrawlFai
 /**
  * Firecrawl Crawl Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log crawl payload schema)
+ *
  * ```ts
  * import { FirecrawlCrawlPayload } from "@beep/firecrawl"
  *
@@ -2494,7 +2638,8 @@ export class FirecrawlCrawlPayload extends S.Class<FirecrawlCrawlPayload>($I`Fir
 /**
  * Firecrawl Crawl Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log crawl success schema)
+ *
  * ```ts
  * import { FirecrawlCrawlSuccess } from "@beep/firecrawl"
  *
@@ -2511,7 +2656,8 @@ export class FirecrawlCrawlSuccess extends S.Class<FirecrawlCrawlSuccess>($I`Fir
 /**
  * Firecrawl Crawl Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log crawl failure schema)
+ *
  * ```ts
  * import { FirecrawlCrawlFailure } from "@beep/firecrawl"
  *
@@ -2529,7 +2675,8 @@ export class FirecrawlCrawlFailure extends S.Class<FirecrawlCrawlFailure>($I`Fir
 /**
  * Firecrawl Get Crawl Errors Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get crawl errors payload)
+ *
  * ```ts
  * import { FirecrawlGetCrawlErrorsPayload } from "@beep/firecrawl"
  *
@@ -2550,7 +2697,8 @@ export class FirecrawlGetCrawlErrorsPayload extends S.Class<FirecrawlGetCrawlErr
 /**
  * Firecrawl Get Crawl Errors Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get crawl errors success)
+ *
  * ```ts
  * import { FirecrawlGetCrawlErrorsSuccess } from "@beep/firecrawl"
  *
@@ -2571,7 +2719,8 @@ export class FirecrawlGetCrawlErrorsSuccess extends S.Class<FirecrawlGetCrawlErr
 /**
  * Firecrawl Get Crawl Errors Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get crawl errors failure)
+ *
  * ```ts
  * import { FirecrawlGetCrawlErrorsFailure } from "@beep/firecrawl"
  *
@@ -2593,7 +2742,8 @@ export class FirecrawlGetCrawlErrorsFailure extends S.Class<FirecrawlGetCrawlErr
 /**
  * Firecrawl Get Active Crawls Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get active crawls payload)
+ *
  * ```ts
  * import { FirecrawlGetActiveCrawlsPayload } from "@beep/firecrawl"
  *
@@ -2614,7 +2764,8 @@ export class FirecrawlGetActiveCrawlsPayload extends S.Class<FirecrawlGetActiveC
 /**
  * Firecrawl Get Active Crawls Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get active crawls success)
+ *
  * ```ts
  * import { FirecrawlGetActiveCrawlsSuccess } from "@beep/firecrawl"
  *
@@ -2635,7 +2786,8 @@ export class FirecrawlGetActiveCrawlsSuccess extends S.Class<FirecrawlGetActiveC
 /**
  * Firecrawl Get Active Crawls Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get active crawls failure)
+ *
  * ```ts
  * import { FirecrawlGetActiveCrawlsFailure } from "@beep/firecrawl"
  *
@@ -2657,7 +2809,8 @@ export class FirecrawlGetActiveCrawlsFailure extends S.Class<FirecrawlGetActiveC
 /**
  * Firecrawl Crawl Params Preview Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log crawl params preview payload)
+ *
  * ```ts
  * import { FirecrawlCrawlParamsPreviewPayload } from "@beep/firecrawl"
  *
@@ -2678,7 +2831,8 @@ export class FirecrawlCrawlParamsPreviewPayload extends S.Class<FirecrawlCrawlPa
 /**
  * Firecrawl Crawl Params Preview Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log crawl params preview success)
+ *
  * ```ts
  * import { FirecrawlCrawlParamsPreviewSuccess } from "@beep/firecrawl"
  *
@@ -2699,7 +2853,8 @@ export class FirecrawlCrawlParamsPreviewSuccess extends S.Class<FirecrawlCrawlPa
 /**
  * Firecrawl Crawl Params Preview Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log crawl params preview failure)
+ *
  * ```ts
  * import { FirecrawlCrawlParamsPreviewFailure } from "@beep/firecrawl"
  *
@@ -2721,7 +2876,8 @@ export class FirecrawlCrawlParamsPreviewFailure extends S.Class<FirecrawlCrawlPa
 /**
  * Firecrawl Create Monitor Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log create monitor payload)
+ *
  * ```ts
  * import { FirecrawlCreateMonitorPayload } from "@beep/firecrawl"
  *
@@ -2740,7 +2896,8 @@ export class FirecrawlCreateMonitorPayload extends S.Class<FirecrawlCreateMonito
 /**
  * Firecrawl Create Monitor Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log create monitor success)
+ *
  * ```ts
  * import { FirecrawlCreateMonitorSuccess } from "@beep/firecrawl"
  *
@@ -2761,7 +2918,8 @@ export class FirecrawlCreateMonitorSuccess extends S.Class<FirecrawlCreateMonito
 /**
  * Firecrawl Create Monitor Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log create monitor failure)
+ *
  * ```ts
  * import { FirecrawlCreateMonitorFailure } from "@beep/firecrawl"
  *
@@ -2783,7 +2941,8 @@ export class FirecrawlCreateMonitorFailure extends S.Class<FirecrawlCreateMonito
 /**
  * Firecrawl List Monitors Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log list monitors payload)
+ *
  * ```ts
  * import { FirecrawlListMonitorsPayload } from "@beep/firecrawl"
  *
@@ -2806,7 +2965,8 @@ export class FirecrawlListMonitorsPayload extends S.Class<FirecrawlListMonitorsP
 /**
  * Firecrawl List Monitors Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log list monitors success)
+ *
  * ```ts
  * import { FirecrawlListMonitorsSuccess } from "@beep/firecrawl"
  *
@@ -2827,7 +2987,8 @@ export class FirecrawlListMonitorsSuccess extends S.Class<FirecrawlListMonitorsS
 /**
  * Firecrawl List Monitors Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log list monitors failure)
+ *
  * ```ts
  * import { FirecrawlListMonitorsFailure } from "@beep/firecrawl"
  *
@@ -2849,7 +3010,8 @@ export class FirecrawlListMonitorsFailure extends S.Class<FirecrawlListMonitorsF
 /**
  * Firecrawl Get Monitor Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get monitor payload)
+ *
  * ```ts
  * import { FirecrawlGetMonitorPayload } from "@beep/firecrawl"
  *
@@ -2866,7 +3028,8 @@ export class FirecrawlGetMonitorPayload extends S.Class<FirecrawlGetMonitorPaylo
 /**
  * Firecrawl Get Monitor Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get monitor success)
+ *
  * ```ts
  * import { FirecrawlGetMonitorSuccess } from "@beep/firecrawl"
  *
@@ -2883,7 +3046,8 @@ export class FirecrawlGetMonitorSuccess extends S.Class<FirecrawlGetMonitorSucce
 /**
  * Firecrawl Get Monitor Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get monitor failure)
+ *
  * ```ts
  * import { FirecrawlGetMonitorFailure } from "@beep/firecrawl"
  *
@@ -2901,7 +3065,8 @@ export class FirecrawlGetMonitorFailure extends S.Class<FirecrawlGetMonitorFailu
 /**
  * Firecrawl Update Monitor Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log update monitor payload)
+ *
  * ```ts
  * import { FirecrawlUpdateMonitorPayload } from "@beep/firecrawl"
  *
@@ -2920,7 +3085,8 @@ export class FirecrawlUpdateMonitorPayload extends S.Class<FirecrawlUpdateMonito
 /**
  * Firecrawl Update Monitor Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log update monitor success)
+ *
  * ```ts
  * import { FirecrawlUpdateMonitorSuccess } from "@beep/firecrawl"
  *
@@ -2941,7 +3107,8 @@ export class FirecrawlUpdateMonitorSuccess extends S.Class<FirecrawlUpdateMonito
 /**
  * Firecrawl Update Monitor Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log update monitor failure)
+ *
  * ```ts
  * import { FirecrawlUpdateMonitorFailure } from "@beep/firecrawl"
  *
@@ -2963,7 +3130,8 @@ export class FirecrawlUpdateMonitorFailure extends S.Class<FirecrawlUpdateMonito
 /**
  * Firecrawl Delete Monitor Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log delete monitor payload)
+ *
  * ```ts
  * import { FirecrawlDeleteMonitorPayload } from "@beep/firecrawl"
  *
@@ -2982,7 +3150,8 @@ export class FirecrawlDeleteMonitorPayload extends S.Class<FirecrawlDeleteMonito
 /**
  * Firecrawl Delete Monitor Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log delete monitor success)
+ *
  * ```ts
  * import { FirecrawlDeleteMonitorSuccess } from "@beep/firecrawl"
  *
@@ -3003,7 +3172,8 @@ export class FirecrawlDeleteMonitorSuccess extends S.Class<FirecrawlDeleteMonito
 /**
  * Firecrawl Delete Monitor Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log delete monitor failure)
+ *
  * ```ts
  * import { FirecrawlDeleteMonitorFailure } from "@beep/firecrawl"
  *
@@ -3025,7 +3195,8 @@ export class FirecrawlDeleteMonitorFailure extends S.Class<FirecrawlDeleteMonito
 /**
  * Firecrawl Run Monitor Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log run monitor payload)
+ *
  * ```ts
  * import { FirecrawlRunMonitorPayload } from "@beep/firecrawl"
  *
@@ -3042,7 +3213,8 @@ export class FirecrawlRunMonitorPayload extends S.Class<FirecrawlRunMonitorPaylo
 /**
  * Firecrawl Run Monitor Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log run monitor success)
+ *
  * ```ts
  * import { FirecrawlRunMonitorSuccess } from "@beep/firecrawl"
  *
@@ -3059,7 +3231,8 @@ export class FirecrawlRunMonitorSuccess extends S.Class<FirecrawlRunMonitorSucce
 /**
  * Firecrawl Run Monitor Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log run monitor failure)
+ *
  * ```ts
  * import { FirecrawlRunMonitorFailure } from "@beep/firecrawl"
  *
@@ -3077,7 +3250,8 @@ export class FirecrawlRunMonitorFailure extends S.Class<FirecrawlRunMonitorFailu
 /**
  * Firecrawl List Monitor Checks Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log list monitor checks payload)
+ *
  * ```ts
  * import { FirecrawlListMonitorChecksPayload } from "@beep/firecrawl"
  *
@@ -3103,7 +3277,8 @@ export class FirecrawlListMonitorChecksPayload extends S.Class<FirecrawlListMoni
 /**
  * Firecrawl List Monitor Checks Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log list monitor checks success)
+ *
  * ```ts
  * import { FirecrawlListMonitorChecksSuccess } from "@beep/firecrawl"
  *
@@ -3124,7 +3299,8 @@ export class FirecrawlListMonitorChecksSuccess extends S.Class<FirecrawlListMoni
 /**
  * Firecrawl List Monitor Checks Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log list monitor checks failure)
+ *
  * ```ts
  * import { FirecrawlListMonitorChecksFailure } from "@beep/firecrawl"
  *
@@ -3146,7 +3322,8 @@ export class FirecrawlListMonitorChecksFailure extends S.Class<FirecrawlListMoni
 /**
  * Firecrawl Get Monitor Check Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get monitor check payload)
+ *
  * ```ts
  * import { FirecrawlGetMonitorCheckPayload } from "@beep/firecrawl"
  *
@@ -3173,7 +3350,8 @@ export class FirecrawlGetMonitorCheckPayload extends S.Class<FirecrawlGetMonitor
 /**
  * Firecrawl Get Monitor Check Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get monitor check success)
+ *
  * ```ts
  * import { FirecrawlGetMonitorCheckSuccess } from "@beep/firecrawl"
  *
@@ -3194,7 +3372,8 @@ export class FirecrawlGetMonitorCheckSuccess extends S.Class<FirecrawlGetMonitor
 /**
  * Firecrawl Get Monitor Check Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get monitor check failure)
+ *
  * ```ts
  * import { FirecrawlGetMonitorCheckFailure } from "@beep/firecrawl"
  *
@@ -3216,7 +3395,8 @@ export class FirecrawlGetMonitorCheckFailure extends S.Class<FirecrawlGetMonitor
 /**
  * Firecrawl Start Batch Scrape Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log start batch scrape payload)
+ *
  * ```ts
  * import { FirecrawlStartBatchScrapePayload } from "@beep/firecrawl"
  *
@@ -3242,7 +3422,8 @@ export class FirecrawlStartBatchScrapePayload extends S.Class<FirecrawlStartBatc
 /**
  * Firecrawl Start Batch Scrape Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log start batch scrape success)
+ *
  * ```ts
  * import { FirecrawlStartBatchScrapeSuccess } from "@beep/firecrawl"
  *
@@ -3263,7 +3444,8 @@ export class FirecrawlStartBatchScrapeSuccess extends S.Class<FirecrawlStartBatc
 /**
  * Firecrawl Start Batch Scrape Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log start batch scrape failure)
+ *
  * ```ts
  * import { FirecrawlStartBatchScrapeFailure } from "@beep/firecrawl"
  *
@@ -3285,7 +3467,8 @@ export class FirecrawlStartBatchScrapeFailure extends S.Class<FirecrawlStartBatc
 /**
  * Firecrawl Get Batch Scrape Status Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get batch scrape status payload)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeStatusPayload } from "@beep/firecrawl"
  *
@@ -3311,7 +3494,8 @@ export class FirecrawlGetBatchScrapeStatusPayload extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Get Batch Scrape Status Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get batch scrape status success)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeStatusSuccess } from "@beep/firecrawl"
  *
@@ -3332,7 +3516,8 @@ export class FirecrawlGetBatchScrapeStatusSuccess extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Get Batch Scrape Status Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get batch scrape status failure)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeStatusFailure } from "@beep/firecrawl"
  *
@@ -3354,7 +3539,8 @@ export class FirecrawlGetBatchScrapeStatusFailure extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Get Batch Scrape Errors Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get batch scrape errors payload)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeErrorsPayload } from "@beep/firecrawl"
  *
@@ -3375,7 +3561,8 @@ export class FirecrawlGetBatchScrapeErrorsPayload extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Get Batch Scrape Errors Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get batch scrape errors success)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeErrorsSuccess } from "@beep/firecrawl"
  *
@@ -3396,7 +3583,8 @@ export class FirecrawlGetBatchScrapeErrorsSuccess extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Get Batch Scrape Errors Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get batch scrape errors failure)
+ *
  * ```ts
  * import { FirecrawlGetBatchScrapeErrorsFailure } from "@beep/firecrawl"
  *
@@ -3418,7 +3606,8 @@ export class FirecrawlGetBatchScrapeErrorsFailure extends S.Class<FirecrawlGetBa
 /**
  * Firecrawl Cancel Batch Scrape Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log cancel batch scrape payload)
+ *
  * ```ts
  * import { FirecrawlCancelBatchScrapePayload } from "@beep/firecrawl"
  *
@@ -3439,7 +3628,8 @@ export class FirecrawlCancelBatchScrapePayload extends S.Class<FirecrawlCancelBa
 /**
  * Firecrawl Cancel Batch Scrape Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log cancel batch scrape success)
+ *
  * ```ts
  * import { FirecrawlCancelBatchScrapeSuccess } from "@beep/firecrawl"
  *
@@ -3460,7 +3650,8 @@ export class FirecrawlCancelBatchScrapeSuccess extends S.Class<FirecrawlCancelBa
 /**
  * Firecrawl Cancel Batch Scrape Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log cancel batch scrape failure)
+ *
  * ```ts
  * import { FirecrawlCancelBatchScrapeFailure } from "@beep/firecrawl"
  *
@@ -3482,7 +3673,8 @@ export class FirecrawlCancelBatchScrapeFailure extends S.Class<FirecrawlCancelBa
 /**
  * Firecrawl Batch Scrape Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log batch scrape payload)
+ *
  * ```ts
  * import { FirecrawlBatchScrapePayload } from "@beep/firecrawl"
  *
@@ -3506,7 +3698,8 @@ export class FirecrawlBatchScrapePayload extends S.Class<FirecrawlBatchScrapePay
 /**
  * Firecrawl Batch Scrape Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log batch scrape success)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeSuccess } from "@beep/firecrawl"
  *
@@ -3523,7 +3716,8 @@ export class FirecrawlBatchScrapeSuccess extends S.Class<FirecrawlBatchScrapeSuc
 /**
  * Firecrawl Batch Scrape Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log batch scrape failure)
+ *
  * ```ts
  * import { FirecrawlBatchScrapeFailure } from "@beep/firecrawl"
  *
@@ -3541,7 +3735,8 @@ export class FirecrawlBatchScrapeFailure extends S.Class<FirecrawlBatchScrapeFai
 /**
  * Firecrawl Start Agent Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log start agent payload)
+ *
  * ```ts
  * import { FirecrawlStartAgentPayload } from "@beep/firecrawl"
  *
@@ -3558,7 +3753,8 @@ export class FirecrawlStartAgentPayload extends S.Class<FirecrawlStartAgentPaylo
 /**
  * Firecrawl Start Agent Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log start agent success)
+ *
  * ```ts
  * import { FirecrawlStartAgentSuccess } from "@beep/firecrawl"
  *
@@ -3575,7 +3771,8 @@ export class FirecrawlStartAgentSuccess extends S.Class<FirecrawlStartAgentSucce
 /**
  * Firecrawl Start Agent Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log start agent failure)
+ *
  * ```ts
  * import { FirecrawlStartAgentFailure } from "@beep/firecrawl"
  *
@@ -3593,7 +3790,8 @@ export class FirecrawlStartAgentFailure extends S.Class<FirecrawlStartAgentFailu
 /**
  * Firecrawl Get Agent Status Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get agent status payload)
+ *
  * ```ts
  * import { FirecrawlGetAgentStatusPayload } from "@beep/firecrawl"
  *
@@ -3614,7 +3812,8 @@ export class FirecrawlGetAgentStatusPayload extends S.Class<FirecrawlGetAgentSta
 /**
  * Firecrawl Get Agent Status Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get agent status success)
+ *
  * ```ts
  * import { FirecrawlGetAgentStatusSuccess } from "@beep/firecrawl"
  *
@@ -3635,7 +3834,8 @@ export class FirecrawlGetAgentStatusSuccess extends S.Class<FirecrawlGetAgentSta
 /**
  * Firecrawl Get Agent Status Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get agent status failure)
+ *
  * ```ts
  * import { FirecrawlGetAgentStatusFailure } from "@beep/firecrawl"
  *
@@ -3657,7 +3857,8 @@ export class FirecrawlGetAgentStatusFailure extends S.Class<FirecrawlGetAgentSta
 /**
  * Firecrawl Agent Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log agent payload schema)
+ *
  * ```ts
  * import { FirecrawlAgentPayload } from "@beep/firecrawl"
  *
@@ -3674,7 +3875,8 @@ export class FirecrawlAgentPayload extends S.Class<FirecrawlAgentPayload>($I`Fir
 /**
  * Firecrawl Agent Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log agent success schema)
+ *
  * ```ts
  * import { FirecrawlAgentSuccess } from "@beep/firecrawl"
  *
@@ -3691,7 +3893,8 @@ export class FirecrawlAgentSuccess extends S.Class<FirecrawlAgentSuccess>($I`Fir
 /**
  * Firecrawl Agent Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log agent failure schema)
+ *
  * ```ts
  * import { FirecrawlAgentFailure } from "@beep/firecrawl"
  *
@@ -3709,7 +3912,8 @@ export class FirecrawlAgentFailure extends S.Class<FirecrawlAgentFailure>($I`Fir
 /**
  * Firecrawl Cancel Agent Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log cancel agent payload)
+ *
  * ```ts
  * import { FirecrawlCancelAgentPayload } from "@beep/firecrawl"
  *
@@ -3726,7 +3930,8 @@ export class FirecrawlCancelAgentPayload extends S.Class<FirecrawlCancelAgentPay
 /**
  * Firecrawl Cancel Agent Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log cancel agent success)
+ *
  * ```ts
  * import { FirecrawlCancelAgentSuccess } from "@beep/firecrawl"
  *
@@ -3743,7 +3948,8 @@ export class FirecrawlCancelAgentSuccess extends S.Class<FirecrawlCancelAgentSuc
 /**
  * Firecrawl Cancel Agent Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log cancel agent failure)
+ *
  * ```ts
  * import { FirecrawlCancelAgentFailure } from "@beep/firecrawl"
  *
@@ -3761,7 +3967,8 @@ export class FirecrawlCancelAgentFailure extends S.Class<FirecrawlCancelAgentFai
 /**
  * Firecrawl Browser Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log browser payload schema)
+ *
  * ```ts
  * import { FirecrawlBrowserPayload } from "@beep/firecrawl"
  *
@@ -3782,7 +3989,8 @@ export class FirecrawlBrowserPayload extends S.Class<FirecrawlBrowserPayload>($I
 /**
  * Firecrawl Browser Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log browser success schema)
+ *
  * ```ts
  * import { FirecrawlBrowserSuccess } from "@beep/firecrawl"
  *
@@ -3799,7 +4007,8 @@ export class FirecrawlBrowserSuccess extends S.Class<FirecrawlBrowserSuccess>($I
 /**
  * Firecrawl Browser Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log browser failure schema)
+ *
  * ```ts
  * import { FirecrawlBrowserFailure } from "@beep/firecrawl"
  *
@@ -3817,7 +4026,8 @@ export class FirecrawlBrowserFailure extends S.Class<FirecrawlBrowserFailure>($I
 /**
  * Firecrawl Browser Execute Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log browser execute payload)
+ *
  * ```ts
  * import { FirecrawlBrowserExecutePayload } from "@beep/firecrawl"
  *
@@ -3838,7 +4048,8 @@ export class FirecrawlBrowserExecutePayload extends S.Class<FirecrawlBrowserExec
 /**
  * Firecrawl Browser Execute Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log browser execute success)
+ *
  * ```ts
  * import { FirecrawlBrowserExecuteSuccess } from "@beep/firecrawl"
  *
@@ -3859,7 +4070,8 @@ export class FirecrawlBrowserExecuteSuccess extends S.Class<FirecrawlBrowserExec
 /**
  * Firecrawl Browser Execute Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log browser execute failure)
+ *
  * ```ts
  * import { FirecrawlBrowserExecuteFailure } from "@beep/firecrawl"
  *
@@ -3881,7 +4093,8 @@ export class FirecrawlBrowserExecuteFailure extends S.Class<FirecrawlBrowserExec
 /**
  * Firecrawl Delete Browser Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log delete browser payload)
+ *
  * ```ts
  * import { FirecrawlDeleteBrowserPayload } from "@beep/firecrawl"
  *
@@ -3900,7 +4113,8 @@ export class FirecrawlDeleteBrowserPayload extends S.Class<FirecrawlDeleteBrowse
 /**
  * Firecrawl Delete Browser Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log delete browser success)
+ *
  * ```ts
  * import { FirecrawlDeleteBrowserSuccess } from "@beep/firecrawl"
  *
@@ -3921,7 +4135,8 @@ export class FirecrawlDeleteBrowserSuccess extends S.Class<FirecrawlDeleteBrowse
 /**
  * Firecrawl Delete Browser Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log delete browser failure)
+ *
  * ```ts
  * import { FirecrawlDeleteBrowserFailure } from "@beep/firecrawl"
  *
@@ -3943,7 +4158,8 @@ export class FirecrawlDeleteBrowserFailure extends S.Class<FirecrawlDeleteBrowse
 /**
  * Firecrawl List Browsers Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log list browsers payload)
+ *
  * ```ts
  * import { FirecrawlListBrowsersPayload } from "@beep/firecrawl"
  *
@@ -3966,7 +4182,8 @@ export class FirecrawlListBrowsersPayload extends S.Class<FirecrawlListBrowsersP
 /**
  * Firecrawl List Browsers Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log list browsers success)
+ *
  * ```ts
  * import { FirecrawlListBrowsersSuccess } from "@beep/firecrawl"
  *
@@ -3987,7 +4204,8 @@ export class FirecrawlListBrowsersSuccess extends S.Class<FirecrawlListBrowsersS
 /**
  * Firecrawl List Browsers Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log list browsers failure)
+ *
  * ```ts
  * import { FirecrawlListBrowsersFailure } from "@beep/firecrawl"
  *
@@ -4009,7 +4227,8 @@ export class FirecrawlListBrowsersFailure extends S.Class<FirecrawlListBrowsersF
 /**
  * Firecrawl Get Concurrency Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get concurrency payload)
+ *
  * ```ts
  * import { FirecrawlGetConcurrencyPayload } from "@beep/firecrawl"
  *
@@ -4030,7 +4249,8 @@ export class FirecrawlGetConcurrencyPayload extends S.Class<FirecrawlGetConcurre
 /**
  * Firecrawl Get Concurrency Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get concurrency success)
+ *
  * ```ts
  * import { FirecrawlGetConcurrencySuccess } from "@beep/firecrawl"
  *
@@ -4051,7 +4271,8 @@ export class FirecrawlGetConcurrencySuccess extends S.Class<FirecrawlGetConcurre
 /**
  * Firecrawl Get Concurrency Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get concurrency failure)
+ *
  * ```ts
  * import { FirecrawlGetConcurrencyFailure } from "@beep/firecrawl"
  *
@@ -4073,7 +4294,8 @@ export class FirecrawlGetConcurrencyFailure extends S.Class<FirecrawlGetConcurre
 /**
  * Firecrawl Get Credit Usage Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get credit usage payload)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsagePayload } from "@beep/firecrawl"
  *
@@ -4094,7 +4316,8 @@ export class FirecrawlGetCreditUsagePayload extends S.Class<FirecrawlGetCreditUs
 /**
  * Firecrawl Get Credit Usage Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get credit usage success)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsageSuccess } from "@beep/firecrawl"
  *
@@ -4115,7 +4338,8 @@ export class FirecrawlGetCreditUsageSuccess extends S.Class<FirecrawlGetCreditUs
 /**
  * Firecrawl Get Credit Usage Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get credit usage failure)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsageFailure } from "@beep/firecrawl"
  *
@@ -4137,7 +4361,8 @@ export class FirecrawlGetCreditUsageFailure extends S.Class<FirecrawlGetCreditUs
 /**
  * Firecrawl Get Token Usage Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get token usage payload)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsagePayload } from "@beep/firecrawl"
  *
@@ -4156,7 +4381,8 @@ export class FirecrawlGetTokenUsagePayload extends S.Class<FirecrawlGetTokenUsag
 /**
  * Firecrawl Get Token Usage Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get token usage success)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsageSuccess } from "@beep/firecrawl"
  *
@@ -4177,7 +4403,8 @@ export class FirecrawlGetTokenUsageSuccess extends S.Class<FirecrawlGetTokenUsag
 /**
  * Firecrawl Get Token Usage Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get token usage failure)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsageFailure } from "@beep/firecrawl"
  *
@@ -4199,7 +4426,8 @@ export class FirecrawlGetTokenUsageFailure extends S.Class<FirecrawlGetTokenUsag
 /**
  * Firecrawl Get Credit Usage Historical Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log historical credit usage payload)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsageHistoricalPayload } from "@beep/firecrawl"
  *
@@ -4220,7 +4448,8 @@ export class FirecrawlGetCreditUsageHistoricalPayload extends S.Class<FirecrawlG
 /**
  * Firecrawl Get Credit Usage Historical Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log historical credit usage success)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsageHistoricalSuccess } from "@beep/firecrawl"
  *
@@ -4241,7 +4470,8 @@ export class FirecrawlGetCreditUsageHistoricalSuccess extends S.Class<FirecrawlG
 /**
  * Firecrawl Get Credit Usage Historical Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log historical credit usage failure)
+ *
  * ```ts
  * import { FirecrawlGetCreditUsageHistoricalFailure } from "@beep/firecrawl"
  *
@@ -4263,7 +4493,8 @@ export class FirecrawlGetCreditUsageHistoricalFailure extends S.Class<FirecrawlG
 /**
  * Firecrawl Get Token Usage Historical Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log historical token usage payload)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsageHistoricalPayload } from "@beep/firecrawl"
  *
@@ -4284,7 +4515,8 @@ export class FirecrawlGetTokenUsageHistoricalPayload extends S.Class<FirecrawlGe
 /**
  * Firecrawl Get Token Usage Historical Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log historical token usage success)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsageHistoricalSuccess } from "@beep/firecrawl"
  *
@@ -4305,7 +4537,8 @@ export class FirecrawlGetTokenUsageHistoricalSuccess extends S.Class<FirecrawlGe
 /**
  * Firecrawl Get Token Usage Historical Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log historical token usage failure)
+ *
  * ```ts
  * import { FirecrawlGetTokenUsageHistoricalFailure } from "@beep/firecrawl"
  *
@@ -4327,7 +4560,8 @@ export class FirecrawlGetTokenUsageHistoricalFailure extends S.Class<FirecrawlGe
 /**
  * Firecrawl Get Queue Status Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log get queue status payload)
+ *
  * ```ts
  * import { FirecrawlGetQueueStatusPayload } from "@beep/firecrawl"
  *
@@ -4348,7 +4582,8 @@ export class FirecrawlGetQueueStatusPayload extends S.Class<FirecrawlGetQueueSta
 /**
  * Firecrawl Get Queue Status Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log get queue status success)
+ *
  * ```ts
  * import { FirecrawlGetQueueStatusSuccess } from "@beep/firecrawl"
  *
@@ -4369,7 +4604,8 @@ export class FirecrawlGetQueueStatusSuccess extends S.Class<FirecrawlGetQueueSta
 /**
  * Firecrawl Get Queue Status Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log get queue status failure)
+ *
  * ```ts
  * import { FirecrawlGetQueueStatusFailure } from "@beep/firecrawl"
  *
@@ -4391,7 +4627,8 @@ export class FirecrawlGetQueueStatusFailure extends S.Class<FirecrawlGetQueueSta
 /**
  * Firecrawl Watcher Payload decoded before calling the Firecrawl SDK.
  *
- * @example
+ * **Example** (Log watcher payload schema)
+ *
  * ```ts
  * import { FirecrawlWatcherPayload } from "@beep/firecrawl"
  *
@@ -4415,7 +4652,8 @@ export class FirecrawlWatcherPayload extends S.Class<FirecrawlWatcherPayload>($I
 /**
  * Firecrawl Watcher Success decoded after a successful Firecrawl SDK call.
  *
- * @example
+ * **Example** (Log watcher success schema)
+ *
  * ```ts
  * import { FirecrawlWatcherSuccess } from "@beep/firecrawl"
  *
@@ -4432,7 +4670,8 @@ export class FirecrawlWatcherSuccess extends S.Class<FirecrawlWatcherSuccess>($I
 /**
  * Firecrawl Watcher Failure decoded from a Firecrawl API failure body.
  *
- * @example
+ * **Example** (Log watcher failure schema)
+ *
  * ```ts
  * import { FirecrawlWatcherFailure } from "@beep/firecrawl"
  *
@@ -4452,7 +4691,8 @@ export class FirecrawlWatcherFailure extends S.Class<FirecrawlWatcherFailure>($I
 /**
  * Firecrawl Watcher Document Event watcher event schema.
  *
- * @example
+ * **Example** (Log watcher document event)
+ *
  * ```ts
  * import { FirecrawlWatcherDocumentEvent } from "@beep/firecrawl"
  *
@@ -4476,7 +4716,8 @@ export class FirecrawlWatcherDocumentEvent extends S.Class<FirecrawlWatcherDocum
 /**
  * Firecrawl Watcher Snapshot Event watcher event schema.
  *
- * @example
+ * **Example** (Log watcher snapshot event)
+ *
  * ```ts
  * import { FirecrawlWatcherSnapshotEvent } from "@beep/firecrawl"
  *
@@ -4499,7 +4740,8 @@ export class FirecrawlWatcherSnapshotEvent extends S.Class<FirecrawlWatcherSnaps
 /**
  * Firecrawl Watcher Done Event watcher event schema.
  *
- * @example
+ * **Example** (Log watcher done event)
+ *
  * ```ts
  * import { FirecrawlWatcherDoneEvent } from "@beep/firecrawl"
  *
@@ -4527,7 +4769,8 @@ export class FirecrawlWatcherDoneEvent extends S.Class<FirecrawlWatcherDoneEvent
 /**
  * Firecrawl Watcher Error Event watcher event schema.
  *
- * @example
+ * **Example** (Log watcher error event)
+ *
  * ```ts
  * import { FirecrawlWatcherErrorEvent } from "@beep/firecrawl"
  *
@@ -4550,7 +4793,8 @@ export class FirecrawlWatcherErrorEvent extends S.Class<FirecrawlWatcherErrorEve
 /**
  * Tagged Firecrawl watcher event union.
  *
- * @example
+ * **Example** (Make document watcher event)
+ *
  * ```ts
  * import { FirecrawlWatcherDocumentEvent } from "@beep/firecrawl"
  *
@@ -4581,7 +4825,8 @@ export const FirecrawlWatcherEvent = S.Union([
 /**
  * Type for {@link FirecrawlWatcherEvent}.
  *
- * @example
+ * **Example** (Handle watcher event type)
+ *
  * ```ts
  * import type { FirecrawlWatcherEvent } from "@beep/firecrawl"
  *

@@ -26,7 +26,8 @@ const OnePasswordCliAccountName = S.Trim.pipe(
 /**
  * 1Password reference probe status.
  *
- * @example
+ * **Example** (Log probe status object)
+ *
  * ```ts
  * import { OnePasswordReferenceProbeStatus } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -47,7 +48,8 @@ export const OnePasswordReferenceProbeStatus = OnePasswordReferenceProbeStatusBa
 /**
  * Runtime type for {@link OnePasswordReferenceProbeStatus}.
  *
- * @example
+ * **Example** (Check resolved status guard)
+ *
  * ```ts
  * import { OnePasswordReferenceProbeStatus } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -63,7 +65,8 @@ export type OnePasswordReferenceProbeStatus = typeof OnePasswordReferenceProbeSt
 /**
  * Process exit status accepted from the native 1Password CLI.
  *
- * @example
+ * **Example** (Make zero exit code)
+ *
  * ```ts
  * import { OnePasswordCliExitCode } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -85,7 +88,8 @@ export const OnePasswordCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxi
 /**
  * Runtime type for {@link OnePasswordCliExitCode}.
  *
- * @example
+ * **Example** (Type exit code value)
+ *
  * ```ts
  * import type { OnePasswordCliExitCode } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -102,7 +106,8 @@ export type OnePasswordCliExitCode = typeof OnePasswordCliExitCode.Type;
 /**
  * Trim-normalized redacted CLI diagnostic text.
  *
- * @example
+ * **Example** (Decode trimmed diagnostic text)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -128,7 +133,8 @@ export const OnePasswordCliDiagnosticText = S.Trim.pipe(
 /**
  * Runtime type for {@link OnePasswordCliDiagnosticText}.
  *
- * @example
+ * **Example** (Type diagnostic text value)
+ *
  * ```ts
  * import type { OnePasswordCliDiagnosticText } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -145,7 +151,8 @@ export type OnePasswordCliDiagnosticText = typeof OnePasswordCliDiagnosticText.T
 /**
  * Process output captured by a 1Password CLI command.
  *
- * @example
+ * **Example** (Log process result schema)
+ *
  * ```ts
  * import { OnePasswordCliProcessResult } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -175,7 +182,8 @@ export class OnePasswordCliProcessResult extends S.Class<OnePasswordCliProcessRe
 /**
  * 1Password account/session probe result.
  *
- * @example
+ * **Example** (Log account probe schema)
+ *
  * ```ts
  * import { OnePasswordCliAccount } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
@@ -202,7 +210,8 @@ export class OnePasswordCliAccount extends S.Class<OnePasswordCliAccount>($I`One
 /**
  * Secret-reference validation result that does not expose the secret.
  *
- * @example
+ * **Example** (Log reference probe schema)
+ *
  * ```ts
  * import { OnePasswordReferenceProbe } from "@beep/onepassword-cli/OnePasswordCli.models"
  *
