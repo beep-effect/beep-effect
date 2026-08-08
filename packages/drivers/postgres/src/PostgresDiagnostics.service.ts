@@ -328,7 +328,8 @@ export const formatSql: {
 /**
  * Renderer that turns an unknown Postgres failure into diagnostic text.
  *
- * @example
+ * **Example** (Bind the default renderer)
+ *
  * ```ts
  * import type { PostgresErrorFormatter } from "@beep/postgres"
  * import { formatPostgresError } from "@beep/postgres"
@@ -345,7 +346,8 @@ export type PostgresErrorFormatter = (error: unknown) => string;
 /**
  * Build a Postgres failure renderer bound to a specific terminal palette.
  *
- * @example
+ * **Example** (Render without ANSI color)
+ *
  * ```ts
  * import { createColors } from "@beep/colors"
  * import { formatPostgresErrorWith, PostgresError } from "@beep/postgres"

@@ -32,7 +32,8 @@ const $I = $OntologyId.create("Fold/markdown");
 /**
  * Link rendering modes for the Markdown projection.
  *
- * @example
+ * **Example** (Guard a link mode literal)
+ *
  * ```ts
  * import { MarkdownLinkMode } from "@beep/ontology"
  * import * as S from "effect/Schema"
@@ -52,7 +53,8 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 /**
  * Runtime type for {@link MarkdownLinkMode}.
  *
- * @example
+ * **Example** (Annotate a link mode value)
+ *
  * ```ts
  * import type { MarkdownLinkMode } from "@beep/ontology"
  *
@@ -68,7 +70,8 @@ export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
 /**
  * Normalized options accepted by {@link toMarkdown}.
  *
- * @example
+ * **Example** (Construct portable link options)
+ *
  * ```ts
  * import { MarkdownOptions } from "@beep/ontology"
  *
@@ -266,7 +269,8 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
 /**
  * Project an assembled ontology into deterministic Markdown.
  *
- * @example
+ * **Example** (Render a folded ontology as Markdown)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toMarkdown } from "@beep/ontology"

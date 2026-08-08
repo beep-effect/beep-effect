@@ -848,7 +848,8 @@ export const renderPlainTextUnsafe = (document: Document): string => renderWithU
  * signatures of {@link renderWithUnsafe} share a single named return type.
  * Every concrete instantiation resolves back to `Output`.
  *
- * @example
+ * **Example** (Typing a parameter as render output)
+ *
  * ```ts
  * import type { RenderOutputOf } from "@beep/md/Md.render"
  *

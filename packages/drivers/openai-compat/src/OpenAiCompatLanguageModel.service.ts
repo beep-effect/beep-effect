@@ -77,7 +77,8 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
 /**
  * Request-time tuning options shared by OpenAI-compatible language-model adapters.
  *
- * @example
+ * **Example** (Set max tokens and temperature)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PosInt } from "@beep/schema/Int"
@@ -125,7 +126,8 @@ export class OpenAiCompatLanguageModelConfig extends S.Class<OpenAiCompatLanguag
 /**
  * Provider callbacks used by the OpenAI-compatible language-model factory.
  *
- * @example
+ * **Example** (Implement a stub provider)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatProvider } from "@beep/openai-compat"
@@ -146,7 +148,8 @@ export type OpenAiCompatProvider = OpenAiCompatClientShape;
 /**
  * Options accepted by {@link makeFromProvider}.
  *
- * @example
+ * **Example** (Assemble provider-backed factory options)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatLanguageModelOptions } from "@beep/openai-compat"
@@ -177,7 +180,8 @@ export type OpenAiCompatLanguageModelOptions = OpenAiCompatLanguageModelClientOp
 /**
  * Options accepted by the default OpenAI-compatible language-model constructor.
  *
- * @example
+ * **Example** (Select a model by name)
+ *
  * ```ts
  * import type { OpenAiCompatLanguageModelClientOptions } from "@beep/openai-compat"
  *
@@ -935,7 +939,8 @@ const makeStreamResponse = (
 /**
  * Builds an Effect AI language-model service from OpenAI-compatible provider callbacks.
  *
- * @example
+ * **Example** (Build a model from provider callbacks)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { makeFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
@@ -983,7 +988,8 @@ export const makeFromProvider: (options: OpenAiCompatLanguageModelOptions) => Ef
 /**
  * Builds a layer for an OpenAI-compatible language model from provider callbacks.
  *
- * @example
+ * **Example** (Build a layer from provider callbacks)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { layerFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
@@ -1010,7 +1016,8 @@ export const layerFromProvider = (
 /**
  * Builds an OpenAI-compatible language-model service backed by {@link OpenAiCompatClient}.
  *
- * @example
+ * **Example** (Build a client-backed model)
+ *
  * ```ts
  * import { make } from "@beep/openai-compat"
  *
@@ -1042,7 +1049,8 @@ export const make: (
 /**
  * Builds a language-model layer backed by {@link OpenAiCompatClient}.
  *
- * @example
+ * **Example** (Build a client-backed layer)
+ *
  * ```ts
  * import { layer } from "@beep/openai-compat"
  *
@@ -1062,7 +1070,8 @@ export const layer = (
 /**
  * Builds an Effect AI model value for a generic OpenAI-compatible provider.
  *
- * @example
+ * **Example** (Build an AI model value by name)
+ *
  * ```ts
  * import { model } from "@beep/openai-compat"
  *

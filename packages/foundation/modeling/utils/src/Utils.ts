@@ -9,11 +9,13 @@ import * as GlobalValue from "./GlobalValue.ts";
 /**
  * Shared mutable state used while structural comparison hooks are active.
  *
- * @remarks
+ * **Details**
+ *
  * This is an experimental hook for custom test matchers. User code should prefer
  * the public comparison APIs instead of mutating this state directly.
  *
- * @example
+ * **Example** (Read the current structural region flag)
+ *
  * ```ts
  * import { structuralRegionState } from "@beep/utils/Utils"
  *

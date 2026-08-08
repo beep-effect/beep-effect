@@ -119,7 +119,13 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * The hook performs one immediate step on press, waits for the configured hold delay,
  * and then repeats the selected action at a fixed interval until `stop` is called.
  *
- * @example
+ * The two callbacks are co-equal, so there is no honest data-last argument to
+ * curry on — and a React hook must never be applied in pipe position anyway.
+ * They travel together in a single `actions` bag instead of as two positional
+ * parameters.
+ *
+ * **Example** (Import useSpinner in a component)
+ *
  * ```tsx
  * import React from "react"
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
@@ -129,17 +135,13 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * console.log(Example)
  * ```
  *
- * @example
+ * **Example** (Import useSpinner hook)
+ *
  * ```ts
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
  *
  * console.log(useSpinner)
  * ```
- *
- * The two callbacks are co-equal, so there is no honest data-last argument to
- * curry on — and a React hook must never be applied in pipe position anyway.
- * They travel together in a single `actions` bag instead of as two positional
- * parameters.
  *
  * @category components
  * @param actions - Upward and downward spinner callbacks.
@@ -149,7 +151,8 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
 /**
  * Use spinner hook.
  *
- * @example
+ * **Example** (Import useSpinner export)
+ *
  * ```ts
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
  *
