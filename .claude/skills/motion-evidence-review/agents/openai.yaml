@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Evidence Review"
-  short_description: "Read beep-qa frame strips, sheets, and event timelines; cite frame+event pairs"
-  default_prompt: "Use $motion-evidence-review to review the QA evidence in the given .beep/qa/round-N directory. Read session.json for clock-sync confidence, correlate frames/ strips and sheets/ against judge/timeline.md and events.ndjson, and report findings as artifact-path + frame-range + event-seq citations. Never open clips/ or any animated media; respect the confidence tolerances in references/frame-event-correlation.md."

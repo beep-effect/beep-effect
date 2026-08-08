@@ -1,1 +1,0 @@
-/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/acp-cli-BXc5GttU.js

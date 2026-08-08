@@ -1,1 +1,0 @@
-Could not reload secrets because the Gateway did not respond: secrets.reload failed. Run `openclaw gateway status --deep` to inspect the active Gateway.

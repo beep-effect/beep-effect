@@ -1,8 +1,0 @@
-total 8
-drwx------ 1 elpresidank elpresidank   90 Jul 17 11:59 .
-drwxr-xr-x 1 elpresidank elpresidank    0 Jul 17 11:59 extensions
-drwx------ 1 elpresidank elpresidank   36 Jul 17 11:59 logs
--rw------- 1 elpresidank elpresidank  330 Jul 17 11:59 openclaw.json
-drwx------ 1 elpresidank elpresidank   44 Jul 17 11:59 plugins
-drwxr-xr-x 1 elpresidank elpresidank 1278 Jul  7 16:06 skills
-drwx------ 1 elpresidank elpresidank   30 Jul 25 06:48 state

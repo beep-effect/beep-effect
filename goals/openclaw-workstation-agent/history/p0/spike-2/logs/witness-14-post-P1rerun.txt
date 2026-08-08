@@ -1,7 +1,0 @@
-### WITNESS post-P1rerun (2026-07-26T04:39:47Z)
-unit_file_exists=yes
-wants_symlink_exists=no
-list-unit-files rc=0 out=UNIT FILE              STATE    PRESET/openclaw-spike.service disabled enabled//1 unit files listed.
-UnitsLoadTimestampMonotonic=62450538902
-LoadState=loaded ActiveState=inactive UnitFileState=disabled
-Linger=yes

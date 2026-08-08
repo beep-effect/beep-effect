@@ -1,1 +1,0 @@
-ALTER TABLE "epistemic_usage_record" ALTER COLUMN "activity_id" DROP NOT NULL;
