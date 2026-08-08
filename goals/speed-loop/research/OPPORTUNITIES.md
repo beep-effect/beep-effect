@@ -1438,3 +1438,83 @@ no-op outside UserPromptSubmit/UserPromptExpansion/SessionStart (decision
 43); merge_group vacuous gates → #62 and
 `strict_required_status_checks_policy` re-opened at its true ~8 runs/day
 cost (decision 44).
+
+91. **Controller build-vs-adopt is a decision gate: no controller code before
+    the research verdict.** (Operator-ordered, 2026-08-08, after the burst
+    landed the merge wave.) The endgame is verbatim: "our own blacksmith
+    minus the UI & ridiculous spend" — zero manual aws/gh commands per PR.
+    Candidate references the research audits against:
+    philips-labs/terraform-aws-github-runner (webhook→Lambda→spot,
+    scale-to-zero, JIT — closest architectural match),
+    actions-runner-controller (k8s), machulav/ec2-github-runner, RunsOn
+    (commercial controller in our own account). Deliverable: a decision
+    record + gap list; the burst's integration discoveries (see the
+    runner-burst receipts below) are its evidence base. Grill session on the
+    record before implementation.
+
+92. **Repo-optimized worker images (lockfile-keyed baked AMI).** Promoted by
+    operator interest from o6 modifier #2: toolbelt + docker + runner agent +
+    bun store + warm dependency/turbo seed baked per bun.lock hash. Deletes
+    the ~36s/job install floor AND the cross-runner tool-cache poisoning
+    class outright. Docker-image variant applies only if the controller
+    research picks the ARC route.
+
+93. **CI resource-weight: the requirements are NOT size-normal, and the
+    excess is attributable.** (Operator question 2026-08-08: "are our
+    hardware requirements normal for repo size?") Evidence: a single
+    full-scope tsgo compile exceeds 16 GB; ~1.65M type-instantiation floor on
+    import; heavy suites spend ~556s in module import before running a test.
+    The premium splits into a deliberate schema-first type-density cost and a
+    recoverable packaging/execution cost. Levers in leverage order: re-run
+    the instantiation census post-beta.104 and make budgets a RATCHET; kill
+    remaining census-ranked union/template bombs (box + MimeType precedent);
+    explicit types at exported boundaries to stop consumer re-inference;
+    break god-barrels (sub-barrels / type-only entries); shard full-scope
+    Check into per-slice processes. If sharded Check fits 16 GB again, the
+    fleet demotes from necessity to speed. Absorbs/widens the parked
+    box-typecheck-cost campaign.
+
+94. **Duplicated build/install across lanes: fix is cache architecture, not
+    orchestration.** (Operator question 2026-08-08.) Fleet logs showed
+    `Cached: 0 cached, 97 total` per lane — every job cold-rebuilds the
+    graph — because PR jobs are deliberately denied shared-cache WRITE (the
+    poisoning boundary #600 closed in storybook.yml). Build-once-as-a-job
+    serializes the critical path and ships GB artifacts; a mega-job sums
+    lane wall-clocks, breaks the 17-context model, and OOMs co-resident
+    heavy lanes. Correct design: asymmetric cache access — trusted push runs
+    WRITE the shared turbo cache, PR runs READ ONLY (content hashing lets
+    main's seed serve any PR's unchanged packages; no untrusted write path =
+    no poisoning). The provisioned-but-unused beep-turbo-cache-832907639880
+    bucket plus o6's pre-signed-read design is the implementation; the
+    node_modules/toolbelt layer moves into #92's baked AMI. Baseline for the
+    research: 0 cache hits, ~36s installs, ~556s type-graph imports,
+    18-20min heavy lanes.
+
+Runner-burst receipts (2026-08-08, the interim burst that landed the merge
+wave; each is a controller-design input): (a) launches must use the dedicated
+launcher identity — the admin user carries a legacy t2.micro-only
+RunInstances deny (FreedomFramework-CI); (b) the launch template deliberately
+leaves subnet placement to launch time, and a request-level subnet must
+restate the FULL network-interface spec because the request block replaces
+the template's per device-index; (c) first spot use needs the EC2 Spot
+service-linked role minted once by an admin; (d) the minimal Ubuntu AMI
+lacks the hosted toolbelt — setup-bun died at exit 127 on missing unzip, and
+Test Integration needs docker for its pglite-testcontainers harness; (e)
+setup-bun's cross-job cache poisons heterogeneous fleets ("Cache restored
+successfully" then bun absent — archives carry the SAVING runner's absolute
+paths); fixed with no-cache pending the baked AMI; (f) non-ephemeral agents
+on long-lived spot guests zombie silently (three occurrences in one night:
+VM running, agent gone, no forensics by design) — the strongest empirical
+argument for one-job-one-VM ephemeral; (g) the actions allowlist's first
+catch was a TRANSITIVE action (swatinem/rust-cache inside
+setup-rust-toolchain) invisible to uses:-grep inventories; (h) the committed
+permission deny-list passes vetted scripts/porcelain while denying ad-hoc
+`gh api` writes — runner operations therefore belong in repo porcelain
+(`beep runners launch|teardown|mint`), a controller-era work item; (i)
+merge-treadmill mechanics under an active fleet: goals/INDEX.md must be
+REGENERATED on every conflict (three-for-three wrong when auto-merged), and
+16GB-survival tunings (hosted-swap, serial caps) amputated in textual
+conflict resolution left semantically mixed trees — the branch's own tests
+failed on features whose call sites were resolved away, caught only by the
+lanes; wholesale file-to-main plus keeping cherry-picked hardware-independent
+fixes was the deterministic repair.

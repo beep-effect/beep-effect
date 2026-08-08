@@ -140,15 +140,24 @@ grills #2–#3.
 21. **Structural CI disposition.** #21 CLOSED (subsumed by #25). #24
     workstation-runner pilot folds into the LAN-cache spike session ($0
     hardware, hygiene rails per ledger; AWS variant waits for pilot data).
+    AMENDED 2026-08-08: the #24 sequencing is REVERSED to EC2-first, ratified
+    by events — the o6 security challenge invalidated the workstation
+    downgrade's premises (472 inherited contributors, approval policy weaker
+    than assumed), the Blacksmith invoice forced a full exit, and the
+    operator deployed the EC2 groundwork stack (infra/ci-runners, PR #603)
+    and ran a live burst on it. The workstation variant is deferred
+    indefinitely; ledger #91 gates the controller on the adopt-vs-build
+    research record.
     #25 `yeet predict-squash` read-only spike enters the queue. #22
     merge-queue evaluation triggers on E-wave monitor data (treadmill tax
     quantified), pairs with deferred lane consolidation. #26 capsule
     protocol + #35 fingerprint lane-collapse → grill #5 design docket, after
     B/G/E teach us the fields. #27 attestation parked behind #24 + #26.
     Grit collector PARKED — #40's changed-scope collapsed its payback;
-    revivable only if nightly full-sweep cost matters. Updated spike order:
-    LAN cache + workstation runner → predict-squash → single-process battery
-    → vitest projects → stage-3 html.
+    revivable only if nightly full-sweep cost matters. Updated spike order
+    (superseded 2026-08-08 by the amendment above — the workstation entry
+    drops with the deferral): LAN cache → predict-squash → single-process
+    battery → vitest projects → stage-3 html.
 22. **Test-typecheck blindspot burn-down: passive + opportunistic.** The
     ratchet (standards/test-typecheck.blindspot-baseline.jsonc) blocks new
     blindspots; queued PRs wire test typecheck for packages they already
