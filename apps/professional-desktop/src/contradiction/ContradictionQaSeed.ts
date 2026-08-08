@@ -563,7 +563,7 @@ const evidenceMatches = (actual: Evidence, expected: Evidence): boolean =>
   Eq.equals(actual.orgId, expected.orgId) &&
   Eq.equals(actual.artifactFixtureKey, expected.artifactFixtureKey) &&
   Eq.equals(actual.spanFixtureKey, expected.spanFixtureKey) &&
-  EvidenceSpan.equivalence(actual.span, expected.span) &&
+  S.toEquivalence(EvidenceSpan)(actual.span, expected.span) &&
   Eq.equals(actual.createdAt, expected.createdAt) &&
   Eq.equals(actual.source, expected.source);
 

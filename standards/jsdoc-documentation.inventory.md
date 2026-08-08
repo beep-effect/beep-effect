@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-08T13:01:12.935Z
+Generated: 2026-08-08T13:52:35.977Z
 
 ## Scope
 
@@ -14,10 +14,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 63 |
-| publicModules | 2418 |
-| publicExports | 15988 |
-| openModules | 406 |
-| openExports | 157 |
+| publicModules | 2420 |
+| publicExports | 15993 |
+| openModules | 407 |
+| openExports | 156 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 81 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
 | 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 83 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
-| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 54 | 176 | 25 | 22 |
+| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 181 | 26 | 21 |
 | 85 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 2 |
 | 86 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 89 | 0 | 0 |
 | 87 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |
@@ -792,6 +792,7 @@ Module findings:
 - `src/chat/UsageRecordSink.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/ChatApp.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/Composer.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/chat/ui/ComposerPolicy.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/MessageView.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/Sidebar.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/chat/ui/StreamingBlocks.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -815,13 +816,12 @@ Module findings:
 
 Export findings:
 - `src/chat/UsageRecordSink.ts:119` `UsageRecordSinkInMemory` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/Composer.atoms.ts:184` `normalizeLegacyRawDocument` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:123` `sidebarPercentAtom` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:179` `clampSidebarPercent` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:201` `sidebarSize` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:139` `sidebarPercentAtom` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:196` `clampSidebarPercent` (const) - 1 documentation section/link violation(s)
+- `src/chat/ui/layout.atoms.ts:218` `sidebarSize` (const) - 1 documentation section/link violation(s)
 - `src/contradiction/ContradictionQaSeed.ts:150` `CONTRADICTION_QA_ANCHOR_START` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:956` `seedContradictionQaFixtures` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1055` `ContradictionQaSeedLive` (const) - 1 documentation section/link violation(s)
+- `src/contradiction/ContradictionQaSeed.ts:1008` `seedContradictionQaFixtures` (const) - 1 documentation section/link violation(s)
+- `src/contradiction/ContradictionQaSeed.ts:1109` `ContradictionQaSeedLive` (const) - 1 documentation section/link violation(s)
 - `src/intake/Intake.atoms.ts:48` `DesktopIntakeClient` (class) - 1 documentation section/link violation(s)
 - `src/ontology/OntologyWorkspaceSeed.ts:70` `seedPizzaTutorial` (const) - 1 documentation section/link violation(s)
 - `src/ontology/OntologyWorkspaceSeed.ts:124` `OntologyWorkspaceSeedLive` (const) - 1 documentation section/link violation(s)
@@ -829,12 +829,12 @@ Export findings:
 - `src/runtime/Migrations.ts:113` `SidecarReadyMarker` (const) - 1 documentation section/link violation(s)
 - `src/runtime/Pglite.ts:90` `ChatDbCompatibilityMarker` (const) - 1 documentation section/link violation(s)
 - `src/runtime/Pglite.ts:221` `ensureCompatibleChatDbDataDir` (const) - 1 documentation section/link violation(s)
-- `src/runtime/ProfessionalAtomRuntime.ts:84` `professionalAtomRegistryAtom` (const) - 1 documentation section/link violation(s)
+- `src/runtime/ProfessionalAtomRuntime.ts:75` `professionalAtomRegistryAtom` (const) - 1 documentation section/link violation(s)
+- `src/runtime/RendererObservabilityConfig.ts:38` `RendererObservabilityConfig` (class) - 1 documentation section/link violation(s)
 - `src/sync/Sync.atoms.ts:240` `vaultSyncStatusAtom` (const) - 1 documentation section/link violation(s)
 - `src/sync/Sync.atoms.ts:381` `vaultSyncCommandAtoms` (const) - 1 documentation section/link violation(s)
 - `src/sync/VaultSyncOrchestrator.ts:74` `VaultSyncHandlersLive` (const) - 1 documentation section/link violation(s)
 - `src/sync/VaultSyncPanel.tsx:185` `VaultSyncPanel` (function) - 1 documentation section/link violation(s)
-- `src/theme/Theme.atoms.ts:59` `migrateWorkbenchThemeMode` (const) - 1 documentation section/link violation(s)
 - `src/workspace/ProfessionalWorkspace.ts:26` `DEFAULT_PROFESSIONAL_WORKSPACE_ID` (const) - 1 documentation section/link violation(s)
 
 ### @beep/epistemic-domain
