@@ -1143,8 +1143,9 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
 > {
   const artifactDir = yield* artifactDirForContext(context);
   yield* warnMergedVerifyIgnoresUncommittedWork(context);
-  return yield* withYeetMergePreview(context, (preview) =>
-    Effect.gen(function* () {
+  return yield* withYeetMergePreview(
+    context,
+    Effect.fnUntraced(function* (preview) {
       yield* Console.log(
         `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
       );

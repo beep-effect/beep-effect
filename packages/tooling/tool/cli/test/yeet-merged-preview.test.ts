@@ -9,14 +9,22 @@ import {
   YeetMergeTreeConflicted,
   yeetMergedPreviewContext,
 } from "@beep/repo-cli/test/Yeet";
+import { provideScopedLayer } from "@beep/test-utils";
+import { NodeChildProcessSpawner } from "@effect/platform-node";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Layer } from "effect";
 import * as O from "effect/Option";
 
 const TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 const BASE_SHA = "1111111111111111111111111111111111111111";
 const HEAD_SHA = "2222222222222222222222222222222222222222";
 const COMMIT_SHA = "3333333333333333333333333333333333333333";
+
+const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+);
 
 const context = RepoRunContext.make({
   base: "origin/main",
@@ -148,7 +156,7 @@ describe("yeet merged tier guards", () => {
       );
 
       expect(Exit.isFailure(exit)).toBe(true);
-    })
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 
   it.effect("refuses --merged on a review-fix tier", () =>
@@ -158,7 +166,7 @@ describe("yeet merged tier guards", () => {
       );
 
       expect(Exit.isFailure(exit)).toBe(true);
-    })
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 
   it.effect("accepts --merged on a full verify", () =>
@@ -168,6 +176,6 @@ describe("yeet merged tier guards", () => {
       );
 
       expect(Exit.isSuccess(exit)).toBe(true);
-    })
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

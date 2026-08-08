@@ -765,10 +765,9 @@ const tsvFlag = Flag.boolean("tsv").pipe(
 export const ciLaneTimingsCommand = Command.make(
   "lane-timings",
   { runs: runLimitFlag, tsv: tsvFlag },
-  ({ runs, tsv }) =>
-    Effect.gen(function* () {
-      const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
-      const report = yield* collectCiLaneTimings(repoRoot, runs);
-      yield* Console.log(tsv ? renderCiLaneTimingsTsv(report.rows) : renderCiLaneTimingsSummary(report));
-    })
+  Effect.fnUntraced(function* ({ runs, tsv }) {
+    const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
+    const report = yield* collectCiLaneTimings(repoRoot, runs);
+    yield* Console.log(tsv ? renderCiLaneTimingsTsv(report.rows) : renderCiLaneTimingsSummary(report));
+  })
 ).pipe(Command.withDescription("Collect hosted lane timings, with pickup latency filtered to run attempt 1"));

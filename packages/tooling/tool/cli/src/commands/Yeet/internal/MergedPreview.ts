@@ -206,8 +206,9 @@ export const gitObjectIdFromOutput = (output: string): O.Option<string> =>
  * **Details**
  *
  * The command prints the written tree object on its first line, then — when the
- * merge conflicts — a conflicted-file-info block of `<mode> <object> <stage>\t
- * <path>` lines, then git's own messages. Exit code 0 means merged, 1 means
+ * merge conflicts — a conflicted-file-info block whose lines carry a mode, an
+ * object id, and a merge stage, tab-separated from the path, then git's own
+ * messages. Exit code 0 means merged, 1 means
  * conflicts, and anything else means git declined to compute the merge at all.
  * Both facts are read: an exit code without output cannot name the conflicted
  * paths, and output without the exit code cannot distinguish "no conflicts"

@@ -564,6 +564,9 @@ const isGithubJobShapeClass = S.is(GithubJobShapeClass);
  * has historically meant, which is what decides whether an operator
  * investigates or waits out the rerun. Log fingerprints carry their evidence in
  * the log the operator can already read, so they get no suffix.
+ *
+ * @param flakeClass - The class the failing job matched.
+ * @returns A parenthesized mechanism, or the empty string for log classes.
  */
 const flakeEvidenceSuffix = (flakeClass: YeetMonitorFlakeClass): string =>
   isGithubJobShapeClass(flakeClass) ? ` (${githubJobShapeEvidence(flakeClass)})` : Str.empty;
