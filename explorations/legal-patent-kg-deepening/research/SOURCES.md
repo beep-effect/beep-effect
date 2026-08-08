@@ -89,6 +89,27 @@ Full 24-row triage, including skipped repositories and exact mine targets:
   project page, LegalRuleML 1.0 spec, and the FOPNet thread (priority;
   ResearchGate blocked scraping — L13 recovered FOPNet via its
   ScienceDirect abstract + reference list).
+- **2026-08-08 URL back-fill (episode-ledger wedge, Lane B).** Mining
+  recorded `url: null` for every paper row; the episode-ledger wedge's
+  research Lane B re-discovered and verified the public URLs for the
+  fifteen paper rows behind its eleven nuggets, now promoted into
+  [`00-catalog.json`](./00-catalog.json) (per-URL ledger with access dates:
+  `explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md`
+  §11). `P005` and `P025` had no discoverable public URL and `P030`'s title
+  maps to no entry in that ledger — all three stay `null`, recorded
+  honestly. Title-drift corrections from the same lane (row `title` fields
+  keep the corpus-file titles as mining-time facts; cite these for
+  disambiguation): the `P018`/`P019` work is "Hierarchical" in its JURIX
+  2025 published form (DOI `10.3233/FAIA251598`) but "Structural" in the
+  current arXiv listing — same work, cite the DOI; `P068` ("PatentGPT ...
+  Knowledge-based Fine-tuning") was retitled at arXiv:2409.00092 v3 to
+  "Large Language Model for Patent Concept Generation" and must not be
+  conflated with the different "PatentGPT" at arXiv:2404.18255; `P018` and
+  `P019` are one work (PDF + HTML renderings), so `T3-F4`'s independent
+  evidence count is one source lower than its distillate list suggests.
+  License caveat: the `P002`/`P003` work (HSNKB) is CC BY-NC 4.0 and its
+  full text was not retrievable (publisher interstitial); its metric tables
+  remain distillate-carried until a full-text retry.
 
 ## 4. In-repo capability references
 

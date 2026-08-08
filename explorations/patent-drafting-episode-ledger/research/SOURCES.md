@@ -31,30 +31,68 @@ Inherited by reference from the parent campaign — the nuggets' distillates
 live in `explorations/legal-patent-kg-deepening/research/mined/` (see each
 nugget's distillate list in [`CAPTURE.md`](../CAPTURE.md)). No new corpus is
 mined for this wedge; links, not copies. The two deepened plays (`ADHD-2`,
-`ADHD-3`) are not verified findings — research Lane B re-grounds their
-boundary language against the primary public sources before align.
+`ADHD-3`) are not verified findings — research Lane B re-grounded their
+boundary language against the primary public sources 2026-08-06
+([`02-drafting-episode-frame.md`](./02-drafting-episode-frame.md)).
+Catalog hygiene found by Lane B (§11): the parent `00-catalog.json` has
+`url: null` for all 17 papers behind this wedge's nuggets — every URL was
+re-discovered this lane and lives in the lane file's §11; two papers were
+retitled at source (D1, D2) and distillates P018/P019 are one work (D3), so
+T3-F4's evidence count is one source lower than the seed suggests.
+Promotion of these findings into the parent catalog is a parent-packet act
+that pends align/PR 2, per the sibling precedent.
 
 ## 2. Upstream repositories & licenses
 
-No external repository is a code donor at capture stage: the eleven nuggets'
-distillates are papers and benchmarks, not portable code. If research Lane B
-surfaces a code donor, it enters here with its license discipline (copyleft
-⇒ clean-room only; permissive ⇒ port-with-attribution; missing/unverified ⇒
+No external repository was a code donor at capture stage: the eleven
+nuggets' distillates are papers and benchmarks, not portable code. Lane B
+(complete 2026-08-06) confirmed it — no code was ported and no repository
+opened — and surfaced two license-relevant artifacts this section now
+records:
+
+- The Pap2Pat code/data repository URL was recorded from its paper but
+  **not opened** — license unverified ⇒ **reference only** under this
+  file's own rule.
+- HSNKB is **CC BY-NC 4.0** — the one non-permissive license in the
+  ledger. Its 377-row/metric figures are currently distillate-carried
+  (the publisher endpoint served a consent page); a license check and a
+  full-text retry come before any SPEC quotes those tables
+  ([`02-drafting-episode-frame.md`](./02-drafting-episode-frame.md) §12).
+
+Any future code donor enters here with its license discipline (copyleft ⇒
+clean-room only; permissive ⇒ port-with-attribution; missing/unverified ⇒
 reference only) before any adoption.
 
 ## 3. External research sources
 
-To be populated by research Lane B (bounded public-source grounding: the
-35 U.S.C. § 112(a)/§ 132 + MPEP § 2163/§ 608.04 written-description/new-matter
-frame; the public papers behind all eleven nuggets' distillates — the six
-primary-cluster episode/retrieval sources plus the absorbed rung's drafting
-traceability/evaluation/routing studies) →
-`research/02-drafting-episode-frame.md`.
+Populated 2026-08-06 by Lane B — the full per-URL ledger with access dates
+is [`02-drafting-episode-frame.md`](./02-drafting-episode-frame.md) §11
+(Sources), with failed/unverifiable fetches recorded in §12 (NOT FOUND /
+NOT VERIFIED) rather than papered over. Source families: the primary legal
+texts (35 U.S.C. § 112 and § 132; MPEP § 2163 and subsections; MPEP
+§ 608.04 — official uscode.house.gov / uspto.gov pages), and the re-opened
+public papers behind the eleven nuggets (agent-memory benchmark,
+legal-GraphRAG retrieval/answer-policy sources, the inference-event study,
+the normative-row/anti-hub benchmark, and the patent-drafting
+traceability/evaluation/routing studies). Known limits recorded honestly:
+one publisher endpoint served a consent page (full text distillate-only,
+retryable), two distillates have no public URL, and one paper's "typed
+failures" phrasing is a mining inference that must not be attributed to the
+paper (§12).
 
 ## 4. In-repo capability references
 
-To be populated by research Lane A (`research/01-repo-surfaces.md`). Known at
-capture (from the routing seed's grounded rows):
+Populated 2026-08-06 by Lane A ([`01-repo-surfaces.md`](./01-repo-surfaces.md))
+— grounded file:line map of all composed surfaces, net-new re-confirmation
+(§9, all eight symbols at zero source occurrences), nugget reconciliation
+(§10), and an explicit corrections ledger (§ Corrections to inherited
+anchors). Headline drift, attributed: PR #575 landed the full law-practice
+lane including a payload-bearing append-only migration precedent (§4);
+`goals/practice-kg-mcp` is live code whose deterministic rows are
+structurally guaranteed by a total `ORDER BY` on every catalog query (§5);
+the verified-span substrate is live and already consumed by #575 (§4, §7).
+Known at capture (from the routing seed's grounded rows, now superseded by
+the lane file where they differ):
 
 - `@beep/agents-use-cases` — `ProfessionalRuntime` contracts
   (`RuntimeCandidateDraft`, `RuntimeApprovalGate`, `RuntimeEvidenceRef`,

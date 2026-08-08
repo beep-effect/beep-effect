@@ -79,11 +79,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md).
   Third wedge
   [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
-  OPENED 2026-08-06 (capture stage). Next: the FunctionalUnit extension on
+  OPENED 2026-08-06, research stage complete 2026-08-08 — its align session
+  is Benjamin's. Next behind it: the FunctionalUnit extension on
   Benjamin's call.
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
-  capture-stage third wedge of the `legal-patent-kg-deepening` routing matrix
-  (opened 2026-08-06): a law-owned, append-only `DraftingEpisode` product
+  research-stage third wedge of the `legal-patent-kg-deepening` routing matrix
+  (opened 2026-08-06; research complete 2026-08-08): a law-owned, append-only
+  `DraftingEpisode` product
   record — closed event union + pure replay fold over outline, retrieval,
   chunk generation, limitation support, deterministic validation, bounded
   retry, correction delta, and attorney disposition — whose first rung is the
@@ -94,8 +96,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   as lossy rebuildable projections with recent-raw fallback — the resolved
   remo2/remo3 boundaries binding (no persistent graph store; no projection
   becomes authority; the 2026-08-06 operator dev-memory role change leaves
-  the product/operator boundary untouched). Eleven nuggets seeded verbatim;
-  two research lanes locked; the align session is Benjamin's.
+  the product/operator boundary untouched). Research highlights: the
+  never-compute boundary proved two-sided from MPEP/statute primary text;
+  the recent-raw fallback is prescribed by no source; PR #575's law-practice
+  lane gives rung 2 a payload-bearing append-only precedent; a new sixth
+  align branch (the live runtime approval vocabulary cannot represent
+  refusal). Six align branches wait; the align session is Benjamin's, with
+  BRIEF gated behind it.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill

@@ -153,3 +153,27 @@ PR #579, graduation PR #590 — with clean review treadmills at each step.
 Rejected: three-stage granular (an extra closeout treadmill with no review
 benefit) and single-PR (mixes the decision record with unreviewed research
 output — the pattern that generated the nine-thread closeout on PR #542).
+
+## 2026-08-08 — PR staging amended: research lands ahead of align
+
+**Question:** Does the research-stage record wait for the align session
+before landing (the original "PR 2 = research + align outcomes" plan), or
+land now?
+
+**Answer:** It lands now, as its own docs-only PR — the complete
+research-stage record (both lane files, `RESEARCH.md`, the friction ledger,
+the manifest/README stage flip) plus the parent-side Lane B promotions
+(catalog URL back-fill, title-drift/one-work corrections, HANDOFF/README/
+ATLAS pointer sweep). Align outcomes land in the NEXT PR after Benjamin's
+align session; BRIEF remains gated behind align. Nothing in this landing
+pre-decides an align branch — the six `openQuestions` stay open.
+
+**Rationale:** Benjamin's 2026-08-08 wrap-up directive: long-running agent
+sessions are being closed out, and any remaining finished work should reach
+mergeable now rather than sit uncommitted in a working tree ("regardless of
+the planned # of PRs"). The research record was already complete and
+review-gate-1 hardened, so holding it uncommitted carried only risk (a
+single dirty checkout as the sole copy) and no review benefit. Rejected:
+waiting for align (leaves finished, reviewed work unlanded against an
+explicit operator directive) and bundling a rushed align session into the
+same PR (align is Benjamin's judgment session, not a wrap-up task).

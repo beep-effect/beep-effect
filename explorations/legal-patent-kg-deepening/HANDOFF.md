@@ -107,9 +107,15 @@ on Benjamin's call, the day the relator wedge's graduation PR #590 merged),
 seeded from the merged drafting-episodes row — which absorbed
 claim-limitation support as its first rung in the 2026-08-01 reconciliation
 grill, with the resolved remo2/remo3 boundaries carried verbatim as binding.
-It sits at capture stage with wedge-scoped decisions pre-seeded and parent
-align questions 11 (the `T3-F4` half), 12, 14, 15, and 16 carried into its
-`openQuestions`.
+Packet-open PR #612 merged 2026-08-07. Its research stage is COMPLETE
+(2026-08-06 lanes + synthesis + review gate 1; landed via the 2026-08-08
+research-stage PR under Benjamin's wrap-up directive — research first, align
+outcomes in the next PR): Lane A repo composition inventory, Lane B
+public-source grounding, `RESEARCH.md`, and the Lane B catalog corrections
+back-filled into this packet's `research/00-catalog.json` + `SOURCES.md`.
+The wedge sits at stage `research` with SIX align branches in its
+`openQuestions` — the five carried parent questions plus a new
+runtime-approval-vocabulary branch its Lane A surfaced.
 
 Phase shape remains sequential: the FunctionalUnit extension into
 `explorations/uspto-patent-driver-depth` stays queued on Benjamin's call.
@@ -156,11 +162,13 @@ For `dup-skip`, record the negative disposition and create nothing.
 
 Phase 1 is complete and signed off (2026-08-01 reconciliation grill). Of the
 Phase 2 wedges, the first two are GRADUATED with their goal packets on main,
-and the third — `explorations/patent-drafting-episode-ledger` — is OPEN
-(2026-08-06). First action is now to RESUME that wedge where its `README.md`
-Next Open Question points: run its two locked research lanes, then review
-gate 1, then hold the align session over their outputs — the align session
-is Benjamin's. Do not re-scaffold the packet or re-run the graduated
+and the third — `explorations/patent-drafting-episode-ledger` — is at stage
+`research` with its research record on main. First action is the align
+session with Benjamin over the six branches in that wedge's
+`ops/manifest.json` `openQuestions` (first branch: episode set, rebuild
+proof, and raw fallback — its research found the recent-raw fallback is
+prescribed by no source). BRIEF stays gated behind align. Do not re-run the
+wedge's completed lanes, re-scaffold the packet, or re-run the graduated
 siblings' stages.
 
 Behind it, the FunctionalUnit extension into
