@@ -85,7 +85,12 @@
     // @beep/data: generator-emitted registry modules (sync-data-to-ts) are intentionally
     // repetitive tuple/table output, not hand-authored source subject to
     // dead-code/duplication/complexity review.
-    "packages/foundation/primitive/data/src/generated/**"
+    "packages/foundation/primitive/data/src/generated/**",
+    // @beep/acp: generator-emitted OpenAPI schema modules (one S.Struct per upstream
+    // schema) are intentionally repetitive, not hand-authored source subject to
+    // dead-code/duplication/complexity review; the acp resync regeneration surfaced
+    // 27 self-clone findings inside the single generated file.
+    "packages/drivers/acp/src/_generated/**"
   ],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
