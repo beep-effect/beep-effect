@@ -8,7 +8,7 @@
   "phases": {
     "P0_law_and_packet": "done",
     "P1_codemod": "done",
-    "P2_generators": "pending",
+    "P2_generators": "done",
     "P3_migration": "pending",
     "P4_close": "pending"
   },
@@ -17,7 +17,10 @@
     "C2_codemod_extract_apply_verify": { "status": "done" },
     "C3_conservation_law_and_proof_manifest": { "status": "done" },
     "C4_title_pass_via_proxy": { "status": "pending" },
-    "C5_generator_templates": { "status": "pending" },
+    "C5_generator_templates": {
+      "status": "done",
+      "note": "P2 measured the real surface at 21 outputs / 10 emitters, not 18 / 9: the census's path-regex missed header-generated Html.model.ts + Html.meta.ts (350 examples) and the apps/professional-desktop sync-migration-bundle generator entirely. 20 of 21 outputs regenerate law-compliant. Residual: acp schema.gen.ts (342 @example) — regeneration materializes a pre-existing staleness bomb (16.6k-line rewrite, schemaNumber governance failures, S.Unknown->S.Json breaking Acp.errors.ts) that needs its own acp-resync PR before DoD item 2 can close; the acp emitter itself is converted, so that future regeneration emits titled sections. Also fixed en route: sync-data-to-ts iana-timezones regeneration had been broken since PR #456 (tar suffix collision asia/australasia)."
+    },
     "C6_residue_overrides": { "status": "pending" },
     "C7_gate_swap_repo_wide_zero": { "status": "pending" },
     "C8_baseline_rewrite": { "status": "pending" }

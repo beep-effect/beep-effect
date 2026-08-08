@@ -82,6 +82,27 @@ describe("@beep/infra CiRunners", () => {
     expect(() => makeCiRunnersStackArgsFromConfigValues({ availabilityZoneA: "us-west-2a" })).toThrow();
   });
 
+  it("rejects subnet geometry outside the VPC or overlapping", () => {
+    // VPC override alone strands the default 10.88.x subnets outside it.
+    expect(() => makeCiRunnersStackArgsFromConfigValues({ vpcCidr: "10.99.0.0/16" })).toThrow();
+    // A subnet outside the default VPC CIDR is rejected.
+    expect(() => makeCiRunnersStackArgsFromConfigValues({ publicSubnetACidr: "192.168.0.0/20" })).toThrow();
+    // Overlapping subnets are rejected even when both sit inside the VPC.
+    expect(() =>
+      makeCiRunnersStackArgsFromConfigValues({
+        publicSubnetACidr: "10.88.0.0/20",
+        publicSubnetBCidr: "10.88.8.0/21",
+      })
+    ).toThrow();
+    // Adjacent, non-overlapping subnets inside the VPC remain valid.
+    expect(
+      makeCiRunnersStackArgsFromConfigValues({
+        publicSubnetACidr: "10.88.32.0/20",
+        publicSubnetBCidr: "10.88.48.0/20",
+      }).network.publicSubnetACidr
+    ).toBe("10.88.32.0/20");
+  });
+
   it("keeps stack args import-safe", () => {
     const args = CiRunnersStackArgs.make({});
 
