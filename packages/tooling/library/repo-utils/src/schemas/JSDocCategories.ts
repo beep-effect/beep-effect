@@ -19,12 +19,14 @@ const $I = $RepoUtilsId.create("schemas/JSDocCategories");
 /**
  * Closed set of canonical `@category` values accepted by repo docgen checks.
  *
- * @example
+ * **Example** (Import canonical categories set)
+ *
  * ```ts
  * import { CANONICAL_JSDOC_CATEGORIES } from "@beep/repo-utils/schemas/JSDocCategories"
  * const categories = CANONICAL_JSDOC_CATEGORIES
  * console.log(categories)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -114,12 +116,14 @@ export const CANONICAL_JSDOC_CATEGORIES = [
 /**
  * Canonical category literal schema used by `@category` JSDoc tags.
  *
- * @example
+ * **Example** (Access validation category enum)
+ *
  * ```ts
  * import { JSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const category = JSDocCategory.Enum.validation
  * console.log(category)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -132,12 +136,14 @@ export const JSDocCategory = LiteralKit(CANONICAL_JSDOC_CATEGORIES).pipe(
 /**
  * Canonical category literal used by `@category` JSDoc tags.
  *
- * @example
+ * **Example** (Annotate category type literal)
+ *
  * ```ts
  * import type { JSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const category: JSDocCategory = "validation"
  * console.log(category)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -146,12 +152,14 @@ export type JSDocCategory = typeof JSDocCategory.Type;
 /**
  * Normalization status for an observed `@category` value.
  *
- * @example
+ * **Example** (Import normalization status value)
+ *
  * ```ts
  * import { JSDocCategoryNormalizationStatus } from "@beep/repo-utils/schemas/JSDocCategories"
  * const status = JSDocCategoryNormalizationStatus
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -163,12 +171,14 @@ export const JSDocCategoryNormalizationStatus = LiteralKit(["canonical", "alias"
 /**
  * Normalization status for an observed `@category` value.
  *
- * @example
+ * **Example** (Assign canonical status type)
+ *
  * ```ts
  * import type { JSDocCategoryNormalizationStatus } from "@beep/repo-utils/schemas/JSDocCategories"
  * const status: JSDocCategoryNormalizationStatus = "canonical"
  * console.log(status)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -177,12 +187,14 @@ export type JSDocCategoryNormalizationStatus = typeof JSDocCategoryNormalization
 /**
  * Normalized interpretation of a single `@category` tag value.
  *
- * @example
+ * **Example** (Normalize DomainModel category)
+ *
  * ```ts
  * import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const normalized = normalizeJSDocCategory("DomainModel")
  * console.log(normalized)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -299,14 +311,16 @@ const appendCategorySeparator = (output: string): string =>
 /**
  * Normalize free-form category text to the repo slug key format.
  *
- * @param value - Free-form category text read from a JSDoc `@category` tag.
- * @returns The normalized kebab-case lookup key.
- * @example
+ * **Example** (Slugify free-form category text)
+ *
  * ```ts
  * import { normalizeJSDocCategoryKey } from "@beep/repo-utils/schemas/JSDocCategories"
  * const key = normalizeJSDocCategoryKey("Resource Management & Finalization")
  * console.log(key)
  * ```
+ *
+ * @param value - Free-form category text read from a JSDoc `@category` tag.
+ * @returns The normalized kebab-case lookup key.
  * @category normalization
  * @since 0.0.0
  */
@@ -352,14 +366,16 @@ export const normalizeJSDocCategoryKey = (value: string): string => {
 /**
  * Check whether a string is already a canonical category slug.
  *
- * @param value - Candidate category slug to check.
- * @returns True when the value is in the canonical category set.
- * @example
+ * **Example** (Check tool-schemas is canonical)
+ *
  * ```ts
  * import { isCanonicalJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const isCanonical = isCanonicalJSDocCategory("tool-schemas")
  * console.log(isCanonical)
  * ```
+ *
+ * @param value - Candidate category slug to check.
+ * @returns True when the value is in the canonical category set.
  * @category predicates
  * @since 0.0.0
  */
@@ -368,14 +384,16 @@ export const isCanonicalJSDocCategory: (value: string) => value is JSDocCategory
 /**
  * Normalize and classify a single observed `@category` value.
  *
- * @param value - Observed category text from a JSDoc block.
- * @returns The normalized category key, status, canonical value, and optional diagnostic message.
- * @example
+ * **Example** (Normalize ToolSchemas category)
+ *
  * ```ts
  * import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const normalized = normalizeJSDocCategory("ToolSchemas")
  * console.log(normalized)
  * ```
+ *
+ * @param value - Observed category text from a JSDoc block.
+ * @returns The normalized category key, status, canonical value, and optional diagnostic message.
  * @category normalization
  * @since 0.0.0
  */
@@ -465,15 +483,17 @@ const JSDocCategoryNormalizationFromString = S.String.pipe(
 /**
  * Normalize and classify free-form `@category` text.
  *
- * @param value - Free-form category text read from a JSDoc block.
- * @returns Canonical, alias, rejected, or unknown category normalization result.
- * @example
+ * **Example** (Log DomainModel status result)
+ *
  * ```ts
  * import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  *
  * const normalized = normalizeJSDocCategory("DomainModel")
  * console.log(normalized.status)
  * ```
+ *
+ * @param value - Free-form category text read from a JSDoc block.
+ * @returns Canonical, alias, rejected, or unknown category normalization result.
  * @category normalization
  * @since 0.0.0
  */
@@ -483,14 +503,16 @@ export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalizatio
 /**
  * Return true when a category is canonical or accepted as a migration alias.
  *
- * @param value - Observed category text from a JSDoc block.
- * @returns True when the value is canonical or accepted as a migration alias.
- * @example
+ * **Example** (Accept DomainModel alias category)
+ *
  * ```ts
  * import { isAcceptedJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
  * const accepted = isAcceptedJSDocCategory("DomainModel")
  * console.log(accepted)
  * ```
+ *
+ * @param value - Observed category text from a JSDoc block.
+ * @returns True when the value is canonical or accepted as a migration alias.
  * @category predicates
  * @since 0.0.0
  */

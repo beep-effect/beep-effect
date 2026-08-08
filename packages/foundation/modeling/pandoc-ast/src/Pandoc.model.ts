@@ -23,7 +23,8 @@ type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
  *
- * @example
+ * **Example** (Making API version tuple)
+ *
  * ```ts
  * import { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -42,7 +43,8 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
 /**
  * Runtime type for {@link PandocApiVersion}.
  *
- * @example
+ * **Example** (Typing version tuple)
+ *
  * ```ts
  * import type { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -58,7 +60,8 @@ export type PandocApiVersion = typeof PandocApiVersion.Type;
 /**
  * Default Pandoc JSON API version emitted by Md-to-Pandoc projections.
  *
- * @example
+ * **Example** (Joining default version)
+ *
  * ```ts
  * import { DEFAULT_PANDOC_API_VERSION } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -73,11 +76,14 @@ export const DEFAULT_PANDOC_API_VERSION: PandocApiVersion = PandocApiVersion.mak
 /**
  * Exact JSON object retained for a future Pandoc constructor.
  *
+ * **Details**
+ *
  * The `c` payload is genuinely optional because Pandoc nullary constructors
  * omit it. Rest fields remain part of the semantic opaque node so a future
  * constructor can round-trip without guessing which fields matter.
  *
- * @example
+ * **Example** (Making unknown constructor wire)
+ *
  * ```ts
  * import { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -104,7 +110,8 @@ export const PandocUnknownConstructorWire = S.StructWithRest(
 /**
  * Runtime type for {@link PandocUnknownConstructorWire}.
  *
- * @example
+ * **Example** (Typing unknown constructor wire)
+ *
  * ```ts
  * import type { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -143,7 +150,8 @@ const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
 /**
  * Pandoc attribute key/value pair.
  *
- * @example
+ * **Example** (Decoding key-value pair)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
@@ -164,7 +172,8 @@ export const PandocKeyValue = S.Tuple([S.String, S.String]).pipe(
 /**
  * Runtime type for {@link PandocKeyValue}.
  *
- * @example
+ * **Example** (Typing key-value pair)
+ *
  * ```ts
  * import type { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -180,7 +189,8 @@ export type PandocKeyValue = typeof PandocKeyValue.Type;
 /**
  * Pandoc attribute triple represented with named fields.
  *
- * @example
+ * **Example** (Using empty attributes)
+ *
  * ```ts
  * import { PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -217,7 +227,8 @@ export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
 /**
  * Companion namespace for {@link PandocAttr}.
  *
- * @example
+ * **Example** (Making named attributes)
+ *
  * ```ts
  * import { PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -247,7 +258,8 @@ export declare namespace PandocAttr {
 /**
  * Pandoc link or image target.
  *
- * @example
+ * **Example** (Making link target)
+ *
  * ```ts
  * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -275,7 +287,8 @@ export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
 /**
  * Companion namespace for {@link PandocTarget}.
  *
- * @example
+ * **Example** (Typing link target)
+ *
  * ```ts
  * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -304,7 +317,8 @@ export declare namespace PandocTarget {
 /**
  * Pandoc math mode marker.
  *
- * @example
+ * **Example** (Checking InlineMath marker)
+ *
  * ```ts
  * import { PandocMathType } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -319,7 +333,8 @@ export { PandocMathType };
 /**
  * Runtime type for {@link PandocMathType}.
  *
- * @example
+ * **Example** (Typing math type)
+ *
  * ```ts
  * import type { PandocMathType } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -335,7 +350,8 @@ export type PandocMathType = typeof PandocMathType.Type;
 /**
  * Pandoc ordered-list numbering style constructor.
  *
- * @example
+ * **Example** (Checking DefaultStyle marker)
+ *
  * ```ts
  * import { PandocListNumberStyle } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -350,7 +366,8 @@ export { PandocListNumberStyle };
 /**
  * Runtime type for {@link PandocListNumberStyle}.
  *
- * @example
+ * **Example** (Typing list number style)
+ *
  * ```ts
  * import type { PandocListNumberStyle } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -366,7 +383,8 @@ export type PandocListNumberStyle = typeof PandocListNumberStyle.Type;
 /**
  * Pandoc ordered-list numbering delimiter constructor.
  *
- * @example
+ * **Example** (Checking DefaultDelim marker)
+ *
  * ```ts
  * import { PandocListNumberDelimiter } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -381,7 +399,8 @@ export { PandocListNumberDelimiter };
 /**
  * Runtime type for {@link PandocListNumberDelimiter}.
  *
- * @example
+ * **Example** (Typing list delimiter)
+ *
  * ```ts
  * import type { PandocListNumberDelimiter } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -397,7 +416,8 @@ export type PandocListNumberDelimiter = typeof PandocListNumberDelimiter.Type;
 /**
  * Recursive Pandoc inline child list.
  *
- * @example
+ * **Example** (Checking empty inline children)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
@@ -420,7 +440,8 @@ export const PandocInlineChildren = S.Array(
 /**
  * Runtime type for {@link PandocInlineChildren}.
  *
- * @example
+ * **Example** (Typing empty inline children)
+ *
  * ```ts
  * import type { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -436,7 +457,8 @@ export type PandocInlineChildren = typeof PandocInlineChildren.Type;
 /**
  * Companion namespace for {@link PandocInlineChildren}.
  *
- * @example
+ * **Example** (Using inline children Type)
+ *
  * ```ts
  * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -462,7 +484,8 @@ export declare namespace PandocInlineChildren {
 /**
  * Recursive Pandoc block child list.
  *
- * @example
+ * **Example** (Checking empty block children)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
@@ -485,7 +508,8 @@ export const PandocBlockChildren = S.Array(
 /**
  * Runtime type for {@link PandocBlockChildren}.
  *
- * @example
+ * **Example** (Typing empty block children)
+ *
  * ```ts
  * import type { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -501,7 +525,8 @@ export type PandocBlockChildren = typeof PandocBlockChildren.Type;
 /**
  * Companion namespace for {@link PandocBlockChildren}.
  *
- * @example
+ * **Example** (Using block children Type)
+ *
  * ```ts
  * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -527,7 +552,8 @@ export declare namespace PandocBlockChildren {
 /**
  * One Pandoc list item as a list of blocks.
  *
- * @example
+ * **Example** (Checking empty list item)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
@@ -550,7 +576,8 @@ export const PandocListItem = S.Array(
 /**
  * Runtime type for {@link PandocListItem}.
  *
- * @example
+ * **Example** (Typing empty list item)
+ *
  * ```ts
  * import type { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -566,7 +593,8 @@ export type PandocListItem = typeof PandocListItem.Type;
 /**
  * Pandoc list items.
  *
- * @example
+ * **Example** (Checking empty list items)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
@@ -587,7 +615,8 @@ export const PandocListItems = S.Array(PandocListItem).pipe(
 /**
  * Runtime type for {@link PandocListItems}.
  *
- * @example
+ * **Example** (Typing empty list items)
+ *
  * ```ts
  * import type { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -603,7 +632,8 @@ export type PandocListItems = typeof PandocListItems.Type;
 /**
  * Plain text inline.
  *
- * @example
+ * **Example** (Making plain text inline)
+ *
  * ```ts
  * import { Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -629,7 +659,8 @@ export class Str extends S.TaggedClass<Str>($I`Str`)(
 /**
  * Companion namespace for {@link Str}.
  *
- * @example
+ * **Example** (Typing Str node)
+ *
  * ```ts
  * import { Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -658,7 +689,8 @@ export declare namespace Str {
 /**
  * Pandoc space inline.
  *
- * @example
+ * **Example** (Making space inline)
+ *
  * ```ts
  * import { Space } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -680,7 +712,8 @@ export class Space extends S.TaggedClass<Space>($I`Space`)(
 /**
  * Companion namespace for {@link Space}.
  *
- * @example
+ * **Example** (Typing Space node)
+ *
  * ```ts
  * import { Space } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -708,7 +741,8 @@ export declare namespace Space {
 /**
  * Pandoc soft line break inline.
  *
- * @example
+ * **Example** (Making soft break inline)
+ *
  * ```ts
  * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -730,7 +764,8 @@ export class SoftBreak extends S.TaggedClass<SoftBreak>($I`SoftBreak`)(
 /**
  * Companion namespace for {@link SoftBreak}.
  *
- * @example
+ * **Example** (Typing SoftBreak node)
+ *
  * ```ts
  * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -758,7 +793,8 @@ export declare namespace SoftBreak {
 /**
  * Pandoc hard line break inline.
  *
- * @example
+ * **Example** (Making hard line break)
+ *
  * ```ts
  * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -780,7 +816,8 @@ export class LineBreak extends S.TaggedClass<LineBreak>($I`LineBreak`)(
 /**
  * Companion namespace for {@link LineBreak}.
  *
- * @example
+ * **Example** (Typing LineBreak node)
+ *
  * ```ts
  * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -808,7 +845,8 @@ export declare namespace LineBreak {
 /**
  * Pandoc emphasis inline.
  *
- * @example
+ * **Example** (Making emphasis inline)
+ *
  * ```ts
  * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -834,7 +872,8 @@ export class Emph extends S.TaggedClass<Emph>($I`Emph`)(
 /**
  * Companion namespace for {@link Emph}.
  *
- * @example
+ * **Example** (Typing Emph node)
+ *
  * ```ts
  * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -866,7 +905,8 @@ export declare namespace Emph {
 /**
  * Pandoc strong inline.
  *
- * @example
+ * **Example** (Making strong inline)
+ *
  * ```ts
  * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -892,7 +932,8 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 /**
  * Companion namespace for {@link Strong}.
  *
- * @example
+ * **Example** (Typing Strong node)
+ *
  * ```ts
  * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -924,7 +965,8 @@ export declare namespace Strong {
 /**
  * Pandoc strikeout inline.
  *
- * @example
+ * **Example** (Making strikeout inline)
+ *
  * ```ts
  * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -950,7 +992,8 @@ export class Strikeout extends S.TaggedClass<Strikeout>($I`Strikeout`)(
 /**
  * Companion namespace for {@link Strikeout}.
  *
- * @example
+ * **Example** (Typing Strikeout node)
+ *
  * ```ts
  * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -982,7 +1025,8 @@ export declare namespace Strikeout {
 /**
  * Pandoc code inline.
  *
- * @example
+ * **Example** (Making code inline)
+ *
  * ```ts
  * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1011,7 +1055,8 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
- * @example
+ * **Example** (Typing Code node)
+ *
  * ```ts
  * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1045,7 +1090,8 @@ export declare namespace Code {
 /**
  * Pandoc link inline.
  *
- * @example
+ * **Example** (Making link inline)
+ *
  * ```ts
  * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1081,7 +1127,8 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 /**
  * Companion namespace for {@link Link}.
  *
- * @example
+ * **Example** (Typing Link node)
+ *
  * ```ts
  * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1121,7 +1168,8 @@ export declare namespace Link {
 /**
  * Pandoc image inline.
  *
- * @example
+ * **Example** (Making image inline)
+ *
  * ```ts
  * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1157,7 +1205,8 @@ export class Image extends S.TaggedClass<Image>($I`Image`)(
 /**
  * Companion namespace for {@link Image}.
  *
- * @example
+ * **Example** (Typing Image node)
+ *
  * ```ts
  * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1197,7 +1246,8 @@ export declare namespace Image {
 /**
  * Pandoc span inline.
  *
- * @example
+ * **Example** (Making span inline)
+ *
  * ```ts
  * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1226,7 +1276,8 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 /**
  * Companion namespace for {@link Span}.
  *
- * @example
+ * **Example** (Typing Span node)
+ *
  * ```ts
  * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1260,7 +1311,8 @@ export declare namespace Span {
 /**
  * Pandoc footnote or endnote inline.
  *
- * @example
+ * **Example** (Making footnote inline)
+ *
  * ```ts
  * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1286,7 +1338,8 @@ export class Note extends S.TaggedClass<Note>($I`Note`)(
 /**
  * Companion namespace for {@link Note}.
  *
- * @example
+ * **Example** (Typing Note node)
+ *
  * ```ts
  * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1318,7 +1371,8 @@ export declare namespace Note {
 /**
  * Pandoc math inline.
  *
- * @example
+ * **Example** (Making math inline)
+ *
  * ```ts
  * import { Math } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1347,7 +1401,8 @@ export class Math extends S.TaggedClass<Math>($I`Math`)(
 /**
  * Companion namespace for {@link Math}.
  *
- * @example
+ * **Example** (Typing Math node)
+ *
  * ```ts
  * import { Math } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1377,7 +1432,8 @@ export declare namespace Math {
 /**
  * Future Pandoc inline constructor outside the pinned 1.23.1 registry.
  *
- * @example
+ * **Example** (Making unknown inline)
+ *
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1423,7 +1479,8 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
 /**
  * Companion namespace for {@link UnknownInline}.
  *
- * @example
+ * **Example** (Typing UnknownInline node)
+ *
  * ```ts
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1457,7 +1514,8 @@ export declare namespace UnknownInline {
 /**
  * Pandoc inline union for the v1 compatibility slice.
  *
- * @example
+ * **Example** (Checking inline union)
+ *
  * ```ts
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1494,7 +1552,8 @@ export const PandocInline = S.Union([
 /**
  * Runtime type for {@link PandocInline}.
  *
- * @example
+ * **Example** (Typing inline union)
+ *
  * ```ts
  * import { Str, type PandocInline } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1510,7 +1569,8 @@ export type PandocInline = typeof PandocInline.Type;
 /**
  * Companion namespace for {@link PandocInline}.
  *
- * @example
+ * **Example** (Using inline Type alias)
+ *
  * ```ts
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1564,7 +1624,8 @@ export declare namespace PandocInline {
 /**
  * Pandoc plain block.
  *
- * @example
+ * **Example** (Making plain block)
+ *
  * ```ts
  * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1590,7 +1651,8 @@ export class Plain extends S.TaggedClass<Plain>($I`Plain`)(
 /**
  * Companion namespace for {@link Plain}.
  *
- * @example
+ * **Example** (Typing Plain node)
+ *
  * ```ts
  * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1622,7 +1684,8 @@ export declare namespace Plain {
 /**
  * Pandoc paragraph block.
  *
- * @example
+ * **Example** (Making paragraph block)
+ *
  * ```ts
  * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1648,7 +1711,8 @@ export class Para extends S.TaggedClass<Para>($I`Para`)(
 /**
  * Companion namespace for {@link Para}.
  *
- * @example
+ * **Example** (Typing Para node)
+ *
  * ```ts
  * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1680,7 +1744,8 @@ export declare namespace Para {
 /**
  * Pandoc header block.
  *
- * @example
+ * **Example** (Making header block)
+ *
  * ```ts
  * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1712,7 +1777,8 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 /**
  * Companion namespace for {@link Header}.
  *
- * @example
+ * **Example** (Typing Header node)
+ *
  * ```ts
  * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1748,7 +1814,8 @@ export declare namespace Header {
 /**
  * Pandoc block quote.
  *
- * @example
+ * **Example** (Making block quote)
+ *
  * ```ts
  * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1774,7 +1841,8 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
 /**
  * Companion namespace for {@link BlockQuote}.
  *
- * @example
+ * **Example** (Typing BlockQuote node)
+ *
  * ```ts
  * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1806,7 +1874,8 @@ export declare namespace BlockQuote {
 /**
  * Pandoc fenced code block.
  *
- * @example
+ * **Example** (Making fenced code block)
+ *
  * ```ts
  * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1835,7 +1904,8 @@ export class CodeBlock extends S.TaggedClass<CodeBlock>($I`CodeBlock`)(
 /**
  * Companion namespace for {@link CodeBlock}.
  *
- * @example
+ * **Example** (Typing CodeBlock node)
+ *
  * ```ts
  * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1869,7 +1939,8 @@ export declare namespace CodeBlock {
 /**
  * Pandoc bullet list block.
  *
- * @example
+ * **Example** (Making bullet list)
+ *
  * ```ts
  * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1895,7 +1966,8 @@ export class BulletList extends S.TaggedClass<BulletList>($I`BulletList`)(
 /**
  * Companion namespace for {@link BulletList}.
  *
- * @example
+ * **Example** (Typing BulletList node)
+ *
  * ```ts
  * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1927,7 +1999,8 @@ export declare namespace BulletList {
 /**
  * Pandoc ordered list block.
  *
- * @example
+ * **Example** (Making ordered list)
+ *
  * ```ts
  * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -1967,7 +2040,8 @@ export class OrderedList extends S.TaggedClass<OrderedList>($I`OrderedList`)(
 /**
  * Companion namespace for {@link OrderedList}.
  *
- * @example
+ * **Example** (Typing OrderedList node)
+ *
  * ```ts
  * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2010,7 +2084,8 @@ export declare namespace OrderedList {
 /**
  * Pandoc horizontal rule block.
  *
- * @example
+ * **Example** (Making horizontal rule)
+ *
  * ```ts
  * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2032,7 +2107,8 @@ export class HorizontalRule extends S.TaggedClass<HorizontalRule>($I`HorizontalR
 /**
  * Companion namespace for {@link HorizontalRule}.
  *
- * @example
+ * **Example** (Typing HorizontalRule node)
+ *
  * ```ts
  * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2060,7 +2136,8 @@ export declare namespace HorizontalRule {
 /**
  * Pandoc div block, including DOCX custom-style wrappers.
  *
- * @example
+ * **Example** (Making div block)
+ *
  * ```ts
  * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2092,7 +2169,8 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 /**
  * Companion namespace for {@link Div}.
  *
- * @example
+ * **Example** (Typing Div node)
+ *
  * ```ts
  * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2290,12 +2368,14 @@ const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCapt
 /**
  * Canonical validated Pandoc table payload.
  *
- * @remarks
+ * **Details**
+ *
  * Tables remain an explicit compatibility gap, so the complete six-field JSON
  * tuple is retained as the sole stored truth. Attribute and caption inspection
  * are derived from this payload by {@link Table}.
  *
- * @example
+ * **Example** (Making six-field table payload)
+ *
  * ```ts
  * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2337,7 +2417,8 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
 /**
  * Runtime type for {@link PandocTablePayload}.
  *
- * @example
+ * **Example** (Decoding table payload)
+ *
  * ```ts
  * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
  * import { Result } from "effect"
@@ -2403,7 +2484,8 @@ const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type
 /**
  * Pandoc table block captured as an explicit gap node.
  *
- * @example
+ * **Example** (Making table gap node)
+ *
  * ```ts
  * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2452,7 +2534,8 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 /**
  * Companion namespace for {@link Table}.
  *
- * @example
+ * **Example** (Typing Table node)
+ *
  * ```ts
  * import { Table } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2488,7 +2571,8 @@ export declare namespace Table {
 /**
  * Future Pandoc block constructor outside the pinned 1.23.1 registry.
  *
- * @example
+ * **Example** (Making unknown block)
+ *
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2534,7 +2618,8 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
 /**
  * Companion namespace for {@link UnknownBlock}.
  *
- * @example
+ * **Example** (Typing UnknownBlock node)
+ *
  * ```ts
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2568,7 +2653,8 @@ export declare namespace UnknownBlock {
 /**
  * Pandoc block union for the v1 compatibility slice.
  *
- * @example
+ * **Example** (Checking block union)
+ *
  * ```ts
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2602,7 +2688,8 @@ export const PandocBlock = S.Union([
 /**
  * Runtime type for {@link PandocBlock}.
  *
- * @example
+ * **Example** (Typing block union)
+ *
  * ```ts
  * import { Para, Str, type PandocBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2618,7 +2705,8 @@ export type PandocBlock = typeof PandocBlock.Type;
 /**
  * Companion namespace for {@link PandocBlock}.
  *
- * @example
+ * **Example** (Using block Type alias)
+ *
  * ```ts
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2666,7 +2754,8 @@ export declare namespace PandocBlock {
 /**
  * Companion recursive type knot for {@link PandocMetaValue}.
  *
- * @example
+ * **Example** (Decoding meta list value)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -2816,7 +2905,8 @@ const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Enc
 /**
  * Boolean Pandoc metadata value.
  *
- * @example
+ * **Example** (Making boolean meta value)
+ *
  * ```ts
  * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2833,7 +2923,8 @@ export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
 /**
  * String Pandoc metadata value.
  *
- * @example
+ * **Example** (Making string meta value)
+ *
  * ```ts
  * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2850,7 +2941,8 @@ export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe
 /**
  * Inline-list Pandoc metadata value.
  *
- * @example
+ * **Example** (Making inline-list meta)
+ *
  * ```ts
  * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2867,7 +2959,8 @@ export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlin
 /**
  * Block-list Pandoc metadata value.
  *
- * @example
+ * **Example** (Making block-list meta)
+ *
  * ```ts
  * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2884,7 +2977,8 @@ export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockCh
 /**
  * Recursive list Pandoc metadata value.
  *
- * @example
+ * **Example** (Making recursive meta list)
+ *
  * ```ts
  * import { MetaList, MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2901,7 +2995,8 @@ export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaV
 /**
  * Recursive mapping Pandoc metadata value.
  *
- * @example
+ * **Example** (Making recursive meta map)
+ *
  * ```ts
  * import { MetaMap, MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2918,7 +3013,8 @@ export const MetaMap = S.TaggedStruct("metaMap", {
 /**
  * Future Pandoc metadata constructor outside the supported surface.
  *
- * @example
+ * **Example** (Making unknown meta value)
+ *
  * ```ts
  * import { UnknownMeta } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2963,7 +3059,8 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
 /**
  * Recursive semantic Pandoc metadata-value union.
  *
- * @example
+ * **Example** (Checking meta value union)
+ *
  * ```ts
  * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -2992,7 +3089,8 @@ export const PandocMetaValue = S.Union([
 /**
  * Decoded boolean metadata payload.
  *
- * @example
+ * **Example** (Typing boolean meta payload)
+ *
  * ```ts
  * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3008,7 +3106,8 @@ export type MetaBool = typeof MetaBool.Type;
 /**
  * Decoded string metadata payload.
  *
- * @example
+ * **Example** (Typing string meta payload)
+ *
  * ```ts
  * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3024,7 +3123,8 @@ export type MetaString = typeof MetaString.Type;
 /**
  * Decoded inline-list metadata payload.
  *
- * @example
+ * **Example** (Typing inline-list meta)
+ *
  * ```ts
  * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3040,7 +3140,8 @@ export type MetaInlines = typeof MetaInlines.Type;
 /**
  * Encoded inline-list metadata payload.
  *
- * @example
+ * **Example** (Typing encoded inline meta)
+ *
  * ```ts
  * import type { MetaInlinesEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3056,7 +3157,8 @@ export type MetaInlinesEncoded = typeof MetaInlines.Encoded;
 /**
  * Decoded block-list metadata payload.
  *
- * @example
+ * **Example** (Typing block-list meta)
+ *
  * ```ts
  * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3072,7 +3174,8 @@ export type MetaBlocks = typeof MetaBlocks.Type;
 /**
  * Encoded block-list metadata payload.
  *
- * @example
+ * **Example** (Typing encoded block meta)
+ *
  * ```ts
  * import type { MetaBlocksEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3088,7 +3191,8 @@ export type MetaBlocksEncoded = typeof MetaBlocks.Encoded;
 /**
  * Decoded recursive metadata-list payload.
  *
- * @example
+ * **Example** (Typing recursive meta list)
+ *
  * ```ts
  * import { MetaList } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3104,7 +3208,8 @@ export type MetaList = typeof MetaList.Type;
 /**
  * Encoded recursive metadata-list payload.
  *
- * @example
+ * **Example** (Typing encoded meta list)
+ *
  * ```ts
  * import type { MetaListEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3120,7 +3225,8 @@ export type MetaListEncoded = typeof MetaList.Encoded;
 /**
  * Decoded recursive metadata-map payload.
  *
- * @example
+ * **Example** (Typing recursive meta map)
+ *
  * ```ts
  * import { MetaMap } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3136,7 +3242,8 @@ export type MetaMap = typeof MetaMap.Type;
 /**
  * Encoded recursive metadata-map payload.
  *
- * @example
+ * **Example** (Typing encoded meta map)
+ *
  * ```ts
  * import type { MetaMapEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3152,7 +3259,8 @@ export type MetaMapEncoded = typeof MetaMap.Encoded;
 /**
  * Encoded exact future metadata constructor.
  *
- * @example
+ * **Example** (Typing encoded unknown meta)
+ *
  * ```ts
  * import type { UnknownMetaEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3168,7 +3276,8 @@ export type UnknownMetaEncoded = typeof UnknownMeta.Encoded;
 /**
  * Recursive decoded Pandoc metadata value.
  *
- * @example
+ * **Example** (Typing decoded meta value)
+ *
  * ```ts
  * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  * import type { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
@@ -3185,7 +3294,8 @@ export type PandocMetaValue = typeof PandocMetaValue.Type;
 /**
  * Recursive encoded Pandoc metadata value.
  *
- * @example
+ * **Example** (Typing encoded meta value)
+ *
  * ```ts
  * import type { PandocMetaValueEncoded } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3201,7 +3311,8 @@ export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
 /**
  * Pandoc document metadata map.
  *
- * @example
+ * **Example** (Decoding document metadata)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -3226,7 +3337,8 @@ export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
 /**
  * Runtime type for {@link PandocMeta}.
  *
- * @example
+ * **Example** (Typing document metadata)
+ *
  * ```ts
  * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  * import type { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
@@ -3243,7 +3355,8 @@ export type PandocMeta = typeof PandocMeta.Type;
 /**
  * Root Pandoc JSON document.
  *
- * @example
+ * **Example** (Making root document)
+ *
  * ```ts
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -3277,7 +3390,8 @@ export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocum
 /**
  * Companion namespace for {@link PandocDocument}.
  *
- * @example
+ * **Example** (Typing PandocDocument node)
+ *
  * ```ts
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  *

@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/File/File.model");
 /**
  * Experimental schema anchor for Box file metadata resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty File)
+ *
  * ```ts
  * import { File } from "@beep/box/experimental/domain/entities/File/File.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class File extends S.Class<File>($I`File`)(
 /**
  * Type-level companion namespace for {@link File} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode File payload)
+ *
  * ```ts
  * import { File } from "@beep/box/experimental/domain/entities/File/File.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace File {
   /**
    * Encoded payload accepted by the {@link File} entity schema.
    *
-   * @example
+   * **Example** (Encode File to Encoded type)
+   *
    * ```ts
    * import { File } from "@beep/box/experimental/domain/entities/File/File.model";
    * import * as S from "effect/Schema";

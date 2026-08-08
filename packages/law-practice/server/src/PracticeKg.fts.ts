@@ -23,7 +23,8 @@ const $I = $LawPracticeServerId.create("PracticeKg.fts");
  * One extraction source feeding the bundle's `document_text` table: a
  * `sources.jsonl` manifest plus the glob of its extracted text files.
  *
- * @example
+ * **Example** (Make text source spec)
+ *
  * ```ts
  * import { GraphTextSourceSpec } from "../../src/PracticeKg.fts.ts"
  *
@@ -231,13 +232,15 @@ ORDER BY digest`;
 /**
  * Build the deterministic DuckDB half of a practice knowledge-graph bundle.
  *
- * @remarks
+ * **Details**
+ *
  * The DuckDB connection is opened and closed around this one call, so the
  * database at `databasePath` is complete when the effect settles. Passing an
  * empty `sourceSpecs` creates the document-text table empty rather than skipping
  * it, keeping the bundle's shape identical whether or not extraction ran.
  *
- * @example
+ * **Example** (Build empty DuckDB tables)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as A from "effect/Array"

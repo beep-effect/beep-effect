@@ -16,7 +16,8 @@ const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
 /**
  * Legal matter entity grouping prosecution work for one legal client.
  *
- * @example
+ * **Example** (Decode Matter with Schema)
+ *
  * ```ts
  * import { Matter } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

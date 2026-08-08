@@ -17,7 +17,8 @@ const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.mod
 /**
  * Candidate claim proposed by an agent and tracked through admission.
  *
- * @example
+ * **Example** (Decoding CandidateClaim from object)
+ *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

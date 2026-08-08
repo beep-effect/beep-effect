@@ -85,7 +85,8 @@ type DirectionalKit<
  * Error thrown when `MappedLiteralKit` receives duplicate literals on the
  * `from` or `to` side of the mapping.
  *
- * @example
+ * **Example** (Construct duplicate mapping error)
+ *
  * ```ts
  * import { MappedLiteralDuplicateError } from "@beep/schema/MappedLiteralKit"
  *
@@ -255,12 +256,15 @@ const makeDirectionalKit = <
 /**
  * Runtime mapped literal kit that augments transformed literal schemas with directional helpers.
  *
+ * **Details**
+ *
  * - `decode` maps `From` literals to `To` literals.
  * - `encode` maps `To` literals back to `From` literals.
  * - Top-level helpers (`Enum`, `is`, `$match`, etc.) are aliases of `From`.
  * - Both sides must be unique by literal value and by `LiteralToKey` helper key encoding.
  *
- * @example
+ * **Example** (Map SQL state literals)
+ *
  * ```typescript
  * import { MappedLiteralKit } from "@beep/schema";
  * import * as S from "effect/Schema";
@@ -304,7 +308,8 @@ type MappedLiteralKitBase<M extends MappedPairs> = ForwardDirectionalKit<M> & {
 /**
  * Runtime mapped literal kit returned by {@link MappedLiteralKit}.
  *
- * @example
+ * **Example** (Type mapped kit pairs)
+ *
  * ```ts
  * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  *
@@ -324,11 +329,14 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
 /**
  * Builds a mapped literal schema kit from a non-empty tuple of literal pairs.
  *
+ * **Details**
+ *
  * Requires one-to-one mappings. Exact duplicate literals on either side throw
  * {@link MappedLiteralDuplicateError}. Helper-key collisions on either side
  * throw {@link LiteralKitKeyCollisionError}.
  *
- * @example
+ * **Example** (Build HTTP status mapping)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"

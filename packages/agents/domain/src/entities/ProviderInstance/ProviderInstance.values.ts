@@ -27,10 +27,13 @@ const hasOnlyValidEnvVarNames = (envVars: Readonly<Record<string, string>>): boo
 /**
  * Closed vocabulary of provider CLI kinds a provider instance can delegate to.
  *
+ * **Details**
+ *
  * This deliberately duplicates the driver vocabulary: the domain must not
  * import drivers, so the server translates between the two literal families.
  *
- * @example
+ * **Example** (Check provider kind membership)
+ *
  * ```ts
  * import { ProviderKind } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -49,7 +52,8 @@ export const ProviderKind = LiteralKit(["claude", "codex"]).pipe(
 /**
  * Type accepted by the {@link ProviderKind} schema.
  *
- * @example
+ * **Example** (Satisfy ProviderKind type)
+ *
  * ```ts
  * import type { ProviderKind } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -65,7 +69,8 @@ export type ProviderKind = typeof ProviderKind.Type;
 /**
  * Trimmed non-empty display label for one provider instance.
  *
- * @example
+ * **Example** (Decode instance label)
+ *
  * ```ts
  * import { InstanceLabel } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -87,7 +92,8 @@ export const InstanceLabel = S.NonEmptyString.check(S.isTrimmed(), S.isMaxLength
 /**
  * Type accepted by the {@link InstanceLabel} schema.
  *
- * @example
+ * **Example** (Type decoded instance label)
+ *
  * ```ts
  * import { InstanceLabel } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -104,7 +110,8 @@ export type InstanceLabel = typeof InstanceLabel.Type;
 /**
  * Non-empty filesystem path to the provider CLI binary.
  *
- * @example
+ * **Example** (Decode binary path)
+ *
  * ```ts
  * import { BinaryPath } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -126,7 +133,8 @@ export const BinaryPath = S.NonEmptyString.pipe(
 /**
  * Type accepted by the {@link BinaryPath} schema.
  *
- * @example
+ * **Example** (Type decoded binary path)
+ *
  * ```ts
  * import { BinaryPath } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -144,7 +152,8 @@ export type BinaryPath = typeof BinaryPath.Type;
  * Non-empty filesystem path used as the isolated HOME directory of one
  * provider instance.
  *
- * @example
+ * **Example** (Decode home path)
+ *
  * ```ts
  * import { HomePath } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -166,7 +175,8 @@ export const HomePath = S.NonEmptyString.pipe(
 /**
  * Type accepted by the {@link HomePath} schema.
  *
- * @example
+ * **Example** (Type decoded home path)
+ *
  * ```ts
  * import { HomePath } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -183,13 +193,16 @@ export type HomePath = typeof HomePath.Type;
 /**
  * Environment-variable name safe to persist on a provider instance.
  *
+ * **Details**
+ *
  * Rejects token-bearing names at decode time (`ANTHROPIC_API_KEY`,
  * `ANTHROPIC_AUTH_TOKEN`, `OPENAI_API_KEY`, `OPENAI_ACCESS_TOKEN`, plus the
  * `*_TOKEN`, `*_SECRET`, `*_KEY` suffix families and the `AI_*_API_KEY`
  * prefix family) so provider credentials can never smuggle into beep-owned
  * storage. Use the colocated `EnvVarName.is` guard, derived via `S.is`.
  *
- * @example
+ * **Example** (Guard token-safe env names)
+ *
  * ```ts
  * import { EnvVarName } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -225,7 +238,8 @@ export const EnvVarName = S.NonEmptyString.check(
 /**
  * Type accepted by the {@link EnvVarName} schema.
  *
- * @example
+ * **Example** (Type decoded env var name)
+ *
  * ```ts
  * import { EnvVarName } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -253,11 +267,14 @@ const TokenSafeEnvVarRecord = S.Record(S.String, S.NonEmptyString).check(
  * Extra child-process environment injected when spawning the provider CLI,
  * keyed by token-safe {@link EnvVarName}.
  *
+ * **Details**
+ *
  * Decoding fails (rather than silently dropping keys, the default record
  * key-selection behavior) when any name is token-bearing or malformed, so a
  * credential-smuggling record can never reach beep-owned storage.
  *
- * @example
+ * **Example** (Decode token-safe env vars)
+ *
  * ```ts
  * import { EnvVars } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -279,7 +296,8 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
 /**
  * Type accepted by the {@link EnvVars} schema.
  *
- * @example
+ * **Example** (Type decoded env vars)
+ *
  * ```ts
  * import { EnvVars } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -296,7 +314,8 @@ export type EnvVars = typeof EnvVars.Type;
 /**
  * Closed vocabulary of credential sources a probe can report.
  *
- * @example
+ * **Example** (Check token source membership)
+ *
  * ```ts
  * import { TokenSource } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -315,7 +334,8 @@ export const TokenSource = LiteralKit(["claude.ai", "console", "api-key", "chatg
 /**
  * Type accepted by the {@link TokenSource} schema.
  *
- * @example
+ * **Example** (Satisfy TokenSource type)
+ *
  * ```ts
  * import type { TokenSource } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -332,7 +352,8 @@ export type TokenSource = typeof TokenSource.Type;
  * Auth-snapshot variant for a logged-in provider CLI, carrying whatever
  * account detail the probe surfaced.
  *
- * @example
+ * **Example** (Decode authenticated snapshot)
+ *
  * ```ts
  * import { AuthenticatedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -374,7 +395,8 @@ export class AuthenticatedSnapshot extends S.Class<AuthenticatedSnapshot>($I`Aut
 /**
  * Auth-snapshot variant for a provider CLI that responded but is logged out.
  *
- * @example
+ * **Example** (Decode unauthenticated snapshot)
+ *
  * ```ts
  * import { UnauthenticatedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -406,7 +428,8 @@ export class UnauthenticatedSnapshot extends S.Class<UnauthenticatedSnapshot>($I
  * any auth state could be read. Deliberately carries no error text so raw CLI
  * output never enters the domain.
  *
- * @example
+ * **Example** (Decode probe-failed snapshot)
+ *
  * ```ts
  * import { ProbeFailedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -436,7 +459,8 @@ export class ProbeFailedSnapshot extends S.Class<ProbeFailedSnapshot>($I`ProbeFa
 /**
  * Tagged union of provider auth-probe outcomes, discriminated by `status`.
  *
- * @example
+ * **Example** (Build auth snapshot union)
+ *
  * ```ts
  * import { AuthSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -461,7 +485,8 @@ export const AuthSnapshot = S.Union([AuthenticatedSnapshot, UnauthenticatedSnaps
 /**
  * Type accepted by the {@link AuthSnapshot} schema.
  *
- * @example
+ * **Example** (Type auth snapshot union)
+ *
  * ```ts
  * import { ProbeFailedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import type { AuthSnapshot } from "@beep/agents-domain/entities/ProviderInstance"

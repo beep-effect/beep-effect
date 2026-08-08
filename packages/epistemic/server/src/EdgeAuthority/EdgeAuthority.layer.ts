@@ -14,13 +14,16 @@ import type { PostgresDrizzle } from "@beep/postgres";
 /**
  * Drizzle-backed edge authority repository layer.
  *
+ * **Details**
+ *
  * There is no in-memory sibling here, and that is deliberate: the atomicity this
  * repository sells — the locked head, the guarded close, the exclusion
  * constraint that refuses a second open head — is enforced by the database, so
  * an in-memory stand-in would be proving a different thing than the one callers
  * depend on.
  *
- * @example
+ * **Example** (Import and log layer)
+ *
  * ```ts
  * import { EdgeAuthorityRepositoryDrizzle } from "@beep/epistemic-server/EdgeAuthority"
  *

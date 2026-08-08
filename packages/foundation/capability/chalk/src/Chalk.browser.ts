@@ -1,12 +1,15 @@
 /**
  * Browser-targeted Chalk entry point.
  *
+ * **Details**
+ *
  * Provides the same API surface as `@beep/chalk/Chalk` but detects color
  * support via the browser navigator instead of Node.js TTY introspection.
  * In non-browser runtimes (e.g. Node test runners) color detection returns
  * `false` and all styling becomes a no-op passthrough.
  *
- * @example
+ * **Example** (Check browser color support)
+ *
  * ```ts
  * import chalk, { Chalk, supportsColor } from "@beep/chalk/Chalk.browser"
  *
@@ -17,8 +20,8 @@
  * }
  * ```
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { makeCreateChalk } from "./internal/ChalkRuntime.ts";
@@ -52,10 +55,12 @@ import type {
 const createChalk = makeCreateChalk(detectedSupportsColorBrowser.stdout);
 const createChalkStderr = makeCreateChalk(detectedSupportsColorBrowser.stderr);
 
+// fallow-ignore-next-line code-duplication -- browser/node chalk dual surfaces intentionally share the public model re-export block; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 /**
  * Recursive callable Chalk builder surface for browser-targeted bundles.
  *
- * @example
+ * **Example** (Type a styled chalk chain)
+ *
  * ```ts
  * import chalk, { type ChalkInstance } from "@beep/chalk/Chalk.browser"
  *
@@ -63,8 +68,8 @@ const createChalkStderr = makeCreateChalk(detectedSupportsColorBrowser.stderr);
  * console.log(warning("Caution!"))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface ChalkInstance extends ChalkInstanceSurface {
   (...text: ReadonlyArray<unknown>): string;
@@ -85,7 +90,8 @@ export type Chalk = ChalkValue;
 /**
  * Constructor for creating isolated browser Chalk instances.
  *
- * @example
+ * **Example** (Construct Chalk with level)
+ *
  * ```ts
  * import { Chalk } from "@beep/chalk/Chalk.browser"
  *
@@ -93,8 +99,8 @@ export type Chalk = ChalkValue;
  * console.log(chalk.green("Success"))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Chalk = makeChalkConstructor(ChalkValue, createChalk);
 

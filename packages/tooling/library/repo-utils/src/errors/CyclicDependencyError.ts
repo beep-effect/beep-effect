@@ -18,7 +18,8 @@ const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
  * Raised when topological sorting or cycle detection finds circular
  * dependencies in the workspace dependency graph.
  *
- * @example
+ * **Example** (Construct cyclic dependency error)
+ *
  * ```ts
  * import { CyclicDependencyError } from "@beep/repo-utils/errors/CyclicDependencyError"
  * const error = CyclicDependencyError.make({
@@ -27,6 +28,7 @@ const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
  * })
  * console.log(error.cycles)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

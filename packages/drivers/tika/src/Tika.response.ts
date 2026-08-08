@@ -27,7 +27,8 @@ const tikaContentKey = "X-TIKA:content";
 /**
  * Trim-normalized text emitted from Apache Tika JSON content.
  *
- * @example
+ * **Example** (Create from unknown string)
+ *
  * ```ts
  * import { TikaContentText } from "@beep/tika"
  *
@@ -48,7 +49,8 @@ export const TikaContentText = S.Trim.pipe(
 /**
  * Type for {@link TikaContentText}.
  *
- * @example
+ * **Example** (Annotate typed content text)
+ *
  * ```ts
  * import type { TikaContentText } from "@beep/tika"
  *
@@ -80,7 +82,8 @@ const metadataValueToString = (value: unknown): O.Option<string> => {
 /**
  * Decode the first metadata record from an Apache Tika JSON payload.
  *
- * @example
+ * **Example** (Decode JSON metadata array)
+ *
  * ```ts
  * import { decodeTikaResponseRecord } from "@beep/tika"
  * import { Effect } from "effect"
@@ -112,10 +115,13 @@ export const decodeTikaResponseRecord = (
 /**
  * Stringify an Apache Tika metadata record, dropping the extracted-text key.
  *
+ * **Details**
+ *
  * String values pass through, string arrays join with `"; "`, numbers and
  * booleans stringify, and every other value is dropped.
  *
- * @example
+ * **Example** (Stringify metadata record values)
+ *
  * ```ts
  * import { stringifyTikaMetadata } from "@beep/tika"
  *
@@ -136,7 +142,8 @@ export const stringifyTikaMetadata = (record: Readonly<Record<string, unknown>>)
 /**
  * Read the trim-normalized extracted text from an Apache Tika metadata record.
  *
- * @example
+ * **Example** (Read content from metadata)
+ *
  * ```ts
  * import { readTikaContentText } from "@beep/tika"
  * import { O } from "@beep/utils"

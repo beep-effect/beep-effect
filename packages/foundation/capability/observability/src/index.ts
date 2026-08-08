@@ -1,10 +1,13 @@
 /**
  * Barrel re-exports for `@beep/observability`.
  *
+ * **Details**
+ *
  * Provides diagnostics, logging, HTTP errors, metric helpers, phase profiling,
  * and transport-safe schemas for Effect causes and exits.
  *
- * @example
+ * **Example** (Classify cause with logger)
+ *
  * ```typescript
  * import { Cause, Effect } from "effect"
  * import { classifyCause, layerConsoleLogger } from "@beep/observability"
@@ -25,7 +28,8 @@
 /**
  * Current version of the `@beep/observability` package.
  *
- * @example
+ * **Example** (Import package version)
+ *
  * ```typescript
  * import { VERSION } from "@beep/observability"
  *
@@ -33,8 +37,8 @@
  * console.log(version) // "0.0.3"
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const VERSION = "0.0.3" as const;
 

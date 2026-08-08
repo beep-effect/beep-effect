@@ -13,7 +13,8 @@ const $I = $GovinfoId.create("domain/values/GovinfoNumeric");
 /**
  * Non-negative signed 64-bit integer reported by GovInfo count fields.
  *
- * @example
+ * **Example** (Decode BigInt count value)
+ *
  * ```ts
  * import { NonNegativeInt64 } from "@beep/govinfo/domain/values/GovinfoNumeric"
  * import * as S from "effect/Schema"
@@ -41,7 +42,8 @@ export const NonNegativeInt64 = Int64.check(
 /**
  * Type for {@link NonNegativeInt64}.
  *
- * @example
+ * **Example** (Type-annotated NonNegativeInt64 decode)
+ *
  * ```ts
  * import { NonNegativeInt64 } from "@beep/govinfo/domain/values/GovinfoNumeric"
  * import type { NonNegativeInt64 as NonNegativeInt64Value } from "@beep/govinfo/domain/values/GovinfoNumeric"

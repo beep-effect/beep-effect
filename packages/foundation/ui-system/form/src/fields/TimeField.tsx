@@ -16,7 +16,8 @@ import type React from "react";
  * Props for {@link TimeField}: `EffectTimePicker` props plus label/description;
  * binding props are owned by the field.
  *
- * @example
+ * **Example** (Satisfies TimeFieldProps shape)
+ *
  * ```ts
  * import type { TimeFieldProps } from "@beep/form/fields/TimeField"
  *
@@ -44,7 +45,8 @@ export interface TimeFieldProps
 /**
  * Schema-bound time picker whose canonical value is Effect `DateTime`.
  *
- * @example
+ * **Example** (Schema-bound reminder time form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { TimeField } from "@beep/form/fields/TimeField"

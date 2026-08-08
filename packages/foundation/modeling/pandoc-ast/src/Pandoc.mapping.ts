@@ -46,7 +46,8 @@ const $I = $PandocAstId.create("Pandoc.mapping");
 /**
  * Typed failure raised when a Pandoc-to-Md projection cannot be completed.
  *
- * @example
+ * **Example** (Catch tagged mapping error)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping"
@@ -1066,7 +1067,8 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
 /**
  * Result of mapping a Pandoc document to `@beep/md`.
  *
- * @example
+ * **Example** (Make document mapping result)
+ *
  * ```ts
  * import * as Md from "@beep/md/Md.model"
  * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
@@ -1099,7 +1101,8 @@ export class PandocToDocumentResult extends S.Class<PandocToDocumentResult>($I`P
 /**
  * Companion namespace for {@link PandocToDocumentResult}.
  *
- * @example
+ * **Example** (Annotate companion result type)
+ *
  * ```ts
  * import * as Md from "@beep/md/Md.model"
  * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
@@ -1136,7 +1139,8 @@ export declare namespace PandocToDocumentResult {
 /**
  * Result of mapping an `@beep/md` document to Pandoc.
  *
- * @example
+ * **Example** (Make pandoc mapping result)
+ *
  * ```ts
  * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
@@ -1169,7 +1173,8 @@ export class DocumentToPandocResult extends S.Class<DocumentToPandocResult>($I`D
 /**
  * Companion namespace for {@link DocumentToPandocResult}.
  *
- * @example
+ * **Example** (Annotate companion result type)
+ *
  * ```ts
  * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
@@ -1207,7 +1212,8 @@ export declare namespace DocumentToPandocResult {
  * Maps a Pandoc document into the canonical `@beep/md` AST with a structured
  * compatibility report.
  *
- * @example
+ * **Example** (Map empty pandoc document)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping"
@@ -1255,7 +1261,8 @@ export const pandocToDocument = (
  * Maps the canonical `@beep/md` AST into a Pandoc document with a structured
  * compatibility report.
  *
- * @example
+ * **Example** (Map empty md document)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as Md from "@beep/md/Md.model"

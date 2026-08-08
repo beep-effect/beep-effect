@@ -12,15 +12,17 @@
  * Record of `text/*` MIME type definitions, each containing a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
+ * **Example** (Accessing text/html MIME type)
+ *
  * ```typescript
  * import { text } from "@beep/data/mime-types/text"
  *
  * text["text/html"]
  * // { source: "iana", extensions: ["html", "htm", "shtml"] }
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const text = {
   "text/cache-manifest": {

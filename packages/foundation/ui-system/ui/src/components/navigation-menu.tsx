@@ -13,7 +13,8 @@ import type { ComponentPropsWithoutRef } from "react";
 /**
  * Navigation menu component.
  *
- * @example
+ * **Example** (Import NavigationMenu)
+ *
  * ```tsx
  * import { NavigationMenu } from "@beep/ui/components/navigation-menu"
  *
@@ -42,7 +43,8 @@ function NavigationMenu({ className, children, ...props }: NavigationMenuPrimiti
 /**
  * Navigation menu list component.
  *
- * @example
+ * **Example** (Import NavigationMenuList)
+ *
  * ```tsx
  * import { NavigationMenuList } from "@beep/ui/components/navigation-menu"
  *
@@ -65,7 +67,8 @@ function NavigationMenuList({ className, ...props }: ComponentPropsWithoutRef<ty
 /**
  * Navigation menu item component.
  *
- * @example
+ * **Example** (Import NavigationMenuItem)
+ *
  * ```tsx
  * import { NavigationMenuItem } from "@beep/ui/components/navigation-menu"
  *
@@ -84,7 +87,8 @@ function NavigationMenuItem({ className, ...props }: ComponentPropsWithoutRef<ty
 /**
  * Navigation menu trigger style theme value.
  *
- * @example
+ * **Example** (Import trigger style)
+ *
  * ```tsx
  * import { navigationMenuTriggerStyle } from "@beep/ui/components/navigation-menu"
  *
@@ -101,7 +105,8 @@ const navigationMenuTriggerStyle = cva(
 /**
  * Navigation menu trigger component.
  *
- * @example
+ * **Example** (Import NavigationMenuTrigger)
+ *
  * ```tsx
  * import { NavigationMenuTrigger } from "@beep/ui/components/navigation-menu"
  *
@@ -130,7 +135,8 @@ function NavigationMenuTrigger({ className, children, ...props }: NavigationMenu
 /**
  * Navigation menu content component.
  *
- * @example
+ * **Example** (Import NavigationMenuContent)
+ *
  * ```tsx
  * import { NavigationMenuContent } from "@beep/ui/components/navigation-menu"
  *
@@ -156,7 +162,8 @@ function NavigationMenuContent({ className, ...props }: NavigationMenuPrimitive.
 /**
  * Navigation menu positioner component.
  *
- * @example
+ * **Example** (Import NavigationMenuPositioner)
+ *
  * ```tsx
  * import { NavigationMenuPositioner } from "@beep/ui/components/navigation-menu"
  *
@@ -198,7 +205,8 @@ function NavigationMenuPositioner({
 /**
  * Navigation menu link component.
  *
- * @example
+ * **Example** (Import NavigationMenuLink)
+ *
  * ```tsx
  * import { NavigationMenuLink } from "@beep/ui/components/navigation-menu"
  *
@@ -224,7 +232,8 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
 /**
  * Navigation menu indicator component.
  *
- * @example
+ * **Example** (Import NavigationMenuIndicator)
+ *
  * ```tsx
  * import { NavigationMenuIndicator } from "@beep/ui/components/navigation-menu"
  *

@@ -15,7 +15,8 @@ import type { ToasterProps } from "sonner";
 /**
  * Toaster component.
  *
- * @example
+ * **Example** (Import Toaster component)
+ *
  * ```tsx
  * import { Toaster } from "@beep/ui/components/sonner"
  *
@@ -64,7 +65,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
 /**
  * Sonner toast controller.
  *
- * @example
+ * **Example** (Show error toast)
+ *
  * ```tsx
  * import { toast } from "@beep/ui/components/sonner"
  *

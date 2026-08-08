@@ -13,7 +13,8 @@ import type React from "react";
 /**
  * Props for {@link SwitchField}.
  *
- * @example
+ * **Example** (Basic switch field props)
+ *
  * ```ts
  * import type { SwitchFieldProps } from "@beep/form/fields/SwitchField"
  *
@@ -36,7 +37,8 @@ export interface SwitchFieldProps
 /**
  * Schema-bound switch rendered inline with its label.
  *
- * @example
+ * **Example** (Notifications toggle form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { SwitchField } from "@beep/form/fields/SwitchField"

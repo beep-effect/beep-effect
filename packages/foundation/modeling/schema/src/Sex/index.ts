@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for sex schemas.
  *
- * @example
+ * **Example** (Decode with Sex.Schema)
+ *
  * ```ts
  * import * as Sex from "@beep/schema/Sex"
  * import * as S from "effect/Schema"

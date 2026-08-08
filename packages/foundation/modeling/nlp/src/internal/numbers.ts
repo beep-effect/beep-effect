@@ -17,15 +17,16 @@ const $I = $NlpId.create("internal/numbers");
 /**
  * Strictly positive numeric value.
  *
- * @example
+ * **Example** (Import and log PositiveNumber)
+ *
  * ```ts
  * import { PositiveNumber } from "./numbers"
  *
  * console.log(PositiveNumber)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PositiveNumber = S.Finite.check(
   isPositive.annotate({
@@ -42,14 +43,15 @@ export const PositiveNumber = S.Finite.check(
 /**
  * Runtime type for {@link PositiveNumber}.
  *
- * @example
+ * **Example** (Declare PositiveNumber type alias)
+ *
  * ```ts
  * import type { PositiveNumber } from "./numbers"
  *
  * type Example = PositiveNumber
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PositiveNumber = typeof PositiveNumber.Type;

@@ -64,7 +64,8 @@ const $I = $PhoenixId.create("Phoenix.service");
 /**
  * Promise-returning SDK adapter used behind the Effect service.
  *
- * @example
+ * **Example** (Keyof PhoenixSdkShape keys)
+ *
  * ```ts
  * import type { PhoenixSdkShape } from "@beep/phoenix"
  *
@@ -95,7 +96,8 @@ export interface PhoenixSdkShape {
 /**
  * Public Effect service shape for Phoenix operations.
  *
- * @example
+ * **Example** (Keyof PhoenixShape operations)
+ *
  * ```ts
  * import type { PhoenixShape } from "@beep/phoenix"
  *
@@ -644,7 +646,8 @@ const makePhoenixFromEnvironment = Effect.fn("Phoenix.makePhoenixFromEnvironment
 /**
  * Effect service for Phoenix datasets, prompts, experiments, and annotations.
  *
- * @example
+ * **Example** (Yield Phoenix doctor effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Phoenix } from "@beep/phoenix"
@@ -664,7 +667,8 @@ export class Phoenix extends Context.Service<Phoenix, PhoenixShape>()($I`Phoenix
   /**
    * Build a Phoenix layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Layer from explicit config)
+   *
    * ```ts
    * import { Phoenix, PhoenixConfigInput } from "@beep/phoenix"
    *
@@ -681,7 +685,8 @@ export class Phoenix extends Context.Service<Phoenix, PhoenixShape>()($I`Phoenix
   /**
    * Build a Phoenix layer from an injected SDK adapter.
    *
-   * @example
+   * **Example** (Layer from injected SDK)
+   *
    * ```ts
    * import { Phoenix, type PhoenixSdkShape } from "@beep/phoenix"
    *
@@ -699,7 +704,8 @@ export class Phoenix extends Context.Service<Phoenix, PhoenixShape>()($I`Phoenix
   /**
    * Live Phoenix layer backed by `PHOENIX_API_KEY` and optional `PHOENIX_HOST`.
    *
-   * @example
+   * **Example** (Live environment layer)
+   *
    * ```ts
    * import { Phoenix } from "@beep/phoenix"
    *

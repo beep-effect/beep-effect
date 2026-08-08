@@ -16,14 +16,16 @@ const $I = $LawPracticeServerId.create("PracticeKg.errors");
 /**
  * Failure raised while projecting a practice knowledge-graph bundle.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the single failure type on the projection lane: filesystem, DuckDB,
  * PGlite, and schema-decoding failures are all mapped onto it through
  * {@link PracticeKgProjectionError.mapError}, with the original cause retained.
  * A partial bundle left on disk is not cleaned up when this is raised — rerun
  * with `overwrite` rather than trusting what is there.
  *
- * @example
+ * **Example** (Catch and recover message)
+ *
  * ```ts
  * import { PracticeKgProjectionError } from "@beep/law-practice-server"
  * import { Effect } from "effect"
@@ -60,12 +62,14 @@ export class PracticeKgProjectionError extends TaggedErrorClass<PracticeKgProjec
   /**
    * Construct a projection error from an original cause and message.
    *
-   * @remarks
+   * **Details**
+   *
    * The data-last form takes the message first so it can be partially applied at
    * the call site that knows what was being attempted, and applied later to
    * whatever cause surfaces.
    *
-   * @example
+   * **Example** (Direct and deferred construction)
+   *
    * ```ts
    * import { PracticeKgProjectionError } from "@beep/law-practice-server"
    *
@@ -90,13 +94,15 @@ export class PracticeKgProjectionError extends TaggedErrorClass<PracticeKgProjec
   /**
    * Map any failure on an effect onto a projection error carrying the given message.
    *
-   * @remarks
+   * **Details**
+   *
    * This is how every foreign failure — filesystem, DuckDB, PGlite, schema
    * decoding — enters the projection lane's single error type. The original
    * failure is preserved as the `cause`, so the message describes the step that
    * was attempted rather than replacing the underlying diagnostic.
    *
-   * @example
+   * **Example** (Map foreign failure)
+   *
    * ```ts
    * import { PracticeKgProjectionError } from "@beep/law-practice-server"
    * import { Effect } from "effect"

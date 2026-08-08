@@ -16,7 +16,8 @@ import { SourceAuthRegistration } from "@beep/mcp-kit";
  * Always-mounted eCFR registration. `ECFR_API_KEY` is an inert placeholder
  * because the `none` branch never resolves a credential.
  *
- * @example
+ * **Example** (Logging the none gate)
+ *
  * ```ts
  * import { EcfrSourceAuthRegistration } from "@beep/gov-legal-mcp/SourceAuth"
  *
@@ -36,7 +37,8 @@ export const EcfrSourceAuthRegistration: SourceAuthRegistration = SourceAuthRegi
 /**
  * Hard-gated GovInfo registration using the driver's public credential name.
  *
- * @example
+ * **Example** (Logging the env var)
+ *
  * ```ts
  * import { GovinfoSourceAuthRegistration } from "@beep/gov-legal-mcp/SourceAuth"
  *

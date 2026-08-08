@@ -19,7 +19,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/FilingDecision");
 /**
  * Maximum characters of extracted document text supplied to the FilingDecision port.
  *
- * @example
+ * **Example** (Log max excerpt length)
+ *
  * ```ts
  * import { FILING_TEXT_EXCERPT_MAX_LENGTH } from "@beep/documents-use-cases/aggregates/Document/server"
  *
@@ -34,7 +35,8 @@ export const FILING_TEXT_EXCERPT_MAX_LENGTH = 8000;
 /**
  * Bounded extracted-text excerpt used by content-aware filing decisions.
  *
- * @example
+ * **Example** (Decode filing text excerpt)
+ *
  * ```ts
  * import { FilingTextExcerpt } from "@beep/documents-use-cases/aggregates/Document/server"
  * import * as S from "effect/Schema"
@@ -55,7 +57,8 @@ export const FilingTextExcerpt = S.NonEmptyString.check(S.isMaxLength(FILING_TEX
 /**
  * Type for {@link FilingTextExcerpt}.
  *
- * @example
+ * **Example** (Type annotated excerpt decode)
+ *
  * ```ts
  * import { FilingTextExcerpt } from "@beep/documents-use-cases/aggregates/Document/server"
  * import * as S from "effect/Schema"
@@ -72,7 +75,8 @@ export type FilingTextExcerpt = typeof FilingTextExcerpt.Type;
 /**
  * Input supplied to the FilingDecision port.
  *
- * @example
+ * **Example** (Make filing decision input)
+ *
  * ```ts
  * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
  * import { FilingDecisionInput } from "@beep/documents-use-cases/aggregates/Document/server"
@@ -108,7 +112,8 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
 /**
  * FilingDecision port shape used by deterministic and LLM-backed classifiers.
  *
- * @example
+ * **Example** (Implement decide service shape)
+ *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
@@ -135,7 +140,8 @@ export interface FilingDecisionShape {
 /**
  * FilingDecision port for deterministic and LLM-backed filing.
  *
- * @example
+ * **Example** (Provide FilingDecision service)
+ *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import { FilingDecision } from "@beep/documents-use-cases/aggregates/Document/server"

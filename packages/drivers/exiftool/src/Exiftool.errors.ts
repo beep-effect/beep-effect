@@ -20,7 +20,8 @@ const isExiftoolDefect = S.is(ExiftoolDefect);
 /**
  * Non-negative integer process exit status.
  *
- * @example
+ * **Example** (Making a process exit code)
+ *
  * ```ts
  * import { ProcessExitCode } from "@beep/exiftool"
  *
@@ -48,7 +49,8 @@ export const ProcessExitCode = S.Int.check(
 /**
  * Non-negative integer process exit status.
  *
- * @example
+ * **Example** (Using ProcessExitCode type)
+ *
  * ```ts
  * import { ProcessExitCode } from "@beep/exiftool"
  * import type { ProcessExitCode as ProcessExitCodeValue } from "@beep/exiftool"
@@ -87,7 +89,8 @@ const optionsFromInput = (options: ExiftoolErrorContextInput): ExiftoolErrorFrom
 /**
  * Additional process context captured for an ExifTool failure.
  *
- * @example
+ * **Example** (Building error context)
+ *
  * ```ts
  * import { ExiftoolErrorContext } from "@beep/exiftool"
  * import * as O from "effect/Option"
@@ -137,7 +140,8 @@ const existingExiftoolError = (cause: unknown): O.Option<ExiftoolError> =>
 /**
  * Options used when normalizing unknown ExifTool boundary failures.
  *
- * @example
+ * **Example** (Building from-unknown options)
+ *
  * ```ts
  * import { ExiftoolErrorFromUnknownOptions } from "@beep/exiftool"
  * import * as O from "effect/Option"
@@ -196,7 +200,8 @@ export class ExiftoolErrorFromUnknownOptions extends S.Class<ExiftoolErrorFromUn
 /**
  * Technical failure raised by the `@beep/exiftool` driver boundary.
  *
- * @example
+ * **Example** (Creating an ExiftoolError)
+ *
  * ```ts
  * import { ExiftoolError } from "@beep/exiftool"
  *
@@ -260,7 +265,8 @@ export class ExiftoolError extends TaggedErrorClass<ExiftoolError>($I`ExiftoolEr
   /**
    * Normalize an unknown process or platform failure into an {@link ExiftoolError}.
    *
-   * @example
+   * **Example** (Normalizing unknown failures)
+   *
    * ```ts
    * import { ExiftoolError } from "@beep/exiftool"
    *

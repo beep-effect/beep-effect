@@ -377,12 +377,14 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * Run the schema-first, tsgo, and biome law lanes over a fixture's source
  * files and collect their violations.
  *
- * @example
+ * **Example** (Evaluate fixture law lanes)
+ *
  * ```ts
  * import { evaluateLaw } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalLawLanes"
  *
  * const evaluation = evaluateLaw("/tmp/fixture", "/repo", ["src/a.ts"])
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

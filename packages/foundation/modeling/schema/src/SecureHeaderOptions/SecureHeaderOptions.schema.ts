@@ -44,7 +44,8 @@ type ResolvedHeader = {
 /**
  * Aggregate input options for configuring all secure response headers.
  *
- * @example
+ * **Example** (Make SecureHeaderOptions instance)
+ *
  * ```ts
  * import { SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions"
  *
@@ -52,8 +53,8 @@ type ResolvedHeader = {
  * console.log(options)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureHeaderOptions`)(
   {
@@ -79,7 +80,8 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
 /**
  * A rendered secure header pair in `{ key, value }` format.
  *
- * @example
+ * **Example** (Make SecureHeaderEntry pair)
+ *
  * ```ts
  * import { SecureHeaderEntry } from "@beep/schema/SecureHeaderOptions"
  *
@@ -87,8 +89,8 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
  * console.log(entry)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SecureHeaderEntry extends S.Class<SecureHeaderEntry>($I`SecureHeaderEntry`)(
   {
@@ -148,7 +150,8 @@ const resolveHeaders = Effect.fnUntraced(function* (
 /**
  * Resolve secure-header options into a plain `Record<string, string>` header object.
  *
- * @example
+ * **Example** (Create headers record object)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { createHeadersObject } from "@beep/schema/SecureHeaderOptions"
@@ -159,9 +162,8 @@ const resolveHeaders = Effect.fnUntraced(function* (
  *
  * @effects
  * Resolves configured secure-header options in memory; it performs no I/O.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersObject")(function* (
   options: SecureHeaderOptions = {}
@@ -180,7 +182,8 @@ export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersO
 /**
  * Resolve secure-header options into an array of {@link SecureHeaderEntry} pairs.
  *
- * @example
+ * **Example** (Create SecureHeaderEntry array)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { createSecureHeaders } from "@beep/schema/SecureHeaderOptions"
@@ -191,9 +194,8 @@ export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersO
  *
  * @effects
  * Resolves configured secure-header options in memory; it performs no I/O.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createSecureHeaders = Effect.fn("SecureHeaderOptions.createSecureHeaders")(function* (
   options: SecureHeaderOptions = {}

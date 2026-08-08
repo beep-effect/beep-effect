@@ -13,7 +13,8 @@ import * as AcpSchema from "./_generated/schema.gen.ts";
 /**
  * RPC definition for `InitializeRpc`.
  *
- * @example
+ * **Example** (Log InitializeRpc method key)
+ *
  * ```ts
  * import { InitializeRpc } from "@beep/acp/rpc"
  *
@@ -33,7 +34,8 @@ export const InitializeRpc = Rpc.make(AGENT_METHODS.initialize, {
 /**
  * RPC definition for `AuthenticateRpc`.
  *
- * @example
+ * **Example** (Log AuthenticateRpc method key)
+ *
  * ```ts
  * import { AuthenticateRpc } from "@beep/acp/rpc"
  *
@@ -53,7 +55,8 @@ export const AuthenticateRpc = Rpc.make(AGENT_METHODS.authenticate, {
 /**
  * RPC definition for `LogoutRpc`.
  *
- * @example
+ * **Example** (Log LogoutRpc method key)
+ *
  * ```ts
  * import { LogoutRpc } from "@beep/acp/rpc"
  *
@@ -73,7 +76,8 @@ export const LogoutRpc = Rpc.make(AGENT_METHODS.logout, {
 /**
  * RPC definition for `NewSessionRpc`.
  *
- * @example
+ * **Example** (Log NewSessionRpc method key)
+ *
  * ```ts
  * import { NewSessionRpc } from "@beep/acp/rpc"
  *
@@ -93,7 +97,8 @@ export const NewSessionRpc = Rpc.make(AGENT_METHODS.session_new, {
 /**
  * RPC definition for `LoadSessionRpc`.
  *
- * @example
+ * **Example** (Log LoadSessionRpc method key)
+ *
  * ```ts
  * import { LoadSessionRpc } from "@beep/acp/rpc"
  *
@@ -113,7 +118,8 @@ export const LoadSessionRpc = Rpc.make(AGENT_METHODS.session_load, {
 /**
  * RPC definition for `ListSessionsRpc`.
  *
- * @example
+ * **Example** (Log ListSessionsRpc method key)
+ *
  * ```ts
  * import { ListSessionsRpc } from "@beep/acp/rpc"
  *
@@ -133,7 +139,8 @@ export const ListSessionsRpc = Rpc.make(AGENT_METHODS.session_list, {
 /**
  * RPC definition for `ForkSessionRpc`.
  *
- * @example
+ * **Example** (Log ForkSessionRpc method key)
+ *
  * ```ts
  * import { ForkSessionRpc } from "@beep/acp/rpc"
  *
@@ -153,7 +160,8 @@ export const ForkSessionRpc = Rpc.make(AGENT_METHODS.session_fork, {
 /**
  * RPC definition for `ResumeSessionRpc`.
  *
- * @example
+ * **Example** (Log ResumeSessionRpc method key)
+ *
  * ```ts
  * import { ResumeSessionRpc } from "@beep/acp/rpc"
  *
@@ -173,7 +181,8 @@ export const ResumeSessionRpc = Rpc.make(AGENT_METHODS.session_resume, {
 /**
  * RPC definition for `CloseSessionRpc`.
  *
- * @example
+ * **Example** (Log CloseSessionRpc method key)
+ *
  * ```ts
  * import { CloseSessionRpc } from "@beep/acp/rpc"
  *
@@ -193,7 +202,8 @@ export const CloseSessionRpc = Rpc.make(AGENT_METHODS.session_close, {
 /**
  * RPC definition for `PromptRpc`.
  *
- * @example
+ * **Example** (Log PromptRpc method key)
+ *
  * ```ts
  * import { PromptRpc } from "@beep/acp/rpc"
  *
@@ -213,7 +223,8 @@ export const PromptRpc = Rpc.make(AGENT_METHODS.session_prompt, {
 /**
  * RPC definition for `SetSessionModelRpc`.
  *
- * @example
+ * **Example** (Log SetSessionModelRpc method key)
+ *
  * ```ts
  * import { SetSessionModelRpc } from "@beep/acp/rpc"
  *
@@ -233,7 +244,8 @@ export const SetSessionModelRpc = Rpc.make(AGENT_METHODS.session_set_model, {
 /**
  * RPC definition for `SetSessionConfigOptionRpc`.
  *
- * @example
+ * **Example** (Log SetSessionConfigOptionRpc key)
+ *
  * ```ts
  * import { SetSessionConfigOptionRpc } from "@beep/acp/rpc"
  *
@@ -253,7 +265,8 @@ export const SetSessionConfigOptionRpc = Rpc.make(AGENT_METHODS.session_set_conf
 /**
  * RPC definition for `ReadTextFileRpc`.
  *
- * @example
+ * **Example** (Log ReadTextFileRpc method key)
+ *
  * ```ts
  * import { ReadTextFileRpc } from "@beep/acp/rpc"
  *
@@ -273,7 +286,8 @@ export const ReadTextFileRpc = Rpc.make(CLIENT_METHODS.fs_read_text_file, {
 /**
  * RPC definition for `WriteTextFileRpc`.
  *
- * @example
+ * **Example** (Log WriteTextFileRpc method key)
+ *
  * ```ts
  * import { WriteTextFileRpc } from "@beep/acp/rpc"
  *
@@ -293,7 +307,8 @@ export const WriteTextFileRpc = Rpc.make(CLIENT_METHODS.fs_write_text_file, {
 /**
  * RPC definition for `RequestPermissionRpc`.
  *
- * @example
+ * **Example** (Log RequestPermissionRpc method key)
+ *
  * ```ts
  * import { RequestPermissionRpc } from "@beep/acp/rpc"
  *
@@ -313,7 +328,8 @@ export const RequestPermissionRpc = Rpc.make(CLIENT_METHODS.session_request_perm
 /**
  * RPC definition for `ElicitationRpc`.
  *
- * @example
+ * **Example** (Log ElicitationRpc method key)
+ *
  * ```ts
  * import { ElicitationRpc } from "@beep/acp/rpc"
  *
@@ -333,7 +349,8 @@ export const ElicitationRpc = Rpc.make(CLIENT_METHODS.session_elicitation, {
 /**
  * RPC definition for `CreateTerminalRpc`.
  *
- * @example
+ * **Example** (Log CreateTerminalRpc method key)
+ *
  * ```ts
  * import { CreateTerminalRpc } from "@beep/acp/rpc"
  *
@@ -353,7 +370,8 @@ export const CreateTerminalRpc = Rpc.make(CLIENT_METHODS.terminal_create, {
 /**
  * RPC definition for `TerminalOutputRpc`.
  *
- * @example
+ * **Example** (Log TerminalOutputRpc method key)
+ *
  * ```ts
  * import { TerminalOutputRpc } from "@beep/acp/rpc"
  *
@@ -373,7 +391,8 @@ export const TerminalOutputRpc = Rpc.make(CLIENT_METHODS.terminal_output, {
 /**
  * RPC definition for `ReleaseTerminalRpc`.
  *
- * @example
+ * **Example** (Log ReleaseTerminalRpc method key)
+ *
  * ```ts
  * import { ReleaseTerminalRpc } from "@beep/acp/rpc"
  *
@@ -393,7 +412,8 @@ export const ReleaseTerminalRpc = Rpc.make(CLIENT_METHODS.terminal_release, {
 /**
  * RPC definition for `WaitForTerminalExitRpc`.
  *
- * @example
+ * **Example** (Log WaitForTerminalExitRpc key)
+ *
  * ```ts
  * import { WaitForTerminalExitRpc } from "@beep/acp/rpc"
  *
@@ -413,7 +433,8 @@ export const WaitForTerminalExitRpc = Rpc.make(CLIENT_METHODS.terminal_wait_for_
 /**
  * RPC definition for `KillTerminalRpc`.
  *
- * @example
+ * **Example** (Log KillTerminalRpc method key)
+ *
  * ```ts
  * import { KillTerminalRpc } from "@beep/acp/rpc"
  *
@@ -433,7 +454,8 @@ export const KillTerminalRpc = Rpc.make(CLIENT_METHODS.terminal_kill, {
 /**
  * RPC group served by ACP agents.
  *
- * @example
+ * **Example** (Log first AgentRpcs method)
+ *
  * ```ts
  * import { AgentRpcs } from "@beep/acp/rpc"
  *
@@ -462,7 +484,8 @@ export const AgentRpcs = RpcGroup.make(
 /**
  * RPC group served by ACP clients.
  *
- * @example
+ * **Example** (Log first ClientRpcs method)
+ *
  * ```ts
  * import { ClientRpcs } from "@beep/acp/rpc"
  *

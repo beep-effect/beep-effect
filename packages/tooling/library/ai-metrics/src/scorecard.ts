@@ -47,7 +47,8 @@ const AiMetricsCoverageGap = LiteralKit([
 /**
  * Error raised by AI metrics label, benchmark, or scorecard workflows.
  *
- * @example
+ * **Example** (Creating scorecard error)
+ *
  * ```ts
  * import { AiMetricsScorecardError } from "@beep/repo-ai-metrics"
  *
@@ -57,6 +58,7 @@ const AiMetricsCoverageGap = LiteralKit([
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -74,7 +76,8 @@ export class AiMetricsScorecardError extends TaggedErrorClass<AiMetricsScorecard
 /**
  * One task waiting for a human outcome label.
  *
- * @example
+ * **Example** (Building label queue item)
+ *
  * ```ts
  * import { AiMetricsLabelQueueItem } from "@beep/repo-ai-metrics"
  *
@@ -89,6 +92,7 @@ export class AiMetricsScorecardError extends TaggedErrorClass<AiMetricsScorecard
  * })
  * console.log(item.turnCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -114,7 +118,8 @@ export class AiMetricsLabelQueueItem extends S.Class<AiMetricsLabelQueueItem>($I
 /**
  * Input for reading unlabeled tasks from the label queue.
  *
- * @example
+ * **Example** (Building label queue input)
+ *
  * ```ts
  * import { AiMetricsLabelQueueInput } from "@beep/repo-ai-metrics"
  *
@@ -126,6 +131,7 @@ export class AiMetricsLabelQueueItem extends S.Class<AiMetricsLabelQueueItem>($I
  * })
  * console.log(input.limit)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -144,7 +150,8 @@ export class AiMetricsLabelQueueInput extends S.Class<AiMetricsLabelQueueInput>(
 /**
  * Result returned by the label queue.
  *
- * @example
+ * **Example** (Building empty queue result)
+ *
  * ```ts
  * import { AiMetricsLabelQueueResult } from "@beep/repo-ai-metrics"
  *
@@ -156,6 +163,7 @@ export class AiMetricsLabelQueueInput extends S.Class<AiMetricsLabelQueueInput>(
  * })
  * console.log(result.items.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -174,7 +182,8 @@ export class AiMetricsLabelQueueResult extends S.Class<AiMetricsLabelQueueResult
 /**
  * Input for adding or replacing the current label for one task.
  *
- * @example
+ * **Example** (Building outcome label input)
+ *
  * ```ts
  * import { AiMetricsOutcomeLabelInput } from "@beep/repo-ai-metrics"
  *
@@ -188,6 +197,7 @@ export class AiMetricsLabelQueueResult extends S.Class<AiMetricsLabelQueueResult
  * })
  * console.log(input.qualityGate)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -210,7 +220,8 @@ export class AiMetricsOutcomeLabelInput extends S.Class<AiMetricsOutcomeLabelInp
 /**
  * Input for adding or replacing a benchmark case.
  *
- * @example
+ * **Example** (Building benchmark case input)
+ *
  * ```ts
  * import { AiMetricsBenchmarkCaseInput } from "@beep/repo-ai-metrics"
  *
@@ -222,6 +233,7 @@ export class AiMetricsOutcomeLabelInput extends S.Class<AiMetricsOutcomeLabelInp
  * })
  * console.log(input.expectedChecks)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -241,7 +253,8 @@ export class AiMetricsBenchmarkCaseInput extends S.Class<AiMetricsBenchmarkCaseI
 /**
  * Result returned by the benchmark case list command.
  *
- * @example
+ * **Example** (Building case list result)
+ *
  * ```ts
  * import { AiMetricsBenchmarkCaseListResult, BenchmarkCase } from "@beep/repo-ai-metrics"
  *
@@ -257,6 +270,7 @@ export class AiMetricsBenchmarkCaseInput extends S.Class<AiMetricsBenchmarkCaseI
  * })
  * console.log(result.cases.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -274,7 +288,8 @@ export class AiMetricsBenchmarkCaseListResult extends S.Class<AiMetricsBenchmark
 /**
  * Input for recording an observed benchmark result.
  *
- * @example
+ * **Example** (Building benchmark run input)
+ *
  * ```ts
  * import { AiMetricsBenchmarkRunInput } from "@beep/repo-ai-metrics"
  *
@@ -287,6 +302,7 @@ export class AiMetricsBenchmarkCaseListResult extends S.Class<AiMetricsBenchmark
  * })
  * console.log(input.elapsedMs)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -308,7 +324,8 @@ export class AiMetricsBenchmarkRunInput extends S.Class<AiMetricsBenchmarkRunInp
 /**
  * One config-snapshot row inside a weekly report.
  *
- * @example
+ * **Example** (Building weekly config score)
+ *
  * ```ts
  * import { AiMetricsWeeklyConfigScore, AiMetricsScoreWeights, Scorecard } from "@beep/repo-ai-metrics"
  *
@@ -331,6 +348,7 @@ export class AiMetricsBenchmarkRunInput extends S.Class<AiMetricsBenchmarkRunInp
  * })
  * console.log(score.scorecard.totalScore)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -346,7 +364,8 @@ export class AiMetricsWeeklyConfigScore extends S.Class<AiMetricsWeeklyConfigSco
 /**
  * Machine-readable weekly report document.
  *
- * @example
+ * **Example** (Building weekly report document)
+ *
  * ```ts
  * import { AiMetricsWeeklyReportDocument } from "@beep/repo-ai-metrics"
  *
@@ -360,6 +379,7 @@ export class AiMetricsWeeklyConfigScore extends S.Class<AiMetricsWeeklyConfigSco
  * })
  * console.log(document.coverageGaps)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -382,7 +402,8 @@ export class AiMetricsWeeklyReportDocument extends S.Class<AiMetricsWeeklyReport
 /**
  * Input for generating a weekly config-impact report.
  *
- * @example
+ * **Example** (Building weekly report input)
+ *
  * ```ts
  * import { AiMetricsWeeklyReportInput } from "@beep/repo-ai-metrics"
  *
@@ -394,6 +415,7 @@ export class AiMetricsWeeklyReportDocument extends S.Class<AiMetricsWeeklyReport
  * })
  * console.log(input.reportDir)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -412,7 +434,8 @@ export class AiMetricsWeeklyReportInput extends S.Class<AiMetricsWeeklyReportInp
 /**
  * Result returned after writing weekly report artifacts.
  *
- * @example
+ * **Example** (Building weekly report result)
+ *
  * ```ts
  * import { AiMetricsWeeklyReportDocument, AiMetricsWeeklyReportResult } from "@beep/repo-ai-metrics"
  *
@@ -430,6 +453,7 @@ export class AiMetricsWeeklyReportInput extends S.Class<AiMetricsWeeklyReportInp
  * })
  * console.log(result.jsonPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -643,8 +667,8 @@ const ensureBenchmarkCaseExists = Effect.fn("AiMetrics.scorecard.ensureBenchmark
 /**
  * Read unlabeled tasks for human review.
  *
- * @effects Ensures scorecard tables exist and queries DuckDB for unlabeled tasks in the selected window.
- * @example
+ * **Example** (Queueing unlabeled tasks)
+ *
  * ```ts
  * import { AiMetricsLabelQueueInput, queueAiMetricsLabels } from "@beep/repo-ai-metrics"
  * const program = queueAiMetricsLabels(
@@ -657,6 +681,8 @@ const ensureBenchmarkCaseExists = Effect.fn("AiMetrics.scorecard.ensureBenchmark
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Ensures scorecard tables exist and queries DuckDB for unlabeled tasks in the selected window.
  * @category services
  * @since 0.0.0
  */
@@ -728,8 +754,8 @@ export const queueAiMetricsLabels: (
 /**
  * Add or replace the current structured human label for a task.
  *
- * @effects Ensures scorecard tables exist, verifies the task exists, and upserts one DuckDB outcome-label row.
- * @example
+ * **Example** (Adding outcome label)
+ *
  * ```ts
  * import { AiMetricsOutcomeLabelInput, addAiMetricsOutcomeLabel } from "@beep/repo-ai-metrics"
  * const program = addAiMetricsOutcomeLabel(
@@ -744,6 +770,8 @@ export const queueAiMetricsLabels: (
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Ensures scorecard tables exist, verifies the task exists, and upserts one DuckDB outcome-label row.
  * @category services
  * @since 0.0.0
  */
@@ -817,8 +845,8 @@ export const addAiMetricsOutcomeLabel: (
 /**
  * Add or replace a deploy-safe benchmark case.
  *
- * @effects Ensures scorecard tables exist and upserts one DuckDB benchmark-case row.
- * @example
+ * **Example** (Upserting benchmark case)
+ *
  * ```ts
  * import { AiMetricsBenchmarkCaseInput, upsertAiMetricsBenchmarkCase } from "@beep/repo-ai-metrics"
  * const program = upsertAiMetricsBenchmarkCase(
@@ -831,6 +859,8 @@ export const addAiMetricsOutcomeLabel: (
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Ensures scorecard tables exist and upserts one DuckDB benchmark-case row.
  * @category services
  * @since 0.0.0
  */
@@ -905,8 +935,8 @@ const caseFromRow = Effect.fn("AiMetrics.scorecard.caseFromRow")(function* (row:
 /**
  * List deploy-safe benchmark cases.
  *
- * @effects Ensures scorecard tables exist and queries DuckDB for benchmark cases.
- * @example
+ * **Example** (Listing benchmark cases)
+ *
  * ```ts
  * import { listAiMetricsBenchmarkCases } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -915,6 +945,8 @@ const caseFromRow = Effect.fn("AiMetrics.scorecard.caseFromRow")(function* (row:
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Ensures scorecard tables exist and queries DuckDB for benchmark cases.
  * @category services
  * @since 0.0.0
  */
@@ -946,8 +978,8 @@ export const listAiMetricsBenchmarkCases: Effect.Effect<
 /**
  * Record an observed benchmark run for one config snapshot.
  *
- * @effects Ensures scorecard tables exist, verifies the benchmark case exists, and upserts one DuckDB run row.
- * @example
+ * **Example** (Recording benchmark run)
+ *
  * ```ts
  * import { AiMetricsBenchmarkRunInput, recordAiMetricsBenchmarkRun } from "@beep/repo-ai-metrics"
  * const program = recordAiMetricsBenchmarkRun(
@@ -961,6 +993,8 @@ export const listAiMetricsBenchmarkCases: Effect.Effect<
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Ensures scorecard tables exist, verifies the benchmark case exists, and upserts one DuckDB run row.
  * @category services
  * @since 0.0.0
  */
@@ -1390,11 +1424,8 @@ const writeWeeklyArtifacts = Effect.fn("AiMetrics.scorecard.writeWeeklyArtifacts
 /**
  * Generate and persist a weekly config-impact report.
  *
- * @effects
- * - Ensures scorecard tables exist and reads DuckDB task, label, benchmark, and coverage aggregates.
- * - Upserts weekly scorecard rows.
- * - Creates the report directory and writes Markdown plus JSON report artifacts.
- * @example
+ * **Example** (Generating weekly report)
+ *
  * ```ts
  * import { AiMetricsWeeklyReportInput, generateAiMetricsWeeklyReport } from "@beep/repo-ai-metrics"
  * const program = generateAiMetricsWeeklyReport(
@@ -1407,6 +1438,11 @@ const writeWeeklyArtifacts = Effect.fn("AiMetrics.scorecard.writeWeeklyArtifacts
  * )
  * console.log(program)
  * ```
+ *
+ * @effects
+ * - Ensures scorecard tables exist and reads DuckDB task, label, benchmark, and coverage aggregates.
+ * - Upserts weekly scorecard rows.
+ * - Creates the report directory and writes Markdown plus JSON report artifacts.
  * @category services
  * @since 0.0.0
  */
@@ -1477,8 +1513,8 @@ export const generateAiMetricsWeeklyReport: (
 /**
  * Render a label queue result as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the label cannot be encoded.
- * @example
+ * **Example** (Encoding label queue JSON)
+ *
  * ```ts
  * import { AiMetricsLabelQueueResult, aiMetricsLabelQueueToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1494,6 +1530,8 @@ export const generateAiMetricsWeeklyReport: (
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the label cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1510,8 +1548,8 @@ export const aiMetricsLabelQueueToJson: (
 /**
  * Render an outcome label as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the label cannot be encoded.
- * @example
+ * **Example** (Encoding outcome label JSON)
+ *
  * ```ts
  * import { OutcomeLabel, aiMetricsOutcomeLabelToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1531,6 +1569,8 @@ export const aiMetricsLabelQueueToJson: (
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the label cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1544,8 +1584,8 @@ export const aiMetricsOutcomeLabelToJson: (result: OutcomeLabel) => Effect.Effec
 /**
  * Render a benchmark case as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the case cannot be encoded.
- * @example
+ * **Example** (Encoding benchmark case JSON)
+ *
  * ```ts
  * import { BenchmarkCase, aiMetricsBenchmarkCaseToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1561,6 +1601,8 @@ export const aiMetricsOutcomeLabelToJson: (result: OutcomeLabel) => Effect.Effec
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the case cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1574,7 +1616,8 @@ export const aiMetricsBenchmarkCaseToJson: (result: BenchmarkCase) => Effect.Eff
 /**
  * Render benchmark cases as JSON.
  *
- * @example
+ * **Example** (Encoding case list JSON)
+ *
  * ```ts
  * import {
  *   AiMetricsBenchmarkCaseListResult,
@@ -1599,6 +1642,7 @@ export const aiMetricsBenchmarkCaseToJson: (result: BenchmarkCase) => Effect.Eff
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1615,8 +1659,8 @@ export const aiMetricsBenchmarkCaseListToJson: (
 /**
  * Render a benchmark run as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the run cannot be encoded.
- * @example
+ * **Example** (Encoding benchmark run JSON)
+ *
  * ```ts
  * import { BenchmarkRun, aiMetricsBenchmarkRunToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1635,6 +1679,8 @@ export const aiMetricsBenchmarkCaseListToJson: (
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsScorecardError` if the run cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */
@@ -1648,7 +1694,8 @@ export const aiMetricsBenchmarkRunToJson: (result: BenchmarkRun) => Effect.Effec
 /**
  * Render a weekly report result as JSON.
  *
- * @example
+ * **Example** (Encoding weekly report JSON)
+ *
  * ```ts
  * import {
  *   AiMetricsWeeklyReportDocument,
@@ -1675,6 +1722,7 @@ export const aiMetricsBenchmarkRunToJson: (result: BenchmarkRun) => Effect.Effec
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

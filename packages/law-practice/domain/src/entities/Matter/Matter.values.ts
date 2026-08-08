@@ -15,7 +15,8 @@ const MatterTypeBase = LiteralKit(["patent_application"]);
 /**
  * Matter type accepted by the law-practice proof fixtures.
  *
- * @example
+ * **Example** (Decode MatterType with Schema)
+ *
  * ```ts
  * import { MatterType } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -41,7 +42,8 @@ export const MatterType = MatterTypeBase.pipe(
 /**
  * Type-level literal union produced by {@link MatterType}.
  *
- * @example
+ * **Example** (Satisfy MatterType literal type)
+ *
  * ```ts
  * import type { MatterType } from "@beep/law-practice-domain"
  *

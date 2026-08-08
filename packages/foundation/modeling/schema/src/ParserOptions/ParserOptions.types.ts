@@ -14,7 +14,8 @@ const $I = $SchemaId.create("ParserOptions");
 /**
  * An array containing possibly nullish strings.
  *
- * @example
+ * **Example** (Decode header array)
+ *
  * ```ts
  * import { HeaderArray } from "../../src/ParserOptions/ParserOptions.types.ts"
  * import * as S from "effect/Schema"
@@ -37,16 +38,6 @@ export const HeaderArray = pipe(
 
 /**
  * {@inheritDoc HeaderArray}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { HeaderArray } from "../../src/ParserOptions/ParserOptions.types.ts"
- *
- * const headers: HeaderArray = S.decodeUnknownSync(HeaderArray)(["name", null])
- * console.log(headers.length)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */
@@ -56,7 +47,8 @@ export type HeaderArray = typeof HeaderArray.Type;
  * An identity function taking an array containing possibly nullish strings
  * and returning it.
  *
- * @example
+ * **Example** (Implement header transform)
+ *
  * ```ts
  * import { HeaderTransformFunction } from "../../src/ParserOptions/ParserOptions.types.ts"
  *
@@ -78,15 +70,6 @@ export const HeaderTransformFunction = Fn({
 
 /**
  * {@inheritDoc HeaderTransformFunction}
- *
- * @example
- * ```ts
- * import { HeaderTransformFunction } from "../../src/ParserOptions/ParserOptions.types.ts"
- *
- * const transform: HeaderTransformFunction = HeaderTransformFunction.implementSync((headers) => headers)
- * console.log(transform(["name"]).length)
- * ```
- *
  * @category validation
  * @since 0.0.0
  */

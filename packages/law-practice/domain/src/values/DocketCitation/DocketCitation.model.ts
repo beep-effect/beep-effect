@@ -18,13 +18,14 @@ const $I = $LawPracticeDomainId.create("values/DocketCitation/DocketCitation.mod
  * A docket-number-only case citation (no traditional reporter assignment), used
  * for very recent decisions identified by docket or slip-opinion number.
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `docket`
  * discriminant tag plus its own docket number and optional court, date,
  * party-name, and full-span metadata.
  *
- * **Example**
+ * **Example** (Constructing a DocketCitation)
  *
- * @example
  * ```ts
  * import { DocketCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -150,7 +151,8 @@ export class DocketCitation extends S.Class<DocketCitation>($I`DocketCitation`)(
 /**
  * Companion namespace for `DocketCitation`.
  *
- * @example
+ * **Example** (Encoded type discriminant)
+ *
  * ```ts
  * import type { DocketCitation } from "@beep/law-practice-domain"
  *
@@ -165,9 +167,8 @@ export declare namespace DocketCitation {
   /**
    * Wire-encoded representation of a decoded {@link DocketCitation}.
    *
-   * **Example**
+   * **Example** (Wire Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { DocketCitation } from "@beep/law-practice-domain"
    *

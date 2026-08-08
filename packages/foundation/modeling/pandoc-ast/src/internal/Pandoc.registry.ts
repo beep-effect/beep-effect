@@ -142,7 +142,8 @@ const PandocCurrentStructuralConstructorName = LiteralKit([
 /**
  * Pandoc table-alignment constructor names.
  *
- * @example
+ * **Example** (Check AlignDefault constructor name)
+ *
  * ```ts
  * import { PandocTableAlignmentConstructorName } from "../internal/Pandoc.registry.js"
  *

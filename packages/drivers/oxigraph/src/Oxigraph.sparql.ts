@@ -266,12 +266,14 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: Sp
 /**
  * Live SPARQL service Layer backed by Oxigraph WASM.
  *
- * @remarks
+ * **Details**
+ *
  * The `oxigraph` package is imported lazily during query execution so this
  * Layer can be imported by browser and worker bundles without initializing
  * WebAssembly at module scope.
  *
- * @example
+ * **Example** (Import the live layer)
+ *
  * ```ts
  * import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph"
  *

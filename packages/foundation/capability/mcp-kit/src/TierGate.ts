@@ -43,7 +43,8 @@ const TierGateOutcomeTag = LiteralKit(["approved", "refused"]);
  * payload, so nothing the wrapped effect produced can leak into whatever
  * record a gate implementation keeps.
  *
- * @example
+ * **Example** (Check completed settlement)
+ *
  * ```ts
  * import { TierGateSettlement } from "@beep/mcp-kit"
  *
@@ -64,7 +65,8 @@ export const TierGateSettlement = LiteralKit(["completed", "failed", "interrupte
 /**
  * Runtime type for {@link TierGateSettlement}.
  *
- * @example
+ * **Example** (Type interrupted settlement)
+ *
  * ```ts
  * import type { TierGateSettlement } from "@beep/mcp-kit"
  *
@@ -83,7 +85,8 @@ export type TierGateSettlement = typeof TierGateSettlement.Type;
  * {@link TierGateVerdict}'s own tag so a persisted audit record is
  * self-describing independent of the verdict it was extracted from.
  *
- * @example
+ * **Example** (Check approved outcome)
+ *
  * ```ts
  * import { TierGateOutcome } from "@beep/mcp-kit"
  *
@@ -104,7 +107,8 @@ export const TierGateOutcome = TierGateOutcomeTag.pipe(
 /**
  * Runtime type for {@link TierGateOutcome}.
  *
- * @example
+ * **Example** (Type refused outcome)
+ *
  * ```ts
  * import { TierGateOutcome } from "@beep/mcp-kit"
  * import type { TierGateOutcome as TierGateOutcomeType } from "@beep/mcp-kit"
@@ -126,7 +130,8 @@ export type TierGateOutcome = typeof TierGateOutcome.Type;
  * so it can be stored directly in the `UsageRecord.metadata` jsonb column;
  * persistence wiring belongs to the consumer.
  *
- * @example
+ * **Example** (Make refused audit record)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { TierGateAuditRecord } from "@beep/mcp-kit"
@@ -182,7 +187,8 @@ export class TierGateAuditRecord extends S.Class<TierGateAuditRecord>($I`TierGat
  * `approved` and `refused` verdicts carry a {@link TierGateAuditRecord} — Q7
  * requires every gated call to be audited, not only refusals.
  *
- * @example
+ * **Example** (Decode approved verdict)
+ *
  * ```ts
  * import { TierGateVerdict } from "@beep/mcp-kit"
  * import * as S from "effect/Schema"
@@ -218,7 +224,8 @@ export const TierGateVerdict = TierGateOutcomeTag.toTaggedUnion("verdict")({
 /**
  * Runtime type for {@link TierGateVerdict}.
  *
- * @example
+ * **Example** (Type approved verdict)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import type { TierGateVerdict } from "@beep/mcp-kit"
@@ -247,7 +254,8 @@ export type TierGateVerdict = typeof TierGateVerdict.Type;
  * decide: the tool being invoked (carrying its `Tool.Destructive` and other
  * annotations) and an optional caller-supplied tool call identifier.
  *
- * @example
+ * **Example** (Build tool call request)
+ *
  * ```ts
  * import type { ToolCallRequest } from "@beep/mcp-kit"
  * import { Tool } from "effect/unstable/ai"
@@ -275,6 +283,8 @@ export interface ToolCallRequest {
  * ({@link TierGateVerdict}), never an error — mirrors the `ClaimGate` total-
  * engine pattern.
  *
+ * **Details**
+ *
  * `recordOutcome` is the settlement half: {@link dispatchWithTierGate} calls
  * it in the same call frame once an approved dispatch's wrapped effect has
  * settled, with a bounded {@link TierGateSettlement} rather than an `Exit`, so
@@ -283,7 +293,8 @@ export interface ToolCallRequest {
  * are total: an outcome write must never fail the dispatch, because the
  * effect has already happened.
  *
- * @example
+ * **Example** (Stub evaluate and recordOutcome)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -319,7 +330,8 @@ export interface TierGateShape {
 /**
  * Tier gate service tag.
  *
- * @example
+ * **Example** (Provide tier gate service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -363,7 +375,8 @@ export class TierGate extends Context.Service<TierGate, TierGateShape>()($I`Tier
  * explicitly approved to dispatch regardless of their destructive
  * annotation.
  *
- * @example
+ * **Example** (Make approved tools policy)
+ *
  * ```ts
  * import { TierGatePolicy } from "@beep/mcp-kit"
  *
@@ -426,7 +439,8 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * keeps no post-execution record, so its `recordOutcome` is a no-op; a
  * ledger-backed gate implements it for real.
  *
- * @example
+ * **Example** (Refuse unapproved destructive tool)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -473,7 +487,8 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
  * record. The wrapped effect never runs on the refused path. Every dispatch
  * — approved or refused — carries an audit record (Q7).
  *
- * @example
+ * **Example** (Type dispatched result)
+ *
  * ```ts
  * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
  * import * as O from "effect/Option"
@@ -507,7 +522,8 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
 /**
  * Tagged-enum constructors and matchers for {@link TierGateDispatchResult}.
  *
- * @example
+ * **Example** (Construct refused result)
+ *
  * ```ts
  * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
  * import * as O from "effect/Option"
@@ -554,7 +570,8 @@ const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
  * `recordOutcome` is total, so the wrapper's error channel is exactly the
  * wrapped effect's error channel.
  *
- * @example
+ * **Example** (Refuse gated dispatch)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -600,7 +617,8 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  * `EnabledWhen` (verified `McpServer.ts:255-262`). Always pair this with
  * {@link dispatchWithTierGate}, which is the real enforcement boundary.
  *
- * @example
+ * **Example** (Annotate list visibility only)
+ *
  * ```ts
  * import { Tool } from "effect/unstable/ai"
  * import { withEnabledWhenApprovedTool } from "@beep/mcp-kit"

@@ -13,7 +13,8 @@ const $I = $RepoConfigsId.create("next/models/Routes.schema");
 /**
  * Literal discriminator values supported by Next.js route match predicates.
  *
- * @example
+ * **Example** (Decode header type value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -21,6 +22,7 @@ const $I = $RepoConfigsId.create("next/models/Routes.schema");
  * const program = S.decodeUnknownEffect(RouteHasType)("header")
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -33,12 +35,14 @@ export const RouteHasType = LiteralKit(["header", "cookie", "query", "host"]).pi
 /**
  * Literal discriminator values supported by Next.js route match predicates.
  *
- * @example
+ * **Example** (Satisfy header type literal)
+ *
  * ```ts
  * import type { RouteHasType } from "@beep/repo-configs/next/models/Routes.schema"
  * const type = "header" satisfies RouteHasType
  * console.log(type)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -47,7 +51,8 @@ export type RouteHasType = typeof RouteHasType.Type;
 /**
  * Match predicate used by Next.js rewrites, headers, redirects, and middleware.
  *
- * @example
+ * **Example** (Decode header match predicate)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -59,6 +64,7 @@ export type RouteHasType = typeof RouteHasType.Type;
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -89,12 +95,14 @@ export const RouteHas = RouteHasType.toTaggedUnion("type")({
 /**
  * Match predicate used by Next.js rewrites, headers, redirects, and middleware.
  *
- * @example
+ * **Example** (Type host match predicate)
+ *
  * ```ts
  * import type { RouteHas } from "@beep/repo-configs/next/models/Routes.schema"
  * const predicate: RouteHas = { type: "host", value: "example.com" }
  * console.log(predicate)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -117,12 +125,14 @@ const RouteBaseFields = {
 /**
  * HTTP redirect status codes supported by Next.js custom redirects.
  *
- * @example
+ * **Example** (Satisfy temporary redirect code)
+ *
  * ```ts
  * import { RedirectStatusCodeValue } from "@beep/repo-configs/next/models/Routes.schema"
  * const statusCode = 307 satisfies RedirectStatusCodeValue
  * console.log(statusCode)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -135,12 +145,14 @@ export const RedirectStatusCodeValue = LiteralKit([301, 302, 303, 307, 308]).pip
 /**
  * HTTP redirect status codes supported by Next.js custom redirects.
  *
- * @example
+ * **Example** (Assign permanent redirect code)
+ *
  * ```ts
  * import type { RedirectStatusCodeValue } from "@beep/repo-configs/next/models/Routes.schema"
  * const statusCode: RedirectStatusCodeValue = 308
  * console.log(statusCode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -234,7 +246,8 @@ class MiddlewareRoute extends S.Class<MiddlewareRoute>($I`Middleware`)(
 /**
  * User-facing Next.js rewrite route configuration.
  *
- * @example
+ * **Example** (Decode rewrite configuration)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -245,6 +258,7 @@ class MiddlewareRoute extends S.Class<MiddlewareRoute>($I`Middleware`)(
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -253,12 +267,14 @@ export const Rewrite = RewriteRoute;
 /**
  * User-facing Next.js rewrite route configuration.
  *
- * @example
+ * **Example** (Type rewrite configuration)
+ *
  * ```ts
  * import type { Rewrite } from "@beep/repo-configs/next/models/Routes.schema"
  * const rewrite: Rewrite = { source: "/old", destination: "/new" }
  * console.log(rewrite)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -267,7 +283,8 @@ export type Rewrite = typeof Rewrite.Type;
 /**
  * User-facing Next.js response header route configuration.
  *
- * @example
+ * **Example** (Decode header route config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -278,6 +295,7 @@ export type Rewrite = typeof Rewrite.Type;
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -286,7 +304,8 @@ export const Header = HeaderRoute;
 /**
  * User-facing Next.js response header route configuration.
  *
- * @example
+ * **Example** (Type header route config)
+ *
  * ```ts
  * import type { Header } from "@beep/repo-configs/next/models/Routes.schema"
  * const header: Header = {
@@ -295,6 +314,7 @@ export const Header = HeaderRoute;
  * }
  * console.log(header)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -303,7 +323,8 @@ export type Header = typeof Header.Type;
 /**
  * User-facing Next.js redirect route configuration.
  *
- * @example
+ * **Example** (Decode permanent redirect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -315,6 +336,7 @@ export type Header = typeof Header.Type;
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -329,7 +351,8 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
 /**
  * User-facing Next.js redirect route configuration.
  *
- * @example
+ * **Example** (Type temporary redirect)
+ *
  * ```ts
  * import type { Redirect } from "@beep/repo-configs/next/models/Routes.schema"
  * const redirect: Redirect = {
@@ -339,6 +362,7 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
  * }
  * console.log(redirect)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -347,7 +371,8 @@ export type Redirect = typeof Redirect.Type;
 /**
  * Next.js middleware route matcher configuration.
  *
- * @example
+ * **Example** (Decode middleware matcher)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -358,6 +383,7 @@ export type Redirect = typeof Redirect.Type;
  * })
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -366,12 +392,14 @@ export const Middleware = MiddlewareRoute;
 /**
  * Next.js middleware route matcher configuration.
  *
- * @example
+ * **Example** (Type middleware matcher)
+ *
  * ```ts
  * import type { Middleware } from "@beep/repo-configs/next/models/Routes.schema"
  * const middleware: Middleware = { source: "/admin/:path*", locale: false }
  * console.log(middleware)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

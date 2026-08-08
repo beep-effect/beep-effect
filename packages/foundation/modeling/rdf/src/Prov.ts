@@ -61,7 +61,8 @@ const provDateTimeChecks = S.makeFilterGroup(
 /**
  * PROV object reference encoded as an IRI, CURIE, or local identifier.
  *
- * @example
+ * **Example** (Decode CURIE object ref)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ObjectRef } from "@beep/rdf/Prov"
@@ -70,8 +71,8 @@ const provDateTimeChecks = S.makeFilterGroup(
  * console.log(ref) // "prov:entity1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
   S.brand("ProvObjectRef"),
@@ -93,7 +94,8 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
 /**
  * Type for {@link ObjectRef}.
  *
- * @example
+ * **Example** (Accept ObjectRef type)
+ *
  * ```ts
  * import type { ObjectRef } from "@beep/rdf/Prov"
  *
@@ -101,15 +103,16 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
  * console.log(acceptObjectRef)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ObjectRef = typeof ObjectRef.Type;
 
 /**
  * Encoded PROV timestamp string.
  *
- * @example
+ * **Example** (Decode encoded timestamp)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProvDateTimeEncoded } from "@beep/rdf/Prov"
@@ -118,8 +121,8 @@ export type ObjectRef = typeof ObjectRef.Type;
  * console.log(encoded) // "2024-01-02T03:04:05Z"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
   S.brand("ProvDateTimeEncoded"),
@@ -141,7 +144,8 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
 /**
  * Type for {@link ProvDateTimeEncoded}.
  *
- * @example
+ * **Example** (Accept encoded datetime type)
+ *
  * ```ts
  * import type { ProvDateTimeEncoded } from "@beep/rdf/Prov"
  *
@@ -149,15 +153,16 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
  * console.log(acceptProvDateTimeEncoded)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
 
 /**
  * PROV timestamp decoded to `DateTime.Utc`.
  *
- * @example
+ * **Example** (Decode to DateTime.Utc)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProvDateTime } from "@beep/rdf/Prov"
@@ -166,8 +171,8 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  * console.log(instant)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ProvDateTime = ProvDateTimeEncoded.pipe(
   S.decodeTo(S.DateTimeUtcFromString),
@@ -189,7 +194,8 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
 /**
  * Type for {@link ProvDateTime}.
  *
- * @example
+ * **Example** (Accept ProvDateTime type)
+ *
  * ```ts
  * import type { ProvDateTime } from "@beep/rdf/Prov"
  *
@@ -197,15 +203,16 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
  * console.log(acceptProvDateTime)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ProvDateTime = typeof ProvDateTime.Type;
 
 /**
  * Explicit lifecycle time fields retained outside plain PROV activity timestamps.
  *
- * @example
+ * **Example** (Decode observedAt option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LifecycleTimes } from "@beep/rdf/Prov"
@@ -216,8 +223,8 @@ export type ProvDateTime = typeof ProvDateTime.Type;
  * console.log(times.observedAt._tag) // "Some"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
   {
@@ -248,7 +255,8 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
 /**
  * PROV entity.
  *
- * @example
+ * **Example** (Decode PROV entity)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Entity } from "@beep/rdf/Prov"
@@ -260,8 +268,8 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
  * console.log(entity.provType) // "Entity"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Entity extends S.Class<Entity>($I`Entity`)(
   {
@@ -294,7 +302,8 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
 /**
  * PROV activity.
  *
- * @example
+ * **Example** (Decode PROV activity)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Activity } from "@beep/rdf/Prov"
@@ -306,8 +315,8 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  * console.log(activity.provType) // "Activity"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Activity extends S.Class<Activity>($I`Activity`)(
   {
@@ -335,7 +344,8 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
 /**
  * PROV agent.
  *
- * @example
+ * **Example** (Decode PROV agent)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Agent } from "@beep/rdf/Prov"
@@ -347,8 +357,8 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
  * console.log(agent.provType) // "Agent"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Agent extends S.Class<Agent>($I`Agent`)(
   {
@@ -373,7 +383,8 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
 /**
  * PROV software agent.
  *
- * @example
+ * **Example** (Decode software agent)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SoftwareAgent } from "@beep/rdf/Prov"
@@ -386,8 +397,8 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
  * console.log(agent.provType) // "SoftwareAgent"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
   {
@@ -412,7 +423,8 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
 /**
  * PROV plan.
  *
- * @example
+ * **Example** (Decode PROV plan)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plan } from "@beep/rdf/Prov"
@@ -425,8 +437,8 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
  * console.log(plan.provType) // "Plan"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Plan extends S.Class<Plan>($I`Plan`)(
   {
@@ -451,7 +463,8 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
 /**
  * PROV collection.
  *
- * @example
+ * **Example** (Decode collection members)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Collection } from "@beep/rdf/Prov"
@@ -464,8 +477,8 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
  * console.log(collection.hadMember.length) // 2
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Collection extends S.Class<Collection>($I`Collection`)(
   {
@@ -490,7 +503,8 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
 /**
  * PROV person.
  *
- * @example
+ * **Example** (Decode PROV person)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Person } from "@beep/rdf/Prov"
@@ -503,8 +517,8 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
  * console.log(person.provType) // "Person"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Person extends S.Class<Person>($I`Person`)(
   {
@@ -529,7 +543,8 @@ export class Person extends S.Class<Person>($I`Person`)(
 /**
  * PROV organization.
  *
- * @example
+ * **Example** (Decode PROV organization)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Organization } from "@beep/rdf/Prov"
@@ -542,8 +557,8 @@ export class Person extends S.Class<Person>($I`Person`)(
  * console.log(organization.provType) // "Organization"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Organization extends S.Class<Organization>($I`Organization`)(
   {
@@ -579,7 +594,8 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
 /**
  * PROV usage relation.
  *
- * @example
+ * **Example** (Decode usage relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Usage } from "@beep/rdf/Prov"
@@ -591,8 +607,8 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  * console.log(usage.activity) // "activity:build"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Usage extends S.Class<Usage>($I`Usage`)(
   {
@@ -609,7 +625,8 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
 /**
  * PROV generation relation.
  *
- * @example
+ * **Example** (Decode generation relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Generation } from "@beep/rdf/Prov"
@@ -621,8 +638,8 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  * console.log(generation.entity) // "entity:artifact"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Generation extends S.Class<Generation>($I`Generation`)(
   {
@@ -639,7 +656,8 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
 /**
  * PROV association relation.
  *
- * @example
+ * **Example** (Decode association with plan)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Association } from "@beep/rdf/Prov"
@@ -652,8 +670,8 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  * console.log(association.agent) // "agent:ci"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Association extends S.Class<Association>($I`Association`)(
   {
@@ -670,7 +688,8 @@ export class Association extends S.Class<Association>($I`Association`)(
 /**
  * PROV attribution relation.
  *
- * @example
+ * **Example** (Decode attribution relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Attribution } from "@beep/rdf/Prov"
@@ -682,8 +701,8 @@ export class Association extends S.Class<Association>($I`Association`)(
  * console.log(attribution.entity) // "entity:artifact"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Attribution extends S.Class<Attribution>($I`Attribution`)(
   {
@@ -699,7 +718,8 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
 /**
  * PROV delegation relation.
  *
- * @example
+ * **Example** (Decode delegation relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Delegation } from "@beep/rdf/Prov"
@@ -712,8 +732,8 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  * console.log(delegation.delegate) // "agent:worker"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Delegation extends S.Class<Delegation>($I`Delegation`)(
   {
@@ -730,7 +750,8 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
 /**
  * PROV derivation relation.
  *
- * @example
+ * **Example** (Decode derivation relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Derivation } from "@beep/rdf/Prov"
@@ -742,8 +763,8 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  * console.log(derivation.usedEntity) // "entity:source"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Derivation extends S.Class<Derivation>($I`Derivation`)(
   {
@@ -759,7 +780,8 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
 /**
  * PROV primary-source relation.
  *
- * @example
+ * **Example** (Decode primary-source relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PrimarySource } from "@beep/rdf/Prov"
@@ -771,8 +793,8 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  * console.log(source.source) // "entity:record"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
   {
@@ -788,7 +810,8 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
 /**
  * PROV quotation relation.
  *
- * @example
+ * **Example** (Decode quotation relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Quotation } from "@beep/rdf/Prov"
@@ -800,8 +823,8 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  * console.log(quotation.entity) // "entity:quote"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Quotation extends S.Class<Quotation>($I`Quotation`)(
   {
@@ -817,7 +840,8 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
 /**
  * PROV revision relation.
  *
- * @example
+ * **Example** (Decode revision relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Revision } from "@beep/rdf/Prov"
@@ -829,8 +853,8 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  * console.log(revision.source) // "entity:v1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Revision extends S.Class<Revision>($I`Revision`)(
   {
@@ -846,7 +870,8 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
 /**
  * PROV start relation.
  *
- * @example
+ * **Example** (Decode start relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Start } from "@beep/rdf/Prov"
@@ -859,8 +884,8 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  * console.log(start.activity) // "activity:build"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Start extends S.Class<Start>($I`Start`)(
   {
@@ -877,7 +902,8 @@ export class Start extends S.Class<Start>($I`Start`)(
 /**
  * PROV end relation.
  *
- * @example
+ * **Example** (Decode end relation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { End } from "@beep/rdf/Prov"
@@ -890,8 +916,8 @@ export class Start extends S.Class<Start>($I`Start`)(
  * console.log(end.trigger) // "entity:artifact"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class End extends S.Class<End>($I`End`)(
   {
@@ -908,7 +934,8 @@ export class End extends S.Class<End>($I`End`)(
 /**
  * Public PROV record union for the stable semantic-web surface.
  *
- * @example
+ * **Example** (Narrow ProvRecord union)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Agent, ProvRecord } from "@beep/rdf/Prov"
@@ -920,8 +947,8 @@ export class End extends S.Class<End>($I`End`)(
  * }
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ProvRecord = S.Union([
   Entity,
@@ -961,7 +988,8 @@ export const ProvRecord = S.Union([
 /**
  * Type for {@link ProvRecord}.
  *
- * @example
+ * **Example** (Accept ProvRecord type)
+ *
  * ```ts
  * import type { ProvRecord } from "@beep/rdf/Prov"
  *
@@ -969,15 +997,16 @@ export const ProvRecord = S.Union([
  * console.log(acceptProvRecord)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ProvRecord = typeof ProvRecord.Type;
 
 /**
  * Bounded provenance bundle exported by the semantic-web surface.
  *
- * @example
+ * **Example** (Decode empty ProvBundle)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProvBundle } from "@beep/rdf/Prov"
@@ -986,8 +1015,8 @@ export type ProvRecord = typeof ProvRecord.Type;
  * console.log(bundle.records.length) // 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
   {
@@ -1013,7 +1042,8 @@ export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
 /**
  * Public provenance entrypoint union.
  *
- * @example
+ * **Example** (Narrow ProvO to bundle)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProvBundle, ProvO } from "@beep/rdf/Prov"
@@ -1024,8 +1054,8 @@ export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
  * }
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
   $I.annoteSchema("ProvO", {
@@ -1045,7 +1075,8 @@ export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
 /**
  * Type for {@link ProvO}.
  *
- * @example
+ * **Example** (Accept ProvO type)
+ *
  * ```ts
  * import type { ProvO } from "@beep/rdf/Prov"
  *
@@ -1053,7 +1084,7 @@ export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
  * console.log(acceptProvO)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ProvO = typeof ProvO.Type;

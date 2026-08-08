@@ -12,11 +12,13 @@ import type { Model } from "./Organization.model.ts";
 /**
  * Test whether an Organization row is its own tenant root.
  *
- * @remarks
+ * **Details**
+ *
  * Organization is the one shared entity whose tenant scope is itself: a root
  * row satisfies `orgId` and `id` equality.
  *
- * @example
+ * **Example** (Detect tenant root row)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { isTenantRoot } from "@beep/shared-domain/entities/Organization/Organization.behavior"
@@ -39,7 +41,8 @@ export const isTenantRoot = (organization: Pick<Model, "id" | "orgId">): boolean
 /**
  * Test whether an Organization belongs to a parent organization.
  *
- * @example
+ * **Example** (Check missing parent organization)
+ *
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  * import * as O from "effect/Option"
@@ -57,12 +60,14 @@ export const hasParentOrganization = (organization: Pick<Model, "parentOrgId">):
  * Test whether Organization tenant placement fields form a valid root or child
  * relationship.
  *
- * @remarks
+ * **Details**
+ *
  * Root rows satisfy `id === orgId` and must not have a parent organization.
  * Child rows use a different tenant root id and must name a parent
  * organization.
  *
- * @example
+ * **Example** (Validate root tenant placement)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Organization } from "@beep/shared-domain/entities"

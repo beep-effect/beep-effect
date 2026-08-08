@@ -34,7 +34,8 @@ const revalidateSerializedEditorState = (
  * Synchronously admits a deeply revalidated decoded state or strictly decodes
  * unknown wire without throwing.
  *
- * @example
+ * **Example** (Decode valid root state)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime"
@@ -63,12 +64,15 @@ export const decodeEditorStateForRuntimeResult = (
  * Admits a schema-decoded state or decodes unknown wire before it is passed to a
  * live Lexical editor or emitted through an editor persistence callback.
  *
+ * **Details**
+ *
  * Wire-valid but runtime-incompatible content, including empty roots and
  * future/extension nodes, is rejected by the strict semantic decoder. Use the
  * lexical compatibility decoder for a lossless read-only fallback; never
  * mount incompatible wire in Lexical.
  *
- * @example
+ * **Example** (Effect decode of root state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeEditorStateForRuntime } from "@beep/editor/runtime"

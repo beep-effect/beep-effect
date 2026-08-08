@@ -18,7 +18,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repos
 /**
  * Persistence failure raised when a WorkItem row is absent.
  *
- * @example
+ * **Example** (Create not-found error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemRepositoryNotFound } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
@@ -52,7 +53,8 @@ export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemReposit
 /**
  * Persistence failure raised when a WorkItem write conflicts.
  *
- * @example
+ * **Example** (Create conflict error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemRepositoryConflict } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
@@ -90,7 +92,8 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
 /**
  * Persistence failure raised when the WorkItem repository is unavailable.
  *
- * @example
+ * **Example** (Create unavailable error)
+ *
  * ```ts
  * import { WorkItemRepositoryUnavailable } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
  *
@@ -122,7 +125,8 @@ export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepo
 /**
  * WorkItem repository failure schema.
  *
- * @example
+ * **Example** (Check repository error type)
+ *
  * ```ts
  * import {
  *   WorkItemRepositoryError,
@@ -153,7 +157,8 @@ export const WorkItemRepositoryError = S.Union([
 /**
  * Runtime type for {@link WorkItemRepositoryError}.
  *
- * @example
+ * **Example** (Annotate repository error type)
+ *
  * ```ts
  * import {
  *   WorkItemRepositoryUnavailable,
@@ -173,11 +178,13 @@ export type WorkItemRepositoryError = typeof WorkItemRepositoryError.Type;
 /**
  * WorkItem repository port consumed by the server-side use-case factory.
  *
- * @remarks
+ * **Details**
+ *
  * `create` fails on duplicate identity, `get` fails when no aggregate exists,
  * `list` returns repository order, and `save` updates an existing aggregate.
  *
- * @example
+ * **Example** (Implement repository shape)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import {
@@ -229,7 +236,8 @@ export interface WorkItemRepositoryShape {
 /**
  * Context tag for the WorkItem repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   WorkItemRepository,

@@ -10,7 +10,8 @@ import * as internal from "./generated/cldr-territories.ts";
 /**
  * A single generated CLDR territory entry.
  *
- * @example
+ * **Example** (Lookup US territory entry)
+ *
  * ```typescript
  * import { TerritoryDataByCode, type TerritoryData } from "@beep/data/Territories"
  *
@@ -26,7 +27,8 @@ export type TerritoryData = (typeof internal.TerritoryDataValues)[number];
 /**
  * Union of generated CLDR territory code strings.
  *
- * @example
+ * **Example** (Assign US territory code)
+ *
  * ```typescript
  * import type { TerritoryCode } from "@beep/data/Territories"
  *
@@ -42,7 +44,8 @@ export type TerritoryCode = TerritoryData["code"];
 /**
  * Union of generated CLDR territory display names.
  *
- * @example
+ * **Example** (Assign United States name)
+ *
  * ```typescript
  * import type { TerritoryName } from "@beep/data/Territories"
  *
@@ -58,7 +61,8 @@ export type TerritoryName = TerritoryData["name"];
 /**
  * A single generated CLDR continent entry.
  *
- * @example
+ * **Example** (Lookup Americas continent entry)
+ *
  * ```typescript
  * import { ContinentDataByCode, type ContinentData } from "@beep/data/Territories"
  *
@@ -74,7 +78,8 @@ export type ContinentData = (typeof internal.ContinentDataValues)[number];
 /**
  * Union of generated CLDR continent code strings.
  *
- * @example
+ * **Example** (Assign Americas continent code)
+ *
  * ```typescript
  * import type { ContinentCode } from "@beep/data/Territories"
  *
@@ -90,7 +95,8 @@ export type ContinentCode = ContinentData["code"];
 /**
  * Union of generated CLDR continent display names.
  *
- * @example
+ * **Example** (Assign Americas continent name)
+ *
  * ```typescript
  * import type { ContinentName } from "@beep/data/Territories"
  *
@@ -106,7 +112,8 @@ export type ContinentName = ContinentData["name"];
 /**
  * Stable source metadata for the generated CLDR territory dataset.
  *
- * @example
+ * **Example** (Check territory release tag)
+ *
  * ```typescript
  * import { TerritoryDataMetadata } from "@beep/data/Territories"
  *
@@ -121,7 +128,8 @@ export const TerritoryDataMetadata: typeof internal.TerritoryDataMetadata = inte
 /**
  * CLDR JSON release tag used for the generated territory dataset.
  *
- * @example
+ * **Example** (Assert CLDR release tag)
+ *
  * ```typescript
  * import { TerritoryDataReleaseTag } from "@beep/data/Territories"
  *
@@ -136,7 +144,8 @@ export const TerritoryDataReleaseTag: typeof internal.TerritoryDataReleaseTag = 
 /**
  * Generated CLDR territory entries.
  *
- * @example
+ * **Example** (Find US in territory list)
+ *
  * ```typescript
  * import { TerritoryDataValues } from "@beep/data/Territories"
  *
@@ -152,7 +161,8 @@ export const TerritoryDataValues: typeof internal.TerritoryDataValues = internal
 /**
  * Generated CLDR territory entries keyed by territory code.
  *
- * @example
+ * **Example** (Access US by territory code)
+ *
  * ```typescript
  * import { TerritoryDataByCode } from "@beep/data/Territories"
  *
@@ -167,7 +177,8 @@ export const TerritoryDataByCode: typeof internal.TerritoryDataByCode = internal
 /**
  * Generated CLDR territory code literals.
  *
- * @example
+ * **Example** (Check US code is included)
+ *
  * ```typescript
  * import { TerritoryCodeValues } from "@beep/data/Territories"
  *
@@ -182,7 +193,8 @@ export const TerritoryCodeValues: typeof internal.TerritoryCodeValues = internal
 /**
  * Generated CLDR territory names keyed by territory code.
  *
- * @example
+ * **Example** (Map US code to name)
+ *
  * ```typescript
  * import { TerritoryDataNameByCode } from "@beep/data/Territories"
  *
@@ -197,7 +209,8 @@ export const TerritoryDataNameByCode: typeof internal.TerritoryDataNameByCode = 
 /**
  * Generated CLDR territory code to English display-name literal pairs.
  *
- * @example
+ * **Example** (Find US code-name pair)
+ *
  * ```typescript
  * import { TerritoryDataCodeNamePairs } from "@beep/data/Territories"
  *
@@ -214,7 +227,8 @@ export const TerritoryDataCodeNamePairs: typeof internal.TerritoryDataCodeNamePa
 /**
  * Generated CLDR continent entries.
  *
- * @example
+ * **Example** (Find Americas in continent list)
+ *
  * ```typescript
  * import { ContinentDataValues } from "@beep/data/Territories"
  *
@@ -230,7 +244,8 @@ export const ContinentDataValues: typeof internal.ContinentDataValues = internal
 /**
  * Generated CLDR continent entries keyed by CLDR region code.
  *
- * @example
+ * **Example** (Access Americas by region code)
+ *
  * ```typescript
  * import { ContinentDataByCode } from "@beep/data/Territories"
  *
@@ -245,7 +260,8 @@ export const ContinentDataByCode: typeof internal.ContinentDataByCode = internal
 /**
  * Generated CLDR continent code literals.
  *
- * @example
+ * **Example** (Check 019 code is included)
+ *
  * ```typescript
  * import { ContinentCodeValues } from "@beep/data/Territories"
  *
@@ -260,7 +276,8 @@ export const ContinentCodeValues: typeof internal.ContinentCodeValues = internal
 /**
  * Generated CLDR continent names keyed by CLDR region code.
  *
- * @example
+ * **Example** (Map 019 code to name)
+ *
  * ```typescript
  * import { ContinentDataNameByCode } from "@beep/data/Territories"
  *
@@ -275,7 +292,8 @@ export const ContinentDataNameByCode: typeof internal.ContinentDataNameByCode = 
 /**
  * Generated CLDR continent code to English display-name literal pairs.
  *
- * @example
+ * **Example** (Find Americas code-name pair)
+ *
  * ```typescript
  * import { ContinentDataCodeNamePairs } from "@beep/data/Territories"
  *

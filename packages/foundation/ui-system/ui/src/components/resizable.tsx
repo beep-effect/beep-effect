@@ -13,7 +13,8 @@ import type * as React from "react";
 /**
  * Resizable panel group component.
  *
- * @example
+ * **Example** (Import ResizablePanelGroup)
+ *
  * ```tsx
  * import { ResizablePanelGroup } from "@beep/ui/components/resizable"
  *
@@ -30,7 +31,8 @@ function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeo
 /**
  * Resizable panel component.
  *
- * @example
+ * **Example** (Import ResizablePanel component)
+ *
  * ```tsx
  * import { ResizablePanel } from "@beep/ui/components/resizable"
  *
@@ -52,7 +54,8 @@ interface ResizableHandleProps extends React.ComponentProps<typeof Separator> {
 /**
  * Resizable handle component.
  *
- * @example
+ * **Example** (Import ResizableHandle component)
+ *
  * ```tsx
  * import { ResizableHandle } from "@beep/ui/components/resizable"
  *

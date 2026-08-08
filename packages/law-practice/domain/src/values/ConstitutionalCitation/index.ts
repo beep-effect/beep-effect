@@ -9,9 +9,8 @@
 /**
  * ConstitutionalCitation model exports.
  *
- * **Example**
+ * **Example** (Import ConstitutionalCitation)
  *
- * @example
  * ```ts
  * import { ConstitutionalCitation } from "@beep/law-practice-domain/values";
  * ```

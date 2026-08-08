@@ -16,10 +16,12 @@ const $I = $SharedDomainId.create("entities/Membership/Membership.model");
 /**
  * Shared organization membership entity schema.
  *
- * @remarks
+ * **Details**
+ *
  * The inherited `orgId` field is the organization being joined.
  *
- * @example
+ * **Example** (Read membership table name)
+ *
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/Membership"
  *

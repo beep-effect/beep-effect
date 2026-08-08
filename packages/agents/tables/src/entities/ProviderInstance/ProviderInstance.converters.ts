@@ -13,7 +13,8 @@ import type { providerInstanceTable } from "./ProviderInstance.table.ts";
 /**
  * Selected agents ProviderInstance row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { providerInstanceTable, ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
  *
@@ -31,7 +32,8 @@ export type ProviderInstanceRow = typeof providerInstanceTable.$inferSelect;
 /**
  * Insertable agents ProviderInstance row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { providerInstanceTable, ProviderInstanceInsert } from "@beep/agents-tables/entities/ProviderInstance"
  *
@@ -52,6 +54,8 @@ const decodeProviderInstanceRow = S.decodeUnknownSync(ProviderInstance);
 /**
  * Convert a ProviderInstance entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link providerInstanceTable}, whose metadata carries the
  * physical SQL column names. The database-managed `id` (SERIAL) is dropped so
@@ -59,7 +63,8 @@ const decodeProviderInstanceRow = S.decodeUnknownSync(ProviderInstance);
  * tokens: `lastProbe` is the tagged auth snapshot and `envVars` rejects
  * token-bearing names at decode time.
  *
- * @example
+ * **Example** (Insert drops managed id)
+ *
  * ```ts
  * import { fromProviderInstanceRow, toProviderInstanceInsert } from "@beep/agents-tables/entities/ProviderInstance"
  * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
@@ -99,7 +104,8 @@ export const toProviderInstanceInsert = (providerInstance: ProviderInstance): Pr
 /**
  * Convert a selected persistence row into a ProviderInstance entity.
  *
- * @example
+ * **Example** (Convert row to entity)
+ *
  * ```ts
  * import { fromProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
  * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"

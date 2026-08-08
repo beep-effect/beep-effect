@@ -17,7 +17,8 @@ import type { FieldOption } from "../core/Options.ts";
  * (`items`/`inputValue`/`onInputValueChange`/`onValueChange`/`name`) are owned
  * by the field.
  *
- * @example
+ * **Example** (Satisfy autocomplete field props)
+ *
  * ```ts
  * import type { AutocompleteFieldProps } from "@beep/form/fields/AutocompleteField"
  *
@@ -51,7 +52,8 @@ export interface AutocompleteFieldProps
  * Schema-bound free-text autocomplete: the value is whatever the user types,
  * with the options offered as filtered suggestions.
  *
- * @example
+ * **Example** (Search form with suggestions)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { AutocompleteField } from "@beep/form/fields/AutocompleteField"

@@ -55,7 +55,8 @@ const $I = $LexicalSchemaId.create("Lexical.codec");
  * URI scheme that round-trips {@link ArtifactRefNode} through the Md AST as a
  * paragraph wrapping a single link.
  *
- * @example
+ * **Example** (Construct artifact URI)
+ *
  * ```ts
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -71,7 +72,8 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
  * Artifact URI form used when the Md projection carries an
  * {@link ArtifactRefNode} as a link.
  *
- * @example
+ * **Example** (Decode artifact URI)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -94,7 +96,8 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
 /**
  * Type for {@link ArtifactUri}.
  *
- * @example
+ * **Example** (Accept ArtifactUri type)
+ *
  * ```ts
  * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -336,7 +339,8 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
 /**
  * Lift one Md block into its serialized Lexical node.
  *
- * @example
+ * **Example** (Convert paragraph to Lexical)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { P, Text } from "@beep/md/Md.model"
@@ -426,11 +430,13 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
 /**
  * Lift a full Md document into a serialized Lexical editor state.
  *
- * @remarks
+ * **Gotchas**
+ *
  * An empty Md document canonicalizes to one blank paragraph because Lexical
  * cannot apply an editor state whose root has no children.
  *
- * @example
+ * **Example** (Lift document to state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
@@ -590,7 +596,8 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
 /**
  * Project one serialized Lexical node onto Md blocks.
  *
- * @example
+ * **Example** (Project artifact-ref node)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -631,7 +638,8 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
  * Project a serialized Lexical editor state onto the canonical Md document
  * AST, applying the documented lossiness profile.
  *
- * @example
+ * **Example** (Round-trip editor state)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"

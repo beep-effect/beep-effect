@@ -19,12 +19,15 @@ import * as S from "effect/Schema";
  * Materializes a schema's constructor defaults into a default form-values
  * object by calling `schema.make({})`.
  *
+ * **Details**
+ *
  * **Totality caveat:** `make({})` succeeds only when *every* field is either
  * defaulted or optional. For a schema with required, non-defaulted fields this
  * throws — declare defaults (`S.withConstructorDefault` / `withKeyDefaults`) or
  * pass explicit `defaultValues` to the form-options builders instead.
  *
- * @example
+ * **Example** (Materialize schema defaults)
+ *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
@@ -45,12 +48,15 @@ export const getDefaultFormValues = <Schema extends S.Top>(schema: Schema): Sche
 /**
  * Materializes constructor defaults and encodes them to the schema's wire shape.
  *
+ * **Details**
+ *
  * TanStack Form stores `defaultValues` as the field value shape. For transform
  * schemas, that is the schema's `Encoded` side rather than its decoded `Type`.
  * For example, `S.NumberFromString` decodes to a number but the form field
  * still starts from a string.
  *
- * @example
+ * **Example** (Encoded form defaults)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

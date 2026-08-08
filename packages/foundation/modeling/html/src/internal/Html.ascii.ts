@@ -13,7 +13,9 @@ const ASCII_UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /**
  * Lowercases only ASCII uppercase characters.
  *
- * @example Internal call site
+ * **Example** (Preserve non-ASCII casing)
+ *
+ * Internal call site
  * ```ts
  * import { toAsciiLowerCase } from "./Html.ascii.ts"
  *

@@ -49,12 +49,14 @@ const $I = $RepoCliId.create("commands/Goals/Doctor");
 /**
  * Repo-relative path of the committed doctor baseline.
  *
- * @example
+ * **Example** (Log baseline path constant)
+ *
  * ```ts
  * import { GOALS_DOCTOR_BASELINE_PATH } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GOALS_DOCTOR_BASELINE_PATH) // "goals/goals-doctor.baseline.jsonc"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -63,12 +65,14 @@ export const GOALS_DOCTOR_BASELINE_PATH = "goals/goals-doctor.baseline.jsonc";
 /**
  * Hard maximum `GOAL.md` launcher size in characters.
  *
- * @example
+ * **Example** (Log max character limit)
+ *
  * ```ts
  * import { GOAL_MD_MAX_CHARS } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GOAL_MD_MAX_CHARS) // 4000
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -79,12 +83,14 @@ const STALE_ACTIVE_DAYS = 21;
 /**
  * Finding kinds emitted by `beep goals doctor`.
  *
- * @example
+ * **Example** (Check finding kind membership)
+ *
  * ```ts
  * import { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GoalDoctorFindingKind.is["manifest-invalid"]("manifest-invalid"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -111,13 +117,15 @@ export const GoalDoctorFindingKind = LiteralKit([
 /**
  * Finding kind emitted by `beep goals doctor`.
  *
- * @example
+ * **Example** (Type a finding kind)
+ *
  * ```ts
  * import type { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * const kind: GoalDoctorFindingKind = "lifecycle-mismatch"
  * console.log(kind)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -132,10 +140,13 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
 /**
  * One goals-doctor finding.
  *
+ * **Details**
+ *
  * `key` is the stable identity used for baseline membership; it never embeds
  * volatile detail so a finding keeps its identity across runs.
  *
- * @example
+ * **Example** (Make a doctor finding)
+ *
  * ```ts
  * import { GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
  *
@@ -148,6 +159,7 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
  * })
  * console.log(finding.key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,13 +209,15 @@ const finding = (
 /**
  * Result of ratcheting current blocking findings against the baseline.
  *
- * @example
+ * **Example** (Make empty classification result)
+ *
  * ```ts
  * import { GoalDoctorClassification } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * const result = GoalDoctorClassification.make({ introduced: [], inherited: [], resolved: [] })
  * console.log(result.introduced.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -221,14 +235,14 @@ export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>(
 /**
  * Classify current blocking findings against the committed baseline keys.
  *
+ * **Details**
+ *
  * Pure fallow-ratchet core: `introduced` (not in the baseline) is the failure
  * signal, `inherited` stays advisory, `resolved` is the shrink-the-baseline
  * nudge.
  *
- * @param current - Current blocking findings.
- * @param baselineKeys - Committed baseline finding keys.
- * @returns Introduced/inherited findings plus resolved baseline keys.
- * @example
+ * **Example** (Classify against empty baseline)
+ *
  * ```ts
  * import { classifyGoalDoctorFindings, GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
  *
@@ -242,6 +256,10 @@ export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>(
  * const result = classifyGoalDoctorFindings([current], [])
  * console.log(result.introduced.length) // 1
  * ```
+ *
+ * @param current - Current blocking findings.
+ * @param baselineKeys - Committed baseline finding keys.
+ * @returns Introduced/inherited findings plus resolved baseline keys.
  * @category utilities
  * @since 0.0.0
  */
@@ -651,13 +669,15 @@ const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item
  * Run the goals doctor: collect findings, ratchet blocking ones against the
  * committed baseline, and fail on new blocking findings.
  *
- * @example
+ * **Example** (Verify doctor returns Effect)
+ *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -739,13 +759,15 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
  * Run the goals doctor: collect findings, ratchet blocking ones against the
  * committed baseline, and fail on new blocking findings.
  *
- * @example
+ * **Example** (Verify doctor returns Effect)
+ *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -800,12 +822,14 @@ const writeBaselineFlag = Flag.boolean("write-baseline").pipe(
 /**
  * `bun run beep goals doctor` — packet-drift findings with a baseline ratchet.
  *
- * @example
+ * **Example** (Log doctor command name)
+ *
  * ```ts
  * import { goalsDoctorCommand } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(goalsDoctorCommand.name)
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

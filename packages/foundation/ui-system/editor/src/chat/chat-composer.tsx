@@ -87,7 +87,8 @@ const PLACEHOLDER_CLASS_NAME =
  * decoded/defaulted once and seeded into atoms owned by the Lexical editor; use
  * a new React `key` when a different mount configuration is required.
  *
- * @example
+ * **Example** (Disable attachments in config)
+ *
  * ```ts
  * import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer"
  *
@@ -116,13 +117,16 @@ export interface ChatComposerMountConfig {
  * Props for {@link ChatComposer}. Additive to (not a replacement for) the bare
  * `EditorComposerProps`.
  *
+ * **Details**
+ *
  * `namespace`, `initialState`, and all fields in `mountConfig` are read ONCE at
  * mount (intentionally stable, like an uncontrolled input's `defaultValue`).
  * Change the React `key` to apply new values — the desktop app remounts per
  * thread/edit-target. A consumer that keeps an `onSend` closure live may instead
  * read mutable state freshly inside the seeded handler.
  *
- * @example
+ * **Example** (Props with sendOn feature)
+ *
  * ```ts
  * import type { ChatComposerProps } from "@beep/editor/chat/chat-composer"
  *
@@ -559,7 +563,8 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 /**
  * The feature-flagged chat composer.
  *
- * @example
+ * **Example** (Composer with onSend config)
+ *
  * ```tsx
  * import { ChatComposer } from "@beep/editor/chat/chat-composer"
  *

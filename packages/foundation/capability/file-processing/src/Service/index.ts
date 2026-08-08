@@ -42,7 +42,8 @@ const $I = $FileProcessingId.create("Service");
 /**
  * Runtime-neutral file-processing engine shape implemented by drivers.
  *
- * @example
+ * **Example** (Pick engine method keys)
+ *
  * ```ts
  * import type { FileProcessingEngineShape } from "@beep/file-processing/Service"
  *
@@ -67,7 +68,8 @@ export type FileProcessingEngineShape = {
 /**
  * Service contract exposed by the file-processing capability.
  *
- * @example
+ * **Example** (Service method type keys)
+ *
  * ```ts
  * import type { FileProcessingServiceShape } from "@beep/file-processing/Service"
  *
@@ -92,7 +94,8 @@ export type FileProcessingServiceShape = {
 /**
  * File-processing service tag.
  *
- * @example
+ * **Example** (Provide service with layer)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { FileProcessingService } from "@beep/file-processing/Service"
@@ -179,7 +182,8 @@ const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAva
 /**
  * Fold per-source processing outcomes into their source and failure records.
  *
- * @example
+ * **Example** (Collect empty outcome records)
+ *
  * ```ts
  * import { collectSourceOutcomeRecords } from "@beep/file-processing/Service"
  *
@@ -206,9 +210,8 @@ export const collectSourceOutcomeRecords = (
 /**
  * Build a runtime-neutral file-processing service layer from concrete drivers.
  *
- * @param engines - Concrete driver engines available to this runtime.
- * @returns Layer for {@link FileProcessingService}.
- * @example
+ * **Example** (Layer from test engines)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { FileProcessingService, makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
@@ -224,6 +227,8 @@ export const collectSourceOutcomeRecords = (
  * Effect.runPromise(program).then(console.log) // "function"
  * ```
  *
+ * @param engines - Concrete driver engines available to this runtime.
+ * @returns Layer for {@link FileProcessingService}.
  * @category layers
  * @since 0.0.0
  */
@@ -328,7 +333,8 @@ export const makeFileProcessingServiceLayer = (
 /**
  * Detect a source artifact with the configured service.
  *
- * @example
+ * **Example** (Detect markdown artifact)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact, OperationId } from "@beep/file-processing/Artifact"
  * import { DetectFileOperation } from "@beep/file-processing/Operation"
@@ -381,7 +387,8 @@ export const detectFile = Effect.fn("FileProcessing.detectFile")(function* (
 /**
  * Extract text and metadata from a source artifact with the configured service.
  *
- * @example
+ * **Example** (Extract plain-text content)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact, OperationId } from "@beep/file-processing/Artifact"
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
@@ -435,7 +442,8 @@ export const extractFile = Effect.fn("FileProcessing.extractFile")(function* (
 /**
  * Export child artifacts from an archive source with the configured service.
  *
- * @example
+ * **Example** (Export PST archive children)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact, OperationId } from "@beep/file-processing/Artifact"
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
@@ -488,7 +496,8 @@ export const exportArchive = Effect.fn("FileProcessing.exportArchive")(function*
 /**
  * Process a source artifact with the configured service.
  *
- * @example
+ * **Example** (Process source to extract)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact, OperationId } from "@beep/file-processing/Artifact"
  * import { ProcessFileOperation } from "@beep/file-processing/Operation"

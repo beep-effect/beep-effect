@@ -1,7 +1,8 @@
 /**
  * Barrel re-exports for `@beep/identity`.
  *
- * @example
+ * **Example** (Make package identity ID)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  *
@@ -17,7 +18,8 @@
 /**
  * CURIE expansion, contraction, and schema codecs for identity vocabularies.
  *
- * @example
+ * **Example** (Expand CURIE to IRI)
+ *
  * ```ts
  * import { expand } from "@beep/identity"
  *
@@ -31,7 +33,8 @@ export * from "./Curie.ts";
 /**
  * Identity system core -- composers, annotations, and branded types.
  *
- * @example
+ * **Example** (Compose branded package ID)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  *
@@ -46,7 +49,8 @@ export * from "./Id.ts";
 /**
  * Turtle PN_LOCAL parser-side helpers and safe emission fallback.
  *
- * @example
+ * **Example** (Emit prefixed name or IRI)
+ *
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
@@ -63,7 +67,8 @@ export * from "./PnLocal.ts";
 /**
  * Pre-built identity composers for every `@beep/*` workspace package.
  *
- * @example
+ * **Example** (Use prebuilt package composer)
+ *
  * ```ts
  * import { $DataId } from "@beep/identity"
  *
@@ -77,7 +82,8 @@ export * from "./packages.ts";
 /**
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *
- * @example
+ * **Example** (Read core vocab IRI)
+ *
  * ```ts
  * import { CoreVocab } from "@beep/identity"
  *

@@ -24,7 +24,8 @@ import type { Klass, LexicalNode, LexicalNodeReplacement } from "lexical";
 /**
  * The Lexical node classes matching the `@beep/lexical-schema` v1 union.
  *
- * @example
+ * **Example** (Import and length check)
+ *
  * ```ts
  * import { editorNodes } from "@beep/editor/nodes"
  *

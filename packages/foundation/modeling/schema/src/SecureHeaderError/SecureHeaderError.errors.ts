@@ -107,7 +107,8 @@ const CoreErrorBase = makeSecureHeaderErrorBase<CoreError, typeof SecureHeader.E
 /**
  * Error raised while building a Content-Security-Policy header.
  *
- * @example
+ * **Example** (Construct CspError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CspError } from "@beep/schema/SecureHeaderError"
@@ -124,7 +125,8 @@ export class CspError extends CspErrorBase {}
 /**
  * Error raised while building force-HTTPS redirect headers.
  *
- * @example
+ * **Example** (Construct ForceHttpsRedirectError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectError } from "@beep/schema/SecureHeaderError"
@@ -141,7 +143,8 @@ export class ForceHttpsRedirectError extends ForceHttpsRedirectErrorBase {}
 /**
  * Error raised while building X-XSS-Protection headers.
  *
- * @example
+ * **Example** (Construct XssProtectionError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { XssProtectionError } from "@beep/schema/SecureHeaderError"
@@ -158,7 +161,8 @@ export class XssProtectionError extends XssProtectionErrorBase {}
 /**
  * Error raised while building Referrer-Policy headers.
  *
- * @example
+ * **Example** (Construct ReferrerPolicyError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ReferrerPolicyError } from "@beep/schema/SecureHeaderError"
@@ -175,7 +179,8 @@ export class ReferrerPolicyError extends ReferrerPolicyErrorBase {}
 /**
  * Error raised while building X-Content-Type-Options headers.
  *
- * @example
+ * **Example** (Construct NoSniffError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoSniffError } from "@beep/schema/SecureHeaderError"
@@ -192,7 +197,8 @@ export class NoSniffError extends NoSniffErrorBase {}
 /**
  * Error raised while building X-Download-Options headers.
  *
- * @example
+ * **Example** (Construct NoOpenError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoOpenError } from "@beep/schema/SecureHeaderError"
@@ -209,7 +215,8 @@ export class NoOpenError extends NoOpenErrorBase {}
 /**
  * Error raised while building frame-guard headers.
  *
- * @example
+ * **Example** (Construct FrameGuardError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { FrameGuardError } from "@beep/schema/SecureHeaderError"
@@ -226,7 +233,8 @@ export class FrameGuardError extends FrameGuardErrorBase {}
 /**
  * Error raised while building Expect-CT headers.
  *
- * @example
+ * **Example** (Construct ExpectCtError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ExpectCtError } from "@beep/schema/SecureHeaderError"
@@ -243,7 +251,8 @@ export class ExpectCtError extends ExpectCtErrorBase {}
 /**
  * Error raised while building Permissions-Policy headers.
  *
- * @example
+ * **Example** (Construct PermissionsPolicyError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PermissionsPolicyError } from "@beep/schema/SecureHeaderError"
@@ -260,7 +269,8 @@ export class PermissionsPolicyError extends PermissionsPolicyErrorBase {}
 /**
  * Error raised while building Cross-Origin-Opener-Policy headers.
  *
- * @example
+ * **Example** (Construct CrossOriginOpenerPolicyError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginOpenerPolicyError } from "@beep/schema/SecureHeaderError"
@@ -277,7 +287,8 @@ export class CrossOriginOpenerPolicyError extends CrossOriginOpenerPolicyErrorBa
 /**
  * Error raised while building Cross-Origin-Embedder-Policy headers.
  *
- * @example
+ * **Example** (Construct CrossOriginEmbedderPolicyError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginEmbedderPolicyError } from "@beep/schema/SecureHeaderError"
@@ -294,7 +305,8 @@ export class CrossOriginEmbedderPolicyError extends CrossOriginEmbedderPolicyErr
 /**
  * Error raised while building Cross-Origin-Resource-Policy headers.
  *
- * @example
+ * **Example** (Construct CrossOriginResourcePolicyError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginResourcePolicyError } from "@beep/schema/SecureHeaderError"
@@ -311,7 +323,8 @@ export class CrossOriginResourcePolicyError extends CrossOriginResourcePolicyErr
 /**
  * Error raised while building X-Permitted-Cross-Domain-Policies headers.
  *
- * @example
+ * **Example** (Construct PermittedCrossDomainPoliciesError)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesError } from "@beep/schema/SecureHeaderError"
@@ -328,7 +341,8 @@ export class PermittedCrossDomainPoliciesError extends PermittedCrossDomainPolic
 /**
  * Error raised by shared secure-header infrastructure.
  *
- * @example
+ * **Example** (Construct CoreError instance)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CoreError } from "@beep/schema/SecureHeaderError"
@@ -345,7 +359,8 @@ export class CoreError extends CoreErrorBase {}
 /**
  * Tagged union schema for all secure-header errors.
  *
- * @example
+ * **Example** (Check SecureHeaderError membership)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -385,7 +400,8 @@ export const SecureHeaderError = SecureHeader.mapMembers(
 /**
  * Type for all secure-header errors.
  *
- * @example
+ * **Example** (Handle SecureHeaderError type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { SecureHeaderError } from "@beep/schema/SecureHeaderError"

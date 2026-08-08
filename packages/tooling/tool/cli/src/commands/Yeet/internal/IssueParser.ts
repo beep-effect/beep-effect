@@ -369,11 +369,8 @@ const fallbackIssuesFromResult = (
 /**
  * Convert a failed step result into quality issues.
  *
- * @param context - Shared run context.
- * @param step - Planned step that produced the result.
- * @param result - Captured step result.
- * @returns Structured or raw issues; successful results produce no issues.
- * @example
+ * **Example** (Failed step quality issues)
+ *
  * ```ts
  * import { qualityIssuesFromStepResult, RepoPlanStep, RepoRunContext, RepoStepRunResult, TurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  *
@@ -401,6 +398,11 @@ const fallbackIssuesFromResult = (
  * const result = RepoStepRunResult.make({ commandText: "bun run check", exitCode: 1, output: "check failed", stepId: step.id })
  * console.log(qualityIssuesFromStepResult(context, step, result))
  * ```
+ *
+ * @param context - Shared run context.
+ * @param step - Planned step that produced the result.
+ * @param result - Captured step result.
+ * @returns Structured or raw issues; successful results produce no issues.
  * @category parsing
  * @since 0.0.0
  */

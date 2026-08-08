@@ -17,7 +17,8 @@ import type React from "react";
 /**
  * Props for {@link SubmitButton}: every `@beep/ui` `Button` prop.
  *
- * @example
+ * **Example** (Button props shape)
+ *
  * ```tsx
  * import type { SubmitButtonProps } from "@beep/form/components/SubmitButton"
  *
@@ -40,12 +41,14 @@ export interface SubmitButtonProps extends React.ComponentProps<typeof Button> {
  * Submit button that disables itself while the form cannot submit or is
  * submitting.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `SubmitButton` reads the active form from provider context. Render it inside
  * `<form.AppForm>` (or use the registered `<form.Submit>` component) so it can
  * subscribe to `canSubmit` and `isSubmitting`.
  *
- * @example
+ * **Example** (Submit button in form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { SubmitButton } from "@beep/form/components/SubmitButton"

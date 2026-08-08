@@ -12,10 +12,12 @@ const $I = $BoxId.create("values/UploadPart/UploadPart.model");
 /**
  * Experimental value object for an uploaded chunk in a Box chunked upload session.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty part)
+ *
  * ```ts
  * import { UploadPart } from "@beep/box/experimental/domain/values/UploadPart/UploadPart.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class UploadPart extends S.Class<UploadPart>($I`UploadPart`)(
 /**
  * Type-level companion namespace for {@link UploadPart} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode UploadPart)
+ *
  * ```ts
  * import { UploadPart } from "@beep/box/experimental/domain/values/UploadPart/UploadPart.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace UploadPart {
   /**
    * Encoded payload accepted by the {@link UploadPart} value-object schema.
    *
-   * @example
+   * **Example** (Encode UploadPart payload)
+   *
    * ```ts
    * import { UploadPart } from "@beep/box/experimental/domain/values/UploadPart/UploadPart.model";
    * import * as S from "effect/Schema";

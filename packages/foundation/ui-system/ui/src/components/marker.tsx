@@ -14,7 +14,8 @@ import type * as React from "react";
 /**
  * Marker variant class generator.
  *
- * @example
+ * **Example** (Importing markerVariants)
+ *
  * ```tsx
  * import { markerVariants } from "@beep/ui/components/marker"
  *
@@ -41,7 +42,8 @@ const markerVariants = cva(
 /**
  * Marker component.
  *
- * @example
+ * **Example** (Importing Marker)
+ *
  * ```tsx
  * import { Marker } from "@beep/ui/components/marker"
  *
@@ -76,7 +78,8 @@ function Marker({
 /**
  * Marker icon component.
  *
- * @example
+ * **Example** (Importing MarkerIcon)
+ *
  * ```tsx
  * import { MarkerIcon } from "@beep/ui/components/marker"
  *
@@ -100,7 +103,8 @@ function MarkerIcon({ className, ...props }: React.ComponentProps<"span">) {
 /**
  * Marker content component.
  *
- * @example
+ * **Example** (Importing MarkerContent)
+ *
  * ```tsx
  * import { MarkerContent } from "@beep/ui/components/marker"
  *

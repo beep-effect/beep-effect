@@ -12,7 +12,8 @@
 /**
  * Empty public law-practice use-case namespace placeholder.
  *
- * @example
+ * **Example** (Count public namespace keys)
+ *
  * ```ts
  * import * as Public from "@beep/law-practice-use-cases/public"
  *

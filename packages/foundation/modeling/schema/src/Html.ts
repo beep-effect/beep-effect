@@ -13,13 +13,16 @@ const $I = $SchemaId.create("Html");
 /**
  * Branded schema for trusted HTML fragment strings.
  *
+ * **Details**
+ *
  * Use this for rendered snippets such as Markdown or rich-text projections that
  * are valid to embed inside an existing HTML document body.
  *
  * This is a nominal trust brand only. Decoding this schema does not sanitize or
  * validate HTML payload safety.
  *
- * @example
+ * **Example** (Make branded HTML fragment)
+ *
  * ```ts
  * import { HtmlFragment } from "@beep/schema/Html"
  *
@@ -41,7 +44,8 @@ export const HtmlFragment = S.String.pipe(
 /**
  * Type for {@link HtmlFragment}.
  *
- * @example
+ * **Example** (Type HtmlFragment parameter)
+ *
  * ```ts
  * import type { HtmlFragment } from "@beep/schema/Html"
  *

@@ -9,7 +9,8 @@
 /**
  * Claim disposition port and gate-outcome resolution exports.
  *
- * @example
+ * **Example** (Check disposition resolver type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimDisposition from "@beep/epistemic-use-cases/ClaimDisposition"
@@ -24,7 +25,8 @@ export * as ClaimDisposition from "./ClaimDisposition/index.ts";
 /**
  * Claim gate service contract exports.
  *
- * @example
+ * **Example** (Check claim gate factory)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimGate from "@beep/epistemic-use-cases/ClaimGate"
@@ -39,7 +41,8 @@ export * as ClaimGate from "./ClaimGate/index.ts";
 /**
  * Claim lifecycle transition service contract exports.
  *
- * @example
+ * **Example** (Check transition factory type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimLifecycle from "@beep/epistemic-use-cases/ClaimLifecycle"
@@ -54,7 +57,8 @@ export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
 /**
  * Contradiction-triage repository contracts.
  *
- * @example
+ * **Example** (Log triage repository export)
+ *
  * ```ts
  * import { ContradictionTriage } from "@beep/epistemic-use-cases/server"
  *
@@ -75,7 +79,8 @@ export * from "./ContradictionTriage/server.ts";
 /**
  * Bitemporal edge authority command, error, and repository port exports.
  *
- * @example
+ * **Example** (Check edge authority repository)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-use-cases/EdgeAuthority"
@@ -97,7 +102,8 @@ export * from "./EdgeAuthority/index.ts";
 /**
  * Execution ledger error and repository port exports.
  *
- * @example
+ * **Example** (Check execution ledger type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ExecutionLedger from "@beep/epistemic-use-cases/ExecutionLedger"

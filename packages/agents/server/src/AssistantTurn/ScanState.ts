@@ -23,7 +23,8 @@ const NonNegativeScanDepth = S.Int.check(isNonNegative).pipe(
 /**
  * The carry state of the incremental block extractor between chunks.
  *
- * @example
+ * **Example** (Assigning initial scan state)
+ *
  * ```ts
  * import { initialScanState } from "@beep/agents-server/AssistantTurn"
  * import type { ScanState } from "@beep/agents-server/AssistantTurn"
@@ -61,7 +62,8 @@ export class ScanState extends S.Class<ScanState>($I`ScanState`)(
 /**
  * Schema-backed input for one incremental scanner transition.
  *
- * @example
+ * **Example** (Building chunk input value)
+ *
  * ```ts
  * import { initialScanState, ScanChunkInput } from "@beep/agents-server/AssistantTurn"
  *
@@ -85,7 +87,8 @@ export class ScanChunkInput extends S.Class<ScanChunkInput>($I`ScanChunkInput`)(
 /**
  * Schema-backed result for one incremental scanner transition.
  *
- * @example
+ * **Example** (Building chunk result value)
+ *
  * ```ts
  * import { initialScanState, ScanChunkResult } from "@beep/agents-server/AssistantTurn"
  *
@@ -111,7 +114,8 @@ export class ScanChunkResult extends S.Class<ScanChunkResult>($I`ScanChunkResult
 /**
  * The empty scan state used to begin scanning a fresh structured-output stream.
  *
- * @example
+ * **Example** (Reading empty state flags)
+ *
  * ```ts
  * import { initialScanState } from "@beep/agents-server/AssistantTurn"
  *
@@ -188,7 +192,8 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
  * Fold one chunk of structured-output JSON text into the scan state, returning
  * the next state plus any block element slices that completed within the chunk.
  *
- * @example
+ * **Example** (Extracting completed block slices)
+ *
  * ```ts
  * import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn"
  *

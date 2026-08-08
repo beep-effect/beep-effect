@@ -8,7 +8,8 @@
 /**
  * Thread model exports.
  *
- * @example
+ * **Example** (Import Thread module)
+ *
  * ```ts
  * import * as Thread from "@beep/workspace-domain/entities/Thread"
  *

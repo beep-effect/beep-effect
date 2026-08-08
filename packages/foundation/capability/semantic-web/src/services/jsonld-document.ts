@@ -32,7 +32,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * JSON-LD document error reason.
  *
- * @example
+ * **Example** (Decode reason with Schema)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -61,7 +62,8 @@ export const JsonLdDocumentErrorReason = LiteralKit([
 /**
  * Type for {@link JsonLdDocumentErrorReason}.
  *
- * @example
+ * **Example** (Guard loader policy violation)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdDocumentErrorReason } from "@beep/semantic-web/services/jsonld-document"
@@ -78,7 +80,8 @@ export type JsonLdDocumentErrorReason = typeof JsonLdDocumentErrorReason.Type;
 /**
  * Typed JSON-LD document service error.
  *
- * @example
+ * **Example** (Construct typed document error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -111,7 +114,8 @@ export class JsonLdDocumentError extends TaggedErrorClass<JsonLdDocumentError>($
 /**
  * Compact JSON-LD document request.
  *
- * @example
+ * **Example** (Decode compact request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -146,7 +150,8 @@ export class CompactJsonLdDocumentRequest extends S.Class<CompactJsonLdDocumentR
 /**
  * Flatten JSON-LD document request.
  *
- * @example
+ * **Example** (Decode flatten request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -179,7 +184,8 @@ export class FlattenJsonLdDocumentRequest extends S.Class<FlattenJsonLdDocumentR
 /**
  * Frame JSON-LD document request.
  *
- * @example
+ * **Example** (Decode frame request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -212,7 +218,8 @@ export class FrameJsonLdDocumentRequest extends S.Class<FrameJsonLdDocumentReque
 /**
  * Bounded JSON-LD document loader policy.
  *
- * @example
+ * **Example** (Decode remote loader policy)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -247,7 +254,8 @@ export class JsonLdDocumentLoaderPolicy extends S.Class<JsonLdDocumentLoaderPoli
 /**
  * JSON-LD document normalization profile.
  *
- * @example
+ * **Example** (Decode expanded profile)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -269,7 +277,8 @@ export const JsonLdDocumentNormalizationProfile = LiteralKit(["bounded-v1", "exp
 /**
  * Type for {@link JsonLdDocumentNormalizationProfile}.
  *
- * @example
+ * **Example** (Accept profile type)
+ *
  * ```ts
  * import type { JsonLdDocumentNormalizationProfile } from "@beep/semantic-web/services/jsonld-document"
  *
@@ -277,15 +286,16 @@ export const JsonLdDocumentNormalizationProfile = LiteralKit(["bounded-v1", "exp
  * console.log(acceptJsonLdDocumentNormalizationProfile)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type JsonLdDocumentNormalizationProfile = typeof JsonLdDocumentNormalizationProfile.Type;
 
 /**
  * Expand JSON-LD document request.
  *
- * @example
+ * **Example** (Decode expand request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -318,7 +328,8 @@ export class ExpandJsonLdDocumentRequest extends S.Class<ExpandJsonLdDocumentReq
 /**
  * Normalize JSON-LD document request.
  *
- * @example
+ * **Example** (Decode normalize request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -356,7 +367,8 @@ export class NormalizeJsonLdDocumentRequest extends S.Class<NormalizeJsonLdDocum
 /**
  * JSON-LD to RDF request.
  *
- * @example
+ * **Example** (Decode to-RDF request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -387,7 +399,8 @@ export class JsonLdToRdfRequest extends S.Class<JsonLdToRdfRequest>($I`JsonLdToR
 /**
  * RDF to JSON-LD request.
  *
- * @example
+ * **Example** (Decode from-RDF request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -420,7 +433,8 @@ export class JsonLdFromRdfRequest extends S.Class<JsonLdFromRdfRequest>($I`JsonL
 /**
  * JSON-LD document result wrapper.
  *
- * @example
+ * **Example** (Decode document result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -448,7 +462,8 @@ export class JsonLdDocumentResult extends S.Class<JsonLdDocumentResult>($I`JsonL
 /**
  * JSON-LD to RDF result wrapper.
  *
- * @example
+ * **Example** (Decode RDF result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -476,7 +491,8 @@ export class JsonLdToRdfResult extends S.Class<JsonLdToRdfResult>($I`JsonLdToRdf
 /**
  * JSON-LD document service contract shape.
  *
- * @example
+ * **Example** (Accept service shape)
+ *
  * ```ts
  * import type { JsonLdDocumentServiceShape } from "@beep/semantic-web/services/jsonld-document"
  *
@@ -484,8 +500,8 @@ export class JsonLdToRdfResult extends S.Class<JsonLdToRdfResult>($I`JsonLdToRdf
  * console.log(acceptJsonLdDocumentServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface JsonLdDocumentServiceShape {
   readonly compact: (request: CompactJsonLdDocumentRequest) => Effect.Effect<JsonLdDocumentResult, JsonLdDocumentError>;
@@ -502,7 +518,8 @@ export interface JsonLdDocumentServiceShape {
 /**
  * JSON-LD document service tag.
  *
- * @example
+ * **Example** (Mock service flatten call)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

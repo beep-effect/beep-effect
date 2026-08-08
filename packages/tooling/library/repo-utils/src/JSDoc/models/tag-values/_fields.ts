@@ -10,12 +10,14 @@ import * as S from "effect/Schema";
 /**
  * Reusable required `type` field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting typeField fragment)
+ *
  * ```ts
  * import { typeField } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(typeField)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */
@@ -27,12 +29,14 @@ export const typeField = {
 /**
  * Reusable optional `type` field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting optionalType fragment)
+ *
  * ```ts
  * import { optionalType } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(optionalType)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */
@@ -44,12 +48,14 @@ export const optionalType = {
 /**
  * Reusable required `name` field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting nameField fragment)
+ *
  * ```ts
  * import { nameField } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(nameField)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */
@@ -61,12 +67,14 @@ export const nameField = {
 /**
  * Reusable optional `name` field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting optionalName fragment)
+ *
  * ```ts
  * import { optionalName } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(optionalName)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */
@@ -78,12 +86,14 @@ export const optionalName = {
 /**
  * Reusable optional `description` field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting optionalDesc fragment)
+ *
  * ```ts
  * import { optionalDesc } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(optionalDesc)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */
@@ -95,12 +105,14 @@ export const optionalDesc = {
 /**
  * Reusable empty field fragment.
  *
- * @internal
- * @example
+ * **Example** (Inspecting empty field fragment)
+ *
  * ```ts
  * import { empty } from "@beep/repo-utils/JSDoc/models/tag-values/_fields"
  * console.log(empty)
  * ```
+ *
+ * @internal
  * @category models
  * @since 0.0.0
  */

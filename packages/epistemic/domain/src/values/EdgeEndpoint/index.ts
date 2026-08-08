@@ -8,7 +8,8 @@
 /**
  * Edge endpoint value exports.
  *
- * @example
+ * **Example** (Decoding an EdgeEndpoint)
+ *
  * ```ts
  * import { EdgeEndpoint } from "@beep/epistemic-domain/values/EdgeEndpoint"
  * import * as S from "effect/Schema"

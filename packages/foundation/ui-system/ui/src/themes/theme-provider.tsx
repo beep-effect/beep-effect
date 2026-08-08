@@ -1,42 +1,47 @@
 /**
  * The theme provider module.
  *
- * @packageDocumentation
- * @example
+ * **Example** (Import ResolvedThemeMode value)
+ *
  * ```tsx
  * import { ResolvedThemeMode } from "@beep/ui/themes/theme-provider"
  *
  * console.log(ResolvedThemeMode)
  * ```
  *
- * @example
+ * **Example** (Import ThemeMode value)
+ *
  * ```tsx
  * import { ThemeMode } from "@beep/ui/themes/theme-provider"
  *
  * console.log(ThemeMode)
  * ```
  *
- * @example
+ * **Example** (Import resolveThemeMode function)
+ *
  * ```tsx
  * import { resolveThemeMode } from "@beep/ui/themes/theme-provider"
  *
  * console.log(resolveThemeMode)
  * ```
  *
- * @example
+ * **Example** (Import AppThemeProvider component)
+ *
  * ```tsx
  * import { AppThemeProvider } from "@beep/ui/themes/theme-provider"
  *
  * console.log(AppThemeProvider)
  * ```
  *
- * @example
+ * **Example** (Import useThemeMode hook)
+ *
  * ```tsx
  * import { useThemeMode } from "@beep/ui/themes/theme-provider"
  *
  * console.log(useThemeMode)
  * ```
  *
+ * @packageDocumentation
  * @category themes
  * @since 0.0.0
  */
@@ -56,7 +61,8 @@ const $I = $UiId.create("themes/theme-provider");
 /**
  * Theme mode export.
  *
- * @example
+ * **Example** (Import ThemeMode value)
+ *
  * ```tsx
  * import { ThemeMode } from "@beep/ui/themes/theme-provider"
  *
@@ -75,7 +81,8 @@ export const ThemeMode = LiteralKit(["light", "dark", "system"]).pipe(
 /**
  * Type of {@link ThemeMode}.
  *
- * @example
+ * **Example** (Assign system ThemeMode)
+ *
  * ```ts
  * import type { ThemeMode } from "@beep/ui/themes/theme-provider"
  *
@@ -84,15 +91,16 @@ export const ThemeMode = LiteralKit(["light", "dark", "system"]).pipe(
  * console.log(preference)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export type ThemeMode = typeof ThemeMode.Type;
 
 /**
  * Resolved theme mode export.
  *
- * @example
+ * **Example** (Import ResolvedThemeMode value)
+ *
  * ```tsx
  * import { ResolvedThemeMode } from "@beep/ui/themes/theme-provider"
  *
@@ -111,7 +119,8 @@ export const ResolvedThemeMode = LiteralKit(ThemeMode.omitOptions(["system"])).p
 /**
  * Type of {@link ResolvedThemeMode}.
  *
- * @example
+ * **Example** (Assign dark ResolvedThemeMode)
+ *
  * ```ts
  * import type { ResolvedThemeMode } from "@beep/ui/themes/theme-provider"
  *
@@ -120,8 +129,8 @@ export const ResolvedThemeMode = LiteralKit(ThemeMode.omitOptions(["system"])).p
  * console.log(resolved)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export type ResolvedThemeMode = typeof ResolvedThemeMode.Type;
 
@@ -148,7 +157,8 @@ interface ThemeModeControls {
 /**
  * Resolve theme mode export.
  *
- * @example
+ * **Example** (Import resolveThemeMode function)
+ *
  * ```tsx
  * import { resolveThemeMode } from "@beep/ui/themes/theme-provider"
  *
@@ -173,7 +183,8 @@ export const resolveThemeMode: {
 /**
  * App theme provider component.
  *
- * @example
+ * **Example** (Import AppThemeProvider component)
+ *
  * ```tsx
  * import { AppThemeProvider } from "@beep/ui/themes/theme-provider"
  *
@@ -200,7 +211,8 @@ export function AppThemeProvider({
 /**
  * Use theme mode hook.
  *
- * @example
+ * **Example** (Import useThemeMode hook)
+ *
  * ```tsx
  * import { useThemeMode } from "@beep/ui/themes/theme-provider"
  *

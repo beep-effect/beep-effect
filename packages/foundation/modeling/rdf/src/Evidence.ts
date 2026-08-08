@@ -17,7 +17,8 @@ const $I = $RdfId.create("evidence");
 /**
  * Evidence selector discriminator.
  *
- * @example
+ * **Example** (Validating selector kind values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceSelectorKind } from "@beep/rdf/Evidence"
@@ -26,8 +27,8 @@ const $I = $RdfId.create("evidence");
  * console.log(S.is(EvidenceSelectorKind)("unknown")) // false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "fragment"]).pipe(
   $I.annoteSchema("EvidenceSelectorKind", {
@@ -38,7 +39,8 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
 /**
  * Type for {@link EvidenceSelectorKind}.
  *
- * @example
+ * **Example** (Accepting typed selector kind)
+ *
  * ```ts
  * import type { EvidenceSelectorKind } from "@beep/rdf/Evidence"
  *
@@ -46,15 +48,16 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
  * console.log(acceptEvidenceSelectorKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
 
 /**
  * Text-quote selector for evidence anchors.
  *
- * @example
+ * **Example** (Decoding text-quote selector)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextQuoteSelector } from "@beep/rdf/Evidence"
@@ -68,8 +71,8 @@ export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
  * console.log(selector.kind) // "text-quote"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSelector`)(
   {
@@ -97,7 +100,8 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
 /**
  * Text-position selector for evidence anchors.
  *
- * @example
+ * **Example** (Decoding text-position selector)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TextPositionSelector } from "@beep/rdf/Evidence"
@@ -110,8 +114,8 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
  * console.log(selector.start) // 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextPositionSelector`)(
   {
@@ -138,7 +142,8 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
 /**
  * Fragment selector for evidence anchors.
  *
- * @example
+ * **Example** (Decoding fragment selector)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FragmentSelector } from "@beep/rdf/Evidence"
@@ -150,8 +155,8 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
  * console.log(selector.value) // "section-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelector`)(
   {
@@ -176,7 +181,8 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
 /**
  * Evidence selector union.
  *
- * @example
+ * **Example** (Decoding selector union)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceSelector } from "@beep/rdf/Evidence"
@@ -188,8 +194,8 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
  * console.log(decoded.kind) // "text-quote"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector, FragmentSelector]).pipe(
   S.toTaggedUnion("kind"),
@@ -201,7 +207,8 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
 /**
  * Type for {@link EvidenceSelector}.
  *
- * @example
+ * **Example** (Accepting typed evidence selector)
+ *
  * ```ts
  * import type { EvidenceSelector } from "@beep/rdf/Evidence"
  *
@@ -209,15 +216,16 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
  * console.log(acceptEvidenceSelector)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EvidenceSelector = typeof EvidenceSelector.Type;
 
 /**
  * Target resource plus selector pair referenced by an evidence anchor.
  *
- * @example
+ * **Example** (Decoding target with selector)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceTarget } from "@beep/rdf/Evidence"
@@ -229,8 +237,8 @@ export type EvidenceSelector = typeof EvidenceSelector.Type;
  * console.log(target.selector.kind) // "fragment"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class EvidenceTarget extends S.Class<EvidenceTarget>($I`EvidenceTarget`)(
   {
@@ -254,7 +262,8 @@ export class EvidenceTarget extends S.Class<EvidenceTarget>($I`EvidenceTarget`)(
 /**
  * Evidence anchor value referenced from provenance and verification services.
  *
- * @example
+ * **Example** (Decoding evidence anchor)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceAnchor } from "@beep/rdf/Evidence"
@@ -270,8 +279,8 @@ export class EvidenceTarget extends S.Class<EvidenceTarget>($I`EvidenceTarget`)(
  * console.log(anchor.id) // "https://example.org/annotation/1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
   {
@@ -297,7 +306,8 @@ export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
 /**
  * Bounded evidence projection.
  *
- * @example
+ * **Example** (Decoding bounded projection)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BoundedEvidenceProjection } from "@beep/rdf/Evidence"
@@ -317,8 +327,8 @@ export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
  * console.log(projection.anchors.length) // 1
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class BoundedEvidenceProjection extends S.Class<BoundedEvidenceProjection>($I`BoundedEvidenceProjection`)(
   {

@@ -10,7 +10,8 @@ import type * as React from "react";
 /**
  * Framed content container with standard and compact density.
  *
- * @example
+ * **Example** (Compact billing card)
+ *
  * ```tsx
  * import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@beep/ui/components/card"
  *
@@ -51,7 +52,8 @@ function Card({
 /**
  * Header grid for card title, description, and optional action.
  *
- * @example
+ * **Example** (Header with action)
+ *
  * ```tsx
  * import { CardAction, CardHeader, CardTitle } from "@beep/ui/components/card"
  *
@@ -84,7 +86,8 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Primary heading slot for a card.
  *
- * @example
+ * **Example** (Simple card title)
+ *
  * ```tsx
  * import { CardTitle } from "@beep/ui/components/card"
  *
@@ -109,7 +112,8 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Muted supporting text for a card heading.
  *
- * @example
+ * **Example** (Muted card subtitle)
+ *
  * ```tsx
  * import { CardDescription } from "@beep/ui/components/card"
  *
@@ -128,7 +132,8 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Top-right action slot in a card header.
  *
- * @example
+ * **Example** (Header action button)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  * import { CardAction } from "@beep/ui/components/card"
@@ -158,7 +163,8 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Main body area for a card.
  *
- * @example
+ * **Example** (Monospace metric content)
+ *
  * ```tsx
  * import { CardContent } from "@beep/ui/components/card"
  *
@@ -177,7 +183,8 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Footer band for card totals, metadata, or secondary actions.
  *
- * @example
+ * **Example** (Footer action buttons)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/button"
  * import { CardFooter } from "@beep/ui/components/card"

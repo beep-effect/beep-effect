@@ -22,16 +22,20 @@ const $I = $RepoCliId.create("commands/Qa/Inventory.schemas");
 /**
  * Severity domain of a vision-judge finding.
  *
+ * **Details**
+ *
  * `P0` blocks the round, `P1` must be fixed before the loop closes, and `P2`
  * is polish that never counts toward the required total.
  *
- * @example
+ * **Example** (Test severity membership)
+ *
  * ```ts
  * import { QaSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(QaSeverity.is.P0("P0")) // true
  * console.log(QaSeverity.Options.length) // 3
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -44,13 +48,15 @@ export const QaSeverity = LiteralKit(["P0", "P1", "P2"]).pipe(
 /**
  * Severity of a vision-judge finding.
  *
- * @example
+ * **Example** (Type a severity value)
+ *
  * ```ts
  * import type { QaSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * const severity: QaSeverity = "P1"
  * console.log(severity)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -59,15 +65,19 @@ export type QaSeverity = typeof QaSeverity.Type;
 /**
  * Review lenses a finding can be attributed to.
  *
+ * **Details**
+ *
  * The first eight are static lenses answerable from a single screenshot; the
  * rest are motion lenses that only frame strips and contact sheets can prove.
  *
- * @example
+ * **Example** (Check lens membership)
+ *
  * ```ts
  * import { QaLens } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(QaLens.is["selection-smear"]("selection-smear")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -97,13 +107,15 @@ export const QaLens = LiteralKit([
 /**
  * Review lens a finding is attributed to.
  *
- * @example
+ * **Example** (Type a lens value)
+ *
  * ```ts
  * import type { QaLens } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * const lens: QaLens = "drag-ghost"
  * console.log(lens)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -112,12 +124,14 @@ export type QaLens = typeof QaLens.Type;
 /**
  * Artifact kinds a finding can cite as evidence.
  *
- * @example
+ * **Example** (Count evidence kind options)
+ *
  * ```ts
  * import { QaEvidenceKind } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(QaEvidenceKind.Options.length) // 5
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -130,13 +144,15 @@ export const QaEvidenceKind = LiteralKit(["clip", "frame", "screenshot", "sheet"
 /**
  * Artifact kind cited by one evidence reference.
  *
- * @example
+ * **Example** (Type an evidence kind)
+ *
  * ```ts
  * import type { QaEvidenceKind } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * const kind: QaEvidenceKind = "strip"
  * console.log(kind)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -145,7 +161,8 @@ export type QaEvidenceKind = typeof QaEvidenceKind.Type;
 /**
  * Zero-padded two-digit ordinal inside a {@link QaFindingId}.
  *
- * @example
+ * **Example** (Validate zero-padded ordinal)
+ *
  * ```ts
  * import { QaFindingOrdinal } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import * as S from "effect/Schema"
@@ -153,6 +170,7 @@ export type QaEvidenceKind = typeof QaEvidenceKind.Type;
  * console.log(S.is(QaFindingOrdinal)("07")) // true
  * console.log(S.is(QaFindingOrdinal)("7")) // false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -172,7 +190,8 @@ export const QaFindingOrdinal = S.String.check(
 /**
  * Branded `R<round>-<nn>` identifier of one vision-judge finding.
  *
- * @example
+ * **Example** (Validate finding id format)
+ *
  * ```ts
  * import { QaFindingId } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import * as S from "effect/Schema"
@@ -180,6 +199,7 @@ export const QaFindingOrdinal = S.String.check(
  * console.log(S.is(QaFindingId)("R3-01")) // true
  * console.log(S.is(QaFindingId)("R3-1")) // false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -193,7 +213,8 @@ export const QaFindingId = S.TemplateLiteral(["R", RoundNumber, "-", QaFindingOr
 /**
  * Identifier of one vision-judge finding.
  *
- * @example
+ * **Example** (Make branded finding id)
+ *
  * ```ts
  * import { QaFindingId } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import type { QaFindingId as QaFindingIdValue } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
@@ -201,6 +222,7 @@ export const QaFindingId = S.TemplateLiteral(["R", RoundNumber, "-", QaFindingOr
  * const id: QaFindingIdValue = QaFindingId.make("R2-04")
  * console.log(id)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -209,10 +231,13 @@ export type QaFindingId = typeof QaFindingId.Type;
 /**
  * One artifact a finding points at, with the witness events it correlates to.
  *
+ * **Details**
+ *
  * `path` is round-relative so an inventory stays valid when the round
  * directory moves into a goal packet's `history/`.
  *
- * @example
+ * **Example** (Construct evidence reference)
+ *
  * ```ts
  * import { QaEvidenceRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
@@ -223,6 +248,7 @@ export type QaFindingId = typeof QaFindingId.Type;
  * })
  * console.log(evidence.path)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -258,13 +284,15 @@ export class QaEvidenceRef extends S.Class<QaEvidenceRef>($I`QaEvidenceRef`)(
 /**
  * The judge run that produced an inventory.
  *
- * @example
+ * **Example** (Construct judge reference)
+ *
  * ```ts
  * import { QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * const judge = QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" })
  * console.log(judge.model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -289,7 +317,8 @@ export class QaJudgeRef extends S.Class<QaJudgeRef>($I`QaJudgeRef`)(
 /**
  * One vision-judge finding with its evidence, reproduction, and fix.
  *
- * @example
+ * **Example** (Construct a full finding)
+ *
  * ```ts
  * import { QaEvidenceRef, QaFinding, QaFindingId } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import * as O from "effect/Option"
@@ -308,6 +337,7 @@ export class QaJudgeRef extends S.Class<QaJudgeRef>($I`QaJudgeRef`)(
  * })
  * console.log(finding.severity)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -363,15 +393,17 @@ export class QaFinding extends S.Class<QaFinding>($I`QaFinding`)(
 /**
  * Whether a finding counts toward the required (blocking) total.
  *
- * @param severity - Severity to classify.
- * @returns True for P0 and P1, false for P2.
- * @example
+ * **Example** (Classify required severities)
+ *
  * ```ts
  * import { isRequiredSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(isRequiredSeverity("P1")) // true
  * console.log(isRequiredSeverity("P2")) // false
  * ```
+ *
+ * @param severity - Severity to classify.
+ * @returns True for P0 and P1, false for P2.
  * @category predicates
  * @since 0.0.0
  */
@@ -385,14 +417,16 @@ export const isRequiredSeverity = (severity: QaSeverity): boolean =>
 /**
  * Count the findings that block the QA loop from closing.
  *
- * @param findings - Findings to count, in any order.
- * @returns How many findings carry a required severity.
- * @example
+ * **Example** (Count empty findings list)
+ *
  * ```ts
  * import { requiredFindingCount } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(requiredFindingCount([])) // 0
  * ```
+ *
+ * @param findings - Findings to count, in any order.
+ * @returns How many findings carry a required severity.
  * @category utilities
  * @since 0.0.0
  */
@@ -415,7 +449,8 @@ const RequiredCountCoherenceCheck = S.makeFilter(
 /**
  * Schema-validated vision-judge inventory for one QA round.
  *
- * @example
+ * **Example** (Construct empty inventory)
+ *
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
@@ -429,6 +464,7 @@ const RequiredCountCoherenceCheck = S.makeFilter(
  * })
  * console.log(inventory.requiredCount) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -480,13 +516,15 @@ export class QaInventory extends S.Class<QaInventory>($I`QaInventory`)(
 /**
  * Decode an unknown value into a {@link QaInventory}.
  *
- * @example
+ * **Example** (Decode unknown as inventory)
+ *
  * ```ts
  * import { decodeQaInventory } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(decodeQaInventory({}))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -495,7 +533,8 @@ export const decodeQaInventory = S.decodeUnknownEffect(QaInventory);
 /**
  * Encode a {@link QaInventory} back to its JSON-ready shape.
  *
- * @example
+ * **Example** (Encode inventory as effect)
+ *
  * ```ts
  * import { encodeQaInventory, QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { Effect } from "effect"
@@ -510,6 +549,7 @@ export const decodeQaInventory = S.decodeUnknownEffect(QaInventory);
  * })
  * console.log(Effect.isEffect(encodeQaInventory(inventory))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

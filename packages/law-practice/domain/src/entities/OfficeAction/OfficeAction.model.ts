@@ -15,10 +15,13 @@ const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model
 /**
  * USPTO office action entity for a patent asset under examination.
  *
+ * **Details**
+ *
  * Links the action to the prosecuting matter and patent asset fixture while
  * carrying the application number extracted from the action.
  *
- * @example
+ * **Example** (Decode OfficeAction entity)
+ *
  * ```ts
  * import { OfficeAction } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

@@ -45,10 +45,13 @@ class ChunkBySentencesSuccess extends S.Class<ChunkBySentencesSuccess>($I`ChunkB
  * Defines the agent-facing tool contract for splitting text into chunks that
  * preserve sentence boundaries.
  *
+ * **Details**
+ *
  * Use this tool for retrieval, summarization, or prompt-packing workflows that
  * need bounded chunks without cutting through detected sentences.
  *
- * @example
+ * **Example** (Decode parameters schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ChunkBySentences } from "@beep/nlp-processing/Tools/ChunkBySentences"

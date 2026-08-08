@@ -106,13 +106,15 @@ const getCandidateComments = (sourceCode: SourceCode, node: Rule.Node): Readonly
 /**
  * Custom ESLint rule that requires exported symbols to include an `@category` tag.
  *
- * @example
+ * **Example** (Inspect recommended docs flag)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { requireCategoryTagRule } from "@beep/repo-configs/eslint/RequireCategoryTagRule"
  *
  * strictEqual(requireCategoryTagRule.meta?.docs?.recommended, false)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

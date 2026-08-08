@@ -27,7 +27,8 @@ const defaultIsDeprecated = (): boolean => false;
  * Complete metadata for a single JSDoc/TSDoc tag.
  * Designed as a discriminated union member via `_tag`.
  *
- * @example
+ * **Example** (Make param tag definition)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { JSDocTagDefinition } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
@@ -55,6 +56,7 @@ const defaultIsDeprecated = (): boolean => false;
  * })
  * console.log(definition._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,7 +129,8 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
 /**
  * JSDoc model export.
  *
- * @example
+ * **Example** (Encode param tag definition)
+ *
  * ```ts
  * import { JSDocTagDefinition } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -151,6 +154,7 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
  * }
  * console.log(encoded._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -182,8 +186,8 @@ export declare namespace JSDocTagDefinition {
 /**
  * Asserts that a value matches the encoded JSDoc tag definition shape.
  *
- * @param input - Encoded JSDoc tag definition candidate to refine.
- * @example
+ * **Example** (Assert encoded tag shape)
+ *
  * ```ts
  * import { JSDocTagDefinition, assertJsDoc } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -208,6 +212,8 @@ export declare namespace JSDocTagDefinition {
  * assertJsDoc(encoded)
  * console.log(encoded._tag)
  * ```
+ *
+ * @param input - Encoded JSDoc tag definition candidate to refine.
  * @category models
  * @since 0.0.0
  */
@@ -220,10 +226,8 @@ export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: 
 /**
  * Builds a JSDoc tag definition schema for a concrete tag payload.
  *
- * @param _tag - Canonical tag discriminator.
- * @param meta - Tag metadata payload without the discriminator.
- * @returns Specialized schema for the provided tag metadata payload.
- * @example
+ * **Example** (Build param tag schema)
+ *
  * ```ts
  * import { JSDocTagDefinition, make } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -247,6 +251,10 @@ export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: 
  * const tagSchema = make("param", meta)
  * console.log(tagSchema.ast.annotations?.jsDocTagMetadata?._tag)
  * ```
+ *
+ * @param _tag - Canonical tag discriminator.
+ * @param meta - Tag metadata payload without the discriminator.
+ * @returns Specialized schema for the provided tag metadata payload.
  * @category models
  * @since 0.0.0
  */

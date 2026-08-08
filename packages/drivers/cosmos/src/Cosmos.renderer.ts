@@ -295,7 +295,8 @@ const makeFpsSampler = (): FpsSampler => {
 /**
  * Mounted graph renderer handle.
  *
- * @example
+ * **Example** (Construct a render handle)
+ *
  * ```ts
  * import { type CosmosRenderHandle } from "@beep/cosmos"
  *
@@ -545,11 +546,13 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 /**
  * Renders a graph projection with the selected runtime backend.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The returned handle owns a frame sampler and renderer resources. Call
  * `destroy` when the host unmounts the graph.
  *
- * @example
+ * **Example** (Render graph and extract backend)
+ *
  * ```ts
  * import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos"
  * import { Effect } from "effect"
@@ -569,7 +572,6 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
  * ```
  *
  * @effects Mounts a browser graph renderer and starts a request-animation-frame sampler.
- *
  * @category adapters
  * @since 0.0.0
  */

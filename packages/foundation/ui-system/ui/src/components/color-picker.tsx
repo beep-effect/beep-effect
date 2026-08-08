@@ -25,7 +25,8 @@ const defaultColorValue = "#000000";
 /**
  * Normalizes a boundary hex color into canonical `#rrggbb` form.
  *
- * @example
+ * **Example** (Short hex to canonical)
+ *
  * ```tsx
  * import * as O from "effect/Option"
  * import { normalizeHexColorInput } from "@beep/ui/components/color-picker"
@@ -43,7 +44,8 @@ const normalizeHexColorInputOrUndefined = flow(normalizeHexColorInput, O.getOrUn
 /**
  * Props for a hex color input that can run controlled or uncontrolled.
  *
- * @example
+ * **Example** (Controlled props shape)
+ *
  * ```tsx
  * import type { ColorPickerProps } from "@beep/ui/components/color-picker"
  *
@@ -85,11 +87,13 @@ const ColorPickerScope = makeScopedAtom((defaultValue: string) =>
 /**
  * Popover hex color picker with a text input fallback.
  *
- * @remarks
+ * **Details**
+ *
  * Pass `value` with `onValueChange` for controlled usage. Without `value`,
  * `defaultValue` seeds the scoped picker state.
  *
- * @example
+ * **Example** (Uncontrolled default value)
+ *
  * ```tsx
  * import { ColorPicker } from "@beep/ui/components/color-picker"
  *

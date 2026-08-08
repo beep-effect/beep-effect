@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for X-Download-Options schemas.
  *
- * @example
+ * **Example** (Import NoOpen and check Header)
+ *
  * ```ts
  * import * as NoOpen from "@beep/schema/NoOpen"
  *

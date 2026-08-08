@@ -12,7 +12,8 @@ import { cn } from "@beep/ui/lib/utils";
 /**
  * Provider that supplies tooltip timing defaults.
  *
- * @example
+ * **Example** (Provider with custom delay)
+ *
  * ```tsx
  * import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/ui/components/ui/tooltip"
  *
@@ -38,7 +39,8 @@ function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Prop
 /**
  * Tooltip root that coordinates trigger and popup state.
  *
- * @example
+ * **Example** (Icon trigger tooltip)
+ *
  * ```tsx
  * import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/ui/tooltip"
  *
@@ -62,7 +64,8 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
 /**
  * Element that opens the tooltip when focused or hovered.
  *
- * @example
+ * **Example** (Button trigger tooltip)
+ *
  * ```tsx
  * import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/ui/tooltip"
  *
@@ -86,7 +89,8 @@ function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
 /**
  * Positioned tooltip popup with an arrow.
  *
- * @example
+ * **Example** (Bottom side tooltip)
+ *
  * ```tsx
  * import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/ui/tooltip"
  *

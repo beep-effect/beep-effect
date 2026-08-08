@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab domain role.
  *
- * @example
+ * **Example** (Assert expected package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-domain"
  *

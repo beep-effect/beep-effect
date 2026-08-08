@@ -1,12 +1,14 @@
 /**
  * CourtListener driver package boundary.
  *
- * @remarks
+ * **Details**
+ *
  * The current public surface exposes package metadata only. CourtListener API
  * schemas and services should be documented on their owning modules before
  * they are re-exported here.
  *
- * @example
+ * **Example** (Build package version label)
+ *
  * ```ts
  * import { VERSION } from "@beep/courtlistener"
  *
@@ -21,11 +23,13 @@
 /**
  * Package version for the CourtListener driver package.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the package release marker, not a CourtListener REST API version.
  * Model upstream API versions separately when endpoint modules are added.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/courtlistener"
  *

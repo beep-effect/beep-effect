@@ -11,7 +11,8 @@ import * as P from "effect/Predicate";
 /**
  * Dual data-first/data-last mapper for converting an effect's error channel.
  *
- * @example
+ * **Example** (Map effect error to class)
+ *
  * ```ts
  * import { Err } from "@beep/utils";
  * import { Effect } from "effect";
@@ -57,11 +58,13 @@ const isErrorBuilderFromInput = <Input, Error>(
 /**
  * Builds a dual mapper that preserves the original failure as constructor input.
  *
- * @remarks
+ * **Details**
+ *
  * Use this when the target error shape has a `cause` field or equivalent
  * provenance slot and should retain the original error-channel value.
  *
- * @example
+ * **Example** (Preserve original failure as cause)
+ *
  * ```ts
  * import { Err } from "@beep/utils";
  * import { Effect, pipe } from "effect";
@@ -107,7 +110,8 @@ export const mapCauseError = <Error, Args extends Array<unknown>>(
 /**
  * Builds a dual mapper that replaces the original failure with a target error.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Static builders receive only the mapper arguments and intentionally discard
  * the original failure. Curried builders may return a function that receives
  * the original failure, which lets dual constructors consume the source
@@ -115,7 +119,8 @@ export const mapCauseError = <Error, Args extends Array<unknown>>(
  * are treated as curried builders, so wrap function errors in an object before
  * returning them from `build`.
  *
- * @example
+ * **Example** (Replace failure with target error)
+ *
  * ```ts
  * import { Err } from "@beep/utils";
  * import { Effect, pipe } from "effect";

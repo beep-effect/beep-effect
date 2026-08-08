@@ -15,15 +15,16 @@ const $I = $LawPracticeDomainId.create("values/RegulationCitation/RegulationCita
 /**
  * Regulation citation (CFR + state regulatory codes).
  *
+ * **Details**
+ *
  * Distinct from `StatuteCitation` because regulations are issued by executive
  * agencies, not enacted by a legislature (#637). The shape mirrors
  * `StatuteCitation`: it spreads the shared {@link CitationBase} fields, adds the
  * literal `regulation` discriminant, and carries the parsed title, code,
  * section, and edition components plus optional {@link StatuteComponentSpan}s.
  *
- * **Example**
+ * **Example** (Make a regulation citation)
  *
- * @example
  * ```ts
  * import { RegulationCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -164,7 +165,8 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
 /**
  * Companion namespace for `RegulationCitation`.
  *
- * @example
+ * **Example** (Alias the Encoded type)
+ *
  * ```ts
  * import type { RegulationCitation } from "@beep/law-practice-domain"
  *
@@ -178,9 +180,8 @@ export declare namespace RegulationCitation {
   /**
    * Wire-encoded representation of a decoded {@link RegulationCitation}.
    *
-   * **Example**
+   * **Example** (Reference Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { RegulationCitation } from "@beep/law-practice-domain"
    *

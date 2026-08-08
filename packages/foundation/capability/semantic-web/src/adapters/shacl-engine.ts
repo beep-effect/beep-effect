@@ -43,7 +43,8 @@ const focusNodeValue = (subject: Subject): string =>
 /**
  * Bounded SHACL-inspired validation service live layer.
  *
- * @example
+ * **Example** (Validate empty dataset)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -209,7 +210,8 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
 /**
  * Backward-compatible alias for the bounded v1 SHACL adapter.
  *
- * @example
+ * **Example** (Validate with alias layer)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

@@ -25,7 +25,8 @@ const $I = $ExiftoolId.create("ExiftoolConfig");
 /**
  * Canonical XMP namespace URI for beep QA provenance.
  *
- * @example
+ * **Example** (Log XMP namespace URI)
+ *
  * ```ts
  * import { BEEP_QA_XMP_NAMESPACE_URI } from "@beep/exiftool"
  *
@@ -40,7 +41,8 @@ export const BEEP_QA_XMP_NAMESPACE_URI = "https://ns.beep.sh/qa/1.0/";
 /**
  * XMP namespace prefix registered by the rendered exiftool config.
  *
- * @example
+ * **Example** (Log XMP namespace prefix)
+ *
  * ```ts
  * import { BEEP_QA_XMP_NAMESPACE_PREFIX } from "@beep/exiftool"
  *
@@ -56,7 +58,8 @@ export const BEEP_QA_XMP_NAMESPACE_PREFIX = "beepQA";
  * Family-1 group name exiftool uses for beep QA tags in `-G1` output and
  * group-qualified tag assignments.
  *
- * @example
+ * **Example** (Log XMP group name)
+ *
  * ```ts
  * import { BEEP_QA_XMP_GROUP } from "@beep/exiftool"
  *
@@ -71,7 +74,8 @@ export const BEEP_QA_XMP_GROUP = `XMP-${BEEP_QA_XMP_NAMESPACE_PREFIX}`;
 /**
  * Tag names declared inside the XMP-beepQA namespace.
  *
- * @example
+ * **Example** (Access Options tag name)
+ *
  * ```ts
  * import { BeepQaTagName } from "@beep/exiftool"
  *
@@ -99,7 +103,8 @@ export const BeepQaTagName = LiteralKit([
 /**
  * Tag names declared inside the XMP-beepQA namespace.
  *
- * @example
+ * **Example** (Annotate sessionId tag name)
+ *
  * ```ts
  * import type { BeepQaTagName } from "@beep/exiftool"
  *
@@ -115,7 +120,8 @@ export type BeepQaTagName = typeof BeepQaTagName.Type;
 /**
  * XMP namespace prefix usable as a bare Perl identifier in the rendered config.
  *
- * @example
+ * **Example** (Decode beepQA namespace prefix)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpNamespacePrefix } from "@beep/exiftool"
@@ -144,7 +150,8 @@ export const XmpNamespacePrefix = S.String.check(
 /**
  * XMP namespace prefix usable as a bare Perl identifier in the rendered config.
  *
- * @example
+ * **Example** (Type-annotate decoded prefix)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpNamespacePrefix } from "@beep/exiftool"
@@ -161,7 +168,8 @@ export type XmpNamespacePrefix = typeof XmpNamespacePrefix.Type;
 /**
  * XMP property name usable as a bare Perl hash key in the rendered config.
  *
- * @example
+ * **Example** (Decode sessionId property name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpPropertyName } from "@beep/exiftool"
@@ -190,7 +198,8 @@ export const XmpPropertyName = S.String.check(
 /**
  * XMP property name usable as a bare Perl hash key in the rendered config.
  *
- * @example
+ * **Example** (Type-annotate decoded property)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpPropertyName } from "@beep/exiftool"
@@ -207,7 +216,8 @@ export type XmpPropertyName = typeof XmpPropertyName.Type;
 /**
  * XMP namespace URI safe to inline inside a single-quoted Perl string.
  *
- * @example
+ * **Example** (Decode XMP namespace URI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpNamespaceUri } from "@beep/exiftool"
@@ -236,7 +246,8 @@ export const XmpNamespaceUri = S.String.check(
 /**
  * XMP namespace URI safe to inline inside a single-quoted Perl string.
  *
- * @example
+ * **Example** (Type-annotate decoded URI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { XmpNamespaceUri } from "@beep/exiftool"
@@ -253,7 +264,8 @@ export type XmpNamespaceUri = typeof XmpNamespaceUri.Type;
 /**
  * Options for rendering the exiftool user-defined XMP namespace config.
  *
- * @example
+ * **Example** (Make empty render options)
+ *
  * ```ts
  * import { RenderBeepQaConfigOptions } from "@beep/exiftool"
  *
@@ -302,7 +314,8 @@ const RenderBeepQaExiftoolConfig = Fn({
 /**
  * Render the Perl `-config` source declaring the XMP-beepQA namespace.
  *
- * @example
+ * **Example** (Render beep QA config)
+ *
  * ```ts
  * import { RenderBeepQaConfigOptions, renderBeepQaExiftoolConfig } from "@beep/exiftool"
  *
@@ -351,10 +364,13 @@ const qualifiedTagName = (name: BeepQaTagName): string => `${BEEP_QA_XMP_GROUP}:
 /**
  * Group-qualified `-j -G1` JSON key a beep QA tag reads back under.
  *
+ * **Details**
+ *
  * exiftool ucfirst-capitalizes tag names in its output, so `sessionId` reads
  * back as `XMP-beepQA:SessionId` (verified against exiftool 13.55).
  *
- * @example
+ * **Example** (Build raw tag key)
+ *
  * ```ts
  * import { beepQaRawTagKey } from "@beep/exiftool"
  *
@@ -369,10 +385,13 @@ export const beepQaRawTagKey = (name: BeepQaTagName): string => `${BEEP_QA_XMP_G
 /**
  * Encode a provenance payload into ordered XMP-beepQA tag assignments.
  *
+ * **Details**
+ *
  * Required fields render first; `None` optional fields are omitted entirely,
  * and `toolVersions` is embedded as a JSON string value.
  *
- * @example
+ * **Example** (Encode provenance assignments)
+ *
  * ```ts
  * import { BeepQaProvenance, provenanceTagAssignments } from "@beep/exiftool"
  *
@@ -438,11 +457,14 @@ const rawNumberAt = (raw: Readonly<Record<string, unknown>>, name: BeepQaTagName
 /**
  * Decode a provenance payload back out of a raw `-j -G1` exiftool record.
  *
+ * **Details**
+ *
  * Reads the ucfirst-capitalized `XMP-beepQA:*` keys exiftool emits (numeric
  * values tolerated as JSON numbers or text) and returns `None` when any
  * required field is missing.
  *
- * @example
+ * **Example** (Decode provenance from tags)
+ *
  * ```ts
  * import { provenanceFromRawTags } from "@beep/exiftool"
  *

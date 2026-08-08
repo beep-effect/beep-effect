@@ -17,11 +17,13 @@ const $I = $GovinfoId.create("domain/contracts/Search/Search.contract");
 /**
  * Request body accepted by the GovInfo search endpoint.
  *
- * @remarks
+ * **Details**
+ *
  * GovInfo search is a POST endpoint. `offsetMark` normally starts as `"*"`
  * and the API returns the next cursor in response pagination links.
  *
- * @example
+ * **Example** (Decode search request payload)
+ *
  * ```ts
  * import { Payload } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -51,7 +53,8 @@ export class Payload extends SearchBody.extend<Payload>($I`Payload`)(
 /**
  * Successful GovInfo search response body.
  *
- * @example
+ * **Example** (Decode search success body)
+ *
  * ```ts
  * import { Success } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -92,7 +95,8 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
 /**
  * Bad-request failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode bad-request failure)
+ *
  * ```ts
  * import { FailureBadRequest } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -121,7 +125,8 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
 /**
  * Not-found failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode not-found failure)
+ *
  * ```ts
  * import { FailureNotFound } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -150,7 +155,8 @@ export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`Failur
 /**
  * Internal-server-error failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode internal server failure)
+ *
  * ```ts
  * import { FailureInternalServerError } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -181,7 +187,8 @@ export class FailureInternalServerError extends TaggedErrorClass<FailureInternal
 /**
  * Tagged union of GovInfo search endpoint failures.
  *
- * @example
+ * **Example** (Guard Failure union membership)
+ *
  * ```ts
  * import { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -206,7 +213,8 @@ export const Failure = S.Union([
 /**
  * Type for {@link Failure}.
  *
- * @example
+ * **Example** (Annotate Failure tag type)
+ *
  * ```ts
  * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -222,7 +230,8 @@ export type Failure = typeof Failure.Type;
 /**
  * Companion namespace for {@link Failure}.
  *
- * @example
+ * **Example** (Assign Failure tag literal)
+ *
  * ```ts
  * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -237,7 +246,8 @@ export declare namespace Failure {
   /**
    * Encoded type for {@link Failure}.
    *
-   * @example
+   * **Example** (Annotate encoded Failure tag)
+   *
    * ```ts
    * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
    *

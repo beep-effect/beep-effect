@@ -40,7 +40,8 @@ const commandContextFields = {
 /**
  * Failure to start the OpenClaw executable.
  *
- * @example
+ * **Example** (Create command spawn error)
+ *
  * ```ts
  * import { OpenclawCommandSpawnError } from "@beep/openclaw/Openclaw.errors"
  *
@@ -81,12 +82,15 @@ export class OpenclawCommandSpawnError extends TaggedErrorClass<OpenclawCommandS
 /**
  * Nonzero process exit with redacted output lengths.
  *
+ * **Details**
+ *
  * Lengths are always recorded; trimmed capped diagnostics are attached only
  * for operations declared secret-free (validate, version, doctor). Token-
  * bearing operations such as secrets reload and gateway health carry lengths
  * only.
  *
- * @example
+ * **Example** (Create command exit error)
+ *
  * ```ts
  * import { OpenclawCommandExitError } from "@beep/openclaw/Openclaw.errors"
  *
@@ -132,7 +136,8 @@ export class OpenclawCommandExitError extends TaggedErrorClass<OpenclawCommandEx
 /**
  * Process timeout with the configured duration in milliseconds.
  *
- * @example
+ * **Example** (Create command timeout error)
+ *
  * ```ts
  * import { OpenclawCommandTimeoutError } from "@beep/openclaw/Openclaw.errors"
  *
@@ -169,10 +174,13 @@ export class OpenclawCommandTimeoutError extends TaggedErrorClass<OpenclawComman
 /**
  * Failure to decode a process's stdout into its expected model.
  *
+ * **Details**
+ *
  * Carries the stdout length and the schema issue — never the raw stdout,
  * which may belong to a token-bearing call.
  *
- * @example
+ * **Example** (Create output parse error)
+ *
  * ```ts
  * import { OpenclawOutputParseError } from "@beep/openclaw/Openclaw.errors"
  *
@@ -211,7 +219,8 @@ export class OpenclawOutputParseError extends TaggedErrorClass<OpenclawOutputPar
 /**
  * Union of failures emitted while executing an OpenClaw driver command.
  *
- * @example
+ * **Example** (Check CliError schema membership)
+ *
  * ```ts
  * import { OpenclawCliError, OpenclawCommandTimeoutError } from "@beep/openclaw/Openclaw.errors"
  * import * as S from "effect/Schema"
@@ -242,7 +251,8 @@ export const OpenclawCliError = S.Union([
 /**
  * Runtime type for {@link OpenclawCliError}.
  *
- * @example
+ * **Example** (Type annotate CliError value)
+ *
  * ```ts
  * import type { OpenclawCliError } from "@beep/openclaw/Openclaw.errors"
  * import { OpenclawCommandTimeoutError } from "@beep/openclaw/Openclaw.errors"

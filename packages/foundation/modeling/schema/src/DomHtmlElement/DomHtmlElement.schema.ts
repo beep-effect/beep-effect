@@ -12,22 +12,24 @@ const $I = $SchemaId.create("DomHtmlElement");
 /**
  * Type guard for HTMLElement.
  *
- * @example
+ * **Example** (Guard HTMLElement instance)
+ *
  * ```ts
  * import { isHTMLElement } from "@beep/schema/DomHtmlElement"
  *
  * console.log(isHTMLElement(document.createElement("div")))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isHTMLElement = (u: unknown): u is HTMLElement => u instanceof HTMLElement;
 
 /**
  * An HTMLElement.
  *
- * @example
+ * **Example** (Decode HTMLElement with schema)
+ *
  * ```ts
  * import { DOMHtmlElement } from "@beep/schema/DomHtmlElement"
  * import * as S from "effect/Schema"
@@ -36,8 +38,8 @@ export const isHTMLElement = (u: unknown): u is HTMLElement => u instanceof HTML
  * console.log(element.tagName)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMHtmlElement = S.declare(isHTMLElement).pipe(
   $I.annoteSchema("DOMHtmlElement", {
@@ -48,7 +50,8 @@ export const DOMHtmlElement = S.declare(isHTMLElement).pipe(
 /**
  * Type for {@link DOMHtmlElement}.
  *
- * @example
+ * **Example** (Typed DOMHtmlElement decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DOMHtmlElement } from "@beep/schema/DomHtmlElement"
@@ -57,8 +60,8 @@ export const DOMHtmlElement = S.declare(isHTMLElement).pipe(
  * console.log(element.tagName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DOMHtmlElement = typeof DOMHtmlElement.Type;
 

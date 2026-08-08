@@ -54,7 +54,8 @@ const optional = <A, I, R>(schema: S.Codec<A, I, R>) =>
 /**
  * Optional filters accepted by the eCFR corrections listing endpoint.
  *
- * @example
+ * **Example** (Make params with title filter)
+ *
  * ```ts
  * import { EcfrCorrectionsParams } from "@beep/ecfr"
  * import * as O from "effect/Option"
@@ -80,7 +81,8 @@ export class EcfrCorrectionsParams extends S.Class<EcfrCorrectionsParams>($I`Ecf
 /**
  * Path parameters identifying one CFR title.
  *
- * @example
+ * **Example** (Make title path params)
+ *
  * ```ts
  * import { EcfrTitleParams } from "@beep/ecfr"
  *
@@ -99,7 +101,8 @@ export class EcfrTitleParams extends S.Class<EcfrTitleParams>($I`EcfrTitleParams
 /**
  * Filters and page controls shared by the eCFR search family.
  *
- * @example
+ * **Example** (Make search params with pagination)
+ *
  * ```ts
  * import { EcfrSearchParams } from "@beep/ecfr"
  * import { NonNegativeInt } from "@beep/schema"
@@ -138,7 +141,8 @@ export class EcfrSearchParams extends S.Class<EcfrSearchParams>($I`EcfrSearchPar
 /**
  * Path and optional hierarchy parameters for dated eCFR versioner requests.
  *
- * @example
+ * **Example** (Make versioner params with hierarchy)
+ *
  * ```ts
  * import { EcfrVersionerParams } from "@beep/ecfr"
  * import * as O from "effect/Option"
@@ -172,7 +176,8 @@ export class EcfrVersionerParams extends S.Class<EcfrVersionerParams>($I`EcfrVer
  * hierarchy selectors (the official structure endpoint takes only `date` and
  * `title`).
  *
- * @example
+ * **Example** (Make dated title path params)
+ *
  * ```ts
  * import { EcfrDatedTitleParams } from "@beep/ecfr"
  *
@@ -196,7 +201,8 @@ export class EcfrDatedTitleParams extends S.Class<EcfrDatedTitleParams>($I`EcfrD
 /**
  * Filters for listing dated content versions within one CFR title.
  *
- * @example
+ * **Example** (Make versions params with date filter)
+ *
  * ```ts
  * import { EcfrVersionsParams } from "@beep/ecfr"
  * import * as O from "effect/Option"
@@ -231,7 +237,8 @@ export class EcfrVersionsParams extends S.Class<EcfrVersionsParams>($I`EcfrVersi
 /**
  * Public service shape for the keyless eCFR driver.
  *
- * @example
+ * **Example** (Stub listTitles on EcfrShape)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { EcfrShape } from "@beep/ecfr"
@@ -554,7 +561,8 @@ const makeFromEnvironment = Effect.fnUntraced(function* () {
 /**
  * Effect service for the keyless eCFR versioner API.
  *
- * @example
+ * **Example** (Access Ecfr via Effect.gen)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Ecfr } from "@beep/ecfr"

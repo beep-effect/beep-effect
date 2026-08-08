@@ -32,13 +32,15 @@ type BoundFieldProps<TValue> = FieldChromeProps & {
 /**
  * Reads TanStack field state and normalizes errors for bound field controls.
  *
- * @remarks
+ * **Gotchas**
+ *
  * TanStack owns the field value, blur/change handlers, and validation meta.
  * This hook only derives the `FieldError` shape and `aria-invalid` boolean
  * used by `@beep/ui` controls, so it must run inside a registered field
  * component context.
  *
- * @example
+ * **Example** (Bound username input)
+ *
  * ```tsx
  * import { useBoundField } from "../../src/internal/FieldBinding.tsx"
  *
@@ -74,7 +76,8 @@ export const useBoundField = <TValue,>() => {
 /**
  * Type returned by {@link useBoundField}.
  *
- * @example
+ * **Example** (Snapshot field state)
+ *
  * ```ts
  * import type { BoundFieldState } from "../../src/internal/FieldBinding.tsx"
  *
@@ -95,12 +98,14 @@ export type BoundFieldState<TValue> = ReturnType<typeof useBoundField<TValue>>;
 /**
  * Renders shared field chrome around a control bound to TanStack field state.
  *
- * @remarks
+ * **Details**
+ *
  * The child render function receives the live TanStack field API. `BoundField`
  * supplies label, description, and normalized errors around that child but does
  * not store a separate copy of the field value.
  *
- * @example
+ * **Example** (Search field render child)
+ *
  * ```tsx
  * import { BoundField } from "../../src/internal/FieldBinding.tsx"
  *
@@ -145,12 +150,14 @@ type CreateBoundFieldOptions<TValue, TProps extends FieldChromeProps, TBoundProp
 /**
  * Creates a field component by binding a primitive control to TanStack state.
  *
- * @remarks
+ * **Details**
+ *
  * `bindControl` is the only place where TanStack field state becomes primitive
  * control props. The returned component still leaves value ownership with
  * TanStack and forwards non-chrome props to the primitive.
  *
- * @example
+ * **Example** (Create bound search field)
+ *
  * ```tsx
  * import type React from "react"
  * import { createBoundField } from "../../src/internal/FieldBinding.tsx"
@@ -231,7 +238,8 @@ type NamedValueControlProps<TValue> = {
 /**
  * Binds controls that expose `value` and `onValueChange`.
  *
- * @example
+ * **Example** (Token field binding)
+ *
  * ```tsx
  * import type React from "react"
  * import { bindNamedValueControl, createBoundField } from "../../src/internal/FieldBinding.tsx"
@@ -296,7 +304,8 @@ type NamedChangeControlProps<TValue> = {
 /**
  * Binds native string controls that report `ChangeEvent` values.
  *
- * @example
+ * **Example** (Notes textarea binding)
+ *
  * ```tsx
  * import type React from "react"
  * import { bindStringChangeControl, createBoundField } from "../../src/internal/FieldBinding.tsx"
@@ -358,7 +367,8 @@ type UploadControlProps = {
 /**
  * Binds upload primitives to file-array field values.
  *
- * @example
+ * **Example** (Documents upload field)
+ *
  * ```tsx
  * import type React from "react"
  * import { bindUploadControl, createBoundField } from "../../src/internal/FieldBinding.tsx"
@@ -458,7 +468,8 @@ const pickerTextFieldProps = (
 /**
  * Creates a date/time picker field component bound to DateTime values.
  *
- * @remarks
+ * **Details**
+ *
  * Picker primitives usually own popup/navigation state, while TanStack owns the
  * selected `DateTime | null` value. This factory injects the value handler and
  * text-field error props without taking over the picker popup.
@@ -468,7 +479,8 @@ const pickerTextFieldProps = (
  * `DateTime.DateTime | null` values and decodes `DateTimeUtcFromValid`
  * compatible encoded defaults before they enter the picker.
  *
- * @example
+ * **Example** (Reminder picker field)
+ *
  * ```tsx
  * import type React from "react"
  * import { createDateTimePickerField } from "../../src/internal/FieldBinding.tsx"
@@ -540,7 +552,8 @@ type InlineBooleanFieldProps = FieldChromeProps & {
 /**
  * Renders compact chrome for inline boolean controls.
  *
- * @example
+ * **Example** (Accept terms checkbox)
+ *
  * ```tsx
  * import { InlineBooleanField } from "../../src/internal/FieldBinding.tsx"
  *
@@ -595,7 +608,8 @@ type MultiBooleanOptionFieldProps = FieldChromeProps & {
 /**
  * Renders a multi-option boolean field such as checkbox or switch groups.
  *
- * @example
+ * **Example** (Notification channels options)
+ *
  * ```tsx
  * import type React from "react"
  * import { MultiBooleanOptionField } from "../../src/internal/FieldBinding.tsx"

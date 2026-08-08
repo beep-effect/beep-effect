@@ -12,11 +12,14 @@ import { EntityTable } from "@beep/drizzle";
 /**
  * Drizzle table projection for agents ProviderInstance entities.
  *
+ * **Details**
+ *
  * The projected row carries instance metadata (label, kind, binary/HOME
  * paths, token-safe env vars) and the latest auth-probe snapshot — never
  * provider tokens.
  *
- * @example
+ * **Example** (Validate table projection shape)
+ *
  * ```ts
  * import { providerInstanceTable } from "@beep/agents-tables/entities/ProviderInstance"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -39,7 +42,8 @@ export const providerInstanceTable = EntityTable.pgTableFrom(DomainProviderInsta
  * Physical Postgres table name derived from the ProviderInstance entity
  * definition.
  *
- * @example
+ * **Example** (Validate physical table name)
+ *
  * ```ts
  * import { PROVIDER_INSTANCE_TABLE_NAME } from "@beep/agents-tables/entities/ProviderInstance"
  *

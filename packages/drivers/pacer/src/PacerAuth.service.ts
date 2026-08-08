@@ -117,7 +117,8 @@ const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuth
 /**
  * PACER Authentication service: raw `login` / `logout` over an HTTP client.
  *
- * @example
+ * **Example** (Make mock layer with auth)
+ *
  * ```ts
  * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
  *
@@ -154,7 +155,8 @@ interface PacerSessionShape {
  * A scoped authenticated session: logs in on layer acquire, exposes the token
  * via a {@link Ref}, and logs out on layer release.
  *
- * @example
+ * **Example** (Make mock layer with session)
+ *
  * ```ts
  * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
  *

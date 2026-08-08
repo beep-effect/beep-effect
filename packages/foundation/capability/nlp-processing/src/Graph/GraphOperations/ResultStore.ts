@@ -46,13 +46,15 @@ const AnyGraphNode = S.Struct({
 /**
  * Type-erased operation result stored in the cache.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The result store is heterogeneous: one execution may cache string children
  * and the next may cache entity nodes. Values therefore cross the cache
  * boundary as `unknown`; callers should decode with their operation's schema
  * before treating cached payloads as a concrete node type.
  *
- * @example
+ * **Example** (Schema-guard cached results)
+ *
  * ```ts
  * import { AnyOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import * as S from "effect/Schema"
@@ -61,8 +63,8 @@ const AnyGraphNode = S.Struct({
  * console.log(isCachedResult)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class AnyOperationResult extends S.Class<AnyOperationResult>($I`AnyOperationResult`)(
   {
@@ -85,12 +87,14 @@ export class AnyOperationResult extends S.Class<AnyOperationResult>($I`AnyOperat
 /**
  * Cache key pairing the operation name with the source node id.
  *
- * @remarks
+ * **Details**
+ *
  * Re-running the same operation against the same leaf can reuse a cached result.
  * Changing either the operation name or the node id creates an independent cache
  * entry, which keeps sibling operation pipelines from colliding.
  *
- * @example
+ * **Example** (Create and stringify key)
+ *
  * ```ts
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ResultKey } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
@@ -101,8 +105,8 @@ export class AnyOperationResult extends S.Class<AnyOperationResult>($I`AnyOperat
  * console.log(ResultKey.toString(key)) // "tokenize:node-example"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
   {
@@ -124,7 +128,8 @@ export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
 /**
  * Stored cache entry plus hit-count and insertion timestamp metadata.
  *
- * @example
+ * **Example** (Read stored hit count)
+ *
  * ```ts
  * import type { StoredResult } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *
@@ -132,8 +137,8 @@ export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
  * console.log(hits)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
   {
@@ -150,7 +155,8 @@ export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
 /**
  * Snapshot of the in-memory result-store cache.
  *
- * @example
+ * **Example** (Build empty cache stats)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { CacheStats } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
@@ -166,8 +172,8 @@ export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
  * console.log(emptyStats.size) // 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class CacheStats extends S.Class<CacheStats>($I`CacheStats`)(
   {
@@ -188,12 +194,14 @@ export class CacheStats extends S.Class<CacheStats>($I`CacheStats`)(
 /**
  * Structural service contract for caching graph-operation results.
  *
- * @remarks
+ * **Details**
+ *
  * `get` increments a hit counter when an entry is present. `gc` removes entries
  * older than the supplied age in milliseconds, measured from the service clock.
  * The live implementation is in-memory and starts empty for every layer build.
  *
- * @example
+ * **Example** (Check key presence helper)
+ *
  * ```ts
  * import type { ResultStoreShape } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *
@@ -203,8 +211,8 @@ export class CacheStats extends S.Class<CacheStats>($I`CacheStats`)(
  * console.log(hasCacheEntry)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface ResultStoreShape {
   readonly clear: Effect.Effect<void, StorageError>;
@@ -223,15 +231,16 @@ export interface ResultStoreShape {
 /**
  * Service tag for retrieving the result cache from an Effect environment.
  *
- * @example
+ * **Example** (Log service tag key)
+ *
  * ```ts
  * import { ResultStore } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  *
  * console.log(ResultStore.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class ResultStore extends Context.Service<ResultStore, ResultStoreShape>()($I`ResultStore`) {}
 
@@ -321,12 +330,14 @@ const makeResultStore = Effect.gen(function* () {
 /**
  * Live in-memory {@link ResultStore} layer.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This layer keeps cache state in a `Ref<HashMap>` scoped to the layer instance.
  * It is suitable for process-local reuse during a pipeline run, but it is not a
  * durable or cross-process cache.
  *
- * @example
+ * **Example** (Provide live store layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ResultStoreLive } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
@@ -342,15 +353,16 @@ const makeResultStore = Effect.gen(function* () {
  * stats.size
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const ResultStoreLive: Layer.Layer<ResultStore> = Layer.effect(ResultStore, makeResultStore);
 
 /**
  * Test {@link ResultStore} layer backed by the same empty in-memory store.
  *
- * @example
+ * **Example** (Assert empty test store)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ResultStoreTest } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
@@ -367,7 +379,7 @@ export const ResultStoreLive: Layer.Layer<ResultStore> = Layer.effect(ResultStor
  * empty
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const ResultStoreTest: Layer.Layer<ResultStore> = ResultStoreLive;

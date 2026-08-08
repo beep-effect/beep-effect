@@ -21,7 +21,8 @@ import { CaseReportList, CourtCaseSearchDto, PartyReportList, PartySearchDto, Re
  * HttpApi group for PCL synchronous search endpoints. `page` is a 0-based query
  * parameter (54 records per page).
  *
- * @example
+ * **Example** (Import PclHttpApiGroup)
+ *
  * ```ts
  * import { PclHttpApiGroup } from "@beep/pacer"
  *
@@ -60,7 +61,8 @@ export const PclHttpApiGroup = HttpApiGroup.make("pcl").add(
 /**
  * The PACER PCL HttpApi contract.
  *
- * @example
+ * **Example** (Import PclHttpApi)
+ *
  * ```ts
  * import { PclHttpApi } from "@beep/pacer"
  *

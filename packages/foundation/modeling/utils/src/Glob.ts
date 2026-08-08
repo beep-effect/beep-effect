@@ -23,7 +23,8 @@ const $I = $UtilsId.create("Glob");
 /**
  * Schema for a glob pattern: either a single string or an array of strings.
  *
- * @example
+ * **Example** (Validate pattern with schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Pattern } from "@beep/utils/Glob"
@@ -44,7 +45,8 @@ export const Pattern = S.Union([S.String, S.Array(S.String)]).pipe(
 /**
  * A glob pattern: either a single string or an array of strings.
  *
- * @example
+ * **Example** (Annotate pattern variable)
+ *
  * ```ts
  * import type { Pattern } from "@beep/utils/Glob"
  *
@@ -60,12 +62,14 @@ export type Pattern = typeof Pattern.Type;
 /**
  * Optional runtime flags for glob scans.
  *
- * @remarks
+ * **Details**
+ *
  * Omitted keys remain absent from the encoded form. At runtime they resolve to
  * relative paths, the current working directory, no dotfiles, no ignores, and
  * directory-inclusive results.
  *
- * @example
+ * **Example** (Make options with flags)
+ *
  * ```ts
  * import { GlobOptions } from "@beep/utils/Glob"
  *
@@ -123,7 +127,8 @@ const GlobErrorCause = S.Defect({ includeStack: true }).pipe(
 /**
  * Namespace for the encoded form of {@link GlobError}.
  *
- * @example
+ * **Example** (Create encoded GlobError)
+ *
  * ```ts
  * import { GlobError } from "@beep/utils/Glob"
  *
@@ -138,7 +143,8 @@ export declare namespace GlobError {
   /**
    * Encoded shape of {@link GlobError}.
    *
-   * @example
+   * **Example** (Build encoded error shape)
+   *
    * ```ts
    * import { GlobError } from "@beep/utils/Glob"
    *
@@ -158,11 +164,14 @@ export declare namespace GlobError {
 /**
  * An error raised when glob pattern matching fails.
  *
+ * **Details**
+ *
  * Carries the offending `pattern` and an optional `cause` with stack trace.
  * Accepts both the decoded `Option` cause and the encoded optional cause shape
  * for constructor compatibility.
  *
- * @example
+ * **Example** (Construct error with Option)
+ *
  * ```ts
  * import { GlobError } from "@beep/utils/Glob"
  *
@@ -213,10 +222,13 @@ const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"]
 /**
  * Service interface for performing glob-based file matching.
  *
+ * **Details**
+ *
  * Provides a single `glob` method that resolves glob patterns against the
  * file system and returns the matched paths.
  *
- * @example
+ * **Example** (Run glob via service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"
@@ -239,7 +251,8 @@ export interface Glob {
 /**
  * Service tag for the {@link Glob} capability.
  *
- * @example
+ * **Example** (Access Glob service tag)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"
@@ -513,7 +526,8 @@ const makeGlob = Effect.fn("Glob.glob")(function* (
  * Live `Layer` providing the {@link Glob} service backed by `Bun.Glob` when
  * available and a recursive Node filesystem scan with `picomatch` otherwise.
  *
- * @example
+ * **Example** (Provide Glob Effect layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Glob, layer } from "@beep/utils/Glob"

@@ -12,7 +12,8 @@ import type * as React from "react";
 /**
  * Table component.
  *
- * @example
+ * **Example** (Import Table component)
+ *
  * ```tsx
  * import { Table } from "@beep/ui/components/table"
  *
@@ -33,7 +34,8 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
 /**
  * Table header component.
  *
- * @example
+ * **Example** (Import TableHeader component)
+ *
  * ```tsx
  * import { TableHeader } from "@beep/ui/components/table"
  *
@@ -50,7 +52,8 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
 /**
  * Table body component.
  *
- * @example
+ * **Example** (Import TableBody component)
+ *
  * ```tsx
  * import { TableBody } from "@beep/ui/components/table"
  *
@@ -67,7 +70,8 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
 /**
  * Table footer component.
  *
- * @example
+ * **Example** (Import TableFooter component)
+ *
  * ```tsx
  * import { TableFooter } from "@beep/ui/components/table"
  *
@@ -90,7 +94,8 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
 /**
  * Table row component.
  *
- * @example
+ * **Example** (Import TableRow component)
+ *
  * ```tsx
  * import { TableRow } from "@beep/ui/components/table"
  *
@@ -113,7 +118,8 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 /**
  * Table head component.
  *
- * @example
+ * **Example** (Import TableHead component)
+ *
  * ```tsx
  * import { TableHead } from "@beep/ui/components/table"
  *
@@ -139,7 +145,8 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 /**
  * Table cell component.
  *
- * @example
+ * **Example** (Import TableCell component)
+ *
  * ```tsx
  * import { TableCell } from "@beep/ui/components/table"
  *
@@ -162,7 +169,8 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
 /**
  * Table caption component.
  *
- * @example
+ * **Example** (Import TableCaption component)
+ *
  * ```tsx
  * import { TableCaption } from "@beep/ui/components/table"
  *

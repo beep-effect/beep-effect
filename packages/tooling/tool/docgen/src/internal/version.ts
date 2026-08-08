@@ -8,7 +8,8 @@
 /**
  * Runtime package version shown in the CLI banner.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { moduleVersion } from "../../src/internal/version.ts"
  *

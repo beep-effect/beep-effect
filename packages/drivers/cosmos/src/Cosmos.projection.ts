@@ -21,7 +21,8 @@ const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uin
 /**
  * Typed-array projection consumed by the graph render adapters.
  *
- * @example
+ * **Example** (Make typed-array projection)
+ *
  * ```ts
  * import { CosmosGraphProjection } from "@beep/cosmos"
  *
@@ -60,7 +61,8 @@ export class CosmosGraphProjection extends S.Class<CosmosGraphProjection>($I`Cos
 /**
  * Options for deterministic synthetic ontology graph generation.
  *
- * @example
+ * **Example** (Make synthetic graph options)
+ *
  * ```ts
  * import { SyntheticOntologyGraphOptions } from "@beep/cosmos"
  *
@@ -96,7 +98,8 @@ const positionScale = 3;
 /**
  * Generates a deterministic typed-array ontology graph projection.
  *
- * @example
+ * **Example** (Generate synthetic ontology projection)
+ *
  * ```ts
  * import { generateSyntheticOntologyProjection, SyntheticOntologyGraphOptions } from "@beep/cosmos"
  *

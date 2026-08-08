@@ -13,7 +13,8 @@ import type { Table } from "./Workspace.table.ts";
 /**
  * Workspace table select row type.
  *
- * @example
+ * **Example** (Assert select type match)
+ *
  * ```ts
  * import type { Table, WorkspaceRow } from "@beep/workspace-tables/entities/Workspace"
  *
@@ -31,7 +32,8 @@ export type WorkspaceRow = typeof Table.$inferSelect;
 /**
  * Workspace table insert row type.
  *
- * @example
+ * **Example** (Assert insert type match)
+ *
  * ```ts
  * import type { Table, WorkspaceInsert } from "@beep/workspace-tables/entities/Workspace"
  *
@@ -52,7 +54,8 @@ const decodeWorkspaceRow = S.decodeUnknownSync(Workspace);
 /**
  * Converts a workspace domain model into a table insert row.
  *
- * @example
+ * **Example** (Convert domain to insert)
+ *
  * ```ts
  * import { SystemPrincipal } from "@beep/shared-domain/entity/Principal"
  * import { Workspace } from "@beep/workspace-domain/entities/Workspace"
@@ -110,7 +113,8 @@ export const toWorkspaceInsert = (workspace: Workspace): WorkspaceInsert => {
 /**
  * Converts a workspace table row into the workspace domain model.
  *
- * @example
+ * **Example** (Convert row to domain)
+ *
  * ```ts
  * import { SystemPrincipal } from "@beep/shared-domain/entity/Principal"
  * import { fromWorkspaceRow } from "@beep/workspace-tables/entities/Workspace"

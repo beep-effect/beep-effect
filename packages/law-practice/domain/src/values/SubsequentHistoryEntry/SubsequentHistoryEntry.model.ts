@@ -16,13 +16,14 @@ const $I = $LawPracticeDomainId.create("values/SubsequentHistoryEntry/Subsequent
 /**
  * A single subsequent history entry from a case citation.
  *
+ * **Details**
+ *
  * Pairs the normalized {@link HistorySignal} classification with the `rawSignal`
  * text as it appeared, the {@link Span} locating that text in the document, and
  * the zero-based `order` of this entry within the history chain.
  *
- * **Example**
+ * **Example** (Affirmed history entry)
  *
- * @example
  * ```ts
  * import { Span, SubsequentHistoryEntry } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -69,7 +70,8 @@ export class SubsequentHistoryEntry extends S.Class<SubsequentHistoryEntry>($I`S
 /**
  * Companion namespace for `SubsequentHistoryEntry`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { SubsequentHistoryEntry } from "@beep/law-practice-domain"
  *
@@ -83,9 +85,8 @@ export declare namespace SubsequentHistoryEntry {
   /**
    * Wire-encoded representation of a decoded {@link SubsequentHistoryEntry}.
    *
-   * **Example**
+   * **Example** (Wire type alias)
    *
-   * @example
    * ```ts
    * import type { SubsequentHistoryEntry } from "@beep/law-practice-domain"
    *

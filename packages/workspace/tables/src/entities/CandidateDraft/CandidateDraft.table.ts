@@ -11,7 +11,8 @@ import { CandidateDraft } from "@beep/workspace-domain/entities/CandidateDraft";
 /**
  * PGLite/Postgres Drizzle table for the workspace CandidateDraft entity.
  *
- * @example
+ * **Example** (Read CandidateDraft table metadata)
+ *
  * ```ts
  * import { CandidateDraft } from "@beep/workspace-tables/entities"
  *

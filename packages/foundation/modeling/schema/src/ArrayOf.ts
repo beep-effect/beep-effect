@@ -13,7 +13,8 @@ const $I = $SchemaId.create("ArrayOf");
 /**
  * Schema for `ReadonlyArray<string>`.
  *
- * @example
+ * **Example** (Decode string array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfStrings } from "@beep/schema/ArrayOf"
@@ -22,8 +23,8 @@ const $I = $SchemaId.create("ArrayOf");
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ArrayOfStrings = S.Array(S.String).pipe(
   $I.annoteSchema("ArrayOfStrings", {
@@ -34,7 +35,8 @@ export const ArrayOfStrings = S.Array(S.String).pipe(
 /**
  * Type for {@link ArrayOfStrings}.
  *
- * @example
+ * **Example** (Typed decoded string array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfStrings } from "@beep/schema/ArrayOf"
@@ -43,15 +45,16 @@ export const ArrayOfStrings = S.Array(S.String).pipe(
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ArrayOfStrings = S.Schema.Type<typeof ArrayOfStrings>;
 
 /**
  * Schema for non-empty arrays of strings.
  *
- * @example
+ * **Example** (Decode non-empty strings)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfStrings } from "@beep/schema/ArrayOf"
@@ -60,8 +63,8 @@ export type ArrayOfStrings = S.Schema.Type<typeof ArrayOfStrings>;
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
   $I.annoteSchema("NonEmptyArrayOfStrings", {
@@ -72,7 +75,8 @@ export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
 /**
  * Type for {@link NonEmptyArrayOfStrings}.
  *
- * @example
+ * **Example** (Typed non-empty string array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfStrings } from "@beep/schema/ArrayOf"
@@ -81,15 +85,16 @@ export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyArrayOfStrings = S.Schema.Type<typeof NonEmptyArrayOfStrings>;
 
 /**
  * Schema for arrays of `NonEmptyString` values.
  *
- * @example
+ * **Example** (Decode non-empty string items)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
@@ -98,8 +103,8 @@ export type NonEmptyArrayOfStrings = S.Schema.Type<typeof NonEmptyArrayOfStrings
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
   $I.annoteSchema("ArrayOfNonEmptyStrings", {
@@ -110,7 +115,8 @@ export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
 /**
  * Type for {@link ArrayOfNonEmptyStrings}.
  *
- * @example
+ * **Example** (Typed non-empty string items)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
@@ -119,15 +125,16 @@ export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ArrayOfNonEmptyStrings = S.Schema.Type<typeof ArrayOfNonEmptyStrings>;
 
 /**
  * Schema for non-empty arrays of `NonEmptyString` values.
  *
- * @example
+ * **Example** (Decode non-empty non-empty strings)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
@@ -136,8 +143,8 @@ export type ArrayOfNonEmptyStrings = S.Schema.Type<typeof ArrayOfNonEmptyStrings
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).pipe(
   $I.annoteSchema("NonEmptyArrayOfNonEmptyStrings", {
@@ -148,7 +155,8 @@ export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).
 /**
  * Type for {@link NonEmptyArrayOfNonEmptyStrings}.
  *
- * @example
+ * **Example** (Typed non-empty non-empty strings)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
@@ -157,15 +165,16 @@ export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyArrayOfNonEmptyStrings = S.Schema.Type<typeof NonEmptyArrayOfNonEmptyStrings>;
 
 /**
  * Schema for arrays of numbers.
  *
- * @example
+ * **Example** (Decode number array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNumbers } from "@beep/schema/ArrayOf"
@@ -174,8 +183,8 @@ export type NonEmptyArrayOfNonEmptyStrings = S.Schema.Type<typeof NonEmptyArrayO
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ArrayOfNumbers = S.Array(S.Finite).pipe(
   $I.annoteSchema("ArrayOfNumbers", {
@@ -186,7 +195,8 @@ export const ArrayOfNumbers = S.Array(S.Finite).pipe(
 /**
  * Type for {@link ArrayOfNumbers}.
  *
- * @example
+ * **Example** (Typed decoded number array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfNumbers } from "@beep/schema/ArrayOf"
@@ -195,15 +205,16 @@ export const ArrayOfNumbers = S.Array(S.Finite).pipe(
  * console.log(decoded.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ArrayOfNumbers = S.Schema.Type<typeof ArrayOfNumbers>;
 
 /**
  * Schema for non-empty arrays of numbers.
  *
- * @example
+ * **Example** (Decode non-empty numbers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNumbers } from "@beep/schema/ArrayOf"
@@ -212,8 +223,8 @@ export type ArrayOfNumbers = S.Schema.Type<typeof ArrayOfNumbers>;
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
   $I.annoteSchema("NonEmptyArrayOfNumbers", {
@@ -224,7 +235,8 @@ export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
 /**
  * Type for {@link NonEmptyArrayOfNumbers}.
  *
- * @example
+ * **Example** (Typed non-empty number array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfNumbers } from "@beep/schema/ArrayOf"
@@ -233,15 +245,16 @@ export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyArrayOfNumbers = S.Schema.Type<typeof NonEmptyArrayOfNumbers>;
 
 /**
  * Schema for arrays of integers.
  *
- * @example
+ * **Example** (Decode integer array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfInts } from "@beep/schema/ArrayOf"
@@ -250,8 +263,8 @@ export type NonEmptyArrayOfNumbers = S.Schema.Type<typeof NonEmptyArrayOfNumbers
  * console.log(decoded.every(Number.isInteger))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ArrayOfInts = S.Array(S.Int).pipe(
   $I.annoteSchema("ArrayOfInts", {
@@ -262,7 +275,8 @@ export const ArrayOfInts = S.Array(S.Int).pipe(
 /**
  * Type for {@link ArrayOfInts}.
  *
- * @example
+ * **Example** (Typed decoded integer array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArrayOfInts } from "@beep/schema/ArrayOf"
@@ -271,15 +285,16 @@ export const ArrayOfInts = S.Array(S.Int).pipe(
  * console.log(decoded.every(Number.isInteger))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ArrayOfInts = S.Schema.Type<typeof ArrayOfInts>;
 
 /**
  * Schema for non-empty arrays of integers.
  *
- * @example
+ * **Example** (Decode non-empty integers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfInts } from "@beep/schema/ArrayOf"
@@ -288,8 +303,8 @@ export type ArrayOfInts = S.Schema.Type<typeof ArrayOfInts>;
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
   $I.annoteSchema("NonEmptyArrayOfInts", {
@@ -300,7 +315,8 @@ export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
 /**
  * Type for {@link NonEmptyArrayOfInts}.
  *
- * @example
+ * **Example** (Typed non-empty integer array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonEmptyArrayOfInts } from "@beep/schema/ArrayOf"
@@ -309,7 +325,7 @@ export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
  * console.log(decoded[0])
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyArrayOfInts = S.Schema.Type<typeof NonEmptyArrayOfInts>;

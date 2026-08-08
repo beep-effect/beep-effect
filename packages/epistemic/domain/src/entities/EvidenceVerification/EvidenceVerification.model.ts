@@ -25,12 +25,15 @@ const $I = $EpistemicDomainId.create("entities/EvidenceVerification/EvidenceVeri
  * Append-only link from an existing evidence row to one exact verified source
  * manifestation.
  *
+ * **Details**
+ *
  * `manifestationKey` seals `evidenceId` and `verifiedAnchor`. Persistence owns
  * the `(org_id, manifestation_key)` unique constraint and denies UPDATE and
  * DELETE so an exact repeat is idempotent while a changed source identity or
  * anchor appends a distinct row.
  *
- * @example
+ * **Example** (Access entity table name)
+ *
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification"
  *
@@ -74,7 +77,8 @@ export class EvidenceVerification extends BaseEntity.Class<EvidenceVerification>
   /**
    * Recompute and validate this row's manifestation key.
    *
-   * @example
+   * **Example** (Validate row manifestation key)
+   *
    * ```ts
    * import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification"
    * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity"
@@ -148,7 +152,8 @@ export class EvidenceVerification extends BaseEntity.Class<EvidenceVerification>
   /**
    * Compute the manifestation key for an evidence id and verified anchor.
    *
-   * @example
+   * **Example** (Inspect manifestationKeyFor type)
+   *
    * ```ts
    * import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification"
    *

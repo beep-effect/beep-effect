@@ -26,7 +26,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.use-c
 /**
  * Public WorkItem use-case contract exposed to callers.
  *
- * @example
+ * **Example** (Offline stub use-cases shape)
+ *
  * ```ts
  * import {
  *   ListWorkItemsQuery,
@@ -67,11 +68,13 @@ export interface WorkItemUseCasesShape {
 /**
  * Context service tag for WorkItem use cases.
  *
- * @remarks
+ * **Details**
+ *
  * The public module declares the tag and contract only. Server code supplies an
  * implementation with a repository-backed layer or `Effect.provideService`.
  *
- * @example
+ * **Example** (ProvideService with offline stub)
+ *
  * ```ts
  * import {
  *   ListWorkItemsQuery,

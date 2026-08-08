@@ -123,7 +123,8 @@ const makeChainRefinement =
 /**
  * Re-export of all helpers from `effect/Predicate`.
  *
- * @example
+ * **Example** (Import Predicate helpers)
+ *
  * ```ts
  * import * as P from "@beep/utils/Predicate"
  *
@@ -140,7 +141,8 @@ export * from "effect/Predicate";
  * Returns whether an unknown value can be inspected with reflection without
  * triggering a throwing Proxy trap.
  *
- * @example
+ * **Example** (Proxy trap safety check)
+ *
  * ```ts
  * import { P } from "@beep/utils"
  *
@@ -172,13 +174,15 @@ export const hasInspectableObjectShape = (value: unknown): boolean => {
  * Chains refinements so each step receives the type narrowed by the previous
  * step.
  *
- * @remarks
+ * **Details**
+ *
  * Use the flat `chainRefinements([...])` form when the first refinement can
  * infer the input type. Use `chainRefinements<Start>()([...])` when the input
  * type must be fixed explicitly. The chain stops at the first failed
  * refinement, so later structural checks can rely on earlier guards.
  *
- * @example
+ * **Example** (Chain successive refinements)
+ *
  * ```ts
  * import { P } from "@beep/utils";
  *
@@ -338,13 +342,14 @@ export function chainRefinements(refinements?: ReadonlyArray<RuntimeRefinement>)
 
 /**
  * Returns a predicate that succeeds when an unknown value is an object with all
- *	the requested own or inherited properties.
+ * the requested own or inherited properties.
+ *
+ * **Details**
  *
  * Supports both data-last and data-first invocation styles.
  *
- * @since 0.0.0
- * @category utilities
- * @example
+ * **Example** (Data-last and data-first)
+ *
  * ```ts
  * import { hasProperties } from "@beep/utils/Predicate"
  *
@@ -361,6 +366,9 @@ export function chainRefinements(refinements?: ReadonlyArray<RuntimeRefinement>)
  * console.log(result1)
  * console.log(result2)
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const hasProperties: {
   <Properties extends A.NonEmptyReadonlyArray<PropertyKey>>(

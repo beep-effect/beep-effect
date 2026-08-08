@@ -90,7 +90,8 @@ const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeyS
 /**
  * Error raised when an AI metrics install spec would be unsafe for the requested target.
  *
- * @example
+ * **Example** (Create configuration error)
+ *
  * ```ts
  * import { AiMetricsInstallConfigurationError } from "@beep/repo-ai-metrics"
  *
@@ -100,6 +101,7 @@ const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeyS
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -120,11 +122,13 @@ export class AiMetricsInstallConfigurationError extends TaggedErrorClass<AiMetri
 /**
  * Input for resolving an AI metrics install spec.
  *
- * @example
+ * **Example** (Make empty install input)
+ *
  * ```ts
  * import { AiMetricsInstallInput } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsInstallInput.make({}).target)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -171,7 +175,8 @@ export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiM
 /**
  * Storage layout resolved for an AI metrics target.
  *
- * @example
+ * **Example** (Build storage layout paths)
+ *
  * ```ts
  * import { AiMetricsStorageLayout } from "@beep/repo-ai-metrics"
  *
@@ -184,6 +189,7 @@ export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiM
  * })
  * console.log(storage.duckDbPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -203,7 +209,8 @@ export class AiMetricsStorageLayout extends S.Class<AiMetricsStorageLayout>($I`A
 /**
  * One candidate service in the local bakeoff or promoted install target.
  *
- * @example
+ * **Example** (Make Phoenix service spec)
+ *
  * ```ts
  * import { AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics"
  *
@@ -225,6 +232,7 @@ export class AiMetricsStorageLayout extends S.Class<AiMetricsStorageLayout>($I`A
  * })
  * console.log(service.tool)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -247,7 +255,8 @@ export class AiMetricsServiceSpec extends S.Class<AiMetricsServiceSpec>($I`AiMet
 /**
  * Resolved target-agnostic install spec for AI metrics.
  *
- * @example
+ * **Example** (Build full install spec)
+ *
  * ```ts
  * import {
  *   AiMetricsInstallSpec,
@@ -276,6 +285,7 @@ export class AiMetricsServiceSpec extends S.Class<AiMetricsServiceSpec>($I`AiMet
  * })
  * console.log(spec.plannedCommands)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -303,11 +313,13 @@ export class AiMetricsInstallSpec extends S.Class<AiMetricsInstallSpec>($I`AiMet
 /**
  * P5a install-plan step kinds.
  *
- * @example
+ * **Example** (Log storage step kind)
+ *
  * ```ts
  * import { AiMetricsInstallPlanStepKind } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsInstallPlanStepKind.Enum.storage)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -334,12 +346,14 @@ export const AiMetricsInstallPlanStepKind = LiteralKit([
 /**
  * Runtime type for {@link AiMetricsInstallPlanStepKind}.
  *
- * @example
+ * **Example** (Assign storage kind type)
+ *
  * ```ts
  * import type { AiMetricsInstallPlanStepKind } from "@beep/repo-ai-metrics"
  * const kind: AiMetricsInstallPlanStepKind = "storage"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -348,7 +362,8 @@ export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.T
 /**
  * One typed P5a install plan step.
  *
- * @example
+ * **Example** (Make source discovery step)
+ *
  * ```ts
  * import { AiMetricsInstallPlanStep } from "@beep/repo-ai-metrics"
  *
@@ -365,6 +380,7 @@ export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.T
  * })
  * console.log(step.required)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -388,7 +404,8 @@ export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>(
 /**
  * Typed P5a install plan for local smoke or dankserver deployment.
  *
- * @example
+ * **Example** (Build dry-run install plan)
+ *
  * ```ts
  * import {
  *   AiMetricsInstallPlan,
@@ -413,6 +430,7 @@ export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>(
  * })
  * console.log(plan.dryRunOnly)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -435,11 +453,13 @@ export class AiMetricsInstallPlan extends S.Class<AiMetricsInstallPlan>($I`AiMet
 /**
  * Doctor check status for P5a install contract validation.
  *
- * @example
+ * **Example** (Log passed check status)
+ *
  * ```ts
  * import { AiMetricsInstallDoctorCheckStatus } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsInstallDoctorCheckStatus.Enum.passed)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -452,12 +472,14 @@ export const AiMetricsInstallDoctorCheckStatus = LiteralKit(["passed", "warning"
 /**
  * Runtime type for {@link AiMetricsInstallDoctorCheckStatus}.
  *
- * @example
+ * **Example** (Assign passed status type)
+ *
  * ```ts
  * import type { AiMetricsInstallDoctorCheckStatus } from "@beep/repo-ai-metrics"
  * const status: AiMetricsInstallDoctorCheckStatus = "passed"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -466,11 +488,13 @@ export type AiMetricsInstallDoctorCheckStatus = typeof AiMetricsInstallDoctorChe
 /**
  * Overall P5a install doctor result status.
  *
- * @example
+ * **Example** (Log warning doctor status)
+ *
  * ```ts
  * import { AiMetricsInstallDoctorStatus } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsInstallDoctorStatus.Enum.warning)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -483,12 +507,14 @@ export const AiMetricsInstallDoctorStatus = LiteralKit(["passed", "warning", "fa
 /**
  * Runtime type for {@link AiMetricsInstallDoctorStatus}.
  *
- * @example
+ * **Example** (Assign warning status type)
+ *
  * ```ts
  * import type { AiMetricsInstallDoctorStatus } from "@beep/repo-ai-metrics"
  * const status: AiMetricsInstallDoctorStatus = "warning"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -497,7 +523,8 @@ export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.T
 /**
  * One P5a install doctor check.
  *
- * @example
+ * **Example** (Make storage layout check)
+ *
  * ```ts
  * import { AiMetricsInstallDoctorCheck } from "@beep/repo-ai-metrics"
  *
@@ -508,6 +535,7 @@ export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.T
  * })
  * console.log(check.metadata)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -529,11 +557,13 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
 /**
  * Input for P5a install doctor evaluation.
  *
- * @example
+ * **Example** (Make empty doctor input)
+ *
  * ```ts
  * import { AiMetricsInstallDoctorInput } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsInstallDoctorInput.make({}))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -553,7 +583,8 @@ export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorI
 /**
  * P5a install doctor result.
  *
- * @example
+ * **Example** (Build passed doctor result)
+ *
  * ```ts
  * import {
  *   AiMetricsInstallDoctorResult,
@@ -586,6 +617,7 @@ export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorI
  * })
  * console.log(result.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -607,7 +639,8 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
 /**
  * P5a dry-run apply result.
  *
- * @example
+ * **Example** (Build dry-run apply result)
+ *
  * ```ts
  * import {
  *   AiMetricsInstallApplyDryRunResult,
@@ -639,6 +672,7 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
  * })
  * console.log(result.dryRun)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1139,15 +1173,17 @@ const check = ({
 /**
  * Resolve an install spec for the requested AI metrics target.
  *
- * @param input - Optional operator install preferences; omitted fields use the local target defaults.
- * @returns An effect that resolves the normalized install spec consumed by IaC and CLI planning.
- * @example
+ * **Example** (Resolve default install spec)
+ *
  * ```ts
  * import { makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  * const spec = Effect.runSync(makeAiMetricsInstallSpec())
  * console.log(spec.storage.rawArchiveDir)
  * ```
+ *
+ * @param input - Optional operator install preferences; omitted fields use the local target defaults.
+ * @returns An effect that resolves the normalized install spec consumed by IaC and CLI planning.
  * @category constructors
  * @since 0.0.0
  */
@@ -1186,9 +1222,8 @@ export const makeAiMetricsInstallSpec: (
 /**
  * Resolve the typed P5a install plan for a target without mutating local or remote state.
  *
- * @param input - Operator install preferences for the target plan.
- * @returns A typed, dry-runnable plan consumed by CLI plan, doctor, and apply workflows.
- * @example
+ * **Example** (Yield default install plan)
+ *
  * ```ts
  * import { makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1199,6 +1234,9 @@ export const makeAiMetricsInstallSpec: (
  * })
  * console.log(program)
  * ```
+ *
+ * @param input - Operator install preferences for the target plan.
+ * @returns A typed, dry-runnable plan consumed by CLI plan, doctor, and apply workflows.
  * @category constructors
  * @since 0.0.0
  */
@@ -1227,9 +1265,8 @@ export const makeAiMetricsInstallPlan: (
 /**
  * Evaluate the P5a install doctor contract checks.
  *
- * @param input - Install preferences plus optional source discovery evidence.
- * @returns A typed doctor result with aggregate pass, warning, or failure status.
- * @example
+ * **Example** (Yield default doctor result)
+ *
  * ```ts
  * import { makeAiMetricsInstallDoctorResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1240,6 +1277,9 @@ export const makeAiMetricsInstallPlan: (
  * })
  * console.log(program)
  * ```
+ *
+ * @param input - Install preferences plus optional source discovery evidence.
+ * @returns A typed doctor result with aggregate pass, warning, or failure status.
  * @category constructors
  * @since 0.0.0
  */
@@ -1332,9 +1372,8 @@ export const makeAiMetricsInstallDoctorResult: (
 /**
  * Resolve the P5a dry-run apply result.
  *
- * @param input - Operator install preferences for the dry-run apply.
- * @returns A dry-run-only apply result listing the CLI-safe steps around the Pulumi P5b stack.
- * @example
+ * **Example** (Yield dry-run apply result)
+ *
  * ```ts
  * import { makeAiMetricsInstallApplyDryRunResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1345,6 +1384,9 @@ export const makeAiMetricsInstallDoctorResult: (
  * })
  * console.log(program)
  * ```
+ *
+ * @param input - Operator install preferences for the dry-run apply.
+ * @returns A dry-run-only apply result listing the CLI-safe steps around the Pulumi P5b stack.
  * @category constructors
  * @since 0.0.0
  */
@@ -1366,7 +1408,8 @@ export const makeAiMetricsInstallApplyDryRunResult: (
 /**
  * Render a P5a install plan as JSON.
  *
- * @example
+ * **Example** (Serialize plan to JSON)
+ *
  * ```ts
  * import { aiMetricsInstallPlanToJson, makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1378,6 +1421,7 @@ export const makeAiMetricsInstallApplyDryRunResult: (
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1390,7 +1434,8 @@ export const aiMetricsInstallPlanToJson: (
 /**
  * Render a P5a install doctor result as JSON.
  *
- * @example
+ * **Example** (Serialize doctor to JSON)
+ *
  * ```ts
  * import { aiMetricsInstallDoctorToJson, makeAiMetricsInstallDoctorResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -1402,6 +1447,7 @@ export const aiMetricsInstallPlanToJson: (
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1414,7 +1460,8 @@ export const aiMetricsInstallDoctorToJson: (
 /**
  * Render a P5a dry-run apply result as JSON.
  *
- * @example
+ * **Example** (Serialize dry-run to JSON)
+ *
  * ```ts
  * import {
  *   aiMetricsInstallApplyDryRunToJson,
@@ -1429,6 +1476,7 @@ export const aiMetricsInstallDoctorToJson: (
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
