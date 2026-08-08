@@ -118,7 +118,8 @@ const compactIdentifier = (context: JsonLdContext, iri: string): string => {
 /**
  * JSON-LD context service live layer.
  *
- * @example
+ * **Example** (Expand term with live layer)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

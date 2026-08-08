@@ -9,9 +9,8 @@
 /**
  * Citation-type model exports.
  *
- * **Example**
+ * **Example** (Import CitationType)
  *
- * @example
  * ```ts
  * import { CitationType } from "@beep/law-practice-domain/values";
  * ```

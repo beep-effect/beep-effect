@@ -13,7 +13,8 @@ import type React from "react";
 /**
  * Props for {@link ToggleField}.
  *
- * @example
+ * **Example** (Satisfies ToggleFieldProps shape)
+ *
  * ```ts
  * import type { ToggleFieldProps } from "@beep/form/fields/ToggleField"
  *
@@ -44,7 +45,8 @@ const toggleExternalLabel = (
 /**
  * Schema-bound toggle rendered inline with its label.
  *
- * @example
+ * **Example** (Schema-bound bold toggle form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { ToggleField } from "@beep/form/fields/ToggleField"

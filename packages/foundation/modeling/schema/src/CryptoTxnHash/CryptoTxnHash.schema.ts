@@ -44,7 +44,8 @@ const CryptoTxnHashChecks = S.makeFilterGroup(
 /**
  * Branded schema for canonical mainnet blockchain transaction identifiers.
  *
- * @example
+ * **Example** (Decode zero transaction hash)
+ *
  * ```ts
  * import { CryptoTxnHash } from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"
@@ -55,8 +56,8 @@ const CryptoTxnHashChecks = S.makeFilterGroup(
  * console.log(hash)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
   S.brand("CryptoTxnHash"),
@@ -68,7 +69,8 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
 /**
  * Type for {@link CryptoTxnHash}.
  *
- * @example
+ * **Example** (Type annotated hash decode)
+ *
  * ```ts
  * import { CryptoTxnHash } from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"
@@ -79,15 +81,16 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
  * console.log(hash)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CryptoTxnHash = typeof CryptoTxnHash.Type;
 
 /**
  * Redacted schema for canonical mainnet blockchain transaction identifiers.
  *
- * @example
+ * **Example** (Make redacted transaction hash)
+ *
  * ```ts
  * import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash"
  *
@@ -97,8 +100,8 @@ export type CryptoTxnHash = typeof CryptoTxnHash.Type;
  * console.log(hash)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
   S.RedactedFromValue,
@@ -113,7 +116,8 @@ export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
 /**
  * Type for {@link CryptoTxnHashRedacted}.
  *
- * @example
+ * **Example** (Type redacted transaction hash)
+ *
  * ```ts
  * import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash"
  *
@@ -123,8 +127,8 @@ export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
  * console.log(hash)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CryptoTxnHashRedacted = typeof CryptoTxnHashRedacted.Type;
 

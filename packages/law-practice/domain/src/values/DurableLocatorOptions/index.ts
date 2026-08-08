@@ -9,9 +9,8 @@
 /**
  * DurableLocatorOptions model exports.
  *
- * **Example**
+ * **Example** (Import DurableLocatorOptions)
  *
- * @example
  * ```ts
  * import { DurableLocatorOptions } from "@beep/law-practice-domain/values";
  * ```

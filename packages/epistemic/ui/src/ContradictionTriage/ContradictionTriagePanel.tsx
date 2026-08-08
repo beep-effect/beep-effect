@@ -185,7 +185,8 @@ function TemporalTriagePanel({
  * Connect the controlled contradiction workspace to the shared Effect Atom
  * runtime and authenticated RPC client.
  *
- * @example
+ * **Example** (Basic panel usage)
+ *
  * ```tsx
  * import { ContradictionTriagePanel } from "@beep/epistemic-ui"
  *

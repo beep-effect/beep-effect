@@ -10,11 +10,14 @@ import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVe
 /**
  * PGLite/Postgres Drizzle table for immutable evidence verification rows.
  *
+ * **Details**
+ *
  * The raw SQL migration owns the evidence foreign key, append-only trigger, and
  * unique `(org_id, manifestation_key)` constraint; Drizzle metadata projects
  * the schema-first column shape only.
  *
- * @example
+ * **Example** (Log table definition name)
+ *
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-tables/entities"
  *

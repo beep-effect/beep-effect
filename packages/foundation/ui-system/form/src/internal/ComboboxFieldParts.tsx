@@ -23,7 +23,8 @@ import type { BoundFieldState } from "./FieldBinding.tsx";
 /**
  * Extracts primitive option values for Base UI combobox item matching.
  *
- * @example
+ * **Example** (Extract option values)
+ *
  * ```ts
  * import { optionValues } from "../../src/internal/ComboboxFieldParts.tsx"
  * import type { FieldOption } from "../../src/core/Options.ts"
@@ -52,7 +53,8 @@ type ComboboxOptionsContentProps = {
 /**
  * Renders a shared combobox popup with empty-state text and option rows.
  *
- * @example
+ * **Example** (Render options content)
+ *
  * ```tsx
  * import { ComboboxOptionsContent } from "../../src/internal/ComboboxFieldParts.tsx"
  *
@@ -115,13 +117,15 @@ const comboboxValueBinding = (mode: StringComboboxMode, field: BoundFieldState<s
 /**
  * Renders the shared single-value combobox/autocomplete field body.
  *
- * @remarks
+ * **Details**
+ *
  * In `selected` mode the TanStack value is passed as the combobox `value`; in
  * `autocomplete` mode the same TanStack value is passed as `inputValue` and
  * updated on input changes. Popup filtering and highlighted-item state stay
  * inside the combobox primitive.
  *
- * @example
+ * **Example** (Selected mode combobox body)
+ *
  * ```tsx
  * import { StringComboboxField } from "../../src/internal/ComboboxFieldParts.tsx"
  *

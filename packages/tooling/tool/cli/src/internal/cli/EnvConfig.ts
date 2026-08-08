@@ -34,15 +34,17 @@ const $I = $RepoCliId.create("internal/cli/EnvConfig");
 /**
  * Synchronously read an optional string config value from the ambient provider.
  *
- * @param name - Config key to read.
- * @returns The configured value when present, evaluated at call time.
- * @example
+ * **Example** (Check HOME is Option)
+ *
  * ```ts
  * import { configStringOptionSync } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import * as O from "effect/Option"
  *
  * console.log(O.isOption(configStringOptionSync("HOME")))
  * ```
+ *
+ * @param name - Config key to read.
+ * @returns The configured value when present, evaluated at call time.
  * @category configuration
  * @since 0.0.0
  */
@@ -52,15 +54,17 @@ export const configStringOptionSync = (name: string): O.Option<string> =>
 /**
  * Check whether an optional string config value equals an expected value.
  *
- * @param name - Config key to read.
- * @param expected - String value required for a match.
- * @returns Whether the configured value equals `expected`.
- * @example
+ * **Example** (Match CI equals true)
+ *
  * ```ts
  * import { configStringEqualsSync } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(configStringEqualsSync("CI", "true"))
  * ```
+ *
+ * @param name - Config key to read.
+ * @param expected - String value required for a match.
+ * @returns Whether the configured value equals `expected`.
  * @category configuration
  * @since 0.0.0
  */
@@ -78,9 +82,8 @@ export const configStringEqualsSync: {
  * Read an optional string config value inside an Effect workflow, succeeding
  * with `None` instead of failing when the value is absent or malformed.
  *
- * @param name - Config key to read.
- * @returns An Effect yielding the configured value when present.
- * @example
+ * **Example** (Run HOME option Effect)
+ *
  * ```ts
  * import { configStringOption } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
@@ -88,6 +91,9 @@ export const configStringEqualsSync: {
  *
  * console.log(O.isOption(Effect.runSync(configStringOption("HOME"))))
  * ```
+ *
+ * @param name - Config key to read.
+ * @returns An Effect yielding the configured value when present.
  * @category configuration
  * @since 0.0.0
  */
@@ -97,18 +103,22 @@ export const configStringOption = (name: string): Effect.Effect<O.Option<string>
 /**
  * Read an optional string config value through the `ConfigProvider` service.
  *
+ * **Details**
+ *
  * Unlike {@link configStringOption}, this surfaces the provider's config error
  * so callers can map it to a domain error at their boundary.
  *
- * @param key - Config key to read.
- * @returns An Effect yielding the configured value when present.
- * @example
+ * **Example** (Effect for optional HOME)
+ *
  * ```ts
  * import { readOptionalConfigString } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readOptionalConfigString("HOME")))
  * ```
+ *
+ * @param key - Config key to read.
+ * @returns An Effect yielding the configured value when present.
  * @category configuration
  * @since 0.0.0
  */
@@ -119,15 +129,17 @@ export const readOptionalConfigString = (key: string) =>
  * Read an optional redacted string config value through the `ConfigProvider`
  * service, keeping the value wrapped in `Redacted`.
  *
- * @param key - Config key to read.
- * @returns An Effect yielding the redacted value when present.
- * @example
+ * **Example** (Effect for redacted SECRET)
+ *
  * ```ts
  * import { readOptionalRedactedConfigString } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(readOptionalRedactedConfigString("SECRET")))
  * ```
+ *
+ * @param key - Config key to read.
+ * @returns An Effect yielding the redacted value when present.
  * @category configuration
  * @since 0.0.0
  */
@@ -137,15 +149,17 @@ export const readOptionalRedactedConfigString = (key: string) =>
 /**
  * Read a non-empty string environment value, falling back to a default.
  *
- * @param name - Config key to read.
- * @param fallback - Value returned when the key is absent or empty.
- * @returns The configured non-empty value or the fallback.
- * @example
+ * **Example** (Default for unset variable)
+ *
  * ```ts
  * import { envValue } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(envValue("DEFINITELY_UNSET_VAR", "default")) // "default"
  * ```
+ *
+ * @param name - Config key to read.
+ * @param fallback - Value returned when the key is absent or empty.
+ * @returns The configured non-empty value or the fallback.
  * @category configuration
  * @since 0.0.0
  */
@@ -163,15 +177,17 @@ export const envValue: {
 /**
  * Read a positive integer environment value, falling back to a default.
  *
- * @param name - Config key to read.
- * @param fallback - Value returned when the key is absent or not a positive integer.
- * @returns The parsed positive integer or the fallback.
- * @example
+ * **Example** (Integer default for unset)
+ *
  * ```ts
  * import { intEnvValue } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(intEnvValue("DEFINITELY_UNSET_VAR", 180))
  * ```
+ *
+ * @param name - Config key to read.
+ * @param fallback - Value returned when the key is absent or not a positive integer.
+ * @returns The parsed positive integer or the fallback.
  * @category configuration
  * @since 0.0.0
  */
@@ -187,15 +203,17 @@ export const intEnvValue: {
  * Read a boolean environment value, accepting `true/1/yes` and `false/0/no`
  * (case-insensitive) and falling back to a default otherwise.
  *
- * @param name - Config key to read.
- * @param fallback - Value returned when the key is absent or unrecognized.
- * @returns The parsed boolean or the fallback.
- * @example
+ * **Example** (Boolean default for unset)
+ *
  * ```ts
  * import { booleanEnvValue } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(booleanEnvValue("DEFINITELY_UNSET_VAR", true))
  * ```
+ *
+ * @param name - Config key to read.
+ * @param fallback - Value returned when the key is absent or unrecognized.
+ * @returns The parsed boolean or the fallback.
  * @category configuration
  * @since 0.0.0
  */
@@ -216,15 +234,17 @@ export const booleanEnvValue: {
 /**
  * Whether a value is an unresolved 1Password secret reference (`op://...`).
  *
- * @param value - The candidate value.
- * @returns Whether the value is a still-unresolved `op://` reference.
- * @example
+ * **Example** (Detect unresolved op references)
+ *
  * ```ts
  * import { isUnresolvedSecretReference } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(isUnresolvedSecretReference("op://vault/item/field"))
  * console.log(isUnresolvedSecretReference("postgres://localhost"))
  * ```
+ *
+ * @param value - The candidate value.
+ * @returns Whether the value is a still-unresolved `op://` reference.
  * @category configuration
  * @since 0.0.0
  */
@@ -234,15 +254,15 @@ export const isUnresolvedSecretReference = (value: string | undefined): boolean 
 /**
  * Compute the environment overrides applied when spawning `turbo` via `bunx`.
  *
+ * **Details**
+ *
  * Forces `TURBO_UI=false` so the child never enables its interactive TUI (which
  * can leave the terminal in mouse-capture mode when a task tears down), and
  * scrubs `TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved `op://` references.
  * Returns an empty object for any non-turbo command.
  *
- * @param command - The command being spawned.
- * @param args - The command arguments.
- * @returns The environment overrides to merge into the child environment.
- * @example
+ * **Example** (Turbo and non-turbo overrides)
+ *
  * ```ts
  * import { turboEnvOverrides } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
@@ -250,6 +270,10 @@ export const isUnresolvedSecretReference = (value: string | undefined): boolean 
  * console.log(Effect.runSync(turboEnvOverrides("bunx", ["turbo", "run", "check"])).TURBO_UI)
  * console.log(Effect.runSync(turboEnvOverrides("git", ["status"])))
  * ```
+ *
+ * @param command - The command being spawned.
+ * @param args - The command arguments.
+ * @returns The environment overrides to merge into the child environment.
  * @category configuration
  * @since 0.0.0
  */
@@ -286,13 +310,15 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
 /**
  * A subprocess step shape recognized by the local-env wrapper.
  *
- * @example
+ * **Example** (Make LocalEnvStep instance)
+ *
  * ```ts
  * import { LocalEnvStep } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * const step = LocalEnvStep.make({ label: "test", command: "bun", args: ["test"], cwd: "/repo" })
  * console.log(step.command)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -312,18 +338,22 @@ export class LocalEnvStep extends S.Class<LocalEnvStep>($I`LocalEnvStep`)(
 /**
  * Whether the local `op run --env-file=.env` wrapper can be used at `repoRoot`.
  *
+ * **Details**
+ *
  * Returns `false` under CI, when no `.env` file is present, or when
  * `op whoami` does not succeed.
  *
- * @param repoRoot - Directory that should contain the `.env` file.
- * @returns Whether local 1Password env injection is available.
- * @example
+ * **Example** (Check local env Effect)
+ *
  * ```ts
  * import { canUseLocalEnv } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(canUseLocalEnv(process.cwd())))
  * ```
+ *
+ * @param repoRoot - Directory that should contain the `.env` file.
+ * @returns Whether local 1Password env injection is available.
  * @category execution
  * @since 0.0.0
  */
@@ -355,18 +385,22 @@ export const canUseLocalEnv = Effect.fn("EnvConfig.canUseLocalEnv")(function* (
 /**
  * Rewrite a step to run under `op run --env-file=.env`.
  *
+ * **Details**
+ *
  * A pure transformation; use {@link withLocalEnv} to apply it only when local
  * env injection is both requested and available.
  *
- * @param step - The step to wrap.
- * @returns The step rewritten to invoke `op run`.
- * @example
+ * **Example** (Rewrite step via op run)
+ *
  * ```ts
  * import { localEnvOpRunStep } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * const wrapped = localEnvOpRunStep({ label: "test", command: "bun", args: ["test"], cwd: "/repo" })
  * console.log(wrapped.command)
  * ```
+ *
+ * @param step - The step to wrap.
+ * @returns The step rewritten to invoke `op run`.
  * @category execution
  * @since 0.0.0
  */
@@ -382,15 +416,17 @@ export const localEnvOpRunStep = (step: LocalEnvStep): LocalEnvStep => ({
  * (`useLocalEnv === true`) and local env is available at its `cwd`; otherwise
  * return the step unchanged.
  *
- * @param step - The step to conditionally wrap.
- * @returns The original or `op run`-wrapped step.
- * @example
+ * **Example** (Conditionally wrap step Effect)
+ *
  * ```ts
  * import { withLocalEnv } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(withLocalEnv({ label: "x", command: "bun", args: [], cwd: "/repo" })))
  * ```
+ *
+ * @param step - The step to conditionally wrap.
+ * @returns The original or `op run`-wrapped step.
  * @category execution
  * @since 0.0.0
  */

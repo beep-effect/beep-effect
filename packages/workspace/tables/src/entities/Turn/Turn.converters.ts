@@ -13,7 +13,8 @@ import type { Table } from "./Turn.table.ts";
 /**
  * Selected workspace Turn row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { Table, TurnRow } from "@beep/workspace-tables/entities/Turn"
  *
@@ -31,7 +32,8 @@ export type TurnRow = typeof Table.$inferSelect;
 /**
  * Insertable workspace Turn row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { Table, TurnInsert } from "@beep/workspace-tables/entities/Turn"
  *
@@ -52,12 +54,15 @@ const decodeTurnRow = S.decodeUnknownSync(Turn);
 /**
  * Convert a Turn entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link Table}, whose metadata carries the physical SQL
  * column names. The database-managed `id` (SERIAL) is dropped so the insert
  * defers to the sequence.
  *
- * @example
+ * **Example** (Convert entity to insert)
+ *
  * ```ts
  * import { Turn } from "@beep/workspace-domain/entities/Turn"
  * import { toTurnInsert } from "@beep/workspace-tables/entities/Turn"
@@ -113,7 +118,8 @@ export const toTurnInsert = (turn: Turn): TurnInsert => {
 /**
  * Convert a selected persistence row into a Turn entity.
  *
- * @example
+ * **Example** (Convert row to entity)
+ *
  * ```ts
  * import { fromTurnRow, type TurnRow } from "@beep/workspace-tables/entities/Turn"
  *

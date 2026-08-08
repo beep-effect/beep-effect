@@ -40,10 +40,13 @@ class RemoveStopWordsSuccess extends S.Class<RemoveStopWordsSuccess>($I`RemoveSt
  * Defines the agent-facing tool contract for removing stop words from text and
  * returning the remaining word tokens.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs content-bearing tokens for keyword
  * extraction, matching, or compact feature generation.
  *
- * @example
+ * **Example** (Decode parameters schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RemoveStopWords } from "@beep/nlp-processing/Tools/RemoveStopWords"

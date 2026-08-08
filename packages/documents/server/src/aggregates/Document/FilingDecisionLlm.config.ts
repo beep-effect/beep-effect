@@ -16,7 +16,8 @@ const $I = $DocumentsServerId.create("aggregates/Document/FilingDecisionLlm.conf
 /**
  * Environment variable selecting the Anthropic model used for filing decisions.
  *
- * @example
+ * **Example** (Log model env name)
+ *
  * ```ts
  * import { FILING_DECISION_MODEL_ENV } from "@beep/documents-server/aggregates/Document"
  *
@@ -31,7 +32,8 @@ export const FILING_DECISION_MODEL_ENV = "DOCUMENTS_FILING_MODEL";
 /**
  * Environment variable controlling the minimum confidence required to auto-file.
  *
- * @example
+ * **Example** (Log threshold env name)
+ *
  * ```ts
  * import { FILING_DECISION_CONFIDENCE_THRESHOLD_ENV } from "@beep/documents-server/aggregates/Document"
  *
@@ -46,7 +48,8 @@ export const FILING_DECISION_CONFIDENCE_THRESHOLD_ENV = "DOCUMENTS_FILING_CONFID
 /**
  * Environment variable controlling the maximum extracted-text excerpt length.
  *
- * @example
+ * **Example** (Log excerpt length env)
+ *
  * ```ts
  * import { FILING_DECISION_MAX_EXCERPT_CHARS_ENV } from "@beep/documents-server/aggregates/Document"
  *
@@ -62,7 +65,8 @@ export const FILING_DECISION_MAX_EXCERPT_CHARS_ENV = "DOCUMENTS_FILING_MAX_EXCER
  * Environment variable controlling the maximum source bytes accepted by filing
  * text extraction before parsing.
  *
- * @example
+ * **Example** (Log max bytes env)
+ *
  * ```ts
  * import { FILING_TEXT_EXTRACTION_MAX_BYTES_ENV } from "@beep/documents-server/aggregates/Document"
  *
@@ -78,7 +82,8 @@ export const FILING_TEXT_EXTRACTION_MAX_BYTES_ENV = "DOCUMENTS_FILING_TEXT_EXTRA
  * Environment variable controlling the filing text-extraction timeout, accepted
  * in Effect `Config` duration syntax.
  *
- * @example
+ * **Example** (Log extraction timeout env)
+ *
  * ```ts
  * import { FILING_TEXT_EXTRACTION_TIMEOUT_ENV } from "@beep/documents-server/aggregates/Document"
  *
@@ -93,7 +98,8 @@ export const FILING_TEXT_EXTRACTION_TIMEOUT_ENV = "DOCUMENTS_FILING_TEXT_EXTRACT
 /**
  * Default fast Anthropic model used for filing classification.
  *
- * @example
+ * **Example** (Log default model value)
+ *
  * ```ts
  * import { FILING_DECISION_DEFAULT_MODEL } from "@beep/documents-server/aggregates/Document"
  *
@@ -108,7 +114,8 @@ export const FILING_DECISION_DEFAULT_MODEL = "claude-haiku-4-5";
 /**
  * Default confidence threshold for automatic filing.
  *
- * @example
+ * **Example** (Log default confidence threshold)
+ *
  * ```ts
  * import { FILING_DECISION_DEFAULT_CONFIDENCE_THRESHOLD } from "@beep/documents-server/aggregates/Document"
  *
@@ -123,7 +130,8 @@ export const FILING_DECISION_DEFAULT_CONFIDENCE_THRESHOLD = UnitInterval.make(0.
 /**
  * Default source-byte cap for PDF and DOCX filing extraction (32 MiB).
  *
- * @example
+ * **Example** (Log default max bytes)
+ *
  * ```ts
  * import { FILING_TEXT_EXTRACTION_DEFAULT_MAX_BYTES } from "@beep/documents-server/aggregates/Document"
  *
@@ -138,7 +146,8 @@ export const FILING_TEXT_EXTRACTION_DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
 /**
  * Default wall-clock budget for PDF and DOCX filing extraction.
  *
- * @example
+ * **Example** (Log default extraction timeout)
+ *
  * ```ts
  * import { FILING_TEXT_EXTRACTION_DEFAULT_TIMEOUT } from "@beep/documents-server/aggregates/Document"
  *
@@ -167,7 +176,8 @@ const ConfiguredMaxMaterializedBytes = S.Int.check(S.isGreaterThan(0)).pipe(
 /**
  * Resolved configuration value for LLM-backed filing.
  *
- * @example
+ * **Example** (Decode filing config value)
+ *
  * ```ts
  * import { FilingDecisionLlmConfigValue } from "@beep/documents-server/aggregates/Document"
  * import { Duration } from "effect"
@@ -204,7 +214,8 @@ export class FilingDecisionLlmConfigValue extends S.Class<FilingDecisionLlmConfi
 /**
  * Typed runtime configuration service for LLM-backed filing.
  *
- * @example
+ * **Example** (Log config service key)
+ *
  * ```ts
  * import { FilingDecisionLlmConfig } from "@beep/documents-server/aggregates/Document"
  *
@@ -248,7 +259,8 @@ const readFilingDecisionLlmConfig = Effect.fn($I`readFilingDecisionLlmConfig`)(f
 /**
  * Live configuration layer backed by the ambient Effect ConfigProvider.
  *
- * @example
+ * **Example** (Log live config layer)
+ *
  * ```ts
  * import { FilingDecisionLlmConfigLayer } from "@beep/documents-server/aggregates/Document"
  *

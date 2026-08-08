@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Cross-Origin-Embedder-Policy schemas.
  *
- * @example
+ * **Example** (Import and check Header export)
+ *
  * ```ts
  * import * as CrossOriginEmbedderPolicy from "@beep/schema/CrossOriginEmbedderPolicy"
  *

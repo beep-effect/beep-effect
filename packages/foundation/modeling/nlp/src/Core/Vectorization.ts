@@ -16,7 +16,8 @@ const $I = $NlpId.create("Core/Vectorization");
 /**
  * Strictly positive numeric value shared by BM25 hyperparameters.
  *
- * @example
+ * **Example** (Import PositiveNumber schema)
+ *
  * ```ts
  * import { PositiveNumber } from "@beep/nlp/Core/Vectorization"
  *
@@ -37,7 +38,8 @@ const BM25NormKit = LiteralKit(["none", "l1", "l2"]).annotate(
 /**
  * BM25 normalization mode used by vectorizer and corpus services.
  *
- * @example
+ * **Example** (Decode BM25Norm value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BM25Norm } from "@beep/nlp/Core/Vectorization"
@@ -59,7 +61,8 @@ export const BM25Norm = BM25NormKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link BM25Norm}.
  *
- * @example
+ * **Example** (Type annotate BM25Norm)
+ *
  * ```ts
  * import type { BM25Norm } from "@beep/nlp/Core/Vectorization"
  *
@@ -75,7 +78,8 @@ export type BM25Norm = typeof BM25Norm.Type;
 /**
  * Resolved BM25 hyperparameters used by vectorization and corpus management.
  *
- * @example
+ * **Example** (Create BM25Config instance)
+ *
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BM25Config } from "@beep/nlp/Core/Vectorization"
@@ -108,7 +112,8 @@ export class BM25Config extends S.Class<BM25Config>($I`BM25Config`)(
 /**
  * Default BM25 hyperparameters used by live vectorizers.
  *
- * @example
+ * **Example** (Inspect default BM25 config)
+ *
  * ```ts
  * import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization"
  *
@@ -128,7 +133,8 @@ export const DefaultBM25Config = BM25Config.make({
 /**
  * Dense vector representation for a document or query.
  *
- * @example
+ * **Example** (Create DocumentVector instance)
+ *
  * ```ts
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentVector } from "@beep/nlp/Core/Vectorization"
@@ -159,7 +165,8 @@ export class DocumentVector extends S.Class<DocumentVector>($I`DocumentVector`)(
 /**
  * Bag-of-words term-frequency representation for a document or query.
  *
- * @example
+ * **Example** (Create BagOfWords instance)
+ *
  * ```ts
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { BagOfWords } from "@beep/nlp/Core/Vectorization"
@@ -188,7 +195,8 @@ export class BagOfWords extends S.Class<BagOfWords>($I`BagOfWords`)(
 /**
  * Term-frequency entry reported for a learned vectorized document.
  *
- * @example
+ * **Example** (Create TermFrequency entry)
+ *
  * ```ts
  * import { TermFrequency } from "@beep/nlp/Core/Vectorization"
  *

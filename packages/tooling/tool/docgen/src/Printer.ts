@@ -23,12 +23,14 @@ const $I = $RepoDocgenId.create("Printer");
 /**
  * Union of documented entities that the markdown printer can render.
  *
- * @internal
- * @example
+ * **Example** (Import Printable type alias)
+ *
  * ```ts
  * import type { Printable } from "@beep/repo-docgen/Printer"
  * type ExamplePrintable = Printable
  * ```
+ *
+ * @internal
  * @category formatting
  * @since 0.0.0
  */
@@ -51,12 +53,14 @@ export const Printable = S.Union([
 /**
  * Companion type for {@link Printable}
  *
- * @example
+ * **Example** (Use companion Printable type)
+ *
  * ```ts
  * import { Printable } from "@beep/repo-docgen/Printer";
  *
  * type ExamplePrintable = Printable
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -384,11 +388,13 @@ const printNamespace: {
 /**
  * Renders a single documented entity into markdown.
  *
- * @internal
- * @remarks
+ * **Details**
+ *
  * Rendering depends on the active {@link Configuration.Configuration} and {@link Parser.Source}
  * so generated pages can include theme-compatible fences and source links.
- * @example
+ *
+ * **Example** (Render constant to markdown)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { Project } from "ts-morph"
@@ -440,6 +446,8 @@ const printNamespace: {
  * )
  * console.log(markdown.includes("answer"))
  * ```
+ *
+ * @internal
  * @category formatting
  * @since 0.0.0
  */
@@ -481,12 +489,13 @@ const sortByName: <
 /**
  * Renders a parsed module into markdown grouped by documentation category.
  *
- * @param module - Parsed docgen module to render.
- * @returns An Effect that yields the module rendered as category-grouped markdown.
- * @remarks
+ * **Details**
+ *
  * Printables are sorted by category and then by symbol name. Symbols with no
  * `@category` are grouped under the legacy `utils` fallback.
- * @example
+ *
+ * **Example** (Render module by category)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Project } from "ts-morph"
@@ -547,6 +556,9 @@ const sortByName: <
  * const markdown = Effect.runSync(printModule(module).pipe(Effect.provide(Configuration.layer(config))))
  * console.log(markdown.includes("# models"))
  * ```
+ *
+ * @param module - Parsed docgen module to render.
+ * @returns An Effect that yields the module rendered as category-grouped markdown.
  * @category formatting
  * @since 0.0.0
  */
@@ -586,7 +598,8 @@ export const printModule = (module: Domain.Module) =>
 /**
  * Builds the front matter used for a generated module documentation page.
  *
- * @example
+ * **Example** (Build module front matter)
+ *
  * ```ts
  * import { Project } from "ts-morph"
  * import { Doc, Module } from "@beep/repo-docgen/Domain"
@@ -620,6 +633,7 @@ export const printModule = (module: Domain.Module) =>
  * const frontMatter = printFrontMatter(module, 3)
  * console.log(frontMatter.includes("nav_order: 3"))
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -640,14 +654,16 @@ parent: Modules
  * unchanged keeps the generation deterministic while avoiding another runtime
  * dependency during the migration.
  *
- * @param content - Markdown content to normalize before writing.
- * @returns Effect that currently returns the markdown unchanged.
- * @example
+ * **Example** (Return markdown unchanged)
+ *
  * ```ts
  * import { prettify } from "@beep/repo-docgen/Printer"
  * const rendered = prettify("# Title")
  * console.log(rendered)
  * ```
+ *
+ * @param content - Markdown content to normalize before writing.
+ * @returns Effect that currently returns the markdown unchanged.
  * @category formatting
  * @since 0.0.0
  */

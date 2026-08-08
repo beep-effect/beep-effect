@@ -100,7 +100,8 @@ const unavailable = FilingOutcome.make({
 /**
  * FilingDecision layer backed by a schema-validated LanguageModel structured call.
  *
- * @example
+ * **Example** (Import and log layer)
+ *
  * ```ts
  * import { FilingDecisionLlmLayer } from "@beep/documents-server/aggregates/Document"
  *

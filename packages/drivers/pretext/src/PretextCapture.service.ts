@@ -31,7 +31,8 @@ const $I = $PretextId.create("PretextCapture.service");
  * the words to measure. `sentence` is optional provenance recorded on the
  * resulting snapshot.
  *
- * @example
+ * **Example** (Make a capture request)
+ *
  * ```ts
  * import { PretextCaptureRequest } from "@beep/pretext"
  *
@@ -44,8 +45,8 @@ const $I = $PretextId.create("PretextCapture.service");
  * console.log(request.font)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PretextCaptureRequest extends S.Class<PretextCaptureRequest>($I`PretextCaptureRequest`)(
   {
@@ -62,7 +63,8 @@ export class PretextCaptureRequest extends S.Class<PretextCaptureRequest>($I`Pre
 /**
  * Font-metrics capture service shape.
  *
- * @example
+ * **Example** (Keyof service shape method)
+ *
  * ```ts
  * import type { PretextCaptureShape } from "@beep/pretext"
  *
@@ -88,7 +90,8 @@ export interface PretextCaptureShape {
  * runtime (`@beep/pretext/browser`); fixture layers serve canned snapshots
  * anywhere.
  *
- * @example
+ * **Example** (Yield capture service tag)
+ *
  * ```ts
  * import { PretextCapture } from "@beep/pretext"
  * import * as Effect from "effect/Effect"
@@ -101,7 +104,7 @@ export interface PretextCaptureShape {
  * console.log(String(program))
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class PretextCapture extends Context.Service<PretextCapture, PretextCaptureShape>()($I`PretextCapture`) {}

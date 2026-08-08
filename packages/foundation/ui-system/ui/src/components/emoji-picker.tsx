@@ -21,7 +21,8 @@ const defaultEmojibaseUrl = "/emojibase-data";
 /**
  * Props for a popover emoji picker that emits the selected emoji glyph.
  *
- * @example
+ * **Example** (Satisfies picker props type)
+ *
  * ```ts
  * import type { EmojiPickerProps } from "@beep/ui/components/emoji-picker"
  *
@@ -54,11 +55,13 @@ const EmojiPickerScope = makeScopedAtom(() => Atom.make<EmojiPickerState>({ open
 /**
  * Popover emoji picker with self-hosted Emojibase data by default.
  *
- * @remarks
+ * **Details**
+ *
  * The default `emojibaseUrl` is `/emojibase-data`; pass a custom URL when the
  * app serves the Frimousse data from another static asset path.
  *
- * @example
+ * **Example** (Basic reaction picker)
+ *
  * ```tsx
  * import { EmojiPicker } from "@beep/ui/components/emoji-picker"
  *

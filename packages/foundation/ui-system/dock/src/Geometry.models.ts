@@ -24,7 +24,8 @@ type Dual2<Self, That, Result> = {
 /**
  * Codec for finite non-negative pixel coordinates and extents.
  *
- * @example
+ * **Example** (Read constructed box width)
+ *
  * ```ts
  * import { DockBox } from "@beep/dock"
  *
@@ -42,10 +43,13 @@ export const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
 /**
  * Finite non-negative rectangle in host pixel coordinates.
  *
- * @remarks Missing constructor fields default to zero, representing an
+ * **Details**
+ *
+ * Missing constructor fields default to zero, representing an
  * unmeasured host container before its first resize observation.
  *
- * @example
+ * **Example** (Construct positioned rectangle)
+ *
  * ```ts
  * import { DockBox } from "@beep/dock"
  *
@@ -69,7 +73,8 @@ export class DockBox extends S.Class<DockBox>($I`DockBox`)(
 /**
  * Projected rectangle for one tab group.
  *
- * @example
+ * **Example** (Create group geometry)
+ *
  * ```ts
  * import { DockBox, GroupGeometry, GroupId } from "@beep/dock"
  *
@@ -88,7 +93,8 @@ export class GroupGeometry extends S.Class<GroupGeometry>($I`GroupGeometry`)(
 /**
  * Projected hit rectangle for one binary split sash.
  *
- * @example
+ * **Example** (Create horizontal sash geometry)
+ *
  * ```ts
  * import { DockBox, SashGeometry, SplitId } from "@beep/dock"
  *
@@ -107,7 +113,8 @@ export class SashGeometry extends S.Class<SashGeometry>($I`SashGeometry`)(
 /**
  * Geometry for one floating subtree in z-order.
  *
- * @example
+ * **Example** (Create empty floating geometry)
+ *
  * ```ts
  * import { DockBox, FloatingGeometry } from "@beep/dock"
  *
@@ -126,7 +133,8 @@ export class FloatingGeometry extends S.Class<FloatingGeometry>($I`FloatingGeome
 /**
  * Complete renderer-facing dock geometry projection.
  *
- * @example
+ * **Example** (Use empty dock geometry)
+ *
  * ```ts
  * import { DockGeometry } from "@beep/dock"
  *
@@ -163,7 +171,8 @@ const minimumFloatingExtent = 32;
 /**
  * Resolves and clamps anchored geometry inside a host container.
  *
- * @example
+ * **Example** (Resolve top-right anchored box)
+ *
  * ```ts
  * import { DockBox, TopRightAnchoredBox, resolveAnchoredBox } from "@beep/dock"
  *
@@ -205,7 +214,8 @@ export const resolveAnchoredBox: Dual2<AnchoredBox, DockBox, DockBox> = dual(
 /**
  * Options for gaps, sash hit targets, and leaf minima.
  *
- * @example
+ * **Example** (Set gap and sash thickness)
+ *
  * ```ts
  * import { GeometryOptions } from "@beep/dock"
  *
@@ -231,7 +241,8 @@ export class GeometryOptions extends S.Class<GeometryOptions>($I`GeometryOptions
 /**
  * Function resolving a pixel minimum for a group.
  *
- * @example
+ * **Example** (Lookup minimum by group)
+ *
  * ```ts
  * import { GroupId } from "@beep/dock"
  * import type { GroupMinimumLookup } from "@beep/dock"
@@ -248,7 +259,8 @@ export type GroupMinimumLookup = (groupId: GroupId) => number;
 /**
  * Serializable group-id to pixel-minimum record.
  *
- * @example
+ * **Example** (Define group minima map)
+ *
  * ```ts
  * import type { GroupMinimaRecord } from "@beep/dock"
  *

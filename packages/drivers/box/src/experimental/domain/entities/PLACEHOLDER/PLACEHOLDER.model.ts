@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.m
 /**
  * Experimental placeholder entity schema retained until this generator slot is promoted to a named Box resource.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty schema)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.model";
  * import * as S from "effect/Schema";
@@ -40,7 +42,8 @@ export class PLACEHOLDER extends S.Class<PLACEHOLDER>($I`PLACEHOLDER`)(
 /**
  * Type-level companion namespace for {@link PLACEHOLDER} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode PLACEHOLDER)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.model";
  * import * as S from "effect/Schema";
@@ -58,7 +61,8 @@ export declare namespace PLACEHOLDER {
   /**
    * Encoded payload accepted by the {@link PLACEHOLDER} entity schema.
    *
-   * @example
+   * **Example** (Encode PLACEHOLDER payload)
+   *
    * ```ts
    * import { PLACEHOLDER } from "@beep/box/experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.model";
    * import * as S from "effect/Schema";

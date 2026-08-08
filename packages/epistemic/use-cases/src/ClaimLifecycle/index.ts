@@ -8,7 +8,8 @@
 /**
  * Claim lifecycle transition service exports.
  *
- * @example
+ * **Example** (Assert makeClaimTransition is function)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimLifecycle from "@beep/epistemic-use-cases/ClaimLifecycle"

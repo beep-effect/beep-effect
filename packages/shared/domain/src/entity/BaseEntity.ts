@@ -67,15 +67,16 @@ type EntityPersistedFor<
  * BaseEntity fields shared by every persisted product entity except the
  * entity-specific `id` and `entityType` fields.
  *
- * @example
+ * **Example** (Log fields.createdAt property)
+ *
  * ```ts
  * import { fields } from "@beep/shared-domain/entity/BaseEntity"
  *
  * console.log(fields.createdAt)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const fields = {
   createdAt: EntitySchema.DateTimeFromMillis,
@@ -91,15 +92,16 @@ export const fields = {
 /**
  * Physical persistence metadata for BaseEntity invariant fields.
  *
- * @example
+ * **Example** (Log orgId storageKind)
+ *
  * ```ts
  * import { persisted } from "@beep/shared-domain/entity/BaseEntity"
  *
  * console.log(persisted.orgId.storageKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const persisted = {
   createdAt: EntitySchema.persist.timestampMillis({
@@ -231,22 +233,24 @@ const hasReplacementClass = <Base extends object>(base: Base): base is Base & { 
 /**
  * Product-facing persisted entity base.
  *
- * @example
+ * **Example** (Log definition tableName)
+ *
  * ```ts
  * import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity"
  *
  * console.log(BaseEntity.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const BaseEntity = replaceClass(BaseEntityCore);
 
 /**
  * Runtime type for {@link BaseEntity}.
  *
- * @example
+ * **Example** (Decode BaseEntity with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -275,7 +279,7 @@ export const BaseEntity = replaceClass(BaseEntityCore);
  * Effect.runPromise(program)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type BaseEntity = typeof BaseEntity.Type;

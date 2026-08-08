@@ -13,7 +13,8 @@ const $I = $SchemaId.create("NumberChecks");
 /**
  * Refinement that accepts positive numbers (greater than zero).
  *
- * @example
+ * **Example** (Decode positive finite number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isPositive } from "@beep/schema/Number"
@@ -23,15 +24,16 @@ const $I = $SchemaId.create("NumberChecks");
  * console.log(value) // 5
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isPositive = S.isGreaterThan(0);
 
 /**
  * Refinement that accepts integers in PostgreSQL `serial` column range.
  *
- * @example
+ * **Example** (Decode PostgreSQL serial integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isPostgresSerialInt } from "@beep/schema/Number"
@@ -41,8 +43,8 @@ export const isPositive = S.isGreaterThan(0);
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isPostgresSerialInt = S.makeFilterGroup(
   [
@@ -75,7 +77,8 @@ export const isPostgresSerialInt = S.makeFilterGroup(
 /**
  * Refinement that accepts non-negative numbers (zero or greater).
  *
- * @example
+ * **Example** (Decode non-negative finite numbers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isNonNegative } from "@beep/schema/Number"
@@ -85,15 +88,16 @@ export const isPostgresSerialInt = S.makeFilterGroup(
  * console.log(S.decodeUnknownSync(NonNeg)(42)) // 42
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isNonNegative = S.isGreaterThanOrEqualTo(0);
 
 /**
  * Refinement that accepts negative numbers (less than zero).
  *
- * @example
+ * **Example** (Decode negative finite number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isNegative } from "@beep/schema/Number"
@@ -103,15 +107,16 @@ export const isNonNegative = S.isGreaterThanOrEqualTo(0);
  * console.log(value) // -1
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isNegative = S.isLessThan(0);
 
 /**
  * Refinement that accepts non-positive numbers (zero or less).
  *
- * @example
+ * **Example** (Decode non-positive finite numbers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { isNonPositive } from "@beep/schema/Number"
@@ -121,15 +126,16 @@ export const isNegative = S.isLessThan(0);
  * console.log(S.decodeUnknownSync(NonPos)(-10)) // -10
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isNonPositive = S.isLessThanOrEqualTo(0);
 
 /**
  * Branded schema for non-negative number (zero or greater).
  *
- * @example
+ * **Example** (Decode non-negative branded number)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegNum } from "@beep/schema/Number"
@@ -138,8 +144,8 @@ export const isNonPositive = S.isLessThanOrEqualTo(0);
  * console.log(S.decodeUnknownSync(NonNegNum)(100)) // 100
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonNegNum = S.Finite.check(isNonNegative).pipe(
   $I.annoteSchema("NonNegNum", {
@@ -150,7 +156,8 @@ export const NonNegNum = S.Finite.check(isNonNegative).pipe(
 /**
  * Type for {@link NonNegNum}.
  *
- * @example
+ * **Example** (Type non-negative branded value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegNum } from "@beep/schema/Number"
@@ -159,15 +166,16 @@ export const NonNegNum = S.Finite.check(isNonNegative).pipe(
  * console.log(index >= 0) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonNegNum = typeof NonNegNum.Type;
 
 /**
  * Branded schema for non-negative integers (zero or greater).
  *
- * @example
+ * **Example** (Decode non-negative branded integer)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -176,8 +184,8 @@ export type NonNegNum = typeof NonNegNum.Type;
  * console.log(S.decodeUnknownSync(NonNegativeInt)(100)) // 100
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
   .check(
@@ -202,7 +210,8 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
 /**
  * Type for {@link NonNegativeInt}.
  *
- * @example
+ * **Example** (Type non-negative integer value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -211,7 +220,7 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
  * console.log(index >= 0) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonNegativeInt = typeof NonNegativeInt.Type;

@@ -47,7 +47,8 @@ const makeMutableHashSetEquivalence =
  * Iso representation (serializable value array) used by
  * {@link MutableHashSetFromSelf} for round-tripping.
  *
- * @example
+ * **Example** (Satisfies value-array iso type)
+ *
  * ```ts
  * import type { MutableHashSetIso } from "@beep/schema/MutableHashSet"
  * import * as S from "effect/Schema"
@@ -56,15 +57,16 @@ const makeMutableHashSetEquivalence =
  * console.log(values.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MutableHashSetIso<Value extends S.Top> = ReadonlyArray<Value["Iso"]>;
 
 /**
  * Schema for validating an existing `MutableHashSet` instance.
  *
- * @example
+ * **Example** (Validates existing MutableHashSet)
+ *
  * ```ts
  * import { MutableHashSet } from "effect"
  * import * as S from "effect/Schema"
@@ -75,8 +77,8 @@ export type MutableHashSetIso<Value extends S.Top> = ReadonlyArray<Value["Iso"]>
  * console.log(S.is(SetSchema)(set))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashSetFromSelf<Value extends S.Top>
   extends S.declareConstructor<
@@ -92,7 +94,8 @@ export interface MutableHashSetFromSelf<Value extends S.Top>
 /**
  * Schema for transforming arrays into `MutableHashSet` instances.
  *
- * @example
+ * **Example** (Decodes array to MutableHashSet)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashSet } from "@beep/schema/MutableHashSet"
@@ -102,8 +105,8 @@ export interface MutableHashSetFromSelf<Value extends S.Top>
  * console.log(decoded)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashSet<Value extends S.Top>
   extends S.decodeTo<MutableHashSetFromSelf<S.toType<Value>>, S.$Array<Value>> {
@@ -114,7 +117,8 @@ export interface MutableHashSet<Value extends S.Top>
 /**
  * Type guard for Effect `MutableHashSet` values.
  *
- * @example
+ * **Example** (Guards MutableHashSet values)
+ *
  * ```ts
  * import { MutableHashSet } from "effect"
  * import { isMutableHashSet } from "@beep/schema/MutableHashSet"
@@ -125,8 +129,8 @@ export interface MutableHashSet<Value extends S.Top>
  *
  * @param value - Unknown input to test.
  * @returns `true` when `value` is a `MutableHashSet`.
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isMutableHashSet = <Value>(value: unknown): value is MutableHashSet_.MutableHashSet<Value> =>
   MutableHashSet_.isMutableHashSet(value);
@@ -135,7 +139,8 @@ export const isMutableHashSet = <Value>(value: unknown): value is MutableHashSet
  * Schema for validating existing `MutableHashSet` instances while applying the
  * provided member schema to each element.
  *
- * @example
+ * **Example** (Decodes existing set members)
+ *
  * ```ts
  * import { MutableHashSet } from "effect"
  * import * as S from "effect/Schema"
@@ -150,8 +155,8 @@ export const isMutableHashSet = <Value>(value: unknown): value is MutableHashSet
  * @param value - Element schema for set members.
  * @returns Schema whose encoded side is another `MutableHashSet` carrying the
  * encoded member type.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): MutableHashSetFromSelf<Value> => {
   const schema = S.declareConstructor<
@@ -243,7 +248,8 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
  * Schema for decoding arrays into `MutableHashSet` instances and encoding sets
  * back to arrays.
  *
- * @example
+ * **Example** (Round-trips set via arrays)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashSet } from "@beep/schema/MutableHashSet"
@@ -257,8 +263,8 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
  *
  * @param value - Element schema for set members.
  * @returns Array-backed schema for mutable hash sets.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashSet = <Value extends S.Top>(value: Value): MutableHashSet<Value> => {
   const schema = S.Array(value).pipe(

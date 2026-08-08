@@ -9,7 +9,8 @@
 /**
  * Package version for the epistemic server role.
  *
- * @example
+ * **Example** (Import and log version)
+ *
  * ```ts
  * import { VERSION } from "@beep/epistemic-server"
  *

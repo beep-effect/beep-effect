@@ -23,7 +23,8 @@ const $I = $SchemaId.create("Csp");
 /**
  * Source expression accepted by a Content-Security-Policy directive.
  *
- * @example
+ * **Example** (Decode self source)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DirectiveSource } from "@beep/schema/Csp"
@@ -44,7 +45,8 @@ export const DirectiveSource = S.Union([...internal.ArrayOfStrOrStr.members, S.U
 /**
  * Runtime type for {@link DirectiveSource}.
  *
- * @example
+ * **Example** (Annotate self source)
+ *
  * ```ts
  * import type { DirectiveSource } from "@beep/schema/Csp"
  *
@@ -66,7 +68,8 @@ const ContentSecurityPolicyHeaderNameBase = LiteralKit([headerName, reportOnlyHe
 /**
  * Header names used for enforcing or report-only CSP directives.
  *
- * @example
+ * **Example** (Decode CSP header name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
@@ -88,7 +91,8 @@ export const ContentSecurityPolicyHeaderName = ContentSecurityPolicyHeaderNameBa
 /**
  * Runtime type for {@link ContentSecurityPolicyHeaderName}.
  *
- * @example
+ * **Example** (Annotate CSP header name)
+ *
  * ```ts
  * import type { ContentSecurityPolicyHeaderName } from "@beep/schema/Csp"
  *
@@ -111,7 +115,8 @@ const unwrapDirectiveValue = <T>(value: undefined | T | O.Option<T>): T | undefi
 /**
  * Select the enforcing or report-only CSP response-header name.
  *
- * @example
+ * **Example** (Select enforcing or report-only)
+ *
  * ```ts
  * import { getProperHeaderName } from "@beep/schema/Csp"
  *
@@ -140,12 +145,14 @@ type DirectiveValueOptions = {
 /**
  * Creates a serialized directive value from a directive name and value list.
  *
- * @remarks
+ * **Details**
+ *
  * The helper is dual-call: pass `(directiveName, value)` directly or pass the
  * value first to obtain a pipe-friendly directive-name formatter. Values are
  * joined with a single space, matching CSP directive-list syntax.
  *
- * @example
+ * **Example** (Dual-call directive formatting)
+ *
  * ```ts
  * import { createDirectiveValue } from "@beep/schema/Csp"
  *
@@ -188,7 +195,8 @@ export const createDirectiveValue: {
 /**
  * Values accepted by the CSP `plugin-types` directive.
  *
- * @example
+ * **Example** (Decode plugin MIME types)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PluginTypes } from "@beep/schema/Csp"
@@ -209,7 +217,8 @@ export const PluginTypes = internal.ArrayOfStrOrStr.pipe(
 /**
  * Runtime type for {@link PluginTypes}.
  *
- * @example
+ * **Example** (Annotate plugin MIME types)
+ *
  * ```ts
  * import type { PluginTypes } from "@beep/schema/Csp"
  *
@@ -242,7 +251,8 @@ const SandboxBase = LiteralKit([
 /**
  * Values accepted by the CSP `sandbox` directive.
  *
- * @example
+ * **Example** (Decode sandbox token)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Sandbox } from "@beep/schema/Csp"
@@ -264,7 +274,8 @@ export const Sandbox = SandboxBase.pipe(
 /**
  * Runtime type for {@link Sandbox}.
  *
- * @example
+ * **Example** (Annotate sandbox token)
+ *
  * ```ts
  * import type { Sandbox } from "@beep/schema/Csp"
  *
@@ -317,12 +328,14 @@ const fetchDirectiveNamesByKey = {
 /**
  * Fetch directive fields accepted by Content-Security-Policy.
  *
- * @remarks
+ * **Details**
+ *
  * The serializer accepts both camelCase keys (`defaultSrc`) and CSP wire keys
  * (`default-src`). `Option.none()` and `undefined` values are omitted so
  * partially configured policy objects can be composed before rendering.
  *
- * @example
+ * **Example** (Serialize mixed fetch keys)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { FetchDirective } from "@beep/schema/Csp"
@@ -407,12 +420,14 @@ export class FetchDirective extends S.Class<FetchDirective>($I`FetchDirective`)(
 /**
  * Document directive fields accepted by Content-Security-Policy.
  *
- * @remarks
+ * **Details**
+ *
  * `sandbox: true` renders the bare `sandbox` directive, while string tokens
  * render as `sandbox <token>`. CamelCase and wire-format keys are normalized
  * to the wire-format directive names when serialized.
  *
- * @example
+ * **Example** (Serialize bare sandbox flag)
+ *
  * ```ts
  * import { DocumentDirective } from "@beep/schema/Csp"
  *
@@ -471,11 +486,13 @@ export class DocumentDirective extends S.Class<DocumentDirective>($I`DocumentDir
 /**
  * Navigation directive fields accepted by Content-Security-Policy.
  *
- * @remarks
+ * **Details**
+ *
  * The serializer normalizes `formAction`, `frameAncestors`, and `navigateTo`
  * to their CSP wire names and omits absent values.
  *
- * @example
+ * **Example** (Serialize navigation directives)
+ *
  * ```ts
  * import { NavigationDirective } from "@beep/schema/Csp"
  *
@@ -534,7 +551,8 @@ export class NavigationDirective extends S.Class<NavigationDirective>($I`Navigat
 /**
  * Values accepted by the CSP `report-uri` directive.
  *
- * @example
+ * **Example** (Decode report URI path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ReportURI } from "@beep/schema/Csp"
@@ -555,7 +573,8 @@ export const ReportURI = S.Union([...internal.StringOrUrl.members, S.Array(inter
 /**
  * Type-level representation of {@link ReportURI}.
  *
- * @example
+ * **Example** (Annotate report URI path)
+ *
  * ```ts
  * import type { ReportURI } from "@beep/schema/Csp"
  *
@@ -571,11 +590,13 @@ export type ReportURI = typeof ReportURI.Type;
 /**
  * Reporting directive fields accepted by Content-Security-Policy.
  *
- * @remarks
+ * **Details**
+ *
  * `report-uri` values are normalized through the shared strict URI encoder
  * before joining, while `report-to` is rendered as the named reporting group.
  *
- * @example
+ * **Example** (Serialize report-uri and report-to)
+ *
  * ```ts
  * import { ReportingDirective } from "@beep/schema/Csp"
  *
@@ -625,13 +646,15 @@ export class ReportingDirective extends S.Class<ReportingDirective>($I`Reporting
 /**
  * Complete normalized CSP directive field schema.
  *
- * @remarks
+ * **Details**
+ *
  * This schema describes the full directive field set produced by composing the
  * directive classes. It is stricter than the user-facing option object: partial
  * policy input belongs in {@link ContentSecurityPolicyOptionStruct}, whose
  * `directives` field makes each directive key optional before rendering.
  *
- * @example
+ * **Example** (Reject partial directive object)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CspDirectives } from "@beep/schema/Csp"
@@ -659,12 +682,14 @@ export class CspDirectives extends S.Class<CspDirectives>($I`CspDirectives`)(
 /**
  * Structured CSP option object accepted before header serialization.
  *
- * @remarks
+ * **Details**
+ *
  * Unlike {@link CspDirectives}, every directive key is optional here. This is
  * the object shape callers should use when constructing a CSP policy from the
  * subset of directives they actually want to emit.
  *
- * @example
+ * **Example** (Decode partial directives option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOptionStruct } from "@beep/schema/Csp"
@@ -709,7 +734,8 @@ export class ContentSecurityPolicyOptionStruct extends S.Class<ContentSecurityPo
 /**
  * CSP option schema accepting a disabled `false` value or structured directives.
  *
- * @example
+ * **Example** (Decode disabled false option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ContentSecurityPolicyOption } from "@beep/schema/Csp"
@@ -730,7 +756,8 @@ export const ContentSecurityPolicyOption = S.Union([S.Literal(false), ContentSec
 /**
  * Runtime type for {@link ContentSecurityPolicyOption}.
  *
- * @example
+ * **Example** (Annotate disabled false option)
+ *
  * ```ts
  * import type { ContentSecurityPolicyOption } from "@beep/schema/Csp"
  *
@@ -746,7 +773,8 @@ export type ContentSecurityPolicyOption = typeof ContentSecurityPolicyOption.Typ
 /**
  * Concise alias for {@link ContentSecurityPolicyOption}.
  *
- * @example
+ * **Example** (Decode alias false option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/Csp"
@@ -763,7 +791,8 @@ export const Option = ContentSecurityPolicyOption;
 /**
  * Type-level representation of {@link Option}.
  *
- * @example
+ * **Example** (Annotate alias false option)
+ *
  * ```ts
  * import type { Option } from "@beep/schema/Csp"
  *
@@ -779,7 +808,8 @@ export type Option = typeof Option.Type;
 /**
  * Serialized Content-Security-Policy response-header model.
  *
- * @example
+ * **Example** (Construct response header model)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader } from "@beep/schema/Csp"
@@ -851,12 +881,14 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
 /**
  * Format a structured CSP option into the serialized header value.
  *
- * @remarks
+ * **Details**
+ *
  * `undefined` and `false` disable output and return `None`. Enabled
  * options concatenate fetch, document, navigation, and reporting directive
  * groups in that order, omitting empty groups.
  *
- * @example
+ * **Example** (Format option or disable)
+ *
  * ```ts
  * import { ContentSecurityPolicyOptionStruct, createContentSecurityPolicyOptionHeaderValue } from "@beep/schema/Csp"
  *
@@ -898,12 +930,14 @@ export const createContentSecurityPolicyOptionHeaderValue = (
 /**
  * One-way schema that decodes CSP options into a response header.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This schema is intentionally one-way: it renders policy options into a
  * response-header model, but encoding a rendered header back into the original
  * option object is forbidden.
  *
- * @example
+ * **Example** (Create report-only response header)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -986,7 +1020,8 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
 /**
  * Runtime type for {@link ContentSecurityPolicyHeader}.
  *
- * @example
+ * **Example** (Annotate response header type)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type ContentSecurityPolicyHeader } from "@beep/schema/Csp"
@@ -1014,7 +1049,8 @@ export { ContentSecurityPolicyResponseHeader as ResponseHeader };
 /**
  * Concise alias for {@link ContentSecurityPolicyHeader}.
  *
- * @example
+ * **Example** (Create header via alias)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -1033,7 +1069,8 @@ export const Header = ContentSecurityPolicyHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Annotate header alias type)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ContentSecurityPolicyResponseHeader, type Header } from "@beep/schema/Csp"

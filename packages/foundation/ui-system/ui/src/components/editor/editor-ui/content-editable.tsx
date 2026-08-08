@@ -43,7 +43,8 @@ class Props extends S.Class<Props>($I`Props`)({
 /**
  * Lexical content-editable surface with a padding-aligned placeholder.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The placeholder overlay shares the editable's padding so the empty-state
  * cursor aligns with the placeholder text. When a custom `className` changes
  * the editable padding, pass a matching `placeholderClassName`.
@@ -52,7 +53,8 @@ class Props extends S.Class<Props>($I`Props`)({
  * typeahead plugin promotes the root to `role="combobox"`, and a combobox with
  * only `aria-placeholder` has no accessible name.
  *
- * @example
+ * **Example** (With RichTextPlugin usage)
+ *
  * ```tsx
  * import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
  * import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"

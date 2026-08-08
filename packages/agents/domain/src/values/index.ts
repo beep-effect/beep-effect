@@ -8,7 +8,8 @@
 /**
  * Root export for assistant-content value-object schemas and mapping helpers.
  *
- * @example
+ * **Example** (Decode AssistantBlock schema)
+ *
  * ```ts
  * import { AssistantBlock } from "@beep/agents-domain/values"
  * import * as S from "effect/Schema"

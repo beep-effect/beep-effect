@@ -12,10 +12,12 @@ const $I = $BoxId.create("errors/ClientError.errors");
 /**
  * Experimental placeholder typed error for Box client-domain failures that have not yet been split into concrete classes.
  *
- * @remarks
+ * **Details**
+ *
  * The current error shape has no payload fields; generated technical driver errors remain the field-level source for Box SDK and API failure details.
  *
- * @example
+ * **Example** (Catch PLACEHOLDER with Effect)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/errors/ClientError.errors";
  * import { Effect } from "effect";
@@ -42,7 +44,8 @@ export class PLACEHOLDER extends TaggedErrorClass<PLACEHOLDER>($I`PLACEHOLDER`)(
 /**
  * Type-level companion namespace for {@link PLACEHOLDER} encoded error payloads.
  *
- * @example
+ * **Example** (Encode PLACEHOLDER payload)
+ *
  * ```ts
  * import { PLACEHOLDER } from "@beep/box/experimental/domain/errors/ClientError.errors";
  * import * as S from "effect/Schema";
@@ -59,7 +62,8 @@ export declare namespace PLACEHOLDER {
   /**
    * Encoded payload accepted by the {@link PLACEHOLDER} error schema.
    *
-   * @example
+   * **Example** (Encode PLACEHOLDER schema)
+   *
    * ```ts
    * import { PLACEHOLDER } from "@beep/box/experimental/domain/errors/ClientError.errors";
    * import * as S from "effect/Schema";

@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Comment/Comment.model");
 /**
  * Experimental schema anchor for comments attached to Box items.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty Comment)
+ *
  * ```ts
  * import { Comment } from "@beep/box/experimental/domain/entities/Comment/Comment.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Comment extends S.Class<Comment>($I`Comment`)(
 /**
  * Type-level companion namespace for {@link Comment} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Comment)
+ *
  * ```ts
  * import { Comment } from "@beep/box/experimental/domain/entities/Comment/Comment.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Comment {
   /**
    * Encoded payload accepted by the {@link Comment} entity schema.
    *
-   * @example
+   * **Example** (Encode Comment to Encoded)
+   *
    * ```ts
    * import { Comment } from "@beep/box/experimental/domain/entities/Comment/Comment.model";
    * import * as S from "effect/Schema";

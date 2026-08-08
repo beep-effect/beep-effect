@@ -161,7 +161,8 @@ const tourBodyOverflowLockAtom = Atom.make((get) => {
 /**
  * Use tour hook.
  *
- * @example
+ * **Example** (Import useTour hook)
+ *
  * ```tsx
  * import { useTour } from "@beep/ui/components/tour"
  *
@@ -179,7 +180,8 @@ function useTour() {
 /**
  * Step type.
  *
- * @example
+ * **Example** (Create Step object)
+ *
  * ```ts
  * import type { Step } from "@beep/ui/components/tour"
  *
@@ -209,7 +211,8 @@ interface Step {
 /**
  * Tour type.
  *
- * @example
+ * **Example** (Create Tour with steps)
+ *
  * ```ts
  * import type { Step, Tour } from "@beep/ui/components/tour"
  *
@@ -230,7 +233,8 @@ interface Tour {
 /**
  * Tour provider export.
  *
- * @example
+ * **Example** (Import TourProvider export)
+ *
  * ```tsx
  * import { TourProvider } from "@beep/ui/components/tour"
  *

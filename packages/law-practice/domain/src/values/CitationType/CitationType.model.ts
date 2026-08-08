@@ -17,13 +17,14 @@ const $I = $LawPracticeDomainId.create("values/CitationType/CitationType.model")
 /**
  * The kind of legal authority a citation refers to.
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `CitationType.Enum` for typed literal access, `CitationType.is` for
  * per-literal guards, and `CitationType.Options` for the full literal list.
  *
- * **Example**
+ * **Example** (Decode and use helpers)
  *
- * @example
  * ```ts
  * import { CitationType } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -71,9 +72,8 @@ export const CitationType = LiteralKit([
  * The decoded literal type for {@link CitationType} — a union of every citation
  * kind (`"case" | "docket" | "statute" | ...`).
  *
- * **Example**
+ * **Example** (Assign decoded literal type)
  *
- * @example
  * ```ts
  * import type { CitationType } from "@beep/law-practice-domain"
  *

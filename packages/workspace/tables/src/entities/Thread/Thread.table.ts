@@ -11,7 +11,8 @@ import { Thread } from "@beep/workspace-domain/entities/Thread";
 /**
  * PGLite/Postgres Drizzle table for the workspace Thread entity.
  *
- * @example
+ * **Example** (Table name and storage)
+ *
  * ```ts
  * import { Thread } from "@beep/workspace-tables/entities"
  *

@@ -14,11 +14,13 @@ const $I = $AnthropicId.create("Anthropic.errors");
 /**
  * Recoverable technical failure raised while running an Anthropic repair helper.
  *
- * @remarks
+ * **Details**
+ *
  * Provider, retry-plan, and configuration failures are normalized into this
  * tagged error so repair callers can handle one package-level error shape.
  *
- * @example
+ * **Example** (Creating a RepairError)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { RepairError } from "@beep/anthropic"

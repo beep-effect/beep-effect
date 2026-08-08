@@ -373,7 +373,8 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
 /**
  * Drizzle-backed contradiction-triage repository layer.
  *
- * @example
+ * **Example** (Verify Drizzle repository layer)
+ *
  * ```ts
  * import { ContradictionTriageRepositoryDrizzle } from "@beep/epistemic-server/layer"
  * import { Layer } from "effect"
@@ -392,7 +393,8 @@ export const ContradictionTriageRepositoryDrizzle = Layer.effect(
 /**
  * Live contradiction-triage application service.
  *
- * @example
+ * **Example** (Verify live service layer)
+ *
  * ```ts
  * import { ContradictionTriageServiceLive } from "@beep/epistemic-server/layer"
  * import { Layer } from "effect"
@@ -411,7 +413,8 @@ export const ContradictionTriageServiceLive = Layer.effect(
 /**
  * Empty contradiction repository used by dependency-free fixture runtimes.
  *
- * @example
+ * **Example** (Verify fixture repository layer)
+ *
  * ```ts
  * import { ContradictionTriageRepositoryFixture } from "@beep/epistemic-server/layer"
  * import { Layer } from "effect"

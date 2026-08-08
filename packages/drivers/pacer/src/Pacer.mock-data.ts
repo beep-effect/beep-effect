@@ -119,7 +119,8 @@ const partyReportListBody = (content: ReadonlyArray<PartyResult>): Effect.Effect
 /**
  * Total number of case rows the default mock serves across all pages.
  *
- * @example
+ * **Example** (Log total mock cases)
+ *
  * ```ts
  * import { PACER_MOCK_TOTAL_CASES } from "@beep/pacer"
  *
@@ -135,7 +136,8 @@ export const PACER_MOCK_TOTAL_CASES = 3;
 /**
  * Two schema-sampled `/cases/find` pages (2 rows then 1 row; last on page 1).
  *
- * @example
+ * **Example** (Verify pages are Effects)
+ *
  * ```ts
  * import { defaultCasePages } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -156,7 +158,8 @@ export const defaultCasePages = (): ReadonlyArray<Effect.Effect<unknown, S.Schem
 /**
  * Build a schema-valid `/cases/find` page that never marks pagination complete.
  *
- * @example
+ * **Example** (Check looping body Effect)
+ *
  * ```ts
  * import { loopingCaseReportBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -174,7 +177,8 @@ export const loopingCaseReportBody = (pageNumber: number): Effect.Effect<unknown
 /**
  * One schema-sampled `/parties/find` page (1 row).
  *
- * @example
+ * **Example** (Check party body Effect)
+ *
  * ```ts
  * import { defaultPartyBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -191,7 +195,8 @@ export const defaultPartyBody: Effect.Effect<unknown, S.SchemaError> = partyRepo
 /**
  * Successful cso-auth body (loginResult "0", non-empty token).
  *
- * @example
+ * **Example** (Check auth success Effect)
+ *
  * ```ts
  * import { authSuccessBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -214,7 +219,8 @@ export const authSuccessBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUn
 /**
  * Failed cso-auth body (invalid credentials / OTP, loginResult "13").
  *
- * @example
+ * **Example** (Check invalid auth Effect)
+ *
  * ```ts
  * import { authInvalidBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -237,7 +243,8 @@ export const authInvalidBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUn
 /**
  * Successful cso-logout body.
  *
- * @example
+ * **Example** (Check logout body Effect)
+ *
  * ```ts
  * import { logoutBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -260,7 +267,8 @@ export const logoutBody: Effect.Effect<unknown, S.SchemaError> = S.encodeUnknown
 /**
  * Failed cso-logout body (invalid or expired nextGenCSO, loginResult "13").
  *
- * @example
+ * **Example** (Check invalid logout Effect)
+ *
  * ```ts
  * import { logoutInvalidBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -283,7 +291,8 @@ export const logoutInvalidBody: Effect.Effect<unknown, S.SchemaError> = S.encode
 /**
  * A PCL 406 validation error body (PACER's own shape, not our error schema).
  *
- * @example
+ * **Example** (Log validation error field)
+ *
  * ```ts
  * import { invalidParameterBody } from "@beep/pacer"
  *
@@ -302,7 +311,8 @@ export const invalidParameterBody = {
 /**
  * The report id the default mock issues for batch downloads.
  *
- * @example
+ * **Example** (Log default report id)
+ *
  * ```ts
  * import { DEFAULT_REPORT_ID } from "@beep/pacer"
  *
@@ -318,7 +328,8 @@ export const DEFAULT_REPORT_ID = 1078;
 /**
  * Total case rows the default batch download returns.
  *
- * @example
+ * **Example** (Log download case count)
+ *
  * ```ts
  * import { PACER_MOCK_DOWNLOAD_CASES } from "@beep/pacer"
  *
@@ -334,7 +345,8 @@ export const PACER_MOCK_DOWNLOAD_CASES = 2;
 /**
  * Build an encoded `ReportInfoType` body for a batch job in the given status.
  *
- * @example
+ * **Example** (Build completed report info)
+ *
  * ```ts
  * import { reportInfoBody } from "@beep/pacer"
  * import { Effect } from "effect"
@@ -368,7 +380,8 @@ export const reportInfoBody: {
 /**
  * Encoded result set returned by a completed batch case download.
  *
- * @example
+ * **Example** (Check download results Effect)
+ *
  * ```ts
  * import { downloadResultsBody } from "@beep/pacer"
  * import { Effect } from "effect"

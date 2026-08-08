@@ -12,22 +12,24 @@ const $I = $SchemaId.create("DomEvent");
 /**
  * Type guard for Event.
  *
- * @example
+ * **Example** (Guard Event instance)
+ *
  * ```ts
  * import { isEvent } from "@beep/schema/DomEvent"
  *
  * console.log(isEvent(new Event("submit")))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isEvent = (u: unknown): u is Event => u instanceof Event;
 
 /**
  * A DOM event.
  *
- * @example
+ * **Example** (Decode Event with schema)
+ *
  * ```ts
  * import { DOMEvent } from "@beep/schema/DomEvent"
  * import * as S from "effect/Schema"
@@ -36,8 +38,8 @@ export const isEvent = (u: unknown): u is Event => u instanceof Event;
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMEvent = S.declare(isEvent).pipe(
   $I.annoteSchema("DOMEvent", {
@@ -48,7 +50,8 @@ export const DOMEvent = S.declare(isEvent).pipe(
 /**
  * Type for {@link DOMEvent}.
  *
- * @example
+ * **Example** (Typed DOMEvent decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DOMEvent } from "@beep/schema/DomEvent"
@@ -57,8 +60,8 @@ export const DOMEvent = S.declare(isEvent).pipe(
  * console.log(event.type)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DOMEvent = typeof DOMEvent.Type;
 

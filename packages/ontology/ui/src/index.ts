@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/ontology-ui`.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-ui"
  *

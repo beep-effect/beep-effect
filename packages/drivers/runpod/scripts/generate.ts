@@ -453,6 +453,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 const $I = $RunpodId.create("Runpod.generated");
 `;
 
+// fallow-ignore-next-line code-duplication -- OpenAPI property-field template is shared with nested struct emission in this codegen script; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 const renderComponent = (name: string, schema: JsonSchema): Component => {
   if (schema.type === "object" || schema.properties !== undefined) {
     const required = pipe(schema.required, O.fromUndefinedOr, O.getOrElse(A.empty<string>));

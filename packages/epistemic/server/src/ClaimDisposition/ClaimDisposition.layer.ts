@@ -17,7 +17,8 @@ import type { PostgresDrizzle } from "@beep/postgres";
 /**
  * In-memory claim disposition repository layer for docker-free proofs.
  *
- * @example
+ * **Example** (Import in-memory layer)
+ *
  * ```ts
  * import { ClaimDispositionRepositoryInMemory } from "@beep/epistemic-server/ClaimDisposition"
  *
@@ -35,7 +36,8 @@ export const ClaimDispositionRepositoryInMemory: Layer.Layer<ClaimDispositionRep
 /**
  * Drizzle-backed claim disposition repository layer.
  *
- * @example
+ * **Example** (Import Drizzle layer)
+ *
  * ```ts
  * import { ClaimDispositionRepositoryDrizzle } from "@beep/epistemic-server/ClaimDisposition"
  *

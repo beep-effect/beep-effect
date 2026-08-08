@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import Workspace module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/Workspace"
  *
@@ -22,7 +23,8 @@ export * from "./Workspace.model.ts";
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import Workspace module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/Workspace"
  *

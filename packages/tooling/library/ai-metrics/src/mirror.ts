@@ -356,7 +356,8 @@ const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
 /**
  * Error raised by the P7 AI metrics mirror bundle workflow.
  *
- * @example
+ * **Example** (Construct mirror error)
+ *
  * ```ts
  * import { AiMetricsMirrorError } from "@beep/repo-ai-metrics"
  *
@@ -366,6 +367,7 @@ const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -395,11 +397,13 @@ const decodeLatestPointer = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirr
 /**
  * Input for building a sanitized P7 mirror bundle.
  *
- * @example
+ * **Example** (Make empty bundle input)
+ *
  * ```ts
  * import { AiMetricsMirrorBundleInput } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsMirrorBundleInput.make({}).remoteRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -428,7 +432,8 @@ export class AiMetricsMirrorBundleInput extends S.Class<AiMetricsMirrorBundleInp
 /**
  * One sanitized table exported into a P7 mirror bundle.
  *
- * @example
+ * **Example** (Make table export)
+ *
  * ```ts
  * import { AiMetricsMirrorTableExport } from "@beep/repo-ai-metrics"
  *
@@ -439,6 +444,7 @@ export class AiMetricsMirrorBundleInput extends S.Class<AiMetricsMirrorBundleInp
  * })
  * console.log(table.rowCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -456,7 +462,8 @@ export class AiMetricsMirrorTableExport extends S.Class<AiMetricsMirrorTableExpo
 /**
  * Privacy proof summary attached to a P7 mirror bundle.
  *
- * @example
+ * **Example** (Make privacy proof)
+ *
  * ```ts
  * import { AiMetricsMirrorPrivacyProof } from "@beep/repo-ai-metrics"
  *
@@ -468,6 +475,7 @@ export class AiMetricsMirrorTableExport extends S.Class<AiMetricsMirrorTableExpo
  * })
  * console.log(proof.safe)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -486,7 +494,8 @@ export class AiMetricsMirrorPrivacyProof extends S.Class<AiMetricsMirrorPrivacyP
 /**
  * Deploy-safe manifest written into every P7 mirror bundle.
  *
- * @example
+ * **Example** (Make bundle manifest)
+ *
  * ```ts
  * import {
  *   AiMetricsMirrorBundleManifest,
@@ -515,6 +524,7 @@ export class AiMetricsMirrorPrivacyProof extends S.Class<AiMetricsMirrorPrivacyP
  * })
  * console.log(manifest.p6ProofPreserved)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -544,7 +554,8 @@ export class AiMetricsMirrorBundleManifest extends S.Class<AiMetricsMirrorBundle
 /**
  * Result of building a sanitized P7 mirror bundle.
  *
- * @example
+ * **Example** (Make bundle result)
+ *
  * ```ts
  * import {
  *   AiMetricsMirrorBundleManifest,
@@ -584,6 +595,7 @@ export class AiMetricsMirrorBundleManifest extends S.Class<AiMetricsMirrorBundle
  * })
  * console.log(result.bundleId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -606,8 +618,8 @@ export class AiMetricsMirrorBundleResult extends S.Class<AiMetricsMirrorBundleRe
 /**
  * Locate the latest local mirror bundle pointer for a data root.
  *
- * @effects Reads and decodes `.beep/ai-metrics/mirror/latest.json` under the selected data root.
- * @example
+ * **Example** (Locate latest mirror bundle)
+ *
  * ```ts
  * import { locateLatestAiMetricsMirrorBundle } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
@@ -617,6 +629,8 @@ export class AiMetricsMirrorBundleResult extends S.Class<AiMetricsMirrorBundleRe
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Reads and decodes `.beep/ai-metrics/mirror/latest.json` under the selected data root.
  * @category services
  * @since 0.0.0
  */
@@ -712,16 +726,13 @@ const buildMirrorTables = Effect.fn("AiMetrics.buildMirrorTables")(function* ({
 /**
  * Build a sanitized deploy-safe P7 mirror bundle from local derived DuckDB data.
  *
- * @remarks
+ * **Details**
+ *
  * The source DuckDB database is attached read-only into a separate mirror
  * database so the active P6 proof database is never mutated by bundle builds.
- * @effects
- * - Checks for the source derived DuckDB database.
- * - Removes and recreates bundle and mirror working directories.
- * - Attaches the source DuckDB read-only into a temporary mirror database.
- * - Writes sanitized Parquet tables, status JSON, manifest JSON, and latest pointer JSON.
- * - Removes the temporary mirror working directory after a successful build.
- * @example
+ *
+ * **Example** (Build sanitized mirror bundle)
+ *
  * ```ts
  * import { AiMetricsMirrorBundleInput, buildAiMetricsMirrorBundle } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
@@ -734,6 +745,13 @@ const buildMirrorTables = Effect.fn("AiMetrics.buildMirrorTables")(function* ({
  * ).pipe(Effect.provide(NodeServices.layer))
  * console.log(program)
  * ```
+ *
+ * @effects
+ * - Checks for the source derived DuckDB database.
+ * - Removes and recreates bundle and mirror working directories.
+ * - Attaches the source DuckDB read-only into a temporary mirror database.
+ * - Writes sanitized Parquet tables, status JSON, manifest JSON, and latest pointer JSON.
+ * - Removes the temporary mirror working directory after a successful build.
  * @category services
  * @since 0.0.0
  */
@@ -875,7 +893,8 @@ const encodeMirrorBundleJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsM
 /**
  * Render a mirror bundle build result as JSON.
  *
- * @example
+ * **Example** (Render bundle result JSON)
+ *
  * ```ts
  * import {
  *   AiMetricsMirrorBundleManifest,
@@ -921,6 +940,7 @@ const encodeMirrorBundleJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsM
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

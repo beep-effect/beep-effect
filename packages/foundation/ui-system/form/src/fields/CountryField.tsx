@@ -17,7 +17,8 @@ import type React from "react";
  * Props for {@link CountryField}: `CountrySelect` props plus
  * label/description; binding props are owned by the field.
  *
- * @example
+ * **Example** (Label and description props)
+ *
  * ```ts
  * import type { CountryFieldProps } from "@beep/form/fields/CountryField"
  *
@@ -41,7 +42,8 @@ export interface CountryFieldProps
 /**
  * Schema-bound country combobox whose value is an ISO alpha-2 code.
  *
- * @example
+ * **Example** (Locale form country field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { CountryField } from "@beep/form/fields/CountryField"

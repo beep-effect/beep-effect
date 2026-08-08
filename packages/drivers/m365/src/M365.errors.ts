@@ -35,7 +35,8 @@ type M365HttpStatus = typeof M365HttpStatus.Type;
 /**
  * Technical error reasons emitted by the Microsoft 365 driver.
  *
- * @example
+ * **Example** (Check throttled reason match)
+ *
  * ```ts
  * import { M365ErrorReason } from "@beep/m365"
  *
@@ -63,7 +64,8 @@ export const M365ErrorReason = LiteralKit([
 /**
  * Type for {@link M365ErrorReason}.
  *
- * @example
+ * **Example** (Assign typed reason value)
+ *
  * ```ts
  * import type { M365ErrorReason as M365ErrorReasonType } from "@beep/m365"
  *
@@ -150,11 +152,14 @@ const M365ErrorFields = {
 /**
  * Technical failure raised by the Microsoft 365 driver boundary.
  *
+ * **Details**
+ *
  * Carries only sanitized, technical context (reason, HTTP status, requested
  * resource, item id, throttle hint) modeled as `Option`. Never raw file
  * content, mail bodies, or tokens.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { M365Error } from "@beep/m365"
  *
@@ -181,7 +186,8 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   /**
    * Create a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Create error with status)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *
@@ -209,7 +215,8 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   /**
    * Create a failed Effect containing a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Fail Effect from reason)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *
@@ -225,7 +232,8 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   /**
    * Create a thunk returning a failed Effect containing a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Thunk returning failed Effect)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *

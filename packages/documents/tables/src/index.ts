@@ -9,7 +9,8 @@
 /**
  * Documents entity table metadata namespaces.
  *
- * @example
+ * **Example** (Log SyncItem table name)
+ *
  * ```ts
  * import { Entities } from "@beep/documents-tables"
  *

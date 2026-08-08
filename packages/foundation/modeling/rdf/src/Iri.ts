@@ -873,7 +873,8 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
 /**
  * RFC 3987 `IRI-reference` schema, including absolute and relative forms.
  *
- * @example
+ * **Example** (Decode absolute IRI reference)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { IRIReference } from "@beep/rdf"
@@ -882,8 +883,8 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  * console.log(decoded) // "https://example.org/resource"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const IRIReference = S.String.check(iriReferenceChecks)
   .annotate({
@@ -900,7 +901,8 @@ export const IRIReference = S.String.check(iriReferenceChecks)
 /**
  * RFC 3987 `IRI-reference` syntax, including absolute and relative forms.
  *
- * @example
+ * **Example** (Accept IRIReference type)
+ *
  * ```ts
  * import type { IRIReference } from "@beep/rdf/Iri"
  *
@@ -908,15 +910,16 @@ export const IRIReference = S.String.check(iriReferenceChecks)
  * console.log(acceptIRIReference)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type IRIReference = typeof IRIReference.Type;
 
 /**
  * RFC 3987 `irelative-ref` schema.
  *
- * @example
+ * **Example** (Decode relative IRI path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RelativeIRIReference } from "@beep/rdf"
@@ -925,8 +928,8 @@ export type IRIReference = typeof IRIReference.Type;
  * console.log(decoded) // "/path/to/resource"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
   .annotate({
@@ -943,7 +946,8 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
 /**
  * RFC 3987 `irelative-ref` syntax.
  *
- * @example
+ * **Example** (Accept RelativeIRIReference type)
+ *
  * ```ts
  * import type { RelativeIRIReference } from "@beep/rdf/Iri"
  *
@@ -951,15 +955,16 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
  * console.log(acceptRelativeIRIReference)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RelativeIRIReference = typeof RelativeIRIReference.Type;
 
 /**
  * RFC 3987 `absolute-IRI` schema without a fragment component.
  *
- * @example
+ * **Example** (Decode absolute IRI)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AbsoluteIRI } from "@beep/rdf"
@@ -968,8 +973,8 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  * console.log(decoded) // "https://example.org"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const AbsoluteIRI = S.String.check(absoluteIriChecks)
   .annotate({
@@ -986,7 +991,8 @@ export const AbsoluteIRI = S.String.check(absoluteIriChecks)
 /**
  * RFC 3987 `absolute-IRI` syntax without a fragment component.
  *
- * @example
+ * **Example** (Accept AbsoluteIRI type)
+ *
  * ```ts
  * import type { AbsoluteIRI } from "@beep/rdf/Iri"
  *
@@ -994,15 +1000,16 @@ export const AbsoluteIRI = S.String.check(absoluteIriChecks)
  * console.log(acceptAbsoluteIRI)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type AbsoluteIRI = typeof AbsoluteIRI.Type;
 
 /**
  * RFC 3987 `IRI` schema.
  *
- * @example
+ * **Example** (Decode IRI with fragment)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { IRI } from "@beep/rdf"
@@ -1011,8 +1018,8 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  * console.log(decoded) // "https://example.org/page#section"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const IRI = S.String.check(iriChecks)
   .annotate({
@@ -1029,7 +1036,8 @@ export const IRI = S.String.check(iriChecks)
 /**
  * RFC 3987 `IRI` syntax.
  *
- * @example
+ * **Example** (Accept IRI type)
+ *
  * ```ts
  * import type { IRI } from "@beep/rdf/Iri"
  *
@@ -1037,7 +1045,7 @@ export const IRI = S.String.check(iriChecks)
  * console.log(acceptIRI)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type IRI = typeof IRI.Type;

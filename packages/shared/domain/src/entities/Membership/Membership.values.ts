@@ -16,7 +16,8 @@ const StatusBase = LiteralKit(["active"]);
 /**
  * Organization membership role.
  *
- * @example
+ * **Example** (Check owner role value)
+ *
  * ```ts
  * import { Role } from "@beep/shared-domain/entities/Membership"
  *
@@ -40,7 +41,8 @@ export const Role = RoleBase.pipe(
 /**
  * Runtime type for {@link Role}.
  *
- * @example
+ * **Example** (Type a Role value)
+ *
  * ```ts
  * import type { Role } from "@beep/shared-domain/entities/Membership"
  *
@@ -56,7 +58,8 @@ export type Role = typeof Role.Type;
 /**
  * Organization membership lifecycle status.
  *
- * @example
+ * **Example** (Check active status value)
+ *
  * ```ts
  * import { Status } from "@beep/shared-domain/entities/Membership"
  *
@@ -80,7 +83,8 @@ export const Status = StatusBase.pipe(
 /**
  * Runtime type for {@link Status}.
  *
- * @example
+ * **Example** (Type a Status value)
+ *
  * ```ts
  * import type { Status } from "@beep/shared-domain/entities/Membership"
  *

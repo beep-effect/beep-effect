@@ -40,7 +40,8 @@ const $I = $UsptoMcpId.create("UsptoDocumentTiers");
  * official date, `complete` adds the human-readable code description and
  * download URL.
  *
- * @example
+ * **Example** (Minimal tier field keys)
+ *
  * ```ts
  * import { usptoDocumentFieldTiers } from "@beep/uspto-mcp/UsptoDocumentTiers"
  *
@@ -126,7 +127,8 @@ const DocumentsProjectionOutputArbitraryValues = [
  * the caller when even the `minimal` tier's columnar envelope exceeds
  * budget.
  *
- * @example
+ * **Example** (Decode Inline projection outcome)
+ *
  * ```ts
  * import { DocumentsProjectionOutput } from "@beep/uspto-mcp/UsptoDocumentTiers"
  * import * as S from "effect/Schema"
@@ -156,7 +158,8 @@ export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate(
 /**
  * Type for {@link DocumentsProjectionOutput}.
  *
- * @example
+ * **Example** (Type annotated Inline result)
+ *
  * ```ts
  * import { DocumentsProjectionOutput } from "@beep/uspto-mcp/UsptoDocumentTiers"
  * import * as S from "effect/Schema"
@@ -179,7 +182,8 @@ export type DocumentsProjectionOutput = typeof DocumentsProjectionOutput.Type;
  * Callback that mints a fetchable handle when even the minimal document tier
  * exceeds the caller's size budget.
  *
- * @example
+ * **Example** (Implement sync mint callback)
+ *
  * ```ts
  * import { FetchableHandle } from "@beep/mcp-kit"
  * import { NonNegativeInt } from "@beep/schema"
@@ -211,7 +215,8 @@ export const MintFetchableHandle = Fn({
 /**
  * Type for {@link MintFetchableHandle}.
  *
- * @example
+ * **Example** (Satisfy mint handle type)
+ *
  * ```ts
  * import type { MintFetchableHandle } from "@beep/uspto-mcp/UsptoDocumentTiers"
  *
@@ -232,7 +237,8 @@ export type MintFetchableHandle = typeof MintFetchableHandle.Type;
 /**
  * Options for {@link projectDocumentsWithinBudget}.
  *
- * @example
+ * **Example** (Make budget options object)
+ *
  * ```ts
  * import { FetchableHandle } from "@beep/mcp-kit"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
@@ -282,7 +288,8 @@ export class ProjectDocumentsWithinBudgetOptions extends S.Class<ProjectDocument
  * `mintFetchableHandle` is called with the oversized minimal projection and
  * its size; the payload is never returned inline in that case.
  *
- * @example
+ * **Example** (Project documents within budget)
+ *
  * ```ts
  * import { UsptoDocumentReference } from "@beep/uspto"
  * import { FetchableHandle } from "@beep/mcp-kit"

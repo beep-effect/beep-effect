@@ -22,12 +22,15 @@ const $I = $ApiTransportId.create("EgressDenied");
 /**
  * A governed egress boundary refused the request's destination.
  *
+ * **Details**
+ *
  * Deliberately field-free: the denial reason is recorded by the policy that
  * refused, never surfaced to the caller. Consumers match on the tag (or use
  * {@link EgressDenied.is}) inside a failure cause and translate to their own
  * typed refusal.
  *
- * @example
+ * **Example** (Make and is check)
+ *
  * ```ts
  * import { EgressDenied } from "@beep/api-transport"
  *

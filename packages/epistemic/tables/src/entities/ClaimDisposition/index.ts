@@ -8,7 +8,8 @@
 /**
  * ClaimDisposition row converter exports.
  *
- * @example
+ * **Example** (Import row converter exports)
+ *
  * ```ts
  * import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition"
  *
@@ -22,7 +23,8 @@ export * from "./ClaimDisposition.converters.ts";
 /**
  * ClaimDisposition table exports.
  *
- * @example
+ * **Example** (Import table definition exports)
+ *
  * ```ts
  * import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition"
  *

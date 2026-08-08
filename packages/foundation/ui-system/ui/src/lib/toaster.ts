@@ -1,7 +1,8 @@
 /**
  * Shared toast manager used by the `@beep/ui` toaster surface.
  *
- * @example
+ * **Example** (Import global toast manager)
+ *
  * ```ts
  * import { globalToastManager } from "@beep/ui/lib/toaster"
  *
@@ -17,7 +18,8 @@ import type { ToastData } from "../components/toast.tsx";
 /**
  * Global toast manager export.
  *
- * @example
+ * **Example** (Log global toast manager)
+ *
  * ```ts
  * import { globalToastManager } from "@beep/ui/lib/toaster"
  *

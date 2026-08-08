@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Switch component.
  *
- * @example
+ * **Example** (Import Switch component)
+ *
  * ```tsx
  * import { Switch } from "@beep/ui/components/switch"
  *

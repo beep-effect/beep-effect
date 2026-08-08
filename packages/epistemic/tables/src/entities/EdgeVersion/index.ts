@@ -8,7 +8,8 @@
 /**
  * EdgeVersion row converter exports.
  *
- * @example
+ * **Example** (Access toEdgeVersionInsert export)
+ *
  * ```ts
  * import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion"
  *
@@ -22,7 +23,8 @@ export * from "./EdgeVersion.converters.ts";
 /**
  * EdgeVersion table exports.
  *
- * @example
+ * **Example** (Access Table entityType)
+ *
  * ```ts
  * import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion"
  *

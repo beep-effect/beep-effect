@@ -16,7 +16,8 @@ const EdgeRelationBase = LiteralKit(["supports", "refutes", "contradicts"]);
  * Bounded relation vocabulary carried by a bitemporal epistemic edge: one
  * endpoint `supports`, `refutes`, or `contradicts` the other.
  *
- * @example
+ * **Example** (Decode supports relation)
+ *
  * ```ts
  * import { EdgeRelation } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -38,7 +39,8 @@ export const EdgeRelation = EdgeRelationBase.pipe(
 /**
  * Runtime type for {@link EdgeRelation}.
  *
- * @example
+ * **Example** (Satisfy EdgeRelation type)
+ *
  * ```ts
  * import type { EdgeRelation } from "@beep/epistemic-domain"
  *
@@ -59,7 +61,8 @@ const SymmetricEdgeRelationBase = LiteralKit(EdgeRelationBase.pickOptions(["cont
  * which endpoint is recorded as source. The logical-edge digest uses this subset
  * to collapse both endpoint orderings onto one key.
  *
- * @example
+ * **Example** (Decode contradicts relation)
+ *
  * ```ts
  * import { SymmetricEdgeRelation } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -81,7 +84,8 @@ export const SymmetricEdgeRelation = SymmetricEdgeRelationBase.pipe(
 /**
  * Runtime type for {@link SymmetricEdgeRelation}.
  *
- * @example
+ * **Example** (Satisfy SymmetricEdgeRelation type)
+ *
  * ```ts
  * import type { SymmetricEdgeRelation } from "@beep/epistemic-domain"
  *
@@ -97,7 +101,8 @@ export type SymmetricEdgeRelation = typeof SymmetricEdgeRelation.Type;
 /**
  * The relation literals that are symmetric, in vocabulary order.
  *
- * @example
+ * **Example** (Log symmetric relations list)
+ *
  * ```ts
  * import { symmetricEdgeRelations } from "@beep/epistemic-domain"
  *
@@ -113,7 +118,8 @@ export const symmetricEdgeRelations: ReadonlyArray<EdgeRelation> = SymmetricEdge
  * Whether a relation's endpoint ordering carries no meaning, derived from the
  * {@link SymmetricEdgeRelation} subset schema rather than an ad-hoc predicate.
  *
- * @example
+ * **Example** (Check relation symmetry)
+ *
  * ```ts
  * import { isSymmetricEdgeRelation } from "@beep/epistemic-domain"
  *

@@ -11,13 +11,15 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 /**
  * Reports a Docgen command error using the historical terminal prefix.
  *
- * @example
+ * **Example** (Report invalid package error)
+ *
  * ```ts
  * import { reportDocgenCommandError } from "@beep/repo-cli/commands/Docgen/Docgen.errors"
  *
  * const program = reportDocgenCommandError({ message: "invalid package" })
  * console.log(program) // example value
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

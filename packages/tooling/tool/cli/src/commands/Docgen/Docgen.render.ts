@@ -30,13 +30,15 @@ const jsonText = (value: unknown): string => pipe(encodeJsonResult(value), Resul
 /**
  * Encode command payloads as stable pretty JSON.
  *
- * @example
+ * **Example** (Encode stable pretty JSON)
+ *
  * ```ts
  * import { renderDocgenJson } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = renderDocgenJson({ ok: true })
  * console.log(program) // example value
  * ```
+ *
  * @category serialization
  * @since 0.0.0
  */
@@ -50,7 +52,8 @@ export const renderDocgenJson: (value: unknown) => Effect.Effect<string, DomainE
 /**
  * Default destination for package JSDoc analysis reports.
  *
- * @example
+ * **Example** (Build default analysis path)
+ *
  * ```ts
  * import { defaultAnalysisPath } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
@@ -58,6 +61,7 @@ export const renderDocgenJson: (value: unknown) => Effect.Effect<string, DomainE
  * console.log(defaultAnalysisPath("/repo/pkg", true, path))
  * console.log(defaultAnalysisPath(true, path)("/repo/pkg"))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -71,7 +75,8 @@ export const defaultAnalysisPath: {
 /**
  * Default destination for package JSDoc quality reports.
  *
- * @example
+ * **Example** (Build default quality path)
+ *
  * ```ts
  * import { defaultQualityPath } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
@@ -79,6 +84,7 @@ export const defaultAnalysisPath: {
  * console.log(defaultQualityPath("/repo/pkg", false, path))
  * console.log(defaultQualityPath(false, path)("/repo/pkg"))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -92,13 +98,15 @@ export const defaultQualityPath: {
 /**
  * Print package generation results and return the failure count.
  *
- * @example
+ * **Example** (Log empty generation results)
+ *
  * ```ts
  * import { logGenerationResults } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = logGenerationResults([])
  * console.log(program) // example value
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -124,13 +132,15 @@ export const logGenerationResults = Effect.fn(function* (results: ReadonlyArray<
 /**
  * Print package docs aggregation results.
  *
- * @example
+ * **Example** (Log empty aggregate results)
+ *
  * ```ts
  * import { logAggregateResults } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = logAggregateResults([])
  * console.log(program) // example value
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -148,13 +158,15 @@ export const logAggregateResults = Effect.fn(function* (results: ReadonlyArray<D
 /**
  * Print the Docgen command index message.
  *
- * @example
+ * **Example** (Print Docgen index message)
+ *
  * ```ts
  * import { printDocgenIndex } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = printDocgenIndex
  * console.log(program) // example value
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -184,7 +196,8 @@ type DocsIndexContentOptions = {
 /**
  * Render the aggregate docs index page for one package.
  *
- * @example
+ * **Example** (Render package docs index)
+ *
  * ```ts
  * import { generateDocsIndexContent } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
@@ -194,6 +207,7 @@ type DocsIndexContentOptions = {
  * })
  * console.log(content.includes("permalink: /docs/tooling/tool/cli"))
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -214,10 +228,8 @@ nav_order: ${order}
 /**
  * Render the Markdown JSDoc analysis report for one package.
  *
- * @param analysis - Package analysis document.
- * @param fixMode - Whether to render checklist-oriented remediation content.
- * @returns Markdown report content.
- * @example
+ * **Example** (Render analysis Markdown report)
+ *
  * ```ts
  * import { generateAnalysisReport } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  * import {
@@ -242,6 +254,10 @@ nav_order: ${order}
  * })
  * console.log(generateAnalysisReport(analysis, false).startsWith("# JSDoc Analysis Report"))
  * ```
+ *
+ * @param analysis - Package analysis document.
+ * @param fixMode - Whether to render checklist-oriented remediation content.
+ * @returns Markdown report content.
  * @category formatting
  * @since 0.0.0
  */
@@ -361,9 +377,8 @@ export const generateAnalysisReport: {
 /**
  * Encode a package analysis document as JSON text.
  *
- * @param analysis - Package analysis document.
- * @returns JSON representation suitable for writing to disk or stdout.
- * @example
+ * **Example** (Encode analysis document JSON)
+ *
  * ```ts
  * import { generateAnalysisJson } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  * import {
@@ -388,6 +403,9 @@ export const generateAnalysisReport: {
  * const json = generateAnalysisJson(analysis)
  * console.log(json.includes("\"packageName\": \"@beep/repo-cli\""))
  * ```
+ *
+ * @param analysis - Package analysis document.
+ * @returns JSON representation suitable for writing to disk or stdout.
  * @category serialization
  * @since 0.0.0
  */

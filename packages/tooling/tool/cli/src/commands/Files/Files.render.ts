@@ -45,14 +45,16 @@ import type {
 /**
  * Render a rename plan entry.
  *
- * @param entry - Rename plan entry.
- * @returns Human-readable plan line.
- * @example
+ * **Example** (Import renderPlanEntry)
+ *
  * ```ts
  * import { renderPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderPlanEntry = renderPlanEntry
  * ```
+ *
+ * @param entry - Rename plan entry.
+ * @returns Human-readable plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -61,14 +63,16 @@ export const renderPlanEntry = (entry: RenamePlanEntry): string => `${entry.sour
 /**
  * Render a metadata strip plan entry.
  *
- * @param entry - Planned source file whose metadata will be removed.
- * @returns Human-readable plan line.
- * @example
+ * **Example** (Import strip metadata renderer)
+ *
  * ```ts
  * import { renderStripMetadataPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderStripMetadataPlanEntry = renderStripMetadataPlanEntry
  * ```
+ *
+ * @param entry - Planned source file whose metadata will be removed.
+ * @returns Human-readable plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -78,14 +82,16 @@ export const renderStripMetadataPlanEntry = (entry: StripMetadataPlanEntry): str
 /**
  * Render a caption sidecar creation plan entry.
  *
- * @param entry - Planned source image and caption sidecar pair.
- * @returns Human-readable plan line.
- * @example
+ * **Example** (Import caption plan renderer)
+ *
  * ```ts
  * import { renderCreateCaptionFilesPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCreateCaptionFilesPlanEntry = renderCreateCaptionFilesPlanEntry
  * ```
+ *
+ * @param entry - Planned source image and caption sidecar pair.
+ * @returns Human-readable plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -95,14 +101,16 @@ export const renderCreateCaptionFilesPlanEntry = (entry: CreateCaptionFilesPlanE
 /**
  * Render a skipped caption sidecar creation source entry.
  *
- * @param entry - Source file excluded from caption sidecar creation with its reason.
- * @returns Human-readable skipped line.
- * @example
+ * **Example** (Import skipped caption renderer)
+ *
  * ```ts
  * import { renderCreateCaptionFilesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCreateCaptionFilesSkippedEntry = renderCreateCaptionFilesSkippedEntry
  * ```
+ *
+ * @param entry - Source file excluded from caption sidecar creation with its reason.
+ * @returns Human-readable skipped line.
  * @category utilities
  * @since 0.0.0
  */
@@ -112,14 +120,16 @@ export const renderCreateCaptionFilesSkippedEntry = (entry: CreateCaptionFilesSk
 /**
  * Render a normalize plan entry.
  *
- * @param entry - Planned source/output pair with probed resize details.
- * @returns Human-readable plan line.
- * @example
+ * **Example** (Import normalize plan renderer)
+ *
  * ```ts
  * import { renderNormalizePlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderNormalizePlanEntry = renderNormalizePlanEntry
  * ```
+ *
+ * @param entry - Planned source/output pair with probed resize details.
+ * @returns Human-readable plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -129,14 +139,16 @@ export const renderNormalizePlanEntry = (entry: NormalizePlanEntry): string =>
 /**
  * Render a normalize skipped entry.
  *
- * @param entry - Source file excluded from normalization with its reason.
- * @returns Human-readable skipped line.
- * @example
+ * **Example** (Import normalize skipped renderer)
+ *
  * ```ts
  * import { renderNormalizeSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderNormalizeSkippedEntry = renderNormalizeSkippedEntry
  * ```
+ *
+ * @param entry - Source file excluded from normalization with its reason.
+ * @returns Human-readable skipped line.
  * @category utilities
  * @since 0.0.0
  */
@@ -146,14 +158,16 @@ export const renderNormalizeSkippedEntry = (entry: NormalizeSkippedEntry): strin
 /**
  * Render a poor-candidate archive plan entry.
  *
- * @param entry - Assessed image candidate.
- * @returns Human-readable archive plan line.
- * @example
+ * **Example** (Import archive plan renderer)
+ *
  * ```ts
  * import { renderArchivePoorCandidatesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderArchivePoorCandidatesEntry = renderArchivePoorCandidatesEntry
  * ```
+ *
+ * @param entry - Assessed image candidate.
+ * @returns Human-readable archive plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -169,14 +183,16 @@ export const renderArchivePoorCandidatesEntry = (entry: ArchivePoorCandidatesEnt
 /**
  * Render a skipped poor-candidate archive source entry.
  *
- * @param entry - Source file excluded from candidate archival with its reason.
- * @returns Human-readable skipped line.
- * @example
+ * **Example** (Import archive skipped renderer)
+ *
  * ```ts
  * import { renderArchivePoorCandidatesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderArchivePoorCandidatesSkippedEntry = renderArchivePoorCandidatesSkippedEntry
  * ```
+ *
+ * @param entry - Source file excluded from candidate archival with its reason.
+ * @returns Human-readable skipped line.
  * @category utilities
  * @since 0.0.0
  */
@@ -186,14 +202,16 @@ export const renderArchivePoorCandidatesSkippedEntry = (entry: ArchivePoorCandid
 /**
  * Render a detected-border report entry.
  *
- * @param entry - Analyzed image entry.
- * @returns Human-readable report line.
- * @example
+ * **Example** (Import border report renderer)
+ *
  * ```ts
  * import { renderDetectBordersEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectBordersEntry = renderDetectBordersEntry
  * ```
+ *
+ * @param entry - Analyzed image entry.
+ * @returns Human-readable report line.
  * @category utilities
  * @since 0.0.0
  */
@@ -211,14 +229,16 @@ export const renderDetectBordersEntry = (entry: DetectBordersEntry): string => {
 /**
  * Render a skipped border-detection source entry.
  *
- * @param entry - Source file excluded from border detection with its reason.
- * @returns Human-readable skipped line.
- * @example
+ * **Example** (Import border skipped renderer)
+ *
  * ```ts
  * import { renderDetectBordersSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectBordersSkippedEntry = renderDetectBordersSkippedEntry
  * ```
+ *
+ * @param entry - Source file excluded from border detection with its reason.
+ * @returns Human-readable skipped line.
  * @category utilities
  * @since 0.0.0
  */
@@ -228,14 +248,16 @@ export const renderDetectBordersSkippedEntry = (entry: DetectBordersSkippedEntry
 /**
  * Render a face-detection report entry.
  *
- * @param entry - Analyzed image entry.
- * @returns Human-readable report line.
- * @example
+ * **Example** (Import face report renderer)
+ *
  * ```ts
  * import { renderDetectFacesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectFacesEntry = renderDetectFacesEntry
  * ```
+ *
+ * @param entry - Analyzed image entry.
+ * @returns Human-readable report line.
  * @category utilities
  * @since 0.0.0
  */
@@ -257,14 +279,16 @@ export const renderDetectFacesEntry = (entry: DetectFacesEntry): string => {
 /**
  * Render a skipped face-detection source entry.
  *
- * @param entry - Source file excluded from face detection with its reason.
- * @returns Human-readable skipped line.
- * @example
+ * **Example** (Import face skipped renderer)
+ *
  * ```ts
  * import { renderDetectFacesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectFacesSkippedEntry = renderDetectFacesSkippedEntry
  * ```
+ *
+ * @param entry - Source file excluded from face detection with its reason.
+ * @returns Human-readable skipped line.
  * @category utilities
  * @since 0.0.0
  */
@@ -274,14 +298,16 @@ export const renderDetectFacesSkippedEntry = (entry: DetectFacesSkippedEntry): s
 /**
  * Render a border crop plan entry.
  *
- * @param entry - Planned in-place crop.
- * @returns Human-readable crop plan line.
- * @example
+ * **Example** (Import crop plan renderer)
+ *
  * ```ts
  * import { renderCropBordersPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCropBordersPlanEntry = renderCropBordersPlanEntry
  * ```
+ *
+ * @param entry - Planned in-place crop.
+ * @returns Human-readable crop plan line.
  * @category utilities
  * @since 0.0.0
  */
@@ -291,15 +317,17 @@ export const renderCropBordersPlanEntry = (entry: CropBordersPlanEntry): string 
 /**
  * Render a normalize manifest with the shared Biome JSON formatter.
  *
- * @param manifestPath - Destination manifest path used for formatter context.
- * @param manifest - Manifest to encode and render.
- * @returns Formatted JSON text.
- * @example
+ * **Example** (Check normalize manifest export)
+ *
  * ```ts
  * import { renderNormalizeManifest } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof renderNormalizeManifest !== "undefined") // true
  * ```
+ *
+ * @param manifestPath - Destination manifest path used for formatter context.
+ * @param manifest - Manifest to encode and render.
+ * @returns Formatted JSON text.
  * @category formatting
  * @since 0.0.0
  */
@@ -323,14 +351,16 @@ export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest"
 /**
  * Select archive-plan entries that move source files.
  *
- * @param entries - Candidate assessment entries.
- * @returns Entries whose decision is `archive`.
- * @example
+ * **Example** (Check archivedEntries export)
+ *
  * ```ts
  * import { archivedEntries } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof archivedEntries !== "undefined") // true
  * ```
+ *
+ * @param entries - Candidate assessment entries.
+ * @returns Entries whose decision is `archive`.
  * @category formatting
  * @since 0.0.0
  */
@@ -341,14 +371,16 @@ export const archivedEntries = (
 /**
  * Count sidecars moved by an archive plan.
  *
- * @param entries - Candidate assessment entries.
- * @returns Total moved sidecar count.
- * @example
+ * **Example** (Check countMovedSidecars export)
+ *
  * ```ts
  * import { countMovedSidecars } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof countMovedSidecars !== "undefined") // true
  * ```
+ *
+ * @param entries - Candidate assessment entries.
+ * @returns Total moved sidecar count.
  * @category formatting
  * @since 0.0.0
  */
@@ -358,14 +390,16 @@ export const countMovedSidecars = (entries: ReadonlyArray<ArchivePoorCandidatesE
 /**
  * Build the archive-poor-candidates manifest for a plan.
  *
- * @param plan - Candidate archive plan.
- * @returns Versioned archive manifest.
- * @example
+ * **Example** (Check archive manifest builder)
+ *
  * ```ts
  * import { makeArchivePoorCandidatesManifest } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof makeArchivePoorCandidatesManifest !== "undefined") // true
  * ```
+ *
+ * @param plan - Candidate archive plan.
+ * @returns Versioned archive manifest.
  * @category formatting
  * @since 0.0.0
  */
@@ -392,15 +426,17 @@ export const makeArchivePoorCandidatesManifest = (
 /**
  * Render an archive manifest with the shared Biome JSON formatter.
  *
- * @param manifestPath - Destination manifest path used for formatter context.
- * @param manifest - Manifest to encode and render.
- * @returns Formatted JSON text.
- * @example
+ * **Example** (Check archive manifest renderer)
+ *
  * ```ts
  * import { renderArchivePoorCandidatesManifest } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof renderArchivePoorCandidatesManifest !== "undefined") // true
  * ```
+ *
+ * @param manifestPath - Destination manifest path used for formatter context.
+ * @param manifest - Manifest to encode and render.
+ * @returns Formatted JSON text.
  * @category formatting
  * @since 0.0.0
  */
@@ -424,14 +460,16 @@ export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchiv
 /**
  * Render a detect-borders report with the shared Biome JSON formatter.
  *
- * @param report - Detect-borders report to encode.
- * @returns Formatted JSON text.
- * @example
+ * **Example** (Check borders report JSON)
+ *
  * ```ts
  * import { renderDetectBordersReportJson } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof renderDetectBordersReportJson !== "undefined") // true
  * ```
+ *
+ * @param report - Detect-borders report to encode.
+ * @returns Formatted JSON text.
  * @category formatting
  * @since 0.0.0
  */
@@ -454,15 +492,17 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
 /**
  * Render a detect-faces report with the shared Biome JSON formatter.
  *
- * @param report - Detect-faces report to encode.
- * @param outputPath - Output path used for formatter context.
- * @returns Formatted JSON text.
- * @example
+ * **Example** (Check faces report JSON)
+ *
  * ```ts
  * import { renderDetectFacesReportJson } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof renderDetectFacesReportJson !== "undefined") // true
  * ```
+ *
+ * @param report - Detect-faces report to encode.
+ * @param outputPath - Output path used for formatter context.
+ * @returns Formatted JSON text.
  * @category formatting
  * @since 0.0.0
  */
@@ -486,13 +526,15 @@ export const renderDetectFacesReportJson = Effect.fn("Files.renderDetectFacesRep
 /**
  * Write a detect-faces manifest report to disk.
  *
- * @param report - Detect-faces report with manifest path.
- * @example
+ * **Example** (Check faces manifest writer)
+ *
  * ```ts
  * import { writeDetectFacesManifest } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof writeDetectFacesManifest !== "undefined") // true
  * ```
+ *
+ * @param report - Detect-faces report with manifest path.
  * @category formatting
  * @since 0.0.0
  */
@@ -526,13 +568,15 @@ export const writeDetectFacesManifest = Effect.fn("Files.writeDetectFacesManifes
 /**
  * Log a rename plan line by line.
  *
- * @param plan - Rename plan entries.
- * @example
+ * **Example** (Check logRenamePlan export)
+ *
  * ```ts
  * import { logRenamePlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logRenamePlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Rename plan entries.
  * @category formatting
  * @since 0.0.0
  */
@@ -545,13 +589,15 @@ export const logRenamePlan = Effect.fn("Files.logRenamePlan")(function* (plan: R
 /**
  * Log a metadata strip plan line by line.
  *
- * @param plan - Metadata strip plan entries.
- * @example
+ * **Example** (Check strip metadata logger)
+ *
  * ```ts
  * import { logStripMetadataPlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logStripMetadataPlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Metadata strip plan entries.
  * @category formatting
  * @since 0.0.0
  */
@@ -566,13 +612,15 @@ export const logStripMetadataPlan = Effect.fn("Files.logStripMetadataPlan")(func
 /**
  * Log normalize plan and skipped entries line by line.
  *
- * @param plan - Plan whose entries are rendered one console line each.
- * @example
+ * **Example** (Check normalize plan logger)
+ *
  * ```ts
  * import { logNormalizePlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logNormalizePlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Plan whose entries are rendered one console line each.
  * @category formatting
  * @since 0.0.0
  */
@@ -588,13 +636,15 @@ export const logNormalizePlan = Effect.fn("Files.logNormalizePlan")(function* (p
 /**
  * Log caption plan and skipped entries line by line.
  *
- * @param plan - Caption creation plan.
- * @example
+ * **Example** (Check caption plan logger)
+ *
  * ```ts
  * import { logCreateCaptionFilesPlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logCreateCaptionFilesPlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Caption creation plan.
  * @category formatting
  * @since 0.0.0
  */
@@ -612,13 +662,15 @@ export const logCreateCaptionFilesPlan = Effect.fn("Files.logCreateCaptionFilesP
 /**
  * Log archive-candidate plan and skipped entries line by line.
  *
- * @param plan - Candidate archive plan.
- * @example
+ * **Example** (Check archive plan logger)
+ *
  * ```ts
  * import { logArchivePoorCandidatesPlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logArchivePoorCandidatesPlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Candidate archive plan.
  * @category formatting
  * @since 0.0.0
  */
@@ -636,13 +688,15 @@ export const logArchivePoorCandidatesPlan = Effect.fn("Files.logArchivePoorCandi
 /**
  * Log only positive border-detection entries line by line.
  *
- * @param entries - Border detection entries.
- * @example
+ * **Example** (Check borders entries logger)
+ *
  * ```ts
  * import { logDetectBordersEntries } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logDetectBordersEntries !== "undefined") // true
  * ```
+ *
+ * @param entries - Border detection entries.
  * @category formatting
  * @since 0.0.0
  */
@@ -658,14 +712,16 @@ export const logDetectBordersEntries = Effect.fn("Files.logDetectBordersEntries"
 /**
  * Log face-detection entries and skipped entries line by line.
  *
- * @param entries - Face detection entries.
- * @param skipped - Skipped face-detection entries.
- * @example
+ * **Example** (Check faces entries logger)
+ *
  * ```ts
  * import { logDetectFacesEntries } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logDetectFacesEntries !== "undefined") // true
  * ```
+ *
+ * @param entries - Face detection entries.
+ * @param skipped - Skipped face-detection entries.
  * @category formatting
  * @since 0.0.0
  */
@@ -684,13 +740,15 @@ export const logDetectFacesEntries = Effect.fn("Files.logDetectFacesEntries")(fu
 /**
  * Log border crop plan entries line by line.
  *
- * @param plan - Border crop plan entries.
- * @example
+ * **Example** (Check crop plan logger)
+ *
  * ```ts
  * import { logCropBordersPlan } from "@beep/repo-cli/commands/Files/Files.render"
  *
  * console.log(typeof logCropBordersPlan !== "undefined") // true
  * ```
+ *
+ * @param plan - Border crop plan entries.
  * @category formatting
  * @since 0.0.0
  */

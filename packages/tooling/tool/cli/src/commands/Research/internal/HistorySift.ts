@@ -99,7 +99,8 @@ const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativeP
 /**
  * Sift browser history into inbox link cards.
  *
- * @example
+ * **Example** (Sift history into cards)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { historySiftImpl } from "@beep/repo-cli/commands/Research/internal/HistorySift"
@@ -115,6 +116,7 @@ const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativeP
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

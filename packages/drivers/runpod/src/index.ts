@@ -44,7 +44,8 @@ export * from "./RunpodDocs.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/runpod"
  *

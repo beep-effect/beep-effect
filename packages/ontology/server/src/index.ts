@@ -9,7 +9,8 @@
 /**
  * Package version for the ontology server role.
  *
- * @example
+ * **Example** (Read package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-server"
  *

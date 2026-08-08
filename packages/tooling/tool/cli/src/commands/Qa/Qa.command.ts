@@ -44,17 +44,21 @@ const FFmpegLive = FFmpeg.makeLayer();
 /**
  * Layer stack shared by every `beep qa` subcommand.
  *
+ * **Details**
+ *
  * `Witness` and `FFmpeg` are provided once and merged out again so the
  * collector, the clock correlator, and the extraction pipeline all observe the
  * same memoized instances.
  *
- * @example
+ * **Example** (Verify shared QA layers)
+ *
  * ```ts
  * import { QaCommandLayers } from "@beep/repo-cli/commands/Qa/Qa.command"
  * import { Layer } from "effect"
  *
  * console.log(Layer.isLayer(QaCommandLayers)) // true
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -283,7 +287,8 @@ const qaJudgeLintCommand = Command.make("judge-lint", { round: requiredRoundFlag
 /**
  * Recorded-QA command group.
  *
- * @example
+ * **Example** (Run recorded QA command)
+ *
  * ```ts
  * import { qaCommand } from "@beep/repo-cli/commands/Qa/index"
  * import { Command } from "effect/unstable/cli"
@@ -292,6 +297,7 @@ const qaJudgeLintCommand = Command.make("judge-lint", { round: requiredRoundFlag
  * const run = Command.run(qaCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

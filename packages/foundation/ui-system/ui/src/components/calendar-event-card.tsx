@@ -14,7 +14,8 @@ import type { ReactNode } from "react";
 /**
  * Visual progress state for a calendar event action.
  *
- * @example
+ * **Example** (Completed status check)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { EventStatus } from "@beep/ui/components/calendar-event-card"
@@ -30,7 +31,8 @@ export type EventStatus = "idle" | "loading" | "completed";
 /**
  * Presentation mode for a calendar event card.
  *
- * @example
+ * **Example** (Action variant check)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { EventVariant } from "@beep/ui/components/calendar-event-card"
@@ -62,7 +64,8 @@ interface CalendarEventCardProps {
 /**
  * Timeline-style event card with optional action state.
  *
- * @example
+ * **Example** (Action event card)
+ *
  * ```tsx
  * import { CalendarEventCard, EventLocation, EventTime, EventTitle } from "@beep/ui/components/calendar-event-card"
  *
@@ -186,7 +189,8 @@ interface EventTitleProps {
 /**
  * Primary title text inside a calendar event card.
  *
- * @example
+ * **Example** (Event title text)
+ *
  * ```tsx
  * import { EventTitle } from "@beep/ui/components/calendar-event-card"
  *
@@ -211,7 +215,8 @@ interface EventTimeProps {
 /**
  * Time range text inside a calendar event card.
  *
- * @example
+ * **Example** (Time range display)
+ *
  * ```tsx
  * import { EventTime } from "@beep/ui/components/calendar-event-card"
  *
@@ -242,7 +247,8 @@ interface EventLocationProps {
 /**
  * Location or meeting channel text inside a calendar event card.
  *
- * @example
+ * **Example** (Location label text)
+ *
  * ```tsx
  * import { EventLocation } from "@beep/ui/components/calendar-event-card"
  *

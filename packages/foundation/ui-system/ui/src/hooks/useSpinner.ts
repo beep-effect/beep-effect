@@ -116,10 +116,13 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * React hook used by spinner buttons to repeatedly increment or decrement a value
  * while the button remains pressed.
  *
+ * **Details**
+ *
  * The hook performs one immediate step on press, waits for the configured hold delay,
  * and then repeats the selected action at a fixed interval until `stop` is called.
  *
- * @example
+ * **Example** (Spinner button hold repeat)
+ *
  * ```tsx
  * import React from "react"
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
@@ -129,23 +132,25 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * console.log(Example)
  * ```
  *
- * @example
+ * **Example** (Import useSpinner hook)
+ *
  * ```ts
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
  *
  * console.log(useSpinner)
  * ```
  *
- * @category components
  * @param increment - Callback invoked for upward spinner movement.
  * @param decrement - Callback invoked for downward spinner movement.
  * @returns Spinner controls for starting and stopping repeated actions.
+ * @category components
  * @since 0.0.0
  */
 /**
  * Use spinner hook.
  *
- * @example
+ * **Example** (Import useSpinner hook)
+ *
  * ```ts
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
  *

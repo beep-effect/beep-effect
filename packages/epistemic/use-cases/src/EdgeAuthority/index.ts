@@ -8,7 +8,8 @@
 /**
  * Edge authority command exports.
  *
- * @example
+ * **Example** (RecordEdgeFact command export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-use-cases/EdgeAuthority"
@@ -23,7 +24,8 @@ export * from "./EdgeAuthority.commands.ts";
 /**
  * Edge authority typed error exports.
  *
- * @example
+ * **Example** (SupersessionConflict error export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-use-cases/EdgeAuthority"
@@ -38,7 +40,8 @@ export * from "./EdgeAuthority.errors.ts";
 /**
  * Edge authority repository port exports.
  *
- * @example
+ * **Example** (EdgeAuthorityRepository port export)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-use-cases/EdgeAuthority"

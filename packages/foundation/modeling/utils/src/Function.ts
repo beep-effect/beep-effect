@@ -1,9 +1,12 @@
 /**
  * Function utilities built on top of `effect/Function`.
  *
+ * **Details**
+ *
  * cspell:words uncurry nullary
  *
- * @example
+ * **Example** (Tuple and reverseCurry demo)
+ *
  * ```ts
  * import { tuple, reverseCurry } from "@beep/utils/Function"
  *
@@ -22,7 +25,8 @@
 /**
  * Re-export the standard Effect function helpers.
  *
- * @example
+ * **Example** (Pipe value through function)
+ *
  * ```ts
  * import { pipe } from "@beep/utils/Function"
  *
@@ -39,7 +43,8 @@ export * from "effect/Function";
 /**
  * Construct a readonly tuple from the provided elements.
  *
- * @example
+ * **Example** (Build readonly string-number pair)
+ *
  * ```ts
  * import { tuple } from "@beep/utils/Function"
  *
@@ -64,7 +69,8 @@ export function tuple<const T extends ReadonlyArray<unknown>>(...elements: T): R
 /**
  * Convert a curried two-argument function into a tuple-consuming function.
  *
- * @example
+ * **Example** (Join pair via tupledCurry)
+ *
  * ```ts
  * import { tupledCurry } from "@beep/utils/Function"
  *
@@ -90,7 +96,8 @@ export function tupledCurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: [A, B]) 
 /**
  * Reverse the argument order of a two-argument curried function.
  *
- * @example
+ * **Example** (Reverse append argument order)
+ *
  * ```ts
  * import { reverseCurry } from "@beep/utils/Function"
  *
@@ -116,7 +123,8 @@ export function reverseCurry<A, B, C>(fn: (b: B) => (a: A) => C) {
 /**
  * Convert a two-argument function into a curried function.
  *
- * @example
+ * **Example** (Curry string join function)
+ *
  * ```ts
  * import { curry } from "@beep/utils/Function"
  *
@@ -141,7 +149,8 @@ export function curry<A, B, C>(fn: (a: A, b: B) => C) {
 /**
  * Convert a curried two-argument function into an uncurried function.
  *
- * @example
+ * **Example** (Uncurry string join function)
+ *
  * ```ts
  * import { uncurry } from "@beep/utils/Function"
  *
@@ -166,7 +175,8 @@ export function uncurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: A, arg1: B) 
 /**
  * Memoize a nullary function and return the cached result after the first call.
  *
- * @example
+ * **Example** (Memoize nullary counter thunk)
+ *
  * ```ts
  * import { lazy } from "@beep/utils/Function"
  *

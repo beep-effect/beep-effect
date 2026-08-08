@@ -15,7 +15,8 @@ const $I = $LawPracticeServerId.create("PracticeKg.host");
 /**
  * Bundle metadata and optional corpus pointer supplied by the owning host.
  *
- * @example
+ * **Example** (Inspect bundleDir field)
+ *
  * ```ts
  * import { PracticeKgBundleContext } from "@beep/law-practice-server"
  *
@@ -39,7 +40,8 @@ export class PracticeKgBundleContext extends S.Class<PracticeKgBundleContext>($I
 /**
  * Context service carrying host-resolved practice KG bundle metadata.
  *
- * @example
+ * **Example** (Check service key type)
+ *
  * ```ts
  * import { PracticeKgBundle } from "@beep/law-practice-server"
  *

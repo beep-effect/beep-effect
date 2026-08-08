@@ -16,6 +16,8 @@ const $I = $LawPracticeDomainId.create("values/StatuteCitation/StatuteCitation.m
 /**
  * A parsed statute citation (type: `statute`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `statute`
  * discriminant plus statute-specific components: title, code, section, chapter,
  * subsection, structured section/subsection ranges, jurisdiction, edition
@@ -24,9 +26,8 @@ const $I = $LawPracticeDomainId.create("values/StatuteCitation/StatuteCitation.m
  * (bare-section, chapter-only, annotated-edition parentheticals, and so on);
  * `hasEtSeq` defaults to `false`.
  *
- * **Example**
+ * **Example** (Creating a statute citation)
  *
- * @example
  * ```ts
  * import { StatuteCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -170,7 +171,8 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
 /**
  * Companion namespace for `StatuteCitation`.
  *
- * @example
+ * **Example** (Using Encoded type alias)
+ *
  * ```ts
  * import type { StatuteCitation } from "@beep/law-practice-domain"
  *
@@ -184,9 +186,8 @@ export declare namespace StatuteCitation {
   /**
    * Wire-encoded representation of a decoded {@link StatuteCitation}.
    *
-   * **Example**
+   * **Example** (Referencing Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { StatuteCitation } from "@beep/law-practice-domain"
    *

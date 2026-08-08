@@ -499,10 +499,8 @@ const computeAnalysisSummary = (analyses: ReadonlyArray<DocgenExportAnalysis>): 
 /**
  * Analyze required JSDoc metadata for one workspace package.
  *
- * @param targetPackage - Workspace package to inspect.
- * @returns Package analysis with sorted export findings and summary counts.
- * @effects Reads package-local docgen config and TypeScript source files.
- * @example
+ * **Example** (Analyze package JSDoc metadata)
+ *
  * ```ts
  * import { analyzePackageDocumentation } from "@beep/repo-cli/commands/Docgen/internal/JsDocAnalysis"
  * import { DocgenWorkspacePackage } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
@@ -520,6 +518,10 @@ const computeAnalysisSummary = (analyses: ReadonlyArray<DocgenExportAnalysis>): 
  * const program = analyzePackageDocumentation(target)
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param targetPackage - Workspace package to inspect.
+ * @returns Package analysis with sorted export findings and summary counts.
+ * @effects Reads package-local docgen config and TypeScript source files.
  * @category workflows
  * @since 0.0.0
  */

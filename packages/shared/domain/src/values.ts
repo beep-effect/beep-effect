@@ -8,7 +8,8 @@
 /**
  * Shared value-object exports.
  *
- * @example
+ * **Example** (Import shared values module)
+ *
  * ```ts
  * import * as Values from "@beep/shared-domain/values"
  *

@@ -9,7 +9,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Fixed-ratio media wrapper that keeps children cropped inside a stable box.
  *
- * @example
+ * **Example** (Sixteen-by-nine video thumbnail)
+ *
  * ```tsx
  * import { AspectRatio } from "@beep/ui/components/aspect-ratio"
  *

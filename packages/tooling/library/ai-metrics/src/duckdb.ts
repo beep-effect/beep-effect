@@ -1,7 +1,8 @@
 /**
  * Derived-store location and DuckDB provider helpers for repo AI metrics.
  *
- * @remarks
+ * **Details**
+ *
  * The AI-metrics workflows all read and write a single derived DuckDB database
  * that lives at a fixed offset under the local data root, and every consumer
  * opens it with the same scoped {@link DuckDb.makeNodeLayer} idiom: build the
@@ -10,6 +11,7 @@
  * {@link withAiMetricsDuckDb} owns the scoping idiom so call sites stop
  * re-deriving either. Callers keep their own error surface by mapping the
  * failure channel after the wrapper.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -21,13 +23,15 @@ import { dual } from "effect/Function";
 /**
  * Default local data root for repo AI metrics storage.
  *
- * @example
+ * **Example** (Path with default root)
+ *
  * ```ts
  * import { DEFAULT_AI_METRICS_DATA_ROOT, aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
  *
  * console.log(aiMetricsDerivedDuckDbPath(DEFAULT_AI_METRICS_DATA_ROOT))
  * // .beep/ai-metrics/derived/ai-metrics.duckdb
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -36,15 +40,17 @@ export const DEFAULT_AI_METRICS_DATA_ROOT = ".beep/ai-metrics";
 /**
  * Resolve the derived DuckDB database path under an AI metrics data root.
  *
- * @param dataRoot - Local AI metrics data root, e.g. {@link DEFAULT_AI_METRICS_DATA_ROOT}.
- * @returns The `derived/ai-metrics.duckdb` path relative to `dataRoot`.
- * @example
+ * **Example** (Resolve derived database path)
+ *
  * ```ts
  * import { aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
  *
  * console.log(aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
  * // .beep/ai-metrics/derived/ai-metrics.duckdb
  * ```
+ *
+ * @param dataRoot - Local AI metrics data root, e.g. {@link DEFAULT_AI_METRICS_DATA_ROOT}.
+ * @returns The `derived/ai-metrics.duckdb` path relative to `dataRoot`.
  * @category utilities
  * @since 0.0.0
  */
@@ -53,13 +59,16 @@ export const aiMetricsDerivedDuckDbPath = (dataRoot: string): string => `${dataR
 /**
  * Run an effect against a scoped AI metrics DuckDB connection.
  *
- * @remarks
+ * **Details**
+ *
  * Builds {@link DuckDb.makeNodeLayer} for `databasePath`, provides the resulting
  * {@link DuckDb} service to `effect`, and discharges the connection scope when
  * `effect` completes. The `DuckDb` requirement is removed from the returned
  * effect; every other requirement, and the error channel, pass through
  * unchanged so callers keep their own typed failure by mapping afterwards.
- * @example
+ *
+ * **Example** (Scoped DuckDB query effect)
+ *
  * ```ts
  * import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics"
  * import { DuckDb } from "@beep/duckdb"
@@ -72,6 +81,7 @@ export const aiMetricsDerivedDuckDbPath = (dataRoot: string): string => `${dataR
  * const program = withAiMetricsDuckDb(rowCount, aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
  * console.log(program)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

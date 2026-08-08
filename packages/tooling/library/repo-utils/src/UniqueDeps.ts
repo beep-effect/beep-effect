@@ -41,7 +41,8 @@ const UniqueNpmPackageNames = S.Array(NpmPackageName)
 /**
  * Result of collecting unique NPM dependencies across the monorepo.
  *
- * @example
+ * **Example** (Create UniqueNpmDeps instance)
+ *
  * ```ts
  * import { UniqueNpmDeps } from "@beep/repo-utils/UniqueDeps"
  * const deps = UniqueNpmDeps.make({
@@ -50,6 +51,7 @@ const UniqueNpmPackageNames = S.Array(NpmPackageName)
  * })
  * console.log(deps.dependencies)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -71,6 +73,8 @@ export class UniqueNpmDeps extends S.Class<UniqueNpmDeps>($I`UniqueNpmDeps`)(
  * Collect all unique external NPM dependency names from every package
  * in the monorepo.
  *
+ * **Details**
+ *
  * Scans all workspace packages plus the root, extracts their NPM
  * (non-workspace) dependencies and devDependencies, deduplicates,
  * and returns sorted arrays.
@@ -79,14 +83,16 @@ export class UniqueNpmDeps extends S.Class<UniqueNpmDeps>($I`UniqueNpmDeps`)(
  * categories: peerDependencies are counted as runtime `dependencies`
  * and optionalDependencies are also counted as runtime `dependencies`.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @returns An object with sorted, deduplicated dependencies and devDependencies.
- * @example
+ * **Example** (Collect monorepo NPM dependencies)
+ *
  * ```ts
  * import { collectUniqueNpmDependencies } from "@beep/repo-utils/UniqueDeps"
  * const program = collectUniqueNpmDependencies(process.cwd())
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @returns An object with sorted, deduplicated dependencies and devDependencies.
  * @category utilities
  * @since 0.0.0
  */

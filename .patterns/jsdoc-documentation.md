@@ -54,35 +54,19 @@ empty or formulaic sections merely to fill out the shape.
 ## Carrier policy
 
 `**Example** (Title)` is the canonical carrier. `@example` and `@remarks` are
-retired; `AGENTS.md` states that rule without qualification and the quality gate
+forbidden; `AGENTS.md` states that rule without qualification and the quality gate
 enforces it.
 
-Enforcement is per touched file and is not advisory. The cleanup-on-touch check in
-`bun run beep quality jsdoc-ratchet` fails when any changed non-generated
-`packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`. It inspects
-the whole file rather than the diff hunk, across `origin/main...HEAD` plus dirty
-paths. A legacy carrier anywhere in a file you touch is a hard CI failure, so
-migrate every legacy carrier in that file and not only the block you edited. Move
-`@remarks` semantics into Details or Gotchas as part of the same pass.
+Enforcement is repo-wide and is not advisory. The zero-legacy check in
+`bun run beep quality jsdoc-ratchet` fails when any non-generated
+`packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`. Pass
+`--include-generated` to scan generator outputs as well (needed when proving a
+codegen emitter; the default non-generated scope cannot prove generated
+compliance). The gate inspects whole files, not diff hunks.
 
 For inventory presence the totals ratchet still counts either a valid Example
 section or a legacy tag. That is a scoring detail of the fail-on-growth comparison,
 not permission to author a legacy carrier.
-
-## Carrier retirement migration
-
-`goals/jsdoc-carrier-migration/` is authorized to migrate every remaining legacy
-carrier in one deterministic pass, including files that no other work has touched.
-This is a single sanctioned exception to the cleanup-on-touch scope above, granted
-because the legacy corpus is both what makes the gate fire on unrelated changes and
-what teaches agents the retired pattern.
-
-Outside that packet, do not mass-migrate untouched files. Migrate what you touch.
-
-When the packet lands, the corpus reaches zero legacy carriers and this policy
-collapses to its target state: `@example` and `@remarks` forbidden repo-wide,
-cleanup-on-touch replaced by a repo-wide zero-legacy check, and these two sections
-deleted.
 
 ## Kind-split Example law
 

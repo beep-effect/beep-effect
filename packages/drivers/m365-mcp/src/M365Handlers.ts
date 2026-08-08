@@ -1,7 +1,8 @@
 /**
  * Microsoft 365 MCP tool handlers.
  *
- * @remarks
+ * **Details**
+ *
  * Handlers are thin wrappers around the `@beep/m365` driver. They translate
  * driver errors into the local `M365ToolError` failure schema and annotate
  * spans with counts and sizes only.
@@ -82,7 +83,8 @@ const annotateDownload = (download: M365DriveItemDownloadType): Effect.Effect<M3
 /**
  * Live handler layer for the Microsoft 365 MCP toolkit.
  *
- * @example
+ * **Example** (Compose live handler layer)
+ *
  * ```ts
  * import { M365ToolkitHandlersLive } from "@beep/m365-mcp"
  * import { M365, M365ConfigInput } from "@beep/m365"

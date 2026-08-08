@@ -10,7 +10,8 @@ import { Order } from "effect";
 /**
  * Build a descending numeric order from a projection.
  *
- * @example
+ * **Example** (Descending order by score)
+ *
  * ```ts
  * import { descendingNumber } from "./order"
  *
@@ -18,8 +19,8 @@ import { Order } from "effect";
  * console.log(byScore)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const descendingNumber = <A>(f: (value: A) => number): Order.Order<A> =>
   Order.mapInput(Order.Number, (value: A) => -f(value));
@@ -27,7 +28,8 @@ export const descendingNumber = <A>(f: (value: A) => number): Order.Order<A> =>
 /**
  * Build an ascending numeric order from a projection.
  *
- * @example
+ * **Example** (Ascending order by index)
+ *
  * ```ts
  * import { ascendingNumber } from "./order"
  *
@@ -35,15 +37,16 @@ export const descendingNumber = <A>(f: (value: A) => number): Order.Order<A> =>
  * console.log(byIndex)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const ascendingNumber = <A>(f: (value: A) => number): Order.Order<A> => Order.mapInput(Order.Number, f);
 
 /**
  * Build an ascending string order from a projection.
  *
- * @example
+ * **Example** (Ascending order by name)
+ *
  * ```ts
  * import { ascendingString } from "./order"
  *
@@ -51,7 +54,7 @@ export const ascendingNumber = <A>(f: (value: A) => number): Order.Order<A> => O
  * console.log(byName)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const ascendingString = <A>(f: (value: A) => string): Order.Order<A> => Order.mapInput(Order.String, f);

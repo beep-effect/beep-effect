@@ -16,7 +16,8 @@ const $I = $EpistemicDomainId.create("values/GrantSet/GrantSet.errors");
  * set's revision, so admitting a foreign-revision grant would make that
  * recorded revision a lie about which policy actually authorized the action.
  *
- * @example
+ * **Example** (Create revision mismatch error)
+ *
  * ```ts
  * import { GrantRevisionMismatch } from "@beep/epistemic-domain"
  * import { PolicyRevision } from "@beep/epistemic-domain"
@@ -46,7 +47,8 @@ export class GrantRevisionMismatch extends TaggedErrorClass<GrantRevisionMismatc
   /**
    * Build a {@link GrantRevisionMismatch} from the set's and grant's revisions.
    *
-   * @example
+   * **Example** (Build mismatch from revisions)
+   *
    * ```ts
    * import { GrantRevisionMismatch, PolicyRevision } from "@beep/epistemic-domain"
    * import * as S from "effect/Schema"

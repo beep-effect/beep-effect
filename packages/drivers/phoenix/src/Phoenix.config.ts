@@ -38,7 +38,8 @@ const PhoenixBaseUrl = S.String.pipe(
 /**
  * Default Phoenix HTTP API base URL.
  *
- * @example
+ * **Example** (Log default API URL)
+ *
  * ```ts
  * import { PHOENIX_API_URL } from "@beep/phoenix"
  *
@@ -53,7 +54,8 @@ export const PHOENIX_API_URL = "http://localhost:6006";
 /**
  * Runtime configuration accepted by {@link Phoenix.makeLayer}.
  *
- * @example
+ * **Example** (Create config with make)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import * as O from "effect/Option"

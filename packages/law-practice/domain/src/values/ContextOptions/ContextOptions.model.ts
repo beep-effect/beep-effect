@@ -14,12 +14,13 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
 /**
  * Options for surrounding context extraction.
  *
+ * **Details**
+ *
  * `type` defaults to `"sentence"`. `maxLength` remains optional so omitting it
  * leaves context extraction unbounded.
  *
- * **Example**
+ * **Example** (Make with type and maxLength)
  *
- * @example
  * ```ts
  * import { ContextOptions } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -61,7 +62,8 @@ export class ContextOptions extends S.Class<ContextOptions>($I`ContextOptions`)(
 /**
  * Companion namespace for `ContextOptions`.
  *
- * @example
+ * **Example** (Accessing Encoded type field)
+ *
  * ```ts
  * import type { ContextOptions } from "@beep/law-practice-domain"
  *
@@ -76,9 +78,8 @@ export declare namespace ContextOptions {
   /**
    * Wire-encoded representation of a decoded {@link ContextOptions}.
    *
-   * **Example**
+   * **Example** (Aliasing Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { ContextOptions } from "@beep/law-practice-domain"
    *

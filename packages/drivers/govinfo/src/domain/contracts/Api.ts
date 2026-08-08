@@ -16,7 +16,8 @@ import * as Search from "./Search/index.ts";
 /**
  * Top-level GovInfo API group carrying the search endpoint.
  *
- * @example
+ * **Example** (Logging group identifier)
+ *
  * ```ts
  * import { GovinfoApiGroup } from "@beep/govinfo"
  *
@@ -31,7 +32,8 @@ export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).
 /**
  * The assembled GovInfo `HttpApi`.
  *
- * @example
+ * **Example** (Logging API identifier)
+ *
  * ```ts
  * import { GovinfoApi } from "@beep/govinfo"
  *

@@ -13,7 +13,8 @@ import type * as React from "react";
 /**
  * Class variance helper for banner tone variants.
  *
- * @example
+ * **Example** (Warning banner class names)
+ *
  * ```ts
  * import { bannerVariants } from "@beep/ui/components/banner"
  *
@@ -71,7 +72,8 @@ function Banner({ className, variant = "default", icon, children, ...props }: Ba
 /**
  * Flexible content column inside a {@link Banner}.
  *
- * @example
+ * **Example** (Banner content column)
+ *
  * ```tsx
  * import { Banner, BannerContent, BannerTitle } from "@beep/ui/components/banner"
  *
@@ -96,7 +98,8 @@ const BannerContent = ({ className, ...props }: React.ComponentProps<"div">) => 
 /**
  * Short headline text inside a banner content column.
  *
- * @example
+ * **Example** (Success banner headline)
+ *
  * ```tsx
  * import { Banner, BannerContent, BannerTitle } from "@beep/ui/components/banner"
  *
@@ -121,7 +124,8 @@ const BannerTitle = ({ className, ...props }: React.ComponentProps<"p">) => (
 /**
  * Secondary explanatory text inside a banner content column.
  *
- * @example
+ * **Example** (Info banner body copy)
+ *
  * ```tsx
  * import { Banner, BannerContent, BannerDescription, BannerTitle } from "@beep/ui/components/banner"
  *
@@ -151,7 +155,8 @@ type BannerDismissProps = React.ComponentProps<"button"> & {
 /**
  * Dismiss control that calls `onDismiss` before the button `onClick` handler.
  *
- * @example
+ * **Example** (Dismissible banner control)
+ *
  * ```tsx
  * import { Banner, BannerContent, BannerDismiss, BannerTitle } from "@beep/ui/components/banner"
  *
@@ -194,7 +199,8 @@ const BannerDismiss = ({ className, onDismiss, onClick, ...props }: BannerDismis
  * content slots via `Banner.Content`, `Banner.Title`, `Banner.Description`,
  * and `Banner.Dismiss`.
  *
- * @example
+ * **Example** (Composed dismissible warning)
+ *
  * ```tsx
  * import { Banner } from "@beep/ui/components/banner"
  *

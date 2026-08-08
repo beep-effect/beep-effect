@@ -20,7 +20,8 @@ import { WinkVectorizerLive as WinkVectorizerLiveService } from "./WinkVectorize
 /**
  * Live layer bundle for the engine-backed tokenization surface.
  *
- * @example
+ * **Example** (Token count via layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Tokenization } from "@beep/nlp-processing/Core"
@@ -50,7 +51,8 @@ const WinkLayerSharedLive = WinkEngineRefLiveService.pipe(Layer.provideMerge(Win
 /**
  * Full live wink layer bundle including corpus management and shared utilities.
  *
- * @example
+ * **Example** (Create corpus with full layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkCorpusManager } from "@beep/wink"
@@ -74,7 +76,8 @@ export const WinkLayerAllLive = WinkCorpusManagerLiveService.pipe(Layer.provideM
 /**
  * Live layer for stateful corpus indexing and query services.
  *
- * @example
+ * **Example** (Merge engine and similarity)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import { WinkCorpusManagerLive, WinkEngineLive, WinkSimilarityLive } from "@beep/wink"
@@ -91,7 +94,8 @@ export const WinkCorpusManagerLive = WinkCorpusManagerLiveService;
 /**
  * Service tag for direct access to the underlying wink runtime.
  *
- * @example
+ * **Example** (Direct engine token count)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
@@ -111,7 +115,8 @@ export const WinkEngine = WinkEngineService;
 /**
  * Live layer that initializes `wink-nlp` with the English lite web model.
  *
- * @example
+ * **Example** (Read engine its helpers)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
@@ -133,7 +138,8 @@ export const WinkEngineLive = WinkEngineLiveService;
 /**
  * Live layer for compatibility access to the shared wink engine state ref.
  *
- * @example
+ * **Example** (Access shared engine ref)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkEngineRef } from "@beep/wink"
@@ -154,7 +160,8 @@ export const WinkEngineRefLive = WinkEngineRefLiveService;
 /**
  * Live layer for wink-backed vector, set, and bag-of-words similarity.
  *
- * @example
+ * **Example** (Provide similarity service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkSimilarity } from "@beep/wink"
@@ -177,7 +184,8 @@ export const WinkSimilarityLive = WinkSimilarityLiveService;
 /**
  * Engine-dependent layer that implements the core tokenization service.
  *
- * @example
+ * **Example** (Wire engine into tokenization)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import { WinkEngineLive, WinkTokenization } from "@beep/wink"
@@ -192,7 +200,8 @@ export const WinkTokenization = WinkTokenizationService;
 /**
  * Live tokenization layer with the wink engine already provided.
  *
- * @example
+ * **Example** (Tokenize with live layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Tokenization } from "@beep/nlp-processing/Core"
@@ -215,7 +224,8 @@ export const WinkTokenizationLive = WinkTokenizationLiveService;
 /**
  * Live layer for `wink-nlp-utils` string and token helper wrappers.
  *
- * @example
+ * **Example** (Remove extra spaces helper)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkUtils } from "@beep/wink"
@@ -236,7 +246,8 @@ export const WinkUtilsLive = WinkUtilsLiveService;
 /**
  * Live layer for BM25 vectorization backed by the wink engine.
  *
- * @example
+ * **Example** (Read vectorizer config)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkVectorizer } from "@beep/wink"

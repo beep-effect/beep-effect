@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/UploadSession/UploadSessi
 /**
  * Experimental schema anchor for Box chunked upload session resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Round-trip empty UploadSession)
+ *
  * ```ts
  * import { UploadSession } from "@beep/box/experimental/domain/entities/UploadSession/UploadSession.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class UploadSession extends S.Class<UploadSession>($I`UploadSession`)(
 /**
  * Type-level companion namespace for {@link UploadSession} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty session)
+ *
  * ```ts
  * import { UploadSession } from "@beep/box/experimental/domain/entities/UploadSession/UploadSession.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace UploadSession {
   /**
    * Encoded payload accepted by the {@link UploadSession} entity schema.
    *
-   * @example
+   * **Example** (Encode empty session payload)
+   *
    * ```ts
    * import { UploadSession } from "@beep/box/experimental/domain/entities/UploadSession/UploadSession.model";
    * import * as S from "effect/Schema";

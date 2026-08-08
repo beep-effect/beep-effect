@@ -9,9 +9,8 @@
 /**
  * StatuteCitation model exports.
  *
- * **Example**
+ * **Example** (Import StatuteCitation export)
  *
- * @example
  * ```ts
  * import { StatuteCitation } from "@beep/law-practice-domain/values";
  * ```

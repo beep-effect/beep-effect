@@ -38,7 +38,8 @@ const decodeEvidence = S.decodeUnknownSync(Evidence);
 /**
  * Structured extraction targets required by the office-action review workflow.
  *
- * @example
+ * **Example** (Check distinction target name)
+ *
  * ```ts
  * import { officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -141,7 +142,8 @@ const extractionRequestFrom = (input: OfficeActionReviewInput, sourceText: strin
  * extraction, the IR-to-law mapping, plus the epistemic claim gate and
  * lifecycle transition.
  *
- * @example
+ * **Example** (List dependency key names)
+ *
  * ```ts
  * import type { OfficeActionReviewDeps } from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -167,7 +169,8 @@ export interface OfficeActionReviewDeps {
 /**
  * Build the office-action review loop shape from its injected dependencies.
  *
- * @example
+ * **Example** (Review fails without extract)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { FileProcessingOperationError } from "@beep/file-processing/Operation"

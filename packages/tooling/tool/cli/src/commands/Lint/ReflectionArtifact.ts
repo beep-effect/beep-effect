@@ -97,10 +97,12 @@ class ReflectionFrontmatter extends S.Class<ReflectionFrontmatter>($I`Reflection
 /**
  * Namespace for {@link ReflectionFinding} companion types.
  *
- * @example
+ * **Example** (Log ReflectionFinding string)
+ *
  * ```ts
  * console.log("ReflectionFinding")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,10 +110,12 @@ export declare namespace ReflectionFinding {
   /**
    * Encoded representation of {@link ReflectionFinding}.
    *
-   * @example
+   * **Example** (Log Encoded string)
+   *
    * ```ts
    * console.log("Encoded")
    * ```
+   *
    * @category models
    * @since 0.0.0
    */
@@ -178,18 +182,22 @@ const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
  * Whether a raw reflection file's YAML frontmatter decodes as
  * `ReflectionFrontmatter`.
  *
+ * **Details**
+ *
  * Shared with `beep goals doctor`, which validates reflections in every
  * packet (not only completed ones).
  *
- * @param raw - Full reflection file content.
- * @returns Whether the frontmatter block exists and decodes.
- * @example
+ * **Example** (Check empty frontmatter validity)
+ *
  * ```ts
  * import { reflectionFrontmatterIsValid } from "@beep/repo-cli/commands/Lint/ReflectionArtifact"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(reflectionFrontmatterIsValid("---\n---\n")))
  * ```
+ *
+ * @param raw - Full reflection file content.
+ * @returns Whether the frontmatter block exists and decodes.
  * @category validation
  * @since 0.0.0
  */
@@ -199,15 +207,17 @@ export const reflectionFrontmatterIsValid = frontmatterIsValid;
  * Whether a file name matches the reflection-artifact naming convention
  * (`<YYYY-MM-DD>-<agent>.md`).
  *
- * @param file - File name inside `history/reflections/`.
- * @returns Whether the name is a reflection artifact.
- * @example
+ * **Example** (Match artifact naming convention)
+ *
  * ```ts
  * import { reflectionFileNameIsArtifact } from "@beep/repo-cli/commands/Lint/ReflectionArtifact"
  *
  * console.log(reflectionFileNameIsArtifact("2026-07-11-claude.md")) // true
  * console.log(reflectionFileNameIsArtifact("_TEMPLATE.md")) // false
  * ```
+ *
+ * @param file - File name inside `history/reflections/`.
+ * @returns Whether the name is a reflection artifact.
  * @category validation
  * @since 0.0.0
  */
@@ -246,10 +256,12 @@ const REMEDIATION =
 /**
  * Verifies completed goal packets carry a schema-valid closeout reflection.
  *
- * @example
+ * **Example** (Log lint runner name)
+ *
  * ```ts
  * console.log("runReflectionArtifactLint")
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -349,10 +361,12 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
 /**
  * `bun run beep lint reflection-artifacts` — enforce closeout reflections.
  *
- * @example
+ * **Example** (Log command name)
+ *
  * ```ts
  * console.log("lintReflectionArtifactsCommand")
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

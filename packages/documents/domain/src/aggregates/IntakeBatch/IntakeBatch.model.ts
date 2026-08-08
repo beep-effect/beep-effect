@@ -15,7 +15,8 @@ const $I = $DocumentsDomainId.create("aggregates/IntakeBatch/IntakeBatch.model")
 /**
  * Stable intake batch identifier supplied by the intake boundary.
  *
- * @example
+ * **Example** (Decode IntakeBatchId value)
+ *
  * ```ts
  * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
  * import * as S from "effect/Schema"
@@ -37,7 +38,8 @@ export const IntakeBatchId = S.NonEmptyString.pipe(
 /**
  * Stable intake batch identifier supplied by the intake boundary.
  *
- * @example
+ * **Example** (Typed IntakeBatchId decode)
+ *
  * ```ts
  * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
  * import * as S from "effect/Schema"
@@ -54,7 +56,8 @@ export type IntakeBatchId = typeof IntakeBatchId.Type;
 /**
  * Deterministic local intake batch metadata.
  *
- * @example
+ * **Example** (Decode IntakeBatch metadata)
+ *
  * ```ts
  * import { IntakeBatch, IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"

@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Ethereum validator public key schemas.
  *
- * @example
+ * **Example** (Import public key namespace)
+ *
  * ```ts
  * import * as EthereumValidatorPublicKey from "@beep/schema/EthereumValidatorPublicKey"
  * import * as S from "effect/Schema"

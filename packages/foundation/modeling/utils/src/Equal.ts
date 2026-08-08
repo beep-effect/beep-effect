@@ -8,7 +8,8 @@
 /**
  * Re-export of all helpers from `effect/Equal`.
  *
- * @example
+ * **Example** (Compare values with equals)
+ *
  * ```ts
  * import {Eq} from "@beep/utils"
  *

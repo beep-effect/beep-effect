@@ -80,13 +80,15 @@ const cachedGet = <A, E, R>(
 /**
  * Compose two backends so each operation falls back to a secondary backend.
  *
- * @remarks
+ * **Details**
+ *
  * The wrapper catches any failure from the primary operation and retries the
  * same operation on the secondary backend. Advertised capabilities are the
  * boolean union of both inputs, so capability selection can see the composed
  * surface.
  *
- * @example
+ * **Example** (Primary secondary fallback composition)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { withFallback } from "@beep/nlp-processing/Backend/Composition"
@@ -198,7 +200,8 @@ export const withFallback: {
 /**
  * Cache settings for memoized backend composition.
  *
- * @example
+ * **Example** (Caching options capacity TTL)
+ *
  * ```ts
  * import { Duration } from "effect"
  * import { PosInt } from "@beep/schema"
@@ -224,12 +227,14 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
 /**
  * Wrap a backend with per-operation `effect/Cache` memoization.
  *
- * @remarks
+ * **Details**
+ *
  * Each backend operation gets its own cache keyed by the input text or sentence.
  * The wrapper preserves the backend's capability bitmap and renames it as
  * `cached(<name>)`.
  *
- * @example
+ * **Example** (Memoized backend tokenize cache)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { PosInt } from "@beep/schema"
@@ -266,7 +271,6 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * @effects Allocates per-operation `effect/Cache` instances when the wrapper
  * effect runs; operations on the returned backend read and populate those
  * caches through `Cache.get`.
- *
  * @category combinators
  * @since 0.0.0
  */
@@ -313,12 +317,14 @@ export const withCaching = Effect.fn("withCaching")(function* (
 /**
  * Select the first backend whose capability bitmap enables a requested feature.
  *
- * @remarks
+ * **Details**
+ *
  * The input order is the preference order. This is useful before building a
  * layer when a caller has several concrete engines but only one operation
  * requires a specialized capability.
  *
- * @example
+ * **Example** (Select backend by capability)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"

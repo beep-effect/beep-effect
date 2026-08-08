@@ -12,9 +12,12 @@ import type * as React from "react";
 /**
  * Hue family for the glow; each tone maps to a base HSL hue that drives every orb layer.
  *
+ * **Details**
+ *
  * Adjacent layers are derived from that base by small hue offsets for depth.
  *
- * @example
+ * **Example** (Declare green tone value)
+ *
  * ```ts
  * import type { OrbTone } from "@beep/ui/components/orb-background"
  *
@@ -30,7 +33,8 @@ type OrbTone = "green" | "emerald" | "teal" | "sky" | "violet" | "amber" | "rose
 /**
  * Visual strength of the glow; controls per-orb alpha and lightness from a faint wash to a saturated bloom.
  *
- * @example
+ * **Example** (Assign medium intensity)
+ *
  * ```ts
  * import type { OrbIntensity } from "@beep/ui/components/orb-background"
  *
@@ -144,7 +148,8 @@ const LAYERS: ReadonlyArray<OrbLayer> = [
 /**
  * Props for {@link OrbBackground}.
  *
- * @example
+ * **Example** (Satisfy typed props object)
+ *
  * ```ts
  * import type { OrbBackgroundProps } from "@beep/ui/components/orb-background"
  *
@@ -187,6 +192,8 @@ function buildGradient(hue: number, lightness: number, alpha: number): string {
 /**
  * `OrbBackground` is a purely decorative, theme-aware backdrop of soft, blurred, glowing orbs.
  *
+ * **Details**
+ *
  * It fills its nearest positioned ancestor, sits behind content (`-z-10`),
  * ignores pointer events, and is hidden from assistive technology.
  *
@@ -196,7 +203,8 @@ function buildGradient(hue: number, lightness: number, alpha: number): string {
  * intro animation fades and scales the orbs in once; the idle animation drifts
  * them forever (unless `animated` is `false` or the user prefers reduced motion).
  *
- * @example
+ * **Example** (Hero section green backdrop)
+ *
  * ```tsx
  * import { OrbBackground } from "@beep/ui/components/orb-background"
  *

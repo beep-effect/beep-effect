@@ -12,15 +12,17 @@
  * Record of `audio/*` MIME type definitions, each containing a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
+ * **Example** (Lookup audio/mpeg entry)
+ *
  * ```typescript
  * import { audio } from "@beep/data/mime-types/audio"
  *
  * audio["audio/mpeg"]
  * // { source: "iana", extensions: ["mpga", "mp2", "mp2a", "mp3", "m2a", "m3a"] }
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const audio = {
   "audio/3gpp": {

@@ -64,7 +64,8 @@ const inferenceResultPanel = (error: O.Option<string>, result: O.Option<Ontology
 /**
  * Inference status and ontology worker metric cards.
  *
- * @example
+ * **Example** (Import OntologyMetricsRegion)
+ *
  * ```tsx
  * import { OntologyMetricsRegion } from "@beep/ontology-ui"
  *

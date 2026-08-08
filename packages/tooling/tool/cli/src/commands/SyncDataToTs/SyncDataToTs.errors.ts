@@ -28,13 +28,15 @@ const causeMessage = (cause: unknown): string => {
 /**
  * Operational error during source fetch, parsing, projection, or file writes.
  *
- * @example
+ * **Example** (Make sync data error)
+ *
  * ```ts
  * import { SyncDataToTsError } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * const error = SyncDataToTsError.make({ message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -86,13 +88,15 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
 /**
  * Drift detected in check mode.
  *
- * @example
+ * **Example** (Make sync drift error)
+ *
  * ```ts
  * import { SyncDataToTsDriftError } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * const error = SyncDataToTsDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

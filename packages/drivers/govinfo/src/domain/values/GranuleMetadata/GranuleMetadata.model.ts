@@ -25,11 +25,13 @@ const Md5Hex = S.String.check(
 /**
  * Metadata row for a GovInfo granule inside a package.
  *
- * @remarks
+ * **Details**
+ *
  * A granule is a subsection of a GovInfo package, such as a Federal Register
  * notice, a Congressional Record speech, or a chapter-level subdivision.
  *
- * @example
+ * **Example** (Decode sample granule metadata)
+ *
  * ```ts
  * import { GranuleMetadata } from "@beep/govinfo/domain/values/GranuleMetadata/GranuleMetadata.model";
  * import * as S from "effect/Schema";
@@ -83,7 +85,8 @@ export class GranuleMetadata extends S.Class<GranuleMetadata>($I`GranuleMetadata
 /**
  * Companion namespace for {@link GranuleMetadata} encoded helpers.
  *
- * @example
+ * **Example** (Type annotated granule decode)
+ *
  * ```ts
  * import { GranuleMetadata } from "@beep/govinfo/domain/values/GranuleMetadata/GranuleMetadata.model";
  * import * as S from "effect/Schema";
@@ -106,7 +109,8 @@ export declare namespace GranuleMetadata {
   /**
    * Encoded JSON shape accepted by {@link GranuleMetadata}.
    *
-   * @example
+   * **Example** (Encode decoded granule shape)
+   *
    * ```ts
    * import { GranuleMetadata } from "@beep/govinfo/domain/values/GranuleMetadata/GranuleMetadata.model";
    * import * as S from "effect/Schema";

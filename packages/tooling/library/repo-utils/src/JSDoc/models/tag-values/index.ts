@@ -345,10 +345,13 @@ const TypeScriptEnc = S.Union([S.toEncoded(OverloadValue)]);
 /**
  * Tagged union over all 113 JSDoc tag occurrence shapes, discriminated by `_tag`.
  *
+ * **Details**
+ *
  * Provides `.cases`, `.match`, `.guards`, and `.isAnyOf` for dispatching on
  * the parsed `_tag` discriminant.
  *
- * @example
+ * **Example** (Guarding param tag values)
+ *
  * ```ts
  * import { ParamValue, TagValue } from "@beep/repo-utils/JSDoc/models/tag-values"
  *
@@ -356,6 +359,7 @@ const TypeScriptEnc = S.Union([S.toEncoded(OverloadValue)]);
  * const parameterName = TagValue.guards.param(tag) ? tag.name : "unknown"
  * console.log(parameterName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -381,7 +385,8 @@ export const TagValue = S.Union([
 /**
  * Static type represented by the `TagValue` tagged union schema.
  *
- * @example
+ * **Example** (Typing a TagValue instance)
+ *
  * ```ts
  * import { ParamValue } from "@beep/repo-utils/JSDoc/models/tag-values"
  * import type { TagValue } from "@beep/repo-utils/JSDoc/models/tag-values"
@@ -390,6 +395,7 @@ export const TagValue = S.Union([
  * const tagName: "param" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -530,11 +536,14 @@ const tagNames = [
 /**
  * LiteralKit over all 113 canonical JSDoc tag names.
  *
+ * **Details**
+ *
  * Provides `.Enum`, the `.is.<literal>` guard map, `.$match`,
  * `S.decodeUnknownResult(TagName)`, and `TagName.Type`
  * (`"param" | "returns" | ... | "overload"`).
  *
- * @example
+ * **Example** (Using TagName enum guards)
+ *
  * ```ts
  * import { TagName } from "@beep/repo-utils/JSDoc/models/tag-values"
  *
@@ -542,6 +551,7 @@ const tagNames = [
  * const isParam = TagName.is.param(tagName)
  * console.log(isParam)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -554,7 +564,8 @@ export const TagName = LiteralKit(tagNames).pipe(
 /**
  * Static literal union represented by the `TagName` LiteralKit.
  *
- * @example
+ * **Example** (Assigning a TagName literal)
+ *
  * ```ts
  * import type { TagName } from "@beep/repo-utils/JSDoc/models/tag-values"
  *
@@ -563,6 +574,7 @@ export const TagName = LiteralKit(tagNames).pipe(
  * const sameTagName = acceptsTagName(tagName)
  * console.log(sameTagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

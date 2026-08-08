@@ -18,7 +18,8 @@ const $I = $RepoUtilsId.create("errors/DomainError");
 /**
  * A generic domain-level error with an optional underlying cause.
  *
- * @example
+ * **Example** (Construct domain error)
+ *
  * ```ts
  * import { DomainError } from "@beep/repo-utils/errors/DomainError"
  * const error = DomainError.make({
@@ -26,6 +27,7 @@ const $I = $RepoUtilsId.create("errors/DomainError");
  * })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

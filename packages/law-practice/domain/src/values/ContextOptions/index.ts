@@ -9,9 +9,8 @@
 /**
  * ContextOptions model exports.
  *
- * **Example**
+ * **Example** (Import ContextOptions)
  *
- * @example
  * ```ts
  * import { ContextOptions } from "@beep/law-practice-domain/values";
  * ```

@@ -28,7 +28,8 @@ const $I = $AcpId.create("agent");
 /**
  * Options for constructing an ACP agent service.
  *
- * @example
+ * **Example** (Options with logIncoming flag)
+ *
  * ```ts
  * import type { AcpAgentOptions } from "@beep/acp/agent"
  *
@@ -46,7 +47,8 @@ export interface AcpAgentOptions extends AcpProtocol.AcpProtocolLoggingOptions {
 /**
  * Service shape implemented by the ACP agent driver.
  *
- * @example
+ * **Example** (Access raw notifications stream)
+ *
  * ```ts
  * import type { AcpAgentShape } from "@beep/acp/agent"
  *
@@ -201,7 +203,8 @@ export interface AcpAgentShape extends AcpProtocol.AcpExtensionRegistrars {
 /**
  * Context service tag for an ACP agent.
  *
- * @example
+ * **Example** (Effect service for agent)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AcpAgent } from "@beep/acp/agent"
@@ -255,7 +258,8 @@ const decodeCancelNotification = S.decodeUnknownEffect(AcpSchema.CancelNotificat
 /**
  * Constructs an ACP agent from an Effect `Stdio` transport.
  *
- * @example
+ * **Example** (Make agent from Stdio)
+ *
  * ```ts
  * import type * as Stdio from "effect/Stdio"
  * import { make } from "@beep/acp/agent"
@@ -565,7 +569,8 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
 /**
  * Constructs a layer for an ACP agent over the provided transport.
  *
- * @example
+ * **Example** (Layer over Stdio transport)
+ *
  * ```ts
  * import type * as Stdio from "effect/Stdio"
  * import { layer } from "@beep/acp/agent"
@@ -583,7 +588,8 @@ export const layer = (stdio: Stdio.Stdio, options: AcpAgentOptions = {}): Layer.
 /**
  * Constructs a layer that reads its transport from the `Stdio` service.
  *
- * @example
+ * **Example** (Layer from Stdio service)
+ *
  * ```ts
  * import { layerStdio } from "@beep/acp/agent"
  *

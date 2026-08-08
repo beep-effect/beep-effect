@@ -19,11 +19,14 @@ const WINDOWS_TAURI_HTTPS_ORIGIN = "https://tauri.localhost";
 /**
  * Resolve the default chat RPC endpoint for a browser-like runtime.
  *
+ * **Details**
+ *
  * HTTP(S) pages use their same-origin `/rpc` route so development servers can
  * proxy the request. Missing, custom-scheme, or malformed origins fall back to
  * the local desktop sidecar.
  *
- * @example
+ * **Example** (Resolve same-origin RPC URL)
+ *
  * ```ts
  * import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer"
  *
@@ -50,11 +53,14 @@ export const resolveChatRpcHttpUrl = (
 /**
  * The default HTTP protocol used by browser and non-IPC desktop sessions.
  *
+ * **Details**
+ *
  * The URL is resolved at module load from the active browser origin: dev-server
  * sessions use a relative `/rpc`, while packaged non-IPC desktop sessions fall
  * back to the local sidecar server.
  *
- * @example
+ * **Example** (Confirm Layer instance)
+ *
  * ```ts
  * import { HttpChatProtocolLive } from "@beep/agents-client/Chat.layer"
  * import { Layer } from "effect"

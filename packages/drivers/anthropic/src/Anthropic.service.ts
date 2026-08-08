@@ -21,7 +21,8 @@ import {
 /**
  * Live Anthropic HTTP client layer backed by Effect Config and Fetch.
  *
- * @example
+ * **Example** (Live client layer type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLive } from "@beep/anthropic"
@@ -37,7 +38,6 @@ import {
  * @effects
  * - Reads `AI_ANTHROPIC_API_KEY` from Effect Config when the layer is acquired.
  * - Provides the Fetch HTTP client used by downstream Anthropic requests.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -49,12 +49,14 @@ export const AnthropicLive: Layer.Layer<AnthropicClient.AnthropicClient, Config.
 /**
  * Build an Anthropic language-model layer from caller options plus package defaults.
  *
- * @remarks
+ * **Details**
+ *
  * `AnthropicLanguageModelOptions` owns the default `model` and `maxTokens`
  * values, so this helper only maps the schema-backed options to the provider
  * config names.
  *
- * @example
+ * **Example** (Layer from model options)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicLanguageModelLayer } from "@beep/anthropic"
@@ -84,11 +86,13 @@ export const makeAnthropicLanguageModelLayer = (
 /**
  * Live language-model layer for the default Anthropic model.
  *
- * @remarks
+ * **Details**
+ *
  * The model id resolves from `AI_ANTHROPIC_MODEL` at layer acquisition and
  * falls back to {@link ANTHROPIC_DEFAULT_MODEL} when the variable is unset.
  *
- * @example
+ * **Example** (Default model live layer)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelLive } from "@beep/anthropic"
@@ -103,7 +107,6 @@ export const makeAnthropicLanguageModelLayer = (
  *
  * @effects
  * - Reads `AI_ANTHROPIC_MODEL` from Effect Config when the layer is acquired.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -117,13 +120,15 @@ export const AnthropicLanguageModelLive = Layer.unwrap(
 /**
  * Build an acquisition-only execution plan for Anthropic turns.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Use this plan with `Stream.withExecutionPlan` or `Effect.withExecutionPlan`
  * at the caller boundary. The `while` predicate retries only `AiError`
  * failures marked retryable by Effect AI, so auth and invalid-request failures
  * fail fast.
  *
- * @example
+ * **Example** (Create turn execution plan)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { makeAnthropicTurnPlan } from "@beep/anthropic"
@@ -147,7 +152,8 @@ export const makeAnthropicTurnPlan = () =>
 /**
  * Default Anthropic turn acquisition plan.
  *
- * @example
+ * **Example** (Default turn plan value)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicTurnPlan } from "@beep/anthropic"

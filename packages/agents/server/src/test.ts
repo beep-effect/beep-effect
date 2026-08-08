@@ -11,7 +11,8 @@ import { initialScanState } from "./AssistantTurn/index.ts";
 /**
  * Deterministic seed scan state re-exported for tests and fixtures.
  *
- * @example
+ * **Example** (Scan chunk with seed state)
+ *
  * ```ts
  * import { AgentsServerInitialScanState } from "@beep/agents-server/test"
  * import { scanChunk } from "@beep/agents-server/AssistantTurn"

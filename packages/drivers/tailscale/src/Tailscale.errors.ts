@@ -47,7 +47,8 @@ const commandContextFields = {
 /**
  * Failure to start the Tailscale executable.
  *
- * @example
+ * **Example** (Create command spawn error)
+ *
  * ```ts
  * import { TailscaleCommandSpawnError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -85,7 +86,8 @@ export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleComman
 /**
  * Failure while collecting output from a running Tailscale process.
  *
- * @example
+ * **Example** (Create command output error)
+ *
  * ```ts
  * import { TailscaleCommandOutputError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -123,7 +125,8 @@ export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleComma
 /**
  * Nonzero Tailscale process exit with redacted output lengths.
  *
- * @example
+ * **Example** (Create command exit error)
+ *
  * ```ts
  * import { TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -168,7 +171,8 @@ export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommand
 /**
  * Tailscale process timeout with the configured duration in milliseconds.
  *
- * @example
+ * **Example** (Create command timeout error)
+ *
  * ```ts
  * import { TailscaleCommandTimeoutError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -210,7 +214,8 @@ export class TailscaleCommandTimeoutError extends TaggedErrorClass<TailscaleComm
 /**
  * Union of failures emitted while executing a Tailscale command.
  *
- * @example
+ * **Example** (Validate command error union)
+ *
  * ```ts
  * import { TailscaleCommandError, TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
  * import * as S from "effect/Schema"
@@ -243,7 +248,8 @@ export const TailscaleCommandError = S.Union([
 /**
  * Runtime type for {@link TailscaleCommandError}.
  *
- * @example
+ * **Example** (Type annotate command error)
+ *
  * ```ts
  * import type { TailscaleCommandError } from "@beep/tailscale/Tailscale.errors"
  * import { TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
@@ -266,7 +272,8 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 /**
  * Failure to decode the JSON emitted by `tailscale status`.
  *
- * @example
+ * **Example** (Create status parse error)
+ *
  * ```ts
  * import { TailscaleStatusParseError } from "@beep/tailscale/Tailscale.errors"
  *

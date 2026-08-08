@@ -173,7 +173,8 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
 /**
  * Build the pure IR-to-law mapping shape.
  *
- * @example
+ * **Example** (Fail empty toLaw mapping)
+ *
  * ```ts
  * import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect, Exit } from "effect"

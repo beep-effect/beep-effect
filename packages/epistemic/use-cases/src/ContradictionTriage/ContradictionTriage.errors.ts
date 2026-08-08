@@ -18,7 +18,8 @@ const ContradictionTriageOperationBase = LiteralKit(["submit", "list", "get", "r
 /**
  * Bounded contradiction repository operations.
  *
- * @example
+ * **Example** (Log review enum member)
+ *
  * ```ts
  * import { ContradictionTriageOperation } from "@beep/epistemic-use-cases/server"
  *
@@ -38,7 +39,8 @@ export const ContradictionTriageOperation = ContradictionTriageOperationBase.pip
 /**
  * Runtime type for {@link ContradictionTriageOperation}.
  *
- * @example
+ * **Example** (Assign submit operation type)
+ *
  * ```ts
  * import type { ContradictionTriageOperation } from "@beep/epistemic-use-cases/server"
  *
@@ -54,7 +56,8 @@ export type ContradictionTriageOperation = typeof ContradictionTriageOperation.T
 /**
  * Raised when the contradiction repository cannot serve an operation.
  *
- * @example
+ * **Example** (Construct unavailable repository error)
+ *
  * ```ts
  * import { ContradictionRepositoryUnavailable } from "@beep/epistemic-use-cases/server"
  *
@@ -93,7 +96,8 @@ export class ContradictionRepositoryUnavailable extends TaggedErrorClass<Contrad
   /**
    * Build an operation-scoped repository failure.
    *
-   * @example
+   * **Example** (Build during-scoped failure)
+   *
    * ```ts
    * import { ContradictionRepositoryUnavailable } from "@beep/epistemic-use-cases/server"
    *
@@ -124,7 +128,8 @@ const ContradictionReviewConflictReasonBase = LiteralKit([
 /**
  * Bounded reasons a contradiction review can lose its optimistic race.
  *
- * @example
+ * **Example** (Access already-resolved enum)
+ *
  * ```ts
  * import { ContradictionReviewConflictReason } from "@beep/epistemic-use-cases/server"
  *
@@ -144,7 +149,8 @@ export const ContradictionReviewConflictReason = ContradictionReviewConflictReas
 /**
  * Runtime type for {@link ContradictionReviewConflictReason}.
  *
- * @example
+ * **Example** (Assign not-found reason type)
+ *
  * ```ts
  * import type { ContradictionReviewConflictReason } from "@beep/epistemic-use-cases/server"
  *
@@ -160,7 +166,8 @@ export type ContradictionReviewConflictReason = typeof ContradictionReviewConfli
 /**
  * Typed optimistic conflict raised when a review no longer applies.
  *
- * @example
+ * **Example** (Construct review conflict error)
+ *
  * ```ts
  * import { ContradictionReviewConflict } from "@beep/epistemic-use-cases/server"
  *
@@ -201,7 +208,8 @@ const ContradictionSubmissionConflictReasonBase = LiteralKit([
 /**
  * Bounded reasons an immutable contradiction submission is refused.
  *
- * @example
+ * **Example** (Validate receipt-key-reused reason)
+ *
  * ```ts
  * import { ContradictionSubmissionConflictReason } from "@beep/epistemic-use-cases/server"
  *
@@ -222,7 +230,8 @@ export const ContradictionSubmissionConflictReason = ContradictionSubmissionConf
 /**
  * Runtime type for {@link ContradictionSubmissionConflictReason}.
  *
- * @example
+ * **Example** (Type and guard reused key)
+ *
  * ```ts
  * import {
  *   ContradictionSubmissionConflictReason,
@@ -241,7 +250,8 @@ export type ContradictionSubmissionConflictReason = typeof ContradictionSubmissi
 /**
  * Typed immutable-submission conflict.
  *
- * @example
+ * **Example** (Construct submission conflict error)
+ *
  * ```ts
  * import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction"
  * import { ContradictionSubmissionConflict } from "@beep/epistemic-use-cases/server"

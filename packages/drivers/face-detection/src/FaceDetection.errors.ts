@@ -50,7 +50,8 @@ const messageWithCause = (message: string, cause: unknown): string =>
 /**
  * Driver operation names surfaced in {@link FaceDetectionError} diagnostics.
  *
- * @example
+ * **Example** (Log detect operation enum)
+ *
  * ```ts
  * import { FaceDetectionOperation } from "@beep/face-detection"
  *
@@ -77,7 +78,8 @@ export const FaceDetectionOperation = LiteralKit([
 /**
  * Runtime TypeScript type produced by the {@link FaceDetectionOperation} schema.
  *
- * @example
+ * **Example** (Type a detect operation)
+ *
  * ```ts
  * import type { FaceDetectionOperation } from "@beep/face-detection"
  *
@@ -93,7 +95,8 @@ export type FaceDetectionOperation = typeof FaceDetectionOperation.Type;
 /**
  * Options used when normalizing unknown face detection boundary failures.
  *
- * @example
+ * **Example** (Make options with model path)
+ *
  * ```ts
  * import { FaceDetectionErrorFromUnknownOptions } from "@beep/face-detection"
  * import * as O from "effect/Option"
@@ -127,13 +130,15 @@ export class FaceDetectionErrorFromUnknownOptions extends S.Class<FaceDetectionE
 /**
  * Technical failure raised by the `@beep/face-detection` driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * This error is reserved for driver concerns such as ONNX Runtime loading,
  * model session creation, image preprocessing, request decoding, and
  * post-processing tensor validation. Product-level "no face found" decisions
  * should be modeled outside this driver.
  *
- * @example
+ * **Example** (Create FaceDetectionError instance)
+ *
  * ```ts
  * import { FaceDetectionError } from "@beep/face-detection"
  *
@@ -172,7 +177,8 @@ export class FaceDetectionError extends TaggedErrorClass<FaceDetectionError>($I`
   /**
    * Normalize an unknown model, platform, or image failure into a {@link FaceDetectionError}.
    *
-   * @example
+   * **Example** (Normalize unknown load failure)
+   *
    * ```ts
    * import { FaceDetectionError } from "@beep/face-detection"
    *

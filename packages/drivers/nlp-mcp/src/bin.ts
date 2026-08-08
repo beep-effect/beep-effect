@@ -21,15 +21,16 @@ import { makeServerLayer, NlpMcpServerConfig } from "./Server.ts";
 /**
  * The server identity advertised to MCP clients by this entrypoint.
  *
- * @example
+ * **Example** (Log server config name)
+ *
  * ```ts
  * import { SERVER_CONFIG } from "@beep/nlp-mcp/bin"
  *
  * console.log(SERVER_CONFIG.name)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const SERVER_CONFIG = NlpMcpServerConfig.make({ name: "beep-nlp", version: "0.0.0" });
 

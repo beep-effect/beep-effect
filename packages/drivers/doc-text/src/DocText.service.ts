@@ -25,10 +25,13 @@ import type { DocTextError } from "./DocText.errors.ts";
 /**
  * Version of the canonical text emitted by the JS-native document extractor.
  *
+ * **Details**
+ *
  * Increment this value when PDF or DOCX extraction semantics change in a way
  * that can alter the canonical text or its UTF-16 offsets.
  *
- * @example
+ * **Example** (Log engine version constant)
+ *
  * ```ts
  * import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text"
  *
@@ -43,10 +46,13 @@ export const DOC_TEXT_ENGINE_VERSION = "1";
 /**
  * JS-native document text file-processing engine descriptor.
  *
+ * **Details**
+ *
  * The capability contract currently groups text engines under the `tika`
  * engine family; the concrete `doc-text-js` name distinguishes this runtime.
  *
- * @example
+ * **Example** (Log supported formats list)
+ *
  * ```ts
  * import { DocTextFileProcessingEngineDescriptor } from "@beep/doc-text"
  *
@@ -172,7 +178,8 @@ const extractDocx = Effect.fn("DocTextFileProcessingEngine.extractDocx")(functio
 /**
  * Create the JS-native PDF and DOCX text extraction engine.
  *
- * @example
+ * **Example** (Create engine and log name)
+ *
  * ```ts
  * import { makeDocTextFileProcessingEngine } from "@beep/doc-text"
  *
@@ -234,7 +241,8 @@ export const makeDocTextFileProcessingEngine = (): FileProcessingEngineShape => 
 /**
  * JS-native PDF and DOCX text extraction engine value.
  *
- * @example
+ * **Example** (Check DOCX format support)
+ *
  * ```ts
  * import { DocTextFileProcessingEngine } from "@beep/doc-text"
  *

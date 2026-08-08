@@ -49,12 +49,14 @@ const learnDocumentState = (
 /**
  * Isolated vectorizer surface passed to scoped BM25 workflows.
  *
- * @remarks
+ * **Details**
+ *
  * Implementations created by `withFreshInstance` do not mutate the shared live
  * vectorizer state, which makes them useful for one-off ranking and keyword
  * extraction jobs.
  *
- * @example
+ * **Example** (Read scoped document terms)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { ScopedVectorizer } from "@beep/wink"
@@ -146,7 +148,8 @@ const observeVectorizer = (operation: string) =>
 /**
  * Typed failure for learning documents or querying wink BM25 vector data.
  *
- * @example
+ * **Example** (Create error from message)
+ *
  * ```ts
  * import { VectorizerError } from "@beep/wink"
  *
@@ -346,7 +349,8 @@ const makeWinkVectorizer = Effect.gen(function* () {
 /**
  * Service for learning documents and producing BM25 vectors, bags, and term frequencies.
  *
- * @example
+ * **Example** (Read vectorizer config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngineLive } from "@beep/wink"
@@ -370,7 +374,8 @@ export class WinkVectorizer extends Context.Service<WinkVectorizer, WinkVectoriz
 /**
  * Live BM25 vectorizer layer that depends on the wink engine.
  *
- * @example
+ * **Example** (Provide live vectorizer layer)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkEngineLive } from "@beep/wink"
