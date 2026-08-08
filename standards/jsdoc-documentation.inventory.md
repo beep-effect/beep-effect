@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-08T06:44:22.236Z
+Generated: 2026-08-08T08:50:53.737Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 20 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 111 |
-| publicModules | 2416 |
-| publicExports | 15889 |
-| openModules | 454 |
+| publicModules | 2417 |
+| publicExports | 15955 |
+| openModules | 455 |
 | openExports | 1350 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 22 |
-| multiple-description-paragraphs | 1337 |
+| multiple-description-paragraphs | 1338 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 2 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 2 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 3 | 3 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 9 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 171 | 1213 | 42 | 46 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 172 | 1279 | 43 | 46 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 1 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 2 |
@@ -483,6 +483,7 @@ Module findings:
 - `src/commands/Goals/Migration.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/PortfolioIndex.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Goals/SetStatus.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/commands/Knowledge/Knowledge.refs.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Lint/IdentityRegistry.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Lint/PackageTestTypecheck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
