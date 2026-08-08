@@ -94,6 +94,16 @@
       "reason": "Migration regression proof decodes fixed fixture rows through the table converters to prove the five-table DDL, the trigger catalog, and the append-only denials; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests."
     },
     {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 121,
+      "owner": "@beep/law-practice-server",
+      "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
+    },
+    {
       "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
