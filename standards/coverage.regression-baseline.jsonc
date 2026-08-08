@@ -577,10 +577,16 @@
     },
     "@beep/openai-compat": {
       "path": "packages/drivers/openai-compat",
-      "lines": 82.23,
-      "statements": 81.93,
+      "lines": 82.41,
+      "statements": 82.1,
       "branches": 62.62,
-      "functions": 73.04
+      "functions": 73.42,
+      "uncovered": {
+        "lines": 54,
+        "statements": 56,
+        "branches": 37,
+        "functions": 38
+      }
     },
     "@beep/openclaw": {
       "path": "packages/drivers/openclaw",
@@ -675,10 +681,10 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 86.29,
-      "statements": 86.28,
-      "branches": 73.38,
-      "functions": 69.81
+      "lines": 85.6,
+      "statements": 85.5,
+      "branches": 72.2,
+      "functions": 69.0
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",

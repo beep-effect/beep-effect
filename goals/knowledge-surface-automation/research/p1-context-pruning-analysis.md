@@ -107,7 +107,7 @@ told agents to prefer `mui-mcp` with a specific `useMuiDocs`-then-`fetchDocs` ca
 order. That server is in no `.mcp.json` (this repo's has `chrome-devtools`, `fallow`,
 `next-devtools`, `nlp`, `serena`, `shadcn`, `webstorm`), and the only occurrence in
 `~/.claude.json` is at
-`projects > /home/elpresidank/YeeBois/projects/beep-effect > disabledMcpServers[15]`.
+`projects > <HOME>/YeeBois/projects/beep-effect > disabledMcpServers[15]`.
 MUI packages are genuinely used (`@mui/material`, `@mui/x-tree-view`), but the routing
 instruction was unusable for Claude Code and meaningless for Codex. Deleted. If the
 server is ever re-enabled, the guidance belongs in a skill or alongside the `.mcp.json`

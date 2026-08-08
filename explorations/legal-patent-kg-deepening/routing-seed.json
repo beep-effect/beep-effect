@@ -221,8 +221,8 @@
   {
     "cluster": "Drafting episodes, deterministic retrieval, and rebuildable projections + claim-limitation support (merged 2026-08-01)",
     "route": "mixed",
-    "primaryTarget": "patent-drafting-episode-ledger",
-    "targetExists": false,
+    "primaryTarget": "explorations/patent-drafting-episode-ledger",
+    "targetExists": true,
     "secondaryTargets": [
       "explorations/agent-memory-tiers-bitemporal-edges",
       "goals/agentic-professional-runtime",
@@ -251,7 +251,7 @@
       "[T4-F2,T4-F3,T4-F4] The active professional-runtime goal already requires candidate drafts, evidence, strict human approval, and deterministic fixtures (goals/agentic-professional-runtime/SPEC.md:28-63,111-125).",
       "[T4-F1,ADHD-2] Exact source-versioned support anchors belong to goals/citation-verified-span-substrate and must be reused, not recreated."
     ],
-    "rationale": "`[T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3]` need a law-owned authoritative episode and answer contract that consumes, but does not duplicate, generic memory and retrieval bricks. AMENDED 2026-08-01: absorbs the claim-limitation-support cluster as its first rung (ClaimLimitationSupport is a submachine of the DraftingEpisode state machine sharing RuntimeApprovalGate); grill annotations resolved \u2014 remo2: rows-first PracticeKgQuery + disposable in-memory @beep/rdf lane, no persistent graph store; remo3: episode ledgers are product records, Cognee projection is lossy and rebuildable.",
+    "rationale": "`[T1-F10,T3-F4,T3-F5,T3-F10,T4-F7,ADHD-3]` need a law-owned authoritative episode and answer contract that consumes, but does not duplicate, generic memory and retrieval bricks. AMENDED 2026-08-01: absorbs the claim-limitation-support cluster as its first rung (ClaimLimitationSupport is a submachine of the DraftingEpisode state machine sharing RuntimeApprovalGate); grill annotations resolved \u2014 remo2: rows-first PracticeKgQuery + disposable in-memory @beep/rdf lane, no persistent graph store; remo3: episode ledgers are product records, Cognee projection is lossy and rebuildable. AMENDED 2026-08-06: packet OPENED at explorations/patent-drafting-episode-ledger (capture stage); wedge-scoped decisions pre-seeded in its DECISIONS.md; parent align questions 11 (the T3-F4 half), 12, 14, 15, and 16 carried into its openQuestions.",
     "cautions": [
       "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): [remo2] route grill: MatterProjection challenges the standing no-graph-store boundary and MUST go through /grill-with-docs with Benjamin before any projection store is shaped; no graph becomes authority.",
       "RESOLVED 2026-08-01 (reconciliation grill; retained for provenance): [remo3,ADHD-3] route grill: Cognee's role touches the 2026-07-25 memory architecture and MUST go through /grill-with-docs with Benjamin. Product drafting records may be repo-native while Cognee remains durable operator dev-memory; do not silently redefine either role.",
@@ -275,7 +275,8 @@
       "T4-F4",
       "ADHD-2"
     ],
-    "reconciled": "2026-08-01"
+    "reconciled": "2026-08-01",
+    "amended": "2026-08-06"
   },
   {
     "cluster": "Rejected admission and ODRL profile claims",
