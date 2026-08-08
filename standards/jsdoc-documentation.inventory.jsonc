@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-08T09:31:02.797Z",
+  "generatedAt": "2026-08-08T12:50:30.943Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,9 +65,9 @@
     "cleanPackages": 68,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 63,
-    "publicModules": 2415,
-    "publicExports": 15950,
-    "openModules": 403,
+    "publicModules": 2418,
+    "publicExports": 15988,
+    "openModules": 406,
     "openExports": 157,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 544,
+    "multiple-description-paragraphs": 547,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -34057,9 +34057,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 174,
-        "publicModuleCount": 172,
-        "publicExportCount": 1279
+        "sourceFileCount": 177,
+        "publicModuleCount": 175,
+        "publicExportCount": 1317
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -34068,7 +34068,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 43,
+        "openModules": 46,
         "openExports": 10,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -34081,7 +34081,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 53,
+          "multiple-description-paragraphs": 56,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 1,
@@ -37859,6 +37859,58 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Worktree/Fleet.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 2,
+          "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 9,
+          "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
           "line": 1,
@@ -37880,7 +37932,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 16,
+          "exportCount": 14,
           "remediationStatus": "open"
         },
         {
@@ -37907,6 +37959,32 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 26,
+          "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Worktree/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
           "line": 1,
@@ -37924,7 +38002,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -65119,12 +65197,266 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "fleetCheckoutLines",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.command.ts",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-command-ts-115-fleetcheckoutlines",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "worktreeFleetCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.command.ts",
+          "line": 191,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-command-ts-191-worktreefleetcommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FLEET_SURFACE_EXCLUDE_PREFIXES",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-85-fleet-surface-exclude-prefixes",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "classifyFleetLiveness",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-121-classifyfleetliveness",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseStatusPorcelainZ",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 200,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-200-parsestatusporcelainz",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseMergeTreeConflictNames",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 240,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-240-parsemergetreeconflictnames",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "transcriptProjectDirName",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 281,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-281-transcriptprojectdirname",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildContestedIndex",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 339,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-339-buildcontestedindex",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetMirrorServiceShape",
+          "exportKind": "interface",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 357,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-357-fleetmirrorserviceshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetMirrorService",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-387-fleetmirrorservice",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetMirrorServiceLive",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 1206,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1206-fleetmirrorservicelive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "WORKTREE_LOCAL_FILE_ENTRIES",
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 50,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-50-worktree-local-file-entries",
+          "line": 52,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-52-worktree-local-file-entries",
           "currentTags": [
             "@category",
             "@since"
@@ -65145,8 +65477,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 68,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-68-defaultworktreebranch",
+          "line": 70,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-70-defaultworktreebranch",
           "currentTags": [
             "@param",
             "@returns",
@@ -65169,8 +65501,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-87-worktreeaddargs",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-91-worktreeaddargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -65193,8 +65525,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 112,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-112-worktreeremoveargs",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-118-worktreeremoveargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -65217,33 +65549,11 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 137,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-137-branchdeletecommand",
+          "line": 143,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-143-branchdeletecommand",
           "currentTags": [
             "@param",
             "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "WorktreeListEntry",
-          "exportKind": "class",
-          "filePath": "src/commands/Worktree/Worktree.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-161-worktreelistentry",
-          "currentTags": [
             "@category",
             "@since"
           ],
@@ -65263,8 +65573,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-195-worktreecontext",
+          "line": 170,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-170-worktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -65285,8 +65595,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 222,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-222-worktreecopyoutcome",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-209-worktreecopyoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -65307,8 +65617,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 258,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-258-worktreedoctorentry",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-251-worktreedoctorentry",
           "currentTags": [
             "@category",
             "@since"
@@ -65347,36 +65657,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "parseWorktreePorcelain",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 360,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-360-parseworktreeporcelain",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "resolveWorktreeContext",
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 463,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-463-resolveworktreecontext",
+          "line": 376,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-376-resolveworktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -65397,8 +65683,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 513,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-513-addworktree",
+          "line": 432,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-432-addworktree",
           "currentTags": [
             "@category",
             "@since"
@@ -65419,8 +65705,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 557,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-557-copylocalfiles",
+          "line": 479,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-479-copylocalfiles",
           "currentTags": [
             "@category",
             "@since"
@@ -65441,8 +65727,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 646,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-646-worktreedoctorreportforcontext",
+          "line": 570,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-570-worktreedoctorreportforcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -65463,8 +65749,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 911,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-911-worktreecommand",
+          "line": 840,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-840-worktreecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -65547,12 +65833,630 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Worktree.command.ts\";",
+          "symbolName": "WorktreeListEntry",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 46,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-46-worktreelistentry",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseWorktreePorcelain",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 149,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-149-parseworktreeporcelain",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FLEET_LIVENESS_WINDOW_SECONDS",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 172,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-172-fleet-liveness-window-seconds",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FLEET_POLICY_SURFACE",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-205-fleet-policy-surface",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLiveness",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 245,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-245-fleetliveness",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLiveness",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 257,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-257-fleetliveness",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLivenessProbe",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 273,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-273-fleetlivenessprobe",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLivenessProbe",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 285,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-285-fleetlivenessprobe",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetProbeReading",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 309,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-309-fleetprobereading",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetProbeReading",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 326,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-326-fleetprobereading",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLivenessReadings",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-355-fleetlivenessreadings",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetLivenessVerdict",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-387-fleetlivenessverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetScanOptions",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 419,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-419-fleetscanoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetConflictStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 454,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-454-fleetconflictstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetConflictStatus",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 466,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-466-fleetconflictstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetPolicyMovement",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 489,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-489-fleetpolicymovement",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetPolicyMovement",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 501,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-501-fleetpolicymovement",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetUnknownReason",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 517,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-517-fleetunknownreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetUnknownReason",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 534,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-534-fleetunknownreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetCheckoutKind",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 550,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-550-fleetcheckoutkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetCheckoutKind",
+          "exportKind": "type",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 562,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-562-fleetcheckoutkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetCheckout",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 605,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-605-fleetcheckout",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetContestedPath",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 649,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-649-fleetcontestedpath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetEpochTarget",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 681,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-681-fleetepochtarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetScanCoverage",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 714,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-714-fleetscancoverage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FleetSnapshot",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-763-fleetsnapshot",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Fleet.command.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Worktree/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
           "line": 13,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-13-export-from-worktree-command-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-13-export-from-fleet-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Fleet.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Worktree/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
+          "line": 20,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-20-export-from-fleet-service-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Worktree.command.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Worktree/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
+          "line": 27,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-27-export-from-worktree-command-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -65573,8 +66477,30 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Worktree/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
-          "line": 20,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-20-export-from-worktree-errors-ts",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-34-export-from-worktree-errors-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Worktree.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Worktree/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
+          "line": 41,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-index-ts-41-export-from-worktree-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
