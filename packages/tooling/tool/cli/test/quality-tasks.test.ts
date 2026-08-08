@@ -1495,6 +1495,20 @@ describe("quality task adapter", () => {
     expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
   });
 
+  // The CI test-integration lane pins --concurrency=2 for 16GB runners. That
+  // cap must bound the parallel pass and never reach the serial pass, whose
+  // concurrency of 1 is a shared-schema correctness invariant — and turbo
+  // errors out on a repeated --concurrency rather than taking the last one.
+  it("keeps the serial SQL pass at concurrency 1 under a caller-provided cap", () => {
+    const steps = rootQualityStepsForTesting(
+      "/repo",
+      getInvocation(["test", "--integration", "--concurrency=2", "--summarize"])
+    );
+
+    expect(steps[0]?.args).toEqual(expectedTurboArgs("test:integration:parallel", ["--concurrency=2", "--summarize"]));
+    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
+  });
+
   it("requires explicit test SQL URLs over generic application defaults", () => {
     expect(
       sqlIntegrationConnectionUriFromEnvForTesting({

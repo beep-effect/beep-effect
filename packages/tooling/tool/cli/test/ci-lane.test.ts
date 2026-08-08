@@ -111,12 +111,26 @@ describe("ciLaneStepsForTesting", () => {
     expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
-    expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
+    expect([...integration.args]).toEqual([
+      "run",
+      "test",
+      "--",
+      "--integration",
+      "--concurrency=2",
+      "--affected",
+      "--summarize",
+    ]);
   });
 
-  it("matches coverage baseline regeneration concurrency", () => {
+  // The lanes that OOM-killed 16GB ubuntu-24.04 runners after PR #600 pin
+  // concurrency 2; the caps injected in Quality/Tasks.ts (4 in CI) only apply
+  // when the caller passes none, so the pin has to reach turbo verbatim.
+  it("pins the memory-bound lanes below the shared CI concurrency cap", () => {
+    const check = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+    expect([...check.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
+
     const coverage = firstOf(ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions));
-    expect([...coverage.args]).toEqual(["run", "coverage", "--", "--concurrency=3", "--affected", "--summarize"]);
+    expect([...coverage.args]).toEqual(["run", "coverage", "--", "--concurrency=2", "--affected", "--summarize"]);
   });
 
   it("runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI", () => {

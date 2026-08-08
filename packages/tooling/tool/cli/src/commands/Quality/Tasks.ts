@@ -485,6 +485,20 @@ const isTurboCacheControlArg = (arg: string): boolean =>
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
 
+const stripTurboConcurrencyArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
+  (arg) => !isTurboConcurrencyArg(arg)
+);
+
+// The serial SQL pass shares one Postgres schema, so its concurrency of 1 is a
+// correctness invariant, not a tuning knob. Callers may now carry their own cap
+// (the CI test-integration lane pins --concurrency=2 for the 16GB runners), and
+// turbo rejects a repeated --concurrency outright rather than taking the last
+// one, so drop any inherited cap before pinning the serial one.
+const serialTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "--concurrency=1",
+  ...stripTurboConcurrencyArgs(args),
+];
+
 const isExplicitTurboScopeArg = (arg: string): boolean =>
   Str.startsWith("--filter")(arg) || Str.startsWith("--since")(arg);
 
@@ -1224,7 +1238,7 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
 
 const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...args]),
+  args: turboRunArgs(["test:integration:serial"], serialTurboArgs(args)),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -1432,7 +1446,7 @@ const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
     ...optionalQualityTaskStep({
       enabled: lanes.integration,
       step: () =>
-        turboStep(repoRoot, "test:integration:serial", ["test:integration:serial"], ["--concurrency=1", ...lanes.args]),
+        turboStep(repoRoot, "test:integration:serial", ["test:integration:serial"], serialTurboArgs(lanes.args)),
     }),
   ];
 };
