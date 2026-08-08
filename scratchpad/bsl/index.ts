@@ -1,0 +1,18 @@
+/**
+ * BSL — Beep Specific Language.
+ *
+ * Experimental Effect v4 + drizzle rc SQL DSL: schema fields carry
+ * statically-typed SQL metadata through a pipeable `Field<S, Meta>` node,
+ * models are VariantSchema-aware classes, and tables project to fully-typed
+ * drizzle `pgTable`s. See `research/` for the design inputs.
+ */
+export * as Field from "./Field.ts";
+export * as Meta from "./Meta.ts";
+export * as PgColumn from "./PgColumn.ts";
+export * as Columns from "./Model.ts";
+export * as Derive from "./derive.ts";
+export * as pg from "./pg.ts";
+export { Model, VariantField, FieldOnly, FieldExcept, fieldEvolve, extract, ModelInvariantError } from "./factory.ts";
+export type { AnyModel, ColumnsOf, FieldsInput, ModelClass, Statics, ValidateFields, Variant } from "./factory.ts";
+export { toPgTable } from "./table.ts";
+export type { BuilderFor, BuildersOf, TableOf } from "./table.ts";
