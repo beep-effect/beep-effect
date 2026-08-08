@@ -54,20 +54,18 @@
           "Equal": "Eq"
         },
         "diagnosticSeverity": {
-          // Every rule the compiler ships is listed explicitly. Rules omitted from this map
-          // run at their upstream default, so silence here is not "disabled" — it is
-          // "whatever upstream decided", which changes under us on every compiler bump.
-          // "off" entries are staged for the 0.33 ratchet, one rule per PR, ending at
-          // "error" like everything else. Remaining counts at time of writing:
-          // preferTypedSchemaDecoder 411, missingPipeableSignature (unmeasured — it wants
-          // pipeable overloads across the public API), abortControllerInEffect 2,
-          // preferUnsafeConstructor 1, the rest 0.
-          "abortControllerInEffect": "off",
+          // Every rule the compiler ships is listed explicitly, and every one is an error.
+          // Rules omitted from this map run at their upstream default, so silence here
+          // would not mean "disabled" — it would mean "whatever upstream decided", which
+          // changes under us on every compiler bump. `beep quality tsgo-rules` enforces
+          // both halves: the listed set must match the installed compiler exactly, and no
+          // entry may be anything other than "error".
+          "abortControllerInEffect": "error",
           "anyUnknownInErrorContext": "error",
           "asyncFunction": "error",
           "catchAllToMapError": "error",
-          "catchChainToFirstSuccessOf": "off",
-          "catchTagToCatchReason": "off",
+          "catchChainToFirstSuccessOf": "error",
+          "catchTagToCatchReason": "error",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
           "catchUnfailableEffect": "error",
@@ -113,7 +111,7 @@
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
           "missingLayerContext": "error",
-          "missingPipeableSignature": "off",
+          "missingPipeableSignature": "error",
           "missingReturnYieldStar": "error",
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
@@ -126,20 +124,20 @@
           "outdatedApi": "error",
           "overriddenSchemaConstructor": "error",
           "preferSchemaOverJson": "error",
-          "preferSchemaTypeProperty": "off",
-          "preferTypedSchemaDecoder": "off",
-          "preferUnsafeConstructor": "off",
+          "preferSchemaTypeProperty": "error",
+          "preferTypedSchemaDecoder": "error",
+          "preferUnsafeConstructor": "error",
           "processEnv": "error",
           "processEnvInEffect": "error",
-          "promiseInEffectSuccess": "off",
+          "promiseInEffectSuccess": "error",
           "redundantOrDie": "error",
           "redundantMapError": "error",
           "redundantSchemaTagIdentifier": "error",
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
-          "schemaLiteralNonFinite": "off",
+          "schemaLiteralNonFinite": "error",
           "schemaNumber": "error",
-          "schemaOpaqueInstanceMember": "off",
+          "schemaOpaqueInstanceMember": "error",
           "schemaStructWithTag": "error",
           "schemaSyncInEffect": "error",
           "schemaUnionOfLiterals": "error",
@@ -147,7 +145,7 @@
           "serviceNotAsClass": "error",
           "strictBooleanExpressions": "error",
           "strictEffectProvide": "error",
-          "syncToSucceed": "off",
+          "syncToSucceed": "error",
           "tryCatchInEffectGen": "error",
           "unknownInEffectCatch": "error",
           "unnecessaryArrowBlock": "error",
