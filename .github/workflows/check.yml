@@ -112,6 +112,14 @@ jobs:
       # Verification runs PR-controlled code. Keep every secret-backed value on
       # trusted push events only; PR lanes use local cache and fixture/default
       # app configuration.
+      #
+      # GOMEMLIMIT bounds the Go runtime (tsgo, the repo's typechecker): on a
+      # cold CI build the epistemic-server project compile balloons past the
+      # 16GB hosted VM and the kernel SIGKILLs it (exit 137), even serial. The
+      # same check peaks ~4.6GB warm, so the overage is GC slack, not live
+      # heap — a soft limit trades CPU for survival. Remove when lanes move to
+      # owned runners with real memory.
+      GOMEMLIMIT: 10GiB
       TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
       TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
