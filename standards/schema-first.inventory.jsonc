@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-06",
+  "generatedOn": "2026-08-08",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -12,14 +12,6 @@
       "line": 94,
       "owner": "@beep/oip-web",
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
-    },
-    {
-      "file": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-      "symbol": "ThreadTranscriptView",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/professional-desktop",
-      "reason": "Derived per-render transcript view model recomputed on every streaming block; every field is already schema-validated upstream (TimelineTurn, StreamingTurn, HashSet of TurnIds), so an S.Class .make here would revalidate a hot path without adding an invariant. Recorded in-source as a crispen: comment."
     },
     {
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
