@@ -19,14 +19,15 @@ import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
+import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.ts";
+import { parseWorktreePorcelain, WorktreeListEntry } from "./Worktree.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
 
 const WORKTREES_ROOT_SUFFIX = "-worktrees";
-const REFS_HEADS_PREFIX = "refs/heads/";
 
 /**
  * Local-only files copied from the main checkout into a fresh worktree.
@@ -36,12 +37,13 @@ const REFS_HEADS_PREFIX = "refs/heads/";
  * These are gitignored per-worktree files that a fresh `git worktree add` does
  * not carry over; restoring them makes a new worktree immediately usable.
  *
- * **Example** (Count local file entries)
+ * **Example** (Inspect the bootstrap entries)
  *
  * ```ts
  * import { WORKTREE_LOCAL_FILE_ENTRIES } from "@beep/repo-cli/commands/Worktree"
  *
- * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length)
+ * console.log(WORKTREE_LOCAL_FILE_ENTRIES.includes(".env")) // true
+ * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length) // 4
  * ```
  *
  * @category constants
@@ -52,12 +54,12 @@ export const WORKTREE_LOCAL_FILE_ENTRIES = [".env", ".claude/settings.local.json
 /**
  * Default branch name created for a new worktree when `--branch` is omitted.
  *
- * **Example** (Default branch from name)
+ * **Example** (Derive the branch name from a worktree name)
  *
  * ```ts
  * import { defaultWorktreeBranch } from "@beep/repo-cli/commands/Worktree"
  *
- * console.log(defaultWorktreeBranch("feature-x"))
+ * console.log(defaultWorktreeBranch("feature-x")) // "feat/feature-x"
  * ```
  *
  * @param name - Worktree name used as the branch suffix.
@@ -70,12 +72,14 @@ export const defaultWorktreeBranch = (name: string): string => `feat/${name}`;
 /**
  * Build the `git worktree add` argument vector for a target path and branch.
  *
- * **Example** (Build worktree add args)
+ * **Example** (Data-first and data-last call forms)
  *
  * ```ts
  * import { worktreeAddArgs } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(worktreeAddArgs("/repo-worktrees/feature-x", "feat/feature-x"))
+ * // ["worktree", "add", "/repo-worktrees/feature-x", "-b", "feat/feature-x"]
+ * console.log(worktreeAddArgs("feat/feature-x")("/repo-worktrees/feature-x").length) // 5
  * ```
  *
  * @param targetPath - Absolute path of the worktree to create.
@@ -95,12 +99,14 @@ export const worktreeAddArgs: {
 /**
  * Build the `git worktree remove` argument vector, optionally forced.
  *
- * **Example** (Build forced remove args)
+ * **Example** (Forced removal carries an extra flag)
  *
  * ```ts
  * import { worktreeRemoveArgs } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(worktreeRemoveArgs("/repo-worktrees/feature-x", true))
+ * // ["worktree", "remove", "--force", "/repo-worktrees/feature-x"]
+ * console.log(worktreeRemoveArgs("/repo-worktrees/feature-x", false).length) // 3
  * ```
  *
  * @param targetPath - Absolute path of the worktree to remove.
@@ -121,12 +127,12 @@ export const worktreeRemoveArgs: {
 /**
  * Suggested command an operator can run to delete a retired branch.
  *
- * **Example** (Format branch delete command)
+ * **Example** (Render the cleanup hint after a removal)
  *
  * ```ts
  * import { branchDeleteCommand } from "@beep/repo-cli/commands/Worktree"
  *
- * console.log(branchDeleteCommand("feat/feature-x"))
+ * console.log(branchDeleteCommand("feat/feature-x")) // "git branch -D feat/feature-x"
  * ```
  *
  * @param branch - Branch left behind after a worktree is removed.
@@ -137,45 +143,14 @@ export const worktreeRemoveArgs: {
 export const branchDeleteCommand = (branch: string): string => `git branch -D ${branch}`;
 
 /**
- * One parsed entry from `git worktree list --porcelain`.
- *
- * **Example** (Make worktree list entry)
- *
- * ```ts
- * import { WorktreeListEntry } from "@beep/repo-cli/commands/Worktree"
- *
- * const entry = WorktreeListEntry.make({
- *   path: "/repo",
- *   head: "abc123",
- *   branch: "main",
- *   detached: false,
- *   locked: false,
- *   prunable: false,
- * })
- * console.log(entry.path)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeListEntry`)(
-  {
-    path: S.String,
-    head: S.NullOr(S.String),
-    branch: S.NullOr(S.String),
-    detached: S.Boolean,
-    locked: S.Boolean,
-    prunable: S.Boolean,
-  },
-  $I.annote("WorktreeListEntry", {
-    description: "One parsed entry from git worktree list --porcelain.",
-  })
-) {}
-
-/**
  * Resolved worktree layout for the invoking repository.
  *
- * **Example** (Make worktree context)
+ * **Details**
+ *
+ * `currentRoot` is the checkout the command was invoked from, which is the
+ * main checkout only when the operator is not already inside a worktree.
+ *
+ * **Example** (Construct a layout for a repository with no worktrees yet)
  *
  * ```ts
  * import { WorktreeContext } from "@beep/repo-cli/commands/Worktree"
@@ -186,7 +161,7 @@ export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeLis
  *   worktreesRoot: "/repo-worktrees",
  *   entries: [],
  * })
- * console.log(context.worktreesRoot)
+ * console.log(context.worktreesRoot) // "/repo-worktrees"
  * ```
  *
  * @category models
@@ -207,13 +182,25 @@ export class WorktreeContext extends S.Class<WorktreeContext>($I`WorktreeContext
 /**
  * Outcome of copying one local-only file into a fresh worktree.
  *
- * **Example** (Make copy outcome)
+ * **Details**
+ *
+ * `reason` is present only for `skipped` outcomes; a `copied` outcome carries
+ * no explanation.
+ *
+ * **Example** (Distinguish a copied entry from a skipped one)
  *
  * ```ts
  * import { WorktreeCopyOutcome } from "@beep/repo-cli/commands/Worktree"
  *
  * const outcome = WorktreeCopyOutcome.make({ entry: ".env", status: "copied" })
- * console.log(outcome.status)
+ * console.log(outcome.status) // "copied"
+ *
+ * const skipped = WorktreeCopyOutcome.make({
+ *   entry: "CLAUDE.local.md",
+ *   status: "skipped",
+ *   reason: "not present in main checkout",
+ * })
+ * console.log(skipped.reason) // "not present in main checkout"
  * ```
  *
  * @category models
@@ -233,7 +220,13 @@ export class WorktreeCopyOutcome extends S.Class<WorktreeCopyOutcome>($I`Worktre
 /**
  * Per-worktree diagnostic row emitted by `worktree doctor`.
  *
- * **Example** (Make doctor entry)
+ * **Details**
+ *
+ * `branch` is `null` for a detached checkout. `hasEnv` and `hasNodeModules`
+ * report whether bootstrap survived, so a `clean` worktree can still be
+ * unusable.
+ *
+ * **Example** (Construct a healthy bootstrapped row)
  *
  * ```ts
  * import { WorktreeDoctorEntry } from "@beep/repo-cli/commands/Worktree"
@@ -249,7 +242,7 @@ export class WorktreeCopyOutcome extends S.Class<WorktreeCopyOutcome>($I`Worktre
  *   hasEnv: true,
  *   hasNodeModules: true,
  * })
- * console.log(entry.clean)
+ * console.log(entry.clean) // true
  * ```
  *
  * @category models
@@ -275,7 +268,14 @@ export class WorktreeDoctorEntry extends S.Class<WorktreeDoctorEntry>($I`Worktre
 /**
  * Read-only report produced by `worktree doctor`.
  *
- * **Example** (Make doctor report)
+ * **Details**
+ *
+ * `entries` covers only worktrees under the worktrees root; checkouts living
+ * elsewhere are excluded. `pruneDryRun` carries the lines that
+ * `git worktree prune --dry-run` would act on, so stale metadata is visible
+ * without mutating it.
+ *
+ * **Example** (Construct a report for a fleet with no managed worktrees)
  *
  * ```ts
  * import { WorktreeDoctorReport } from "@beep/repo-cli/commands/Worktree"
@@ -286,7 +286,7 @@ export class WorktreeDoctorEntry extends S.Class<WorktreeDoctorEntry>($I`Worktre
  *   entries: [],
  *   pruneDryRun: [],
  * })
- * console.log(report.worktreesRoot)
+ * console.log(report.entries.length) // 0
  * ```
  *
  * @category models
@@ -303,94 +303,6 @@ export class WorktreeDoctorReport extends S.Class<WorktreeDoctorReport>($I`Workt
     description: "Read-only report produced by worktree doctor.",
   })
 ) {}
-
-type PorcelainAccumulator = {
-  path: string;
-  head: string | null;
-  branch: string | null;
-  detached: boolean;
-  locked: boolean;
-  prunable: boolean;
-};
-
-const stripRefsHeads = (ref: string): string =>
-  Str.startsWith(REFS_HEADS_PREFIX)(ref) ? ref.slice(REFS_HEADS_PREFIX.length) : ref;
-
-const accumulatorEntry = (accumulator: PorcelainAccumulator): WorktreeListEntry =>
-  WorktreeListEntry.make({
-    path: accumulator.path,
-    head: accumulator.head,
-    branch: accumulator.branch,
-    detached: accumulator.detached,
-    locked: accumulator.locked,
-    prunable: accumulator.prunable,
-  });
-
-const applyPorcelainAttribute = (current: PorcelainAccumulator, line: string): void => {
-  if (Str.startsWith("HEAD ")(line)) {
-    current.head = line.slice("HEAD ".length);
-  } else if (Str.startsWith("branch ")(line)) {
-    current.branch = stripRefsHeads(line.slice("branch ".length));
-  } else if (line === "detached") {
-    current.detached = true;
-  } else if (line === "locked" || Str.startsWith("locked ")(line)) {
-    current.locked = true;
-  } else if (line === "prunable" || Str.startsWith("prunable ")(line)) {
-    current.prunable = true;
-  }
-};
-
-/**
- * Parse `git worktree list --porcelain` output into structured entries.
- *
- * **Example** (Parse porcelain listing)
- *
- * ```ts
- * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
- *
- * const entries = parseWorktreePorcelain("worktree /repo\nHEAD abc123\nbranch refs/heads/main\n")
- * console.log(entries.length)
- * ```
- *
- * @param porcelain - Raw stdout from `git worktree list --porcelain`.
- * @returns One entry per worktree block, in listing order.
- * @category parsing
- * @since 0.0.0
- */
-export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry> => {
-  const lines = Str.split(Str.trimEnd(porcelain), "\n");
-  const entries: Array<WorktreeListEntry> = [];
-  let current: PorcelainAccumulator | undefined;
-
-  for (const line of lines) {
-    if (Str.startsWith("worktree ")(line)) {
-      if (current !== undefined) {
-        entries.push(accumulatorEntry(current));
-      }
-      current = {
-        path: line.slice("worktree ".length),
-        head: null,
-        branch: null,
-        detached: false,
-        locked: false,
-        prunable: false,
-      };
-      continue;
-    }
-
-    if (current === undefined) {
-      continue;
-    }
-
-    applyPorcelainAttribute(current, line);
-  }
-
-  if (current !== undefined) {
-    entries.push(accumulatorEntry(current));
-  }
-
-  return entries;
-};
 
 const isUnderWorktreesRoot = (path: Path.Path, worktreesRoot: string, candidate: string): boolean => {
   const relative = path.relative(worktreesRoot, candidate);
@@ -449,12 +361,13 @@ const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
  * `git worktree list --porcelain`, so the canonical
  * `<main-checkout>-worktrees` sibling directory is stable from any worktree.
  *
- * **Example** (Resolve context from path)
+ * **Example** (Resolve the layout from a checkout path)
  *
  * ```ts
  * import { resolveWorktreeContext } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
  *
- * console.log(resolveWorktreeContext("/repo"))
+ * console.log(Effect.isEffect(resolveWorktreeContext("/repo"))) // true
  * ```
  *
  * @category use-cases
@@ -490,13 +403,19 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
  *
  * **Details**
  *
- * Refuses when the target directory already exists. Does not bootstrap; see
+ * Creates the branch along with the worktree and returns the created path.
+ *
+ * **Gotchas**
+ *
+ * Fails with `WorktreeExistsError` when the target directory already exists,
+ * rather than reusing it. Bootstrapping is a separate step; see
  * {@link copyLocalFiles} and the `worktree new` command handler.
  *
- * **Example** (Add named sibling worktree)
+ * **Example** (Describe the worktree to create)
  *
  * ```ts
  * import { addWorktree, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
  *
  * const context = WorktreeContext.make({
  *   currentRoot: "/repo",
@@ -504,7 +423,7 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
  *   worktreesRoot: "/repo-worktrees",
  *   entries: [],
  * })
- * console.log(addWorktree(context, "feature-x", "feat/feature-x"))
+ * console.log(Effect.isEffect(addWorktree(context, "feature-x", "feat/feature-x"))) // true
  * ```
  *
  * @category use-cases
@@ -541,14 +460,17 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
  * **Details**
  *
  * Each entry in {@link WORKTREE_LOCAL_FILE_ENTRIES} is copied when present and
- * skipped otherwise; directories are copied recursively.
+ * skipped otherwise; directories are copied recursively. One
+ * {@link WorktreeCopyOutcome} is returned per entry, in that array's order, so
+ * the caller can report copies and skips without re-probing the filesystem.
  *
- * **Example** (Copy local files into worktree)
+ * **Example** (Bootstrap a freshly created worktree)
  *
  * ```ts
  * import { copyLocalFiles } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
  *
- * console.log(copyLocalFiles("/repo", "/repo-worktrees/feature-x"))
+ * console.log(Effect.isEffect(copyLocalFiles("/repo", "/repo-worktrees/feature-x"))) // true
  * ```
  *
  * @category use-cases
@@ -624,12 +546,14 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
  * **Details**
  *
  * Inspects only worktrees under the worktrees root: branch, clean/dirty status,
- * presence of bootstrap files, and prunable metadata.
+ * presence of bootstrap files, and prunable metadata. Nothing is mutated —
+ * pruning is reported as a dry run.
  *
- * **Example** (Build doctor report for context)
+ * **Example** (Report on a resolved layout)
  *
  * ```ts
  * import { worktreeDoctorReportForContext, WorktreeContext } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
  *
  * const context = WorktreeContext.make({
  *   currentRoot: "/repo",
@@ -637,7 +561,7 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
  *   worktreesRoot: "/repo-worktrees",
  *   entries: [],
  * })
- * console.log(worktreeDoctorReportForContext(context))
+ * console.log(Effect.isEffect(worktreeDoctorReportForContext(context))) // true
  * ```
  *
  * @category use-cases
@@ -894,7 +818,12 @@ const worktreeDoctorCommand = Command.make(
 /**
  * Worktree command group.
  *
- * **Example** (Run worktree command group)
+ * **Details**
+ *
+ * Bare `worktree` prints the subcommand menu; the work lives in the `new`,
+ * `remove`, `doctor`, and `fleet` subcommands.
+ *
+ * **Example** (Build the CLI program for the group)
  *
  * ```ts
  * import { worktreeCommand } from "@beep/repo-cli/commands/Worktree"
@@ -915,9 +844,10 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
       "- bun run beep worktree new <name> [--branch <branch>]",
       "- bun run beep worktree remove <name> [--force]",
       "- bun run beep worktree doctor",
+      "- bun run beep worktree fleet [--json]",
     ].join("\n")
   )
 ).pipe(
   Command.withDescription("Manage sibling git worktrees under the canonical worktrees root"),
-  Command.withSubcommands([worktreeNewCommand, worktreeRemoveCommand, worktreeDoctorCommand])
+  Command.withSubcommands([worktreeNewCommand, worktreeRemoveCommand, worktreeDoctorCommand, worktreeFleetCommand])
 );
