@@ -22,7 +22,8 @@ import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 /**
  * Destination the fixture grant authorizes for external network egress.
  *
- * @example
+ * **Example** (Log allowed destination URL)
+ *
  * ```ts
  * import { fixtureAllowedDestination } from "@beep/epistemic-config/test"
  *
@@ -38,7 +39,8 @@ export const fixtureAllowedDestination = SinkDestination.fromUnknown("https://re
  * Destination the fixture grant deliberately omits, so a denial has something
  * concrete to be a denial *of*.
  *
- * @example
+ * **Example** (Log denied destination URL)
+ *
  * ```ts
  * import { fixtureDeniedDestination } from "@beep/epistemic-config/test"
  *
@@ -53,7 +55,8 @@ export const fixtureDeniedDestination = SinkDestination.fromUnknown("https://att
 /**
  * Instant the fixture grant set is sealed at. Pinned so the digest is stable.
  *
- * @example
+ * **Example** (Convert freeze time to epoch)
+ *
  * ```ts
  * import { fixtureFrozenAt } from "@beep/epistemic-config/test"
  * import { DateTime } from "effect"
@@ -85,7 +88,8 @@ const fixtureGrant = S.decodeUnknownSync(ExecutionGrant)({
  * Deterministic frozen grant set: one grant, for one operation, against one
  * external destination, under the default policy revision.
  *
- * @example
+ * **Example** (Verify frozen grant digest)
+ *
  * ```ts
  * import { fixtureFrozenGrantSet } from "@beep/epistemic-config/test"
  * import { verifyFrozenGrantSetDigest } from "@beep/epistemic-domain/values/GrantSet"
@@ -105,7 +109,8 @@ export const fixtureFrozenGrantSet: FrozenGrantSet = freezeGrantSet(
  * Configuration value matching {@link fixtureFrozenGrantSet}: the fixture
  * grant's destination is allowlisted, the attacker destination is not.
  *
- * @example
+ * **Example** (Check allowlist length)
+ *
  * ```ts
  * import { testEpistemicConfig } from "@beep/epistemic-config/test"
  *
@@ -123,7 +128,8 @@ export const testEpistemicConfig = EpistemicServerConfig.make({
 /**
  * Static execution-authority configuration layer built from an explicit value.
  *
- * @example
+ * **Example** (Build layer from config)
+ *
  * ```ts
  * import { makeEpistemicConfigTest, testEpistemicConfig } from "@beep/epistemic-config/test"
  * import { Layer } from "effect"
@@ -139,7 +145,8 @@ export const makeEpistemicConfigTest = (config: EpistemicServerConfig) => Layer.
 /**
  * Static execution-authority configuration layer carrying {@link testEpistemicConfig}.
  *
- * @example
+ * **Example** (Confirm static config layer)
+ *
  * ```ts
  * import { EpistemicConfigTest } from "@beep/epistemic-config/test"
  * import { Layer } from "effect"

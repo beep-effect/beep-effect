@@ -28,7 +28,8 @@ const isXAiWebSocketBaseUrl = isUrlWithProtocol(["ws:", "wss:"]);
 /**
  * xAI HTTP API base URL normalized without trailing slashes.
  *
- * @example
+ * **Example** (Decode trailing slash URL)
+ *
  * ```ts
  * import { XAiHttpBaseUrl } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -62,7 +63,8 @@ export const XAiHttpBaseUrl = S.NonEmptyString.check(
 /**
  * xAI WebSocket API base URL normalized without trailing slashes.
  *
- * @example
+ * **Example** (Decode WebSocket base URL)
+ *
  * ```ts
  * import { XAiWebSocketBaseUrl } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -96,7 +98,8 @@ export const XAiWebSocketBaseUrl = S.NonEmptyString.check(
 /**
  * Default xAI inference API base URL.
  *
- * @example
+ * **Example** (Read default API hostname)
+ *
  * ```ts
  * import { XAI_API_URL } from "@beep/xai"
  *
@@ -112,7 +115,8 @@ export const XAI_API_URL = "https://api.x.ai";
 /**
  * Default xAI management API base URL.
  *
- * @example
+ * **Example** (Read management API hostname)
+ *
  * ```ts
  * import { XAI_MANAGEMENT_API_URL } from "@beep/xai"
  *
@@ -128,7 +132,8 @@ export const XAI_MANAGEMENT_API_URL = "https://management-api.x.ai";
 /**
  * Default xAI WebSocket API base URL.
  *
- * @example
+ * **Example** (Read WebSocket protocol)
+ *
  * ```ts
  * import { XAI_WEBSOCKET_URL } from "@beep/xai"
  *
@@ -144,7 +149,8 @@ export const XAI_WEBSOCKET_URL = "wss://api.x.ai";
 /**
  * Runtime configuration accepted by {@link XAi.makeLayer}.
  *
- * @example
+ * **Example** (Build config with API keys)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import * as O from "effect/Option"

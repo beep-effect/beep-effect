@@ -30,13 +30,15 @@ type OsvIgnoreEntry = {
 /**
  * Active and dropped OSV ignore ids for one audit invocation.
  *
- * @example
+ * **Example** (Empty selection object)
+ *
  * ```ts
  * import type { OsvIgnoreAuditSelection } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore"
  *
  * const selection: OsvIgnoreAuditSelection = { activeIds: [], droppedIds: [] }
  * console.log(selection.activeIds)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,10 +86,8 @@ const osvIgnoreEntryIsActive = (now: DateTime.DateTime): ((entry: OsvIgnoreEntry
 /**
  * Select active and dropped OSV advisory ids from `osv-scanner.toml`.
  *
- * @param configText - Raw `osv-scanner.toml` contents.
- * @param now - Current instant used to compare against each `ignoreUntil`.
- * @returns Active ids to pass to Bun audit and ids dropped because they expired or malformed.
- * @example
+ * **Example** (Select from empty config)
+ *
  * ```ts
  * import { DateTime } from "effect"
  * import { selectOsvIgnoreIdsForAudit } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore"
@@ -95,6 +95,10 @@ const osvIgnoreEntryIsActive = (now: DateTime.DateTime): ((entry: OsvIgnoreEntry
  * const selection = selectOsvIgnoreIdsForAudit("", DateTime.makeUnsafe("2026-06-17T00:00:00Z"))
  * console.log(selection.activeIds)
  * ```
+ *
+ * @param configText - Raw `osv-scanner.toml` contents.
+ * @param now - Current instant used to compare against each `ignoreUntil`.
+ * @returns Active ids to pass to Bun audit and ids dropped because they expired or malformed.
  * @category parsing
  * @since 0.0.0
  */
@@ -122,14 +126,14 @@ export const selectOsvIgnoreIdsForAudit: {
 /**
  * Select the OSV advisory ids that may still be suppressed at `now`.
  *
+ * **Details**
+ *
  * Entries whose `ignoreUntil` has passed, or whose `ignoreUntil` is present but
  * unparseable, are dropped so the Bun audit lane stops mirroring expired
  * ignores and fails closed once the configured expiry elapses.
  *
- * @param configText - Raw `osv-scanner.toml` contents.
- * @param now - Current instant used to compare against each `ignoreUntil`.
- * @returns Active advisory ids in config order.
- * @example
+ * **Example** (Future expiry stays active)
+ *
  * ```ts
  * import { DateTime } from "effect"
  * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/test/Quality"
@@ -140,6 +144,10 @@ export const selectOsvIgnoreIdsForAudit: {
  * )
  * console.log(ids) // example value
  * ```
+ *
+ * @param configText - Raw `osv-scanner.toml` contents.
+ * @param now - Current instant used to compare against each `ignoreUntil`.
+ * @returns Active advisory ids in config order.
  * @category testing
  * @since 0.0.0
  */

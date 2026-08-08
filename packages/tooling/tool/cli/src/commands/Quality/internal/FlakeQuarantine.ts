@@ -45,16 +45,20 @@ const $I = $RepoCliId.create("commands/Quality/internal/FlakeQuarantine");
 /**
  * Repo-root-relative path of the flake-quarantine incident artifact.
  *
+ * **Details**
+ *
  * The quality lane runner deletes any stale copy before a policy-carrying lane
  * group starts and writes it only when incidents were quarantined in that run;
  * the yeet verdict reads it right after the proof step finishes.
  *
- * @example
+ * **Example** (Log artifact relative path)
+ *
  * ```ts
  * import { FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH } from "@beep/repo-cli/test/Quality"
  *
  * console.log(FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -63,15 +67,19 @@ export const FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH = ".beep/yeet/flake-quarant
 /**
  * Maximum Turbo tasks one lane failure may quarantine.
  *
+ * **Details**
+ *
  * The established flake class strikes one near-ceiling package per lane; a
  * larger failed set is not that class and stays a hard failure.
  *
- * @example
+ * **Example** (Log max quarantined tasks)
+ *
  * ```ts
  * import { MAX_QUARANTINED_TASKS_PER_LANE } from "@beep/repo-cli/test/Quality"
  *
  * console.log(MAX_QUARANTINED_TASKS_PER_LANE)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -82,16 +90,20 @@ const FLAKE_QUARANTINE_OUTPUT_MAX_CHARS = 4 * 1024 * 1024;
 /**
  * Output bound for quarantine-eligible lane captures.
  *
+ * **Details**
+ *
  * Sized far above a full forced pre-push sweep (~0.5 MiB) because a truncated
  * capture cannot prove "the only error output is the TS2589 signature" and
  * therefore disqualifies quarantine.
  *
- * @example
+ * **Example** (Log output bound maxChars)
+ *
  * ```ts
  * import { flakeQuarantineOutputBound } from "@beep/repo-cli/test/Quality"
  *
  * console.log(flakeQuarantineOutputBound.maxChars)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -103,13 +115,15 @@ export const flakeQuarantineOutputBound = OutputBound.make({
 /**
  * One failed Turbo task attributed to the no-location TS2589 signature.
  *
- * @example
+ * **Example** (Create quarantine task)
+ *
  * ```ts
  * import { FlakeQuarantineTask } from "@beep/repo-cli/test/Quality"
  *
  * const task = FlakeQuarantineTask.make({ taskId: "@beep/box#build", packageName: "@beep/box", task: "build" })
  * console.log(task.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,10 +141,13 @@ export class FlakeQuarantineTask extends S.Class<FlakeQuarantineTask>($I`FlakeQu
 /**
  * One quarantined environment-only flake incident.
  *
+ * **Details**
+ *
  * Recorded per failed Turbo task after its standalone rerun and the shared
  * lane rerun both came back green.
  *
- * @example
+ * **Example** (Create quarantine incident)
+ *
  * ```ts
  * import { FlakeQuarantineIncident } from "@beep/repo-cli/test/Quality"
  *
@@ -147,6 +164,7 @@ export class FlakeQuarantineTask extends S.Class<FlakeQuarantineTask>($I`FlakeQu
  * })
  * console.log(incident.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -170,7 +188,8 @@ export class FlakeQuarantineIncident extends S.Class<FlakeQuarantineIncident>($I
 /**
  * Persisted flake-quarantine artifact read by the yeet verdict.
  *
- * @example
+ * **Example** (Create empty artifact)
+ *
  * ```ts
  * import { FlakeQuarantineArtifact } from "@beep/repo-cli/test/Quality"
  *
@@ -180,6 +199,7 @@ export class FlakeQuarantineIncident extends S.Class<FlakeQuarantineIncident>($I
  * })
  * console.log(artifact.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -196,7 +216,8 @@ export class FlakeQuarantineArtifact extends S.Class<FlakeQuarantineArtifact>($I
 /**
  * JSON-string codec for the flake-quarantine artifact file.
  *
- * @example
+ * **Example** (Encode artifact to JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { FlakeQuarantineArtifact, FlakeQuarantineArtifactJson } from "@beep/repo-cli/test/Quality"
@@ -204,6 +225,7 @@ export class FlakeQuarantineArtifact extends S.Class<FlakeQuarantineArtifact>($I
  * const artifact = FlakeQuarantineArtifact.make({ schemaVersion: "yeet-flake-quarantine/v1", incidents: [] })
  * console.log(Effect.runSync(FlakeQuarantineArtifactJson.encode(artifact)))
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -298,13 +320,14 @@ const scanOutputForTs2589 = (output: string): Ts2589Scan =>
  * Decide whether a failed lane output matches the no-location TS2589 flake
  * signature, returning the failed Turbo tasks to rerun standalone.
  *
+ * **Details**
+ *
  * Returns `None` — keep the failure hard — unless every strictness rule in the
  * module documentation holds. The caller must additionally reject truncated
  * captures before consulting this.
  *
- * @param output - Full captured lane output (stdout+stderr interleaved).
- * @returns Failed tasks from Turbo's `Failed:` footer when quarantinable.
- * @example
+ * **Example** (Detect TS2589 flake signature)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { detectNoLocationTs2589Flake } from "@beep/repo-cli/test/Quality"
@@ -315,6 +338,9 @@ const scanOutputForTs2589 = (output: string): Ts2589Scan =>
  * ].join("\n")
  * console.log(O.isSome(detectNoLocationTs2589Flake(output)))
  * ```
+ *
+ * @param output - Full captured lane output (stdout+stderr interleaved).
+ * @returns Failed tasks from Turbo's `Failed:` footer when quarantinable.
  * @category detection
  * @since 0.0.0
  */
@@ -349,6 +375,8 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
 /**
  * Build the standalone rerun step for one quarantined Turbo task.
  *
+ * **Details**
+ *
  * Reuses the lane's `bun run <script>` invocation with an explicit package
  * filter appended and the lane's environment preserved verbatim. Preserving an
  * inherited `TURBO_FORCE=true` is deliberate: under a forced sweep an older
@@ -358,10 +386,8 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  * attribution rests on a real execution; without forcing, a flake implies a
  * cache miss, so the task executes either way.
  *
- * @param step - The failed quarantine-eligible lane step.
- * @param task - One failed Turbo task attributed to the flake signature.
- * @returns Step running only that package's lane standalone.
- * @example
+ * **Example** (Build standalone rerun step)
+ *
  * ```ts
  * import { FlakeQuarantineTask, QualityTaskStep, standaloneQuarantineRerunStep } from "@beep/repo-cli/test/Quality"
  *
@@ -369,6 +395,10 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  * const task = FlakeQuarantineTask.make({ taskId: "@beep/box#build", packageName: "@beep/box", task: "build" })
  * console.log(standaloneQuarantineRerunStep(lane, task).args)
  * ```
+ *
+ * @param step - The failed quarantine-eligible lane step.
+ * @param task - One failed Turbo task attributed to the flake signature.
+ * @returns Step running only that package's lane standalone.
  * @category constructors
  * @since 0.0.0
  */
@@ -384,20 +414,24 @@ export const standaloneQuarantineRerunStep = (step: QualityTaskStep, task: Flake
 /**
  * Build the full lane rerun step that arbitrates a quarantine attempt.
  *
+ * **Details**
+ *
  * Reruns the identical lane with the quarantine policy stripped (no recursive
  * quarantine) and `TURBO_FORCE` removed so tasks proven green in the failed
  * run replay from the cache that run wrote, while tasks Turbo skipped after
  * the flake actually execute.
  *
- * @param step - The failed quarantine-eligible lane step.
- * @returns Step rerunning the whole lane once.
- * @example
+ * **Example** (Build lane rerun step)
+ *
  * ```ts
  * import { laneQuarantineRerunStep, QualityTaskStep } from "@beep/repo-cli/test/Quality"
  *
  * const lane = QualityTaskStep.make({ label: "quality:build", command: "bun", args: ["run", "build"], cwd: "/repo" })
  * console.log(laneQuarantineRerunStep(lane).label)
  * ```
+ *
+ * @param step - The failed quarantine-eligible lane step.
+ * @returns Step rerunning the whole lane once.
  * @category constructors
  * @since 0.0.0
  */

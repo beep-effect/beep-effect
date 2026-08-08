@@ -1,16 +1,17 @@
 /**
  * URL sanitization helpers for UI navigation.
  *
- * @example
+ * **Example** (Import sanitizeAnchorHref helper)
+ *
  * ```ts
  * import { sanitizeAnchorHref } from "@beep/ui/lib/url"
  *
  * console.log(sanitizeAnchorHref)
  * ```
  *
+ * @packageDocumentation
  * @category utilities
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { A, Str } from "@beep/utils";
@@ -88,7 +89,8 @@ const normalizeHrefProtocolCandidate: (value: string) => string = flow(
 /**
  * Sanitize anchor href export.
  *
- * @example
+ * **Example** (Import sanitizeAnchorHref)
+ *
  * ```ts
  * import { sanitizeAnchorHref } from "@beep/ui/lib/url"
  *

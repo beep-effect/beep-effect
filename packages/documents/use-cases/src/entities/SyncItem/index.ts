@@ -9,7 +9,8 @@
  * Empty public SyncItem namespace placeholder; the repository port is
  * server-only and exported from `@beep/documents-use-cases/entities/SyncItem/server`.
  *
- * @example
+ * **Example** (Import SyncItem namespace)
+ *
  * ```ts
  * import * as SyncItem from "@beep/documents-use-cases/entities/SyncItem"
  *

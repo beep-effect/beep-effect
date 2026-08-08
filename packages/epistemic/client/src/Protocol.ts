@@ -39,10 +39,13 @@ class BrowserHttpRuntime extends S.Class<BrowserHttpRuntime>($I`BrowserHttpRunti
 /**
  * Resolve the default epistemic RPC endpoint for a browser-like runtime.
  *
+ * **Details**
+ *
  * HTTP(S) pages use their same-origin `/rpc` route. Missing, custom-scheme,
  * malformed, and packaged Windows Tauri origins use the local desktop sidecar.
  *
- * @example
+ * **Example** (Resolve same-origin RPC URL)
+ *
  * ```ts
  * import { resolveEpistemicRpcHttpUrl } from "@beep/epistemic-client"
  *
@@ -75,10 +78,13 @@ export const resolveEpistemicRpcHttpUrl = (runtime: BrowserHttpRuntime | undefin
 /**
  * Default HTTP protocol for browser and non-IPC epistemic clients.
  *
+ * **Details**
+ *
  * Professional Desktop replaces this layer with its authenticated protocol
  * before mounting contradiction query atoms.
  *
- * @example
+ * **Example** (Verify protocol Layer)
+ *
  * ```ts
  * import { HttpEpistemicProtocolLive } from "@beep/epistemic-client"
  * import { Layer } from "effect"
@@ -96,7 +102,8 @@ export const HttpEpistemicProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcCli
 /**
  * Writable transport selector for epistemic RPC clients.
  *
- * @example
+ * **Example** (Set HTTP protocol atom)
+ *
  * ```ts
  * import {
  *   epistemicProtocolLayerAtom,

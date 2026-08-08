@@ -9,9 +9,8 @@
 /**
  * Citation model exports.
  *
- * **Example**
+ * **Example** (Import Citation module)
  *
- * @example
  * ```ts
  * import { Citation } from "@beep/law-practice-domain/values";
  * ```

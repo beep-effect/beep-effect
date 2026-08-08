@@ -16,7 +16,8 @@ const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.model");
 /**
  * Stable concept identifiers in the P1 legal document taxonomy seed.
  *
- * @example
+ * **Example** (Decode pleadings concept id)
+ *
  * ```ts
  * import { LegalDocumentConceptId } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -63,7 +64,8 @@ export const LegalDocumentConceptId = LiteralKit([
 /**
  * Stable concept identifiers in the P1 legal document taxonomy seed.
  *
- * @example
+ * **Example** (Typed concept id decode)
+ *
  * ```ts
  * import { LegalDocumentConceptId } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -80,7 +82,8 @@ export type LegalDocumentConceptId = typeof LegalDocumentConceptId.Type;
 /**
  * FOLIO alignment confidence for a legal document taxonomy concept.
  *
- * @example
+ * **Example** (Decode none alignment kind)
+ *
  * ```ts
  * import { FolioAlignmentKind } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -101,7 +104,8 @@ export const FolioAlignmentKind = LiteralKit(["exact", "close", "none"]).pipe(
 /**
  * FOLIO alignment confidence for a legal document taxonomy concept.
  *
- * @example
+ * **Example** (Typed none alignment kind)
+ *
  * ```ts
  * import { FolioAlignmentKind } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -118,7 +122,8 @@ export type FolioAlignmentKind = typeof FolioAlignmentKind.Type;
 /**
  * FOLIO mapping metadata for a seed taxonomy concept.
  *
- * @example
+ * **Example** (Decode FOLIO alignment object)
+ *
  * ```ts
  * import { FolioAlignment } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -154,7 +159,8 @@ export class FolioAlignment extends S.Class<FolioAlignment>($I`FolioAlignment`)(
 /**
  * One SKOS-style legal document taxonomy concept.
  *
- * @example
+ * **Example** (Decode full taxonomy concept)
+ *
  * ```ts
  * import { LegalDocumentTaxonomyConcept } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -216,7 +222,8 @@ export class LegalDocumentTaxonomyConcept extends S.Class<LegalDocumentTaxonomyC
 /**
  * Repo-owned legal document taxonomy seed.
  *
- * @example
+ * **Example** (Make taxonomy from seed)
+ *
  * ```ts
  * import { LegalDocumentTaxonomy, legalDocumentTaxonomy } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -250,7 +257,8 @@ export class LegalDocumentTaxonomy extends S.Class<LegalDocumentTaxonomy>($I`Leg
 /**
  * Client and matter context used to project filed documents into a vault.
  *
- * @example
+ * **Example** (Decode vault filing context)
+ *
  * ```ts
  * import { VaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -290,7 +298,8 @@ export class VaultFilingContext extends S.Class<VaultFilingContext>($I`VaultFili
 /**
  * Default filing context used before matter resolution exists.
  *
- * @example
+ * **Example** (Read default client key)
+ *
  * ```ts
  * import { DefaultVaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
  *

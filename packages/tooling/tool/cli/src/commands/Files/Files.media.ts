@@ -48,12 +48,14 @@ import type { FfprobeStream, MediaKind, NormalizeImageFormat, SortableFile } fro
 /**
  * Analyze raw image pixels for solid borders.
  *
- * @example
+ * **Example** (Analyze solid image borders)
+ *
  * ```ts
  * import { analyzeSolidBorders } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof analyzeSolidBorders = analyzeSolidBorders
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -62,12 +64,14 @@ export const analyzeSolidBorders = analyzeSolidBordersImpl;
 /**
  * Classify a set of matched border sides.
  *
- * @example
+ * **Example** (Classify matched border sides)
+ *
  * ```ts
  * import { classifyBorderSides } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof classifyBorderSides = classifyBorderSides
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -76,12 +80,14 @@ export const classifyBorderSides = classifyBorderSidesImpl;
 /**
  * Render an RGB color as a lowercase hex string.
  *
- * @example
+ * **Example** (Convert RGB to hex)
+ *
  * ```ts
  * import { rgbToHex } from "@beep/repo-cli/commands/Files"
  *
  * const color = rgbToHex({ b: 0, g: 128, r: 255 })
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -90,12 +96,14 @@ export const rgbToHex = rgbToHexImpl;
 /**
  * Assess image dimensions against archive-candidate thresholds.
  *
- * @example
+ * **Example** (Assess archive image candidate)
+ *
  * ```ts
  * import { assessImageCandidate } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof assessImageCandidate = assessImageCandidate
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -104,12 +112,14 @@ export const assessImageCandidate = assessImageCandidateImpl;
 /**
  * Convert a border detection entry into a crop plan entry.
  *
- * @example
+ * **Example** (Convert detection to crop plan)
+ *
  * ```ts
  * import { cropBordersPlanEntryFromDetection } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof cropBordersPlanEntryFromDetection = cropBordersPlanEntryFromDetection
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -118,12 +128,14 @@ export const cropBordersPlanEntryFromDetection = cropBordersPlanEntryFromDetecti
 /**
  * Format a zero-padded index.
  *
- * @example
+ * **Example** (Format zero-padded index)
+ *
  * ```ts
  * import { formatIndex } from "@beep/repo-cli/commands/Files"
  *
  * const text = formatIndex(7, 3)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -132,12 +144,14 @@ export const formatIndex = formatIndexImpl;
 /**
  * Check whether a command skipped any files.
  *
- * @example
+ * **Example** (Check for skipped files)
+ *
  * ```ts
  * import { hasSkippedFiles } from "@beep/repo-cli/commands/Files"
  *
  * const skipped = hasSkippedFiles(2)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -146,12 +160,14 @@ export const hasSkippedFiles = hasSkippedFilesImpl;
 /**
  * Build temporary metadata-strip output paths.
  *
- * @example
+ * **Example** (Build metadata strip temp paths)
+ *
  * ```ts
  * import { makeStripMetadataTempEntries } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof makeStripMetadataTempEntries = makeStripMetadataTempEntries
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -160,12 +176,14 @@ export const makeStripMetadataTempEntries = makeStripMetadataTempEntriesImpl;
 /**
  * Round an archive-candidate metric for stable manifests.
  *
- * @example
+ * **Example** (Round archive candidate metric)
+ *
  * ```ts
  * import { roundCandidateMetric } from "@beep/repo-cli/commands/Files"
  *
  * const metric = roundCandidateMetric(1.23456)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -174,12 +192,14 @@ export const roundCandidateMetric = roundCandidateMetricImpl;
 /**
  * Build the canonical source path set selected by a rename plan.
  *
- * @example
+ * **Example** (Build selected canonical path set)
+ *
  * ```ts
  * import { selectedCanonicalPathSet } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof selectedCanonicalPathSet = selectedCanonicalPathSet
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -188,12 +208,14 @@ export const selectedCanonicalPathSet = selectedCanonicalPathSetImpl;
 /**
  * Build a generated target filename for a sortable file.
  *
- * @example
+ * **Example** (Build generated target filename)
+ *
  * ```ts
  * import { targetNameForEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof targetNameForEntry = targetNameForEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -202,12 +224,14 @@ export const targetNameForEntry = targetNameForEntryImpl;
 /**
  * Render a rename plan entry.
  *
- * @example
+ * **Example** (Render rename plan entry)
+ *
  * ```ts
  * import { renderPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderPlanEntry = renderPlanEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -216,12 +240,14 @@ export const renderPlanEntry = renderPlanEntryImpl;
 /**
  * Render a metadata-strip plan entry.
  *
- * @example
+ * **Example** (Render metadata strip plan entry)
+ *
  * ```ts
  * import { renderStripMetadataPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderStripMetadataPlanEntry = renderStripMetadataPlanEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -230,12 +256,14 @@ export const renderStripMetadataPlanEntry = renderStripMetadataPlanEntryImpl;
 /**
  * Render a caption sidecar creation plan entry.
  *
- * @example
+ * **Example** (Render caption creation plan entry)
+ *
  * ```ts
  * import { renderCreateCaptionFilesPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCreateCaptionFilesPlanEntry = renderCreateCaptionFilesPlanEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -244,12 +272,14 @@ export const renderCreateCaptionFilesPlanEntry = renderCreateCaptionFilesPlanEnt
 /**
  * Render a skipped caption sidecar source entry.
  *
- * @example
+ * **Example** (Render skipped caption source entry)
+ *
  * ```ts
  * import { renderCreateCaptionFilesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCreateCaptionFilesSkippedEntry = renderCreateCaptionFilesSkippedEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -258,12 +288,14 @@ export const renderCreateCaptionFilesSkippedEntry = renderCreateCaptionFilesSkip
 /**
  * Render a normalize plan entry.
  *
- * @example
+ * **Example** (Render normalize plan entry)
+ *
  * ```ts
  * import { renderNormalizePlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderNormalizePlanEntry = renderNormalizePlanEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -272,12 +304,14 @@ export const renderNormalizePlanEntry = renderNormalizePlanEntryImpl;
 /**
  * Render a skipped normalize source entry.
  *
- * @example
+ * **Example** (Render skipped normalize entry)
+ *
  * ```ts
  * import { renderNormalizeSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderNormalizeSkippedEntry = renderNormalizeSkippedEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -286,12 +320,14 @@ export const renderNormalizeSkippedEntry = renderNormalizeSkippedEntryImpl;
 /**
  * Render an archive-candidate plan entry.
  *
- * @example
+ * **Example** (Render archive candidate plan entry)
+ *
  * ```ts
  * import { renderArchivePoorCandidatesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderArchivePoorCandidatesEntry = renderArchivePoorCandidatesEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -300,12 +336,14 @@ export const renderArchivePoorCandidatesEntry = renderArchivePoorCandidatesEntry
 /**
  * Render a skipped archive-candidate source entry.
  *
- * @example
+ * **Example** (Render skipped archive candidate entry)
+ *
  * ```ts
  * import { renderArchivePoorCandidatesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderArchivePoorCandidatesSkippedEntry = renderArchivePoorCandidatesSkippedEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -314,12 +352,14 @@ export const renderArchivePoorCandidatesSkippedEntry = renderArchivePoorCandidat
 /**
  * Render a positive border-detection report entry.
  *
- * @example
+ * **Example** (Render border detection report entry)
+ *
  * ```ts
  * import { renderDetectBordersEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectBordersEntry = renderDetectBordersEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -328,12 +368,14 @@ export const renderDetectBordersEntry = renderDetectBordersEntryImpl;
 /**
  * Render a skipped border-detection source entry.
  *
- * @example
+ * **Example** (Render skipped border detection entry)
+ *
  * ```ts
  * import { renderDetectBordersSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectBordersSkippedEntry = renderDetectBordersSkippedEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -342,12 +384,14 @@ export const renderDetectBordersSkippedEntry = renderDetectBordersSkippedEntryIm
 /**
  * Render a face-detection report entry.
  *
- * @example
+ * **Example** (Render face detection report entry)
+ *
  * ```ts
  * import { renderDetectFacesEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectFacesEntry = renderDetectFacesEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -356,12 +400,14 @@ export const renderDetectFacesEntry = renderDetectFacesEntryImpl;
 /**
  * Render a skipped face-detection source entry.
  *
- * @example
+ * **Example** (Render skipped face detection entry)
+ *
  * ```ts
  * import { renderDetectFacesSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderDetectFacesSkippedEntry = renderDetectFacesSkippedEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -370,12 +416,14 @@ export const renderDetectFacesSkippedEntry = renderDetectFacesSkippedEntryImpl;
 /**
  * Render a border crop plan entry.
  *
- * @example
+ * **Example** (Render border crop plan entry)
+ *
  * ```ts
  * import { renderCropBordersPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof renderCropBordersPlanEntry = renderCropBordersPlanEntry
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -384,12 +432,14 @@ export const renderCropBordersPlanEntry = renderCropBordersPlanEntryImpl;
 /**
  * Schema-derived image extension guard.
  *
- * @example
+ * **Example** (Guard image file extensions)
+ *
  * ```ts
  * import { isImageFileExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isImageFileExtension = isImageFileExtension
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -398,12 +448,14 @@ export const isImageFileExtension = S.is(ImageFileExtension);
 /**
  * Schema-derived video extension guard.
  *
- * @example
+ * **Example** (Guard video file extensions)
+ *
  * ```ts
  * import { isVideoFileExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isVideoFileExtension = isVideoFileExtension
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -412,12 +464,14 @@ export const isVideoFileExtension = S.is(VideoFileExtension);
 /**
  * Schema-derived metadata-strip image extension guard.
  *
- * @example
+ * **Example** (Guard metadata image extensions)
+ *
  * ```ts
  * import { isSupportedMetadataImageExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isSupportedMetadataImageExtension = isSupportedMetadataImageExtension
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -426,12 +480,14 @@ export const isSupportedMetadataImageExtension = S.is(SupportedMetadataImageExte
 /**
  * Order regular files by size descending, then name ascending.
  *
- * @example
+ * **Example** (Sort files by size then name)
+ *
  * ```ts
  * import { bySizeDescendingThenNameAscending } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof bySizeDescendingThenNameAscending = bySizeDescendingThenNameAscending
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -443,12 +499,14 @@ export const bySizeDescendingThenNameAscending: Order.Order<SortableFile> = Orde
 /**
  * Order regular files by name ascending.
  *
- * @example
+ * **Example** (Sort files by name ascending)
+ *
  * ```ts
  * import { byNameAscending } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof byNameAscending = byNameAscending
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -460,14 +518,16 @@ export const byNameAscending: Order.Order<SortableFile> = Order.mapInput(
 /**
  * Normalize a file extension to a lowercase bare extension.
  *
- * @param extension - File extension with or without a leading dot.
- * @returns Lowercase extension without a leading dot.
- * @example
+ * **Example** (Normalize bare file extension)
+ *
  * ```ts
  * import { normalizeBareExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof normalizeBareExtension = normalizeBareExtension
  * ```
+ *
+ * @param extension - File extension with or without a leading dot.
+ * @returns Lowercase extension without a leading dot.
  * @category utilities
  * @since 0.0.0
  */
@@ -476,14 +536,16 @@ export const normalizeBareExtension: (extension: string) => string = flow(Str.re
 /**
  * Resolve a media kind from a file extension.
  *
- * @param extension - File extension with or without a leading dot.
- * @returns Optional media kind for recognized image or video extensions.
- * @example
+ * **Example** (Resolve media kind from extension)
+ *
  * ```ts
  * import { mediaKindFromExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof mediaKindFromExtension = mediaKindFromExtension
  * ```
+ *
+ * @param extension - File extension with or without a leading dot.
+ * @returns Optional media kind for recognized image or video extensions.
  * @category utilities
  * @since 0.0.0
  */
@@ -504,14 +566,16 @@ export const mediaKindFromExtension = (extension: string): O.Option<MediaKind> =
 /**
  * Collect a byte stream into trimmed text.
  *
- * @param stream - Byte stream to decode.
- * @returns Decoded trimmed text effect.
- * @example
+ * **Example** (Collect stream into trimmed text)
+ *
  * ```ts
  * import { collectText } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof collectText = collectText
  * ```
+ *
+ * @param stream - Byte stream to decode.
+ * @returns Decoded trimmed text effect.
  * @category utilities
  * @since 0.0.0
  */
@@ -528,14 +592,16 @@ export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
 /**
  * Check whether an EXIF orientation value implies a quarter-turn image.
  *
- * @param orientation - EXIF orientation value.
- * @returns Whether dimensions should be swapped.
- * @example
+ * **Example** (Check EXIF quarter-turn orientation)
+ *
  * ```ts
  * import { isExifOrientationRotated } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isExifOrientationRotated = isExifOrientationRotated
  * ```
+ *
+ * @param orientation - EXIF orientation value.
+ * @returns Whether dimensions should be swapped.
  * @category utilities
  * @since 0.0.0
  */
@@ -544,14 +610,16 @@ export const isExifOrientationRotated = (orientation: number): boolean => A.cont
 /**
  * Check whether a video rotation value implies a quarter-turn image.
  *
- * @param rotation - Rotation degrees.
- * @returns Whether dimensions should be swapped.
- * @example
+ * **Example** (Check video quarter-turn rotation)
+ *
  * ```ts
  * import { isQuarterTurnRotation } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isQuarterTurnRotation = isQuarterTurnRotation
  * ```
+ *
+ * @param rotation - Rotation degrees.
+ * @returns Whether dimensions should be swapped.
  * @category utilities
  * @since 0.0.0
  */
@@ -563,15 +631,17 @@ export const isQuarterTurnRotation = (rotation: number): boolean => {
 /**
  * Swap dimensions when a media orientation requires it.
  *
- * @param dimensions - Original media dimensions.
- * @param swap - Whether to swap width and height.
- * @returns Original or swapped dimensions.
- * @example
+ * **Example** (Swap dimensions when needed)
+ *
  * ```ts
  * import { maybeSwapDimensions } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof maybeSwapDimensions = maybeSwapDimensions
  * ```
+ *
+ * @param dimensions - Original media dimensions.
+ * @param swap - Whether to swap width and height.
+ * @returns Original or swapped dimensions.
  * @category utilities
  * @since 0.0.0
  */
@@ -592,14 +662,16 @@ export const maybeSwapDimensions: {
 /**
  * Resolve rotation metadata from an ffprobe stream.
  *
- * @param stream - ffprobe stream metadata.
- * @returns Optional rotation value.
- * @example
+ * **Example** (Resolve rotation from ffprobe stream)
+ *
  * ```ts
  * import { rotationFromStream } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof rotationFromStream = rotationFromStream
  * ```
+ *
+ * @param stream - ffprobe stream metadata.
+ * @returns Optional rotation value.
  * @category utilities
  * @since 0.0.0
  */
@@ -618,14 +690,16 @@ export const rotationFromStream = (stream: FfprobeStream): O.Option<number> => {
 /**
  * Resolve the file extension emitted for a canonical normalize format.
  *
- * @param format - Canonical normalize output format.
- * @returns Dotted file extension.
- * @example
+ * **Example** (Resolve normalize output extension)
+ *
  * ```ts
  * import { normalizeOutputExtension } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof normalizeOutputExtension = normalizeOutputExtension
  * ```
+ *
+ * @param format - Canonical normalize output format.
+ * @returns Dotted file extension.
  * @category utilities
  * @since 0.0.0
  */
@@ -634,14 +708,16 @@ export const normalizeOutputExtension = (format: NormalizeImageFormat): string =
 /**
  * Resolve the sharp encoder name for a canonical normalize format.
  *
- * @param format - Canonical normalize output format.
- * @returns Format name accepted by sharp.
- * @example
+ * **Example** (Resolve sharp encoder format name)
+ *
  * ```ts
  * import { sharpFormatForNormalize } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof sharpFormatForNormalize = sharpFormatForNormalize
  * ```
+ *
+ * @param format - Canonical normalize output format.
+ * @returns Format name accepted by sharp.
  * @category utilities
  * @since 0.0.0
  */
@@ -651,15 +727,17 @@ export const sharpFormatForNormalize = (format: NormalizeImageFormat): "jpeg" | 
 /**
  * Calculate downscaled dimensions for a max long edge without upscaling.
  *
- * @param dimensions - Input dimensions after orientation is applied.
- * @param maxLongEdge - Maximum output long edge.
- * @returns Output dimensions after optional downscaling.
- * @example
+ * **Example** (Calculate downscaled output dimensions)
+ *
  * ```ts
  * import { normalizeOutputDimensions } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof normalizeOutputDimensions = normalizeOutputDimensions
  * ```
+ *
+ * @param dimensions - Input dimensions after orientation is applied.
+ * @param maxLongEdge - Maximum output long edge.
+ * @returns Output dimensions after optional downscaling.
  * @category utilities
  * @since 0.0.0
  */
@@ -686,15 +764,17 @@ export const normalizeOutputDimensions: {
 /**
  * Check whether two media dimensions differ.
  *
- * @param left - First dimensions.
- * @param right - Second dimensions.
- * @returns Whether width or height changed.
- * @example
+ * **Example** (Compare media dimensions for change)
+ *
  * ```ts
  * import { mediaDimensionsChanged } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof mediaDimensionsChanged = mediaDimensionsChanged
  * ```
+ *
+ * @param left - First dimensions.
+ * @param right - Second dimensions.
+ * @returns Whether width or height changed.
  * @category utilities
  * @since 0.0.0
  */
@@ -709,14 +789,16 @@ export const mediaDimensionsChanged: {
 /**
  * Check whether a selected image file can be normalized by metadata stripping.
  *
- * @param file - Selected file.
- * @returns Whether the file extension is supported for image metadata stripping.
- * @example
+ * **Example** (Check metadata strip image support)
+ *
  * ```ts
  * import { isSupportedMetadataImageFile } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof isSupportedMetadataImageFile = isSupportedMetadataImageFile
  * ```
+ *
+ * @param file - Selected file.
+ * @returns Whether the file extension is supported for image metadata stripping.
  * @category utilities
  * @since 0.0.0
  */

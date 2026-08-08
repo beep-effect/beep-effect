@@ -14,7 +14,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Radio group component.
  *
- * @example
+ * **Example** (Import RadioGroup component)
+ *
  * ```tsx
  * import { RadioGroup } from "@beep/ui/components/radio-group"
  *
@@ -31,7 +32,8 @@ function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
 /**
  * Radio group item component.
  *
- * @example
+ * **Example** (Import RadioGroupItem component)
+ *
  * ```tsx
  * import { RadioGroupItem } from "@beep/ui/components/radio-group"
  *

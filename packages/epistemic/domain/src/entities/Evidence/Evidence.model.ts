@@ -18,7 +18,8 @@ const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
  * its existing fixture-key refs; the span is persisted as a JSONB column so the
  * fractional `confidence` survives (there is no float storage kind).
  *
- * @example
+ * **Example** (Decode Evidence with span)
+ *
  * ```ts
  * import { Evidence } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

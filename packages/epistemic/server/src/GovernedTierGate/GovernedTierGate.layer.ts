@@ -24,7 +24,8 @@ import type { GovernedTierGateOptions } from "./GovernedTierGate.gate.ts";
 /**
  * Build the governed `TierGate` layer from composition-root options.
  *
- * @example
+ * **Example** (Build governed TierGate layer)
+ *
  * ```ts
  * import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"

@@ -289,13 +289,15 @@ const formatExactToken = (value: DateTime.DateTime, locale: string, formatString
 /**
  * MUI X adapter that lets pickers read and write Effect `DateTime` values.
  *
- * @remarks
+ * **Details**
+ *
  * Effect `DateTime.DateTime` is the canonical value that crosses the public
  * picker boundary. This adapter performs the MUI-specific month indexing,
  * timezone, formatting, and JavaScript `Date` conversions internally so
  * application state does not need to store `Date`.
  *
- * @example
+ * **Example** (Verify month index boundary)
+ *
  * ```ts
  * import { DateTime } from "effect"
  * import { AdapterEffectDateTime } from "@beep/ui/components/effect-date-time-picker"
@@ -647,7 +649,8 @@ type EffectDateTimeLocalizationProviderProps = Omit<
  * Localization provider preconfigured for MUI pickers that consume Effect
  * `DateTime` values.
  *
- * @example
+ * **Example** (Localized invoice date field)
+ *
  * ```tsx
  * import * as React from "react"
  * import { DateTime } from "effect"
@@ -683,7 +686,8 @@ type ControlledPickerProps<TProps> = Omit<TProps, "value" | "defaultValue" | "on
 /**
  * Date picker wrapper whose controlled value is an Effect `DateTime`.
  *
- * @example
+ * **Example** (Controlled birthday date field)
+ *
  * ```tsx
  * import * as React from "react"
  * import { DateTime } from "effect"
@@ -722,7 +726,8 @@ export function EffectDatePicker({
 /**
  * Date-time picker wrapper whose controlled value is an Effect `DateTime`.
  *
- * @example
+ * **Example** (Timezone-aware appointment picker)
+ *
  * ```tsx
  * import * as React from "react"
  * import { DateTime } from "effect"
@@ -768,7 +773,8 @@ export function EffectDateTimePicker({
 /**
  * Time picker wrapper whose controlled value is an Effect `DateTime`.
  *
- * @example
+ * **Example** (Controlled reminder time field)
+ *
  * ```tsx
  * import * as React from "react"
  * import { DateTime } from "effect"

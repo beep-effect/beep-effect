@@ -31,7 +31,8 @@ const $I = $FormId.create("components/country-select");
 /**
  * ISO 3166-1 alpha-2 country code schema accepted by the country primitives.
  *
- * @example
+ * **Example** (Validate country code schema)
+ *
  * ```ts
  * import { CountryCode } from "@beep/ui/components/country-select"
  * import * as S from "effect/Schema"
@@ -301,7 +302,8 @@ const CountryCodeBase = LiteralKit([
 /**
  * ISO 3166-1 alpha-2 country code schema accepted by country UI primitives.
  *
- * @example
+ * **Example** (Check country code validity)
+ *
  * ```ts
  * import { CountryCode } from "@beep/ui/components/country-select"
  * import * as S from "effect/Schema"
@@ -323,7 +325,8 @@ export const CountryCode = CountryCodeBase.pipe(
 /**
  * ISO 3166-1 alpha-2 country code used by the country primitives.
  *
- * @example
+ * **Example** (Type a country code)
+ *
  * ```ts
  * import type { CountryCode } from "@beep/ui/components/country-select"
  *
@@ -361,7 +364,8 @@ const countryOptionOrder = Order.mapInput(Order.String, (option: CountryOption) 
 /**
  * Stable, label-sorted country options derived from `countries-list`.
  *
- * @example
+ * **Example** (Log country options length)
+ *
  * ```tsx
  * import { countryOptions } from "@beep/ui/components/country-select"
  *
@@ -395,7 +399,8 @@ export const countryOptions: ReadonlyArray<CountryOption> = pipe(
 /**
  * Country codes aligned with {@link countryOptions}.
  *
- * @example
+ * **Example** (Check code in list)
+ *
  * ```tsx
  * import { countryCodes } from "@beep/ui/components/country-select"
  *
@@ -410,7 +415,8 @@ export const countryCodes: ReadonlyArray<CountryCode> = A.map(countryOptions, (o
 /**
  * Checks whether a string is one of the supported country codes.
  *
- * @example
+ * **Example** (Guard supported country codes)
+ *
  * ```tsx
  * import { isCountryCode } from "@beep/ui/components/country-select"
  *
@@ -425,7 +431,8 @@ export const isCountryCode: (value: string) => value is CountryCode = S.is(Count
 /**
  * Finds the display option for a country code.
  *
- * @example
+ * **Example** (Lookup option by code)
+ *
  * ```tsx
  * import { findCountryOption } from "@beep/ui/components/country-select"
  *
@@ -459,7 +466,8 @@ const countryCodeValue = (value: unknown): string => (P.isString(value) && isCou
 /**
  * Props for {@link CountryFlag}.
  *
- * @example
+ * **Example** (Satisfy flag props type)
+ *
  * ```ts
  * import type { CountryFlagProps } from "@beep/ui/components/country-select"
  *
@@ -482,7 +490,8 @@ export type CountryFlagProps = React.ComponentPropsWithoutRef<"span"> & {
 /**
  * Renders a 3x2 SVG country flag.
  *
- * @example
+ * **Example** (Render Canada flag)
+ *
  * ```tsx
  * import { CountryFlag } from "@beep/ui/components/country-select"
  *
@@ -503,7 +512,8 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({ code, className, ...pr
 /**
  * Props for {@link CountryOptionContent}.
  *
- * @example
+ * **Example** (Type option content props)
+ *
  * ```ts
  * import type { CountryOptionContentProps } from "@beep/ui/components/country-select"
  *
@@ -523,7 +533,8 @@ export interface CountryOptionContentProps extends React.ComponentProps<"span"> 
 /**
  * Shared visual content for country options.
  *
- * @example
+ * **Example** (Render US option content)
+ *
  * ```tsx
  * import { CountryOptionContent, countryOptions } from "@beep/ui/components/country-select"
  *
@@ -555,7 +566,8 @@ export const CountryOptionContent: React.FC<CountryOptionContentProps> = ({
 /**
  * Props for a controlled country combobox.
  *
- * @example
+ * **Example** (Satisfy select props type)
+ *
  * ```tsx
  * import type { CountrySelectProps } from "@beep/ui/components/country-select"
  *
@@ -585,7 +597,8 @@ export interface CountrySelectProps
 /**
  * Filterable country combobox with SVG flags.
  *
- * @example
+ * **Example** (Shipping country combobox)
+ *
  * ```tsx
  * import { CountrySelect } from "@beep/ui/components/country-select"
  *

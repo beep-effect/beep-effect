@@ -9,7 +9,8 @@
  * Empty public SyncConflict namespace placeholder; the repository port is
  * server-only and exported from `@beep/documents-use-cases/entities/SyncConflict/server`.
  *
- * @example
+ * **Example** (Import SyncConflict namespace)
+ *
  * ```ts
  * import * as SyncConflict from "@beep/documents-use-cases/entities/SyncConflict"
  *

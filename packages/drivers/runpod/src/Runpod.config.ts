@@ -18,7 +18,8 @@ const normalizeConfigUrl = Str.replace(/\/+$/, "");
 /**
  * Runpod configuration URL normalized without trailing slashes.
  *
- * @example
+ * **Example** (Normalize URL without trailing slash)
+ *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
  *
@@ -44,7 +45,8 @@ export const RunpodConfigUrl = S.String.pipe(
 /**
  * Type for {@link RunpodConfigUrl}.
  *
- * @example
+ * **Example** (Type annotation for config URL)
+ *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
  *
@@ -60,7 +62,8 @@ export type RunpodConfigUrl = typeof RunpodConfigUrl.Type;
 /**
  * Default Runpod REST API v1 base URL.
  *
- * @example
+ * **Example** (Log default API base URL)
+ *
  * ```ts
  * import { RUNPOD_API_URL } from "@beep/runpod"
  *
@@ -75,7 +78,8 @@ export const RUNPOD_API_URL = "https://rest.runpod.io/v1";
 /**
  * Default Runpod documentation index URL for LLM-oriented docs.
  *
- * @example
+ * **Example** (Log default docs index URL)
+ *
  * ```ts
  * import { RUNPOD_DOCS_INDEX_URL } from "@beep/runpod"
  *
@@ -90,7 +94,8 @@ export const RUNPOD_DOCS_INDEX_URL = "https://docs.runpod.io/llms.txt";
 /**
  * Runtime configuration accepted by {@link Runpod.makeLayer}.
  *
- * @example
+ * **Example** (Build runtime config input)
+ *
  * ```ts
  * import { RunpodConfigInput } from "@beep/runpod"
  *
@@ -118,7 +123,8 @@ export class RunpodConfigInput extends S.Class<RunpodConfigInput>($I`RunpodConfi
 /**
  * Runtime configuration accepted by {@link RunpodDocs.makeLayer}.
  *
- * @example
+ * **Example** (Build docs config input)
+ *
  * ```ts
  * import { RunpodDocsConfigInput } from "@beep/runpod"
  *

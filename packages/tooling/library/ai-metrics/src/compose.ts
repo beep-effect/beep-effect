@@ -29,7 +29,8 @@ const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSp
 /**
  * Render a dedicated Docker Compose file for local Phoenix smoke tests.
  *
- * @example
+ * **Example** (Render local Phoenix compose)
+ *
  * ```ts
  * import { makeAiMetricsInstallSpec, renderAiMetricsLocalPhoenixCompose } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -40,6 +41,7 @@ const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSp
  * })
  * console.log(program)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

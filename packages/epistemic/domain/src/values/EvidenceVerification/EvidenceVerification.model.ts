@@ -22,10 +22,13 @@ const manifestationEncodingVersion = "evidence-verification-manifestation/v1";
 /**
  * Digest naming one exact evidence-to-source verification manifestation.
  *
+ * **Details**
+ *
  * The key is unique only within an organization. Persistence therefore applies
  * uniqueness to `(org_id, manifestation_key)` rather than to this digest alone.
  *
- * @example
+ * **Example** (Validate 64-character key)
+ *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
  *
@@ -46,7 +49,8 @@ export const EvidenceVerificationManifestationKey = Sha256Hex.pipe(
 /**
  * Runtime type for {@link EvidenceVerificationManifestationKey}.
  *
- * @example
+ * **Example** (Typed empty keys array)
+ *
  * ```ts
  * import type { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
  *
@@ -62,7 +66,8 @@ export type EvidenceVerificationManifestationKey = typeof EvidenceVerificationMa
 /**
  * Exact immutable payload sealed by an evidence-verification manifestation key.
  *
- * @example
+ * **Example** (Check evidenceId field exists)
+ *
  * ```ts
  * import { EvidenceVerificationManifestation } from "@beep/epistemic-domain/values/EvidenceVerification"
  *
@@ -94,11 +99,14 @@ const encodeManifestation = S.encodeResult(EvidenceVerificationManifestation);
 /**
  * Compute the stable key for one exact verification manifestation.
  *
+ * **Details**
+ *
  * The versioned canonical wire encoding includes the evidence id, exact source
  * identity, and exact anchor. Repeating the same manifestation produces the
  * same key; changing any bound field produces a different key.
  *
- * @example
+ * **Example** (Key function type and fields)
+ *
  * ```ts
  * import { EvidenceVerificationManifestation, evidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
  *
@@ -131,7 +139,8 @@ type IsEvidenceVerificationManifestationKey = {
 /**
  * Check a persisted manifestation key against its exact immutable payload.
  *
- * @example
+ * **Example** (Validator function type check)
+ *
  * ```ts
  * import { isEvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
  *

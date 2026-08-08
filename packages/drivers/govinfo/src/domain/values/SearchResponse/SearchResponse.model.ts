@@ -13,7 +13,8 @@ const $I = $GovinfoId.create("domain/values/SearchResponse/SearchResponse.model"
 /**
  * GovInfo search response with a result count, cursor, and hits.
  *
- * @example
+ * **Example** (Decode response with hits)
+ *
  * ```ts
  * import { SearchResponse } from "@beep/govinfo/domain/values/SearchResponse/SearchResponse.model";
  * import * as S from "effect/Schema";
@@ -69,7 +70,8 @@ export class SearchResponse extends S.Class<SearchResponse>($I`SearchResponse`)(
 /**
  * Companion namespace for {@link SearchResponse} encoded helpers.
  *
- * @example
+ * **Example** (Decode empty results list)
+ *
  * ```ts
  * import { SearchResponse } from "@beep/govinfo/domain/values/SearchResponse/SearchResponse.model";
  * import * as S from "effect/Schema";
@@ -90,7 +92,8 @@ export declare namespace SearchResponse {
   /**
    * Encoded JSON shape accepted by {@link SearchResponse}.
    *
-   * @example
+   * **Example** (Encode decoded search response)
+   *
    * ```ts
    * import { SearchResponse } from "@beep/govinfo/domain/values/SearchResponse/SearchResponse.model";
    * import * as S from "effect/Schema";

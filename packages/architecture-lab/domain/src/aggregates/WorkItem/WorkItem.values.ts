@@ -15,7 +15,8 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.values"
 /**
  * Branded string identifier for a WorkItem aggregate.
  *
- * @example
+ * **Example** (Decode branded WorkItem id)
+ *
  * ```ts
  * import { WorkItemId, type WorkItemId as WorkItemIdValue } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -42,7 +43,8 @@ export const WorkItemId = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link WorkItemId}.
  *
- * @example
+ * **Example** (Collect WorkItem ids array)
+ *
  * ```ts
  * import { WorkItemId, type WorkItemId as WorkItemIdValue } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -63,7 +65,8 @@ export type WorkItemId = S.Schema.Type<typeof WorkItemId>;
 /**
  * Human-readable title carried by a WorkItem aggregate.
  *
- * @example
+ * **Example** (Decode WorkItem title text)
+ *
  * ```ts
  * import { WorkItemTitle, type WorkItemTitle as WorkItemTitleValue } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -89,7 +92,8 @@ export const WorkItemTitle = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link WorkItemTitle}.
  *
- * @example
+ * **Example** (Embed title in label)
+ *
  * ```ts
  * import { WorkItemTitle, type WorkItemTitle as WorkItemTitleValue } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -110,7 +114,8 @@ export type WorkItemTitle = S.Schema.Type<typeof WorkItemTitle>;
 /**
  * Closed lifecycle vocabulary for WorkItem state transitions.
  *
- * @example
+ * **Example** (Use assigned status enum)
+ *
  * ```ts
  * import { WorkItemStatus, type WorkItemStatus as WorkItemStatusValue } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  *
@@ -137,7 +142,8 @@ export const WorkItemStatus = LiteralKit(["open", "assigned", "completed", "arch
 /**
  * Runtime type for {@link WorkItemStatus}.
  *
- * @example
+ * **Example** (Type terminal archived status)
+ *
  * ```ts
  * import type { WorkItemStatus } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  *

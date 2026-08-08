@@ -18,7 +18,8 @@ import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 /**
  * PGLite/Postgres Drizzle table for the epistemic EdgeVersion entity.
  *
- * @example
+ * **Example** (Log EdgeVersion table name)
+ *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-tables/entities"
  *

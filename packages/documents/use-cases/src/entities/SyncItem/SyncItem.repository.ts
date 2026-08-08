@@ -22,7 +22,8 @@ const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
 /**
  * Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.
  *
- * @example
+ * **Example** (Making a SyncItem seed)
+ *
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server"
@@ -97,7 +98,8 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
 /**
  * Persistence failure raised when a SyncItem write conflicts with an existing row.
  *
- * @example
+ * **Example** (Building a conflict error)
+ *
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncItemRepositoryConflict } from "@beep/documents-use-cases/entities/SyncItem/server"
@@ -136,7 +138,8 @@ export class SyncItemRepositoryConflict extends TaggedErrorClass<SyncItemReposit
 /**
  * Persistence failure raised when a SyncItem row is absent.
  *
- * @example
+ * **Example** (Building a not-found error)
+ *
  * ```ts
  * import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem"
  * import { SyncItemRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncItem/server"
@@ -171,7 +174,8 @@ export class SyncItemRepositoryNotFound extends TaggedErrorClass<SyncItemReposit
 /**
  * Persistence failure raised when the SyncItem repository is unavailable.
  *
- * @example
+ * **Example** (Building an unavailable error)
+ *
  * ```ts
  * import { SyncItemRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncItem/server"
  *
@@ -202,7 +206,8 @@ export class SyncItemRepositoryUnavailable extends TaggedErrorClass<SyncItemRepo
 /**
  * Lookup input addressing one sync-tracking row by vault-relative path.
  *
- * @example
+ * **Example** (Making path lookup input)
+ *
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { FindSyncItemByPathInput } from "@beep/documents-use-cases/entities/SyncItem/server"
@@ -240,7 +245,8 @@ export class FindSyncItemByPathInput extends S.Class<FindSyncItemByPathInput>($I
 /**
  * Lookup input addressing one sync-tracking row by provider remote id.
  *
- * @example
+ * **Example** (Making remote-id lookup input)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { FindSyncItemByRemoteIdInput } from "@beep/documents-use-cases/entities/SyncItem/server"
@@ -278,7 +284,8 @@ export class FindSyncItemByRemoteIdInput extends S.Class<FindSyncItemByRemoteIdI
 /**
  * Listing input addressing every sync-tracking row of one workspace mirror.
  *
- * @example
+ * **Example** (Making workspace list input)
+ *
  * ```ts
  * import { ListSyncItemsByWorkspaceInput } from "@beep/documents-use-cases/entities/SyncItem/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -313,13 +320,15 @@ export class ListSyncItemsByWorkspaceInput extends S.Class<ListSyncItemsByWorksp
 /**
  * SyncItem repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * `create` fails with {@link SyncItemRepositoryConflict} when a row already
  * tracks the seed's workspace, provider, and path; `update` persists a full
  * entity and fails with {@link SyncItemRepositoryNotFound} when the row is
  * absent.
  *
- * @example
+ * **Example** (Defining a stub repository)
+ *
  * ```ts
  * import {
  *   ListSyncItemsByWorkspaceInput,
@@ -370,7 +379,8 @@ export interface SyncItemRepositoryShape {
 /**
  * Context tag for the SyncItem repository port.
  *
- * @example
+ * **Example** (Providing repository context service)
+ *
  * ```ts
  * import {
  *   SyncItemRepository,

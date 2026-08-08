@@ -213,7 +213,8 @@ const projectTimeline = (
 /**
  * Build the in-memory ThreadStore used by the fast workspace proof.
  *
- * @example
+ * **Example** (Create thread in memory)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { CuidState } from "@beep/schema/Cuid"
@@ -394,7 +395,8 @@ const messageTable = DbSchema.message;
 /**
  * Build a Drizzle-backed ThreadStore used by live persistence tests.
  *
- * @example
+ * **Example** (Build Drizzle ThreadStore effect)
+ *
  * ```ts
  * import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread"
  * import { Effect } from "effect"
@@ -629,7 +631,8 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
 /**
  * Build the default ThreadStore for normal slice tests.
  *
- * @example
+ * **Example** (Build default ThreadStore)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { CuidState } from "@beep/schema/Cuid"

@@ -9,11 +9,13 @@ import * as GlobalValue from "./GlobalValue.ts";
 /**
  * Shared mutable state used while structural comparison hooks are active.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is an experimental hook for custom test matchers. User code should prefer
  * the public comparison APIs instead of mutating this state directly.
  *
- * @example
+ * **Example** (Read enabled flag)
+ *
  * ```ts
  * import { structuralRegionState } from "@beep/utils/Utils"
  *
@@ -35,11 +37,13 @@ export const structuralRegionState = GlobalValue.globalValue(
 /**
  * Runs `body` with structural comparison hooks temporarily enabled.
  *
- * @remarks
+ * **Details**
+ *
  * The previous enabled state and tester are restored in a `finally` block, so
  * nested or throwing bodies do not leak the temporary structural region.
  *
- * @example
+ * **Example** (Enable structural region)
+ *
  * ```ts
  * import { structuralRegion, structuralRegionState } from "@beep/utils/Utils"
  *

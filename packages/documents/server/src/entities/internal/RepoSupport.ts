@@ -1,7 +1,8 @@
 /**
  * Shared in-memory scaffolding for the Sync entity repository adapters.
  *
- * @remarks
+ * **Details**
+ *
  * The four Sync entity repositories (`SyncItem`, `SyncOperation`, `SyncCursor`,
  * `SyncConflict`) each back their deterministic in-memory adapter with the same
  * `Ref<HashMap>` store, monotonic id counter, live snapshot, and
@@ -23,7 +24,8 @@ import { Effect, HashMap, Order, Ref } from "effect";
  * System-principal audit stamp for rows the repository writes on the
  * application's behalf (there is no acting user for a runtime-initiated sync).
  *
- * @example
+ * **Example** (System principal kind value)
+ *
  * ```ts
  * import { SYSTEM_PRINCIPAL } from "@beep/documents-server/entities/internal/RepoSupport"
  *
@@ -40,7 +42,8 @@ export const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as cons
  * Next monotonic entity id: one past the maximum id already present, matching
  * the sequence-shaped ids the persisted tables allocate.
  *
- * @example
+ * **Example** (Next id after maximum)
+ *
  * ```ts
  * import { nextEntityId } from "@beep/documents-server/entities/internal/RepoSupport"
  *
@@ -59,7 +62,8 @@ export const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): numb
  * Ascending `Order` over any id-bearing entity, so listings are stable in
  * enqueue/creation order (ascending id equals insertion order in these stores).
  *
- * @example
+ * **Example** (Sort entities by id)
+ *
  * ```ts
  * import { byIdAscending } from "@beep/documents-server/entities/internal/RepoSupport"
  * import * as A from "effect/Array"
@@ -82,7 +86,8 @@ export const byIdAscending = <T extends { readonly id: number }>(): Order.Order<
  * effect that materializes the current values as an array. The initial map
  * carries the `Id`/`T` types so callers pass `HashMap.empty<Id, T>()`.
  *
- * @example
+ * **Example** (Empty store snapshot)
+ *
  * ```ts
  * import { makeEntityStore } from "@beep/documents-server/entities/internal/RepoSupport"
  * import { Effect, HashMap } from "effect"

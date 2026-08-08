@@ -18,14 +18,15 @@ const $I = $LawPracticeDomainId.create("values/ShortFormCitationType/ShortFormCi
  * Citation type discriminators for short-form references (`Id.`, supra,
  * short-form case).
  *
+ * **Details**
+ *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `ShortFormCitationType.Enum` for typed literal access,
  * `ShortFormCitationType.is` for per-literal guards, and
  * `ShortFormCitationType.Options` for the full literal list.
  *
- * **Example**
+ * **Example** (Decode and guard short-form types)
  *
- * @example
  * ```ts
  * import { ShortFormCitationType } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -49,9 +50,8 @@ export const ShortFormCitationType = LiteralKit(["id", "supra", "shortFormCase"]
  * The decoded literal type for {@link ShortFormCitationType} — a union of every
  * short-form discriminator (`"id" | "supra" | "shortFormCase"`).
  *
- * **Example**
+ * **Example** (Assign supra short-form type)
  *
- * @example
  * ```ts
  * import type { ShortFormCitationType } from "@beep/law-practice-domain"
  *

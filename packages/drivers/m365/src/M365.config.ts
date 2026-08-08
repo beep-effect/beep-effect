@@ -18,9 +18,12 @@ const $I = $M365Id.create("M365.config");
 /**
  * Microsoft Graph base URL pinned to the stable `v1.0` endpoint.
  *
+ * **Details**
+ *
  * The driver never targets `beta` in product code (surface drift / no SLA).
  *
- * @example
+ * **Example** (Build Graph drives URL)
+ *
  * ```ts
  * import { GRAPH_API_BASE_URL } from "@beep/m365"
  *
@@ -36,7 +39,8 @@ export const GRAPH_API_BASE_URL = "https://graph.microsoft.com/v1.0";
 /**
  * Default Microsoft identity platform authority host.
  *
- * @example
+ * **Example** (Build authority host URL)
+ *
  * ```ts
  * import { DEFAULT_AUTHORITY_HOST } from "@beep/m365"
  *
@@ -52,10 +56,13 @@ export const DEFAULT_AUTHORITY_HOST = "https://login.microsoftonline.com";
 /**
  * Default loopback redirect URI for the delegated authorization-code + PKCE flow.
  *
+ * **Details**
+ *
  * AAD allows any port for `http://localhost` / `http://127.0.0.1` loopback
  * redirects (RFC 8252); the host-owned interactive authorizer binds the port.
  *
- * @example
+ * **Example** (Parse default redirect URI)
+ *
  * ```ts
  * import { DEFAULT_REDIRECT_URI } from "@beep/m365"
  *
@@ -71,7 +78,8 @@ export const DEFAULT_REDIRECT_URI = "http://localhost";
 /**
  * Default throttle-retry budget honored on `429` / `503` responses.
  *
- * @example
+ * **Example** (Check retry budget threshold)
+ *
  * ```ts
  * import { DEFAULT_MAX_RETRIES } from "@beep/m365"
  *
@@ -87,9 +95,12 @@ export const DEFAULT_MAX_RETRIES = 3;
 /**
  * Delegated Graph read scopes requested in v1.
  *
+ * **Details**
+ *
  * Least-privilege for read-only ingest; `offline_access` enables silent refresh.
  *
- * @example
+ * **Example** (Check Files.Read.All scope)
+ *
  * ```ts
  * import { M365_READ_SCOPES } from "@beep/m365"
  *
@@ -111,10 +122,13 @@ export const M365_READ_SCOPES = [
 /**
  * Write scopes reserved for a future write-back phase. v1 NEVER requests these.
  *
+ * **Details**
+ *
  * The service shape is write-ready (verbs/scopes are extensible), but the v1
  * scope set is read-only by construction — see {@link M365ConfigInput}.
  *
- * @example
+ * **Example** (Check Mail.Send write scope)
+ *
  * ```ts
  * import { M365_RESERVED_WRITE_SCOPES } from "@beep/m365"
  *
@@ -161,6 +175,8 @@ const M365ConfigUrl = S.String.pipe(
 /**
  * Runtime configuration accepted by the Microsoft 365 driver layers.
  *
+ * **Details**
+ *
  * Public-client (delegated, auth-code + PKCE) configuration. `tenantId` and
  * `clientId` are not secrets; `clientSecret` is reserved (and `S.Redacted`) for
  * a future confidential-client path and is unused by the v1 public-client flow.
@@ -172,7 +188,8 @@ const M365ConfigUrl = S.String.pipe(
  * Requested `scopes` may not include any {@link M365_RESERVED_WRITE_SCOPES}
  * entry — read-only by construction.
  *
- * @example
+ * **Example** (Create minimal config input)
+ *
  * ```ts
  * import { M365ConfigInput } from "@beep/m365"
  *
@@ -238,7 +255,8 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
  * Resolved Microsoft 365 configuration with defaults applied. Internal model
  * shared by the auth and service layers; absence is modeled as `Option`.
  *
- * @example
+ * **Example** (Resolve config with defaults)
+ *
  * ```ts
  * import { M365ConfigInput, resolveM365Config } from "@beep/m365"
  *
@@ -276,7 +294,8 @@ export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM
 /**
  * Apply defaults to {@link M365ConfigInput}, producing a {@link ResolvedM365Config}.
  *
- * @example
+ * **Example** (Apply config defaults)
+ *
  * ```ts
  * import { M365ConfigInput, resolveM365Config } from "@beep/m365"
  *

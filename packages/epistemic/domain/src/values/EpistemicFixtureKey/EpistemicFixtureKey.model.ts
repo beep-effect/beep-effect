@@ -13,7 +13,8 @@ const $I = $EpistemicDomainId.create("values/EpistemicFixtureKey/EpistemicFixtur
 /**
  * Stable non-empty fixture/reference key used by epistemic fixtures and projections.
  *
- * @example
+ * **Example** (Make fixture key from string)
+ *
  * ```ts
  * import { EpistemicFixtureKey } from "@beep/epistemic-domain"
  *
@@ -34,7 +35,8 @@ export const EpistemicFixtureKey = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link EpistemicFixtureKey}.
  *
- * @example
+ * **Example** (Type a fixture key value)
+ *
  * ```ts
  * import { EpistemicFixtureKey } from "@beep/epistemic-domain"
  * import type { EpistemicFixtureKey as EpistemicFixtureKeyValue } from "@beep/epistemic-domain"

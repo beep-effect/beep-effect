@@ -76,12 +76,15 @@ const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, Inv
 /**
  * Live handler layer for the streaming toolkit.
  *
+ * **Details**
+ *
  * Provide this layer (together with a node `FileSystem`/`Path` implementation)
  * when mounting {@link StreamingTools.StreamingToolkit} into an MCP server. Each
  * handler returns plain objects matching the tool's schema-backed success shape
  * and surfaces expected failures as {@link AiToolError}.
  *
- * @example
+ * **Example** (Provide with Node layers)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
@@ -98,8 +101,8 @@ const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, Inv
  * console.log(Layer.isLayer(handlers))
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const StreamingToolkitHandlersLive: Layer.Layer<
   Tool.HandlersFor<typeof StreamingToolkit.tools>,

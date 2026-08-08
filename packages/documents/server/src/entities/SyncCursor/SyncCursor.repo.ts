@@ -84,10 +84,13 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
 /**
  * Build the in-memory SyncCursor repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * At most one cursor row exists per workspace and provider pair: `upsert`
  * inserts when absent and replaces the seed fields in place when present.
  *
- * @example
+ * **Example** (Import in-memory repository)
+ *
  * ```ts
  * import { makeInMemorySyncCursorRepository } from "@beep/documents-server/entities/SyncCursor"
  *
@@ -96,7 +99,6 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
  *
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for find and upsert repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -145,7 +147,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncCursor repository used by live persistence tests.
  *
- * @example
+ * **Example** (Import Drizzle repository)
+ *
  * ```ts
  * import { makeDrizzleSyncCursorRepository } from "@beep/documents-server/entities/SyncCursor"
  *
@@ -155,7 +158,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncCursor table and redacts driver
  * failures to `SyncCursorRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

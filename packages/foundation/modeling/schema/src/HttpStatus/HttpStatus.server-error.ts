@@ -20,15 +20,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * the client’s side. Read this tutorial on {@link https://www.siteground.com/kb/internal_server_error_500/ | what an “HTTP Error 500 –
  * Internal Server Error” is and how to fix it} for more information.
  *
- * @example
+ * **Example** (Log InternalServerError literal)
+ *
  * ```ts
  * import { InternalServerError } from "@beep/schema/HttpStatus"
  *
  * console.log(InternalServerError.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const InternalServerError = S.Literal(500).pipe(
   $I.annoteSchema("InternalServerError", {
@@ -40,17 +41,8 @@ export const InternalServerError = S.Literal(500).pipe(
 
 /**
  * {@inheritDoc InternalServerError}
- *
- * @example
- * ```ts
- * import type { InternalServerError } from "@beep/schema/HttpStatus"
- *
- * const status: InternalServerError = 500
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type InternalServerError = typeof InternalServerError.Type;
 
@@ -58,15 +50,16 @@ export type InternalServerError = typeof InternalServerError.Type;
  * 501 “Not Implemented” – The server doesn’t support the request method or
  * doesn’t have the ability to fulfill the request.
  *
- * @example
+ * **Example** (Log NotImplemented literal)
+ *
  * ```ts
  * import { NotImplemented } from "@beep/schema/HttpStatus"
  *
  * console.log(NotImplemented.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NotImplemented = S.Literal(501).pipe(
   $I.annoteSchema("NotImplemented", {
@@ -78,17 +71,8 @@ export const NotImplemented = S.Literal(501).pipe(
 
 /**
  * {@inheritDoc NotImplemented}
- *
- * @example
- * ```ts
- * import type { NotImplemented } from "@beep/schema/HttpStatus"
- *
- * const status: NotImplemented = 501
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NotImplemented = typeof NotImplemented.Type;
 
@@ -98,15 +82,16 @@ export type NotImplemented = typeof NotImplemented.Type;
  * is the official description, but various factors can cause this error. Find
  * out more about the HTTP 502 “Bad Gateway” error and how to fix it here.
  *
- * @example
+ * **Example** (Log BadGateway literal)
+ *
  * ```ts
  * import { BadGateway } from "@beep/schema/HttpStatus"
  *
  * console.log(BadGateway.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const BadGateway = S.Literal(502).pipe(
   $I.annoteSchema("BadGateway", {
@@ -118,17 +103,8 @@ export const BadGateway = S.Literal(502).pipe(
 
 /**
  * {@inheritDoc BadGateway}
- *
- * @example
- * ```ts
- * import type { BadGateway } from "@beep/schema/HttpStatus"
- *
- * const status: BadGateway = 502
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type BadGateway = typeof BadGateway.Type;
 
@@ -138,15 +114,16 @@ export type BadGateway = typeof BadGateway.Type;
  * the server. Read this guide on what the HTTP 503 “Service Unavailable” error
  * is and how to fix it.
  *
- * @example
+ * **Example** (Log ServiceUnavailable literal)
+ *
  * ```ts
  * import { ServiceUnavailable } from "@beep/schema/HttpStatus"
  *
  * console.log(ServiceUnavailable.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ServiceUnavailable = S.Literal(503).pipe(
   $I.annoteSchema("ServiceUnavailable", {
@@ -158,17 +135,8 @@ export const ServiceUnavailable = S.Literal(503).pipe(
 
 /**
  * {@inheritDoc ServiceUnavailable}
- *
- * @example
- * ```ts
- * import type { ServiceUnavailable } from "@beep/schema/HttpStatus"
- *
- * const status: ServiceUnavailable = 503
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ServiceUnavailable = typeof ServiceUnavailable.Type;
 
@@ -180,15 +148,16 @@ export type ServiceUnavailable = typeof ServiceUnavailable.Type;
  * the connection. See more details in this article about the HTTP 504
  * “Gateway Timeout” and how to fix it.
  *
- * @example
+ * **Example** (Log GatewayTimeout literal)
+ *
  * ```ts
  * import { GatewayTimeout } from "@beep/schema/HttpStatus"
  *
  * console.log(GatewayTimeout.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GatewayTimeout = S.Literal(504).pipe(
   $I.annoteSchema("GatewayTimeout", {
@@ -200,17 +169,8 @@ export const GatewayTimeout = S.Literal(504).pipe(
 
 /**
  * {@inheritDoc GatewayTimeout}
- *
- * @example
- * ```ts
- * import type { GatewayTimeout } from "@beep/schema/HttpStatus"
- *
- * const status: GatewayTimeout = 504
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type GatewayTimeout = typeof GatewayTimeout.Type;
 
@@ -218,15 +178,16 @@ export type GatewayTimeout = typeof GatewayTimeout.Type;
  * 505 “HTTP Version Not Supported” – The server doesn’t support the HTTP
  * protocol version used in the request.
  *
- * @example
+ * **Example** (Log HttpVersionNotSupported literal)
+ *
  * ```ts
  * import { HttpVersionNotSupported } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpVersionNotSupported.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpVersionNotSupported = S.Literal(505).pipe(
   $I.annoteSchema("HttpVersionNotSupported", {
@@ -238,17 +199,8 @@ export const HttpVersionNotSupported = S.Literal(505).pipe(
 
 /**
  * {@inheritDoc HttpVersionNotSupported}
- *
- * @example
- * ```ts
- * import type { HttpVersionNotSupported } from "@beep/schema/HttpStatus"
- *
- * const status: HttpVersionNotSupported = 505
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type HttpVersionNotSupported = typeof HttpVersionNotSupported.Type;
 
@@ -259,15 +211,16 @@ export type HttpVersionNotSupported = typeof HttpVersionNotSupported.Type;
  * versions. However, there is a misconfiguration, and the chosen resource also
  * prompts content negotiation that causes a closed loop.
  *
- * @example
+ * **Example** (Log VariantAlsoNegotiates literal)
+ *
  * ```ts
  * import { VariantAlsoNegotiates } from "@beep/schema/HttpStatus"
  *
  * console.log(VariantAlsoNegotiates.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const VariantAlsoNegotiates = S.Literal(506).pipe(
   $I.annoteSchema("VariantAlsoNegotiates", {
@@ -279,17 +232,8 @@ export const VariantAlsoNegotiates = S.Literal(506).pipe(
 
 /**
  * {@inheritDoc VariantAlsoNegotiates}
- *
- * @example
- * ```ts
- * import type { VariantAlsoNegotiates } from "@beep/schema/HttpStatus"
- *
- * const status: VariantAlsoNegotiates = 506
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type VariantAlsoNegotiates = typeof VariantAlsoNegotiates.Type;
 
@@ -297,15 +241,16 @@ export type VariantAlsoNegotiates = typeof VariantAlsoNegotiates.Type;
  * 507 “Insufficient Storage” (WebDAV) – The server is unable to store the
  * representation required to complete the request.
  *
- * @example
+ * **Example** (Log InsufficientStorage literal)
+ *
  * ```ts
  * import { InsufficientStorage } from "@beep/schema/HttpStatus"
  *
  * console.log(InsufficientStorage.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const InsufficientStorage = S.Literal(507).pipe(
   $I.annoteSchema("InsufficientStorage", {
@@ -317,17 +262,8 @@ export const InsufficientStorage = S.Literal(507).pipe(
 
 /**
  * {@inheritDoc InsufficientStorage}
- *
- * @example
- * ```ts
- * import type { InsufficientStorage } from "@beep/schema/HttpStatus"
- *
- * const status: InsufficientStorage = 507
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type InsufficientStorage = typeof InsufficientStorage.Type;
 
@@ -335,15 +271,16 @@ export type InsufficientStorage = typeof InsufficientStorage.Type;
  * 508 “Loop Detected” (WebDAV) – The server detected an infinite loop while
  * processing the request.
  *
- * @example
+ * **Example** (Log LoopDetected literal)
+ *
  * ```ts
  * import { LoopDetected } from "@beep/schema/HttpStatus"
  *
  * console.log(LoopDetected.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const LoopDetected = S.Literal(508).pipe(
   $I.annoteSchema("LoopDetected", {
@@ -354,17 +291,8 @@ export const LoopDetected = S.Literal(508).pipe(
 
 /**
  * {@inheritDoc LoopDetected}
- *
- * @example
- * ```ts
- * import type { LoopDetected } from "@beep/schema/HttpStatus"
- *
- * const status: LoopDetected = 508
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type LoopDetected = typeof LoopDetected.Type;
 
@@ -372,15 +300,16 @@ export type LoopDetected = typeof LoopDetected.Type;
  * 510 “Not Extended” – Further extensions to the request are required for the
  * server to fulfill it. This code is now deprecated.
  *
- * @example
+ * **Example** (Log NotExtended literal)
+ *
  * ```ts
  * import { NotExtended } from "@beep/schema/HttpStatus"
  *
  * console.log(NotExtended.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NotExtended = S.Literal(510).pipe(
   $I.annoteSchema("NotExtended", {
@@ -392,17 +321,8 @@ export const NotExtended = S.Literal(510).pipe(
 
 /**
  * {@inheritDoc NotExtended}
- *
- * @example
- * ```ts
- * import type { NotExtended } from "@beep/schema/HttpStatus"
- *
- * const status: NotExtended = 510
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NotExtended = typeof NotExtended.Type;
 
@@ -412,15 +332,16 @@ export type NotExtended = typeof NotExtended.Type;
  * commonly, it is seen when trying to use a Wi-Fi network, and you need to
  * agree to its Terms of Agreement.
  *
- * @example
+ * **Example** (Log NetworkAuthenticationRequired literal)
+ *
  * ```ts
  * import { NetworkAuthenticationRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(NetworkAuthenticationRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NetworkAuthenticationRequired = S.Literal(511).pipe(
   $I.annoteSchema("NetworkAuthenticationRequired", {
@@ -432,16 +353,7 @@ export const NetworkAuthenticationRequired = S.Literal(511).pipe(
 
 /**
  * {@inheritDoc NetworkAuthenticationRequired}
- *
- * @example
- * ```ts
- * import type { NetworkAuthenticationRequired } from "@beep/schema/HttpStatus"
- *
- * const status: NetworkAuthenticationRequired = 511
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NetworkAuthenticationRequired = typeof NetworkAuthenticationRequired.Type;

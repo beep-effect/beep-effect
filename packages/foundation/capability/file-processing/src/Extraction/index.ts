@@ -37,7 +37,8 @@ type JsonEncodeEffect<Input> = {
 /**
  * Processing status emitted for each source row.
  *
- * @example
+ * **Example** (Check skipped status option)
+ *
  * ```ts
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
@@ -56,7 +57,8 @@ export const SourceProcessingStatus = LiteralKit(["succeeded", "skipped", "faile
 /**
  * Type for {@link SourceProcessingStatus}.
  *
- * @example
+ * **Example** (Type succeeded status value)
+ *
  * ```ts
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
@@ -72,7 +74,8 @@ export type SourceProcessingStatus = typeof SourceProcessingStatus.Type;
 /**
  * Materialized text artifact reference.
  *
- * @example
+ * **Example** (Decode text artifact reference)
+ *
  * ```ts
  * import { TextArtifactReference } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -106,7 +109,8 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
 /**
  * Text span emitted by a text extraction operation.
  *
- * @example
+ * **Example** (Make text span value)
+ *
  * ```ts
  * import { TextSpan } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -130,7 +134,8 @@ export const TextSpan = TextSpanBase.check(
 /**
  * Type for {@link TextSpan}.
  *
- * @example
+ * **Example** (Type text span value)
+ *
  * ```ts
  * import { TextSpan } from "@beep/file-processing/Extraction"
  * import { NonNegativeInt } from "@beep/schema"
@@ -139,15 +144,16 @@ export const TextSpan = TextSpanBase.check(
  * console.log(span.text) // "hello"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextSpan = InstanceType<typeof TextSpanBase>;
 
 /**
  * Text and metadata extraction result.
  *
- * @example
+ * **Example** (Decode extraction result)
+ *
  * ```ts
  * import { ExtractionResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -189,7 +195,8 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
 /**
  * Archive export result.
  *
- * @example
+ * **Example** (Decode archive export result)
+ *
  * ```ts
  * import { ArchiveExportResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -225,7 +232,8 @@ export class ArchiveExportResult extends S.Class<ArchiveExportResult>($I`Archive
 /**
  * Successful extraction result of a full source processing operation.
  *
- * @example
+ * **Example** (Make extracted process result)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ExtractedProcessFileResult, ExtractionResult } from "@beep/file-processing/Extraction"
@@ -280,7 +288,8 @@ export class ExtractedProcessFileResult extends S.Class<ExtractedProcessFileResu
 /**
  * Successful archive export result of a full source processing operation.
  *
- * @example
+ * **Example** (Make archive export process result)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ArchiveExportProcessFileResult, ArchiveExportResult } from "@beep/file-processing/Extraction"
@@ -335,7 +344,8 @@ export class ArchiveExportProcessFileResult extends S.Class<ArchiveExportProcess
 /**
  * Intentional skip result of a full source processing operation.
  *
- * @example
+ * **Example** (Make skipped process result)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedProcessFileResult } from "@beep/file-processing/Extraction"
@@ -382,7 +392,8 @@ export class SkippedProcessFileResult extends S.Class<SkippedProcessFileResult>(
 /**
  * Result of a full source processing operation.
  *
- * @example
+ * **Example** (Decode skipped process result)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { ProcessFileResult } from "@beep/file-processing/Extraction"
@@ -425,7 +436,8 @@ export const ProcessFileResult = S.Union([
 /**
  * Type for {@link ProcessFileResult}.
  *
- * @example
+ * **Example** (Type process file result)
+ *
  * ```ts
  * import { ProcessFileResult } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -455,7 +467,8 @@ export type ProcessFileResult = typeof ProcessFileResult.Type;
 /**
  * Succeeded source row written to sources.jsonl.
  *
- * @example
+ * **Example** (Make succeeded source record)
+ *
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
@@ -512,7 +525,8 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
 /**
  * Skipped source row written to sources.jsonl.
  *
- * @example
+ * **Example** (Make skipped source record)
+ *
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedSourceProcessingRecord } from "@beep/file-processing/Extraction"
@@ -568,7 +582,8 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
 /**
  * Failed source row written to sources.jsonl.
  *
- * @example
+ * **Example** (Make failed source record)
+ *
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedSourceProcessingRecord } from "@beep/file-processing/Extraction"
@@ -621,7 +636,8 @@ export class FailedSourceProcessingRecord extends S.Class<FailedSourceProcessing
 /**
  * Source row written to sources.jsonl.
  *
- * @example
+ * **Example** (Decode source processing record)
+ *
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
@@ -668,7 +684,8 @@ export const SourceProcessingRecord = S.Union([
 /**
  * Type for {@link SourceProcessingRecord}.
  *
- * @example
+ * **Example** (Type source processing record)
+ *
  * ```ts
  * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -698,7 +715,8 @@ export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
 /**
  * Machine-readable failure row reason.
  *
- * @example
+ * **Example** (Decode failure reason value)
+ *
  * ```ts
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -722,7 +740,8 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
 /**
  * Type for {@link FileProcessingFailureReason}.
  *
- * @example
+ * **Example** (Type failure reason value)
+ *
  * ```ts
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -746,7 +765,8 @@ export type FileProcessingFailureReason = typeof FileProcessingFailureReason.Typ
 /**
  * Skipped row written to failures.jsonl.
  *
- * @example
+ * **Example** (Decode skipped failure record)
+ *
  * ```ts
  * import { SkippedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -789,7 +809,8 @@ export class SkippedFileProcessingFailureRecord extends S.Class<SkippedFileProce
 /**
  * Hard failure row written to failures.jsonl.
  *
- * @example
+ * **Example** (Make failed failure record)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
@@ -840,7 +861,8 @@ export class FailedFileProcessingFailureRecord extends S.Class<FailedFileProcess
 /**
  * Failure row written to failures.jsonl.
  *
- * @example
+ * **Example** (Decode failure record)
+ *
  * ```ts
  * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -879,7 +901,8 @@ export const FileProcessingFailureRecord = S.Union([
 /**
  * Type for {@link FileProcessingFailureRecord}.
  *
- * @example
+ * **Example** (Type failure record)
+ *
  * ```ts
  * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -909,7 +932,8 @@ export type FileProcessingFailureRecord = typeof FileProcessingFailureRecord.Typ
 /**
  * Child artifact row written to children/<source-artifact-id>/artifacts.jsonl.
  *
- * @example
+ * **Example** (Decode child artifact record)
+ *
  * ```ts
  * import { ChildArtifactRecord } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -948,7 +972,8 @@ export class ChildArtifactRecord extends S.Class<ChildArtifactRecord>($I`ChildAr
 /**
  * Coverage summary written to coverage.json.
  *
- * @example
+ * **Example** (Decode coverage summary)
+ *
  * ```ts
  * import { FileProcessingCoverageSummary } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -993,7 +1018,8 @@ export class FileProcessingCoverageSummary extends S.Class<FileProcessingCoverag
 /**
  * Top-level run manifest written to run.json.
  *
- * @example
+ * **Example** (Decode process run manifest)
+ *
  * ```ts
  * import { ProcessRunManifest } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -1045,7 +1071,8 @@ export class ProcessRunManifest extends S.Class<ProcessRunManifest>($I`ProcessRu
 /**
  * JSON encoder for {@link ProcessRunManifest}.
  *
- * @example
+ * **Example** (Encode run manifest JSON)
+ *
  * ```ts
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import { encodeProcessRunManifestJson, ProcessRunManifest } from "@beep/file-processing/Extraction"
@@ -1091,7 +1118,8 @@ export const encodeProcessRunManifestJson = ProcessRunManifest.encodeJson;
 /**
  * JSON encoder for {@link FileProcessingCoverageSummary}.
  *
- * @example
+ * **Example** (Encode coverage summary JSON)
+ *
  * ```ts
  * import { encodeFileProcessingCoverageSummaryJson, FileProcessingCoverageSummary } from "@beep/file-processing/Extraction"
  * import { Effect } from "effect"
@@ -1127,7 +1155,8 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
 /**
  * JSONL encoder for {@link SourceProcessingRecord}.
  *
- * @example
+ * **Example** (Encode source record JSONL)
+ *
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { encodeSourceProcessingRecordJson, SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
@@ -1164,7 +1193,8 @@ export const encodeSourceProcessingRecordJson = SourceProcessingRecord.encodeJso
 /**
  * JSONL encoder for {@link FileProcessingFailureRecord}.
  *
- * @example
+ * **Example** (Encode failure record JSONL)
+ *
  * ```ts
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { encodeFileProcessingFailureRecordJson, SkippedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
@@ -1199,7 +1229,8 @@ export const encodeFileProcessingFailureRecordJson = FileProcessingFailureRecord
 /**
  * JSONL encoder for {@link ChildArtifactRecord}.
  *
- * @example
+ * **Example** (Encode child artifact JSONL)
+ *
  * ```ts
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { ChildArtifactRecord, encodeChildArtifactRecordJson } from "@beep/file-processing/Extraction"

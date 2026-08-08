@@ -13,6 +13,8 @@ import * as S from "effect/Schema";
  * Splits a text stream into lines, decodes each line as JSON with `schema`,
  * and emits only the successfully decoded values.
  *
+ * **Details**
+ *
  * Invalid JSON lines and schema decode failures are filtered out rather than
  * failing the stream.
  *
@@ -20,7 +22,8 @@ import * as S from "effect/Schema";
  * - Data-last: `pipe(stream, streamFilterJson(schema))`
  * - Data-first: `streamFilterJson(stream, schema)`
  *
- * @example
+ * **Example** (Filter JSON lines stream)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import * as S from "effect/Schema"

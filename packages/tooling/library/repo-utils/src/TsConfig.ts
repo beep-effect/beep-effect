@@ -23,15 +23,16 @@ const ROOT_KEY = "@beep/root";
 /**
  * Collect all `tsconfig*.json` file paths for each workspace and the root.
  *
+ * **Details**
+ *
  * For every workspace package (plus the monorepo root), this function
  * globs for files matching `tsconfig*.json` and returns a HashMap
  * mapping each package name to its array of tsconfig paths.
  *
  * The root directory is indexed under `"@beep/root"`.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @returns A HashMap mapping package names to arrays of tsconfig file paths.
- * @example
+ * **Example** (Collect workspace tsconfig paths)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig"
@@ -39,6 +40,9 @@ const ROOT_KEY = "@beep/root";
  * const program = collectTsConfigPaths(".")
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @returns A HashMap mapping package names to arrays of tsconfig file paths.
  * @category utilities
  * @since 0.0.0
  */

@@ -25,13 +25,15 @@ type WorktreeCommandErrorOptions =
 /**
  * Operational failure raised while planning or running a worktree operation.
  *
- * @example
+ * **Example** (Make worktree command error)
+ *
  * ```ts
  * import { WorktreeCommandError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeCommandError.make({ message: "git worktree add failed" })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -77,13 +79,15 @@ export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>
 /**
  * Removal refused because the target worktree has uncommitted changes.
  *
- * @example
+ * **Example** (Create dirty worktree error)
+ *
  * ```ts
  * import { WorktreeDirtyError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeDirtyError.new("/tmp/beep-effect-worktrees/feature-x", 3)
  * console.log(error.changeCount)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -120,13 +124,15 @@ export class WorktreeDirtyError extends TaggedErrorClass<WorktreeDirtyError>($I`
 /**
  * Creation refused because a worktree directory already exists at the target path.
  *
- * @example
+ * **Example** (Create exists worktree error)
+ *
  * ```ts
  * import { WorktreeExistsError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeExistsError.new("/tmp/beep-effect-worktrees/feature-x")
  * console.log(error.path)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

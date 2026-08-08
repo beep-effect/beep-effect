@@ -22,7 +22,8 @@ import type { QaReportOptions } from "./Qa.schemas.ts";
 /**
  * Re-render a round's `report.md` from its session manifest.
  *
- * @example
+ * **Example** (Re-render session report)
+ *
  * ```ts
  * import { runQaReport } from "@beep/repo-cli/commands/Qa/Report"
  * import { QaReportOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -32,6 +33,7 @@ import type { QaReportOptions } from "./Qa.schemas.ts";
  * const program = runQaReport("/repo", QaReportOptions.make({ session: O.none() }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

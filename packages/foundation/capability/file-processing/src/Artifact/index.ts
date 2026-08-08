@@ -66,7 +66,8 @@ const ArtifactName = S.Union([
 /**
  * Stable artifact identifier derived from a content digest.
  *
- * @example
+ * **Example** (Decode ArtifactId from string)
+ *
  * ```ts
  * import { ArtifactId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -95,7 +96,8 @@ export const ArtifactId = S.TemplateLiteral(["artifact:", Sha256Hex]).pipe(
 /**
  * Type for {@link ArtifactId}.
  *
- * @example
+ * **Example** (Annotate decoded ArtifactId type)
+ *
  * ```ts
  * import { ArtifactId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -114,7 +116,8 @@ export type ArtifactId = typeof ArtifactId.Type;
 /**
  * Stable operation identifier derived from source, operation kind, and strategy.
  *
- * @example
+ * **Example** (Decode OperationId from string)
+ *
  * ```ts
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -143,7 +146,8 @@ export const OperationId = S.TemplateLiteral(["operation:", Sha256Hex]).pipe(
 /**
  * Type for {@link OperationId}.
  *
- * @example
+ * **Example** (Annotate decoded OperationId type)
+ *
  * ```ts
  * import { OperationId } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -162,7 +166,8 @@ export type OperationId = typeof OperationId.Type;
 /**
  * SHA-256 content digest recorded with the source or emitted artifact.
  *
- * @example
+ * **Example** (Decode ContentDigest from string)
+ *
  * ```ts
  * import { ContentDigest } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -191,7 +196,8 @@ export const ContentDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
 /**
  * Type for {@link ContentDigest}.
  *
- * @example
+ * **Example** (Annotate decoded ContentDigest type)
+ *
  * ```ts
  * import { ContentDigest } from "@beep/file-processing/Artifact"
  * import * as S from "effect/Schema"
@@ -214,7 +220,8 @@ const artifactIdTextEncoder = new TextEncoder();
 /**
  * Derive a stable artifact identifier from deterministic artifact parts.
  *
- * @example
+ * **Example** (Derive id from artifact parts)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { deriveArtifactId } from "@beep/file-processing/Artifact"
@@ -242,7 +249,8 @@ export const deriveArtifactId = Effect.fn("Artifact.deriveArtifactId")(function*
 /**
  * Origin kind for a source artifact locator.
  *
- * @example
+ * **Example** (Check locator kind options)
+ *
  * ```ts
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
@@ -261,7 +269,8 @@ export const ArtifactLocatorKind = LiteralKit(["file", "synthetic", "memory"]).p
 /**
  * Type for {@link ArtifactLocatorKind}.
  *
- * @example
+ * **Example** (Narrow memory locator kind)
+ *
  * ```ts
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
@@ -277,7 +286,8 @@ export type ArtifactLocatorKind = typeof ArtifactLocatorKind.Type;
 /**
  * Runtime-neutral artifact locator.
  *
- * @example
+ * **Example** (Create synthetic artifact locator)
+ *
  * ```ts
  * import { ArtifactLocator } from "@beep/file-processing/Artifact"
  * import { PosixPath } from "@beep/schema/PosixPath"
@@ -308,7 +318,8 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
 /**
  * Source artifact supplied to a file-processing operation.
  *
- * @example
+ * **Example** (Construct SourceArtifact instance)
+ *
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { NonNegativeInt } from "@beep/schema"
@@ -360,7 +371,8 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
 /**
  * Lightweight reference to a materialized artifact.
  *
- * @example
+ * **Example** (Construct ArtifactReference instance)
+ *
  * ```ts
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { NonNegativeInt } from "@beep/schema"

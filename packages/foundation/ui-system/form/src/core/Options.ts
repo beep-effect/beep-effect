@@ -12,7 +12,8 @@ import type React from "react";
  * A single selectable option: a stable string `value`, a renderable `label`,
  * and an optional `disabled` flag.
  *
- * @example
+ * **Example** (Options array with disabled)
+ *
  * ```ts
  * import type { FieldOption } from "@beep/form/core/Options"
  *

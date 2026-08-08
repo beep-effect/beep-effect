@@ -13,7 +13,8 @@ import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
 /**
  * SDK facade shape exposed to clients and adapters.
  *
- * @example
+ * **Example** (In-memory SDK instantiation)
+ *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
  * import type { ProfessionalRuntimeSdk } from "@beep/agents-use-cases/public"

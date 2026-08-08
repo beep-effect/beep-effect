@@ -16,14 +16,15 @@ const $I = $LawPracticeDomainId.create("values/JournalCitation/JournalCitation.m
 /**
  * A parsed journal citation (type: `journal`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `journal`
  * discriminant plus the full `journal` name and standard `abbreviation`, the
  * optional `author`, `title`, `volume`, `page`, `pincite`, and `year`, and the
  * optional component `spans` locating each sub-part within the source text.
  *
- * **Example**
+ * **Example** (Construct journal citation value)
  *
- * @example
  * ```ts
  * import { JournalCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -118,7 +119,8 @@ export class JournalCitation extends S.Class<JournalCitation>($I`JournalCitation
 /**
  * Companion namespace for `JournalCitation`.
  *
- * @example
+ * **Example** (Access Encoded type field)
+ *
  * ```ts
  * import type { JournalCitation } from "@beep/law-practice-domain"
  *
@@ -133,9 +135,8 @@ export declare namespace JournalCitation {
   /**
    * Wire-encoded representation of a decoded {@link JournalCitation}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { JournalCitation } from "@beep/law-practice-domain"
    *

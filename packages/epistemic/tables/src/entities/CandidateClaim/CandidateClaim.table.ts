@@ -11,7 +11,8 @@ import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim";
 /**
  * PGLite/Postgres Drizzle table for the epistemic CandidateClaim entity.
  *
- * @example
+ * **Example** (Log table definition name)
+ *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-tables/entities"
  *

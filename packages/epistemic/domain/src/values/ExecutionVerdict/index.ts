@@ -8,13 +8,14 @@
 /**
  * Execution verdict model exports.
  *
- * @example
+ * **Example** (Import DenialReason enum value)
+ *
  * ```ts
  * import { DenialReason } from "@beep/epistemic-domain/values/ExecutionVerdict"
  *
  * console.log(DenialReason.Enum["grant-expired"])
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */

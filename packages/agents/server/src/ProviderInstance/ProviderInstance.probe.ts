@@ -37,12 +37,16 @@ const toDomainSnapshot = Effect.fn("Agents.ProviderProbe.toDomainSnapshot")(func
   );
 });
 
-/** Build the ProviderProbe adapter from the live driver service.
- * @example
+/**
+ *  Build the ProviderProbe adapter from the live driver service.
+ *
+ * **Example** (Import and log probe)
+ *
  * ```ts
  * import { makeProviderProbe } from "@beep/agents-server/ProviderInstance"
  * console.log(makeProviderProbe)
  * ```
+ *
  * @category ports
  * @since 0.0.0
  */

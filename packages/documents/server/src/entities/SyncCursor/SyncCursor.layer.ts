@@ -13,7 +13,8 @@ import { makeDrizzleSyncCursorRepository, makeInMemorySyncCursorRepository } fro
 /**
  * In-memory SyncCursor repository layer for deterministic sync tests.
  *
- * @example
+ * **Example** (Import in-memory repository layer)
+ *
  * ```ts
  * import { SyncCursorRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncCursor"
  *
@@ -28,7 +29,8 @@ export const SyncCursorRepositoryInMemoryLayer = Layer.effect(SyncCursorReposito
 /**
  * Drizzle-backed SyncCursor repository layer; requires `PostgresDrizzle`.
  *
- * @example
+ * **Example** (Import Drizzle repository layer)
+ *
  * ```ts
  * import { SyncCursorRepositoryDrizzleLayer } from "@beep/documents-server/entities/SyncCursor"
  *

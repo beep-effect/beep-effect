@@ -23,7 +23,8 @@ import type { ToastData } from "@beep/ui/components/toast";
 /**
  * Renders the live toasts from the toast manager.
  *
- * @example
+ * **Example** (Import ToastPrimitive)
+ *
  * ```tsx
  * import { ToastPrimitive } from "@beep/ui/components/toaster"
  *
@@ -69,7 +70,8 @@ function ToasterViewport() {
 /**
  * Toaster component.
  *
- * @example
+ * **Example** (Import Toaster component)
+ *
  * ```tsx
  * import { Toaster } from "@beep/ui/components/toaster"
  *
@@ -90,7 +92,8 @@ export function Toaster() {
 /**
  * Toast primitive namespace re-export.
  *
- * @example
+ * **Example** (Import ToastPrimitive namespace)
+ *
  * ```tsx
  * import { ToastPrimitive } from "@beep/ui/components/toaster"
  *

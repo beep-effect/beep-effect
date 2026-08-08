@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for X-Content-Type-Options schemas.
  *
- * @example
+ * **Example** (Verify Header export exists)
+ *
  * ```ts
  * import * as NoSniff from "@beep/schema/NoSniff"
  *

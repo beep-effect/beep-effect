@@ -8,7 +8,8 @@
 /**
  * Package version for `@beep/xai`.
  *
- * @example
+ * **Example** (Build package coordinate)
+ *
  * ```ts
  * import { VERSION } from "@beep/xai"
  *
@@ -24,7 +25,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * Runtime configuration exports for the xAI driver.
  *
- * @example
+ * **Example** (Make empty config)
+ *
  * ```ts
  * import { XAiConfigInput } from "@beep/xai"
  *
@@ -39,7 +41,8 @@ export * from "./XAi.config.ts";
 /**
  * Error exports for the xAI driver.
  *
- * @example
+ * **Example** (Create config error)
+ *
  * ```ts
  * import { XAiError } from "@beep/xai"
  *
@@ -54,7 +57,8 @@ export * from "./XAi.errors.ts";
 /**
  * Model exports for the xAI driver.
  *
- * @example
+ * **Example** (Make request options)
+ *
  * ```ts
  * import { XAiRequestOptions } from "@beep/xai"
  *
@@ -69,7 +73,8 @@ export * from "./XAi.models.ts";
 /**
  * Service exports for the xAI driver.
  *
- * @example
+ * **Example** (Access service layer)
+ *
  * ```ts
  * import { XAi } from "@beep/xai"
  *
@@ -84,7 +89,8 @@ export * from "./XAi.service.ts";
 /**
  * Endpoint manifest exports for the xAI driver.
  *
- * @example
+ * **Example** (Log endpoints length)
+ *
  * ```ts
  * import { XAI_ENDPOINTS } from "@beep/xai"
  *
@@ -98,7 +104,8 @@ export * from "./XAiEndpoints.models.ts";
 /**
  * Effect AI language-model adapter exports for xAI chat completions.
  *
- * @example
+ * **Example** (Create grok-3 model)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  *

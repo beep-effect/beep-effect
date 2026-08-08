@@ -25,12 +25,15 @@ const ClaimLifecycleTransitionReason = S.NonEmptyString.pipe(
 /**
  * Lifecycle vocabulary for claims.
  *
+ * **Details**
+ *
  * The four states form a linear admission pipeline: a claim starts as a
  * `candidate`, becomes `shape_valid` once it passes structural validation,
  * `consistency_checked` after cross-checking, and `admitted` once accepted into
  * the authoritative store. `ClaimLifecycle.Options` is the canonical forward order.
  *
- * @example
+ * **Example** (Check state and enum)
+ *
  * ```ts
  * import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle"
  *
@@ -55,7 +58,8 @@ export const ClaimLifecycle = ClaimLifecycleBase.pipe(
 /**
  * Runtime type for {@link ClaimLifecycle}.
  *
- * @example
+ * **Example** (Type a lifecycle value)
+ *
  * ```ts
  * import type { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle"
  *
@@ -75,7 +79,8 @@ export type ClaimLifecycle = typeof ClaimLifecycle.Type;
  * one. Legality of a transition is enforced by the owning slice's transition
  * service.
  *
- * @example
+ * **Example** (Make a transition record)
+ *
  * ```ts
  * import { ClaimLifecycleTransition } from "@beep/shared-domain/values/ClaimLifecycle"
  *

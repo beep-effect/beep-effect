@@ -1,12 +1,14 @@
 /**
  * Federal Register driver package boundary.
  *
- * @remarks
+ * **Details**
+ *
  * The current public surface exposes package metadata only. Federal Register
  * API schemas, endpoint clients, and service layers should be documented on
  * their owning modules before they are re-exported here.
  *
- * @example
+ * **Example** (Log package version label)
+ *
  * ```ts
  * import { VERSION } from "@beep/federal-register"
  *
@@ -21,12 +23,14 @@
 /**
  * Package version for the Federal Register driver package.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the package release marker, not a Federal Register API version,
  * publication date, document number, or edition identifier. Model upstream
  * Federal Register versioning separately when endpoint modules are added.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/federal-register"
  *

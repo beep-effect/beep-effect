@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/AiTextGen/AiTextGen.model
 /**
  * Experimental schema anchor for Box AI text generation response resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { AiTextGen } from "@beep/box/experimental/domain/entities/AiTextGen/AiTextGen.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class AiTextGen extends S.Class<AiTextGen>($I`AiTextGen`)(
 /**
  * Type-level companion namespace for {@link AiTextGen} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { AiTextGen } from "@beep/box/experimental/domain/entities/AiTextGen/AiTextGen.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace AiTextGen {
   /**
    * Encoded payload accepted by the {@link AiTextGen} entity schema.
    *
-   * @example
+   * **Example** (Encode made empty payload)
+   *
    * ```ts
    * import { AiTextGen } from "@beep/box/experimental/domain/entities/AiTextGen/AiTextGen.model";
    * import * as S from "effect/Schema";

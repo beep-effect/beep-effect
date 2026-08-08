@@ -13,7 +13,8 @@ import type { EntityPatternElement, LiteralPatternElement, PatternElement, POSPa
 /**
  * Check whether an element is a POS element.
  *
- * @example
+ * **Example** (True for POS element)
+ *
  * ```ts
  * import { pos } from "@beep/nlp/Core/PatternBuilders"
  * import { isPOSElement } from "@beep/nlp/Core/PatternOperations"
@@ -21,15 +22,16 @@ import type { EntityPatternElement, LiteralPatternElement, PatternElement, POSPa
  * console.log(isPOSElement(pos("NOUN"))) // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isPOSElement: (element: PatternElement) => element is POSPatternElement = Pattern.POS.is;
 
 /**
  * Check whether an element is an entity element.
  *
- * @example
+ * **Example** (True for entity element)
+ *
  * ```ts
  * import { entity } from "@beep/nlp/Core/PatternBuilders"
  * import { isEntityElement } from "@beep/nlp/Core/PatternOperations"
@@ -37,15 +39,16 @@ export const isPOSElement: (element: PatternElement) => element is POSPatternEle
  * console.log(isEntityElement(entity("EMAIL"))) // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isEntityElement: (element: PatternElement) => element is EntityPatternElement = Pattern.Entity.is;
 
 /**
  * Check whether an element is a literal element.
  *
- * @example
+ * **Example** (True for literal element)
+ *
  * ```ts
  * import { literal } from "@beep/nlp/Core/PatternBuilders"
  * import { isLiteralElement } from "@beep/nlp/Core/PatternOperations"
@@ -53,15 +56,16 @@ export const isEntityElement: (element: PatternElement) => element is EntityPatt
  * console.log(isLiteralElement(literal("Effect"))) // true
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isLiteralElement: (element: PatternElement) => element is LiteralPatternElement = Pattern.Literal.is;
 
 /**
  * Extract element values as a readonly array.
  *
- * @example
+ * **Example** (Optional literal value array)
+ *
  * ```ts
  * import { optionalLiteral } from "@beep/nlp/Core/PatternBuilders"
  * import { extractElementValues } from "@beep/nlp/Core/PatternOperations"
@@ -69,15 +73,16 @@ export const isLiteralElement: (element: PatternElement) => element is LiteralPa
  * console.log(extractElementValues(optionalLiteral("Inc."))) // ["", "Inc."]
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const extractElementValues = (element: PatternElement): ReadonlyArray<string> => element.value;
 
 /**
  * Create a bracket-string content slice if the input is bracketed.
  *
- * @example
+ * **Example** (Slice bracketed string content)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { extractBracketContent } from "@beep/nlp/Core/PatternOperations"
@@ -85,8 +90,8 @@ export const extractElementValues = (element: PatternElement): ReadonlyArray<str
  * console.log(O.getOrThrow(extractBracketContent("[ADJ|NOUN]"))) // "ADJ|NOUN"
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const extractBracketContent = (value: string): O.Option<string> =>
   Str.startsWith("[")(value) && Str.endsWith("]")(value) ? O.some(Str.slice(1, -1)(value)) : O.none();
@@ -94,29 +99,31 @@ export const extractBracketContent = (value: string): O.Option<string> =>
 /**
  * Split bracket content into trimmed segments.
  *
- * @example
+ * **Example** (Split trimmed bracket segments)
+ *
  * ```ts
  * import { splitBracketValues } from "@beep/nlp/Core/PatternOperations"
  *
  * console.log(splitBracketValues("ADJ | NOUN")) // ["ADJ", "NOUN"]
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const splitBracketValues = (content: string): ReadonlyArray<string> => A.map(Str.split(content, "|"), Str.trim);
 
 /**
  * Join values into bracket-string form.
  *
- * @example
+ * **Example** (Join values as brackets)
+ *
  * ```ts
  * import { joinBracketValues } from "@beep/nlp/Core/PatternOperations"
  *
  * console.log(joinBracketValues(["ADJ", "NOUN"])) // "[ADJ|NOUN]"
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const joinBracketValues = (values: ReadonlyArray<string>): string => `[${A.join(values, "|")}]`;

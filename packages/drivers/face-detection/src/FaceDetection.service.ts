@@ -168,7 +168,8 @@ type OrtTensor = import("onnxruntime-node").Tensor;
 /**
  * Loaded face detector bound to one model session.
  *
- * @example
+ * **Example** (Mock detector detect call)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { FaceDetectionImageRequest, FaceDetectionResult } from "@beep/face-detection"
@@ -209,7 +210,8 @@ export interface LoadedFaceDetector {
 /**
  * Runtime shape exposed by the {@link FaceDetectionService}.
  *
- * @example
+ * **Example** (Service shape withDetector usage)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { FaceDetectionImageRequest, FaceDetectionModelConfig, FaceDetectionResult } from "@beep/face-detection"
@@ -259,7 +261,8 @@ export interface FaceDetectionServiceShape {
 /**
  * Service tag for ONNX face detection.
  *
- * @example
+ * **Example** (Provide and inject service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -313,7 +316,8 @@ export class FaceDetectionService extends Context.Service<FaceDetectionService, 
   /**
    * Live ONNX Runtime service layer.
    *
-   * @example
+   * **Example** (Create live service layer)
+   *
    * ```ts
    * import { Layer } from "effect"
    * import { FaceDetectionService } from "@beep/face-detection"
@@ -797,11 +801,13 @@ const makeLoadedDetector = (ort: Ort, session: OrtSession): LoadedFaceDetector =
 /**
  * Construct the live ONNX Runtime service implementation.
  *
- * @remarks
+ * **Details**
+ *
  * Construction is pure; ONNX Runtime is imported and the model session is
  * opened only when the returned service's `withDetector` method is executed.
  *
- * @example
+ * **Example** (Construct live service)
+ *
  * ```ts
  * import { makeFaceDetectionService } from "@beep/face-detection/FaceDetection.service"
  *
@@ -835,7 +841,8 @@ export const makeFaceDetectionService = (): FaceDetectionServiceShape =>
 /**
  * Run a workflow with a loaded face detector.
  *
- * @example
+ * **Example** (withDetector effect helper)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -881,7 +888,6 @@ export const makeFaceDetectionService = (): FaceDetectionServiceShape =>
  * @effects Requires {@link FaceDetectionService} in context. With the live
  * service, each invocation validates the model config, opens an ONNX Runtime
  * session for the callback, and releases the session after the callback exits.
- *
  * @category use-cases
  * @since 0.0.0
  */

@@ -14,6 +14,8 @@ import * as S from "effect/Schema";
  * Decodes an optional object key whose value may also be `null` or `undefined`
  * into a required `Option`.
  *
+ * **Details**
+ *
  * This helper is a repository-named wrapper around
  * {@link S.OptionFromOptionalNullOr}. It is intended for object and class
  * fields where the boundary allows all common "missing" shapes:
@@ -31,12 +33,12 @@ import * as S from "effect/Schema";
  * - `null`: encode `None` as `null`
  * - `undefined`: encode `None` as `undefined`
  *
- * @remarks
  * Use this when an object boundary treats an omitted key, `undefined`, and
  * `null` as the same absence case but the decoded domain model should always
  * carry an explicit `Option`.
  *
- * @example
+ * **Example** (Decode optional nullish key)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -57,7 +59,8 @@ import * as S from "effect/Schema";
  * console.log(O.getOrUndefined(present.nickname)) // "beep"
  * ```
  *
- * @example
+ * **Example** (Encode None as null)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

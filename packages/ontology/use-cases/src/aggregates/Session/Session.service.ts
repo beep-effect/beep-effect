@@ -83,7 +83,8 @@ interface SessionUseCasesShape {
 /**
  * Build the ontology session use-case implementation from ports.
  *
- * @example
+ * **Example** (Build session use cases)
+ *
  * ```ts
  * import { makeSessionUseCases } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -92,8 +93,8 @@ interface SessionUseCasesShape {
  * console.log(useCases)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(function* () {
   const fileStore = yield* OntologyFileStore;
@@ -148,7 +149,8 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
 /**
  * Ontology session use-case service tag.
  *
- * @example
+ * **Example** (Yield SessionUseCases service)
+ *
  * ```ts
  * import { SessionUseCases } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -161,22 +163,23 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class SessionUseCases extends Context.Service<SessionUseCases, SessionUseCasesShape>()($I`SessionUseCases`) {}
 
 /**
  * Layer for ontology session use cases.
  *
- * @example
+ * **Example** (Log SessionUseCasesLayer)
+ *
  * ```ts
  * import { SessionUseCasesLayer } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(SessionUseCasesLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const SessionUseCasesLayer = Layer.effect(SessionUseCases, makeSessionUseCases());

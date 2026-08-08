@@ -18,12 +18,15 @@ const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.mo
  * Persisted provider CLI instance: a labeled binary + HOME/env configuration
  * for one vendor CLI, plus the latest auth-probe snapshot.
  *
+ * **Details**
+ *
  * Invariant: no token-bearing fields. The vendor CLI owns login, token
  * storage, and refresh; beep persists only instance metadata and the tagged
  * {@link AuthSnapshot} — never access tokens, refresh tokens, OAuth codes, or
  * raw CLI output.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain"
  *

@@ -11,7 +11,8 @@ import { Turn } from "@beep/workspace-domain/entities/Turn";
 /**
  * PGLite/Postgres Drizzle table for the workspace Turn entity.
  *
- * @example
+ * **Example** (Table name and storage)
+ *
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *

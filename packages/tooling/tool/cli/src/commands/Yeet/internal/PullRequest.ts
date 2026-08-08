@@ -48,10 +48,8 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
 /**
  * Read the current branch pull request through `gh pr view`.
  *
- * @param context - Repo context whose root is used as the GitHub CLI working
- * directory.
- * @returns Decoded pull request metadata for the current branch.
- * @example
+ * **Example** (Map current branch PR number)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, runGhPullRequestView } from "@beep/repo-cli/test/Yeet"
@@ -69,6 +67,10 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
  *
  * const prNumber = runGhPullRequestView(context).pipe(Effect.map((view) => view.number))
  * ```
+ *
+ * @param context - Repo context whose root is used as the GitHub CLI working
+ * directory.
+ * @returns Decoded pull request metadata for the current branch.
  * @category clients
  * @since 0.0.0
  */
@@ -90,10 +92,8 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 /**
  * Return the open pull request for the current branch when one exists.
  *
- * @param context - Repo context whose branch must match the PR head ref.
- * @returns `Some` open pull request metadata for the current branch, otherwise
- * `None`.
- * @example
+ * **Example** (Check open PR option tag)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { findOpenPullRequest, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -111,6 +111,10 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
  *
  * const maybePr = findOpenPullRequest(context).pipe(Effect.map((view) => view._tag))
  * ```
+ *
+ * @param context - Repo context whose branch must match the PR head ref.
+ * @returns `Some` open pull request metadata for the current branch, otherwise
+ * `None`.
  * @category clients
  * @since 0.0.0
  */
@@ -143,12 +147,8 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 /**
  * Build the PR body from commit log text and recorded local proof lanes.
  *
- * @param context - Repo context used to compute the commit range and verdict
- * artifact path.
- * @param recorder - Ref containing proof lanes already executed before PR
- * creation.
- * @returns Markdown body text for `gh pr create`.
- * @example
+ * **Example** (Build body with recorder)
+ *
  * ```ts
  * import { Effect, Ref } from "effect"
  * import { buildPrBody, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -169,6 +169,12 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
  *   return yield* buildPrBody(context, recorder)
  * })
  * ```
+ *
+ * @param context - Repo context used to compute the commit range and verdict
+ * artifact path.
+ * @param recorder - Ref containing proof lanes already executed before PR
+ * creation.
+ * @returns Markdown body text for `gh pr create`.
  * @category formatting
  * @since 0.0.0
  */
@@ -197,11 +203,8 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
 /**
  * Record a successful `gh pr create` lane in the Yeet execution recorder.
  *
- * @param recorder - Mutable Ref of executed Yeet lanes.
- * @param prStep - Optional planned PR creation step to append.
- * @param output - GitHub CLI output, usually the created PR URL.
- * @returns An Effect that updates the recorder when `prStep` is present.
- * @example
+ * **Example** (Record successful PR create)
+ *
  * ```ts
  * import { Effect, Ref } from "effect"
  * import * as O from "effect/Option"
@@ -225,6 +228,11 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
  *   return (yield* Ref.get(recorder)).length
  * })
  * ```
+ *
+ * @param recorder - Mutable Ref of executed Yeet lanes.
+ * @param prStep - Optional planned PR creation step to append.
+ * @param output - GitHub CLI output, usually the created PR URL.
+ * @returns An Effect that updates the recorder when `prStep` is present.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -255,13 +263,8 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
 /**
  * Create a pull request for publish when one does not already exist.
  *
- * @param context - Repo context whose branch is published.
- * @param recorder - Execution recorder updated when PR creation is attempted
- * or skipped.
- * @param prStep - Optional planned PR creation lane for recorder metadata.
- * @returns An Effect that completes after an existing PR is found or a new PR
- * is created.
- * @example
+ * **Example** (Ensure PR when missing)
+ *
  * ```ts
  * import { Effect, Ref } from "effect"
  * import * as O from "effect/Option"
@@ -284,6 +287,13 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
  *   return "pull request ensured"
  * })
  * ```
+ *
+ * @param context - Repo context whose branch is published.
+ * @param recorder - Execution recorder updated when PR creation is attempted
+ * or skipped.
+ * @param prStep - Optional planned PR creation lane for recorder metadata.
+ * @returns An Effect that completes after an existing PR is found or a new PR
+ * is created.
  * @category workflows
  * @since 0.0.0
  */
@@ -327,10 +337,8 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
 /**
  * Ensure the current branch has an open PR whose head matches the branch.
  *
- * @param context - Repo context carrying the branch that monitor expects.
- * @returns An Effect that completes when `gh pr view` reports an open matching
- * pull request.
- * @example
+ * **Example** (Validate matching open PR)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, validateOpenPullRequest } from "@beep/repo-cli/test/Yeet"
@@ -348,6 +356,10 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
  *
  * const valid = validateOpenPullRequest(context).pipe(Effect.as("open PR matches branch"))
  * ```
+ *
+ * @param context - Repo context carrying the branch that monitor expects.
+ * @returns An Effect that completes when `gh pr view` reports an open matching
+ * pull request.
  * @category validation
  * @since 0.0.0
  */

@@ -28,7 +28,8 @@ const UtcIsoTimestamp = S.NonEmptyString.check(
 /**
  * Normalized email artifact imported into a workspace thread.
  *
- * @example
+ * **Example** (Log resource name)
+ *
  * ```ts
  * import { EmailArtifact } from "@beep/workspace-domain"
  *

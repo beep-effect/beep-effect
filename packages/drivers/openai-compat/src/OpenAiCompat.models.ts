@@ -21,7 +21,8 @@ const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unkno
 /**
  * OpenAI-compatible sampling temperature.
  *
- * @example
+ * **Example** (Making a temperature value)
+ *
  * ```ts
  * import { OpenAiCompatTemperature } from "@beep/openai-compat"
  *
@@ -42,7 +43,8 @@ export const OpenAiCompatTemperature = S.Finite.check(S.isBetween({ minimum: 0, 
 /**
  * OpenAI-compatible sampling temperature.
  *
- * @example
+ * **Example** (Typing a temperature value)
+ *
  * ```ts
  * import type { OpenAiCompatTemperature } from "@beep/openai-compat"
  *
@@ -59,7 +61,8 @@ export type OpenAiCompatTemperature = typeof OpenAiCompatTemperature.Type;
 /**
  * OpenAI-compatible frequency or presence penalty.
  *
- * @example
+ * **Example** (Making a penalty value)
+ *
  * ```ts
  * import { OpenAiCompatPenalty } from "@beep/openai-compat"
  *
@@ -80,7 +83,8 @@ export const OpenAiCompatPenalty = S.Finite.check(S.isBetween({ minimum: -2, max
 /**
  * OpenAI-compatible frequency or presence penalty.
  *
- * @example
+ * **Example** (Typing a penalty value)
+ *
  * ```ts
  * import type { OpenAiCompatPenalty } from "@beep/openai-compat"
  *
@@ -97,7 +101,8 @@ export type OpenAiCompatPenalty = typeof OpenAiCompatPenalty.Type;
 /**
  * Chat roles accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Checking a user role)
+ *
  * ```ts
  * import { OpenAiCompatChatRole } from "@beep/openai-compat"
  *
@@ -118,7 +123,8 @@ export const OpenAiCompatChatRole = LiteralKit(["system", "user", "assistant", "
 /**
  * Chat roles accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Typing an assistant role)
+ *
  * ```ts
  * import type { OpenAiCompatChatRole } from "@beep/openai-compat"
  *
@@ -135,7 +141,8 @@ export type OpenAiCompatChatRole = typeof OpenAiCompatChatRole.Type;
 /**
  * Finish reasons emitted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Checking a stop reason)
+ *
  * ```ts
  * import { OpenAiCompatFinishReason } from "@beep/openai-compat"
  *
@@ -162,7 +169,8 @@ export const OpenAiCompatFinishReason = LiteralKit([
 /**
  * Finish reasons emitted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Typing a tool_calls reason)
+ *
  * ```ts
  * import type { OpenAiCompatFinishReason } from "@beep/openai-compat"
  *
@@ -179,7 +187,8 @@ export type OpenAiCompatFinishReason = typeof OpenAiCompatFinishReason.Type;
 /**
  * Function payload inside an OpenAI-compatible tool call.
  *
- * @example
+ * **Example** (Making a tool-call function)
+ *
  * ```ts
  * import { OpenAiCompatToolCallFunction } from "@beep/openai-compat"
  *
@@ -209,7 +218,8 @@ export class OpenAiCompatToolCallFunction extends S.Class<OpenAiCompatToolCallFu
 /**
  * Tool call payload emitted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a tool call)
+ *
  * ```ts
  * import { OpenAiCompatToolCall } from "@beep/openai-compat"
  *
@@ -244,7 +254,8 @@ export class OpenAiCompatToolCall extends S.Class<OpenAiCompatToolCall>($I`OpenA
 /**
  * Incremental function payload inside an OpenAI-compatible streaming tool-call delta.
  *
- * @example
+ * **Example** (Making a function delta)
+ *
  * ```ts
  * import { OpenAiCompatToolCallFunctionDelta } from "@beep/openai-compat"
  *
@@ -277,7 +288,8 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Class<OpenAiCompatToolC
 /**
  * Incremental tool-call payload emitted by OpenAI-compatible chat completion streams.
  *
- * @example
+ * **Example** (Making a tool-call delta)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatToolCallDelta } from "@beep/openai-compat"
@@ -314,7 +326,8 @@ export class OpenAiCompatToolCallDelta extends S.Class<OpenAiCompatToolCallDelta
 /**
  * Function details sent to OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a function definition)
+ *
  * ```ts
  * import { OpenAiCompatFunctionToolDefinition } from "@beep/openai-compat"
  *
@@ -352,7 +365,8 @@ export class OpenAiCompatFunctionToolDefinition extends S.Class<OpenAiCompatFunc
 /**
  * Function declaration sent to OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a function tool)
+ *
  * ```ts
  * import { OpenAiCompatFunctionTool } from "@beep/openai-compat"
  *
@@ -388,7 +402,8 @@ const OpenAiCompatChatContent = S.Union([S.String, S.Array(S.Record(S.String, S.
 /**
  * System chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a system message)
+ *
  * ```ts
  * import { OpenAiCompatSystemChatMessage } from "@beep/openai-compat"
  *
@@ -421,7 +436,8 @@ export class OpenAiCompatSystemChatMessage extends S.Class<OpenAiCompatSystemCha
 /**
  * User chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a user message)
+ *
  * ```ts
  * import { OpenAiCompatUserChatMessage } from "@beep/openai-compat"
  *
@@ -452,7 +468,8 @@ export class OpenAiCompatUserChatMessage extends S.Class<OpenAiCompatUserChatMes
 /**
  * Assistant chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making an assistant message)
+ *
  * ```ts
  * import { OpenAiCompatAssistantChatMessage } from "@beep/openai-compat"
  *
@@ -490,7 +507,8 @@ export class OpenAiCompatAssistantChatMessage extends S.Class<OpenAiCompatAssist
 /**
  * Tool chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a tool message)
+ *
  * ```ts
  * import { OpenAiCompatToolChatMessage } from "@beep/openai-compat"
  *
@@ -525,7 +543,8 @@ export class OpenAiCompatToolChatMessage extends S.Class<OpenAiCompatToolChatMes
 /**
  * Chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Typing a user chat message)
+ *
  * ```ts
  * import type { OpenAiCompatChatMessage } from "@beep/openai-compat"
  *
@@ -558,7 +577,8 @@ export const OpenAiCompatChatMessage = OpenAiCompatChatRole.mapMembers(
 /**
  * Chat message accepted by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Typing a user chat message)
+ *
  * ```ts
  * import type { OpenAiCompatChatMessage } from "@beep/openai-compat"
  *
@@ -578,7 +598,8 @@ export type OpenAiCompatChatMessage = typeof OpenAiCompatChatMessage.Type;
 /**
  * JSON schema response-format details for chat completion requests.
  *
- * @example
+ * **Example** (Making a JSON schema definition)
+ *
  * ```ts
  * import { OpenAiCompatJsonSchemaDefinition } from "@beep/openai-compat"
  *
@@ -617,7 +638,8 @@ export class OpenAiCompatJsonSchemaDefinition extends S.Class<OpenAiCompatJsonSc
 /**
  * Structured response format configuration for chat completion requests.
  *
- * @example
+ * **Example** (Making a JSON schema format)
+ *
  * ```ts
  * import { OpenAiCompatJsonSchemaResponseFormat } from "@beep/openai-compat"
  *
@@ -649,7 +671,8 @@ export class OpenAiCompatJsonSchemaResponseFormat extends S.Class<OpenAiCompatJs
 /**
  * Response format discriminator accepted by OpenAI-compatible chat completion requests.
  *
- * @example
+ * **Example** (Checking a json_schema kind)
+ *
  * ```ts
  * import { OpenAiCompatResponseFormatKind } from "@beep/openai-compat"
  *
@@ -670,7 +693,8 @@ export const OpenAiCompatResponseFormatKind = LiteralKit(["text", "json_object",
 /**
  * Type for {@link OpenAiCompatResponseFormatKind}.
  *
- * @example
+ * **Example** (Typing a json_object kind)
+ *
  * ```ts
  * import type { OpenAiCompatResponseFormatKind } from "@beep/openai-compat"
  *
@@ -687,7 +711,8 @@ export type OpenAiCompatResponseFormatKind = typeof OpenAiCompatResponseFormatKi
 /**
  * Text response format configuration.
  *
- * @example
+ * **Example** (Making a text response format)
+ *
  * ```ts
  * import { OpenAiCompatTextResponseFormat } from "@beep/openai-compat"
  *
@@ -713,7 +738,8 @@ export class OpenAiCompatTextResponseFormat extends S.Class<OpenAiCompatTextResp
 /**
  * JSON object response format configuration.
  *
- * @example
+ * **Example** (Making a JSON object format)
+ *
  * ```ts
  * import { OpenAiCompatJsonObjectResponseFormat } from "@beep/openai-compat"
  *
@@ -739,7 +765,8 @@ export class OpenAiCompatJsonObjectResponseFormat extends S.Class<OpenAiCompatJs
 /**
  * Response format configuration accepted by OpenAI-compatible chat completion requests.
  *
- * @example
+ * **Example** (Typing a JSON object format)
+ *
  * ```ts
  * import type { OpenAiCompatResponseFormat } from "@beep/openai-compat"
  *
@@ -768,7 +795,8 @@ export const OpenAiCompatResponseFormat = OpenAiCompatResponseFormatKind.mapMemb
 /**
  * Response format configuration accepted by OpenAI-compatible chat completion requests.
  *
- * @example
+ * **Example** (Typing a text response format)
+ *
  * ```ts
  * import type { OpenAiCompatResponseFormat } from "@beep/openai-compat"
  *
@@ -785,7 +813,8 @@ export type OpenAiCompatResponseFormat = typeof OpenAiCompatResponseFormat.Type;
 /**
  * Chat completion request sent to OpenAI-compatible providers.
  *
- * @example
+ * **Example** (Making a chat completion request)
+ *
  * ```ts
  * import { OpenAiCompatChatCompletionRequest, OpenAiCompatUserChatMessage } from "@beep/openai-compat"
  *
@@ -857,7 +886,8 @@ export class OpenAiCompatChatCompletionRequest extends S.Class<OpenAiCompatChatC
 /**
  * Assistant message returned by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making an assistant message)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { OpenAiCompatAssistantMessage } from "@beep/openai-compat"
@@ -895,7 +925,8 @@ export class OpenAiCompatAssistantMessage extends S.Class<OpenAiCompatAssistantM
 /**
  * Delta message returned by OpenAI-compatible chat completion streams.
  *
- * @example
+ * **Example** (Making an assistant delta)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { OpenAiCompatAssistantDelta } from "@beep/openai-compat"
@@ -933,7 +964,8 @@ export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDel
 /**
  * Token usage returned by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a usage payload)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -974,7 +1006,8 @@ export class OpenAiCompatUsage extends S.Class<OpenAiCompatUsage>($I`OpenAiCompa
 /**
  * Chat completion choice returned by OpenAI-compatible endpoints.
  *
- * @example
+ * **Example** (Making a completion choice)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -1014,7 +1047,8 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
 /**
  * Chat completion response returned by OpenAI-compatible endpoints.
  *
- * @example
+ * **Example** (Making a completion response)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -1063,7 +1097,8 @@ export class OpenAiCompatChatCompletionResponse extends S.Class<OpenAiCompatChat
 /**
  * Stream chunk choice returned by OpenAI-compatible endpoints.
  *
- * @example
+ * **Example** (Making a stream chunk choice)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -1102,7 +1137,8 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
 /**
  * Stream chunk returned by OpenAI-compatible chat completion endpoints.
  *
- * @example
+ * **Example** (Making a stream chunk)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NonNegativeInt } from "@beep/schema/Number"
@@ -1150,7 +1186,8 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
 /**
  * Decodes an unknown value into an OpenAI-compatible chat completion response.
  *
- * @example
+ * **Example** (Decoding a completion response)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeChatCompletionResponse } from "@beep/openai-compat"
@@ -1168,7 +1205,8 @@ export const decodeChatCompletionResponse = OpenAiCompatChatCompletionResponse.d
 /**
  * Decodes an unknown value into an OpenAI-compatible chat completion stream chunk.
  *
- * @example
+ * **Example** (Decoding a stream chunk)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeChatCompletionChunk } from "@beep/openai-compat"

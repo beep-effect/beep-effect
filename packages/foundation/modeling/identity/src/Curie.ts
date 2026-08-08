@@ -24,7 +24,7 @@ const $I = $IdentityId.create("Curie");
 // unresolved branch is type-level unreachable. Modeled as a TaggedErrorClass
 // (not a native Error) to satisfy the native-runtime law without an allowlist
 // entry; intentionally not exported (never a caught public failure).
-class CurieCodecInvariantError extends S.TaggedErrorClass<CurieCodecInvariantError>(
+class CurieCodecInvariantError extends S.TaggedError<CurieCodecInvariantError>(
   "@beep/identity/errors/CurieCodecInvariantError"
 )(
   "CurieCodecInvariantError",
@@ -82,12 +82,15 @@ const expandOptionImpl = <const V extends VocabShape>(curie: string, vocab: V): 
 /**
  * Expand a possibly-unknown CURIE into its IRI.
  *
+ * **Details**
+ *
  * Returns `O.none()` when the CURIE's prefix is unregistered or its term
  * isn't declared for that prefix, instead of a null/undefined-typed return.
  * Use {@link expand} instead when the CURIE is statically known to be
  * registered (it preserves the exact IRI literal type).
  *
- * @example
+ * **Example** (Optional CURIE expansion results)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import * as O from "effect/Option"
@@ -131,12 +134,15 @@ const contractOptionImpl = <const V extends VocabShape>(iri: string, vocab: V): 
 /**
  * Contract a possibly-unknown IRI back to its registered CURIE.
  *
+ * **Details**
+ *
  * Returns `O.none()` when the IRI isn't registered under any vocabulary
  * entry, instead of a null/undefined-typed return. Use {@link contract}
  * instead when the IRI is statically known to be registered (it preserves
  * the exact CURIE literal type).
  *
- * @example
+ * **Example** (Optional IRI contraction results)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import * as O from "effect/Option"
@@ -221,7 +227,8 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
 /**
  * Expand a known CURIE into its exact IRI literal.
  *
- * @example
+ * **Example** (Expand known CURIE to IRI)
+ *
  * ```ts
  * import { expand } from "@beep/identity"
  *
@@ -246,7 +253,8 @@ export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
 /**
  * Contract a registered IRI back to its CURIE literal.
  *
- * @example
+ * **Example** (Contract IRI to CURIE literal)
+ *
  * ```ts
  * import { contract } from "@beep/identity"
  *
@@ -276,7 +284,8 @@ export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
 /**
  * Expand a forward or inverse predicate CURIE into IRI plus direction.
  *
- * @example
+ * **Example** (Expand inverse predicate CURIE)
+ *
  * ```ts
  * import { expandPredicate } from "@beep/identity"
  *
@@ -313,7 +322,8 @@ export function expandPredicate(predicate: string, vocab: VocabShape = CoreVocab
 /**
  * Build literal-preserving CURIE encode/decode helpers for a registry.
  *
- * @example
+ * **Example** (Build codec from vocabulary)
+ *
  * ```ts
  * import { CoreVocab, makeCurieCodec } from "@beep/identity"
  *
@@ -332,7 +342,8 @@ export const makeCurieCodec = <const V extends VocabShape>(vocab: V) => ({
 /**
  * Literal-preserving CURIE helper pair for {@link CoreVocab}.
  *
- * @example
+ * **Example** (Decode CoreVocab CURIE)
+ *
  * ```ts
  * import { CoreCurieCodec } from "@beep/identity"
  *
@@ -348,7 +359,8 @@ export const CoreCurieCodec = makeCurieCodec(CoreVocab);
 /**
  * Build an Effect Schema codec that decodes CURIEs to IRIs and encodes IRIs to CURIEs.
  *
- * @example
+ * **Example** (Build Schema CURIE codec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CoreVocab, makeCurieFromIri } from "@beep/identity"
@@ -371,7 +383,8 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
 /**
  * Core vocabulary CURIE-to-IRI Effect Schema codec.
  *
- * @example
+ * **Example** (Decode with CurieFromIri schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurieFromIri } from "@beep/identity"
@@ -392,15 +405,6 @@ export const CurieFromIri = CoreCurieSchema.pipe(
 
 /**
  * {@inheritDoc CurieFromIri}
- *
- * @example
- * ```ts
- * import type { CurieFromIri } from "@beep/identity"
- *
- * const iri: CurieFromIri = "http://www.w3.org/2004/02/skos/core#prefLabel"
- * console.log(iri)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

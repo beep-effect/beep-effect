@@ -9,7 +9,8 @@
  * Empty public SyncOperation namespace placeholder; the repository port is
  * server-only and exported from `@beep/documents-use-cases/entities/SyncOperation/server`.
  *
- * @example
+ * **Example** (Import SyncOperation namespace)
+ *
  * ```ts
  * import * as SyncOperation from "@beep/documents-use-cases/entities/SyncOperation"
  *

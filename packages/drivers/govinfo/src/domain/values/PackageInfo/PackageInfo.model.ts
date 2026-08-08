@@ -12,12 +12,14 @@ const $I = $GovinfoId.create("domain/values/PackageInfo/PackageInfo.model");
 /**
  * GovInfo package metadata returned by collection and published listings.
  *
- * @remarks
+ * **Details**
+ *
  * GovInfo packages group the content files and metadata needed to understand a
  * publication. `dateIssued` is the publication date, while `lastModified`
  * reflects when GovInfo added or updated the package.
  *
- * @example
+ * **Example** (Decode package metadata)
+ *
  * ```ts
  * import { PackageInfo } from "@beep/govinfo/domain/values/PackageInfo/PackageInfo.model";
  * import * as S from "effect/Schema";
@@ -77,7 +79,8 @@ export class PackageInfo extends S.Class<PackageInfo>($I`PackageInfo`)(
 /**
  * Companion namespace for {@link PackageInfo} encoded helpers.
  *
- * @example
+ * **Example** (Decode typed PackageInfo)
+ *
  * ```ts
  * import { PackageInfo } from "@beep/govinfo/domain/values/PackageInfo/PackageInfo.model";
  * import * as S from "effect/Schema";
@@ -101,7 +104,8 @@ export declare namespace PackageInfo {
   /**
    * Encoded JSON shape accepted by {@link PackageInfo}.
    *
-   * @example
+   * **Example** (Encode PackageInfo value)
+   *
    * ```ts
    * import { PackageInfo } from "@beep/govinfo/domain/values/PackageInfo/PackageInfo.model";
    * import * as S from "effect/Schema";

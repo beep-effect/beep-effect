@@ -11,7 +11,8 @@ import type * as Scope from "effect/Scope";
 /**
  * Queue-backed worker handle that can be drained before a scoped shutdown.
  *
- * @example
+ * **Example** (Define drainable worker shape)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { DrainableWorker } from "@beep/utils/DrainableWorker"
@@ -44,10 +45,13 @@ export interface DrainableWorker<A> {
 /**
  * Create a drainable worker that processes items from an unbounded queue.
  *
+ * **Details**
+ *
  * The worker is forked into the current scope and will be interrupted when
  * the scope closes. A finalizer shuts down the queue.
  *
- * @example
+ * **Example** (Process items with drainable worker)
+ *
  * ```ts
  * import { Effect, Ref } from "effect"
  * import { makeDrainableWorker } from "@beep/utils/DrainableWorker"

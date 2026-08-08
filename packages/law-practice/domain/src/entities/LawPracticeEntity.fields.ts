@@ -14,7 +14,8 @@ const $I = $LawPracticeDomainId.create("entities/LawPracticeEntity.fields");
 /**
  * Stable non-empty fixture key used to link law-practice proof entities.
  *
- * @example
+ * **Example** (Make fixture key from string)
+ *
  * ```ts
  * import { LawPracticeFixtureKey } from "@beep/law-practice-domain"
  *
@@ -34,7 +35,8 @@ export const LawPracticeFixtureKey = S.NonEmptyString.pipe(
 /**
  * Type-level string accepted by {@link LawPracticeFixtureKey}.
  *
- * @example
+ * **Example** (Annotate typed fixture key)
+ *
  * ```ts
  * import { LawPracticeFixtureKey, type LawPracticeFixtureKey as LawPracticeFixtureKeyType } from "@beep/law-practice-domain"
  *
@@ -50,7 +52,8 @@ export type LawPracticeFixtureKey = typeof LawPracticeFixtureKey.Type;
 /**
  * Non-empty legal text stored on law-practice proof entities.
  *
- * @example
+ * **Example** (Make non-empty legal text)
+ *
  * ```ts
  * import { LawPracticeText } from "@beep/law-practice-domain"
  *
@@ -70,7 +73,8 @@ export const LawPracticeText = S.NonEmptyString.pipe(
 /**
  * Type-level string accepted by {@link LawPracticeText}.
  *
- * @example
+ * **Example** (Annotate typed legal text)
+ *
  * ```ts
  * import { LawPracticeText, type LawPracticeText as LawPracticeTextType } from "@beep/law-practice-domain"
  *
@@ -86,7 +90,8 @@ export type LawPracticeText = typeof LawPracticeText.Type;
 /**
  * One-based patent claim number.
  *
- * @example
+ * **Example** (Make one-based claim number)
+ *
  * ```ts
  * import { ClaimNumber } from "@beep/law-practice-domain"
  *
@@ -111,7 +116,8 @@ export const ClaimNumber = NonNegativeInt.check(
 /**
  * Type-level number accepted by {@link ClaimNumber}.
  *
- * @example
+ * **Example** (Annotate typed claim number)
+ *
  * ```ts
  * import { ClaimNumber, type ClaimNumber as ClaimNumberType } from "@beep/law-practice-domain"
  *

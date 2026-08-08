@@ -9,9 +9,8 @@
 /**
  * StructuredDate model exports.
  *
- * **Example**
+ * **Example** (Import StructuredDate export)
  *
- * @example
  * ```ts
  * import { StructuredDate } from "@beep/law-practice-domain/values";
  * ```

@@ -44,7 +44,8 @@ const BoxErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the Box driver.
  *
- * @example
+ * **Example** (Check transport reason match)
+ *
  * ```ts
  * import { BoxErrorReason } from "@beep/box"
  *
@@ -65,7 +66,8 @@ export const BoxErrorReason = BoxErrorReasonBase.pipe(
 /**
  * Type for {@link BoxErrorReason}.
  *
- * @example
+ * **Example** (Assign reason type value)
+ *
  * ```ts
  * import type { BoxErrorReason } from "@beep/box"
  *
@@ -81,7 +83,8 @@ export type BoxErrorReason = typeof BoxErrorReason.Type;
 /**
  * Sanitized context copied from Box API failures.
  *
- * @example
+ * **Example** (Make failure context values)
+ *
  * ```ts
  * import { BoxApiFailureContext } from "@beep/box"
  *
@@ -137,7 +140,8 @@ const BoxHttpStatusCode = S.Int.check(
 /**
  * Options used when constructing Box driver errors.
  *
- * @example
+ * **Example** (Make options with method)
+ *
  * ```ts
  * import { BoxErrorOptions } from "@beep/box"
  * import * as O from "effect/Option"
@@ -184,7 +188,8 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
 /**
  * Technical failure raised by the Box driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { BoxError } from "@beep/box"
  *
@@ -215,7 +220,8 @@ export class BoxError extends TaggedErrorClass<BoxError>($I`BoxError`)(
   /**
    * Create a Box driver error from a redacted reason.
    *
-   * @example
+   * **Example** (Create error from config)
+   *
    * ```ts
    * import { BoxError } from "@beep/box"
    *
@@ -246,7 +252,8 @@ export class BoxError extends TaggedErrorClass<BoxError>($I`BoxError`)(
   /**
    * Convert an unknown SDK throw into a sanitized Box driver error.
    *
-   * @example
+   * **Example** (Sanitize unknown SDK throw)
+   *
    * ```ts
    * import { BoxError } from "@beep/box"
    * import * as O from "effect/Option"

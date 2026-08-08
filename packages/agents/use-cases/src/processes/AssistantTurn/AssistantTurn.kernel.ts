@@ -22,7 +22,8 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.kerne
 /**
  * Service shape of the assistant-turn generation kernel.
  *
- * @example
+ * **Example** (Minimal empty stream kernel)
+ *
  * ```ts
  * import type { AgentTurnKernelShape } from "@beep/agents-use-cases/public"
  * import { Stream } from "effect"
@@ -53,7 +54,8 @@ export interface AgentTurnKernelShape {
 /**
  * Assistant-turn generation kernel service tag.
  *
- * @example
+ * **Example** (Stream turn with fixture)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"

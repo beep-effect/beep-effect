@@ -79,17 +79,21 @@ export const video = _video;
  * Combined record of all MIME type definitions across every category
  * (application, audio, image, text, video, and miscellaneous).
  *
+ * **Details**
+ *
  * This is the raw merged data object that backs the `mimeTypes` typed record.
  *
- * @since 0.0.0
- * @category configuration
- * @example
+ * **Example** (Access CSS MIME definition)
+ *
  * ```typescript
  * import { mimes } from "@beep/data"
  *
  * mimes["text/css"]
  * // { source: "iana", charset: "UTF-8", extensions: ["css"] }
  * ```
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 export const mimes = {
   ...application,
@@ -103,16 +107,20 @@ export const mimes = {
 /**
  * Union of all known MIME type strings derived from the vendored mime-db data.
  *
+ * **Details**
+ *
  * Each member is a full MIME type string such as `"application/json"` or `"image/png"`.
  *
- * @since 0.0.0
- * @category models
- * @example
+ * **Example** (Assign JSON content type)
+ *
  * ```typescript
  * import type { MimeType } from "@beep/data"
  *
  * const contentType: MimeType = "application/json"
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type MimeType = keyof typeof mimes;
 
@@ -120,16 +128,20 @@ export type MimeType = keyof typeof mimes;
  * Union of all known file extension strings (without leading dot) derived
  * from the vendored mime-db data.
  *
+ * **Details**
+ *
  * Each member is a bare extension like `"json"`, `"html"`, or `"png"`.
  *
- * @since 0.0.0
- * @category models
- * @example
+ * **Example** (Assign JSON file extension)
+ *
  * ```typescript
  * import type { FileExtension } from "@beep/data"
  *
  * const ext: FileExtension = "json"
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
 
@@ -138,15 +150,17 @@ export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
  * file extensions. The source indicates where the MIME type definition
  * originated (`"iana"`, `"apache"`, or `"nginx"`).
  *
- * @since 0.0.0
- * @category configuration
- * @example
+ * **Example** (Read JSON MIME definition)
+ *
  * ```typescript
  * import { mimeTypes } from "@beep/data"
  *
  * const json = mimeTypes["application/json"]
  * // { source: "iana", extensions: ["json", "map"] }
  * ```
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 type MimeTypeDefinition = {
   source: MimeTypeSource;
@@ -211,12 +225,13 @@ function lookupNormalizedExtension(extension: string): false | MimeType {
  * preferred MIME type string. Preference is determined by source priority:
  * IANA, then unspecified, then Apache, then Nginx.
  *
+ * **Details**
+ *
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * @since 0.0.0
- * @category utilities
- * @example
+ * **Example** (Map extensions to MIME types)
+ *
  * ```typescript
  * import { getTypes } from "@beep/data"
  *
@@ -224,6 +239,9 @@ function lookupNormalizedExtension(extension: string): false | MimeType {
  * types["json"] // "application/json"
  * types["html"] // "text/html"
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function getTypes(): Record<FileExtension, MimeType> {
   populateMaps(extensions, types);
@@ -234,12 +252,13 @@ export function getTypes(): Record<FileExtension, MimeType> {
  * Returns a record mapping each known MIME type to an array of its associated
  * file extensions (without leading dots).
  *
+ * **Details**
+ *
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * @since 0.0.0
- * @category utilities
- * @example
+ * **Example** (Map MIME types to extensions)
+ *
  * ```typescript
  * import { getExtensions } from "@beep/data"
  *
@@ -247,6 +266,9 @@ export function getTypes(): Record<FileExtension, MimeType> {
  * extensions["application/json"] // ["json", "map"]
  * extensions["text/html"]        // ["html", "htm", "shtml"]
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function getExtensions(): Record<MimeType, FileExtension[]> {
   populateMaps(extensions, types);
@@ -256,13 +278,14 @@ export function getExtensions(): Record<MimeType, FileExtension[]> {
 /**
  * Look up the MIME type for a file path or extension.
  *
+ * **Details**
+ *
  * Accepts a bare extension (`"json"`), a dotted extension (`".json"`), or a
  * full file path (`"path/to/file.json"`). The lookup is case-insensitive.
  * Returns the matching MIME type string, or `false` if no match is found.
  *
- * @since 0.0.0
- * @category utilities
- * @example
+ * **Example** (Look up MIME from path)
+ *
  * ```typescript
  * import { lookup } from "@beep/data"
  *
@@ -271,6 +294,9 @@ export function getExtensions(): Record<MimeType, FileExtension[]> {
  * lookup("photo.png")       // "image/png"
  * lookup("unknown.zzzzz")   // false
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function lookup(path: string): false | MimeType {
   return lookupPath(path);

@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Content Security Policy schemas.
  *
- * @example
+ * **Example** (Create CSP directive value)
+ *
  * ```ts
  * import * as Csp from "@beep/schema/Csp"
  *

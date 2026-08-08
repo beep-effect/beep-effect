@@ -10,7 +10,8 @@ import type React from "react";
 /**
  * Skeleton component.
  *
- * @example
+ * **Example** (Import Skeleton component)
+ *
  * ```tsx
  * import { Skeleton } from "@beep/ui/components/skeleton"
  *

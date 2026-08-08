@@ -43,7 +43,8 @@ const copyFn = Atom.family((code: string) =>
 /**
  * Renders a code block that scrolls rather than wraps, and that can be copied.
  *
- * @example
+ * **Example** (Render typescript code block)
+ *
  * ```tsx
  * import { CodeBlockView } from "@beep/editor/code-block-view"
  *

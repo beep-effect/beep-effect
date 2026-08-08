@@ -8,7 +8,8 @@
 /**
  * Empty shared aggregate namespace placeholder.
  *
- * @example
+ * **Example** (Import empty aggregates namespace)
+ *
  * ```ts
  * import * as Aggregates from "@beep/shared-domain/aggregates"
  *

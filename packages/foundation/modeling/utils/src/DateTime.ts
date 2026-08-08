@@ -10,9 +10,12 @@ import { Clock, Context, DateTime, Effect, Layer } from "effect";
 /**
  * Constructs a `DateTime.Utc` from any supported `DateTime` input.
  *
+ * **Details**
+ *
  * This helper normalizes zoned inputs to UTC while preserving the instant.
  *
- * @example
+ * **Example** (Parse ISO string as UTC)
+ *
  * ```typescript
  * import { makeUnsafeUtc } from "@beep/utils/DateTime"
  *
@@ -29,7 +32,8 @@ export const makeUnsafeUtc = <A extends Parameters<typeof DateTime.make>[0]>(inp
 /**
  * Re-export of all helpers from `effect/DateTime`.
  *
- * @example
+ * **Example** (Import DateTime module helpers)
+ *
  * ```ts
  * import * as DateTime from "@beep/utils/DateTime"
  *
@@ -44,7 +48,8 @@ export * from "effect/DateTime";
 /**
  * Time service with live and fixed clock-backed helpers.
  *
- * @example
+ * **Example** (Access Default DateTimes layer)
+ *
  * ```ts
  * import { DateTimes } from "@beep/utils/DateTime"
  *

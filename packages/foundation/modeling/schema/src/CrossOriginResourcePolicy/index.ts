@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Cross-Origin-Resource-Policy schemas.
  *
- * @example
+ * **Example** (Import CORP namespace)
+ *
  * ```ts
  * import * as CrossOriginResourcePolicy from "@beep/schema/CrossOriginResourcePolicy"
  *

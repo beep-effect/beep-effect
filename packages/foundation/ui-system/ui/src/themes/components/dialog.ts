@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Dialog theme theme value.
  *
- * @example
+ * **Example** (Import dialog theme)
+ *
  * ```ts
  * import { dialogTheme } from "@beep/ui/themes/components/dialog"
  *

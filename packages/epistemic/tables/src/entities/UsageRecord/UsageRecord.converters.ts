@@ -13,7 +13,8 @@ import type { Table } from "./UsageRecord.table.ts";
 /**
  * Selected epistemic UsageRecord row.
  *
- * @example
+ * **Example** (Satisfying UsageRecordRow fixture)
+ *
  * ```ts
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
  *
@@ -54,7 +55,8 @@ export type UsageRecordRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic UsageRecord row.
  *
- * @example
+ * **Example** (Satisfying UsageRecordInsert fixture)
+ *
  * ```ts
  * import type { UsageRecordInsert } from "@beep/epistemic-tables/entities/UsageRecord"
  *
@@ -97,11 +99,14 @@ const decodeUsageRecordRow = S.decodeUnknownSync(UsageRecord);
 /**
  * Convert a UsageRecord entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the
  * snake_case column shape produced by {@link Table}. The database-managed
  * `id` (SERIAL) is dropped so the insert defers to the sequence.
  *
- * @example
+ * **Example** (Convert entity dropping id)
+ *
  * ```ts
  * import { fromUsageRecordRow, toUsageRecordInsert } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
@@ -147,7 +152,8 @@ export const toUsageRecordInsert = (usageRecord: UsageRecord): UsageRecordInsert
 /**
  * Convert a selected persistence row into a UsageRecord entity.
  *
- * @example
+ * **Example** (Decode row into entity)
+ *
  * ```ts
  * import { fromUsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"

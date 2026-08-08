@@ -50,7 +50,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * Provenance export profile.
  *
- * @example
+ * **Example** (Decode export profile value)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -72,7 +73,8 @@ export const ProvenanceExportProfile = LiteralKit(["prov-core-v1", "prov-core-ex
 /**
  * Type for {@link ProvenanceExportProfile}.
  *
- * @example
+ * **Example** (Type-check export profile)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ProvenanceExportProfile } from "@beep/semantic-web/services/provenance"
@@ -89,7 +91,8 @@ export type ProvenanceExportProfile = typeof ProvenanceExportProfile.Type;
 /**
  * Provenance service error reason.
  *
- * @example
+ * **Example** (Decode error reason value)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -116,7 +119,8 @@ export const ProvenanceServiceErrorReason = LiteralKit([
 /**
  * Type for {@link ProvenanceServiceErrorReason}.
  *
- * @example
+ * **Example** (Type-check error reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ProvenanceServiceErrorReason } from "@beep/semantic-web/services/provenance"
@@ -133,7 +137,8 @@ export type ProvenanceServiceErrorReason = typeof ProvenanceServiceErrorReason.T
 /**
  * Provenance projection request.
  *
- * @example
+ * **Example** (Decode projection request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -165,7 +170,8 @@ export class ProjectProvenanceRequest extends S.Class<ProjectProvenanceRequest>(
 /**
  * Provenance summary request.
  *
- * @example
+ * **Example** (Decode summary request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -195,7 +201,8 @@ export class SummarizeProvenanceRequest extends S.Class<SummarizeProvenanceReque
 /**
  * Provenance export request.
  *
- * @example
+ * **Example** (Decode export request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -229,7 +236,8 @@ export class ExportProvenanceRequest extends S.Class<ExportProvenanceRequest>($I
 /**
  * Bounded provenance projection result.
  *
- * @example
+ * **Example** (Decode bounded projection)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -264,7 +272,8 @@ export class BoundedProvenanceProjection extends S.Class<BoundedProvenanceProjec
 /**
  * Provenance summary result.
  *
- * @example
+ * **Example** (Decode provenance summary)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -300,7 +309,8 @@ export class ProvenanceSummary extends S.Class<ProvenanceSummary>($I`ProvenanceS
 /**
  * Typed provenance service error.
  *
- * @example
+ * **Example** (Make service error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ProvenanceServiceError } from "@beep/semantic-web/services/provenance"
@@ -330,7 +340,8 @@ export class ProvenanceServiceError extends TaggedErrorClass<ProvenanceServiceEr
 /**
  * Provenance service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { ProvenanceServiceShape } from "@beep/semantic-web/services/provenance"
  *
@@ -338,8 +349,8 @@ export class ProvenanceServiceError extends TaggedErrorClass<ProvenanceServiceEr
  * console.log(acceptProvenanceServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface ProvenanceServiceShape {
   readonly exportBundle: (
@@ -354,7 +365,8 @@ export interface ProvenanceServiceShape {
 /**
  * Provenance service tag.
  *
- * @example
+ * **Example** (Provide mock service tag)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -481,7 +493,8 @@ const createProjection = (
 /**
  * Live provenance service implementation for bounded projection and summary work.
  *
- * @example
+ * **Example** (Run live summarize layer)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

@@ -1,12 +1,14 @@
 /**
  * Microsoft 365 Model Context Protocol stdio server.
  *
- * @remarks
+ * **Details**
+ *
  * This package exposes read-only Microsoft 365 driver verbs as schema-first MCP
  * tools. It intentionally delegates Graph auth, transport, decoding, and
  * redaction to `@beep/m365`.
  *
- * @example
+ * **Example** (Launch M365 MCP server)
+ *
  * ```ts
  * import { makeServerLayer, M365McpServerConfig } from "@beep/m365-mcp"
  * import { M365 } from "@beep/m365"
@@ -48,7 +50,8 @@ export * from "./Server.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/m365-mcp"
  *

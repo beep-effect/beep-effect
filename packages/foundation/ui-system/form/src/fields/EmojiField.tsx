@@ -15,7 +15,8 @@ import type { BoundFieldState } from "../internal/FieldBinding.tsx";
  * Props for {@link EmojiField}: `EmojiPicker` props plus label/description;
  * binding props are owned by the field.
  *
- * @example
+ * **Example** (Props with placeholder)
+ *
  * ```ts
  * import type { EmojiFieldProps } from "@beep/form/fields/EmojiField"
  *
@@ -52,7 +53,8 @@ const bindEmojiControl = ({ field, hasErrors }: BoundFieldState<string>): EmojiC
  * Schema-bound emoji picker whose value is the selected emoji string in form
  * state.
  *
- * @example
+ * **Example** (Mood form emoji field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

@@ -13,7 +13,8 @@ const $I = $ObservabilityId.create("server/Config");
 /**
  * Server-only observability configuration.
  *
- * @example
+ * **Example** (Creating server observability config)
+ *
  * ```typescript
  * import { ServerObservabilityConfig } from "@beep/observability/server"
  *
@@ -32,8 +33,8 @@ const $I = $ObservabilityId.create("server/Config");
  * console.log(config.serviceName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ServerObservabilityConfig extends S.Class<ServerObservabilityConfig>($I`ServerObservabilityConfig`)(
   {
@@ -58,7 +59,8 @@ export class ServerObservabilityConfig extends S.Class<ServerObservabilityConfig
 /**
  * Convert server config into OTLP resource attributes.
  *
- * @example
+ * **Example** (Convert config to OTLP resource)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, toOtlpResource } from "@beep/observability/server"
  *
@@ -78,8 +80,8 @@ export class ServerObservabilityConfig extends S.Class<ServerObservabilityConfig
  * console.log(resource.serviceName)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const toOtlpResource = (config: ServerObservabilityConfig) => ({
   serviceName: config.serviceName,

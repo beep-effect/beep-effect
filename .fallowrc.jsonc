@@ -272,6 +272,14 @@
         "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
         "maxCrap": 57,
         "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": [
+          "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts"
+        ],
+        "functions": ["normalizeJSDocCategoryKey"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing slug normalizer body unchanged by the jsdoc-carrier migration; Fallow audit attributes its cognitive finding as introduced when only the JSDoc carrier grammar changes. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       }
     ]
   },

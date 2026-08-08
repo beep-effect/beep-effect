@@ -33,7 +33,8 @@ const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
 /**
  * CLI command for synchronizing version pins across the monorepo.
  *
- * @example
+ * **Example** (Run version sync command)
+ *
  * ```ts
  * import { versionSyncCommand } from "@beep/repo-cli/commands/VersionSync"
  * import { Command } from "effect/unstable/cli"
@@ -42,6 +43,7 @@ const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
  * const run = Command.run(versionSyncCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

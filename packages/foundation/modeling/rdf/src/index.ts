@@ -8,7 +8,8 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Check package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/rdf"
  *

@@ -16,13 +16,15 @@ const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
 /**
  * Error raised by corpus curation commands.
  *
- * @example
+ * **Example** (Create corpus command error)
+ *
  * ```ts
  * import { CorpusCommandError } from "@beep/repo-cli/commands/Corpus/index"
  *
  * const error = CorpusCommandError.make({ message: "Invalid corpus root" })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -52,7 +54,8 @@ export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`
 /**
  * Error raised when an archive-move source file has no covering provenance row.
  *
- * @example
+ * **Example** (Make uncovered file error)
+ *
  * ```ts
  * import { CorpusArchiveMoveUncoveredFileError } from "@beep/repo-cli/commands/Corpus/index"
  *
@@ -63,6 +66,7 @@ export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`
  * })
  * console.log(error._tag) // "CorpusArchiveMoveUncoveredFileError"
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -84,7 +88,8 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
 /**
  * Error raised when a provenance-covered raw file digest does not match.
  *
- * @example
+ * **Example** (Make digest mismatch error)
+ *
  * ```ts
  * import { CorpusArchiveMoveDigestMismatchError } from "@beep/repo-cli/commands/Corpus/index"
  * import { Sha256Hex } from "@beep/schema"
@@ -98,6 +103,7 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
  * })
  * console.log(error._tag) // "CorpusArchiveMoveDigestMismatchError"
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -121,7 +127,8 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
 /**
  * Error raised when archive-move would overwrite an existing archive target.
  *
- * @example
+ * **Example** (Make destination conflict error)
+ *
  * ```ts
  * import { CorpusArchiveMoveDestinationConflictError } from "@beep/repo-cli/commands/Corpus/index"
  *
@@ -132,6 +139,7 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
  * })
  * console.log(error.archivePath)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
@@ -153,7 +161,8 @@ export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<
 /**
  * Error union returned by archive-move operations.
  *
- * @example
+ * **Example** (Handle archive-move error union)
+ *
  * ```ts
  * import { CorpusArchiveMoveUncoveredFileError } from "@beep/repo-cli/commands/Corpus/index"
  * import type { CorpusArchiveMoveError } from "@beep/repo-cli/commands/Corpus/index"
@@ -165,6 +174,7 @@ export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<
  *   sourcePath: "/tmp/source-a"
  * })))
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

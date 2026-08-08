@@ -1,42 +1,45 @@
 /**
  * Shared-kernel membership concept namespace.
  *
- * @example
+ * **Example** (Access membership model)
+ *
  * ```ts
  * import { Membership } from "@beep/shared-domain/entities"
  *
  * console.log(Membership.Model.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category entities
+ * @since 0.0.0
  */
 export * as Membership from "./Membership/index.ts";
 /**
  * Shared-kernel organization concept namespace.
  *
- * @example
+ * **Example** (Access organization model)
+ *
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  *
  * console.log(Organization.Model.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category entities
+ * @since 0.0.0
  */
 export * as Organization from "./Organization/index.ts";
 /**
  * Shared-kernel user concept namespace.
  *
- * @example
+ * **Example** (Access user model)
+ *
  * ```ts
  * import { User } from "@beep/shared-domain/entities"
  *
  * console.log(User.Model.definition.tableName)
  * ```
  *
- * @since 0.0.0
  * @category entities
+ * @since 0.0.0
  */
 export * as User from "./User/index.ts";

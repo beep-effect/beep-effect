@@ -24,7 +24,8 @@ export * from "./Transport.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/api-transport"
  *

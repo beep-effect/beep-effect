@@ -13,7 +13,8 @@ import type * as React from "react";
 /**
  * Navigation landmark for a hierarchical page trail.
  *
- * @example
+ * **Example** (Matters engagement trail)
+ *
  * ```tsx
  * import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@beep/ui/components/breadcrumb"
  *
@@ -40,7 +41,8 @@ function Breadcrumb({ ...props }: React.ComponentPropsWithoutRef<"nav">) {
 /**
  * Ordered list container for breadcrumb items and separators.
  *
- * @example
+ * **Example** (List with custom gap)
+ *
  * ```tsx
  * import { BreadcrumbList } from "@beep/ui/components/breadcrumb"
  *
@@ -68,7 +70,8 @@ function BreadcrumbList({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * List item wrapper for one breadcrumb link, page, or separator.
  *
- * @example
+ * **Example** (Linked matter item)
+ *
  * ```tsx
  * import { BreadcrumbItem, BreadcrumbLink } from "@beep/ui/components/breadcrumb"
  *
@@ -91,7 +94,8 @@ function BreadcrumbItem({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * Navigable breadcrumb segment.
  *
- * @example
+ * **Example** (Clients navigation link)
+ *
  * ```tsx
  * import { BreadcrumbLink } from "@beep/ui/components/breadcrumb"
  *
@@ -112,7 +116,8 @@ function BreadcrumbLink({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * Non-interactive breadcrumb segment for the current page.
  *
- * @example
+ * **Example** (Current invoice page)
+ *
  * ```tsx
  * import { BreadcrumbPage } from "@beep/ui/components/breadcrumb"
  *
@@ -140,7 +145,8 @@ function BreadcrumbPage({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * Decorative separator between breadcrumb items.
  *
- * @example
+ * **Example** (Custom slash separator)
+ *
  * ```tsx
  * import { BreadcrumbSeparator } from "@beep/ui/components/breadcrumb"
  *
@@ -169,7 +175,8 @@ function BreadcrumbSeparator({ children, className, ...props }: React.ComponentP
 /**
  * Compact placeholder for collapsed breadcrumb segments.
  *
- * @example
+ * **Example** (Collapsed segment ellipsis)
+ *
  * ```tsx
  * import { BreadcrumbEllipsis, BreadcrumbItem } from "@beep/ui/components/breadcrumb"
  *

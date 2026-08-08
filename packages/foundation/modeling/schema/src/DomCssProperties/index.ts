@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for DOM CSS property schemas.
  *
- * @example
+ * **Example** (List namespace Schema export)
+ *
  * ```ts
  * import * as DomCssProperties from "@beep/schema/DomCssProperties"
  *

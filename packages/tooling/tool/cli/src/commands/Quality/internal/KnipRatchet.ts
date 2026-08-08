@@ -34,11 +34,13 @@ const newPackageHandling =
 /**
  * Normalized Knip finding category.
  *
- * @example
+ * **Example** (Check exports finding kind)
+ *
  * ```ts
  * import { KnipFindingKind } from "@beep/repo-cli/test/Quality"
  * console.log(KnipFindingKind.is.exports("exports"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -63,12 +65,14 @@ export const KnipFindingKind = LiteralKit([
 /**
  * Normalized Knip finding category.
  *
- * @example
+ * **Example** (Type a finding kind)
+ *
  * ```ts
  * import type { KnipFindingKind } from "@beep/repo-cli/test/Quality"
  * const kind: KnipFindingKind = "exports"
  * console.log(kind) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,12 +142,14 @@ class KnipRawReport extends S.Class<KnipRawReport>($I`KnipRawReport`)(
 /**
  * Stable Knip finding identity retained in the committed baseline.
  *
- * @example
+ * **Example** (Make a Knip finding)
+ *
  * ```ts
  * import { KnipFinding } from "@beep/repo-cli/test/Quality"
  * const finding = KnipFinding.make({ kind: "exports", file: "src/index.ts", name: "unused" })
  * console.log(finding.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -476,12 +482,14 @@ const enforceComparison = Effect.fn("KnipRatchet.enforceComparison")(function* (
 /**
  * Options accepted by {@link runKnipRatchet}.
  *
- * @example
+ * **Example** (Configure ratchet options)
+ *
  * ```ts
  * import type { RunKnipRatchetOptions } from "@beep/repo-cli/test/Quality"
  * const options: RunKnipRatchetOptions = { baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false }
  * console.log(options) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -498,14 +506,16 @@ export class RunKnipRatchetOptions extends S.Class<RunKnipRatchetOptions>($I`Run
 /**
  * Run Knip and enforce or refresh the committed regression baseline.
  *
- * @param options - Baseline path and write mode.
- * @returns Effect that fails only when current Knip findings grow beyond the baseline.
- * @example
+ * **Example** (Run knip ratchet)
+ *
  * ```ts
  * import { runKnipRatchet } from "@beep/repo-cli/test/Quality"
  * const program = runKnipRatchet({ baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false })
  * console.log(program) // example value
  * ```
+ *
+ * @param options - Baseline path and write mode.
+ * @returns Effect that fails only when current Knip findings grow beyond the baseline.
  * @category use-cases
  * @since 0.0.0
  */

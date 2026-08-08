@@ -2073,13 +2073,17 @@ const jsdocRatchetCommand = Command.make(
     writeBaseline: Flag.boolean("write-baseline").pipe(
       Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
     ),
+    includeGenerated: Flag.boolean("include-generated").pipe(
+      Flag.withDescription("Scan generated package sources in the zero-legacy check (default is non-generated only)")
+    ),
   },
-  ({ baseline, inventory, writeBaseline }) =>
+  ({ baseline, includeGenerated, inventory, writeBaseline }) =>
     runQualityProgram(
       runJSDocRatchet({
         baselinePath: baseline,
         inventoryPath: inventory,
         writeBaseline,
+        includeGenerated,
       })
     )
 ).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));
@@ -2112,8 +2116,12 @@ const jsdocMigrateTitlesCommand = Command.make(
       Flag.withDescription("Process at most this many pending files this run"),
       Flag.optional
     ),
+    concurrency: Flag.integer("concurrency").pipe(
+      Flag.withDescription("Concurrent proxy requests (one per file); default 12"),
+      Flag.optional
+    ),
   },
-  ({ extract, limitFiles, model, proxyUrl, titles }) =>
+  ({ concurrency, extract, limitFiles, model, proxyUrl, titles }) =>
     runQualityProgram(
       Effect.scoped(
         Layer.build(FetchHttpClient.layer).pipe(
@@ -2121,7 +2129,7 @@ const jsdocMigrateTitlesCommand = Command.make(
             Effect.provideContext(
               runJSDocMigrateTitles(
                 RunJSDocMigrateTitlesOptions.make({
-                  ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles }),
+                  ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
                 })
               ),
               context

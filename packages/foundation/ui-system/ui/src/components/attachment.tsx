@@ -34,7 +34,8 @@ const attachmentVariants = cva(
 /**
  * File attachment shell with state, size, and orientation styling hooks.
  *
- * @example
+ * **Example** (Done horizontal invoice attachment)
+ *
  * ```tsx
  * import { Attachment, AttachmentContent, AttachmentDescription, AttachmentTitle } from "@beep/ui/components/attachment"
  *
@@ -94,7 +95,8 @@ const attachmentMediaVariants = cva(
 /**
  * Media slot for an attachment icon, spinner, or thumbnail image.
  *
- * @example
+ * **Example** (Vertical image media preview)
+ *
  * ```tsx
  * import { Attachment, AttachmentMedia } from "@beep/ui/components/attachment"
  *
@@ -130,7 +132,8 @@ function AttachmentMedia({
 /**
  * Text column for attachment titles and descriptions.
  *
- * @example
+ * **Example** (Title and description column)
+ *
  * ```tsx
  * import { AttachmentContent, AttachmentDescription, AttachmentTitle } from "@beep/ui/components/attachment"
  *
@@ -163,7 +166,8 @@ function AttachmentContent({ className, ...props }: React.ComponentProps<"div">)
 /**
  * Truncated primary label for an attachment.
  *
- * @example
+ * **Example** (Truncated attachment file name)
+ *
  * ```tsx
  * import { AttachmentTitle } from "@beep/ui/components/attachment"
  *
@@ -191,7 +195,8 @@ function AttachmentTitle({ className, ...props }: React.ComponentProps<"span">) 
 /**
  * Secondary attachment metadata such as size, status, or error text.
  *
- * @example
+ * **Example** (Upload progress status text)
+ *
  * ```tsx
  * import { AttachmentDescription } from "@beep/ui/components/attachment"
  *
@@ -220,7 +225,8 @@ function AttachmentDescription({ className, ...props }: React.ComponentProps<"sp
 /**
  * Action cluster positioned inside an attachment.
  *
- * @example
+ * **Example** (Download and remove actions)
+ *
  * ```tsx
  * import { AttachmentAction, AttachmentActions } from "@beep/ui/components/attachment"
  *
@@ -253,7 +259,8 @@ function AttachmentActions({ className, ...props }: React.ComponentProps<"div">)
 /**
  * Button styled for attachment-level commands.
  *
- * @example
+ * **Example** (Ghost icon remove button)
+ *
  * ```tsx
  * import { AttachmentAction } from "@beep/ui/components/attachment"
  *
@@ -284,7 +291,8 @@ function AttachmentAction({ className, variant, size = "icon-xs", ...props }: Re
 /**
  * Full-surface button overlay for making an attachment clickable.
  *
- * @example
+ * **Example** (Clickable full-surface overlay)
+ *
  * ```tsx
  * import { Attachment, AttachmentTrigger } from "@beep/ui/components/attachment"
  *
@@ -320,7 +328,8 @@ function AttachmentTrigger({ className, render, type, ...props }: useRender.Comp
 /**
  * Horizontally scrollable group of attachment cards.
  *
- * @example
+ * **Example** (Scrollable multi-attachment tray)
+ *
  * ```tsx
  * import { Attachment, AttachmentContent, AttachmentGroup, AttachmentTitle } from "@beep/ui/components/attachment"
  *

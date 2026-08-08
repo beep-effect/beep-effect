@@ -54,11 +54,13 @@ export {
 /**
  * Filesystem utility service tag.
  *
- * @example
+ * **Example** (Import FsUtils service tag)
+ *
  * ```ts
  * import { FsUtils } from "@beep/repo-utils"
  * console.log(FsUtils)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,11 +68,13 @@ export { FsUtils } from "./FsUtils.ts";
 /**
  * Live layer for the filesystem utility service.
  *
- * @example
+ * **Example** (Import FsUtilsLive layer)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * console.log(FsUtilsLive)
  * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -78,12 +82,14 @@ export { FsUtilsLive } from "./FsUtils.ts";
 /**
  * Service shape implemented by `FsUtils` providers.
  *
- * @example
+ * **Example** (Type-check FsUtilsShape keys)
+ *
  * ```ts
  * import type { FsUtilsShape } from "@beep/repo-utils"
  * const key = "readJson" satisfies keyof FsUtilsShape
  * console.log(key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,12 +97,14 @@ export type { FsUtilsShape } from "./FsUtils.ts";
 /**
  * Options accepted by filesystem glob helpers.
  *
- * @example
+ * **Example** (Create GlobOptions with cwd)
+ *
  * ```ts
  * import { GlobOptions } from "@beep/repo-utils"
  * const options = GlobOptions.make({ cwd: "src" })
  * console.log(options.cwd)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -450,11 +458,13 @@ export * from "./TypeScript/index.ts";
 /**
  * Collect unique NPM dependency names from the workspace graph.
  *
- * @example
+ * **Example** (Import dependency collector)
+ *
  * ```ts
  * import { collectUniqueNpmDependencies } from "@beep/repo-utils"
  * console.log(collectUniqueNpmDependencies)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -462,7 +472,8 @@ export { collectUniqueNpmDependencies } from "./UniqueDeps.ts";
 /**
  * Result model for unique NPM dependency aggregation.
  *
- * @example
+ * **Example** (Build UniqueNpmDeps result)
+ *
  * ```ts
  * import { UniqueNpmDeps } from "@beep/repo-utils"
  * const deps = UniqueNpmDeps.make({
@@ -471,6 +482,7 @@ export { collectUniqueNpmDependencies } from "./UniqueDeps.ts";
  * })
  * console.log(deps)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

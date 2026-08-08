@@ -15,7 +15,8 @@ const $I = $FaceDetectionId.create("FaceDetection.models");
 /**
  * Pixel dimension greater than zero.
  *
- * @example
+ * **Example** (Decode positive pixel width)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositivePixelDimension } from "@beep/face-detection/FaceDetection.models"
@@ -44,7 +45,8 @@ export const PositivePixelDimension = S.Int.check(
 /**
  * Runtime TypeScript type produced by the {@link PositivePixelDimension} schema.
  *
- * @example
+ * **Example** (Type decoded pixel dimension)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositivePixelDimension } from "@beep/face-detection/FaceDetection.models"
@@ -62,7 +64,8 @@ export type PositivePixelDimension = typeof PositivePixelDimension.Type;
 /**
  * Detection confidence between zero and one.
  *
- * @example
+ * **Example** (Decode confidence score)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
@@ -106,7 +109,8 @@ export const FaceDetectionConfidence = S.Finite.check(
 /**
  * Runtime TypeScript type produced by the {@link FaceDetectionConfidence} schema.
  *
- * @example
+ * **Example** (Type decoded confidence value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
@@ -124,7 +128,8 @@ export type FaceDetectionConfidence = typeof FaceDetectionConfidence.Type;
 /**
  * Raw model confidence score normalized into the public confidence domain.
  *
- * @example
+ * **Example** (Decode raw confidence score)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -154,7 +159,8 @@ export const RawFaceDetectionConfidence = S.Finite.pipe(
 /**
  * Runtime TypeScript type produced by the {@link RawFaceDetectionConfidence} schema.
  *
- * @example
+ * **Example** (Annotate raw confidence type)
+ *
  * ```ts
  * import type { RawFaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
  *
@@ -170,7 +176,8 @@ export type RawFaceDetectionConfidence = typeof RawFaceDetectionConfidence.Type;
 /**
  * Percentage threshold accepted by face-detection triage.
  *
- * @example
+ * **Example** (Decode percentage threshold)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionPercentage } from "@beep/face-detection/FaceDetection.models"
@@ -214,7 +221,8 @@ export const FaceDetectionPercentage = S.Finite.check(
 /**
  * Runtime TypeScript type produced by the {@link FaceDetectionPercentage} schema.
  *
- * @example
+ * **Example** (Type decoded percentage value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionPercentage } from "@beep/face-detection/FaceDetection.models"
@@ -232,7 +240,8 @@ export type FaceDetectionPercentage = typeof FaceDetectionPercentage.Type;
 /**
  * Positive maximum number of detections to keep.
  *
- * @example
+ * **Example** (Decode top-K limit)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionTopK } from "@beep/face-detection/FaceDetection.models"
@@ -261,7 +270,8 @@ export const FaceDetectionTopK = S.Int.check(
 /**
  * Runtime TypeScript type produced by the {@link FaceDetectionTopK} schema.
  *
- * @example
+ * **Example** (Type decoded top-K value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FaceDetectionTopK } from "@beep/face-detection/FaceDetection.models"
@@ -279,7 +289,8 @@ export type FaceDetectionTopK = typeof FaceDetectionTopK.Type;
 /**
  * Non-negative image coordinate or dimension.
  *
- * @example
+ * **Example** (Decode non-negative coordinate)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativeImageCoordinate } from "@beep/face-detection/FaceDetection.models"
@@ -308,7 +319,8 @@ export const NonNegativeImageCoordinate = S.Finite.check(
 /**
  * Runtime TypeScript type produced by the {@link NonNegativeImageCoordinate} schema.
  *
- * @example
+ * **Example** (Annotate coordinate type)
+ *
  * ```ts
  * import type { NonNegativeImageCoordinate } from "@beep/face-detection/FaceDetection.models"
  *
@@ -324,7 +336,8 @@ export type NonNegativeImageCoordinate = typeof NonNegativeImageCoordinate.Type;
 /**
  * Request to load a YuNet-compatible ONNX face detector.
  *
- * @example
+ * **Example** (Make model config)
+ *
  * ```ts
  * import { FaceDetectionModelConfig } from "@beep/face-detection"
  *
@@ -351,7 +364,8 @@ export class FaceDetectionModelConfig extends S.Class<FaceDetectionModelConfig>(
 /**
  * Request to detect faces in one image with a loaded detector.
  *
- * @example
+ * **Example** (Make image request)
+ *
  * ```ts
  * import { FaceDetectionImageRequest } from "@beep/face-detection"
  *
@@ -387,7 +401,8 @@ export class FaceDetectionImageRequest extends S.Class<FaceDetectionImageRequest
 /**
  * Two-dimensional point emitted by a face detector.
  *
- * @example
+ * **Example** (Make detection point)
+ *
  * ```ts
  * import { FaceDetectionPoint } from "@beep/face-detection/FaceDetection.models"
  *
@@ -415,7 +430,8 @@ export class FaceDetectionPoint extends S.Class<FaceDetectionPoint>($I`FaceDetec
 /**
  * Bounding box emitted by a face detector.
  *
- * @example
+ * **Example** (Make bounding box)
+ *
  * ```ts
  * import { FaceDetectionBox } from "@beep/face-detection/FaceDetection.models"
  *
@@ -449,7 +465,8 @@ export class FaceDetectionBox extends S.Class<FaceDetectionBox>($I`FaceDetection
 /**
  * Five landmark points emitted by YuNet-compatible face detection models.
  *
- * @example
+ * **Example** (Make five landmarks)
+ *
  * ```ts
  * import { FaceDetectionLandmarks } from "@beep/face-detection/FaceDetection.models"
  *
@@ -492,7 +509,8 @@ export class FaceDetectionLandmarks extends S.Class<FaceDetectionLandmarks>($I`F
 /**
  * One face detection emitted for an image.
  *
- * @example
+ * **Example** (Make face detection)
+ *
  * ```ts
  * import { FaceDetection } from "@beep/face-detection/FaceDetection.models"
  *
@@ -533,7 +551,8 @@ export class FaceDetection extends S.Class<FaceDetection>($I`FaceDetection`)(
 /**
  * Face detection result for one image.
  *
- * @example
+ * **Example** (Make empty detection result)
+ *
  * ```ts
  * import { FaceDetectionResult } from "@beep/face-detection/FaceDetection.models"
  *
@@ -572,7 +591,8 @@ export class FaceDetectionResult extends S.Class<FaceDetectionResult>($I`FaceDet
 /**
  * Decode a model config from unknown input.
  *
- * @example
+ * **Example** (Decode model config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeFaceDetectionModelConfig } from "@beep/face-detection/FaceDetection.models"
@@ -591,7 +611,8 @@ export const decodeFaceDetectionModelConfig = FaceDetectionModelConfig.decodeEff
 /**
  * Decode an image request from unknown input.
  *
- * @example
+ * **Example** (Decode image request)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeFaceDetectionImageRequest } from "@beep/face-detection/FaceDetection.models"

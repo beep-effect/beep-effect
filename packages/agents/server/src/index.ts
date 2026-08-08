@@ -9,7 +9,8 @@
 /**
  * Assistant-turn streaming primitives namespace.
  *
- * @example
+ * **Example** (Scan chunk for completed blocks)
+ *
  * ```ts
  * import { AssistantTurn } from "@beep/agents-server"
  *
@@ -24,12 +25,16 @@
  * @since 0.0.0
  */
 export * as AssistantTurn from "./AssistantTurn/index.ts";
-/** Provider-instance persistence, probe, use-case, and RPC layers.
- * @example
+/**
+ *  Provider-instance persistence, probe, use-case, and RPC layers.
+ *
+ * **Example** (Log ProviderInstanceLive layer)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-server"
  * console.log(ProviderInstance.ProviderInstanceLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

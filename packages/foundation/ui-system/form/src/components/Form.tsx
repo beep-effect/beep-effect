@@ -15,7 +15,8 @@ import type React from "react";
 /**
  * Props for {@link Form}: every native `<form>` prop.
  *
- * @example
+ * **Example** (Native form props)
+ *
  * ```tsx
  * import type { FormProps } from "@beep/form/components/Form"
  *
@@ -36,12 +37,14 @@ export interface FormProps extends React.ComponentProps<"form"> {}
  * Native `<form>` element that prevents default submission and delegates to the
  * supplied `onSubmit` handler.
  *
- * @remarks
+ * **Details**
+ *
  * `Form` always calls `preventDefault()` and `stopPropagation()` before the
  * caller's handler. Pair it with `form.handleSubmit()` so TanStack owns submit
  * validation and state transitions instead of the browser's native navigation.
  *
- * @example
+ * **Example** (Profile form submit)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

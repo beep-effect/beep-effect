@@ -23,7 +23,8 @@ const $I = $EpistemicUseCasesId.create("ClaimGate/ClaimGate.ports");
  * and return a typed admitted/rejected verdict. Rejection is a value
  * ({@link ClaimGateResult}), never an error.
  *
- * @example
+ * **Example** (Stub evaluate admitted shape)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -49,7 +50,8 @@ export interface ClaimGateShape {
 /**
  * Claim gate service tag.
  *
- * @example
+ * **Example** (Provide service and yield)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -82,7 +84,8 @@ export class ClaimGate extends Context.Service<ClaimGate, ClaimGateShape>()($I`C
  * engine. The implementation that satisfies this dependency is provided in the
  * epistemic server tier.
  *
- * @example
+ * **Example** (Annotate layer type parameter)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { ClaimGateLayer } from "@beep/epistemic-use-cases/ClaimGate"

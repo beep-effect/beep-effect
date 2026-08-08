@@ -213,12 +213,15 @@ const safeDocumentToHtmlFragment = (document: Document): HtmlModel.Fragment =>
 /**
  * Renders a user-boundary Markdown document as opaque, policy-proven HTML.
  *
+ * **Details**
+ *
  * The renderer performs a direct AST projection and executes the canonical
  * `conform -> enforceSafeHtml -> serializeSafe` pipeline. Raw nodes cannot
  * enter through {@link SafeDocument}; the defensive raw-node branches render
  * their source as text if a structurally forged value reaches this module.
  *
- * @example
+ * **Example** (Render simple paragraph document)
+ *
  * ```ts
  * import { Md, safeHtmlValue } from "@beep/md"
  * import { Result } from "effect"

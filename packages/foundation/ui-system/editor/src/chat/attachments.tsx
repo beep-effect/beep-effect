@@ -65,7 +65,8 @@ const dragDropBindingAtom = Atom.family((editor: LexicalEditor) =>
  * {@link captureAttachmentsFn} mounted (via `useAtomSet`) so the registry never
  * interrupts the capture fiber dispatched from the drag-drop binding.
  *
- * @example
+ * **Example** (Mount capture plugin)
+ *
  * ```tsx
  * import { AttachmentPlugin } from "@beep/editor/chat/attachments"
  *
@@ -98,7 +99,8 @@ const attachmentFailureMessage = AttachmentFailure.match({
  * schema-backed and rendered exhaustively; raw upload-port defects remain in
  * structured logs and are never interpolated into the DOM.
  *
- * @example
+ * **Example** (Render failure notice)
+ *
  * ```tsx
  * import { AttachmentFailureNotice } from "@beep/editor/chat/attachments"
  *
@@ -139,7 +141,8 @@ export function AttachmentFailureNotice(): JSX.Element | null {
  * The captured-attachment chip strip with per-item remove controls and image
  * thumbnails.
  *
- * @example
+ * **Example** (Chips with remove callback)
+ *
  * ```tsx
  * import { AttachmentChips } from "@beep/editor/chat/attachments"
  * import type { ComposerAttachment } from "@beep/editor/chat/attachment-model"

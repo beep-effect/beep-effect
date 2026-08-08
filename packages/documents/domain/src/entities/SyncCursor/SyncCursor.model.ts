@@ -19,7 +19,8 @@ const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.model");
 /**
  * Entity identifier for a persisted documents SyncCursor.
  *
- * @example
+ * **Example** (Decode SyncCursorId identifier)
+ *
  * ```ts
  * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const SyncCursorId = Documents.SyncCursorId;
 /**
  * Runtime type for {@link SyncCursorId}.
  *
- * @example
+ * **Example** (Type array of SyncCursorIds)
+ *
  * ```ts
  * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
  * import * as S from "effect/Schema"
@@ -60,7 +62,8 @@ export type SyncCursorId = typeof SyncCursorId.Type;
 /**
  * Health status for a remote-event stream cursor.
  *
- * @example
+ * **Example** (Assert active SyncCursorStatus)
+ *
  * ```ts
  * import { SyncCursorStatus } from "@beep/documents-domain/entities/SyncCursor"
  *
@@ -83,7 +86,8 @@ export const SyncCursorStatus = LiteralKit(["active", "error"]).pipe(
 /**
  * Runtime type for {@link SyncCursorStatus}.
  *
- * @example
+ * **Example** (Assign error status string)
+ *
  * ```ts
  * import type { SyncCursorStatus } from "@beep/documents-domain/entities/SyncCursor"
  *
@@ -99,7 +103,8 @@ export type SyncCursorStatus = typeof SyncCursorStatus.Type;
 /**
  * Durable remote-event stream cursor enabling drift detection to survive app restarts.
  *
- * @example
+ * **Example** (Decode full SyncCursor entity)
+ *
  * ```ts
  * import { SyncCursor, SyncCursorId } from "@beep/documents-domain/entities/SyncCursor"
  * import * as S from "effect/Schema"

@@ -21,7 +21,8 @@ const $I = $M365McpId.create("Server");
 /**
  * Configuration for the Microsoft 365 MCP server.
  *
- * @example
+ * **Example** (Creating server configuration)
+ *
  * ```ts
  * import { M365McpServerConfig } from "@beep/m365-mcp"
  *
@@ -50,7 +51,8 @@ export class M365McpServerConfig extends S.Class<M365McpServerConfig>($I`M365Mcp
 /**
  * Builds the stdio MCP server layer.
  *
- * @example
+ * **Example** (Building stdio server layer)
+ *
  * ```ts
  * import { M365McpServerConfig, makeServerLayer } from "@beep/m365-mcp"
  * import { Layer } from "effect"

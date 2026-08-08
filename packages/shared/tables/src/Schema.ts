@@ -16,12 +16,14 @@ type DbSchemaShape = {
 /**
  * Metadata-only Drizzle schema aggregate for shared product tables.
  *
- * @remarks
+ * **Details**
+ *
  * This aggregate is intended for callers that need the shared table set as one
  * object, such as Drizzle schema wiring. It does not create a connection,
  * repository, migration, or query executor.
  *
- * @example
+ * **Example** (List shared table names)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { DbSchema } from "@beep/shared-tables/Schema"
@@ -47,7 +49,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type contract for the shared Drizzle schema aggregate.
  *
- * @example
+ * **Example** (Satisfy DbSchema type contract)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { DbSchema } from "@beep/shared-tables/Schema"

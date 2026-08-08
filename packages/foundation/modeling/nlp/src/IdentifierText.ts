@@ -21,12 +21,14 @@ const normalizeIdentifierWords = flow(
 /**
  * Split a source identifier or symbol-like phrase into normalized words.
  *
- * @remarks
+ * **Details**
+ *
  * Handles camelCase, PascalCase, snake_case, and kebab-case as equivalent word
  * boundaries. The returned tokens are lowercase because callers use them as the
  * canonical basis for deterministic lookup variants.
  *
- * @example
+ * **Example** (Tokenize camelCase identifier)
+ *
  * ```typescript
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
@@ -42,13 +44,15 @@ export const tokens = flow(normalizeIdentifierWords, Str.split(" "), A.map(Str.t
 /**
  * Generate common source-code spellings for a symbol phrase.
  *
- * @remarks
+ * **Details**
+ *
  * Variants preserve first occurrence order and cover human text, spaced words,
  * camelCase, PascalCase, snake_case, kebab-case, and compact joined text. This
  * lets query code match a user phrase against exported symbols without guessing
  * which naming convention the source used.
  *
- * @example
+ * **Example** (Generate user name variants)
+ *
  * ```typescript
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *

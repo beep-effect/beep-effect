@@ -8,7 +8,8 @@
 /**
  * Logical edge identity and digest exports.
  *
- * @example
+ * **Example** (Decode LogicalEdgeIdentity and key)
+ *
  * ```ts
  * import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
  * import * as S from "effect/Schema"

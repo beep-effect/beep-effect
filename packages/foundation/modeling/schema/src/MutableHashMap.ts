@@ -75,7 +75,8 @@ type MutableHashMapEntry<Key extends S.Top, Value extends S.Top> = S.Codec<
 /**
  * Serializable entry-array iso type for `MutableHashMap` schemas.
  *
- * @example
+ * **Example** (Satisfies entry-array iso type)
+ *
  * ```ts
  * import type { MutableHashMapIso } from "@beep/schema/MutableHashMap"
  * import * as S from "effect/Schema"
@@ -84,8 +85,8 @@ type MutableHashMapEntry<Key extends S.Top, Value extends S.Top> = S.Codec<
  * console.log(entries.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = ReadonlyArray<
   readonly [Key["Iso"], Value["Iso"]]
@@ -94,7 +95,8 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
 /**
  * Schema for validating an existing `MutableHashMap` instance.
  *
- * @example
+ * **Example** (Validates existing MutableHashMap)
+ *
  * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
@@ -105,8 +107,8 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
  * console.log(S.is(MapSchema)(map))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
   extends S.declareConstructor<
@@ -123,7 +125,8 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
 /**
  * Schema for transforming entry arrays into `MutableHashMap` instances.
  *
- * @example
+ * **Example** (Decodes entries to MutableHashMap)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
@@ -133,8 +136,8 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
  * console.log(decoded)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
   extends S.decodeTo<
@@ -149,7 +152,8 @@ export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
 /**
  * Type guard for Effect `MutableHashMap` values.
  *
- * @example
+ * **Example** (Guards MutableHashMap values)
+ *
  * ```ts
  * import { MutableHashMap } from "effect"
  * import { isMutableHashMap } from "@beep/schema/MutableHashMap"
@@ -160,8 +164,8 @@ export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
  *
  * @param value - Unknown input to test.
  * @returns `true` when `value` is a `MutableHashMap`.
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHashMap_.MutableHashMap<Key, Value> =>
   MutableHashMap_.isMutableHashMap(value);
@@ -170,7 +174,8 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  * Schema for validating existing `MutableHashMap` instances while applying the
  * provided key and value schemas to each entry.
  *
- * @example
+ * **Example** (Decodes existing map entries)
+ *
  * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
@@ -185,8 +190,8 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  * @param options - Schemas for keys and values.
  * @returns Schema whose encoded side is another `MutableHashMap` carrying the
  * encoded key and value types.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(options: {
   readonly key: Key;
@@ -285,7 +290,8 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  * Schema for decoding entry arrays into `MutableHashMap` instances and encoding
  * maps back to arrays.
  *
- * @example
+ * **Example** (Round-trips map via entry arrays)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
@@ -302,8 +308,8 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  *
  * @param options - Schemas for keys and values.
  * @returns Entry-array-backed schema for mutable hash maps.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashMap = <Key extends S.Top, Value extends S.Top>(options: {
   readonly key: Key;

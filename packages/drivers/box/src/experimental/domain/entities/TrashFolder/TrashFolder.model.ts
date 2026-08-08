@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/TrashFolder/TrashFolder.m
 /**
  * Experimental schema anchor for Box folder metadata while the folder is in trash.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty)
+ *
  * ```ts
  * import { TrashFolder } from "@beep/box/experimental/domain/entities/TrashFolder/TrashFolder.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class TrashFolder extends S.Class<TrashFolder>($I`TrashFolder`)(
 /**
  * Type-level companion namespace for {@link TrashFolder} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { TrashFolder } from "@beep/box/experimental/domain/entities/TrashFolder/TrashFolder.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace TrashFolder {
   /**
    * Encoded payload accepted by the {@link TrashFolder} entity schema.
    *
-   * @example
+   * **Example** (Encode to Encoded type)
+   *
    * ```ts
    * import { TrashFolder } from "@beep/box/experimental/domain/entities/TrashFolder/TrashFolder.model";
    * import * as S from "effect/Schema";

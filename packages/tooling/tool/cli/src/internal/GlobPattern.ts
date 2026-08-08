@@ -22,14 +22,16 @@ import * as Str from "effect/String";
 /**
  * Escape a single character for safe literal inclusion in a `RegExp` source.
  *
- * @param char - The character to escape.
- * @returns The character with regex metacharacters backslash-escaped.
- * @example
+ * **Example** (Escape regex metacharacter)
+ *
  * ```ts
  * import { escapeRegexChar } from "@beep/repo-cli/internal/GlobPattern"
  *
  * console.log(escapeRegexChar("."))
  * ```
+ *
+ * @param char - The character to escape.
+ * @returns The character with regex metacharacters backslash-escaped.
  * @category utilities
  * @since 0.0.0
  */
@@ -38,15 +40,16 @@ export const escapeRegexChar = (char: string): string => Str.replace(/[.+?^${}()
 /**
  * Compile a glob pattern into an anchored `RegExp`.
  *
+ * **Details**
+ *
  * Supported wildcards: a `**` immediately followed by a slash matches any number
  * of path segments (including none), a bare `**` matches across separators, and
  * `*` matches within a single segment. All other characters match literally. The
  * pattern is anchored at both ends; slash and leading-`./` normalization is the
  * caller's responsibility.
  *
- * @param pattern - The glob pattern to compile.
- * @returns An anchored `RegExp` matching paths against the pattern.
- * @example
+ * **Example** (Match nested TypeScript paths)
+ *
  * ```ts
  * import { globPatternToRegExp } from "@beep/repo-cli/internal/GlobPattern"
  *
@@ -54,6 +57,9 @@ export const escapeRegexChar = (char: string): string => Str.replace(/[.+?^${}()
  * console.log(re.test("src/a/b/c.ts"))
  * console.log(re.test("src/a.ts"))
  * ```
+ *
+ * @param pattern - The glob pattern to compile.
+ * @returns An anchored `RegExp` matching paths against the pattern.
  * @category constructors
  * @since 0.0.0
  */
@@ -94,20 +100,24 @@ export const globPatternToRegExp = (pattern: string): RegExp => {
 /**
  * Test whether a candidate path matches a compiled glob pattern.
  *
+ * **Details**
+ *
  * A convenience over {@link globPatternToRegExp} for the exclude-matching call
  * sites, which test one pattern against several candidate relative paths. As
  * with the compiler, the caller is responsible for normalizing candidates and
  * patterns first.
  *
- * @param pattern - The glob pattern to test against.
- * @returns A predicate over candidate paths.
- * @example
+ * **Example** (Match test file paths)
+ *
  * ```ts
  * import { globMatches } from "@beep/repo-cli/internal/GlobPattern"
  *
  * const matchesTests = globMatches("**\/*.test.ts")
  * console.log(matchesTests("src/a.test.ts"))
  * ```
+ *
+ * @param pattern - The glob pattern to test against.
+ * @returns A predicate over candidate paths.
  * @category utilities
  * @since 0.0.0
  */

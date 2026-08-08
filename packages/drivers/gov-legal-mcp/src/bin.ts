@@ -14,7 +14,8 @@ import { GovLegalMcpServerConfig, makeServerLayer } from "./Server.ts";
 /**
  * Server identity advertised by the executable entrypoint.
  *
- * @example
+ * **Example** (Log server config name)
+ *
  * ```ts
  * import { SERVER_CONFIG } from "@beep/gov-legal-mcp/bin"
  *
@@ -30,7 +31,8 @@ export const SERVER_CONFIG = GovLegalMcpServerConfig.make({ name: "beep-gov-lega
 /**
  * Launch the stdio server explicitly; importing this module does not launch it.
  *
- * @example
+ * **Example** (Inspect launcher function type)
+ *
  * ```ts
  * import { runGovLegalMcpServer } from "@beep/gov-legal-mcp/bin"
  *

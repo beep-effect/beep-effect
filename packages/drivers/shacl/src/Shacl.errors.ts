@@ -14,7 +14,8 @@ const $I = $ShaclId.create("Shacl.errors");
 /**
  * shacl-engine driver failure reason.
  *
- * @example
+ * **Example** (Assign validationFailed reason)
+ *
  * ```ts
  * import { ShaclEngineErrorReason } from "@beep/shacl"
  *
@@ -40,7 +41,8 @@ export const ShaclEngineErrorReason = LiteralKit([
 /**
  * Type for {@link ShaclEngineErrorReason}.
  *
- * @example
+ * **Example** (Assign importFailed reason)
+ *
  * ```ts
  * import { ShaclEngineErrorReason } from "@beep/shacl"
  *
@@ -57,7 +59,8 @@ export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
 /**
  * Typed shacl-engine driver error.
  *
- * @example
+ * **Example** (Make validationFailed error)
+ *
  * ```ts
  * import { ShaclEngineError } from "@beep/shacl"
  *

@@ -11,11 +11,13 @@ import { Membership } from "@beep/shared-domain/entities";
 /**
  * Postgres Drizzle table metadata for shared organization memberships.
  *
- * @remarks
+ * **Details**
+ *
  * The table is projected from `Membership.Model`, preserving the shared-domain
  * entity definition on `Table.definition` for schema and index inspection.
  *
- * @example
+ * **Example** (Inspect membership table name)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { Membership } from "@beep/shared-tables/entities"

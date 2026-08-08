@@ -16,7 +16,8 @@ import type React from "react";
 /**
  * Props for {@link NumberField}.
  *
- * @example
+ * **Example** (Quantity number field props)
+ *
  * ```ts
  * import type { NumberFieldProps } from "@beep/form/fields/NumberField"
  *
@@ -42,7 +43,8 @@ export interface NumberFieldProps
  * Schema-bound numeric input. The form value stays a `number`; an empty input
  * surfaces as `NaN` for the schema to reject.
  *
- * @example
+ * **Example** (Quantity number form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { NumberField } from "@beep/form/fields/NumberField"

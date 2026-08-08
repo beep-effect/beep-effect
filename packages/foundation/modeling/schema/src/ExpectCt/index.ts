@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Expect-CT schemas.
  *
- * @example
+ * **Example** (Import ExpectCt namespace)
+ *
  * ```ts
  * import * as ExpectCt from "@beep/schema/ExpectCt"
  *

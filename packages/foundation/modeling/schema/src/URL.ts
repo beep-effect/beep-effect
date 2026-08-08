@@ -25,7 +25,8 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
 /**
  * A branded schema for URL-encoded strings validated against `new URL()`.
  *
- * @example
+ * **Example** (Decode URL-encoded string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
@@ -52,7 +53,8 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
 /**
  * Type for {@link URLStr}.
  *
- * @example
+ * **Example** (Type annotated URL string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
@@ -84,7 +86,8 @@ const filterHttpsUrl = S.makeFilter(
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
  *
- * @example
+ * **Example** (Decode HTTPS URL string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
@@ -107,7 +110,8 @@ export const HttpsUrl = S.String.pipe(
 /**
  * Type for {@link HttpsUrl}.
  *
- * @example
+ * **Example** (Type annotated HTTPS URL)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
@@ -124,7 +128,8 @@ export type HttpsUrl = typeof HttpsUrl.Type;
 /**
  * Namespace members for {@link HttpsUrl}.
  *
- * @example
+ * **Example** (Satisfy Encoded type)
+ *
  * ```ts
  * import { HttpsUrl } from "@beep/schema/URL"
  *
@@ -139,7 +144,8 @@ export declare namespace HttpsUrl {
   /**
    * Encoded representation accepted by {@link HttpsUrl}.
    *
-   * @example
+   * **Example** (Satisfy Encoded type)
+   *
    * ```ts
    * import { HttpsUrl } from "@beep/schema/URL"
    *

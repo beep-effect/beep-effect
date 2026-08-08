@@ -16,12 +16,14 @@ const $I = $RepoCliId.create("commands/Image/Image.errors");
 /**
  * Error raised by image curation commands.
  *
- * @example
+ * **Example** (Create ImageCommandError instance)
+ *
  * ```ts
  * import { ImageCommandError } from "@beep/repo-cli/commands/Image/index"
  *
  * const error = ImageCommandError.make({ message: "No videos found" })
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

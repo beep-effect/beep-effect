@@ -12,7 +12,8 @@ import type * as AcpError from "./Acp.errors.ts";
 /**
  * Handle for a terminal created through ACP.
  *
- * @example
+ * **Example** (Access terminal ID)
+ *
  * ```ts
  * import type { AcpTerminal } from "@beep/acp/terminal"
  *
@@ -47,7 +48,8 @@ export interface AcpTerminal {
 /**
  * Options used to construct an ACP terminal handle.
  *
- * @example
+ * **Example** (Read session ID option)
+ *
  * ```ts
  * import type { MakeTerminalOptions } from "@beep/acp/terminal"
  *
@@ -70,7 +72,8 @@ export interface MakeTerminalOptions {
 /**
  * Constructs an ACP terminal helper from terminal request effects.
  *
- * @example
+ * **Example** (Build terminal from options)
+ *
  * ```ts
  * import { makeTerminal, type MakeTerminalOptions } from "@beep/acp/terminal"
  *

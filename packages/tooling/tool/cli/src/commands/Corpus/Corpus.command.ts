@@ -312,13 +312,15 @@ const corpusArchiveMoveCommand = Command.make(
 /**
  * Corpus curation command group.
  *
- * @example
+ * **Example** (Register corpus command group)
+ *
  * ```ts
  * import { corpusCommand } from "@beep/repo-cli/commands/Corpus"
  *
  * const commandGroups = { corpus: corpusCommand }
  * console.log(Object.keys(commandGroups)) // ["corpus"]
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

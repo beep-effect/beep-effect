@@ -31,12 +31,14 @@ const AiProviderCliCodexLocalEntryBase = LiteralKit(["log", "memories", "tmp"]);
 /**
  * Home-layout mode for a provider CLI instance.
  *
- * @remarks
+ * **Details**
+ *
  * `direct` runs the CLI against the shared home directory as-is.
  * `authOverlay` runs it against a shadow home whose shared entries are
  * symlinked back to the shared home while credential files stay private.
  *
- * @example
+ * **Example** (Decode authOverlay mode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliHomeMode } from "@beep/ai-provider-cli"
@@ -59,7 +61,8 @@ export const AiProviderCliHomeMode = AiProviderCliHomeModeBase.pipe(
 /**
  * Type for a provider CLI home-layout mode.
  *
- * @example
+ * **Example** (Annotate direct mode)
+ *
  * ```ts
  * import type { AiProviderCliHomeMode } from "@beep/ai-provider-cli"
  *
@@ -76,12 +79,14 @@ export type AiProviderCliHomeMode = typeof AiProviderCliHomeMode.Type;
 /**
  * Codex home entries shared between the shared home and every shadow home.
  *
- * @remarks
+ * **Details**
+ *
  * Each directory is created inside the shared home and symlinked from the
  * shadow home so session state, caches, and logs stay common across
  * credential overlays.
  *
- * @example
+ * **Example** (Count shared directories)
+ *
  * ```ts
  * import { AiProviderCliCodexSharedDirectory } from "@beep/ai-provider-cli"
  *
@@ -101,7 +106,8 @@ export const AiProviderCliCodexSharedDirectory = AiProviderCliCodexSharedDirecto
 /**
  * Type for a shared Codex home directory name.
  *
- * @example
+ * **Example** (Annotate sessions directory)
+ *
  * ```ts
  * import type { AiProviderCliCodexSharedDirectory } from "@beep/ai-provider-cli"
  *
@@ -118,12 +124,14 @@ export type AiProviderCliCodexSharedDirectory = typeof AiProviderCliCodexSharedD
 /**
  * Credential-bearing Codex home entries that must stay private per shadow home.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Private entries must exist as real files inside the shadow home. A private
  * entry that resolves to a symlink is a hard error because it would leak one
  * instance's credentials into another home.
  *
- * @example
+ * **Example** (List private entry options)
+ *
  * ```ts
  * import { AiProviderCliCodexPrivateEntry } from "@beep/ai-provider-cli"
  *
@@ -143,7 +151,8 @@ export const AiProviderCliCodexPrivateEntry = AiProviderCliCodexPrivateEntryBase
 /**
  * Type for a private Codex home entry name.
  *
- * @example
+ * **Example** (Annotate auth.json entry)
+ *
  * ```ts
  * import type { AiProviderCliCodexPrivateEntry } from "@beep/ai-provider-cli"
  *
@@ -160,7 +169,8 @@ export type AiProviderCliCodexPrivateEntry = typeof AiProviderCliCodexPrivateEnt
 /**
  * Codex home entries left local to each home and never linked or shared.
  *
- * @example
+ * **Example** (List local entry options)
+ *
  * ```ts
  * import { AiProviderCliCodexLocalEntry } from "@beep/ai-provider-cli"
  *
@@ -180,7 +190,8 @@ export const AiProviderCliCodexLocalEntry = AiProviderCliCodexLocalEntryBase.pip
 /**
  * Type for a local-only Codex home entry name.
  *
- * @example
+ * **Example** (Annotate tmp entry)
+ *
  * ```ts
  * import type { AiProviderCliCodexLocalEntry } from "@beep/ai-provider-cli"
  *
@@ -197,13 +208,15 @@ export type AiProviderCliCodexLocalEntry = typeof AiProviderCliCodexLocalEntry.T
 /**
  * Resolved Codex home layout for a provider CLI instance.
  *
- * @remarks
+ * **Details**
+ *
  * `sharedHomePath` is always the resolved shared Codex home. In `direct`
  * mode `effectiveHomePath` is only present when a home path was explicitly
  * configured (otherwise the ambient environment applies); in `authOverlay`
  * mode it is the resolved shadow home path.
  *
- * @example
+ * **Example** (Make authOverlay layout)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliCodexHomeLayout } from "@beep/ai-provider-cli"

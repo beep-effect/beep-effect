@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for DOM HTML element schemas.
  *
- * @example
+ * **Example** (Import DomHtmlElement namespace)
+ *
  * ```ts
  * import * as DomHtmlElement from "@beep/schema/DomHtmlElement"
  *
