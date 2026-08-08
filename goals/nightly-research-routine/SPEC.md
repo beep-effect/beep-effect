@@ -121,4 +121,4 @@ fully authoritative, fail-closed backstop.
 Auto-merge; writing to `explorations/INBOX.md` or `goals/`; raw scraped
 bytes reaching the writer stage; attention-throttling feedback loops
 (explicitly rejected 2026-08-08 — merge is archival, not engagement);
-Anthropic-pool fan-out; touching the OIP corpus or `docs/_internal/`.
+Anthropic-pool fan-out; touching the OIP corpus or private internal docs.
