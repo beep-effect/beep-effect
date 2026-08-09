@@ -1114,6 +1114,7 @@ const npmPackageJsonFields = {
   typesVersions: S.OptionFromOptionalKey(TypesVersions),
   resolutions: S.OptionFromOptionalKey(StringRecord),
   patchedDependencies: S.OptionFromOptionalKey(NonEmptyStringRecord),
+  trustedDependencies: S.OptionFromOptionalKey(StringArray),
   readme: S.OptionFromOptionalKey(S.String),
 } as const;
 

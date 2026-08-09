@@ -21,10 +21,13 @@ the performance layer follows on its own track without becoming subordinate.
 
 ## Immediate next action
 
-Execute P1 only: validate 1Password secret references through the authorized
-`BEEP_CI` vault flow, mint/install the repo-scoped GitHub App, then
-prove the module on a non-serving shadow label through the existing Pulumi
-backend. Do not start cache or AMI work before the module is deployed.
+P1 deploy is DONE (2026-08-08): App minted/installed, secrets in KMS-backed
+SSM, module deployed via the Pulumi bridge, webhook activated as a repository
+hook, signed ping accepted. Remaining P1 work: dispatch the
+`fleet-shadow-check` probe from main after the bridge PR merges, prove
+one-job-one-VM birth/teardown, run the red-team acceptance gates, then flip
+P1 complete and start P2 cutover. Do not start cache or AMI work before
+cutover.
 
 ## Verification commands
 

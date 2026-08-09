@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-08T19:51:02.055Z",
+  "generatedAt": "2026-08-08T22:39:16.632Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,11 +65,11 @@
     "cleanPackages": 68,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 63,
-    "publicModules": 2419,
-    "publicExports": 16006,
-    "openModules": 406,
-    "openExports": 157,
-    "missingExportExamples": 0,
+    "publicModules": 2420,
+    "publicExports": 16013,
+    "openModules": 407,
+    "openExports": 162,
+    "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 547,
+    "multiple-description-paragraphs": 548,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -58578,8 +58578,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 996,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-996-rungithubchecks",
+          "line": 997,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-997-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -58602,8 +58602,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1307,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1307-collecteffecttsgodiagnosticlines",
+          "line": 1308,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1308-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -58626,8 +58626,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1436,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1436-runtsgorulescheck",
+          "line": 1437,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1437-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -58649,8 +58649,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1580,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1580-runtesttsgochecks",
+          "line": 1581,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1581-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -58673,8 +58673,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1678,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1678-runtsgosmokecheck",
+          "line": 1679,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1679-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -58696,8 +58696,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1781,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1781-runjsdocmoduletagscheck",
+          "line": 1782,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1782-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -58719,8 +58719,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1860,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1860-runjsdocinventory",
+          "line": 1861,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1861-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -58742,8 +58742,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1913,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1913-runjsdocquality",
+          "line": 1914,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1914-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -58764,8 +58764,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2351,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2351-qualitycommand",
+          "line": 2352,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2352-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -261750,9 +261750,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 8,
-        "publicModuleCount": 8,
-        "publicExportCount": 89
+        "sourceFileCount": 9,
+        "publicModuleCount": 9,
+        "publicExportCount": 96
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -261761,9 +261761,9 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 2,
-        "openExports": 19,
-        "missingExportExamples": 0,
+        "openModules": 3,
+        "openExports": 24,
+        "missingExportExamples": 5,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -261774,7 +261774,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 21,
+          "multiple-description-paragraphs": 22,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -261811,6 +261811,32 @@
           "documentationShapeViolations": [],
           "exportCount": 7,
           "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 1,
+          "anchor": "infra-src-cifleetcontroller-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 6,
+          "remediationStatus": "open"
         },
         {
           "docKind": "packageDocumentation",
@@ -261970,7 +261996,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         }
       ],
@@ -262135,6 +262161,148 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiFleetControllerPulumiConfigValues",
+          "exportKind": "const",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 92,
+          "anchor": "infra-src-cifleetcontroller-ts-92-cifleetcontrollerpulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "CiFleetControllerPulumiConfigValues",
+          "exportKind": "type",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 118,
+          "anchor": "infra-src-cifleetcontroller-ts-118-cifleetcontrollerpulumiconfigvalues",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiFleetControllerConfig",
+          "exportKind": "class",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 126,
+          "anchor": "infra-src-cifleetcontroller-ts-126-cifleetcontrollerconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "makeCiFleetControllerConfig",
+          "exportKind": "const",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 150,
+          "anchor": "infra-src-cifleetcontroller-ts-150-makecifleetcontrollerconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "loadCiFleetControllerConfig",
+          "exportKind": "const",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 170,
+          "anchor": "infra-src-cifleetcontroller-ts-170-loadcifleetcontrollerconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "CiFleetController",
+          "exportKind": "class",
+          "filePath": "src/CiFleetController.ts",
+          "repoPath": "infra/src/CiFleetController.ts",
+          "line": 205,
+          "anchor": "infra-src-cifleetcontroller-ts-205-cifleetcontroller",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
         },
         {
           "symbolName": "ciRunnersRunnerTagKey",
@@ -263922,12 +264090,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./CiFleetController.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "infra/src/index.ts",
+          "line": 50,
+          "anchor": "infra-src-index-ts-50-export-from-cifleetcontroller-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./CiRunners.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 58,
-          "anchor": "infra-src-index-ts-58-export-from-cirunners-ts",
+          "line": 65,
+          "anchor": "infra-src-index-ts-65-export-from-cirunners-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -263948,8 +264138,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 72,
-          "anchor": "infra-src-index-ts-72-export-from-oipweb-ts",
+          "line": 79,
+          "anchor": "infra-src-index-ts-79-export-from-oipweb-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -263971,8 +264161,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 86,
-          "anchor": "infra-src-index-ts-86-export-from-openclaw-ts",
+          "line": 93,
+          "anchor": "infra-src-index-ts-93-export-from-openclaw-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -263994,8 +264184,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 100,
-          "anchor": "infra-src-index-ts-100-export-from-openclawartifacts-ts",
+          "line": 107,
+          "anchor": "infra-src-index-ts-107-export-from-openclawartifacts-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -264017,8 +264207,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 114,
-          "anchor": "infra-src-index-ts-114-export-from-storybook-ts",
+          "line": 121,
+          "anchor": "infra-src-index-ts-121-export-from-storybook-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -264040,8 +264230,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "infra/src/index.ts",
-          "line": 128,
-          "anchor": "infra-src-index-ts-128-export-from-vercel-ts",
+          "line": 135,
+          "anchor": "infra-src-index-ts-135-export-from-vercel-ts",
           "currentTags": [
             "@example",
             "@category",
@@ -280976,8 +281166,8 @@
           "exportKind": "const",
           "filePath": "src/TsConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TsConfig.ts",
-          "line": 49,
-          "anchor": "packages-tooling-library-repo-utils-src-tsconfig-ts-49-collecttsconfigpaths",
+          "line": 51,
+          "anchor": "packages-tooling-library-repo-utils-src-tsconfig-ts-51-collecttsconfigpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -282496,8 +282686,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1336,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1336-npmpackagename",
+          "line": 1342,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1342-npmpackagename",
           "currentTags": [
             "@category",
             "@since"
@@ -282540,8 +282730,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1351,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1351-repopackagename",
+          "line": 1357,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1357-repopackagename",
           "currentTags": [
             "@category",
             "@since"
@@ -282584,8 +282774,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1366,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1366-relativedotpath",
+          "line": 1372,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1372-relativedotpath",
           "currentTags": [
             "@category",
             "@since"
@@ -282628,8 +282818,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1381,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1381-nonemptystringvalue",
+          "line": 1387,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1387-nonemptystringvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -282650,8 +282840,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 382,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-382-person",
+          "line": 386,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-386-person",
           "currentTags": [
             "@category",
             "@since"
@@ -282672,8 +282862,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1397,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1397-person",
+          "line": 1403,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1403-person",
           "currentTags": [
             "@category",
             "@since"
@@ -282694,8 +282884,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 405,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-405-author",
+          "line": 409,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-409-author",
           "currentTags": [
             "@category",
             "@since"
@@ -282716,8 +282906,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1412,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1412-author",
+          "line": 1418,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1418-author",
           "currentTags": [
             "@category",
             "@since"
@@ -282738,8 +282928,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 426,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-426-contributors",
+          "line": 430,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-430-contributors",
           "currentTags": [
             "@category",
             "@since"
@@ -282760,8 +282950,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1427,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1427-contributors",
+          "line": 1433,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1433-contributors",
           "currentTags": [
             "@category",
             "@since"
@@ -282782,8 +282972,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 447,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-447-maintainers",
+          "line": 451,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-451-maintainers",
           "currentTags": [
             "@category",
             "@since"
@@ -282804,8 +282994,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1442,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1442-maintainers",
+          "line": 1448,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1448-maintainers",
           "currentTags": [
             "@category",
             "@since"
@@ -282826,8 +283016,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 468,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-468-repository",
+          "line": 472,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-472-repository",
           "currentTags": [
             "@category",
             "@since"
@@ -282848,8 +283038,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1457,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1457-repository",
+          "line": 1463,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1463-repository",
           "currentTags": [
             "@category",
             "@since"
@@ -282870,8 +283060,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 491,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-491-bugs",
+          "line": 495,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-495-bugs",
           "currentTags": [
             "@category",
             "@since"
@@ -282892,8 +283082,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1472,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1472-bugs",
+          "line": 1478,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1478-bugs",
           "currentTags": [
             "@category",
             "@since"
@@ -282914,8 +283104,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 514,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-514-funding",
+          "line": 518,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-518-funding",
           "currentTags": [
             "@category",
             "@since"
@@ -282936,8 +283126,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1487,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1487-funding",
+          "line": 1493,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1493-funding",
           "currentTags": [
             "@category",
             "@since"
@@ -282958,8 +283148,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 537,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-537-bin",
+          "line": 541,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-541-bin",
           "currentTags": [
             "@category",
             "@since"
@@ -282980,8 +283170,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1502,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1502-bin",
+          "line": 1508,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1508-bin",
           "currentTags": [
             "@category",
             "@since"
@@ -283002,8 +283192,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 559,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-559-browser",
+          "line": 563,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-563-browser",
           "currentTags": [
             "@category",
             "@since"
@@ -283024,8 +283214,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1517,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1517-browser",
+          "line": 1523,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1523-browser",
           "currentTags": [
             "@category",
             "@since"
@@ -283046,8 +283236,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 603,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-603-directories",
+          "line": 607,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-607-directories",
           "currentTags": [
             "@category",
             "@since"
@@ -283068,8 +283258,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1532,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1532-directories",
+          "line": 1538,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1538-directories",
           "currentTags": [
             "@category",
             "@since"
@@ -283090,8 +283280,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 628,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-628-man",
+          "line": 632,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-632-man",
           "currentTags": [
             "@category",
             "@since"
@@ -283112,8 +283302,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1547,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1547-man",
+          "line": 1553,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1553-man",
           "currentTags": [
             "@category",
             "@since"
@@ -283134,8 +283324,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 650,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-650-sideeffects",
+          "line": 654,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-654-sideeffects",
           "currentTags": [
             "@category",
             "@since"
@@ -283156,8 +283346,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1562,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1562-sideeffects",
+          "line": 1568,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1568-sideeffects",
           "currentTags": [
             "@category",
             "@since"
@@ -283178,8 +283368,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 672,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-672-bundledependencies",
+          "line": 676,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-676-bundledependencies",
           "currentTags": [
             "@category",
             "@since"
@@ -283200,8 +283390,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1577,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1577-bundledependencies",
+          "line": 1583,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1583-bundledependencies",
           "currentTags": [
             "@category",
             "@since"
@@ -283222,8 +283412,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 694,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-694-peerdependenciesmeta",
+          "line": 698,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-698-peerdependenciesmeta",
           "currentTags": [
             "@category",
             "@since"
@@ -283244,8 +283434,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1592,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1592-peerdependenciesmeta",
+          "line": 1598,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1598-peerdependenciesmeta",
           "currentTags": [
             "@category",
             "@since"
@@ -283266,8 +283456,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 719,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-719-typesversions",
+          "line": 723,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-723-typesversions",
           "currentTags": [
             "@category",
             "@since"
@@ -283288,8 +283478,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1607,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1607-typesversions",
+          "line": 1613,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1613-typesversions",
           "currentTags": [
             "@category",
             "@since"
@@ -283310,8 +283500,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 760,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-760-devenginedependency",
+          "line": 764,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-764-devenginedependency",
           "currentTags": [
             "@category",
             "@since"
@@ -283332,8 +283522,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1622,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1622-devenginedependency",
+          "line": 1628,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1628-devenginedependency",
           "currentTags": [
             "@category",
             "@since"
@@ -283354,8 +283544,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 806,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-806-devengines",
+          "line": 810,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-810-devengines",
           "currentTags": [
             "@category",
             "@since"
@@ -283376,8 +283566,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1637,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1637-devengines",
+          "line": 1643,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1643-devengines",
           "currentTags": [
             "@category",
             "@since"
@@ -283398,8 +283588,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 886,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-886-packageexports",
+          "line": 890,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-890-packageexports",
           "currentTags": [
             "@category",
             "@since"
@@ -283420,8 +283610,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1652,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1652-packageexports",
+          "line": 1658,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1658-packageexports",
           "currentTags": [
             "@category",
             "@since"
@@ -283442,8 +283632,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 967,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-967-packageimports",
+          "line": 971,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-971-packageimports",
           "currentTags": [
             "@category",
             "@since"
@@ -283464,8 +283654,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1667,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1667-packageimports",
+          "line": 1673,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1673-packageimports",
           "currentTags": [
             "@category",
             "@since"
@@ -283486,8 +283676,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1035,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1035-workspaces",
+          "line": 1039,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1039-workspaces",
           "currentTags": [
             "@category",
             "@since"
@@ -283508,8 +283698,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1682,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1682-workspaces",
+          "line": 1688,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1688-workspaces",
           "currentTags": [
             "@category",
             "@since"
@@ -283530,8 +283720,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1058,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1058-publishconfig",
+          "line": 1062,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1062-publishconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -283552,8 +283742,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1697,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1697-publishconfig",
+          "line": 1703,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1703-publishconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -283574,8 +283764,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1150,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1150-npmpackagejson",
+          "line": 1156,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1156-npmpackagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -283596,8 +283786,8 @@
           "exportKind": "namespace",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1274,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1274-npmpackagejson",
+          "line": 1280,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1280-npmpackagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -283618,8 +283808,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1176,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1176-packagejson",
+          "line": 1182,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1182-packagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -283640,8 +283830,8 @@
           "exportKind": "namespace",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1305,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1305-packagejson",
+          "line": 1311,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1311-packagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -283662,8 +283852,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1716,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1716-decodepackagejson",
+          "line": 1722,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1722-decodepackagejson",
           "currentTags": [
             "@param",
             "@returns",
@@ -283686,8 +283876,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1736,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1736-decodepackagejsonexit",
+          "line": 1742,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1742-decodepackagejsonexit",
           "currentTags": [
             "@param",
             "@returns",
@@ -283710,8 +283900,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1770,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1770-decodepackagejsoneffect",
+          "line": 1776,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1776-decodepackagejsoneffect",
           "currentTags": [
             "@param",
             "@returns",
@@ -283735,8 +283925,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1803,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1803-encodepackagejsoneffect",
+          "line": 1809,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1809-encodepackagejsoneffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -283758,8 +283948,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1833,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1833-encodepackagejsontojsoneffect",
+          "line": 1839,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1839-encodepackagejsontojsoneffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -283781,8 +283971,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1868,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1868-encodepackagejsonprettyeffect",
+          "line": 1874,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1874-encodepackagejsonprettyeffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -283804,8 +283994,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1902,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1902-readpackagejsonfile",
+          "line": 1908,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1908-readpackagejsonfile",
           "currentTags": [
             "@category",
             "@since"
@@ -284638,8 +284828,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TypeScriptSourceExclusions.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
-          "line": 61,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-61-typescript-source-excluded-suffixes",
+          "line": 62,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-62-typescript-source-excluded-suffixes",
           "currentTags": [
             "@category",
             "@since"
@@ -284660,8 +284850,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TypeScriptSourceExclusions.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
-          "line": 88,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-88-toposixpath",
+          "line": 89,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-89-toposixpath",
           "currentTags": [
             "@param",
             "@returns",
@@ -284684,8 +284874,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TypeScriptSourceExclusions.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
-          "line": 113,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-113-isexcludedtypescriptsourcepath",
+          "line": 114,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-typescriptsourceexclusions-ts-114-isexcludedtypescriptsourcepath",
           "currentTags": [
             "@param",
             "@returns",
