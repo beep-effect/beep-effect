@@ -7,8 +7,9 @@ const validConfigValues = {
   bucketName: "beep-turbo-cache-123456789012",
   lambdaZipPath: "/artifacts/turbo-cache.zip",
   readOnlyTokenSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/read-only-token",
-  region: "us-east-1",
+  tokenKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
   trustedWriteTokenSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/trusted-write-token",
+  writerSharedSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/writer-hmac-secret",
 };
 
 const decodeConfigValues = S.decodeUnknownResult(CiTurboCachePulumiConfigValues);
@@ -35,11 +36,24 @@ describe("@beep/infra CiTurboCache", () => {
         })
       )
     ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeConfigValues({
+          ...validConfigValues,
+          writerSharedSecretSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
+        })
+      )
+    ).toBe(true);
+    const { writerSharedSecretSsmParameterArn: _writerSharedSecretSsmParameterArn, ...missingWriterSharedSecret } =
+      validConfigValues;
+    expect(Result.isFailure(decodeConfigValues(missingWriterSharedSecret))).toBe(true);
   });
 
-  it("accepts AWS regions and rejects availability zones", () => {
+  it("accepts a KMS key ARN and rejects malformed or missing values", () => {
     expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, region: "us-east-1a" }))).toBe(true);
+    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, tokenKmsKeyArn: "not-an-arn" }))).toBe(true);
+    const { tokenKmsKeyArn: _tokenKmsKeyArn, ...missingKmsKeyArn } = validConfigValues;
+    expect(Result.isFailure(decodeConfigValues(missingKmsKeyArn))).toBe(true);
   });
 
   it("accepts absolute ZIP paths and rejects relative or non-ZIP paths", () => {

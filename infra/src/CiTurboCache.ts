@@ -22,19 +22,23 @@ import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiTurboCache");
 
-const awsRegionPattern = /^[a-z]{2}(?:-[a-z]+)+-\d$/u;
 const bucketNamePattern = /^(?!\d{1,3}(?:\.\d{1,3}){3}$)(?!.*\.\.)(?!.*\.-)(?!.*-\.)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/u;
+const kmsKeyArnPattern = /^arn:aws(?:-us-gov|-cn)?:kms:[a-z0-9-]+:\d{12}:key\/[A-Za-z0-9-]+$/u;
 const ssmParameterArnPattern = /^arn:aws(?:-us-gov|-cn)?:ssm:[a-z0-9-]+:\d{12}:parameter\/[A-Za-z0-9_./-]+$/u;
 const absoluteZipPathPattern = /^\/.+\.zip$/u;
 
-const AwsRegion = S.String.check(
-  S.isPattern(awsRegionPattern, {
-    identifier: $I`AwsRegionFormat`,
-    title: "AWS Region Format",
-    description: "An AWS region name such as us-east-1.",
-    message: "Expected an AWS region name like us-east-1",
+const KmsKeyArn = S.String.check(
+  S.isPattern(kmsKeyArnPattern, {
+    identifier: $I`KmsKeyArnFormat`,
+    title: "KMS Key ARN Format",
+    description: "An ARN for an AWS KMS key.",
+    message: "Expected an AWS KMS key ARN",
   })
-).pipe($I.annoteSchema("AwsRegion", { description: "An AWS region name such as us-east-1." }));
+).pipe(
+  $I.annoteSchema("KmsKeyArn", {
+    description: "An ARN for the KMS key encrypting the cache SecureString parameters.",
+  })
+);
 
 const CacheBucketName = S.String.check(
   S.isPattern(bucketNamePattern, {
@@ -79,8 +83,9 @@ type CiTurboCachePulumiConfigValuesFields = {
   readonly bucketName: string;
   readonly lambdaZipPath: string;
   readonly readOnlyTokenSsmParameterArn: string;
-  readonly region: string;
+  readonly tokenKmsKeyArn: string;
   readonly trustedWriteTokenSsmParameterArn: string;
+  readonly writerSharedSecretSsmParameterArn: string;
 };
 
 /**
@@ -104,8 +109,9 @@ export const CiTurboCachePulumiConfigValues = S.Class<CiTurboCachePulumiConfigVa
     bucketName: CacheBucketName,
     lambdaZipPath: AbsoluteZipPath,
     readOnlyTokenSsmParameterArn: SsmParameterArn,
-    region: AwsRegion,
+    tokenKmsKeyArn: KmsKeyArn,
     trustedWriteTokenSsmParameterArn: SsmParameterArn,
+    writerSharedSecretSsmParameterArn: SsmParameterArn,
   },
   $I.annote("CiTurboCachePulumiConfigValues", {
     description: "Validated Pulumi configuration for the asymmetric Turbo cache component.",
@@ -153,13 +159,30 @@ const lambdaAssumeRolePolicy = () =>
  * `GET`, `HEAD`, and event-reporting requests reach a read-only Lambda whose
  * role cannot write S3. `PUT` reaches a writer whose role can write cache
  * objects. A separate Lambda authorizer resolves both token parameters and
- * rejects the read token on `PUT`. Every role uses the account's
- * `beep-ci-fleet-boundary` permissions boundary.
+ * rejects the read token on `PUT`. The authorizer signs each allowed write
+ * request with a shared secret held in SSM, and the dedicated writer wrapper
+ * validates that HMAC before delegating to the unauthenticated shim. Every role
+ * uses the account's `beep-ci-fleet-boundary` permissions boundary.
  *
  * **Gotchas**
  *
- * The Lambda ZIP must export `index.handler` for the shim and
- * `authorizer.handler` for the token-and-method authorizer.
+ * The Lambda ZIP must export `index.handler` for the read-only shim,
+ * `authorizer.handler` for the token-and-method authorizer, and
+ * `writer.handler` for the HMAC-validating writer wrapper. The authorizer and
+ * writer must calculate and verify the HMAC over the API Gateway request id,
+ * method, and raw path before the wrapper delegates to the shim. The writer's
+ * `lambda:InvokeFunction` resource permission is additionally scoped to this
+ * API's `PUT /v8/artifacts/{hash}` execution ARN. These barriers are independent
+ * of the API resource policy, so a same-account principal with direct invoke
+ * authority still cannot mint an accepted write event.
+ *
+ * All resources inherit the enclosing stack's AWS provider. The component has
+ * no independent region setting, preventing Lambda, API Gateway, and permission
+ * resources from being split across regions. The bucket policy admits object
+ * reads only from the reader and writer roles and object writes only from the
+ * writer role. Stack administrators retain bucket control-plane authority, so
+ * they can update or remove the policy, but cannot read or mutate cache objects
+ * while this data-plane policy remains installed.
  *
  * **Example** (Declare the component)
  *
@@ -171,9 +194,12 @@ const lambdaAssumeRolePolicy = () =>
  *   lambdaZipPath: "/artifacts/turbo-cache.zip",
  *   readOnlyTokenSsmParameterArn:
  *     "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/read-only-token",
- *   region: "us-east-1",
+ *   tokenKmsKeyArn:
+ *     "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
  *   trustedWriteTokenSsmParameterArn:
  *     "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/trusted-write-token",
+ *   writerSharedSecretSsmParameterArn:
+ *     "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/cache/writer-hmac-secret",
  * })
  *
  * console.log(new CiTurboCache("ci-turbo-cache", { config }).apiEndpoint)
@@ -211,7 +237,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
       {
         bucket: config.bucketName,
         forceDestroy: false,
-        region: config.region,
         tags: { ...defaultTags, DataClass: "ci-build-cache" },
       },
       { parent: this }
@@ -242,7 +267,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
       `${name}-lifecycle`,
       {
         bucket: bucket.id,
-        region: config.region,
         rules: [
           {
             abortIncompleteMultipartUpload: { daysAfterInitiation: 1 },
@@ -260,7 +284,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
       `${name}-read-logs`,
       {
         name: `/aws/lambda/${name}-read`,
-        region: config.region,
         retentionInDays: 14,
         tags: defaultTags,
       },
@@ -270,7 +293,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
       `${name}-write-logs`,
       {
         name: `/aws/lambda/${name}-write`,
-        region: config.region,
         retentionInDays: 14,
         tags: defaultTags,
       },
@@ -280,7 +302,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
       `${name}-authorizer-logs`,
       {
         name: `/aws/lambda/${name}-authorizer`,
-        region: config.region,
         retentionInDays: 14,
         tags: defaultTags,
       },
@@ -349,6 +370,16 @@ export class CiTurboCache extends pulumi.ComponentResource {
           sid: "ReadWriteCacheObjects",
         },
         {
+          actions: ["ssm:GetParameter"],
+          resources: [config.writerSharedSecretSsmParameterArn],
+          sid: "ReadWriterSharedSecret",
+        },
+        {
+          actions: ["kms:Decrypt"],
+          resources: [config.tokenKmsKeyArn],
+          sid: "DecryptWriterSharedSecret",
+        },
+        {
           actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
           resources: [pulumi.interpolate`${writeLogGroup.arn}:*`],
           sid: "WriteOwnLogs",
@@ -359,8 +390,17 @@ export class CiTurboCache extends pulumi.ComponentResource {
       statements: [
         {
           actions: ["ssm:GetParameter", "ssm:GetParameters"],
-          resources: [config.readOnlyTokenSsmParameterArn, config.trustedWriteTokenSsmParameterArn],
+          resources: [
+            config.readOnlyTokenSsmParameterArn,
+            config.trustedWriteTokenSsmParameterArn,
+            config.writerSharedSecretSsmParameterArn,
+          ],
           sid: "ReadCacheTokens",
+        },
+        {
+          actions: ["kms:Decrypt"],
+          resources: [config.tokenKmsKeyArn],
+          sid: "DecryptCacheSecrets",
         },
         {
           actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
@@ -386,9 +426,53 @@ export class CiTurboCache extends pulumi.ComponentResource {
       { parent: this }
     );
 
+    const bucketPolicy = aws.iam.getPolicyDocumentOutput({
+      statements: [
+        {
+          actions: ["s3:*"],
+          conditions: [{ test: "Bool", values: ["false"], variable: "aws:SecureTransport" }],
+          effect: "Deny",
+          principals: [{ identifiers: ["*"], type: "*" }],
+          resources: [bucket.arn, pulumi.interpolate`${bucket.arn}/*`],
+          sid: "DenyInsecureTransport",
+        },
+        {
+          actions: ["s3:GetObject"],
+          principals: [{ identifiers: [readRole.arn], type: "AWS" }],
+          resources: [pulumi.interpolate`${bucket.arn}/*`],
+          sid: "AllowReaderObjectAccess",
+        },
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          principals: [{ identifiers: [writeRole.arn], type: "AWS" }],
+          resources: [pulumi.interpolate`${bucket.arn}/*`],
+          sid: "AllowWriterObjectAccess",
+        },
+        {
+          actions: ["s3:*"],
+          conditions: [
+            {
+              test: "ArnNotEquals",
+              values: [readRole.arn, writeRole.arn],
+              variable: "aws:PrincipalArn",
+            },
+          ],
+          effect: "Deny",
+          principals: [{ identifiers: ["*"], type: "*" }],
+          resources: [pulumi.interpolate`${bucket.arn}/*`],
+          sid: "DenyObjectAccessOutsideCacheRoles",
+        },
+      ],
+    });
+
+    new aws.s3.BucketPolicy(
+      `${name}-bucket-policy`,
+      { bucket: bucket.id, policy: bucketPolicy.json },
+      { parent: this }
+    );
+
     const commonEnvironment = {
       AUTH_MODE: "none",
-      AWS_REGION: config.region,
       STORAGE_PATH: config.bucketName,
       STORAGE_PROVIDER: "s3",
     };
@@ -406,7 +490,6 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "index.handler",
         memorySize: 512,
         name: `${name}-read`,
-        region: config.region,
         role: readRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -422,12 +505,12 @@ export class CiTurboCache extends pulumi.ComponentResource {
           variables: {
             ...commonEnvironment,
             READ_ONLY: "false",
+            WRITER_SHARED_SECRET_SSM_PARAMETER_ARN: config.writerSharedSecretSsmParameterArn,
           },
         },
-        handler: "index.handler",
+        handler: "writer.handler",
         memorySize: 512,
         name: `${name}-write`,
-        region: config.region,
         role: writeRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -443,12 +526,12 @@ export class CiTurboCache extends pulumi.ComponentResource {
           variables: {
             READ_ONLY_TOKEN_SSM_PARAMETER_ARN: config.readOnlyTokenSsmParameterArn,
             TRUSTED_WRITE_TOKEN_SSM_PARAMETER_ARN: config.trustedWriteTokenSsmParameterArn,
+            WRITER_SHARED_SECRET_SSM_PARAMETER_ARN: config.writerSharedSecretSsmParameterArn,
           },
         },
         handler: "authorizer.handler",
         memorySize: 128,
         name: `${name}-authorizer`,
-        region: config.region,
         role: authorizerRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -554,7 +637,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         action: "lambda:InvokeFunction",
         function: writeFunction.name,
         principal: "apigateway.amazonaws.com",
-        sourceArn: pulumi.interpolate`${api.executionArn}/*/*`,
+        sourceArn: pulumi.interpolate`${api.executionArn}/*/PUT/v8/artifacts/*`,
       },
       { parent: this }
     );

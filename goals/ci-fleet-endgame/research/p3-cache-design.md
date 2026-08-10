@@ -16,10 +16,15 @@ with a Lambda authorizer and two shim processes behind one HTTP API:
   `s3:PutObject` permission; and
 - API Gateway exposes artifact `PUT` only through the writer integration.
 
-This is defense in depth. A leaked PR token encounters three independent write
-barriers: the authorizer denies it on `PUT`, only `PUT` targets the writer, and
-the reader role has no S3 write action. Shim functions have no token-reading
-permission and are invokable only through API Gateway.
+This is defense in depth. A leaked PR token encounters four independent write
+barriers: the authorizer denies it on `PUT`, only `PUT` targets the writer, the
+reader role has no S3 write action, and the writer wrapper requires an
+authorizer-produced HMAC before delegating to the shim. The authorizer and
+writer resolve the HMAC key from one SSM SecureString; the value is never a
+Pulumi input or Lambda environment value. The writer's Lambda resource
+permission is scoped to this API's artifact `PUT` execution ARN. A direct
+same-account `lambda:InvokeFunction` call therefore lacks a valid HMAC even if
+its caller already has identity-policy permission to invoke the function.
 
 Do not use Lambda aliases for the split. Lambda environment variables belong to
 published function versions, not aliases, so aliases cannot independently set
@@ -111,24 +116,41 @@ flowchart LR
   PR[PR job + read token] --> API[API Gateway HTTP API]
   Main[trusted main job + write token] --> API
   API --> Auth[token and method authorizer]
-  Auth -->|GetParameter: both tokens| SSM[SSM SecureString]
+  Auth -->|GetParameter: tokens and HMAC key| SSM[SSM SecureString]
   API -->|GET HEAD POST read routes| Reader[reader Lambda]
-  API -->|PUT artifact only| Writer[writer Lambda]
+  API -->|PUT artifact plus signed context| Writer[HMAC-validating writer Lambda]
   Reader -->|GetObject ListBucket| S3[(private S3 bucket)]
   Writer -->|GetObject PutObject ListBucket| S3
 ```
 
-The Lambda ZIP exports the shim handler and an authorizer handler. The
-authorizer resolves both parameter ARNs, compares the bearer token, and denies
-the read token unless the route method is in the read matrix. Authorization
-caching is disabled so a result for one method cannot authorize another.
-Pulumi state and Lambda environments contain parameter ARNs, never token values.
+The Lambda ZIP exports the read shim handler, an authorizer handler, and a
+writer wrapper handler. The authorizer resolves both token parameter ARNs,
+compares the bearer token, and denies the read token unless the route method is
+in the read matrix. For an allowed write, it signs the API Gateway request id,
+method, and raw path with the separate writer HMAC key. The writer resolves the
+same key, verifies the signature on every event, and only then delegates to the
+shim. Missing or invalid signatures fail closed. Authorization caching is
+disabled so a result for one method cannot authorize another. Pulumi state and
+Lambda environments contain parameter ARNs, never secret values.
 
 All three execution roles use the account-local
 `arn:aws:iam::<account>:policy/beep-ci-fleet-boundary` boundary. The reader role
 cannot call `s3:PutObject`; the writer role cannot delete objects because cache
-cleaning is not part of the CI request surface. Only the authorizer role can
-read the token parameters, and it has no S3 access.
+cleaning is not part of the CI request surface. The authorizer can read the two
+token parameters and the HMAC parameter; the writer can read only the HMAC
+parameter. Both roles receive `kms:Decrypt` only for the configured CMK that
+encrypts those three SecureStrings. Neither role receives unrelated KMS access,
+and the authorizer has no S3 access.
+
+The S3 bucket policy independently denies non-HTTPS requests and denies object
+access from every principal except the reader and writer role ARNs. The reader
+is allowed `s3:GetObject`; the writer is allowed `s3:GetObject` and
+`s3:PutObject`, with its identity policy still denying delete. No AWS service
+principal needs cache-object access. Stack administrators retain bucket
+control-plane permissions and can update or remove the policy, but cannot read,
+write, or delete cache objects while the data-plane restriction is installed.
+The entire component inherits the enclosing stack's AWS provider and region so
+Lambda, API Gateway, S3, IAM, and Lambda permissions cannot silently diverge.
 
 ## Request-method matrix
 
@@ -144,8 +166,10 @@ read the token parameters, and it has no S3 access.
 | Any other method or path | no route | no route | none | none |
 
 The HTTP API invokes its request authorizer before a route integration. The
-authorizer interprets the bearer token and route method; API Gateway then routes
-the allowed request to a shim process with `AUTH_MODE=none`.
+authorizer interprets the bearer token and route method; API Gateway routes an
+allowed read directly to the read-only shim with `AUTH_MODE=none` and an allowed
+write to the HMAC-validating wrapper. The wrapper is the only path to the writer
+shim and rejects unsigned or incorrectly signed events before delegation.
 
 ## Payload-size deployment gate
 
@@ -226,8 +250,9 @@ Sources:
 ## Rollout plan
 
 1. Measure real artifact sizes and stop if the Lambda ceiling is unsafe.
-2. Build a pinned shim ZIP with the authorizer handler and run protocol tests
-   against both shim modes and the token-method matrix.
+2. Build a pinned shim ZIP with the authorizer and writer-wrapper handlers and
+   run protocol tests against both shim modes, the token-method matrix, and
+   direct-invoke HMAC rejection.
 3. Deploy the private bucket, lifecycle rule, three boundaried roles, three
    Lambda functions, and method-split HTTP API from a stack entrypoint added
    later.
@@ -246,7 +271,7 @@ Sources:
 
 | Risk | Control |
 | --- | --- |
-| PR cache poisoning | Method split, writer token isolation, read-only S3 role |
+| PR cache poisoning | Method split, writer token isolation, writer HMAC, read-only S3 role, bucket data-plane policy |
 | Read token leak | Treat as public-equivalent; rate/cost alarms; easy rotation |
 | Trusted token leak | Main-only environment; SSM references; ephemeral jobs only |
 | Reader code exploit | Reader role has no S3 write or delete action |
@@ -267,8 +292,9 @@ could create a valid poisoned artifact.
 3. What exact `TURBO_TEAM` namespace should own the cache keys?
 4. Use the existing cache bucket named in the packet record, or let the new
    component own a replacement bucket without creating a dual writer?
-5. Should cache tokens use the existing CI KMS key? If so, add its ARN and a
-   narrowly scoped `kms:Decrypt` statement before deployment.
+5. Which CI KMS key encrypts the two cache-token parameters and writer HMAC
+   parameter? Its key ARN is required by the scaffold's narrowly scoped
+   `kms:Decrypt` statements.
 6. Is 30-day retention appropriate after the first size and hit-rate sample?
 7. Is artifact signing worth distributing a third secret to trusted jobs?
 
