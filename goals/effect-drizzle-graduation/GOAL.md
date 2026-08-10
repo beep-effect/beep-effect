@@ -1,12 +1,13 @@
-# GOAL: graduate scratchpad/bsl into packages/ecosystem/effect-drizzle
+# GOAL: graduate scratchpad/bsl into @beep/effect-drizzle (ecosystem family)
 
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
 Outcome: the effect v4 + drizzle SQL DSL proven in `scratchpad/bsl` ships as
-`packages/ecosystem/effect-drizzle` inside a newly chartered `ecosystem`
-package family, with family doctrine, gates, and quality lanes landed.
+`@beep/effect-drizzle` (member root `packages/ecosystem/effect-drizzle/**`,
+created in P1) inside a newly chartered `ecosystem` package family, with
+family doctrine, gates, and quality lanes landed.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:

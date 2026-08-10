@@ -10,7 +10,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Graduate `scratchpad/bsl` — the effect v4 + drizzle SQL DSL proven through
 rounds 1-7.5, two quality loops, and PR #651 — into
-`packages/ecosystem/effect-drizzle`, chartering the new `ecosystem` package
+the new flat `ecosystem` family as `@beep/effect-drizzle` (member root
+`packages/ecosystem/effect-drizzle/**`, created in P1), chartering the package
 family (publishable, beep-independent packages) in the architecture standards
 along the way.
 

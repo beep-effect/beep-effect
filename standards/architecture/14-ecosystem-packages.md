@@ -96,7 +96,7 @@ Members publish a deliberately strict artifact:
 
 - ESM-only (`"type": "module"`); no dual-format builds.
 - An exports map naming exactly the supported entry points (plus
-  `./package.json`); no wildcards, so deep imports are impossible. A root
+  `"./package.json"`); no wildcards, so deep imports are impossible. A root
   entry point may stay alongside granular subpaths as a convenience whose
   bundle cost is documented.
 - `sideEffects: false`, with pure annotations where a bundler needs help.

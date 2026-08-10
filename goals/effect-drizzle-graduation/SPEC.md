@@ -3,8 +3,9 @@
 ## Objective
 
 `scratchpad/bsl` (the effect v4 + drizzle SQL DSL proven through rounds 1-7.5,
-two quality loops, and PR #651) ships as `packages/ecosystem/effect-drizzle`
-(`@beep/effect-drizzle`) inside a newly chartered `ecosystem` package family,
+two quality loops, and PR #651) ships as `@beep/effect-drizzle` (member root
+`packages/ecosystem/effect-drizzle/**`, created in P1) inside a newly
+chartered `ecosystem` package family,
 with the family's doctrine, gates, and quality lanes landed in the standards
 and repo tooling. Complete at P2; npm publication itself stays gated
 (`private: true`) until effect v4 stable and drizzle 1.0 final.
@@ -85,8 +86,8 @@ operator:
    projection at `@beep/drizzle` is updated in P0.
 5. **Test harness**: migrate the hand-rolled live-scope support to
    `@effect/vitest` `layer()` in P1.
-6. **Artifact**: ESM-only, exports map exposing exactly `.`, `./pg`,
-   `./sqlite`, `./package.json`; `sideEffects: false`; declarations built with
+6. **Artifact**: ESM-only, exports map exposing exactly `"."`, `"./pg"`,
+   `"./sqlite"`, `"./package.json"`; `sideEffects: false`; declarations built with
    `stripInternal` so `@internal` symbols vanish from published `.d.ts`; the
    root `make` convenience stays, with its bundle cost documented.
 7. **Publish gate**: `private: true` until effect v4 stable AND drizzle 1.0
@@ -112,7 +113,7 @@ operator:
 - [ ] P0: doc 14 exists and is indexed; family grammar, binding summary,
       glossary term, decision entry, and the shared-tables projection line all
       agree; packet registered in `goals/INDEX.md`; PR merged.
-- [ ] P1: `packages/ecosystem/effect-drizzle` builds, checks, tests, and
+- [ ] P1: `@beep/effect-drizzle` builds, checks, tests, and
       docgens green through standard lanes; the member tstyche lane exists and
       passes (matrix + exact `~effect-drizzle.error` literals via
       `.toRaiseError`); the inverted-import gate fails on a deliberate

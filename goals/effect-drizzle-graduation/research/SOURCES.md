@@ -47,7 +47,7 @@ entirely on-disk under `scratchpad/bsl/research/`.
   (devDependencies only). **reuse**.
 - `packages/shared/tables` — consumer of the updated projection contract
   line. **touched in P0 (one line)**.
-- `packages/ecosystem/effect-drizzle` — **NET-NEW** (P1, via git-mv).
+- `packages/ecosystem/effect-drizzle/**` — **NET-NEW** (P1, via git-mv).
 
 ## 5. Cross-links & provenance
 
