@@ -38,6 +38,7 @@ import {
   Path,
   Result,
 } from "effect";
+import * as S from "effect/Schema";
 import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
 import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
@@ -51,6 +52,7 @@ import {
   FleetLivenessVerdict,
   FleetScanCoverage,
   FleetScanOptions,
+  FleetSessionRegistryEntry,
   FleetSnapshot,
   parseWorktreePorcelain,
 } from "./Worktree.schemas.ts";
@@ -90,11 +92,16 @@ export const FLEET_SURFACE_EXCLUDE_PREFIXES = [".repos/", "node_modules/", ".git
  * **Details**
  *
  * `live` requires positive evidence from any probe. `dormant` requires every
- * probe to have measured a negative — a complete process scan with no match,
- * a transcript that is absent or older than the window, and a worktree mtime
- * older than the window. Anything else is `unknown`: an incomplete process
- * scan or a failed probe leaves open the possibility of a live agent, and a
- * falsely-`dormant` verdict is a silent miss.
+ * negative-capable probe to have measured a negative — a complete process
+ * scan with no match, a transcript that is absent or older than the window,
+ * and a worktree mtime older than the window. Anything else is `unknown`: an
+ * incomplete process scan or a failed probe leaves open the possibility of a
+ * live agent, and a falsely-`dormant` verdict is a silent miss.
+ *
+ * The session-registry probe (`sessionMatches`) is positive-only: a confirmed
+ * registry entry classifies `live` with `claude-session` evidence, but zero
+ * matches never counts toward `dormant` — the registry covers Claude Code
+ * sessions only, so its silence is not absence of activity.
  *
  * **Example** (An unreadable process entry yields unknown, never dormant)
  *
@@ -105,6 +112,7 @@ export const FLEET_SURFACE_EXCLUDE_PREFIXES = [".repos/", "node_modules/", ".git
  *   FleetLivenessReadings.make({
  *     processMatches: 0,
  *     processScanComplete: false,
+ *     sessionMatches: 0,
  *     transcript: { _tag: "absent" },
  *     worktreeMtime: { _tag: "measured", ageSeconds: 86_400 },
  *   })
@@ -122,16 +130,16 @@ export const classifyFleetLiveness = (
   readings: FleetLivenessReadings,
   windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS
 ): FleetLivenessVerdict => {
-  const evidence: Array<FleetLivenessProbe> = [];
-  if (readings.processMatches > 0) {
-    evidence.push("process-cwd");
-  }
-  if (readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds) {
-    evidence.push("transcript-mtime");
-  }
-  if (readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds) {
-    evidence.push("worktree-mtime");
-  }
+  const candidates: ReadonlyArray<readonly [boolean, FleetLivenessProbe]> = [
+    [readings.processMatches > 0, "process-cwd"],
+    [readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds, "transcript-mtime"],
+    [readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds, "worktree-mtime"],
+    [readings.sessionMatches > 0, "claude-session"],
+  ];
+  const evidence = A.map(
+    A.filter(candidates, ([active]) => active),
+    ([, probe]) => probe
+  );
   if (evidence.length > 0) {
     return FleetLivenessVerdict.make({ status: "live", evidence });
   }
@@ -279,6 +287,43 @@ export const parseMergeTreeConflictNames = (output: string): ReadonlyArray<strin
  * @since 0.0.0
  */
 export const transcriptProjectDirName = (absolutePath: string): string => Str.replace(/[/_.]/g, "-")(absolutePath);
+
+/**
+ * Parse the `starttime` field (field 22) out of a `/proc/<pid>/stat` line.
+ *
+ * **Details**
+ *
+ * `stat` embeds the command name in parentheses as field 2, and the command
+ * name may itself contain spaces and parentheses, so fields are only
+ * addressable after the *last* `)`. Fields resume there at field 3 (`state`),
+ * which places `starttime` at index 19 of the remaining whitespace-split
+ * fields. This is the PID-reuse guard for the session-registry probe: a
+ * registry entry whose PID is alive but whose `starttime` differs is a stale
+ * file over a recycled PID.
+ *
+ * **Example** (Parse a stat line whose command name contains spaces)
+ *
+ * ```ts
+ * import { parseProcStatStartTime } from "@beep/repo-cli/commands/Worktree"
+ * import { A, O } from "@beep/utils"
+ *
+ * const fields = A.join(["S", ...A.makeBy(18, () => "0"), "220635", "0"], " ")
+ * console.log(O.getOrNull(parseProcStatStartTime(`244216 (tmux: server) ${fields}`))) // "220635"
+ * ```
+ *
+ * @param stat - Raw contents of a `/proc/<pid>/stat` file.
+ * @returns The `starttime` field as the string `/proc` reports, or `O.none()` when the line does not carry one.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseProcStatStartTime = (stat: string): O.Option<string> => {
+  const closeParen = Str.lastIndexOf(")")(stat);
+  if (O.isNone(closeParen)) {
+    return O.none();
+  }
+  const fields = A.filter(Str.split(Str.trim(Str.slice(closeParen.value + 1)(stat)), /\s+/), Str.isNonEmpty);
+  return O.fromUndefinedOr(fields[19]);
+};
 
 type SurfaceIndex = MutableHashMap.MutableHashMap<string, MutableHashSet.MutableHashSet<string>>;
 
@@ -591,6 +636,71 @@ const scanProcesses = Effect.fn("Fleet.scanProcesses")(function* (
   return { counts, scanned: A.length(pids), unreadable, complete: unreadable === 0 };
 });
 
+const SESSION_REGISTRY_FILE = /^[0-9]+\.json$/;
+
+const decodeSessionRegistryEntry = S.decodeUnknownEffect(S.fromJsonString(FleetSessionRegistryEntry));
+
+/** A confirmed registry session's cwd, or `O.none()` for an unreadable, undecodable, or PID-recycled entry — never a negative. */
+const confirmedSessionCwd = Effect.fn("Fleet.confirmedSessionCwd")(function* (
+  registryDir: string,
+  name: string
+): Effect.fn.Return<O.Option<string>, never, FleetMirrorServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const content = yield* fs.readFileString(path.join(registryDir, name)).pipe(Effect.option);
+  if (O.isNone(content)) {
+    return O.none();
+  }
+  const entry = yield* decodeSessionRegistryEntry(content.value).pipe(Effect.option);
+  if (O.isNone(entry)) {
+    return O.none();
+  }
+  const stat = yield* fs.readFileString(`/proc/${entry.value.pid}/stat`).pipe(Effect.option);
+  const startTime = O.flatMap(stat, parseProcStatStartTime);
+  return O.isSome(startTime) && startTime.value === entry.value.procStart ? O.some(entry.value.cwd) : O.none();
+});
+
+/**
+ * Count confirmed Claude Code session-registry entries per checkout.
+ *
+ * **Details**
+ *
+ * Reads `~/.claude/sessions/<pid>.json`, keeps only entries whose PID passes
+ * the `/proc/<pid>/stat` `starttime` reuse guard, and attributes each
+ * surviving entry's recorded working directory to the longest checkout path
+ * containing it — a session started in a subdirectory still belongs to its
+ * checkout. Every failure mode (missing registry, unreadable file, decode
+ * failure, dead or recycled PID) contributes nothing: this probe produces
+ * positive evidence only, so a checkout with no registry hit falls through to
+ * the other probes unchanged.
+ */
+const scanSessionRegistry = Effect.fn("Fleet.scanSessionRegistry")(function* (
+  homeDir: O.Option<string>,
+  checkoutPaths: ReadonlyArray<string>
+): Effect.fn.Return<MutableHashMap.MutableHashMap<string, number>, never, FleetMirrorServiceRequirements> {
+  const counts = MutableHashMap.empty<string, number>();
+  if (O.isNone(homeDir)) {
+    return counts;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const registryDir = path.join(homeDir.value, ".claude", "sessions");
+  const names = yield* fs.readDirectory(registryDir).pipe(Effect.option);
+  if (O.isNone(names)) {
+    return counts;
+  }
+  const byLengthDesc = A.sort(
+    checkoutPaths,
+    Order.mapInput(Order.Number, (candidate: string) => -candidate.length)
+  );
+  const files = A.filter(names.value, (name) => O.isSome(Str.match(SESSION_REGISTRY_FILE)(name)));
+  const cwds = yield* Effect.forEach(files, (name) => confirmedSessionCwd(registryDir, name));
+  for (const cwd of A.getSomes(cwds)) {
+    attributeProcessCwd(counts, byLengthDesc, cwd);
+  }
+  return counts;
+});
+
 const PROBE_FAILED: FleetProbeReading = { _tag: "failed" };
 const PROBE_ABSENT: FleetProbeReading = { _tag: "absent" };
 
@@ -786,11 +896,12 @@ type CheckoutDerivation = {
   readonly degraded: boolean;
 };
 
-/** Everything one scan measured once and every checkout row reads: the scanner, epoch target, process scan, and clock. */
+/** Everything one scan measured once and every checkout row reads: the scanner, epoch target, process and registry scans, and clock. */
 type DerivationContext = {
   readonly scanner: ScannerContext;
   readonly target: FleetEpochTarget;
   readonly processScan: ProcessScan;
+  readonly sessionCounts: MutableHashMap.MutableHashMap<string, number>;
   readonly homeDir: O.Option<string>;
   readonly nowMillis: number;
   readonly windowSeconds: number;
@@ -840,6 +951,7 @@ const livenessFacts = Effect.fn("Fleet.livenessFacts")(function* (
     FleetLivenessReadings.make({
       processMatches: O.getOrElse(MutableHashMap.get(context.processScan.counts, checkoutPath), () => 0),
       processScanComplete: context.processScan.complete,
+      sessionMatches: O.getOrElse(MutableHashMap.get(context.sessionCounts, checkoutPath), () => 0),
       transcript,
       worktreeMtime,
     }),
@@ -1136,10 +1248,10 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
     onSome: Effect.succeed,
     onNone: () =>
       Effect.map(runGitProbe(currentRoot, ["rev-parse", "--git-common-dir"]), (probe): string =>
-        O.match(gitStdout(probe), {
-          onNone: () => path.dirname(currentRoot),
-          onSome: (output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output)))),
-        })
+        gitStdout(probe).pipe(
+          O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
+          O.getOrElse(() => path.dirname(currentRoot))
+        )
       ),
   });
 
@@ -1153,10 +1265,14 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
 
   const { clones, stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);
   const processScan = yield* scanProcesses(A.map(stubs, (stub) => stub.path));
+  const sessionCounts = yield* scanSessionRegistry(
+    homeDir,
+    A.map(stubs, (stub) => stub.path)
+  );
   const scanner = yield* ensureScanner(scannerDir, clones);
   const target = yield* materializeTarget(scanner, originUrl, targetRef);
 
-  const context: DerivationContext = { scanner, target, processScan, homeDir, nowMillis, windowSeconds };
+  const context: DerivationContext = { scanner, target, processScan, sessionCounts, homeDir, nowMillis, windowSeconds };
   const derivations = yield* Effect.forEach(stubs, (stub) => deriveCheckout(stub, context), { concurrency: 8 });
 
   const contestedPaths = buildContestedIndex(

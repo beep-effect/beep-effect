@@ -70,3 +70,38 @@ and moved onto the measured policy surface — `.github/workflows/**`,
 which tripped yeet's stale-base publish guard. Signal 3 pointed at this exact
 window in the first live scan hours earlier. Fourth real specimen of the arc;
 resolved by fast-forward (no local commits yet) + INDEX regeneration.
+
+## 2026-08-10 — the advertised full JSON escape hatch truncated at 64 KiB
+
+The rung 1.5 live smoke test piped `beep worktree fleet --json` into `jq` and
+failed at byte 65,536 with an unfinished JSON string. The real 1,185-row
+contested snapshot exceeded the Bun platform Console service's output cap, so
+the text renderer's overflow instruction — "use `--json` for the full list" —
+pointed at invalid output exactly when the list was large enough to need it.
+
+- Evidence: both `bun run beep worktree fleet --json | wc -c` and direct
+  invocation of the CLI emitted exactly `65536`; a 70,000-byte
+  `Console.log` under `BunServices.layer` reproduced the cap, while
+  `Terminal.display` under the same layer emitted all 70,000 bytes.
+- Resolution: the shared `printCommandJson` process boundary now writes
+  directly to stdout. This fixes Fleet and prevents the same silent truncation
+  in Yeet's JSON status/plan output without spreading process I/O through
+  command logic.
+- What would have prevented it: a shared JSON-printer integration proof with a
+  payload above 64 KiB. Small-object formatting tests cannot exercise the
+  platform Console boundary.
+
+## 2026-08-10 — the package test tsconfig is not a direct test-typecheck entrypoint
+
+After the full Yeet lane found an Effect diagnostic in a CLI test, running
+`tsgo -p packages/tooling/tool/cli/test/tsconfig.json --noEmit` directly produced
+only `TS6059` noise because the package source config fixes `rootDir` to `src/`.
+The canonical `beep quality test-tsgo` lane builds its own per-package test
+profile and is the usable reproduction path.
+
+- Evidence: the direct command rejected every `test/**/*.test.ts` file as being
+  outside `packages/tooling/tool/cli/src`; `bun run beep quality test-tsgo`
+  instead reported the two actionable `TS377098` diagnostics.
+- What would have prevented it: a package-local `beep:check:tests` script, or a
+  short note in `test/tsconfig.json` naming `beep quality test-tsgo` as the
+  supported entrypoint.
