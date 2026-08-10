@@ -148,11 +148,15 @@ canonical JSON compare (`:45`, `:274`). Evidence integrity checks
 cases, including encoded-shape stability at `:86` and schema-derived
 arbitraries at `:170`).
 
-**Composition read.** The fixture already produces a *totally ordered,
-evidence-closed* set of eight event-shaped facts for one law-patent matter,
-regenerated deterministically from a seed + body. It is the cheapest possible
-`DraftingEpisode` replay corpus: an episode-fold over these eight facts can be
-proven against the existing expected snapshots with no new fixture authoring.
+**Composition read.** The fixture deterministically regenerates an
+evidence-closed, grouped candidate-output set for one law-patent matter, and
+the existing snapshots prove that encoded grouped shape. It does **not**
+define a sequence or timestamp across claims, project, tasks, drafts, approval
+gates, and nested context activities; stable serialization is not a domain
+event order. The fixture is therefore cheap source material, not yet a
+`DraftingEpisode` replay corpus. A replay proof first needs either an explicit
+flattening plus total-order contract or a canonical event fixture, followed by
+an episode-fold snapshot.
 
 ## 3. `ExecutionLedger` — append-only / hash-chain precedent
 
@@ -376,10 +380,14 @@ carries 3,992 lines of `PracticeKg.*`: `PracticeKg.queries.ts` (194),
 
 The live named-query catalog is `PracticeKgQueries`
 (`packages/law-practice/server/src/PracticeKg.queries.ts:21-194`) — a frozen
-record of SQL strings, every one of which ends in a total `ORDER BY` over
-natural keys (`:45`, `:64`, `:89`, `:101`, `:137`, `:144`, `:155`, `:165`,
-`:173`, `:192`), which is exactly the "deterministic docket rows" property
-remo2 depends on. Row shapes are schema-decoded, not raw:
+record of SQL strings with explicit `ORDER BY` clauses over natural-key
+fields (`:46`, `:65`, `:71`, `:90`, `:102`, `:138`, `:145`, `:156`, `:166`,
+`:174`, `:193`). That ordering is **not total**: `kg_node` makes only `iri`
+unique (`KgNode.read-model-table.ts:71-73`), while queries such as
+`application`, `find`, and `provenance` omit `iri` as a tie-breaker; `find`
+also applies `LIMIT 100`. The deterministic-row property remo2 depends on is
+therefore an explicit gap: add a unique tie-breaker/constraint before treating
+the live rows as a contract. Row shapes are schema-decoded, not raw:
 `decodePracticeKgGraphRows` / `…FamilyRows` / `…DocumentRows` / `…EmailRows` /
 `…CandidateClaimRows` at `PracticeKg.rows.ts:216,230,244,258,272`. Candidate
 claims are span-bearing and label-carrying —
@@ -587,10 +595,10 @@ should not reuse that stem.
 **Primary cluster.**
 
 - **T1-F10** (atomic normative rows; anti-hub prefilter is not a default gate)
-  → `NormativeRow` net-new (§9). Nearest live substrate: the deterministic
-  row-and-ORDER-BY discipline of `PracticeKgQueries`
-  (`PracticeKg.queries.ts:21-194`) and the schema-decoded row types at
-  `PracticeKg.rows.ts:216-272`. The anti-hub policy has no live counterpart —
+  → `NormativeRow` net-new (§9). Nearest live substrate: the schema-decoded
+  row/query surface of `PracticeKgQueries` (`PracticeKg.queries.ts:21-194`)
+  and `PracticeKg.rows.ts:216-272`, with the non-total ordering gap recorded
+  in §5.1. The anti-hub policy has no live counterpart —
   fusion channel weighting is SPEC-only
   (`goals/hybrid-retrieval-fusion-core/SPEC.md:77-88`) and there is no
   implementation to constrain (§7). Caution stands: small-benchmark result,

@@ -926,7 +926,12 @@ numbers, and by the fact that a human-fixed path won.
 
 ---
 
-## 11. Sources — every URL actually opened (access date 2026-08-06)
+## 11. Sources — URLs recorded with verification depth (access date 2026-08-06)
+
+Each entry states whether the lane opened full text, read only metadata or an
+abstract, merely recorded a repository URL, or confirmed a URL through a
+search index. A URL's presence in this ledger is not by itself evidence that
+the underlying source was inspected.
 
 ### Statutory and USPTO guidance (Frame a)
 
@@ -956,7 +961,9 @@ numbers, and by the fact that a human-fixed path won.
 - `explorations/patent-drafting-episode-ledger/CAPTURE.md` (nuggets, resolved remo2/remo3 boundaries, cautions)
 - `explorations/patent-drafting-episode-ledger/DECISIONS.md` (lane scope)
 - `explorations/patent-drafting-episode-ledger/research/SOURCES.md`
-- `explorations/legal-patent-kg-deepening/research/00-catalog.json` (per-paper catalog rows; **every `url` field is `null`** — no public URL was recorded at mining time, which is why this lane had to re-discover all seventeen)
+- `explorations/legal-patent-kg-deepening/research/00-catalog.json` (historical
+  lane-open state: all 18 consumed paper rows had `url: null`; the two duplicate
+  pairs represent 16 distinct works. See D7 for the post-lane promotion.)
 - `explorations/legal-patent-kg-deepening/research/SOURCES.md`
 - `explorations/legal-patent-kg-deepening/research/20-adhd-integration.md` § Focus 2 (lines 161-194), § Focus 3 (lines 195-234)
 - `explorations/legal-patent-kg-deepening/research/mined/` — P002, P003, P005, P016, P018, P019, P025, P027, P028, P030, P048, P056, P066, P068, P069, P078, P084, P099
@@ -975,18 +982,18 @@ numbers, and by the fact that a human-fixed path won.
   author the corpus filename does not reflect). Note also a *different*
   "PatentGPT" exists (arXiv:2404.18255, *A Large Language Model for Intellectual
   Property*); the two must not be conflated.
-- **D3 — P018/P019 are one work, not two sources.** The distillate says so
-  itself (`P018.md:82`: "P019 is the HTML rendering of the same arXiv v4 work
-  and should not be counted as independent empirical evidence"). T3-F4 lists
-  both among its distillates; the evidence count for that nugget is therefore
-  one source lower than it appears.
+- **D3 — two duplicate pairs are two works, not four sources.** P002/P003 have
+  the same HSNKB filename, title, and DOI, so T1-F10's two distillate rows
+  provide one study. P018/P019 are PDF/HTML renderings of the same SAT-Graph
+  work (`P018.md:82`), so T3-F4 likewise has one fewer independent source than
+  its distillate list suggests. The 18 consumed rows represent 16 works.
 - **D4 — T3-F10's regression surface is under-reported.** See § 2.4.
 - **D5 — Four of seven annex fields are net-new.** See § 3.2.
 - **D6 — The recent-raw fallback has no source prescription.** See § 2.4 / H6.
-- **D7 — The parent catalog carries no URLs.** `00-catalog.json` has
-  `"url": null` for all seventeen paper rows consumed here. Every URL in § 11
-  was re-discovered in this lane. If SOURCES.md is meant to be the durable
-  provenance ledger, these URLs belong in it.
+- **D7 — The parent catalog carried no URLs at lane open; 15 were promoted.**
+  All 18 consumed rows had `"url": null` on 2026-08-06. This research-stage PR
+  promoted the 15 verified URLs into `00-catalog.json`; P005/P025/P030 remain
+  null, with the reasons recorded in the wedge and parent `SOURCES.md` files.
 
 ---
 

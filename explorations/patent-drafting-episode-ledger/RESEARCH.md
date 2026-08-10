@@ -108,9 +108,10 @@ per-field provenance, not from a donor schema.
   question 12) is the upgrade path; until then the inference event is a
   study fixture.
 - **T1-F10 (anti-hub prefilter):** small benchmark, study fixture only
-  (Lane B §5); the full-text metric tables remain distillate-only because
-  the publisher endpoint served a consent page (recorded NOT FOUND,
-  retryable).
+  (Lane B §5); P002/P003 are duplicate catalog rows for the same HSNKB study,
+  not independent corroboration. The full-text metric tables remain
+  distillate-only because the publisher endpoint served a consent page
+  (recorded NOT FOUND, retryable).
 - **T4-F2 (traceability):** the sources support artifact traceability and
   **refute the causal reading in the measured direction** — outline/budget
   artifacts are auditable work products, never quality-acceptance proxies
@@ -129,10 +130,12 @@ Lane A's drift ledger (§§4-5, § Corrections) moves three things from
    `ExecutionLedger`'s raw-`pgTable` escape hatch. A live precedent now
    exists for rung 2's storage shape to follow.
 2. **`goals/practice-kg-mcp` is live code** (~4 kLOC, three read-model
-   tables) — the deterministic-rows property remo2 requires is
-   structurally guaranteed by a total `ORDER BY` on every catalog query
-   (Lane A §5.1), and the rows-first contract should be written against
-   live row/decoder shapes. Naming caution: the live symbol
+   tables), and the rows-first contract can reuse its live row/decoder
+   shapes. But the deterministic-rows property remo2 requires is **not yet
+   structurally guaranteed**: several catalog queries order by non-unique
+   `(kind, natural_key)` fields without the unique `iri` tie-breaker, and
+   `find` applies `LIMIT 100` (Lane A §5.1). Closing that ordering gap is an
+   align/implementation prerequisite. Naming caution: the live symbol
    `PracticeKgQueries` is one letter from the seed's `PracticeKgQuery`
    contract name — recommend a distinct stem to avoid collision
    (Lane A §9).
@@ -141,9 +144,10 @@ Lane A's drift ledger (§§4-5, § Corrections) moves three things from
    to a live receipt type on day one (Lane A §4, §7).
 
 Also load-bearing: the ADHD-3 speedrun entry is real and cheap —
-`runLawPatentIntake` emits its ordered event-shaped facts with five
-on-disk expected snapshots, so an episode fold can be proven against
-existing snapshots with zero new fixture authoring (Lane A §2). And the
+`runLawPatentIntake` emits a deterministic, evidence-closed grouped output
+with five on-disk expected snapshots. It has no cross-category sequence or
+timestamp, so it can seed a fold only after align defines a flattening/order
+contract or implementation adds a canonical event fixture (Lane A §2). And the
 `ExecutionLedger` transfer boundary is drawn precisely: port shape, dense
 `seq`/`prevHash` chain, and trigger pair transfer; the digest-only
 payload law does not (Lane A §3).
@@ -168,9 +172,11 @@ defer refusal semantics to rung 2.
 ### Corrections and hygiene carried into the ledger
 
 The lane files correct inherited anchors (the `:428-490` span, two SPEC
-off-by-N cites), retitle two papers, and merge P018/P019 as one work (18
-parent-catalog rows but 17 distinct works; T3-F4's evidence count is one
-lower than the seed suggests). Lane B re-discovered and verified public URLs
+off-by-N cites), retitle two papers, and identify two duplicate pairs:
+P002/P003 are one HSNKB work and P018/P019 are one SAT-Graph work. The 18
+parent-catalog rows therefore represent 16 distinct works; T1-F10's and
+T3-F4's independent-evidence counts are each one lower than their distillate
+lists suggest. Lane B re-discovered and verified public URLs
 for 15 rows, carried in its §11 per-URL ledger; this research-stage PR
 promoted those URLs into the parent catalog while P005/P025/P030 remained
 `url: null`, as recorded by the 2026-08-08 PR-staging amendment in
@@ -187,8 +193,9 @@ sharpened by this stage, plus one new branch:
 
 1. **Episode set, rebuild proof, raw fallback** (parent q14) — now knowing
    the fallback is unprescribed by any source and the delete-and-rebuild
-   drill has a live projection seam (remo3) and a snapshot-backed fold
-   entry (Lane A §2).
+   drill has a live projection seam (remo3) plus a snapshot-backed grouped
+   source fixture whose cross-category order remains an align input (Lane A
+   §2).
 2. **Smallest annex** (parent q11, T3-F4 half) — now knowing 4 of 7 fields
    are net-new beep-side and the live exclusions carrier is the
    insufficient shape.

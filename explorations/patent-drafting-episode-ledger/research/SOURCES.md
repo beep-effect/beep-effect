@@ -35,13 +35,15 @@ mined for this wedge; links, not copies. The two deepened plays (`ADHD-2`,
 boundary language against the primary public sources 2026-08-06
 ([`02-drafting-episode-frame.md`](./02-drafting-episode-frame.md)).
 Catalog hygiene found by Lane B (§11): the wedge draws on 18 parent-catalog
-paper rows (17 distinct works because P018/P019 are one work). This
+paper rows representing 16 distinct works because P002/P003 are one HSNKB
+work and P018/P019 are one SAT-Graph work. This
 research-stage PR promoted verified public URLs for 15 rows into the parent
 `00-catalog.json`; P005 and P025 had no discoverable public URL, and P030 had
 no matching entry in the lane ledger, so those three remain `url: null`.
 The lane's §11 carries the per-URL evidence. Two papers were retitled at
-source (D1, D2), and the P018/P019 correction (D3) means T3-F4's independent
-evidence count is one source lower than the seed suggests.
+source (D1, D2); the duplicate-pair correction (D3) means T1-F10's and
+T3-F4's independent-evidence counts are each one source lower than their
+distillate lists suggest.
 
 ## 2. Upstream repositories & licenses
 
@@ -89,8 +91,9 @@ Populated 2026-08-06 by Lane A ([`01-repo-surfaces.md`](./01-repo-surfaces.md))
 (§10), and an explicit corrections ledger (§ Corrections to inherited
 anchors). Headline drift, attributed: PR #575 landed the full law-practice
 lane including a payload-bearing append-only migration precedent (§4);
-`goals/practice-kg-mcp` is live code whose deterministic rows are
-structurally guaranteed by a total `ORDER BY` on every catalog query (§5);
+`goals/practice-kg-mcp` is live code with reusable row/decoder shapes, but
+several catalog queries lack a unique tie-breaker and therefore do not yet
+structurally guarantee the deterministic rows remo2 requires (§5);
 the verified-span substrate is live and already consumed by #575 (§4, §7).
 Known at capture (from the routing seed's grounded rows, now superseded by
 the lane file where they differ):

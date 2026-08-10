@@ -81,8 +81,8 @@ Original Phase 1 steps (retained for provenance):
 
 ### Phase 2 — per approved wedge — STARTED 2026-08-04
 
-The first two wedges are COMPLETE (graduated); the third is OPEN at capture
-stage.
+The first two wedges are COMPLETE (graduated); the third has completed and
+landed research and is awaiting Benjamin's align session.
 
 The first: `explorations/patent-citation-candor-gate` walked capture →
 research → align → shape → decompose and GRADUATED 2026-08-04 into

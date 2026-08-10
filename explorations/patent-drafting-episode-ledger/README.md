@@ -76,8 +76,8 @@ land in the next PR, and BRIEF stays gated behind align.
   Opus 5 agents (Workflow `wf_8f1c1557-f39`): Lane A repo surfaces
   (headline drift: PR #575 landed the full law-practice lane including a
   payload-bearing append-only migration precedent; practice-kg-mcp is live
-  code with structurally-guaranteed deterministic rows (total `ORDER BY`
-  on every catalog query); the verified-span substrate is live
+  code with reusable row/decoder shapes but a non-total query-ordering gap
+  before remo2 can claim deterministic rows; the verified-span substrate is live
   and consumed; NEW blocker — the live `RuntimeApprovalDecision` vocabulary
   is single-member `pending`, so gate refusal is unrepresentable today),
   Lane B public-source grounding (the never-compute boundary proved

@@ -107,9 +107,11 @@ Full 24-row triage, including skipped repositories and exact mine targets:
   conflated with the different "PatentGPT" at arXiv:2404.18255; `P018` and
   `P019` are one work (PDF + HTML renderings), so `T3-F4`'s independent
   evidence count is one source lower than its distillate list suggests.
-  License caveat: the `P002`/`P003` work (HSNKB) is CC BY-NC 4.0 and its
-  full text was not retrievable (publisher interstitial); its metric tables
-  remain distillate-carried until a full-text retry.
+  The `P002`/`P003` rows are one HSNKB work, not independent sources, so
+  `T1-F10`'s independent-evidence count is one lower than its distillate list
+  suggests. License caveat: HSNKB is CC BY-NC 4.0 and its full text was not
+  retrievable (publisher interstitial); its metric tables remain
+  distillate-carried until a full-text retry.
 
 ## 4. In-repo capability references
 
