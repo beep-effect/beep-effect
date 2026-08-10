@@ -1336,9 +1336,9 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 68.98,
-      "statements": 68.69,
-      "branches": 54.79,
+      "lines": 68.97,
+      "statements": 68.68,
+      "branches": 54.77,
       "functions": 60.57,
       "uncovered": {
         "lines": 8187,
