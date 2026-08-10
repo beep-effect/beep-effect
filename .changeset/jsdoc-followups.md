@@ -12,4 +12,8 @@ because OpenAPI numbers are JSON-finite, clearing 45 schemaNumber governance fin
 retiring the repo's last 342 legacy `@example` carriers), and migrate all apps legacy
 carriers to titled Example sections with conservation proven (272 blocks, zero residue).
 The zero-legacy documentation gate now scans `apps/**/src` in both scopes and its
-generated-residual allowlist is empty.
+generated-residual allowlist is empty. The `AcpRequestError` `data` field and its
+constructors are typed as wire JSON end-to-end, so `toProtocolError()` can no longer
+build a payload the `S.Json` error schema rejects at encode time, and the hosted
+Test Unit CI lane keeps the 16GB turbo concurrency cap while fleet lanes return to
+the 8vCPU tuning.
