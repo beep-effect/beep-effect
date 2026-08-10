@@ -1,14 +1,14 @@
 {
   "name": "@effect/platform-deno",
   "type": "module",
-  "version": "4.0.0-beta.106",
+  "version": "4.0.0-beta.107",
   "license": "MIT",
   "description": "Platform specific implementations for the Deno runtime",
   "homepage": "https://effect.website",
   "repository": {
     "type": "git",
     "url": "https://github.com/Effect-TS/effect.git",
-    "directory": "packages/platform-deno"
+    "directory": "packages/platform/deno"
   },
   "bugs": {
     "url": "https://github.com/Effect-TS/effect/issues"
