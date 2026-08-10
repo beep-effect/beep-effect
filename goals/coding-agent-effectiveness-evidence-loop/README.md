@@ -87,13 +87,18 @@ validated), payload shapes hold. Then the two blockers were cleared:
    cut over globally at `2026-08-06T13:12:20Z`. Pre-cutover rows are verification
    data in a different pseudonym namespace and are not baseline data.
 
-**Open risk — sampling power, checkpoint 2026-08-09.** 20 of 22 observed sessions
-run `bypassPermissions`, where ordinary tool gates emit no `PermissionRequest` at
-all. Zero *organic* plan approvals have been seen (the one captured was induced),
-and all organic `tool-permission` rows are `AskUserQuestion`. The baseline
-therefore measures plan approvals and `AskUserQuestion` only — a narrower slice
-than "agent waits", by construction rather than by chance. Re-check at mid-week
-before assuming the window can produce a p95.
+**Open risk — sampling power: checkpoint executed 2026-08-10, risk confirmed.**
+The mid-window check
+([`research/2026-08-10-p1-sampling-power-checkpoint.md`](./research/2026-08-10-p1-sampling-power-checkpoint.md))
+found **zero `ExitPlanMode` rows in any hook event** at ~day 4 — plan mode is
+simply not part of the operator's in-window working style, so this window
+cannot produce a plan-approval p95. What it is producing: a defensible
+`AskUserQuestion` wait distribution (n = 35, 100% bracket closure, p50 59 s,
+p95 ≈ 26.6 min, strongly bimodal), stratified 31/36 `bypassPermissions` on the
+`PermissionRequest` row. The instrument was not touched. The re-scope decision
+(baseline deliverable and P8 target) is deliberately deferred to the
+window-close analysis on or after 2026-08-13 — the three options are enumerated
+in the checkpoint note.
 
 ## Latest Evidence
 
