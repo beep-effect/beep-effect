@@ -1,4 +1,5 @@
 import { CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra";
+import * as O from "@beep/utils/Option";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -110,9 +111,22 @@ describe("@beep/infra CiFleetController", () => {
 
     expect(Result.isSuccess(result)).toBe(true);
     if (Result.isSuccess(result)) {
-      expect(makeCiFleetControllerConfig(result.success).amiSsmParameterName).toBe(
-        "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
-      );
+      const config = makeCiFleetControllerConfig(result.success);
+      expect(O.isNone(config.amiId)).toBe(true);
+      expect(config.amiSsmParameterName).toBe("/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64");
     }
+  });
+
+  it("honors an explicit controller AMI id instead of the SSM default", () => {
+    const result = decodeConfigValues({ ...validConfigValues, amiId: "ami-07a5b367e8dc8bd92" });
+
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(O.getOrUndefined(makeCiFleetControllerConfig(result.success).amiId)).toBe("ami-07a5b367e8dc8bd92");
+    }
+  });
+
+  it("rejects malformed controller AMI ids", () => {
+    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, amiId: "latest" }))).toBe(true);
   });
 });

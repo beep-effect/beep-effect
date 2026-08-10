@@ -1,5 +1,19 @@
 # Opportunities
 
+## Prove worker east-west isolation with two live workers
+
+- **Work:** P1 red-team review of the worker network-isolation evidence.
+- **Friction:** A single worker probing an address with no known listener cannot
+  distinguish security-group denial from the absence of a service, so it cannot
+  honestly prove intra-VPC east-west isolation.
+- **Evidence:** Gate C proves only tailnet/LAN denial; the P1 acceptance evidence
+  records the worker security group's empty ingress list as the current
+  east-west control evidence.
+- **Proposal (P2):** Dispatch two workers concurrently. Have one open a listener
+  and publish its private address through a per-run coordination channel, then
+  have the second attempt to connect and require the connection to fail. Tear
+  down both workers and the coordination record after the probe.
+
 ## Generated-path exclusions need one source of truth
 
 - **Work:** Landing the generated Pulumi bridge SDK at
