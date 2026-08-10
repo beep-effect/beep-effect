@@ -1,6 +1,8 @@
 /**
  * Judge-rubric lens drift lint.
  *
+ * **Details**
+ *
  * The browser-qa-loop judge prompt names the review lenses a vision judge may
  * attribute findings to, while `QaLens` in the Qa inventory schema is the
  * decode-time authority. The two are maintained by hand in different files: a
@@ -15,13 +17,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, pipe } from "effect";
+import { Console, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { QaLens } from "../Qa/Inventory.schemas.ts";
-import { JUDGE_PROMPT_TEMPLATE } from "../Qa/JudgePack.ts";
+import { JUDGE_PROMPT_TEMPLATE, QaLens } from "../Qa/index.ts";
 
 const $I = $RepoCliId.create("commands/Lint/JudgeRubric");
 
@@ -53,10 +55,13 @@ const promptLensTokens = (prompt: string): HashSet.HashSet<string> =>
 /**
  * Drift between the judge prompt's lens list and the `QaLens` schema.
  *
- * **Example** (Reference the drift schema)
+ * **Example** (Construct a drift report)
  *
  * ```ts
- * console.log("docgen metadata")
+ * import { JudgeRubricDrift } from "@beep/repo-cli/commands/Lint"
+ *
+ * const drift = JudgeRubricDrift.make({ missingFromPrompt: ["contrast"], unknownInPrompt: [] })
+ * console.log(drift.missingFromPrompt) // [ "contrast" ]
  * ```
  *
  * @category models
@@ -64,7 +69,7 @@ const promptLensTokens = (prompt: string): HashSet.HashSet<string> =>
  */
 export class JudgeRubricDrift extends S.Class<JudgeRubricDrift>($I`JudgeRubricDrift`)(
   {
-    missingFromPrompt: S.Array(S.String),
+    missingFromPrompt: S.Array(QaLens),
     unknownInPrompt: S.Array(S.String),
   },
   $I.annote("JudgeRubricDrift", {
@@ -86,7 +91,7 @@ export class JudgeRubricDrift extends S.Class<JudgeRubricDrift>($I`JudgeRubricDr
  * **Example** (Detect a drifted lens)
  *
  * ```ts
- * import { diffJudgeRubricLenses } from "@beep/repo-cli/commands/Lint/JudgeRubric"
+ * import { diffJudgeRubricLenses } from "@beep/repo-cli/commands/Lint"
  *
  * const drift = diffJudgeRubricLenses("## Lenses\n\nUse `made-up-lens` only.\n\n## Output contract\n")
  * console.log(drift.unknownInPrompt) // [ "made-up-lens" ]
@@ -112,9 +117,15 @@ export const diffJudgeRubricLenses = (prompt: string): JudgeRubricDrift => {
 
 const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const prompt = yield* fs
-    .readFileString(JUDGE_PROMPT_TEMPLATE)
-    .pipe(Effect.catch(() => failWithReportedExit(`[lint:judge-rubric] failed to read ${JUDGE_PROMPT_TEMPLATE}.`, 2)));
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot();
+  const templatePath = path.join(repoRoot, JUDGE_PROMPT_TEMPLATE);
+  const prompt = yield* fs.readFileString(templatePath).pipe(
+    Effect.catch((error) => {
+      const message = `[lint:judge-rubric] failed to read ${templatePath}: ${error.message}`;
+      return Console.error(message).pipe(Effect.andThen(failWithReportedExit(message, 2)));
+    })
+  );
   const drift = diffJudgeRubricLenses(prompt);
   const violationCount = A.length(drift.missingFromPrompt) + A.length(drift.unknownInPrompt);
 
@@ -141,10 +152,12 @@ const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
 /**
  * Lint command binding the judge prompt lens list to the `QaLens` schema.
  *
- * **Example** (Show the judge-rubric lint invocation)
+ * **Example** (Inspect the registered command)
  *
  * ```ts
- * console.log("bun run beep lint judge-rubric")
+ * import { lintJudgeRubricCommand } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(lintJudgeRubricCommand.name) // "judge-rubric"
  * ```
  *
  * @category cli-commands

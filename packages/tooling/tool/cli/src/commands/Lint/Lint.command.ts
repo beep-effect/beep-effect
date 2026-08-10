@@ -588,6 +588,23 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
   Command.withDescription("Check packages/tooling/tool/cli source for schema-first conventions")
 );
 
+const lintSubcommands = [
+  lintCircularCommand,
+  lintDeprecatedApisCommand,
+  lintGoalPacketsCommand,
+  lintIdentityRegistryCommand,
+  lintJudgeRubricCommand,
+  lintPackageTestImportsCommand,
+  lintPackageTestTypecheckCommand,
+  lintPolicyCommand,
+  lintReflectionArtifactsCommand,
+  lintRoadmapRefsCommand,
+  lintSchemaCatalogCommand,
+  lintSchemaFirstCommand,
+  lintSchemaTopologyCommand,
+  lintToolingSchemaFirstCommand,
+];
+
 /**
  * Lint command group.
  *
@@ -601,39 +618,5 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
  * @since 0.0.0
  */
 export const lintCommand = Command.make("lint", {}, () =>
-  printLines([
-    "Lint commands:",
-    "- bun run beep lint circular",
-    "- bun run beep lint deprecated-apis",
-    "- bun run beep lint goal-packets",
-    "- bun run beep lint identity-registry",
-    "- bun run beep lint judge-rubric",
-    "- bun run beep lint package-test-imports",
-    "- bun run beep lint package-test-typecheck",
-    "- bun run beep lint policy",
-    "- bun run beep lint reflection-artifacts",
-    "- bun run beep lint roadmap-refs",
-    "- bun run beep lint schema-catalog",
-    "- bun run beep lint schema-first",
-    "- bun run beep lint schema-topology",
-    "- bun run beep lint tooling-schema-first",
-  ])
-).pipe(
-  Command.withDescription("Repository lint policy checks"),
-  Command.withSubcommands([
-    lintCircularCommand,
-    lintDeprecatedApisCommand,
-    lintGoalPacketsCommand,
-    lintIdentityRegistryCommand,
-    lintJudgeRubricCommand,
-    lintPackageTestImportsCommand,
-    lintPackageTestTypecheckCommand,
-    lintPolicyCommand,
-    lintReflectionArtifactsCommand,
-    lintRoadmapRefsCommand,
-    lintSchemaCatalogCommand,
-    lintSchemaFirstCommand,
-    lintSchemaTopologyCommand,
-    lintToolingSchemaFirstCommand,
-  ])
-);
+  printLines(["Lint commands:", ...A.map(lintSubcommands, (command) => `- bun run beep lint ${command.name}`)])
+).pipe(Command.withDescription("Repository lint policy checks"), Command.withSubcommands(lintSubcommands));

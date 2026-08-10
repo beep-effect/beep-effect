@@ -35,6 +35,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 const judge = QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" });
 
@@ -133,6 +134,25 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": { "nested": "}{" } }');
   });
 
+  it("handles escaped quotes and a string ending in an escaped backslash", () => {
+    // The "path" value ends in a backslash, so its closing quote is preceded by
+    // an even backslash run — the parity branch that decides the quote is real.
+    const candidate = JSON.stringify({ message: 'escaped quote: "; braces: }{', path: "C:\\logs\\" });
+    const stdout = `thinking... ${candidate} trailing prose`;
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe(candidate);
+  });
+
+  it("salvages a valid unfenced object followed by trailing prose", () => {
+    const candidate = '{ "final": true }';
+    expect(O.getOrElse(extractLastJsonBlock(`${candidate} REQUIRED FINDINGS: 0`), () => "")).toBe(candidate);
+  });
+
+  it("returns none when an unterminated string hides later brace pairs", () => {
+    // A scanner that drops string state would close a span at the brace inside
+    // the unterminated string, reject it, then salvage the trailing `{}`.
+    expect(O.isNone(extractLastJsonBlock('{ "message": "unterminated } and a later {} pair'))).toBe(true);
+  });
+
   it("prefers a fenced block over later unfenced objects", () => {
     const stdout = ["```json", '{ "final": true }', "```", 'afterthought: { "not": "the inventory" }'].join("\n");
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
@@ -140,6 +160,28 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
 
   it("returns none when braces never balance into valid JSON", () => {
     expect(O.isNone(extractLastJsonBlock("opening { and prose {still not json}"))).toBe(true);
+  });
+
+  it("stays bounded on pathological unmatched-opening-brace output", () => {
+    const hostile = Str.repeat(40_000)("{");
+    const startedAt = globalThis.performance.now();
+    const extracted = extractLastJsonBlock(hostile);
+    const elapsedMs = globalThis.performance.now() - startedAt;
+
+    expect(O.isNone(extracted)).toBe(true);
+    expect(elapsedMs).toBeLessThan(1000);
+  });
+
+  it("stays bounded on pathological balanced-object output", () => {
+    // Unlike unmatched braces, every repeat completes a span; accumulating
+    // spans instead of retaining the latest decodable candidate is quadratic here.
+    const hostile = Str.repeat(40_000)('{ "final": true } ');
+    const startedAt = globalThis.performance.now();
+    const extracted = extractLastJsonBlock(hostile);
+    const elapsedMs = globalThis.performance.now() - startedAt;
+
+    expect(O.getOrElse(extracted, () => "")).toBe('{ "final": true }');
+    expect(elapsedMs).toBeLessThan(1000);
   });
 });
 

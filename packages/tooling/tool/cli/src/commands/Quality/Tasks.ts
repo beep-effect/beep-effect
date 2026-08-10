@@ -1476,6 +1476,7 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
   repoCliStep(
     repoRoot,
     "lint:package-test-imports",
@@ -1560,7 +1561,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
   yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
 });

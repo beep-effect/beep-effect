@@ -18,6 +18,7 @@ import { Effect, FileSystem, HashSet, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { jsonObjectTextFromMixedOutput } from "../../internal/cli/MixedOutputJson.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { QaInventory } from "./Inventory.schemas.ts";
@@ -365,52 +366,6 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
     O.map(Str.trim)
   );
 
-const parseJsonOption: (span: string) => O.Option<unknown> = O.liftThrowable(JSON.parse);
-
-const skipJsonString = (text: string, afterOpeningQuote: number): number => {
-  let index = afterOpeningQuote;
-  while (index < text.length && text.charAt(index) !== '"') {
-    index = text.charAt(index) === "\\" ? index + 2 : index + 1;
-  }
-  return index;
-};
-
-const balancedSpanEnd = (text: string, start: number): O.Option<number> => {
-  let depth = 0;
-  for (let index = start; index < text.length; index++) {
-    const char = text.charAt(index);
-    if (char === '"') {
-      index = skipJsonString(text, index + 1);
-    } else if (char === "{") {
-      depth = depth + 1;
-    } else if (char === "}" && depth === 1) {
-      return O.some(index);
-    } else if (char === "}") {
-      depth = depth - 1;
-    }
-  }
-  return O.none();
-};
-
-const lastParseableObject = (text: string): O.Option<string> => {
-  let last = O.none<string>();
-  for (let index = 0; index < text.length; index++) {
-    if (text.charAt(index) !== "{") {
-      continue;
-    }
-    const end = balancedSpanEnd(text, index);
-    if (O.isNone(end)) {
-      continue;
-    }
-    const span = Str.trim(Str.slice(index, end.value + 1)(text));
-    if (O.isSome(parseJsonOption(span))) {
-      last = O.some(span);
-      index = end.value;
-    }
-  }
-  return last;
-};
-
 /**
  * Extract the last JSON inventory block from noisy judge output.
  *
@@ -432,11 +387,12 @@ const lastParseableObject = (text: string): O.Option<string> => {
  * A fenced block always wins over unfenced text, even when prose after the
  * fence contains a parseable object; the unfenced rung only runs when no
  * fence matched anywhere.
+ * Unfenced salvage is permanent ingest hardening, not transitional compatibility.
  *
  * **Example** (Usage)
  *
  * ```ts
- * import { extractLastJsonBlock } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import { extractLastJsonBlock } from "@beep/repo-cli/commands/Qa"
  * import * as O from "effect/Option"
  *
  * const fence = "`".repeat(3)
@@ -457,5 +413,5 @@ export const extractLastJsonBlock = (text: string): O.Option<string> =>
   pipe(
     lastMatch(text, FENCED_JSON),
     O.orElse(() => lastMatch(text, FENCED_ANY)),
-    O.orElse(() => lastParseableObject(text))
+    O.orElse(() => jsonObjectTextFromMixedOutput(text))
   );

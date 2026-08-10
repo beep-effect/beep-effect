@@ -8,6 +8,9 @@
  * @since 0.0.0
  */
 
+import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
+
+const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
 const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
 const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "--completions",
@@ -23,13 +26,6 @@ const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
 const { flow } = await import("effect");
-// Single authority for which `lint` subcommands the full command tree owns:
-// the LintPolicySubcommand LiteralKit (Quality.schemas.ts). A test binds that
-// domain to the subcommands registered on lintCommand, so this list can no
-// longer drift apart from either surface.
-const { LintPolicySubcommand } = await import("./commands/Quality/Quality.schemas.ts");
-const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = LintPolicySubcommand.literals;
-
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   text
     .split(/\r?\n/)
@@ -80,7 +76,7 @@ const isQualityTaskName = (value: string | undefined): boolean =>
   value !== undefined && QUALITY_TASK_NAMES.includes(value);
 
 const isLintPolicySubcommand = (value: string | undefined): boolean =>
-  value !== undefined && LINT_POLICY_SUBCOMMANDS.includes(value);
+  value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
 
 const isRootCliGlobalFlag = (value: string): boolean =>
   ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) || ROOT_CLI_GLOBAL_FLAG_NAMES.some((name) => value.startsWith(`${name}=`));
