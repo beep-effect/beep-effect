@@ -11,8 +11,13 @@ import {
   DistinctionDetail,
   DocketCitation,
   DurableLocatorOptions,
+  extractPatentFigures,
+  extractPatentNumber,
   FullCaseCitation,
   FullCitation,
+  getKindCodeExplanation,
+  getPatentDisplay,
+  getStatusFromKindCode,
   IdCitation,
   IdsSubmissionFact,
   KindCode,
@@ -35,6 +40,7 @@ import {
   PatentNumber,
   PinciteInfo,
   PriorArtReference,
+  parsePatentSections,
   RegulationCitation,
   Rejection,
   RejectionGround,
@@ -96,6 +102,30 @@ const citationBaseWire = (text: string) => ({
 });
 
 describe("@beep/law-practice-domain", () => {
+  it("handles patent metadata helper defaults and representative values", () => {
+    expect(getStatusFromKindCode()).toBe("unknown");
+    expect(getStatusFromKindCode({ country: "WO" })).toBe("international");
+    expect(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") })).toBe("granted");
+    expect(O.isNone(getKindCodeExplanation())).toBe(true);
+    expect(O.getOrThrow(getKindCodeExplanation({ country: "EP", kindCode: "A1" }))).toContain("European");
+
+    const display = getPatentDisplay({
+      metadata: { country: "US", kind_code: "B2", patent_number: "7654321" },
+    });
+    expect(display.formatted).toBe("US 7,654,321 B2");
+    expect(getPatentDisplay().status).toBe("unknown");
+    expect(extractPatentFigures()).toEqual([]);
+    expect(extractPatentFigures({ imageUrls: { figure1: "https://example.com/patents/figure-1.png" } })).toHaveLength(
+      1
+    );
+
+    const content = "## Abstract\nA compact tool.\n\n## Claims\n1. A tool.";
+    const sections = parsePatentSections({ content, requestedSections: ["abstract", "claims"] });
+    expect(O.getOrThrow(sections.abstract)).toContain("A compact tool.");
+    expect(O.getOrThrow(sections.claims)).toBe("1. A tool.");
+    expect(extractPatentNumber({ content: "**Patent Number:** US 7,654,321 B2" })).toBe("US 7654321 B2");
+  });
+
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
     expect(LegalClientStatus.fromUnknown("active_client")).toBe("active_client");

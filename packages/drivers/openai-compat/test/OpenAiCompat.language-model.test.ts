@@ -1,6 +1,8 @@
 import {
   decodeChatCompletionChunk,
+  decodeChatCompletionResponse,
   makeFromProvider,
+  model as makeLanguageModel,
   OpenAiCompatAssistantDelta,
   OpenAiCompatAssistantMessage,
   OpenAiCompatChatCompletionChoice,
@@ -126,6 +128,20 @@ const makeOpenAiCompatClientLayer = (respond: TestRespond) =>
   );
 
 layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (it) => {
+  it.effect(
+    "supports data-last codecs and model construction",
+    Effect.fnUntraced(function* () {
+      const response = yield* decodeChatCompletionResponse()(Result.getOrThrow(encodeResponse(makeResponse("hello"))));
+      const chunk = yield* decodeChatCompletionChunk()({
+        choices: [{ delta: { content: "hello", role: "assistant" }, index: 0 }],
+      });
+
+      expect(response.choices).toHaveLength(1);
+      expect(chunk.choices).toHaveLength(1);
+      expect(makeLanguageModel()("compat-model")).toBeDefined();
+    })
+  );
+
   it("keeps encoded OpenAI-compatible schema wire shapes byte-identical", () => {
     const clientOptions = OpenAiCompatClientOptions.make({
       headers: O.some({ "X-Provider": "test" }),

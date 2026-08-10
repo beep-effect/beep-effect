@@ -348,6 +348,8 @@ describe("@beep/rdf IRI schemas", () => {
       expect(decodeRelativeIriReference(value)).toBe(value);
     }
 
+    expect(fc.sample(S.toArbitrary(RelativeIRIReference)(fc), 1)).toHaveLength(1);
+
     expect(decodeIriReference("folder:child/leaf")).toBe("folder:child/leaf");
     expect(decodeRelativeIriReference("folder/child:leaf")).toBe("folder/child:leaf");
     expect(() => decodeRelativeIriReference("folder:child/leaf")).toThrow(

@@ -380,10 +380,14 @@ describe("PostgresError", () => {
 describe("Postgres formatting", () => {
   it("formats SQL and parameters with a disabled color palette", () => {
     const rendered = formatSql("select * from users where id = $1", [1], createColors(false));
+    const dataLast = formatSql([1], createColors(false))("select * from users where id = $1");
+    const defaults = formatSql()("select 1");
 
     expect(rendered).toContain("select");
     expect(rendered).toContain("from");
     expect(rendered).toContain("$1=1");
+    expect(dataLast).toBe(rendered);
+    expect(defaults).toContain("select");
   });
 
   it("formats Postgres errors", () => {

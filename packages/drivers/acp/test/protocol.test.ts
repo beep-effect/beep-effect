@@ -1,4 +1,4 @@
-import { Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
+import { Client as AcpClient, Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -510,6 +510,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const handle = yield* makeHandle({
         ACP_MOCK_EXIT_IMMEDIATELY_CODE: "7",
       });
+      assert.isDefined(AcpClient.layerChildProcess({ handle }));
       const firstMessage = yield* Deferred.make<unknown>();
       const termination = yield* Deferred.make<AcpError.AcpError>();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({

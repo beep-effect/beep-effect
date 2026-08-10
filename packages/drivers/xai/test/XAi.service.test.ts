@@ -264,6 +264,10 @@ const requestFor = (descriptor: XAiEndpointDescriptor): XAiRequestOptions => {
 };
 
 describe("@beep/xai", () => {
+  it("constructs language models in data-last form", () => {
+    expect(XAiLanguageModel.model()("grok-4")).toBeDefined();
+  });
+
   it("keeps encoded xAI schema wire shapes byte-identical", () => {
     const descriptor = XAI_ENDPOINTS[0];
     if (descriptor === undefined) {

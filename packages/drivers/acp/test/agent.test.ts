@@ -30,6 +30,10 @@ const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonStrin
 const InitializeResponseArbitrary = Schema.toArbitrary(InitializeResponse)(fc);
 const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
 
+it("constructs the stdio agent layer with default options", () => {
+  assert.isDefined(AcpAgent.layerStdio());
+});
+
 it("round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries", () =>
   fc.assert(
     fc.property(

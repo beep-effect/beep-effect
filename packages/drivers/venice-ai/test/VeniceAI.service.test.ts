@@ -405,6 +405,10 @@ const requestFor = (descriptor: (typeof VENICE_AI_OPERATION_DESCRIPTORS)[number]
 };
 
 describe("@beep/venice-ai", () => {
+  it("constructs language models in data-last form", () => {
+    expect(VeniceAiLanguageModel.model()("venice-uncensored-1-2")).toBeDefined();
+  });
+
   it("round-trips schema-derived OpenAPI fixture and prompt body data", () =>
     fc.assert(
       fc.property(OpenApiOperationArbitrary, PromptBodyArbitrary, (operation, promptBody) => {

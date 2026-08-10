@@ -1,6 +1,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import {
+  makeUsptoError,
   normalizeUsptoApplicationNumber,
   normalizeUsptoPatentNumber,
   Uspto,
@@ -199,6 +200,13 @@ describe("Uspto service", () => {
 });
 
 describe("Uspto identifier normalization", () => {
+  it("constructs errors in data-last form", () => {
+    const error = makeUsptoError({ cause: "socket hang up" })("transport");
+
+    expect(error.reason).toBe("transport");
+    expect(error.cause).toStrictEqual(O.some("socket hang up"));
+  });
+
   it("normalizes application numbers", () => {
     expect(normalizeUsptoApplicationNumber("16/138,242")).toStrictEqual(O.some("16138242"));
     expect(normalizeUsptoApplicationNumber("16-138-242")).toStrictEqual(O.some("16138242"));
