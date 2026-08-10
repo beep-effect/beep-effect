@@ -1,5 +1,6 @@
 import {
   deriveYeetMergeReady,
+  GateUnproven,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   YeetStatusArtifact,
@@ -241,6 +242,18 @@ describe("yeet status snapshot rendering and encoding", () => {
     expect(summary).toContain("- merge-ready: no, blocked on threads-resolved (greptile 5/5)");
   });
 
+  it("renders missing gate artifacts as unproven rather than clean", () => {
+    const summary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        unprovenGates: [GateUnproven.make({ gateId: "jsdoc-inventory", detail: "artifact does not exist" })],
+      })
+    );
+
+    expect(summary).toContain("gate staleness: 0 stale, 1 unproven");
+    expect(summary).not.toContain("gate staleness: none");
+  });
+
   it.effect("round-trips through the status JSON codec instead of leaking Option runtime objects", () =>
     Effect.gen(function* () {
       const json = yield* YeetStatusSnapshotJson.encode(snapshot);
@@ -272,6 +285,7 @@ describe("yeet status snapshot rendering and encoding", () => {
       expect(decoded.mergeReady).toStrictEqual(O.none());
       expect(decoded.remote.unresolvedThreads).toStrictEqual(O.none());
       expect(decoded.remote.headSha).toStrictEqual(O.none());
+      expect(decoded.unprovenGates).toStrictEqual([]);
     })
   );
 });

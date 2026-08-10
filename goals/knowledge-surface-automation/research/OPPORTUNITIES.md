@@ -129,3 +129,45 @@ measurement first). Reviewed at each grill.
    until something executes them; a lane that runs each packet's declared
    commands on touched packets (Workstream E's doctor is the natural home) would
    have caught this at the introducing PR.
+
+10. **Three publish attempts burned on yeet publish ordering semantics.** `unowned`
+
+    Closing out PR #613 cost three failed publish invocations before the working
+    form: `--push-only` rejects `--message` (it never creates a commit); plain
+    `publish` refuses a dirty-but-unstaged worktree ("requires reviewed staged
+    changes") because it does not auto-stage; and staging files AFTER a green
+    verify flips "diff fingerprint changed", invalidating `--reuse-verified` and
+    forcing a fresh ~18-minute proof. The working sequence is stage first, then
+    `yeet verify && yeet publish --reuse-verified --message ...` chained in one
+    shell.
+
+    **What would have prevented it:** either a stage-aware proof fingerprint
+    (index-only transitions over identical content should not invalidate a
+    proof) or a `publish` preflight that names the required order in one message
+    instead of one constraint per failed attempt.
+
+11. **`lint schema-first --write` records entries that still fail the gate.** `unowned`
+
+    The refs census added five exported scanner-machinery types; the policy
+    finding's remediation says "Run bun run beep lint schema-first --write after
+    reviewing the finding". `--write` appended them with `status: "candidate"`
+    and the finding text as `reason` — and candidate entries still fail the
+    lint. The undocumented second step is hand-flipping each entry to
+    `status: "exception"` with a real justification (existing entries show the
+    expected quality bar).
+
+    **What would have prevented it:** `--write` emitting exception scaffolds
+    with an explicit `TODO-justify` reason, or the remediation text stating that
+    candidate entries keep the gate red until upgraded by hand.
+
+12. **docgen rejects an unregistered `@category` without naming the valid set.** `unowned`
+
+    `docgen check` failed with `invalid category: Unknown @category value
+    scanning.` — no list of registered values in the error or the finding. Two
+    agents hit it independently in one PR: the first migrated its symbols and
+    the second reintroduced the same unregistered value on a new export because
+    nothing at the authoring site says which categories exist.
+
+    **What would have prevented it:** the error enumerating the registered
+    category values (they are known to the checker), or the JSDoc skill carrying
+    the list.
