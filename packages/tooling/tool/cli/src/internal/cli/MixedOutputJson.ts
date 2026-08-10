@@ -105,5 +105,5 @@ export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> 
     }
   }
 
-  return state.depth > 0 && !state.inString ? O.orElse(jsonObjectTextFromRight(output), () => latest) : latest;
+  return state.depth > 0 ? O.orElse(jsonObjectTextFromRight(output), () => latest) : latest;
 };

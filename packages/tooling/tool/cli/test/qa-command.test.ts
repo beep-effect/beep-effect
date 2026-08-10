@@ -157,10 +157,10 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     expect(O.getOrElse(extractLastJsonBlock(`${candidate} REQUIRED FINDINGS: 0`), () => "")).toBe(candidate);
   });
 
-  it("returns none when an unterminated string hides later brace pairs", () => {
-    // A scanner that drops string state would close a span at the brace inside
-    // the unterminated string, reject it, then salvage the trailing `{}`.
-    expect(O.isNone(extractLastJsonBlock('{ "message": "unterminated } and a later {} pair'))).toBe(true);
+  it("resynchronizes after an unterminated string before a later valid object", () => {
+    const candidate = '{ "round": 4, "findings": [] }';
+    const stdout = `{ "message": "unterminated }\n${candidate}`;
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe(candidate);
   });
 
   it("prefers a fenced block over later unfenced objects", () => {
