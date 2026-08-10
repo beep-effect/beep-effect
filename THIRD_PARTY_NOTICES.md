@@ -95,3 +95,52 @@ limitations under the License.
 
 A full copy of the Apache License, Version 2.0 is included at
 [`licenses/Apache-2.0.txt`](./licenses/Apache-2.0.txt).
+
+## TNO (flint-ontology) — Apache-2.0 material
+
+Upstream repository:
+
+- flint-ontology:
+  <https://gitlab.com/normativesystems/knowledge-modeling/flint-ontology>
+  - **The repository is hosted on GitLab, not GitHub.**
+  - Pinned release: `v1.0.0` (dated 2025-12-03)
+  - Affected material: the act-frame shape — named actor/object/recipient
+    slots, preconditions, and the `creates`/`terminates` pair — together with
+    the source-reference-per-element discipline in which each frame element
+    names the norm text it was read from.
+  - Form of use: **structural reimplementation in Effect/TypeScript over
+    Postgres.** No upstream source, ontology file, or vocabulary term is
+    copied, vendored, or redistributed; the donor is not a build-time or
+    runtime dependency of this project. The donor's execution semantics are
+    deliberately **excluded**: nothing in this project evaluates a
+    precondition, fires a transition, or derives a violation. The positions a
+    frame names are this project's own Hohfeldian kind-and-content pairs, a
+    frame's effect on positions is a non-empty set of derivation kinds rather
+    than a single act type, and preconditions carry an explicit
+    present/absent polarity.
+  - Repository locations carrying the attribution notice:
+    `packages/law-practice/domain/src/values/NormSourceReference/NormSourceReference.model.ts`,
+    `packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts`,
+    `packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts`.
+  - The repository's `shacl/` subdirectory is **MPL-2.0**, not Apache-2.0, and
+    nothing is ported from it. The two-severity hard/advisory split in
+    `packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.values.ts`
+    is a clean-room re-expression of a concept only; no shape text, constraint
+    body, or file structure from that subdirectory was consulted or copied.
+
+Copyright 2022 TNO.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+A full copy of the Apache License, Version 2.0 is included at
+[`licenses/Apache-2.0.txt`](./licenses/Apache-2.0.txt).

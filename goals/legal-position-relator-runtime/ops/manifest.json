@@ -3,13 +3,13 @@
   "initiative": {
     "id": "legal-position-relator-runtime",
     "title": "Legal Position Relator Runtime",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-06",
-    "updated": "2026-08-06",
+    "updated": "2026-08-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legal-position-relator-runtime",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Give the law-practice slice a closed HohfeldPosition domain with sound correlative/opposite derivations over (kind, content) and a simple LegalPositionRelator that stores one advantage-side relation and derives every other view — recording positions, exercises, and scope alignments while legal judgment stays human.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -33,7 +33,11 @@
     "goals/legal-position-relator-runtime/GOAL.md",
     "goals/legal-position-relator-runtime/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/01-surface-reverification.md",
+    "research/02-handoff-shape-evidence.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -47,27 +51,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Rung 1: domain proof",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rung 2: transitions, correction contract, durability",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
