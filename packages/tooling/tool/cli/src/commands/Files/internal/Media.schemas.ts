@@ -6,10 +6,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as O from "effect/Option";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/Media.schemas");
 
@@ -422,7 +426,10 @@ export class MediaDimensions extends S.Class<MediaDimensions>($I`MediaDimensions
  * @category decoding
  * @since 0.0.0
  */
-export const decodeImageSizeMetadata = S.decodeUnknownEffect(ImageSizeMetadata);
+export const decodeImageSizeMetadata: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ImageSizeMetadata, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ImageSizeMetadata, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ImageSizeMetadata));
 
 /**
  * Decode an ffprobe JSON document.
@@ -438,7 +445,10 @@ export const decodeImageSizeMetadata = S.decodeUnknownEffect(ImageSizeMetadata);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeFfprobeOutputJson = S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput));
+export const decodeFfprobeOutputJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<FfprobeOutput, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<FfprobeOutput, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput)));
 
 /**
  * Decode an unknown rotation value into an optional number.
@@ -454,7 +464,10 @@ export const decodeFfprobeOutputJson = S.decodeUnknownEffect(S.fromJsonString(Ff
  * @category decoding
  * @since 0.0.0
  */
-export const decodeRotationNumber = S.decodeUnknownOption(S.Union([S.Finite, S.FiniteFromString]));
+export const decodeRotationNumber: {
+  (options?: AST.ParseOptions): (input: unknown) => O.Option<number>;
+  (input: unknown, options?: AST.ParseOptions): O.Option<number>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(S.Union([S.Finite, S.FiniteFromString])));
 
 /**
  * Decode an unknown safe filename prefix.
@@ -470,4 +483,7 @@ export const decodeRotationNumber = S.decodeUnknownOption(S.Union([S.Finite, S.F
  * @category decoding
  * @since 0.0.0
  */
-export const decodeSafeFilePrefix = S.decodeUnknownEffect(SafeFilePrefix);
+export const decodeSafeFilePrefix: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SafeFilePrefix, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SafeFilePrefix, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SafeFilePrefix));

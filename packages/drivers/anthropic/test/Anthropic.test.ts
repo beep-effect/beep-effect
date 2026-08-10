@@ -16,9 +16,9 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ApproximatePriceArbitrary = S.toArbitrary(AnthropicApproximatePrice);
-const LanguageModelOptionsArbitrary = S.toArbitrary(AnthropicLanguageModelOptions);
-const RepairErrorArbitrary = S.toArbitrary(RepairError);
+const ApproximatePriceArbitrary = S.toArbitrary(AnthropicApproximatePrice)(fc);
+const LanguageModelOptionsArbitrary = S.toArbitrary(AnthropicLanguageModelOptions)(fc);
+const RepairErrorArbitrary = S.toArbitrary(RepairError)(fc);
 
 const encodeApproximatePrice = S.encodeResult(AnthropicApproximatePrice);
 const decodeApproximatePrice = S.decodeUnknownResult(AnthropicApproximatePrice);

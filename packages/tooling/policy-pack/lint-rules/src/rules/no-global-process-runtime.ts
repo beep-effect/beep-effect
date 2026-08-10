@@ -108,13 +108,13 @@ export default defineRule({
       O.exists(
         unwrapMemberExpression(node),
         (access) =>
-          isIdentifier(access.object, "globalThis") &&
+          isIdentifier("globalThis")(access.object) &&
           O.exists(getPropertyName(access.property), (p) => p === "process")
       );
 
     // A bare global `process` (skipped when locally shadowed) or the explicit `globalThis.process`.
     const isGlobalProcessObject = (node: MaybeNode): boolean => {
-      if (isIdentifier(unwrapExpression(node), "process")) return !isProcessShadowed();
+      if (isIdentifier("process")(unwrapExpression(node))) return !isProcessShadowed();
       return isGlobalThisProcess(node);
     };
 

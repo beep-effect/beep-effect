@@ -24,7 +24,8 @@ function ProfessionalAtomRuntimeMount({ children }: { readonly children: ReactNo
 /**
  * Provides the app-local Atom registry and runtime for the desktop chat surface.
  *
- * @example
+ * **Example** (Creating atom provider element)
+ *
  * ```tsx
  * import { ProfessionalAtomProvider } from "@/runtime/ProfessionalAtomProvider"
  *

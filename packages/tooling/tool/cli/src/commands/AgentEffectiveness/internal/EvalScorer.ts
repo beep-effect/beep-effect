@@ -6,11 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { DEFAULT_AI_METRICS_DATA_ROOT } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import { decodeTaskManifestJson, encodeAgentEffectivenessEvalScoreReportJson } from "../AgentEffectiveness.schemas.ts";
@@ -173,27 +173,35 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
   $I`RunAgentEffectivenessEvalScoreCommandOptions`
 )(
   {
-    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))),
+    dataRoot: S.Option(S.String),
     dir: S.String,
     json: S.Boolean,
     record: S.Boolean,
     taskPath: S.String,
   },
   $I.annote("RunAgentEffectivenessEvalScoreCommandOptions", {
-    description: "Options for running an agent effectiveness eval score.",
+    description: "Options for running an agent effectiveness eval score; the data root is only present when recording.",
   })
 ) {}
 
 /**
  * Render one scorer report to stdout and optionally record it.
  *
- * **Example** (Run an agent effectiveness eval score command)
+ * **Details**
+ *
+ * The data root is `Option`-valued and read only inside the `record` branch, so
+ * pure fixture scoring never touches writable-store configuration — a
+ * `HOME`-less hermetic container can score with `dataRoot: O.none()` as long as
+ * it does not ask to record.
+ *
+ * **Example** (Score a fixture without recording)
  *
  * ```ts
  * import { runAgentEffectivenessEvalScoreCommand } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer"
+ * import * as O from "effect/Option"
  *
  * const program = runAgentEffectivenessEvalScoreCommand({
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: O.none(),
  *   dir: "fixtures/task",
  *   json: true,
  *   record: false,
@@ -206,7 +214,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  * @since 0.0.0
  */
 export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivenessEvalScorer.runCommand")(function* ({
-  dataRoot = DEFAULT_AI_METRICS_DATA_ROOT,
+  dataRoot,
   dir,
   json,
   record,
@@ -242,8 +250,12 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
   }
 
   if (record) {
+    const resolvedDataRoot = yield* O.match(dataRoot, {
+      onNone: () => AgentEffectivenessEvalScorerError.new("Recording an eval score requires an AI metrics data root."),
+      onSome: Effect.succeed,
+    });
     yield* recordAgentEffectivenessEvalScore({
-      dataRoot,
+      dataRoot: resolvedDataRoot,
       elapsedMs: Duration.toMillis(elapsed),
       report,
       task,

@@ -33,6 +33,21 @@ type MarkdownParserOptions = {
 };
 
 /**
+ * Renders a Markdown document into a `Result` carrying the rendered HTML.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the data-first and data-last returns of
+ * {@link makeParseMarkdownForSchema}.
+ */
+type MarkdownSchemaParser = (input: string) => MarkdownParseResult;
+
+/**
+ * The runtime-application step of the data-last
+ * {@link makeParseMarkdownForSchema} form.
+ */
+type MarkdownSchemaParserForRuntime = (runtime: MarkdownRuntime) => MarkdownSchemaParser;
+
+/**
  * Public schema module export.
  *
  * @category type-level
@@ -116,18 +131,15 @@ export const getGlobalMarkdownRuntime = (): MarkdownRuntime =>
  * @since 0.0.0
  */
 export const makeParseMarkdownForSchema: {
+  (loadMarkdown: MarkdownModuleLoader, options: MarkdownParserOptions): MarkdownSchemaParserForRuntime;
+  (runtime: MarkdownRuntime, loadMarkdown: MarkdownModuleLoader, options: MarkdownParserOptions): MarkdownSchemaParser;
+} = dual(
+  3,
   (
     runtime: MarkdownRuntime,
     loadMarkdown: MarkdownModuleLoader,
     options: MarkdownParserOptions
-  ): (input: string) => MarkdownParseResult;
-  (
-    loadMarkdown: MarkdownModuleLoader,
-    options: MarkdownParserOptions
-  ): (runtime: MarkdownRuntime) => (input: string) => MarkdownParseResult;
-} = dual(
-  3,
-  (runtime: MarkdownRuntime, loadMarkdown: MarkdownModuleLoader, options: MarkdownParserOptions) =>
+  ): MarkdownSchemaParser =>
     (input: string): MarkdownParseResult =>
       pipe(
         getBunRuntime(runtime),

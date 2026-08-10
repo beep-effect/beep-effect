@@ -23,6 +23,7 @@ import {
   Ref,
 } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -103,11 +104,10 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
-// goals/quality-speedup/research/instantiation-census.md §5. After the Blacksmith
-// exit (#600) halved lane CPUs, even 4 concurrent package checks (4 tsgo + 4 bun
-// wrappers) OOM-killed standard ubuntu-24.04 runners mid-lane on every branch,
-// including main — 2 is the widest cap the 16GB hosted VMs survive.
-const CI_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+// goals/quality-speedup/research/instantiation-census.md §5. The heavy lanes now
+// run on 32GB beep-ec2-heavy fleet workers, so the cap is back to the 8vCPU
+// tuning; the 16GB-survival value was 2.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -1476,6 +1476,7 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
   repoCliStep(
     repoRoot,
     "lint:package-test-imports",
@@ -1520,10 +1521,14 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
  * @category utilities
  * @since 0.0.0
  */
-export const rootLintPolicyStepsForTesting = (
-  repoRoot: string,
-  files?: ReadonlyArray<string>
-): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files);
+export const rootLintPolicyStepsForTesting: {
+  (files?: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
+    rootRepoLintPolicySteps(repoRoot, files)
+);
 
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
@@ -1560,7 +1565,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
   yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
 });
@@ -2114,4 +2119,7 @@ export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeCh
  * @category utilities
  * @since 0.0.0
  */
-export const lintFixChangedStepForTesting = lintFixChangedStep;
+export const lintFixChangedStepForTesting: {
+  (files: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+  (repoRoot: string, files: ReadonlyArray<string>): QualityTaskStep;
+} = dual(2, lintFixChangedStep);

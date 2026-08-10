@@ -30,7 +30,9 @@ class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
 ) {}
 
 type JsonEncodeEffect<Input> = {
-  (options: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
+  // Data-last first: the `(input, options?)` overload would otherwise absorb a
+  // lone parse-options argument and hide the curried form.
+  (options?: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };
 
@@ -1188,7 +1190,10 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSourceProcessingRecordJson = SourceProcessingRecord.encodeJson;
+export const encodeSourceProcessingRecordJson: JsonEncodeEffect<unknown> = dual(
+  SchemaUtils.isCodecDataFirst,
+  SourceProcessingRecord.encodeJson
+);
 
 /**
  * JSONL encoder for {@link FileProcessingFailureRecord}.
@@ -1224,7 +1229,10 @@ export const encodeSourceProcessingRecordJson = SourceProcessingRecord.encodeJso
  * @category codecs
  * @since 0.0.0
  */
-export const encodeFileProcessingFailureRecordJson = FileProcessingFailureRecord.encodeJson;
+export const encodeFileProcessingFailureRecordJson: JsonEncodeEffect<unknown> = dual(
+  SchemaUtils.isCodecDataFirst,
+  FileProcessingFailureRecord.encodeJson
+);
 
 /**
  * JSONL encoder for {@link ChildArtifactRecord}.

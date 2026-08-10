@@ -48,7 +48,7 @@ describe("EvidenceVerification", () => {
     const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
 
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceVerificationManifestation), (value) =>
+      fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (value) =>
         equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)
       ),
       fcRuns(25)

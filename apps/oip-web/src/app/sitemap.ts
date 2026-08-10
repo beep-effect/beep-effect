@@ -11,7 +11,8 @@ import type { MetadataRoute } from "next";
 /**
  * Returns the OIP sitemap.
  *
- * @example
+ * **Example** (Logging first sitemap entry)
+ *
  * ```ts
  * import sitemap from "@beep/oip-web/app/sitemap"
  *

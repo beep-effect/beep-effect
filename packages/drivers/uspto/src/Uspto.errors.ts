@@ -8,6 +8,8 @@
 import { $UsptoId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $UsptoId.create("Uspto.errors");
@@ -148,16 +150,18 @@ export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
  * **Example** (Make response-decoding error)
  *
  * ```ts
+ * import { pipe } from "effect"
  * import { makeUsptoError } from "@beep/uspto"
  *
  * const error = makeUsptoError("response-decoding")
- * console.log(error.reason)
+ * const piped = pipe("transport", makeUsptoError({ cause: "socket hang up" }))
+ * console.log(error.reason, piped.reason)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeUsptoError: (
-  reason: UsptoErrorReason,
-  options?: { readonly cause?: string; readonly status?: NonNegativeInt }
-) => UsptoError = UsptoError.fromReason;
+export const makeUsptoError: {
+  (options?: { readonly cause?: string; readonly status?: NonNegativeInt }): (reason: UsptoErrorReason) => UsptoError;
+  (reason: UsptoErrorReason, options?: { readonly cause?: string; readonly status?: NonNegativeInt }): UsptoError;
+} = dual((args) => P.isString(args[0]), UsptoError.fromReason);

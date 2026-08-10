@@ -18,7 +18,8 @@ const oipAtomRuntimeFactory = Atom.context({
 /**
  * Browser runtime mounted by the OIP app provider.
  *
- * @example
+ * **Example** (Logging browser runtime)
+ *
  * ```ts
  * import { oipBrowserRuntime } from "@beep/oip-web/runtime/OipAtomRuntime"
  *

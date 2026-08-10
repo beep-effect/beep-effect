@@ -219,7 +219,7 @@ const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): Reado
     A.some(args, isTurboConcurrencyArg)
       ? args
       : Bun.env.CI === "true"
-        ? ["--concurrency=2", ...args]
+        ? ["--concurrency=4", ...args]
         : ["--concurrency=3", ...args]
   );
 const bunScriptStep = (label: string, source: string) =>
@@ -338,7 +338,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=2",
+        "--concurrency=4",
         "--force",
         "--filter=@beep/schema",
         "--dry=json",
@@ -357,7 +357,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=2",
+        "--concurrency=4",
         "--cache=local:rw",
         "--filter=@beep/schema",
       ]);
@@ -523,8 +523,8 @@ describe("quality task adapter", () => {
   it("decodes the failure policy and wave report schemas", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(yield* S.decodeUnknownEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
-        const report = yield* S.decodeUnknownEffect(GithubCheckRunReport)({
+        expect(yield* S.decodeEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
+        const report = yield* S.decodeEffect(GithubCheckRunReport)({
           failurePolicy: "collect-all",
           lanes: [
             {
@@ -541,10 +541,10 @@ describe("quality task adapter", () => {
     ));
 
   it("property: the wave report schema round-trips arbitrary reports", () => {
-    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport);
+    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
-        const decoded = S.decodeUnknownSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
+        const decoded = S.decodeSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
         expect(decoded.schemaVersion).toBe("github-check-run/v1");
         expect(decoded.failurePolicy).toBe(report.failurePolicy);
         expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
@@ -902,7 +902,7 @@ describe("quality task adapter", () => {
       "turbo",
       "run",
       "check",
-      ...(Bun.env.CI === "true" ? ["--concurrency=2"] : ["--cache=local:rw", "--concurrency=3"]),
+      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
       "--affected",
       "--summarize",
     ]);
@@ -1079,6 +1079,7 @@ describe("quality task adapter", () => {
       "lint:allowlist",
       "lint:tsgo-rules",
       "lint:identity-registry",
+      "lint:judge-rubric",
       "lint:package-test-imports",
       "lint:package-test-typecheck",
       "lint:reflection-artifacts",
@@ -1110,6 +1111,7 @@ describe("quality task adapter", () => {
       "lint:allowlist",
       "lint:tsgo-rules",
       "lint:identity-registry",
+      "lint:judge-rubric",
       "lint:package-test-imports",
       "lint:package-test-typecheck",
       "lint:reflection-artifacts",

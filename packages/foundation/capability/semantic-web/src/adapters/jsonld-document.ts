@@ -93,7 +93,7 @@ const decodeIriReference = (
   reason: JsonLdDocumentError["reason"],
   subject: string = value
 ): Effect.Effect<IRIReference, JsonLdDocumentError> =>
-  S.decodeUnknownEffect(IRIReference)(value).pipe(
+  S.decodeEffect(IRIReference)(value).pipe(
     Effect.mapError((cause) =>
       makeDocumentError(reason, `Failed to decode JSON-LD IRI reference "${value}": ${String(cause)}`, subject)
     )
@@ -104,7 +104,7 @@ const decodeJsonLdNodeIdentifier = (
   reason: JsonLdDocumentError["reason"],
   subject: string = value
 ): Effect.Effect<JsonLdNodeIdentifier, JsonLdDocumentError> =>
-  S.decodeUnknownEffect(JsonLdNodeIdentifier)(value).pipe(
+  S.decodeEffect(JsonLdNodeIdentifier)(value).pipe(
     Effect.mapError((cause) =>
       makeDocumentError(reason, `Failed to decode JSON-LD node identifier "${value}": ${String(cause)}`, subject)
     )
@@ -115,7 +115,7 @@ const makeNamedNodeEffect = (
   reason: JsonLdDocumentError["reason"],
   subject: string = value
 ): Effect.Effect<NamedNode, JsonLdDocumentError> =>
-  S.decodeUnknownEffect(NamedNode)({ termType: "NamedNode", value }).pipe(
+  S.decodeEffect(NamedNode)({ termType: "NamedNode", value }).pipe(
     Effect.mapError((cause) =>
       makeDocumentError(reason, `Failed to decode RDF named node "${value}": ${String(cause)}`, subject)
     )
@@ -126,7 +126,7 @@ const makeBlankNodeEffect = (
   reason: JsonLdDocumentError["reason"],
   subject: string = value
 ): Effect.Effect<BlankNode, JsonLdDocumentError> =>
-  S.decodeUnknownEffect(BlankNode)({ termType: "BlankNode", value }).pipe(
+  S.decodeEffect(BlankNode)({ termType: "BlankNode", value }).pipe(
     Effect.mapError((cause) =>
       makeDocumentError(reason, `Failed to decode RDF blank node "${value}": ${String(cause)}`, subject)
     )
@@ -139,7 +139,7 @@ const makeLiteralEffect = (options: {
   readonly subject: string;
   readonly value: string;
 }): Effect.Effect<Literal, JsonLdDocumentError> =>
-  S.decodeUnknownEffect(Literal)({
+  S.decodeEffect(Literal)({
     termType: "Literal",
     value: options.value,
     datatype: options.datatype,

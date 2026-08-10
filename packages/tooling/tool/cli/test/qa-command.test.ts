@@ -35,6 +35,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 const judge = QaJudgeRef.make({ effort: "high", model: "gpt-5.6-sol" });
 
@@ -121,6 +122,76 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
 
   it("returns none when the output holds no fenced block", () => {
     expect(O.isNone(extractLastJsonBlock("no json here at all"))).toBe(true);
+  });
+
+  it("salvages a correct unfenced object when the judge omits fences entirely", () => {
+    const stdout = ["REQUIRED FINDINGS: 0", 'Inventory follows: { "round": 3, "findings": [] }'].join("\n");
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "round": 3, "findings": [] }');
+  });
+
+  it("ignores an unmatched quote in prose before an unfenced object", () => {
+    const stdout = 'analysis says "maybe then { "final": true }';
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
+  });
+
+  it("ignores an unmatched opening brace in prose before an unfenced object", () => {
+    const stdout = 'analysis starts { but inventory follows: { "final": { "findings": [] } }';
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": { "findings": [] } }');
+  });
+
+  it("takes the last parseable unfenced object, skipping prose braces and brace-bearing strings", () => {
+    const stdout = 'set {a, b} then { "draft": true } and finally { "final": { "nested": "}{" } }';
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": { "nested": "}{" } }');
+  });
+
+  it("handles escaped quotes and a string ending in an escaped backslash", () => {
+    // The "path" value ends in a backslash, so its closing quote is preceded by
+    // an even backslash run — the parity branch that decides the quote is real.
+    const candidate = JSON.stringify({ message: 'escaped quote: "; braces: }{', path: "C:\\logs\\" });
+    const stdout = `thinking... ${candidate} trailing prose`;
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe(candidate);
+  });
+
+  it("salvages a valid unfenced object followed by trailing prose", () => {
+    const candidate = '{ "final": true }';
+    expect(O.getOrElse(extractLastJsonBlock(`${candidate} REQUIRED FINDINGS: 0`), () => "")).toBe(candidate);
+  });
+
+  it("resynchronizes after an unterminated string before a later valid object", () => {
+    const candidate = '{ "round": 4, "findings": [] }';
+    const stdout = `{ "message": "unterminated }\n${candidate}`;
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe(candidate);
+  });
+
+  it("prefers a fenced block over later unfenced objects", () => {
+    const stdout = ["```json", '{ "final": true }', "```", 'afterthought: { "not": "the inventory" }'].join("\n");
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
+  });
+
+  it("returns none when braces never balance into valid JSON", () => {
+    expect(O.isNone(extractLastJsonBlock("opening { and prose {still not json}"))).toBe(true);
+  });
+
+  it("stays bounded on pathological unmatched-opening-brace output", () => {
+    const hostile = Str.repeat(40_000)("{");
+    const startedAt = globalThis.performance.now();
+    const extracted = extractLastJsonBlock(hostile);
+    const elapsedMs = globalThis.performance.now() - startedAt;
+
+    expect(O.isNone(extracted)).toBe(true);
+    expect(elapsedMs).toBeLessThan(1000);
+  });
+
+  it("stays bounded on pathological balanced-object output", () => {
+    // Unlike unmatched braces, every repeat completes a span; accumulating
+    // spans instead of retaining the latest decodable candidate is quadratic here.
+    const hostile = Str.repeat(40_000)('{ "final": true } ');
+    const startedAt = globalThis.performance.now();
+    const extracted = extractLastJsonBlock(hostile);
+    const elapsedMs = globalThis.performance.now() - startedAt;
+
+    expect(O.getOrElse(extracted, () => "")).toBe('{ "final": true }');
+    expect(elapsedMs).toBeLessThan(1000);
   });
 });
 

@@ -187,7 +187,7 @@ const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.leng
  */
 export const httpApiSuccessStatus: {
   (schema: S.Top, fallback?: number): NonNegativeInt;
-  (fallback: number): (schema: S.Top) => NonNegativeInt;
+  (fallback?: number): (schema: S.Top) => NonNegativeInt;
 } = dual(
   isHttpApiSuccessStatusDataFirst,
   (schema: S.Top, fallback = 200): NonNegativeInt =>
@@ -234,7 +234,16 @@ const endpointErrorSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<
  * @category observability
  * @since 0.0.0
  */
-export const makeHttpApiMetrics = (prefix: string, descriptionPrefix = "HTTP API request"): HttpApiMetricSet => ({
+// unary by contract: `prefix` and `descriptionPrefix` are both `string`, so a
+// dual is undecidable — a lone string cannot be told apart from a data-last
+// call. `descriptionPrefix` is REMOVED FROM THE PUBLIC TYPE, not merely
+// relocated: it keeps its runtime default but no caller can supply it through
+// any export. That was a deliberate narrowing (it had zero callers); widening
+// the signature back re-arms the diagnostic.
+export const makeHttpApiMetrics: (prefix: string) => HttpApiMetricSet = (
+  prefix: string,
+  descriptionPrefix = "HTTP API request"
+): HttpApiMetricSet => ({
   requestsTotal: Metric.counter(`${prefix}_requests_total`, {
     description: `${descriptionPrefix} count.`,
     incremental: true,

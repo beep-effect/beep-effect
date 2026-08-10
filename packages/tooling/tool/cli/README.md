@@ -185,12 +185,26 @@ Run repo-local AI-agent analytics workflows for transcript ingest, Phoenix
 install proofs, OTLP export, benchmark scoring, labeling, reports, and P7
 operator workflows.
 
+Every `ai-metrics` subcommand resolves its data root by precedence:
+
+| Rung | Source | Value |
+| --- | --- | --- |
+| 1 | `--data-root` | The flag value, used verbatim |
+| 2 | `BEEP_AI_METRICS_DATA_ROOT` | The environment value, used verbatim |
+| 3 | `--target dankserver` with neither of the above | `/srv/data/ai-metrics` |
+| 4 | otherwise | `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics` |
+
+The canonical store therefore lives outside every clone, and `forwarder timer`
+refuses to render a systemd unit unless the resolved root is absolute — a
+relative root inside a unit binds to `WorkingDirectory`, which is how the store
+previously ended up inside whichever clone the collector happened to run in.
+
 The P7 mirror commands build and inspect sanitized derived mirror bundles. A
 sync is a dry-run by default and requires `--confirm p7-derived-mirror` before
 it writes to the remote mirror root.
 
 ```bash
-bun run beep ai-metrics mirror build --target dankserver --data-root .beep/ai-metrics --json
+bun run beep ai-metrics mirror build --target dankserver --data-root "$BEEP_AI_METRICS_DATA_ROOT" --json
 bun run beep ai-metrics mirror sync --bundle latest --json
 bun run beep ai-metrics mirror status --json
 ```
@@ -200,10 +214,10 @@ workflows; `delete` and `compact` are dry-run previews unless the command also
 has an explicit retention window and `--confirm p7-retention-window`.
 
 ```bash
-bun run beep ai-metrics retention list --data-root .beep/ai-metrics --json
-bun run beep ai-metrics retention restore-drill --data-root .beep/ai-metrics --restore-root /tmp/ai-metrics-restore --before 2026-05-16T00:00:00Z --json
-bun run beep ai-metrics retention delete --data-root .beep/ai-metrics --before 2026-05-16T00:00:00Z --json
-bun run beep ai-metrics retention compact --data-root .beep/ai-metrics --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention list --data-root "$BEEP_AI_METRICS_DATA_ROOT" --json
+bun run beep ai-metrics retention restore-drill --data-root "$BEEP_AI_METRICS_DATA_ROOT" --restore-root /tmp/ai-metrics-restore --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention delete --data-root "$BEEP_AI_METRICS_DATA_ROOT" --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention compact --data-root "$BEEP_AI_METRICS_DATA_ROOT" --before 2026-05-16T00:00:00Z --json
 ```
 
 ### `files`

@@ -39,7 +39,7 @@ const skipNotice = Effect.logInfo(
 
 const liveEngine = Effect.fn("TikaLive.engine")(function* (baseUrl: string) {
   return yield* makeTikaServerFileProcessingEngine(
-    yield* S.decodeUnknownEffect(TikaServerEngineConfig)({ baseUrl, timeoutMillis: 30_000 })
+    yield* S.decodeEffect(TikaServerEngineConfig)({ baseUrl, timeoutMillis: 30_000 })
   );
 });
 
@@ -56,8 +56,8 @@ const liveOperation = Effect.fn("TikaLive.operation")(function* (
   yield* fs.writeFile(filePath, bytes);
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(filePath);
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)(name);
+  const locatorValue = yield* S.decodeEffect(PosixPath)(filePath);
+  const relativePath = yield* S.decodeEffect(PosixPath)(name);
 
   return ExtractFileOperation.make({
     format,

@@ -12,12 +12,14 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 /**
  * Compose the injected projection service with its app-owned PGlite store.
  *
- * @remarks
+ * **Details**
+ *
  * The resulting layer still needs a filesystem and path from the host — build it
  * inside a scope so the PGlite store is closed once the build settles, which is
  * how `practice-kg-build` drives it.
  *
- * @example
+ * **Example** (Scoped build layer program)
+ *
  * ```ts
  * import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server"
  * import * as BunServices from "@effect/platform-bun/BunServices"
@@ -46,7 +48,6 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
  * ```
  *
  * @param dataDir - Directory the bundle's PGlite files are created in.
- *
  * @category layers
  * @since 0.0.0
  */

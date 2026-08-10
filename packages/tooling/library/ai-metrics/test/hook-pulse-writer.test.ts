@@ -9,13 +9,14 @@ import {
   HookPulseNotificationType,
   HookPulseSchemaVersion,
   HookPulseV1,
+  HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -68,6 +69,22 @@ const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
 // `HookPulseWaitReasonInvariant` filter does for the wait derivation.
 const privateDigest = (value: string) => hashPrivateIdentifier(value, undefined);
 
+// One salt for the writer child and the codec provider alike, so a parity case
+// reads as "both halves were told the same thing" rather than as two constants
+// that happen to match.
+const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
+
+// The workstation that owns this instrument exports a real operator salt into
+// the environment vitest inherits, so a codec decode that read the ambient
+// provider would assert one thing here and another in CI — and would print that
+// salt into a failure diff. Every parity case pins its own provider, the cleared
+// one included. Mutating `process.env` is not an alternative: `fromEnv`
+// snapshots the environment once per process and `Context.Reference` memoizes
+// its default, so the first read freezes it.
+const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+
+const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
 const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownSync(S.String);
@@ -138,6 +155,7 @@ interface WriterRun {
 const runWriter = Effect.fnUntraced(function* (
   stdin: string,
   options: {
+    readonly aiMetricsHashSalt?: string;
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
     readonly viaXdgFallback?: boolean;
@@ -201,8 +219,10 @@ const runWriter = Effect.fnUntraced(function* (
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
       // unconfigured clone byte-identical to `hashPrivateIdentifier(value, undefined)`.
+      // The second rung is settable so the codec-parity cases can prove both
+      // halves walk the *same* chain rather than only its first link.
       BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-      BEEP_AI_METRICS_HASH_SALT: "",
+      BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
     },
     // `endOnDone` is stated rather than left to its `true` default: closing stdin once
     // the payload is written is the whole reason this run terminates, so it is part of
@@ -563,7 +583,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     // round-trip half proves the NDJSON line the ledger stores is lossless for
     // every such row, which is what P4 replay actually depends on.
     fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
         const line = encodeHookPulseRow(value);
 
         expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
@@ -833,6 +853,69 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       })
     )
   );
+
+  // The writer is shell and the codec is TypeScript, so the only honest parity
+  // proof runs the real script and derives a row from the same raw payload under
+  // the matching `ConfigProvider`, then compares digests rather than shapes.
+  // Every other assertion in this file is satisfied by any 64-hex string, and
+  // the two halves used to disagree on exactly these three fields whenever
+  // either salt was exported.
+  const codecParityCases: ReadonlyArray<{
+    readonly label: string;
+    readonly writerOptions: { readonly aiMetricsHashSalt?: string; readonly hashSalt?: string };
+    readonly codecEnv: Record<string, string>;
+    readonly expectedSalt: string | undefined;
+  }> = [
+    { label: "neither salt configured", writerOptions: {}, codecEnv: {}, expectedSalt: undefined },
+    {
+      label: "the hook-pulse rung",
+      writerOptions: { hashSalt: CODEC_PARITY_SALT },
+      codecEnv: { BEEP_HOOK_PULSE_HASH_SALT: CODEC_PARITY_SALT },
+      expectedSalt: CODEC_PARITY_SALT,
+    },
+    {
+      label: "the ai-metrics rung",
+      writerOptions: { aiMetricsHashSalt: CODEC_PARITY_SALT },
+      codecEnv: { BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
+      expectedSalt: CODEC_PARITY_SALT,
+    },
+  ];
+
+  A.forEach(codecParityCases, ({ codecEnv, expectedSalt, label, writerOptions }) => {
+    it.effect(`reproduces the writer's private digests through ${label}`, () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const run = yield* runWriter(encodeJson(preToolUsePayload), writerOptions);
+          const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
+          // `ts`, `notifierRev`, `instrumentClass`, `agentKind`, and
+          // `evidenceTier` enter no digest, so a literal `ts` here avoids
+          // re-encoding the writer's own `DateTimeUtc` for no gain.
+          const codecRow = yield* withSaltEnv(
+            codecEnv,
+            decodeHookPulseFromRaw({
+              event: preToolUsePayload,
+              notifierRev: "log-only-0",
+              instrumentClass: HookPulseInstrumentClass.Enum.production,
+              agentKind: HookPulseAgentKind.Enum["claude-code"],
+              evidenceTier: HookPulseEvidenceTier.Enum.derived,
+              ts: "2026-08-01T06:40:07.000Z",
+            })
+          );
+
+          expect(codecRow.sessionId).toBe(writerRow.sessionId);
+          expect(codecRow.cwd).toBe(writerRow.cwd);
+          expect(codecRow.transcriptPath).toEqual(writerRow.transcriptPath);
+          // Non-vacuity: two halves that both ignored the salt would agree
+          // too — on the fallback constant. Naming the rung's own digest is
+          // what separates "reproduces the writer" from "both hardcode the
+          // default", and it fails on the salted rows if either half stops
+          // reading its variable.
+          expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, expectedSalt));
+          expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, expectedSalt));
+        })
+      )
+    );
+  });
 });
 
 // The switch's two artifacts, stated as schemas rather than as inline object

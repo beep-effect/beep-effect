@@ -244,7 +244,8 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
 /**
  * Submits an OIP contact payload to HubSpot when runtime config is present.
  *
- * @example
+ * **Example** (Submit contact via Effect)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
@@ -300,7 +301,8 @@ export const submitContact: (input: unknown) => Effect.Effect<ContactSubmissionR
 /**
  * Builds a JSON-safe contact response object.
  *
- * @example
+ * **Example** (Build contact response body)
+ *
  * ```ts
  * import { ContactSubmissionResponse, contactResponseBody } from "@beep/oip-web/contact"
  *

@@ -7,7 +7,8 @@
 
 import { $LibpffId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.errors");
@@ -142,13 +143,18 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
  * **Example** (Create typed technical error)
  *
  * ```ts
- * import { makeLibpffError } from "@beep/libpff"
+ * import { pipe } from "effect"
+ * import { LibpffErrorOptions, makeLibpffError } from "@beep/libpff"
  *
  * const error = makeLibpffError("engine-unavailable")
- * console.log(error.reason)
+ * const piped = pipe("timeout", makeLibpffError(LibpffErrorOptions.make({ cause: "pffexport stalled" })))
+ * console.log(error.reason, piped.reason)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeLibpffError = LibpffError.fromReason;
+export const makeLibpffError: {
+  (options?: LibpffErrorOptions): (reason: LibpffErrorReason) => LibpffError;
+  (reason: LibpffErrorReason, options?: LibpffErrorOptions): LibpffError;
+} = dual((args) => Str.isString(args[0]), LibpffError.fromReason);

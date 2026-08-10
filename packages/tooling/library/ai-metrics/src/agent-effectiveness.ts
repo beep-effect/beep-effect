@@ -38,17 +38,30 @@ import type {
 const $I = $RepoAiMetricsId.create("agent-effectiveness");
 
 const defaultPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
-const defaultDataRoot = ".beep/ai-metrics";
 /**
  * Stable default pointer used to locate the latest checked-in JSDoc worker-eval evidence.
  *
- * **Example** (Default worker-eval report path)
+ * **Details**
+ *
+ * The path stays repo-relative on purpose: worker-eval evidence is checked in and
+ * travels with the clone, unlike the AI-metrics data root, which is resolved per
+ * machine. It also points at the packet's manifest rather than a report, so the
+ * doctor follows the manifest to whichever worker-eval report is newest instead
+ * of pinning one filename that goes stale on the next run.
+ *
+ * **Example** (Confirming the doctor's default evidence pointer)
  *
  * ```ts
- * import { DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH } from "@beep/repo-ai-metrics"
+ * import {
+ *   AgentEffectivenessDoctorInput,
+ *   DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH
+ * } from "@beep/repo-ai-metrics"
  *
- * const reportPath = DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH
- * console.log(reportPath.endsWith("/ops/manifest.json"))
+ * const input = AgentEffectivenessDoctorInput.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ * })
+ *
+ * console.log(input.workerEvalReportPath === DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH) // true
  * ```
  *
  * @category constants
@@ -83,12 +96,28 @@ query AgentEffectivenessPhoenixInventory {
 /**
  * Status emitted by agent-effectiveness reports.
  *
- * **Example** (Check passed status guard)
+ * **Details**
+ *
+ * `unavailable` is distinct from `failed`: it means a section had no evidence to
+ * judge — Phoenix was unreachable or disabled, derived storage was never built,
+ * a worker-eval report was missing — whereas `failed` means evidence was read and
+ * it was bad. The doctor is a report-only trust gate, so neither status blocks a
+ * caller.
+ *
+ * **Gotchas**
+ *
+ * `unavailable` is a section status that never reaches a summary. Rolling
+ * sections up yields `failed` when any section failed, `warning` when any section
+ * warned *or* was unavailable, and `passed` otherwise — so missing evidence
+ * surfaces as a summary warning, with the section itself naming what was absent.
+ *
+ * **Example** (Branching on a section status)
  *
  * ```ts
  * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
  *
- * console.log(AgentEffectivenessStatus.is.passed("passed"))
+ * console.log(AgentEffectivenessStatus.is.passed("passed")) // true
+ * console.log(AgentEffectivenessStatus.Enum.unavailable) // unavailable
  * ```
  *
  * @category models
@@ -101,17 +130,14 @@ export const AgentEffectivenessStatus = LiteralKit(["passed", "warning", "failed
 );
 
 /**
- * Runtime type for `AgentEffectivenessStatus`.
+ * Decoded status carried by every agent-effectiveness section and summary.
  *
- * **Example** (Type status as passed)
+ * **Details**
  *
- * ```ts
- * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
+ * The union of the four literals, so a variable of this type accepts any status
+ * and the per-member guards on the runtime value narrow it further.
  *
- * const status: AgentEffectivenessStatus = "passed"
- * console.log(AgentEffectivenessStatus.is.passed(status))
- * ```
- *
+ * @see {@link AgentEffectivenessStatus} for the runtime schema, its `Enum`, and its guards.
  * @category models
  * @since 0.0.0
  */
@@ -120,12 +146,21 @@ export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
 /**
  * Primitive annotation value allowed in local Phase 1 plans.
  *
- * **Example** (Validate numeric annotation value)
+ * **Details**
+ *
+ * Annotation values are deliberately restricted to a string, a finite number, or
+ * a boolean. Nested objects and arrays are excluded because a planned annotation
+ * is scanned for forbidden tokens before it can be written, and a flat primitive
+ * is scannable without walking arbitrary structure. Metrics land as finite
+ * numbers, statuses as strings.
+ *
+ * **Example** (Checking a planned metric value)
  *
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
  *
- * console.log(AgentEffectivenessAnnotationValue.is(0.98))
+ * console.log(AgentEffectivenessAnnotationValue.is(0.98)) // true
+ * console.log(AgentEffectivenessAnnotationValue.is({ score: 0.98 })) // false
  * ```
  *
  * @category models
@@ -139,17 +174,15 @@ export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.
 );
 
 /**
- * Runtime type for `AgentEffectivenessAnnotationValue`.
+ * Decoded value accepted by a planned annotation.
  *
- * **Example** (Type annotation value number)
+ * **Details**
  *
- * ```ts
- * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
+ * `string | number | boolean`, narrowed from the schema union. A value of this
+ * type still has to survive the plan's privacy check before it can be written,
+ * so the type bounds shape rather than content.
  *
- * const value: AgentEffectivenessAnnotationValue = 0.98
- * console.log(AgentEffectivenessAnnotationValue.is(value))
- * ```
- *
+ * @see {@link AgentEffectivenessAnnotationValue} for the runtime schema and its guard.
  * @category models
  * @since 0.0.0
  */
@@ -158,7 +191,15 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 /**
  * Error raised by agent-effectiveness report helpers.
  *
- * **Example** (Construct effectiveness error)
+ * **Details**
+ *
+ * This covers the encode and decode boundaries — rendering a report or plan as
+ * JSON, and reading one back — rather than the doctor itself. Building a doctor
+ * report never fails: an unreachable Phoenix or a missing worker-eval report
+ * becomes an `unavailable` section, so the absence of evidence is reported rather
+ * than raised.
+ *
+ * **Example** (Reporting a failed encode)
  *
  * ```ts
  * import { AgentEffectivenessError } from "@beep/repo-ai-metrics"
@@ -167,7 +208,9 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
  *   cause: "decode failed",
  *   message: "Failed to encode agent-effectiveness evidence."
  * })
- * console.log(error._tag)
+ *
+ * console.log(error._tag) // AgentEffectivenessError
+ * console.log(error.message)
  * ```
  *
  * @category errors
@@ -187,11 +230,22 @@ export class AgentEffectivenessError extends TaggedErrorClass<AgentEffectiveness
 /**
  * Input for the Phase 1 agent-effectiveness doctor.
  *
- * **Example** (Make empty doctor input)
+ * **Gotchas**
+ *
+ * `dataRoot` is required. The doctor reports on whichever store it is pointed
+ * at, so a default here would let it certify a store nobody named; the CLI
+ * resolves the root once, by precedence, through `resolveAiMetricsDataRoot`.
+ *
+ * **Example** (Pointing the doctor at a resolved store)
  *
  * ```ts
  * import { AgentEffectivenessDoctorInput } from "@beep/repo-ai-metrics"
- * console.log(AgentEffectivenessDoctorInput.make({}).target)
+ *
+ * const input = AgentEffectivenessDoctorInput.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ * })
+ *
+ * console.log(input.target) // "dankserver"
  * ```
  *
  * @category models
@@ -201,10 +255,7 @@ export class AgentEffectivenessDoctorInput extends S.Class<AgentEffectivenessDoc
   $I`AgentEffectivenessDoctorInput`
 )(
   {
-    dataRoot: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultDataRoot)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultDataRoot))
-    ),
+    dataRoot: S.String,
     noPhoenix: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
@@ -230,11 +281,24 @@ export class AgentEffectivenessDoctorInput extends S.Class<AgentEffectivenessDoc
 /**
  * Input for building a dry-run annotation plan.
  *
- * **Example** (Make annotation plan input)
+ * **Gotchas**
+ *
+ * `doctor` is required, and so is the data root it carries. Defaulting the
+ * nested doctor input would reintroduce, one level down, the very thing the
+ * data-root precedence removed: a plan built against a store nobody named.
+ *
+ * **Example** (Bounding a plan to a resolved store)
  *
  * ```ts
- * import { AgentEffectivenessAnnotationPlanInput } from "@beep/repo-ai-metrics"
- * console.log(AgentEffectivenessAnnotationPlanInput.make({}).annotationLimit)
+ * import { AgentEffectivenessAnnotationPlanInput, AgentEffectivenessDoctorInput } from "@beep/repo-ai-metrics"
+ *
+ * const input = AgentEffectivenessAnnotationPlanInput.make({
+ *   doctor: AgentEffectivenessDoctorInput.make({
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *   })
+ * })
+ *
+ * console.log(input.annotationLimit) // 50
  * ```
  *
  * @category models
@@ -248,10 +312,7 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
       S.withConstructorDefault(Effect.succeed(defaultAnnotationLimit)),
       S.withDecodingDefaultKey(Effect.succeed(defaultAnnotationLimit))
     ),
-    doctor: AgentEffectivenessDoctorInput.pipe(
-      S.withConstructorDefault(Effect.succeed(AgentEffectivenessDoctorInput.make({}))),
-      S.withDecodingDefaultKey(Effect.succeed(AgentEffectivenessDoctorInput.make({})))
-    ),
+    doctor: AgentEffectivenessDoctorInput,
   },
   $I.annote("AgentEffectivenessAnnotationPlanInput", {
     description: "Input used to render a sanitized, local-only Phoenix annotation plan.",
@@ -266,7 +327,15 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
 /**
  * Summary for one Phoenix project.
  *
- * **Example** (Create Phoenix project summary)
+ * **Details**
+ *
+ * A counts-and-names row read from Phoenix's GraphQL inventory: no span bodies,
+ * prompts, or trace payloads cross into it. The three annotation-name arrays are
+ * separate because Phoenix scopes annotations to traces, spans, and sessions
+ * independently, and the doctor uses them to tell whether the repo's own
+ * annotation names are already present on a project.
+ *
+ * **Example** (Reading one project out of the inventory)
  *
  * ```ts
  * import { AgentEffectivenessPhoenixProject } from "@beep/repo-ai-metrics"
@@ -280,7 +349,8 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
  *   traceAnnotationNames: ["agent.loop.status"],
  *   traceCount: 4
  * })
- * console.log(project.hasTraces)
+ *
+ * console.log(project.traceAnnotationNames) // [ "agent.loop.status" ]
  * ```
  *
  * @category models
@@ -306,7 +376,22 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
 /**
  * Read-only Phoenix health and inventory section.
  *
- * **Example** (Create Phoenix health section)
+ * **Details**
+ *
+ * Probing Phoenix only reads: two reachability `GET`s followed by one GraphQL
+ * inventory query, never a mutation. `serverInsufficientStorage` is Phoenix's own
+ * storage alarm, surfaced here because a Phoenix that still answers queries while
+ * out of disk will drop later writes.
+ *
+ * **Gotchas**
+ *
+ * Every count is zero whenever the probe could not complete, so an unreachable
+ * server and a genuinely empty one look alike in the numbers — read `status` and
+ * `message` first, since they carry the distinction. `version` is read from the
+ * `x-phoenix-server-version` response header and is therefore null for a
+ * reachable server that does not send it, not only for an unreachable one.
+ *
+ * **Example** (Recording a reachable Phoenix)
  *
  * ```ts
  * import { AgentEffectivenessPhoenixSection } from "@beep/repo-ai-metrics"
@@ -323,7 +408,8 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
  *   status: "passed",
  *   version: "9.0.0"
  * })
- * console.log(section.status)
+ *
+ * console.log(section.status) // passed
  * ```
  *
  * @category models
@@ -352,7 +438,22 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
 /**
  * Source coverage row derived from AI-metrics storage.
  *
- * **Example** (Create source coverage row)
+ * **Details**
+ *
+ * One row per transcript source kind, aggregated across every ingested file of
+ * that kind. `acceptedEvents` against `totalLines` is the useful ratio: it says
+ * how much of what was read the ingest pipeline could actually understand, which
+ * is the early signal that a provider changed its transcript format.
+ *
+ * **Gotchas**
+ *
+ * `totalLines` counts non-empty transcript lines, not raw file lines — blanks are
+ * stripped before anything is counted. `rejectedLines` is then derived as
+ * `totalLines - acceptedEvents` rather than tallied on its own, so it means "not
+ * decodable as an event" and lumps genuinely malformed lines together with
+ * well-formed ones the decoder does not recognize.
+ *
+ * **Example** (Measuring how much of a source was understood)
  *
  * ```ts
  * import { AgentEffectivenessSourceCoverage } from "@beep/repo-ai-metrics"
@@ -365,7 +466,8 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
  *   sourceKind: "codex",
  *   totalLines: 50
  * })
- * console.log(coverage.acceptedEvents / coverage.totalLines)
+ *
+ * console.log(coverage.acceptedEvents / coverage.totalLines) // 0.96
  * ```
  *
  * @category models
@@ -390,7 +492,15 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
 /**
  * Latest forwarder summary from derived AI-metrics storage.
  *
- * **Example** (Create forwarder summary)
+ * **Details**
+ *
+ * The most recent completed ingest run, describing how much was taken in rather
+ * than what it contained: file, archive-object, and turn counts, plus the
+ * configuration snapshot that run was executed under. `configSnapshotId` is what
+ * makes a run comparable to another — two runs with different snapshot ids were
+ * produced by differently configured agents.
+ *
+ * **Example** (Reading the last completed ingest)
  *
  * ```ts
  * import { AgentEffectivenessForwarderSummary } from "@beep/repo-ai-metrics"
@@ -404,7 +514,8 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
  *   target: "dankserver",
  *   turnCount: 12
  * })
- * console.log(summary.turnCount)
+ *
+ * console.log(summary.turnCount) // 12
  * ```
  *
  * @category models
@@ -430,7 +541,21 @@ export class AgentEffectivenessForwarderSummary extends S.Class<AgentEffectivene
 /**
  * Latest scorecard summary from derived AI-metrics storage.
  *
- * **Example** (Create scorecard summary)
+ * **Details**
+ *
+ * A scorecard grades a bounded window rather than all history, which is why the
+ * window bounds travel with the score: `totalScore` is only meaningful alongside
+ * the window and the `configSnapshotId` it was computed under. `completionReady`
+ * is the scorecard's own judgment that it had enough labelled evidence to be
+ * trusted, and `coverageGaps` names what was missing when it did not.
+ *
+ * **Gotchas**
+ *
+ * A low `totalScore` and an untrustworthy one are different problems. Check
+ * `completionReady` before reading the score — a scorecard computed over too few
+ * labels still reports a number.
+ *
+ * **Example** (Reading a window's score with its caveats)
  *
  * ```ts
  * import { AgentEffectivenessScorecardSummary } from "@beep/repo-ai-metrics"
@@ -447,7 +572,9 @@ export class AgentEffectivenessForwarderSummary extends S.Class<AgentEffectivene
  *   windowEndEpochMillis: 1_717_086_400_000,
  *   windowStartEpochMillis: 1_717_000_000_000
  * })
- * console.log(summary.completionReady)
+ *
+ * console.log(summary.completionReady) // true
+ * console.log(summary.coverageGaps.length) // 0
  * ```
  *
  * @category models
@@ -476,15 +603,29 @@ export class AgentEffectivenessScorecardSummary extends S.Class<AgentEffectivene
 /**
  * AI-metrics local evidence section for the doctor report.
  *
- * **Example** (Create AI-metrics section)
+ * **Details**
+ *
+ * What the local derived store can currently answer. `unavailableMetrics` is the
+ * honest half of the section: it names metrics the store cannot supply at all —
+ * per-provider token cost, for instance — so a reader can tell a metric that is
+ * zero from one that was never captured. `dataRoot` records which store was
+ * consulted, since it is resolved per machine rather than fixed.
+ *
+ * **Gotchas**
+ *
+ * The section is reported as `unavailable` when derived storage does not exist
+ * yet, and in that state every count is zero and both `latestForwarder` and
+ * `latestScorecard` are null. That is "not built", not "built and empty".
+ *
+ * **Example** (Recording a store that was never derived)
  *
  * ```ts
  * import { AgentEffectivenessAiMetricsSection } from "@beep/repo-ai-metrics"
  *
  * const section = AgentEffectivenessAiMetricsSection.make({
  *   benchmarkRunCount: 0,
- *   dataRoot: ".beep/ai-metrics",
- *   derivedDuckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *   derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *   labelCount: 0,
  *   latestForwarder: null,
  *   latestScorecard: null,
@@ -493,7 +634,8 @@ export class AgentEffectivenessScorecardSummary extends S.Class<AgentEffectivene
  *   status: "unavailable",
  *   unavailableMetrics: ["provider_model_token_cost"]
  * })
- * console.log(section.unavailableMetrics)
+ *
+ * console.log(section.unavailableMetrics) // [ "provider_model_token_cost" ]
  * ```
  *
  * @category models
@@ -522,7 +664,22 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
 /**
  * JSDoc worker-eval section for the doctor report.
  *
- * **Example** (Create JSDoc worker section)
+ * **Details**
+ *
+ * Read-only evidence from the last JSDoc worker-eval run. `selectedPackets`
+ * against `completedPackets`, `failedPackets`, and `timedOutPackets` is the shape
+ * that matters — a run that selected more packets than it completed left work
+ * unaccounted for. `policyViolationCodes` carries codes rather than messages so
+ * the section stays free of worker output text.
+ *
+ * **Gotchas**
+ *
+ * `reportPath` is the path actually read, which is not necessarily the path that
+ * was requested: pointing the doctor at a packet manifest makes it follow the
+ * manifest to the newest worker-eval report and record that resolved path here.
+ * The cleanup and OTLP status fields are null when the run did not report them.
+ *
+ * **Example** (Recording a clean worker-eval run)
  *
  * ```ts
  * import { AgentEffectivenessJsdocWorkerSection } from "@beep/repo-ai-metrics"
@@ -540,7 +697,9 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
  *   status: "passed",
  *   timedOutPackets: 0
  * })
- * console.log(section.completedPackets === section.selectedPackets)
+ *
+ * console.log(section.completedPackets === section.selectedPackets) // true
+ * console.log(section.policyViolationCodes.length) // 0
  * ```
  *
  * @category models
@@ -570,7 +729,22 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
 /**
  * Aggregate summary emitted by the doctor report.
  *
- * **Example** (Create doctor summary)
+ * **Details**
+ *
+ * Folds the three sections into one verdict plus the labelled messages behind it.
+ * `status` is `failed` when any section failed, `warning` when any section warned
+ * or was unavailable, and `passed` only when all three reported evidence and
+ * liked it. Each entry is prefixed with its section label, so the summary alone
+ * says which section is responsible.
+ *
+ * **Gotchas**
+ *
+ * A `warning` summary with an empty `warnings` array is normal, not a
+ * contradiction: an unavailable section degrades the status while its message
+ * lands in `unavailable`. Reading only `warnings` on a warning summary can
+ * therefore turn up nothing.
+ *
+ * **Example** (Explaining a warning caused by a disabled probe)
  *
  * ```ts
  * import { AgentEffectivenessDoctorSummary } from "@beep/repo-ai-metrics"
@@ -581,7 +755,9 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
  *   unavailable: ["phoenix: Phoenix probe disabled by --no-phoenix."],
  *   warnings: []
  * })
- * console.log(summary.unavailable.length)
+ *
+ * console.log(summary.status) // warning
+ * console.log(summary.unavailable[0]) // phoenix: Phoenix probe disabled by --no-phoenix.
  * ```
  *
  * @category models
@@ -604,7 +780,16 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
 /**
  * Phase 1 agent-effectiveness doctor report.
  *
- * **Example** (Build full doctor report)
+ * **Details**
+ *
+ * The whole trust gate in one value: three independent evidence sections —
+ * Phoenix, local AI-metrics storage, JSDoc worker-eval — plus the summary that
+ * folds them. Building it mutates nothing and cannot fail, so a section that
+ * could not be read reports itself as unavailable instead of collapsing the
+ * report. `schemaVersion` is what lets a stored report be compared against one
+ * produced by a later build.
+ *
+ * **Example** (Assembling a fully passing report)
  *
  * ```ts
  * import {
@@ -624,8 +809,8 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  * const report = AgentEffectivenessDoctorReport.make({
  *   aiMetrics: AgentEffectivenessAiMetricsSection.make({
  *     benchmarkRunCount: 0,
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDuckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *     labelCount: 0,
  *     latestForwarder: null,
  *     latestScorecard: null,
@@ -634,7 +819,7 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  *     status: "passed",
  *     unavailableMetrics: []
  *   }),
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   generatedAt: "2026-05-20T00:00:00.000Z",
  *   jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection.make({
  *     cleanupDeleteStatus: null,
@@ -665,7 +850,9 @@ export class AgentEffectivenessDoctorSummary extends S.Class<AgentEffectivenessD
  *   summary,
  *   target: "dankserver"
  * })
- * console.log(report.summary.status)
+ *
+ * console.log(report.summary.status) // passed
+ * console.log(report.aiMetrics.unavailableMetrics.length) // 0
  * ```
  *
  * @category models
@@ -692,7 +879,23 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
 /**
  * One local-only annotation row that could be written to Phoenix later.
  *
- * **Example** (Create planned annotation row)
+ * **Details**
+ *
+ * A planned annotation is inert: it describes a write without performing one.
+ * `annotationId` is composed as `source:targetKind:targetRef:name` rather than
+ * generated, which makes it stable across runs — replanning the same evidence
+ * yields the same id, so a later write phase can be idempotent. `optimization`
+ * records the direction that counts as better for the metric, since Phoenix
+ * cannot infer that from a bare number.
+ *
+ * **Gotchas**
+ *
+ * `metadata` is a flat string-to-string record, and both it and `value` are
+ * scanned for forbidden tokens before a plan is allowed to be written. Putting a
+ * path or an operator-supplied string in metadata is what makes a plan fail its
+ * own check.
+ *
+ * **Example** (Planning one scorecard annotation)
  *
  * ```ts
  * import { AgentEffectivenessPlannedAnnotation } from "@beep/repo-ai-metrics"
@@ -707,7 +910,9 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
  *   targetRef: "scorecard-1",
  *   value: 0.91
  * })
- * console.log(annotation.metadata.configSnapshotId)
+ *
+ * console.log(annotation.metadata.configSnapshotId) // config-1
+ * console.log(annotation.value) // 0.91
  * ```
  *
  * @category models
@@ -737,7 +942,15 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
 /**
  * Dry-run annotation plan for Phase 1.
  *
- * **Example** (Build dry-run annotation plan)
+ * **Details**
+ *
+ * The plan carries the doctor report it was derived from, so a reviewer can see
+ * the evidence and the annotations it produced in one value without re-running
+ * the doctor. `mutationPolicy` records that this generation wrote nothing to
+ * Phoenix — it is a claim about how the plan was produced, not a switch that
+ * governs a later write.
+ *
+ * **Example** (Deriving a plan from passing evidence)
  *
  * ```ts
  * import {
@@ -759,8 +972,8 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  * const doctor = AgentEffectivenessDoctorReport.make({
  *   aiMetrics: AgentEffectivenessAiMetricsSection.make({
  *     benchmarkRunCount: 0,
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDuckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDuckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *     labelCount: 0,
  *     latestForwarder: null,
  *     latestScorecard: null,
@@ -769,7 +982,7 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  *     status: "passed",
  *     unavailableMetrics: []
  *   }),
- *   dataRoot: ".beep/ai-metrics",
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   generatedAt: "2026-05-20T00:00:00.000Z",
  *   jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection.make({
  *     cleanupDeleteStatus: null,
@@ -819,7 +1032,9 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
  *   schemaVersion: "agent-effectiveness-annotation-plan/v1",
  *   summary
  * })
- * console.log(plan.annotations.length)
+ *
+ * console.log(plan.annotations.length) // 1
+ * console.log(plan.mutationPolicy) // local-only-no-phoenix-mutation
  * ```
  *
  * @category models
@@ -844,7 +1059,21 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
 /**
  * One validation finding for an annotation plan.
  *
- * **Example** (Create annotation check finding)
+ * **Details**
+ *
+ * `code` names the class of problem — a private home path, a 1Password
+ * reference, a secret-shaped value, raw worker draft text — so findings can be
+ * counted and compared without parsing prose. `annotationId` locates the finding:
+ * it is the offending annotation's id, or a synthetic subject such as
+ * `plan.metadata` when the problem is in the plan envelope rather than in one row.
+ *
+ * **Gotchas**
+ *
+ * `message` names the class of content that matched and never quotes the match,
+ * so a finding stays safe to print and log. Locating the actual offending text
+ * means going back to the plan.
+ *
+ * **Example** (Reading a privacy finding)
  *
  * ```ts
  * import { AgentEffectivenessAnnotationCheckFinding } from "@beep/repo-ai-metrics"
@@ -854,7 +1083,8 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
  *   code: "private-home-path",
  *   message: "Plan payload contains forbidden private-home-path content."
  * })
- * console.log(finding.code)
+ *
+ * console.log(finding.code) // private-home-path
  * ```
  *
  * @category models
@@ -876,7 +1106,14 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Class<AgentEffec
 /**
  * Report emitted by `agent-effectiveness annotations check`.
  *
- * **Example** (Create annotation check report)
+ * **Details**
+ *
+ * The verdict on whether a plan is safe to write: `annotationCount` says how much
+ * was inspected and `findings` says what was wrong with it. An empty `findings`
+ * with a non-zero `annotationCount` is the meaningful pass — it distinguishes a
+ * plan that was checked and cleared from an empty plan that had nothing to check.
+ *
+ * **Example** (Recording a plan that cleared its check)
  *
  * ```ts
  * import { AgentEffectivenessAnnotationCheckReport } from "@beep/repo-ai-metrics"
@@ -888,7 +1125,9 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Class<AgentEffec
  *   schemaVersion: "agent-effectiveness-annotation-check/v1",
  *   status: "passed"
  * })
- * console.log(report.findings.length)
+ *
+ * console.log(report.status) // passed
+ * console.log(report.findings.length) // 0
  * ```
  *
  * @category models
@@ -912,13 +1151,26 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
 /**
  * Dedicated Phoenix project namespace for the agent-effectiveness loop.
  *
- * **Example** (Phoenix project name constant)
+ * **Details**
+ *
+ * The loop writes into a project of its own rather than into whichever project
+ * happens to be receiving traces, so repo-owned datasets, prompts, and
+ * experiments never mix with application telemetry. Every bundle this module
+ * builds stamps this name into its `projectName`.
+ *
+ * **Example** (Finding the loop's own project in an inventory)
  *
  * ```ts
- * import { AGENT_EFFECTIVENESS_PHOENIX_PROJECT } from "@beep/repo-ai-metrics"
+ * import { AGENT_EFFECTIVENESS_PHOENIX_PROJECT, AgentEffectivenessDatasetBundle } from "@beep/repo-ai-metrics"
  *
- * const projectName = AGENT_EFFECTIVENESS_PHOENIX_PROJECT
- * console.log(projectName === "beep-agent-effectiveness")
+ * const bundle = AgentEffectivenessDatasetBundle.make({
+ *   datasets: [],
+ *   generatedAt: "2026-05-20T00:00:00.000Z",
+ *   projectName: AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
+ *   schemaVersion: "agent-effectiveness-datasets/v1"
+ * })
+ *
+ * console.log(bundle.projectName) // beep-agent-effectiveness
  * ```
  *
  * @category constants
@@ -929,15 +1181,37 @@ export const AGENT_EFFECTIVENESS_PHOENIX_PROJECT = "beep-agent-effectiveness";
 /**
  * Confirmation token required before live Phoenix writes.
  *
- * **Example** (Write confirmation token check)
+ * **Details**
+ *
+ * Writing to Phoenix takes two independent acts: clearing the dry-run flag and
+ * supplying this exact token. The token is a fixed, non-guessable-by-accident
+ * string precisely so that a `dryRun: false` reached by a defaulted or
+ * misremembered argument still cannot mutate a live Phoenix instance.
+ *
+ * **Example** (Arming a real write)
  *
  * ```ts
- * import { AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION } from "@beep/repo-ai-metrics"
+ * import {
+ *   AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+ *   AgentEffectivenessAnnotationPlanInput,
+ *   AgentEffectivenessDoctorInput,
+ *   AgentEffectivenessPhoenixSyncInput
+ * } from "@beep/repo-ai-metrics"
  *
- * const confirmed = AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION === "agent-effectiveness-phoenix-write"
- * console.log(confirmed)
+ * const input = AgentEffectivenessPhoenixSyncInput.make({
+ *   annotationPlan: AgentEffectivenessAnnotationPlanInput.make({
+ *     doctor: AgentEffectivenessDoctorInput.make({
+ *       dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *     })
+ *   }),
+ *   confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+ *   dryRun: false
+ * })
+ *
+ * console.log(input.dryRun) // false
  * ```
  *
+ * @see {@link AgentEffectivenessPhoenixSyncInput} for the sync input that consumes this token.
  * @category constants
  * @since 0.0.0
  */
@@ -946,12 +1220,20 @@ export const AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION = "agent-effectivene
 /**
  * Phoenix dataset kinds owned by the agent-effectiveness loop.
  *
- * **Example** (Access dataset kind enum)
+ * **Details**
+ *
+ * A closed set, because these are the datasets the repo creates and keeps
+ * current in Phoenix rather than an open catalogue of anything a caller might
+ * upload. Each kind maps to one dataset the loop derives from doctor evidence,
+ * and the kind is what names the dataset and its deterministic experiment.
+ *
+ * **Example** (Naming a dataset by its kind)
  *
  * ```ts
  * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
  *
- * console.log(AgentEffectivenessDatasetKind.Enum["agent-loop-health"])
+ * console.log(AgentEffectivenessDatasetKind.Enum["agent-loop-health"]) // agent-loop-health
+ * console.log(AgentEffectivenessDatasetKind.Options.length) // 5
  * ```
  *
  * @category models
@@ -970,17 +1252,15 @@ export const AgentEffectivenessDatasetKind = LiteralKit([
 );
 
 /**
- * Type for {@link AgentEffectivenessDatasetKind}.
+ * Decoded dataset kind carried by a dataset specification.
  *
- * **Example** (Type dataset kind value)
+ * **Details**
  *
- * ```ts
- * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
+ * The union of the five owned kinds. A value of this type is already known to
+ * name a repo-owned dataset, so consumers can switch on it exhaustively without
+ * a fallback branch.
  *
- * const kind: AgentEffectivenessDatasetKind = "agent-loop-health"
- * console.log(AgentEffectivenessDatasetKind.is["agent-loop-health"](kind))
- * ```
- *
+ * @see {@link AgentEffectivenessDatasetKind} for the runtime schema, its `Enum`, and its guards.
  * @category models
  * @since 0.0.0
  */
@@ -989,13 +1269,23 @@ export type AgentEffectivenessDatasetKind = typeof AgentEffectivenessDatasetKind
 /**
  * One sanitized example destined for a Phoenix dataset.
  *
- * **Example** (Create dataset example)
+ * **Details**
+ *
+ * Examples carry aggregates and statuses, never transcript content: the loop
+ * publishes what the evidence measured, not what an agent said. `metadata`,
+ * `output`, and `split` all default, so a row that only records an input needs
+ * just `id` and `input`, and unlabelled rows land together in the `"current"`
+ * split.
+ *
+ * **Example** (Recording a loop-health row)
  *
  * ```ts
  * import { AgentEffectivenessDatasetExample } from "@beep/repo-ai-metrics"
  *
  * const example = AgentEffectivenessDatasetExample.make({ id: "loop", input: { status: "passed" } })
- * console.log(example.id)
+ *
+ * console.log(example.id) // loop
+ * console.log(example.split) // current
  * ```
  *
  * @category models
@@ -1028,7 +1318,15 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
 /**
  * One repo-owned Phoenix dataset specification.
  *
- * **Example** (Create dataset specification)
+ * **Details**
+ *
+ * A dataset described in full — identity, prose, and rows — so that syncing is a
+ * matter of applying the spec rather than assembling it against a live Phoenix.
+ * `kind` is the closed classification and `name` is the versioned Phoenix
+ * identity, which is why both exist: the kind survives a version bump of the
+ * name.
+ *
+ * **Example** (Specifying an empty loop-health dataset)
  *
  * ```ts
  * import { AgentEffectivenessDatasetSpec } from "@beep/repo-ai-metrics"
@@ -1039,7 +1337,9 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
  *   kind: "agent-loop-health",
  *   name: "agent-loop-health-v1"
  * })
- * console.log(spec.name)
+ *
+ * console.log(spec.name) // agent-loop-health-v1
+ * console.log(spec.kind) // agent-loop-health
  * ```
  *
  * @category models
@@ -1062,7 +1362,14 @@ export class AgentEffectivenessDatasetSpec extends S.Class<AgentEffectivenessDat
 /**
  * Full Phoenix dataset bundle derived from a doctor report.
  *
- * **Example** (Create dataset bundle)
+ * **Details**
+ *
+ * Every dataset the loop owns, derived in one pass from a single doctor report,
+ * so the bundle is a consistent snapshot rather than datasets assembled at
+ * different moments. `generatedAt` timestamps the derivation and `projectName`
+ * fixes which Phoenix project the whole bundle belongs to.
+ *
+ * **Example** (Describing a bundle's destination)
  *
  * ```ts
  * import { AgentEffectivenessDatasetBundle } from "@beep/repo-ai-metrics"
@@ -1073,7 +1380,8 @@ export class AgentEffectivenessDatasetSpec extends S.Class<AgentEffectivenessDat
  *   projectName: "beep-agent-effectiveness",
  *   schemaVersion: "agent-effectiveness-datasets/v1"
  * })
- * console.log(bundle.projectName)
+ *
+ * console.log(bundle.projectName) // beep-agent-effectiveness
  * ```
  *
  * @category models
@@ -1096,12 +1404,20 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
 /**
  * Prompt roles used by repo-owned agent-effectiveness prompt templates.
  *
- * **Example** (Access prompt role enum)
+ * **Details**
+ *
+ * Only `system` and `user`. The repo authors prompt templates, never transcripts,
+ * so there is no assistant role to represent — a stored template holds the
+ * instruction and the question, and the model's reply belongs to an experiment
+ * run rather than to the template.
+ *
+ * **Example** (Tagging a template message)
  *
  * ```ts
  * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
  *
- * console.log(AgentEffectivenessPromptRole.Enum.user)
+ * console.log(AgentEffectivenessPromptRole.Enum.user) // user
+ * console.log(AgentEffectivenessPromptRole.Options.length) // 2
  * ```
  *
  * @category models
@@ -1114,17 +1430,14 @@ export const AgentEffectivenessPromptRole = LiteralKit(["system", "user"]).pipe(
 );
 
 /**
- * Type for {@link AgentEffectivenessPromptRole}.
+ * Decoded role carried by a prompt template message.
  *
- * **Example** (Type prompt role value)
+ * **Details**
  *
- * ```ts
- * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
+ * `"system" | "user"`, so a message's role is exhaustively handled by two
+ * branches with no assistant case to guard against.
  *
- * const role: AgentEffectivenessPromptRole = "user"
- * console.log(AgentEffectivenessPromptRole.is.user(role))
- * ```
- *
+ * @see {@link AgentEffectivenessPromptRole} for the runtime schema, its `Enum`, and its guards.
  * @category models
  * @since 0.0.0
  */
@@ -1133,13 +1446,21 @@ export type AgentEffectivenessPromptRole = typeof AgentEffectivenessPromptRole.T
 /**
  * One repo-owned Phoenix prompt message.
  *
- * **Example** (Create prompt message)
+ * **Details**
+ *
+ * `content` is a template rather than a finished prompt: `{{name}}` placeholders
+ * are left intact for Phoenix to substitute at run time, which is what lets one
+ * stored template serve every row of a dataset.
+ *
+ * **Example** (Authoring a templated user turn)
  *
  * ```ts
  * import { AgentEffectivenessPromptMessage } from "@beep/repo-ai-metrics"
  *
  * const message = AgentEffectivenessPromptMessage.make({ content: "Review {{caseId}}", role: "user" })
- * console.log(message.role)
+ *
+ * console.log(message.role) // user
+ * console.log(message.content.includes("{{caseId}}")) // true
  * ```
  *
  * @category models
@@ -1160,7 +1481,14 @@ export class AgentEffectivenessPromptMessage extends S.Class<AgentEffectivenessP
 /**
  * Repo-owned Phoenix prompt specification.
  *
- * **Example** (Create prompt specification)
+ * **Details**
+ *
+ * The template plus the model it was written against. `modelName` travels with
+ * the prompt because an evaluator prompt tuned for one model is not
+ * interchangeable across models, and a stored version that lost its model would
+ * not be reproducible.
+ *
+ * **Example** (Specifying an evaluator prompt)
  *
  * ```ts
  * import { AgentEffectivenessPromptSpec } from "@beep/repo-ai-metrics"
@@ -1171,7 +1499,8 @@ export class AgentEffectivenessPromptMessage extends S.Class<AgentEffectivenessP
  *   modelName: "gpt-4o-mini",
  *   name: "agent-effectiveness-review-evaluator-v1"
  * })
- * console.log(spec.name)
+ *
+ * console.log(spec.name) // agent-effectiveness-review-evaluator-v1
  * ```
  *
  * @category models
@@ -1194,7 +1523,14 @@ export class AgentEffectivenessPromptSpec extends S.Class<AgentEffectivenessProm
 /**
  * Full repo-owned Phoenix prompt bundle.
  *
- * **Example** (Create prompt bundle)
+ * **Details**
+ *
+ * Every prompt template the loop owns, generated together so the set stays
+ * internally consistent. Unlike the dataset bundle, prompts are authored rather
+ * than derived from doctor evidence, so this bundle's content does not change
+ * with the state of the local store.
+ *
+ * **Example** (Describing a prompt bundle's destination)
  *
  * ```ts
  * import { AgentEffectivenessPromptBundle } from "@beep/repo-ai-metrics"
@@ -1205,7 +1541,8 @@ export class AgentEffectivenessPromptSpec extends S.Class<AgentEffectivenessProm
  *   prompts: [],
  *   schemaVersion: "agent-effectiveness-prompts/v1"
  * })
- * console.log(bundle.projectName)
+ *
+ * console.log(bundle.projectName) // beep-agent-effectiveness
  * ```
  *
  * @category models
@@ -1228,7 +1565,14 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
 /**
  * Deterministic experiment plan entry.
  *
- * **Example** (Create experiment specification)
+ * **Details**
+ *
+ * A readback over an existing dataset: the experiment performs no new model work
+ * and therefore costs nothing per run and returns the same result for the same
+ * dataset. It exists so that evidence already in Phoenix is exercised through
+ * the experiment surface without inference spend.
+ *
+ * **Example** (Planning a readback over one dataset)
  *
  * ```ts
  * import { AgentEffectivenessExperimentSpec } from "@beep/repo-ai-metrics"
@@ -1238,7 +1582,8 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
  *   description: "Deterministic loop-health readback.",
  *   name: "agent-loop-health-deterministic-v1"
  * })
- * console.log(spec.datasetName)
+ *
+ * console.log(spec.datasetName) // agent-loop-health-v1
  * ```
  *
  * @category models
@@ -1264,7 +1609,13 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
 /**
  * Deterministic experiment bundle derived from dataset specs.
  *
- * **Example** (Create experiment bundle)
+ * **Details**
+ *
+ * One experiment per dataset in the matching dataset bundle, which is why this
+ * is derived rather than authored: the experiment set follows whatever datasets
+ * were generated, and an experiment never outlives the dataset it reads.
+ *
+ * **Example** (Describing an experiment bundle's destination)
  *
  * ```ts
  * import { AgentEffectivenessExperimentBundle } from "@beep/repo-ai-metrics"
@@ -1275,7 +1626,8 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
  *   projectName: "beep-agent-effectiveness",
  *   schemaVersion: "agent-effectiveness-experiments/v1"
  * })
- * console.log(bundle.projectName)
+ *
+ * console.log(bundle.projectName) // beep-agent-effectiveness
  * ```
  *
  * @category models
@@ -1310,13 +1662,31 @@ type AgentEffectivenessPhoenixSyncNewOptions = {
 /**
  * Input for syncing agent-effectiveness evidence to Phoenix.
  *
- * **Example** (Make dry-run sync input)
+ * **Gotchas**
+ *
+ * `annotationPlan` is required all the way down to its doctor input's data
+ * root. A Phoenix sync writes evidence derived from a local store, so the store
+ * it reads is named by the operator rather than defaulted here.
+ *
+ * **Example** (Preparing a dry-run sync)
  *
  * ```ts
- * import { AgentEffectivenessPhoenixSyncInput } from "@beep/repo-ai-metrics"
+ * import {
+ *   AgentEffectivenessAnnotationPlanInput,
+ *   AgentEffectivenessDoctorInput,
+ *   AgentEffectivenessPhoenixSyncInput
+ * } from "@beep/repo-ai-metrics"
  *
- * const input = AgentEffectivenessPhoenixSyncInput.make({ dryRun: true })
- * console.log(input.dryRun)
+ * const input = AgentEffectivenessPhoenixSyncInput.make({
+ *   annotationPlan: AgentEffectivenessAnnotationPlanInput.make({
+ *     doctor: AgentEffectivenessDoctorInput.make({
+ *       dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *     })
+ *   }),
+ *   dryRun: true
+ * })
+ *
+ * console.log(input.dryRun) // true
  * ```
  *
  * @category models
@@ -1326,10 +1696,7 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
   $I`AgentEffectivenessPhoenixSyncInput`
 )(
   {
-    annotationPlan: AgentEffectivenessAnnotationPlanInput.pipe(
-      S.withConstructorDefault(Effect.succeed(AgentEffectivenessAnnotationPlanInput.make({}))),
-      S.withDecodingDefaultKey(Effect.succeed(AgentEffectivenessAnnotationPlanInput.make({})))
-    ),
+    annotationPlan: AgentEffectivenessAnnotationPlanInput,
     confirmToken: S.String.pipe(S.optionalKey),
     dryRun: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
@@ -1361,7 +1728,17 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
 /**
  * Result from a guarded Phoenix sync attempt.
  *
- * **Example** (Create Phoenix sync result)
+ * **Details**
+ *
+ * The counts and the written ids answer different questions. Counts describe
+ * what the sync considered; the `written*Ids` arrays describe what Phoenix
+ * actually accepted, and they are empty on a dry run even when the counts are
+ * not. `skippedAnnotationCount` covers planned annotations that could not be
+ * expressed as Phoenix annotations — a target kind Phoenix does not model, for
+ * instance — so a sync that wrote fewer annotations than it planned says so
+ * rather than reporting a clean pass.
+ *
+ * **Example** (Reading back a dry run)
  *
  * ```ts
  * import { AgentEffectivenessPhoenixSyncResult } from "@beep/repo-ai-metrics"
@@ -1379,7 +1756,9 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
  *   writtenExperimentIds: [],
  *   writtenPromptVersionIds: []
  * })
- * console.log(result.mutationPolicy)
+ *
+ * console.log(result.mutationPolicy) // dry-run
+ * console.log(result.writtenDatasetIds.length) // 0
  * ```
  *
  * @category models
@@ -2197,35 +2576,48 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
 /**
  * Build the report-only Phase 1 agent-effectiveness doctor report.
  *
- * **Example** (Build doctor report effect)
+ * **Details**
+ *
+ * The three evidence sections are probed concurrently and each absorbs its own
+ * failure, which is why the error channel is `never`: an unreachable Phoenix, a
+ * store that was never derived, and a missing worker-eval report all become
+ * `unavailable` sections rather than a failed effect. The summary is then folded
+ * from whatever the sections reported.
+ *
+ * **Gotchas**
+ *
+ * A successful effect is not a passing report. The verdict lives in
+ * `summary.status`, so a caller that only checks for success will treat a
+ * `failed` doctor as fine.
+ *
+ * **Example** (Running the doctor with the Phoenix probe disabled)
  *
  * ```ts
  * import { AgentEffectivenessDoctorInput, makeAgentEffectivenessDoctorReport } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
- * const program = makeAgentEffectivenessDoctorReport(
- *   AgentEffectivenessDoctorInput.make({ noPhoenix: true })
- * )
- * const status = Effect.map(program, (report) => report.summary.status)
- * console.log(status)
+ *
+ * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
+ *
+ * const status = makeAgentEffectivenessDoctorReport(
+ *   AgentEffectivenessDoctorInput.make({ dataRoot, noPhoenix: true })
+ * ).pipe(Effect.map((report) => report.summary.status))
+ *
+ * console.log(Effect.isEffect(status)) // true
  * ```
  *
- * @effects
- * - Reads Phoenix health and GraphQL inventory unless `noPhoenix` disables the probe.
- * - Reads the local AI-metrics DuckDB file when derived storage exists.
- * - Reads the JSDoc worker-eval manifest or report from the selected path.
- * - Captures the current clock time for the report timestamp.
+ * @effects Reads Phoenix health and GraphQL inventory unless `noPhoenix` disables the probe, the
+ * local AI-metrics DuckDB file when derived storage exists, and the worker-eval manifest or report
+ * at the selected path. Writes nothing.
  * @category services
  * @since 0.0.0
  */
 export const makeAgentEffectivenessDoctorReport: (
-  input?: AgentEffectivenessDoctorInput
+  input: AgentEffectivenessDoctorInput
 ) => Effect.Effect<
   AgentEffectivenessDoctorReport,
   never,
   DuckDb | FileSystem.FileSystem | HttpClient.HttpClient | Path.Path
-> = Effect.fn("AiMetrics.makeAgentEffectivenessDoctorReport")(function* (
-  input: AgentEffectivenessDoctorInput = AgentEffectivenessDoctorInput.make({})
-) {
+> = Effect.fn("AiMetrics.makeAgentEffectivenessDoctorReport")(function* (input: AgentEffectivenessDoctorInput) {
   const [phoenix, aiMetrics, jsdocWorkerEval] = yield* Effect.all(
     [probePhoenix(input), buildAiMetricsSection(input), buildJsdocWorkerSection(input)] as const,
     { concurrency: 3 }
@@ -2545,7 +2937,21 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
 /**
  * Build a sanitized local-only annotation plan.
  *
- * **Example** (Build annotation plan effect)
+ * **Details**
+ *
+ * Runs the doctor, then derives annotations from every section it produced —
+ * loop health, source coverage, scorecards, worker-eval — and appends rows read
+ * from derived storage when it exists. Nothing is written to Phoenix; the result
+ * describes writes that a later phase could perform.
+ *
+ * **Gotchas**
+ *
+ * Storage-derived annotations degrade silently: if the derived-storage read
+ * fails, the plan is still produced, just without those rows. A short plan can
+ * therefore mean thin evidence rather than a healthy loop, so read the embedded
+ * doctor report alongside the annotation count.
+ *
+ * **Example** (Planning annotations without touching Phoenix)
  *
  * ```ts
  * import {
@@ -2554,31 +2960,33 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
- * const program = makeAgentEffectivenessAnnotationPlan(
+ *
+ * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
+ *
+ * const annotationCount = makeAgentEffectivenessAnnotationPlan(
  *   AgentEffectivenessAnnotationPlanInput.make({
  *     annotationLimit: 10,
- *     doctor: AgentEffectivenessDoctorInput.make({ noPhoenix: true })
+ *     doctor: AgentEffectivenessDoctorInput.make({ dataRoot, noPhoenix: true })
  *   })
- * )
- * const annotationCount = Effect.map(program, (plan) => plan.annotations.length)
- * console.log(annotationCount)
+ * ).pipe(Effect.map((plan) => plan.annotations.length))
+ *
+ * console.log(Effect.isEffect(annotationCount)) // true
  * ```
  *
- * @effects
- * - Builds the doctor report, including its Phoenix, DuckDB, worker-eval, and clock reads.
- * - Reads outcome-label and benchmark-run rows from derived DuckDB storage when available.
- * - Performs no Phoenix mutation; the result is a local dry-run annotation plan.
+ * @effects Performs the doctor's reads plus outcome-label and benchmark-run reads from derived
+ * DuckDB storage when available. Performs no Phoenix mutation.
+ * @see {@link makeAgentEffectivenessDoctorReport} for the evidence this plan is derived from.
  * @category services
  * @since 0.0.0
  */
 export const makeAgentEffectivenessAnnotationPlan: (
-  input?: AgentEffectivenessAnnotationPlanInput
+  input: AgentEffectivenessAnnotationPlanInput
 ) => Effect.Effect<
   AgentEffectivenessAnnotationPlan,
   never,
   DuckDb | FileSystem.FileSystem | HttpClient.HttpClient | Path.Path
 > = Effect.fn("AiMetrics.makeAgentEffectivenessAnnotationPlan")(function* (
-  input: AgentEffectivenessAnnotationPlanInput = AgentEffectivenessAnnotationPlanInput.make({})
+  input: AgentEffectivenessAnnotationPlanInput
 ) {
   const doctor = yield* makeAgentEffectivenessDoctorReport(input.doctor);
   const storageAnnotations = yield* queryAnnotationRows(input, doctor).pipe(Effect.orElseSucceed(() => []));
@@ -2771,7 +3179,20 @@ const jsdocWorkerDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffect
 /**
  * Build the Phoenix dataset bundle from a doctor report.
  *
- * **Example** (Derive dataset bundle)
+ * **Details**
+ *
+ * A pure projection of evidence already gathered: the bundle always contains one
+ * dataset per owned kind, and it inherits the report's `generatedAt` rather than
+ * taking a fresh clock reading, so the bundle is timestamped with the moment the
+ * evidence was collected rather than the moment it was reshaped.
+ *
+ * **Gotchas**
+ *
+ * A dataset is always present even when the section behind it had nothing to
+ * report, in which case it is present with no examples. Test dataset membership
+ * by row count, not by looking for a missing dataset.
+ *
+ * **Example** (Deriving datasets from a fresh doctor run)
  *
  * ```ts
  * import {
@@ -2781,15 +3202,22 @@ const jsdocWorkerDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffect
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = makeAgentEffectivenessDoctorReport(
- *   AgentEffectivenessDoctorInput.make({ noPhoenix: true })
- * ).pipe(Effect.map(makeAgentEffectivenessDatasetBundle))
- * const datasetNames = Effect.map(program, (bundle) => bundle.datasets.map((dataset) => dataset.name))
- * console.log(datasetNames)
+ * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
+ *
+ * const datasetCount = makeAgentEffectivenessDoctorReport(
+ *   AgentEffectivenessDoctorInput.make({ dataRoot, noPhoenix: true })
+ * ).pipe(
+ *   Effect.map(makeAgentEffectivenessDatasetBundle),
+ *   Effect.map((bundle) => bundle.datasets.length)
+ * )
+ *
+ * console.log(Effect.isEffect(datasetCount)) // true
  * ```
  *
- * @param doctor - Doctor report used to derive sanitized aggregate Phoenix datasets.
- * @returns Phoenix dataset bundle generated from the doctor report.
+ * @param doctor - Report supplying every dataset's rows; its `generatedAt` is copied onto the bundle
+ * rather than replaced with a fresh reading.
+ * @returns One dataset per owned kind, in a fixed order, each present even when the section behind it
+ * produced no rows.
  * @category services
  * @since 0.0.0
  */
@@ -2812,18 +3240,28 @@ export const makeAgentEffectivenessDatasetBundle: (
 /**
  * Build the repo-owned Phoenix prompt bundle.
  *
- * **Example** (Build prompt bundle)
+ * **Details**
+ *
+ * The prompt set is authored in this function rather than derived from evidence,
+ * so the same timestamp always yields the same bundle. Both templates instruct
+ * the reviewing model to work from aggregates and to refuse raw transcripts,
+ * which is what keeps a Phoenix-side evaluation inside the same privacy envelope
+ * as the datasets it reads.
+ *
+ * **Example** (Generating the authored prompt set)
  *
  * ```ts
  * import { makeAgentEffectivenessPromptBundle } from "@beep/repo-ai-metrics"
  *
  * const bundle = makeAgentEffectivenessPromptBundle("2026-05-20T00:00:00.000Z")
- * const promptNames = bundle.prompts.map((prompt) => prompt.name)
- * console.log(promptNames)
+ *
+ * console.log(bundle.prompts.length) // 2
+ * console.log(bundle.prompts.map((prompt) => prompt.name))
+ * // [ "agent-effectiveness-review-evaluator-v1", "agent-effectiveness-source-coverage-review-v1" ]
  * ```
  *
- * @param generatedAt - ISO timestamp to assign to the generated prompt bundle.
- * @returns Repo-owned Phoenix prompt bundle for agent-effectiveness review.
+ * @param generatedAt - ISO-8601 timestamp stamped onto the bundle; it is recorded verbatim, not parsed.
+ * @returns The same authored prompt set on every call; only the timestamp varies between bundles.
  * @category services
  * @since 0.0.0
  */
@@ -2871,7 +3309,13 @@ export const makeAgentEffectivenessPromptBundle: (generatedAt: string) => AgentE
 /**
  * Build deterministic experiment specs from a dataset bundle.
  *
- * **Example** (Derive experiment bundle)
+ * **Details**
+ *
+ * Exactly one experiment per dataset in the supplied bundle, so an empty dataset
+ * bundle yields an empty experiment bundle. The experiments perform no model
+ * work, which makes generating and re-generating them free of inference cost.
+ *
+ * **Example** (Deriving experiments from an empty dataset bundle)
  *
  * ```ts
  * import {
@@ -2886,11 +3330,15 @@ export const makeAgentEffectivenessPromptBundle: (generatedAt: string) => AgentE
  *   schemaVersion: "agent-effectiveness-datasets/v1"
  * })
  * const experimentBundle = makeAgentEffectivenessExperimentBundle(datasetBundle)
- * console.log(experimentBundle.experiments.length)
+ *
+ * console.log(experimentBundle.experiments.length) // 0
  * ```
  *
- * @param datasetBundle - Dataset bundle used to derive one experiment per dataset.
- * @returns Deterministic Phoenix experiment bundle for the supplied datasets.
+ * @param datasetBundle - Datasets to derive experiments from; its `projectName` and `generatedAt` are
+ * carried onto the result so both bundles describe the same derivation.
+ * @returns One experiment per supplied dataset, in the dataset bundle's order; an empty dataset bundle
+ * yields an empty experiment bundle.
+ * @see {@link makeAgentEffectivenessDatasetBundle} for the dataset bundle these experiments read.
  * @category services
  * @since 0.0.0
  */
@@ -3080,39 +3528,64 @@ const unconfirmedSyncResult = ({
 /**
  * Sync agent-effectiveness datasets, prompts, experiments, and resolved annotations to Phoenix.
  *
+ * **Details**
+ *
+ * The sync rebuilds everything it needs from the local store — plan, datasets,
+ * prompts, experiments — so it always writes a consistent set rather than
+ * reconciling against whatever Phoenix currently holds. Writing is gated twice
+ * over: `dryRun` must be false *and* `confirmToken` must equal
+ * {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}. Failing either gate is
+ * not an error; the sync returns a result whose `mutationPolicy` records why
+ * nothing was written.
+ *
+ * The plan's privacy check runs before any write, and a failed check blocks the
+ * write even when both gates were satisfied.
+ *
  * **Gotchas**
  *
- * This function defaults to dry-run. Live writes require
- * {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}.
+ * `dryRun` defaults to true, so an input built without naming it never writes.
+ * Planned annotations whose target kind Phoenix does not model are dropped rather
+ * than rejected, landing in `skippedAnnotationCount` — a sync can therefore
+ * report success while writing fewer annotations than were planned.
  *
- * **Example** (Dry-run Phoenix sync)
+ * **Example** (Previewing a sync without writing)
  *
  * ```ts
- * import { AgentEffectivenessPhoenixSyncInput, syncAgentEffectivenessPhoenix } from "@beep/repo-ai-metrics"
+ * import {
+ *   AgentEffectivenessAnnotationPlanInput,
+ *   AgentEffectivenessDoctorInput,
+ *   AgentEffectivenessPhoenixSyncInput,
+ *   syncAgentEffectivenessPhoenix
+ * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
- * const program = syncAgentEffectivenessPhoenix(
- *   AgentEffectivenessPhoenixSyncInput.make({ dryRun: true })
- * )
- * const mutationPolicy = Effect.map(program, (result) => result.mutationPolicy)
- * console.log(mutationPolicy)
+ *
+ * const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
+ *   doctor: AgentEffectivenessDoctorInput.make({
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *   })
+ * })
+ *
+ * const mutationPolicy = syncAgentEffectivenessPhoenix(
+ *   AgentEffectivenessPhoenixSyncInput.make({ annotationPlan, dryRun: true })
+ * ).pipe(Effect.map((result) => result.mutationPolicy))
+ *
+ * console.log(Effect.isEffect(mutationPolicy)) // true
  * ```
  *
- * @effects
- * - In dry-run mode, reads local doctor and annotation evidence but does not mutate Phoenix.
- * - In confirmed live mode, creates or appends Phoenix datasets, creates prompts and experiments, and writes valid trace/session/span annotations.
- * - Blocks live writes unless the confirmation token matches {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}.
+ * @effects In dry-run or unconfirmed mode, reads local doctor and annotation evidence and mutates
+ * nothing. In confirmed live mode, creates or appends Phoenix datasets and creates prompts,
+ * experiments, and trace/session/span annotations.
+ * @see {@link AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION} for the token that unlocks live writes.
  * @category services
  * @since 0.0.0
  */
 export const syncAgentEffectivenessPhoenix: (
-  input?: AgentEffectivenessPhoenixSyncInput
+  input: AgentEffectivenessPhoenixSyncInput
 ) => Effect.Effect<
   AgentEffectivenessPhoenixSyncResult,
   AgentEffectivenessError,
   DuckDb | FileSystem.FileSystem | HttpClient.HttpClient | Path.Path | Phoenix
-> = Effect.fn("AiMetrics.syncAgentEffectivenessPhoenix")(function* (
-  input: AgentEffectivenessPhoenixSyncInput = AgentEffectivenessPhoenixSyncInput.make({})
-) {
+> = Effect.fn("AiMetrics.syncAgentEffectivenessPhoenix")(function* (input: AgentEffectivenessPhoenixSyncInput) {
   const plan = yield* makeAgentEffectivenessAnnotationPlan(input.annotationPlan);
   const datasetBundle = makeAgentEffectivenessDatasetBundle(plan.doctor);
   const promptBundle = makeAgentEffectivenessPromptBundle(plan.generatedAt);
@@ -3453,25 +3926,51 @@ const duplicateAnnotationIdFindings = (
 /**
  * Check a local annotation plan for Phase 1 privacy and schema safety.
  *
- * **Example** (Check annotation plan safety)
+ * **Details**
+ *
+ * Three independent checks feed one report: each annotation is scanned for
+ * forbidden content, the plan envelope is scanned as a whole, and annotation ids
+ * are checked for duplicates. Any finding at all makes the report `failed` —
+ * there is no severity ladder here, because every forbidden pattern is a reason
+ * not to publish.
+ *
+ * **Gotchas**
+ *
+ * The check is pure and report-only: it never redacts, never drops the offending
+ * annotation, and never mutates the plan. A caller that ignores the report can
+ * still hand the same plan to a sync, which is why the sync re-runs this check
+ * itself before writing.
+ *
+ * **Example** (Checking a plan before considering a write)
  *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlanInput,
+ *   AgentEffectivenessDoctorInput,
  *   makeAgentEffectivenessAnnotationCheckReport,
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = makeAgentEffectivenessAnnotationPlan(
- *   AgentEffectivenessAnnotationPlanInput.make({})
- * ).pipe(Effect.map(makeAgentEffectivenessAnnotationCheckReport))
- * const status = Effect.map(program, (report) => report.status)
- * console.log(status)
+ * const status = makeAgentEffectivenessAnnotationPlan(
+ *   AgentEffectivenessAnnotationPlanInput.make({
+ *     doctor: AgentEffectivenessDoctorInput.make({
+ *       dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *     })
+ *   })
+ * ).pipe(
+ *   Effect.map(makeAgentEffectivenessAnnotationCheckReport),
+ *   Effect.map((report) => report.status)
+ * )
+ *
+ * console.log(Effect.isEffect(status)) // true
  * ```
  *
- * @param plan - Local annotation plan to inspect for private or forbidden payload fields.
- * @returns Report-only validation summary that never mutates Phoenix or local evidence.
+ * @param plan - Plan whose annotations, envelope, and annotation ids are all inspected; it is read
+ * only, never redacted or rewritten.
+ * @returns A report that is `failed` when even one finding was produced and `passed` only when none
+ * were; its `generatedAt` is the plan's, not the moment of the check.
+ * @see {@link AgentEffectivenessAnnotationCheckFinding} for what a single finding records.
  * @category services
  * @since 0.0.0
  */
@@ -3497,7 +3996,18 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
 /**
  * Encode a doctor report as JSON.
  *
- * **Example** (Encode doctor report JSON)
+ * **Details**
+ *
+ * Encoding runs through the report schema rather than a raw stringify, so the
+ * output is the schema's encoded shape and a field that cannot be encoded fails
+ * the effect instead of vanishing from the payload.
+ *
+ * **Gotchas**
+ *
+ * The report records the `dataRoot` it inspected, so the JSON contains a local
+ * path. It is operator output, not a deploy-safe payload.
+ *
+ * **Example** (Rendering a doctor run for operator output)
  *
  * ```ts
  * import {
@@ -3507,11 +4017,16 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = makeAgentEffectivenessDoctorReport(
- *   AgentEffectivenessDoctorInput.make({ noPhoenix: true })
- * ).pipe(Effect.flatMap(agentEffectivenessDoctorReportToJson))
- * const hasSchemaVersion = Effect.map(program, (json) => json.includes("agent-effectiveness-doctor/v1"))
- * console.log(hasSchemaVersion)
+ * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
+ *
+ * const hasSchemaVersion = makeAgentEffectivenessDoctorReport(
+ *   AgentEffectivenessDoctorInput.make({ dataRoot, noPhoenix: true })
+ * ).pipe(
+ *   Effect.flatMap(agentEffectivenessDoctorReportToJson),
+ *   Effect.map((json) => json.includes("agent-effectiveness-doctor/v1"))
+ * )
+ *
+ * console.log(Effect.isEffect(hasSchemaVersion)) // true
  * ```
  *
  * @category encoding
@@ -3534,21 +4049,41 @@ export const agentEffectivenessDoctorReportToJson: (
 /**
  * Encode an annotation plan as JSON.
  *
- * **Example** (Encode annotation plan JSON)
+ * **Details**
+ *
+ * The encoded plan embeds the whole doctor report it was derived from, so the
+ * JSON is a self-contained review artifact: an operator reading it can see the
+ * evidence and the annotations together without re-running the doctor.
+ *
+ * **Gotchas**
+ *
+ * Encoding is not the privacy check. A plan carrying forbidden content encodes
+ * happily — run {@link makeAgentEffectivenessAnnotationCheckReport} first if the
+ * JSON is going anywhere but local operator output.
+ *
+ * **Example** (Rendering a plan for review)
  *
  * ```ts
  * import {
  *   AgentEffectivenessAnnotationPlanInput,
+ *   AgentEffectivenessDoctorInput,
  *   agentEffectivenessAnnotationPlanToJson,
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = makeAgentEffectivenessAnnotationPlan(
- *   AgentEffectivenessAnnotationPlanInput.make({})
- * ).pipe(Effect.flatMap(agentEffectivenessAnnotationPlanToJson))
- * const hasMutationPolicy = Effect.map(program, (json) => json.includes("local-only-no-phoenix-mutation"))
- * console.log(hasMutationPolicy)
+ * const hasMutationPolicy = makeAgentEffectivenessAnnotationPlan(
+ *   AgentEffectivenessAnnotationPlanInput.make({
+ *     doctor: AgentEffectivenessDoctorInput.make({
+ *       dataRoot: "/home/dev/.local/state/beep/ai-metrics"
+ *     })
+ *   })
+ * ).pipe(
+ *   Effect.flatMap(agentEffectivenessAnnotationPlanToJson),
+ *   Effect.map((json) => json.includes("local-only-no-phoenix-mutation"))
+ * )
+ *
+ * console.log(Effect.isEffect(hasMutationPolicy)) // true
  * ```
  *
  * @category encoding
@@ -3571,7 +4106,13 @@ export const agentEffectivenessAnnotationPlanToJson: (
 /**
  * Encode an annotation-check report as JSON.
  *
- * **Example** (Encode check report JSON)
+ * **Details**
+ *
+ * Findings name the class of content that matched and never quote it, so unlike
+ * the plan it judges, an encoded check report is safe to print, log, or attach
+ * to CI output even when the check failed.
+ *
+ * **Example** (Rendering a passing check report)
  *
  * ```ts
  * import {
@@ -3587,8 +4128,10 @@ export const agentEffectivenessAnnotationPlanToJson: (
  *   schemaVersion: "agent-effectiveness-annotation-check/v1",
  *   status: "passed"
  * })
- * const json = Effect.runPromise(agentEffectivenessAnnotationCheckReportToJson(report))
- * console.log(json)
+ *
+ * Effect.runPromise(agentEffectivenessAnnotationCheckReportToJson(report)).then((json: string) =>
+ *   console.log(json)
+ * )
  * ```
  *
  * @category encoding
@@ -3612,7 +4155,13 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
 /**
  * Encode a dataset bundle as JSON.
  *
- * **Example** (Encode dataset bundle JSON)
+ * **Details**
+ *
+ * The encoded bundle is the reviewable form of what a sync would upload, so
+ * diffing two encodings across runs shows exactly what a live write would change
+ * in Phoenix.
+ *
+ * **Example** (Rendering a bundle before syncing it)
  *
  * ```ts
  * import {
@@ -3627,8 +4176,10 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
  *   projectName: "beep-agent-effectiveness",
  *   schemaVersion: "agent-effectiveness-datasets/v1"
  * })
- * const json = Effect.runPromise(agentEffectivenessDatasetBundleToJson(bundle))
- * console.log(json)
+ *
+ * Effect.runPromise(agentEffectivenessDatasetBundleToJson(bundle)).then((json: string) =>
+ *   console.log(json)
+ * )
  * ```
  *
  * @category encoding
@@ -3651,7 +4202,13 @@ export const agentEffectivenessDatasetBundleToJson: (
 /**
  * Encode a prompt bundle as JSON.
  *
- * **Example** (Encode prompt bundle JSON)
+ * **Details**
+ *
+ * Template placeholders survive encoding unsubstituted, so the JSON holds the
+ * prompts as Phoenix will store them rather than as any one run would render
+ * them.
+ *
+ * **Example** (Rendering the authored prompt set)
  *
  * ```ts
  * import {
@@ -3661,8 +4218,10 @@ export const agentEffectivenessDatasetBundleToJson: (
  * import { Effect } from "effect"
  *
  * const bundle = makeAgentEffectivenessPromptBundle("2026-05-20T00:00:00.000Z")
- * const json = Effect.runPromise(agentEffectivenessPromptBundleToJson(bundle))
- * console.log(json)
+ *
+ * Effect.runPromise(agentEffectivenessPromptBundleToJson(bundle)).then((json: string) =>
+ *   console.log(json)
+ * )
  * ```
  *
  * @category encoding
@@ -3685,7 +4244,13 @@ export const agentEffectivenessPromptBundleToJson: (
 /**
  * Encode an experiment bundle as JSON.
  *
- * **Example** (Encode experiment bundle JSON)
+ * **Details**
+ *
+ * Experiments reference their dataset by name rather than embedding its rows, so
+ * the encoded bundle stays small and reading it tells you which datasets a sync
+ * expects to already exist.
+ *
+ * **Example** (Rendering experiments derived from a dataset bundle)
  *
  * ```ts
  * import {
@@ -3702,8 +4267,10 @@ export const agentEffectivenessPromptBundleToJson: (
  *   schemaVersion: "agent-effectiveness-datasets/v1"
  * })
  * const bundle = makeAgentEffectivenessExperimentBundle(datasetBundle)
- * const json = Effect.runPromise(agentEffectivenessExperimentBundleToJson(bundle))
- * console.log(json)
+ *
+ * Effect.runPromise(agentEffectivenessExperimentBundleToJson(bundle)).then((json: string) =>
+ *   console.log(json)
+ * )
  * ```
  *
  * @category encoding
@@ -3726,7 +4293,13 @@ export const agentEffectivenessExperimentBundleToJson: (
 /**
  * Encode a Phoenix sync result as JSON.
  *
- * **Example** (Encode sync result JSON)
+ * **Details**
+ *
+ * This is the audit record of a sync attempt. Because `mutationPolicy` and the
+ * written-id arrays are encoded alongside the counts, the JSON distinguishes a
+ * run that wrote from one that was blocked, which the counts alone cannot do.
+ *
+ * **Example** (Recording a dry run as an audit artifact)
  *
  * ```ts
  * import {
@@ -3748,8 +4321,10 @@ export const agentEffectivenessExperimentBundleToJson: (
  *   writtenExperimentIds: [],
  *   writtenPromptVersionIds: []
  * })
- * const json = Effect.runPromise(agentEffectivenessPhoenixSyncResultToJson(result))
- * console.log(json)
+ *
+ * Effect.runPromise(agentEffectivenessPhoenixSyncResultToJson(result)).then((json: string) =>
+ *   console.log(json)
+ * )
  * ```
  *
  * @category encoding

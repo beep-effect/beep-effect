@@ -10,6 +10,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, MutableHashSet, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -67,18 +68,15 @@ class JSDocLegacyFileFinding extends S.Class<JSDocLegacyFileFinding>($I`JSDocLeg
 ) {}
 
 /**
- * Generated residual paths still carrying legacy tags after P2 emitter conversion.
+ * Generated residual paths still carrying legacy tags, allowed under `--include-generated`.
  *
- * Documented in goals/jsdoc-carrier-migration progress C5 (acp schema.gen.ts
- * regeneration is a separate acp-resync; the emitter itself already emits titled sections).
- * Only consulted when `--include-generated` is set.
+ * Empty since the acp resync regenerated `schema.gen.ts` with the converted
+ * emitter; kept as the documented channel for any future generated residual.
  *
  * @category constants
  * @since 0.0.0
  */
-export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [
-  "packages/drivers/acp/src/_generated/schema.gen.ts",
-];
+export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [];
 
 /**
  * Repo-relative path to the generated JSDoc documentation inventory.
@@ -516,41 +514,42 @@ export const hasGeneratedFileHeader = (sourceText: string): boolean =>
   pipe(Str.slice(0, GENERATED_HEADER_PROBE_LENGTH)(sourceText), Str.includes("GENERATED FILE"));
 
 /**
- * Whether a repo-relative path is a non-generated package source file.
+ * Whether a repo-relative path is a non-generated workspace source file.
  *
- * **Example** (Classify package source paths)
+ * **Example** (Classify workspace source paths)
  *
  * ```ts
  * import { isPackageSourceFile } from "@beep/repo-cli/test/Quality"
  *
  * console.log(isPackageSourceFile("packages/shared/schema/src/Kits.ts")) // true
+ * console.log(isPackageSourceFile("apps/professional-desktop/src/App.tsx")) // true
  * console.log(isPackageSourceFile("packages/shared/schema/test/Kits.test.ts")) // false
  * ```
  *
  * @param filePath - Repo-relative path to classify.
- * @returns `true` for non-generated package source files.
+ * @returns `true` for non-generated source files under package or app workspaces.
  * @category predicates
  * @since 0.0.0
  */
 export const isPackageSourceFile = (filePath: string): boolean =>
-  Str.startsWith("packages/")(filePath) &&
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
   !isGeneratedSourceFile(filePath);
 
 /**
- * Whether a repo-relative path is any package source file, including generated.
+ * Whether a repo-relative path is any workspace source file, including generated.
  *
  * Used by the zero-legacy scan when `--include-generated` is set so generator
  * outputs get their own compliance proof (non-generated scope cannot prove them).
  *
  * @param filePath - Repo-relative path to classify.
- * @returns `true` for package source files under packages/…/src, including generated.
+ * @returns `true` for source files under packages/…/src or apps/…/src, including generated.
  * @category predicates
  * @since 0.0.0
  */
 export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean =>
-  Str.startsWith("packages/")(filePath) &&
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
@@ -558,7 +557,7 @@ const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(fu
   repoRoot: string,
   includeGenerated: boolean
 ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages"], jsdocGitErrorAdapter);
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
   return A.filter(lines, predicate);
 });
@@ -740,4 +739,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
  * @category testing
  * @since 0.0.0
  */
-export const compareJSDocTotalsForTesting = compareTotals;
+export const compareJSDocTotalsForTesting: {
+  (baselineTotals: JSDocTrackedTotals): (currentTotals: JSDocTrackedTotals) => JSDocTotalsComparison;
+  (currentTotals: JSDocTrackedTotals, baselineTotals: JSDocTrackedTotals): JSDocTotalsComparison;
+} = dual(2, compareTotals);

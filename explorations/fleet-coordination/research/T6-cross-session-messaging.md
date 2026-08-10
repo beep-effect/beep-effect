@@ -220,6 +220,11 @@ fleet not-live.
 signal the mirror currently has no equivalent of. Worth a follow-up probe;
 out of scope for 1.5.
 
+**Resolved 2026-08-10 (D7).** Rung 1.5 ships in `goals/fleet-mirror` with the
+terse `claude-session` evidence member, PID-reuse guard, renderer join, and
+tests. It deliberately reads only `pid`, `procStart`, and `cwd`; session status
+freshness remains outside the liveness contract rather than becoming a proxy.
+
 ---
 
 ## 5. Delivery-class mechanics that constrain rung 2
@@ -277,6 +282,11 @@ ahead of time, or the bulletin must remain pull-derivable — which is the mirro
   "The negotiation had to be relayed by hand through the operator, because the
   capability this packet is about does not exist yet." It exists. And §0's
   specimen is why the 2026-08-08 CI notice *still* came by hand.
+
+**Resolved 2026-08-10 (D7).** Rung 2 is push-to-reachable plus
+pull-for-everyone and resumes in `goals/fleet-mirror`; no second packet opens.
+The socket-less live-session specimen is accepted as the proof that pull must
+remain authoritative, not retained as an open investigation.
 
 ---
 

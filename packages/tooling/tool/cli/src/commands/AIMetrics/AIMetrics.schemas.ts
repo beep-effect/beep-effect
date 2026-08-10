@@ -14,7 +14,6 @@
 export {
   defaultP7MirrorRemoteRoot,
   defaultP7MirrorSshHost,
-  localCollectorDataRoot,
   p7MirrorConfirmToken,
   p7MirrorRawArchiveTable,
   p7MirrorSchemaVersion,

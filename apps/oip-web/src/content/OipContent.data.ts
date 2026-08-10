@@ -362,7 +362,8 @@ const rawOipSiteContent = {
 /**
  * Decoded OIP launch content.
  *
- * @example
+ * **Example** (Access site content metadata)
+ *
  * ```ts
  * import { oipSiteContent } from "@beep/oip-web/content"
  *
@@ -377,7 +378,8 @@ export const oipSiteContent = Result.getOrThrow(decodeOipSiteContentResult(rawOi
 /**
  * Review gate statuses that must be closed before public launch.
  *
- * @example
+ * **Example** (Check launch review gates)
+ *
  * ```ts
  * import { launchReviewGates } from "@beep/oip-web/content"
  *

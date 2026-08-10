@@ -170,7 +170,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
   it("round-trips schema-derived canonical dataset results through encoded form", {
     timeout: 30000,
   }, () => {
-    const arbitrary = S.toArbitrary(CanonicalDatasetResult).map((result) =>
+    const arbitrary = S.toArbitrary(CanonicalDatasetResult)(fc).map((result) =>
       CanonicalDatasetResult.make({
         ...result,
         dataset: makeDataset(result.dataset.quads.slice(0, 3)),
@@ -193,7 +193,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
 
     // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
     // stays fast and reliable. The round-trip law holds regardless of dataset size.
-    const arbitrary = S.toArbitrary(CanonicalizeDatasetRequest).map((request) =>
+    const arbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
       CanonicalizeDatasetRequest.make({
         ...request,
         dataset: makeDataset(request.dataset.quads.slice(0, 3)),

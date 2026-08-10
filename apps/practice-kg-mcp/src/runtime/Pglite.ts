@@ -10,13 +10,15 @@ import * as Pglite from "@beep/pglite";
 /**
  * Provision the PGlite store owned by a graph bundle.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `relaxedDurability` is deliberate: the store is a derived artifact rebuilt from
  * the corpus whenever it is lost, so trading fsync guarantees for build speed
  * costs nothing recoverable. Point `dataDir` at the bundle's own `kg.pglite`
  * directory rather than a shared application database.
  *
- * @example
+ * **Example** (Provision PGlite store layer)
+ *
  * ```ts
  * import { makePracticeKgPgliteLayer } from "../../src/runtime/Pglite.ts"
  *
@@ -26,7 +28,6 @@ import * as Pglite from "@beep/pglite";
  * ```
  *
  * @param dataDir - Directory the bundle's PGlite files are created in.
- *
  * @category layers
  * @since 0.0.0
  */

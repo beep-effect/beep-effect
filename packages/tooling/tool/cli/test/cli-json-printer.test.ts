@@ -1,9 +1,11 @@
 import {
+  CommandJsonOutput,
   DEFAULT_JSON_FORMATTING_OPTIONS,
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   formatDurationSeconds,
   logTaggedSummary,
   makeTaggedLogger,
+  printCommandJson,
   renderPrettyCommandJson,
 } from "@beep/repo-cli/test/Cli";
 import { describe, expect, it } from "@effect/vitest";
@@ -56,6 +58,44 @@ describe("internal/cli/Json renderPrettyCommandJson", () => {
 
   it("exposes the shared 500k pretty-render cap constant", () => {
     expect(DEFAULT_JSON_PRETTY_MAX_LENGTH).toBe(500_000);
+  });
+});
+
+describe("internal/cli/Json printCommandJson", () => {
+  it.effect(
+    "routes output through an injected writer",
+    Effect.fnUntraced(function* () {
+      const chunks: Array<string> = [];
+
+      yield* printCommandJson({ ok: true }).pipe(
+        Effect.provideService(CommandJsonOutput, (text) =>
+          Effect.sync(() => {
+            chunks.push(text);
+          })
+        )
+      );
+
+      expect(chunks).toEqual(['{"ok":true}\n']);
+    })
+  );
+
+  it("emits payloads larger than 64 KiB intact across a process boundary", () => {
+    const payload = { value: "x".repeat(70_000) };
+    const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
+    const program = [
+      `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
+      'import { Effect } from "effect";',
+      'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
+    ].join("\n");
+    const result = Bun.spawnSync(["bun", "--eval", program], {
+      stderr: "pipe",
+      stdout: "pipe",
+    });
+    const output = result.stdout.toString();
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.byteLength).toBeGreaterThan(65_536);
+    expect(output).toBe(`${JSON.stringify(payload)}\n`);
   });
 });
 

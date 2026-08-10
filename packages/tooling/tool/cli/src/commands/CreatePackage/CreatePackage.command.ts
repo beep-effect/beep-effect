@@ -581,7 +581,7 @@ const parseJsonDocument: {
 } = dual(
   2,
   Effect.fn(function* (content: string, filePath: string) {
-    return yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(content).pipe(
+    return yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(
       Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
     );
   })

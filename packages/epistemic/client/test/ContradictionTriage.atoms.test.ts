@@ -120,8 +120,8 @@ describe("@beep/epistemic-client contradiction atoms", () => {
   it("round-trips schema-derived detail and source payloads", () =>
     fc.assert(
       fc.property(
-        S.toArbitrary(GetContradictionCandidate),
-        S.toArbitrary(EvidenceSourcePagePayload),
+        S.toArbitrary(GetContradictionCandidate)(fc),
+        S.toArbitrary(EvidenceSourcePagePayload)(fc),
         (detailRequest, sourceRequest) => {
           expect(
             detailRequestEquivalence(

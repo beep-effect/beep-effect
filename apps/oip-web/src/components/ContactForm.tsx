@@ -102,7 +102,8 @@ class ContactFormProps extends S.Class<ContactFormProps>($I`ContactFormProps`)(
 /**
  * Renders the OIP contact form.
  *
- * @example
+ * **Example** (Rendering ContactForm with props)
+ *
  * ```tsx
  * import { ContactForm } from "@beep/oip-web/components/ContactForm"
  *

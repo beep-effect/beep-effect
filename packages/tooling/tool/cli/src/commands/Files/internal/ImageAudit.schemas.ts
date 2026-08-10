@@ -6,8 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { FileSha256Hash, PositiveMediaDimension } from "./Media.schemas.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 // cspell:ignore Iptc
 
@@ -224,7 +228,10 @@ export class ImageAuditManifest extends S.Class<ImageAuditManifest>($I`ImageAudi
  * @category encoding
  * @since 0.0.0
  */
-export const encodeImageAuditManifest = S.encodeUnknownEffect(ImageAuditManifest);
+export const encodeImageAuditManifest: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof ImageAuditManifest.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof ImageAuditManifest.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(ImageAuditManifest));
 
 /**
  * Decode a JSON image audit manifest.
@@ -232,4 +239,7 @@ export const encodeImageAuditManifest = S.encodeUnknownEffect(ImageAuditManifest
  * @category decoding
  * @since 0.0.0
  */
-export const decodeImageAuditManifestJson = S.decodeUnknownEffect(S.fromJsonString(ImageAuditManifest));
+export const decodeImageAuditManifestJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ImageAuditManifest, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ImageAuditManifest, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ImageAuditManifest)));

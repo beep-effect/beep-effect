@@ -27,7 +27,8 @@ const $I = $ProfessionalDesktopId.create("sync/Sync.atoms");
 /**
  * Browser RPC client for the professional desktop vault-sync protocol.
  *
- * @example
+ * **Example** (Runtime function type check)
+ *
  * ```ts
  * import { DesktopSyncClient } from "@/sync/Sync.atoms"
  *
@@ -100,7 +101,8 @@ const VaultSyncPanelStateKind = LiteralKit(["idle", "syncing", "reviewing", "suc
 /**
  * Exhaustive state machine for vault sync operator actions.
  *
- * @example
+ * **Example** (Creating idle panel state)
+ *
  * ```ts
  * import { VaultSyncPanelState } from "@/sync/Sync.atoms"
  *
@@ -130,7 +132,8 @@ export const VaultSyncPanelState = VaultSyncPanelStateKind.mapMembers(
 /**
  * Runtime type for {@link VaultSyncPanelState}.
  *
- * @example
+ * **Example** (Typing syncing panel state)
+ *
  * ```ts
  * import { VaultSyncPanelState, type VaultSyncPanelState as State } from "@/sync/Sync.atoms"
  *
@@ -171,7 +174,8 @@ const VaultSyncCommandKind = LiteralKit(["trigger", "review"]).pipe(
 /**
  * Exhaustive command accepted by a workspace vault sync action family.
  *
- * @example
+ * **Example** (Trigger command guard check)
+ *
  * ```ts
  * import { VaultSyncCommand } from "@/sync/Sync.atoms"
  *
@@ -203,7 +207,8 @@ type VaultSyncCommand = typeof VaultSyncCommand.Type;
 /**
  * Per-workspace vault sync action state.
  *
- * @example
+ * **Example** (Workspace panel state access)
+ *
  * ```ts
  * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
  * import { vaultSyncPanelStateAtoms } from "@/sync/Sync.atoms"
@@ -222,10 +227,13 @@ export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIden
 /**
  * Atom family that reads the workspace vault sync status over desktop RPC.
  *
+ * **Details**
+ *
  * Refreshes whenever a sync trigger or conflict review invalidates the
  * workspace's status reactivity key.
  *
- * @example
+ * **Example** (Workspace status atom access)
+ *
  * ```ts
  * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
  * import { vaultSyncStatusAtom } from "@/sync/Sync.atoms"
@@ -246,7 +254,8 @@ export const vaultSyncStatusAtom = Atom.family((workspaceId: WorkspaceIdentity.W
 /**
  * Atom family that lists the workspace's open vault sync drift records.
  *
- * @example
+ * **Example** (Workspace conflicts atom access)
+ *
  * ```ts
  * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
  * import { vaultSyncConflictsAtom } from "@/sync/Sync.atoms"
@@ -364,11 +373,14 @@ const reviewVaultSyncConflict = Effect.fn("documents.vault_sync.review")(functio
 /**
  * Per-workspace command state machine for sync and conflict review.
  *
+ * **Details**
+ *
  * Commands for different workspaces run independently. Commands for the same
  * workspace share one semaphore and execute in FIFO order, so a review cannot
  * race a sync pass or overwrite its state transition.
  *
- * @example
+ * **Example** (Command atoms function check)
+ *
  * ```ts
  * import { vaultSyncCommandAtoms } from "@/sync/Sync.atoms"
  *

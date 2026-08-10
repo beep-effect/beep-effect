@@ -10,7 +10,8 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 /**
  * Open the shipped practice DuckDB file for the MCP host lifetime.
  *
- * @example
+ * **Example** (Create practice DuckDB layer)
+ *
  * ```ts
  * import { makePracticeKgDuckDbLayer } from "../../src/runtime/DuckDb.ts"
  *
@@ -19,7 +20,6 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
  * ```
  *
  * @param databasePath - Path to the bundle's `practice.duckdb` file.
- *
  * @category layers
  * @since 0.0.0
  */

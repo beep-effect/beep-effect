@@ -361,15 +361,21 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): GrantSetDigest =>
  * @category constructors
  * @since 0.0.0
  */
-export const freezeGrantSet = (draft: DraftGrantSet, frozenAt: DateTime.Utc): FrozenGrantSet =>
-  FrozenGrantSet.make({
-    grants: draft.grants,
-    policyRevision: draft.policyRevision,
-    frozenAt,
-    digest: computeGrantSetDigest(
-      GrantSetDigestInput.make({ frozenAt, grants: draft.grants, policyRevision: draft.policyRevision })
-    ),
-  });
+export const freezeGrantSet: {
+  (frozenAt: DateTime.Utc): (draft: DraftGrantSet) => FrozenGrantSet;
+  (draft: DraftGrantSet, frozenAt: DateTime.Utc): FrozenGrantSet;
+} = dual(
+  2,
+  (draft: DraftGrantSet, frozenAt: DateTime.Utc): FrozenGrantSet =>
+    FrozenGrantSet.make({
+      grants: draft.grants,
+      policyRevision: draft.policyRevision,
+      frozenAt,
+      digest: computeGrantSetDigest(
+        GrantSetDigestInput.make({ frozenAt, grants: draft.grants, policyRevision: draft.policyRevision })
+      ),
+    })
+);
 
 /**
  * Re-verifies a frozen set's seal by recomputing the digest from its own

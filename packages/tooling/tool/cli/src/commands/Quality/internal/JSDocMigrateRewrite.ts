@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { MutableHashMap, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { documentationShapeViolations } from "./JSDocDocumentationInventory.ts";
@@ -461,6 +462,25 @@ export const jsdocMigrateConservationFindings = (input: {
   return findings;
 };
 
+const shapeRegressions = (original: string, candidate: string): ReadonlyArray<string> => {
+  const before = MutableHashMap.empty<string, number>();
+  for (const issue of documentationShapeViolations(original)) {
+    MutableHashMap.set(before, issue.rule, O.getOrElse(MutableHashMap.get(before, issue.rule), () => 0) + 1);
+  }
+  const after = MutableHashMap.empty<string, number>();
+  for (const issue of documentationShapeViolations(candidate)) {
+    MutableHashMap.set(after, issue.rule, O.getOrElse(MutableHashMap.get(after, issue.rule), () => 0) + 1);
+  }
+  const regressions: Array<string> = [];
+  for (const [rule, count] of after) {
+    const beforeCount = O.getOrElse(MutableHashMap.get(before, rule), () => 0);
+    if (count > beforeCount) {
+      A.appendInPlace(regressions, `shape-regression: ${rule} ${beforeCount} -> ${count}`);
+    }
+  }
+  return regressions;
+};
+
 /**
  * Report documentation-shape rules whose finding count grew in a candidate rewrite.
  *
@@ -485,24 +505,10 @@ export const jsdocMigrateConservationFindings = (input: {
  * @category use-cases
  * @since 0.0.0
  */
-export const jsdocMigrateShapeRegressions = (original: string, candidate: string): ReadonlyArray<string> => {
-  const before = MutableHashMap.empty<string, number>();
-  for (const issue of documentationShapeViolations(original)) {
-    MutableHashMap.set(before, issue.rule, O.getOrElse(MutableHashMap.get(before, issue.rule), () => 0) + 1);
-  }
-  const after = MutableHashMap.empty<string, number>();
-  for (const issue of documentationShapeViolations(candidate)) {
-    MutableHashMap.set(after, issue.rule, O.getOrElse(MutableHashMap.get(after, issue.rule), () => 0) + 1);
-  }
-  const regressions: Array<string> = [];
-  for (const [rule, count] of after) {
-    const beforeCount = O.getOrElse(MutableHashMap.get(before, rule), () => 0);
-    if (count > beforeCount) {
-      A.appendInPlace(regressions, `shape-regression: ${rule} ${beforeCount} -> ${count}`);
-    }
-  }
-  return regressions;
-};
+export const jsdocMigrateShapeRegressions: {
+  (candidate: string): (original: string) => ReadonlyArray<string>;
+  (original: string, candidate: string): ReadonlyArray<string>;
+} = dual(2, shapeRegressions);
 
 const tagClauseFindings = (input: {
   readonly expectedSegments: ReadonlyArray<TagSegment>;
@@ -577,6 +583,17 @@ const rewriteBlockUnchecked = (
   | { readonly _tag: "DataMismatch"; readonly reasons: ReadonlyArray<string> } => {
   const { bodyLines, exampleSegments, remarksSegments, segments } = parseBlockModel(blockText);
   const reasons: Array<string> = [];
+
+  // TSDoc forbids summary content in an `{@inheritDoc}` block
+  // (eslint-plugin-tsdoc `tsdoc-inheritdoc-incompatible-summary`), and every
+  // body section this rewrite emits — Example, Details, Gotchas — IS summary
+  // content, while the legacy `@example`/`@remarks` block tags were legal
+  // beside `@inheritDoc`. Converting would trade a retired carrier for a
+  // TSDoc violation, so these blocks fail closed into the override channel;
+  // the usual resolution is deleting the optional type-level example.
+  if (Str.includes("{@inheritDoc")(blockText) && (exampleSegments.length > 0 || remarksSegments.length > 0)) {
+    return { _tag: "Quarantined", reasons: ["inheritdoc-summary-content"] };
+  }
 
   if (data.titles.length !== exampleSegments.length) {
     return {
@@ -811,6 +828,36 @@ export const jsdocMigrateBlockStats = (blockText: string): JSDocMigrateBlockStat
 };
 
 /**
+ * Input contract for rewriting one legacy-carrier JSDoc block.
+ *
+ * **Example** (Construct a rewrite input)
+ *
+ * ```ts
+ * import { JSDocMigrateBlockInput } from "@beep/repo-cli/test/Quality"
+ *
+ * const input = JSDocMigrateBlockInput.make({
+ *   blockText: "/** Lead. *" + "/",
+ *   indent: "",
+ *   data: { titles: [] }
+ * })
+ * console.log(input.indent) // ""
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JSDocMigrateBlockInput extends S.Class<JSDocMigrateBlockInput>($I`JSDocMigrateBlockInput`)(
+  {
+    blockText: S.String,
+    indent: S.String,
+    data: JSDocMigrateRewriteData,
+  },
+  $I.annote("JSDocMigrateBlockInput", {
+    description: "Block text, indentation, and title data consumed by the JSDoc migration rewriter.",
+  })
+) {}
+
+/**
  * Rewrite one legacy-carrier JSDoc block and prove the rewrite conservative.
  *
  * **Details**
@@ -841,11 +888,7 @@ export const jsdocMigrateBlockStats = (blockText: string): JSDocMigrateBlockStat
  * @category use-cases
  * @since 0.0.0
  */
-export const rewriteJSDocMigrateBlock = (input: {
-  readonly blockText: string;
-  readonly indent: string;
-  readonly data: JSDocMigrateRewriteData;
-}): JSDocMigrateRewriteResult => {
+export const rewriteJSDocMigrateBlock = (input: JSDocMigrateBlockInput): JSDocMigrateRewriteResult => {
   const built = rewriteBlockUnchecked(input.blockText, input.data, input.indent);
   if (built._tag !== "Built") {
     return built;

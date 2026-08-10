@@ -22,7 +22,7 @@ describe("Contradiction review commands", () => {
     const equivalent = S.toEquivalence(SubmitContradictionCandidate);
 
     fc.assert(
-      fc.property(S.toArbitrary(SubmitContradictionCandidate), (submission) => {
+      fc.property(S.toArbitrary(SubmitContradictionCandidate)(fc), (submission) => {
         const encoded = Result.getOrThrow(encode(submission));
         const decoded = Result.getOrThrow(decodeSubmission(encoded));
 
@@ -33,7 +33,7 @@ describe("Contradiction review commands", () => {
   });
 
   it("rejects empty or reversed candidate validity intervals", () => {
-    const [submission] = fc.sample(S.toArbitrary(SubmitContradictionCandidate), { numRuns: 1, seed: 520 });
+    const [submission] = fc.sample(S.toArbitrary(SubmitContradictionCandidate)(fc), { numRuns: 1, seed: 520 });
     const encoded = Result.getOrThrow(S.encodeResult(SubmitContradictionCandidate)(submission));
 
     expect(Result.isFailure(decodeSubmission({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);

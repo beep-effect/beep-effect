@@ -59,7 +59,7 @@ const ApiKeyRequiredFailureFromJson = S.fromJsonString(ApiKeyRequiredFailure);
 const StringFromJson = S.fromJsonString(S.String);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -85,7 +85,7 @@ describe("api_key_required envelope", () => {
 
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const envelope = yield* S.decodeUnknownEffect(ApiKeyRequiredFailureFromJson)(
+        const envelope = yield* S.decodeEffect(ApiKeyRequiredFailureFromJson)(
           (first as { readonly text: string }).text
         );
 
@@ -106,7 +106,7 @@ describe("api_key_required envelope", () => {
         assert.isFalse(result.isError);
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const decoded = yield* S.decodeUnknownEffect(StringFromJson)((first as { readonly text: string }).text);
+        const decoded = yield* S.decodeEffect(StringFromJson)((first as { readonly text: string }).text);
         assert.strictEqual(decoded, "ok");
       })
     );

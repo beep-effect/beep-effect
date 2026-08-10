@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const AtUriArbitrary = S.toArbitrary(AtUri);
+const AtUriArbitrary = S.toArbitrary(AtUri)(fc);
 const decodeAtUri = S.decodeUnknownEffect(AtUri);
 
 const validAtUriExamples = [

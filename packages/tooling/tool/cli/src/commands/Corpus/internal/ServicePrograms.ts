@@ -57,6 +57,7 @@ import {
   Result,
 } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -269,28 +270,62 @@ const decodeDuplicateTotalsRows = S.decodeUnknownEffect(S.Array(DuplicateTotalsR
 const decodeDuplicateSetRecords = S.decodeUnknownEffect(S.Array(CorpusDuplicateSetRecord));
 const decodeCatalogDigestRows = S.decodeUnknownEffect(S.Array(CorpusCatalogDigestRow));
 
-const runWithCorpusDb = <A, E>(
-  databasePath: string,
-  message: string,
-  work: Effect.Effect<A, E, DuckDb>
-): Effect.Effect<A, CorpusCommandError> =>
-  work.pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })), CorpusCommandError.mapError(message));
+const runWithCorpusDb: {
+  <A, E>(
+    message: string,
+    work: Effect.Effect<A, E, DuckDb>
+  ): (databasePath: string) => Effect.Effect<A, CorpusCommandError>;
+  <A, E>(
+    databasePath: string,
+    message: string,
+    work: Effect.Effect<A, E, DuckDb>
+  ): Effect.Effect<A, CorpusCommandError>;
+} = dual(
+  3,
+  <A, E>(
+    databasePath: string,
+    message: string,
+    work: Effect.Effect<A, E, DuckDb>
+  ): Effect.Effect<A, CorpusCommandError> =>
+    work.pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })), CorpusCommandError.mapError(message))
+);
 
-const insertRows = <Row>(
-  db: DuckDbShape,
-  statement: string,
-  rows: ReadonlyArray<Row>,
-  toParameters: (row: Row) => Array<string | number | boolean | null>
-): Effect.Effect<void, DuckDbError> =>
-  Effect.forEach(rows, (row) => db.run(statement, toParameters(row)), { discard: true });
+const insertRows: {
+  <Row>(
+    statement: string,
+    rows: ReadonlyArray<Row>,
+    toParameters: (row: Row) => Array<string | number | boolean | null>
+  ): (db: DuckDbShape) => Effect.Effect<void, DuckDbError>;
+  <Row>(
+    db: DuckDbShape,
+    statement: string,
+    rows: ReadonlyArray<Row>,
+    toParameters: (row: Row) => Array<string | number | boolean | null>
+  ): Effect.Effect<void, DuckDbError>;
+} = dual(
+  4,
+  <Row>(
+    db: DuckDbShape,
+    statement: string,
+    rows: ReadonlyArray<Row>,
+    toParameters: (row: Row) => Array<string | number | boolean | null>
+  ): Effect.Effect<void, DuckDbError> =>
+    Effect.forEach(rows, (row) => db.run(statement, toParameters(row)), { discard: true })
+);
 
-const singleRow = <Row>(rows: ReadonlyArray<Row>, label: string): Effect.Effect<Row, CorpusCommandError> =>
-  A.head(rows).pipe(
-    O.match({
-      onNone: () => Effect.fail(CorpusCommandError.make({ message: `DuckDB returned no rows for ${label}.` })),
-      onSome: Effect.succeed,
-    })
-  );
+const singleRow: {
+  <Row>(label: string): (rows: ReadonlyArray<Row>) => Effect.Effect<Row, CorpusCommandError>;
+  <Row>(rows: ReadonlyArray<Row>, label: string): Effect.Effect<Row, CorpusCommandError>;
+} = dual(
+  2,
+  <Row>(rows: ReadonlyArray<Row>, label: string): Effect.Effect<Row, CorpusCommandError> =>
+    A.head(rows).pipe(
+      O.match({
+        onNone: () => Effect.fail(CorpusCommandError.make({ message: `DuckDB returned no rows for ${label}.` })),
+        onSome: Effect.succeed,
+      })
+    )
+);
 
 const basenameOf = (relativePath: string): string =>
   A.last(Str.split(relativePath, "/")).pipe(O.getOrElse(() => relativePath));
@@ -2042,7 +2077,10 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
   return summary;
 });
 
-const labelPathKey = (sourceLabel: string, relativePath: string): string => `${sourceLabel}\u0000${relativePath}`;
+const labelPathKey: {
+  (relativePath: string): (sourceLabel: string) => string;
+  (sourceLabel: string, relativePath: string): string;
+} = dual(2, (sourceLabel: string, relativePath: string): string => `${sourceLabel}\u0000${relativePath}`);
 
 const docketPattern = /\b(\d{5,6}(?:US|WO|EP|CA|AU|CN|JP|PCT)\d{0,2}(?:-US\d+)?)\b/iu;
 const docketFamilyPattern = /^\d{5,6}/;
@@ -2592,7 +2630,7 @@ const loadEnrichOrganizeRecords = Effect.fn("CorpusCommandService.loadEnrichOrga
       CorpusCommandError.mapError(`Failed reading organize manifest "${organizeManifestPath}"; run organize first.`)
     );
   return yield* Effect.forEach(A.filter(Str.split(organizeText, "\n"), Str.isNonEmpty), (line) =>
-    S.decodeUnknownEffect(S.fromJsonString(CorpusOrganizeRecord))(line).pipe(
+    S.decodeEffect(S.fromJsonString(CorpusOrganizeRecord))(line).pipe(
       CorpusCommandError.mapError("Organize manifest line failed schema validation.")
     )
   );
@@ -2622,7 +2660,7 @@ const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextN
     .readFileString(sourcesPath)
     .pipe(CorpusCommandError.mapError(`Failed reading extraction sources "${sourcesPath}".`));
   const sourceRows = yield* Effect.forEach(A.filter(Str.split(sourcesText, "\n"), Str.isNonEmpty), (line) =>
-    S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord))(line).pipe(
+    S.decodeEffect(S.fromJsonString(SourceProcessingRecord))(line).pipe(
       CorpusCommandError.mapError("Extraction sources line failed schema validation.")
     )
   );

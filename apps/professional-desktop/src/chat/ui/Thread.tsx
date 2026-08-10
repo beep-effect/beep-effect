@@ -226,7 +226,8 @@ const StreamingTurnView = ({
 /**
  * Renders the selected thread's timeline and in-flight streaming turn.
  *
- * @example
+ * **Example** (Log component name)
+ *
  * ```tsx
  * import { Thread } from "@/chat/ui/Thread"
  *

@@ -68,7 +68,7 @@ describe("@beep/documents-domain taxonomy seed", () => {
     const equivalent = S.toEquivalence(FilingOutcome);
 
     fc.assert(
-      fc.property(S.toArbitrary(FilingOutcome), (outcome) => {
+      fc.property(S.toArbitrary(FilingOutcome)(fc), (outcome) => {
         const encoded = Result.getOrThrow(encode(outcome));
         const decoded = Result.getOrThrow(decode(encoded));
 

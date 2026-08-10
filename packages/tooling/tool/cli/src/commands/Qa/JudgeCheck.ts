@@ -18,6 +18,7 @@ import { Effect, FileSystem, HashSet, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { jsonObjectTextFromMixedOutput } from "../../internal/cli/MixedOutputJson.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { QaInventory } from "./Inventory.schemas.ts";
@@ -366,16 +367,32 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
   );
 
 /**
- * Extract the last fenced JSON block from noisy judge output.
+ * Extract the last JSON inventory block from noisy judge output.
  *
  * Judges narrate. The contract is that the inventory is the final fenced JSON
  * block, so everything before it — reasoning, tool chatter, earlier draft
  * blocks — is ignored rather than parsed.
  *
+ * **Details**
+ *
+ * Extraction degrades through three rungs: the last json-tagged fence, then
+ * the last anonymous fence holding an object, then a balanced-brace scan that
+ * accepts the last parseable top-level object anywhere in the text.
+ * The final rung exists because judges sometimes emit a correct, schema-valid
+ * inventory without any fence at all — an output that used to hard-fail
+ * ingest and discard the whole capture+extract+judge round.
+ *
+ * **Gotchas**
+ *
+ * A fenced block always wins over unfenced text, even when prose after the
+ * fence contains a parseable object; the unfenced rung only runs when no
+ * fence matched anywhere.
+ * Unfenced salvage is permanent ingest hardening, not transitional compatibility.
+ *
  * **Example** (Usage)
  *
  * ```ts
- * import { extractLastJsonBlock } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import { extractLastJsonBlock } from "@beep/repo-cli/commands/Qa"
  * import * as O from "effect/Option"
  *
  * const fence = "`".repeat(3)
@@ -383,12 +400,18 @@ const lastMatch = (text: string, pattern: RegExp): O.Option<string> =>
  * const final = [`${fence}json`, `{"final":true}`, fence].join("\n")
  * const stdout = ["thinking...", draft, "on reflection:", final, "REQUIRED FINDINGS: 0"].join("\n")
  * console.log(O.getOrElse(extractLastJsonBlock(stdout), () => "")) // '{"final":true}'
+ * console.log(O.getOrElse(extractLastJsonBlock('no fence: {"final":true}'), () => "")) // '{"final":true}'
  * ```
  *
  * @param text - Raw judge output, narration and draft blocks included.
- * @returns The last fenced JSON block, or none when the output carries none.
+ * @returns The last fenced JSON block, the last parseable unfenced object when
+ * no fence matched, or none when the output carries neither.
  * @category utilities
  * @since 0.0.0
  */
 export const extractLastJsonBlock = (text: string): O.Option<string> =>
-  O.orElse(lastMatch(text, FENCED_JSON), () => lastMatch(text, FENCED_ANY));
+  pipe(
+    lastMatch(text, FENCED_JSON),
+    O.orElse(() => lastMatch(text, FENCED_ANY)),
+    O.orElse(() => jsonObjectTextFromMixedOutput(text))
+  );

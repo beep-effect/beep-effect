@@ -39,7 +39,7 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
   const encode = Schema.encodeSync(schema);
 
   fc.assert(
-    fc.property(Schema.toArbitrary(schema), (value) => {
+    fc.property(Schema.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -48,18 +48,18 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
 
 describe("Tool validation", () => {
   it("rejects fractional keyword limits at the schema boundary", () => {
-    expect(() => Schema.decodeUnknownSync(ExtractKeywords.parametersSchema)({ text: "hello", topN: 2.5 })).toThrow();
+    expect(() => Schema.decodeSync(ExtractKeywords.parametersSchema)({ text: "hello", topN: 2.5 })).toThrow();
   });
 
   it("rejects non-positive chunk limits at the schema boundary", () => {
     expect(() =>
-      Schema.decodeUnknownSync(ChunkBySentences.parametersSchema)({ maxChunkChars: 0, text: "One. Two." })
+      Schema.decodeSync(ChunkBySentences.parametersSchema)({ maxChunkChars: 0, text: "One. Two." })
     ).toThrow();
   });
 
   it("rejects invalid BM25 ranges at the schema boundary", () => {
     expect(() =>
-      Schema.decodeUnknownSync(CreateCorpus.parametersSchema)({
+      Schema.decodeSync(CreateCorpus.parametersSchema)({
         bm25Config: {
           b: 2,
           k: 0,
@@ -70,7 +70,7 @@ describe("Tool validation", () => {
   });
 
   it("defaults Tversky parameters at the schema boundary", () => {
-    expect(Schema.decodeUnknownSync(TverskySimilarity.parametersSchema)({ text1: "alpha", text2: "beta" })).toEqual({
+    expect(Schema.decodeSync(TverskySimilarity.parametersSchema)({ text1: "alpha", text2: "beta" })).toEqual({
       alpha: 0.5,
       beta: 0.5,
       text1: "alpha",
@@ -80,19 +80,19 @@ describe("Tool validation", () => {
 
   it("rejects out-of-range similarity scores in tool success schemas", () => {
     expect(() =>
-      Schema.decodeUnknownSync(BowCosineSimilarity.successSchema)({
+      Schema.decodeSync(BowCosineSimilarity.successSchema)({
         method: "bow.cosine",
         score: 1.2,
       })
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(TextSimilarity.successSchema)({
+      Schema.decodeSync(TextSimilarity.successSchema)({
         method: "vector.cosine",
         score: -0.1,
       })
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(TverskySimilarity.successSchema)({
+      Schema.decodeSync(TverskySimilarity.successSchema)({
         alpha: 0.5,
         beta: 0.5,
         method: "set.tversky",

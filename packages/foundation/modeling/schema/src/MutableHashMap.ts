@@ -211,7 +211,7 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
           return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
-        return Effect.mapBothEager(SchemaParser.decodeUnknownEffect(entries)(A.fromIterable(input), parseOptions), {
+        return Effect.mapBothEager(SchemaParser.decodeEffect(entries)(A.fromIterable(input), parseOptions), {
           onSuccess: MutableHashMap_.fromIterable,
           onFailure: (issue) => new SchemaIssue.Composite(ast, [new SchemaIssue.Pointer(["entries"], issue)]),
         });

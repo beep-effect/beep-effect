@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
-const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel);
+const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel)(fc);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
 const usageRecordInput = (id: number) => ({
@@ -393,7 +393,7 @@ describe("EpistemicTables", () => {
       spanFixtureKey: "span:oa-1:12-48",
     };
 
-    expect(Result.isFailure(S.decodeUnknownResult(EvidenceModel)(legacyRow))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(EvidenceModel)(legacyRow))).toBe(true);
 
     const decoded = Evidence.fromEvidenceRow(legacyRow);
     const canonicalInsert = Evidence.toEvidenceInsert(decoded);
@@ -419,7 +419,7 @@ describe("EpistemicTables", () => {
       },
     };
 
-    expect(Result.isFailure(S.decodeUnknownResult(EvidenceModel)(legacyRow))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(EvidenceModel)(legacyRow))).toBe(true);
 
     const decoded = Evidence.fromEvidenceRow(legacyRow);
 

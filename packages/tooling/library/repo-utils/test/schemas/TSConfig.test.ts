@@ -18,7 +18,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions);
+const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions)(fc);
 
 describe("TSConfig schema", () => {
   describe("valid structures", () => {
@@ -35,7 +35,7 @@ describe("TSConfig schema", () => {
       fc.assert(
         fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(TSConfig.fields.compilerOptions)(value);
-          const decoded = S.decodeUnknownSync(TSConfig.fields.compilerOptions)(encoded);
+          const decoded = S.decodeSync(TSConfig.fields.compilerOptions)(encoded);
 
           expect(decoded).toEqual(value);
         }),

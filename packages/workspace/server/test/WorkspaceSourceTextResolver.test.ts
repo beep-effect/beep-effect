@@ -62,8 +62,8 @@ const digestBytes = Effect.fn("WorkspaceSourceTextResolverTest.digestBytes")(fun
 
 const configureVault = Effect.fn("WorkspaceSourceTextResolverTest.configureVault")(function* (vaultRootPath: string) {
   const store = yield* Workspace.WorkspaceVaultStore;
-  const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(1);
-  const input = yield* S.decodeUnknownEffect(Workspace.SetWorkspaceVaultInput)({
+  const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
+  const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
     vaultRootPath,
     workspaceId,
   });
@@ -148,9 +148,9 @@ const expectSourceTextResolveSpan = (
 describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
   it("round-trips schema-derived source identities through their wire shape", () =>
     fc.assert(
-      fc.property(S.toArbitrary(SourceTextIdentity), (identity) => {
+      fc.property(S.toArbitrary(SourceTextIdentity)(fc), (identity) => {
         const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(identity));
-        const decoded = Result.getOrThrow(S.decodeUnknownResult(SourceTextIdentity)(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
 
         expect(S.toEquivalence(SourceTextIdentity)(decoded, identity)).toBe(true);
       }),

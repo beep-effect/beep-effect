@@ -36,7 +36,7 @@ import type * as DomainSyncOperation from "@beep/documents-domain/entities/SyncO
 import type * as Documents from "@beep/documents-domain/identity/Documents";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -101,7 +101,7 @@ const ProcfsUnavailableMissingInodeSyncEngineTestLayer = DocumentsSyncFixtureLiv
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(7);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(7);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const encodeText = (text: string) => new TextEncoder().encode(text);
 const digestOf = (text: string) => DocumentContentDigest.make(bytesToHex(sha256(encodeText(text))));

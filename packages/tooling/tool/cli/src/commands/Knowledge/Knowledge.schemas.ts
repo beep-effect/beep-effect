@@ -6,8 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
 
@@ -142,10 +146,19 @@ export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
  * `skipped-untrusted-context` records that the run deliberately declined to execute, so a green
  * report on a fork pull request can never be mistaken for a fully probed one.
  *
+ * `skipped-base-boot-failure` records the other way probe coverage is lost. The merge-base archive's
+ * probe process exited non-zero without emitting its structured output, which is what happens when a
+ * branch deletes a workspace export the base revision's CLI still imports. That is a property of the
+ * base revision, not a defect the branch can repair on the base side, so the comparison degrades
+ * rather than failing closed. The equivalent HEAD failure stays an operational error, because HEAD is
+ * the branch author's own tree.
+ *
  * **Gotchas**
  *
  * The policy is a property of the whole comparison, never of one side: probing only one archive
- * would turn every probe-class finding into a spurious introduced or resolved entry.
+ * would turn every probe-class finding into a spurious introduced or resolved entry. That is why a
+ * base boot failure discards the base probe results it had already collected instead of comparing
+ * them against an unprobed HEAD.
  *
  * **Example** (Read the probe policy domain)
  *
@@ -153,15 +166,19 @@ export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
  * import { KnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeProbePolicy.is.enabled("enabled")) // true
- * console.log(KnowledgeProbePolicy.Options.length) // 2
+ * console.log(KnowledgeProbePolicy.Options.length) // 3
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const KnowledgeProbePolicy = LiteralKit(["enabled", "skipped-untrusted-context"]).pipe(
+export const KnowledgeProbePolicy = LiteralKit([
+  "enabled",
+  "skipped-untrusted-context",
+  "skipped-base-boot-failure",
+]).pipe(
   $I.annoteSchema("KnowledgeProbePolicy", {
-    description: "Whether archive-local command and index probes were allowed to execute.",
+    description: "Whether archive-local command and index probes were allowed to execute, and ran.",
   })
 );
 
@@ -197,10 +214,10 @@ export const isKnowledgeProbePolicy = S.is(KnowledgeProbePolicy);
  * **Details**
  *
  * `unknown-beep-command` needs the archive's own command tree and `index-drift` needs the archive's
- * own index projection, so both disappear from a `skipped-untrusted-context` comparison while
- * `broken-tracked-path` and `failed-assertion` keep working from the tracked-tree oracle alone.
- * This is the ratified graceful degradation, and naming it here keeps the scanner and its tests
- * reading from one list.
+ * own index projection, so both disappear from any comparison whose {@link KnowledgeProbePolicy} is
+ * not `enabled`, while `broken-tracked-path` and `failed-assertion` keep working from the
+ * tracked-tree oracle alone. This is the ratified graceful degradation, and naming it here keeps the
+ * scanner and its tests reading from one list.
  *
  * **Example** (Read the probe-dependent classes)
  *
@@ -393,7 +410,10 @@ export const isKnowledgeFinding = S.is(KnowledgeFinding);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeKnowledgeFinding = S.decodeUnknownEffect(KnowledgeFinding);
+export const decodeKnowledgeFinding: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<KnowledgeFinding, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<KnowledgeFinding, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(KnowledgeFinding));
 
 /**
  * Encodes a {@link KnowledgeFinding} back to its JSON wire shape.
@@ -431,7 +451,10 @@ export const decodeKnowledgeFinding = S.decodeUnknownEffect(KnowledgeFinding);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeKnowledgeFinding = S.encodeUnknownEffect(KnowledgeFinding);
+export const encodeKnowledgeFinding: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof KnowledgeFinding.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof KnowledgeFinding.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(KnowledgeFinding));
 
 /**
  * One tracked Git-tree entry backing the archive-local path oracle.
@@ -743,14 +766,17 @@ export class KnowledgeCommandOccurrence extends S.Class<KnowledgeCommandOccurren
  *
  * **Gotchas**
  *
- * `probePolicy` is part of the report because coverage is part of the result. Under
- * `skipped-untrusted-context` the probe-dependent classes are absent rather than clean, so an empty
- * `introduced` bucket means less than it does under `enabled`.
+ * `probePolicy` is part of the report because coverage is part of the result. Under any policy other
+ * than `enabled` the probe-dependent classes are absent rather than clean, so an empty `introduced`
+ * bucket means less than it does under `enabled`. `probeSkipDetail` carries the evidence when the
+ * skip was involuntary — the first lines of the base probe's boot failure — and is `O.none()`
+ * otherwise, including under `skipped-untrusted-context`, where the policy name is the whole reason.
  *
  * **Example** (Read the gating bucket of a clean report)
  *
  * ```ts
  * import { KnowledgeSemanticDeltaReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import * as O from "effect/Option"
  *
  * const report = KnowledgeSemanticDeltaReport.make({
  *   introduced: [],
@@ -760,6 +786,7 @@ export class KnowledgeCommandOccurrence extends S.Class<KnowledgeCommandOccurren
  * })
  *
  * console.log(report.introduced.length) // 0
+ * console.log(O.isNone(report.probeSkipDetail)) // true
  * ```
  *
  * @see {@link KnowledgeProbePolicy} for what a skipped comparison stops checking.
@@ -774,6 +801,7 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
     resolved: S.Array(KnowledgeFinding),
     unchanged: S.Array(KnowledgeFinding),
     probePolicy: KnowledgeProbePolicy,
+    probeSkipDetail: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
   },
   $I.annote("KnowledgeSemanticDeltaReport", {
     description: "Findings introduced, resolved, and unchanged between merge-base and HEAD archives.",
@@ -814,6 +842,7 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
  * @category encoding
  * @since 0.0.0
  */
-export const encodeKnowledgeSemanticDeltaReportJson = S.encodeUnknownEffect(
-  S.fromJsonString(KnowledgeSemanticDeltaReport)
-);
+export const encodeKnowledgeSemanticDeltaReportJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(KnowledgeSemanticDeltaReport)));

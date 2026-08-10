@@ -11,8 +11,8 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeOrganization = S.decodeUnknownEffect(Organization.Model);
 const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
-const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier);
-const SettingsArbitrary = S.toArbitrary(Organization.Settings);
+const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier)(fc);
+const SettingsArbitrary = S.toArbitrary(Organization.Settings)(fc);
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
@@ -81,9 +81,9 @@ describe("Organization", () => {
   it("round-trips schema-derived license tiers and settings", () =>
     fc.assert(
       fc.property(LicenseTierArbitrary, SettingsArbitrary, (licenseTier, settings) => {
-        const decodedTier = S.decodeUnknownSync(Organization.LicenseTier)(licenseTier);
+        const decodedTier = S.decodeSync(Organization.LicenseTier)(licenseTier);
         const encodedSettings = S.encodeSync(Organization.Settings)(settings);
-        const decodedSettings = S.decodeUnknownSync(Organization.Settings)(encodedSettings);
+        const decodedSettings = S.decodeSync(Organization.Settings)(encodedSettings);
 
         expect(decodedTier).toBe(licenseTier);
         expect(

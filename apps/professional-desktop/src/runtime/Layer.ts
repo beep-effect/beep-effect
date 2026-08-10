@@ -81,7 +81,8 @@ import type * as PlatformError from "effect/PlatformError";
  * (`AgentTurnKernel | ThreadStore | UsageRecordSink`) are satisfied here, so the
  * remaining requirement is whatever rpc/http transport the sidecar adds on top.
  *
- * @example
+ * **Example** (Check handlers layer type)
+ *
  * ```ts
  * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import type { RuntimeLive } from "@/runtime/Layer"
@@ -114,7 +115,8 @@ const DesktopHandlersTest = Layer.merge(DesktopHandlersBase, EpistemicServerRpcL
 /**
  * Typed startup failures preserved by the desktop runtime.
  *
- * @example
+ * **Example** (Extract startup error tag)
+ *
  * ```ts
  * import type { DesktopStartupError } from "@/runtime/Layer"
  *
@@ -130,7 +132,8 @@ export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformErr
 /**
  * Fully-provided desktop handler layer with recoverable startup failures.
  *
- * @example
+ * **Example** (Confirm runtime handlers)
+ *
  * ```ts
  * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import { RuntimeLive } from "@/runtime/Layer"
@@ -276,7 +279,8 @@ const DocumentsSyncLive = selectByChatAgent(
 /**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
- * @example
+ * **Example** (Verify live layer)
+ *
  * ```ts
  * import { RuntimeLive } from "@/runtime/Layer"
  * import { Layer } from "effect"
@@ -311,7 +315,8 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
 /**
  * App-local fixture runtime Layer for smoke/dev chat and ontology handlers.
  *
- * @example
+ * **Example** (Verify test layer)
+ *
  * ```ts
  * import { RuntimeTest } from "@/runtime/Layer"
  * import { Layer } from "effect"

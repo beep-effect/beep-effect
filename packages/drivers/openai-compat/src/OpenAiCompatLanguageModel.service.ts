@@ -14,6 +14,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -76,7 +77,7 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
 /**
  * Request-time tuning options shared by OpenAI-compatible language-model adapters.
  *
- * **Example** (Config with max tokens)
+ * **Example** (Set max tokens and temperature)
  *
  * ```ts
  * import * as O from "effect/Option"
@@ -125,7 +126,7 @@ export class OpenAiCompatLanguageModelConfig extends S.Class<OpenAiCompatLanguag
 /**
  * Provider callbacks used by the OpenAI-compatible language-model factory.
  *
- * **Example** (Provider with empty stream)
+ * **Example** (Implement a stub provider)
  *
  * ```ts
  * import { Effect, Stream } from "effect"
@@ -147,7 +148,7 @@ export type OpenAiCompatProvider = OpenAiCompatClientShape;
 /**
  * Options accepted by {@link makeFromProvider}.
  *
- * **Example** (Options with provider callbacks)
+ * **Example** (Assemble provider-backed factory options)
  *
  * ```ts
  * import { Effect, Stream } from "effect"
@@ -179,7 +180,7 @@ export type OpenAiCompatLanguageModelOptions = OpenAiCompatLanguageModelClientOp
 /**
  * Options accepted by the default OpenAI-compatible language-model constructor.
  *
- * **Example** (Client options with model)
+ * **Example** (Select a model by name)
  *
  * ```ts
  * import type { OpenAiCompatLanguageModelClientOptions } from "@beep/openai-compat"
@@ -702,13 +703,18 @@ const streamToolCallName = (
     ? (activeToolCall?.name ?? toolNameMapper.getCustomName("unknown_tool"))
     : toolNameMapper.getCustomName(toolCall.function.name);
 
+type ToolCallDeltaAccumulator = readonly [
+  Readonly<Record<string, ActiveToolCall>>,
+  ReadonlyArray<Response.StreamPartEncoded>,
+];
+
 const makeToolCallDeltaParts = (
   toolNameMapper: Tool.NameMapper<ReadonlyArray<Tool.Any>>,
   chunk: OpenAiCompatChatCompletionChunk,
   activeToolCalls: Readonly<Record<string, ActiveToolCall>>,
   toolCall: OpenAiCompatToolCallDelta,
   indexInChunk: number
-): [Readonly<Record<string, ActiveToolCall>>, Array<Response.StreamPartEncoded>] => {
+): ToolCallDeltaAccumulator => {
   const toolIndex = streamToolCallIndex(toolCall, indexInChunk);
   const activeToolCall = activeToolCalls[toolIndex];
   const id = streamToolCallId(chunk, toolIndex, activeToolCall, toolCall);
@@ -719,7 +725,7 @@ const makeToolCallDeltaParts = (
     id,
     name,
   };
-  const parts: Array<Response.StreamPartEncoded> = [
+  const parts: ReadonlyArray<Response.StreamPartEncoded> = [
     ...(activeToolCall === undefined
       ? [
           Response.makePart("tool-params-start", {
@@ -738,7 +744,7 @@ const makeToolCallDeltaParts = (
         ]
       : []),
   ];
-  return [R.set(activeToolCalls, toolIndex, nextToolCall), parts];
+  return Tuple.make(R.set(activeToolCalls, toolIndex, nextToolCall), parts);
 };
 
 const makeCompletedStreamToolCallParts = (
@@ -841,16 +847,17 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
             ],
           })
         );
+        const toolCallDeltaSeed: ToolCallDeltaAccumulator = Tuple.make(
+          activeToolCalls,
+          A.empty<Response.StreamPartEncoded>()
+        );
         const [nextActiveToolCalls, toolDeltaParts] = pipe(
           choice.delta,
           O.flatMap((delta) => delta.tool_calls),
           O.getOrElse(A.empty<OpenAiCompatToolCallDelta>),
           A.reduce(
-            [activeToolCalls, A.empty<Response.StreamPartEncoded>()] as [
-              Readonly<Record<string, ActiveToolCall>>,
-              Array<Response.StreamPartEncoded>,
-            ],
-            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk) => {
+            toolCallDeltaSeed,
+            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk): ToolCallDeltaAccumulator => {
               const [updatedActiveToolCalls, deltaParts] = makeToolCallDeltaParts(
                 toolNameMapper,
                 chunk,
@@ -858,10 +865,7 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
                 toolCall,
                 indexInChunk
               );
-              return [updatedActiveToolCalls, A.appendAll(currentParts, deltaParts)] as [
-                Readonly<Record<string, ActiveToolCall>>,
-                Array<Response.StreamPartEncoded>,
-              ];
+              return Tuple.make(updatedActiveToolCalls, [...currentParts, ...deltaParts]);
             }
           )
         );
@@ -935,7 +939,7 @@ const makeStreamResponse = (
 /**
  * Builds an Effect AI language-model service from OpenAI-compatible provider callbacks.
  *
- * **Example** (Model from provider callbacks)
+ * **Example** (Build a model from provider callbacks)
  *
  * ```ts
  * import { Effect, Stream } from "effect"
@@ -984,7 +988,7 @@ export const makeFromProvider: (options: OpenAiCompatLanguageModelOptions) => Ef
 /**
  * Builds a layer for an OpenAI-compatible language model from provider callbacks.
  *
- * **Example** (Layer from provider callbacks)
+ * **Example** (Build a layer from provider callbacks)
  *
  * ```ts
  * import { Effect, Stream } from "effect"
@@ -1012,7 +1016,7 @@ export const layerFromProvider = (
 /**
  * Builds an OpenAI-compatible language-model service backed by {@link OpenAiCompatClient}.
  *
- * **Example** (Make with model name)
+ * **Example** (Build a client-backed model)
  *
  * ```ts
  * import { make } from "@beep/openai-compat"
@@ -1045,7 +1049,7 @@ export const make: (
 /**
  * Builds a language-model layer backed by {@link OpenAiCompatClient}.
  *
- * **Example** (Layer with model name)
+ * **Example** (Build a client-backed layer)
  *
  * ```ts
  * import { layer } from "@beep/openai-compat"
@@ -1066,7 +1070,7 @@ export const layer = (
 /**
  * Builds an Effect AI model value for a generic OpenAI-compatible provider.
  *
- * **Example** (Model value for provider)
+ * **Example** (Build an AI model value by name)
  *
  * ```ts
  * import { model } from "@beep/openai-compat"
@@ -1079,19 +1083,30 @@ export const layer = (
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: string,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
-  AiModel.make(
-    "openai-compat",
-    modelName,
-    layer(
-      config === undefined
-        ? { model: modelName }
-        : {
-            config,
-            model: modelName,
-          }
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: string) => AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
+    AiModel.make(
+      "openai-compat",
+      modelName,
+      layer(
+        config === undefined
+          ? { model: modelName }
+          : {
+              config,
+              model: modelName,
+            }
+      )
     )
-  );
+);

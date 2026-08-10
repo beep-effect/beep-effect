@@ -21,7 +21,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Result.getOrThrow(encode(value));
       const decoded = Result.getOrThrow(decode(encoded));
 
@@ -42,13 +42,13 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(1);
+      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
       const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-" });
 
       const before = yield* store.getVaultConfig(workspaceId);
       expect(O.isNone(before.vaultRootPath)).toBe(true);
 
-      const input = yield* S.decodeUnknownEffect(Workspace.SetWorkspaceVaultInput)({
+      const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
         vaultRootPath,
         workspaceId: 1,
       });
@@ -66,11 +66,11 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(1);
+      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(1);
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-parent-" });
       const missingVaultRootPath = path.join(parent, "missing-vault");
 
-      const input = yield* S.decodeUnknownEffect(Workspace.SetWorkspaceVaultInput)({
+      const input = yield* S.decodeEffect(Workspace.SetWorkspaceVaultInput)({
         vaultRootPath: missingVaultRootPath,
         workspaceId: 1,
       });

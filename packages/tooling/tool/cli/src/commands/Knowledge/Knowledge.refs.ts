@@ -13,9 +13,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, HashMap, HashSet, Match, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -24,6 +25,7 @@ import { decodeGoalManifest } from "../Goals/Goals.schemas.ts";
 import { parseGoalManifestText } from "../Goals/Inventory.ts";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
 import { KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
+import type * as AST from "effect/SchemaAST";
 import type { KnowledgeTrackedEntry } from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.refs");
@@ -990,7 +992,10 @@ export const isKnowledgeRefsReport = S.is(KnowledgeRefsReport);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeKnowledgeRefsReportJson = S.encodeUnknownEffect(S.fromJsonString(KnowledgeRefsReport));
+export const encodeKnowledgeRefsReportJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(S.fromJsonString(KnowledgeRefsReport)));
 
 /**
  * Decodes one JSON census line back into a {@link KnowledgeRefsReport}.
@@ -1014,7 +1019,10 @@ export const encodeKnowledgeRefsReportJson = S.encodeUnknownEffect(S.fromJsonStr
  * @category decoding
  * @since 0.0.0
  */
-export const decodeKnowledgeRefsReportJson = S.decodeUnknownEffect(S.fromJsonString(KnowledgeRefsReport));
+export const decodeKnowledgeRefsReportJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<KnowledgeRefsReport, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<KnowledgeRefsReport, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(KnowledgeRefsReport)));
 
 const decodeSha256 = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeRefId = S.decodeUnknownEffect(KnowledgeRefId);
@@ -1349,7 +1357,10 @@ const resolvePathSegments = (base: ReadonlyArray<string>, value: string): O.Opti
  * @category normalization
  * @since 0.0.0
  */
-export const normalizeKnowledgeRepoPath = (documentPath: string, raw: string): O.Option<string> => {
+export const normalizeKnowledgeRepoPath: {
+  (raw: string): (documentPath: string) => O.Option<string>;
+  (documentPath: string, raw: string): O.Option<string>;
+} = dual(2, (documentPath: string, raw: string): O.Option<string> => {
   if (!isGovernedPathSpelling(raw)) {
     return O.none();
   }
@@ -1361,7 +1372,7 @@ export const normalizeKnowledgeRepoPath = (documentPath: string, raw: string): O
     O.filter(A.isReadonlyArrayNonEmpty),
     O.map((segments) => nfc(A.join(segments, "/")))
   );
-};
+});
 
 /**
  * Drains a global pattern over one line, preserving `exec` order.
@@ -1386,7 +1397,10 @@ export const normalizeKnowledgeRepoPath = (documentPath: string, raw: string): O
  * @category parsing
  * @since 0.0.0
  */
-export const knowledgeLineMatches = (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray> => {
+export const knowledgeLineMatches: {
+  (text: string): (pattern: RegExp) => ReadonlyArray<RegExpExecArray>;
+  (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray>;
+} = dual(2, (pattern: RegExp, text: string): ReadonlyArray<RegExpExecArray> => {
   let matches = A.empty<RegExpExecArray>();
   let match = pattern.exec(text);
   while (match !== null) {
@@ -1394,7 +1408,7 @@ export const knowledgeLineMatches = (pattern: RegExp, text: string): ReadonlyArr
     match = pattern.exec(text);
   }
   return matches;
-};
+});
 
 /**
  * An inline code span and the 1-based column its opening backtick run starts at.
@@ -1712,7 +1726,7 @@ export const extractKnowledgeHostAnchors = (lineText: string): ReadonlyArray<Kno
   ]);
 };
 
-const PORTABLE_HOME_CONVENTIONS = HashSet.make("~/.claude", "~/.codex", "~/.config", "~/.bun");
+const PORTABLE_HOME_CONVENTIONS = HashSet.make("~/.claude", "~/.codex", "~/.config", "~/.bun", "~/.openclaw");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
@@ -1926,10 +1940,10 @@ export const classifyKnowledgeRef = (input: KnowledgeRefClassificationInput): Kn
  * @category policies
  * @since 0.0.0
  */
-export const knowledgeRefRemediation = (
-  classification: KnowledgeRefClassification,
-  resolution: KnowledgeRefResolution
-): string =>
+export const knowledgeRefRemediation: {
+  (resolution: KnowledgeRefResolution): (classification: KnowledgeRefClassification) => string;
+  (classification: KnowledgeRefClassification, resolution: KnowledgeRefResolution): string;
+} = dual(2, (classification: KnowledgeRefClassification, resolution: KnowledgeRefResolution): string =>
   Match.value(classification).pipe(
     Match.when("verified", () => "None; the reference resolves in the tree."),
     Match.when("broken-target", () => "Update the reference or add the tracked target."),
@@ -1947,7 +1961,8 @@ export const knowledgeRefRemediation = (
     Match.when("ambiguous-ref-pairing", () => "Keep one `beep:ref` per line beside exactly one display path."),
     Match.when("ungoverned-syntax", () => "Rewrite the spelling as a governed repository-relative path."),
     Match.exhaustive
-  );
+  )
+);
 
 /**
  * Everything the census may read from one Git tree.
@@ -2039,14 +2054,17 @@ const skippedEntry = (entry: KnowledgeTrackedEntry): O.Option<KnowledgeSkippedBl
  * @category decoding
  * @since 0.0.0
  */
-export const decodeKnowledgeUtf8 = (
-  bytes: Uint8Array,
-  message: string
-): Effect.Effect<string, KnowledgeOperationalError> =>
-  Effect.try({
-    try: () => strictUtf8Decoder.decode(bytes),
-    catch: KnowledgeOperationalError.new(message),
-  });
+export const decodeKnowledgeUtf8: {
+  (message: string): (bytes: Uint8Array) => Effect.Effect<string, KnowledgeOperationalError>;
+  (bytes: Uint8Array, message: string): Effect.Effect<string, KnowledgeOperationalError>;
+} = dual(
+  2,
+  (bytes: Uint8Array, message: string): Effect.Effect<string, KnowledgeOperationalError> =>
+    Effect.try({
+      try: () => strictUtf8Decoder.decode(bytes),
+      catch: KnowledgeOperationalError.new(message),
+    })
+);
 
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
   decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked file "${repoPath}".`);
@@ -2504,17 +2522,12 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
 
   const occurrences = MutableHashMap.empty<string, number>();
   const toObservation = Effect.fnUntraced(function* (candidate: RefCandidate) {
-    const resolution = O.match(candidate.normalized, {
-      onNone: (): KnowledgeRefResolution =>
-        O.match(
-          O.flatMap(candidate.slug, (slug) => HashMap.get(slugResolutions, slug)),
-          {
-            onNone: () => KnowledgeRefNotApplicable.make({}),
-            onSome: (resolved) => resolved,
-          }
-        ),
-      onSome: (normalized) => resolveRepoPath(pathIndex, directoryPrefixes, normalized),
-    });
+    const resolution = pipe(
+      candidate.normalized,
+      O.map((normalized) => resolveRepoPath(pathIndex, directoryPrefixes, normalized)),
+      O.orElse(() => O.flatMap(candidate.slug, (slug) => HashMap.get(slugResolutions, slug))),
+      O.getOrElse((): KnowledgeRefResolution => KnowledgeRefNotApplicable.make({}))
+    );
     const classification = classifyKnowledgeRef({
       kind: candidate.kind,
       surface: candidate.surface,

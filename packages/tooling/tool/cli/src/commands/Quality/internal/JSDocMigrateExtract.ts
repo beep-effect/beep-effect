@@ -10,6 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
@@ -231,46 +232,7 @@ const isAffectedBlock = (blockText: string): boolean => {
   return A.some(legacyCarrierTags, (tag) => A.contains(tags, tag));
 };
 
-/**
- * Scan one source file into anchored JSDoc blocks.
- *
- * **Details**
- *
- * Blocks are discovered with the same fence-aware raw scanner the quality
- * gate uses, then bound to declarations through ts-morph. Anchors are
- * `path#symbol#ordinal` where the ordinal counts every doc block sharing the
- * `path#symbol` prefix in source order — over all blocks, not only affected
- * ones, so anchors stay stable when the affected subset shrinks. The first
- * block of a multi-doc leading run (a fileoverview above a symbol doc) binds
- * to `<fileoverview>`.
- *
- * **Example** (Scan a file with a companion type)
- *
- * ```ts
- * import { scanJSDocMigrateBlocks } from "@beep/repo-cli/test/Quality"
- *
- * const source = [
- *   "/** Runtime schema. *" + "/",
- *   "export const Foo = 1",
- *   "/** Companion type. *" + "/",
- *   "export type Foo = typeof Foo",
- *   ""
- * ].join("\n")
- * const blocks = scanJSDocMigrateBlocks("packages/x/src/Foo.ts", source)
- * console.log(blocks.map((block) => block.anchor))
- * // ["packages/x/src/Foo.ts#Foo#0", "packages/x/src/Foo.ts#Foo#1"]
- * ```
- *
- * @param filePath - Repo-relative path used in anchors.
- * @param sourceText - Full source text to scan.
- * @returns Anchored blocks in source order.
- * @category use-cases
- * @since 0.0.0
- */
-export const scanJSDocMigrateBlocks = (
-  filePath: string,
-  sourceText: string
-): ReadonlyArray<JSDocMigrateScannedBlock> => {
+const scanBlocks = (filePath: string, sourceText: string): ReadonlyArray<JSDocMigrateScannedBlock> => {
   const spans = rawBlockSpans(sourceText);
   if (spans.length === 0) {
     return [];
@@ -325,6 +287,71 @@ export const scanJSDocMigrateBlocks = (
 };
 
 /**
+ * Scan one source file into anchored JSDoc blocks.
+ *
+ * **Details**
+ *
+ * Blocks are discovered with the same fence-aware raw scanner the quality
+ * gate uses, then bound to declarations through ts-morph. Anchors are
+ * `path#symbol#ordinal` where the ordinal counts every doc block sharing the
+ * `path#symbol` prefix in source order — over all blocks, not only affected
+ * ones, so anchors stay stable when the affected subset shrinks. The first
+ * block of a multi-doc leading run (a fileoverview above a symbol doc) binds
+ * to `<fileoverview>`.
+ *
+ * **Example** (Scan a file with a companion type)
+ *
+ * ```ts
+ * import { scanJSDocMigrateBlocks } from "@beep/repo-cli/test/Quality"
+ *
+ * const source = [
+ *   "/** Runtime schema. *" + "/",
+ *   "export const Foo = 1",
+ *   "/** Companion type. *" + "/",
+ *   "export type Foo = typeof Foo",
+ *   ""
+ * ].join("\n")
+ * const blocks = scanJSDocMigrateBlocks("packages/x/src/Foo.ts", source)
+ * console.log(blocks.map((block) => block.anchor))
+ * // ["packages/x/src/Foo.ts#Foo#0", "packages/x/src/Foo.ts#Foo#1"]
+ * ```
+ *
+ * @param filePath - Repo-relative path used in anchors.
+ * @param sourceText - Full source text to scan.
+ * @returns Anchored blocks in source order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const scanJSDocMigrateBlocks: {
+  (sourceText: string): (filePath: string) => ReadonlyArray<JSDocMigrateScannedBlock>;
+  (filePath: string, sourceText: string): ReadonlyArray<JSDocMigrateScannedBlock>;
+} = dual(2, scanBlocks);
+
+const extractRecordsForFile = (filePath: string, sourceText: string): ReadonlyArray<JSDocMigrateExtractRecord> =>
+  A.map(
+    A.filter(scanBlocks(filePath, sourceText), (block) => block.affected),
+    (block) => {
+      const stats = jsdocMigrateBlockStats(block.text);
+      return JSDocMigrateExtractRecord.make({
+        anchor: block.anchor,
+        filePath: block.filePath,
+        symbol: block.symbol,
+        ordinal: block.ordinal,
+        kind: block.kind,
+        sourceHash: jsdocMigrateSourceHash(block.text),
+        start: block.start,
+        end: block.end,
+        blockText: block.text,
+        leadParagraphCount: stats.leadParagraphCount,
+        exampleTagCount: stats.exampleTagCount,
+        unfencedExampleCount: stats.unfencedExampleCount,
+        remarksTagCount: stats.remarksTagCount,
+        undescribedSeeCount: stats.undescribedSeeCount,
+      });
+    }
+  );
+
+/**
  * Build extract records for the affected blocks of one source file.
  *
  * **Example** (Extract records from a legacy file)
@@ -355,39 +382,17 @@ export const scanJSDocMigrateBlocks = (
  * @category use-cases
  * @since 0.0.0
  */
-export const jsdocMigrateExtractRecordsForFile = (
-  filePath: string,
-  sourceText: string
-): ReadonlyArray<JSDocMigrateExtractRecord> =>
-  A.map(
-    A.filter(scanJSDocMigrateBlocks(filePath, sourceText), (block) => block.affected),
-    (block) => {
-      const stats = jsdocMigrateBlockStats(block.text);
-      return JSDocMigrateExtractRecord.make({
-        anchor: block.anchor,
-        filePath: block.filePath,
-        symbol: block.symbol,
-        ordinal: block.ordinal,
-        kind: block.kind,
-        sourceHash: jsdocMigrateSourceHash(block.text),
-        start: block.start,
-        end: block.end,
-        blockText: block.text,
-        leadParagraphCount: stats.leadParagraphCount,
-        exampleTagCount: stats.exampleTagCount,
-        unfencedExampleCount: stats.unfencedExampleCount,
-        remarksTagCount: stats.remarksTagCount,
-        undescribedSeeCount: stats.undescribedSeeCount,
-      });
-    }
-  );
+export const jsdocMigrateExtractRecordsForFile: {
+  (sourceText: string): (filePath: string) => ReadonlyArray<JSDocMigrateExtractRecord>;
+  (filePath: string, sourceText: string): ReadonlyArray<JSDocMigrateExtractRecord>;
+} = dual(2, extractRecordsForFile);
 
 /**
  * List the non-generated package source files the migration covers.
  *
  * **Details**
  *
- * Uses `git ls-files packages` so untracked scratch files never enter the
+ * Uses `git ls-files packages apps` so untracked scratch files never enter the
  * corpus, then applies the same path filters as the quality gate. The
  * generated-header probe still runs per file at read time.
  *
@@ -407,7 +412,7 @@ export const jsdocMigrateExtractRecordsForFile = (
 export const listJSDocMigrateCorpusFiles = Effect.fn("JSDocMigrateExtract.listCorpusFiles")(function* (
   repoRoot: string
 ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages"], jsdocGitErrorAdapter);
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   return A.filter(lines, isPackageSourceFile);
 });
 

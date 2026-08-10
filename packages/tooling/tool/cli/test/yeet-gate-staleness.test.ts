@@ -5,6 +5,7 @@ import {
   GateFresh,
   GateStale,
   GateUnproven,
+  isGateInputRelevant,
   renderYeetGateStalenessBlock,
   staleGateVerdicts,
   unprovenGateVerdicts,
@@ -19,6 +20,15 @@ const descriptor = GateArtifactDescriptor.make({
   gateId: "coverage-regression",
   kind: "baseline",
   regenerateCommand: "bun run beep quality coverage",
+  scope: "repo-code",
+});
+
+const goalsDescriptor = GateArtifactDescriptor.make({
+  artifactPath: "goals/baselines/doctor.jsonc",
+  gateId: "goals-doctor",
+  kind: "baseline",
+  regenerateCommand: "bun run beep goals doctor --write-baseline",
+  scope: "goals-packets",
 });
 
 const artifactAt = (modifiedAtMs: number) =>
@@ -60,8 +70,55 @@ describe("gate staleness assessment", () => {
     expect(verdict.status === "unproven" ? verdict.detail : "").toContain(descriptor.artifactPath);
   });
 
-  it("refuses to judge when the branch changed nothing", () => {
-    expect(assessGateStaleness(descriptor, artifactAt(1_000), O.none()).status).toBe("unproven");
+  it("preserves an existing artifact when the branch has no relevant input", () => {
+    expect(assessGateStaleness(descriptor, artifactAt(1_000), O.none()).status).toBe("fresh");
+  });
+
+  it("keeps every repo-code gate fresh for a changeset-only change", () => {
+    const repoCodeDescriptors = A.filter(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.scope === "repo-code");
+
+    expect(A.every(repoCodeDescriptors, (entry) => !isGateInputRelevant(entry.scope, ".changeset/widget.md"))).toBe(
+      true
+    );
+    expect(
+      A.every(
+        repoCodeDescriptors,
+        (entry) =>
+          assessGateStaleness(
+            entry,
+            O.some(GateFileWitness.make({ modifiedAtMs: 1_000, path: entry.artifactPath })),
+            O.none()
+          ).status === "fresh"
+      )
+    ).toBe(true);
+  });
+
+  it("keeps repo-code gates fresh for a goals-only change but can stale goals-doctor", () => {
+    const goalsInput = "goals/widget/README.md";
+
+    expect(isGateInputRelevant(descriptor.scope, goalsInput)).toBe(false);
+    expect(assessGateStaleness(descriptor, artifactAt(1_000), O.none()).status).toBe("fresh");
+    expect(isGateInputRelevant(goalsDescriptor.scope, goalsInput)).toBe(true);
+    expect(
+      assessGateStaleness(
+        goalsDescriptor,
+        O.some(GateFileWitness.make({ modifiedAtMs: 1_000, path: goalsDescriptor.artifactPath })),
+        O.some(GateFileWitness.make({ modifiedAtMs: 2_000, path: goalsInput }))
+      ).status
+    ).toBe("stale");
+  });
+
+  it("still stales an older code baseline after a source change", () => {
+    const sourceInput = "packages/widgets/src/Widget.ts";
+
+    expect(isGateInputRelevant(descriptor.scope, sourceInput)).toBe(true);
+    expect(
+      assessGateStaleness(
+        descriptor,
+        artifactAt(1_000),
+        O.some(GateFileWitness.make({ modifiedAtMs: 2_000, path: sourceInput }))
+      ).status
+    ).toBe("stale");
   });
 });
 
@@ -85,7 +142,7 @@ describe("gate staleness reporting", () => {
   it("renders a clean pass as a line rather than as nothing", () => {
     // "The check ran and found nothing" and "the check never ran" must not look
     // identical — that is the same missing-provenance failure this catches.
-    expect(renderYeetGateStalenessBlock([])).toBe("gate staleness: none");
+    expect(renderYeetGateStalenessBlock([], [])).toBe("gate staleness: none");
   });
 
   it("preserves an absent artifact as unproven in operator output", () => {
@@ -99,16 +156,19 @@ describe("gate staleness reporting", () => {
   });
 
   it("names the artifact, the newer input, and the regenerate command", () => {
-    const rendered = renderYeetGateStalenessBlock([
-      GateStale.make({
-        artifactPath: descriptor.artifactPath,
-        gateId: descriptor.gateId,
-        kind: "baseline",
-        newestInputPath: "packages/x/src/X.ts",
-        regenerateCommand: descriptor.regenerateCommand,
-        skewMs: 5_000,
-      }),
-    ]);
+    const rendered = renderYeetGateStalenessBlock(
+      [
+        GateStale.make({
+          artifactPath: descriptor.artifactPath,
+          gateId: descriptor.gateId,
+          kind: "baseline",
+          newestInputPath: "packages/x/src/X.ts",
+          regenerateCommand: descriptor.regenerateCommand,
+          skewMs: 5_000,
+        }),
+      ],
+      []
+    );
 
     expect(rendered).toContain(descriptor.artifactPath);
     expect(rendered).toContain("packages/x/src/X.ts");
@@ -121,6 +181,11 @@ describe("gate staleness reporting", () => {
 
     expect(A.length(YEET_GATE_ARTIFACT_DESCRIPTORS)).toBeGreaterThan(0);
     expect(A.length(A.dedupe(gateIds))).toBe(A.length(gateIds));
+    expect(A.filter(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.scope === "goals-packets")).toHaveLength(1);
+    expect(A.findFirst(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.gateId === "goals-doctor")).toMatchObject({
+      _tag: "Some",
+      value: { scope: "goals-packets" },
+    });
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
       "bun run coverage:baseline:write",

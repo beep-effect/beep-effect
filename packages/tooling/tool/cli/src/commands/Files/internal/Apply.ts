@@ -828,14 +828,14 @@ export const moveDetectFacesNoFaceEntries = Effect.fn("Files.moveDetectFacesNoFa
     }
 
     const sourceStem = path.basename(entry.sourceName, entry.extension);
-    const uniqueTarget = uniqueArchiveTargetName(sourceStem, entry.extension, usedTargetNames);
-    usedTargetNames = uniqueTarget.usedTargetNames;
+    const archiveTargetName = uniqueArchiveTargetName(sourceStem, entry.extension, usedTargetNames);
+    usedTargetNames = HashSet.add(usedTargetNames, archiveTargetName);
 
-    const targetPath = path.join(targetDirectory, uniqueTarget.targetName);
+    const targetPath = path.join(targetDirectory, archiveTargetName);
     const targetRelativePath = path.relative(targetDirectory, targetPath);
     nextEntries = A.append(
       nextEntries,
-      withDetectFacesMovedNoFaceTarget(entry, uniqueTarget.targetName, targetPath, targetRelativePath)
+      withDetectFacesMovedNoFaceTarget(entry, archiveTargetName, targetPath, targetRelativePath)
     );
     movePlans = A.append(movePlans, { entry, targetPath });
   }

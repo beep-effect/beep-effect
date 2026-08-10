@@ -6,11 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FileSha256Hash, NonNegativePixelOffset, PositiveMediaDimension } from "./Media.schemas.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/ImageCuration.schemas");
 
@@ -201,9 +203,10 @@ export class ImageCurationManifest extends S.Class<ImageCurationManifest>($I`Ima
  * @category decoding
  * @since 0.0.0
  */
-export const decodeImageCurationDecisionDocumentJson = S.decodeUnknownEffect(
-  S.fromJsonString(ImageCurationDecisionDocument)
-);
+export const decodeImageCurationDecisionDocumentJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ImageCurationDecisionDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ImageCurationDecisionDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ImageCurationDecisionDocument)));
 
 /**
  * Encode a curation decision ledger into its JSON-safe representation.
@@ -211,7 +214,15 @@ export const decodeImageCurationDecisionDocumentJson = S.decodeUnknownEffect(
  * @category encoding
  * @since 0.0.0
  */
-export const encodeImageCurationDecisionDocument = S.encodeUnknownEffect(ImageCurationDecisionDocument);
+export const encodeImageCurationDecisionDocument: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<typeof ImageCurationDecisionDocument.Encoded, S.SchemaError>;
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<typeof ImageCurationDecisionDocument.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(ImageCurationDecisionDocument));
 
 /**
  * Encode a curation manifest into its JSON-safe representation.
@@ -219,7 +230,10 @@ export const encodeImageCurationDecisionDocument = S.encodeUnknownEffect(ImageCu
  * @category encoding
  * @since 0.0.0
  */
-export const encodeImageCurationManifest = S.encodeUnknownEffect(ImageCurationManifest);
+export const encodeImageCurationManifest: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof ImageCurationManifest.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof ImageCurationManifest.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(ImageCurationManifest));
 
 /**
  * Decode a JSON curation manifest.
@@ -227,4 +241,7 @@ export const encodeImageCurationManifest = S.encodeUnknownEffect(ImageCurationMa
  * @category decoding
  * @since 0.0.0
  */
-export const decodeImageCurationManifestJson = S.decodeUnknownEffect(S.fromJsonString(ImageCurationManifest));
+export const decodeImageCurationManifestJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ImageCurationManifest, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ImageCurationManifest, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(ImageCurationManifest)));
