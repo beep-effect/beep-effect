@@ -337,6 +337,13 @@ export class CiFleetController extends pulumi.ComponentResource {
         enable_job_queued_check: true,
         enable_managed_runner_security_group: false,
         enable_organization_runners: false,
+        /**
+         * **Gotchas**
+         *
+         * Default labels plus any-match webhook filtering widened the shadow
+         * fleet to ordinary `self-hosted` jobs, so both label sets must be exact.
+         */
+        enable_runner_bidirectional_label_match: true,
         enable_runner_on_demand_failover_for_errors: onDemandFailoverErrors,
         enable_ssm_on_runners: false,
         enable_user_data_debug_logging_runner: false,
@@ -375,6 +382,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_additional_security_group_ids: [args.workerSecurityGroupId],
         runner_architecture: "x64",
         runner_binaries_syncer_lambda_zip: args.config.runnerBinariesSyncerLambdaZip,
+        runner_disable_default_labels: true,
         runner_ec2_tags: { "beep-ci": "runner" },
         runner_extra_labels: [args.config.runnerLabel],
         runner_metadata_options: {
