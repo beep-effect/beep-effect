@@ -52,11 +52,19 @@ import type {
   SetDimensions,
 } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
-import { Match, pipe } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
+import { pipe } from "effect/Function";
+import {
+  exhaustive,
+  tags as matchTags,
+  type as matchType,
+  value as matchValue,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
+import { isArray, reduce } from "effect/Array";
+import { flatMap, fromUndefinedOr, getOrElse, getOrUndefined, match } from "effect/Option";
+import { isFunction } from "effect/Predicate";
+import { empty, get, set } from "effect/Record";
 import { snakeCase } from "../internal/case.ts";
 import * as Derive from "./derive.ts";
 import * as Field from "../core/Field.ts";
@@ -180,10 +188,10 @@ type ElementAtDepth<Carrier, Dimensions extends PgColumn.ArrayDimension> = Dimen
  * **Example** (Project a string field builder)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { BuilderFor } from "./table.ts"
  *
- * type StringBuilder = BuilderFor<typeof S.String>
+ * type StringBuilder = BuilderFor<typeof String>
  * ```
  *
  * @category models
@@ -215,10 +223,10 @@ export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
  * **Example** (Project a builder record)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { BuildersOf } from "./table.ts"
  *
- * type Builders = BuildersOf<{ readonly name: typeof S.String }>
+ * type Builders = BuildersOf<{ readonly name: typeof String }>
  * ```
  *
  * @category models
@@ -268,57 +276,57 @@ const buildColumn = (
   nullable: boolean,
   enums: EnumRegistry | undefined,
 ): PgColumn.DrizzleBuilder => {
-  const spec = O.getOrElse(O.fromUndefinedOr(meta.column), () => {
+  const spec = getOrElse(fromUndefinedOr(meta.column), () => {
     throw Derive.DeriveColumnError.make({
       message: `Column for '${key}' was not resolved before projection.`,
       fieldName: key,
       astTag: "(resolved)",
     });
   });
-  const name = O.getOrElse(O.fromUndefinedOr(meta.columnName), () => snakeCase(key));
+  const name = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
   const base = PgColumn.Spec.guards.enum(spec)
     ? PgColumn.Enum.toDrizzleBuilder(
         spec,
         name,
-        O.flatMap(O.fromUndefinedOr(enums), (registry) => R.get(registry, spec.name)).pipe(
-          O.getOrUndefined,
+        flatMap(fromUndefinedOr(enums), (registry) => get(registry, spec.name)).pipe(
+          getOrUndefined,
         ),
       )
     : pipe(spec, PgColumn.Spec.toDrizzleBuilder(name, meta.identity));
-  const withDimensions = Match.value(meta.dimensions).pipe(
-    Match.when(0, () => base),
-    Match.when(1, () => base.array("[]")),
-    Match.when(2, () => base.array("[][]")),
-    Match.when(3, () => base.array("[][][]")),
-    Match.when(4, () => base.array("[][][][]")),
-    Match.when(5, () => base.array("[][][][][]")),
-    Match.exhaustive,
+  const withDimensions = matchValue(meta.dimensions).pipe(
+    matchWhen(0, () => base),
+    matchWhen(1, () => base.array("[]")),
+    matchWhen(2, () => base.array("[][]")),
+    matchWhen(3, () => base.array("[][][]")),
+    matchWhen(4, () => base.array("[][][][]")),
+    matchWhen(5, () => base.array("[][][][][]")),
+    exhaustive,
   );
   const withNullability = nullable ? withDimensions : withDimensions.notNull();
   const withPrimaryKey = meta.primaryKey ? withNullability.primaryKey() : withNullability;
   const withUnique = meta.unique ? withPrimaryKey.unique() : withPrimaryKey;
-  const withDefault = O.match(O.fromUndefinedOr(meta.default), {
+  const withDefault = match(fromUndefinedOr(meta.default), {
     onNone: () => withUnique,
-    onSome: Match.type<Meta.Default>().pipe(
-      Match.withReturnType<PgColumn.DrizzleBuilder>(),
-      Match.tags({
+    onSome: matchType<Meta.Default>().pipe(
+      withReturnType<PgColumn.DrizzleBuilder>(),
+      matchTags({
         value: ({ value }) => withUnique.default(value),
         sqlExpr: ({ expression }) => withUnique.default(expression),
         now: () => withUnique.default(sql`now()`),
         unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
       }),
-      Match.exhaustive,
+      exhaustive,
     ),
   });
-  return Match.value(meta.generated).pipe(
-    Match.withReturnType<PgColumn.DrizzleBuilder>(),
-    Match.when(false, () => withDefault),
-    Match.tags({
+  return matchValue(meta.generated).pipe(
+    withReturnType<PgColumn.DrizzleBuilder>(),
+    matchWhen(false, () => withDefault),
+    matchTags({
       identityAlways: () => withDefault,
       sqlExpr: ({ expression }) => withDefault.generatedAlwaysAs(expression),
       unsafeSql: ({ sql: statement }) => withDefault.generatedAlwaysAs(sql.raw(statement)),
     }),
-    Match.exhaustive,
+    exhaustive,
   );
 };
 
@@ -342,13 +350,13 @@ export type AdditionalExtras<M extends AnyModel> = (
 ) => ReadonlyArray<PgTableExtraConfigValue>;
 
 const isDeclaredExtras = (value: unknown): value is ReadonlyArray<TableExtras.Node> =>
-  A.isArray(value) && A.every(value, TableExtras.isNode);
+  isArray(value) && value.every(TableExtras.isNode);
 
 const invokeDeclaredExtras = (
   callback: unknown,
   columns: TableExtras.BoundColumns<FieldsInput>,
 ): ReadonlyArray<TableExtras.Node> => {
-  if (!P.isFunction(callback)) {
+  if (!isFunction(callback)) {
     throw Derive.DeriveColumnError.make({
       message: "Model table extras must be callable.",
       fieldName: "(extras)",
@@ -371,11 +379,11 @@ const invokeDeclaredExtras = (
  *
  * ```ts
  * import { getTableName } from "drizzle-orm"
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { Model } from "./model.ts"
  * import { toPgTable } from "./table.ts"
  *
- * class User extends Model<User>("User")({ name: S.String }) {}
+ * class User extends Model<User>("User")({ name: String }) {}
  * console.log(getTableName(toPgTable(User))) // "user"
  * ```
  *
@@ -392,18 +400,18 @@ export function toPgTable(
   additionalExtras?: AdditionalExtras<AnyModel>,
   enums?: EnumRegistry,
 ): unknown {
-  const builders = A.reduce(
-    R.toEntries(model.sql.fields),
-    R.empty<string, PgColumn.DrizzleBuilder>(),
+  const builders = reduce(
+    Object.entries(model.sql.fields),
+    empty<string, PgColumn.DrizzleBuilder>(),
     (builders, [key, input]) => {
-      const meta = O.getOrElse(R.get(model.sql.columns, key), () => {
+      const meta = getOrElse(get(model.sql.columns, key), () => {
         throw Derive.DeriveColumnError.make({
           message: `Metadata for '${key}' was not resolved before projection.`,
           fieldName: key,
           astTag: "(resolved)",
         });
       });
-      return R.set(
+      return set(
         builders,
         key,
         buildColumn(key, meta, Derive.isNullable(Field.from(input).schema), enums),
@@ -412,14 +420,14 @@ export function toPgTable(
   );
   return pgTable(model.sql.tableName, builders, (columns) => {
     const bound: TableExtras.BoundColumns<FieldsInput> = columns;
-    const declared = O.match(O.fromUndefinedOr(model.sql.extras), {
-      onNone: A.empty<PgTableExtraConfigValue>,
-      onSome: (extras) => A.map(invokeDeclaredExtras(extras, bound), TableExtras.emit),
+    const declared = match(fromUndefinedOr(model.sql.extras), {
+      onNone: () => [],
+      onSome: (extras) => invokeDeclaredExtras(extras, bound).map(TableExtras.emit),
     });
-    const additional = O.match(O.fromUndefinedOr(additionalExtras), {
-      onNone: A.empty<PgTableExtraConfigValue>,
+    const additional = match(fromUndefinedOr(additionalExtras), {
+      onNone: () => [],
       onSome: (extras) => extras(bound),
     });
-    return A.appendAll(declared, additional);
+    return [...declared, ...additional];
   });
 }

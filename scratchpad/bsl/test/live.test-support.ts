@@ -3,14 +3,21 @@ import { PgliteClient, PgliteTestLayer, type PgliteClientValue } from "@beep/pgl
 import { PGlite, types } from "@electric-sql/pglite";
 import type * as Pg from "@effect/sql-pg/PgClient";
 import * as Pglite from "@effect/sql-pglite/PgliteClient";
-import { Context, Effect, Exit, Layer, Scope } from "effect";
+import { get as getContext } from "effect/Context";
+import type { Context } from "effect/Context";
+import { gen, provide, runPromise, withSpan } from "effect/Effect";
+import type { Effect } from "effect/Effect";
+import { void as voidExit } from "effect/Exit";
+import { buildWithScope } from "effect/Layer";
+import { close as closeScope, make as makeScope } from "effect/Scope";
+import type { Closeable } from "effect/Scope";
 import { identity } from "effect/Function";
-import * as Str from "effect/String";
-import type * as SqlClient from "effect/unstable/sql/SqlClient";
+import { camelCase, snakeCase } from "effect/String";
+import type { SqlClient } from "effect/unstable/sql/SqlClient";
 
-type BaseServices = PgliteClientValue | Pg.PgClient | SqlClient.SqlClient;
+type BaseServices = PgliteClientValue | Pg.PgClient | SqlClient;
 
-type RepositoryServices = Pglite.PgliteClient | SqlClient.SqlClient;
+type RepositoryServices = Pglite.PgliteClient | SqlClient;
 
 /**
  * Pin PGlite timestamp parsers to the string carrier used by @beep/effect-drizzle timestamp schemas.
@@ -51,8 +58,8 @@ export const pinStringTimestampParsers = (client: PGlite): PGlite => {
 export const makeCamelSnakeRepositoryLayer = (client: PGlite) =>
   Pglite.layer({
     liveClient: client,
-    transformQueryNames: Str.snakeCase,
-    transformResultNames: Str.camelCase,
+    transformQueryNames: snakeCase,
+    transformResultNames: camelCase,
   });
 
 /**
@@ -69,21 +76,21 @@ export const makeCamelSnakeRepositoryLayer = (client: PGlite) =>
  * @since 0.0.0
  */
 export interface LiveTestSupport {
-  readonly run: <A, E>(effect: Effect.Effect<A, E, BaseServices>) => Promise<A>;
-  readonly runRepository: <A, E>(effect: Effect.Effect<A, E, RepositoryServices>) => Promise<A>;
+  readonly run: <A, E>(effect: Effect<A, E, BaseServices>) => Promise<A>;
+  readonly runRepository: <A, E>(effect: Effect<A, E, RepositoryServices>) => Promise<A>;
   readonly close: () => Promise<void>;
 }
 
 const makeSupport = (
-  scope: Scope.Closeable,
-  context: Context.Context<BaseServices>,
-  repositoryContext: Context.Context<RepositoryServices>,
+  scope: Closeable,
+  context: Context<BaseServices>,
+  repositoryContext: Context<RepositoryServices>,
 ): LiveTestSupport => {
-  const run = <A, E>(effect: Effect.Effect<A, E, BaseServices>): Promise<A> =>
-    Effect.runPromise(Effect.provide(effect, context));
-  const runRepository = <A, E>(effect: Effect.Effect<A, E, RepositoryServices>): Promise<A> =>
-    Effect.runPromise(Effect.provide(effect, repositoryContext));
-  const close = (): Promise<void> => Effect.runPromise(Scope.close(scope, Exit.void));
+  const run = <A, E>(effect: Effect<A, E, BaseServices>): Promise<A> =>
+    runPromise(provide(effect, context));
+  const runRepository = <A, E>(effect: Effect<A, E, RepositoryServices>): Promise<A> =>
+    runPromise(provide(effect, repositoryContext));
+  const close = (): Promise<void> => runPromise(closeScope(scope, voidExit));
   return { run, runRepository, close };
 };
 
@@ -93,27 +100,24 @@ const makeSupport = (
  * **Example** (Acquire Bun test support)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { runPromise } from "effect/Effect"
  * import { makeLiveTestSupport } from "./live.test-support.ts"
  *
- * const support = await Effect.runPromise(makeLiveTestSupport)
+ * const support = await runPromise(makeLiveTestSupport)
  * await support.close()
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
-export const makeLiveTestSupport = Effect.gen(function* () {
-  const scope = yield* Scope.make();
-  const context = yield* Layer.buildWithScope(PgliteTestLayer, scope);
-  const client = Context.get(context, PgliteClient);
+export const makeLiveTestSupport = gen(function* () {
+  const scope = yield* makeScope();
+  const context = yield* buildWithScope(PgliteTestLayer, scope);
+  const client = getContext(context, PgliteClient);
   if (!(client.pglite instanceof PGlite)) {
     throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
   }
   const pglite = pinStringTimestampParsers(client.pglite);
-  const repositoryContext = yield* Layer.buildWithScope(
-    makeCamelSnakeRepositoryLayer(pglite),
-    scope,
-  );
+  const repositoryContext = yield* buildWithScope(makeCamelSnakeRepositoryLayer(pglite), scope);
   return makeSupport(scope, context, repositoryContext);
-}).pipe(Effect.withSpan("EffectDrizzleLiveTestSupport.make"));
+}).pipe(withSpan("EffectDrizzleLiveTestSupport.make"));

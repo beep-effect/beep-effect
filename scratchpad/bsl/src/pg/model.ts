@@ -13,12 +13,22 @@
  * - construction time: runtime checks mirror the same rules (nullable PK,
  *   multiple PKs) as tagged errors, catching hand-built field nodes.
  */
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { findFirst, last as lastArray, reduce } from "effect/Array";
+import {
+  fromUndefinedOr,
+  getOrElse,
+  getOrUndefined,
+  isSome,
+  match,
+  none,
+  orElse,
+  some,
+} from "effect/Option";
+import { isFunction, isNotUndefined } from "effect/Predicate";
+import { empty, set } from "effect/Record";
+import { optionalKey } from "effect/Schema";
+import type { Annotations, Struct as StructSchema, Top } from "effect/Schema";
+import { split } from "effect/String";
 import { VariantSchema } from "effect/unstable/schema";
 import { snakeCase } from "../internal/case.ts";
 import { withStatics } from "../internal/statics.ts";
@@ -77,10 +87,10 @@ export {
  * **Example** (Declare a field record)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { FieldsInput } from "./model.ts"
  *
- * const fields: FieldsInput = { name: S.String }
+ * const fields: FieldsInput = { name: String }
  * ```
  *
  * @category models
@@ -130,10 +140,10 @@ export type ColumnsOf<F extends FieldsInput> = {
   readonly [K in keyof F]: ResolvedMetaOf<F[K], K & string>;
 };
 
-type PlainVariants<Sch extends S.Top, M extends Meta.Meta> = M["version"] extends true
+type PlainVariants<Sch extends Top, M extends Meta.Meta> = M["version"] extends true
   ? VariantSchema.Field<{
       readonly select: Sch;
-      readonly insert: S.optionalKey<Sch>;
+      readonly insert: optionalKey<Sch>;
       readonly update: Sch;
       readonly json: Sch;
       readonly jsonCreate: Sch;
@@ -142,8 +152,8 @@ type PlainVariants<Sch extends S.Top, M extends Meta.Meta> = M["version"] extend
   : M["generated"] extends false
     ? VariantSchema.Field<{
         readonly select: Sch;
-        readonly insert: M["hasDefault"] extends true ? S.optionalKey<Sch> : Sch;
-        readonly update: S.optionalKey<Sch>;
+        readonly insert: M["hasDefault"] extends true ? optionalKey<Sch> : Sch;
+        readonly update: optionalKey<Sch>;
         readonly json: Sch;
         readonly jsonCreate: Sch;
         readonly jsonUpdate: Sch;
@@ -168,7 +178,7 @@ type PlainVariants<Sch extends S.Top, M extends Meta.Meta> = M["version"] extend
 export type EffectiveSchema<I extends Field.Input> =
   Field.SchemaFrom<I> extends VariantSchema.Field.Any
     ? Field.SchemaFrom<I>
-    : Field.SchemaFrom<I> extends S.Top
+    : Field.SchemaFrom<I> extends Top
       ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
       : never;
 
@@ -178,10 +188,10 @@ export type EffectiveSchema<I extends Field.Input> =
  * **Example** (Unwrap model fields)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { UnwrappedFields } from "./model.ts"
  *
- * type Fields = UnwrappedFields<{ readonly name: typeof S.String }>
+ * type Fields = UnwrappedFields<{ readonly name: typeof String }>
  * ```
  *
  * @category models
@@ -241,10 +251,10 @@ type ValidateArrayField<I extends Field.Input> = Field.MetaFrom<I>["dimensions"]
  * **Example** (Validate a model field record)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { ValidateFields } from "./model.ts"
  *
- * type Valid = ValidateFields<{ readonly name: typeof S.String }>
+ * type Valid = ValidateFields<{ readonly name: typeof String }>
  * ```
  *
  * @category validation
@@ -324,7 +334,7 @@ export interface Statics<F extends FieldsInput> {
 export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
   Self,
   UnwrappedFields<F>,
-  S.Struct<VariantSchema.ExtractFields<"select", UnwrappedFields<F>, true>>
+  StructSchema<VariantSchema.ExtractFields<"select", UnwrappedFields<F>, true>>
 > & {
   readonly [Va in Variant]: VariantSchema.Extract<Va, VariantSchema.Struct<UnwrappedFields<F>>>;
 } & Statics<F>;
@@ -358,7 +368,7 @@ export interface AnyModel extends CoreAnyModel {
 // ---------------------------------------------------------------------------
 
 const deriveTableName = (identifier: string): string => {
-  const last = O.getOrElse(A.last(Str.split(identifier, "/")), () => identifier);
+  const last = getOrElse(lastArray(split(identifier, "/")), () => identifier);
   return snakeCase(last);
 };
 
@@ -367,21 +377,21 @@ const resolveReferences = (
   select: unknown,
   fieldName: string,
 ): Meta.References | undefined => {
-  const explicit = O.fromUndefinedOr(meta.references);
+  const explicit = fromUndefinedOr(meta.references);
   const derived =
     !meta.primaryKey && Derive.isEntityIdLike(select)
-      ? O.some<Meta.References>({
+      ? some<Meta.References>({
           tableName: select.tableName,
           columnName: "id",
           onDelete: undefined,
           onUpdate: undefined,
         })
-      : O.none<Meta.References>();
+      : none<Meta.References>();
   const resolved = explicit.pipe(
-    O.orElse(() => derived),
-    O.getOrUndefined,
+    orElse(() => derived),
+    getOrUndefined,
   );
-  if (P.isNotUndefined(resolved) && !Meta.isReferences(resolved)) {
+  if (isNotUndefined(resolved) && !Meta.isReferences(resolved)) {
     throw ModelInvariantError.make({
       message: `Field '${fieldName}' has an invalid reference descriptor.`,
       fieldName,
@@ -395,7 +405,7 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
     const select = Derive.selectSchemaOf(schema);
     return V.Field({
       select,
-      insert: S.optionalKey(select),
+      insert: optionalKey(select),
       update: select,
       json: select,
       jsonCreate: select,
@@ -418,8 +428,8 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
   }
   return V.Field({
     select: schema,
-    insert: meta.hasDefault ? S.optionalKey(schema) : schema,
-    update: S.optionalKey(schema),
+    insert: meta.hasDefault ? optionalKey(schema) : schema,
+    update: optionalKey(schema),
     json: schema,
     jsonCreate: schema,
     jsonUpdate: schema,
@@ -440,28 +450,28 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
-  annotations: S.Annotations.Annotations | undefined,
+  annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<F> | undefined,
 ): ModelClass<Self, F>;
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,
-  annotations: S.Annotations.Annotations | undefined,
+  annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<FieldsInput> | undefined,
 ): object {
   const tableName = deriveTableName(identifier);
-  const state = A.reduce(
-    R.toEntries(fields),
+  const state = reduce(
+    Object.entries(fields),
     {
-      columns: R.empty<string, Meta.Meta<PgColumn.Spec>>(),
+      columns: empty<string, Meta.Meta<PgColumn.Spec>>(),
       primaryKeys: 0,
       versionFields: 0,
-      schemaFields: R.empty<string, Field.AnySchema>(),
+      schemaFields: empty<string, Field.AnySchema>(),
     },
     (state, [key, input]) => {
       const field = Field.from(input);
       const select = Derive.selectSchemaOf(field.schema);
-      const classified = O.match(O.fromUndefinedOr(field.meta.column), {
+      const classified = match(fromUndefinedOr(field.meta.column), {
         onNone: () => Derive.classify(field.schema, key),
         onSome: (column) => {
           if (!PgColumn.isSpec(column)) {
@@ -500,7 +510,7 @@ export function makeModelClass(
       }
       if (
         field.meta.generated !== false &&
-        (field.meta.hasDefault || P.isNotUndefined(field.meta.default))
+        (field.meta.hasDefault || isNotUndefined(field.meta.default))
       ) {
         throw ModelInvariantError.make({
           message: `Field '${key}' cannot be both defaulted and generated.`,
@@ -520,16 +530,16 @@ export function makeModelClass(
         });
       }
       const bounded = PgColumn.Spec.guards.varchar(classified.column)
-        ? O.some({ kind: "varchar", length: classified.column.length })
+        ? some({ kind: "varchar", length: classified.column.length })
         : PgColumn.Spec.guards.char(classified.column)
-          ? O.some({ kind: "char", length: classified.column.length })
-          : O.none<{ readonly kind: string; readonly length: number }>();
-      if (O.isSome(bounded)) {
-        const incompatible = A.findFirst(
+          ? some({ kind: "char", length: classified.column.length })
+          : none<{ readonly kind: string; readonly length: number }>();
+      if (isSome(bounded)) {
+        const incompatible = findFirst(
           Derive.maxLengths(field.schema),
           (maxLength) => maxLength > bounded.value.length,
         );
-        if (O.isSome(incompatible)) {
+        if (isSome(incompatible)) {
           throw ModelInvariantError.make({
             message: `${bounded.value.kind}(${bounded.value.length}) on '${key}' is narrower than schema maxLength ${incompatible.value}.`,
             fieldName: key,
@@ -541,10 +551,10 @@ export function makeModelClass(
         references: resolveReferences(field.meta, select, key),
       });
       return {
-        columns: R.set(state.columns, key, resolvedMeta),
+        columns: set(state.columns, key, resolvedMeta),
         primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
         versionFields: state.versionFields + (field.meta.version ? 1 : 0),
-        schemaFields: R.set(state.schemaFields, key, effectiveSchema(field.schema, resolvedMeta)),
+        schemaFields: set(state.schemaFields, key, effectiveSchema(field.schema, resolvedMeta)),
       };
     },
   );
@@ -575,10 +585,10 @@ export function makeModelClass(
  * **Example** (Define a @beep/effect-drizzle model)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { Model } from "./model.ts"
  *
- * class User extends Model<User>("User")({ name: S.String }) {}
+ * class User extends Model<User>("User")({ name: String }) {}
  * console.log(User.sql.tableName) // "user"
  * ```
  *
@@ -589,15 +599,15 @@ export function Model<Self = never>(
   identifier: string,
 ): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
-  annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<F>,
+  annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>,
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>;
 export function Model(identifier: string): unknown {
   return (
     fields: FieldsInput,
-    annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<FieldsInput>,
+    annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<FieldsInput>,
   ): object => {
-    const extras = P.isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
-    const annotations = P.isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
+    const extras = isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+    const annotations = isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
     return makeModelClass(identifier, fields, annotations, extras);
   };
 }

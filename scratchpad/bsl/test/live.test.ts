@@ -4,16 +4,31 @@ import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { drizzle } from "drizzle-orm/pglite";
-import { DateTime, Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import * as SchemaParser from "effect/SchemaParser";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
-import * as SqlError from "effect/unstable/sql/SqlError";
-import * as SqlModel from "effect/unstable/sql/SqlModel";
+import { formatIso } from "effect/DateTime";
+import { flip, fn, gen, option, runPromise, tryPromise } from "effect/Effect";
+import { findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import {
+  getOrThrow,
+  getOrThrowWith,
+  getOrUndefined,
+  isNone,
+  match,
+  none,
+  some,
+} from "effect/Option";
+import { hasProperty, isFunction } from "effect/Predicate";
+import {
+  Array as ArraySchema,
+  Finite,
+  NullOr,
+  Struct as StructSchema,
+  decodeUnknownEffect,
+  is,
+} from "effect/Schema";
+import { makeEffect } from "effect/SchemaParser";
+import { SqlClient } from "effect/unstable/sql/SqlClient";
+import { isSqlError } from "effect/unstable/sql/SqlError";
+import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
 import {
   effectDrizzleSchema,
   ArrayRecord,
@@ -25,27 +40,27 @@ import {
 import { makeLiveTestSupport, type LiveTestSupport } from "./live.test-support.ts";
 import { VersionConflictError } from "../src/index.ts";
 
-const RelationId = S.Struct({ id: S.Finite }).annotate({
+const RelationId = StructSchema({ id: Finite }).annotate({
   identifier: "@beep/effect-drizzle/test/RelationId",
   description: "Minimal related-row shape asserted by the @beep/effect-drizzle live suite.",
 });
-const UserRelationRows = S.Array(
-  S.Struct({
-    id: S.Finite,
+const UserRelationRows = ArraySchema(
+  StructSchema({
+    id: Finite,
     org: RelationId,
-    organizationsThroughMembership: S.Array(RelationId),
+    organizationsThroughMembership: ArraySchema(RelationId),
   }),
 ).annotate({
   identifier: "@beep/effect-drizzle/test/UserRelationRows",
   description: "User relation rows decoded from live RQBv2 queries.",
 });
-const OrganizationRelationRows = S.Array(
-  S.Struct({
-    id: S.Finite,
-    parentOrg: S.NullOr(RelationId),
-    childOrgs: S.Array(RelationId),
-    users: S.Array(RelationId),
-    usersThroughMembership: S.Array(RelationId),
+const OrganizationRelationRows = ArraySchema(
+  StructSchema({
+    id: Finite,
+    parentOrg: NullOr(RelationId),
+    childOrgs: ArraySchema(RelationId),
+    users: ArraySchema(RelationId),
+    usersThroughMembership: ArraySchema(RelationId),
   }),
 ).annotate({
   identifier: "@beep/effect-drizzle/test/OrganizationRelationRows",
@@ -53,7 +68,7 @@ const OrganizationRelationRows = S.Array(
 });
 
 const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
-  if (P.hasProperty(query, "findMany") && P.isFunction(query.findMany)) {
+  if (hasProperty(query, "findMany") && isFunction(query.findMany)) {
     return Reflect.apply(query.findMany, query, [config]);
   }
   return Promise.reject(new Error("RQBv2 findMany is unavailable"));
@@ -64,32 +79,32 @@ const drizzleExports: Record<string, unknown> = {
   ...effectDrizzleSchema.tables,
 };
 
-let live = O.none<LiveTestSupport>();
-let migrationStatements: ReadonlyArray<string> = A.empty();
-let noOpStatements: ReadonlyArray<string> = A.empty();
+let live = none<LiveTestSupport>();
+let migrationStatements: ReadonlyArray<string> = [];
+let noOpStatements: ReadonlyArray<string> = [];
 
 const support = (): LiveTestSupport =>
-  O.getOrThrowWith(live, () => new Error("live PGlite support is not ready"));
+  getOrThrowWith(live, () => new Error("live PGlite support is not ready"));
 
-const isVersionConflict = S.is(VersionConflictError);
+const isVersionConflict = is(VersionConflictError);
 
-const organizationRepository = SqlModel.makeRepository(Organization, {
+const organizationRepository = makeSqlRepository(Organization, {
   tableName: Organization.sql.tableName,
   spanPrefix: "Organization",
   idColumn: "id",
 });
 
-const arrayRecordRepository = SqlModel.makeRepository(ArrayRecord, {
+const arrayRecordRepository = makeSqlRepository(ArrayRecord, {
   tableName: ArrayRecord.sql.tableName,
   spanPrefix: "ArrayRecord",
   idColumn: "id",
 });
 
-const createOrganization = Effect.fn("EffectDrizzleLiveTest.createOrganization")(function* (
+const createOrganization = fn("EffectDrizzleLiveTest.createOrganization")(function* (
   suffix: string,
 ) {
   const repository = yield* organizationRepository;
-  const request = yield* SchemaParser.makeEffect(Organization.insert)({
+  const request = yield* makeEffect(Organization.insert)({
     parentOrgId: null,
     slug: `round-four-${suffix}`,
     name: `Round Four ${suffix}`,
@@ -98,20 +113,20 @@ const createOrganization = Effect.fn("EffectDrizzleLiveTest.createOrganization")
   return yield* repository.insert(request);
 });
 
-const setupLive = Effect.gen(function* () {
+const setupLive = gen(function* () {
   const current = yield* makeLiveTestSupport;
-  live = O.some(current);
-  const result = yield* Effect.tryPromise(() =>
+  live = some(current);
+  const result = yield* tryPromise(() =>
     current.run(
-      Effect.gen(function* () {
+      gen(function* () {
         const client = yield* PgliteClient;
         if (!(client.pglite instanceof PGlite)) {
           throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
         }
         const db = drizzle({ client: client.pglite });
-        const migration = yield* Effect.tryPromise(() => pushSchema(drizzleExports, db));
-        yield* Effect.tryPromise(() => migration.apply());
-        const noOp = yield* Effect.tryPromise(() => pushSchema(drizzleExports, db));
+        const migration = yield* tryPromise(() => pushSchema(drizzleExports, db));
+        yield* tryPromise(() => migration.apply());
+        const noOp = yield* tryPromise(() => pushSchema(drizzleExports, db));
         return {
           migrationStatements: migration.sqlStatements,
           noOpStatements: noOp.sqlStatements,
@@ -123,10 +138,10 @@ const setupLive = Effect.gen(function* () {
   noOpStatements = result.noOpStatements;
 });
 
-beforeAll(() => Effect.runPromise(setupLive), 90_000);
+beforeAll(() => runPromise(setupLive), 90_000);
 
 afterAll(() =>
-  O.match(live, {
+  match(live, {
     onNone: () => Promise.resolve(),
     onSome: (current) => current.close(),
   }),
@@ -134,19 +149,25 @@ afterAll(() =>
 
 describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
   it("applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op", () => {
-    expect(A.isReadonlyArrayNonEmpty(migrationStatements)).toBe(true);
-    expect(A.some(migrationStatements, Str.includes('CREATE TABLE "user"'))).toBe(true);
-    expect(A.some(migrationStatements, Str.includes("record_status"))).toBe(true);
-    expect(A.some(migrationStatements, Str.includes('"labels" text[]'))).toBe(true);
-    expect(A.some(migrationStatements, Str.includes('"matrix" text[][]'))).toBe(true);
+    expect(isReadonlyArrayNonEmpty(migrationStatements)).toBe(true);
+    expect(migrationStatements.some((statement) => statement.includes('CREATE TABLE "user"'))).toBe(
+      true,
+    );
+    expect(migrationStatements.some((statement) => statement.includes("record_status"))).toBe(true);
+    expect(migrationStatements.some((statement) => statement.includes('"labels" text[]'))).toBe(
+      true,
+    );
+    expect(migrationStatements.some((statement) => statement.includes('"matrix" text[][]'))).toBe(
+      true,
+    );
     expect(noOpStatements).toEqual([]);
   });
 
   it("round-trips one- and two-dimensional arrays through the model repository", () =>
     support().runRepository(
-      Effect.gen(function* () {
+      gen(function* () {
         const repository = yield* arrayRecordRepository;
-        const request = yield* SchemaParser.makeEffect(ArrayRecord.insert)({
+        const request = yield* makeEffect(ArrayRecord.insert)({
           labels: ["round-five", "array"],
           matrix: [
             ["a", "b"],
@@ -166,79 +187,77 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
 
   it("executes the installed SqlModel repository and Option codec", () =>
     support().runRepository(
-      Effect.gen(function* () {
+      gen(function* () {
         const organization = yield* createOrganization("native");
         const repository = yield* userRepository;
-        const insert = yield* SchemaParser.makeEffect(User.insert)({
+        const insert = yield* makeEffect(User.insert)({
           orgId: organization.id,
           email: "round-four-native@example.com",
           name: "Native Repository",
           bio: null,
-          nickname: O.none(),
+          nickname: none(),
           settings: { theme: "dark" },
           active: true,
           status: "draft",
         });
         const inserted = yield* repository.insert(insert);
         const found = yield* repository.findById(inserted.id);
-        const update = yield* SchemaParser.makeEffect(User.update)({
+        const update = yield* makeEffect(User.update)({
           id: inserted.id,
           rowVersion: inserted.rowVersion,
           name: "Native Repository Updated",
-          nickname: O.some("round-four"),
+          nickname: some("round-four"),
         });
         const updated = yield* repository.update(update);
         yield* repository.delete(inserted.id);
-        const missing = yield* Effect.option(repository.findById(inserted.id));
+        const missing = yield* option(repository.findById(inserted.id));
         expect(inserted.id).toBeGreaterThan(0);
-        expect(DateTime.formatIso(inserted.createdAt)).toBe(DateTime.formatIso(insert.createdAt));
-        expect(DateTime.formatIso(inserted.updatedAt)).toBe(DateTime.formatIso(insert.updatedAt));
+        expect(formatIso(inserted.createdAt)).toBe(formatIso(insert.createdAt));
+        expect(formatIso(inserted.updatedAt)).toBe(formatIso(insert.updatedAt));
         expect(found.id).toBe(inserted.id);
-        expect(inserted.nickname.pipe(O.isNone)).toBe(true);
+        expect(inserted.nickname.pipe(isNone)).toBe(true);
         expect(updated.id).toBe(inserted.id);
         expect(updated.name).toBe("Native Repository Updated");
-        expect(updated.nickname.pipe(O.getOrUndefined)).toBe("round-four");
-        expect(DateTime.formatIso(updated.updatedAt)).toBe(DateTime.formatIso(update.updatedAt));
-        expect(missing.pipe(O.isNone)).toBe(true);
+        expect(updated.nickname.pipe(getOrUndefined)).toBe("round-four");
+        expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
+        expect(missing.pipe(isNone)).toBe(true);
       }),
     ));
 
   it("increments versions and rejects stale concurrent writers", () =>
     support().runRepository(
-      Effect.gen(function* () {
+      gen(function* () {
         const organization = yield* createOrganization("optimistic");
         const repository = yield* userOptimisticRepository;
-        const insert = yield* SchemaParser.makeEffect(User.insert)({
+        const insert = yield* makeEffect(User.insert)({
           orgId: organization.id,
           email: "round-four-optimistic@example.com",
           name: "Optimistic Snapshot",
           bio: null,
-          nickname: O.none(),
+          nickname: none(),
           settings: { theme: "light" },
           active: true,
           status: "active",
         });
         const snapshot = yield* repository.insert(insert);
-        const firstRequest = yield* SchemaParser.makeEffect(User.update)({
+        const firstRequest = yield* makeEffect(User.update)({
           id: snapshot.id,
           rowVersion: snapshot.rowVersion,
           name: "First Writer",
         });
-        const secondRequest = yield* SchemaParser.makeEffect(User.update)({
+        const secondRequest = yield* makeEffect(User.update)({
           id: snapshot.id,
           rowVersion: snapshot.rowVersion,
           name: "Second Writer",
         });
         const winner = yield* repository.update(firstRequest);
-        const conflict = yield* Effect.flip(repository.update(secondRequest));
+        const conflict = yield* flip(repository.update(secondRequest));
         const current = yield* repository.findById(snapshot.id);
         yield* repository.delete(snapshot.id);
         expect(snapshot.rowVersion).toBe(1);
         expect(winner.rowVersion).toBe(2);
         expect(winner.name).toBe("First Writer");
-        expect(DateTime.formatIso(winner.updatedAt)).toBe(
-          DateTime.formatIso(firstRequest.updatedAt),
-        );
+        expect(formatIso(winner.updatedAt)).toBe(formatIso(firstRequest.updatedAt));
         expect(current.rowVersion).toBe(2);
         expect(current.name).toBe("First Writer");
         if (!isVersionConflict(conflict)) {
@@ -252,22 +271,22 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
 
   it("round-trips valid enums and surfaces invalid values as SqlError", () =>
     support().runRepository(
-      Effect.gen(function* () {
+      gen(function* () {
         const organization = yield* createOrganization("enum");
         const repository = yield* userOptimisticRepository;
-        const insert = yield* SchemaParser.makeEffect(User.insert)({
+        const insert = yield* makeEffect(User.insert)({
           orgId: organization.id,
           email: "round-four-enum@example.com",
           name: "Enum Proof",
           bio: null,
-          nickname: O.none(),
+          nickname: none(),
           settings: { theme: "dark" },
           active: true,
           status: "draft",
         });
         const valid = yield* repository.insert(insert);
-        const sql = yield* SqlClient.SqlClient;
-        const invalid = yield* Effect.flip(
+        const sql = yield* SqlClient;
+        const invalid = yield* flip(
           sql`
             update ${sql(User.sql.tableName)}
             set ${sql("status")} = ${"not-a-record-status"}
@@ -276,55 +295,55 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
         );
         yield* repository.delete(valid.id);
         expect(valid.status).toBe("draft");
-        expect(invalid.pipe(SqlError.isSqlError)).toBe(true);
+        expect(invalid.pipe(isSqlError)).toBe(true);
       }),
     ));
 
   it("queries forward, reverse, self, and junction relations through RQBv2", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const seeded = yield* Effect.tryPromise(() =>
+    runPromise(
+      gen(function* () {
+        const seeded = yield* tryPromise(() =>
           support().runRepository(
-            Effect.gen(function* () {
+            gen(function* () {
               const organizations = yield* organizationRepository;
               const users = yield* userOptimisticRepository;
-              const rootRequest = yield* SchemaParser.makeEffect(Organization.insert)({
+              const rootRequest = yield* makeEffect(Organization.insert)({
                 parentOrgId: null,
                 slug: "round-five-root",
                 name: "Round Five Root",
                 code: "R5-ROOT",
               });
               const root = yield* organizations.insert(rootRequest);
-              const childRequest = yield* SchemaParser.makeEffect(Organization.insert)({
+              const childRequest = yield* makeEffect(Organization.insert)({
                 parentOrgId: root.id,
                 slug: "round-five-child",
                 name: "Round Five Child",
                 code: "R5-CHILD",
               });
               const child = yield* organizations.insert(childRequest);
-              const directRequest = yield* SchemaParser.makeEffect(User.insert)({
+              const directRequest = yield* makeEffect(User.insert)({
                 orgId: root.id,
                 email: "round-five-direct@example.com",
                 name: "Round Five Direct",
                 bio: null,
-                nickname: O.none(),
+                nickname: none(),
                 settings: { theme: "direct" },
                 active: true,
                 status: "active",
               });
               const direct = yield* users.insert(directRequest);
-              const memberRequest = yield* SchemaParser.makeEffect(User.insert)({
+              const memberRequest = yield* makeEffect(User.insert)({
                 orgId: child.id,
                 email: "round-five-member@example.com",
                 name: "Round Five Member",
                 bio: null,
-                nickname: O.none(),
+                nickname: none(),
                 settings: { theme: "member" },
                 active: true,
                 status: "draft",
               });
               const member = yield* users.insert(memberRequest);
-              const sql = yield* SqlClient.SqlClient;
+              const sql = yield* SqlClient;
               yield* sql`
                 insert into membership (organization_id, user_id, role)
                 values (${root.id}, ${member.id}, ${"member"})
@@ -334,9 +353,9 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
           ),
         );
 
-        const queried = yield* Effect.tryPromise(() =>
+        const queried = yield* tryPromise(() =>
           support().run(
-            Effect.gen(function* () {
+            gen(function* () {
               const client = yield* PgliteClient;
               if (!(client.pglite instanceof PGlite)) {
                 throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
@@ -345,7 +364,7 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
                 client: client.pglite,
                 relations: effectDrizzleSchema.relations,
               });
-              const usersUnknown = yield* Effect.tryPromise(() =>
+              const usersUnknown = yield* tryPromise(() =>
                 invokeFindMany(db.query.user, {
                   with: {
                     org: true,
@@ -353,7 +372,7 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
                   },
                 }),
               );
-              const organizationsUnknown = yield* Effect.tryPromise(() =>
+              const organizationsUnknown = yield* tryPromise(() =>
                 invokeFindMany(db.query.organization, {
                   with: {
                     parentOrg: true,
@@ -363,32 +382,28 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
                   },
                 }),
               );
-              const users = yield* S.decodeUnknownEffect(UserRelationRows)(usersUnknown);
+              const users = yield* decodeUnknownEffect(UserRelationRows)(usersUnknown);
               const organizations =
-                yield* S.decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
+                yield* decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
               return { users, organizations };
             }),
           ),
         );
 
-        const direct = O.getOrThrow(
-          A.findFirst(queried.users, (row) => row.id === seeded.direct.id),
+        const direct = getOrThrow(findFirst(queried.users, (row) => row.id === seeded.direct.id));
+        const member = getOrThrow(findFirst(queried.users, (row) => row.id === seeded.member.id));
+        const root = getOrThrow(
+          findFirst(queried.organizations, (row) => row.id === seeded.root.id),
         );
-        const member = O.getOrThrow(
-          A.findFirst(queried.users, (row) => row.id === seeded.member.id),
-        );
-        const root = O.getOrThrow(
-          A.findFirst(queried.organizations, (row) => row.id === seeded.root.id),
-        );
-        const child = O.getOrThrow(
-          A.findFirst(queried.organizations, (row) => row.id === seeded.child.id),
+        const child = getOrThrow(
+          findFirst(queried.organizations, (row) => row.id === seeded.child.id),
         );
         expect(direct.org.id).toBe(seeded.root.id);
         expect(child.parentOrg?.id).toBe(seeded.root.id);
-        expect(A.map(root.childOrgs, (row) => row.id)).toContain(seeded.child.id);
-        expect(A.map(root.users, (row) => row.id)).toContain(seeded.direct.id);
-        expect(A.map(root.usersThroughMembership, (row) => row.id)).toContain(seeded.member.id);
-        expect(A.map(member.organizationsThroughMembership, (row) => row.id)).toContain(
+        expect(root.childOrgs.map((row) => row.id)).toContain(seeded.child.id);
+        expect(root.users.map((row) => row.id)).toContain(seeded.direct.id);
+        expect(root.usersThroughMembership.map((row) => row.id)).toContain(seeded.member.id);
+        expect(member.organizationsThroughMembership.map((row) => row.id)).toContain(
           seeded.root.id,
         );
       }),

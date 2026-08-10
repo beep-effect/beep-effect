@@ -9,13 +9,32 @@ import {
 } from "drizzle-orm";
 import { foreignKey, PgColumn as DrizzlePgColumn } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import {
+  contains,
+  findFirst,
+  flatMap as flatMapArray,
+  forEach,
+  get as getArray,
+  getSomes,
+  head,
+  reduce,
+} from "effect/Array";
+import { equals } from "effect/Equal";
+import {
+  exists,
+  flatMap as flatMapOption,
+  fromUndefinedOr,
+  getOrElse,
+  map,
+  match,
+  none,
+  some,
+} from "effect/Option";
+import type { Option } from "effect/Option";
+import { hasProperty, isUndefined } from "effect/Predicate";
+import { empty, get as getRecord, set } from "effect/Record";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import { capitalize } from "effect/String";
 import {
   type Edge,
   type Junction,
@@ -52,15 +71,15 @@ import { type EnumRegistry, type TableOf, toPgTable } from "./table.ts";
  * @category errors
  * @since 0.0.0
  */
-export class SchemaAssemblyError extends S.TaggedError<SchemaAssemblyError>(
+export class SchemaAssemblyError extends TaggedError<SchemaAssemblyError>(
   "@beep/effect-drizzle/SchemaAssemblyError",
 )(
   "SchemaAssemblyError",
   {
-    message: S.String,
-    sourceTable: S.String,
-    fieldName: S.String,
-    targetTable: S.String,
+    message: StringSchema,
+    sourceTable: StringSchema,
+    fieldName: StringSchema,
+    targetTable: StringSchema,
   },
   {
     description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
@@ -73,10 +92,10 @@ export class SchemaAssemblyError extends S.TaggedError<SchemaAssemblyError>(
  * **Example** (Accept a model registry)
  *
  * ```ts
- * import * as R from "effect/Record"
+ * import {  } from "effect/Record"
  * import type { ModelRecord } from "./schema.ts"
  *
- * const names = (models: ModelRecord) => R.keys(models)
+ * const names = (models: ModelRecord) => Object.keys(models)
  * console.log(names)
  * ```
  *
@@ -261,25 +280,25 @@ const fail = (
   });
 };
 
-const targetFieldKey = (model: AnyModel, columnName: string): O.Option<string> =>
-  P.hasProperty(model.sql.fields, columnName)
-    ? O.some(columnName)
-    : A.findFirst(R.keys(model.sql.columns), (key) =>
-        O.exists(
-          R.get(model.sql.columns, key),
-          (meta) => Eq.equals(meta.columnName, columnName) || Eq.equals(snakeCase(key), columnName),
+const targetFieldKey = (model: AnyModel, columnName: string): Option<string> =>
+  hasProperty(model.sql.fields, columnName)
+    ? some(columnName)
+    : findFirst(Object.keys(model.sql.columns), (key) =>
+        exists(
+          getRecord(model.sql.columns, key),
+          (meta) => meta.columnName === columnName || snakeCase(key) === columnName,
         ),
       );
 
 const collectEnums = (models: ModelRecord): EnumRegistry =>
-  A.reduce(
-    R.toEntries(models),
-    R.empty<string, PgColumn.EnumInstance>(),
+  reduce(
+    Object.entries(models),
+    empty<string, PgColumn.EnumInstance>(),
     (enums, [modelKey, model]) =>
-      A.reduce(R.toEntries(model.sql.columns), enums, (current, [fieldName, meta]) => {
+      reduce(Object.entries(model.sql.columns), enums, (current, [fieldName, meta]) => {
         const column = meta.column;
         if (!PgColumn.Spec.guards.enum(column)) return current;
-        if (Eq.equals(column.name, "")) {
+        if (column.name === "") {
           return fail(
             "Enum name was not resolved during model construction.",
             modelKey,
@@ -287,10 +306,10 @@ const collectEnums = (models: ModelRecord): EnumRegistry =>
             "(enum)",
           );
         }
-        return O.match(R.get(current, column.name), {
-          onNone: () => R.set(current, column.name, PgColumn.Enum.toDrizzleEnum(column)),
+        return match(getRecord(current, column.name), {
+          onNone: () => set(current, column.name, PgColumn.Enum.toDrizzleEnum(column)),
           onSome: (existing) => {
-            if (!Eq.equals(existing.enumValues, column.values)) {
+            if (!equals(existing.enumValues, column.values)) {
               return fail(
                 `PostgreSQL enum '${column.name}' is declared with incompatible values.`,
                 modelKey,
@@ -305,21 +324,20 @@ const collectEnums = (models: ModelRecord): EnumRegistry =>
   );
 
 const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
-  const entries = R.toEntries(models);
-  return A.flatMap(entries, ([sourceKey, model]) =>
-    A.getSomes(
-      A.map(R.keys<string, Field.Input>(model.sql.fields), (sourceField) =>
-        O.map(
-          O.flatMap(R.get(model.sql.columns, sourceField), (meta) =>
-            O.fromUndefinedOr(meta.references),
+  const entries = Object.entries(models);
+  return flatMapArray(entries, ([sourceKey, model]) =>
+    getSomes(
+      Object.keys(model.sql.fields).map((sourceField) =>
+        map(
+          flatMapOption(getRecord(model.sql.columns, sourceField), (meta) =>
+            fromUndefinedOr(meta.references),
           ),
           (reference) => {
-            const [targetKey, targetModel] = O.getOrElse(
-              A.findFirst(
+            const [targetKey, targetModel] = getOrElse(
+              findFirst(
                 entries,
                 ([key, target]) =>
-                  Eq.equals(key, reference.tableName) ||
-                  Eq.equals(target.sql.tableName, reference.tableName),
+                  key === reference.tableName || target.sql.tableName === reference.tableName,
               ),
               () =>
                 fail(
@@ -329,7 +347,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                   reference.tableName,
                 ),
             );
-            const targetField = O.getOrElse(targetFieldKey(targetModel, reference.columnName), () =>
+            const targetField = getOrElse(targetFieldKey(targetModel, reference.columnName), () =>
               fail(
                 `Reference target column '${reference.columnName}' is missing from '${reference.tableName}'.`,
                 sourceKey,
@@ -337,7 +355,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
-            const sourceMeta = O.getOrElse(R.get(model.sql.columns, sourceField), () =>
+            const sourceMeta = getOrElse(getRecord(model.sql.columns, sourceField), () =>
               fail(
                 "Foreign-key source metadata must be resolved before assembly.",
                 sourceKey,
@@ -345,7 +363,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
-            const targetMeta = O.getOrElse(R.get(targetModel.sql.columns, targetField), () =>
+            const targetMeta = getOrElse(getRecord(targetModel.sql.columns, targetField), () =>
               fail(
                 "Foreign-key target metadata must be resolved before assembly.",
                 sourceKey,
@@ -353,7 +371,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
-            const sourceSpec = O.getOrElse(O.fromUndefinedOr(sourceMeta.column), () =>
+            const sourceSpec = getOrElse(fromUndefinedOr(sourceMeta.column), () =>
               fail(
                 "Foreign-key source column must be resolved before assembly.",
                 sourceKey,
@@ -361,7 +379,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
-            const targetSpec = O.getOrElse(O.fromUndefinedOr(targetMeta.column), () =>
+            const targetSpec = getOrElse(fromUndefinedOr(targetMeta.column), () =>
               fail(
                 "Foreign-key target column must be resolved before assembly.",
                 sourceKey,
@@ -370,23 +388,27 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
               ),
             );
             if (
-              !Eq.equals(
-                PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions),
-                PgColumn.storageIdent(targetSpec, targetMeta.dimensions),
-              ) ||
-              !Eq.equals(
+              PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
+                PgColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
+              !equals(
                 PgColumn.carrier(sourceSpec, sourceMeta.dimensions),
                 PgColumn.carrier(targetSpec, targetMeta.dimensions),
               )
             ) {
               fail(
-                `Foreign key '${sourceKey}.${sourceField}' (${PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions)}) cannot reference '${targetKey}.${targetField}' (${PgColumn.storageIdent(targetSpec, targetMeta.dimensions)}).`,
+                `Foreign key '${sourceKey}.${sourceField}' (${PgColumn.storageIdent(
+                  sourceSpec,
+                  sourceMeta.dimensions,
+                )}) cannot reference '${targetKey}.${targetField}' (${PgColumn.storageIdent(
+                  targetSpec,
+                  targetMeta.dimensions,
+                )}).`,
                 sourceKey,
                 sourceField,
                 reference.tableName,
               );
             }
-            const sourceSchema = O.getOrElse(O.fromUndefinedOr(model.sql.fields[sourceField]), () =>
+            const sourceSchema = getOrElse(fromUndefinedOr(model.sql.fields[sourceField]), () =>
               fail(
                 "Foreign-key source field is missing.",
                 sourceKey,
@@ -414,32 +436,32 @@ const collectJunctions = (
   tables: Readonly<Record<string, TableOf<AnyModel>>>,
   edges: ReadonlyArray<Edge>,
 ): ReadonlyArray<Junction> =>
-  A.getSomes(
-    A.map(R.toEntries(tables), ([key, table]) => {
+  getSomes(
+    Object.entries(tables).map(([key, table]) => {
       const primaryKeys = getTableConfig(table).primaryKeys;
-      if (primaryKeys.length !== 1) return O.none();
+      if (primaryKeys.length !== 1) return none();
       const columns = primaryKeys[0]?.columns;
-      if (P.isUndefined(columns) || columns.length !== 2) return O.none();
-      const columnNames = A.map(columns, (column) => column.name);
-      const candidates = A.filter(edges, (edge) => Eq.equals(edge.sourceKey, key));
-      const primaryEdges = A.filter(candidates, (edge) => {
-        if (!P.hasProperty(table, edge.sourceField)) return false;
+      if (isUndefined(columns) || columns.length !== 2) return none();
+      const columnNames = columns.map((column) => column.name);
+      const candidates = edges.filter((edge) => edge.sourceKey === key);
+      const primaryEdges = candidates.filter((edge) => {
+        if (!hasProperty(table, edge.sourceField)) return false;
         const column = table[edge.sourceField];
-        return isDrizzleEntity(column, DrizzlePgColumn) && A.contains(columnNames, column.name);
+        return isDrizzleEntity(column, DrizzlePgColumn) && contains(columnNames, column.name);
       });
       if (
         primaryEdges.length !== 2 ||
-        !A.every(columnNames, (name) =>
-          A.some(primaryEdges, (edge) => {
-            if (!P.hasProperty(table, edge.sourceField)) return false;
+        !columnNames.every((name) =>
+          primaryEdges.some((edge) => {
+            if (!hasProperty(table, edge.sourceField)) return false;
             const column = table[edge.sourceField];
-            return isDrizzleEntity(column, DrizzlePgColumn) ? Eq.equals(column.name, name) : false;
+            return isDrizzleEntity(column, DrizzlePgColumn) ? column.name === name : false;
           }),
         )
       ) {
-        return O.none();
+        return none();
       }
-      const left = O.getOrElse(A.head(primaryEdges), () =>
+      const left = getOrElse(head(primaryEdges), () =>
         fail(
           "Junction is missing its first foreign-key edge.",
           key,
@@ -447,7 +469,7 @@ const collectJunctions = (
           "(junction)",
         ),
       );
-      const right = O.getOrElse(A.get(primaryEdges, 1), () =>
+      const right = getOrElse(getArray(primaryEdges, 1), () =>
         fail(
           "Junction is missing its second foreign-key edge.",
           key,
@@ -455,12 +477,12 @@ const collectJunctions = (
           "(junction)",
         ),
       );
-      return Eq.equals(left.targetKey, right.targetKey) ? O.none() : O.some({ key, left, right });
+      return left.targetKey === right.targetKey ? none() : some({ key, left, right });
     }),
   );
 
 const throughRelationName = (targetKey: string, junctionKey: string): string =>
-  `${plural(targetKey)}Through${Str.capitalize(camelCase(junctionKey))}`;
+  `${plural(targetKey)}Through${capitalize(camelCase(junctionKey))}`;
 
 const addRelation = (
   models: ModelRecord,
@@ -471,7 +493,7 @@ const addRelation = (
   targetTable: string,
   relation: AnyRelation,
 ): Record<string, Record<string, AnyRelation>> => {
-  const model = O.getOrElse(O.fromUndefinedOr(models[tableKey]), () =>
+  const model = getOrElse(fromUndefinedOr(models[tableKey]), () =>
     fail(
       "Relation source model is missing from EffectDrizzle.schema.",
       tableKey,
@@ -479,8 +501,8 @@ const addRelation = (
       targetTable,
     ),
   );
-  const relations = O.getOrElse(R.get(config, tableKey), () => R.empty<string, AnyRelation>());
-  if (P.hasProperty(model.sql.fields, name) || P.hasProperty(relations, name)) {
+  const relations = getOrElse(getRecord(config, tableKey), () => empty<string, AnyRelation>());
+  if (hasProperty(model.sql.fields, name) || hasProperty(relations, name)) {
     return fail(
       `Relation name '${tableKey}.${name}' collides with an existing field or relation.`,
       tableKey,
@@ -488,7 +510,7 @@ const addRelation = (
       targetTable,
     );
   }
-  return R.set(config, tableKey, R.set(relations, name, relation));
+  return set(config, tableKey, set(relations, name, relation));
 };
 
 /**
@@ -497,11 +519,11 @@ const addRelation = (
  * **Example** (Assemble one model)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { Model } from "./model.ts"
  * import { schema } from "./schema.ts"
  *
- * class User extends Model<User>("User")({ name: S.String }) {}
+ * class User extends Model<User>("User")({ name: String }) {}
  * console.log(schema({ user: User }).tables.user !== undefined) // true
  * ```
  *
@@ -517,19 +539,19 @@ export function schema(models: ModelRecord): unknown {
   // Drizzle evaluates extra-config callbacks lazily. Reassigning this registry
   // lets callbacks created for earlier tables see forward and self references
   // after every table has been projected.
-  let runtimeTables = R.empty<string, TableOf<AnyModel>>();
+  let runtimeTables = empty<string, TableOf<AnyModel>>();
 
-  A.forEach(R.toEntries(models), ([key, model]) => {
-    runtimeTables = R.set(
+  forEach(Object.entries(models), ([key, model]) => {
+    runtimeTables = set(
       runtimeTables,
       key,
       toPgTable(
         model,
         (columns) =>
-          A.map(
-            A.filter(edges, (edge) => Eq.equals(edge.sourceKey, key)),
-            (edge) => {
-              const targetTable = O.getOrElse(R.get(runtimeTables, edge.targetKey), () =>
+          edges
+            .filter((edge) => edge.sourceKey === key)
+            .map((edge) => {
+              const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
                 fail(
                   "Resolved foreign-key table or column is unavailable.",
                   key,
@@ -537,7 +559,7 @@ export function schema(models: ModelRecord): unknown {
                   edge.targetKey,
                 ),
               );
-              if (!P.hasProperty(targetTable, edge.targetField)) {
+              if (!hasProperty(targetTable, edge.targetField)) {
                 return fail(
                   "Resolved foreign-key table or column is unavailable.",
                   key,
@@ -558,16 +580,15 @@ export function schema(models: ModelRecord): unknown {
                 columns: [columns[edge.sourceField]],
                 foreignColumns: [targetColumn],
               });
-              const withDelete = O.match(O.fromUndefinedOr(edge.reference.onDelete), {
+              const withDelete = match(fromUndefinedOr(edge.reference.onDelete), {
                 onNone: () => builder,
                 onSome: (action) => builder.onDelete(action),
               });
-              return O.match(O.fromUndefinedOr(edge.reference.onUpdate), {
+              return match(fromUndefinedOr(edge.reference.onUpdate), {
                 onNone: () => withDelete,
                 onSome: (action) => withDelete.onUpdate(action),
               });
-            },
-          ),
+            }),
         enums,
       ),
     );
@@ -578,70 +599,66 @@ export function schema(models: ModelRecord): unknown {
   const relationsConfig = (
     helpers: RelationsBuilder<typeof tables>,
   ): RelationsBuilderConfig<typeof tables> => {
-    const direct = A.reduce(
-      edges,
-      R.empty<string, Record<string, AnyRelation>>(),
-      (config, edge) => {
-        const source = helpers[edge.sourceKey];
-        const target = helpers[edge.targetKey];
-        const one = O.getOrElse(R.get(helpers.one, edge.targetKey), () =>
-          fail(
-            "defineRelations helper is missing a resolved table.",
-            edge.sourceKey,
-            edge.sourceField,
-            edge.targetKey,
-          ),
-        );
-        const many = O.getOrElse(R.get(helpers.many, edge.sourceKey), () =>
-          fail(
-            "defineRelations reverse-many helper is missing a resolved table.",
-            edge.targetKey,
-            edge.sourceField,
-            edge.sourceKey,
-          ),
-        );
-        if (!P.hasProperty(source, edge.sourceField) || !P.hasProperty(target, edge.targetField)) {
-          return fail(
-            "defineRelations helper is missing a resolved table.",
-            edge.sourceKey,
-            edge.sourceField,
-            edge.targetKey,
-          );
-        }
-        const sourceColumn = source[edge.sourceField];
-        const targetColumn = target[edge.targetField];
-        const alias = relationAlias(edge);
-        const withForward = addRelation(
-          models,
-          config,
+    const direct = reduce(edges, empty<string, Record<string, AnyRelation>>(), (config, edge) => {
+      const source = helpers[edge.sourceKey];
+      const target = helpers[edge.targetKey];
+      const one = getOrElse(getRecord(helpers.one, edge.targetKey), () =>
+        fail(
+          "defineRelations helper is missing a resolved table.",
           edge.sourceKey,
-          edge.relationName,
           edge.sourceField,
           edge.targetKey,
-          one({
-            from: sourceColumn,
-            to: targetColumn,
-            optional: edge.optional,
-            alias,
-          }),
-        );
-        return addRelation(
-          models,
-          withForward,
+        ),
+      );
+      const many = getOrElse(getRecord(helpers.many, edge.sourceKey), () =>
+        fail(
+          "defineRelations reverse-many helper is missing a resolved table.",
           edge.targetKey,
-          reverseRelationName(edge, edges),
           edge.sourceField,
           edge.sourceKey,
-          many({ alias }),
+        ),
+      );
+      if (!hasProperty(source, edge.sourceField) || !hasProperty(target, edge.targetField)) {
+        return fail(
+          "defineRelations helper is missing a resolved table.",
+          edge.sourceKey,
+          edge.sourceField,
+          edge.targetKey,
         );
-      },
-    );
+      }
+      const sourceColumn = source[edge.sourceField];
+      const targetColumn = target[edge.targetField];
+      const alias = relationAlias(edge);
+      const withForward = addRelation(
+        models,
+        config,
+        edge.sourceKey,
+        edge.relationName,
+        edge.sourceField,
+        edge.targetKey,
+        one({
+          from: sourceColumn,
+          to: targetColumn,
+          optional: edge.optional,
+          alias,
+        }),
+      );
+      return addRelation(
+        models,
+        withForward,
+        edge.targetKey,
+        reverseRelationName(edge, edges),
+        edge.sourceField,
+        edge.sourceKey,
+        many({ alias }),
+      );
+    });
 
-    return A.reduce(junctions, direct, (config, junction) => {
+    return reduce(junctions, direct, (config, junction) => {
       const junctionTable = helpers[junction.key];
       const leftTable = helpers[junction.left.targetKey];
       const rightTable = helpers[junction.right.targetKey];
-      const manyRight = O.getOrElse(R.get(helpers.many, junction.right.targetKey), () =>
+      const manyRight = getOrElse(getRecord(helpers.many, junction.right.targetKey), () =>
         fail(
           "defineRelations through helper is missing the right target table.",
           junction.left.targetKey,
@@ -649,7 +666,7 @@ export function schema(models: ModelRecord): unknown {
           junction.right.targetKey,
         ),
       );
-      const manyLeft = O.getOrElse(R.get(helpers.many, junction.left.targetKey), () =>
+      const manyLeft = getOrElse(getRecord(helpers.many, junction.left.targetKey), () =>
         fail(
           "defineRelations through helper is missing the left target table.",
           junction.right.targetKey,
@@ -658,10 +675,10 @@ export function schema(models: ModelRecord): unknown {
         ),
       );
       if (
-        !P.hasProperty(leftTable, junction.left.targetField) ||
-        !P.hasProperty(rightTable, junction.right.targetField) ||
-        !P.hasProperty(junctionTable, junction.left.sourceField) ||
-        !P.hasProperty(junctionTable, junction.right.sourceField)
+        !hasProperty(leftTable, junction.left.targetField) ||
+        !hasProperty(rightTable, junction.right.targetField) ||
+        !hasProperty(junctionTable, junction.left.sourceField) ||
+        !hasProperty(junctionTable, junction.right.sourceField)
       ) {
         return fail(
           "defineRelations through helper is missing a resolved junction column.",

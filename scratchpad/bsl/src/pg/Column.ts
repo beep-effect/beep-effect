@@ -38,25 +38,51 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { Match } from "effect";
-import * as A from "effect/Array";
-import * as Data from "effect/Data";
-import * as Eq from "effect/Equal";
+import {
+  orElse as matchOrElse,
+  tag as matchTag,
+  tags as matchTags,
+  type as matchType,
+  value as matchValue,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
+import {
+  append,
+  contains,
+  empty,
+  isArray,
+  isReadonlyArrayNonEmpty,
+  some as someArray,
+} from "effect/Array";
+import { taggedEnum } from "effect/Data";
+import type { TaggedEnum } from "effect/Data";
+import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as AST from "effect/SchemaAST";
+import { fromUndefinedOr, getOrElse, none, some as someOption } from "effect/Option";
+import type { Option } from "effect/Option";
+import {
+  Struct as StructPredicate,
+  hasProperty,
+  isBoolean,
+  isNumber,
+  isString,
+  isUndefined,
+} from "effect/Predicate";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import type { AST, Literal } from "effect/SchemaAST";
 import type * as Meta from "../core/Meta.ts";
 import { assignStatics } from "../internal/statics.ts";
 
 /** Descriptor-construction failure at an author-input seam. */
-export class ColumnInvariantError extends S.TaggedError<ColumnInvariantError>(
+export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/ColumnInvariantError",
 )(
   "ColumnInvariantError",
-  { message: S.String },
-  { description: "A PostgreSQL column descriptor violates its shape invariant." },
+  { message: StringSchema },
+  {
+    description: "A PostgreSQL column descriptor violates its shape invariant.",
+  },
 ) {}
 
 /** PostgreSQL identity-generation mode. */
@@ -196,13 +222,15 @@ type SpecDefinition = {
 };
 
 /** Complete internal PostgreSQL descriptor algebra. */
-export type Spec = Data.TaggedEnum<SpecDefinition>;
+export type Spec = TaggedEnum<SpecDefinition>;
 
 export type Text = Extract<Spec, { readonly _tag: "text" }>;
 export type Varchar<L extends number = number> = Omit<
   Extract<Spec, { readonly _tag: "varchar" }>,
   "length"
-> & { readonly length: L };
+> & {
+  readonly length: L;
+};
 export type Enum<Name extends string = string, Value extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "enum" }>,
   "ident" | "name" | "values"
@@ -231,7 +259,9 @@ export type DateColumn<Mode extends "string" | "date" = "string" | "date"> = Omi
 export type Char<Length extends number = number> = Omit<
   Extract<Spec, { readonly _tag: "char" }>,
   "length"
-> & { readonly length: Length };
+> & {
+  readonly length: Length;
+};
 export type Json = Extract<Spec, { readonly _tag: "json" }>;
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
 export type Bigserial<Mode extends "number" | "bigint" = "number" | "bigint"> = Omit<
@@ -268,12 +298,12 @@ export type Timestamp<
 };
 export type Bytea = Extract<Spec, { readonly _tag: "bytea" }>;
 
-const Constructors = Data.taggedEnum<Spec>();
+const Constructors = taggedEnum<Spec>();
 
 const isPositiveInteger = (value: unknown): value is number =>
-  P.isNumber(value) && Number.isInteger(value) && value > 0;
+  isNumber(value) && Number.isInteger(value) && value > 0;
 const isNatural = (value: unknown): value is number =>
-  P.isNumber(value) && Number.isInteger(value) && value >= 0;
+  isNumber(value) && Number.isInteger(value) && value >= 0;
 const invariant = (message: string): never => {
   throw ColumnInvariantError.make({ message });
 };
@@ -313,7 +343,7 @@ function makeEnum(props: {
   readonly name: string;
   readonly values: readonly [string, ...string[]];
 }): Enum {
-  if (!Eq.equals(props.ident, `enum<${props.name}>`)) {
+  if (props.ident !== `enum<${props.name}>`) {
     return invariant("Enum identity must agree with its name.");
   }
   return Constructors.enum({ kind: "enum", ...props });
@@ -323,7 +353,7 @@ export const Enum = assignStatics(
   { make: makeEnum },
   {
     toDrizzleBuilder: (spec: Enum, name: string, shared?: EnumInstance): DrizzleBuilder =>
-      O.getOrElse(O.fromUndefinedOr(shared), () => pgEnum(spec.name, spec.values))(name),
+      getOrElse(fromUndefinedOr(shared), () => pgEnum(spec.name, spec.values))(name),
     toDrizzleEnum: (spec: Enum): EnumInstance => pgEnum(spec.name, spec.values),
   },
 );
@@ -336,7 +366,7 @@ function makeCustom(props: {
   readonly ident: `custom<${string}>`;
   readonly sqlType: string;
 }): Custom {
-  if (!Eq.equals(props.ident, `custom<${props.sqlType}>`)) {
+  if (props.ident !== `custom<${props.sqlType}>`) {
     return invariant("Custom-column identity must agree with its SQL type.");
   }
   return Constructors.custom({ kind: "custom", ...props });
@@ -363,8 +393,8 @@ function makeNumeric(props: {
   readonly scale: number | undefined;
 }): Numeric {
   if (
-    (P.isNumber(props.precision) && !isPositiveInteger(props.precision)) ||
-    (P.isNumber(props.scale) && !isNatural(props.scale))
+    (isNumber(props.precision) && !isPositiveInteger(props.precision)) ||
+    (isNumber(props.scale) && !isNatural(props.scale))
   ) {
     return invariant("Numeric precision must be positive and scale natural.");
   }
@@ -374,17 +404,18 @@ export const Numeric = assignStatics(
   { make: makeNumeric },
   {
     toDrizzleBuilder: ({ precision, scale }: Numeric, name: string): PgNumericBuilder =>
-      Match.value({ precision, scale }).pipe(
-        Match.when(P.Struct({ precision: P.isNumber, scale: P.isNumber }), ({ precision, scale }) =>
-          numeric(name, { precision, scale, mode: "string" }),
+      matchValue({ precision, scale }).pipe(
+        matchWhen(
+          StructPredicate({ precision: isNumber, scale: isNumber }),
+          ({ precision, scale }) => numeric(name, { precision, scale, mode: "string" }),
         ),
-        Match.when(P.Struct({ precision: P.isNumber }), ({ precision }) =>
+        matchWhen(StructPredicate({ precision: isNumber }), ({ precision }) =>
           numeric(name, { precision, mode: "string" }),
         ),
-        Match.when(P.Struct({ scale: P.isNumber }), ({ scale }) =>
+        matchWhen(StructPredicate({ scale: isNumber }), ({ scale }) =>
           numeric(name, { scale, mode: "string" }),
         ),
-        Match.orElse(() => numeric(name, { mode: "string" })),
+        matchOrElse(() => numeric(name, { mode: "string" })),
       ),
   },
 );
@@ -450,7 +481,11 @@ function makeBigserial<const Mode extends "number" | "bigint">(props: {
   readonly mode: Mode;
 }): Bigserial<Mode>;
 function makeBigserial(props: { readonly mode: "number" | "bigint" }): Bigserial {
-  return Constructors.bigserial({ kind: "bigserial", ident: "bigint", ...props });
+  return Constructors.bigserial({
+    kind: "bigserial",
+    ident: "bigint",
+    ...props,
+  });
 }
 export const Bigserial = assignStatics(
   { make: makeBigserial },
@@ -562,7 +597,7 @@ function makeTimestamp(props: {
   readonly withTimezone: boolean;
 }): Timestamp {
   const expected = props.withTimezone ? "timestamptz" : "timestamp";
-  if (!Eq.equals(props.ident, expected)) {
+  if (props.ident !== expected) {
     return invariant("Timestamp identity must agree with withTimezone.");
   }
   return Constructors.timestamp({ kind: "timestamp", ...props });
@@ -608,103 +643,94 @@ const knownTags: ReadonlyArray<Spec["_tag"]> = [
 /** Cheap full-enough shape guard for hand-built author descriptors. */
 export const isSpec = (value: unknown): value is Spec => {
   if (
-    !P.hasProperty(value, "_tag") ||
-    !P.isString(value._tag) ||
-    !A.contains(knownTags, value._tag) ||
-    !P.hasProperty(value, "kind") ||
-    !Eq.equals(value.kind, value._tag) ||
-    !P.hasProperty(value, "ident") ||
-    !P.isString(value.ident)
+    !hasProperty(value, "_tag") ||
+    !isString(value._tag) ||
+    !contains(knownTags, value._tag) ||
+    !hasProperty(value, "kind") ||
+    value.kind !== value._tag ||
+    !hasProperty(value, "ident") ||
+    !isString(value.ident)
   ) {
     return false;
   }
-  return Match.value(value._tag).pipe(
-    Match.when("varchar", () => P.hasProperty(value, "length") && isPositiveInteger(value.length)),
-    Match.when("char", () => P.hasProperty(value, "length") && isPositiveInteger(value.length)),
-    Match.when(
+  return matchValue(value._tag).pipe(
+    matchWhen("varchar", () => hasProperty(value, "length") && isPositiveInteger(value.length)),
+    matchWhen("char", () => hasProperty(value, "length") && isPositiveInteger(value.length)),
+    matchWhen(
       "enum",
       () =>
-        P.hasProperty(value, "name") &&
-        P.isString(value.name) &&
-        P.hasProperty(value, "values") &&
-        A.isArray(value.values) &&
-        A.isReadonlyArrayNonEmpty(value.values) &&
-        A.every(value.values, P.isString) &&
-        Eq.equals(value.ident, `enum<${value.name}>`),
+        hasProperty(value, "name") &&
+        isString(value.name) &&
+        hasProperty(value, "values") &&
+        isArray(value.values) &&
+        isReadonlyArrayNonEmpty(value.values) &&
+        value.values.every(isString) &&
+        value.ident === `enum<${value.name}>`,
     ),
-    Match.when(
+    matchWhen(
       "custom",
       () =>
-        P.hasProperty(value, "sqlType") &&
-        P.isString(value.sqlType) &&
-        Eq.equals(value.ident, `custom<${value.sqlType}>`),
+        hasProperty(value, "sqlType") &&
+        isString(value.sqlType) &&
+        value.ident === `custom<${value.sqlType}>`,
     ),
-    Match.when(
+    matchWhen(
       "numeric",
       () =>
-        P.hasProperty(value, "precision") &&
-        (P.isUndefined(value.precision) || isPositiveInteger(value.precision)) &&
-        P.hasProperty(value, "scale") &&
-        (P.isUndefined(value.scale) || isNatural(value.scale)),
+        hasProperty(value, "precision") &&
+        (isUndefined(value.precision) || isPositiveInteger(value.precision)) &&
+        hasProperty(value, "scale") &&
+        (isUndefined(value.scale) || isNatural(value.scale)),
     ),
-    Match.when(
+    matchWhen(
       "date",
-      () =>
-        P.hasProperty(value, "mode") &&
-        (Eq.equals(value.mode, "string") || Eq.equals(value.mode, "date")),
+      () => hasProperty(value, "mode") && (value.mode === "string" || value.mode === "date"),
     ),
-    Match.when(
+    matchWhen(
       "bigserial",
-      () =>
-        P.hasProperty(value, "mode") &&
-        (Eq.equals(value.mode, "number") || Eq.equals(value.mode, "bigint")),
+      () => hasProperty(value, "mode") && (value.mode === "number" || value.mode === "bigint"),
     ),
-    Match.when(
+    matchWhen(
       "bigint",
-      () =>
-        P.hasProperty(value, "mode") &&
-        (Eq.equals(value.mode, "number") || Eq.equals(value.mode, "bigint")),
+      () => hasProperty(value, "mode") && (value.mode === "number" || value.mode === "bigint"),
     ),
-    Match.when(
+    matchWhen(
       "timestamp",
       () =>
-        P.hasProperty(value, "mode") &&
-        (Eq.equals(value.mode, "date") || Eq.equals(value.mode, "string")) &&
-        P.hasProperty(value, "withTimezone") &&
-        P.isBoolean(value.withTimezone) &&
-        Eq.equals(value.ident, value.withTimezone ? "timestamptz" : "timestamp"),
+        hasProperty(value, "mode") &&
+        (value.mode === "date" || value.mode === "string") &&
+        hasProperty(value, "withTimezone") &&
+        isBoolean(value.withTimezone) &&
+        value.ident === (value.withTimezone ? "timestamptz" : "timestamp"),
     ),
-    Match.orElse(() => true),
+    matchOrElse(() => true),
   );
 };
 
-const fromLiteralAST = Match.type<AST.Literal>().pipe(
-  Match.withReturnType<O.Option<Spec>>(),
-  Match.when(P.Struct({ literal: P.isString }), () => O.some(Text.make({}))),
-  Match.when(P.Struct({ literal: P.isNumber }), () => O.some(DoublePrecision.make({}))),
-  Match.when(P.Struct({ literal: P.isBoolean }), () => O.some(Bool.make({}))),
-  Match.orElse(() => O.none()),
+const fromLiteralAST = matchType<Literal>().pipe(
+  withReturnType<Option<Spec>>(),
+  matchWhen(StructPredicate({ literal: isString }), () => someOption(Text.make({}))),
+  matchWhen(StructPredicate({ literal: isNumber }), () => someOption(DoublePrecision.make({}))),
+  matchWhen(StructPredicate({ literal: isBoolean }), () => someOption(Bool.make({}))),
+  matchOrElse(() => none()),
 );
 
-const fromSchemaAST = (
-  node: AST.AST,
-  visited: ReadonlyArray<AST.AST> = A.empty(),
-): O.Option<Spec> => {
-  if (A.some(visited, Eq.equals(node))) return O.none();
-  const nextVisited = A.append(visited, node);
-  return Match.type<AST.AST>().pipe(
-    Match.withReturnType<O.Option<Spec>>(),
-    Match.tag("String", "TemplateLiteral", () => O.some(Text.make({}))),
-    Match.tag("Objects", "Arrays", () => O.some(Jsonb.make({}))),
-    Match.tags({
-      Boolean: () => O.some(Bool.make({})),
-      BigInt: () => O.some(Bigint.make({ mode: "bigint" })),
-      Number: () => O.some(DoublePrecision.make({})),
+const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option<Spec> => {
+  if (someArray(visited, equals(node))) return none();
+  const nextVisited = append(visited, node);
+  return matchType<AST>().pipe(
+    withReturnType<Option<Spec>>(),
+    matchTag("String", "TemplateLiteral", () => someOption(Text.make({}))),
+    matchTag("Objects", "Arrays", () => someOption(Jsonb.make({}))),
+    matchTags({
+      Boolean: () => someOption(Bool.make({})),
+      BigInt: () => someOption(Bigint.make({ mode: "bigint" })),
+      Number: () => someOption(DoublePrecision.make({})),
       Literal: fromLiteralAST,
-      Enum: () => O.some(Text.make({})),
+      Enum: () => someOption(Text.make({})),
       Suspend: ({ thunk }) => fromSchemaAST(thunk(), nextVisited),
     }),
-    Match.orElse(() => O.none()),
+    matchOrElse(() => none()),
   )(node);
 };
 
@@ -781,7 +807,7 @@ export function resolveName<C extends Spec, const Key extends string>(
   key: Key,
 ): ResolveName<C, Key>;
 export function resolveName(spec: Spec, key: string): Spec {
-  return Spec.guards.enum(spec) && Eq.equals(spec.name, "")
+  return Spec.guards.enum(spec) && spec.name === ""
     ? Enum.make({ name: key, ident: `enum<${key}>`, values: spec.values })
     : spec;
 }

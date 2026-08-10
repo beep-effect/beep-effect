@@ -2,15 +2,40 @@
 import { describe, expect, it } from "bun:test";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig, type PgColumn } from "drizzle-orm/pg-core";
-import { Effect, Order, pipe } from "effect";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import * as AST from "effect/SchemaAST";
-import * as SchemaParser from "effect/SchemaParser";
+import { catchTag, fail as failEffect, runSync, succeed } from "effect/Effect";
+import { pipe } from "effect/Function";
+import { String as StringOrder } from "effect/Order";
+import { findFirst, head, sort } from "effect/Array";
+import { equals } from "effect/Equal";
+import {
+  flatMap,
+  fromUndefinedOr,
+  getOrThrow,
+  getOrThrowWith,
+  getOrUndefined,
+  isNone,
+  none,
+} from "effect/Option";
+import { hasProperty } from "effect/Predicate";
+import {
+  Array as ArraySchema,
+  Boolean as BooleanSchema,
+  Date as DateSchema,
+  Finite,
+  FiniteFromString,
+  NullOr,
+  OptionFromNullOr,
+  String as StringSchema,
+  Struct as StructSchema,
+  Union,
+  Unknown as UnknownSchema,
+  decodeUnknownSync,
+  is,
+  isMaxLength,
+  isSchema,
+} from "effect/Schema";
+import { toEncoded } from "effect/SchemaAST";
+import { makeEffect } from "effect/SchemaParser";
 import { Model as EffectModel } from "effect/unstable/schema";
 import * as Derive from "../src/pg/derive.ts";
 import * as Field from "../src/core/Field.ts";
@@ -71,30 +96,30 @@ import {
 const userConfig = getTableConfig(userTable);
 
 const column = (name: string): PgColumn =>
-  O.getOrThrowWith(
-    A.findFirst(userConfig.columns, (candidate) => candidate.name === name),
+  getOrThrowWith(
+    findFirst(userConfig.columns, (candidate) => candidate.name === name),
     () => new Error(`column '${name}' missing`),
   );
 
 const columnFrom = (columns: ReadonlyArray<PgColumn>, name: string): PgColumn =>
-  O.getOrThrowWith(
-    A.findFirst(columns, (candidate) => candidate.name === name),
+  getOrThrowWith(
+    findFirst(columns, (candidate) => candidate.name === name),
     () => new Error(`column '${name}' missing`),
   );
 
 const first = <A>(values: ReadonlyArray<A>, label: string): A =>
-  O.getOrThrowWith(A.head(values), () => new Error(`${label} missing`));
+  getOrThrowWith(head(values), () => new Error(`${label} missing`));
 
 describe("toPgTable", () => {
   it("projects names, nullability, identities, defaults, and generation", () => {
     expect(getTableName(userTable)).toBe("user");
     expect(
-      A.sort(
-        A.map(userConfig.columns, (candidate) => candidate.name),
-        Order.String,
+      sort(
+        userConfig.columns.map((candidate) => candidate.name),
+        StringOrder,
       ),
     ).toEqual(
-      A.sort(
+      sort(
         [
           "active",
           "bio",
@@ -110,13 +135,13 @@ describe("toPgTable", () => {
           "status",
           "updated_at",
         ],
-        Order.String,
+        StringOrder,
       ),
     );
     expect(column("name").notNull).toBe(true);
     expect(column("bio").notNull).toBe(false);
     expect(column("id").primary).toBe(true);
-    expect(O.fromUndefinedOr(column("id").generatedIdentity?.type).pipe(O.getOrUndefined)).toBe(
+    expect(fromUndefinedOr(column("id").generatedIdentity?.type).pipe(getOrUndefined)).toBe(
       "always",
     );
     expect(column("created_at").hasDefault).toBe(false);
@@ -138,16 +163,16 @@ describe("toPgTable", () => {
     expect(userIndex.config.name).toBe("user_email_idx");
     expect(userIndex.config.method).toBe("btree");
     expect(userIndex.config.where).toBeDefined();
-    expect(A.map(userConfig.uniqueConstraints, (constraint) => constraint.name)).toContain(
+    expect(userConfig.uniqueConstraints.map((constraint) => constraint.name)).toContain(
       "user_org_email_unique",
     );
-    expect(A.map(userConfig.checks, (check) => check.name)).toContain("user_email_check");
+    expect(userConfig.checks.map((check) => check.name)).toContain("user_email_check");
 
     const membershipConfig = getTableConfig(effectDrizzleSchema.tables.membership);
     expect(membershipConfig.primaryKeys).toHaveLength(1);
     const membershipPrimaryKey = first(membershipConfig.primaryKeys, "membership primary key");
     expect(membershipPrimaryKey.name).toBe("membership_pk");
-    expect(A.map(membershipPrimaryKey.columns, (candidate) => candidate.name)).toEqual([
+    expect(membershipPrimaryKey.columns.map((candidate) => candidate.name)).toEqual([
       "organization_id",
       "user_id",
     ]);
@@ -156,41 +181,41 @@ describe("toPgTable", () => {
 
 describe("variant truth table", () => {
   it("keeps identity row locators in update and omits generated expressions", () => {
-    expect(R.keys(User.insert.fields)).not.toContain("id");
-    expect(R.keys(User.update.fields)).toContain("id");
-    expect(R.keys(User.insert.fields)).not.toContain("searchName");
-    expect(R.keys(User.update.fields)).not.toContain("searchName");
-    const insert = Effect.runSync(
-      SchemaParser.makeEffect(User.insert)({
+    expect(Object.keys(User.insert.fields)).not.toContain("id");
+    expect(Object.keys(User.update.fields)).toContain("id");
+    expect(Object.keys(User.insert.fields)).not.toContain("searchName");
+    expect(Object.keys(User.update.fields)).not.toContain("searchName");
+    const insert = runSync(
+      makeEffect(User.insert)({
         orgId: OrganizationId.make(1),
         email: "a@example.com",
         name: "A",
         bio: null,
-        nickname: O.none(),
+        nickname: none(),
         settings: { theme: "dark" },
         active: true,
         rowVersion: 1,
       }),
     );
-    const update = Effect.runSync(
-      SchemaParser.makeEffect(User.update)({
+    const update = runSync(
+      makeEffect(User.update)({
         id: UserId.make(1),
         rowVersion: 1,
       }),
     );
     const { rowVersion: _rowVersion, ...withoutVersion } = update;
-    expect(S.is(User.insert)(insert)).toBe(true);
-    expect(S.is(User.update)(update)).toBe(true);
-    expect(S.is(User.update)(withoutVersion)).toBe(false);
-    expect(S.is(User.update)({})).toBe(false);
-    expect(R.keys(User.jsonCreate.fields)).not.toContain("searchName");
+    expect(is(User.insert)(insert)).toBe(true);
+    expect(is(User.update)(update)).toBe(true);
+    expect(is(User.update)(withoutVersion)).toBe(false);
+    expect(is(User.update)({})).toBe(false);
+    expect(Object.keys(User.jsonCreate.fields)).not.toContain("searchName");
   });
 
   it("keeps identity-by-default present in update and optional in insert", () => {
-    expect(R.keys(Organization.insert.fields)).toContain("id");
-    expect(R.keys(Organization.update.fields)).toContain("id");
+    expect(Object.keys(Organization.insert.fields)).toContain("id");
+    expect(Object.keys(Organization.update.fields)).toContain("id");
     expect(
-      S.is(Organization.insert)({
+      is(Organization.insert)({
         parentOrgId: null,
         slug: "root",
         name: "Root",
@@ -199,22 +224,22 @@ describe("variant truth table", () => {
     ).toBe(true);
     const organizationConfig = getTableConfig(effectDrizzleSchema.tables.organization);
     expect(
-      O.flatMap(
-        A.findFirst(organizationConfig.columns, (candidate) => candidate.name === "id"),
-        (candidate) => O.fromUndefinedOr(candidate.generatedIdentity?.type),
-      ).pipe(O.getOrUndefined),
+      flatMap(
+        findFirst(organizationConfig.columns, (candidate) => candidate.name === "id"),
+        (candidate) => fromUndefinedOr(candidate.generatedIdentity?.type),
+      ).pipe(getOrUndefined),
     ).toBe("byDefault");
   });
 
   it("preserves author-supplied VariantSchema.Field membership", () => {
-    expect(R.keys(ExplicitVariantModel.insert.fields)).toContain("value");
-    expect(R.keys(ExplicitVariantModel.update.fields)).toContain("value");
+    expect(Object.keys(ExplicitVariantModel.insert.fields)).toContain("value");
+    expect(Object.keys(ExplicitVariantModel.update.fields)).toContain("value");
   });
 });
 
 describe("kit write strategies", () => {
   it("injects defaults while preserving Effect variant membership", () => {
-    expect(R.keys(AuditedRecord.fields)).toEqual(
+    expect(Object.keys(AuditedRecord.fields)).toEqual(
       expect.arrayContaining([
         "createdAt",
         "updatedAt",
@@ -225,18 +250,18 @@ describe("kit write strategies", () => {
         "search",
       ]),
     );
-    expect(R.keys(AuditedRecord.update.fields)).not.toContain("createdAt");
-    expect(R.keys(AuditedRecord.insert.fields)).toContain("updatedAt");
-    expect(R.keys(AuditedRecord.update.fields)).toContain("updatedAt");
-    expect(R.keys(AuditedRecord.update.fields)).toContain("rowVersion");
-    expect(R.keys(AuditedRecord.json.fields)).toContain("rowVersion");
+    expect(Object.keys(AuditedRecord.update.fields)).not.toContain("createdAt");
+    expect(Object.keys(AuditedRecord.insert.fields)).toContain("updatedAt");
+    expect(Object.keys(AuditedRecord.update.fields)).toContain("updatedAt");
+    expect(Object.keys(AuditedRecord.update.fields)).toContain("rowVersion");
+    expect(Object.keys(AuditedRecord.json.fields)).toContain("rowVersion");
     expect(AuditedRecord.sql.columns.createdAt.column.kind).toBe("timestamp");
     expect(AuditedRecord.sql.columns.updatedAt.column.kind).toBe("timestamp");
   });
 
   it("constructs insert payloads through Overrideable constructor defaults", () => {
-    const constructed = Effect.runSync(
-      SchemaParser.makeEffect(AuditedRecord.insert)({
+    const constructed = runSync(
+      makeEffect(AuditedRecord.insert)({
         name: "Round Three",
         status: "draft",
         source: "api",
@@ -245,7 +270,7 @@ describe("kit write strategies", () => {
     );
     expect(constructed.createdAt).toBeDefined();
     expect(constructed.updatedAt).toBeDefined();
-    expect(P.hasProperty(constructed, "rowVersion")).toBe(false);
+    expect(hasProperty(constructed, "rowVersion")).toBe(false);
   });
 
   it("rejects kit default collisions at compile time and runtime", () => {
@@ -254,7 +279,7 @@ describe("kit write strategies", () => {
 
   it("emits default extras before model extras", () => {
     const config = getTableConfig(auditSchema.tables.audited_record);
-    expect(A.map(config.checks, (check) => check.name)).toEqual([
+    expect(config.checks.map((check) => check.name)).toEqual([
       "kit_row_version_positive",
       "audited_record_name_non_empty",
     ]);
@@ -269,10 +294,10 @@ describe("enum and custom columns", () => {
     const eventStatus = columnFrom(eventConfig.columns, "status");
     expect(recordStatus.getSQLType()).toBe("record_status");
     expect(columnFrom(recordConfig.columns, "source").getSQLType()).toBe("source");
-    expect(P.hasProperty(recordStatus, "enum") ? recordStatus.enum : undefined).toBe(
+    expect(hasProperty(recordStatus, "enum") ? recordStatus.enum : undefined).toBe(
       auditSchema.enums.record_status,
     );
-    expect(P.hasProperty(eventStatus, "enum") ? eventStatus.enum : undefined).toBe(
+    expect(hasProperty(eventStatus, "enum") ? eventStatus.enum : undefined).toBe(
       auditSchema.enums.record_status,
     );
   });
@@ -311,7 +336,7 @@ describe("mechanical column kinds", () => {
 
   it("reuses varchar's char length derivation and refusal policy", () => {
     expect(_charWithoutMaxLength).toThrow("isMaxLength");
-    expect(Field.from(S.String.check(S.isMaxLength(3)).pipe(pg.char())).meta.column).toEqual({
+    expect(Field.from(StringSchema.check(isMaxLength(3)).pipe(pg.char())).meta.column).toEqual({
       _tag: "char",
       kind: "char",
       ident: "char",
@@ -338,7 +363,7 @@ describe("PostgreSQL arrays", () => {
   });
 
   it("keeps bare array and object schemas on the existing jsonb derivation", () => {
-    expect(Derive.classify(S.Array(S.String), "bareArray")).toEqual({
+    expect(Derive.classify(ArraySchema(StringSchema), "bareArray")).toEqual({
       column: { _tag: "jsonb", kind: "jsonb", ident: "jsonb" },
       nullable: false,
     });
@@ -389,26 +414,26 @@ describe("schema assembly", () => {
     const userRelations = effectDrizzleSchema.relations.user?.relations;
     const organizationRelations = effectDrizzleSchema.relations.organization?.relations;
     expect(
-      P.hasProperty(userRelations, "org") && P.hasProperty(userRelations.org, "optional")
+      hasProperty(userRelations, "org") && hasProperty(userRelations.org, "optional")
         ? userRelations.org.optional
         : undefined,
     ).toBe(false);
     expect(
-      P.hasProperty(organizationRelations, "parentOrg") &&
-        P.hasProperty(organizationRelations.parentOrg, "optional")
+      hasProperty(organizationRelations, "parentOrg") &&
+        hasProperty(organizationRelations.parentOrg, "optional")
         ? organizationRelations.parentOrg.optional
         : undefined,
     ).toBe(true);
-    expect(P.hasProperty(organizationRelations, "users")).toBe(true);
-    expect(P.hasProperty(organizationRelations, "childOrgs")).toBe(true);
-    expect(P.hasProperty(organizationRelations, "usersThroughMembership")).toBe(true);
-    expect(P.hasProperty(userRelations, "organizationsThroughMembership")).toBe(true);
+    expect(hasProperty(organizationRelations, "users")).toBe(true);
+    expect(hasProperty(organizationRelations, "childOrgs")).toBe(true);
+    expect(hasProperty(organizationRelations, "usersThroughMembership")).toBe(true);
+    expect(hasProperty(userRelations, "organizationsThroughMembership")).toBe(true);
   });
 
   it("disambiguates multiple reverse edges by the source relation field", () => {
     const relations = dualOrgLinkSchema.relations.organization?.relations;
-    expect(P.hasProperty(relations, "dualOrgLinksByPrimaryOrg")).toBe(true);
-    expect(P.hasProperty(relations, "dualOrgLinksBySecondaryOrg")).toBe(true);
+    expect(hasProperty(relations, "dualOrgLinksByPrimaryOrg")).toBe(true);
+    expect(hasProperty(relations, "dualOrgLinksBySecondaryOrg")).toBe(true);
   });
 
   it("throws tagged errors for missing and incompatible targets", () => {
@@ -421,10 +446,10 @@ describe("schema assembly", () => {
 
 describe("schema corroboration and invariants", () => {
   it("colocates AST derivation and Drizzle compilation with column specs", () => {
-    expect(
-      PgColumnSchema.Spec.fromSchemaAST(AST.toEncoded(S.String.ast)).pipe(O.getOrThrow),
-    ).toEqual(PgColumnSchema.Text.make({}));
-    expect(PgColumnSchema.Spec.fromSchemaAST(AST.toEncoded(S.Date.ast)).pipe(O.isNone)).toBe(true);
+    expect(PgColumnSchema.Spec.fromSchemaAST(toEncoded(StringSchema.ast)).pipe(getOrThrow)).toEqual(
+      PgColumnSchema.Text.make({}),
+    );
+    expect(PgColumnSchema.Spec.fromSchemaAST(toEncoded(DateSchema.ast)).pipe(isNone)).toBe(true);
     expect(
       typeof PgColumnSchema.Text.toDrizzleBuilder(PgColumnSchema.Text.make({}), "body").notNull,
     ).toBe("function");
@@ -446,31 +471,31 @@ describe("schema corroboration and invariants", () => {
     expect(_incompatibleVarchar).toThrow("maxLength 500");
     expect(_compatibleVarchar).not.toThrow();
     expect(_unboundedVarchar).not.toThrow();
-    expect(S.String.pipe(Derive.maxLengths)).toEqual([]);
+    expect(StringSchema.pipe(Derive.maxLengths)).toEqual([]);
   });
 
   it("classifies bare carriers with SQL identities", () => {
-    expect(Derive.classify(S.String, "s")).toEqual({
+    expect(Derive.classify(StringSchema, "s")).toEqual({
       column: { _tag: "text", kind: "text", ident: "text" },
       nullable: false,
     });
-    expect(Derive.classify(S.Boolean, "b")).toEqual({
+    expect(Derive.classify(BooleanSchema, "b")).toEqual({
       column: { _tag: "boolean", kind: "boolean", ident: "boolean" },
       nullable: false,
     });
-    expect(Derive.classify(S.NullOr(S.String), "n")).toEqual({
+    expect(Derive.classify(NullOr(StringSchema), "n")).toEqual({
       column: { _tag: "text", kind: "text", ident: "text" },
       nullable: true,
     });
-    expect(Derive.classify(S.Struct({ a: S.String }), "j")).toEqual({
+    expect(Derive.classify(StructSchema({ a: StringSchema }), "j")).toEqual({
       column: { _tag: "jsonb", kind: "jsonb", ident: "jsonb" },
       nullable: false,
     });
   });
 
   it("refuses ambiguous encodings and mirrors model invariants at runtime", () => {
-    expect(() => Derive.classify(S.Unknown, "u")).toThrow();
-    expect(() => Derive.classify(S.Union([S.String, S.Finite]), "mixed")).toThrow();
+    expect(() => Derive.classify(UnknownSchema, "u")).toThrow();
+    expect(() => Derive.classify(Union([StringSchema, Finite]), "mixed")).toThrow();
     expect(_needsExplicitColumn).toThrow();
     expect(_twoPrimaryKeys).toThrow();
     expect(_twoVersions).toThrow("optimistic-version fields");
@@ -504,16 +529,16 @@ describe("tagged errors", () => {
       message: "invalid field",
       fieldName: "value",
     });
-    expect(Eq.equals(left, right)).toBe(true);
+    expect(equals(left, right)).toBe(true);
 
-    const recovered = Effect.runSync(
-      Effect.fail(
+    const recovered = runSync(
+      failEffect(
         VersionConflictError.make({
           table: "user",
           id: 1,
           expectedVersion: 2,
         }),
-      ).pipe(Effect.catchTag("VersionConflictError", () => Effect.succeed("recovered"))),
+      ).pipe(catchTag("VersionConflictError", () => succeed("recovered"))),
     );
     expect(recovered).toBe("recovered");
   });
@@ -521,7 +546,7 @@ describe("tagged errors", () => {
 
 describe("varchar authoring modes", () => {
   it("derives the length from the schema's isMaxLength check", () => {
-    const derived = Field.from(S.String.check(S.isMaxLength(320)).pipe(pg.varchar()));
+    const derived = Field.from(StringSchema.check(isMaxLength(320)).pipe(pg.varchar()));
     expect(derived.meta.column).toEqual({
       _tag: "varchar",
       kind: "varchar",
@@ -532,7 +557,7 @@ describe("varchar authoring modes", () => {
 
   it("takes the tightest bound when several maxLength checks exist", () => {
     const derived = Field.from(
-      S.String.check(S.isMaxLength(100)).check(S.isMaxLength(64)).pipe(pg.varchar()),
+      StringSchema.check(isMaxLength(100)).check(isMaxLength(64)).pipe(pg.varchar()),
     );
     expect(derived.meta.column).toEqual({
       _tag: "varchar",
@@ -543,32 +568,32 @@ describe("varchar authoring modes", () => {
   });
 
   it("refuses derive mode when no maxLength check exists", () => {
-    expect(() => S.String.pipe(pg.varchar())).toThrow("isMaxLength");
+    expect(() => StringSchema.pipe(pg.varchar())).toThrow("isMaxLength");
   });
 
   it("injects isMaxLength into unbounded plain schemas so domain and DDL agree", () => {
-    const injected = Field.from(S.String.pipe(pg.varchar(50)));
-    if (!S.isSchema(injected.schema)) {
+    const injected = Field.from(StringSchema.pipe(pg.varchar(50)));
+    if (!isSchema(injected.schema)) {
       throw new Error("varchar injection unexpectedly produced a variant field");
     }
-    const accepts = S.is(injected.schema);
+    const accepts = is(injected.schema);
     expect(accepts("x".repeat(50))).toBe(true);
     expect(accepts("x".repeat(51))).toBe(false);
     expect(injected.schema.pipe(Derive.maxLengths)).toEqual([50]);
   });
 
   it("injects varchar bounds on the encoded side of transformed schemas", () => {
-    const injected = Field.from(S.FiniteFromString.pipe(pg.varchar(2)));
-    if (!S.isSchema(injected.schema)) {
+    const injected = Field.from(FiniteFromString.pipe(pg.varchar(2)));
+    if (!isSchema(injected.schema)) {
       throw new Error("varchar injection unexpectedly produced a variant field");
     }
-    expect(S.decodeUnknownSync(injected.schema)("42")).toBe(42);
-    expect(() => S.decodeUnknownSync(injected.schema)("123")).toThrow();
+    expect(decodeUnknownSync(injected.schema)("42")).toBe(42);
+    expect(() => decodeUnknownSync(injected.schema)("123")).toThrow();
     expect(injected.schema.pipe(Derive.maxLengths)).toEqual([2]);
   });
 
   it("verifies instead of double-injecting when the schema already carries a bound", () => {
-    const verified = Field.from(S.String.check(S.isMaxLength(50)).pipe(pg.varchar(80)));
+    const verified = Field.from(StringSchema.check(isMaxLength(50)).pipe(pg.varchar(80)));
     expect(verified.schema.pipe(Derive.maxLengths)).toEqual([50]);
     expect(verified.meta.column).toEqual({
       _tag: "varchar",
@@ -581,11 +606,11 @@ describe("varchar authoring modes", () => {
 
 describe("Option paved road", () => {
   it("derives nullable columns from OptionFromNullOr and effect FieldOption", () => {
-    expect(Derive.classify(S.OptionFromNullOr(S.String), "opt")).toEqual({
+    expect(Derive.classify(OptionFromNullOr(StringSchema), "opt")).toEqual({
       column: { _tag: "text", kind: "text", ident: "text" },
       nullable: true,
     });
-    expect(Derive.classify(EffectModel.FieldOption(S.String), "opt2")).toEqual({
+    expect(Derive.classify(EffectModel.FieldOption(StringSchema), "opt2")).toEqual({
       column: { _tag: "text", kind: "text", ident: "text" },
       nullable: true,
     });

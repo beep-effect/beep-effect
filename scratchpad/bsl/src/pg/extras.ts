@@ -11,11 +11,12 @@ import type {
   PgIndexMethod,
   PgTableExtraConfigValue,
 } from "drizzle-orm/pg-core";
-import * as A from "effect/Array";
-import * as Data from "effect/Data";
+import { isArray } from "effect/Array";
+import { taggedEnum } from "effect/Data";
+import type { TaggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import { fromUndefinedOr, match } from "effect/Option";
+import { hasProperty, isObject, isString, isUndefined } from "effect/Predicate";
 import type * as Field from "../core/Field.ts";
 
 /** Bound Drizzle column retaining its originating field type. */
@@ -51,14 +52,14 @@ type NodeDefinition = {
 };
 
 /** Complete PostgreSQL table-extra descriptor algebra. */
-export type Node = Data.TaggedEnum<NodeDefinition>;
+export type Node = TaggedEnum<NodeDefinition>;
 export type CompositeUnique = Extract<Node, { readonly _tag: "compositeUnique" }>;
 export type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrimaryKey" }>;
 export type Index = Extract<Node, { readonly _tag: "index" }>;
 export type Check = Extract<Node, { readonly _tag: "check" }>;
 export type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>;
 
-const Nodes = Data.taggedEnum<Node>();
+const Nodes = taggedEnum<Node>();
 export const CompositeUnique = { make: Nodes.compositeUnique };
 export const CompositePrimaryKey = { make: Nodes.compositePrimaryKey };
 export const Index = { make: Nodes.index };
@@ -66,13 +67,13 @@ export const Check = { make: Nodes.check };
 export const UnsafeCheckSql = { make: Nodes.unsafeCheckSql };
 
 const isNamed = (value: unknown): boolean =>
-  P.hasProperty(value, "name") && P.isString(value.name) && value.name.length > 0;
-const isColumn = P.isObject;
+  hasProperty(value, "name") && isString(value.name) && value.name.length > 0;
+const isColumn = isObject;
 const hasColumns = (value: unknown, minimum: number): boolean =>
-  P.hasProperty(value, "columns") &&
-  A.isArray(value.columns) &&
+  hasProperty(value, "columns") &&
+  isArray(value.columns) &&
   value.columns.length >= minimum &&
-  A.every(value.columns, isColumn);
+  value.columns.every(isColumn);
 
 /** Cheap tag/shape guard for author-returned extras callback values. */
 export const isNode = (value: unknown): value is Node =>
@@ -83,15 +84,13 @@ export const isNode = (value: unknown): value is Node =>
       ? hasColumns(value, 2)
       : Nodes.$is("index")(value)
         ? hasColumns(value, 1) &&
-          P.hasProperty(value, "using") &&
-          (P.isUndefined(value.using) || P.isString(value.using)) &&
-          P.hasProperty(value, "where") &&
-          (P.isUndefined(value.where) || isDrizzleEntity(value.where, SQL))
+          hasProperty(value, "using") &&
+          (isUndefined(value.using) || isString(value.using)) &&
+          hasProperty(value, "where") &&
+          (isUndefined(value.where) || isDrizzleEntity(value.where, SQL))
         : Nodes.$is("check")(value)
-          ? P.hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
-          : Nodes.$is("unsafeCheckSql")(value) &&
-            P.hasProperty(value, "sql") &&
-            P.isString(value.sql));
+          ? hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
+          : Nodes.$is("unsafeCheckSql")(value) && hasProperty(value, "sql") && isString(value.sql));
 
 /** Constructors and matcher for the table-extra union. */
 export const Node = {
@@ -139,11 +138,11 @@ export const unsafeCheckSql = (name: string, value: string): UnsafeCheckSql =>
 
 const emitIndex = (node: Index): PgTableExtraConfigValue => {
   const on = drizzleIndex(node.name);
-  const builder = O.match(O.fromUndefinedOr(node.using), {
+  const builder = match(fromUndefinedOr(node.using), {
     onNone: () => on.on(...node.columns),
     onSome: (using) => on.using(using, ...node.columns),
   });
-  return O.match(O.fromUndefinedOr(node.where), {
+  return match(fromUndefinedOr(node.where), {
     onNone: () => builder,
     onSome: (where) => builder.where(where),
   });

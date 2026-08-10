@@ -1,7 +1,5 @@
 /** Dialect-neutral graph records and deterministic relation naming. */
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import * as Str from "effect/String";
+import { capitalize, slice } from "effect/String";
 import { camelCase } from "../internal/case.ts";
 import type * as Meta from "./Meta.ts";
 
@@ -25,7 +23,7 @@ export interface Junction {
 
 /** Derive a forward relation name from an id field. */
 export const relationName = (fieldName: string): string =>
-  Str.endsWith("Id")(fieldName) ? Str.slice(0, -2)(fieldName) : `${fieldName}Relation`;
+  fieldName.endsWith("Id") ? slice(0, -2)(fieldName) : `${fieldName}Relation`;
 
 /** Stable alias shared by forward and reverse relations. */
 export const relationAlias = (edge: Edge): string =>
@@ -37,15 +35,13 @@ export const plural = (value: string): string => `${camelCase(value)}s`;
 /** Derive the reverse relation name for one edge. */
 export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
-    A.filter(
-      edges,
+    edges.filter(
       (candidate) =>
-        Eq.equals(candidate.sourceKey, edge.sourceKey) &&
-        Eq.equals(candidate.targetKey, edge.targetKey),
+        candidate.sourceKey === edge.sourceKey && candidate.targetKey === edge.targetKey,
     ).length > 1;
-  if (Eq.equals(edge.sourceKey, edge.targetKey) && Str.startsWith("parent")(edge.relationName)) {
-    return `child${Str.capitalize(Str.slice(6)(edge.relationName))}s`;
+  if (edge.sourceKey === edge.targetKey && edge.relationName.startsWith("parent")) {
+    return `child${capitalize(slice(6)(edge.relationName))}s`;
   }
   const base = plural(edge.sourceKey);
-  return ambiguous ? `${base}By${Str.capitalize(edge.relationName)}` : base;
+  return ambiguous ? `${base}By${capitalize(edge.relationName)}` : base;
 };

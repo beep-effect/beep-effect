@@ -1,15 +1,16 @@
 /** Optimistic repositories derived from @beep/effect-drizzle model metadata. */
-import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import { Model as EffectModel } from "effect/unstable/schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
+import type { Effect, Success } from "effect/Effect";
+import { findFirst } from "effect/Array";
+import { getOrElse, map } from "effect/Option";
+import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
+import { Int, NonEmptyString, TaggedError, Unknown, is } from "effect/Schema";
+import type { SchemaError } from "effect/Schema";
+import type { Model as EffectModel } from "effect/unstable/schema";
+import { SqlClient } from "effect/unstable/sql/SqlClient";
 import type { SqlError } from "effect/unstable/sql/SqlError";
-import * as SqlModel from "effect/unstable/sql/SqlModel";
-import * as SqlSchema from "effect/unstable/sql/SqlSchema";
+import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
+import { findOne } from "effect/unstable/sql/SqlSchema";
 import { isUnknownRecord, type UnknownRecord } from "../internal/guards.ts";
 import type * as Field from "./Field.ts";
 import { ModelInvariantError, type AnyModel } from "./model.ts";
@@ -34,14 +35,14 @@ import { ModelInvariantError, type AnyModel } from "./model.ts";
  * @category errors
  * @since 0.0.0
  */
-export class VersionConflictError extends S.TaggedError<VersionConflictError>(
+export class VersionConflictError extends TaggedError<VersionConflictError>(
   "@beep/effect-drizzle/VersionConflictError",
 )(
   "VersionConflictError",
   {
-    table: S.NonEmptyString,
-    id: S.Unknown,
-    expectedVersion: S.Int,
+    table: NonEmptyString,
+    id: Unknown,
+    expectedVersion: Int,
   },
   {
     description: "An optimistic repository update found no row with the expected version.",
@@ -73,8 +74,8 @@ type ValidateVersionModel<M extends AnyModel> = [VersionKey<M>] extends [never]
   ? Field.SqlTypeError<"optimistic repository requires one pg.version() field">
   : unknown;
 
-type NativeRepository<M extends EffectModel.Any, Id extends IdKey<M>> = Effect.Success<
-  ReturnType<typeof SqlModel.makeRepository<M, Id>>
+type NativeRepository<M extends EffectModel.Any, Id extends IdKey<M>> = Success<
+  ReturnType<typeof makeSqlRepository<M, Id>>
 >;
 
 /**
@@ -89,17 +90,17 @@ export type Repository<M extends EffectModel.Any, Id extends IdKey<M>> = Pick<
 > & {
   readonly update: (
     update: M["update"]["Type"],
-  ) => Effect.Effect<
+  ) => Effect<
     M["Type"],
-    S.SchemaError | SqlError | VersionConflictError,
+    SchemaError | SqlError | VersionConflictError,
     M["DecodingServices"] | M["update"]["EncodingServices"]
   >;
 };
 
 const findVersionColumn = (model: AnyModel): string =>
-  O.getOrElse(
-    O.map(
-      A.findFirst(R.toEntries(model.sql.columns), ([, metadata]) => metadata.version),
+  getOrElse(
+    map(
+      findFirst(Object.entries(model.sql.columns), ([, metadata]) => metadata.version),
       ([key]) => key,
     ),
     () => {
@@ -119,7 +120,7 @@ const requireRecord = (value: unknown, table: string): UnknownRecord => {
 };
 
 const requireValue = (record: UnknownRecord, key: string, table: string): unknown =>
-  O.getOrElse(R.get(record, key), () => {
+  getOrElse(get(record, key), () => {
     throw ModelInvariantError.make({
       message: `Repository request for '${table}' is missing '${key}'.`,
       fieldName: key,
@@ -128,7 +129,7 @@ const requireValue = (record: UnknownRecord, key: string, table: string): unknow
 
 const requireVersion = (record: UnknownRecord, key: string, table: string): number => {
   const value = requireValue(record, key, table);
-  if (S.is(S.Int)(value)) return value;
+  if (is(Int)(value)) return value;
   throw ModelInvariantError.make({
     message: `Repository version '${key}' for '${table}' is not an integer.`,
     fieldName: key,
@@ -157,29 +158,29 @@ export const makeRepository = <const M extends RepositoryModel, const Id extends
     readonly spanPrefix: string;
     readonly idColumn: Id;
   },
-): Effect.Effect<Repository<M, Id>, never, SqlClient.SqlClient> =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const base = yield* SqlModel.makeRepository<M, Id>(model, {
+): Effect<Repository<M, Id>, never, SqlClient> =>
+  gen(function* () {
+    const sql = yield* SqlClient;
+    const base = yield* makeSqlRepository<M, Id>(model, {
       tableName: model.sql.tableName,
       spanPrefix: options.spanPrefix,
       idColumn: options.idColumn,
     });
     const idColumn: string = options.idColumn;
     const versionColumn = findVersionColumn(model);
-    const updateSchema = SqlSchema.findOne<M["update"], M, SqlError, never>({
+    const updateSchema = findOne<M["update"], M, SqlError, never>({
       Request: model.update,
       Result: model,
       execute: (request) => {
         const record = requireRecord(request, model.sql.tableName);
         const id = requireValue(record, idColumn, model.sql.tableName);
         const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
-        const authorFields = R.filter(
+        const authorFields = filter(
           record,
-          (_value, key) => !Eq.equals(key, idColumn) && !Eq.equals(key, versionColumn),
+          (_value, key) => key !== idColumn && key !== versionColumn,
         );
         const versionSet = sql`${sql(versionColumn)} = ${expectedVersion} + 1`;
-        const set = R.isEmptyReadonlyRecord(authorFields)
+        const set = isEmptyReadonlyRecord(authorFields)
           ? versionSet
           : sql`${sql.update(authorFields)}, ${versionSet}`;
         return sql`
@@ -196,8 +197,8 @@ export const makeRepository = <const M extends RepositoryModel, const Id extends
       const id = requireValue(record, idColumn, model.sql.tableName);
       const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
       return updateSchema(request).pipe(
-        Effect.catchTag("NoSuchElementError", () =>
-          Effect.fail(
+        catchTag("NoSuchElementError", () =>
+          failEffect(
             VersionConflictError.make({
               table: model.sql.tableName,
               id,
@@ -205,7 +206,7 @@ export const makeRepository = <const M extends RepositoryModel, const Id extends
             }),
           ),
         ),
-        Effect.withSpan(
+        withSpan(
           `${options.spanPrefix}.updateOptimistic`,
           { attributes: { id, expectedVersion } },
           { captureStackTrace: false },

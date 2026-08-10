@@ -8,10 +8,11 @@
  * is a small pipeable wrapper `{ schema, meta }` whose combinators transform
  * both the runtime value and the phantom generics without loss.
  */
-import * as Pipeable from "effect/Pipeable";
-import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
-import { VariantSchema } from "effect/unstable/schema";
+import { pipeArguments } from "effect/Pipeable";
+import type { Pipeable } from "effect/Pipeable";
+import { hasProperty } from "effect/Predicate";
+import type { Top } from "effect/Schema";
+import type { VariantSchema } from "effect/unstable/schema";
 import * as Meta from "./Meta.ts";
 
 /**
@@ -49,7 +50,7 @@ export type TypeId = typeof TypeId;
  * @category models
  * @since 0.0.0
  */
-export type AnySchema = S.Top | VariantSchema.Field<any>;
+export type AnySchema = Top | VariantSchema.Field<any>;
 
 /**
  * Pipeable wrapper correlating one schema with its SQL metadata.
@@ -57,8 +58,7 @@ export type AnySchema = S.Top | VariantSchema.Field<any>;
  * @category models
  * @since 0.0.0
  */
-export interface Field<out Sch extends AnySchema, out M extends Meta.Meta>
-  extends Pipeable.Pipeable {
+export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> extends Pipeable {
   readonly [TypeId]: TypeId;
   readonly schema: Sch;
   readonly meta: M;
@@ -83,7 +83,7 @@ export type Input = AnySchema | Any;
 const Proto = {
   [TypeId]: TypeId,
   pipe(this: Any) {
-    return Pipeable.pipeArguments(this, arguments);
+    return pipeArguments(this, arguments);
   },
 };
 
@@ -93,11 +93,11 @@ const Proto = {
  * **Example** (Construct a field)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { make } from "./Field.ts"
  * import { empty } from "./Meta.ts"
  *
- * console.log(make(S.String, empty).schema === S.String) // true
+ * console.log(make(String, empty).schema === String) // true
  * ```
  *
  * @category constructors
@@ -119,17 +119,17 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
  * **Example** (Recognize a field)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { isField, make } from "./Field.ts"
  * import { empty } from "./Meta.ts"
  *
- * console.log(isField(make(S.String, empty))) // true
+ * console.log(isField(make(String, empty))) // true
  * ```
  *
  * @category guards
  * @since 0.0.0
  */
-export const isField = (u: unknown): u is Any => P.hasProperty(u, TypeId);
+export const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
 
 /**
  * Schema type obtained by normalizing an {@link Input}.
@@ -146,11 +146,11 @@ export type SchemaFrom<I extends Input> =
  * **Example** (Resolve bare metadata)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { MetaFrom } from "./Field.ts"
  * import type { Empty } from "./Meta.ts"
  *
- * declare const metadata: MetaFrom<typeof S.String>
+ * declare const metadata: MetaFrom<typeof String>
  * const empty: Empty = metadata
  * ```
  *
@@ -165,10 +165,10 @@ export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M 
  * **Example** (Normalize a bare schema)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { from } from "./Field.ts"
  *
- * console.log(from(S.String).meta.primaryKey) // false
+ * console.log(from(String).meta.primaryKey) // false
  * ```
  *
  * @category constructors
@@ -201,10 +201,10 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
  * **Example** (Mark a field unique)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { patch } from "./Field.ts"
  *
- * console.log(patch(S.String, { unique: true }).meta.unique) // true
+ * console.log(patch(String, { unique: true }).meta.unique) // true
  * ```
  *
  * @category combinators
@@ -233,11 +233,11 @@ export type EncodedOf<I extends Input> = SchemaEncoded<SchemaFrom<I>>;
 type SchemaEncoded<Sch> =
   Sch extends VariantSchema.Field<infer Config>
     ? Config extends { readonly select: infer Sel }
-      ? Sel extends S.Top
+      ? Sel extends Top
         ? Sel["Encoded"]
         : never
       : never
-    : Sch extends S.Top
+    : Sch extends Top
       ? Sch["Encoded"]
       : never;
 
@@ -274,10 +274,10 @@ export interface SqlTypeError<Msg extends string> {
  * **Example** (Validate a string carrier)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { ValidateEncoded } from "./Field.ts"
  *
- * type Valid = ValidateEncoded<typeof S.String, string, "expected string">
+ * type Valid = ValidateEncoded<typeof String, string, "expected string">
  * ```
  *
  * @category validation
@@ -299,10 +299,10 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
  * **Example** (Validate a primary-key carrier)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import type { ValidateNonNullable } from "./Field.ts"
  *
- * type Valid = ValidateNonNullable<typeof S.String, "must not be nullable">
+ * type Valid = ValidateNonNullable<typeof String, "must not be nullable">
  * ```
  *
  * @category validation

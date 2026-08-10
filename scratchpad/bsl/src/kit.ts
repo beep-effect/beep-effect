@@ -1,10 +1,9 @@
 /** Dialect kit factory for invariant model defaults and shared @beep/effect-drizzle operators. */
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import type * as S from "effect/Schema";
-import * as Struct from "effect/Struct";
+import { contains, findFirst } from "effect/Array";
+import { fromUndefinedOr, isSome, match } from "effect/Option";
+import { isFunction } from "effect/Predicate";
+import type { Annotations } from "effect/Schema";
+import { assign } from "effect/Struct";
 import * as Field from "./core/Field.ts";
 import {
   type FieldsInput,
@@ -67,7 +66,7 @@ function mergeFields<Defaults extends FieldsInput, Own extends FieldsInput>(
   own: Own,
 ): Merged<Defaults, Own>;
 function mergeFields(defaults: FieldsInput, own: FieldsInput): FieldsInput {
-  return Struct.assign(defaults, own);
+  return assign(defaults, own);
 }
 
 type ValidateCollision<Defaults extends FieldsInput, Own extends FieldsInput> = {
@@ -99,7 +98,7 @@ export interface EntityFactory<Defaults extends FieldsInput> {
     identifier: string,
   ): <const Own extends FieldsInput>(
     ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
-    annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+    annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
   ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
 }
 
@@ -125,12 +124,12 @@ export interface PgKit<Defaults extends FieldsInput> {
  * **Example** (Create a PostgreSQL kit)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { make } from "./kit.ts"
  *
  * const kit = make({
  *   dialect: "pg",
- *   defaultColumns: (pg) => ({ version: S.Int.pipe(pg.integer(), pg.default(1)) }),
+ *   defaultColumns: (pg) => ({ version: Int.pipe(pg.integer(), pg.default(1)) }),
  *   defaultExtras: () => []
  * })
  * console.log(kit.pg.integer)
@@ -149,42 +148,39 @@ export const make = <const Defaults extends FieldsInput>(
     });
   }
   const defaults = config.defaultColumns(Pg);
-  const defaultKeys = R.keys<string, Field.Input>(defaults);
+  const defaultKeys = Object.keys(defaults);
 
   function Entity<Self = never>(
     identifier: string,
   ): <const Own extends FieldsInput>(
     ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
-    annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+    annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
   ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
   function Entity(identifier: string): unknown {
     return <const Own extends FieldsInput>(
       ownFields: Own,
-      annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+      annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
     ): object => {
-      const collision = A.findFirst(R.keys<string, Field.Input>(ownFields), (key) =>
-        A.contains(defaultKeys, key),
-      );
-      if (O.isSome(collision)) {
+      const collision = findFirst(Object.keys(ownFields), (key) => contains(defaultKeys, key));
+      if (isSome(collision)) {
         throw ModelInvariantError.make({
           message: `'${collision.value}' is a kit default column — remove it or use Model.`,
           fieldName: collision.value,
         });
       }
       const fields = mergeFields(defaults, ownFields);
-      const modelExtras = P.isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
-      const annotations = P.isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
-      const extras: Table.Callback<typeof fields> = (columns) =>
-        A.appendAll(
-          O.match(O.fromUndefinedOr(config.defaultExtras), {
-            onNone: A.empty<Table.Node>,
-            onSome: (callback) => callback(columns),
-          }),
-          O.match(O.fromUndefinedOr(modelExtras), {
-            onNone: A.empty<Table.Node>,
-            onSome: (callback) => callback(columns),
-          }),
-        );
+      const modelExtras = isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+      const annotations = isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
+      const extras: Table.Callback<typeof fields> = (columns) => [
+        ...match(fromUndefinedOr(config.defaultExtras), {
+          onNone: () => [],
+          onSome: (callback) => callback(columns),
+        }),
+        ...match(fromUndefinedOr(modelExtras), {
+          onNone: () => [],
+          onSome: (callback) => callback(columns),
+        }),
+      ];
       return makeModelClass(identifier, fields, annotations, extras);
     };
   }

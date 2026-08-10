@@ -1,19 +1,21 @@
 /** Dialect-neutral encoded-AST classification algorithm. */
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as AST from "effect/SchemaAST";
+import { every, filter, findFirst, head, isArrayEmpty, join, map, of, some } from "effect/Array";
+import { getOrElse, isSome } from "effect/Option";
+import type { Option } from "effect/Option";
+import { isTagged, not, or } from "effect/Predicate";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+import type { Top } from "effect/Schema";
+import { toEncoded } from "effect/SchemaAST";
+import type { AST } from "effect/SchemaAST";
 import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
 
 /** Failure to derive one unambiguous SQL column from an encoded schema. */
-export class DeriveColumnError extends S.TaggedError<DeriveColumnError>(
+export class DeriveColumnError extends TaggedError<DeriveColumnError>(
   "@beep/effect-drizzle/DeriveColumnError",
 )(
   "DeriveColumnError",
-  { message: S.String, fieldName: S.String, astTag: S.String },
+  { message: StringSchema, fieldName: StringSchema, astTag: StringSchema },
   {
     description: "A bare schema field's column could not be derived from its encoded AST.",
   },
@@ -21,10 +23,10 @@ export class DeriveColumnError extends S.TaggedError<DeriveColumnError>(
 
 /** Dialect hooks consumed by the shared classification algorithm. */
 export interface Classifier<Column extends Meta.ColumnSpec> {
-  readonly selectSchemaOf: (schema: Field.AnySchema) => S.Top;
-  readonly entityTableName: (schema: S.Top) => O.Option<string>;
+  readonly selectSchemaOf: (schema: Field.AnySchema) => Top;
+  readonly entityTableName: (schema: Top) => Option<string>;
   readonly entityColumn: (tableName: string) => Column;
-  readonly fromSchemaAST: (ast: AST.AST) => O.Option<Column>;
+  readonly fromSchemaAST: (ast: AST) => Option<Column>;
 }
 
 /** Dialect-neutral result of encoded-AST classification. */
@@ -44,19 +46,19 @@ export const classify = <Column extends Meta.ColumnSpec>(
   classifier: Classifier<Column>,
 ): Classified<Column> => {
   const select = classifier.selectSchemaOf(schema);
-  const encoded = AST.toEncoded(select.ast);
-  const members = P.isTagged(encoded, "Union") ? encoded.types : A.of(encoded);
-  const invalidAbsence = A.findFirst(members, P.or(P.isTagged("Undefined"), P.isTagged("Void")));
-  if (O.isSome(invalidAbsence)) {
+  const encoded = toEncoded(select.ast);
+  const members = isTagged(encoded, "Union") ? encoded.types : of(encoded);
+  const invalidAbsence = findFirst(members, or(isTagged("Undefined"), isTagged("Void")));
+  if (isSome(invalidAbsence)) {
     fail(
       fieldName,
       invalidAbsence.value._tag,
       "Encoded 'undefined' cannot reach a SQL row; represent absence as null.",
     );
   }
-  const nullable = A.some(members, P.isTagged("Null"));
-  const rest = A.filter(members, P.not(P.isTagged("Null")));
-  if (A.isArrayEmpty(rest)) {
+  const nullable = some(members, isTagged("Null"));
+  const rest = filter(members, not(isTagged("Null")));
+  if (isArrayEmpty(rest)) {
     fail(
       fieldName,
       encoded._tag,
@@ -64,11 +66,11 @@ export const classify = <Column extends Meta.ColumnSpec>(
     );
   }
   const entity = classifier.entityTableName(select);
-  if (O.isSome(entity) && A.every(rest, P.isTagged("Number"))) {
+  if (isSome(entity) && every(rest, isTagged("Number"))) {
     return { column: classifier.entityColumn(entity.value), nullable };
   }
-  const specs = A.map(rest, (member) =>
-    O.getOrElse(classifier.fromSchemaAST(member), () =>
+  const specs = map(rest, (member) =>
+    getOrElse(classifier.fromSchemaAST(member), () =>
       fail(
         fieldName,
         member._tag,
@@ -76,15 +78,15 @@ export const classify = <Column extends Meta.ColumnSpec>(
       ),
     ),
   );
-  const first = O.getOrElse(A.head(specs), () =>
+  const first = getOrElse(head(specs), () =>
     fail(fieldName, encoded._tag, "No encoded members remain after null stripping."),
   );
-  if (!A.every(specs, (spec) => Eq.equals(spec.kind, first.kind))) {
+  if (!every(specs, (spec) => spec.kind === first.kind)) {
     fail(
       fieldName,
       "Union",
-      `Union members derive different columns (${A.join(
-        A.map(specs, (spec) => spec.kind),
+      `Union members derive different columns (${join(
+        map(specs, (spec) => spec.kind),
         ", ",
       )}); provide explicit metadata.`,
     );

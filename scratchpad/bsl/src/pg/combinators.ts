@@ -7,18 +7,36 @@
  * field gets used. All combinators funnel through `Field.patch`, the single
  * audited merge seam.
  *
- * Usage: `S.NonEmptyString.pipe(pg.varchar(320), pg.unique())`.
+ * Usage: `NonEmptyString.pipe(pg.varchar(320), pg.unique())`.
  */
 import type { SQL } from "drizzle-orm";
-import { Match } from "effect";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
+import {
+  exhaustive,
+  orElse as matchOrElse,
+  tags as matchTags,
+  type as matchType,
+  value as matchValue,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
+import {
+  append,
+  empty,
+  every,
+  isReadonlyArrayEmpty,
+  match as matchArray,
+  min,
+  some,
+} from "effect/Array";
+import { equals } from "effect/Equal";
 import { constFalse, constTrue } from "effect/Function";
-import * as N from "effect/Number";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as AST from "effect/SchemaAST";
+import { Order as NumberOrder } from "effect/Number";
+import { fromUndefinedOr, getOrElse, isSome, match as matchOption } from "effect/Option";
+import { isString, isUndefined } from "effect/Predicate";
+import { NonEmptyString, flip, is, isMaxLength } from "effect/Schema";
+import type { Schema, Top } from "effect/Schema";
+import { toType } from "effect/SchemaAST";
+import type { AST, Suspend } from "effect/SchemaAST";
 import { VariantSchema } from "effect/unstable/schema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
@@ -37,24 +55,24 @@ import {
 // Column setters
 // ---------------------------------------------------------------------------
 
-const isStringTypeAst = (node: AST.AST, visited: ReadonlyArray<AST.Suspend> = A.empty()): boolean =>
-  Match.type<AST.AST>().pipe(
-    Match.tags({
+const isStringTypeAst = (node: AST, visited: ReadonlyArray<Suspend> = empty()): boolean =>
+  matchType<AST>().pipe(
+    matchTags({
       String: constTrue,
       TemplateLiteral: constTrue,
-      Literal: ({ literal }) => P.isString(literal),
-      Enum: ({ enums }) => A.every(enums, ([, value]) => P.isString(value)),
-      Union: ({ types }) => A.every(types, (member) => isStringTypeAst(member, visited)),
+      Literal: ({ literal }) => isString(literal),
+      Enum: ({ enums }) => every(enums, ([, value]) => isString(value)),
+      Union: ({ types }) => every(types, (member) => isStringTypeAst(member, visited)),
       Suspend: (suspend) =>
-        A.some(visited, Eq.equals(suspend))
+        some(visited, equals(suspend))
           ? false
-          : isStringTypeAst(suspend.thunk(), A.append(visited, suspend)),
+          : isStringTypeAst(suspend.thunk(), append(visited, suspend)),
     }),
-    Match.orElse(constFalse),
+    matchOrElse(constFalse),
   )(node);
 
-const isStringTypeSchema = (schema: S.Top): schema is S.Schema<string> =>
-  isStringTypeAst(AST.toType(schema.ast));
+const isStringTypeSchema = (schema: Top): schema is Schema<string> =>
+  isStringTypeAst(toType(schema.ast));
 
 /**
  * Set an unbounded PostgreSQL text column on a string-encoded schema.
@@ -62,10 +80,10 @@ const isStringTypeSchema = (schema: S.Top): schema is S.Schema<string> =>
  * **Example** (Set a text column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { text } from "@beep/effect-drizzle/pg"
  *
- * const field = S.String.pipe(text())
+ * const field = String.pipe(text())
  * console.log(field.meta.column?.kind) // "text"
  * ```
  *
@@ -87,9 +105,9 @@ const boundedString = (
 ): Field.Any => {
   const f = Field.from(input);
   const bounds = maxLengths(f.schema);
-  return O.match(O.fromUndefinedOr(length), {
+  return matchOption(fromUndefinedOr(length), {
     onNone: () =>
-      A.match(bounds, {
+      matchArray(bounds, {
         onEmpty: () => {
           throw DeriveColumnError.make({
             message: `pg.${kind}() derive mode requires an isMaxLength check on the schema; add one or pass an explicit length.`,
@@ -99,20 +117,20 @@ const boundedString = (
         },
         onNonEmpty: (nonEmptyBounds) =>
           Field.patch(f, {
-            column: spec(A.min(nonEmptyBounds, N.Order)),
+            column: spec(min(nonEmptyBounds, NumberOrder)),
           }),
       }),
     onSome: (resolvedLength) => {
-      if (A.isReadonlyArrayEmpty(bounds) && !VariantSchema.isField(f.schema)) {
-        const encodedSchema = S.flip(f.schema);
+      if (isReadonlyArrayEmpty(bounds) && !VariantSchema.isField(f.schema)) {
+        const encodedSchema = flip(f.schema);
         if (!isStringTypeSchema(encodedSchema)) {
           throw DeriveColumnError.make({
             message: `pg.${kind}(length) can inject isMaxLength only when the encoded schema is string-valued.`,
             fieldName: "(unknown — set at model definition)",
-            astTag: AST.toType(encodedSchema.ast)._tag,
+            astTag: toType(encodedSchema.ast)._tag,
           });
         }
-        const evolved = S.flip(encodedSchema.check(S.isMaxLength(resolvedLength)));
+        const evolved = flip(encodedSchema.check(isMaxLength(resolvedLength)));
         return Field.make(evolved, Meta.merge(f.meta, { column: spec(resolvedLength) }));
       }
       return Field.patch(f, { column: spec(resolvedLength) });
@@ -129,17 +147,17 @@ const boundedString = (
  * - `pg.varchar(n)` on a schema WITH a maxLength `m` — VERIFY: `m ≤ n` passes,
  *   `m > n` fails at model construction (column would truncate).
  * - `pg.varchar(n)` on a plain schema WITHOUT one — INJECT: the field's schema
- *   gains `S.check(S.isMaxLength(n))`, so the domain validates exactly what
+ *   gains `check(isMaxLength(n))`, so the domain validates exactly what
  *   the column enforces. Variant-field inputs are verify-only (their per-variant
  *   codecs are author-owned).
  *
  * **Example** (Derive varchar length)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String, isMaxLength } from "effect/Schema"
  * import { varchar } from "@beep/effect-drizzle/pg"
  *
- * const field = S.String.check(S.isMaxLength(320)).pipe(varchar())
+ * const field = String.check(isMaxLength(320)).pipe(varchar())
  * console.log(field.meta.column?.kind) // "varchar"
  * ```
  *
@@ -180,10 +198,10 @@ type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null
  * **Example** (Set a named enum)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Literals } from "effect/Schema"
  * import { enum as pgEnum } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
+ * console.log(Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
  * ```
  *
  * @category combinators
@@ -199,22 +217,22 @@ export function enum_<const Name extends string>(
 ) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>> }>;
 export function enum_(name?: string): unknown {
   return (input: Field.Input): Field.Any => {
-    const values = O.getOrElse(stringLiteralValues(Field.from(input).schema), () => {
+    const values = getOrElse(stringLiteralValues(Field.from(input).schema), () => {
       throw DeriveColumnError.make({
         message: "pg.enum requires a finite non-empty union of encoded string literals.",
         fieldName: "(unknown — set at model definition)",
         astTag: "(encoded literals)",
       });
     });
-    const explicitName = O.fromUndefinedOr(name);
-    if (O.isSome(explicitName) && !S.is(S.NonEmptyString)(explicitName.value)) {
+    const explicitName = fromUndefinedOr(name);
+    if (isSome(explicitName) && !is(NonEmptyString)(explicitName.value)) {
       throw DeriveColumnError.make({
         message: "pg.enum name must be non-empty when supplied explicitly.",
         fieldName: "(unknown — set at model definition)",
         astTag: "(enum name)",
       });
     }
-    const resolvedName = O.getOrElse(explicitName, () => "");
+    const resolvedName = getOrElse(explicitName, () => "");
     return Field.patch(input, {
       column: PgColumn.Enum.make({
         ident: `enum<${resolvedName}>`,
@@ -233,10 +251,10 @@ export { enum_ as enum };
  * **Example** (Set a tsvector column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { unsafeCustom } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(unsafeCustom("tsvector")).meta.column?.ident)
+ * console.log(String.pipe(unsafeCustom("tsvector")).meta.column?.ident)
  * ```
  *
  * @category combinators
@@ -260,10 +278,10 @@ export const unsafeCustom =
  * **Example** (Set numeric precision and scale)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { numeric } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(numeric(10, 2)).meta.column?.kind) // "numeric"
+ * console.log(String.pipe(numeric(10, 2)).meta.column?.kind) // "numeric"
  * ```
  *
  * @category combinators
@@ -296,10 +314,10 @@ export function numeric(precision?: number, scale?: number): unknown {
  * **Example** (Set string date mode)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { date } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(date()).meta.column?.kind) // "date"
+ * console.log(String.pipe(date()).meta.column?.kind) // "date"
  * ```
  *
  * @category combinators
@@ -318,7 +336,7 @@ export function date(options?: { readonly mode: "date" }): unknown {
   return (input: Field.Input): Field.Any =>
     Field.patch(input, {
       column: PgColumn.DateColumn.make({
-        mode: O.match(O.fromUndefinedOr(options), {
+        mode: matchOption(fromUndefinedOr(options), {
           onNone: () => "string",
           onSome: ({ mode }) => mode,
         }),
@@ -332,10 +350,10 @@ export function date(options?: { readonly mode: "date" }): unknown {
  * **Example** (Derive a char length)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String, isMaxLength } from "effect/Schema"
  * import { char } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.check(S.isMaxLength(2)).pipe(char()).meta.column?.kind)
+ * console.log(String.check(isMaxLength(2)).pipe(char()).meta.column?.kind)
  * ```
  *
  * @category combinators
@@ -360,10 +378,10 @@ export function char(length?: number): unknown {
  * **Example** (Set JSON storage)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Boolean, Struct } from "effect/Schema"
  * import { json } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Struct({ ok: S.Boolean }).pipe(json()).meta.column?.ident)
+ * console.log(Struct({ ok: Boolean }).pipe(json()).meta.column?.ident)
  * ```
  *
  * @category combinators
@@ -383,10 +401,10 @@ export const json =
  * **Example** (Set real storage)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Number } from "effect/Schema"
  * import { real } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Number.pipe(real()).meta.column?.ident) // "real"
+ * console.log(Number.pipe(real()).meta.column?.ident) // "real"
  * ```
  *
  * @category combinators
@@ -405,10 +423,10 @@ export const real =
  * **Example** (Set number-mode bigserial)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { bigserial } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(bigserial("number")).meta.hasDefault) // true
+ * console.log(Int.pipe(bigserial("number")).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -448,10 +466,10 @@ export function bigserial(mode: "number" | "bigint"): unknown {
  * **Example** (Set smallserial storage)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { smallserial } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(smallserial()).meta.hasDefault) // true
+ * console.log(Int.pipe(smallserial()).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -473,10 +491,10 @@ export const smallserial =
  * **Example** (Set a UUID column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { uuid } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(uuid()).meta.column?.kind) // "uuid"
+ * console.log(String.pipe(uuid()).meta.column?.kind) // "uuid"
  * ```
  *
  * @category combinators
@@ -502,10 +520,10 @@ type IntegerColumn<I extends Field.Input> =
  * **Example** (Set an integer column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { integer } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(integer()).meta.column?.kind) // "integer"
+ * console.log(Int.pipe(integer()).meta.column?.kind) // "integer"
  * ```
  *
  * @category combinators
@@ -531,10 +549,10 @@ export const integer = () => {
  * **Example** (Set a smallint column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { smallint } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(smallint()).meta.column?.kind) // "smallint"
+ * console.log(Int.pipe(smallint()).meta.column?.kind) // "smallint"
  * ```
  *
  * @category combinators
@@ -553,10 +571,10 @@ export const smallint =
  * **Example** (Set a double-precision column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Finite } from "effect/Schema"
  * import { doublePrecision } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Finite.pipe(doublePrecision()).meta.column?.kind) // "doublePrecision"
+ * console.log(Finite.pipe(doublePrecision()).meta.column?.kind) // "doublePrecision"
  * ```
  *
  * @category combinators
@@ -576,10 +594,10 @@ export const doublePrecision =
  * **Example** (Set a native-bigint column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { BigInt } from "effect/Schema"
  * import { bigint } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.BigInt.pipe(bigint("bigint")).meta.column?.kind) // "bigint"
+ * console.log(BigInt.pipe(bigint("bigint")).meta.column?.kind) // "bigint"
  * ```
  *
  * @category combinators
@@ -608,10 +626,10 @@ export function bigint(mode: "number" | "bigint"): unknown {
  * **Example** (Set a serial column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { serial } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(serial()).meta.hasDefault) // true
+ * console.log(Int.pipe(serial()).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -630,10 +648,10 @@ export const serial =
  * **Example** (Set a boolean column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Boolean } from "effect/Schema"
  * import { boolean } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Boolean.pipe(boolean()).meta.column?.kind) // "boolean"
+ * console.log(Boolean.pipe(boolean()).meta.column?.kind) // "boolean"
  * ```
  *
  * @category combinators
@@ -652,10 +670,10 @@ export const boolean =
  * **Example** (Set a JSONB column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String, Struct } from "effect/Schema"
  * import { jsonb } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Struct({ theme: S.String }).pipe(jsonb()).meta.column?.kind) // "jsonb"
+ * console.log(Struct({ theme: String }).pipe(jsonb()).meta.column?.kind) // "jsonb"
  * ```
  *
  * @category combinators
@@ -675,10 +693,10 @@ export const jsonb =
  * **Example** (Set a bytea column)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Uint8Array } from "effect/Schema"
  * import { bytea } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Uint8Array.pipe(bytea()).meta.column?.kind) // "bytea"
+ * console.log(Uint8Array.pipe(bytea()).meta.column?.kind) // "bytea"
  * ```
  *
  * @category combinators
@@ -698,10 +716,10 @@ export const bytea =
  * **Example** (Set a string timestamp)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { timestamp } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(timestamp()).meta.column?.kind) // "timestamp"
+ * console.log(String.pipe(timestamp()).meta.column?.kind) // "timestamp"
  * ```
  *
  * @category combinators
@@ -726,11 +744,11 @@ export function timestamp(options?: {
   readonly withTimezone?: boolean;
 }): unknown {
   return (input: Field.Input): Field.Any => {
-    const withTimezone = O.getOrElse(O.fromUndefinedOr(options?.withTimezone), constTrue);
+    const withTimezone = getOrElse(fromUndefinedOr(options?.withTimezone), constTrue);
     return Field.patch(input, {
       column: PgColumn.Timestamp.make({
         ident: withTimezone ? "timestamptz" : "timestamp",
-        mode: O.getOrElse(O.fromUndefinedOr(options?.mode), () => "string"),
+        mode: getOrElse(fromUndefinedOr(options?.mode), () => "string"),
         withTimezone,
       }),
     });
@@ -754,14 +772,14 @@ type ValidateArrayModifiers<I extends Field.Input> = Field.MetaFrom<I>["primaryK
     : Field.SqlTypeError<"array fields cannot use identity generation">;
 
 const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.ArrayDimension, 0> =>
-  Match.value(suffix).pipe(
-    Match.withReturnType<Exclude<PgColumn.ArrayDimension, 0>>(),
-    Match.when("[]", () => 1),
-    Match.when("[][]", () => 2),
-    Match.when("[][][]", () => 3),
-    Match.when("[][][][]", () => 4),
-    Match.when("[][][][][]", () => 5),
-    Match.exhaustive,
+  matchValue(suffix).pipe(
+    withReturnType<Exclude<PgColumn.ArrayDimension, 0>>(),
+    matchWhen("[]", () => 1),
+    matchWhen("[][]", () => 2),
+    matchWhen("[][][]", () => 3),
+    matchWhen("[][][][]", () => 4),
+    matchWhen("[][][][][]", () => 5),
+    exhaustive,
   );
 
 /**
@@ -770,11 +788,11 @@ const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.Arra
  * **Example** (Declare a two-dimensional text array)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Array, String } from "effect/Schema"
  * import * as pg from "@beep/effect-drizzle/pg"
  *
- * const matrix = S.Array(S.Array(S.String)).pipe(
- *   pg.array(S.String.pipe(pg.text()), "[][]")
+ * const matrix = Array(Array(String)).pipe(
+ *   pg.array(String.pipe(pg.text()), "[][]")
  * )
  * ```
  *
@@ -802,7 +820,7 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
     const outer = Field.from(input);
     const base = Field.from(element);
     const dimensions = dimension(suffix);
-    if (P.isUndefined(base.meta.column) || base.meta.dimensions !== 0) {
+    if (isUndefined(base.meta.column) || base.meta.dimensions !== 0) {
       throw DeriveColumnError.make({
         message: "pg.array requires an element schema with one explicit scalar column combinator.",
         fieldName: "(unknown — set at model definition)",
@@ -818,7 +836,7 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
     }
     const outerElement = arrayElementAST(outer.schema, dimensions);
     const baseElement = encodedAST(base.schema);
-    if (!Eq.equals(outerElement, baseElement)) {
+    if (!equals(outerElement, baseElement)) {
       throw DeriveColumnError.make({
         message: "pg.array outer schema does not match the element schema at the declared depth.",
         fieldName: "(unknown — set at model definition)",
@@ -842,10 +860,10 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
  * **Example** (Mark a primary key)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { primaryKey } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(primaryKey()).meta.primaryKey) // true
+ * console.log(String.pipe(primaryKey()).meta.primaryKey) // true
  * ```
  *
  * @category combinators
@@ -869,10 +887,10 @@ export const primaryKey =
  * **Example** (Mark a unique field)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { unique } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(unique()).meta.unique) // true
+ * console.log(String.pipe(unique()).meta.unique) // true
  * ```
  *
  * @category combinators
@@ -911,10 +929,10 @@ type ValidateNotArray<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] e
  * **Example** (Apply always identity generation)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { identity, integer } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(integer(), identity()).meta.identity) // "always"
+ * console.log(Int.pipe(integer(), identity()).meta.identity) // "always"
  * ```
  *
  * @category combinators
@@ -941,8 +959,8 @@ export function identity<const K extends "always" | "byDefault" = "always">(
 >;
 export function identity(kind?: "always" | "byDefault"): unknown {
   return (input: Field.Input): Field.Any => {
-    const resolved: Exclude<Meta.IdentityMode, false> = O.getOrElse(
-      O.fromUndefinedOr(kind),
+    const resolved: Exclude<Meta.IdentityMode, false> = getOrElse(
+      fromUndefinedOr(kind),
       (): "always" => "always",
     );
     return Field.patch(
@@ -977,10 +995,10 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
  * **Example** (Set a literal default)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { default as defaultValue } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(defaultValue("active")).meta.hasDefault) // true
+ * console.log(String.pipe(defaultValue("active")).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -1005,10 +1023,10 @@ export { default_ as default };
  *
  * ```ts
  * import { sql } from "drizzle-orm"
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { defaultExpr } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault) // true
+ * console.log(String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -1041,10 +1059,10 @@ type ValidateTimestamp<I extends Field.Input> =
  * **Example** (Set the current-time default)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { defaultNow, timestamp } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(timestamp(), defaultNow()).meta.hasDefault) // true
+ * console.log(String.pipe(timestamp(), defaultNow()).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -1066,10 +1084,10 @@ export const defaultNow =
  * **Example** (Set a raw default)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { unsafeDefaultSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault) // true
+ * console.log(String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault) // true
  * ```
  *
  * @category combinators
@@ -1091,10 +1109,10 @@ export const unsafeDefaultSql =
  * **Example** (Use the compatibility alias)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { defaultSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(defaultSql("current_user")).meta.hasDefault) // true
+ * console.log(String.pipe(defaultSql("current_user")).meta.hasDefault) // true
  * ```
  *
  * @deprecated Use the explicitly unsafe-named {@link unsafeDefaultSql}.
@@ -1127,10 +1145,10 @@ type ValidateVersionCompatibility<I extends Field.Input> =
  * **Example** (Mark a row version)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { default as defaultValue, integer, version } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.Int.pipe(integer(), defaultValue(1), version()).meta.version) // true
+ * console.log(Int.pipe(integer(), defaultValue(1), version()).meta.version) // true
  * ```
  *
  * @category combinators
@@ -1150,10 +1168,10 @@ export const version =
  *
  * ```ts
  * import { sql } from "drizzle-orm"
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { generated } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(generated(sql<string>`lower(name)`)).meta.generated !== false) // true
+ * console.log(String.pipe(generated(sql<string>`lower(name)`)).meta.generated !== false) // true
  * ```
  *
  * @category combinators
@@ -1174,10 +1192,10 @@ export const generated =
  * **Example** (Set a raw generated expression)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { unsafeGeneratedSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated !== false) // true
+ * console.log(String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated !== false) // true
  * ```
  *
  * @category combinators
@@ -1198,10 +1216,10 @@ export const unsafeGeneratedSql =
  * **Example** (Override a column name)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { columnName } from "@beep/effect-drizzle/pg"
  *
- * console.log(S.String.pipe(columnName("legacy_name")).meta.columnName) // "legacy_name"
+ * console.log(String.pipe(columnName("legacy_name")).meta.columnName) // "legacy_name"
  * ```
  *
  * @category combinators
@@ -1219,12 +1237,12 @@ export const columnName =
  * **Example** (Reference an EntityId schema)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Int } from "effect/Schema"
  * import { withStatics } from "../internal/statics.ts"
  * import { references } from "@beep/effect-drizzle/pg"
  *
- * const UserId = withStatics(S.Int, () => ({ tableName: "user", entityType: "User" }))
- * console.log(S.Int.pipe(references(UserId)).meta.references?.tableName) // "user"
+ * const UserId = withStatics(Int, () => ({ tableName: "user", entityType: "User" }))
+ * console.log(Int.pipe(references(UserId)).meta.references?.tableName) // "user"
  * ```
  *
  * @category combinators

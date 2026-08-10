@@ -9,7 +9,7 @@
  * - Unambiguous carriers derive directly: string → text, boolean → boolean,
  *   bigint → bigint, object/array → jsonb.
  * - `number` derives `doublePrecision` — v4 checks are not type-visible, so
- *   `S.Int` cannot be distinguished from `S.Number` statically; integer
+ *   `Int` cannot be distinguished from `NumberSchema` statically; integer
  *   columns are explicit (`pg.integer()`).
  * - Declarations (Date, Uint8Array, Option, …), heterogeneous unions, and
  *   everything else DO NOT derive: explicit column metadata is required.
@@ -19,15 +19,54 @@
  * feed `.notNull()` instead), and an encoded `Undefined` is rejected — SQL
  * absence must be represented as `null` in selected rows.
  */
-import { flow, Match } from "effect";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
+import { flow } from "effect/Function";
+import {
+  orElse as matchOrElse,
+  tags as matchTags,
+  type as matchType,
+  withReturnType,
+} from "effect/Match";
+import {
+  append,
+  appendAll,
+  empty,
+  every,
+  filter,
+  flatMap,
+  getSomes,
+  head,
+  isReadonlyArrayNonEmpty,
+  map,
+  match,
+  of,
+  range,
+  reduce,
+  some,
+} from "effect/Array";
+import { equals } from "effect/Equal";
 import { constFalse, constTrue, dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as AST from "effect/SchemaAST";
-import * as Struct from "effect/Struct";
+import {
+  flatMap as flatMapOption,
+  fromUndefinedOr,
+  getOrElse,
+  map as mapOption,
+  none,
+  some as someOption,
+} from "effect/Option";
+import type { Option } from "effect/Option";
+import {
+  Struct as StructPredicate,
+  hasProperty,
+  isNumber,
+  isString,
+  isTagged,
+  not,
+} from "effect/Predicate";
+import { NonEmptyString, annotate, declare, is, isSchema } from "effect/Schema";
+import type { Top } from "effect/Schema";
+import { toEncoded } from "effect/SchemaAST";
+import type { AST, Check, Suspend } from "effect/SchemaAST";
+import { get as getStruct } from "effect/Struct";
 import { VariantSchema } from "effect/unstable/schema";
 import type * as Field from "../core/Field.ts";
 import { classify as classifyCore, DeriveColumnError } from "../core/classification.ts";
@@ -55,7 +94,7 @@ type EntityIdLikeShape = {
   readonly entityType: string;
 };
 
-const isNonEmptyString = S.is(S.NonEmptyString);
+const isNonEmptyString = is(NonEmptyString);
 
 /**
  * Structural contract for the statics carried by EntityId schemas.
@@ -76,14 +115,14 @@ const isNonEmptyString = S.is(S.NonEmptyString);
  * @category schemas
  * @since 0.0.0
  */
-export const EntityIdLike = S.declare<EntityIdLikeShape>(
+export const EntityIdLike = declare<EntityIdLikeShape>(
   (input): input is EntityIdLikeShape =>
-    P.hasProperty(input, "tableName") &&
+    hasProperty(input, "tableName") &&
     isNonEmptyString(input.tableName) &&
-    P.hasProperty(input, "entityType") &&
+    hasProperty(input, "entityType") &&
     isNonEmptyString(input.entityType),
 ).pipe(
-  S.annotate({
+  annotate({
     identifier: "@beep/effect-drizzle/EntityIdLike",
     description: "Static identity metadata carried by an EntityId schema.",
   }),
@@ -111,7 +150,7 @@ export type EntityIdLike = typeof EntityIdLike.Type;
  * @category guards
  * @since 0.0.0
  */
-export const isEntityIdLike = S.is(EntityIdLike);
+export const isEntityIdLike = is(EntityIdLike);
 
 // ---------------------------------------------------------------------------
 // Type-level derivation
@@ -188,19 +227,19 @@ export type ResolvedColumn<I extends Field.Input> =
  * **Example** (Select a plain schema)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String } from "effect/Schema"
  * import { selectSchemaOf } from "./derive.ts"
  *
- * console.log(selectSchemaOf(S.String) === S.String) // true
+ * console.log(selectSchemaOf(String) === String) // true
  * ```
  *
  * @category getters
  * @since 0.0.0
  */
-export const selectSchemaOf = (schema: Field.AnySchema): S.Top => {
+export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   if (VariantSchema.isField(schema)) {
     const select: unknown = schema.schemas["select"];
-    if (S.isSchema(select)) return select;
+    if (isSchema(select)) return select;
     throw DeriveColumnError.make({
       message:
         "Variant field has no select schema; the select variant is the database row representation.",
@@ -219,10 +258,10 @@ export const selectSchemaOf = (schema: Field.AnySchema): S.Top => {
  * **Example** (Classify a nullable string)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { NullOr, String } from "effect/Schema"
  * import { classify } from "./derive.ts"
  *
- * console.log(classify(S.NullOr(S.String), "bio").nullable) // true
+ * console.log(classify(NullOr(String), "bio").nullable) // true
  * ```
  *
  * @category getters
@@ -234,7 +273,7 @@ export const classify = (
 ): { readonly column: PgColumn.Spec; readonly nullable: boolean } =>
   classifyCore(schema, fieldName, {
     selectSchemaOf,
-    entityTableName: (select) => (isEntityIdLike(select) ? O.some(select.tableName) : O.none()),
+    entityTableName: (select) => (isEntityIdLike(select) ? someOption(select.tableName) : none()),
     entityColumn: (tableName) => PgColumn.Integer.make({ ident: `entityId<"${tableName}">` }),
     fromSchemaAST: PgColumn.Spec.fromSchemaAST,
   });
@@ -249,10 +288,10 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
  * **Example** (Detect encoded nullability)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { NullOr, String } from "effect/Schema"
  * import { isNullable } from "./derive.ts"
  *
- * console.log(isNullable(S.NullOr(S.String))) // true
+ * console.log(isNullable(NullOr(String))) // true
  * ```
  *
  * @category guards
@@ -260,25 +299,25 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
  */
 export const isNullable = flow(
   selectSchemaOf,
-  flow(Struct.get("ast"), AST.toEncoded),
-  Match.type<AST.AST>().pipe(
-    Match.withReturnType<boolean>(),
-    Match.tags({
-      Union: P.Struct({
-        types: A.some(P.isTagged("Null")),
+  flow(getStruct("ast"), toEncoded),
+  matchType<AST>().pipe(
+    withReturnType<boolean>(),
+    matchTags({
+      Union: StructPredicate({
+        types: some(isTagged("Null")),
       }),
       Null: constTrue,
     }),
-    Match.orElse(constFalse),
+    matchOrElse(constFalse),
   ),
 );
 
-const nonNullEncodedAST = (schema: Field.AnySchema): AST.AST => {
-  const encoded = AST.toEncoded(selectSchemaOf(schema).ast);
-  if (!P.isTagged(encoded, "Union")) return encoded;
-  if (!A.some(encoded.types, P.isTagged("Null"))) return encoded;
-  const members = A.filter(encoded.types, P.not(P.isTagged("Null")));
-  return O.getOrElse(A.head(members), () =>
+const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
+  const encoded = toEncoded(selectSchemaOf(schema).ast);
+  if (!isTagged(encoded, "Union")) return encoded;
+  if (!some(encoded.types, isTagged("Null"))) return encoded;
+  const members = filter(encoded.types, not(isTagged("Null")));
+  return getOrElse(head(members), () =>
     fail(
       "(unknown)",
       encoded._tag,
@@ -296,17 +335,17 @@ const nonNullEncodedAST = (schema: Field.AnySchema): AST.AST => {
 export const arrayElementAST = (
   schema: Field.AnySchema,
   dimensions: Exclude<PgColumn.ArrayDimension, 0>,
-): AST.AST => {
-  const current = A.reduce(A.range(1, dimensions), nonNullEncodedAST(schema), (node) => {
-    if (P.isTagged(node, "Arrays")) {
-      if (A.isReadonlyArrayNonEmpty(node.elements) || node.rest.length !== 1) {
+): AST => {
+  const current = reduce(range(1, dimensions), nonNullEncodedAST(schema), (node) => {
+    if (isTagged(node, "Arrays")) {
+      if (isReadonlyArrayNonEmpty(node.elements) || node.rest.length !== 1) {
         fail(
           "(unknown)",
           node._tag,
           `pg.array expected one homogeneous encoded element at depth ${dimensions}.`,
         );
       }
-      return O.getOrElse(A.head(node.rest), () =>
+      return getOrElse(head(node.rest), () =>
         fail(
           "(unknown)",
           node._tag,
@@ -320,7 +359,7 @@ export const arrayElementAST = (
       `pg.array expected an encoded ReadonlyArray at depth ${dimensions}.`,
     );
   });
-  if (P.isTagged(current, "Arrays")) {
+  if (isTagged(current, "Arrays")) {
     fail(
       "(unknown)",
       current._tag,
@@ -336,37 +375,35 @@ export const arrayElementAST = (
  * @category getters
  * @since 0.0.0
  */
-export const encodedAST = flow(selectSchemaOf, flow(Struct.get("ast"), AST.toEncoded));
+export const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 
 const stringLiteralsFromAST = (
-  node: AST.AST,
-  visited: ReadonlyArray<AST.Suspend> = A.empty(),
-): O.Option<ReadonlyArray<string>> =>
-  Match.type<AST.AST>().pipe(
-    Match.withReturnType<O.Option<ReadonlyArray<string>>>(),
-    Match.tags({
-      Literal: ({ literal }) => (P.isString(literal) ? O.some(A.of(literal)) : O.none()),
-      Null: () => O.some(A.empty()),
+  node: AST,
+  visited: ReadonlyArray<Suspend> = empty(),
+): Option<ReadonlyArray<string>> =>
+  matchType<AST>().pipe(
+    withReturnType<Option<ReadonlyArray<string>>>(),
+    matchTags({
+      Literal: ({ literal }) => (isString(literal) ? someOption(of(literal)) : none()),
+      Null: () => someOption(empty()),
       Enum: ({ enums }) =>
-        A.every(enums, ([, value]) => P.isString(value))
-          ? O.some(
-              A.getSomes(
-                A.map(enums, ([, value]) => (P.isString(value) ? O.some(value) : O.none())),
-              ),
+        every(enums, ([, value]) => isString(value))
+          ? someOption(
+              getSomes(map(enums, ([, value]) => (isString(value) ? someOption(value) : none()))),
             )
-          : O.none(),
+          : none(),
       Union: ({ types }) =>
-        A.reduce(types, O.some<ReadonlyArray<string>>(A.empty()), (values, member) =>
-          O.flatMap(values, (current) =>
-            O.map(stringLiteralsFromAST(member, visited), (next) => A.appendAll(current, next)),
+        reduce(types, someOption<ReadonlyArray<string>>(empty()), (values, member) =>
+          flatMapOption(values, (current) =>
+            mapOption(stringLiteralsFromAST(member, visited), (next) => appendAll(current, next)),
           ),
         ),
       Suspend: (suspend) =>
-        A.some(visited, Eq.equals(suspend))
-          ? O.none()
-          : stringLiteralsFromAST(suspend.thunk(), A.append(visited, suspend)),
+        some(visited, equals(suspend))
+          ? none()
+          : stringLiteralsFromAST(suspend.thunk(), append(visited, suspend)),
     }),
-    Match.orElse(() => O.none()),
+    matchOrElse(() => none()),
   )(node);
 
 /**
@@ -380,10 +417,10 @@ const stringLiteralsFromAST = (
  * **Example** (Collect enum values)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Literals } from "effect/Schema"
  * import { stringLiteralValues } from "./derive.ts"
  *
- * console.log(stringLiteralValues(S.Literals(["draft", "active"])).pipe)
+ * console.log(stringLiteralValues(Literals(["draft", "active"])).pipe)
  * ```
  *
  * @category getters
@@ -391,64 +428,64 @@ const stringLiteralsFromAST = (
  */
 export const stringLiteralValues = (
   schema: Field.AnySchema,
-): O.Option<readonly [string, ...string[]]> =>
-  O.flatMap(stringLiteralsFromAST(AST.toEncoded(selectSchemaOf(schema).ast)), (values) =>
-    A.match(values, {
-      onEmpty: O.none,
-      onNonEmpty: O.some,
+): Option<readonly [string, ...string[]]> =>
+  flatMapOption(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast)), (values) =>
+    match(values, {
+      onEmpty: none,
+      onNonEmpty: someOption,
     }),
   );
 
-const maxLengthFromCheck = (check: AST.Check<unknown>): ReadonlyArray<number> => {
+const maxLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
   const representation = check.annotations?.representation;
   const current =
     representation?.id === "effect/schema/isMaxLength" &&
-    P.hasProperty(representation.payload, "maxLength") &&
-    P.isNumber(representation.payload.maxLength)
-      ? A.of(representation.payload.maxLength)
-      : A.empty<number>();
-  return P.isTagged(check, "FilterGroup")
-    ? A.appendAll(current, A.flatMap(check.checks, maxLengthFromCheck))
+    hasProperty(representation.payload, "maxLength") &&
+    isNumber(representation.payload.maxLength)
+      ? of(representation.payload.maxLength)
+      : empty<number>();
+  return isTagged(check, "FilterGroup")
+    ? appendAll(current, flatMap(check.checks, maxLengthFromCheck))
     : current;
 };
 
 const collectMaxLengths: {
-  (visited: ReadonlyArray<AST.AST>): (node: AST.AST) => ReadonlyArray<number>;
-  (node: AST.AST, visited: ReadonlyArray<AST.AST>): ReadonlyArray<number>;
-} = dual(2, (node: AST.AST, visited: ReadonlyArray<AST.AST>): ReadonlyArray<number> => {
-  if (A.some(visited, Eq.equals(node))) return A.empty();
-  const nextVisited = A.append(visited, node);
+  (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
+  (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
+} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+  if (some(visited, equals(node))) return empty();
+  const nextVisited = append(visited, node);
   const collectNested = collectMaxLengths(nextVisited);
-  const checks = O.fromUndefinedOr(node.checks).pipe(
-    O.map(A.flatMap(maxLengthFromCheck)),
-    O.getOrElse(A.empty<number>),
+  const checks = fromUndefinedOr(node.checks).pipe(
+    mapOption(flatMap(maxLengthFromCheck)),
+    getOrElse(empty<number>),
   );
-  const encodings = O.fromUndefinedOr(node.encoding).pipe(
-    O.map(A.flatMap((link) => collectNested(link.to))),
-    O.getOrElse(A.empty<number>),
+  const encodings = fromUndefinedOr(node.encoding).pipe(
+    mapOption(flatMap((link) => collectNested(link.to))),
+    getOrElse(empty<number>),
   );
-  const nested = Match.type<AST.AST>().pipe(
-    Match.withReturnType<ReadonlyArray<number>>(),
-    Match.tags({
-      Union: ({ types }) => A.flatMap(types, collectNested),
+  const nested = matchType<AST>().pipe(
+    withReturnType<ReadonlyArray<number>>(),
+    matchTags({
+      Union: ({ types }) => flatMap(types, collectNested),
       Suspend: (suspend) => collectNested(suspend.thunk()),
-      Declaration: ({ typeParameters }) => A.flatMap(typeParameters, collectNested),
+      Declaration: ({ typeParameters }) => flatMap(typeParameters, collectNested),
     }),
-    Match.orElse(A.empty<number>),
+    matchOrElse(empty<number>),
   )(node);
-  return A.appendAll(A.appendAll(checks, encodings), nested);
+  return appendAll(appendAll(checks, encodings), nested);
 });
 
 /**
- * Collect every installed `S.isMaxLength` bound on the encoded select schema.
+ * Collect every installed `isMaxLength` bound on the encoded select schema.
  *
  * **Example** (Read a maximum length)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { String, isMaxLength } from "effect/Schema"
  * import { maxLengths } from "./derive.ts"
  *
- * console.log(maxLengths(S.String.check(S.isMaxLength(50)))) // [50]
+ * console.log(maxLengths(String.check(isMaxLength(50)))) // [50]
  * ```
  *
  * @category getters
@@ -456,6 +493,6 @@ const collectMaxLengths: {
  */
 export const maxLengths = flow(
   selectSchemaOf,
-  flow(Struct.get("ast"), AST.toEncoded),
-  collectMaxLengths(A.empty()),
+  flow(getStruct("ast"), toEncoded),
+  collectMaxLengths(empty()),
 );

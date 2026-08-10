@@ -1,10 +1,10 @@
 /** Internal SQL intent records shared by dialect implementations. */
 import type { SQL } from "drizzle-orm";
-import * as Data from "effect/Data";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Str from "effect/String";
-import * as Struct from "effect/Struct";
+import { taggedEnum } from "effect/Data";
+import type { TaggedEnum } from "effect/Data";
+import { fromUndefinedOr, getOrElse } from "effect/Option";
+import { hasProperty, isString, isUndefined } from "effect/Predicate";
+import { evolve } from "effect/Struct";
 
 /** Minimal column identity required by the dialect-neutral field wrapper. */
 export interface ColumnSpec {
@@ -39,19 +39,19 @@ export interface References<TableName extends string = string, ColumnName extend
 
 /** Cheap shape guard used where references cross an author-input seam. */
 export const isReferences = (value: unknown): value is References =>
-  P.hasProperty(value, "tableName") &&
-  P.isString(value.tableName) &&
-  Str.isNonEmpty(value.tableName) &&
-  P.hasProperty(value, "columnName") &&
-  P.isString(value.columnName) &&
-  Str.isNonEmpty(value.columnName) &&
-  P.hasProperty(value, "onDelete") &&
-  (P.isUndefined(value.onDelete) || isFkAction(value.onDelete)) &&
-  P.hasProperty(value, "onUpdate") &&
-  (P.isUndefined(value.onUpdate) || isFkAction(value.onUpdate));
+  hasProperty(value, "tableName") &&
+  isString(value.tableName) &&
+  value.tableName.length > 0 &&
+  hasProperty(value, "columnName") &&
+  isString(value.columnName) &&
+  value.columnName.length > 0 &&
+  hasProperty(value, "onDelete") &&
+  (isUndefined(value.onDelete) || isFkAction(value.onDelete)) &&
+  hasProperty(value, "onUpdate") &&
+  (isUndefined(value.onUpdate) || isFkAction(value.onUpdate));
 
 /** Server-default descriptor union. */
-export type Default = Data.TaggedEnum<{
+export type Default = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   value: { readonly value: unknown };
   now: {};
@@ -59,13 +59,15 @@ export type Default = Data.TaggedEnum<{
 }>;
 
 /** Constructors, guards, and exhaustive matcher for defaults. */
-export const Default = Data.taggedEnum<Default>();
+export const Default = taggedEnum<Default>();
 
 /** Typed SQL-expression default descriptor. */
 export type DefaultSqlExpr<Carrier> = Omit<
   Extract<Default, { readonly _tag: "sqlExpr" }>,
   "expression"
-> & { readonly expression: SQL<Carrier> };
+> & {
+  readonly expression: SQL<Carrier>;
+};
 
 /** Literal-value default descriptor. */
 export type DefaultValue<Encoded> = Omit<Extract<Default, { readonly _tag: "value" }>, "value"> & {
@@ -79,20 +81,22 @@ export type DefaultNow = Extract<Default, { readonly _tag: "now" }>;
 export type UnsafeDefaultSql = Extract<Default, { readonly _tag: "unsafeSql" }>;
 
 /** Generated-column descriptor union. */
-export type Generated = Data.TaggedEnum<{
+export type Generated = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   unsafeSql: { readonly sql: string };
   identityAlways: {};
 }>;
 
 /** Constructors, guards, and exhaustive matcher for generated columns. */
-export const Generated = Data.taggedEnum<Generated>();
+export const Generated = taggedEnum<Generated>();
 
 /** Typed generated SQL-expression descriptor. */
 export type GeneratedSqlExpr<Carrier> = Omit<
   Extract<Generated, { readonly _tag: "sqlExpr" }>,
   "expression"
-> & { readonly expression: SQL<Carrier> };
+> & {
+  readonly expression: SQL<Carrier>;
+};
 
 /** Explicit raw-SQL generated descriptor. */
 export type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql" }>;
@@ -163,7 +167,7 @@ function mergeField<const M extends Meta, const P extends Patch, K extends keyof
   key: K,
 ): Merge<M, P>[K];
 function mergeField(current: Meta[keyof Meta], patch: Patch, key: keyof Meta): Meta[keyof Meta] {
-  return O.getOrElse(O.fromUndefinedOr(patch[key]), () => current);
+  return getOrElse(fromUndefinedOr(patch[key]), () => current);
 }
 
 /** Merge a literal-preserving patch into existing metadata. */
@@ -184,5 +188,5 @@ export const merge = <const M extends Meta, const P extends Patch>(
     columnName: (current: M["columnName"]) => mergeField(current, patch, "columnName"),
     references: (current: M["references"]) => mergeField(current, patch, "references"),
   };
-  return Struct.evolve<Meta, typeof evolver>(meta, evolver);
+  return evolve<Meta, typeof evolver>(meta, evolver);
 };

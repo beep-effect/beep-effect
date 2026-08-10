@@ -1,8 +1,28 @@
 /** Compile-time and runtime consumer fixtures. */
 import { sql } from "drizzle-orm";
-import { Context, Effect } from "effect";
-import * as S from "effect/Schema";
-import * as SchemaGetter from "effect/SchemaGetter";
+import { Service } from "effect/Context";
+import { succeed } from "effect/Effect";
+import type { Effect, Success } from "effect/Effect";
+import {
+  Array,
+  BigInt,
+  Boolean,
+  Date as DateSchema,
+  Finite,
+  Int,
+  Literals,
+  NullOr,
+  OptionFromNullOr,
+  String,
+  Struct,
+  brand,
+  decodeTo,
+  isGreaterThan,
+  isMaxLength,
+  isMinLength,
+} from "effect/Schema";
+import type { Top } from "effect/Schema";
+import { transformOrFail } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { SqlModel } from "effect/unstable/sql";
 import { make, makeRepository, Model, VariantField } from "../src/index.ts";
@@ -12,8 +32,8 @@ import * as PgColumn from "../src/pg/Column.ts";
 import * as pg from "../src/pg/index.ts";
 import { schema, Table, toPgTable } from "../src/pg/index.ts";
 
-const PosInt = S.Int.check(
-  S.isGreaterThan(0, {
+const PosInt = Int.check(
+  isGreaterThan(0, {
     identifier: "PosIntPositiveCheck",
     title: "Positive Integer",
     description: "Checks that a row version is a positive integer.",
@@ -24,11 +44,11 @@ const PosInt = S.Int.check(
   description: "Positive integer used by kit row-version defaults.",
 });
 
-export const RecordStatus = S.Literals(["draft", "active"]).annotate({
+export const RecordStatus = Literals(["draft", "active"]).annotate({
   identifier: "@beep/effect-drizzle/test/RecordStatus",
   description: "Lifecycle status stored in the shared record_status enum.",
 });
-export const RecordSource = S.Literals(["web", "api"]).annotate({
+export const RecordSource = Literals(["web", "api"]).annotate({
   identifier: "@beep/effect-drizzle/test/RecordSource",
   description: "Creation source stored in a field-derived PostgreSQL enum.",
 });
@@ -47,37 +67,37 @@ export const auditKit = make({
 
 export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord")(
   {
-    name: S.String,
+    name: String,
     status: RecordStatus.pipe(pg.enum("record_status")),
     source: RecordSource.pipe(pg.enum()),
-    search: S.String.pipe(pg.unsafeCustom("tsvector")),
+    search: String.pipe(pg.unsafeCustom("tsvector")),
   },
   (columns) => [Table.check(sql<boolean>`${columns.name} <> ''`, "audited_record_name_non_empty")],
 ) {}
 
 export class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
-  label: S.String,
+  label: String,
   status: RecordStatus.pipe(pg.enum("record_status")),
 }) {}
 
 export class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
   {
-    leftId: S.Int.pipe(pg.integer()),
-    rightId: S.Int.pipe(pg.integer()),
+    leftId: Int.pipe(pg.integer()),
+    rightId: Int.pipe(pg.integer()),
   },
   (columns) => [Table.compositePrimaryKey("bare_junction_pk", [columns.leftId, columns.rightId])],
 ) {}
 
 export class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
-  amount: S.String.pipe(pg.numeric(10, 2)),
-  calendarDate: S.String.pipe(pg.date()),
-  objectDate: S.Date.pipe(pg.date({ mode: "date" })),
-  code: S.String.check(S.isMaxLength(4)).pipe(pg.char()),
-  payload: S.Struct({ ok: S.Boolean }).pipe(pg.json()),
-  score: S.Finite.pipe(pg.real()),
-  largeSequence: S.Int.pipe(pg.bigserial("number")),
-  nativeSequence: S.BigInt.pipe(pg.bigserial("bigint")),
-  shortSequence: S.Int.pipe(pg.smallserial()),
+  amount: String.pipe(pg.numeric(10, 2)),
+  calendarDate: String.pipe(pg.date()),
+  objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
+  code: String.check(isMaxLength(4)).pipe(pg.char()),
+  payload: Struct({ ok: Boolean }).pipe(pg.json()),
+  score: Finite.pipe(pg.real()),
+  largeSequence: Int.pipe(pg.bigserial("number")),
+  nativeSequence: BigInt.pipe(pg.bigserial("bigint")),
+  shortSequence: Int.pipe(pg.smallserial()),
 }) {}
 
 export const mechanicalTable = toPgTable(MechanicalColumns);
@@ -88,11 +108,7 @@ export const auditSchema = auditKit.schema({
   bare_junction: BareJunction,
 });
 
-const entityId = <
-  const TableName extends string,
-  const EntityType extends string,
-  Sch extends S.Top,
->(
+const entityId = <const TableName extends string, const EntityType extends string, Sch extends Top>(
   id: Sch,
   tableName: TableName,
   entityType: EntityType,
@@ -107,14 +123,14 @@ function attachStatics(self: object, statics: object): object {
   return Object.assign(self, statics);
 }
 
-export const UserId = entityId(S.Finite.pipe(S.brand("UserId")), "user", "User");
+export const UserId = entityId(Finite.pipe(brand("UserId")), "user", "User");
 export const OrganizationId = entityId(
-  S.Finite.pipe(S.brand("OrganizationId")),
+  Finite.pipe(brand("OrganizationId")),
   "organization",
   "Organization",
 );
 export const NullableOrganizationId = entityId(
-  S.NullOr(S.Finite.pipe(S.brand("OrganizationId"))),
+  NullOr(Finite.pipe(brand("OrganizationId"))),
   "organization",
   "Organization",
 );
@@ -125,9 +141,9 @@ export class Organization extends Model<Organization>("Organization")(
     parentOrgId: NullableOrganizationId.pipe(
       pg.references(OrganizationId, { onDelete: "set null" }),
     ),
-    slug: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
-    name: S.String,
-    code: S.String,
+    slug: String.check(isMaxLength(50)).pipe(pg.varchar(50)),
+    name: String,
+    code: String,
   },
   (t) => [
     Table.compositeUnique("organization_name_slug_unique", [t.name, t.slug]),
@@ -143,14 +159,14 @@ export class User extends auditKit.Entity<User>("User")(
   {
     id: UserId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
     orgId: OrganizationId,
-    email: S.String.check(S.isMaxLength(320)).pipe(pg.varchar(320), pg.unique()),
-    name: S.String,
-    bio: S.NullOr(S.String),
-    nickname: S.OptionFromNullOr(S.String),
-    settings: S.Struct({ theme: S.String }),
-    active: S.Boolean,
+    email: String.check(isMaxLength(320)).pipe(pg.varchar(320), pg.unique()),
+    name: String,
+    bio: NullOr(String),
+    nickname: OptionFromNullOr(String),
+    settings: Struct({ theme: String }),
+    active: Boolean,
     status: RecordStatus.pipe(pg.enum("record_status"), pg.default("active")),
-    searchName: S.String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
+    searchName: String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
   },
   (t) => [
     Table.compositeUnique("user_org_email_unique", [t.orgId, t.email]),
@@ -174,24 +190,24 @@ export const userOptimisticRepository = auditKit.Repository(User, {
 });
 
 // @effect-diagnostics deterministicKeys:off
-class CodecService extends Context.Service<
+class CodecService extends Service<
   CodecService,
   { readonly normalize: (value: string) => string }
 >()("@beep/effect-drizzle/test/fixtures/CodecService") {}
 
-const ServiceString = S.String.pipe(
-  S.decodeTo(S.String, {
-    decode: SchemaGetter.transformOrFail((value) =>
-      CodecService.use((service) => Effect.succeed(service.normalize(value))),
+const ServiceString = String.pipe(
+  decodeTo(String, {
+    decode: transformOrFail((value) =>
+      CodecService.use((service) => succeed(service.normalize(value))),
     ),
-    encode: SchemaGetter.transformOrFail((value) =>
-      CodecService.use((service) => Effect.succeed(service.normalize(value))),
+    encode: transformOrFail((value) =>
+      CodecService.use((service) => succeed(service.normalize(value))),
     ),
   }),
 );
 
 class ServiceCodecRecord extends Model<ServiceCodecRecord>("ServiceCodecRecord")({
-  id: S.Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+  id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
   value: ServiceString.pipe(pg.text()),
   rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
 }) {}
@@ -211,7 +227,7 @@ export class Membership extends Model<Membership>("Membership")(
   {
     organizationId: OrganizationId,
     userId: UserId,
-    role: S.String.pipe(pg.text(), pg.default("member")),
+    role: String.pipe(pg.text(), pg.default("member")),
   },
   (t) => [Table.compositePrimaryKey("membership_pk", [t.organizationId, t.userId])],
 ) {}
@@ -222,25 +238,25 @@ class DualOrgLink extends Model<DualOrgLink>("DualOrgLink")({
 }) {}
 
 export class ArrayRecord extends Model<ArrayRecord>("ArrayRecord")({
-  id: S.Int.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
-  labels: S.Array(S.String).pipe(pg.array(S.String.pipe(pg.text())), pg.unique()),
-  matrix: S.String.pipe(
-    S.Array,
-    S.Array,
-    pg.array(S.String.pipe(pg.text()), "[][]"),
+  id: Int.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
+  labels: Array(String).pipe(pg.array(String.pipe(pg.text())), pg.unique()),
+  matrix: String.pipe(
+    Array,
+    Array,
+    pg.array(String.pipe(pg.text()), "[][]"),
     pg.default([["seed"]]),
   ),
 }) {}
 
 export class EnumArrayRecord extends Model<EnumArrayRecord>("EnumArrayRecord")({
-  statuses: S.Array(RecordStatus).pipe(pg.array(RecordStatus.pipe(pg.enum("record_status")))),
+  statuses: Array(RecordStatus).pipe(pg.array(RecordStatus.pipe(pg.enum("record_status")))),
 }) {}
 
 export class ExplicitVariantModel extends Model<ExplicitVariantModel>("ExplicitVariantModel")({
   value: VariantField({
-    select: S.String,
-    insert: S.String,
-    update: S.String,
+    select: String,
+    insert: String,
+    update: String,
   }).pipe(pg.text(), pg.generated(sql<string>`lower(value)`)),
 }) {}
 
@@ -280,10 +296,10 @@ type MechanicalSelectRow = typeof mechanicalTable.$inferSelect;
 type MechanicalInsertRow = typeof mechanicalTable.$inferInsert;
 type ArraySelectRow = (typeof effectDrizzleSchema.tables.array_record)["$inferSelect"];
 type ArrayInsertRow = (typeof effectDrizzleSchema.tables.array_record)["$inferInsert"];
-type ServiceRepository = Effect.Success<typeof serviceCodecRepository>;
+type ServiceRepository = Success<typeof serviceCodecRepository>;
 type ServiceInsert = ReturnType<ServiceRepository["insert"]>;
 type ServiceInsertRequirements =
-  ServiceInsert extends Effect.Effect<unknown, unknown, infer Requirements> ? Requirements : never;
+  ServiceInsert extends Effect<unknown, unknown, infer Requirements> ? Requirements : never;
 
 export type _selectId = Expect<Equal<SelectRow["id"], number>>;
 export type _selectEmail = Expect<Equal<SelectRow["email"], string>>;
@@ -388,52 +404,52 @@ export type _repositoryCarriesCodecServices = Expect<
 // Negative matrix: each assertion names the rejected invariant.
 
 // @ts-expect-error invariant: varchar requires a string-encoded schema
-export const _badVarchar = () => S.Finite.pipe(pg.varchar(80));
+export const _badVarchar = () => Finite.pipe(pg.varchar(80));
 // @ts-expect-error invariant: text requires a string-encoded schema
-export const _badText = S.Finite.pipe(pg.text());
+export const _badText = Finite.pipe(pg.text());
 // @ts-expect-error invariant: uuid requires a string-encoded schema
-export const _badUuid = S.Finite.pipe(pg.uuid());
+export const _badUuid = Finite.pipe(pg.uuid());
 // @ts-expect-error invariant: integer requires a number-encoded schema
-export const _badInteger = S.String.pipe(pg.integer());
+export const _badInteger = String.pipe(pg.integer());
 // @ts-expect-error invariant: smallint requires a number-encoded schema
-export const _badSmallint = S.String.pipe(pg.smallint());
+export const _badSmallint = String.pipe(pg.smallint());
 // @ts-expect-error invariant: doublePrecision requires a number-encoded schema
-export const _badDouble = S.String.pipe(pg.doublePrecision());
+export const _badDouble = String.pipe(pg.doublePrecision());
 // @ts-expect-error invariant: bigint bigint-mode requires a bigint-encoded schema
-export const _badBigintBig = S.Finite.pipe(pg.bigint("bigint"));
+export const _badBigintBig = Finite.pipe(pg.bigint("bigint"));
 // @ts-expect-error invariant: bigint number-mode requires a number-encoded schema
-export const _badBigintNumber = S.BigInt.pipe(pg.bigint("number"));
+export const _badBigintNumber = BigInt.pipe(pg.bigint("number"));
 // @ts-expect-error invariant: serial requires a number-encoded schema
-export const _badSerial = S.String.pipe(pg.serial());
+export const _badSerial = String.pipe(pg.serial());
 // @ts-expect-error invariant: boolean requires a boolean-encoded schema
-export const _badBoolean = S.String.pipe(pg.boolean());
+export const _badBoolean = String.pipe(pg.boolean());
 // @ts-expect-error invariant: jsonb requires an object- or array-encoded schema
-export const _badJsonb = S.Boolean.pipe(pg.jsonb());
+export const _badJsonb = Boolean.pipe(pg.jsonb());
 // @ts-expect-error invariant: bytea requires a Uint8Array-encoded schema
-export const _badBytea = S.String.pipe(pg.bytea());
+export const _badBytea = String.pipe(pg.bytea());
 // @ts-expect-error invariant: timestamp string mode requires a string-encoded schema
-export const _badTimestampString = S.Finite.pipe(pg.timestamp());
+export const _badTimestampString = Finite.pipe(pg.timestamp());
 // @ts-expect-error invariant: timestamp date mode requires a Date-encoded schema
-export const _badTimestampDate = S.String.pipe(pg.timestamp({ mode: "date" }));
+export const _badTimestampDate = String.pipe(pg.timestamp({ mode: "date" }));
 // @ts-expect-error invariant: defaultNow requires an explicit timestamp column
-export const _badDefaultNow = S.String.pipe(pg.text(), pg.defaultNow());
+export const _badDefaultNow = String.pipe(pg.text(), pg.defaultNow());
 // @ts-expect-error invariant: a default value must match the encoded carrier
-export const _badDefaultValue = S.String.pipe(pg.text(), pg.default(1));
-export const _badDefaultExpr = S.String.pipe(
+export const _badDefaultValue = String.pipe(pg.text(), pg.default(1));
+export const _badDefaultExpr = String.pipe(
   pg.text(),
   // @ts-expect-error invariant: a typed default expression carrier must match the field
   pg.defaultExpr(sql<number>`1`),
 );
-export const _badGeneratedExpr = S.String.pipe(
+export const _badGeneratedExpr = String.pipe(
   pg.text(),
   // @ts-expect-error invariant: a generated expression carrier must match the field
   pg.generated(sql<number>`1`),
 );
 // @ts-expect-error invariant: identity requires an explicit integer-family column
-export const _badIdentityMissingColumn = S.Finite.pipe(pg.identity());
+export const _badIdentityMissingColumn = Finite.pipe(pg.identity());
 // @ts-expect-error invariant: identity rejects non-integer column families
-export const _badIdentityText = S.String.pipe(pg.text(), pg.identity());
-export const _badNullablePk = S.NullOr(S.String).pipe(
+export const _badIdentityText = String.pipe(pg.text(), pg.identity());
+export const _badNullablePk = NullOr(String).pipe(
   pg.text(),
   // @ts-expect-error invariant: nullable schemas cannot be primary keys
   pg.primaryKey(),
@@ -450,53 +466,53 @@ export type _badUpdateGeneratedShape = UserUpdateVariant["searchName"];
 export type _badJsonCreateGeneratedShape = UserJsonCreateVariant["searchName"];
 export const _badEnumBroadString = () =>
   // @ts-expect-error invariant: pg.enum rejects broad string schemas
-  S.String.pipe(pg.enum("bad_status"));
+  String.pipe(pg.enum("bad_status"));
 export const _badNumeric = () =>
   // @ts-expect-error invariant: numeric requires a string-encoded schema
-  S.Finite.pipe(pg.numeric());
+  Finite.pipe(pg.numeric());
 export const _badDateString = () =>
   // @ts-expect-error invariant: string date mode requires a string-encoded schema
-  S.Date.pipe(pg.date());
+  DateSchema.pipe(pg.date());
 export const _badDateObject = () =>
   // @ts-expect-error invariant: Date mode requires a Date-encoded schema
-  S.String.pipe(pg.date({ mode: "date" }));
+  String.pipe(pg.date({ mode: "date" }));
 export const _badChar = () =>
   // @ts-expect-error invariant: char requires a string-encoded schema
-  S.Finite.pipe(pg.char(2));
+  Finite.pipe(pg.char(2));
 export const _badJson = () =>
   // @ts-expect-error invariant: json requires an object- or array-encoded schema
-  S.String.pipe(pg.json());
+  String.pipe(pg.json());
 export const _badReal = () =>
   // @ts-expect-error invariant: real requires a number-encoded schema
-  S.String.pipe(pg.real());
+  String.pipe(pg.real());
 export const _badBigserialNumber = () =>
   // @ts-expect-error invariant: number-mode bigserial requires a number schema
-  S.BigInt.pipe(pg.bigserial("number"));
+  BigInt.pipe(pg.bigserial("number"));
 export const _badBigserialBigint = () =>
   // @ts-expect-error invariant: bigint-mode bigserial requires a bigint schema
-  S.Int.pipe(pg.bigserial("bigint"));
+  Int.pipe(pg.bigserial("bigint"));
 export const _badSmallserial = () =>
   // @ts-expect-error invariant: smallserial requires a number-encoded schema
-  S.String.pipe(pg.smallserial());
+  String.pipe(pg.smallserial());
 export const _badArrayCarrier = () =>
-  S.Array(S.Finite).pipe(
+  Array(Finite).pipe(
     // @ts-expect-error invariant: the outer array carrier must match its element declaration
-    pg.array(S.String.pipe(pg.text())),
+    pg.array(String.pipe(pg.text())),
   );
 export const _badArrayDepth = () =>
-  S.Array(S.String).pipe(
+  Array(String).pipe(
     // @ts-expect-error invariant: declared dimensions must match the encoded array depth
-    pg.array(S.String.pipe(pg.text()), "[][]"),
+    pg.array(String.pipe(pg.text()), "[][]"),
   );
 export const _badArrayBareElement = () =>
-  S.Array(S.String).pipe(
+  Array(String).pipe(
     // @ts-expect-error invariant: array elements require an explicit base column combinator
-    pg.array(S.String),
+    pg.array(String),
   );
 export const _badArrayThenPrimaryKey = () => {
   class BadArrayThenPrimaryKey extends Model<BadArrayThenPrimaryKey>("BadArrayThenPrimaryKey")({
-    value: S.Array(S.String).pipe(
-      pg.array(S.String.pipe(pg.text())),
+    value: Array(String).pipe(
+      pg.array(String.pipe(pg.text())),
       // @ts-expect-error invariant: array fields cannot be primary keys
       pg.primaryKey(),
     ),
@@ -505,18 +521,18 @@ export const _badArrayThenPrimaryKey = () => {
 };
 export const _badPrimaryKeyThenArray = () => {
   class BadPrimaryKeyThenArray extends Model<BadPrimaryKeyThenArray>("BadPrimaryKeyThenArray")({
-    value: S.Array(S.String).pipe(
+    value: Array(String).pipe(
       pg.primaryKey(),
       // @ts-expect-error invariant: primary-key fields cannot become arrays
-      pg.array(S.String.pipe(pg.text())),
+      pg.array(String.pipe(pg.text())),
     ),
   }) {}
   return BadPrimaryKeyThenArray;
 };
 export const _badArrayThenIdentity = () => {
   class BadArrayThenIdentity extends Model<BadArrayThenIdentity>("BadArrayThenIdentity")({
-    value: S.Array(S.Int).pipe(
-      pg.array(S.Int.pipe(pg.integer())),
+    value: Array(Int).pipe(
+      pg.array(Int.pipe(pg.integer())),
       // @ts-expect-error invariant: array fields cannot use identity generation
       pg.identity(),
     ),
@@ -525,20 +541,20 @@ export const _badArrayThenIdentity = () => {
 };
 export const _badIdentityThenArray = () => {
   class BadIdentityThenArray extends Model<BadIdentityThenArray>("BadIdentityThenArray")({
-    value: Field.patch(S.Array(S.Int), {
+    value: Field.patch(Array(Int), {
       column: PgColumn.Integer.make({ ident: "integer" }),
     }).pipe(
       pg.identity(),
       // @ts-expect-error invariant: identity fields cannot become arrays
-      pg.array(S.Int.pipe(pg.integer())),
+      pg.array(Int.pipe(pg.integer())),
     ),
   }) {}
   return BadIdentityThenArray;
 };
 export const _badArrayThenVersion = () => {
   class BadArrayThenVersion extends Model<BadArrayThenVersion>("BadArrayThenVersion")({
-    value: S.Array(S.Int).pipe(
-      pg.array(S.Int.pipe(pg.integer())),
+    value: Array(Int).pipe(
+      pg.array(Int.pipe(pg.integer())),
       // @ts-expect-error invariant: array fields cannot be optimistic versions
       pg.version(),
     ),
@@ -547,19 +563,19 @@ export const _badArrayThenVersion = () => {
 };
 export const _badVersionThenArray = () => {
   class BadVersionThenArray extends Model<BadVersionThenArray>("BadVersionThenArray")({
-    value: Field.patch(S.Array(S.Int), {
+    value: Field.patch(Array(Int), {
       column: PgColumn.Integer.make({ ident: "integer" }),
     }).pipe(
       pg.version(),
       // @ts-expect-error invariant: version fields cannot become arrays
-      pg.array(S.Int.pipe(pg.integer())),
+      pg.array(Int.pipe(pg.integer())),
     ),
   }) {}
   return BadVersionThenArray;
 };
 export const _badVersionColumn = () => {
   class BadVersionColumn extends Model<BadVersionColumn>("BadVersionColumn")({
-    value: S.String.pipe(
+    value: String.pipe(
       pg.text(),
       // @ts-expect-error invariant: optimistic versions require integer-family columns
       pg.version(),
@@ -569,7 +585,7 @@ export const _badVersionColumn = () => {
 };
 export const _badVersionThenIdentity = () => {
   class BadVersionThenIdentity extends Model<BadVersionThenIdentity>("BadVersionThenIdentity")({
-    value: S.Int.pipe(
+    value: Int.pipe(
       pg.integer(),
       pg.version(),
       // @ts-expect-error invariant: version fields cannot use identity generation
@@ -580,7 +596,7 @@ export const _badVersionThenIdentity = () => {
 };
 export const _badIdentityThenVersion = () => {
   class BadIdentityThenVersion extends Model<BadIdentityThenVersion>("BadIdentityThenVersion")({
-    value: S.Int.pipe(
+    value: Int.pipe(
       pg.integer(),
       pg.identity(),
       // @ts-expect-error invariant: identity-generated fields cannot be versions
@@ -591,7 +607,7 @@ export const _badIdentityThenVersion = () => {
 };
 export const _badVersionThenGenerated = () => {
   class BadVersionThenGenerated extends Model<BadVersionThenGenerated>("BadVersionThenGenerated")({
-    value: S.Int.pipe(
+    value: Int.pipe(
       pg.integer(),
       pg.version(),
       // @ts-expect-error invariant: version fields cannot be generated
@@ -602,7 +618,7 @@ export const _badVersionThenGenerated = () => {
 };
 export const _badGeneratedThenVersion = () => {
   class BadGeneratedThenVersion extends Model<BadGeneratedThenVersion>("BadGeneratedThenVersion")({
-    value: S.Int.pipe(
+    value: Int.pipe(
       pg.integer(),
       pg.unsafeGeneratedSql("1"),
       // @ts-expect-error invariant: generated fields cannot be versions
@@ -611,7 +627,7 @@ export const _badGeneratedThenVersion = () => {
   }) {}
   return BadGeneratedThenVersion;
 };
-export const _charWithoutMaxLength = () => S.String.pipe(pg.char());
+export const _charWithoutMaxLength = () => String.pipe(pg.char());
 
 export const _badTimestampCorrelation = () =>
   PgColumn.Timestamp.make({
@@ -623,7 +639,7 @@ export const _badTimestampCorrelation = () =>
 
 export const _badHandBuiltColumn = () => {
   const field = Field.make(
-    S.String,
+    String,
     Meta.merge(Meta.empty, {
       column: {
         _tag: "text",
@@ -642,7 +658,7 @@ export const _badHandBuiltColumn = () => {
 
 export const _badHandBuiltReference = () => {
   const field = Field.make(
-    S.String,
+    String,
     Meta.merge(Meta.empty, {
       references: {
         tableName: "target",
@@ -662,7 +678,7 @@ export const _badHandBuiltReference = () => {
 
 export const _badExtrasCallback = () => {
   class BadExtrasCallback extends Model<BadExtrasCallback>("BadExtrasCallback")(
-    { value: S.String },
+    { value: String },
     // @ts-expect-error invariant: extras callbacks must return valid PostgreSQL extra nodes
     () => [{ _tag: "index", name: "", columns: [] }],
   ) {}
@@ -672,13 +688,13 @@ export const _badExtrasCallback = () => {
 export const _kitDefaultCollision = () => {
   class KitDefaultCollision extends auditKit.Entity<KitDefaultCollision>("KitDefaultCollision")({
     // @ts-expect-error invariant: kit default columns cannot be overridden
-    createdAt: S.String.pipe(pg.timestamp()),
+    createdAt: String.pipe(pg.timestamp()),
   }) {}
   return KitDefaultCollision;
 };
 
 export class CallbackTyping extends Model<CallbackTyping>("CallbackTyping")(
-  { one: S.String, two: S.String },
+  { one: String, two: String },
   (t) => [
     Table.index("callback_good_idx", [t.one]),
     // @ts-expect-error invariant: extras callbacks expose only declared fields
@@ -697,7 +713,7 @@ export class CallbackTyping extends Model<CallbackTyping>("CallbackTyping")(
 export const _needsExplicitColumn = () => {
   class NeedsExplicitColumn extends Model<NeedsExplicitColumn>("NeedsExplicitColumn")({
     // @ts-expect-error invariant: Date declarations require explicit pg.timestamp metadata
-    at: S.Date,
+    at: DateSchema,
   }) {}
   return NeedsExplicitColumn;
 };
@@ -705,8 +721,8 @@ export const _needsExplicitColumn = () => {
 export const _twoPrimaryKeys = () => {
   // @ts-expect-error invariant: multiple inline primary keys require a composite table node instead
   class TwoPrimaryKeys extends Model<TwoPrimaryKeys>("TwoPrimaryKeys")({
-    one: S.Finite.pipe(pg.integer(), pg.primaryKey()),
-    two: S.Finite.pipe(pg.integer(), pg.primaryKey()),
+    one: Finite.pipe(pg.integer(), pg.primaryKey()),
+    two: Finite.pipe(pg.integer(), pg.primaryKey()),
   }) {}
   return TwoPrimaryKeys;
 };
@@ -714,8 +730,8 @@ export const _twoPrimaryKeys = () => {
 export const _twoVersions = () => {
   // @ts-expect-error invariant: a model may declare at most one optimistic-version field
   class TwoVersions extends Model<TwoVersions>("TwoVersions")({
-    leftVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
-    rightVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
+    leftVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
+    rightVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
   }) {}
   return TwoVersions;
 };
@@ -723,14 +739,14 @@ export const _twoVersions = () => {
 export const _nullablePrimaryKey = () => {
   class NullablePrimaryKey extends Model<NullablePrimaryKey>("NullablePrimaryKey")({
     // @ts-expect-error invariant: nullable schemas cannot be primary keys
-    id: S.NullOr(S.Finite).pipe(pg.integer(), pg.primaryKey()),
+    id: NullOr(Finite).pipe(pg.integer(), pg.primaryKey()),
   }) {}
   return NullablePrimaryKey;
 };
 
 export const _defaultThenGenerated = () => {
   class DefaultThenGenerated extends Model<DefaultThenGenerated>("DefaultThenGenerated")({
-    value: S.String.pipe(
+    value: String.pipe(
       pg.text(),
       pg.default("x"),
       // @ts-expect-error invariant: default and generated are mutually exclusive
@@ -742,7 +758,7 @@ export const _defaultThenGenerated = () => {
 
 export const _generatedThenDefault = () => {
   class GeneratedThenDefault extends Model<GeneratedThenDefault>("GeneratedThenDefault")({
-    value: S.String.pipe(
+    value: String.pipe(
       pg.text(),
       pg.unsafeGeneratedSql("lower(value)"),
       // @ts-expect-error invariant: generated and default are mutually exclusive
@@ -754,26 +770,26 @@ export const _generatedThenDefault = () => {
 
 export const _incompatibleVarchar = () => {
   class IncompatibleVarchar extends Model<IncompatibleVarchar>("IncompatibleVarchar")({
-    value: S.String.check(S.isMaxLength(500)).check(S.isMinLength(1)).pipe(pg.varchar(50)),
+    value: String.check(isMaxLength(500)).check(isMinLength(1)).pipe(pg.varchar(50)),
   }) {}
   return IncompatibleVarchar;
 };
 
 export const _compatibleVarchar = () => {
   class CompatibleVarchar extends Model<CompatibleVarchar>("CompatibleVarchar")({
-    value: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
+    value: String.check(isMaxLength(50)).pipe(pg.varchar(50)),
   }) {}
   return CompatibleVarchar;
 };
 
 export const _unboundedVarchar = () => {
   class UnboundedVarchar extends Model<UnboundedVarchar>("UnboundedVarchar")({
-    value: S.String.pipe(pg.varchar(50)),
+    value: String.pipe(pg.varchar(50)),
   }) {}
   return UnboundedVarchar;
 };
 
-const TextTargetId = entityId(S.String, "text_target", "TextTarget");
+const TextTargetId = entityId(String, "text_target", "TextTarget");
 class TextTarget extends Model<TextTarget>("TextTarget")({
   id: TextTargetId.pipe(pg.text(), pg.primaryKey()),
 }) {}
@@ -797,7 +813,7 @@ export const _entityFkMismatch = () =>
     wrong_entity_source: WrongEntitySource,
   });
 
-const MissingId = entityId(S.Finite, "missing_table", "Missing");
+const MissingId = entityId(Finite, "missing_table", "Missing");
 class MissingSource extends Model<MissingSource>("MissingSource")({
   missingId: MissingId,
 }) {}
@@ -806,11 +822,11 @@ export const _missingTarget = () =>
   // @ts-expect-error invariant: every reference target must be present in EffectDrizzle.schema
   schema({ missing_source: MissingSource });
 
-const MismatchStatusOne = S.Literals(["draft", "active"]).annotate({
+const MismatchStatusOne = Literals(["draft", "active"]).annotate({
   identifier: "@beep/effect-drizzle/test/MismatchStatusOne",
   description: "First declaration used to prove enum assembly mismatch errors.",
 });
-const MismatchStatusTwo = S.Literals(["draft", "disabled"]).annotate({
+const MismatchStatusTwo = Literals(["draft", "disabled"]).annotate({
   identifier: "@beep/effect-drizzle/test/MismatchStatusTwo",
   description: "Conflicting declaration used to prove enum assembly mismatch errors.",
 });
@@ -824,12 +840,12 @@ class EnumShapeTwo extends Model<EnumShapeTwo>("EnumShapeTwo")({
 export const _enumValueMismatch = () =>
   schema({ enum_shape_one: EnumShapeOne, enum_shape_two: EnumShapeTwo });
 
-const ArrayTextId = entityId(S.Array(S.String), "array_text_target", "ArrayTextTarget");
+const ArrayTextId = entityId(Array(String), "array_text_target", "ArrayTextTarget");
 class ArrayTextTarget extends Model<ArrayTextTarget>("ArrayTextTarget")({
-  id: ArrayTextId.pipe(pg.array(S.String.pipe(pg.text())), pg.unique()),
+  id: ArrayTextId.pipe(pg.array(String.pipe(pg.text())), pg.unique()),
 }) {}
 class ScalarArraySource extends Model<ScalarArraySource>("ScalarArraySource")({
-  targetId: S.String.pipe(pg.text(), pg.references(ArrayTextId)),
+  targetId: String.pipe(pg.text(), pg.references(ArrayTextId)),
 }) {}
 
 export const _scalarArrayFkMismatch = () =>
@@ -839,16 +855,12 @@ export const _scalarArrayFkMismatch = () =>
     scalar_array_source: ScalarArraySource,
   });
 
-const MatrixTextId = entityId(
-  S.String.pipe(S.Array, S.Array),
-  "matrix_text_target",
-  "MatrixTextTarget",
-);
+const MatrixTextId = entityId(String.pipe(Array, Array), "matrix_text_target", "MatrixTextTarget");
 class MatrixTextTarget extends Model<MatrixTextTarget>("MatrixTextTarget")({
-  id: MatrixTextId.pipe(pg.array(S.String.pipe(pg.text()), "[][]"), pg.unique()),
+  id: MatrixTextId.pipe(pg.array(String.pipe(pg.text()), "[][]"), pg.unique()),
 }) {}
 class ShallowArraySource extends Model<ShallowArraySource>("ShallowArraySource")({
-  targetId: S.Array(S.String).pipe(pg.array(S.String.pipe(pg.text())), pg.references(MatrixTextId)),
+  targetId: Array(String).pipe(pg.array(String.pipe(pg.text())), pg.references(MatrixTextId)),
 }) {}
 
 export const _arrayDepthFkMismatch = () =>
@@ -859,13 +871,13 @@ export const _arrayDepthFkMismatch = () =>
   });
 
 const CollisionTargetId = entityId(
-  S.Finite.pipe(S.brand("CollisionTargetId")),
+  Finite.pipe(brand("CollisionTargetId")),
   "collision_target",
   "CollisionTarget",
 );
 class CollisionTarget extends Model<CollisionTarget>("CollisionTarget")({
   id: CollisionTargetId.pipe(pg.integer(), pg.primaryKey()),
-  collisionSources: S.String.pipe(S.brand("CollisionValue")),
+  collisionSources: String.pipe(brand("CollisionValue")),
 }) {}
 class CollisionSource extends Model<CollisionSource>("CollisionSource")({
   targetId: CollisionTargetId,
