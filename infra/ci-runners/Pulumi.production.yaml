@@ -1,3 +1,15 @@
 encryptionsalt: v1:d1UtUvnQxrA=:v1:wXUDO7YvIR4o36Gt:Wb6zhIDuCMK7/V/y9yw9FswDX7vb5w==
 config:
   ciRunners:amiId: ami-052355af2a014bd2c
+  # The base image is pinned, while boot-time dnf upgrade-minimal still applies package security updates on every launch.
+  ciFleetController:amiId: ami-07a5b367e8dc8bd92
+  ciFleetController:githubAppIdSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_id
+  ciFleetController:githubAppKeyBase64SsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_key_base64
+  ciFleetController:githubAppWebhookSecretSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/app/github_app_webhook_secret
+  ciFleetController:githubAppKmsKeyArn: arn:aws:kms:us-east-1:832907639880:key/79ab38d9-2a9d-426b-b704-beb6fc5c971d
+  ciFleetController:runnerRolePermissionsBoundaryArn: arn:aws:iam::832907639880:policy/beep-ci-fleet-boundary
+  ciFleetController:runnerBinariesSyncerLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/runner-binaries-syncer.zip
+  ciFleetController:runnersLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/runners.zip
+  ciFleetController:terminationWatcherLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/termination-watcher.zip
+  ciFleetController:webhookLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/webhook.zip
+  ciFleetController:runnerLabel: beep-ec2-heavy-shadow

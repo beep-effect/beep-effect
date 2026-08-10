@@ -157,6 +157,22 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
     });
   }
 
+  if (options.merged && options.mode !== "verify") {
+    return yield* YeetCommandError.make({
+      message:
+        "yeet --merged is only valid for verify. Publish proves the commit it is about to push, which is the tree the operator owns; --merged proves a tree that exists only until the merge happens.",
+      exitCode: 1,
+    });
+  }
+
+  if (options.merged && options.tier !== "full") {
+    return yield* YeetCommandError.make({
+      message:
+        "yeet verify --merged requires the full proof tier. A review-fix tier on a merged tree would report a green that covers neither the branch nor the merge.",
+      exitCode: 1,
+    });
+  }
+
   if (options.startPrEarly && options.mode !== "publish") {
     return yield* YeetCommandError.make({
       message: "yeet --start-pr-early is only valid for publish.",

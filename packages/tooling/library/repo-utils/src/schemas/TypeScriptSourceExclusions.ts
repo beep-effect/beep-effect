@@ -29,6 +29,7 @@ import { A, Str } from "@beep/utils";
  */
 export const TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS = [
   "/.repos/",
+  "/ci-runners/sdks/",
   "/node_modules/",
   "/dist/",
   "/build/",

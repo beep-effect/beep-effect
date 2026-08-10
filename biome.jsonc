@@ -31,6 +31,7 @@
       "!**/__snapshots__",
       "!./package.json",
       "!**/vendor",
+      "!infra/ci-runners/sdks",
       "!**/certificates",
       "!**/generated",
       "!**/node_modules",
