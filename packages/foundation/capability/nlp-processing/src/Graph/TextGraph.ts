@@ -21,7 +21,7 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
 import { TaggedErrorClass } from "@beep/schema";
-import { A, O as OptionUtils } from "@beep/utils";
+import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph, MutableHashMap, MutableHashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -532,7 +532,7 @@ export const filterNodes: {
  * style. A `TextGraph` is never an array, which makes the subject decidable.
  */
 const isTraversalDataFirst = (args: IArguments): boolean =>
-  args.length >= 2 || (args.length === 1 && !A.isArray(args[0]));
+  args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !A.isArray(args[0]));
 
 /**
  * Create a depth-first walker over text nodes.

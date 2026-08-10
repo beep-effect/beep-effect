@@ -584,6 +584,9 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
   const existingSourceFiles = yield* Effect.filter(touchedSourceFiles, (filePath) => {
     const candidate = path.resolve(canonicalRepoRoot, filePath);
     return resolvePathWithinCanonicalRoot({ canonicalRoot: canonicalRepoRoot, candidate: filePath }).pipe(
+      Effect.mapError((cause) =>
+        QualityScriptCommandError.new(cause, `Failed to resolve changed source path ${filePath}.`)
+      ),
       Effect.filterOrFail(
         (canonical) => Eq.equals(candidate, canonical),
         () =>
@@ -593,9 +596,12 @@ const touchedFileFindings = Effect.fn("JSDocRatchet.touchedFileFindings")(functi
             exitCode: 1,
           })
       ),
-      Effect.flatMap((canonical) => fs.stat(canonical)),
-      Effect.map((info) => Eq.equals(info.type, "File")),
-      Effect.orElseSucceed(() => false)
+      Effect.flatMap((canonical) =>
+        fs.stat(canonical).pipe(
+          Effect.map((info) => Eq.equals(info.type, "File")),
+          Effect.orElseSucceed(() => false)
+        )
+      )
     );
   });
 

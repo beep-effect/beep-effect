@@ -44,7 +44,7 @@ import {
   renderOpenclawConfig,
 } from "@beep/openclaw";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, O, R, Str } from "@beep/utils";
+import { A, O, P, R, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
@@ -657,7 +657,7 @@ export const makeOpenClawDeploymentIntent: {
   (configRoot?: string): (deployment: OpenClawDeploymentConfig) => OpenclawDeploymentIntent;
   (deployment: OpenClawDeploymentConfig, configRoot?: string): OpenclawDeploymentIntent;
 } = dual(
-  (args) => args.length >= 1 && !Str.isString(args[0]),
+  (args) => args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !Str.isString(args[0])),
   (deployment: OpenClawDeploymentConfig, configRoot: string = defaultConfigRoot): OpenclawDeploymentIntent =>
     OpenclawDeploymentIntent.make({
       agent: OpenclawAgentIntent.make({

@@ -193,8 +193,10 @@ describe("@beep/infra OpenClaw", () => {
 
   it("renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI", () => {
     const intent = makeOpenClawDeploymentIntent(deploymentConfig);
+    const intentFromExplicitDefault = makeOpenClawDeploymentIntent(undefined)(deploymentConfig);
     const document = parseDocument(defaultGeneration.canonicalJson);
 
+    expect(intentFromExplicitDefault).toEqual(intent);
     expect(intent.agent.model).toBe("hosted/hosted-model");
     expect(intent.agent.workspace).toBe("/etc/beep/openclaw/current/workspace");
     expect(intent.providers).toHaveLength(2);

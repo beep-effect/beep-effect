@@ -286,7 +286,12 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         const contactPayload = validContactPayload();
         const submission = yield* ContactSubmission.decodeUnknownEffect(contactPayload);
         const submissionFromAlias = yield* decodeContactSubmission(contactPayload);
+        const submissionWithOptionNamedField = yield* decodeContactSubmission({
+          ...contactPayload,
+          errors: "all",
+        });
         expect(submission).toEqual(submissionFromAlias);
+        expect(submissionWithOptionNamedField).toEqual(submission);
       })
     ));
 

@@ -124,7 +124,7 @@ export const classifyFleetLiveness: {
   (windowSeconds?: number): (readings: FleetLivenessReadings) => FleetLivenessVerdict;
   (readings: FleetLivenessReadings, windowSeconds?: number): FleetLivenessVerdict;
 } = dual(
-  (args: IArguments) => args.length >= 2 || (args.length === 1 && !P.isNumber(args[0])),
+  (args: IArguments) => args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !P.isNumber(args[0])),
   // fallow-ignore-next-line complexity -- existing fleet tests exhaustively cover the conservative liveness branches
   (readings: FleetLivenessReadings, windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS): FleetLivenessVerdict => {
     const evidence: Array<FleetLivenessProbe> = [];
