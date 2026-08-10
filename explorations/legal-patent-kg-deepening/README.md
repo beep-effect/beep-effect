@@ -17,14 +17,16 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The third wedge is OPEN:
+The third wedge,
 [`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
-(opened 2026-08-06 on Benjamin's call after the relator wedge graduated)
-sits at capture stage carrying the merged drafting-episodes +
-claim-limitation-support row, the resolved remo2/remo3 boundaries verbatim,
-and parent align questions 11 (the `T3-F4` half), 12, 14, 15, and 16. Its
-next step is its two locked research lanes, then review gate 1, then its
-align session — which is Benjamin's.
+(opened 2026-08-06; packet-open PR #612 merged 2026-08-07), has COMPLETED
+its research stage: both locked lanes, the `RESEARCH.md` synthesis, review
+gate 1, and the Lane B catalog corrections back-filled into this packet's
+`research/00-catalog.json`/`SOURCES.md` (landed 2026-08-08 as a
+research-only PR under Benjamin's wrap-up directive — align outcomes follow
+in the next PR). It sits at stage `research` with six align branches in its
+`openQuestions`. Its next step is the align session — which is Benjamin's;
+BRIEF stays gated behind align.
 
 Behind it: **the FunctionalUnit extension into `uspto-patent-driver-depth`
 stays queued on Benjamin's call** — an approved routing-matrix slug needing
@@ -116,3 +118,13 @@ not started) is likewise his call.
   AMENDED notes, slug-count line, a dated Phase-2 amendments item); align
   questions 11 (the `T3-F4` half), 12, 14, 15, and 16 carried into the
   wedge; HANDOFF first action now points at the new wedge's research lanes.
+- 2026-08-08: episode-ledger wedge research stage landed (packet-open PR
+  #612 had merged 2026-08-07) — both Opus lanes, `RESEARCH.md`, review
+  gate 1 folded, stage capture → research, a sixth align branch added
+  (runtime approval-decision vocabulary). Parent side in the same PR:
+  Lane B's URL back-fill promoted into `research/00-catalog.json` (15 rows;
+  P005/P025/P030 stay null, recorded honestly), title-drift/one-work
+  corrections and the HSNKB CC BY-NC caveat recorded in
+  `research/SOURCES.md` §3, HANDOFF first action advanced to the align
+  session. Research landed ahead of align on Benjamin's 2026-08-08 wrap-up
+  directive; align outcomes follow in the next PR.
