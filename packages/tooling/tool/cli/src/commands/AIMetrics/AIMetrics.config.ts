@@ -17,6 +17,7 @@ export {
   requireHashSaltForTarget,
   requireHashSaltSecretRefForTarget,
   requireRawArchiveKeySecretRefForTarget,
+  resolveDataRoot,
   resolveHashSalt,
   resolveHashSaltSecretRef,
   resolveHomeDir,

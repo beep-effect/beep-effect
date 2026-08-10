@@ -123,6 +123,16 @@ const writeText = Effect.fn("AiMetricsTest.writeText")(function* (filePath: stri
   yield* fs.writeFileString(filePath, content);
 });
 
+const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+  yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
+  yield* writeText(
+    path.join(repoRoot, ".git/config"),
+    '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
+  );
+});
+
 const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>): ReadonlyArray<string> =>
   pipe(
     files,
@@ -296,6 +306,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -482,6 +493,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -788,6 +800,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const reportDir = path.join(dataRoot, "reports");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -928,7 +941,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           A.some(
             P.every([
               Str.includes("ai-metrics otlp export --target dankserver"),
-              Str.includes("--data-root .beep/ai-metrics"),
+              Str.includes("--data-root /srv/data/ai-metrics"),
               Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
               Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
               Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
@@ -938,10 +951,19 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       ).toBe(true);
       expect(spec.plannedCommands).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("ai-metrics label queue --target dankserver --data-root .beep/ai-metrics"),
-          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics"),
+          expect.stringContaining("ai-metrics label queue --target dankserver --data-root /srv/data/ai-metrics"),
+          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root /srv/data/ai-metrics"),
         ])
       );
+      // Every planned command an operator copy-pastes must survive the CLI's
+      // absolute-path gate; `forwarder timer` rejects a relative root outright.
+      expect(
+        pipe(
+          spec.plannedCommands,
+          A.filter(Str.includes("--data-root")),
+          A.filter(P.not(Str.includes("--data-root /")))
+        )
+      ).toEqual([]);
     })
   );
 
@@ -1101,7 +1123,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
-      const spec = yield* makeAiMetricsInstallSpec();
+      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/srv/data/ai-metrics" }));
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
       if (O.isNone(phoenix)) {
@@ -1135,6 +1157,7 @@ volumes:
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
+          dataRoot: "/srv/data/ai-metrics",
           phoenixImage: "arizephoenix/phoenix:latest-p5b",
         })
       );
@@ -1308,7 +1331,7 @@ volumes:
       const error = yield* Effect.flip(
         runAiMetricsForwarder(
           AiMetricsForwarderInput.make({
-            dataRoot: ".beep/ai-metrics",
+            dataRoot: "/srv/data/ai-metrics",
             hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
             homeDir: "/tmp/home",
             rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
@@ -2011,6 +2034,83 @@ volumes:
   );
 
   it.effect(
+    "collapses a legacy session row onto one that already carries the content id",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            const contentSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000mixed-transcript").pipe(
+              Effect.map((digest) => `session-${digest}`)
+            );
+            const legacySessionId = yield* hashPublicTextSha256(
+              "session\u0000run-old\u0000codex\u0000mixed-transcript"
+            ).pipe(Effect.map((digest) => `session-${digest}`));
+
+            // A store caught mid-transition: one row already minted under the new content
+            // key by a post-upgrade ingest, and one still holding the old per-run key. The
+            // migration's other collision branch -- legacy sibling versus legacy sibling --
+            // never reaches this shape, and getting it wrong violates the primary key.
+            yield* Effect.forEach(
+              [
+                { agentSessionId: contentSessionId, ingestRunId: "run-new", turnId: "turn-new" },
+                { agentSessionId: legacySessionId, ingestRunId: "run-old", turnId: "turn-old" },
+              ],
+              Effect.fnUntraced(function* (row) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_sessions (
+                     agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+                   ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'mixed-transcript', 'primary', 'snapshot')`,
+                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, $agentSessionId, 'codex', 'mixed-transcript',
+                     'primary', 1, 'event', $turnId, NULL
+                   )`,
+                  row
+                );
+              }),
+              { discard: true }
+            );
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-agent-session-id-v2'`
+            );
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+            const turns = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", agent_session_id AS "agentSessionId"
+               FROM ai_metrics_turns ORDER BY turn_id`
+            );
+
+            // The legacy row loses to the row that already holds the content id, and its
+            // turn follows -- no primary-key violation, and nothing orphaned behind the
+            // exporter's INNER join.
+            expect(sessions).toEqual([{ agentSessionId: contentSessionId }]);
+            expect(turns).toEqual([
+              { agentSessionId: contentSessionId, turnId: "turn-new" },
+              { agentSessionId: contentSessionId, turnId: "turn-old" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
     "collapses per-run session rows and repoints their turns",
     Effect.fn(function* () {
       yield* withTempDirectory(
@@ -2025,10 +2125,10 @@ volumes:
             // Ids exactly as the previous release minted them: rowId("session", [runId,
             // kind, pathHash]) => `session-${sha256("session\0<parts joined by \0>")}`.
             const legacySessionId = (ingestRunId: string) =>
-              hashPublicTextSha256(`session ${ingestRunId} codex grown-transcript`).pipe(
+              hashPublicTextSha256(`session\u0000${ingestRunId}\u0000codex\u0000grown-transcript`).pipe(
                 Effect.map((digest) => `session-${digest}`)
               );
-            const expectedSessionId = yield* hashPublicTextSha256("session codex grown-transcript").pipe(
+            const expectedSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000grown-transcript").pipe(
               Effect.map((digest) => `session-${digest}`)
             );
 
@@ -2498,6 +2598,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
 
@@ -2725,9 +2826,7 @@ volumes:
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const codexRoot = path.join(homeDir, ".codex/sessions");
-          const decoy = `{"payload":{"message":"not metadata session_meta ${"x".repeat(
-            70_000
-          )}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
+          const decoy = `{"payload":{"message":"not metadata session_meta ${pipe("x", Str.repeat(70_000))}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
           const actual =
             '{"payload":{"id":"child-session","source":{"subagent":{"agent_nickname":"worker-one","agent_role":"worker","parent_thread_id":"parent-thread","thread_spawn":true}}},"timestamp":"2026-05-05T10:01:00Z","type":"session_meta"}';
           yield* writeText(path.join(codexRoot, "codex-subagent.jsonl"), `${decoy}\n${actual}\n`);
@@ -2798,6 +2897,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -2887,6 +2987,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -3040,6 +3141,7 @@ volumes:
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -3128,6 +3230,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");

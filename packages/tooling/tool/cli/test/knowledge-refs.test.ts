@@ -221,6 +221,15 @@ describe("knowledge refs golden fixture matrix", () => {
     })
   );
 
+  it.effect("openclaw config dir is a portable home convention", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "The gateway reads ~/.openclaw/openclaw.json on boot.\n",
+      });
+      expect(verdicts(report.observations)).toEqual(["portable-home-convention/not-applicable"]);
+    })
+  );
+
   it.effect("documented temp convention is not a defect", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture({

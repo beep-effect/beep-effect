@@ -31,6 +31,7 @@
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
     "./CandorRecord": "./src/CandorRecord/index.ts",
+    "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },

@@ -10,9 +10,11 @@ import {
   HookPulseV1FromLegacyRecord,
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
+  hashPrivateIdentifier,
+  hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { ConfigProvider, Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -223,6 +225,37 @@ const misownedIsInterruptOnStop = rawInput("2026-08-01T08:49:00.000Z", {
   is_interrupt: true,
 });
 
+// Every identifier below is already 64 lowercase hex, which is exactly what a
+// writer row carries. `privateReference` must pass such a value through
+// untouched under any salt; hashing it again would mint a digest no producer can
+// reproduce and would silently orphan the whole live corpus.
+const alreadyHashedRawEventFixture = {
+  session_id: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  cwd: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  transcript_path: "89abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567",
+};
+
+const alreadyHashedRawInput = {
+  ...baseRawInputFixture,
+  ts: "2026-08-01T09:10:00.000Z",
+  event: { ...alreadyHashedRawEventFixture, hook_event_name: HookPulseEvent.Enum.Stop },
+};
+
+// Distinct per rung so a digest can name which variable it came from. Neither is
+// a salt any clone would configure, so neither can collide with a real one.
+const HOOK_RUNG_SALT = "hook-pulse-codec-hook-rung-salt";
+const AI_RUNG_SALT = "hook-pulse-codec-ai-rung-salt";
+
+// The workstation that owns this instrument exports a real operator salt into
+// the environment vitest inherits, so a case that read the ambient provider
+// would assert one thing here and another in CI — and would print that salt into
+// a failure diff. Every case below pins its own provider, cleared cases
+// included: `ConfigProvider.fromEnv` snapshots the environment once per process
+// and `Context.Reference` memoizes its default, so mutating `process.env` could
+// not work even if the repo permitted reading it.
+const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+
 const decodeRawHookPulse = S.decodeUnknownEffect(HookPulseRawEvent);
 const encodeRawHookPulse = S.encodeUnknownEffect(HookPulseRawEvent);
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
@@ -250,7 +283,10 @@ describe("HookPulseV1", () => {
         transcriptPath: "/tmp/legacy-session.jsonl",
       };
 
-      const decoded = yield* decodeHookPulseFromLegacy(legacy);
+      // Pinned to the no-salt rung. Before the codec resolved a salt this test
+      // was pinned by construction; now an unpinned decode would mean the
+      // developer's environment here and the empty one in CI.
+      const decoded = yield* withSaltEnv({}, decodeHookPulseFromLegacy(legacy));
       const serialized = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(yield* encodeHookPulse(decoded));
 
       expect(decoded).toBeInstanceOf(HookPulseV1);
@@ -302,11 +338,14 @@ describe("HookPulseV1", () => {
       fc.sample(S.toArbitrary(HookPulseRawEvent), { numRuns: 50, seed: 804 }),
       Effect.fnUntraced(function* (event) {
         const encodedEvent = yield* encodeRawHookPulse(event);
-        const decoded = yield* decodeHookPulseFromRaw({
-          ...baseRawInputFixture,
-          ts: "2026-08-01T08:00:00.000Z",
-          event: encodedEvent,
-        });
+        const decoded = yield* withSaltEnv(
+          {},
+          decodeHookPulseFromRaw({
+            ...baseRawInputFixture,
+            ts: "2026-08-01T08:00:00.000Z",
+            event: encodedEvent,
+          })
+        );
 
         expect(decoded.waitReason).toBeDefined();
         expect(isHookPulseWaitReason(decoded.waitReason)).toBe(true);
@@ -317,10 +356,13 @@ describe("HookPulseV1", () => {
 
   it.effect("pseudonymizes raw session and filesystem identifiers", () =>
     Effect.gen(function* () {
-      const decoded = yield* decodeHookPulseFromRaw(
-        rawInput("2026-08-01T08:00:00.000Z", {
-          hook_event_name: HookPulseEvent.Enum.Stop,
-        })
+      const decoded = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromRaw(
+          rawInput("2026-08-01T08:00:00.000Z", {
+            hook_event_name: HookPulseEvent.Enum.Stop,
+          })
+        )
       );
       const encoded = yield* encodeHookPulse(decoded);
       const serialized = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(encoded);
@@ -761,4 +803,201 @@ describe("HookPulseV1", () => {
       expect(canonical).not.toHaveProperty("last_assistant_message");
     })
   );
+
+  it.effect(
+    "resolves the hash salt through the writer's precedence",
+    Effect.fn("HookPulseTest.resolvesHashSaltPrecedence")(function* () {
+      // `.claude/hooks/hook-pulse.sh` reads
+      // `${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}` and then
+      // collapses a blank result. Each row below is one rung of that chain, and
+      // the last two are the rows where a shell reading and a trim-first reading
+      // could disagree while both looked correct: `""` is absence to `${:-}` and
+      // falls through, while `"   "` is a *value* that wins the contest and is
+      // only afterwards collapsed by `resolveAiMetricsHashSaltValue`.
+      const cases: ReadonlyArray<{
+        readonly env: Record<string, string>;
+        readonly expectedSalt: string | undefined;
+      }> = [
+        { env: {}, expectedSalt: undefined },
+        { env: { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: AI_RUNG_SALT },
+        { env: { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT }, expectedSalt: HOOK_RUNG_SALT },
+        {
+          env: { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT, BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+          expectedSalt: HOOK_RUNG_SALT,
+        },
+        { env: { BEEP_HOOK_PULSE_HASH_SALT: "", BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: AI_RUNG_SALT },
+        { env: { BEEP_HOOK_PULSE_HASH_SALT: "   ", BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT }, expectedSalt: "   " },
+      ];
+      // Compared as digests of a fixed probe, never as salts. A `withSaltEnv`
+      // that ever stopped providing its literal record would resolve this
+      // workstation's real operator salt, and a value assertion would then print
+      // it into the failure diff and into CI logs. A digest pins the same six
+      // rungs and can only ever print a truncated digest.
+      const probe = "hook-pulse-salt-precedence-probe";
+      const resolved = yield* Effect.forEach(
+        cases,
+        ({ env }) =>
+          withSaltEnv(
+            env,
+            Effect.flatMap(hookPulseHashSalt, (hashSalt) => hashPrivateIdentifier(probe, hashSalt))
+          ),
+        { concurrency: 1 }
+      );
+      const expected = yield* Effect.forEach(cases, ({ expectedSalt }) => hashPrivateIdentifier(probe, expectedSalt), {
+        concurrency: 1,
+      });
+
+      expect(resolved).toEqual(expected);
+      // The rungs are genuinely distinguishable: without this a codec that
+      // returned one constant digest for every environment would satisfy the
+      // equality above.
+      expect(A.dedupe(resolved).length).toBe(3);
+    })
+  );
+
+  it.effect(
+    "hashes codec identifiers with the resolved salt, not the library default",
+    Effect.fn("HookPulseTest.hashesWithResolvedSalt")(function* () {
+      const decoded = yield* withSaltEnv(
+        { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT },
+        decodeHookPulseFromRaw(rawInput("2026-08-01T09:00:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+      );
+
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, HOOK_RUNG_SALT));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, HOOK_RUNG_SALT));
+      expect(decoded.transcriptPath).toEqual(
+        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, HOOK_RUNG_SALT))
+      );
+      // Non-vacuity: every shape assertion elsewhere in this file is satisfied
+      // by a codec that ignored the salt entirely, because the library default
+      // is what such a codec would have used anyway.
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+    })
+  );
+
+  it.effect(
+    "reads the ai-metrics rung when the hook-pulse rung is unset",
+    Effect.fn("HookPulseTest.readsAiMetricsSaltRung")(function* () {
+      // The second rung is what keeps hook rows in the same pseudonym namespace
+      // as every other ai-metrics producer on a machine that exports one salt.
+      const decoded = yield* withSaltEnv(
+        { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+        decodeHookPulseFromRaw(rawInput("2026-08-01T09:01:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+      );
+
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, AI_RUNG_SALT));
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+    })
+  );
+
+  it.effect(
+    "falls back to the library default when neither salt is configured",
+    Effect.fn("HookPulseTest.fallsBackToLibraryDefaultSalt")(function* () {
+      // The CI rung, and the backward-compatibility rung: an unconfigured clone
+      // must keep producing byte-identical digests to the committed conformance
+      // corpus and to every pre-cutover row.
+      const decoded = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromRaw(rawInput("2026-08-01T09:02:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+      );
+
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, undefined));
+      expect(decoded.transcriptPath).toEqual(
+        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, undefined))
+      );
+    })
+  );
+
+  it.effect(
+    "collapses a whitespace-only salt to the insecure default, exactly as the writer does",
+    Effect.fn("HookPulseTest.collapsesWhitespaceOnlySalt")(function* () {
+      // The writer's own `case "${hash_salt}" in *[![:space:]]*)` arm, restated
+      // as a digest. `hook-pulse-writer.test.ts` pins the shell half of this
+      // same input.
+      const decoded = yield* withSaltEnv(
+        { BEEP_HOOK_PULSE_HASH_SALT: "   " },
+        decodeHookPulseFromRaw(rawInput("2026-08-01T09:03:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+      );
+
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, undefined));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, undefined));
+    })
+  );
+
+  it.effect(
+    "migrates legacy rows under the resolved salt",
+    Effect.fn("HookPulseTest.migratesLegacyRowsUnderResolvedSalt")(function* () {
+      // The legacy codec reads pre-pseudonymization rows, which are older than
+      // the operator cutover. Migrating them under the resolved salt is what
+      // puts a migrated row in the same namespace as its live siblings.
+      const legacy = {
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T09:04:00.000Z",
+        sessionId: "legacy-session-id",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/legacy-checkout",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+        transcriptPath: "/tmp/legacy-session.jsonl",
+      };
+      const decoded = yield* withSaltEnv(
+        { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+        decodeHookPulseFromLegacy(legacy)
+      );
+
+      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(legacy.sessionId, AI_RUNG_SALT));
+      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(legacy.cwd, AI_RUNG_SALT));
+      expect(decoded.transcriptPath).toEqual(O.some(yield* hashPrivateIdentifier(legacy.transcriptPath, AI_RUNG_SALT)));
+      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, undefined));
+    })
+  );
+
+  it.effect(
+    "leaves an already-hashed identifier untouched under any salt",
+    Effect.fn("HookPulseTest.passesThroughHashedIdentifiers")(function* () {
+      // Why the live ledger is unaffected by any of the above: a writer row
+      // arrives already 64-hex and takes the pass-through branch, so no salt can
+      // double-hash it into a digest neither half can reproduce.
+      const decoded = yield* Effect.all(
+        {
+          hookRung: withSaltEnv(
+            { BEEP_HOOK_PULSE_HASH_SALT: HOOK_RUNG_SALT },
+            decodeHookPulseFromRaw(alreadyHashedRawInput)
+          ),
+          aiRung: withSaltEnv(
+            { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT },
+            decodeHookPulseFromRaw(alreadyHashedRawInput)
+          ),
+          unsalted: withSaltEnv({}, decodeHookPulseFromRaw(alreadyHashedRawInput)),
+        },
+        { concurrency: 1 }
+      );
+
+      expect(A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.sessionId)).toEqual(
+        A.replicate(alreadyHashedRawEventFixture.session_id, 3)
+      );
+      expect(A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.cwd)).toEqual(
+        A.replicate(alreadyHashedRawEventFixture.cwd, 3)
+      );
+      expect(A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.transcriptPath)).toEqual(
+        A.replicate(O.some(alreadyHashedRawEventFixture.transcript_path), 3)
+      );
+    })
+  );
+
+  it("decodes an already-hashed raw event synchronously", () => {
+    // The salt read now sits *before* the 64-hex fast path. `Effect.runSync`
+    // dies on an effect that ever suspends, so this pins that the read did not
+    // push that path into async — which would break the codec's own JSDoc
+    // Examples and any `S.decodeUnknownResult`-shaped replay code, both of which
+    // go through the same synchronous adapter.
+    const decoded = Effect.runSync(withSaltEnv({}, decodeHookPulseFromRaw(alreadyHashedRawInput)));
+
+    expect(decoded).toBeInstanceOf(HookPulseV1);
+    expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);
+  });
 });

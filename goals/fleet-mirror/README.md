@@ -33,19 +33,21 @@ Use this command for execution-capable sessions:
 
 ## Scope Boundary — read before starting
 
-This packet is **rung 1: derivation only**. The command exists, the three signals
-are correct, and a human runs it.
+This retained packet owns the fleet mirror across its rungs. Rung 1 shipped the
+read-only derivation command; rung 1.5 hardens its liveness and contested-path
+presentation without changing the snapshot's measured-or-`unknown` contract.
 
-**Rung 2 — ambient delivery through `AgentBrief.fleet` — is not in this packet
-and cannot start here.** That field ships in speed-loop PR-I; re-verified against
-`main` at `b4a06cefa3` (2026-08-06, after PR-E landed as #569), `AgentBrief`,
-`OwnershipClaim`, and `beep agent report list` still have **zero source
-references**. Everything rung 1 needs — `worktree doctor`, `git merge-tree`,
-`/proc` — is already on `main`.
+Rung 2 is decided but unimplemented: **push to reachable sessions plus pull for
+everyone**, with the mirror remaining authoritative. It resumes here rather
+than opening a second packet; see fleet-coordination
+[`D7`](../../explorations/fleet-coordination/DECISIONS.md). Cross-session
+messaging removed the old PR-I dependency, but does not cover socket-less,
+non-Claude, dormant, exited, or container-isolated sessions, so push can never
+replace pull.
 
 ## Current Phase
 
-**Complete.** Rung 1 shipped: `beep worktree fleet` derives the read-only
+**Complete-retained.** Rung 1 shipped: `beep worktree fleet` derives the read-only
 snapshot (schema family in `Worktree.schemas.ts`, `FleetMirrorService` in
 `Fleet.service.ts`, subcommand in `Fleet.command.ts` — all under
 `packages/tooling/tool/cli/src/commands/Worktree/`). One siting deviation from
@@ -54,6 +56,14 @@ than inside `Worktree.command.ts`, because registering the subcommand from the
 same file the service imports schemas from is a TDZ-fatal ESM cycle (hit live
 on first run; see [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)).
 Doctor's row schema is unchanged.
+
+Rung 1.5 adds a positive-only `claude-session` liveness probe from
+`~/.claude/sessions/<pid>.json`, guarded against PID reuse by comparing
+`procStart` with `/proc/<pid>/stat` field 22. Missing, unreadable, malformed,
+dead, or recycled entries contribute nothing, so existing `live`, `dormant`,
+and `unknown` verdicts can only gain measured live evidence. The text renderer
+also ranks contested rows by live claimants and notes a checkout that claims
+more than half an overflowing index; `--json` keeps its canonical path order.
 
 ## Latest Evidence
 
@@ -66,6 +76,10 @@ Doctor's row schema is unchanged.
   `unmoved` for a branch cut after the moved commits — and `dormant` proved
   unreachable on this host (1285/1816 `/proc` entries root-owned ⇒ scan never
   complete), which is the measured-or-`unknown` law behaving as specified.
+- Rung 1.5 proof (2026-08-10): focused fleet tests cover the registry decode,
+  real `/proc/self/stat` confirmation, subdirectory-to-checkout join, PID-reuse,
+  dead-PID and malformed-entry failures, unknown-to-live classification,
+  live-first contested ranking, and swamping notes.
 - [`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md)
   (2026-08-06) — 26 paths measured over 300 first-parent `main` commits.
 - Friction ledger: [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md).

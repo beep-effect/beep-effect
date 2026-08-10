@@ -1,0 +1,39 @@
+# bun run test (packages/law-practice/use-cases)
+$ bun run beep:test
+$ bunx --bun vitest run --passWithNoTests
+
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect18/packages/law-practice/use-cases
+
+ Test Files  3 passed (3)
+      Tests  45 passed (45)
+   Start at  23:18:20
+   Duration  3.34s (transform 4.07s, setup 877ms, import 8.00s, tests 152ms, environment 0ms)
+
+
+# per-test listing: bunx --bun vitest run --reporter=verbose test/LegalPositionRelatorPolicy.test.ts
+
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect18/packages/law-practice/use-cases
+
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — the derivations over the closed eight-member domain > are total: every kind maps into the domain under both derivations 19ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — the derivations over the closed eight-member domain > are involutive: applying either derivation twice returns the position it started from 22ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — the derivations over the closed eight-member domain > commute: correlative after opposite is opposite after correlative 22ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — the derivations over the closed eight-member domain > generate exactly the two four-member orbits, each closed within its own subdomain 22ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — the derivations over the closed eight-member domain > leave no advantage-side kind whose opposite is also advantage-side 22ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — kind and content move together, or not at all > opposite moves kind and polarity in one application, leaving the act description alone 22ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — kind and content move together, or not at all > correlative moves kind with the content left exactly as recorded 23ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — kind and content move together, or not at all > cannot be applied to a kind alone or to content alone 23ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — kind and content move together, or not at all > expose no half-derivation on the domain surface 23ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — admission > admits a complete advantage-side record 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — admission > refuses a record missing any one required field, naming the field it refused 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — scope overlap and prima facie opposition > emits nothing for Hohfeld's coexisting privilege(enter) and duty(enter) 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — scope overlap and prima facie opposition > emits exactly one candidate for a genuinely opposite pair within an overlapping scope 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — scope overlap and prima facie opposition > emits nothing for an opposite pair whose scopes miss on a single axis 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — admission > refuses a burden-side stored position kind 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — one stored relation, every other reading derived > derives both views from a single record, and neither view is storable 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — scope overlap and prima facie opposition > emits one unordered candidate per pair however the relations are ordered 24ms
+ ✓ test/LegalPositionRelatorPolicy.test.ts > LegalPositionRelatorPolicy — scope overlap and prima facie opposition > emits nothing for a single relation, which is never opposed to itself 24ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  23:18:35
+   Duration  3.64s (transform 1.79s, setup 272ms, import 3.28s, tests 27ms, environment 0ms)

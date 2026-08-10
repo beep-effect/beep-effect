@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `capture`
+Stage: `research`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -31,19 +31,20 @@ after the relator wedge graduated).
 
 ## Next Open Question
 
-Run the two locked research lanes (see the research-depth decision in
-[`DECISIONS.md`](./DECISIONS.md)): Lane A repo composition inventory →
-`research/01-repo-surfaces.md`; Lane B bounded public-source grounding
-(35 U.S.C. § 112(a)/§ 132 + MPEP § 2163/§ 608.04 never-compute frame; the
-public papers behind all eleven nuggets — the six primary-cluster
-episode/retrieval sources plus the absorbed rung's drafting
-traceability/evaluation/routing studies)
-→ `research/02-drafting-episode-frame.md`. Then review gate 1, then the
-align session with Benjamin — first branch: the episode set, rebuild proof,
-and raw fallback (parent align question 14), with the answer annex, the
-support schema/attorney gates, routing modes, and the T3-F5
-independent-benchmark choice behind it (`ops/manifest.json`
-`openQuestions`).
+Both research lanes and the [`RESEARCH.md`](./RESEARCH.md) synthesis are
+complete (2026-08-06; review gate 1 folded). Next: the align session with
+Benjamin over six branches (`ops/manifest.json` `openQuestions`) — first
+branch: the episode set, rebuild proof, and raw fallback (parent align
+question 14; research found the recent-raw fallback is prescribed by no
+source), with the answer annex (4 of 7 fields net-new beep-side), the
+support schema/attorney gates (statutory N-closure, omission-type new
+matter, the objection/rejection split), routing modes, the T3-F5
+independent-benchmark choice, and the NEW runtime approval-decision
+vocabulary branch (the live `RuntimeApprovalDecision` is single-member
+`pending` — refusal is unrepresentable today) behind it. The research-stage
+record is on main (landed 2026-08-08 as its own PR per the amended
+PR-staging decision in [`DECISIONS.md`](./DECISIONS.md)); align outcomes
+land in the next PR, and BRIEF stays gated behind align.
 
 ## Read This First
 
@@ -69,3 +70,29 @@ independent-benchmark choice behind it (`ops/manifest.json`
   lanes, dependency posture, Opus 5 orchestration, two-stage PR cadence)
   pre-seeded into DECISIONS; parent align questions 11 (the `T3-F4` half),
   12, 14, 15, and 16 carried into `openQuestions`.
+- 2026-08-06: packet-open PR #612 published (docs-only; full local proof
+  green after one environment-only TS2589 build flake rerun; Greptile 5/5,
+  0 issues, 0 threads on first review). Both research lanes ran as parallel
+  Opus 5 agents (Workflow `wf_8f1c1557-f39`): Lane A repo surfaces
+  (headline drift: PR #575 landed the full law-practice lane including a
+  payload-bearing append-only migration precedent; practice-kg-mcp is live
+  code with reusable row/decoder shapes but a non-total query-ordering gap
+  before remo2 can claim deterministic rows; the verified-span substrate is live
+  and consumed; NEW blocker — the live `RuntimeApprovalDecision` vocabulary
+  is single-member `pending`, so gate refusal is unrepresentable today),
+  Lane B public-source grounding (the never-compute boundary proved
+  two-sided from MPEP/statute primary text; statutory N-closure for
+  dependent claims; the T3-F10 projection regression verified; the
+  recent-raw fallback found to be prescribed by no source; T3-F5's missing
+  reification ablation confirmed at source; 4 of 7 annex fields net-new).
+  `RESEARCH.md` synthesis authored; SOURCES ledger populated; review gate 1
+  critique (Opus) folded. Stage capture → research; one new align branch
+  added to `openQuestions`. Research artifacts stay uncommitted until PR 2.
+- 2026-08-08: packet-open PR #612 had merged centrally 2026-08-07; PR
+  staging amended on Benjamin's wrap-up directive (see DECISIONS) — the
+  research-stage record landed as its own docs-only PR, together with the
+  parent-side Lane B promotions: 15 catalog URL back-fills
+  (`P005`/`P025`/`P030` honestly left null), the title-drift/one-work
+  corrections and HSNKB CC BY-NC caveat in the parent `SOURCES.md`, and the
+  parent HANDOFF/README/ATLAS pointer sweep to research-complete. Align
+  outcomes follow in the next PR; the align session is Benjamin's.

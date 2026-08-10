@@ -3,11 +3,9 @@
   "exploration": {
     "slug": "fleet-coordination",
     "title": "Fleet Coordination For Parallel Agent Checkouts",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "Rung 2 only: when speed-loop PR-I lands AgentBrief.fleet, does ambient delivery ride into goals/fleet-mirror as a second phase, or open its own packet? Not blocking - rung 1 is graduated and executable now."
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/fleet-mirror"],
@@ -15,6 +13,6 @@
       "supersededBy": null
     },
     "created": "2026-08-04",
-    "updated": "2026-08-05"
+    "updated": "2026-08-10"
   }
 }

@@ -1,5 +1,24 @@
 # Opportunities
 
+## Burst reaper kills busy workers mid-job
+
+- **Work:** Post-merge main run for PR #633 on the manual burst fleet.
+- **Friction:** The TTL reaper terminates on age alone, without checking
+  whether the runner is executing a job. All three burst workers launched
+  04:33Z were terminated at 06:05:19Z (TTL-90 plus reaper period) exactly 90
+  seconds after the heavy lanes started on them: main run `31360612950` lost
+  Check and Coverage Regression mid-step and cancelled Test Integration,
+  turning an infrastructure event into a red main run needing manual
+  relaunch-and-rerun.
+- **Evidence:** Instances `i-047e8aef0ce1cb51b`, `i-0e13088d0c37de391`,
+  `i-0b32615510035c84e`, all `User initiated (2026-08-10 06:05:19 GMT)`; job
+  steps `Run verification lane` conclusion `cancelled` at 06:05:2x.
+- **Proposal:** Retire the class via P2 cutover — the controller's scale-down
+  only retires idle runners, and ephemeral one-job-one-VM workers cannot be
+  reaped mid-job by design. If the burst path must live longer, teach the
+  reaper to skip runners whose GitHub registration reports `busy` and sweep
+  them on the next cycle instead.
+
 ## Prove worker east-west isolation with two live workers
 
 - **Work:** P1 red-team review of the worker network-isolation evidence.
@@ -71,3 +90,22 @@
 
   Validate on the shadow label before the `beep-ec2-heavy` cutover, and confirm
   the shipped logs contain no JIT config before treating the group as durable.
+
+## The resource-weight ratchet inherits the beta.104 epistemic kill set
+
+- **Work:** PR #607 (effect `4.0.0-beta.104` subtree refresh) — keeping the
+  hosted heavy lanes alive on 16 GB runners while the fleet work landed.
+- **Friction:** single cold compiles exceeded runner memory. Turbo concurrency
+  was walked 4 → 3 → 2 → 1 across five heads and fully serial still died:
+  `packages/epistemic/server` `tsc -b` alone killed a runner. Only the CLI-side
+  advisory swap step plus serial lane caps (both stopgaps, landed in #607) got
+  the PR green.
+- **Evidence:** `explorations/graphnosis-prior-art/research/OPPORTUNITIES.md`
+  (the beta.104 heavy-lane receipt, lines 35–52). The recurring kill set:
+  `epistemic/server`, `epistemic/client`, `epistemic/ui`, `db-admin`,
+  `ontology/client`, `tooling/tool/cli`, `apps/storybook`.
+- **Proposal:** the resource-weight ratchet work (SPEC.md target surfaces,
+  PLAN.md P5) should inherit this kill set as its first ranked target list —
+  re-run the instantiation census post-beta.104 and drive the epistemic slice
+  down first. This is the real fix behind the #607 stopgaps; the swap step and
+  serial caps should be retired once the slice fits cold in runner memory.

@@ -161,6 +161,11 @@ export * from "./FileExtension.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./FileInfo.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./FileName.ts";
 /**
  * @since 0.0.0
