@@ -184,7 +184,7 @@ describe("@beep/chalk", () => {
     ] as const;
 
     for (const schema of schemas) {
-      const arbitrary = S.toArbitrary(schema);
+      const arbitrary = S.toArbitrary(schema)(fc);
       const decode = S.decodeSync(schema);
       const encode = S.encodeSync(schema);
 

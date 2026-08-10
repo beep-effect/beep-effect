@@ -278,7 +278,7 @@ describe("TaggedErrorClass", () => {
     const equivalence = S.toEquivalence(RecursiveExtendedBeepError);
 
     fc.assert(
-      fc.property(S.toArbitrary(RecursiveExtendedBeepError), (sampled) => {
+      fc.property(S.toArbitrary(RecursiveExtendedBeepError)(fc), (sampled) => {
         const encoded = S.encodeUnknownSync(RecursiveExtendedBeepError)(sampled);
         const roundTripped = S.decodeSync(RecursiveExtendedBeepError)(encoded);
 

@@ -11,10 +11,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-const TokenArbitrary = S.toArbitrary(Token);
-const SentenceArbitrary = S.toArbitrary(Sentence);
-const DocumentArbitrary = S.toArbitrary(Document);
-const SimilarityScoreArbitrary = S.toArbitrary(SimilarityScore);
+const TokenArbitrary = S.toArbitrary(Token)(fc);
+const SentenceArbitrary = S.toArbitrary(Sentence)(fc);
+const DocumentArbitrary = S.toArbitrary(Document)(fc);
+const SimilarityScoreArbitrary = S.toArbitrary(SimilarityScore)(fc);
 
 const makeToken = (index: number, text: string, start: number, end: number): Token =>
   Token.make({

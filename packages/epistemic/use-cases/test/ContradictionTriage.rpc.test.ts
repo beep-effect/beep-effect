@@ -143,7 +143,7 @@ describe("ContradictionTriage RPC contract", () => {
 
   it("constructs only non-empty forward source highlights and rejects malformed ranges", () =>
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourceHighlight), (highlight) => {
+      fc.property(S.toArbitrary(EvidenceSourceHighlight)(fc), (highlight) => {
         expect(highlight.startChar).toBeLessThan(highlight.endChar);
         expect(
           Result.isFailure(
@@ -168,7 +168,7 @@ describe("ContradictionTriage RPC contract", () => {
 
   it("rejects a page whose source identity differs from its verified highlight", () =>
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
+      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
         const otherSource = SourceTextIdentity.make({
           ...sourcePage.highlight.source,
           sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
@@ -192,7 +192,7 @@ describe("ContradictionTriage RPC contract", () => {
 
   it("constructs source pages that cover their highlight and rejects out-of-bounds offsets", () =>
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
+      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
         expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
         expect(
           Result.isFailure(
@@ -216,7 +216,7 @@ describe("ContradictionTriage RPC contract", () => {
     const equivalent = S.toEquivalence(EvidenceSourcePage);
 
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage), (sourcePage) => {
+      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
         const encoded = encode(sourcePage).pipe(Result.getOrThrow);
         const decoded = decode(encoded).pipe(Result.getOrThrow);
 

@@ -268,7 +268,7 @@ describe("HookPulseV1", () => {
     const decode = S.decodeUnknownResult(HookPulseV1);
 
     fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
         const encoded = Result.getOrThrow(encode(value));
         const decoded = Result.getOrThrow(decode(encoded));
 
@@ -282,7 +282,7 @@ describe("HookPulseV1", () => {
     const encode = S.encodeResult(HookPulseV1FromRawEvent);
     const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent);
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
-    const arbitrary = S.toArbitrary(HookPulseV1)
+    const arbitrary = S.toArbitrary(HookPulseV1)(fc)
       .filter((value) => O.isSome(value.transcriptPath))
       .filter((value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier)));
 
@@ -299,7 +299,7 @@ describe("HookPulseV1", () => {
 
   it.effect("derives a total wait reason for arbitrary raw events", () =>
     Effect.forEach(
-      fc.sample(S.toArbitrary(HookPulseRawEvent), { numRuns: 50, seed: 804 }),
+      fc.sample(S.toArbitrary(HookPulseRawEvent)(fc), { numRuns: 50, seed: 804 }),
       Effect.fnUntraced(function* (event) {
         const encodedEvent = yield* encodeRawHookPulse(event);
         const decoded = yield* decodeHookPulseFromRaw({

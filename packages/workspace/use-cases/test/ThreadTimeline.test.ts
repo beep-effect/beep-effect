@@ -132,7 +132,7 @@ describe("ThreadTimeline", () => {
       const encode = S.encodeSync(schema);
       const equivalent = S.toEquivalence(schema);
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => equivalent(decode(encode(value)), value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => equivalent(decode(encode(value)), value)),
         fcRuns(5)
       );
     }

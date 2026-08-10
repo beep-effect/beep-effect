@@ -34,7 +34,7 @@ const skipNotice = Effect.logInfo(
 );
 
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
 
 const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: string) {
   const fs = yield* FileSystem.FileSystem;

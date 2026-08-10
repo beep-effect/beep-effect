@@ -50,7 +50,7 @@ describe("Observed", () => {
   });
 
   it("schema-derived arbitrary values are members of ObservedCause", () => {
-    const arbitrary = S.toArbitrary(ObservedCause);
+    const arbitrary = S.toArbitrary(ObservedCause)(fc);
 
     fc.assert(
       fc.property(arbitrary, (cause) => {
@@ -61,7 +61,7 @@ describe("Observed", () => {
   });
 
   it("schema-derived arbitrary values are members of ObservedExit", () => {
-    const arbitrary = S.toArbitrary(ObservedExit);
+    const arbitrary = S.toArbitrary(ObservedExit)(fc);
 
     fc.assert(
       fc.property(arbitrary, (exit) => {

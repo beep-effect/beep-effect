@@ -54,7 +54,7 @@ class InvalidNumberRow extends S.Class<InvalidNumberRow>($I`InvalidNumberRow`)(
 ) {}
 
 describe("CSV", () => {
-  const userRowArbitrary = S.toArbitrary(UserRow);
+  const userRowArbitrary = S.toArbitrary(UserRow)(fc);
 
   it.effect(
     "decodes headered CSV text into typed row arrays",

@@ -31,7 +31,7 @@ const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = encode(schema, value);
       const decoded = decode(schema, encoded);
 

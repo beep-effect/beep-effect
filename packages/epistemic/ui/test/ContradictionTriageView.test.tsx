@@ -411,7 +411,7 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
     const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
 
     fc.assert(
-      fc.property(S.toArbitrary(ContradictionTriage.ContradictionListPayload), (query) => {
+      fc.property(S.toArbitrary(ContradictionTriage.ContradictionListPayload)(fc), (query) => {
         const encoded = Result.getOrThrow(encode(query));
         const decoded = Result.getOrThrow(decode(encoded));
 

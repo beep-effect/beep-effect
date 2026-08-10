@@ -46,7 +46,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   const decode = S.decodeUnknownSync(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -160,7 +160,7 @@ describe("@beep/ffmpeg", () => {
     const decodeErrorOptions = S.decodeUnknownSync(FFmpegErrorFromUnknownOptions);
     fc.assert(
       fc.property(
-        S.toArbitrary(FFmpegErrorFromUnknownOptions).filter((options) => O.isNone(options.cause)),
+        S.toArbitrary(FFmpegErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
         (options) => {
           expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
         }

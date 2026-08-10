@@ -54,7 +54,7 @@ describe("FilePath part schemas", () => {
 
   it("derives valid values from the WindowsDriveRoot source schema and round-trips", () => {
     const decode = S.decodeUnknownSync(FilePathSchema.WindowsDriveRoot);
-    const arbitrary = S.toArbitrary(FilePathSchema.WindowsDriveRoot);
+    const arbitrary = S.toArbitrary(FilePathSchema.WindowsDriveRoot)(fc);
 
     fc.assert(
       fc.property(arbitrary, (value) => {

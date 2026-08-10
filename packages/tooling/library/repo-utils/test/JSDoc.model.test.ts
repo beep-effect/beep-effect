@@ -9,11 +9,11 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const TagNameArbitrary = S.toArbitrary(TagName);
-const TagValueArbitrary = S.toArbitrary(TagValue);
-const TSCategoryDefinitionArbitrary = S.toArbitrary(TSCategoryDefinition);
-const CategorySignalArbitrary = S.toArbitrary(CategorySignal);
-const ScoredCategoryCandidateArbitrary = S.toArbitrary(ScoredCategoryCandidate);
+const TagNameArbitrary = S.toArbitrary(TagName)(fc);
+const TagValueArbitrary = S.toArbitrary(TagValue)(fc);
+const TSCategoryDefinitionArbitrary = S.toArbitrary(TSCategoryDefinition)(fc);
+const CategorySignalArbitrary = S.toArbitrary(CategorySignal)(fc);
+const ScoredCategoryCandidateArbitrary = S.toArbitrary(ScoredCategoryCandidate)(fc);
 
 describe("JSDoc schema models", () => {
   it("round-trips schema-derived tag names through the encoded wire shape", () => {

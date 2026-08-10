@@ -11,8 +11,8 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeOrganization = S.decodeUnknownEffect(Organization.Model);
 const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
-const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier);
-const SettingsArbitrary = S.toArbitrary(Organization.Settings);
+const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier)(fc);
+const SettingsArbitrary = S.toArbitrary(Organization.Settings)(fc);
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);

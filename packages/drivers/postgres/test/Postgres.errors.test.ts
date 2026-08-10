@@ -110,7 +110,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)
+  arbitrary = S.toArbitrary(schema)(fc)
 ): void => {
   fc.assert(
     fc.property(arbitrary, (value) => {
@@ -202,7 +202,7 @@ describe("PostgresError", () => {
   });
 
   it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
-    const postgresErrorArbitrary = S.toArbitrary(PostgresError).map((error) =>
+    const postgresErrorArbitrary = S.toArbitrary(PostgresError)(fc).map((error) =>
       PostgresError.make({
         operation: error.operation,
         cause: O.none(),

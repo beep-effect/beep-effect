@@ -76,7 +76,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "COEP",
     headerName: "Cross-Origin-Embedder-Policy",
     validValue: "require-corp",
-    optionArbitrary: S.toArbitrary(CrossOriginEmbedderPolicyOption),
+    optionArbitrary: S.toArbitrary(CrossOriginEmbedderPolicyOption)(fc),
     decodeDisabled: (input) => S.decodeSync(CrossOriginEmbedderPolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader),
     decodeValid: () => S.decodeSync(CrossOriginEmbedderPolicyHeader)("require-corp"),
@@ -88,7 +88,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "COOP",
     headerName: "Cross-Origin-Opener-Policy",
     validValue: "same-origin",
-    optionArbitrary: S.toArbitrary(CrossOriginOpenerPolicyOption),
+    optionArbitrary: S.toArbitrary(CrossOriginOpenerPolicyOption)(fc),
     decodeDisabled: (input) => S.decodeSync(CrossOriginOpenerPolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginOpenerPolicyHeader),
     decodeValid: () => S.decodeSync(CrossOriginOpenerPolicyHeader)("same-origin"),
@@ -100,7 +100,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "CORP",
     headerName: "Cross-Origin-Resource-Policy",
     validValue: "same-origin",
-    optionArbitrary: S.toArbitrary(CrossOriginResourcePolicyOption),
+    optionArbitrary: S.toArbitrary(CrossOriginResourcePolicyOption)(fc),
     decodeDisabled: (input) => S.decodeSync(CrossOriginResourcePolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginResourcePolicyHeader),
     decodeValid: () => S.decodeSync(CrossOriginResourcePolicyHeader)("same-origin"),
@@ -112,7 +112,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
 
 describe("Secure header schemas", () => {
   it("derives cross-origin option examples directly from the source schema", () => {
-    const optionArbitrary = S.toArbitrary(CrossOriginEmbedderPolicyOption);
+    const optionArbitrary = S.toArbitrary(CrossOriginEmbedderPolicyOption)(fc);
 
     fc.assert(
       fc.property(optionArbitrary, (option) => {

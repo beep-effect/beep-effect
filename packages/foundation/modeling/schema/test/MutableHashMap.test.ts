@@ -114,7 +114,7 @@ describe("MutableHashMap", () => {
       key: S.String,
       value: S.FiniteFromString,
     });
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
     const equivalence = S.toEquivalence(schema);

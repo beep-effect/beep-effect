@@ -15,7 +15,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { SyncCursorRepositoryShape } from "@beep/documents-use-cases/entities/SyncCursor/server";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);

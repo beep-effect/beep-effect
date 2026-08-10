@@ -6,9 +6,9 @@ import * as Graph_ from "effect/Graph";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex);
-const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex);
-const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind);
+const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex)(fc);
+const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex)(fc);
+const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind)(fc);
 
 describe("Graph indices", () => {
   it("brands non-negative integer node and edge indices", () => {

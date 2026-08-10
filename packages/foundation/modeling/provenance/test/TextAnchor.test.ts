@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
-const TextAnchorArbitrary = S.toArbitrary(TextAnchor);
+const TextAnchorArbitrary = S.toArbitrary(TextAnchor)(fc);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
 describe("@beep/provenance TextAnchor", () => {

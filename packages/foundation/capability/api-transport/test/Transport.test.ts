@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as Headers from "effect/unstable/http/Headers";
 
-const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot);
+const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot)(fc);
 const RateLimitSnapshotEquivalence = S.toEquivalence(RateLimitSnapshot);
 const decodeRateLimitSnapshot = S.decodeUnknownEffect(RateLimitSnapshot);
 const encodeRateLimitSnapshot = S.encodeEffect(RateLimitSnapshot);
@@ -19,7 +19,7 @@ const HeaderRoundTripSnapshot = S.Struct({
   remaining: S.optionalKey(HeaderRoundTripNumber),
   reset: S.optionalKey(HeaderRoundTripNumber),
 });
-const HeaderRoundTripSnapshotArbitrary = S.toArbitrary(HeaderRoundTripSnapshot).map((snapshot) =>
+const HeaderRoundTripSnapshotArbitrary = S.toArbitrary(HeaderRoundTripSnapshot)(fc).map((snapshot) =>
   RateLimitSnapshot.make(snapshot)
 );
 

@@ -45,9 +45,9 @@ const isAbsoluteUriString = S.is(AbsoluteUriString);
 const isIdUriReferenceString = S.is(IdUriReferenceString);
 const isUriReferenceString = S.is(UriReferenceString);
 
-const NodeArbitrary = S.toArbitrary(Node);
-const SubSchemaArbitrary = S.toArbitrary(SubSchema);
-const DocumentArbitrary = S.toArbitrary(Document);
+const NodeArbitrary = S.toArbitrary(Node)(fc);
+const SubSchemaArbitrary = S.toArbitrary(SubSchema)(fc);
+const DocumentArbitrary = S.toArbitrary(Document)(fc);
 const nodeEquivalence = S.toEquivalence(Node);
 const subSchemaEquivalence = S.toEquivalence(SubSchema);
 const documentEquivalence = S.toEquivalence(Document);

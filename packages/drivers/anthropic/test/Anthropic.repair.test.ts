@@ -8,7 +8,7 @@ import { FastCheck as fc } from "effect/testing";
 import { Response } from "effect/unstable/ai";
 
 const JsonAnthropicToolJsonResponse = S.fromJsonString(AnthropicToolJsonResponse);
-const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse);
+const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse)(fc);
 
 describe("Anthropic repair helpers", () => {
   it.effect(

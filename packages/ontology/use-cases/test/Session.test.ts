@@ -86,7 +86,7 @@ describe("Session use-cases", () => {
     "round-trips schema-derived graph projection option samples",
     Effect.fnUntraced(function* () {
       fc.assert(
-        fc.property(S.toArbitrary(OntologyGraphProjectionOptions), (options) => {
+        fc.property(S.toArbitrary(OntologyGraphProjectionOptions)(fc), (options) => {
           const encoded = Result.getOrThrow(S.encodeResult(OntologyGraphProjectionOptions)(options));
           const decoded = Result.getOrThrow(S.decodeResult(OntologyGraphProjectionOptions)(encoded));
 
@@ -889,7 +889,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Result.getOrThrow(encode(value));
       const decoded = Result.getOrThrow(decode(encoded));
 

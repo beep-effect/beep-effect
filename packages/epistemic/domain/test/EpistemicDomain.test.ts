@@ -51,7 +51,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -93,7 +93,7 @@ describe("@beep/epistemic-domain", () => {
     ).toBe(true);
 
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceSpan), (span) => EvidenceSpan.isInternallyConsistent(span)),
+      fc.property(S.toArbitrary(EvidenceSpan)(fc), (span) => EvidenceSpan.isInternallyConsistent(span)),
       fcRuns(25)
     );
   });

@@ -48,12 +48,12 @@ const CapturedSanityRequestBody = S.Struct({
   query: S.String,
 });
 const CapturedSanityRequestBodyJson = S.fromJsonString(CapturedSanityRequestBody);
-const ConfigInputArbitrary = S.toArbitrary(SanityConfigInput).filter((config) => config.apiToken === undefined);
-const QueryParamValueArbitrary = S.toArbitrary(SanityQueryParamValue);
-const QueryRequestArbitrary = S.toArbitrary(SanityQueryRequest);
-const QueryResponseArbitrary = S.toArbitrary(SanityQueryResponse);
-const ErrorReasonArbitrary = S.toArbitrary(SanityErrorReason);
-const ErrorOptionsArbitrary = S.toArbitrary(SanityErrorOptions).map((options) =>
+const ConfigInputArbitrary = S.toArbitrary(SanityConfigInput)(fc).filter((config) => config.apiToken === undefined);
+const QueryParamValueArbitrary = S.toArbitrary(SanityQueryParamValue)(fc);
+const QueryRequestArbitrary = S.toArbitrary(SanityQueryRequest)(fc);
+const QueryResponseArbitrary = S.toArbitrary(SanityQueryResponse)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(SanityErrorReason)(fc);
+const ErrorOptionsArbitrary = S.toArbitrary(SanityErrorOptions)(fc).map((options) =>
   SanityErrorOptions.make(
     O.getSomesStruct({
       status: O.fromUndefinedOr(options.status),

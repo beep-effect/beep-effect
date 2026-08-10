@@ -22,9 +22,9 @@ import { FastCheck as fc } from "effect/testing";
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
-const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name);
-const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies);
-const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta);
+const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name)(fc);
+const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies)(fc);
+const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta)(fc);
 // `PublishConfig`'s `exports` field is a recursive suspend()-based schema
 // without a finite arbitrary generation path (pre-existing, unrelated to the
 // `PublishConfigBase` field-literal conversion below); this arbitrary covers
@@ -37,7 +37,7 @@ const PublishConfigCoreArbitrary = S.toArbitrary(
     registry: S.optionalKey(S.String),
     provenance: S.optionalKey(S.Boolean),
   })
-);
+)(fc);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {

@@ -607,7 +607,7 @@ describe("dock snapshot codec properties", () => {
   it.effect("round-trips arbitrary snapshots through the JSON codec", () =>
     Effect.sync(() =>
       fc.assert(
-        fc.property(S.toArbitrary(DockSnapshot), (snapshot) => {
+        fc.property(S.toArbitrary(DockSnapshot)(fc), (snapshot) => {
           const decoded = O.flatMap(
             S.encodeOption(S.fromJsonString(DockSnapshot))(snapshot),
             S.decodeUnknownOption(S.fromJsonString(DockSnapshot))

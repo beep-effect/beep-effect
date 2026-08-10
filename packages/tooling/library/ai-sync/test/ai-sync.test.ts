@@ -45,7 +45,7 @@ const previousHash = AiSyncContentHash.make("00000000000000000000000000000000000
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -54,7 +54,7 @@ const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = S.encodeSync(schema)(value);
       expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
     }),

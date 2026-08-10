@@ -23,12 +23,12 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation);
-const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig);
-const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions);
-const LibpffErrorArbitrary = S.toArbitrary(LibpffError);
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation)(fc);
+const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig)(fc);
+const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions)(fc);
+const LibpffErrorArbitrary = S.toArbitrary(LibpffError)(fc);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);

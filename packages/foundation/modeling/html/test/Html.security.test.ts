@@ -54,8 +54,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute);
-const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute);
+const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute)(fc);
+const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute)(fc);
 const text = (value: string): Text => Text.make({ value });
 const fragment = (...children: HtmlFragment["children"]): HtmlFragment => HtmlFragment.make({ children });
 

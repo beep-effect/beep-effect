@@ -34,6 +34,6 @@ describe("AllowedDevOrigin", () => {
   });
 
   it("round-trips schema-derived allowed origins", () => {
-    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin), expectRoundTrip), fcRuns(25));
+    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin)(fc), expectRoundTrip), fcRuns(25));
   });
 });

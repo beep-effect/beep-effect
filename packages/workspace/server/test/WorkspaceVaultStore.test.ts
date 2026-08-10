@@ -21,7 +21,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Result.getOrThrow(encode(value));
       const decoded = Result.getOrThrow(decode(encoded));
 

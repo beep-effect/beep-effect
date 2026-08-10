@@ -31,7 +31,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PlatformError } from "effect";
 
-const AgentModeArbitrary = S.toArbitrary(AgentMode);
+const AgentModeArbitrary = S.toArbitrary(AgentMode)(fc);
 
 const repoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
@@ -186,7 +186,7 @@ describe("@beep/agents-domain", () => {
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }

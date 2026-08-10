@@ -302,7 +302,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   it.effect("round-trips generated filing segments and never admits separators", () =>
     Effect.sync(() =>
       fc.assert(
-        fc.property(S.toArbitrary(FilingSegment), (segment) => {
+        fc.property(S.toArbitrary(FilingSegment)(fc), (segment) => {
           const decoded = O.flatMap(S.encodeOption(FilingSegment)(segment), S.decodeUnknownOption(FilingSegment));
           expect(O.exists(decoded, (value) => value === segment)).toBe(true);
           expect(isFilingSegment(segment)).toBe(true);

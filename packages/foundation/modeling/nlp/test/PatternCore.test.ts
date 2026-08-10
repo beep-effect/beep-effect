@@ -44,11 +44,11 @@ import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
-const POSPatternOptionArbitrary = Schema.toArbitrary(POSPatternOption);
-const EntityPatternOptionArbitrary = Schema.toArbitrary(EntityPatternOption);
-const LiteralPatternOptionArbitrary = Schema.toArbitrary(LiteralPatternOption);
-const PatternElementArbitrary = Schema.toArbitrary(Pattern.Element);
-const PatternArbitrary = Schema.toArbitrary(Pattern);
+const POSPatternOptionArbitrary = Schema.toArbitrary(POSPatternOption)(fc);
+const EntityPatternOptionArbitrary = Schema.toArbitrary(EntityPatternOption)(fc);
+const LiteralPatternOptionArbitrary = Schema.toArbitrary(LiteralPatternOption)(fc);
+const PatternElementArbitrary = Schema.toArbitrary(Pattern.Element)(fc);
+const PatternArbitrary = Schema.toArbitrary(Pattern)(fc);
 
 const firstIncludes = (values: ReadonlyArray<string>, searchString: string): boolean => {
   const first = values[0];

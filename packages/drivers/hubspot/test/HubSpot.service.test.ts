@@ -40,12 +40,12 @@ class HubSpotTestHttp extends Context.Service<HubSpotTestHttp, HubSpotTestHttpSh
   "@beep/hubspot/test/HubSpot.service.test/HubSpotTestHttp"
 ) {}
 
-const ConfigInputArbitrary = S.toArbitrary(HubSpotConfigInput).filter((config) => config.accessToken === undefined);
-const SubmitFormRequestArbitrary = S.toArbitrary(HubSpotSubmitFormRequest);
-const UpsertContactRequestArbitrary = S.toArbitrary(HubSpotUpsertContactRequest);
-const SubmitFormResponseArbitrary = S.toArbitrary(HubSpotSubmitFormResponse);
-const UpsertContactResponseArbitrary = S.toArbitrary(HubSpotUpsertContactResponse);
-const ErrorArbitrary = S.toArbitrary(HubSpotError);
+const ConfigInputArbitrary = S.toArbitrary(HubSpotConfigInput)(fc).filter((config) => config.accessToken === undefined);
+const SubmitFormRequestArbitrary = S.toArbitrary(HubSpotSubmitFormRequest)(fc);
+const UpsertContactRequestArbitrary = S.toArbitrary(HubSpotUpsertContactRequest)(fc);
+const SubmitFormResponseArbitrary = S.toArbitrary(HubSpotSubmitFormResponse)(fc);
+const UpsertContactResponseArbitrary = S.toArbitrary(HubSpotUpsertContactResponse)(fc);
+const ErrorArbitrary = S.toArbitrary(HubSpotError)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

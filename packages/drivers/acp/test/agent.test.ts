@@ -27,8 +27,8 @@ const decodeSessionCancelNotification = Schema.decodeEffect(Schema.fromJsonStrin
 const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const encodeInitializeResponse = Schema.encodeEffect(Schema.fromJsonString(InitializeResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
-const InitializeResponseArbitrary = Schema.toArbitrary(InitializeResponse);
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
+const InitializeResponseArbitrary = Schema.toArbitrary(InitializeResponse)(fc);
+const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
 
 it("round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries", () =>
   fc.assert(

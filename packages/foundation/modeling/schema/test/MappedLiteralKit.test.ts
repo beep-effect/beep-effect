@@ -22,7 +22,7 @@ describe("MappedLiteralKit", () => {
   });
 
   it("round-trips schema-derived mapped literal samples", () => {
-    const arbitrary = S.toArbitrary(SqlState);
+    const arbitrary = S.toArbitrary(SqlState)(fc);
     const decode = S.decodeUnknownSync(SqlState);
     const encode = S.encodeSync(SqlState);
 

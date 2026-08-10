@@ -26,7 +26,7 @@ describe("Model optional helpers", () => {
     const Struct = S.Struct({
       value: Model.optionalOption(S.String),
     });
-    const arbitrary = S.toArbitrary(Struct);
+    const arbitrary = S.toArbitrary(Struct)(fc);
     const decode = S.decodeUnknownSync(Struct);
     const encode = S.encodeSync(Struct);
 

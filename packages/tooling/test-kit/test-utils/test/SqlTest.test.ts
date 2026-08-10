@@ -44,7 +44,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeUnknownEffect(schema);
   const equivalent = S.toEquivalence(schema);
@@ -413,7 +413,7 @@ describe("SqlTest", () => {
     const encode = S.encodeUnknownEffect(SqlTestHarnessError);
 
     fc.assert(
-      fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded), (encoded) => {
+      fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded)(fc), (encoded) => {
         const decoded = Effect.runSync(decode(encoded));
 
         expect(SqlTestHarnessError.is(decoded)).toBe(true);

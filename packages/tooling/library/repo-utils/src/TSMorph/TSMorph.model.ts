@@ -1032,7 +1032,7 @@ export type ProjectCacheKey = typeof ProjectCacheKey.Type;
 const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(SymbolFilePath), S.toArbitrary(SymbolQualifiedName), S.toArbitrary(SymbolKind))
+      .tuple(S.toArbitrary(SymbolFilePath)(fc), S.toArbitrary(SymbolQualifiedName)(fc), S.toArbitrary(SymbolKind)(fc))
       .map(([filePath, qualifiedName, kind]) => `${filePath}::${qualifiedName}#${kind}` as typeof symbolIdentity.Type),
 });
 

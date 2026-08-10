@@ -39,7 +39,7 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
   const encode = Schema.encodeSync(schema);
 
   fc.assert(
-    fc.property(Schema.toArbitrary(schema), (value) => {
+    fc.property(Schema.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
     fcRuns(25)

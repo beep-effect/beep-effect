@@ -31,7 +31,7 @@ describe("Cuid", () => {
   );
 
   it("derives valid CUIDs from the schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Cuid);
+    const arbitrary = S.toArbitrary(Cuid)(fc);
 
     fc.assert(
       fc.property(arbitrary, (id) => {

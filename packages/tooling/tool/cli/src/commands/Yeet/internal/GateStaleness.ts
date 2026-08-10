@@ -36,6 +36,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
@@ -349,29 +350,42 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
  * @category detection
  * @since 0.0.0
  */
-export const assessGateStaleness = (
-  descriptor: GateArtifactDescriptor,
-  artifact: O.Option<GateFileWitness>,
-  newestInput: O.Option<GateFileWitness>
-): GateStalenessVerdict => {
-  if (O.isNone(artifact)) {
-    return GateUnproven.make({ detail: `${descriptor.artifactPath} does not exist`, gateId: descriptor.gateId });
+export const assessGateStaleness: {
+  (
+    artifact: O.Option<GateFileWitness>,
+    newestInput: O.Option<GateFileWitness>
+  ): (descriptor: GateArtifactDescriptor) => GateStalenessVerdict;
+  (
+    descriptor: GateArtifactDescriptor,
+    artifact: O.Option<GateFileWitness>,
+    newestInput: O.Option<GateFileWitness>
+  ): GateStalenessVerdict;
+} = dual(
+  3,
+  (
+    descriptor: GateArtifactDescriptor,
+    artifact: O.Option<GateFileWitness>,
+    newestInput: O.Option<GateFileWitness>
+  ): GateStalenessVerdict => {
+    if (O.isNone(artifact)) {
+      return GateUnproven.make({ detail: `${descriptor.artifactPath} does not exist`, gateId: descriptor.gateId });
+    }
+    if (O.isNone(newestInput)) {
+      return GateUnproven.make({ detail: "no changed files to compare against", gateId: descriptor.gateId });
+    }
+    const skewMs = newestInput.value.modifiedAtMs - artifact.value.modifiedAtMs;
+    return skewMs > 0
+      ? GateStale.make({
+          artifactPath: descriptor.artifactPath,
+          gateId: descriptor.gateId,
+          kind: descriptor.kind,
+          newestInputPath: newestInput.value.path,
+          regenerateCommand: descriptor.regenerateCommand,
+          skewMs,
+        })
+      : GateFresh.make({ gateId: descriptor.gateId });
   }
-  if (O.isNone(newestInput)) {
-    return GateUnproven.make({ detail: "no changed files to compare against", gateId: descriptor.gateId });
-  }
-  const skewMs = newestInput.value.modifiedAtMs - artifact.value.modifiedAtMs;
-  return skewMs > 0
-    ? GateStale.make({
-        artifactPath: descriptor.artifactPath,
-        gateId: descriptor.gateId,
-        kind: descriptor.kind,
-        newestInputPath: newestInput.value.path,
-        regenerateCommand: descriptor.regenerateCommand,
-        skewMs,
-      })
-    : GateFresh.make({ gateId: descriptor.gateId });
-};
+);
 
 /**
  * Keep only the verdicts that name a real problem.
@@ -425,7 +439,7 @@ export const unprovenGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdic
  * ```ts
  * import { renderYeetGateStalenessBlock } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(renderYeetGateStalenessBlock([]))
+ * console.log(renderYeetGateStalenessBlock([], []))
  * ```
  *
  * @param stale - Stale verdicts from one staleness pass.
@@ -434,10 +448,10 @@ export const unprovenGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdic
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetGateStalenessBlock = (
-  stale: ReadonlyArray<GateStale>,
-  unproven: ReadonlyArray<GateUnproven> = []
-): string =>
+export const renderYeetGateStalenessBlock: {
+  (unproven: ReadonlyArray<GateUnproven>): (stale: ReadonlyArray<GateStale>) => string;
+  (stale: ReadonlyArray<GateStale>, unproven: ReadonlyArray<GateUnproven>): string;
+} = dual(2, (stale: ReadonlyArray<GateStale>, unproven: ReadonlyArray<GateUnproven>): string =>
   A.isReadonlyArrayEmpty(stale) && A.isReadonlyArrayEmpty(unproven)
     ? "gate staleness: none"
     : A.join(
@@ -451,7 +465,8 @@ export const renderYeetGateStalenessBlock = (
           ...A.map(unproven, (verdict) => `  - ${verdict.gateId} (unproven): ${verdict.detail}`),
         ],
         "\n"
-      );
+      )
+);
 
 const witnessOrder = Order.mapInput(Order.Number, (witness: GateFileWitness) => witness.modifiedAtMs);
 

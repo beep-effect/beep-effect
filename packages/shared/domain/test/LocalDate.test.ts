@@ -36,7 +36,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
 const juneFifteenth = () => make({ year: 2024, month: 6, day: 15 });
-const ModelArbitrary = S.toArbitrary(Model);
+const ModelArbitrary = S.toArbitrary(Model)(fc);
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);

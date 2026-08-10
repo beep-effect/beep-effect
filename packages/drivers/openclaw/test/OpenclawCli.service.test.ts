@@ -573,8 +573,8 @@ describe("@beep/openclaw OpenclawCli service", () => {
     const reloadEquivalence = S.toEquivalence(OpenclawSecretsReload);
     fc.assert(
       fc.property(
-        S.toArbitrary(OpenclawConfigValidation),
-        S.toArbitrary(OpenclawSecretsReload),
+        S.toArbitrary(OpenclawConfigValidation)(fc),
+        S.toArbitrary(OpenclawSecretsReload)(fc),
         (validation, reload) => {
           const validationWire = Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation));
           const reloadWire = Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload));

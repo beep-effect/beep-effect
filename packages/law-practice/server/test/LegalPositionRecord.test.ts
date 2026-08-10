@@ -291,7 +291,7 @@ describe("@beep/law-practice-server legal position record repository", () => {
     // over organizations and ids nobody chose to make the assertion easy. Each
     // run builds its own store, which is stricter isolation than a shared
     // `Layer.fresh` gives across runs of one property.
-    const relators = S.toArbitrary(LegalPositionRelator);
+    const relators = S.toArbitrary(LegalPositionRelator)(fc);
 
     const readPerOrganization = Effect.fnUntraced(function* (recorded: ReadonlyArray<LegalPositionRelator>) {
       const repository = yield* makeInMemoryLegalPositionRecordRepository();

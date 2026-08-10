@@ -2522,17 +2522,12 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
 
   const occurrences = MutableHashMap.empty<string, number>();
   const toObservation = Effect.fnUntraced(function* (candidate: RefCandidate) {
-    const resolution = O.match(candidate.normalized, {
-      onNone: (): KnowledgeRefResolution =>
-        O.match(
-          O.flatMap(candidate.slug, (slug) => HashMap.get(slugResolutions, slug)),
-          {
-            onNone: () => KnowledgeRefNotApplicable.make({}),
-            onSome: (resolved) => resolved,
-          }
-        ),
-      onSome: (normalized) => resolveRepoPath(pathIndex, directoryPrefixes, normalized),
-    });
+    const resolution = pipe(
+      candidate.normalized,
+      O.map((normalized) => resolveRepoPath(pathIndex, directoryPrefixes, normalized)),
+      O.orElse(() => O.flatMap(candidate.slug, (slug) => HashMap.get(slugResolutions, slug))),
+      O.getOrElse((): KnowledgeRefResolution => KnowledgeRefNotApplicable.make({}))
+    );
     const classification = classifyKnowledgeRef({
       kind: candidate.kind,
       surface: candidate.surface,

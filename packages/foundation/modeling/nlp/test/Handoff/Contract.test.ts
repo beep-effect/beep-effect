@@ -13,7 +13,7 @@ import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const AnnotatedDocumentArbitrary = S.toArbitrary(Contract.AnnotatedDocument);
+const AnnotatedDocumentArbitrary = S.toArbitrary(Contract.AnnotatedDocument)(fc);
 
 const sampleProvenance = Contract.Provenance.make({
   generatedBy: "wink-nlp",

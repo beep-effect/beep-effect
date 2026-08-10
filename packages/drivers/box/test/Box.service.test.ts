@@ -182,7 +182,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expectRoundTrip(schema, value);
     }),
     fcRuns(25)
@@ -201,7 +201,7 @@ const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unkno
   );
 };
 
-const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt).map((fileSize) =>
+const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt)(fc).map((fileSize) =>
   B.BoxUploadBigFilePayload.make({
     file: new Uint8Array([1, 2, 3]),
     fileName: "large-document.txt",

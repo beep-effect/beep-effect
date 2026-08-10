@@ -230,7 +230,7 @@ describe("DateTimeUtcFromValid", () => {
   });
 
   it("schema-derived values satisfy the encode round-trip law", () => {
-    const arbitrary = S.toArbitrary(DateTimeUtcFromValid);
+    const arbitrary = S.toArbitrary(DateTimeUtcFromValid)(fc);
     const encode = S.encodeSync(DateTimeUtcFromValid);
     const decode = S.decodeSync(DateTimeUtcFromValid);
 

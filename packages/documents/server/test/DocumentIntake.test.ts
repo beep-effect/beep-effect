@@ -49,7 +49,7 @@ describe("@beep/documents-server DocumentIntake", () => {
     const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
 
     fc.assert(
-      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64), (bytes) => {
+      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64)(fc), (bytes) => {
         const encoded = Result.getOrThrow(encode(bytes));
         const decoded = Result.getOrThrow(decode(encoded));
 

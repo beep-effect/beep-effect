@@ -34,7 +34,7 @@ const restoreGlobalBunMarkdownHtml = ({
   });
 
 describe("Markdown", () => {
-  const markdownArbitrary = S.toArbitrary(Markdown);
+  const markdownArbitrary = S.toArbitrary(Markdown)(fc);
 
   it.effect(
     "brands Markdown text accepted by the active parser",

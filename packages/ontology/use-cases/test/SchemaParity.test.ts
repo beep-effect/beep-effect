@@ -64,7 +64,7 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
   schema: Schema
 ): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
       const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
       expect(Equal.equals(decoded, value)).toBe(true);

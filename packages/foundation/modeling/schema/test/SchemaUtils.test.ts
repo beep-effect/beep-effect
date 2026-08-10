@@ -306,7 +306,7 @@ describe("withCodecStatics", () => {
 
   it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
     fc.assert(
-      fc.property(S.toArbitrary(S.NonEmptyString), (sampled) => {
+      fc.property(S.toArbitrary(S.NonEmptyString)(fc), (sampled) => {
         expect(Slug.is(sampled)).toBe(S.is(S.NonEmptyString)(sampled));
         expect(Slug.fromUnknown(sampled)).toBe(sampled);
         expect(O.isSome(Slug.decodeOption(sampled))).toBe(true);

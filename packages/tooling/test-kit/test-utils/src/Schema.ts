@@ -45,7 +45,7 @@ export const assertSchemaArbitraryDecodesToSelf: {
       readonly numRuns?: number;
     }
   ): void => {
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const decode = S.decodeUnknownSync(schema);
     const equivalent = S.toEquivalence(schema);
     const isValue = S.is(schema);

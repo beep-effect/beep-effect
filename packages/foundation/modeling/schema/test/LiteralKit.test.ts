@@ -40,7 +40,7 @@ describe("LiteralKit", () => {
   });
 
   it("round-trips schema-derived literal samples", () => {
-    const arbitrary = S.toArbitrary(Status);
+    const arbitrary = S.toArbitrary(Status)(fc);
     const decode = S.decodeUnknownSync(Status);
     const encode = S.encodeSync(Status);
 

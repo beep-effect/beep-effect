@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ClaimProjectionAuthorityArbitrary = S.toArbitrary(ClaimProjection.inputSchema);
+const ClaimProjectionAuthorityArbitrary = S.toArbitrary(ClaimProjection.inputSchema)(fc);
 const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>

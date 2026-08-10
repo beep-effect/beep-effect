@@ -530,7 +530,7 @@ describe("gov-legal MCP frozen contract", () => {
   );
 });
 
-const ToolNameCandidateArbitrary = S.toArbitrary(ToolNameCandidate);
+const ToolNameCandidateArbitrary = S.toArbitrary(ToolNameCandidate)(fc);
 
 const encodeThrowing = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,

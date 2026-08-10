@@ -36,6 +36,7 @@ import {
   MutableHashSet,
   Order,
   Path,
+  pipe,
   Result,
 } from "effect";
 import { dual } from "effect/Function";
@@ -1141,19 +1142,19 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
     onSome: Effect.succeed,
     onNone: () =>
       Effect.map(runGitProbe(currentRoot, ["rev-parse", "--git-common-dir"]), (probe): string =>
-        O.match(gitStdout(probe), {
-          onNone: () => path.dirname(currentRoot),
-          onSome: (output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output)))),
-        })
+        pipe(
+          gitStdout(probe),
+          O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
+          O.getOrElse(() => path.dirname(currentRoot))
+        )
       ),
   });
 
   const homeDir = O.orElse(O.fromUndefinedOr(options.homeDir), () => homeDirectory());
-  const scannerDir = O.getOrElse(O.fromUndefinedOr(options.scannerDir), () =>
-    O.match(cacheDirectory(homeDir), {
-      onNone: () => path.join(fleetRoot, ".beep-fleet-scanner"),
-      onSome: (cache) => path.join(cache, "beep", "fleet-scanner"),
-    })
+  const scannerDir = pipe(
+    O.fromUndefinedOr(options.scannerDir),
+    O.orElse(() => O.map(cacheDirectory(homeDir), (cache) => path.join(cache, "beep", "fleet-scanner"))),
+    O.getOrElse(() => path.join(fleetRoot, ".beep-fleet-scanner"))
   );
 
   const { clones, stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);

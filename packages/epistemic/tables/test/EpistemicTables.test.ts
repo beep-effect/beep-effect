@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
-const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel);
+const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel)(fc);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
 const usageRecordInput = (id: number) => ({

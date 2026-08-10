@@ -64,7 +64,7 @@ describe("FileName", () => {
   });
 
   it("derives only-valid names from the schema arbitrary and round-trips them", () => {
-    const arbitrary = S.toArbitrary(FileName);
+    const arbitrary = S.toArbitrary(FileName)(fc);
     const isFileName = S.is(FileName);
 
     fc.assert(

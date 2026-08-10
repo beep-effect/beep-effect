@@ -29,7 +29,7 @@ import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
-const LocalDateArbitrary = S.toArbitrary(LocalDate);
+const LocalDateArbitrary = S.toArbitrary(LocalDate)(fc);
 
 describe("LocalDate", () => {
   describe("validation", () => {

@@ -35,7 +35,7 @@ describe("blockchain redacted schemas", () => {
   });
 
   const decodeValidatorPublicKey = S.decodeUnknownSync(EthereumValidatorPublicKey);
-  const validatorPublicKeyArbitrary = S.toArbitrary(EthereumValidatorPublicKey);
+  const validatorPublicKeyArbitrary = S.toArbitrary(EthereumValidatorPublicKey)(fc);
 
   it("derives valid validator public keys from the source schema and round-trips", () => {
     fc.assert(

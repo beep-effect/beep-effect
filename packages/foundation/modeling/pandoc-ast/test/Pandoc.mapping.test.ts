@@ -23,10 +23,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const JsonPathArbitrary = S.toArbitrary(JsonPath);
-const JsonPathSegmentArbitrary = S.toArbitrary(JsonPathSegment);
-const MdDocumentArbitrary = S.toArbitrary(Md.Document);
-const PandocDocumentArbitrary = S.toArbitrary(Pandoc.PandocDocument);
+const JsonPathArbitrary = S.toArbitrary(JsonPath)(fc);
+const JsonPathSegmentArbitrary = S.toArbitrary(JsonPathSegment)(fc);
+const MdDocumentArbitrary = S.toArbitrary(Md.Document)(fc);
+const PandocDocumentArbitrary = S.toArbitrary(Pandoc.PandocDocument)(fc);
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>

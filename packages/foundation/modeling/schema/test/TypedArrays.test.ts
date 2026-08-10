@@ -24,7 +24,7 @@ describe("Float16Array schemas", () => {
   });
 
   it("derives Float16Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float16ArrayFromArray);
+    const arbitrary = S.toArbitrary(Float16ArrayFromArray)(fc);
     const encode = S.encodeSync(Float16ArrayFromArray);
     const decode = S.decodeUnknownSync(Float16ArrayFromArray);
 
@@ -55,7 +55,7 @@ describe("Float32Array schemas", () => {
   });
 
   it("derives Float32Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float32ArrayFromArray);
+    const arbitrary = S.toArbitrary(Float32ArrayFromArray)(fc);
     const encode = S.encodeSync(Float32ArrayFromArray);
     const decode = S.decodeUnknownSync(Float32ArrayFromArray);
 
@@ -86,7 +86,7 @@ describe("Float64Array schemas", () => {
   });
 
   it("derives Float64Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float64ArrayFromArray);
+    const arbitrary = S.toArbitrary(Float64ArrayFromArray)(fc);
     const encode = S.encodeSync(Float64ArrayFromArray);
     const decode = S.decodeUnknownSync(Float64ArrayFromArray);
 

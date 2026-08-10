@@ -25,12 +25,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference);
-const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion);
-const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey);
-const GatewayIntentArbitrary = S.toArbitrary(OpenclawGatewayIntent);
-const TelegramIntentArbitrary = S.toArbitrary(OpenclawTelegramIntent);
-const DeploymentIntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent);
+const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference)(fc);
+const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion)(fc);
+const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey)(fc);
+const GatewayIntentArbitrary = S.toArbitrary(OpenclawGatewayIntent)(fc);
+const TelegramIntentArbitrary = S.toArbitrary(OpenclawTelegramIntent)(fc);
+const DeploymentIntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
 
 const sameProviderApiKey = S.toEquivalence(OpenclawProviderApiKey);
 const sameGatewayIntent = S.toEquivalence(OpenclawGatewayIntent);

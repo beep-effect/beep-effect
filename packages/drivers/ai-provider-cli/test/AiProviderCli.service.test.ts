@@ -16,12 +16,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
-const ProviderArbitrary = S.toArbitrary(AiProviderCliProvider);
-const AuthStatusArbitrary = S.toArbitrary(AiProviderCliAuthStatus);
-const ExitCodeArbitrary = S.toArbitrary(AiProviderCliExitCode);
-const ProcessResultArbitrary = S.toArbitrary(AiProviderCliProcessResult);
-const AuthProbeArbitrary = S.toArbitrary(AiProviderCliAuthProbe);
-const ErrorArbitrary = S.toArbitrary(AiProviderCliError);
+const ProviderArbitrary = S.toArbitrary(AiProviderCliProvider)(fc);
+const AuthStatusArbitrary = S.toArbitrary(AiProviderCliAuthStatus)(fc);
+const ExitCodeArbitrary = S.toArbitrary(AiProviderCliExitCode)(fc);
+const ProcessResultArbitrary = S.toArbitrary(AiProviderCliProcessResult)(fc);
+const AuthProbeArbitrary = S.toArbitrary(AiProviderCliAuthProbe)(fc);
+const ErrorArbitrary = S.toArbitrary(AiProviderCliError)(fc);
 
 const sameProcessResult = S.toEquivalence(AiProviderCliProcessResult);
 const sameAuthProbe = S.toEquivalence(AiProviderCliAuthProbe);

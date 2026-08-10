@@ -52,16 +52,16 @@ type GovinfoTestHttpShape = {
 
 class GovinfoTestHttp extends Context.Service<GovinfoTestHttp, GovinfoTestHttpShape>()($TestI`GovinfoTestHttp`) {}
 
-const GovinfoConfigInputArbitrary = S.toArbitrary(GovinfoConfigInput).map((config) =>
+const GovinfoConfigInputArbitrary = S.toArbitrary(GovinfoConfigInput)(fc).map((config) =>
   GovinfoConfigInput.make({ apiUrl: config.apiUrl })
 );
-const GovinfoErrorOptionsArbitrary = S.toArbitrary(GovinfoErrorOptions).map((options) =>
+const GovinfoErrorOptionsArbitrary = S.toArbitrary(GovinfoErrorOptions)(fc).map((options) =>
   GovinfoErrorOptions.make({ status: options.status })
 );
-const GovinfoErrorArbitrary = S.toArbitrary(GovinfoError).map((error) =>
+const GovinfoErrorArbitrary = S.toArbitrary(GovinfoError)(fc).map((error) =>
   GovinfoError.of(error.reason, GovinfoErrorOptions.make({ status: error.status }))
 );
-const SearchFailureArbitrary = S.toArbitrary(Search.Failure).filter((failure) => O.isNone(failure.cause));
+const SearchFailureArbitrary = S.toArbitrary(Search.Failure)(fc).filter((failure) => O.isNone(failure.cause));
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -80,7 +80,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)
+  arbitrary = S.toArbitrary(schema)(fc)
 ): void => {
   fc.assert(
     fc.property(arbitrary, (value) => {
@@ -283,7 +283,7 @@ describe("@beep/govinfo", () => {
 
   it("round-trips hand-authored schema-derived values through encoded form", () => {
     fc.assert(
-      fc.property(S.toArbitrary(GovinfoHttpStatus), (status) => {
+      fc.property(S.toArbitrary(GovinfoHttpStatus)(fc), (status) => {
         expectRoundTrip(GovinfoHttpStatus, status);
       }),
       fcRuns(25)

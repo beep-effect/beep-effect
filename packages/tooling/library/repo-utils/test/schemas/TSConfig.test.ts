@@ -18,7 +18,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions);
+const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions)(fc);
 
 describe("TSConfig schema", () => {
   describe("valid structures", () => {

@@ -14,14 +14,14 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const TextNodeArbitrary = S.toArbitrary(GraphSchema.TextNode);
-const TextEdgeArbitrary = S.toArbitrary(GraphSchema.TextEdge);
-const EntityNodeArbitrary = S.toArbitrary(GraphSchema.EntityNode);
-const POSNodeArbitrary = S.toArbitrary(GraphSchema.POSNode);
-const LemmaNodeArbitrary = S.toArbitrary(GraphSchema.LemmaNode);
-const DependencyNodeArbitrary = S.toArbitrary(GraphSchema.DependencyNode);
-const RelationNodeArbitrary = S.toArbitrary(GraphSchema.RelationNode);
-const NLPAnalysisArbitrary = S.toArbitrary(GraphSchema.NLPAnalysis);
+const TextNodeArbitrary = S.toArbitrary(GraphSchema.TextNode)(fc);
+const TextEdgeArbitrary = S.toArbitrary(GraphSchema.TextEdge)(fc);
+const EntityNodeArbitrary = S.toArbitrary(GraphSchema.EntityNode)(fc);
+const POSNodeArbitrary = S.toArbitrary(GraphSchema.POSNode)(fc);
+const LemmaNodeArbitrary = S.toArbitrary(GraphSchema.LemmaNode)(fc);
+const DependencyNodeArbitrary = S.toArbitrary(GraphSchema.DependencyNode)(fc);
+const RelationNodeArbitrary = S.toArbitrary(GraphSchema.RelationNode)(fc);
+const NLPAnalysisArbitrary = S.toArbitrary(GraphSchema.NLPAnalysis)(fc);
 
 describe("TextNode", () => {
   it.effect(

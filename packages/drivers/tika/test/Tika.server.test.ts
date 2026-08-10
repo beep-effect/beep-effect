@@ -128,7 +128,7 @@ describe("TikaServerEngineConfig", () => {
 
   it("round-trips schema-derived Tika Server config through encoded form", () =>
     fc.assert(
-      fc.property(S.toArbitrary(TikaServerEngineConfig), (config) => {
+      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
         expectRoundTrip(TikaServerEngineConfig, config);
       }),
       fcRuns(25)

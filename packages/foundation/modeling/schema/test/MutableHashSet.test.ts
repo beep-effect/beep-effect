@@ -44,7 +44,7 @@ describe("MutableHashSetFromSelf", () => {
 
   it("round-trips arbitrary sets derived from the source schema under the derived equivalence", () => {
     const schema = MutableHashSetFromSelf(S.String);
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const equivalence = S.toEquivalence(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);

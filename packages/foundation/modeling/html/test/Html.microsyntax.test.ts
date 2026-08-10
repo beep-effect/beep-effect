@@ -24,12 +24,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"]);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
-const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger);
-const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger);
-const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber);
-const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber);
-const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
+const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger)(fc);
+const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger)(fc);
+const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber)(fc);
+const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber)(fc);
+const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber)(fc);
 
 describe("@beep/html attribute microsyntaxes", () => {
   it("derives valid presence and integer values from the production schemas", () =>

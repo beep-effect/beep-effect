@@ -22,7 +22,7 @@ const testLayer = NodeServices.layer;
 const provideTestLayer = provideScopedLayer(testLayer);
 
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
 
 const stubVersionBanner = 'if [ "$1" = "-V" ]; then printf "pffexport 20260608\\n\\nCopyright (C) test\\n"; exit 0; fi';
 

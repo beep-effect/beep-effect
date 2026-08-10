@@ -344,7 +344,7 @@ describe("verified-span hostile-text contract", () => {
 
   it("derives only ordered, round-trippable ranges from both schemas", () =>
     fc.assert(
-      fc.property(S.toArbitrary(TextOffsetRange), S.toArbitrary(Utf16TextRange), (offsetRange, utf16Range) => {
+      fc.property(S.toArbitrary(TextOffsetRange)(fc), S.toArbitrary(Utf16TextRange)(fc), (offsetRange, utf16Range) => {
         const encodedOffsetRange = Result.getOrThrow(S.encodeUnknownResult(TextOffsetRange)(offsetRange));
         const encodedUtf16Range = Result.getOrThrow(S.encodeUnknownResult(Utf16TextRange)(utf16Range));
         const decodedOffsetRange = Result.getOrThrow(S.decodeResult(TextOffsetRange)(encodedOffsetRange));

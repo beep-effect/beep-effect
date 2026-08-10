@@ -174,15 +174,15 @@ describe("Shared Next.js config preset", () => {
 
   it("round-trips defaulted shared feature schemas", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextMdxConfig), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
+      fc.property(S.toArbitrary(BeepNextMdxConfig)(fc), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextPwaConfig), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
+      fc.property(S.toArbitrary(BeepNextPwaConfig)(fc), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(SecureHeadersConfig), (value) => expectRoundTrip(SecureHeadersConfig, value)),
+      fc.property(S.toArbitrary(SecureHeadersConfig)(fc), (value) => expectRoundTrip(SecureHeadersConfig, value)),
       fcRuns(25)
     );
   });

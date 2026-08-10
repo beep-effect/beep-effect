@@ -119,7 +119,7 @@ describe("Document Monoids", () => {
 
     it("round-trips schema-derived document statistics values", () => {
       fc.assert(
-        fc.property(S.toArbitrary(NLP.DocumentStatistics), (stats) => {
+        fc.property(S.toArbitrary(NLP.DocumentStatistics)(fc), (stats) => {
           const encoded = Effect.runSync(S.encodeEffect(NLP.DocumentStatistics)(stats));
           const decoded = Effect.runSync(S.decodeEffect(NLP.DocumentStatistics)(encoded));
 
@@ -136,7 +136,7 @@ describe("Linguistic Monoids", () => {
     const edgeEquals = S.toEquivalence(NLP.DependencyEdge);
 
     fc.assert(
-      fc.property(S.toArbitrary(NLP.DependencyEdge), (edge) => {
+      fc.property(S.toArbitrary(NLP.DependencyEdge)(fc), (edge) => {
         const encoded = Effect.runSync(S.encodeEffect(NLP.DependencyEdge)(edge));
         const decoded = Effect.runSync(S.decodeEffect(NLP.DependencyEdge)(encoded));
 
@@ -158,7 +158,7 @@ describe("TextAnalysis", () => {
     const analysisEquals = S.toEquivalence(NLP.TextAnalysis);
 
     fc.assert(
-      fc.property(S.toArbitrary(NLP.TextAnalysis), (analysis) => {
+      fc.property(S.toArbitrary(NLP.TextAnalysis)(fc), (analysis) => {
         const encoded = Effect.runSync(S.encodeEffect(NLP.TextAnalysis)(analysis));
         const decoded = Effect.runSync(S.decodeEffect(NLP.TextAnalysis)(encoded));
 

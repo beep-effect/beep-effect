@@ -114,7 +114,7 @@ describe("EvidenceVerificationTable", () => {
 
   it("round-trips schema-derived manifestations through the sealed row converters", () => {
     fc.assert(
-      fc.property(S.toArbitrary(EvidenceVerificationManifestation), (manifestation) => {
+      fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (manifestation) => {
         const verification = Result.getOrThrow(
           S.decodeUnknownResult(EvidenceVerificationModel)({
             ...baseEntityFixtureInput("EpistemicEvidenceVerification", 7),

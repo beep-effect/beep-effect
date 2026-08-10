@@ -11,7 +11,7 @@ import { FastCheck as fc } from "effect/testing";
 describe("HashSet", () => {
   it("decodes arrays into hash sets and removes duplicates", () => {
     const schema = HashSet(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)(["1", "2", "1"]);
+    const decoded = S.decodeSync(schema)(["1", "2", "1"]);
 
     expect(schema.value).toBe(S.FiniteFromString);
     expect(schema.annotate({}).value).toBe(S.FiniteFromString);
@@ -49,7 +49,7 @@ describe("HashSet", () => {
     });
 
     const constructed = schema.make({});
-    const decoded = S.decodeUnknownSync(schema)({});
+    const decoded = S.decodeSync(schema)({});
 
     expect(HashSet_.isHashSet(constructed.values)).toBe(true);
     expect(HashSet_.isHashSet(decoded.values)).toBe(true);
@@ -58,7 +58,7 @@ describe("HashSet", () => {
 
   it("round-trips arbitrary sets through the array form under the derived equivalence", () => {
     const schema = HashSet(S.String);
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const equivalence = S.toEquivalence(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);

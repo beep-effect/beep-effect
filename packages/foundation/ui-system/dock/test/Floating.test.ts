@@ -554,7 +554,7 @@ describe("anchored box codec properties", () => {
   it.effect("round-trips arbitrary anchored boxes through their codec", () =>
     Effect.sync(() =>
       fc.assert(
-        fc.property(S.toArbitrary(AnchoredBox), (box) => {
+        fc.property(S.toArbitrary(AnchoredBox)(fc), (box) => {
           const decoded = O.flatMap(S.encodeOption(AnchoredBox)(box), S.decodeUnknownOption(AnchoredBox));
           expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
         })

@@ -358,9 +358,9 @@ describe("Contradiction domain invariants", () => {
   it("derives only constructive unique collections and canonical pairs", () => {
     fc.assert(
       fc.property(
-        S.toArbitrary(ContradictionMatchBasis),
-        S.toArbitrary(ContradictionAssessment),
-        S.toArbitrary(CanonicalContradictionBeliefPair),
+        S.toArbitrary(ContradictionMatchBasis)(fc),
+        S.toArbitrary(ContradictionAssessment)(fc),
+        S.toArbitrary(CanonicalContradictionBeliefPair)(fc),
         (basis, arbitraryAssessment, canonicalPair) => {
           expect(A.dedupe(basis.leftEvidenceIds)).toHaveLength(basis.leftEvidenceIds.length);
           expect(A.dedupe(basis.rightEvidenceIds)).toHaveLength(basis.rightEvidenceIds.length);

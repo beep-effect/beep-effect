@@ -2319,7 +2319,7 @@ describe("yeet publish scope helpers", () => {
   });
 
   it("property: verdict schema round-trips arbitrary verdicts", () => {
-    const VerdictArbitrary = S.toArbitrary(YeetVerdict);
+    const VerdictArbitrary = S.toArbitrary(YeetVerdict)(fc);
     fc.assert(
       fc.property(VerdictArbitrary, (verdict) => {
         const encoded = S.encodeSync(YeetVerdict)(verdict);

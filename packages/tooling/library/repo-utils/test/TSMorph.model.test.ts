@@ -223,7 +223,7 @@ describe("TSMorph model taxonomy", () => {
 
     it("round-trips schema-derived project identity parts through the encoded wire shape", () => {
       fc.assert(
-        fc.property(S.toArbitrary(ProjectIdentityParts), (value) => {
+        fc.property(S.toArbitrary(ProjectIdentityParts)(fc), (value) => {
           const encoded = S.encodeSync(ProjectIdentityParts)(value);
           const decoded = S.decodeSync(ProjectIdentityParts)(encoded);
 
@@ -236,7 +236,7 @@ describe("TSMorph model taxonomy", () => {
 
     it("round-trips schema-derived symbol identity parts through the encoded wire shape", () => {
       fc.assert(
-        fc.property(S.toArbitrary(SymbolIdentityParts), (value) => {
+        fc.property(S.toArbitrary(SymbolIdentityParts)(fc), (value) => {
           const encoded = S.encodeSync(SymbolIdentityParts)(value);
           const decoded = S.decodeSync(SymbolIdentityParts)(encoded);
 
@@ -289,7 +289,7 @@ describe("TSMorph model taxonomy", () => {
     });
 
     it("decodes every schema-derived SymbolId and round-trips it identically", () => {
-      const arbitrary = S.toArbitrary(SymbolId);
+      const arbitrary = S.toArbitrary(SymbolId)(fc);
       fc.assert(
         fc.property(arbitrary, (symbolId) => {
           const decoded = decodeSymbolId(symbolId);

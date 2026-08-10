@@ -52,7 +52,7 @@ const withoutValidFrom = ({ validFrom: _validFrom, ...rest }: { readonly validFr
 // EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
 // freely; the write commands require orgScope/orgId agreement, which a generate-and-filter
 // arbitrary would essentially never satisfy.
-const EdgeAsOfQueryArbitrary = S.toArbitrary(EdgeAsOfQuery);
+const EdgeAsOfQueryArbitrary = S.toArbitrary(EdgeAsOfQuery)(fc);
 
 describe("@beep/epistemic-use-cases edge authority commands", () => {
   it("round-trips RecordEdgeFact through its epoch-millis encoding", () => {

@@ -34,11 +34,11 @@ import { FastCheck as fc } from "effect/testing";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
-const ListNodeArbitrary = S.toArbitrary(ListNode);
-const NodeArbitrary = S.toArbitrary(LexicalNode);
-const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
-const StateArbitrary = S.toArbitrary(SerializedEditorState);
-const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire);
+const ListNodeArbitrary = S.toArbitrary(ListNode)(fc);
+const NodeArbitrary = S.toArbitrary(LexicalNode)(fc);
+const SafeUrlArbitrary = S.toArbitrary(SafeUrl)(fc);
+const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
+const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire)(fc);
 const decodeEditorState = S.decodeUnknownSync(SerializedEditorState);
 const encodeEditorState = S.encodeSync(SerializedEditorState);
 const encodeLexicalNode = S.encodeSync(LexicalNode);

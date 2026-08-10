@@ -19,14 +19,16 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ProbeStatusArbitrary = S.toArbitrary(OnePasswordReferenceProbeStatus);
-const ExitCodeArbitrary = S.toArbitrary(OnePasswordCliExitCode);
-const DiagnosticTextArbitrary = S.toArbitrary(OnePasswordCliDiagnosticText);
-const ProcessResultArbitrary = S.toArbitrary(OnePasswordCliProcessResult);
-const AccountArbitrary = S.toArbitrary(OnePasswordCliAccount);
-const ReferenceProbeArbitrary = S.toArbitrary(OnePasswordReferenceProbe);
-const ErrorOptionsArbitrary = S.toArbitrary(OnePasswordCliErrorOptions).filter((options) => O.isNone(options.cause));
-const ErrorArbitrary = S.toArbitrary(OnePasswordCliError).filter((error) => O.isNone(error.cause));
+const ProbeStatusArbitrary = S.toArbitrary(OnePasswordReferenceProbeStatus)(fc);
+const ExitCodeArbitrary = S.toArbitrary(OnePasswordCliExitCode)(fc);
+const DiagnosticTextArbitrary = S.toArbitrary(OnePasswordCliDiagnosticText)(fc);
+const ProcessResultArbitrary = S.toArbitrary(OnePasswordCliProcessResult)(fc);
+const AccountArbitrary = S.toArbitrary(OnePasswordCliAccount)(fc);
+const ReferenceProbeArbitrary = S.toArbitrary(OnePasswordReferenceProbe)(fc);
+const ErrorOptionsArbitrary = S.toArbitrary(OnePasswordCliErrorOptions)(fc).filter((options) =>
+  O.isNone(options.cause)
+);
+const ErrorArbitrary = S.toArbitrary(OnePasswordCliError)(fc).filter((error) => O.isNone(error.cause));
 
 const sameProcessResult = S.toEquivalence(OnePasswordCliProcessResult);
 const sameAccount = S.toEquivalence(OnePasswordCliAccount);

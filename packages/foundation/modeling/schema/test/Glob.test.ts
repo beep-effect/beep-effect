@@ -47,7 +47,7 @@ describe("Glob", () => {
   });
 
   it("derives portable glob patterns from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Glob);
+    const arbitrary = S.toArbitrary(Glob)(fc);
     const isGlob = S.is(Glob);
 
     fc.assert(

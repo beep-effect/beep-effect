@@ -382,7 +382,7 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 describe("practice KG projections", () => {
   it("generates schema-valid fixture source rows", () => {
     fc.assert(
-      fc.property(S.toArbitrary(S.String), (value) => {
+      fc.property(S.toArbitrary(S.String)(fc), (value) => {
         expect(S.is(S.String)(value)).toBe(true);
       }),
       { numRuns: 10 }

@@ -23,9 +23,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
-const StateArbitrary = S.toArbitrary(SerializedEditorState);
-const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri);
-const DocumentArbitrary = S.toArbitrary(MdModel.Document);
+const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
+const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri)(fc);
+const DocumentArbitrary = S.toArbitrary(MdModel.Document)(fc);
 
 const mdText = (value: string) => MdModel.Text.make({ value });
 

@@ -78,14 +78,14 @@ const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Laye
 const usptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
-const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber);
-const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber);
-const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput);
-const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata);
-const ContinuityArbitrary = S.toArbitrary(UsptoContinuity);
-const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference);
-const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason);
-const ErrorArbitrary = S.toArbitrary(UsptoError);
+const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber)(fc);
+const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber)(fc);
+const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput)(fc);
+const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata)(fc);
+const ContinuityArbitrary = S.toArbitrary(UsptoContinuity)(fc);
+const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason)(fc);
+const ErrorArbitrary = S.toArbitrary(UsptoError)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

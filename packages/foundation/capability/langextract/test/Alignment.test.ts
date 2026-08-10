@@ -7,7 +7,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ExtractionCandidateArbitrary = S.toArbitrary(ExtractionCandidate);
+const ExtractionCandidateArbitrary = S.toArbitrary(ExtractionCandidate)(fc);
 
 describe("alignCandidate", () => {
   it("finds exact source matches", () => {

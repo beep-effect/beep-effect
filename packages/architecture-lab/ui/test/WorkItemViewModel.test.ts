@@ -15,9 +15,9 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
-const WorkItemVisibleActionArbitrary = S.toArbitrary(WorkItemVisibleAction);
-const WorkItemSummaryViewModelArbitrary = S.toArbitrary(WorkItemSummaryViewModel);
-const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem);
+const WorkItemVisibleActionArbitrary = S.toArbitrary(WorkItemVisibleAction)(fc);
+const WorkItemSummaryViewModelArbitrary = S.toArbitrary(WorkItemSummaryViewModel)(fc);
+const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem)(fc);
 
 describe("WorkItem UI view model", () => {
   it.effect(

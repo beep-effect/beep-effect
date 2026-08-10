@@ -137,7 +137,7 @@ describe("CauseRedaction", () => {
 
   it("round-trips schema-derived redaction options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), (options) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(RedactCauseOptions)(options),
           S.decodeUnknownOption(RedactCauseOptions)
@@ -150,7 +150,7 @@ describe("CauseRedaction", () => {
 
   it("honors generated redaction bounds and channel rules", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), fc.string(), (options, rawMessage) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), fc.string(), (options, rawMessage) => {
         const cause = Cause.fail(new Error(rawMessage));
         const summary = summarizeCause(cause);
         const safe = redactCause(cause, options);

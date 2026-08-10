@@ -7,7 +7,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const portMinimum = 1;
 const portMaximum = 65_535;
-const PortArbitrary = S.toArbitrary(Port);
+const PortArbitrary = S.toArbitrary(Port)(fc);
 
 describe("Port", () => {
   const decode = S.decodeUnknownEffect(Port);

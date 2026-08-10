@@ -15,8 +15,8 @@ import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
-const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig);
-const TikaContentTextArbitrary = S.toArbitrary(TikaContentText);
+const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig)(fc);
+const TikaContentTextArbitrary = S.toArbitrary(TikaContentText)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

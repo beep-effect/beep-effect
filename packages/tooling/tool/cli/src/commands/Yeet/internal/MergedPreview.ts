@@ -39,6 +39,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -235,7 +236,10 @@ export const gitObjectIdFromOutput = (output: string): O.Option<string> =>
  * @category parsing
  * @since 0.0.0
  */
-export const parseYeetMergeTreeResult = (exitCode: number, output: string): YeetMergeTreeResult => {
+export const parseYeetMergeTreeResult: {
+  (output: string): (exitCode: number) => YeetMergeTreeResult;
+  (exitCode: number, output: string): YeetMergeTreeResult;
+} = dual(2, (exitCode: number, output: string): YeetMergeTreeResult => {
   const lines = outputLines(output);
   if (exitCode !== 0 && exitCode !== 1) {
     return YeetMergeTreeUnavailable.make({
@@ -264,7 +268,7 @@ export const parseYeetMergeTreeResult = (exitCode: number, output: string): Yeet
     ),
     messages: A.filter(lines, (line) => CONFLICT_MESSAGE_PATTERN.test(line)),
   });
-};
+});
 
 /**
  * Render the operator-facing refusal for a conflicting merge preview.
@@ -291,7 +295,10 @@ export const parseYeetMergeTreeResult = (exitCode: number, output: string): Yeet
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetMergePreviewConflict = (baseRef: string, conflict: YeetMergeTreeConflicted): string =>
+export const renderYeetMergePreviewConflict: {
+  (conflict: YeetMergeTreeConflicted): (baseRef: string) => string;
+  (baseRef: string, conflict: YeetMergeTreeConflicted): string;
+} = dual(2, (baseRef: string, conflict: YeetMergeTreeConflicted): string =>
   A.join(
     [
       `yeet verify --merged cannot build the merge preview: HEAD conflicts with ${baseRef}.`,
@@ -301,7 +308,8 @@ export const renderYeetMergePreviewConflict = (baseRef: string, conflict: YeetMe
       `Resolve it locally with: git fetch origin && git merge ${baseRef}, then re-run yeet verify --merged.`,
     ],
     "\n"
-  );
+  )
+);
 
 /**
  * A materialized merge preview: the merged commit and the worktree holding it.
@@ -394,18 +402,20 @@ export class YeetMergePreview extends S.Class<YeetMergePreview>($I`YeetMergePrev
  * @category constructors
  * @since 0.0.0
  */
-export const yeetMergedPreviewContext = (
-  context: RepoRunContext,
-  preview: YeetMergePreview,
-  absolutePacketDir: string
-): RepoRunContext =>
-  RepoRunContext.make({
-    ...context,
-    cwd: preview.worktreePath,
-    head: preview.commitSha,
-    packetDir: absolutePacketDir,
-    repoRoot: preview.worktreePath,
-  });
+export const yeetMergedPreviewContext: {
+  (preview: YeetMergePreview, absolutePacketDir: string): (context: RepoRunContext) => RepoRunContext;
+  (context: RepoRunContext, preview: YeetMergePreview, absolutePacketDir: string): RepoRunContext;
+} = dual(
+  3,
+  (context: RepoRunContext, preview: YeetMergePreview, absolutePacketDir: string): RepoRunContext =>
+    RepoRunContext.make({
+      ...context,
+      cwd: preview.worktreePath,
+      head: preview.commitSha,
+      packetDir: absolutePacketDir,
+      repoRoot: preview.worktreePath,
+    })
+);
 
 const gitCapture = Effect.fn("Yeet.mergedPreviewGitCapture")(function* (
   repoRoot: string,
@@ -649,10 +659,23 @@ export const installYeetMergePreview = Effect.fn("Yeet.installYeetMergePreview")
  * @category use-cases
  * @since 0.0.0
  */
-export const withYeetMergePreview = <A, E, R>(
-  context: RepoRunContext,
-  use: (preview: YeetMergePreview) => Effect.Effect<A, E, R>
-): Effect.Effect<A, E | YeetCommandError, R | Path.Path | ChildProcessSpawner.ChildProcessSpawner> =>
-  Effect.acquireUseRelease(createYeetMergePreview(context), use, (preview) =>
-    removeMergePreviewWorktree(context, preview.worktreePath)
-  );
+export const withYeetMergePreview: {
+  <A, E, R>(
+    use: (preview: YeetMergePreview) => Effect.Effect<A, E, R>
+  ): (
+    context: RepoRunContext
+  ) => Effect.Effect<A, E | YeetCommandError, R | Path.Path | ChildProcessSpawner.ChildProcessSpawner>;
+  <A, E, R>(
+    context: RepoRunContext,
+    use: (preview: YeetMergePreview) => Effect.Effect<A, E, R>
+  ): Effect.Effect<A, E | YeetCommandError, R | Path.Path | ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  <A, E, R>(
+    context: RepoRunContext,
+    use: (preview: YeetMergePreview) => Effect.Effect<A, E, R>
+  ): Effect.Effect<A, E | YeetCommandError, R | Path.Path | ChildProcessSpawner.ChildProcessSpawner> =>
+    Effect.acquireUseRelease(createYeetMergePreview(context), use, (preview) =>
+      removeMergePreviewWorktree(context, preview.worktreePath)
+    )
+);

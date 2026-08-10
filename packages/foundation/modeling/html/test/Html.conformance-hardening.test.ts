@@ -91,7 +91,7 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { isValidURLString, parseURL } from "whatwg-url";
 
-const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList);
+const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList)(fc);
 const htmlUrlValidationBase = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>

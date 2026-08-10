@@ -58,7 +58,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 10): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -153,7 +153,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("covers patent identifiers with schema-derived arbitraries", () => {
     fc.assert(
-      fc.property(S.toArbitrary(PatentNumber), (patentNumber) => {
+      fc.property(S.toArbitrary(PatentNumber)(fc), (patentNumber) => {
         expect(S.is(PatentNumber)(patentNumber)).toBe(true);
       }),
       fcRuns(25)

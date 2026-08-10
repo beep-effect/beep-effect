@@ -347,7 +347,7 @@ const DistinctBeliefPairCheck = S.makeFilter(beliefsAreDistinct, {
   message: "Expected left and right to reference different edge versions.",
 });
 
-const contradictionBeliefPairStructArbitrary = S.toArbitraryLazy(ContradictionBeliefPairStruct);
+const contradictionBeliefPairStructArbitrary = S.toArbitrary(ContradictionBeliefPairStruct);
 const ContradictionBeliefPairSchema = ContradictionBeliefPairStruct.mapFields(identity)
   .check(DistinctBeliefPairCheck)
   .annotate({
@@ -392,7 +392,7 @@ const CanonicalBeliefPairCheck = S.makeFilter(
   }
 );
 
-const beliefVersionRefArbitrary = S.toArbitraryLazy(BeliefVersionRef);
+const beliefVersionRefArbitrary = S.toArbitrary(BeliefVersionRef);
 
 const CanonicalContradictionBeliefPairSchema = ContradictionBeliefPair.mapFields(identity)
   .check(DistinctBeliefPairCheck)
@@ -495,7 +495,7 @@ export const ContradictionMatchBasisKind = ContradictionMatchBasisKindBase.pipe(
 export type ContradictionMatchBasisKind = typeof ContradictionMatchBasisKind.Type;
 
 const evidenceIdEquivalence = S.toEquivalence(EpistemicIdentity.EvidenceId);
-const evidenceIdArbitrary = S.toArbitraryLazy(EpistemicIdentity.EvidenceId);
+const evidenceIdArbitrary = S.toArbitrary(EpistemicIdentity.EvidenceId);
 const evidenceIdOrder = Order.mapInput(Order.String, (evidenceId: EpistemicIdentity.EvidenceId) => `${evidenceId}`);
 const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>): boolean =>
   Eq.equals(A.length(A.dedupeWith(ids, evidenceIdEquivalence)), A.length(ids));
@@ -624,7 +624,7 @@ const IndependentEvidenceSetsCheck = S.makeFilter(
   }
 );
 
-const contradictionMatchBasisStructArbitrary = S.toArbitraryLazy(ContradictionMatchBasisStruct);
+const contradictionMatchBasisStructArbitrary = S.toArbitrary(ContradictionMatchBasisStruct);
 
 const ContradictionMatchBasisSchema = ContradictionMatchBasisStruct.mapFields(identity)
   .check(IndependentEvidenceSetsCheck)
@@ -822,7 +822,7 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
 ) {}
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
-const contradictionResolutionProposalStructArbitrary = S.toArbitraryLazy(ContradictionResolutionProposalStruct);
+const contradictionResolutionProposalStructArbitrary = S.toArbitrary(ContradictionResolutionProposalStruct);
 const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity)
   .check(
     S.makeFilter(
@@ -873,7 +873,7 @@ export class ContradictionResolutionProposal extends S.Class<ContradictionResolu
 ) {}
 
 const contradictionProposalIdEquivalence = S.toEquivalence(ContradictionProposalId);
-const contradictionProposalArbitrary = S.toArbitraryLazy(ContradictionResolutionProposal);
+const contradictionProposalArbitrary = S.toArbitrary(ContradictionResolutionProposal);
 const proposalsShareId = (self: ContradictionResolutionProposal, that: ContradictionResolutionProposal): boolean =>
   contradictionProposalIdEquivalence(self.proposalId, that.proposalId);
 const hasUniqueProposalIds = (proposals: ReadonlyArray<ContradictionResolutionProposal>): boolean =>
@@ -1444,7 +1444,7 @@ class ContradictionCandidateContentStruct extends S.Class<ContradictionCandidate
   })
 ) {}
 
-const contradictionCandidateContentStructArbitrary = S.toArbitraryLazy(ContradictionCandidateContentStruct);
+const contradictionCandidateContentStructArbitrary = S.toArbitrary(ContradictionCandidateContentStruct);
 const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.mapFields(identity)
   .check(
     S.makeFilter(

@@ -58,7 +58,7 @@ describe("OptionFromOptionalNullishKey", () => {
 
     const decode = S.decodeUnknownSync(Payload);
     const encode = S.encodeSync(Payload);
-    const arbitrary = S.toArbitrary(Payload);
+    const arbitrary = S.toArbitrary(Payload)(fc);
 
     fc.assert(
       fc.property(arbitrary, (payload) => {

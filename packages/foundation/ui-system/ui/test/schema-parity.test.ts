@@ -22,13 +22,13 @@ describe("@beep/ui schema parity", () => {
   it("round-trips exported schema models through encoded form", () => {
     fc.assert(
       fc.property(
-        S.toArbitrary(BoundaryParams),
-        S.toArbitrary(SpinParams),
-        S.toArbitrary(NumberInputChangeMetadata),
-        S.toArbitrary(NotificationAction),
-        S.toArbitrary(ToastData),
-        S.toArbitrary(ReactContextInvariantOptions),
-        S.toArbitrary(ReactContextInvariantError),
+        S.toArbitrary(BoundaryParams)(fc),
+        S.toArbitrary(SpinParams)(fc),
+        S.toArbitrary(NumberInputChangeMetadata)(fc),
+        S.toArbitrary(NotificationAction)(fc),
+        S.toArbitrary(ToastData)(fc),
+        S.toArbitrary(ReactContextInvariantOptions)(fc),
+        S.toArbitrary(ReactContextInvariantError)(fc),
         (boundary, spin, metadata, action, toast, invariantOptions, invariantError) => {
           const roundTrippedBoundary = Result.getOrThrow(
             S.decodeResult(BoundaryParams)(Result.getOrThrow(S.encodeResult(BoundaryParams)(boundary)))

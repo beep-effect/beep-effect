@@ -148,7 +148,7 @@ const expectSourceTextResolveSpan = (
 describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
   it("round-trips schema-derived source identities through their wire shape", () =>
     fc.assert(
-      fc.property(S.toArbitrary(SourceTextIdentity), (identity) => {
+      fc.property(S.toArbitrary(SourceTextIdentity)(fc), (identity) => {
         const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(identity));
         const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
 

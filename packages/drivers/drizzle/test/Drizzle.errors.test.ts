@@ -26,9 +26,9 @@ const makeClient = (execute: DrizzleClient["execute"]): DrizzleClient => {
   return client;
 };
 
-const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext);
-const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError);
-const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows);
+const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext)(fc);
+const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError)(fc);
+const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows)(fc);
 
 describe("DrizzleError", () => {
   it("constructs the single public tagged driver error", () => {

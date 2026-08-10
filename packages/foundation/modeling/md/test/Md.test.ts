@@ -82,11 +82,11 @@ import { micromark } from "micromark";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
 import type { JsonObject } from "@beep/schema";
 
-const InlineArbitrary = S.toArbitrary(Inline);
-const BlockArbitrary = S.toArbitrary(Block);
-const DocumentArbitrary = S.toArbitrary(Document);
-const FootnoteIdentifierArbitrary = S.toArbitrary(FootnoteIdentifier);
-const SafeDocumentArbitrary = S.toArbitrary(SafeDocument);
+const InlineArbitrary = S.toArbitrary(Inline)(fc);
+const BlockArbitrary = S.toArbitrary(Block)(fc);
+const DocumentArbitrary = S.toArbitrary(Document)(fc);
+const FootnoteIdentifierArbitrary = S.toArbitrary(FootnoteIdentifier)(fc);
+const SafeDocumentArbitrary = S.toArbitrary(SafeDocument)(fc);
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform behavior remains covered until removal.
 const documentToMarkdownCompatibility = DocumentToMarkdown;
@@ -1253,7 +1253,7 @@ Demo video`);
   it("colocated escape-schema guards agree with their schemas", () => {
     // Mirrors the module-private StringArray schema in Md.escape.ts.
     const StringArraySchema = S.Array(S.String);
-    const stringArrayArbitrary = S.toArbitrary(StringArraySchema);
+    const stringArrayArbitrary = S.toArbitrary(StringArraySchema)(fc);
     fc.assert(
       fc.property(stringArrayArbitrary, (values) => {
         expect(isStringArray(values)).toBe(true);

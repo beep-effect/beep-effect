@@ -41,12 +41,12 @@ const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const decodeRequestPermissionResponse = Schema.decodeEffect(Schema.fromJsonString(RequestPermissionResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
 const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
-const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse);
-const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent);
-const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions);
-const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification);
-const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError);
+const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
+const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse)(fc);
+const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent)(fc);
+const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions)(fc);
+const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification)(fc);
+const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc);
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")

@@ -136,7 +136,7 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
   runs = 25
 ): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Effect.runSync(S.encodeEffect(schema)(value));
       const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
       expect(Equal.equals(decoded, value)).toBe(true);
@@ -152,7 +152,7 @@ const assertDecodeEncodeDecodeStable = <
   runs = 25
 ): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (input) => {
+    fc.property(S.toArbitrary(schema)(fc), (input) => {
       const firstEncoded = Effect.runSync(S.encodeEffect(schema)(input));
       const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(firstEncoded));
       const encoded = Effect.runSync(S.encodeEffect(schema)(decoded));
@@ -643,7 +643,7 @@ describe("@beep/rdf semantic metadata", () => {
   });
 
   it("round-trips decode/encode for metadata derived from the source schema", () => {
-    const arbitrary = S.toArbitrary(SemanticSchemaMetadata);
+    const arbitrary = S.toArbitrary(SemanticSchemaMetadata)(fc);
     const decode = S.decodeSync(SemanticSchemaMetadata);
     const encode = S.encodeSync(SemanticSchemaMetadata);
 

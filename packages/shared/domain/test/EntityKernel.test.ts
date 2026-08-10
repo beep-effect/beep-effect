@@ -249,7 +249,7 @@ describe("EntityRef and shared entity primitives", () => {
 
   it("round-trips schema-derived document ids through entity references", () =>
     fc.assert(
-      fc.property(S.toArbitrary(DocumentId), (id) => {
+      fc.property(S.toArbitrary(DocumentId)(fc), (id) => {
         const ref = EntityRef.make(DocumentId, id);
         const encodedRef = S.encodeSync(EntityRef.EntityRef)(ref);
         const decodedRef = S.decodeSync(EntityRef.EntityRef)(encodedRef);

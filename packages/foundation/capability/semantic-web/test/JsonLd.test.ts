@@ -49,9 +49,9 @@ const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(s
   S.decodeUnknownSync(schema);
 
 const isJsonLdLiteralValue = S.is(JsonLdLiteralValue);
-const JsonLdContextArbitrary = S.toArbitrary(JsonLdContext);
-const JsonLdFrameArbitrary = S.toArbitrary(JsonLdFrame);
-const JsonLdLiteralValueArbitrary = S.toArbitrary(JsonLdLiteralValue);
+const JsonLdContextArbitrary = S.toArbitrary(JsonLdContext)(fc);
+const JsonLdFrameArbitrary = S.toArbitrary(JsonLdFrame)(fc);
+const JsonLdLiteralValueArbitrary = S.toArbitrary(JsonLdLiteralValue)(fc);
 
 const rawContext = {
   "@base": "https://example.com/",
@@ -243,7 +243,7 @@ describe("JSON-LD", () => {
 
   it("round-trips schema-derived JSON-LD stream serialize requests through encoded shapes", { timeout: 30000 }, () =>
     fc.assert(
-      fc.property(S.toArbitrary(JsonLdStreamSerializeRequest), (request) => {
+      fc.property(S.toArbitrary(JsonLdStreamSerializeRequest)(fc), (request) => {
         const encoded = S.encodeSync(JsonLdStreamSerializeRequest)(request);
         const decoded = S.decodeSync(JsonLdStreamSerializeRequest)(encoded);
 

@@ -48,7 +48,7 @@ describe("Color", () => {
   });
 
   it("canonical hex colors round-trip losslessly through RGB", () => {
-    const hexArbitrary = S.toArbitrary(Color.HexColor);
+    const hexArbitrary = S.toArbitrary(Color.HexColor)(fc);
     const decodeRgb = S.decodeUnknownSync(Color.HexToRgb);
     const encodeHex = S.decodeUnknownSync(Color.RgbToHex);
 
@@ -63,7 +63,7 @@ describe("Color", () => {
   });
 
   it("derives only bounded color amounts from the source schema", () => {
-    const amountArbitrary = S.toArbitrary(Color.ColorAmount);
+    const amountArbitrary = S.toArbitrary(Color.ColorAmount)(fc);
     const encode = S.encodeSync(Color.ColorAmount);
     const decode = S.decodeUnknownSync(Color.ColorAmount);
 

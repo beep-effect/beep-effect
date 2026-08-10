@@ -75,7 +75,7 @@ class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCand
 ) {}
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
-const submitContradictionCandidateStructArbitrary = S.toArbitraryLazy(SubmitContradictionCandidateStruct);
+const submitContradictionCandidateStructArbitrary = S.toArbitrary(SubmitContradictionCandidateStruct);
 
 const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.mapFields(identity)
   .check(

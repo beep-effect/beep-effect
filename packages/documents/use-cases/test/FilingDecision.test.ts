@@ -22,7 +22,7 @@ describe("@beep/documents-use-cases FilingDecision port", () => {
     const equivalent = S.toEquivalence(FilingDecisionInput);
 
     fc.assert(
-      fc.property(S.toArbitrary(FilingDecisionInput), (input) => {
+      fc.property(S.toArbitrary(FilingDecisionInput)(fc), (input) => {
         const encoded = Result.getOrThrow(encode(input));
         const decoded = Result.getOrThrow(decode(encoded));
 

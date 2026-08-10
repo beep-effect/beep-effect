@@ -63,24 +63,24 @@ describe("@beep/editor schema crispening parity", () => {
 
   it("round-trips pure chat schemas with schema-derived arbitraries", () => {
     fc.assert(
-      fc.property(S.toArbitrary(SendOn), (value) => {
+      fc.property(S.toArbitrary(SendOn)(fc), (value) => {
         expect(Equal.equals(S.decodeSync(SendOn)(S.encodeSync(SendOn)(value)), value)).toBe(true);
       })
     );
     fc.assert(
-      fc.property(S.toArbitrary(ImageAttachmentMimeType), (value) => {
+      fc.property(S.toArbitrary(ImageAttachmentMimeType)(fc), (value) => {
         expect(
           Equal.equals(S.decodeSync(ImageAttachmentMimeType)(S.encodeSync(ImageAttachmentMimeType)(value)), value)
         ).toBe(true);
       })
     );
     fc.assert(
-      fc.property(S.toArbitrary(ComposerFeatures), (value) => {
+      fc.property(S.toArbitrary(ComposerFeatures)(fc), (value) => {
         expect(Equal.equals(S.decodeSync(ComposerFeatures)(S.encodeSync(ComposerFeatures)(value)), value)).toBe(true);
       })
     );
     fc.assert(
-      fc.property(S.toArbitrary(AttachmentRejection), (value) => {
+      fc.property(S.toArbitrary(AttachmentRejection)(fc), (value) => {
         expect(Equal.equals(S.decodeSync(AttachmentRejection)(S.encodeSync(AttachmentRejection)(value)), value)).toBe(
           true
         );

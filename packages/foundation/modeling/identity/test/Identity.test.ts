@@ -50,7 +50,7 @@ describe("@beep/identity", () => {
 
   it("round-trips generated base constructor input values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BaseIdentityInput), (base) => {
+      fc.property(S.toArbitrary(BaseIdentityInput)(fc), (base) => {
         const decoded = O.flatMap(S.encodeOption(BaseIdentityInput)(base), S.decodeUnknownOption(BaseIdentityInput));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);

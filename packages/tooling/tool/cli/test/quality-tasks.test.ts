@@ -541,7 +541,7 @@ describe("quality task adapter", () => {
     ));
 
   it("property: the wave report schema round-trips arbitrary reports", () => {
-    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport);
+    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
         const decoded = S.decodeSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));

@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const ExtractionCandidates = S.Array(ExtractionCandidate);
-const ExtractionCandidatesArbitrary = S.toArbitrary(ExtractionCandidates);
+const ExtractionCandidatesArbitrary = S.toArbitrary(ExtractionCandidates)(fc);
 const ExtractionCandidatesEquivalence = S.toEquivalence(ExtractionCandidates);
 const encodeCandidateArrayJson = S.encodeUnknownEffect(S.fromJsonString(ExtractionCandidates));
 const encodeCandidateEnvelopeJson = S.encodeUnknownEffect(

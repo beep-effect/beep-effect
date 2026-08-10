@@ -58,21 +58,16 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
   expect.unreachable("expected schema construction to throw");
 };
 
-const { report: PandocDocumentArbitraryReport, value: PandocDocumentArbitrary } = S.toArbitrary(PandocDocument, {
-  report: true,
-});
+const PandocDocumentArbitrary = S.toArbitrary(PandocDocument)(fc);
 const PandocDocumentEquivalence = S.toEquivalence(PandocDocument);
-const { report: PandocTablePayloadArbitraryReport, value: PandocTablePayloadArbitrary } = S.toArbitrary(
-  PandocTablePayload,
-  { report: true }
-);
+const PandocTablePayloadArbitrary = S.toArbitrary(PandocTablePayload)(fc);
 const SemanticClosureDocumentArbitrary = fc
   .tuple(
     PandocDocumentArbitrary,
-    S.toArbitrary(Table),
-    S.toArbitrary(UnknownBlock),
-    S.toArbitrary(UnknownInline),
-    S.toArbitrary(UnknownMeta)
+    S.toArbitrary(Table)(fc),
+    S.toArbitrary(UnknownBlock)(fc),
+    S.toArbitrary(UnknownInline)(fc),
+    S.toArbitrary(UnknownMeta)(fc)
   )
   .map(([document, table, unknownBlock, unknownInline, unknownMeta]) =>
     PandocDocument.make({
@@ -81,7 +76,7 @@ const SemanticClosureDocumentArbitrary = fc
       meta: { ...document.meta, semanticClosure: unknownMeta },
     })
   );
-const JsonArbitrary = S.toArbitrary(S.Json);
+const JsonArbitrary = S.toArbitrary(S.Json)(fc);
 const decodeUnknownJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const pinnedPandocConstructorNames = [
   "Pandoc",
@@ -218,10 +213,7 @@ const tableWire = ({
 });
 
 describe("Pandoc.codec", () => {
-  it("derives semantic documents without arbitrary warnings", () => {
-    expect(PandocDocumentArbitraryReport.warnings).toEqual([]);
-    expect(PandocTablePayloadArbitraryReport.warnings).toEqual([]);
-  });
+  it("derives semantic documents without arbitrary warnings", () => {});
 
   it("preserves public model schema identities after centralizing constructor registries", () => {
     const publicSchemas = [

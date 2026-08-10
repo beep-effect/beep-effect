@@ -223,7 +223,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
 
   it("derives constructive arbitrary source identities from the schema", () =>
     fc.assert(
-      fc.property(S.toArbitrary(SourceTextIdentity), (source) => {
+      fc.property(S.toArbitrary(SourceTextIdentity)(fc), (source) => {
         const encoded = Result.getOrThrow(S.encodeUnknownResult(SourceTextIdentity)(source));
         const decoded = Result.getOrThrow(S.decodeResult(SourceTextIdentity)(encoded));
 

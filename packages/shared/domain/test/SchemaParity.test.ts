@@ -30,7 +30,7 @@ const CustomDocumentId = makeSharedId("document", {
 });
 
 const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options?: { readonly numRuns?: number }) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);

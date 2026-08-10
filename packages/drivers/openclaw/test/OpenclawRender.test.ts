@@ -34,7 +34,7 @@ import {
   goldenIntentContentHash,
 } from "./fixtures/golden-intent.expected.ts";
 
-const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent);
+const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
 
 const decodeJsonDocument = (json: string): unknown =>
   Result.getOrThrow(S.decodeResult(S.fromJsonString(S.Unknown))(json));

@@ -45,13 +45,13 @@ describe("Effect laws allowlist schemas", () => {
 
   it("round-trips allowlist document and snapshot schemas", () => {
     fc.assert(
-      fc.property(S.toArbitrary(EffectLawsAllowlistDocument), (value) =>
+      fc.property(S.toArbitrary(EffectLawsAllowlistDocument)(fc), (value) =>
         expectRoundTrip(EffectLawsAllowlistDocument, value)
       ),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(EffectLawsAllowlistSnapshot), (value) =>
+      fc.property(S.toArbitrary(EffectLawsAllowlistSnapshot)(fc), (value) =>
         expectRoundTrip(EffectLawsAllowlistSnapshot, value)
       ),
       fcRuns(25)

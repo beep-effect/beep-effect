@@ -47,15 +47,15 @@ const dataset = makeDataset([
 
 const boundDataset = (value: Dataset): Dataset => Dataset.make({ quads: pipe(value.quads, A.take(3)) });
 
-const DatasetArbitrary = S.toArbitrary(Dataset).map(boundDataset);
-const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetRequest).map((request) =>
+const DatasetArbitrary = S.toArbitrary(Dataset)(fc).map(boundDataset);
+const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
   CanonicalizeDatasetRequest.make({
     algorithm: request.algorithm,
     dataset: boundDataset(request.dataset),
     workLimit: request.workLimit,
   })
 );
-const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest).map((request) =>
+const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest)(fc).map((request) =>
   FingerprintDatasetRequest.make({
     algorithm: request.algorithm,
     dataset: boundDataset(request.dataset),

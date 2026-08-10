@@ -259,7 +259,7 @@ describe("Contradiction candidate row converters", () => {
     const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
 
     fc.assert(
-      fc.property(S.toArbitrary(CanonicalContradictionBeliefPair), (arbitraryPair) => {
+      fc.property(S.toArbitrary(CanonicalContradictionBeliefPair)(fc), (arbitraryPair) => {
         const decoded = encode(arbitraryPair).pipe(Result.getOrThrow, decode, Result.getOrThrow);
         expect(equivalent(decoded, arbitraryPair)).toBe(true);
       }),

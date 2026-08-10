@@ -56,11 +56,11 @@ const encodeLabelQueue = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQu
 const encodeMirrorBundle = S.encodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleResult));
 const encodeOtlpExportResult = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 const encodeWeeklyReport = S.encodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
-const ForwarderResultArbitrary = S.toArbitrary(AiMetricsForwarderRunResult);
-const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult);
-const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult);
-const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult);
-const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult);
+const ForwarderResultArbitrary = S.toArbitrary(AiMetricsForwarderRunResult)(fc);
+const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult)(fc);
+const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult)(fc);
+const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult)(fc);
+const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult)(fc);
 const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;

@@ -83,20 +83,20 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   expect(encode(schema, decoded)).toEqual(encoded);
 };
 
-const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput);
-const EndpointArbitrary = S.toArbitrary(XAiEndpoint);
-const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions);
-const ErrorArbitrary = S.toArbitrary(XAiError);
-const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl);
-const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode);
-const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions);
-const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName);
-const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar);
-const QueryValueArbitrary = S.toArbitrary(XAiQueryValue);
-const ResponseArbitrary = S.toArbitrary(XAiResponse);
-const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent);
-const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl);
-const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent);
+const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput)(fc);
+const EndpointArbitrary = S.toArbitrary(XAiEndpoint)(fc);
+const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions)(fc);
+const ErrorArbitrary = S.toArbitrary(XAiError)(fc);
+const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl)(fc);
+const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode)(fc);
+const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions)(fc);
+const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName)(fc);
+const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar)(fc);
+const QueryValueArbitrary = S.toArbitrary(XAiQueryValue)(fc);
+const ResponseArbitrary = S.toArbitrary(XAiResponse)(fc);
+const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent)(fc);
+const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl)(fc);
+const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent)(fc);
 
 const endpointIds = () => sortStrings(A.map(XAI_ENDPOINTS, (descriptor) => descriptor.id));
 

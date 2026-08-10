@@ -61,7 +61,7 @@ describe("CURIE codec", () => {
 
   it("round-trips generated CoreVocab IRIs through the schema codec", () => {
     fc.assert(
-      fc.property(S.toArbitrary(CurieFromIri), (iri) => {
+      fc.property(S.toArbitrary(CurieFromIri)(fc), (iri) => {
         const decoded = O.flatMap(S.encodeOption(CurieFromIri)(iri), S.decodeUnknownOption(CurieFromIri));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);

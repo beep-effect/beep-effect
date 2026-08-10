@@ -15,11 +15,11 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation);
-const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason);
-const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions);
-const TikaErrorArbitrary = S.toArbitrary(TikaError);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation)(fc);
+const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason)(fc);
+const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions)(fc);
+const TikaErrorArbitrary = S.toArbitrary(TikaError)(fc);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExtractFileOperation = S.encodeEffect(ExtractFileOperation);

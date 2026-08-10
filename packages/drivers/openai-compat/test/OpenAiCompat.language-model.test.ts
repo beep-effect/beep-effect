@@ -37,13 +37,13 @@ import type { TUnsafe } from "@beep/types";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
-const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions);
-const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig);
-const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage);
-const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat);
-const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest);
-const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse);
-const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk);
+const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions)(fc);
+const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig)(fc);
+const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage)(fc);
+const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat)(fc);
+const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest)(fc);
+const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse)(fc);
+const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk)(fc);
 
 const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
 const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
