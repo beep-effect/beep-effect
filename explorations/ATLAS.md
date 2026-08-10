@@ -40,6 +40,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
+  research-stage: port the contract *shapes* mined from OpenLink's
+  `ai-agent-skills` corpus (2026-08-10, seven Codex lanes; rollup in
+  `research/mining/SYNTHESIS.md`) into Effect Schema, where contract = gate.
+  Corpus verdict: contract-rich, enforcement-poor — evidence ladders
+  (acceptance ≠ semantic success), discovery-before-invocation state machines,
+  authoritative-artifact re-extraction, bounded recovery with audit receipts,
+  provenance-claimed-never-proven. AI Barrister gold-path metrics captured as
+  the candidate eval layer for legal KG reasoning. Next: in-repo capability
+  inventory, then broader landscape sweep.
 - [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
   align-stage: deep-dive of the Lynx project's Legal Knowledge Graph ontology
   (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded
