@@ -9,7 +9,7 @@
  *
  * **Example** (Construct a File stat)
  *
- * ```typescript
+ * ```ts
  * import { FileInfo } from "@beep/schema/FileInfo";
  * import { FileSystem } from "effect";
  *
@@ -55,7 +55,7 @@ const OptionalStatSize = (description: string) =>
  *
  * **Example** (Pick an entry kind)
  *
- * ```typescript
+ * ```ts
  * import { FileInfoType } from "@beep/schema/FileInfo";
  *
  * const kind: FileInfoType = FileInfoType.Enum.SymbolicLink;
@@ -107,7 +107,7 @@ export const FileInfoType = LiteralKit([
  *
  * **Example** (Use the literal type)
  *
- * ```typescript
+ * ```ts
  * import { FileInfoType } from "@beep/schema/FileInfo";
  *
  * const kind: FileInfoType = FileInfoType.Enum.Directory;
@@ -115,7 +115,7 @@ export const FileInfoType = LiteralKit([
  * console.log(kind); // "Directory"
  * ```
  *
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
 export type FileInfoType = typeof FileInfoType.Type;
@@ -130,7 +130,7 @@ export type FileInfoType = typeof FileInfoType.Type;
  *
  * **Example** (Construct a Directory stat)
  *
- * ```typescript
+ * ```ts
  * import { FileInfo } from "@beep/schema/FileInfo";
  * import { FileSystem } from "effect";
  *
@@ -176,7 +176,7 @@ export const FileInfo = FileInfoType.mapMembers(
  * console.log(info._tag); // "Socket"
  * ```
  *
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
 export type FileInfo = typeof FileInfo.Type;
