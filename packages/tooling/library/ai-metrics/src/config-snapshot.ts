@@ -8,7 +8,7 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Ref } from "effect";
+import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { isNestedGitRoot } from "./identity-registry.ts";
@@ -94,6 +94,13 @@ export type AiMetricsConfigScope = typeof AiMetricsConfigScope.Type;
 
 /**
  * Named stage of the config snapshot pipeline, recorded for timing attribution.
+ *
+ * **Gotchas**
+ *
+ * `write` stays in the literal domain for decode compatibility with manifests
+ * persisted before the write measurement moved to
+ * {@link writeAiMetricsConfigSnapshotArtifacts}; new manifests no longer emit a
+ * `write` timing, because the snapshot builder writes nothing.
  *
  * **Example** (Naming a stage)
  *
@@ -970,7 +977,6 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
     const diff = snapshotDiff(files, previousFiles);
     const diffMillis = yield* elapsedSince(diffStartedAt);
 
-    const writeStartedAt = yield* Clock.currentTimeMillis;
     const relativePaths = A.map(files, (file) => file.relativePath);
     const changedPaths = changedPathsFor(diff);
     const previousSnapshotId = pipe(
@@ -986,7 +992,6 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
       truncated: O.isSome(truncationReason),
       ...(O.isSome(truncationReason) ? { truncationReason: truncationReason.value } : {}),
     });
-    const writeMillis = yield* elapsedSince(writeStartedAt);
 
     return AiMetricsConfigSnapshotResult.make({
       baselineHash,
@@ -1005,12 +1010,15 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
         ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
         snapshotId: `config-${snapshotHash}`,
       }),
+      // The `write` stage is deliberately absent: this function writes nothing.
+      // The artifact writes are measured where they happen, in
+      // `writeAiMetricsConfigSnapshotArtifacts`, which cannot fold its own
+      // duration back into the manifest it is writing.
       stageTimings: [
         stageTiming(AiMetricsConfigSnapshotStage.Enum.enumerate, enumerateMillis, A.length(enumeration.paths), 0),
         stageTiming(AiMetricsConfigSnapshotStage.Enum.read, readMillis, A.length(read.files), read.totalBytes),
         stageTiming(AiMetricsConfigSnapshotStage.Enum.hash, hashMillis, A.length(files), read.totalBytes),
         stageTiming(AiMetricsConfigSnapshotStage.Enum.diff, diffMillis, A.length(files), 0),
-        stageTiming(AiMetricsConfigSnapshotStage.Enum.write, writeMillis, A.length(files), read.totalBytes),
       ],
     });
   },
@@ -1039,9 +1047,17 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
  * **Details**
  *
  * The manifest is named by `snapshotId` and kept forever; `latest.json` is the
- * moving pointer the next run diffs against. The pointer is written to a `.tmp`
- * sibling and promoted with a rename, so a crash mid-write leaves the previous
- * pointer intact rather than a half-written one that fails to decode.
+ * moving pointer the next run diffs against. The pointer is written to a
+ * writer-unique `.tmp` sibling and promoted with a rename, so a crash mid-write
+ * leaves the previous pointer intact rather than a half-written one that fails
+ * to decode. The `.tmp` name carries a per-writer token — the same idiom as the
+ * identity registry — because a single fixed `latest.json.tmp` lets two
+ * shared-root runs interleave: one writer renames the other's bytes and the
+ * second rename fails with `NotFound` after its derived rows already landed.
+ *
+ * The write duration is measured here, around the real filesystem work, and
+ * annotated on the current span — it cannot ride inside the manifest, which is
+ * one of the files being written.
  *
  * **Gotchas**
  *
@@ -1107,10 +1123,12 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
   }) {
     const fs = yield* FileSystem.FileSystem;
     const pathApi = yield* Path.Path;
+    const writeStartedAt = yield* Clock.currentTimeMillis;
     const content = yield* configSnapshotToJson(result);
     const manifestPath = pathApi.join(outputDir, `${result.snapshot.snapshotId}.json`);
     const latestPath = pathApi.join(outputDir, "latest.json");
-    const latestTmpPath = pathApi.join(outputDir, "latest.json.tmp");
+    const writerEntropy = yield* Random.nextIntBetween(0, 0xffffffff);
+    const latestTmpPath = pathApi.join(outputDir, `latest.json.${writeStartedAt}-${writerEntropy.toString(16)}.tmp`);
     yield* fs.makeDirectory(outputDir, { recursive: true }).pipe(
       Effect.mapError((cause) =>
         AiMetricsConfigSnapshotError.make({
@@ -1145,8 +1163,10 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
         )
       );
     }
+    const writeMillis = yield* elapsedSince(writeStartedAt);
+    yield* Effect.annotateCurrentSpan({ "ai_metrics.config_snapshot.write_millis": writeMillis });
 
-    return { latestPath, manifestPath };
+    return { latestPath, manifestPath, writeMillis };
   }
 );
 

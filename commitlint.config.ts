@@ -38,8 +38,6 @@ const SUBTREE_SQUASH_MARKER =
  * a narrow enough signal: the pattern demands a quoted directory operand plus a real hex commit id
  * or hex range, which ordinary prose about squashing does not produce.
  *
- * **Gotchas**
- *
  * Custom `ignores` are appended to commitlint's default wildcards (`@commitlint/is-ignored`), so
  * merge-commit ignoring stays active. Never set `defaultIgnores: false` here. This module is loaded
  * by `@commitlint/load`, not by the Effect runtime — keep it a plain object literal with no Effect

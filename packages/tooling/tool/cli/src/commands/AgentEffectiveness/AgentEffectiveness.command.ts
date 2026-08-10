@@ -472,7 +472,9 @@ class MakeEvalScoreProgramOptions extends S.Class<MakeEvalScoreProgramOptions>($
 ) {}
 
 // `evals score` carries no `--target` flag, so the fallback rung is always the
-// workstation's XDG store rather than a deploy target's server-owned root.
+// workstation's XDG store rather than a deploy target's server-owned root. The
+// root is resolved only when recording: pure fixture scoring must not depend on
+// HOME/XDG_STATE_HOME in hermetic environments.
 const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram")(function* ({
   dataRoot,
   dir,
@@ -480,8 +482,11 @@ const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram"
   record,
   taskPath,
 }: MakeEvalScoreProgramOptions) {
+  const resolvedDataRoot = record
+    ? O.some(yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
+    : O.none<string>();
   return yield* runAgentEffectivenessEvalScoreCommand({
-    dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
+    dataRoot: resolvedDataRoot,
     dir,
     json,
     record,

@@ -1037,7 +1037,13 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
         homeDir: input.homeDir,
         rootPath: pathApi.resolve(input.repoRoot),
-        sourceKinds: [AiMetricsTranscriptSource.Enum.codex, AiMetricsTranscriptSource.Enum.claude],
+        // Every kind this run scans, so openclaw-derived rows keep source-instance
+        // provenance and stay joinable through the registry.
+        sourceKinds: [
+          AiMetricsTranscriptSource.Enum.codex,
+          AiMetricsTranscriptSource.Enum.claude,
+          AiMetricsTranscriptSource.Enum.openclaw,
+        ],
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to upsert the AI metrics identity registry.", cause)));
     const configSnapshotDir = pathApi.join(installSpec.storage.dataRoot, "config-snapshots");

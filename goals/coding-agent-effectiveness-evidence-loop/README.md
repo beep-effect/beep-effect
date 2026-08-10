@@ -66,7 +66,7 @@ as PLAN.md permitted: the 20G canonical store moved atomically to
 census gates, the data-root precedence (`--data-root` →
 `BEEP_AI_METRICS_DATA_ROOT` → XDG default) replaced every clone-relative
 default, the identity registry and bounded config snapshots are live
-(25,741 → 256 snapshot files, five stage timings, nested worktrees excluded),
+(25,741 → 256 snapshot files, per-stage timings, nested worktrees excluded),
 and the codec↔writer hash-salt divergence noted below is resolved. Evidence:
 [`history/outputs/2026-08-07-p0-cutover.md`](./history/outputs/2026-08-07-p0-cutover.md).
 The cutover never touched the sibling `agent-evidence/` ledger — the P1

@@ -817,6 +817,15 @@ export const identityRegistryToJson: (
  * would let one writer promote another's half-written bytes, or lose the rename
  * outright — a failure mode the lock alone does not close, since a stale lock
  * that an operator clears by hand can leave two writers briefly overlapping.
+ *
+ * A populated registry whose persisted `hashSaltStatus` differs from the current
+ * run's is refused, not merged: its digests live in a different pseudonym
+ * namespace, so merging would mix unjoinable identities under a single claimed
+ * status and silently break every later join. The remedy is deliberate — delete
+ * the registry file to rebuild it in the current namespace, or keep one data
+ * root per salt. Same-status salt rotations (`provided` → a different provided
+ * salt) are not detectable from the status alone; the registry stores no salt
+ * fingerprint by design, so that hazard stays with the operator.
  */
 const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   readonly input: AiMetricsIdentityRegistryUpsertInput;
@@ -828,6 +837,18 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
   const existing = yield* readAiMetricsIdentityRegistry(input.dataRoot);
+
+  const hashSaltStatus = resolveAiMetricsHashSaltStatus(input.hashSalt);
+  const existingPopulated =
+    A.isReadonlyArrayNonEmpty(existing.roots) || A.isReadonlyArrayNonEmpty(existing.sourceInstances);
+  if (existingPopulated && existing.hashSaltStatus !== hashSaltStatus) {
+    return yield* AiMetricsIdentityRegistryError.make({
+      cause: { existing: existing.hashSaltStatus, incoming: hashSaltStatus },
+      message:
+        `Refusing to merge the AI metrics identity registry across hash-salt namespaces (persisted: ${existing.hashSaltStatus}, current run: ${hashSaltStatus}). ` +
+        `Digests hashed under different salts are not joinable. Delete ${identityRegistryPath(pathApi, input.dataRoot)} to rebuild the registry in the current namespace, or use a separate data root per salt.`,
+    });
+  }
 
   const rootsById = MutableHashMap.empty<string, AiMetricsCanonicalRoot>();
   for (const existingRoot of existing.roots) {
@@ -856,7 +877,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
 
   const registry = AiMetricsIdentityRegistry.make({
     generatedAtEpochMillis: nowEpochMillis,
-    hashSaltStatus: resolveAiMetricsHashSaltStatus(input.hashSalt),
+    hashSaltStatus,
     registryVersion: identityRegistryVersion,
     roots: pipe(A.fromIterable(MutableHashMap.values(rootsById)), A.sort(byRootId)),
     sourceInstances: pipe(A.fromIterable(MutableHashMap.values(instancesById)), A.sort(byInstanceIdHash)),

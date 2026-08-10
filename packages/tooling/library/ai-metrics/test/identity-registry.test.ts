@@ -280,6 +280,40 @@ describe("@beep/repo-ai-metrics identity registry", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("refuses to merge a populated registry across hash-salt namespaces", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const clonePath = pathApi.join(tmpDir, "clone");
+        const dataRoot = pathApi.join(tmpDir, "store");
+        yield* makeClone(clonePath);
+
+        yield* upsertAiMetricsIdentityRegistry(
+          AiMetricsIdentityRegistryUpsertInput.make({
+            dataRoot,
+            homeDir: pathApi.join(tmpDir, "home"),
+            rootPath: clonePath,
+            sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+          })
+        );
+        const failure = yield* Effect.flip(
+          upsertAiMetricsIdentityRegistry(
+            AiMetricsIdentityRegistryUpsertInput.make({
+              dataRoot,
+              hashSalt,
+              homeDir: pathApi.join(tmpDir, "home"),
+              rootPath: clonePath,
+              sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+            })
+          )
+        );
+
+        expect(failure._tag).toBe("AiMetricsIdentityRegistryError");
+        expect(failure.message).toContain("hash-salt namespaces");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("appends a second root without disturbing the first and keeps the arrays sorted", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {

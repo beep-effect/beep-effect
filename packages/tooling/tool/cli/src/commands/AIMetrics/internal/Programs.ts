@@ -112,6 +112,7 @@ import {
   Redacted,
 } from "effect";
 import * as S from "effect/Schema";
+import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
@@ -218,6 +219,16 @@ const resolveRepoRoot = Effect.fn("AIMetrics.resolveRepoRoot")(function* (repoRo
   return path.resolve(O.isSome(repoRoot) ? repoRoot.value : process.cwd());
 });
 
+const requireAbsoluteDataRoot = (path: string) =>
+  requireAbsoluteAiMetricsDataRoot(path).pipe(
+    Effect.mapError((error) =>
+      AiMetricsCommandError.make({
+        cause: error.cause,
+        message: `${error.message} Pass an absolute --data-root or ${aiMetricsDataRootEnvVar}.`,
+      })
+    )
+  );
+
 /**
  * Resolve the AI metrics data root every `ai-metrics` program reads and writes.
  *
@@ -225,9 +236,11 @@ const resolveRepoRoot = Effect.fn("AIMetrics.resolveRepoRoot")(function* (repoRo
  *
  * Precedence is `--data-root`, then `BEEP_AI_METRICS_DATA_ROOT`, then the deploy
  * target's default, where `local` means `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
- * and `dankserver` means `/srv/data/ai-metrics`. The flag already carries the
- * environment rung through `Flag.withFallbackConfig`, so `flagDataRoot` here
- * means "flag or environment" and the schema's `envDataRoot` key stays unset.
+ * and `dankserver` means `/srv/data/ai-metrics`. The flag carries the
+ * environment rung through `Flag.withFallbackConfig`, and the environment is
+ * also read here into the schema's `envDataRoot` key, so callers that pass
+ * `O.none()` directly — `install preview` and `install compose` — still honor
+ * `BEEP_AI_METRICS_DATA_ROOT` instead of silently rendering the target default.
  *
  * **Gotchas**
  *
@@ -236,9 +249,10 @@ const resolveRepoRoot = Effect.fn("AIMetrics.resolveRepoRoot")(function* (repoRo
  * state home to hang beneath — costs a `HOME` read. Reading `HOME` eagerly
  * would fail `--target dankserver` runs in environments that have none, and
  * restating the precedence table here to decide would leave two copies of it to
- * drift apart. Relative
- * values are passed through unresolved on purpose: `forwarder timer` rejects
- * them outright rather than silently binding a unit to `WorkingDirectory`.
+ * drift apart. Relative values are refused here, for every command: a relative
+ * root would rebind the store to each process working directory, splitting the
+ * canonical store back into clone-local trees and letting destructive retention
+ * target a tree the operator never meant.
  *
  * **Example** (Resolving an operator flag)
  *
@@ -264,16 +278,17 @@ const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
   target: AiMetricsDeployTarget
 ) {
   const flagDataRoot = nonBlankOption(dataRoot);
+  const envDataRoot = yield* readOptionalConfigString(aiMetricsDataRootEnvVar);
   const stateHome = yield* readOptionalConfigString("XDG_STATE_HOME");
   const makeInput = (homeDir: O.Option<string>) =>
     AiMetricsDataRootInput.make({
-      ...O.getSomesStruct({ flagDataRoot, homeDir, stateHome }),
+      ...O.getSomesStruct({ envDataRoot, flagDataRoot, homeDir, stateHome }),
       target,
     });
   const missingHomeDir = O.none<string>();
   const probe = pipe(missingHomeDir, makeInput, resolveAiMetricsDataRoot);
   if (O.isSome(probe)) {
-    return probe.value.path;
+    return yield* requireAbsoluteDataRoot(probe.value.path);
   }
 
   const homeDir = O.some(yield* resolveHomeDir(missingHomeDir));
@@ -285,7 +300,7 @@ const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
     });
   }
 
-  return resolved.value.path;
+  return yield* requireAbsoluteDataRoot(resolved.value.path);
 });
 
 const resolveHashSalt = Effect.fn("AIMetrics.resolveHashSalt")(function* (hashSalt: O.Option<string>) {

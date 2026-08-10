@@ -288,7 +288,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
-  it.effect("emits one timing per pipeline stage", () =>
+  it.effect("emits one timing per measured pipeline stage and none for the write it does not perform", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const pathApi = yield* Path.Path;
@@ -302,7 +302,6 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           AiMetricsConfigSnapshotStage.Enum.read,
           AiMetricsConfigSnapshotStage.Enum.hash,
           AiMetricsConfigSnapshotStage.Enum.diff,
-          AiMetricsConfigSnapshotStage.Enum.write,
         ]);
         expect(A.every(result.stageTimings, (timing) => timing.durationMillis >= 0)).toBe(true);
         expect(A.every(result.stageTimings, (timing) => timing.byteCount >= 0)).toBe(true);
