@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "harvey-lab-firm-knowledge",
+    "title": "Harvey LAB Firm-Knowledge Mining",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Q2 (grill first): beep's wedge — amortized structural representation (crowded: Harvey+Engram) or tracked-changes-aware ingest (unclaimed, 371-task testbed, gated on U4 pandoc-ast w:ins/w:del preservation)?",
+      "Q1: first experiment corpus — C&H firm-knowledge (thesis+baselines) or one closed diligence data room (deliverable-mode, runnable end-to-end)?",
+      "Q3: run their harness at all (podman + metered keys, externally comparable) vs our own eval from day one?",
+      "Q4: how many goal packets graduate — benchmark run / generator / Effect-native eval / DMS rungs (eval framework is the shared dependency)?",
+      "Q5: operational meaning of the standing-test-asset decision — clone home, pinning, CI vs on-demand, OIP containment?",
+      "Q6: contribute the defect ledger (incl. redline-blindness) upstream or hold?",
+      "Q7: accept the 14-shape taxonomy as requirements or re-derive with a published rule (U1)?",
+      "Q8: OIP first move — synthetic prosecution generator or conflicts/lifecycle rungs for practice-kg?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-08",
+    "updated": "2026-08-08"
+  }
+}

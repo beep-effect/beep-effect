@@ -116,8 +116,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
     onNone: () =>
       Effect.fail(
         QaCommandError.make({
-          message:
-            "qa judge-ingest found no fenced JSON block in the judge output. The judge must end with one ```json block followed by the REQUIRED FINDINGS line.",
+          message: "qa judge-ingest found no parseable JSON inventory object (fenced or unfenced) in the judge output.",
         })
       ),
     onSome: Effect.succeed,

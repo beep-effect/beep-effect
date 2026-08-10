@@ -10,6 +10,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
 import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.ts";
 import type * as Effect from "effect/Effect";
@@ -130,19 +131,7 @@ export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
  * @category models
  * @since 0.0.0
  */
-export const LintPolicySubcommand = LiteralKit([
-  "circular",
-  "deprecated-apis",
-  "goal-packets",
-  "identity-registry",
-  "package-test-imports",
-  "policy",
-  "reflection-artifacts",
-  "roadmap-refs",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-]).pipe(
+export const LintPolicySubcommand = LiteralKit(LINT_POLICY_SUBCOMMANDS).pipe(
   $I.annoteSchema("LintPolicySubcommand", {
     description: "Lint policy subcommands that remain owned by the full command tree.",
   })
