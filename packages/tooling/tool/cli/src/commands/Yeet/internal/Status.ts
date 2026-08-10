@@ -18,10 +18,19 @@ import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
 import { PrCloseoutReport } from "./Closeout.ts";
+import {
+  collectYeetGateStaleness,
+  GateStale,
+  GateUnproven,
+  renderYeetGateStalenessBlock,
+  staleGateVerdicts,
+  unprovenGateVerdicts,
+} from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetMergeReady, YeetMergeReadyCriteria, YeetMergeReadyCriterion, YeetVerdict } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { GateStalenessVerdict } from "./GateStaleness.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Status");
 const threadExcerptLength = 140;
@@ -248,6 +257,8 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     verdict: YeetStatusArtifact,
     worktree: YeetStatusWorktree,
     mergeReady: YeetMergeReady.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
+    unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
@@ -1032,12 +1043,13 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
   const verdictPath = yield* runArtifactPathForContext(context, "verdict.json");
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const statusPath = yield* statusPathForContext(context);
-  const [worktree, verdict, closeout, remoteStatus, createdAt] = yield* Effect.all(
+  const [worktree, verdict, closeout, remoteStatus, gateVerdicts, createdAt] = yield* Effect.all(
     [
       collectWorktreeStatus(context),
       readVerdictArtifact(verdictPath),
       readCloseoutArtifact(closeoutPath),
       collectRemoteStatus(context, remote),
+      collectYeetGateStaleness(context).pipe(Effect.orElseSucceed(A.empty<GateStalenessVerdict>)),
       DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     ],
     { concurrency: "unbounded" }
@@ -1056,6 +1068,8 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
     verdict,
     worktree,
     mergeReady: deriveYeetMergeReady(closeout, remoteStatus),
+    staleGates: staleGateVerdicts(gateVerdicts),
+    unprovenGates: unprovenGateVerdicts(gateVerdicts),
   });
 });
 
@@ -1187,6 +1201,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- ${renderCheckLine(snapshot.remote)}`,
       `- ${renderYeetReviewThreadBlock(snapshot.remote)}`,
       `- ${renderMergeReadyLine(snapshot)}`,
+      `- ${renderYeetGateStalenessBlock(snapshot.staleGates, snapshot.unprovenGates)}`,
       `- rerun-failed: ${snapshot.remote.rerunFailedDecision ?? "not checked"}`,
       `- status artifact: ${snapshot.statusPath}`,
       `- next: ${snapshot.nextCommand}`,

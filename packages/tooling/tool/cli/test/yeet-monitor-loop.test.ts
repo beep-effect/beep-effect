@@ -1,10 +1,18 @@
 import {
+  detectGithubJobShapeClass,
+  GithubJobRecord,
+  GithubJobShapeClass,
+  GithubJobStepRecord,
+  githubJobShapeEvidence,
+} from "@beep/repo-cli/test/SharedInternals";
+import {
   detectYeetMonitorFlakeClass,
   emptyYeetMonitorRerunBudget,
   planYeetMonitorReruns,
   renderYeetMonitorJobDecision,
   stripYeetMonitorLogDecoration,
   YeetMonitorFailedJob,
+  YeetMonitorFlakeClass,
   yeetMonitorRerunCommand,
   yeetMonitorRerunKey,
   yeetMonitorTerminalState,
@@ -53,8 +61,20 @@ const jobTimeoutLog = ghLog("Test Unit", "Complete job", [
 
 const cancelledSiblingLog = ghLog("Test Unit", "Run vitest", ["##[error]The operation was canceled."]);
 
-const failedJob = (databaseId: number, name: string, flakeClass: O.Option<"ts2589-no-location" | "ci-timeout">) =>
+const failedJob = (databaseId: number, name: string, flakeClass: O.Option<YeetMonitorFlakeClass>) =>
   YeetMonitorFailedJob.make({ databaseId, name, flakeClass });
+
+// `gh run view --json jobs` reports every step of a job, and a step that never
+// reached a terminal state carries `conclusion: null`. These fixtures keep the
+// nulls so the shape detectors see the record they actually receive.
+const jobStep = (name: string, conclusion: string | null) => GithubJobStepRecord.make({ name, conclusion });
+
+const jobRecord = (
+  conclusion: string | null,
+  steps: ReadonlyArray<GithubJobStepRecord>,
+  name = "Test Unit",
+  databaseId = 991
+) => GithubJobRecord.make({ conclusion, databaseId, name, status: "completed", steps });
 
 describe("yeet monitor flake fingerprints", () => {
   it("strips the job, step, timestamp, and workflow-command decoration from a log line", () => {
@@ -84,6 +104,151 @@ describe("yeet monitor flake fingerprints", () => {
     // A job cancelled because a sibling failed carries no timeout evidence;
     // classifying it would spend a rerun on a fail-fast side effect.
     expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
+  });
+});
+
+describe("yeet monitor job-shape fingerprints", () => {
+  it("recognizes a control-plane setup failure from the job record alone", () => {
+    // "Set up job" is GitHub's implicit setup step. When it concludes failure,
+    // action download info never resolved and zero repo commands ran, so a
+    // rerun cannot paper over branch state.
+    const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Run bun run test", null)]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+  });
+
+  it("recognizes the setup failure under the runner-setup step name too", () => {
+    expect(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")]))).toStrictEqual(
+      O.some("setup-5xx")
+    );
+  });
+
+  it("recognizes runner loss when the job failed and no step ever concluded", () => {
+    const job = jobRecord("failure", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("runner-loss"));
+  });
+
+  it("refuses runner loss when any step reached a conclusion", () => {
+    // A job whose setup succeeded and whose lane then failed is an ordinary
+    // red: the runner was present for the whole job.
+    const job = jobRecord("failure", [jobStep("Set up job", "success"), jobStep("Run bun run test", "failure")]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+  });
+
+  it("refuses a job with no steps rather than reading absent evidence as runner loss", () => {
+    // An empty `steps` list is missing evidence, not evidence of absence.
+    expect(detectGithubJobShapeClass(jobRecord("failure", []))).toStrictEqual(O.none());
+  });
+
+  it("refuses a cancelled job, whose steps are null for a reason that is not runner loss", () => {
+    // Fail-fast cancellation leaves exactly the runner-loss step shape, so the
+    // job-level conclusion is what separates them.
+    const job = jobRecord("cancelled", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+  });
+
+  it("refuses a job that has not concluded at all", () => {
+    expect(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)]))).toStrictEqual(O.none());
+  });
+
+  it("prefers the setup class when a failed setup step coexists with unconcluded steps", () => {
+    // Both shapes are present; the setup step is the more specific evidence and
+    // names the actual remedy in the operator line.
+    const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Complete job", null)]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+  });
+
+  it("recognizes an install step that failed before any lane ran", () => {
+    // Live instance: keytar's prebuild download timed out, node-gyp took over,
+    // and the source build died on absent libsecret-1-dev headers. The trigger
+    // is a network flake; the environment gap only converts it to red.
+    const job = jobRecord("failure", [
+      jobStep("Set up job", "success"),
+      jobStep("Install dependencies", "failure"),
+      jobStep("Run bun run codegen", null),
+    ]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+  });
+
+  it("still recognizes an install failure past GitHub's own cleanup steps", () => {
+    // `Post <action>` unwinds and `Complete job` conclude success even on a job
+    // that died at install, so treating them as "a later step ran" would refuse
+    // every real install failure.
+    const job = jobRecord("failure", [
+      jobStep("Install dependencies", "failure"),
+      jobStep("Run bun run codegen", "skipped"),
+      jobStep("Post Set up job", "success"),
+      jobStep("Complete job", "success"),
+    ]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+  });
+
+  it("refuses an install failure when a lane afterwards actually ran", () => {
+    // If a lane concluded after the install step, the job got past install and
+    // the red belongs to that lane, not to the installer.
+    const job = jobRecord("failure", [
+      jobStep("Install dependencies", "failure"),
+      jobStep("Run bun run codegen", "failure"),
+    ]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+  });
+
+  it("prefers the setup class over the install class when setup is what failed", () => {
+    // A setup failure leaves install null, so an unordered check would let the
+    // vaguer class shadow the precise one.
+    const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Install dependencies", null)]);
+
+    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+  });
+
+  it("carries every shape class into the rerun plan with its evidence", () => {
+    const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
+      failedJob(991, "Test Unit", O.some("setup-5xx")),
+      failedJob(992, "Check", O.some("runner-loss")),
+      failedJob(993, "Codegen Drift", O.some("install-failure")),
+    ]);
+    const rendered = A.map(plan.decisions, renderYeetMonitorJobDecision);
+
+    expect(A.map(plan.decisions, (decision) => decision.status)).toStrictEqual(["rerun", "rerun", "rerun"]);
+    expect(rendered[0]).toContain("setup-5xx flake fingerprint matched");
+    expect(rendered[1]).toContain("runner-loss flake fingerprint matched");
+    expect(rendered[2]).toContain("install-failure flake fingerprint matched");
+    // Shape classes carry the observed mechanism, because the class name alone
+    // does not tell an operator whether to investigate or wait out the rerun.
+    expect(rendered[2]).toContain("keytar prebuild download timeout");
+    expect(githubJobShapeEvidence("runner-loss")).toContain("stopped reporting");
+  });
+
+  it("leaves a log fingerprint's operator line free of shape evidence", () => {
+    const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
+      failedJob(991, "Check", O.some("ts2589-no-location")),
+    ]);
+
+    expect(renderYeetMonitorJobDecision(plan.decisions[0]!)).toBe(
+      "[yeet] Check: ts2589-no-location flake fingerprint matched; rerunning once -> gh run rerun --job 991"
+    );
+  });
+
+  it("keeps every fingerprint the loop knows in one domain", () => {
+    expect(YeetMonitorFlakeClass.Options).toStrictEqual([
+      "ts2589-no-location",
+      "ci-timeout",
+      "setup-5xx",
+      "runner-loss",
+      "install-failure",
+    ]);
+    // Every shape class the shared detector can return must be a class the loop
+    // can act on, or a match would decode into a domain that rejects it.
+    expect(A.every(GithubJobShapeClass.Options, (option) => A.contains(YeetMonitorFlakeClass.Options, option))).toBe(
+      true
+    );
   });
 });
 

@@ -60,6 +60,7 @@
     // is not a workspace member and isn't part of the analyzable source graph, same as goals/**.
     "explorations/**",
     "scratchpad/**",
+    "infra/ci-runners/sdks/**",
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
@@ -169,7 +170,11 @@
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.
-  "ignoreWorkspaces": ["scratchpad", "**/test/fixtures/mock-monorepo"],
+  "ignoreWorkspaces": [
+    "scratchpad",
+    "infra/ci-runners/sdks/**",
+    "**/test/fixtures/mock-monorepo"
+  ],
   "rules": {
     // Duplicate exports here are intentional conventions: Schema/<DomainName> dual-naming on
     // schema modules, Overridable/Overrideable upstream-compat aliases, and named/default React
