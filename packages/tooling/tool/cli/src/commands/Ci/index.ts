@@ -25,3 +25,10 @@ export * from "./Ci.errors.ts";
  * @since 0.0.0
  */
 export * from "./CiLane.ts";
+/**
+ * Public CI lane-timings collector export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LaneTimings.ts";
