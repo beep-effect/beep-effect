@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-10T09:29:27.601Z",
+  "generatedAt": "2026-08-10T12:11:22.233Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 61,
     "publicModules": 2494,
-    "publicExports": 16243,
+    "publicExports": 16244,
     "openModules": 407,
     "openExports": 133,
     "missingExportExamples": 5,
@@ -175360,7 +175360,7 @@
         "srcDir": "src",
         "sourceFileCount": 19,
         "publicModuleCount": 19,
-        "publicExportCount": 287
+        "publicExportCount": 288
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -175593,7 +175593,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 18,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -178589,12 +178589,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export { repoPathToClaudeProjectName } from \"./internal/transcript-utils.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
+          "line": 157,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-157-export-repopathtoclaudeprojectname-from-internal-transcript-utils-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./mirror.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 156,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-156-export-from-mirror-ts",
+          "line": 171,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-171-export-from-mirror-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178615,8 +178637,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 170,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-170-export-from-models-ts",
+          "line": 185,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-185-export-from-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178637,8 +178659,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 184,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-184-export-from-otlp-ts",
+          "line": 199,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-199-export-from-otlp-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178659,8 +178681,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 198,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-198-export-from-privacy-ts",
+          "line": 213,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-213-export-from-privacy-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178681,8 +178703,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 212,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-212-export-from-retention-ts",
+          "line": 227,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-227-export-from-retention-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178703,8 +178725,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 226,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-226-export-from-scorecard-ts",
+          "line": 241,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-241-export-from-scorecard-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178725,8 +178747,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 240,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-240-export-from-shell-ts",
+          "line": 255,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-255-export-from-shell-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -178747,8 +178769,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 254,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-254-export-from-source-discovery-ts",
+          "line": 269,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-269-export-from-source-discovery-ts",
           "currentTags": [
             "@category",
             "@since"

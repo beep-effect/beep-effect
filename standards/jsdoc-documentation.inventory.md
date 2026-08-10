@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-10T09:29:27.601Z
+Generated: 2026-08-10T12:11:22.233Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 61 |
 | publicModules | 2494 |
-| publicExports | 16243 |
+| publicExports | 16244 |
 | openModules | 407 |
 | openExports | 133 |
 | missingExportExamples | 5 |
@@ -121,7 +121,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 202 | 4 | 1 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 19 | 287 | 0 | 0 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 19 | 288 | 0 | 0 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
