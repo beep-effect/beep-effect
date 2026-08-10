@@ -513,19 +513,20 @@ export const hasGeneratedFileHeader = (sourceText: string): boolean =>
   pipe(Str.slice(0, GENERATED_HEADER_PROBE_LENGTH)(sourceText), Str.includes("GENERATED FILE"));
 
 /**
- * Whether a repo-relative path is a non-generated package source file.
+ * Whether a repo-relative path is a non-generated workspace source file.
  *
- * **Example** (Classify package source paths)
+ * **Example** (Classify workspace source paths)
  *
  * ```ts
  * import { isPackageSourceFile } from "@beep/repo-cli/test/Quality"
  *
  * console.log(isPackageSourceFile("packages/shared/schema/src/Kits.ts")) // true
+ * console.log(isPackageSourceFile("apps/professional-desktop/src/App.tsx")) // true
  * console.log(isPackageSourceFile("packages/shared/schema/test/Kits.test.ts")) // false
  * ```
  *
  * @param filePath - Repo-relative path to classify.
- * @returns `true` for non-generated package source files.
+ * @returns `true` for non-generated source files under package or app workspaces.
  * @category predicates
  * @since 0.0.0
  */
@@ -536,13 +537,13 @@ export const isPackageSourceFile = (filePath: string): boolean =>
   !isGeneratedSourceFile(filePath);
 
 /**
- * Whether a repo-relative path is any package source file, including generated.
+ * Whether a repo-relative path is any workspace source file, including generated.
  *
  * Used by the zero-legacy scan when `--include-generated` is set so generator
  * outputs get their own compliance proof (non-generated scope cannot prove them).
  *
  * @param filePath - Repo-relative path to classify.
- * @returns `true` for package source files under packages/…/src, including generated.
+ * @returns `true` for source files under packages/…/src or apps/…/src, including generated.
  * @category predicates
  * @since 0.0.0
  */

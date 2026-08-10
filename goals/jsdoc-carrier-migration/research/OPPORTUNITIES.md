@@ -178,7 +178,8 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   through the frozen-data pipeline (272 conserved, 0 residue; data under `data/apps/`).
   (3) jsdoc-migrate now quarantines `{@inheritDoc}` blocks carrying legacy carriers
   (`inheritdoc-summary-content`) instead of emitting TSDoc-illegal summary content.
-  (4) CI lane concurrency restored to 8vCPU tuning for the beep-ec2-heavy fleet.
+  (4) CI lane concurrency restored to 8vCPU tuning for the beep-ec2-heavy fleet,
+  while hosted Lint and Test Unit retain the 16GB-safe Turbo cap.
 - **Evidence:** `jsdoc-ratchet --include-generated` findings=0 with an empty allowlist;
   `jsdoc-migrate verify` 272 conserved / 0 residue on post-biome bytes; acp `bun run check`
   exit 0 with 45 `S.Finite`, 0 `S.Number`.
@@ -188,3 +189,16 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   repo-pinned formatter. `jsdoc-migrate verify` defaults to the P3 frozen data paths, so a
   scoped rerun must pass --extract/--titles/--overrides explicitly or it reports the P3
   records as orphans.
+
+### Final completeness audit found runner-map and packet-state drift
+
+- **What happened:** the #627 closeout audit mapped each Check workflow lane back to its
+  runner and found that Lint remained on 16GB `ubuntu-24.04` while inheriting the restored
+  fleet Turbo cap of 4. The same audit found that the binding carrier law still omitted
+  `apps/**/src`, and current packet notes still described the already-closed ACP residual.
+- **Evidence:** `.github/workflows/check.yml` routes Lint and Test Unit to `ubuntu-24.04`
+  while Check, Test Integration, Coverage, Docgen, and push Build use `beep-ec2-heavy`;
+  `ciLaneStepsForTesting` now proves `--concurrency=2` for both hosted Turbo lanes.
+- **Prevention:** review concurrency changes against the workflow lane-to-runner map rather
+  than a shared CI default in isolation, and refresh current packet status prose when a
+  follow-up closes a previously documented residual.

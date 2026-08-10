@@ -16,4 +16,4 @@ generated-residual allowlist is empty. The `AcpRequestError` `data` field and it
 constructors are typed as wire JSON end-to-end, so `toProtocolError()` can no longer
 build a payload the `S.Json` error schema rejects at encode time, and the hosted
 Test Unit CI lane keeps the 16GB turbo concurrency cap while fleet lanes return to
-the 8vCPU tuning.
+the 8vCPU tuning; the hosted Lint lane keeps the same 16GB-safe cap.
