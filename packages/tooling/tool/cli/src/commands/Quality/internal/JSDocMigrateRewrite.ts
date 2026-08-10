@@ -828,6 +828,36 @@ export const jsdocMigrateBlockStats = (blockText: string): JSDocMigrateBlockStat
 };
 
 /**
+ * Input contract for rewriting one legacy-carrier JSDoc block.
+ *
+ * **Example** (Construct a rewrite input)
+ *
+ * ```ts
+ * import { JSDocMigrateBlockInput } from "@beep/repo-cli/test/Quality"
+ *
+ * const input = JSDocMigrateBlockInput.make({
+ *   blockText: "/** Lead. *" + "/",
+ *   indent: "",
+ *   data: { titles: [] }
+ * })
+ * console.log(input.indent) // ""
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JSDocMigrateBlockInput extends S.Class<JSDocMigrateBlockInput>($I`JSDocMigrateBlockInput`)(
+  {
+    blockText: S.String,
+    indent: S.String,
+    data: JSDocMigrateRewriteData,
+  },
+  $I.annote("JSDocMigrateBlockInput", {
+    description: "Block text, indentation, and title data consumed by the JSDoc migration rewriter.",
+  })
+) {}
+
+/**
  * Rewrite one legacy-carrier JSDoc block and prove the rewrite conservative.
  *
  * **Details**
@@ -858,11 +888,7 @@ export const jsdocMigrateBlockStats = (blockText: string): JSDocMigrateBlockStat
  * @category use-cases
  * @since 0.0.0
  */
-export const rewriteJSDocMigrateBlock = (input: {
-  readonly blockText: string;
-  readonly indent: string;
-  readonly data: JSDocMigrateRewriteData;
-}): JSDocMigrateRewriteResult => {
+export const rewriteJSDocMigrateBlock = (input: JSDocMigrateBlockInput): JSDocMigrateRewriteResult => {
   const built = rewriteBlockUnchecked(input.blockText, input.data, input.indent);
   if (built._tag !== "Built") {
     return built;

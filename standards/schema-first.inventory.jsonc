@@ -704,16 +704,6 @@
       "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
-      "symbol": "rewriteJSDocMigrateBlock",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 861,
-      "owner": "@beep/repo-cli",
-      "reason": "Exported function \"rewriteJSDocMigrateBlock\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
