@@ -26,7 +26,8 @@ const usagePersistenceFailures = Metric.counter("agents_usage_persistence_failur
  * Service shape of the usage-record sink: append a single {@link UsageRecord}.
  * Appends are total — the sink never fails the calling turn pipeline.
  *
- * @example
+ * **Example** (Define minimal sink shape)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { UsageRecordSinkShape } from "@/chat/UsageRecordSink"
@@ -48,7 +49,8 @@ export interface UsageRecordSinkShape {
  * Append-only usage-record sink the chat orchestration handler writes finalized
  * turn usage to.
  *
- * @example
+ * **Example** (Yield usage record sink)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UsageRecordSink } from "@/chat/UsageRecordSink"
@@ -70,7 +72,8 @@ export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecor
  * app-level contract test can assert exactly which {@link UsageRecord}s were
  * appended by reading the `Ref` directly.
  *
- * @example
+ * **Example** (Build sink with backing ref)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink"
@@ -99,10 +102,13 @@ export const makeInMemoryUsageRecordSink: Effect.Effect<{
 /**
  * In-memory {@link UsageRecordSink} layer backed by a shared {@link Ref}.
  *
+ * **Details**
+ *
  * Production composition uses {@link UsageRecordSinkDrizzle}; this layer is the
  * deterministic fixture for isolated contract and smoke tests.
  *
- * @example
+ * **Example** (Provide in-memory sink layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UsageRecordSink, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink"
@@ -175,7 +181,8 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
  * Drizzle-backed {@link UsageRecordSink} layer that persists finalized turn usage
  * into the epistemic `epistemic_usage_record` table through {@link PostgresDrizzle}.
  *
- * @example
+ * **Example** (Verify Drizzle sink layer)
+ *
  * ```ts
  * import { UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
  * import { Layer } from "effect"

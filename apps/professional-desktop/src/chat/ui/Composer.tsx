@@ -91,7 +91,8 @@ const emptyDocument = Md.Document.make({ children: [] });
  * normalization. Preview content is rendered as React text in a `<pre>`, never
  * as HTML.
  *
- * @example
+ * **Example** (Safety warning with preview)
+ *
  * ```tsx
  * import { ComposerSafetyWarning } from "@/chat/ui/Composer"
  *
@@ -164,7 +165,8 @@ function ComposerRawNormalizationWarning({
  * The thread composer. Persists drafts, loads edit targets, and dispatches
  * send/edit turns.
  *
- * @example
+ * **Example** (Log Composer component name)
+ *
  * ```tsx
  * import { Composer } from "@/chat/ui/Composer"
  *

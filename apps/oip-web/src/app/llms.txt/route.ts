@@ -10,7 +10,8 @@ import { getOipSiteContent, makeLlmsText } from "../../content";
 /**
  * Returns `llms.txt` for oip.law.
  *
- * @example
+ * **Example** (Fetching llms.txt content type)
+ *
  * ```ts
  * import { GET } from "@beep/oip-web/app/llms.txt/route"
  *

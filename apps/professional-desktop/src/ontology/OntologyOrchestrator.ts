@@ -192,7 +192,8 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
 /**
  * Live ontology workbench handler layer for the {@link OntologyRpcs} group.
  *
- * @example
+ * **Example** (Confirming ontology Layer)
+ *
  * ```ts
  * import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator"
  * import { Layer } from "effect"

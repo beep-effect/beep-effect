@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-07",
+  "generatedOn": "2026-08-08",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -9,7 +9,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 94,
+      "line": 96,
       "owner": "@beep/oip-web",
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
@@ -635,7 +635,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 844,
+      "line": 855,
       "owner": "@beep/repo-cli",
       "reason": "Inline input pairs raw block bytes with a projection of the schema-decoded title record; the tagged result union is transient control flow consumed immediately by apply, never decoded or persisted."
     },

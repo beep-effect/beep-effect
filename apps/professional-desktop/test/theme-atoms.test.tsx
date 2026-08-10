@@ -6,10 +6,10 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { AtomRegistry } from "effect/unstable/reactivity";
-import { afterEach, describe, expect } from "vitest";
+import { afterEach, describe, expect, vi } from "vitest";
 import { ThemeToggle } from "@/chat/ui/ThemeToggle";
 import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime";
-import { migrateWorkbenchThemeMode, workbenchThemeModeAtom } from "@/theme/Theme.atoms";
+import { migrateWorkbenchThemeMode, resolvedWorkbenchThemeModeAtom, workbenchThemeModeAtom } from "@/theme/Theme.atoms";
 import { WorkbenchThemeProvider } from "@/theme/WorkbenchThemeProvider";
 
 const NEW_THEME_KEY = "professional-desktop:theme-mode";
@@ -26,6 +26,7 @@ const migrateTheme = migrateWorkbenchThemeMode();
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  vi.restoreAllMocks();
 });
 
 describe("Atom-owned workbench theme", { concurrent: false }, () => {
@@ -91,6 +92,44 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
 
         expect(getByTestId("theme-child")).toBe(child);
         expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.dark));
+      })
+    );
+
+    it.effect(
+      "tracks system color-scheme changes while the preference is system",
+      Effect.fnUntraced(function* () {
+        let matches = false;
+        const listeners: Array<EventListenerOrEventListenerObject> = [];
+        vi.spyOn(window, "matchMedia").mockImplementation(
+          (query) =>
+            ({
+              get matches() {
+                return matches;
+              },
+              media: query,
+              onchange: null,
+              addListener: () => {},
+              removeListener: () => {},
+              addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+                listeners.push(listener);
+              },
+              removeEventListener: () => {},
+              dispatchEvent: () => false,
+            }) as MediaQueryList
+        );
+
+        const registry = yield* makeRegistry;
+        registry.mount(resolvedWorkbenchThemeModeAtom);
+        expect(registry.get(resolvedWorkbenchThemeModeAtom)).toBe(ThemeMode.Enum.light);
+
+        matches = true;
+        const event = new Event("change");
+        for (const listener of listeners) {
+          if (typeof listener === "function") listener(event);
+          else listener.handleEvent(event);
+        }
+
+        expect(registry.get(resolvedWorkbenchThemeModeAtom)).toBe(ThemeMode.Enum.dark);
       })
     );
   });

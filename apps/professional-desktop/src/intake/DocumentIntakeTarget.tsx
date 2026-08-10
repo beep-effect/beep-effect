@@ -245,7 +245,8 @@ const IntakeWorkspaceSurface = ({
  * Full-screen boundary that onboards a workspace vault and routes DOM events
  * into runtime-owned document intake actions.
  *
- * @example
+ * **Example** (Create React Element)
+ *
  * ```ts
  * import { DocumentIntakeTarget } from "@/intake/DocumentIntakeTarget"
  * import { createElement } from "react"

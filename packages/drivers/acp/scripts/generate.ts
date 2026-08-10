@@ -502,7 +502,11 @@ function renderSchemaEntry(name: string, constLine: string): string {
       constLine,
       Str.replace(new RegExp(`^export const ${name} = `), ""),
       Str.replace(/;$/, ""),
-      Str.replaceAll("Schema.", "S.")
+      Str.replaceAll("Schema.", "S."),
+      // OpenAPI `number` fields are JSON numbers, which are always finite;
+      // the upstream generator emits S.Number, which the schemaNumber
+      // governance rule (TS377098) rejects for exactly that reason.
+      Str.replaceAll(/\bS\.Number\b/g, "S.Finite")
     )
   );
   return pipe(

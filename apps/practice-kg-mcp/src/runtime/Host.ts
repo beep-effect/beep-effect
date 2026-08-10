@@ -27,7 +27,8 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
 /**
  * Sanitized startup failure while resolving a portable practice KG bundle.
  *
- * @example
+ * **Example** (Make PracticeKgHostError)
+ *
  * ```ts
  * import { PracticeKgHostError } from "../../src/runtime/Host.ts"
  *
@@ -52,7 +53,8 @@ export class PracticeKgHostError extends TaggedErrorClass<PracticeKgHostError>($
 /**
  * Read and validate the bundle manifest before either database is opened.
  *
- * @example
+ * **Example** (Load bundle context effect)
+ *
  * ```ts
  * import { loadPracticeKgBundleContext } from "../../src/runtime/Host.ts"
  * import { Effect } from "effect"
@@ -63,7 +65,6 @@ export class PracticeKgHostError extends TaggedErrorClass<PracticeKgHostError>($
  *
  * @param bundleDir - Directory containing `bundle.manifest.json` and both stores.
  * @param corpusRoot - Optional pointer to the external corpus content tree.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -100,7 +101,8 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
 /**
  * Compose the stdio server with app-owned PGlite and DuckDB resources.
  *
- * @example
+ * **Example** (Compose practice host layer)
+ *
  * ```ts
  * import { makePracticeKgHostLayer } from "../../src/runtime/Host.ts"
  * import type { PracticeKgBundleContext } from "@beep/law-practice-server"
@@ -110,7 +112,6 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
  * ```
  *
  * @param context - Validated bundle paths and manifest metadata.
- *
  * @category layers
  * @since 0.0.0
  */

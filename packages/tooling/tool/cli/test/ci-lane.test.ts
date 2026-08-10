@@ -91,24 +91,30 @@ describe("CI lane descriptors", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
+  it("serializes the PR-shape check lane on fleet workers", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=1", "--affected", "--summarize"]);
+    expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
+  });
+
   it("builds the PR-shape lint lane with TURBO_SCM_BASE", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "lint", prShapeOptions);
     expect(A.length(steps)).toBe(1);
     const step = firstOf(steps);
     expect(step.command).toBe("bun");
-    expect([...step.args]).toEqual(["run", "lint", "--", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual(["run", "lint", "--", "--concurrency=2", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 
-  it("builds the push-shape lint lane without turbo args", () => {
+  it("builds the push-shape lint lane with the hosted-runner turbo cap", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", baseOptions));
-    expect([...step.args]).toEqual(["run", "lint"]);
+    expect([...step.args]).toEqual(["run", "lint", "--", "--concurrency=2"]);
     expect(step.env).toBeUndefined();
   });
 
   it("splits the test lanes into CI's unit and integration shapes", () => {
     const unit = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-unit", prShapeOptions));
-    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
+    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--concurrency=2", "--affected", "--summarize"]);
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
@@ -116,7 +122,7 @@ describe("ciLaneStepsForTesting", () => {
 
   it("matches coverage baseline regeneration concurrency", () => {
     const coverage = firstOf(ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions));
-    expect([...coverage.args]).toEqual(["run", "coverage", "--", "--concurrency=2", "--affected", "--summarize"]);
+    expect([...coverage.args]).toEqual(["run", "coverage", "--", "--concurrency=3", "--affected", "--summarize"]);
   });
 
   it("runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI", () => {

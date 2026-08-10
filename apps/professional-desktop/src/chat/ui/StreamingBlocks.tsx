@@ -41,7 +41,8 @@ const KEY_SAMPLE_LIMIT = 4096;
  * caps the per-render hashing work so untrusted content cannot force large
  * string materialization.
  *
- * @example
+ * **Example** (Generate deterministic bounded key)
+ *
  * ```ts
  * import { boundedKey } from "@/chat/ui/StreamingBlocks"
  *
@@ -63,7 +64,8 @@ export const boundedKey = (raw: string): string => {
  * `renderKey` for every earlier candidate (O(n^2) over untrusted content); a
  * running `MutableHashMap` count keeps this linear and the emitted keys bounded.
  *
- * @example
+ * **Example** (Disambiguate duplicate occurrence keys)
+ *
  * ```ts
  * import { stableOccurrenceKeys } from "@/chat/ui/StreamingBlocks"
  *
@@ -133,7 +135,8 @@ const tableRowRenderKey = (row: TableBlock["rows"][number]): string =>
  * Derives a content-addressed render key for a single assistant block,
  * dispatched by block variant.
  *
- * @example
+ * **Example** (Derive paragraph block key)
+ *
  * ```ts
  * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -310,7 +313,8 @@ const Block = ({ block, renderKey }: { readonly block: AssistantBlock; readonly 
 /**
  * Renders the in-flight streamed assistant turn's blocks.
  *
- * @example
+ * **Example** (Log StreamingBlocks component name)
+ *
  * ```tsx
  * import { StreamingBlocks } from "@/chat/ui/StreamingBlocks"
  *

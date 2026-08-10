@@ -52,6 +52,49 @@ describe("JSDocMigrateRewrite rewriteJSDocMigrateBlock", () => {
     expect(result.text.indexOf("@category decoding")).toBeLessThan(result.text.indexOf("@since 0.0.0"));
   });
 
+  it("quarantines an @example inside an {@inheritDoc} block instead of emitting summary content", () => {
+    const block = lines(
+      "/**",
+      " * {@inheritDoc Ok}",
+      " *",
+      " * @example",
+      " * ```ts",
+      " * const status: Ok = 200",
+      " * ```",
+      " *",
+      " * @category validation",
+      " * @since 0.0.0",
+      " */"
+    );
+    const result = rewriteJSDocMigrateBlock({
+      blockText: block,
+      indent: "",
+      data: { titles: ["Assign Ok status type"] },
+    });
+    expect(result._tag).toBe("Quarantined");
+    if (result._tag === "Quarantined") {
+      expect(result.reasons).toContain("inheritdoc-summary-content");
+    }
+  });
+
+  it("quarantines an @remarks inside an {@inheritDoc} block instead of emitting summary content", () => {
+    const block = lines(
+      "/**",
+      " * {@inheritDoc Created}",
+      " *",
+      " * @remarks",
+      " * Routed detail.",
+      " *",
+      " * @since 0.0.0",
+      " */"
+    );
+    const result = rewriteJSDocMigrateBlock({ blockText: block, indent: "", data: { titles: [] } });
+    expect(result._tag).toBe("Quarantined");
+    if (result._tag === "Quarantined") {
+      expect(result.reasons).toContain("inheritdoc-summary-content");
+    }
+  });
+
   it("quarantines an unfenced @example instead of inventing a fence", () => {
     const block = lines("/**", " * Adds numbers.", " *", " * @example", " * add(1, 2)", " *", " * @since 0.0.0", " */");
     const result = rewriteJSDocMigrateBlock({ blockText: block, indent: "", data: { titles: ["Add numbers"] } });
@@ -695,6 +738,14 @@ describe("JSDoc zero-legacy path predicates", () => {
     expect(isPackageSourceFile(generated)).toBe(false);
     expect(isPackageSourceFileIncludingGenerated(hand)).toBe(true);
     expect(isPackageSourceFileIncludingGenerated(generated)).toBe(true);
-    expect(jsdocZeroLegacyGeneratedResiduals).toContain(generated);
+    expect(jsdocZeroLegacyGeneratedResiduals).toHaveLength(0);
+  });
+
+  it("includes apps source files in both zero-legacy scopes", () => {
+    const appHand = "apps/professional-desktop/src/sync/Sync.atoms.ts";
+    const appGenerated = "apps/professional-desktop/src/runtime/Migrations.gen.ts";
+    expect(isPackageSourceFile(appHand)).toBe(true);
+    expect(isPackageSourceFileIncludingGenerated(appHand)).toBe(true);
+    expect(isPackageSourceFileIncludingGenerated(appGenerated)).toBe(true);
   });
 });

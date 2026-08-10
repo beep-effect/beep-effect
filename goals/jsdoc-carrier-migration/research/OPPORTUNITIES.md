@@ -159,3 +159,59 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   `--include-generated` (superset scope: everything the non-generated scan catches, plus
   generated files minus the one allowlisted residual). The `apps/**` scope gap is a
   candidate follow-up: extend the corpus or add an apps-scoped totals metric.
+
+### Follow-ups closed: acp resync, apps corpus, inheritDoc quarantine, fleet re-tuning
+
+- **What happened:** the four receipted follow-ups landed in one PR after #606/#608 merged.
+  (1) acp `schema.gen.ts` regenerated with the converted emitter — the feared staleness bomb
+  reduced to one real defect class: the upstream openapi-generator emits `S.Number`, which
+  the schemaNumber governance rule rejects (45 sites); OpenAPI numbers are JSON numbers
+  (always finite), so the repo-owned script now rewrites them to `S.Finite`. The predicted
+  `Acp.errors.ts` S.Json break DID materialize — at runtime, not compile time: the JSON-RPC
+  error `data` field became S.Json, and the ext-request error path was stuffing a live
+  SchemaIssue object into it, so `Error.make` threw inside mapError and the error response
+  never reached the peer (integration test hung at 30s). Fixed by carrying the rendered
+  issue string; the old behavior was a latent wire bug that S.Unknown had been masking. acp check, tests, and
+  docgen all green; the last 342 legacy carriers are gone and the
+  `jsdocZeroLegacyGeneratedResiduals` allowlist is EMPTY — SPEC DoD item 2 now closes
+  without vacuity. (2) apps/** joined both zero-legacy scopes and its 272 blocks migrated
+  through the frozen-data pipeline (272 conserved, 0 residue; data under `data/apps/`).
+  (3) jsdoc-migrate now quarantines `{@inheritDoc}` blocks carrying legacy carriers
+  (`inheritdoc-summary-content`) instead of emitting TSDoc-illegal summary content.
+  (4) CI lane concurrency restored to 8vCPU tuning for the beep-ec2-heavy fleet,
+  while hosted Lint and Test Unit retain the 16GB-safe Turbo cap.
+- **Evidence:** `jsdoc-ratchet --include-generated` findings=0 with an empty allowlist;
+  `jsdoc-migrate verify` 272 conserved / 0 residue on post-biome bytes; acp `bun run check`
+  exit 0 with 45 `S.Finite`, 0 `S.Number`.
+- **Residual friction:** `bunx --bun oxfmt` still resolves the mise shim with no configured
+  version on this workstation (P2 receipt stands) — worked around via
+  `mise x oxfmt@0.50.0`; the generate script's format step should probably prefer a
+  repo-pinned formatter. `jsdoc-migrate verify` defaults to the P3 frozen data paths, so a
+  scoped rerun must pass --extract/--titles/--overrides explicitly or it reports the P3
+  records as orphans.
+
+### Final completeness audit found runner-map and packet-state drift
+
+- **What happened:** the #627 closeout audit mapped each Check workflow lane back to its
+  runner and found that Lint remained on 16GB `ubuntu-24.04` while inheriting the restored
+  fleet Turbo cap of 4. The same audit found that the binding carrier law still omitted
+  `apps/**/src`, and current packet notes still described the already-closed ACP residual.
+- **Evidence:** `.github/workflows/check.yml` routes Lint and Test Unit to `ubuntu-24.04`
+  while Check, Test Integration, Coverage, Docgen, and push Build use `beep-ec2-heavy`;
+  `ciLaneStepsForTesting` now proves `--concurrency=2` for both hosted Turbo lanes.
+- **Prevention:** review concurrency changes against the workflow lane-to-runner map rather
+  than a shared CI default in isolation, and refresh current packet status prose when a
+  follow-up closes a previously documented residual.
+
+### Fresh Check graphs still exhaust 32GB fleet workers at concurrency four
+
+- **What happened:** PR #627's hosted Check lane ran a cache-cold 127-task graph with the
+  restored fleet Turbo cap of four. `@beep/epistemic-server`'s `tsgo` process was killed
+  with exit 137, and the GitHub runner service went offline immediately afterward.
+- **Evidence:** Actions job `93473451163` completed 123 of 127 tasks before the kill. The
+  instance console recorded `Out of memory: Killed process 11096 (tsc)` at about 20.8GB
+  resident memory. EC2 still reported the runner as a healthy running `m7a.2xlarge` with an
+  active Spot request, ruling out Spot reclamation or instance shutdown as the initiating
+  event.
+- **Prevention:** keep the Check lane serial even on the 32GB fleet; its largest package
+  checks dominate peak memory when they overlap, while the smaller tasks dominate count.

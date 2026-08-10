@@ -19,7 +19,8 @@ const $I = $ProfessionalDesktopId.create("runtime/BrowserFailure.atoms");
 /**
  * Closed set of renderer boundaries that can report a browser failure.
  *
- * @example
+ * **Example** (Check workspace source)
+ *
  * ```ts
  * import { BrowserFailureSource } from "@/runtime/BrowserFailure.atoms"
  *
@@ -45,7 +46,8 @@ const BrowserFailureSource = LiteralKit([
 /**
  * Browser boundary that reported a handled failure.
  *
- * @example
+ * **Example** (Assign typed source)
+ *
  * ```ts
  * import type { BrowserFailureSource } from "@/runtime/BrowserFailure.atoms"
  *
@@ -62,7 +64,8 @@ type BrowserFailureSource = typeof BrowserFailureSource.Type;
  * A browser-side failure that must be reported without exposing its cause to
  * the rendered UI.
  *
- * @example
+ * **Example** (Create browser failure)
+ *
  * ```ts
  * import { BrowserFailure } from "@/runtime/BrowserFailure.atoms"
  *
@@ -111,11 +114,14 @@ const reportBrowserFailureAtom = professionalBrowserRuntime.fn<BrowserFailure>()
  * Runtime-observed failure family for failures already represented by an
  * `AsyncResult` UI branch.
  *
+ * **Details**
+ *
  * Mount the family member beside the rendered fallback so the technical Cause
  * is logged once through the professional runtime while the UI renders only its
  * redacted client message.
  *
- * @example
+ * **Example** (Mount reported failure)
+ *
  * ```tsx
  * import { reportedBrowserFailureAtoms } from "@/runtime/BrowserFailure.atoms"
  * import { useAtomMount } from "@effect/atom-react"
@@ -138,7 +144,8 @@ export const reportedBrowserFailureAtoms = Atom.family((source: BrowserFailureSo
 /**
  * Compatibility family for callers that already hold a complete failure.
  *
- * @example
+ * **Example** (Mount handled failure)
+ *
  * ```tsx
  * import { BrowserFailure, handledBrowserFailureAtoms } from "@/runtime/BrowserFailure.atoms"
  * import { useAtomMount } from "@effect/atom-react"
@@ -165,7 +172,8 @@ export const handledBrowserFailureAtoms = Atom.family((failure: BrowserFailure) 
  * Mounted Atom that registers browser-global error and rejected-Promise
  * listeners and removes them when the renderer registry is disposed.
  *
- * @example
+ * **Example** (Mount global listeners)
+ *
  * ```tsx
  * import { browserFailureListenersAtom } from "@/runtime/BrowserFailure.atoms"
  * import { useAtomMount } from "@effect/atom-react"

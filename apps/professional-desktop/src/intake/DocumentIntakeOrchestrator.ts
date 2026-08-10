@@ -82,7 +82,8 @@ const toDocumentIntakeActionError = (context: string) =>
 /**
  * RPC handler layer for workspace vault configuration commands.
  *
- * @example
+ * **Example** (Verify Layer Instance)
+ *
  * ```ts
  * import { WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
  * import { Layer } from "effect"
@@ -114,7 +115,8 @@ export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
 /**
  * RPC handler layer for dropped legal document intake commands.
  *
- * @example
+ * **Example** (Verify Layer Instance)
+ *
  * ```ts
  * import { DocumentIntakeHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
  * import { Layer } from "effect"

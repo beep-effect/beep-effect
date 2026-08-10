@@ -7,7 +7,7 @@
 //   P2 keeps P3 from planting a codegen mine.
 {
   "schemaVersion": "jsdoc-carrier-migration/tasks/v1",
-  "updated": "2026-08-06",
+  "updated": "2026-08-10",
   "rankingMethod": "P0 first because it makes P3 legal and is docs-only (no gate exposure). P1 before P2 because the codemod's dry run is the only way to learn the true residue count. P2 before P3 so P3 touches hand-authored code only. P3 is atomic. P4 lands with P3.",
   "tasks": [
     {
@@ -77,8 +77,9 @@
       "phase": "P2",
       "status": "done",
       "blockedBy": ["jcm-001"],
-      "title": "Fix the 9 repo-owned generator templates",
-      "detail": "Emit **Example** (Title) sections instead of @example. Mechanical titles are acceptable in generated output. Targets: drivers/{box,acp,runpod,ecfr,gov-legal-mcp} (bun run generate), foundation/primitive/data and foundation/modeling/rdf (beep sync-data-to-ts), foundation/modeling/html (bun run generate), tooling/library/ai-sync (package-local emitter). Then regenerate the 18 files. Independent of P1 — can run in parallel."
+      "title": "Fix the repo-owned generator templates",
+      "note": "The executed census found 10 emitters / 21 outputs. The #627 follow-up regenerated the deferred ACP schema output, leaving all 21 law-compliant.",
+      "detail": "Emit **Example** (Title) sections instead of @example. Mechanical titles are acceptable in generated output. Targets: drivers/{box,acp,runpod,ecfr,gov-legal-mcp} (bun run generate), foundation/primitive/data and foundation/modeling/rdf (beep sync-data-to-ts), foundation/modeling/html (bun run generate), tooling/library/ai-sync (package-local emitter), and the professional-desktop sync-migration-bundle generator. Then regenerate all 21 files. Independent of P1 — can run in parallel."
     },
     {
       "id": "jcm-009",
@@ -105,10 +106,10 @@
       "rank": 11,
       "phase": "P3",
       "status": "done",
-      "note": "Done in P3: enforceTouchedFileCleanup replaced by enforceZeroLegacy with both scopes; hosted ci lane now passes --include-generated so the generated scope (and the acp allowlist) is CI-enforced.",
+      "note": "Done in P3 and completed by #627: enforceZeroLegacy covers packages/**/src and apps/**/src; hosted CI passes --include-generated; the generated-residual allowlist is empty.",
       "blockedBy": ["jcm-010"],
       "title": "Swap the gate to a repo-wide zero-legacy check",
-      "detail": "Replace enforceTouchedFileCleanup with a check that fails on any @example or @remarks in packages/**/src. Once the corpus is zero, 'touched' is a meaningless qualifier: the repo-wide form needs no git diff work, is faster, and cannot be evaded. Ship TWO scopes: default non-generated (SPEC 7 row 4) and --include-generated (SPEC 7 row 6). The generated scope is not optional — without it, 'generated output stays compliant' would be proved by re-running a check that skips generated files, which passes vacuously. Same PR as the migration."
+      "detail": "Replace enforceTouchedFileCleanup with a check that fails on any @example or @remarks in packages/**/src or apps/**/src. Once the corpus is zero, 'touched' is a meaningless qualifier: the repo-wide form needs no git diff work, is faster, and cannot be evaded. Ship TWO scopes: default non-generated (SPEC 7 row 4) and --include-generated (SPEC 7 row 6). The generated scope is not optional — without it, 'generated output stays compliant' would be proved by re-running a check that skips generated files, which passes vacuously."
     },
     {
       "id": "jcm-012",
@@ -125,7 +126,7 @@
       "rank": 13,
       "phase": "P4",
       "status": "done",
-      "note": "Done in P4 (same PR): reflection at history/reflections/2026-08-06-grok.md; lifecycle completed-retained. Residual: acp schema.gen.ts (342 @example) allowlisted in the generated scope until the acp-resync PR lands; receipted in research/OPPORTUNITIES.md.",
+      "note": "Done in P4 (same PR): reflection at history/reflections/2026-08-06-grok.md; lifecycle completed-retained. The #627 follow-up regenerated acp schema.gen.ts, removed its last 342 @example carriers, emptied the generated-residual allowlist, and closed the receipted follow-ups.",
       "blockedBy": ["jcm-011", "jcm-012"],
       "title": "Close the packet",
       "detail": "Reflection under history/reflections/ via the reflect skill, manifest lifecycle flipped to completed-retained, progress.json finalised — all in the same PR as P3 per the same-PR packet-state-flip law. The completion gate clears only if the merged commit cites the packet slug."
