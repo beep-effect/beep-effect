@@ -248,9 +248,11 @@ describe("Fn convenience exports", () => {
   it("creates thunk schemas with ThunkOf", () => {
     const schema = ThunkOf({ output: S.FiniteFromString, error: S.String });
     const impl = schema.implementSync(() => 1);
+    const infallible = ThunkOf(S.String);
 
     expect(impl()).toBe(1);
     expect(schema.errorSchema).toBe(S.String);
+    expect(infallible.errorSchema).toBe(S.Never);
   });
 
   it("derives formatter and equivalence instances", () => {

@@ -166,7 +166,6 @@ export function useSpinner<T>(actions: {
   readonly increment: (params?: T) => void;
   readonly decrement: (params?: T) => void;
 }) {
-  const { increment, decrement } = actions;
   const scope = useId();
   const dispatch = useAtomSet(spinnerCommandAtom(scope));
 
@@ -184,12 +183,12 @@ export function useSpinner<T>(actions: {
     up: (params?: T) =>
       dispatch({
         _tag: "start",
-        run: () => increment(params),
+        run: () => actions.increment(params),
       }),
     down: (params?: T) =>
       dispatch({
         _tag: "start",
-        run: () => decrement(params),
+        run: () => actions.decrement(params),
       }),
     stop: () => dispatch({ _tag: "stop" }),
   };
