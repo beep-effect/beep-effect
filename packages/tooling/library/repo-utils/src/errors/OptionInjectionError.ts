@@ -22,7 +22,8 @@ const $I = $RepoUtilsId.create("errors/OptionInjectionError");
  * example begins with `-`) and would be reinterpreted as a flag by the spawned
  * process instead of being treated as a literal positional argument.
  *
- * @example
+ * **Example** (Construct option injection error)
+ *
  * ```ts
  * import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionError"
  * const error = OptionInjectionError.make({
@@ -31,6 +32,7 @@ const $I = $RepoUtilsId.create("errors/OptionInjectionError");
  * })
  * console.log(error.value)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

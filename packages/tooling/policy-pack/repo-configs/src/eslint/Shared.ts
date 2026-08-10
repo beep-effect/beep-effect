@@ -10,7 +10,8 @@ import { normalizePath as normalizeSchemaPath, PosixPath as PosixPathSchema } fr
 /**
  * POSIX-normalized path string schema re-exported for tooling config consumers.
  *
- * @example
+ * **Example** (Decode POSIX path schema)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -20,6 +21,7 @@ import { normalizePath as normalizeSchemaPath, PosixPath as PosixPathSchema } fr
  *
  * strictEqual(decoded, "packages/tooling/policy-pack/repo-configs")
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -28,11 +30,13 @@ export const PosixPath = PosixPathSchema;
 /**
  * Type for {@link PosixPath}.
  *
- * @example
+ * **Example** (Alias PosixPath type)
+ *
  * ```ts
  * import type { PosixPath } from "@beep/repo-configs/eslint/Shared"
  * type ExamplePath = PosixPath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -41,14 +45,16 @@ export type PosixPath = typeof PosixPath.Type;
 /**
  * Normalize a file-system path to POSIX separators.
  *
- * @param value - Input path string that may contain native separators.
- * @returns Path string normalized to POSIX separators.
- * @example
+ * **Example** (Normalize path separators)
+ *
  * ```ts
  * import { normalizePath } from "@beep/repo-configs/eslint/Shared"
  * const path = normalizePath("packages/tooling/policy-pack/repo-configs/src/index.ts")
  * console.log(path)
  * ```
+ *
+ * @param value - Input path string that may contain native separators.
+ * @returns Path string normalized to POSIX separators.
  * @category utilities
  * @since 0.0.0
  */

@@ -13,11 +13,14 @@ const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
 /**
  * Segment-based position mapping.
  *
+ * **Details**
+ *
  * Compresses a per-character position map into contiguous segments where the
  * offset between clean and original coordinates is constant. Lookups use
  * binary search (O(log k) where k = number of segments, typically 50-200).
  *
- * @example
+ * **Example** (Create position segment)
+ *
  * ```ts
  * import { Segment } from "@beep/law-practice-domain"
  * import { NonNegativeInt, PosInt } from "@beep/schema"

@@ -15,7 +15,8 @@ import type { BoundFieldState } from "../internal/FieldBinding.tsx";
  * Props for {@link RatingField}: `Rating` props plus label/description; binding
  * props are owned by the field.
  *
- * @example
+ * **Example** (Satisfying rating field props)
+ *
  * ```ts
  * import type { RatingFieldProps } from "@beep/form/fields/RatingField"
  *
@@ -57,7 +58,8 @@ const bindRatingControl = ({ field, hasErrors }: BoundFieldState<number>): Ratin
  * Schema-bound numeric rating field backed by the registered `Rating`
  * AppField component.
  *
- * @example
+ * **Example** (Review form rating field)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

@@ -24,7 +24,8 @@ import type { DockWorkspace as DockWorkspaceType } from "./Dock.tree.ts";
 /**
  * Policy contract that can veto a command before transition.
  *
- * @example
+ * **Example** (Always-allow command policy)
+ *
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import type { DockCommandPolicy } from "@beep/dock"
@@ -92,10 +93,13 @@ const rejectNoDropReference = (
 /**
  * Destination policy enforcing persisted group locking metadata.
  *
- * @remarks Locking applies to destinations while preserving reorder and
+ * **Details**
+ *
+ * Locking applies to destinations while preserving reorder and
  * outbound-move behavior.
  *
- * @example
+ * **Example** (Reject open on locked group)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy } from "@beep/dock"
  * import { Effect } from "effect"
@@ -172,7 +176,8 @@ export const lockedGroupsPolicy: DualDockCommandPolicy = dual(
 /**
  * Wraps the live engine with a command policy.
  *
- * @example
+ * **Example** (Policy-wrapped engine rejection)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, DockEngine, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy, makePolicyDockEngineLayer } from "@beep/dock"
  * import { Effect } from "effect"

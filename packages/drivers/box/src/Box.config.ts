@@ -32,7 +32,8 @@ const BoxCcgConfigShape = S.Struct({
 /**
  * Developer-token configuration for local Box access.
  *
- * @example
+ * **Example** (Make developer token config)
+ *
  * ```ts
  * import { BoxDeveloperTokenConfig } from "@beep/box"
  * import { Redacted } from "effect"
@@ -56,7 +57,8 @@ export class BoxDeveloperTokenConfig extends S.Class<BoxDeveloperTokenConfig>($I
 /**
  * Client Credentials Grant configuration for enterprise Box access.
  *
- * @example
+ * **Example** (Make CCG enterprise config)
+ *
  * ```ts
  * import { BoxCcgConfig } from "@beep/box"
  * import { Redacted } from "effect"
@@ -83,7 +85,8 @@ export class BoxCcgConfig extends S.Class<BoxCcgConfig>($I`BoxCcgConfig`)(
 /**
  * Box developer-token configuration service.
  *
- * @example
+ * **Example** (Provide config service layer)
+ *
  * ```ts
  * import { BoxConfig, BoxDeveloperTokenConfig } from "@beep/box"
  * import { Effect, Layer, Redacted } from "effect"
@@ -110,7 +113,8 @@ export class BoxConfig extends Context.Service<BoxConfig, BoxDeveloperTokenConfi
 /**
  * Live developer-token configuration layer backed by `CLOUD_BOX_TOKEN`.
  *
- * @example
+ * **Example** (Read token from env)
+ *
  * ```ts
  * import { BoxConfig, BoxConfigLayer } from "@beep/box"
  * import { ConfigProvider, Effect, Redacted } from "effect"
@@ -149,7 +153,8 @@ export const BoxConfigLayer = Layer.effect(
 /**
  * Backward-compatible alias for {@link BoxConfigLayer}.
  *
- * @example
+ * **Example** (Use layer alias)
+ *
  * ```ts
  * import { BoxConfig, layer } from "@beep/box"
  * import { ConfigProvider, Effect, Redacted } from "effect"
@@ -176,7 +181,8 @@ export const layer = BoxConfigLayer;
 /**
  * Construct a developer-token configuration layer from an explicit token.
  *
- * @example
+ * **Example** (Layer from explicit token)
+ *
  * ```ts
  * import { BoxConfig, layerConfig } from "@beep/box"
  * import { Effect, Redacted } from "effect"

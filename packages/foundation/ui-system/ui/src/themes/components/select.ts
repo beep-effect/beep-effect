@@ -10,7 +10,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Select theme theme value.
  *
- * @example
+ * **Example** (Import and log selectTheme)
+ *
  * ```ts
  * import { selectTheme } from "@beep/ui/themes/components/select"
  *

@@ -12,15 +12,17 @@
  * Record of `application/*` MIME type definitions, each containing a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
+ * **Example** (Lookup application/json entry)
+ *
  * ```typescript
  * import { application } from "@beep/data/mime-types/application"
  *
  * application["application/json"]
  * // { source: "iana", charset: "UTF-8", extensions: ["json", "map"] }
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const application = {
   "application/andrew-inset": {

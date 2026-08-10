@@ -359,6 +359,25 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`graphnosis-prior-art`](./graphnosis-prior-art/README.md) — graduated
+  2026-08-06 (opened same day) into
+  [`goals/epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md)
+  and [`goals/agentic-governance-laws`](../goals/agentic-governance-laws/README.md):
+  mined the Apache-2.0 Graphnosis dual-graph memory engine plus four papers
+  (two Zenodo preprints, two arXiv; all CC BY 4.0, linked from
+  [`assets/README.md`](./graphnosis-prior-art/assets/README.md)) against the
+  live checkout — 191 mappings, beep-effect partial-or-better on 78%, so the
+  packet **dissolved** (Q1) rather than porting: 26 amendments routed to the
+  packets that already own the territory
+  ([`AMENDMENTS.json`](./graphnosis-prior-art/research/AMENDMENTS.json)),
+  three live-defect findings (WinkCorpus tie-break, DocText WorkerTransport
+  leak, law-scan vacuity), and exactly two graduations — the contradiction
+  detective producing against triage's shipped contract, and the repo-law
+  bundle (minting ceilings, per-edge lifetime caps, scanner non-vacuity).
+  Align Q1–Q10 resolved in one sitting; BRIEF adversarially verified against
+  main and confirmed 2026-08-06. Remaining exploration-owned work: the
+  amendment-application pass (spec-delta docs-PR carrying the Q10 standards
+  paragraph, then the three code-change PRs).
 - [`legal-position-relator-runtime`](./legal-position-relator-runtime/README.md) —
   graduated 2026-08-06 (opened 2026-08-05) into
   [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md):

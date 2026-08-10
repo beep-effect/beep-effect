@@ -31,7 +31,8 @@ const CONTRADICTION_QUEUE_KEY = "epistemic:contradiction-queue" as const;
 /**
  * Maximum number of contradiction candidates requested per queue page.
  *
- * @example
+ * **Example** (Taking first page of candidates)
+ *
  * ```ts
  * import { CONTRADICTION_QUEUE_LIMIT } from "@beep/epistemic-client"
  * import * as A from "effect/Array"
@@ -48,7 +49,8 @@ export const CONTRADICTION_QUEUE_LIMIT = ContradictionCandidatePageLimit.make(50
 /**
  * RPC client for the authenticated contradiction-triage surface.
  *
- * @example
+ * **Example** (Checking client runtime function)
+ *
  * ```ts
  * import { ContradictionClient } from "@beep/epistemic-client"
  *
@@ -74,7 +76,8 @@ const sourceKey = (
 /**
  * Disposition filter selected for the contradiction queue.
  *
- * @example
+ * **Example** (Reading disposition filter atom)
+ *
  * ```ts
  * import { contradictionDispositionFilterAtom } from "@beep/epistemic-client"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -108,7 +111,8 @@ const makeTemporalAxisAtom = () => {
 /**
  * Valid-time instant selected for contradiction applicability.
  *
- * @example
+ * **Example** (Reading valid-at AsyncResult)
+ *
  * ```ts
  * import { contradictionValidAtAtom } from "@beep/epistemic-client"
  * import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity"
@@ -125,7 +129,8 @@ export const contradictionValidAtAtom = makeTemporalAxisAtom();
 /**
  * Transaction-time instant selected for contradiction visibility.
  *
- * @example
+ * **Example** (Reading known-at AsyncResult)
+ *
  * ```ts
  * import { contradictionKnownAtAtom } from "@beep/epistemic-client"
  * import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity"
@@ -142,7 +147,8 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
 /**
  * Zero-based offset of the currently visible contradiction queue page.
  *
- * @example
+ * **Example** (Reading default queue offset)
+ *
  * ```ts
  * import { contradictionQueueOffsetAtom } from "@beep/epistemic-client"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -182,7 +188,8 @@ const noContradictionQueuePrevious = O.none<AsyncResult.AsyncResult<Contradictio
 /**
  * Reactive contradiction queue for the selected temporal view and disposition.
  *
- * @example
+ * **Example** (Rendering queue AsyncResult tag)
+ *
  * ```tsx
  * import { contradictionQueueAtom } from "@beep/epistemic-client"
  * import { useAtomValue } from "@effect/atom-react"
@@ -216,7 +223,8 @@ export const contradictionQueueAtom = Atom.readable((get) =>
 /**
  * Currently selected contradiction candidate, or none before a queue choice.
  *
- * @example
+ * **Example** (Checking empty candidate selection)
+ *
  * ```ts
  * import { selectedContradictionCandidateIdAtom } from "@beep/epistemic-client"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -236,10 +244,13 @@ export const selectedContradictionCandidateIdAtom: Atom.Writable<
 /**
  * Candidate associated with the current review mutation result.
  *
+ * **Details**
+ *
  * This lets the connected UI ignore a completed or failed mutation after the
  * operator selects a different queue row.
  *
- * @example
+ * **Example** (Checking empty review candidate)
+ *
  * ```ts
  * import { contradictionReviewCandidateIdAtom } from "@beep/epistemic-client"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -276,9 +287,12 @@ const noCandidateDetail = AsyncResult.initial<ContradictionCandidateDetailView>(
  * Expanded selected candidate, including both beliefs without ranking and
  * their evidence.
  *
+ * **Details**
+ *
  * The atom is explicitly `Initial` while no queue row is selected.
  *
- * @example
+ * **Example** (Rendering candidate AsyncResult tag)
+ *
  * ```tsx
  * import { selectedContradictionCandidateAtom } from "@beep/epistemic-client"
  * import { useAtomValue } from "@effect/atom-react"
@@ -309,7 +323,8 @@ export const selectedContradictionCandidateAtom = Atom.readable((get) =>
 /**
  * Current candidate-authorized source-page request.
  *
- * @example
+ * **Example** (Checking empty source selection)
+ *
  * ```ts
  * import { selectedContradictionEvidenceSourceAtom } from "@beep/epistemic-client"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -347,9 +362,12 @@ const noEvidenceSourcePage = AsyncResult.initial<EvidenceSourcePage>();
 /**
  * Verified canonical source page selected from candidate-bound evidence.
  *
+ * **Details**
+ *
  * The atom is explicitly `Initial` until verified evidence is selected.
  *
- * @example
+ * **Example** (Rendering source page tag)
+ *
  * ```tsx
  * import { contradictionEvidenceSourcePageAtom } from "@beep/epistemic-client"
  * import { useAtomValue } from "@effect/atom-react"
@@ -379,7 +397,8 @@ export const contradictionEvidenceSourcePageAtom = Atom.readable((get) =>
  * Select one queue candidate and clear any source selection from the previous
  * candidate.
  *
- * @example
+ * **Example** (Selecting candidate via button)
+ *
  * ```tsx
  * import { selectContradictionCandidateAtom } from "@beep/epistemic-client"
  * import type { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
@@ -407,7 +426,8 @@ export const selectContradictionCandidateAtom = ContradictionClient.runtime.fn<
 /**
  * Select a verified evidence source and its initial anchor-containing page.
  *
- * @example
+ * **Example** (Opening evidence source page)
+ *
  * ```tsx
  * import { selectContradictionEvidenceSourceAtom } from "@beep/epistemic-client"
  * import { useAtomSet } from "@effect/atom-react"
@@ -432,7 +452,8 @@ export const selectContradictionEvidenceSourceAtom = ContradictionClient.runtime
  * Reset both bitemporal query axes to the same current instant and return to
  * the first queue page.
  *
- * @example
+ * **Example** (Resetting temporal view to now)
+ *
  * ```tsx
  * import { resetContradictionTemporalViewAtom } from "@beep/epistemic-client"
  * import { useAtomSet } from "@effect/atom-react"
@@ -461,7 +482,8 @@ export const resetContradictionTemporalViewAtom = ContradictionClient.runtime.fn
  * Force the currently visible contradiction queue and selected detail to
  * refresh from persisted state.
  *
- * @example
+ * **Example** (Refreshing contradiction queue)
+ *
  * ```tsx
  * import { refreshContradictionTriageAtom } from "@beep/epistemic-client"
  * import { useAtomSet } from "@effect/atom-react"
@@ -489,7 +511,8 @@ export const refreshContradictionTriageAtom = ContradictionClient.runtime.fn<voi
 /**
  * Retry the currently selected candidate-authorized source page.
  *
- * @example
+ * **Example** (Retrying selected source page)
+ *
  * ```tsx
  * import { refreshContradictionEvidenceSourceAtom } from "@beep/epistemic-client"
  * import { useAtomSet } from "@effect/atom-react"
@@ -516,11 +539,14 @@ export const refreshContradictionEvidenceSourceAtom = ContradictionClient.runtim
 /**
  * Apply one human contradiction decision and invalidate all affected reads.
  *
+ * **Details**
+ *
  * The runtime atom exposes `AsyncResult` pending, success, and failure states
  * directly to the UI. The payload is the narrow public command: actor,
  * organization, source, time, fact, validity, and losing side are absent.
  *
- * @example
+ * **Example** (Submitting contradiction review)
+ *
  * ```tsx
  * import { reviewContradictionCandidateAtom } from "@beep/epistemic-client"
  * import { useAtomSet } from "@effect/atom-react"

@@ -33,7 +33,8 @@ const $I = $FormId.create("core/FormOptions");
 /**
  * Validation events supported by TanStack validator routing.
  *
- * @example
+ * **Example** (Checking blur membership)
+ *
  * ```ts
  * import { ValidateOn } from "@beep/form/core/FormOptions"
  *
@@ -52,7 +53,8 @@ export const ValidateOn = LiteralKit(["change", "blur", "submit"]).pipe(
 /**
  * Which validation event the schema runs on.
  *
- * @example
+ * **Example** (Typing ValidateOn as blur)
+ *
  * ```ts
  * import type { ValidateOn } from "@beep/form/core/FormOptions"
  *
@@ -91,12 +93,14 @@ const buildValidators = <A, I>(
  * Base builder: wires a schema's Standard Schema into TanStack `validators` on
  * the chosen slot, with caller-supplied default values.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `defaultValues` must match the schema's encoded input shape. This is visible
  * for transform schemas such as `S.NumberFromString`: the field stores a
  * string while validation and submit decoding produce a number.
  *
- * @example
+ * **Example** (NumberFromString default values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { makeFormOptions } from "@beep/form/core/FormOptions"
@@ -133,12 +137,14 @@ export const makeFormOptions = <A, I>(
  * constructor defaults and encodes them back to the field/wire shape when not
  * supplied.
  *
- * @remarks
+ * **Details**
+ *
  * Constructor defaults are decoded `Type` values, while TanStack
  * `defaultValues` are encoded form values. This helper performs that encode
  * step so transform schemas can still use schema-first defaults.
  *
- * @example
+ * **Example** (Schema-derived default values)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -170,7 +176,8 @@ export const formOptionsWithDefaults = <A, I>(
  * callback runs. Named for what `onSubmit` receives (decoded value) — contrast
  * {@link formOptionsWithSubmitEffect}.
  *
- * @example
+ * **Example** (Decoded Type in onSubmit)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { formOptionsWithSubmit } from "@beep/form/core/FormOptions"
@@ -209,7 +216,8 @@ export const formOptionsWithSubmit = <A, I>(
  * sanctioned TanStack-to-atom boundary). Named for what `onSubmit` receives (an
  * `Effect`) — contrast {@link formOptionsWithSubmit}.
  *
- * @example
+ * **Example** (Effect-based submit handler)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

@@ -16,7 +16,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Editable, filterable select root built on Base UI's combobox primitive.
  *
- * @example
+ * **Example** (Basic framework combobox)
+ *
  * ```tsx
  * import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from "@beep/ui/components/combobox"
  *
@@ -43,7 +44,8 @@ const Combobox = ComboboxPrimitive.Root;
 /**
  * Current combobox value renderer for custom display or chips.
  *
- * @example
+ * **Example** (Value inside input)
+ *
  * ```tsx
  * import { Combobox, ComboboxInput, ComboboxValue } from "@beep/ui/components/combobox"
  *
@@ -68,7 +70,8 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
 /**
  * Button affordance that opens the combobox popup.
  *
- * @example
+ * **Example** (Custom trigger button)
+ *
  * ```tsx
  * import { Combobox, ComboboxInput, ComboboxTrigger } from "@beep/ui/components/combobox"
  *
@@ -115,7 +118,8 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
 /**
  * Text input wrapper with optional trigger and clear controls.
  *
- * @example
+ * **Example** (Clearable status input)
+ *
  * ```tsx
  * import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from "@beep/ui/components/combobox"
  *
@@ -172,7 +176,8 @@ function ComboboxInput({
 /**
  * Positioned popup surface for combobox options.
  *
- * @example
+ * **Example** (Aligned popup content)
+ *
  * ```tsx
  * import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from "@beep/ui/components/combobox"
  *
@@ -233,7 +238,8 @@ function ComboboxContent({
 /**
  * Scrollable listbox container for combobox items.
  *
- * @example
+ * **Example** (Status option list)
+ *
  * ```tsx
  * import { ComboboxItem, ComboboxList } from "@beep/ui/components/combobox"
  *
@@ -266,7 +272,8 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
 /**
  * Selectable option row with checked-state indicator.
  *
- * @example
+ * **Example** (Single status option)
+ *
  * ```tsx
  * import { ComboboxItem } from "@beep/ui/components/combobox"
  *
@@ -301,7 +308,8 @@ function ComboboxItem({ className, children, ...props }: ComboboxPrimitive.Item.
 /**
  * Option group for sectioning a combobox list.
  *
- * @example
+ * **Example** (Grouped matter options)
+ *
  * ```tsx
  * import { ComboboxGroup, ComboboxItem, ComboboxLabel } from "@beep/ui/components/combobox"
  *
@@ -325,7 +333,8 @@ function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
 /**
  * Muted label for an option group.
  *
- * @example
+ * **Example** (Status group label)
+ *
  * ```tsx
  * import { ComboboxLabel } from "@beep/ui/components/combobox"
  *
@@ -350,7 +359,8 @@ function ComboboxLabel({ className, ...props }: ComboboxPrimitive.GroupLabel.Pro
 /**
  * Collection boundary for combobox items that are rendered outside the list.
  *
- * @example
+ * **Example** (Render function items)
+ *
  * ```tsx
  * import { ComboboxCollection, ComboboxItem } from "@beep/ui/components/combobox"
  *
@@ -377,7 +387,8 @@ function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {
 /**
  * Empty-state row shown when filtering leaves no options.
  *
- * @example
+ * **Example** (No options message)
+ *
  * ```tsx
  * import { ComboboxEmpty } from "@beep/ui/components/combobox"
  *
@@ -405,7 +416,8 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
 /**
  * Divider between combobox option groups.
  *
- * @example
+ * **Example** (Separator before label)
+ *
  * ```tsx
  * import { ComboboxGroup, ComboboxLabel, ComboboxSeparator } from "@beep/ui/components/combobox"
  *
@@ -435,7 +447,8 @@ function ComboboxSeparator({ className, ...props }: ComboboxPrimitive.Separator.
 /**
  * Multi-select chip container that also anchors the popup.
  *
- * @example
+ * **Example** (Multi-select assignee chips)
+ *
  * ```tsx
  * import { Combobox, ComboboxChip, ComboboxChips, ComboboxChipsInput, ComboboxValue } from "@beep/ui/components/combobox"
  *
@@ -477,7 +490,8 @@ function ComboboxChips({
 /**
  * Removable selected value token for multi-select comboboxes.
  *
- * @example
+ * **Example** (Chip without remove)
+ *
  * ```tsx
  * import { ComboboxChip } from "@beep/ui/components/combobox"
  *
@@ -523,7 +537,8 @@ function ComboboxChip({
 /**
  * Inline search input used inside a multi-select chip container.
  *
- * @example
+ * **Example** (Assignee chip input)
+ *
  * ```tsx
  * import { ComboboxChipsInput } from "@beep/ui/components/combobox"
  *
@@ -548,11 +563,13 @@ function ComboboxChipsInput({ className, ...props }: ComboboxPrimitive.Input.Pro
 /**
  * Stable ref for anchoring chip-mode combobox popups to the chips container.
  *
- * @remarks
+ * **Details**
+ *
  * Pass the returned ref to `ComboboxChips` and to `ComboboxContent`'s `anchor`
  * prop so the popup width and position follow the chip input surface.
  *
- * @example
+ * **Example** (Anchored chip combobox)
+ *
  * ```tsx
  * import { Combobox, ComboboxChips, ComboboxChipsInput, ComboboxContent, useComboboxAnchor } from "@beep/ui/components/combobox"
  *

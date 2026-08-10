@@ -2,11 +2,14 @@
  * `@beep/html` — generated HTML AST, validation proofs, policy, and canonical
  * serialization.
  *
+ * **Details**
+ *
  * The root exports the stable boundary contract and namespace views. The full
  * generated element catalog remains available from `@beep/html/Html.model`;
  * specialist schemas are available from their matching explicit subpaths.
  *
- * @example
+ * **Example** (Conform enforce serialize pipeline)
+ *
  * ```ts
  * import {
  *   conform,
@@ -39,12 +42,15 @@ const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPoli
 /**
  * Staged HTML validation facade.
  *
+ * **Details**
+ *
  * `Conformant` admits a structural HTML root and reports HTML-model issues.
  * `Safe` narrows a conformance proof through the canonical output policy. The
  * two stages stay explicit so policy approval can never substitute for tree
  * conformance.
  *
- * @example
+ * **Example** (Conformant then Safe decode)
+ *
  * ```ts
  * import { Fragment, Html } from "@beep/html"
  * import { Effect } from "effect"
@@ -72,7 +78,8 @@ export const Html = {
 /**
  * Package version.
  *
- * @example
+ * **Example** (Read package version constant)
+ *
  * ```ts
  * import { VERSION } from "@beep/html"
  *

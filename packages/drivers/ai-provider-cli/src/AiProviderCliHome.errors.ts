@@ -25,7 +25,8 @@ const AiProviderCliHomeFsOperationBase = LiteralKit([
 /**
  * Filesystem operation names performed by shadow-home maintenance.
  *
- * @example
+ * **Example** (Decode symlink operation name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliHomeFsOperation } from "@beep/ai-provider-cli"
@@ -48,7 +49,8 @@ export const AiProviderCliHomeFsOperation = AiProviderCliHomeFsOperationBase.pip
 /**
  * Type for a shadow-home filesystem operation name.
  *
- * @example
+ * **Example** (Annotate readLink operation type)
+ *
  * ```ts
  * import type { AiProviderCliHomeFsOperation } from "@beep/ai-provider-cli"
  *
@@ -65,7 +67,8 @@ export type AiProviderCliHomeFsOperation = typeof AiProviderCliHomeFsOperation.T
 /**
  * Filesystem failure raised while maintaining a provider CLI home layout.
  *
- * @example
+ * **Example** (Construct filesystem error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliHomeFileSystemError } from "@beep/ai-provider-cli"
@@ -130,7 +133,8 @@ export class AiProviderCliHomeFileSystemError extends TaggedErrorClass<AiProvide
 /**
  * Failure raised when the shadow home path equals the shared home path.
  *
- * @example
+ * **Example** (Construct path conflict error)
+ *
  * ```ts
  * import { AiProviderCliHomePathConflictError } from "@beep/ai-provider-cli"
  *
@@ -169,7 +173,8 @@ export class AiProviderCliHomePathConflictError extends TaggedErrorClass<AiProvi
 /**
  * Failure raised when a non-symlink entry blocks a required shadow-home link.
  *
- * @example
+ * **Example** (Construct entry conflict error)
+ *
  * ```ts
  * import { AiProviderCliHomeEntryConflictError } from "@beep/ai-provider-cli"
  *
@@ -220,7 +225,8 @@ export class AiProviderCliHomeEntryConflictError extends TaggedErrorClass<AiProv
 /**
  * Failure raised when a private credential entry resolves to a symlink.
  *
- * @example
+ * **Example** (Construct private symlink error)
+ *
  * ```ts
  * import { AiProviderCliHomePrivateEntrySymlinkError } from "@beep/ai-provider-cli"
  *
@@ -267,7 +273,8 @@ export class AiProviderCliHomePrivateEntrySymlinkError extends TaggedErrorClass<
 /**
  * Union of all provider CLI home-layout failures.
  *
- * @example
+ * **Example** (Check membership in error union)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AiProviderCliHomeError, AiProviderCliHomePathConflictError } from "@beep/ai-provider-cli"
@@ -297,7 +304,8 @@ export const AiProviderCliHomeError = S.Union([
 /**
  * Type for any provider CLI home-layout failure.
  *
- * @example
+ * **Example** (Type annotate home error)
+ *
  * ```ts
  * import type { AiProviderCliHomeError } from "@beep/ai-provider-cli"
  * import { AiProviderCliHomePathConflictError } from "@beep/ai-provider-cli"

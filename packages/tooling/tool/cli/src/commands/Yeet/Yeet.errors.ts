@@ -26,13 +26,15 @@ type YeetCommandErrorOptions =
 /**
  * Operational error raised by the yeet command.
  *
- * @example
+ * **Example** (Make yeet command error)
+ *
  * ```ts
  * import { YeetCommandError } from "@beep/repo-cli/commands/Yeet"
  *
  * const error = YeetCommandError.make({ message: "failed" })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

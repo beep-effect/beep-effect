@@ -9,7 +9,8 @@
 /**
  * Public law-practice use-case exports.
  *
- * @example
+ * **Example** (List public export keys)
+ *
  * ```ts
  * import * as LawPracticeUseCases from "@beep/law-practice-use-cases"
  *

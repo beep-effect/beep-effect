@@ -38,7 +38,8 @@ export * from "./UsptoTools.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log version)
+ *
  * ```ts
  * import { VERSION } from "@beep/uspto-mcp"
  *

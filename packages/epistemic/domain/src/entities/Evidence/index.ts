@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Importing Evidence entity)
+ *
  * ```ts
  * import { Evidence } from "@beep/epistemic-domain/entities/Evidence"
  *

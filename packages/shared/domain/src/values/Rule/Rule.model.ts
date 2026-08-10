@@ -42,7 +42,8 @@ const RuleResource = S.NonEmptyString.check(
 /**
  * Rule-effect literal schema used as the discriminator for rule decisions.
  *
- * @example
+ * **Example** (Decode allow effect)
+ *
  * ```ts
  * import { Effect as RuleEffect } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -69,7 +70,8 @@ export const Effect = EffectBase.pipe(
 /**
  * Companion namespace for {@link Effect}.
  *
- * @example
+ * **Example** (Check encoded allow value)
+ *
  * ```ts
  * import { Effect as RuleEffect } from "@beep/shared-domain/values/Rule/Rule.model"
  *
@@ -85,7 +87,8 @@ export declare namespace Effect {
   /**
    * Companion Encoded type for {@link Effect}.
    *
-   * @example
+   * **Example** (Assign encoded effect)
+   *
    * ```ts
    * import type { Effect } from "@beep/shared-domain/values/Rule/Rule.model"
    *
@@ -103,7 +106,8 @@ export declare namespace Effect {
 /**
  * Shared action and resource fields for rule decision variants.
  *
- * @example
+ * **Example** (Decode base rule fields)
+ *
  * ```ts
  * import { Base } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -132,7 +136,8 @@ export class Base extends S.Class<Base>($I`Base`)(
 /**
  * Rule variant that grants the requested action.
  *
- * @example
+ * **Example** (Decode allow rule)
+ *
  * ```ts
  * import { Allow } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -161,7 +166,8 @@ export class Allow extends Base.extend<Allow>($I`Allow`)(
 /**
  * Rule variant that rejects the requested action.
  *
- * @example
+ * **Example** (Decode deny rule)
+ *
  * ```ts
  * import { Deny } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -190,7 +196,8 @@ export class Deny extends Base.extend<Deny>($I`Deny`)(
 /**
  * Rule variant that requires an additional decision before proceeding.
  *
- * @example
+ * **Example** (Decode ask rule)
+ *
  * ```ts
  * import { Ask } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -219,7 +226,8 @@ export class Ask extends Base.extend<Ask>($I`Ask`)(
 /**
  * Tagged union schema for allow, deny, and ask rule decisions.
  *
- * @example
+ * **Example** (Decode rule union)
+ *
  * ```ts
  * import { Rule } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -247,7 +255,8 @@ export const Rule = S.Union([Allow, Deny, Ask]).pipe(
 /**
  * Companion type for {@link Rule}.
  *
- * @example
+ * **Example** (Extract rule effect type)
+ *
  * ```ts
  * import type { Rule } from "@beep/shared-domain/values/Rule/Rule.model"
  *
@@ -266,7 +275,8 @@ export type Rule = typeof Rule.Type;
 /**
  * Array schema for ordered rule effects.
  *
- * @example
+ * **Example** (Decode ordered ruleset)
+ *
  * ```ts
  * import { Ruleset } from "@beep/shared-domain/values/Rule/Rule.model"
  * import * as S from "effect/Schema"
@@ -292,7 +302,8 @@ export const Ruleset = Rule.pipe(
 /**
  * Type for {@link Ruleset}.
  *
- * @example
+ * **Example** (Extract ruleset effect type)
+ *
  * ```ts
  * import type { Ruleset } from "@beep/shared-domain/values/Rule/Rule.model"
  *

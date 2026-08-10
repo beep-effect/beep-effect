@@ -22,7 +22,8 @@ const changeTargetLabel = (change: ChangeOperation): string =>
 /**
  * Applied change history and redo position for the ontology session.
  *
- * @example
+ * **Example** (Import OntologyChangeLogRegion)
+ *
  * ```tsx
  * import { OntologyChangeLogRegion } from "@beep/ontology-ui"
  *

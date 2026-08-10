@@ -16,14 +16,15 @@ const $I = $LawPracticeDomainId.create("values/AnnotationCitation/AnnotationCita
 /**
  * Annotation citation (#581): American Law Reports (A.L.R.) annotations.
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and tags itself with the
  * `annotation` discriminant. A.L.R. annotations look like case citations
  * (100 A.L.R.2d 1234) but are secondary authority, so the series, volume, and
  * page that identify the annotation are carried as required own fields.
  *
- * **Example**
+ * **Example** (Constructing an AnnotationCitation)
  *
- * @example
  * ```ts
  * import { AnnotationCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -88,7 +89,8 @@ export class AnnotationCitation extends S.Class<AnnotationCitation>($I`Annotatio
 /**
  * Companion namespace for `AnnotationCitation`.
  *
- * @example
+ * **Example** (Accessing Encoded type field)
+ *
  * ```ts
  * import type { AnnotationCitation } from "@beep/law-practice-domain"
  *
@@ -103,9 +105,8 @@ export declare namespace AnnotationCitation {
   /**
    * Wire-encoded representation of a decoded {@link AnnotationCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing the Encoded type)
    *
-   * @example
    * ```ts
    * import type { AnnotationCitation } from "@beep/law-practice-domain"
    *

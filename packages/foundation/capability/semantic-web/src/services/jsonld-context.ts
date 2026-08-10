@@ -30,7 +30,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * JSON-LD context error reason.
  *
- * @example
+ * **Example** (Decode unknown term reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -52,7 +53,8 @@ export const JsonLdContextErrorReason = LiteralKit(["unknownTerm", "policyViolat
 /**
  * Type for {@link JsonLdContextErrorReason}.
  *
- * @example
+ * **Example** (Type-check unknown term reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdContextErrorReason } from "@beep/semantic-web/services/jsonld-context"
@@ -69,7 +71,8 @@ export type JsonLdContextErrorReason = typeof JsonLdContextErrorReason.Type;
 /**
  * Typed JSON-LD context service error.
  *
- * @example
+ * **Example** (Make context error instance)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as O from "effect/Option"
@@ -102,7 +105,8 @@ export class JsonLdContextError extends TaggedErrorClass<JsonLdContextError>($I`
 /**
  * Normalize JSON-LD context request.
  *
- * @example
+ * **Example** (Decode normalize context request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -138,7 +142,8 @@ export class NormalizeJsonLdContextRequest extends S.Class<NormalizeJsonLdContex
 /**
  * Expand JSON-LD term request.
  *
- * @example
+ * **Example** (Decode expand term request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -173,7 +178,8 @@ export class ExpandJsonLdTermRequest extends S.Class<ExpandJsonLdTermRequest>($I
 /**
  * Expand JSON-LD term result.
  *
- * @example
+ * **Example** (Decode expand term result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -203,7 +209,8 @@ export class ExpandJsonLdTermResult extends S.Class<ExpandJsonLdTermResult>($I`E
 /**
  * Compact JSON-LD IRI request.
  *
- * @example
+ * **Example** (Decode compact IRI request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -238,7 +245,8 @@ export class CompactJsonLdIriRequest extends S.Class<CompactJsonLdIriRequest>($I
 /**
  * Compact JSON-LD IRI result.
  *
- * @example
+ * **Example** (Decode compact IRI result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -268,7 +276,8 @@ export class CompactJsonLdIriResult extends S.Class<CompactJsonLdIriResult>($I`C
 /**
  * Merge JSON-LD contexts request.
  *
- * @example
+ * **Example** (Decode merge contexts request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -301,7 +310,8 @@ export class MergeJsonLdContextsRequest extends S.Class<MergeJsonLdContextsReque
 /**
  * JSON-LD context service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { JsonLdContextServiceShape } from "@beep/semantic-web/services/jsonld-context"
  *
@@ -309,8 +319,8 @@ export class MergeJsonLdContextsRequest extends S.Class<MergeJsonLdContextsReque
  * console.log(acceptJsonLdContextServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface JsonLdContextServiceShape {
   readonly compactIri: (request: CompactJsonLdIriRequest) => Effect.Effect<CompactJsonLdIriResult, JsonLdContextError>;
@@ -322,7 +332,8 @@ export interface JsonLdContextServiceShape {
 /**
  * JSON-LD context service tag.
  *
- * @example
+ * **Example** (Provide expandTerm service mock)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

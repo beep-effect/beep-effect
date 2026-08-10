@@ -31,7 +31,8 @@ const byWorkspacePathLengthDescending: Order.Order<readonly [string, string]> = 
 /**
  * Create a resolver from absolute source file paths to owning workspace names.
  *
- * @example
+ * **Example** (Create workspace owner resolver)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { createWorkspaceOwnerResolver } from "@beep/repo-cli/internal/tsmorph/OwnerResolver"
@@ -42,6 +43,7 @@ const byWorkspacePathLengthDescending: Order.Order<readonly [string, string]> = 
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category factories
  * @since 0.0.0
  */

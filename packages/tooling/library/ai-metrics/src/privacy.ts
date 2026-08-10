@@ -44,13 +44,15 @@ const OptionalNonEmptyTrimmed = S.optionalKey(NonEmptyTrimmedStringInput).pipe(
 /**
  * Local fallback salt used only for smoke-mode private identifier hashes.
  *
- * @example
+ * **Example** (Smoke salt insecure check)
+ *
  * ```ts
  * import { AI_METRICS_LOCAL_INSECURE_HASH_SALT } from "@beep/repo-ai-metrics"
  *
  * const isSmokeSalt = AI_METRICS_LOCAL_INSECURE_HASH_SALT.includes("insecure")
  * console.log(isSmokeSalt)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -70,11 +72,13 @@ const countMatches = (pattern: RegExp, content: string): number =>
 /**
  * Whether private identifier hashes used an operator-provided salt or a local smoke fallback.
  *
- * @example
+ * **Example** (Enum provided status value)
+ *
  * ```ts
  * import { AiMetricsHashSaltStatus } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsHashSaltStatus.Enum.provided)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -87,12 +91,14 @@ export const AiMetricsHashSaltStatus = LiteralKit(["provided", "insecure_default
 /**
  * Runtime type for {@link AiMetricsHashSaltStatus}.
  *
- * @example
+ * **Example** (Assign provided status type)
+ *
  * ```ts
  * import type { AiMetricsHashSaltStatus } from "@beep/repo-ai-metrics"
  * const status: AiMetricsHashSaltStatus = "provided"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -101,7 +107,8 @@ export type AiMetricsHashSaltStatus = typeof AiMetricsHashSaltStatus.Type;
 /**
  * Redaction proof for text that crossed the raw-transcript boundary.
  *
- * @example
+ * **Example** (Make redaction proof result)
+ *
  * ```ts
  * import { AiMetricsRedactionResult } from "@beep/repo-ai-metrics"
  *
@@ -115,6 +122,7 @@ export type AiMetricsHashSaltStatus = typeof AiMetricsHashSaltStatus.Type;
  * })
  * console.log(redaction.safeForDerivedUi)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -135,7 +143,8 @@ export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>(
 /**
  * Hash-only envelope for a raw transcript event line.
  *
- * @example
+ * **Example** (Make raw event envelope)
+ *
  * ```ts
  * import { AiMetricsRawEventEnvelope } from "@beep/repo-ai-metrics"
  *
@@ -148,6 +157,7 @@ export class AiMetricsRedactionResult extends S.Class<AiMetricsRedactionResult>(
  * })
  * console.log(envelope.sourceRole)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -172,7 +182,8 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
 /**
  * Redacted transcript summary safe for derived tables, dashboards, and OTLP attributes.
  *
- * @example
+ * **Example** (Make sanitized transcript)
+ *
  * ```ts
  * import { AiMetricsSanitizedTranscript } from "@beep/repo-ai-metrics"
  *
@@ -187,6 +198,7 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
  * })
  * console.log(sanitized.eventNames)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -223,7 +235,8 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
 /**
  * Result produced by the P1 privacy proof command.
  *
- * @example
+ * **Example** (Make privacy check result)
+ *
  * ```ts
  * import {
  *   AiMetricsPrivacyCheckResult,
@@ -255,6 +268,7 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
  * })
  * console.log(result.redaction.safeForDerivedUi)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -274,7 +288,8 @@ export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckRe
 /**
  * Error raised by AI metrics privacy helpers.
  *
- * @example
+ * **Example** (Make privacy error)
+ *
  * ```ts
  * import { AiMetricsPrivacyError } from "@beep/repo-ai-metrics"
  *
@@ -284,6 +299,7 @@ export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckRe
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -364,13 +380,15 @@ const encodePrivacyCheckJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsP
 /**
  * Resolve the effective private hash salt value.
  *
- * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
- * @returns The salt value used before hashing private identifiers.
- * @example
+ * **Example** (Resolve operator salt value)
+ *
  * ```ts
  * import { resolveAiMetricsHashSaltValue } from "@beep/repo-ai-metrics"
  * console.log(resolveAiMetricsHashSaltValue("salt"))
  * ```
+ *
+ * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
+ * @returns The salt value used before hashing private identifiers.
  * @category utilities
  * @since 0.0.0
  */
@@ -380,13 +398,15 @@ export const resolveAiMetricsHashSaltValue = (hashSalt: string | undefined): str
 /**
  * Resolve the effective private hash salt status.
  *
- * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
- * @returns Whether hashing used an operator salt or the local insecure fallback.
- * @example
+ * **Example** (Resolve salt status provided)
+ *
  * ```ts
  * import { resolveAiMetricsHashSaltStatus } from "@beep/repo-ai-metrics"
  * console.log(resolveAiMetricsHashSaltStatus("salt"))
  * ```
+ *
+ * @param hashSalt - Operator-provided salt, or an empty value for local smoke mode.
+ * @returns Whether hashing used an operator salt or the local insecure fallback.
  * @category utilities
  * @since 0.0.0
  */
@@ -398,8 +418,8 @@ export const resolveAiMetricsHashSaltStatus = (hashSalt: string | undefined): Ai
 /**
  * Compute a deterministic public SHA-256 digest for non-private content identity.
  *
- * @effects Reads the Web Crypto implementation through `globalThis.crypto.subtle`.
- * @example
+ * **Example** (Hash public text digest)
+ *
  * ```ts
  * import { hashPublicTextSha256 } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -407,6 +427,8 @@ export const resolveAiMetricsHashSaltStatus = (hashSalt: string | undefined): Ai
  * const digest = Effect.runPromise(hashPublicTextSha256("visible benchmark id"))
  * console.log(digest)
  * ```
+ *
+ * @effects Reads the Web Crypto implementation through `globalThis.crypto.subtle`.
  * @category utilities
  * @since 0.0.0
  */
@@ -426,8 +448,8 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMe
 /**
  * Compute a salted SHA-256 digest for private identifiers such as local paths and session ids.
  *
- * @effects Reads the Web Crypto implementation through `globalThis.crypto.subtle`.
- * @example
+ * **Example** (Hash private path identifier)
+ *
  * ```ts
  * import { hashPrivateIdentifier } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -435,6 +457,8 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<string, AiMe
  * const pathHash = Effect.runPromise(hashPrivateIdentifier("/home/me/.codex/session.jsonl", "salt"))
  * console.log(pathHash)
  * ```
+ *
+ * @effects Reads the Web Crypto implementation through `globalThis.crypto.subtle`.
  * @category utilities
  * @since 0.0.0
  */
@@ -550,8 +574,8 @@ const pathRoleFor = (relativePath: string): AiMetricsSourceRole => {
 /**
  * Derive privacy-safe source attribution from local transcript metadata.
  *
- * @effects Reads `globalThis.crypto.subtle` to hash private source identifiers and thread metadata.
- * @example
+ * **Example** (Derive source attribution)
+ *
  * ```ts
  * import { makeAiMetricsSourceAttribution } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -566,6 +590,8 @@ const pathRoleFor = (relativePath: string): AiMetricsSourceRole => {
  * )
  * console.log(attribution)
  * ```
+ *
+ * @effects Reads `globalThis.crypto.subtle` to hash private source identifiers and thread metadata.
  * @category constructors
  * @since 0.0.0
  */
@@ -625,13 +651,15 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
 /**
  * Redact secret-shaped text before any diagnostic rendering.
  *
- * @param text - Transcript or diagnostic text that may contain secret-shaped values.
- * @returns Text with secret-shaped values replaced by redaction markers.
- * @example
+ * **Example** (Redact API key text)
+ *
  * ```ts
  * import { redactAiMetricsSensitiveText } from "@beep/repo-ai-metrics"
  * console.log(redactAiMetricsSensitiveText("OPENAI_API_KEY=sk-testfixture"))
  * ```
+ *
+ * @param text - Transcript or diagnostic text that may contain secret-shaped values.
+ * @returns Text with secret-shaped values replaced by redaction markers.
  * @category utilities
  * @since 0.0.0
  */
@@ -718,8 +746,8 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
 /**
  * Build a sanitized transcript projection from an ingest summary and raw JSONL text.
  *
- * @effects Reads `globalThis.crypto.subtle` while hashing transcript source and event-attribution identifiers.
- * @example
+ * **Example** (Build sanitized transcript)
+ *
  * ```ts
  * import { TranscriptIngestSummary, makeSanitizedTranscript } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -740,6 +768,8 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
  * )
  * console.log(sanitized)
  * ```
+ *
+ * @effects Reads `globalThis.crypto.subtle` while hashing transcript source and event-attribution identifiers.
  * @category constructors
  * @since 0.0.0
  */
@@ -795,8 +825,8 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
 /**
  * Build the P1 privacy proof payload for one transcript.
  *
- * @effects Reads `globalThis.crypto.subtle` while hashing the transcript path, source attribution, and event metadata.
- * @example
+ * **Example** (Build privacy proof payload)
+ *
  * ```ts
  * import { TranscriptIngestSummary, makeAiMetricsPrivacyCheckResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -817,6 +847,8 @@ export const makeSanitizedTranscript = Effect.fn("AiMetrics.makeSanitizedTranscr
  * )
  * console.log(proof)
  * ```
+ *
+ * @effects Reads `globalThis.crypto.subtle` while hashing the transcript path, source attribution, and event metadata.
  * @category constructors
  * @since 0.0.0
  */
@@ -851,8 +883,8 @@ export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetric
 /**
  * Render a privacy check result as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsPrivacyError` if the payload cannot be encoded.
- * @example
+ * **Example** (Encode privacy check JSON)
+ *
  * ```ts
  * import {
  *   AiMetricsPrivacyCheckResult,
@@ -889,6 +921,8 @@ export const makeAiMetricsPrivacyCheckResult = Effect.fn("AiMetrics.makeAiMetric
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsPrivacyError` if the payload cannot be encoded.
  * @category utilities
  * @since 0.0.0
  */

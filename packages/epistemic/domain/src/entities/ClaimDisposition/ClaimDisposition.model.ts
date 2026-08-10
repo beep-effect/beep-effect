@@ -27,7 +27,8 @@ const ClaimDispositionReason = S.NonEmptyString.pipe(
  * deliberately refused. The violations that blocked admission are stored verbatim
  * so the refusal can be re-read without re-running the gate.
  *
- * @example
+ * **Example** (Decoding a rejected disposition)
+ *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

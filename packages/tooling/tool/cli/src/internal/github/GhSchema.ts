@@ -21,12 +21,14 @@ const $I = $RepoCliId.create("internal/github/GhSchema");
 /**
  * GitHub actor (author) metadata returned by `gh`.
  *
- * @example
+ * **Example** (Make actor from login)
+ *
  * ```ts
  * import { GhActor } from "@beep/repo-cli/internal/github"
  *
  * console.log(GhActor.make({ login: "octocat" }).login)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,12 +44,14 @@ export class GhActor extends S.Class<GhActor>($I`GhActor`)(
 /**
  * GitHub GraphQL connection pagination metadata.
  *
- * @example
+ * **Example** (Make page info fields)
+ *
  * ```ts
  * import { GhPageInfo } from "@beep/repo-cli/internal/github"
  *
  * console.log(GhPageInfo.make({ endCursor: null, hasNextPage: false }).hasNextPage)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -64,7 +68,8 @@ export class GhPageInfo extends S.Class<GhPageInfo>($I`GhPageInfo`)(
 /**
  * A pull request comment returned by GitHub GraphQL.
  *
- * @example
+ * **Example** (Make comment with author)
+ *
  * ```ts
  * import { GhActor, GhComment } from "@beep/repo-cli/internal/github"
  *
@@ -76,6 +81,7 @@ export class GhPageInfo extends S.Class<GhPageInfo>($I`GhPageInfo`)(
  * })
  * console.log(comment.body)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -95,19 +101,23 @@ export class GhComment extends S.Class<GhComment>($I`GhComment`)(
 /**
  * Unified `gh pr view` metadata.
  *
+ * **Details**
+ *
  * Decodes both `gh pr view` shapes used across Yeet: the monitor view
  * (`number,headRefName,state`) and the closeout view
  * (`number,headRefName,state,url,headRefOid,isDraft`). `headRefOid`, `isDraft`,
  * and `url` are optional so the narrower monitor payload also decodes; callers
  * that request the wider `--json` set always receive them.
  *
- * @example
+ * **Example** (Make narrow monitor view)
+ *
  * ```ts
  * import { GhPrView } from "@beep/repo-cli/internal/github"
  *
  * const view = GhPrView.make({ headRefName: "feature", number: 42, state: "OPEN" })
  * console.log(view.number)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -14,7 +14,8 @@ const $I = $LawPracticeDomainId.create("values/PatentOffice/PatentOffice");
 /**
  * WIPO ST.16 / office logo + flag metadata, used for jurisdiction-aware UI.
  *
- * @example
+ * **Example** (Create empty Metadata instance)
+ *
  * ```ts
  * import { Metadata } from "@beep/law-practice-domain"
  *

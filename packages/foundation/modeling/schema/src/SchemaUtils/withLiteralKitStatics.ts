@@ -20,7 +20,8 @@ type LiteralKitStatics<L extends A.NonEmptyReadonlyArray<SchemaAST.LiteralValue>
  * `Enum`, `Options`, `HashSet`, and `pickOptions`. Schema annotations rebuild
  * the schema, so those helpers need to be copied back onto the annotated value.
  *
- * @example
+ * **Example** (Reattach statics after pipe)
+ *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  * import { withLiteralKitStatics } from "@beep/schema/SchemaUtils/withLiteralKitStatics"

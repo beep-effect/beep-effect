@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/EmailAlias/EmailAlias.mod
 /**
  * Experimental schema anchor for alternate email addresses on Box user accounts.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and re-encode empty)
+ *
  * ```ts
  * import { EmailAlias } from "@beep/box/experimental/domain/entities/EmailAlias/EmailAlias.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class EmailAlias extends S.Class<EmailAlias>($I`EmailAlias`)(
 /**
  * Type-level companion namespace for {@link EmailAlias} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty)
+ *
  * ```ts
  * import { EmailAlias } from "@beep/box/experimental/domain/entities/EmailAlias/EmailAlias.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace EmailAlias {
   /**
    * Encoded payload accepted by the {@link EmailAlias} entity schema.
    *
-   * @example
+   * **Example** (Encode typed Encoded payload)
+   *
    * ```ts
    * import { EmailAlias } from "@beep/box/experimental/domain/entities/EmailAlias/EmailAlias.model";
    * import * as S from "effect/Schema";

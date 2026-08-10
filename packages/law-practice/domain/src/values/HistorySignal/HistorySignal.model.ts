@@ -13,6 +13,8 @@ const $I = $LawPracticeDomainId.create("values/HistorySignal/HistorySignal.model
 /**
  * Normalized subsequent-history signal classification.
  *
+ * **Details**
+ *
  * Maps variant spellings (`aff'd`, `affirmed`) onto a single canonical form so
  * downstream consumers compare one value per disposition. Federal-style
  * subsequent history (`affirmed`, `reversed`, `cert_denied`, ...) sits
@@ -27,9 +29,8 @@ const $I = $LawPracticeDomainId.create("values/HistorySignal/HistorySignal.model
  * for per-literal guards, and `HistorySignal.Options` for the full literal
  * list.
  *
- * **Example**
+ * **Example** (Decode Enum and guards)
  *
- * @example
  * ```ts
  * import { HistorySignal } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -94,9 +95,8 @@ export const HistorySignal = LiteralKit([
  * `"affirmed" | "reversed" | "cert_denied" | ...`, spanning federal-style history, Texas Greenbook
  * writ/petition history, and California review history.
  *
- * **Example**
+ * **Example** (Typed signal assignment)
  *
- * @example
  * ```ts
  * import type { HistorySignal } from "@beep/law-practice-domain"
  *

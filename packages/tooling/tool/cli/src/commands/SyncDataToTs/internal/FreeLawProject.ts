@@ -55,7 +55,8 @@ export const extractArchiveTextEntries = (options: {
     let openEntries = 0;
     let parserEnded = false;
     let completed = false;
-    const matchingSuffix = (path: string) => A.findFirst(options.pathSuffixes, (suffix) => Str.endsWith(suffix)(path));
+    const matchingSuffix = (path: string) =>
+      A.findFirst(options.pathSuffixes, (suffix) => path === suffix || Str.endsWith(`/${suffix}`)(path));
     const parser = new Parser({
       strict: true,
       filter: (path) => matchingSuffix(path)._tag === "Some",

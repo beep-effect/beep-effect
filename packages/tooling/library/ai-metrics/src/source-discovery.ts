@@ -34,11 +34,13 @@ const DEFAULT_MAX_FILES = 200;
 /**
  * P1 source discovery availability status.
  *
- * @example
+ * **Example** (Log available status enum)
+ *
  * ```ts
  * import { AiMetricsSourceStatus } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsSourceStatus.Enum.available)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,12 +53,14 @@ export const AiMetricsSourceStatus = LiteralKit(["available", "missing", "unavai
 /**
  * Runtime type for {@link AiMetricsSourceStatus}.
  *
- * @example
+ * **Example** (Assign available status type)
+ *
  * ```ts
  * import type { AiMetricsSourceStatus } from "@beep/repo-ai-metrics"
  * const status: AiMetricsSourceStatus = "available"
  * console.log(status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,7 +69,8 @@ export type AiMetricsSourceStatus = typeof AiMetricsSourceStatus.Type;
 /**
  * Input for local AI metrics source discovery.
  *
- * @example
+ * **Example** (Make discovery input object)
+ *
  * ```ts
  * import { AiMetricsSourceDiscoveryInput } from "@beep/repo-ai-metrics"
  *
@@ -77,6 +82,7 @@ export type AiMetricsSourceStatus = typeof AiMetricsSourceStatus.Type;
  * })
  * console.log(input.target)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -113,7 +119,8 @@ export class AiMetricsSourceDiscoveryInput extends S.Class<AiMetricsSourceDiscov
 /**
  * One transcript or source metadata file discovered for AI metrics.
  *
- * @example
+ * **Example** (Make transcript file metadata)
+ *
  * ```ts
  * import { AiMetricsDiscoveredTranscriptFile } from "@beep/repo-ai-metrics"
  *
@@ -127,6 +134,7 @@ export class AiMetricsSourceDiscoveryInput extends S.Class<AiMetricsSourceDiscov
  * })
  * console.log(file.sizeBytes)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -155,7 +163,8 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
 /**
  * Source-level discovery summary.
  *
- * @example
+ * **Example** (Make missing source summary)
+ *
  * ```ts
  * import { AiMetricsDiscoveredSource } from "@beep/repo-ai-metrics"
  *
@@ -168,6 +177,7 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
  * })
  * console.log(source.fileCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -205,7 +215,8 @@ export class AiMetricsDiscoveredSource extends S.Class<AiMetricsDiscoveredSource
 /**
  * Complete P1 source discovery result.
  *
- * @example
+ * **Example** (Make empty discovery result)
+ *
  * ```ts
  * import { AiMetricsSourceDiscoveryResult } from "@beep/repo-ai-metrics"
  *
@@ -222,6 +233,7 @@ export class AiMetricsDiscoveredSource extends S.Class<AiMetricsDiscoveredSource
  * })
  * console.log(result.hashSaltStatus)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -249,7 +261,8 @@ export class AiMetricsSourceDiscoveryResult extends S.Class<AiMetricsSourceDisco
 /**
  * Error raised by source discovery.
  *
- * @example
+ * **Example** (Make discovery error instance)
+ *
  * ```ts
  * import { AiMetricsSourceDiscoveryError } from "@beep/repo-ai-metrics"
  *
@@ -259,6 +272,7 @@ export class AiMetricsSourceDiscoveryResult extends S.Class<AiMetricsSourceDisco
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -598,12 +612,8 @@ const discoverOpenClawSource = Effect.fn("AiMetrics.discoverOpenClawSource")(fun
 /**
  * Discover local AI metrics transcript sources for the smoke target.
  *
- * @effects
- * - Stats configured Codex, Claude, and OpenClaw source roots.
- * - Recursively scans JSONL transcript files up to `maxFiles`.
- * - Reads Codex session metadata only far enough to derive source attribution.
- * - Hashes private local paths and session identifiers before returning results.
- * @example
+ * **Example** (Discover sources with Effect)
+ *
  * ```ts
  * import { AiMetricsSourceDiscoveryInput, discoverAiMetricsSources } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
@@ -617,6 +627,12 @@ const discoverOpenClawSource = Effect.fn("AiMetrics.discoverOpenClawSource")(fun
  * ).pipe(Effect.provide(NodeServices.layer))
  * console.log(program)
  * ```
+ *
+ * @effects
+ * - Stats configured Codex, Claude, and OpenClaw source roots.
+ * - Recursively scans JSONL transcript files up to `maxFiles`.
+ * - Reads Codex session metadata only far enough to derive source attribution.
+ * - Hashes private local paths and session identifiers before returning results.
  * @category services
  * @since 0.0.0
  */
@@ -669,7 +685,8 @@ export const discoverAiMetricsSources = Effect.fn("AiMetrics.discoverAiMetricsSo
 /**
  * Render a source discovery result as JSON.
  *
- * @example
+ * **Example** (Render discovery result JSON)
+ *
  * ```ts
  * import { AiMetricsSourceDiscoveryResult, sourceDiscoveryToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -691,6 +708,7 @@ export const discoverAiMetricsSources = Effect.fn("AiMetrics.discoverAiMetricsSo
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

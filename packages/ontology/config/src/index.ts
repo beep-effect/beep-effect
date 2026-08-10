@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/ontology-config`.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-config"
  *

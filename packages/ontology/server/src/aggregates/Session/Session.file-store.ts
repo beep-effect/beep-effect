@@ -197,11 +197,14 @@ const resolveWritePath = (
 /**
  * Build the FileSystem-backed ontology file-store port implementation.
  *
- * @remarks The supplied ontology server configuration must name an existing
+ * **Gotchas**
+ *
+ * The supplied ontology server configuration must name an existing
  * directory. Requests accept only traversal-safe root-relative paths ending in
  * lower-case `.ttl`.
  *
- * @example
+ * **Example** (Build filesystem file store)
+ *
  * ```ts
  * import { OntologyConfig, OntologyServerConfig } from "@beep/ontology-config/server"
  * import { makeFileSystemOntologyFileStore } from "@beep/ontology-server/aggregates/Session"

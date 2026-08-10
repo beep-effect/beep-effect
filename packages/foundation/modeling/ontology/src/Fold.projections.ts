@@ -29,7 +29,8 @@ import type {
 /**
  * JSON-LD term binding emitted into projected contexts.
  *
- * @example
+ * **Example** (Typed term binding)
+ *
  * ```ts
  * import type { JsonLdTerm } from "@beep/ontology"
  *
@@ -52,7 +53,8 @@ export type JsonLdTerm =
 /**
  * JSON-LD context record emitted by {@link toContext}.
  *
- * @example
+ * **Example** (Vocab context record)
+ *
  * ```ts
  * import type { JsonLdContext } from "@beep/ontology"
  *
@@ -68,7 +70,8 @@ export type JsonLdContext = R.ReadonlyRecord<string, JsonLdTerm>;
 /**
  * JSON-LD node value: an `@id` reference or a typed `@value` literal.
  *
- * @example
+ * **Example** (Id reference value)
+ *
  * ```ts
  * import type { JsonLdNodeValue } from "@beep/ontology"
  *
@@ -90,7 +93,8 @@ export type JsonLdNodeValue =
 /**
  * JSON-LD graph node emitted by {@link toJsonLd}.
  *
- * @example
+ * **Example** (Graph node shape)
+ *
  * ```ts
  * import type { JsonLdNode } from "@beep/ontology"
  *
@@ -110,7 +114,8 @@ export type JsonLdNode = {
 /**
  * JSON-LD document emitted by {@link toJsonLd}.
  *
- * @example
+ * **Example** (Empty document shell)
+ *
  * ```ts
  * import type { JsonLdDocument } from "@beep/ontology"
  *
@@ -198,10 +203,13 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
 /**
  * Project the JSON-LD `@context` for an assembled ontology.
  *
+ * **Details**
+ *
  * The context derives entirely from assembled annotations: every class name
  * and predicate key becomes a term entry, and core prefixes are always bound.
  *
- * @example
+ * **Example** (Context from folded ontology)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toContext } from "@beep/ontology"
@@ -354,10 +362,13 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
 /**
  * Project an assembled ontology into a bounded JSON-LD document.
  *
+ * **Details**
+ *
  * Reverse-marked predicates emit under `@reverse`; class nodes carry their
  * SKOS classification beside `rdfs:Class` when marked.
  *
- * @example
+ * **Example** (Document from folded ontology)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toJsonLd } from "@beep/ontology"
@@ -594,10 +605,13 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
 /**
  * Project an assembled ontology into deterministic Turtle.
  *
+ * **Details**
+ *
  * Owned locals emit as prefixed names only when PN_LOCAL-safe, otherwise the
  * writer falls back to full IRI references; literals are escaped.
  *
- * @example
+ * **Example** (Turtle from folded ontology)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toTurtle } from "@beep/ontology"

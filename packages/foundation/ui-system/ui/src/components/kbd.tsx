@@ -10,7 +10,8 @@ import type React from "react";
 /**
  * Kbd component.
  *
- * @example
+ * **Example** (Import Kbd component)
+ *
  * ```tsx
  * import { Kbd } from "@beep/ui/components/kbd"
  *
@@ -36,7 +37,8 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
 /**
  * Kbd group component.
  *
- * @example
+ * **Example** (Import KbdGroup component)
+ *
  * ```tsx
  * import { KbdGroup } from "@beep/ui/components/kbd"
  *

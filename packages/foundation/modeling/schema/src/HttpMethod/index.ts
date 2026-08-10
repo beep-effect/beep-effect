@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for HTTP method schemas.
  *
- * @example
+ * **Example** (Decode HTTP method schema)
+ *
  * ```ts
  * import * as HttpMethod from "@beep/schema/HttpMethod"
  * import * as S from "effect/Schema"

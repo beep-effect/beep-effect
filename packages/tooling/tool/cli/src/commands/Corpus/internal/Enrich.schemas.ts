@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/Corpus/internal/Enrich.schemas");
 /**
  * Validated options used by `corpus enrich`.
  *
- * @example
+ * **Example** (Make enrich options)
+ *
  * ```ts
  * import { CorpusEnrichOptions } from "@beep/repo-cli/commands/Corpus"
  *
  * const options = CorpusEnrichOptions.make({ corpusRoot: "/data/corpus" })
  * console.log(options.corpusRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,7 +41,8 @@ export class CorpusEnrichOptions extends S.Class<CorpusEnrichOptions>($I`CorpusE
 /**
  * One resolved USPTO identifier row of the enrichment manifest.
  *
- * @example
+ * **Example** (Make resolved patent record)
+ *
  * ```ts
  * import { CorpusEnrichmentRecord } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -55,6 +58,7 @@ export class CorpusEnrichOptions extends S.Class<CorpusEnrichOptions>($I`CorpusE
  * })
  * console.log(record.candidateKind) // "patent"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,7 +84,8 @@ export class CorpusEnrichmentRecord extends S.Class<CorpusEnrichmentRecord>($I`C
 /**
  * JSONL encoder for {@link CorpusEnrichmentRecord}.
  *
- * @example
+ * **Example** (Encode enrichment record JSON)
+ *
  * ```ts
  * import { CorpusEnrichmentRecord, encodeCorpusEnrichmentRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -97,6 +102,7 @@ export class CorpusEnrichmentRecord extends S.Class<CorpusEnrichmentRecord>($I`C
  *
  * Effect.runPromise(encodeCorpusEnrichmentRecordJson(record)).then((json) => console.log(json.includes("patent"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -105,7 +111,8 @@ export const encodeCorpusEnrichmentRecordJson = JsonStringCodec(CorpusEnrichment
 /**
  * Summary counts returned by `corpus enrich`.
  *
- * @example
+ * **Example** (Make enrich summary counts)
+ *
  * ```ts
  * import { CorpusEnrichSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -120,6 +127,7 @@ export const encodeCorpusEnrichmentRecordJson = JsonStringCodec(CorpusEnrichment
  * })
  * console.log(summary.resolved) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -140,7 +148,8 @@ export class CorpusEnrichSummary extends S.Class<CorpusEnrichSummary>($I`CorpusE
 /**
  * JSON encoder for {@link CorpusEnrichSummary}.
  *
- * @example
+ * **Example** (Encode enrich summary JSON)
+ *
  * ```ts
  * import { CorpusEnrichSummary, encodeCorpusEnrichSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -157,6 +166,7 @@ export class CorpusEnrichSummary extends S.Class<CorpusEnrichSummary>($I`CorpusE
  *
  * Effect.runPromise(encodeCorpusEnrichSummaryJson(summary)).then((json) => console.log(json.includes("resolved"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

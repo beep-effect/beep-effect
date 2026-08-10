@@ -2,7 +2,8 @@
  * Branded schema for canonical lowercase slugs safe for a single URL path
  * segment.
  *
- * @example
+ * **Example** (Decode a URL slug)
+ *
  * ```typescript
  * import * as S from "effect/Schema";
  * import { Slug } from "@beep/schema/Slug";
@@ -11,8 +12,8 @@
  * console.log(slug);
  * ```
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $SchemaId } from "@beep/identity/packages";
@@ -62,11 +63,14 @@ const SlugChecks = S.makeFilterGroup(
 /**
  * Branded schema for canonical lowercase kebab-case slugs.
  *
+ * **Details**
+ *
  * Validates that a string is non-empty, uses only lowercase ASCII letters,
  * digits, and hyphens, and does not start or end with a hyphen or contain
  * repeated hyphens.
  *
- * @example
+ * **Example** (Decode kebab-case slug)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
@@ -77,8 +81,8 @@ const SlugChecks = S.makeFilterGroup(
  * console.log(slug) // "my-post-2"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
   S.brand("Slug"),
@@ -90,7 +94,8 @@ export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
 /**
  * Branded slug string type extracted from {@link Slug}.
  *
- * @example
+ * **Example** (Type a decoded slug)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Slug } from "@beep/schema/Slug"
@@ -99,15 +104,16 @@ export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
  * console.log(slug)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Slug = typeof Slug.Type;
 
 /**
  * Non-empty string schema used as the source input for {@link Slug}.
  *
- * @example
+ * **Example** (Decode non-empty input)
+ *
  * ```ts
  * import { SlugFromStr } from "@beep/schema/Slug"
  * import * as S from "effect/Schema"

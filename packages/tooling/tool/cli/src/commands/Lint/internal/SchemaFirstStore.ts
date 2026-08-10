@@ -21,10 +21,12 @@ import {
  * Read and decode the tracked schema-first inventory document, failing with
  * `SchemaFirstInventoryReadError` when the file exists but cannot be decoded.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A missing inventory file yields `Option.none` (fresh repo); a malformed one
  * fails loudly — the sanctioned replacement for the former silent
  * parse-swallow.
+ *
  * @category utilities
  * @since 0.0.0
  */

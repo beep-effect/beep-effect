@@ -9,9 +9,8 @@
 /**
  * SubsequentHistoryEntry model exports.
  *
- * **Example**
+ * **Example** (Import SubsequentHistoryEntry export)
  *
- * @example
  * ```ts
  * import { SubsequentHistoryEntry } from "@beep/law-practice-domain/values";
  * ```

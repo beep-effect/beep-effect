@@ -19,12 +19,14 @@ const $I = $QaCaptureId.create("ActionEvent.models");
 /**
  * Monotonically increasing witness event sequence number.
  *
- * @example
+ * **Example** (Make sequence number)
+ *
  * ```ts
  * import { SequenceNumber } from "@beep/qa-capture"
  * const seq = SequenceNumber.make(1)
  * console.log(seq)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -45,13 +47,15 @@ export const SequenceNumber = S.Int.check(
 /**
  * Monotonically increasing witness event sequence number.
  *
- * @example
+ * **Example** (Type sequence number value)
+ *
  * ```ts
  * import { SequenceNumber } from "@beep/qa-capture"
  * import type { SequenceNumber as SequenceNumberValue } from "@beep/qa-capture"
  * const seq: SequenceNumberValue = SequenceNumber.make(1)
  * console.log(seq)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,15 +64,19 @@ export type SequenceNumber = typeof SequenceNumber.Type;
 /**
  * Non-negative wall-clock timestamp in epoch milliseconds.
  *
+ * **Details**
+ *
  * Witness timestamps are `performance.timeOrigin + performance.now()`, so
  * fractional milliseconds are expected.
  *
- * @example
+ * **Example** (Make fractional epoch timestamp)
+ *
  * ```ts
  * import { EpochMilliseconds } from "@beep/qa-capture"
  * const t = EpochMilliseconds.make(1753838000000.25)
  * console.log(t)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -89,13 +97,15 @@ export const EpochMilliseconds = S.Finite.check(
 /**
  * Non-negative wall-clock timestamp in epoch milliseconds.
  *
- * @example
+ * **Example** (Type epoch milliseconds value)
+ *
  * ```ts
  * import { EpochMilliseconds } from "@beep/qa-capture"
  * import type { EpochMilliseconds as EpochMillisecondsValue } from "@beep/qa-capture"
  * const t: EpochMillisecondsValue = EpochMilliseconds.make(1753838000000)
  * console.log(t)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,12 +114,14 @@ export type EpochMilliseconds = typeof EpochMilliseconds.Type;
 /**
  * Finite CSS-pixel coordinate inside the viewport coordinate space.
  *
- * @example
+ * **Example** (Make pixel position)
+ *
  * ```ts
  * import { PixelPosition } from "@beep/qa-capture"
  * const x = PixelPosition.make(120.5)
  * console.log(x)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -123,13 +135,15 @@ export const PixelPosition = S.Finite.pipe(
 /**
  * Finite CSS-pixel coordinate inside the viewport coordinate space.
  *
- * @example
+ * **Example** (Type pixel position value)
+ *
  * ```ts
  * import { PixelPosition } from "@beep/qa-capture"
  * import type { PixelPosition as PixelPositionValue } from "@beep/qa-capture"
  * const x: PixelPositionValue = PixelPosition.make(120.5)
  * console.log(x)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,12 +152,14 @@ export type PixelPosition = typeof PixelPosition.Type;
 /**
  * Non-negative finite duration in milliseconds.
  *
- * @example
+ * **Example** (Make duration milliseconds)
+ *
  * ```ts
  * import { DurationMilliseconds } from "@beep/qa-capture"
  * const duration = DurationMilliseconds.make(150)
  * console.log(duration)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -164,13 +180,15 @@ export const DurationMilliseconds = S.Finite.check(
 /**
  * Non-negative finite duration in milliseconds.
  *
- * @example
+ * **Example** (Type duration milliseconds value)
+ *
  * ```ts
  * import { DurationMilliseconds } from "@beep/qa-capture"
  * import type { DurationMilliseconds as DurationMillisecondsValue } from "@beep/qa-capture"
  * const duration: DurationMillisecondsValue = DurationMilliseconds.make(150)
  * console.log(duration)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -179,12 +197,14 @@ export type DurationMilliseconds = typeof DurationMilliseconds.Type;
 /**
  * Non-negative finite CSS-pixel extent (widths and heights).
  *
- * @example
+ * **Example** (Make non-negative pixels)
+ *
  * ```ts
  * import { NonNegativePixels } from "@beep/qa-capture"
  * const width = NonNegativePixels.make(240)
  * console.log(width)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -205,13 +225,15 @@ export const NonNegativePixels = S.Finite.check(
 /**
  * Non-negative finite CSS-pixel extent (widths and heights).
  *
- * @example
+ * **Example** (Type non-negative pixels value)
+ *
  * ```ts
  * import { NonNegativePixels } from "@beep/qa-capture"
  * import type { NonNegativePixels as NonNegativePixelsValue } from "@beep/qa-capture"
  * const width: NonNegativePixelsValue = NonNegativePixels.make(240)
  * console.log(width)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,12 +242,14 @@ export type NonNegativePixels = typeof NonNegativePixels.Type;
 /**
  * Deterministic selector path produced by the witness selector builder.
  *
- * @example
+ * **Example** (Make selector path)
+ *
  * ```ts
  * import { SelectorPath } from "@beep/qa-capture"
  * const selector = SelectorPath.make("[data-qa=\"dock-sash\"]")
  * console.log(selector)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -246,13 +270,15 @@ export const SelectorPath = S.String.check(
 /**
  * Deterministic selector path produced by the witness selector builder.
  *
- * @example
+ * **Example** (Type selector path value)
+ *
  * ```ts
  * import { SelectorPath } from "@beep/qa-capture"
  * import type { SelectorPath as SelectorPathValue } from "@beep/qa-capture"
  * const selector: SelectorPathValue = SelectorPath.make("#root")
  * console.log(selector)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -261,15 +287,19 @@ export type SelectorPath = typeof SelectorPath.Type;
 /**
  * Non-printable key identity (`event.key` with length greater than one).
  *
+ * **Details**
+ *
  * The witness records only these, so printable keystrokes never enter the
  * event stream.
  *
- * @example
+ * **Example** (Make Escape key)
+ *
  * ```ts
  * import { NonPrintableKey } from "@beep/qa-capture"
  * const key = NonPrintableKey.make("Escape")
  * console.log(key)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -290,13 +320,15 @@ export const NonPrintableKey = S.String.check(
 /**
  * Non-printable key identity (`event.key` with length greater than one).
  *
- * @example
+ * **Example** (Type non-printable key value)
+ *
  * ```ts
  * import { NonPrintableKey } from "@beep/qa-capture"
  * import type { NonPrintableKey as NonPrintableKeyValue } from "@beep/qa-capture"
  * const key: NonPrintableKeyValue = NonPrintableKey.make("Escape")
  * console.log(key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -305,11 +337,13 @@ export type NonPrintableKey = typeof NonPrintableKey.Type;
 /**
  * Witness action-event kind identifiers.
  *
- * @example
+ * **Example** (Read pointer-down kind)
+ *
  * ```ts
  * import { ActionEventKind } from "@beep/qa-capture"
  * console.log(ActionEventKind.Enum["pointer-down"])
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -337,13 +371,15 @@ export const ActionEventKind = LiteralKit([
 /**
  * Witness action-event kind identifiers.
  *
- * @example
+ * **Example** (Type marker kind value)
+ *
  * ```ts
  * import { ActionEventKind } from "@beep/qa-capture"
  * import type { ActionEventKind as ActionEventKindValue } from "@beep/qa-capture"
  * const kind: ActionEventKindValue = ActionEventKind.Enum.marker
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,11 +388,13 @@ export type ActionEventKind = typeof ActionEventKind.Type;
 /**
  * CSS transition/animation lifecycle phases observed by the witness.
  *
- * @example
+ * **Example** (Read start phase)
+ *
  * ```ts
  * import { TransitionPhase } from "@beep/qa-capture"
  * console.log(TransitionPhase.Enum.start)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -369,13 +407,15 @@ export const TransitionPhase = LiteralKit(["cancel", "end", "start"]).pipe(
 /**
  * CSS transition/animation lifecycle phases observed by the witness.
  *
- * @example
+ * **Example** (Type end phase value)
+ *
  * ```ts
  * import { TransitionPhase } from "@beep/qa-capture"
  * import type { TransitionPhase as TransitionPhaseValue } from "@beep/qa-capture"
  * const phase: TransitionPhaseValue = TransitionPhase.Enum.end
  * console.log(phase)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -384,12 +424,14 @@ export type TransitionPhase = typeof TransitionPhase.Type;
 /**
  * Bounding rectangle of the event target in viewport CSS pixels.
  *
- * @example
+ * **Example** (Make bounding rectangle)
+ *
  * ```ts
  * import { DomRect } from "@beep/qa-capture"
  * const rect = DomRect.make({ height: 32, width: 240, x: 8, y: 64 })
  * console.log(rect)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -424,7 +466,8 @@ export class DomRect extends S.Class<DomRect>($I`DomRect`)(
 /**
  * Pointer pressed on an element.
  *
- * @example
+ * **Example** (Make pointer-down event)
+ *
  * ```ts
  * import { PointerDownEvent } from "@beep/qa-capture"
  * const event = PointerDownEvent.make({
@@ -439,6 +482,7 @@ export class DomRect extends S.Class<DomRect>($I`DomRect`)(
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -499,7 +543,8 @@ export class PointerDownEvent extends S.Class<PointerDownEvent>($I`PointerDownEv
 /**
  * Pointer released after a press.
  *
- * @example
+ * **Example** (Make pointer-up event)
+ *
  * ```ts
  * import { PointerUpEvent } from "@beep/qa-capture"
  * const event = PointerUpEvent.make({
@@ -514,6 +559,7 @@ export class PointerDownEvent extends S.Class<PointerDownEvent>($I`PointerDownEv
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -575,7 +621,8 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
  * Pointer gesture cancelled before release (touch cancel, OS drag
  * interception, or a harness-dispatched `pointercancel`).
  *
- * @example
+ * **Example** (Make pointer-cancel event)
+ *
  * ```ts
  * import { PointerCancelEvent } from "@beep/qa-capture"
  * const event = PointerCancelEvent.make({
@@ -589,6 +636,7 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -644,7 +692,8 @@ export class PointerCancelEvent extends S.Class<PointerCancelEvent>($I`PointerCa
 /**
  * Throttled pointer movement sample (~30 Hz plus last-before-up).
  *
- * @example
+ * **Example** (Make pointer-move event)
+ *
  * ```ts
  * import { PointerMoveEvent } from "@beep/qa-capture"
  * const event = PointerMoveEvent.make({
@@ -657,6 +706,7 @@ export class PointerCancelEvent extends S.Class<PointerCancelEvent>($I`PointerCa
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -701,7 +751,8 @@ export class PointerMoveEvent extends S.Class<PointerMoveEvent>($I`PointerMoveEv
 /**
  * Pointer entered an interactive element.
  *
- * @example
+ * **Example** (Make pointer-enter event)
+ *
  * ```ts
  * import { PointerEnterEvent } from "@beep/qa-capture"
  * const event = PointerEnterEvent.make({
@@ -712,6 +763,7 @@ export class PointerMoveEvent extends S.Class<PointerMoveEvent>($I`PointerMoveEv
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -752,7 +804,8 @@ export class PointerEnterEvent extends S.Class<PointerEnterEvent>($I`PointerEnte
 /**
  * Pointer left an interactive element.
  *
- * @example
+ * **Example** (Make pointer-leave event)
+ *
  * ```ts
  * import { PointerLeaveEvent } from "@beep/qa-capture"
  * const event = PointerLeaveEvent.make({
@@ -763,6 +816,7 @@ export class PointerEnterEvent extends S.Class<PointerEnterEvent>($I`PointerEnte
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -797,7 +851,8 @@ export class PointerLeaveEvent extends S.Class<PointerLeaveEvent>($I`PointerLeav
 /**
  * Focus entered an element.
  *
- * @example
+ * **Example** (Make focus-in event)
+ *
  * ```ts
  * import { FocusInEvent } from "@beep/qa-capture"
  * const event = FocusInEvent.make({
@@ -808,6 +863,7 @@ export class PointerLeaveEvent extends S.Class<PointerLeaveEvent>($I`PointerLeav
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -842,7 +898,8 @@ export class FocusInEvent extends S.Class<FocusInEvent>($I`FocusInEvent`)(
 /**
  * Focus left an element.
  *
- * @example
+ * **Example** (Make focus-out event)
+ *
  * ```ts
  * import { FocusOutEvent } from "@beep/qa-capture"
  * const event = FocusOutEvent.make({
@@ -853,6 +910,7 @@ export class FocusInEvent extends S.Class<FocusInEvent>($I`FocusInEvent`)(
  * })
  * console.log(event.kind)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -887,7 +945,8 @@ export class FocusOutEvent extends S.Class<FocusOutEvent>($I`FocusOutEvent`)(
 /**
  * Non-printable key pressed (Escape, Tab, arrows, and similar).
  *
- * @example
+ * **Example** (Make Escape key-down)
+ *
  * ```ts
  * import { KeyDownEvent } from "@beep/qa-capture"
  * const event = KeyDownEvent.make({
@@ -899,6 +958,7 @@ export class FocusOutEvent extends S.Class<FocusOutEvent>($I`FocusOutEvent`)(
  * })
  * console.log(event.key)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -944,7 +1004,8 @@ export class KeyDownEvent extends S.Class<KeyDownEvent>($I`KeyDownEvent`)(
 /**
  * CSS transition lifecycle observation with its computed duration.
  *
- * @example
+ * **Example** (Make transition start event)
+ *
  * ```ts
  * import { CssTransitionEvent } from "@beep/qa-capture"
  * const event = CssTransitionEvent.make({
@@ -958,6 +1019,7 @@ export class KeyDownEvent extends S.Class<KeyDownEvent>($I`KeyDownEvent`)(
  * })
  * console.log(event.phase)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1007,7 +1069,8 @@ export class CssTransitionEvent extends S.Class<CssTransitionEvent>($I`CssTransi
 /**
  * CSS animation lifecycle observation with its computed duration.
  *
- * @example
+ * **Example** (Make animation start event)
+ *
  * ```ts
  * import { CssAnimationEvent } from "@beep/qa-capture"
  * const event = CssAnimationEvent.make({
@@ -1021,6 +1084,7 @@ export class CssTransitionEvent extends S.Class<CssTransitionEvent>($I`CssTransi
  * })
  * console.log(event.animationName)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1070,7 +1134,8 @@ export class CssAnimationEvent extends S.Class<CssAnimationEvent>($I`CssAnimatio
 /**
  * Throttled scroll position sample.
  *
- * @example
+ * **Example** (Make scroll event)
+ *
  * ```ts
  * import { ScrollEvent } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -1084,6 +1149,7 @@ export class CssAnimationEvent extends S.Class<CssAnimationEvent>($I`CssAnimatio
  * })
  * console.log(event.scrollTop)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1129,7 +1195,8 @@ export class ScrollEvent extends S.Class<ScrollEvent>($I`ScrollEvent`)(
 /**
  * Semantic marker injected by the harness or `beep qa mark`.
  *
- * @example
+ * **Example** (Make marker event)
+ *
  * ```ts
  * import { MarkerEvent } from "@beep/qa-capture"
  * const event = MarkerEvent.make({
@@ -1140,6 +1207,7 @@ export class ScrollEvent extends S.Class<ScrollEvent>($I`ScrollEvent`)(
  * })
  * console.log(event.label)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1181,10 +1249,13 @@ export class MarkerEvent extends S.Class<MarkerEvent>($I`MarkerEvent`)(
 /**
  * One flip of the visual clock-sync beacon overlay.
  *
+ * **Details**
+ *
  * `tPaintEpochMs` is sampled inside the flip's `requestAnimationFrame`
  * callback, so it is the closest wall-clock proxy for the painted frame.
  *
- * @example
+ * **Example** (Make beacon flip event)
+ *
  * ```ts
  * import { BeaconEvent } from "@beep/qa-capture"
  * const event = BeaconEvent.make({
@@ -1197,6 +1268,7 @@ export class MarkerEvent extends S.Class<MarkerEvent>($I`MarkerEvent`)(
  * })
  * console.log(event.flipIndex)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1248,7 +1320,8 @@ export class BeaconEvent extends S.Class<BeaconEvent>($I`BeaconEvent`)(
 /**
  * Union of all witness action events, discriminated by `kind`.
  *
- * @example
+ * **Example** (Read event kind helper)
+ *
  * ```ts
  * import { ActionEvent } from "@beep/qa-capture"
  * import type { ActionEvent as ActionEventValue } from "@beep/qa-capture"
@@ -1256,6 +1329,7 @@ export class BeaconEvent extends S.Class<BeaconEvent>($I`BeaconEvent`)(
  * console.log(kindOf)
  * console.log(ActionEvent)
  * ```
+ *
  * @category events
  * @since 0.0.0
  */
@@ -1285,12 +1359,14 @@ export const ActionEvent = S.Union([
 /**
  * Union of all witness action events, discriminated by `kind`.
  *
- * @example
+ * **Example** (Read event sequence helper)
+ *
  * ```ts
  * import type { ActionEvent } from "@beep/qa-capture"
  * const seqOf = (event: ActionEvent) => event.seq
  * console.log(seqOf)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1299,7 +1375,8 @@ export type ActionEvent = typeof ActionEvent.Type;
 /**
  * Decode one JSON-encoded NDJSON line into an {@link ActionEvent}.
  *
- * @example
+ * **Example** (Decode marker NDJSON line)
+ *
  * ```ts
  * import { decodeActionEventJson } from "@beep/qa-capture"
  * const effect = decodeActionEventJson(
@@ -1307,6 +1384,7 @@ export type ActionEvent = typeof ActionEvent.Type;
  * )
  * console.log(effect)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -1315,7 +1393,8 @@ export const decodeActionEventJson = S.decodeUnknownEffect(S.fromJsonString(Acti
 /**
  * Encode an {@link ActionEvent} into its JSON NDJSON-line representation.
  *
- * @example
+ * **Example** (Encode marker event JSON)
+ *
  * ```ts
  * import { encodeActionEventJson, MarkerEvent } from "@beep/qa-capture"
  * const effect = encodeActionEventJson(
@@ -1323,6 +1402,7 @@ export const decodeActionEventJson = S.decodeUnknownEffect(S.fromJsonString(Acti
  * )
  * console.log(effect)
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */

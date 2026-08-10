@@ -9,9 +9,8 @@
 /**
  * SurroundingContext model exports.
  *
- * **Example**
+ * **Example** (Import SurroundingContext export)
  *
- * @example
  * ```ts
  * import { SurroundingContext } from "@beep/law-practice-domain/values";
  * ```

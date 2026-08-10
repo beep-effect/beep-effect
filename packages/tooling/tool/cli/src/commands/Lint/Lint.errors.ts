@@ -19,13 +19,15 @@ const messageWithCause = (message: string, cause: unknown): string =>
 /**
  * Failure raised when circular dependency analysis cannot complete.
  *
- * @example
+ * **Example** (Create circular analysis error)
+ *
  * ```ts
  * import { LintCircularAnalysisError } from "@beep/repo-cli/commands/Lint/Lint.errors"
  *
  * const error = LintCircularAnalysisError.new("Circular dependency analysis failed.")
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -50,13 +52,15 @@ export class LintCircularAnalysisError extends TaggedErrorClass<LintCircularAnal
 /**
  * Failure raised when lint file discovery cannot read a source root.
  *
- * @example
+ * **Example** (Create file discovery error)
+ *
  * ```ts
  * import { LintFileDiscoveryError } from "@beep/repo-cli/commands/Lint/Lint.errors"
  *
  * const error = LintFileDiscoveryError.new("src/index.ts", ".", "Could not discover TypeScript files.")
  * console.log(error.path)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -99,7 +103,8 @@ export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryEr
  * Failure raised when the test-typecheck blind-spot baseline cannot be read,
  * decoded, or rewritten.
  *
- * @example
+ * **Example** (Create baseline error from cause)
+ *
  * ```ts
  * import { TestTypecheckBaselineError } from "@beep/repo-cli/commands/Lint/Lint.errors"
  *
@@ -109,6 +114,7 @@ export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryEr
  * )
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -142,13 +148,15 @@ export class TestTypecheckBaselineError extends TaggedErrorClass<TestTypecheckBa
 /**
  * Failure raised when the schema-first inventory cannot be read or decoded.
  *
- * @example
+ * **Example** (Create inventory read error)
+ *
  * ```ts
  * import { SchemaFirstInventoryReadError } from "@beep/repo-cli/commands/Lint/Lint.errors"
  *
  * const error = SchemaFirstInventoryReadError.new("Could not read standards/schema-first.inventory.jsonc.")
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

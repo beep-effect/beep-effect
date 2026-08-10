@@ -13,7 +13,8 @@ import type { Table } from "./CandidateClaim.table.ts";
 /**
  * Selected epistemic CandidateClaim row.
  *
- * @example
+ * **Example** (Satisfy CandidateClaimRow type)
+ *
  * ```ts
  * import type { CandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
  *
@@ -45,7 +46,8 @@ export type CandidateClaimRow = typeof Table.$inferSelect;
 /**
  * Insertable epistemic CandidateClaim row.
  *
- * @example
+ * **Example** (Satisfy CandidateClaimInsert type)
+ *
  * ```ts
  * import type { CandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim"
  *
@@ -79,11 +81,14 @@ const decodeCandidateClaimRow = S.decodeUnknownSync(CandidateClaim);
 /**
  * Convert a CandidateClaim entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the
  * snake_case column shape produced by {@link Table}. The database-managed
  * `id` (SERIAL) is dropped so the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert omits database id)
+ *
  * ```ts
  * import { fromCandidateClaimRow, toCandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim"
  * import type { CandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
@@ -120,7 +125,8 @@ export const toCandidateClaimInsert = (candidateClaim: CandidateClaim): Candidat
 /**
  * Convert a selected persistence row into a CandidateClaim entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import { fromCandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
  * import type { CandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"

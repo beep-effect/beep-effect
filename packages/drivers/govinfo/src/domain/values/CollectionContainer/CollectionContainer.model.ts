@@ -13,11 +13,13 @@ const $I = $GovinfoId.create("domain/values/CollectionContainer/CollectionContai
 /**
  * Paginated GovInfo collection response containing package summaries.
  *
- * @remarks
+ * **Details**
+ *
  * GovInfo collection traversal starts with `offsetMark=*`; subsequent cursors
  * are exposed through `nextPage` rather than a numeric offset.
  *
- * @example
+ * **Example** (Decode collection container response)
+ *
  * ```ts
  * import { CollectionContainer } from "@beep/govinfo/domain/values/CollectionContainer/CollectionContainer.model";
  * import * as S from "effect/Schema";
@@ -86,7 +88,8 @@ export class CollectionContainer extends S.Class<CollectionContainer>($I`Collect
 /**
  * Companion namespace for {@link CollectionContainer} encoded helpers.
  *
- * @example
+ * **Example** (Decode empty collection container)
+ *
  * ```ts
  * import { CollectionContainer } from "@beep/govinfo/domain/values/CollectionContainer/CollectionContainer.model";
  * import * as S from "effect/Schema";
@@ -109,7 +112,8 @@ export declare namespace CollectionContainer {
   /**
    * Encoded JSON shape accepted by {@link CollectionContainer}.
    *
-   * @example
+   * **Example** (Encode decoded collection container)
+   *
    * ```ts
    * import { CollectionContainer } from "@beep/govinfo/domain/values/CollectionContainer/CollectionContainer.model";
    * import * as S from "effect/Schema";

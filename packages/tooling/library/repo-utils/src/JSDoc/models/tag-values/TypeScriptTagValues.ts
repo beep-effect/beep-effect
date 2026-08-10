@@ -14,7 +14,8 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/TypeScriptTagValues");
 /**
  * Schema-backed value for a parsed `overload` tag occurrence: marks a function overload signature.
  *
- * @example
+ * **Example** (Creating empty overload value)
+ *
  * ```ts
  * import { OverloadValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeScriptTagValues"
  *
@@ -22,6 +23,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/TypeScriptTagValues");
  * const tagName: "overload" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

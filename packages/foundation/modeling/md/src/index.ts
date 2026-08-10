@@ -8,7 +8,8 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and type VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/md"
  *
@@ -24,7 +25,8 @@ export const VERSION = "0.0.2" as const;
 /**
  * Pure, escaping-free node behavior (plain-text projection and run segmentation).
  *
- * @example
+ * **Example** (Render plain-text heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlocks } from "@beep/md"
@@ -39,7 +41,8 @@ export * from "./Md.behavior.ts";
 /**
  * Markdown and HTML escaping and URL-sanitization helpers.
  *
- * @example
+ * **Example** (Escape markdown hash)
+ *
  * ```ts
  * import { escapeMarkdownText } from "@beep/md"
  *
@@ -53,7 +56,8 @@ export * from "./Md.escape.ts";
 /**
  * Direct safe-HTML AST projection and opaque safe-output rendering.
  *
- * @example
+ * **Example** (Render safe HTML paragraph)
+ *
  * ```ts
  * import { Md, renderSafeHtml, safeHtmlValue } from "@beep/md"
  * import { Result } from "effect"
@@ -69,7 +73,8 @@ export * from "./Md.html.ts";
 /**
  * Schema-first Markdown AST models.
  *
- * @example
+ * **Example** (Create empty Document)
+ *
  * ```ts
  * import { Document } from "@beep/md"
  *
@@ -83,7 +88,8 @@ export * from "./Md.model.ts";
 /**
  * Render adapters and schema transformations.
  *
- * @example
+ * **Example** (Render via MarkdownAdapter)
+ *
  * ```ts
  * import { Md, MarkdownAdapter } from "@beep/md"
  *
@@ -97,7 +103,8 @@ export * from "./Md.render.ts";
 /**
  * Branded user-content trust-boundary refinements and structured safety issues.
  *
- * @example
+ * **Example** (Refine safe document success)
+ *
  * ```ts
  * import { Md, refineSafeDocument } from "@beep/md"
  * import { Result } from "effect"
@@ -112,7 +119,8 @@ export * from "./Md.safe.ts";
 /**
  * Public Markdown builder namespace and constructor helpers.
  *
- * @example
+ * **Example** (Build and render heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import { Result } from "effect"

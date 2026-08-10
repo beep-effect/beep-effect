@@ -13,7 +13,8 @@ const $I = $ProvenanceId.create("SourceTextIdentity");
 /**
  * Canonical SHA-256 digest encoded as `sha256:<lowercase hex>`.
  *
- * @example
+ * **Example** (Make empty SHA-256 digest)
+ *
  * ```ts
  * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
  *
@@ -39,7 +40,8 @@ export const SourceTextDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
 /**
  * Type for {@link SourceTextDigest}.
  *
- * @example
+ * **Example** (Type annotate SourceTextDigest value)
+ *
  * ```ts
  * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
  *
@@ -57,7 +59,8 @@ export type SourceTextDigest = typeof SourceTextDigest.Type;
 /**
  * Pinned extractor implementation that produced the source text.
  *
- * @example
+ * **Example** (Create SourceTextExtractor instance)
+ *
  * ```ts
  * import { SourceTextExtractor } from "@beep/provenance/SourceTextIdentity"
  *
@@ -85,11 +88,14 @@ export class SourceTextExtractor extends S.Class<SourceTextExtractor>($I`SourceT
 /**
  * Matter-scoped identity for one exact extracted source-text manifestation.
  *
+ * **Details**
+ *
  * `locator` is interpreted relative to the scope's configured source root.
  * Containment checks, filesystem access, extraction, and digest computation
  * remain responsibilities of the resolving capability.
  *
- * @example
+ * **Example** (Build complete SourceTextIdentity)
+ *
  * ```ts
  * import {
  *   SourceTextDigest,

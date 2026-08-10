@@ -9,7 +9,8 @@
 /**
  * Package version constant published by the architecture lab tables entry point.
  *
- * @example
+ * **Example** (Import and check VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-tables"
  *

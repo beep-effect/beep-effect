@@ -18,7 +18,8 @@ const isObsDefect = S.is(ObsDefect);
 /**
  * Non-negative integer obs-websocket `RequestStatus` code.
  *
- * @example
+ * **Example** (Make request status code)
+ *
  * ```ts
  * import { ObsRequestStatusCode } from "@beep/obs"
  *
@@ -46,7 +47,8 @@ export const ObsRequestStatusCode = S.Int.check(
 /**
  * Non-negative integer obs-websocket `RequestStatus` code.
  *
- * @example
+ * **Example** (Type-annotate status code)
+ *
  * ```ts
  * import { ObsRequestStatusCode } from "@beep/obs"
  * import type { ObsRequestStatusCode as ObsRequestStatusCodeValue } from "@beep/obs"
@@ -63,7 +65,8 @@ export type ObsRequestStatusCode = typeof ObsRequestStatusCode.Type;
 /**
  * Non-negative integer WebSocket close code.
  *
- * @example
+ * **Example** (Make WebSocket close code)
+ *
  * ```ts
  * import { ObsWebSocketCloseCode } from "@beep/obs"
  *
@@ -91,7 +94,8 @@ export const ObsWebSocketCloseCode = S.Int.check(
 /**
  * Non-negative integer WebSocket close code.
  *
- * @example
+ * **Example** (Type-annotate close code)
+ *
  * ```ts
  * import { ObsWebSocketCloseCode } from "@beep/obs"
  * import type { ObsWebSocketCloseCode as ObsWebSocketCloseCodeValue } from "@beep/obs"
@@ -121,12 +125,15 @@ const existingObsError = (cause: unknown): O.Option<ObsError> => (ObsError.is(ca
 /**
  * Technical failure raised by the `@beep/obs` driver boundary.
  *
+ * **Details**
+ *
  * A single tagged error covers the whole driver; the optional fields
  * discriminate transport failures (`closeCode`), obs-websocket request
  * failures (`requestType`, `requestStatusCode`, `requestStatusComment`),
  * and wrapped platform defects (`cause`).
  *
- * @example
+ * **Example** (Construct ObsError instance)
+ *
  * ```ts
  * import { ObsError } from "@beep/obs"
  *
@@ -190,10 +197,13 @@ export class ObsError extends TaggedErrorClass<ObsError>($I`ObsError`)(
   /**
    * Normalize an unknown transport or platform failure into an {@link ObsError}.
    *
+   * **Details**
+   *
    * Existing {@link ObsError} causes pass through unchanged so error context is
    * never double-wrapped.
    *
-   * @example
+   * **Example** (Normalize unknown failure)
+   *
    * ```ts
    * import { ObsError } from "@beep/obs"
    *

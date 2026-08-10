@@ -15,7 +15,8 @@ import type * as React from "react";
 /**
  * Dialog component.
  *
- * @example
+ * **Example** (Import Dialog component)
+ *
  * ```tsx
  * import { Dialog } from "@beep/ui/components/dialog"
  *
@@ -32,7 +33,8 @@ function Dialog({ ...props }: DialogPrimitive.Root.Props) {
 /**
  * Dialog trigger component.
  *
- * @example
+ * **Example** (Import DialogTrigger component)
+ *
  * ```tsx
  * import { DialogTrigger } from "@beep/ui/components/dialog"
  *
@@ -49,7 +51,8 @@ function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
 /**
  * Dialog portal component.
  *
- * @example
+ * **Example** (Import DialogPortal component)
+ *
  * ```tsx
  * import { DialogPortal } from "@beep/ui/components/dialog"
  *
@@ -66,7 +69,8 @@ function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
 /**
  * Dialog close component.
  *
- * @example
+ * **Example** (Import DialogClose component)
+ *
  * ```tsx
  * import { DialogClose } from "@beep/ui/components/dialog"
  *
@@ -83,7 +87,8 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
 /**
  * Dialog overlay component.
  *
- * @example
+ * **Example** (Import DialogOverlay component)
+ *
  * ```tsx
  * import { DialogOverlay } from "@beep/ui/components/dialog"
  *
@@ -109,7 +114,8 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
 /**
  * Dialog content component.
  *
- * @example
+ * **Example** (Import DialogContent component)
+ *
  * ```tsx
  * import { DialogContent } from "@beep/ui/components/dialog"
  *
@@ -158,7 +164,8 @@ function DialogContent({
 /**
  * Dialog header component.
  *
- * @example
+ * **Example** (Import DialogHeader component)
+ *
  * ```tsx
  * import { DialogHeader } from "@beep/ui/components/dialog"
  *
@@ -175,7 +182,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Dialog footer component.
  *
- * @example
+ * **Example** (Import DialogFooter component)
+ *
  * ```tsx
  * import { DialogFooter } from "@beep/ui/components/dialog"
  *
@@ -211,7 +219,8 @@ function DialogFooter({
 /**
  * Dialog title component.
  *
- * @example
+ * **Example** (Import DialogTitle component)
+ *
  * ```tsx
  * import { DialogTitle } from "@beep/ui/components/dialog"
  *
@@ -234,7 +243,8 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
 /**
  * Dialog description component.
  *
- * @example
+ * **Example** (Import DialogDescription component)
+ *
  * ```tsx
  * import { DialogDescription } from "@beep/ui/components/dialog"
  *
@@ -261,7 +271,8 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
  * `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Header`,
  * `Dialog.Footer`, `Dialog.Title`, `Dialog.Description`, and `Dialog.Close`.
  *
- * @example
+ * **Example** (Confirm dialog with parts)
+ *
  * ```tsx
  * import { Dialog } from "@beep/ui/components/dialog"
  *

@@ -9,9 +9,8 @@
 /**
  * HistoryLink model exports.
  *
- * **Example**
+ * **Example** (Importing HistoryLink)
  *
- * @example
  * ```ts
  * import { HistoryLink } from "@beep/law-practice-domain/values";
  * ```

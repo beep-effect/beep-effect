@@ -56,7 +56,8 @@ const mapDocumentErrorToSerializeError = (error: JsonLdDocumentError): JsonLdStr
 /**
  * JSON-LD streaming serialize service live layer.
  *
- * @example
+ * **Example** (Serialize stream with fallback)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect, Layer } from "effect"

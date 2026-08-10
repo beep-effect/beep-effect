@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for age schemas.
  *
- * @example
+ * **Example** (Decoding with Age.Schema)
+ *
  * ```ts
  * import * as Age from "@beep/schema/Age"
  * import * as S from "effect/Schema"

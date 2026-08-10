@@ -12,14 +12,16 @@ const $I = $RepoUtilsId.create("JSDoc/models/TagKind.model");
 /**
  * Classifies a tag by its syntactic placement in documentation text.
  *
- * @description The syntactic form of the tag
- * @example
+ * **Example** (Check block TagKind)
+ *
  * ```ts
  * import { TagKind } from "@beep/repo-utils/JSDoc/models/TagKind.model"
  *
  * const kind = TagKind.Enum.block
  * console.log(TagKind.is.block(kind))
  * ```
+ *
+ * @description The syntactic form of the tag
  * @category models
  * @since 0.0.0
  */
@@ -39,14 +41,16 @@ export const TagKind = LiteralKit([
 /**
  * Union of supported documentation tag placement kinds.
  *
- * @description The syntactic form of the tag
- * @example
+ * **Example** (Use TagKind as type)
+ *
  * ```ts
  * import type { TagKind } from "@beep/repo-utils/JSDoc/models/TagKind.model"
  * type Example = TagKind
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
+ * @description The syntactic form of the tag
  * @category models
  * @since 0.0.0
  */

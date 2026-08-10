@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for nominal safe-object schemas.
  *
- * @example
+ * **Example** (Import SafeObject namespace)
+ *
  * ```ts
  * import * as SafeObject from "@beep/schema/SafeObject"
  * import { Effect } from "effect"

@@ -22,7 +22,8 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
 /**
  * Persistence failure raised when a Thread row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -57,7 +58,8 @@ export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($
 /**
  * Persistence failure raised when a ThreadStore write conflicts.
  *
- * @example
+ * **Example** (Construct conflict error)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -95,7 +97,8 @@ export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($
 /**
  * Persistence failure raised when the ThreadStore is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -122,7 +125,8 @@ export class ThreadStoreUnavailable extends TaggedErrorClass<ThreadStoreUnavaila
 /**
  * ThreadStore port failure.
  *
- * @example
+ * **Example** (Test ThreadStoreError guard)
+ *
  * ```ts
  * import { ThreadStoreError, ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -144,7 +148,8 @@ export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflic
 /**
  * Companion type for {@link ThreadStoreError}
  *
- * @example
+ * **Example** (Enumerate error tag values)
+ *
  * ```ts
  * import type { ThreadStoreError } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *

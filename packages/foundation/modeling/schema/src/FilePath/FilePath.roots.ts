@@ -14,7 +14,8 @@ import { $I, windowsDriveRootRegExp, windowsUncRootRegExp } from "./FilePath.sha
 /**
  * Branded schema for Windows drive roots such as `C:` and `C:\\`.
  *
- * @example
+ * **Example** (Decode Windows drive root)
+ *
  * ```ts
  * import { WindowsDriveRoot } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -23,8 +24,8 @@ import { $I, windowsDriveRootRegExp, windowsUncRootRegExp } from "./FilePath.sha
  * console.log(root)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsDriveRoot = S.String.check(
   S.isPattern(windowsDriveRootRegExp, {
@@ -48,7 +49,8 @@ export const WindowsDriveRoot = S.String.check(
 /**
  * Type for {@link WindowsDriveRoot}.
  *
- * @example
+ * **Example** (Type annotated drive root)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsDriveRoot } from "@beep/schema/FilePath"
@@ -57,15 +59,16 @@ export const WindowsDriveRoot = S.String.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsDriveRoot = typeof WindowsDriveRoot.Type;
 
 /**
  * Branded schema for UNC roots such as `\\\\server\\share`.
  *
- * @example
+ * **Example** (Decode UNC root path)
+ *
  * ```ts
  * import { WindowsUncRoot } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -74,8 +77,8 @@ export type WindowsDriveRoot = typeof WindowsDriveRoot.Type;
  * console.log(root)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const WindowsUncRoot = S.String.check(
   S.isPattern(windowsUncRootRegExp, {
@@ -95,7 +98,8 @@ export const WindowsUncRoot = S.String.check(
 /**
  * Type for {@link WindowsUncRoot}.
  *
- * @example
+ * **Example** (Type annotated UNC root)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { WindowsUncRoot } from "@beep/schema/FilePath"
@@ -104,8 +108,8 @@ export const WindowsUncRoot = S.String.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WindowsUncRoot = typeof WindowsUncRoot.Type;
 
@@ -116,7 +120,8 @@ const isWindowsUncRoot = WindowsUncRoot.is;
 /**
  * Branded schema for path strings that include a non-root leaf segment.
  *
- * @example
+ * **Example** (Decode path with leaf)
+ *
  * ```ts
  * import { HasLeafSegment } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -125,8 +130,8 @@ const isWindowsUncRoot = WindowsUncRoot.is;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HasLeafSegment = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -173,7 +178,8 @@ export const HasLeafSegment = S.NonEmptyString.check(
 /**
  * Type for {@link HasLeafSegment}.
  *
- * @example
+ * **Example** (Type annotated leaf path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HasLeafSegment } from "@beep/schema/FilePath"
@@ -182,7 +188,7 @@ export const HasLeafSegment = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HasLeafSegment = typeof HasLeafSegment.Type;

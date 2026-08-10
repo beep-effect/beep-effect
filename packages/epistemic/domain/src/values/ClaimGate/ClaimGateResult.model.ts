@@ -16,7 +16,8 @@ const ClaimGateSeverityBase = LiteralKit(["info", "warning", "violation"]);
  * vocabulary as a product-agnostic domain literal so the verdict carries no
  * dependency on the semantic-web engine.
  *
- * @example
+ * **Example** (Decode severity value)
+ *
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -42,7 +43,8 @@ export const ClaimGateSeverity = ClaimGateSeverityBase.pipe(
 /**
  * Runtime type for {@link ClaimGateSeverity}.
  *
- * @example
+ * **Example** (Satisfy severity type)
+ *
  * ```ts
  * import type { ClaimGateSeverity } from "@beep/epistemic-domain"
  *
@@ -59,7 +61,8 @@ export type ClaimGateSeverity = typeof ClaimGateSeverity.Type;
  * A single claim gate violation, projected from a SHACL validation violation
  * into product-agnostic primitives (no RDF terms, no engine types).
  *
- * @example
+ * **Example** (Construct a violation)
+ *
  * ```ts
  * import { ClaimGateViolation } from "@beep/epistemic-domain"
  *
@@ -98,7 +101,8 @@ const ClaimGateVerdict = LiteralKit(["admitted", "rejected"]).annotate(
  * `admitted` claim carries no violations and drives a lifecycle advance, while a
  * `rejected` claim carries the violations that blocked it and does not advance.
  *
- * @example
+ * **Example** (Decode rejected result)
+ *
  * ```ts
  * import { ClaimGateResult } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -138,7 +142,8 @@ export const ClaimGateResult = ClaimGateVerdict.toTaggedUnion("verdict")({
 /**
  * Runtime type for {@link ClaimGateResult}.
  *
- * @example
+ * **Example** (Type admitted result)
+ *
  * ```ts
  * import type { ClaimGateResult } from "@beep/epistemic-domain"
  *

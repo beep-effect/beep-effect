@@ -20,8 +20,11 @@ import type {
 import type { ProviderInstanceRepositoryShape, ProviderProbeShape } from "./ProviderInstance.repository.ts";
 import type { ProviderInstanceUseCasesShape } from "./ProviderInstance.use-cases.ts";
 
-/** Builds provider-instance operations from persistence and probe ports.
- * @example
+/**
+ *  Builds provider-instance operations from persistence and probe ports.
+ *
+ * **Example** (Build use cases from ports)
+ *
  * ```ts
  * import { makeProviderInstanceUseCases } from "@beep/agents-use-cases/server"
  * import type { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
@@ -30,6 +33,7 @@ import type { ProviderInstanceUseCasesShape } from "./ProviderInstance.use-cases
  * const useCases = makeProviderInstanceUseCases(repository, { probe: () => Effect.die("example") })
  * console.log(useCases.list)
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

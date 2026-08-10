@@ -15,7 +15,8 @@ import type * as React from "react";
 /**
  * Dropdown menu component.
  *
- * @example
+ * **Example** (Import DropdownMenu component)
+ *
  * ```tsx
  * import { DropdownMenu } from "@beep/ui/components/dropdown-menu"
  *
@@ -32,7 +33,8 @@ function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
 /**
  * Dropdown menu portal component.
  *
- * @example
+ * **Example** (Import DropdownMenuPortal component)
+ *
  * ```tsx
  * import { DropdownMenuPortal } from "@beep/ui/components/dropdown-menu"
  *
@@ -49,7 +51,8 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
 /**
  * Dropdown menu trigger component.
  *
- * @example
+ * **Example** (Import DropdownMenuTrigger component)
+ *
  * ```tsx
  * import { DropdownMenuTrigger } from "@beep/ui/components/dropdown-menu"
  *
@@ -66,7 +69,8 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
 /**
  * Dropdown menu content component.
  *
- * @example
+ * **Example** (Import DropdownMenuContent component)
+ *
  * ```tsx
  * import { DropdownMenuContent } from "@beep/ui/components/dropdown-menu"
  *
@@ -109,7 +113,8 @@ function DropdownMenuContent({
 /**
  * Dropdown menu group component.
  *
- * @example
+ * **Example** (Import DropdownMenuGroup component)
+ *
  * ```tsx
  * import { DropdownMenuGroup } from "@beep/ui/components/dropdown-menu"
  *
@@ -126,7 +131,8 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
 /**
  * Dropdown menu label component.
  *
- * @example
+ * **Example** (Import DropdownMenuLabel component)
+ *
  * ```tsx
  * import { DropdownMenuLabel } from "@beep/ui/components/dropdown-menu"
  *
@@ -156,7 +162,8 @@ function DropdownMenuLabel({
 /**
  * Dropdown menu item component.
  *
- * @example
+ * **Example** (Import DropdownMenuItem component)
+ *
  * ```tsx
  * import { DropdownMenuItem } from "@beep/ui/components/dropdown-menu"
  *
@@ -192,7 +199,8 @@ function DropdownMenuItem({
 /**
  * Dropdown menu sub component.
  *
- * @example
+ * **Example** (Import DropdownMenuSub component)
+ *
  * ```tsx
  * import { DropdownMenuSub } from "@beep/ui/components/dropdown-menu"
  *
@@ -209,7 +217,8 @@ function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
 /**
  * Dropdown menu sub trigger component.
  *
- * @example
+ * **Example** (Import DropdownMenuSubTrigger component)
+ *
  * ```tsx
  * import { DropdownMenuSubTrigger } from "@beep/ui/components/dropdown-menu"
  *
@@ -246,7 +255,8 @@ function DropdownMenuSubTrigger({
 /**
  * Dropdown menu sub content component.
  *
- * @example
+ * **Example** (Import DropdownMenuSubContent component)
+ *
  * ```tsx
  * import { DropdownMenuSubContent } from "@beep/ui/components/dropdown-menu"
  *
@@ -283,7 +293,8 @@ function DropdownMenuSubContent({
 /**
  * Dropdown menu checkbox item component.
  *
- * @example
+ * **Example** (Import DropdownMenuCheckboxItem)
+ *
  * ```tsx
  * import { DropdownMenuCheckboxItem } from "@beep/ui/components/dropdown-menu"
  *
@@ -319,7 +330,8 @@ function DropdownMenuCheckboxItem({ className, children, ...props }: MenuPrimiti
 /**
  * Dropdown menu radio group component.
  *
- * @example
+ * **Example** (Import DropdownMenuRadioGroup)
+ *
  * ```tsx
  * import { DropdownMenuRadioGroup } from "@beep/ui/components/dropdown-menu"
  *
@@ -336,7 +348,8 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
 /**
  * Dropdown menu radio item component.
  *
- * @example
+ * **Example** (Import DropdownMenuRadioItem)
+ *
  * ```tsx
  * import { DropdownMenuRadioItem } from "@beep/ui/components/dropdown-menu"
  *
@@ -372,7 +385,8 @@ function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.
 /**
  * Dropdown menu separator component.
  *
- * @example
+ * **Example** (Import DropdownMenuSeparator)
+ *
  * ```tsx
  * import { DropdownMenuSeparator } from "@beep/ui/components/dropdown-menu"
  *
@@ -395,7 +409,8 @@ function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.
 /**
  * Dropdown menu shortcut component.
  *
- * @example
+ * **Example** (Import DropdownMenuShortcut)
+ *
  * ```tsx
  * import { DropdownMenuShortcut } from "@beep/ui/components/dropdown-menu"
  *
@@ -427,7 +442,8 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"kbd
  * `DropdownMenu.SubTrigger`, `DropdownMenu.SubContent`, and
  * `DropdownMenu.MenuPortal`.
  *
- * @example
+ * **Example** (Account menu composition)
+ *
  * ```tsx
  * import { DropdownMenu } from "@beep/ui/components/dropdown-menu"
  *

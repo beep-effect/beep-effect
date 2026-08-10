@@ -39,10 +39,13 @@ class PhoneticMatchParameters extends S.Class<PhoneticMatchParameters>($I`Phonet
  * Defines the agent-facing tool contract for comparing two texts by phonetic
  * encodings.
  *
+ * **Details**
+ *
  * Use this tool for fuzzy name or phrase matching where spelling differences
  * should still match similar-sounding tokens.
  *
- * @example
+ * **Example** (Decode soundex match parameters)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PhoneticMatch } from "@beep/nlp-processing/Tools/PhoneticMatch"

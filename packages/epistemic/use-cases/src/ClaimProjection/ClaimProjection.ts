@@ -25,7 +25,8 @@ const $I = $EpistemicUseCasesId.create("ClaimProjection/ClaimProjection");
  * Executable pure read-only projection contract from a single-owner authority
  * array of candidate claims to a deterministic {@link ClaimProjectionView}.
  *
- * @example
+ * **Example** (Decode and project empty)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection"
@@ -51,7 +52,8 @@ export const ClaimProjection = Fn({
 /**
  * Runtime type for {@link ClaimProjection}.
  *
- * @example
+ * **Example** (Typed projectClaims empty total)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { projectClaims, type ClaimProjection } from "@beep/epistemic-use-cases/ClaimProjection"
@@ -71,7 +73,8 @@ export type ClaimProjection = typeof ClaimProjection.Type;
  * state and lists the admitted claims' fixture keys in sorted order so rebuilds
  * from the same authority are structurally equal.
  *
- * @example
+ * **Example** (Empty admitted claim count)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { projectClaims } from "@beep/epistemic-use-cases/ClaimProjection"

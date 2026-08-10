@@ -303,13 +303,15 @@ const researchStatusCommand = Command.make(
 /**
  * Research knowledge-vault command group.
  *
- * @example
+ * **Example** (Register research command group)
+ *
  * ```ts
  * import { researchCommand } from "@beep/repo-cli/commands/Research"
  *
  * const commandGroups = { research: researchCommand }
  * console.log(Object.keys(commandGroups)) // ["research"]
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

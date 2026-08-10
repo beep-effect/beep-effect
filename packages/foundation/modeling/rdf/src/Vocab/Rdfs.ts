@@ -23,7 +23,8 @@ export { RDFS_NAMESPACE, RDFS_TERMS } from "./generated/Rdfs.terms.ts";
 /**
  * `rdfs:label`
  *
- * @example
+ * **Example** (Inspect RDFS_LABEL NamedNode)
+ *
  * ```ts
  * import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs"
  *
@@ -31,15 +32,16 @@ export { RDFS_NAMESPACE, RDFS_TERMS } from "./generated/Rdfs.terms.ts";
  * console.log(RDFS_LABEL.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDFS_LABEL = makeNamedNode(`${RDFS_NAMESPACE}label`);
 
 /**
  * `rdfs:comment`
  *
- * @example
+ * **Example** (Inspect RDFS_COMMENT NamedNode)
+ *
  * ```ts
  * import { RDFS_COMMENT } from "@beep/rdf/Vocab/Rdfs"
  *
@@ -47,15 +49,16 @@ export const RDFS_LABEL = makeNamedNode(`${RDFS_NAMESPACE}label`);
  * console.log(RDFS_COMMENT.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDFS_COMMENT = makeNamedNode(`${RDFS_NAMESPACE}comment`);
 
 /**
  * `rdfs:Class`
  *
- * @example
+ * **Example** (Inspect RDFS_CLASS NamedNode)
+ *
  * ```ts
  * import { RDFS_CLASS } from "@beep/rdf/Vocab/Rdfs"
  *
@@ -63,7 +66,7 @@ export const RDFS_COMMENT = makeNamedNode(`${RDFS_NAMESPACE}comment`);
  * console.log(RDFS_CLASS.termType) // "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const RDFS_CLASS = makeNamedNode(`${RDFS_NAMESPACE}Class`);

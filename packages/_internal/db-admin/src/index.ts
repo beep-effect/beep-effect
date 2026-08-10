@@ -2,7 +2,8 @@
  * Internal db-admin migration aggregation for repo-owned database proof
  * targets.
  *
- * @remarks
+ * **Details**
+ *
  * This package is the migration tooling boundary for generated Drizzle SQL and
  * proof targets. Production application packages should depend on their slice
  * table packages instead of importing `_internal/db-admin`.

@@ -14,7 +14,8 @@ import type React from "react";
  * Props for {@link UploadAvatarField}: `UploadAvatar` props plus
  * label/description; binding props are owned by the field.
  *
- * @example
+ * **Example** (Satisfies UploadAvatarFieldProps shape)
+ *
  * ```ts
  * import type { UploadAvatarFieldProps } from "@beep/form/fields/UploadAvatarField"
  *
@@ -42,11 +43,14 @@ export interface UploadAvatarFieldProps
 /**
  * TanStack-bound avatar upload field backed by a single-file array value.
  *
+ * **Details**
+ *
  * Use through `useAppForm` as `field.UploadAvatar`; the avatar preview is
  * rendered by the underlying `@beep/ui` primitive while the form value stays a
  * `ReadonlyArray<File>`.
  *
- * @example
+ * **Example** (Profile avatar upload form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

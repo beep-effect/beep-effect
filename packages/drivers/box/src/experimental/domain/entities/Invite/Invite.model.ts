@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Invite/Invite.model");
 /**
  * Experimental schema anchor for Box invite records representing pending access.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty invite)
+ *
  * ```ts
  * import { Invite } from "@beep/box/experimental/domain/entities/Invite/Invite.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Invite extends S.Class<Invite>($I`Invite`)(
 /**
  * Type-level companion namespace for {@link Invite} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode invite)
+ *
  * ```ts
  * import { Invite } from "@beep/box/experimental/domain/entities/Invite/Invite.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Invite {
   /**
    * Encoded payload accepted by the {@link Invite} entity schema.
    *
-   * @example
+   * **Example** (Encode invite payload)
+   *
    * ```ts
    * import { Invite } from "@beep/box/experimental/domain/entities/Invite/Invite.model";
    * import * as S from "effect/Schema";

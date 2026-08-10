@@ -14,15 +14,16 @@ const $I = $SchemaId.create("DomReactNode");
 /**
  * Type guard for React.ReactNode.
  *
- * @example
+ * **Example** (Guard mixed ReactNode array)
+ *
  * ```ts
  * import { isReactNode } from "@beep/schema/DomReactNode"
  *
  * console.log(isReactNode(["hello", 1, null]))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isReactNode = (u: unknown): u is React.ReactNode => {
   if (u === null || u === undefined) {
@@ -41,7 +42,8 @@ export const isReactNode = (u: unknown): u is React.ReactNode => {
 /**
  * A React.ReactNode value.
  *
- * @example
+ * **Example** (Decode string as ReactNode)
+ *
  * ```ts
  * import { DOMReactNode } from "@beep/schema/DomReactNode"
  * import * as S from "effect/Schema"
@@ -50,8 +52,8 @@ export const isReactNode = (u: unknown): u is React.ReactNode => {
  * console.log(node)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMReactNode = S.declare(isReactNode).pipe(
   $I.annoteSchema("DOMReactNode", {
@@ -62,7 +64,8 @@ export const DOMReactNode = S.declare(isReactNode).pipe(
 /**
  * Type for {@link DOMReactNode}.
  *
- * @example
+ * **Example** (Annotate decoded ReactNode type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DOMReactNode } from "@beep/schema/DomReactNode"
@@ -71,23 +74,24 @@ export const DOMReactNode = S.declare(isReactNode).pipe(
  * console.log(node)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DOMReactNode = typeof DOMReactNode.Type;
 
 /**
  * Type guard for React.Ref<T>.
  *
- * @example
+ * **Example** (Guard object as React ref)
+ *
  * ```ts
  * import { isReactRef } from "@beep/schema/DomReactNode"
  *
  * console.log(isReactRef({ current: null }))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isReactRef = <T>(u: unknown): u is React.Ref<T> => {
   if (u === null || u === undefined) {
@@ -103,7 +107,8 @@ export const isReactRef = <T>(u: unknown): u is React.Ref<T> => {
 /**
  * Creates a schema for React.Ref<T> where T extends HTMLElement.
  *
- * @example
+ * **Example** (Create HTMLDivElement ref schema)
+ *
  * ```ts
  * import { createDOMRefSchema } from "@beep/schema/DomReactNode"
  * import * as S from "effect/Schema"
@@ -113,8 +118,8 @@ export const isReactRef = <T>(u: unknown): u is React.Ref<T> => {
  * console.log(ref)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createDOMRefSchema = <T extends HTMLElement>() =>
   S.declare(isReactRef<T>).pipe(

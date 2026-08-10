@@ -26,7 +26,8 @@ const $I = $SanityId.create("Sanity.service");
 /**
  * Scalar JSON value accepted in Sanity query params.
  *
- * @example
+ * **Example** (Scalar param value check)
+ *
  * ```ts
  * import { SanityQueryParamValue } from "@beep/sanity"
  *
@@ -47,7 +48,8 @@ export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pi
 /**
  * Type for {@link SanityQueryParamValue}.
  *
- * @example
+ * **Example** (Typed query params record)
+ *
  * ```ts
  * import type { SanityQueryParamValue } from "@beep/sanity"
  *
@@ -68,7 +70,8 @@ export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
 /**
  * Sanity GROQ query request.
  *
- * @example
+ * **Example** (Make GROQ query request)
+ *
  * ```ts
  * import { SanityQueryRequest } from "@beep/sanity"
  *
@@ -102,7 +105,8 @@ export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQue
 /**
  * Sanity query response.
  *
- * @example
+ * **Example** (Make query response)
+ *
  * ```ts
  * import { SanityQueryResponse } from "@beep/sanity"
  * import * as O from "effect/Option"
@@ -139,7 +143,8 @@ export class SanityQueryResponse extends S.Class<SanityQueryResponse>($I`SanityQ
 /**
  * Public Sanity service shape.
  *
- * @example
+ * **Example** (Mock Sanity service shape)
+ *
  * ```ts
  * import { SanityQueryResponse, type SanityShape } from "@beep/sanity"
  * import { Effect } from "effect"
@@ -332,7 +337,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedSanityConfig
 /**
  * Effect service for Sanity content API requests.
  *
- * @example
+ * **Example** (Provide Sanity service layer)
+ *
  * ```ts
  * import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity"
  * import { Effect, Layer } from "effect"
@@ -360,7 +366,8 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
   /**
    * Build a Sanity layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Build layer from config)
+   *
    * ```ts
    * import { Sanity, SanityConfigInput } from "@beep/sanity"
    * import { Layer } from "effect"
@@ -392,7 +399,8 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
   /**
    * Live Sanity layer backed by ambient Effect Config values.
    *
-   * @example
+   * **Example** (Check ambient config layer)
+   *
    * ```ts
    * import { Sanity } from "@beep/sanity"
    * import { Layer } from "effect"

@@ -268,8 +268,9 @@ const renderCldrTerritoriesModule = (
 /**
  * Stable source metadata for the Unicode CLDR territory data release.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the CLDR release metadata)
+ *
+ * \`\`\`ts
  * import { TerritoryDataMetadata } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataMetadata.releaseTag === ${formatTsLiteral(releaseTag)})
@@ -288,8 +289,9 @@ export const TerritoryDataMetadata = ${formatTsLiteral({
 /**
  * CLDR JSON release tag used for this generated module.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the CLDR release tag)
+ *
+ * \`\`\`ts
  * import { TerritoryDataReleaseTag } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataReleaseTag === ${formatTsLiteral(releaseTag)})
@@ -303,8 +305,9 @@ export const TerritoryDataReleaseTag = ${formatTsLiteral(releaseTag)} as const;
 /**
  * Normalized CLDR territory entries.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a territory entry by code)
+ *
+ * \`\`\`ts
  * import { TerritoryDataValues } from "@beep/data/generated/cldr-territories"
  *
  * const sample = TerritoryDataValues.find((entry) => entry.code === ${formatTsLiteral(sampleTerritory.code)})
@@ -319,8 +322,9 @@ export const TerritoryDataValues = ${formatTsLiteral(territories)} as const;
 /**
  * Normalized CLDR territory entries keyed by territory code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a territory entry by code)
+ *
+ * \`\`\`ts
  * import { TerritoryDataByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataByCode.${sampleTerritory.code}.name === ${formatTsLiteral(sampleTerritory.name)})
@@ -334,8 +338,9 @@ export const TerritoryDataByCode = ${formatTsLiteral(byCode(territories))} as co
 /**
  * CLDR territory code literals.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Check a territory code literal)
+ *
+ * \`\`\`ts
  * import { TerritoryCodeValues } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryCodeValues.includes(${formatTsLiteral(sampleTerritory.code)}))
@@ -349,8 +354,9 @@ export const TerritoryCodeValues = ${formatTsLiteral(A.map(territories, (entry) 
 /**
  * CLDR territory names keyed by territory code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a territory name by code)
+ *
+ * \`\`\`ts
  * import { TerritoryDataNameByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(TerritoryDataNameByCode.${sampleTerritory.code} === ${formatTsLiteral(sampleTerritory.name)})
@@ -364,8 +370,9 @@ export const TerritoryDataNameByCode = ${formatTsLiteral(nameByCode(territories)
 /**
  * CLDR territory code to English display-name literal pairs.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a territory code and name pair)
+ *
+ * \`\`\`ts
  * import { TerritoryDataCodeNamePairs } from "@beep/data/generated/cldr-territories"
  *
  * const sample = TerritoryDataCodeNamePairs.find(([code]) => code === ${formatTsLiteral(sampleTerritory.code)})
@@ -380,8 +387,9 @@ export const TerritoryDataCodeNamePairs = ${formatTsLiteral(codeNamePairs(territ
 /**
  * Normalized CLDR continent entries.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a continent entry by code)
+ *
+ * \`\`\`ts
  * import { ContinentDataValues } from "@beep/data/generated/cldr-territories"
  *
  * const sample = ContinentDataValues.find((entry) => entry.code === ${formatTsLiteral(sampleContinent.code)})
@@ -396,8 +404,9 @@ export const ContinentDataValues = ${formatTsLiteral(continents)} as const;
 /**
  * Normalized CLDR continent entries keyed by CLDR region code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a continent entry by region code)
+ *
+ * \`\`\`ts
  * import { ContinentDataByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentDataByCode[${formatTsLiteral(sampleContinent.code)}].name === ${formatTsLiteral(sampleContinent.name)})
@@ -411,8 +420,9 @@ export const ContinentDataByCode = ${formatTsLiteral(byCode(continents))} as con
 /**
  * CLDR continent code literals.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Check a continent code literal)
+ *
+ * \`\`\`ts
  * import { ContinentCodeValues } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentCodeValues.includes(${formatTsLiteral(sampleContinent.code)}))
@@ -426,8 +436,9 @@ export const ContinentCodeValues = ${formatTsLiteral(A.map(continents, (entry) =
 /**
  * CLDR continent names keyed by CLDR region code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a continent name by region code)
+ *
+ * \`\`\`ts
  * import { ContinentDataNameByCode } from "@beep/data/generated/cldr-territories"
  *
  * console.assert(ContinentDataNameByCode[${formatTsLiteral(sampleContinent.code)}] === ${formatTsLiteral(sampleContinent.name)})
@@ -441,8 +452,9 @@ export const ContinentDataNameByCode = ${formatTsLiteral(nameByCode(continents))
 /**
  * CLDR continent code to English display-name literal pairs.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a continent code and name pair)
+ *
+ * \`\`\`ts
  * import { ContinentDataCodeNamePairs } from "@beep/data/generated/cldr-territories"
  *
  * const sample = ContinentDataCodeNamePairs.find(([code]) => code === ${formatTsLiteral(sampleContinent.code)})

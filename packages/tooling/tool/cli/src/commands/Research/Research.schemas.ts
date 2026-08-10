@@ -14,7 +14,8 @@ const $I = $RepoCliId.create("commands/Research/Research.schemas");
 /**
  * Source kind recorded on a knowledge card.
  *
- * @example
+ * **Example** (Validate article and link)
+ *
  * ```ts
  * import { CardSourceType } from "@beep/repo-cli/commands/Research"
  * import * as S from "effect/Schema"
@@ -22,6 +23,7 @@ const $I = $RepoCliId.create("commands/Research/Research.schemas");
  * console.log(S.is(CardSourceType)("article")) // true
  * console.log(S.is(CardSourceType)("link")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -35,13 +37,15 @@ export const CardSourceType = LiteralKit(["repo", "article", "x-post", "link"]).
 /**
  * Source kind type recorded on a knowledge card.
  *
- * @example
+ * **Example** (Assign article source type)
+ *
  * ```ts
  * import type { CardSourceType } from "@beep/repo-cli/commands/Research"
  *
  * const sourceType: CardSourceType = "article"
  * console.log(sourceType) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,13 +54,15 @@ export type CardSourceType = typeof CardSourceType.Type;
 /**
  * Triage status recorded on a knowledge card.
  *
- * @example
+ * **Example** (Validate inbox status)
+ *
  * ```ts
  * import { CardStatus } from "@beep/repo-cli/commands/Research"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CardStatus)("inbox")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -70,13 +76,15 @@ export const CardStatus = LiteralKit(["inbox", "triaged", "integrated"]).pipe(
 /**
  * Triage status type recorded on a knowledge card.
  *
- * @example
+ * **Example** (Assign inbox status)
+ *
  * ```ts
  * import type { CardStatus } from "@beep/repo-cli/commands/Research"
  *
  * const status: CardStatus = "inbox"
  * console.log(status) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -85,13 +93,15 @@ export type CardStatus = typeof CardStatus.Type;
 /**
  * Pipeline entry point that produced a knowledge card.
  *
- * @example
+ * **Example** (Validate capture via)
+ *
  * ```ts
  * import { CardVia } from "@beep/repo-cli/commands/Research"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CardVia)("capture")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -105,13 +115,15 @@ export const CardVia = LiteralKit(["history-sift", "capture", "repo-card", "noti
 /**
  * Pipeline entry point type that produced a knowledge card.
  *
- * @example
+ * **Example** (Assign capture via)
+ *
  * ```ts
  * import type { CardVia } from "@beep/repo-cli/commands/Research"
  *
  * const via: CardVia = "capture"
  * console.log(via) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,10 +132,13 @@ export type CardVia = typeof CardVia.Type;
 /**
  * YAML frontmatter carried by every knowledge card in the vault.
  *
+ * **Details**
+ *
  * The `id` is stable for the card's lifetime and doubles as the Cognee
  * document id.
  *
- * @example
+ * **Example** (Make knowledge card frontmatter)
+ *
  * ```ts
  * import { KnowledgeCardFrontmatter } from "@beep/repo-cli/commands/Research"
  *
@@ -140,6 +155,7 @@ export type CardVia = typeof CardVia.Type;
  * })
  * console.log(frontmatter.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -166,7 +182,8 @@ export class KnowledgeCardFrontmatter extends S.Class<KnowledgeCardFrontmatter>(
 /**
  * Browser family targeted by `research history-sift`.
  *
- * @example
+ * **Example** (Validate brave and all)
+ *
  * ```ts
  * import { BrowserKind } from "@beep/repo-cli/commands/Research"
  * import * as S from "effect/Schema"
@@ -174,6 +191,7 @@ export class KnowledgeCardFrontmatter extends S.Class<KnowledgeCardFrontmatter>(
  * console.log(S.is(BrowserKind)("brave")) // true
  * console.log(S.is(BrowserKind)("all")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -187,13 +205,15 @@ export const BrowserKind = LiteralKit(["brave", "chrome", "all"]).pipe(
 /**
  * Browser family type targeted by `research history-sift`.
  *
- * @example
+ * **Example** (Assign brave browser kind)
+ *
  * ```ts
  * import type { BrowserKind } from "@beep/repo-cli/commands/Research"
  *
  * const browser: BrowserKind = "brave"
  * console.log(browser) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -202,7 +222,8 @@ export type BrowserKind = typeof BrowserKind.Type;
 /**
  * Validated options used by `research history-sift`.
  *
- * @example
+ * **Example** (Make history-sift options)
+ *
  * ```ts
  * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -214,6 +235,7 @@ export type BrowserKind = typeof BrowserKind.Type;
  * })
  * console.log(options.sinceDays)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -231,7 +253,8 @@ export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptio
 /**
  * Summary returned by `research history-sift`.
  *
- * @example
+ * **Example** (Make history-sift summary)
+ *
  * ```ts
  * import { ResearchHistorySiftSummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -245,6 +268,7 @@ export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptio
  * })
  * console.log(summary.stubsWritten)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -264,7 +288,8 @@ export class ResearchHistorySiftSummary extends S.Class<ResearchHistorySiftSumma
 /**
  * Validated options used by `research repo-card`.
  *
- * @example
+ * **Example** (Make repo-card options)
+ *
  * ```ts
  * import { ResearchRepoCardOptions } from "@beep/repo-cli/commands/Research"
  *
@@ -276,6 +301,7 @@ export class ResearchHistorySiftSummary extends S.Class<ResearchHistorySiftSumma
  * })
  * console.log(options.researchRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -295,7 +321,8 @@ export class ResearchRepoCardOptions extends S.Class<ResearchRepoCardOptions>($I
 /**
  * Summary returned by `research repo-card`.
  *
- * @example
+ * **Example** (Make repo-card summary)
+ *
  * ```ts
  * import { ResearchRepoCardSummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -308,6 +335,7 @@ export class ResearchRepoCardOptions extends S.Class<ResearchRepoCardOptions>($I
  * })
  * console.log(summary.cardsWritten)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -326,7 +354,8 @@ export class ResearchRepoCardSummary extends S.Class<ResearchRepoCardSummary>($I
 /**
  * Validated options used by `research notion-pull`.
  *
- * @example
+ * **Example** (Make notion-pull options)
+ *
  * ```ts
  * import { ResearchNotionPullOptions } from "@beep/repo-cli/commands/Research"
  *
@@ -336,6 +365,7 @@ export class ResearchRepoCardSummary extends S.Class<ResearchRepoCardSummary>($I
  * })
  * console.log(options.database)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -355,7 +385,8 @@ export class ResearchNotionPullOptions extends S.Class<ResearchNotionPullOptions
 /**
  * Summary returned by `research notion-pull`.
  *
- * @example
+ * **Example** (Make notion-pull summary)
+ *
  * ```ts
  * import { ResearchNotionPullSummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -367,6 +398,7 @@ export class ResearchNotionPullOptions extends S.Class<ResearchNotionPullOptions
  * })
  * console.log(summary.cardsWritten)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -384,7 +416,8 @@ export class ResearchNotionPullSummary extends S.Class<ResearchNotionPullSummary
 /**
  * Validated options used by `research daily`.
  *
- * @example
+ * **Example** (Make daily options)
+ *
  * ```ts
  * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -397,6 +430,7 @@ export class ResearchNotionPullSummary extends S.Class<ResearchNotionPullSummary
  * })
  * console.log(options.commit)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -416,13 +450,15 @@ export class ResearchDailyOptions extends S.Class<ResearchDailyOptions>($I`Resea
 /**
  * Summary returned by `research daily`.
  *
- * @example
+ * **Example** (Make daily summary)
+ *
  * ```ts
  * import { ResearchDailySummary } from "@beep/repo-cli/commands/Research"
  *
  * const summary = ResearchDailySummary.make({ failed: [], ran: ["history-sift"], skipped: ["notion-pull"] })
  * console.log(summary.ran)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -440,13 +476,15 @@ export class ResearchDailySummary extends S.Class<ResearchDailySummary>($I`Resea
 /**
  * Validated options used by `research cognify`.
  *
- * @example
+ * **Example** (Make cognify options)
+ *
  * ```ts
  * import { ResearchCognifyOptions } from "@beep/repo-cli/commands/Research"
  *
  * const options = ResearchCognifyOptions.make({ dryRun: true, vaultRoot: "/home/user/knowledge" })
  * console.log(options.dryRun)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -463,7 +501,8 @@ export class ResearchCognifyOptions extends S.Class<ResearchCognifyOptions>($I`R
 /**
  * Summary returned by `research cognify`.
  *
- * @example
+ * **Example** (Make cognify summary)
+ *
  * ```ts
  * import { ResearchCognifySummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -475,6 +514,7 @@ export class ResearchCognifyOptions extends S.Class<ResearchCognifyOptions>($I`R
  * })
  * console.log(summary.cardsPushed)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -492,13 +532,15 @@ export class ResearchCognifySummary extends S.Class<ResearchCognifySummary>($I`R
 /**
  * Validated options used by `research digest`.
  *
- * @example
+ * **Example** (Make digest options)
+ *
  * ```ts
  * import { ResearchDigestOptions } from "@beep/repo-cli/commands/Research"
  *
  * const options = ResearchDigestOptions.make({ vaultRoot: "/home/user/knowledge" })
  * console.log(options.vaultRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -515,7 +557,8 @@ export class ResearchDigestOptions extends S.Class<ResearchDigestOptions>($I`Res
 /**
  * Summary returned by `research digest`.
  *
- * @example
+ * **Example** (Make digest summary)
+ *
  * ```ts
  * import { ResearchDigestSummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -527,6 +570,7 @@ export class ResearchDigestOptions extends S.Class<ResearchDigestOptions>($I`Res
  * })
  * console.log(summary.digestPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -544,7 +588,8 @@ export class ResearchDigestSummary extends S.Class<ResearchDigestSummary>($I`Res
 /**
  * Validated options used by `research capture`.
  *
- * @example
+ * **Example** (Make capture options)
+ *
  * ```ts
  * import { ResearchCaptureOptions } from "@beep/repo-cli/commands/Research"
  *
@@ -555,6 +600,7 @@ export class ResearchDigestSummary extends S.Class<ResearchDigestSummary>($I`Res
  * })
  * console.log(options.url)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -572,7 +618,8 @@ export class ResearchCaptureOptions extends S.Class<ResearchCaptureOptions>($I`R
 /**
  * Summary returned by `research capture`.
  *
- * @example
+ * **Example** (Make capture summary)
+ *
  * ```ts
  * import { ResearchCaptureSummary } from "@beep/repo-cli/commands/Research"
  *
@@ -584,6 +631,7 @@ export class ResearchCaptureOptions extends S.Class<ResearchCaptureOptions>($I`R
  * })
  * console.log(summary.skipped) // false
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -602,13 +650,15 @@ export class ResearchCaptureSummary extends S.Class<ResearchCaptureSummary>($I`R
 /**
  * Validated options used by `research status`.
  *
- * @example
+ * **Example** (Make status options)
+ *
  * ```ts
  * import { ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
  *
  * const options = ResearchStatusOptions.make({ vaultRoot: "/home/user/knowledge" })
  * console.log(options.vaultRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -624,7 +674,8 @@ export class ResearchStatusOptions extends S.Class<ResearchStatusOptions>($I`Res
 /**
  * Per-source-type card count reported by `research status`.
  *
- * @example
+ * **Example** (Make source-type count)
+ *
  * ```ts
  * import { ResearchSourceTypeCount } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -632,6 +683,7 @@ export class ResearchStatusOptions extends S.Class<ResearchStatusOptions>($I`Res
  * const row = ResearchSourceTypeCount.make({ cards: NonNegativeInt.make(3), sourceType: "article" })
  * console.log(row.cards)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -648,7 +700,8 @@ export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I
 /**
  * Summary returned by `research status`.
  *
- * @example
+ * **Example** (Make status summary)
+ *
  * ```ts
  * import { ResearchStatusSummary } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -662,6 +715,7 @@ export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I
  * })
  * console.log(summary.totalCards)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

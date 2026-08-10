@@ -13,12 +13,14 @@ import * as Str from "effect/String";
 /**
  * Protobufjs-compatible `Long` object shape for 64-bit integer fields.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs commonly exposes decoded 64-bit scalar fields as `long.js`
  * values. The stable runtime shape has 32-bit `low` and `high` words, an
  * `unsigned` flag, and a decimal `toString()` representation.
  *
- * @example
+ * **Example** (Long-like object shape)
+ *
  * ```ts
  * import type { ProtobufInt64Input } from "@beep/schema/internal/ProtobufInt64Input"
  *
@@ -45,7 +47,8 @@ interface ProtobufLongLike {
 /**
  * Input values protobufjs accepts or can expose for 64-bit integer fields.
  *
- * @example
+ * **Example** (Decimal string input)
+ *
  * ```ts
  * import type { ProtobufInt64Input } from "@beep/schema/internal/ProtobufInt64Input"
  *
@@ -119,13 +122,15 @@ const decodeProtobufInt64Input = (input: ProtobufInt64Input) =>
 /**
  * Schema for protobufjs 64-bit integer input values.
  *
- * @remarks
+ * **Details**
+ *
  * This schema accepts decimal strings, safe JavaScript integer numbers,
  * `bigint`, and protobufjs `Long`-like objects. Downstream scalar schemas
  * decode these inputs into branded `bigint` values before applying signed or
  * unsigned range checks.
  *
- * @example
+ * **Example** (Schema acceptance check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ProtobufInt64Input } from "@beep/schema/internal/ProtobufInt64Input"
@@ -145,7 +150,8 @@ export const ProtobufInt64Input = S.declare<ProtobufInt64Input>(isProtobufInt64I
 /**
  * Codec transformation for protobufjs 64-bit integer input values.
  *
- * @example
+ * **Example** (Log transformation value)
+ *
  * ```ts
  * import { decodeProtobufInt64InputTransformation } from "@beep/schema/internal/ProtobufInt64Input"
  *

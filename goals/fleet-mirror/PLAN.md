@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
 Appetite: **1–2 focused days.** Budget-busting looks like the derivation scan not
 producing a correct fleet snapshot inside day one. The cut is signal 3 — ship
@@ -15,10 +15,10 @@ make the budget.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | **complete** | Confirm the `Worktree` schema family and **measure** the policy surface against recent first-parent `main` commits. | Met — [`research/p0-policy-surface-measurement.md`](./research/p0-policy-surface-measurement.md): 26 paths measured over 300 first-parent commits, surface E recommended at 23.7%, `FleetCheckout` sited as a sibling class. |
-| P1 Implement | pending | Schema → `Context.Service` → subcommand, in that order. | Acceptance criteria in `SPEC.md` are met. |
-| P2 Verify | pending | The #551-shape proof test plus the two `unknown`-path tests; full repo proof. | The proof test fails before signal 3 and passes after; `beep yeet verify` green. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence updated; a closeout reflection exists and lints. |
+| P1 Implement | **complete** | Schema → `Context.Service` → subcommand, in that order. | Met — `Worktree.schemas.ts` (fleet family, measured surface E constant), `Fleet.service.ts` (`FleetMirrorService`), `Fleet.command.ts` (`beep worktree fleet`), validated live against the 17-clone / 75-checkout fleet. |
+| P2 Verify | **complete** | The #551-shape proof test plus the two `unknown`-path tests; full repo proof. | Met — `test/worktree-fleet*.test.ts`: proof test (signal 3 fires, signals 1–2 silent), unreadable `/proc` ⇒ `unknown`, unmaterialized target ⇒ `unknown`; `beep yeet verify` green. |
+| P3 Yeet: PR to mergeable | **complete** | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | **complete** | Write the closeout reflection and flip packet state. | [`history/reflections/2026-08-06-claude.md`](./history/reflections/2026-08-06-claude.md) lints; packet status flipped in the same PR as the final work. |
 
 ## P1 Implementation Order
 

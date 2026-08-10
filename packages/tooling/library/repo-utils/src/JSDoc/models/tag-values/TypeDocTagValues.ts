@@ -15,7 +15,8 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/TypeDocTagValues");
 /**
  * Schema-backed value for a parsed `category` tag occurrence: assigns a documentation category.
  *
- * @example
+ * **Example** (Make category with name)
+ *
  * ```ts
  * import { CategoryValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -23,6 +24,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/TypeDocTagValues");
  * const tagName: "category" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -37,7 +39,8 @@ export class CategoryValue extends S.TaggedClass<CategoryValue>($I`CategoryValue
 /**
  * Schema-backed value for a parsed `document` tag occurrence: marks for documentation generation.
  *
- * @example
+ * **Example** (Make empty document tag)
+ *
  * ```ts
  * import { DocumentValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -45,6 +48,7 @@ export class CategoryValue extends S.TaggedClass<CategoryValue>($I`CategoryValue
  * const tagName: "document" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -59,7 +63,8 @@ export class DocumentValue extends S.TaggedClass<DocumentValue>($I`DocumentValue
 /**
  * Schema-backed value for a parsed `group` tag occurrence: assigns a documentation group.
  *
- * @example
+ * **Example** (Make group with name)
+ *
  * ```ts
  * import { GroupValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -67,6 +72,7 @@ export class DocumentValue extends S.TaggedClass<DocumentValue>($I`DocumentValue
  * const tagName: "group" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -81,7 +87,8 @@ export class GroupValue extends S.TaggedClass<GroupValue>($I`GroupValue`)(
 /**
  * Schema-backed value for a parsed `hidden` tag occurrence: hides the symbol from documentation.
  *
- * @example
+ * **Example** (Make empty hidden tag)
+ *
  * ```ts
  * import { HiddenValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -89,6 +96,7 @@ export class GroupValue extends S.TaggedClass<GroupValue>($I`GroupValue`)(
  * const tagName: "hidden" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,7 +111,8 @@ export class HiddenValue extends S.TaggedClass<HiddenValue>($I`HiddenValue`)(
 /**
  * Schema-backed value for a parsed `expand` tag occurrence: expands type aliases in documentation.
  *
- * @example
+ * **Example** (Make empty expand tag)
+ *
  * ```ts
  * import { ExpandValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -111,6 +120,7 @@ export class HiddenValue extends S.TaggedClass<HiddenValue>($I`HiddenValue`)(
  * const tagName: "expand" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -125,7 +135,8 @@ export class ExpandValue extends S.TaggedClass<ExpandValue>($I`ExpandValue`)(
 /**
  * Schema-backed value for a parsed `inline` tag occurrence: inlines a type in documentation.
  *
- * @example
+ * **Example** (Make empty inline tag)
+ *
  * ```ts
  * import { InlineValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -133,6 +144,7 @@ export class ExpandValue extends S.TaggedClass<ExpandValue>($I`ExpandValue`)(
  * const tagName: "inline" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -147,7 +159,8 @@ export class InlineValue extends S.TaggedClass<InlineValue>($I`InlineValue`)(
 /**
  * Schema-backed value for a parsed `mergeModuleWith` tag occurrence: merges module documentation.
  *
- * @example
+ * **Example** (Make mergeModuleWith with name)
+ *
  * ```ts
  * import { MergeModuleWithValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -155,6 +168,7 @@ export class InlineValue extends S.TaggedClass<InlineValue>($I`InlineValue`)(
  * const tagName: "mergeModuleWith" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -169,7 +183,8 @@ export class MergeModuleWithValue extends S.TaggedClass<MergeModuleWithValue>($I
 /**
  * Schema-backed value for a parsed `primaryExport` tag occurrence: marks the primary export.
  *
- * @example
+ * **Example** (Make empty primaryExport tag)
+ *
  * ```ts
  * import { PrimaryExportValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -177,6 +192,7 @@ export class MergeModuleWithValue extends S.TaggedClass<MergeModuleWithValue>($I
  * const tagName: "primaryExport" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -191,7 +207,8 @@ export class PrimaryExportValue extends S.TaggedClass<PrimaryExportValue>($I`Pri
 /**
  * Schema-backed value for a parsed `sortStrategy` tag occurrence: specifies documentation sort order.
  *
- * @example
+ * **Example** (Make sortStrategy with name)
+ *
  * ```ts
  * import { SortStrategyValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -199,6 +216,7 @@ export class PrimaryExportValue extends S.TaggedClass<PrimaryExportValue>($I`Pri
  * const tagName: "sortStrategy" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -213,7 +231,8 @@ export class SortStrategyValue extends S.TaggedClass<SortStrategyValue>($I`SortS
 /**
  * Schema-backed value for a parsed `useDeclaredType` tag occurrence: uses declared type in docs.
  *
- * @example
+ * **Example** (Make empty useDeclaredType tag)
+ *
  * ```ts
  * import { UseDeclaredTypeValue } from "@beep/repo-utils/JSDoc/models/tag-values/TypeDocTagValues"
  *
@@ -221,6 +240,7 @@ export class SortStrategyValue extends S.TaggedClass<SortStrategyValue>($I`SortS
  * const tagName: "useDeclaredType" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

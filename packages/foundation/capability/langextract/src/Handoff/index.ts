@@ -19,7 +19,8 @@ const $I = $LangExtractId.create("Handoff");
 /**
  * Input required to build an NLP handoff document.
  *
- * @example
+ * **Example** (Build handoff document input)
+ *
  * ```ts
  * import { AnnotatedDocumentInput } from "@beep/langextract/Handoff"
  * import { DocumentId } from "@beep/nlp/Core"
@@ -77,7 +78,8 @@ const makeEntity = (
 /**
  * Convert grounded extractions into the generic NLP handoff envelope.
  *
- * @example
+ * **Example** (Convert to annotated document)
+ *
  * ```ts
  * import { toAnnotatedDocument } from "@beep/langextract/Handoff"
  * import { DocumentId } from "@beep/nlp/Core"

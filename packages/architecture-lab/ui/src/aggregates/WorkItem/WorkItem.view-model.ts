@@ -1,7 +1,8 @@
 /**
  * WorkItem UI read models for architecture-lab proof screens.
  *
- * @remarks
+ * **Details**
+ *
  * The declarations in this module are intentionally presentation-shaped:
  * domain identifiers and statuses are preserved, while display labels and
  * visible action keys are derived for browser-safe consumers.
@@ -27,7 +28,8 @@ const WorkItemVisibleActionBase = LiteralKit(["assign", "complete", "reopen", "a
 /**
  * Closed action vocabulary the WorkItem UI may expose for a summary row.
  *
- * @example
+ * **Example** (Parse archive action)
+ *
  * ```ts
  * import { WorkItemVisibleAction } from "@beep/architecture-lab-ui/aggregates/WorkItem"
  *
@@ -56,7 +58,8 @@ export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe(
 /**
  * Runtime type for {@link WorkItemVisibleAction}.
  *
- * @example
+ * **Example** (Type assign action values)
+ *
  * ```ts
  * import {
  *   WorkItemVisibleAction,
@@ -98,7 +101,8 @@ const VisibleActionList = S.Array(WorkItemVisibleAction)
 /**
  * Client-renderable summary for a canonical WorkItem aggregate.
  *
- * @example
+ * **Example** (Make display-ready summary)
+ *
  * ```ts
  * import {
  *   WorkItemSummaryViewModel,
@@ -188,12 +192,14 @@ const makeVisibleActions = (
 /**
  * Project a domain WorkItem into its UI summary read model.
  *
- * @remarks
+ * **Details**
+ *
  * Supports both data-first and config-first forms. The projection uppercases
  * the status label, formats an assignee label when present, and filters
  * visible actions through the browser-safe public WorkItem config.
  *
- * @example
+ * **Example** (Project open WorkItem summary)
+ *
  * ```ts
  * import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/public"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"

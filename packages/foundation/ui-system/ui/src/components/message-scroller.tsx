@@ -20,7 +20,8 @@ import type * as React from "react";
 /**
  * Message scroller provider component.
  *
- * @example
+ * **Example** (Import MessageScrollerProvider)
+ *
  * ```tsx
  * import { MessageScrollerProvider } from "@beep/ui/components/message-scroller"
  *
@@ -37,7 +38,8 @@ function MessageScrollerProvider(props: React.ComponentProps<typeof MessageScrol
 /**
  * Message scroller root component.
  *
- * @example
+ * **Example** (Import MessageScroller)
+ *
  * ```tsx
  * import { MessageScroller } from "@beep/ui/components/message-scroller"
  *
@@ -60,7 +62,8 @@ function MessageScroller({ className, ...props }: React.ComponentProps<typeof Me
 /**
  * Message scroller viewport component.
  *
- * @example
+ * **Example** (Import MessageScrollerViewport)
+ *
  * ```tsx
  * import { MessageScrollerViewport } from "@beep/ui/components/message-scroller"
  *
@@ -89,7 +92,8 @@ function MessageScrollerViewport({
 /**
  * Message scroller content component.
  *
- * @example
+ * **Example** (Import MessageScrollerContent)
+ *
  * ```tsx
  * import { MessageScrollerContent } from "@beep/ui/components/message-scroller"
  *
@@ -115,7 +119,8 @@ function MessageScrollerContent({
 /**
  * Message scroller item component.
  *
- * @example
+ * **Example** (Import MessageScrollerItem)
+ *
  * ```tsx
  * import { MessageScrollerItem } from "@beep/ui/components/message-scroller"
  *
@@ -143,7 +148,8 @@ function MessageScrollerItem({
 /**
  * Message scroller button component.
  *
- * @example
+ * **Example** (Import MessageScrollerButton)
+ *
  * ```tsx
  * import { MessageScrollerButton } from "@beep/ui/components/message-scroller"
  *

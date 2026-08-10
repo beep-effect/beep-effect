@@ -8,7 +8,8 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Access typed package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/pandoc-ast"
  *
@@ -24,7 +25,8 @@ export const VERSION = "0.0.0";
 /**
  * Pandoc JSON wire codecs.
  *
- * @example
+ * **Example** (Import decodePandocJsonString codec)
+ *
  * ```ts
  * import { decodePandocJsonString } from "@beep/pandoc-ast"
  *
@@ -38,7 +40,8 @@ export * from "./Pandoc.codec.ts";
 /**
  * Pandoc and Md compatibility mapping.
  *
- * @example
+ * **Example** (Import pandocToDocument mapper)
+ *
  * ```ts
  * import { pandocToDocument } from "@beep/pandoc-ast"
  *
@@ -52,7 +55,8 @@ export * from "./Pandoc.mapping.ts";
 /**
  * Schema-first Pandoc AST models.
  *
- * @example
+ * **Example** (Make empty PandocDocument)
+ *
  * ```ts
  * import { PandocDocument } from "@beep/pandoc-ast"
  *
@@ -66,7 +70,8 @@ export * from "./Pandoc.model.ts";
 /**
  * Pandoc compatibility report models.
  *
- * @example
+ * **Example** (Create empty compatibility report)
+ *
  * ```ts
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast"
  *

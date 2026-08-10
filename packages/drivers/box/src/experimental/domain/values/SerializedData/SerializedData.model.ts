@@ -14,7 +14,8 @@ const $I = $BoxId.create("experimental/domain/values/SerializedData/SerializedDa
 /**
  * Type-level namespace for {@link SerializedData} recursive encoded values.
  *
- * @example
+ * **Example** (Encoded nested map payload)
+ *
  * ```ts
  * import type { SerializedData } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  *
@@ -32,7 +33,8 @@ export declare namespace SerializedData {
   /**
    * Encoded recursive payload accepted by {@link SerializedData}.
    *
-   * @example
+   * **Example** (Encoded array payload)
+   *
    * ```ts
    * import type { SerializedData } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
    *
@@ -57,7 +59,8 @@ export declare namespace SerializedData {
 /**
  * Recursive value schema for serializable Box payload fragments: primitives, lists, and string-keyed maps.
  *
- * @example
+ * **Example** (Decode and encode map)
+ *
  * ```ts
  * import { SerializedData } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"
@@ -90,7 +93,8 @@ export const SerializedData = S.Union([
 /**
  * Runtime value type decoded by {@link SerializedData}.
  *
- * @example
+ * **Example** (Decoded array runtime type)
+ *
  * ```ts
  * import { SerializedData } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"
@@ -108,7 +112,8 @@ export type SerializedData = typeof SerializedData.Type;
 /**
  * Type-level namespace for {@link SerializedDataList} recursive encoded arrays.
  *
- * @example
+ * **Example** (Encoded list type usage)
+ *
  * ```ts
  * import type { SerializedDataList } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  *
@@ -123,7 +128,8 @@ export declare namespace SerializedDataList {
   /**
    * Encoded readonly array accepted by {@link SerializedDataList}.
    *
-   * @example
+   * **Example** (Encoded readonly array)
+   *
    * ```ts
    * import type { SerializedDataList } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
    *
@@ -141,7 +147,8 @@ export declare namespace SerializedDataList {
 /**
  * Value schema for arrays of serializable Box payload fragments.
  *
- * @example
+ * **Example** (Decode and encode list)
+ *
  * ```ts
  * import { SerializedDataList } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"
@@ -165,7 +172,8 @@ export const SerializedDataList = S.Array(S.suspend((): S.Codec<SerializedData.E
 /**
  * Runtime value type decoded by {@link SerializedDataList}.
  *
- * @example
+ * **Example** (Decoded list runtime type)
+ *
  * ```ts
  * import { SerializedDataList } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"
@@ -183,7 +191,8 @@ export type SerializedDataList = typeof SerializedDataList.Type;
 /**
  * Type-level namespace for {@link SerializedDataMap} recursive encoded records.
  *
- * @example
+ * **Example** (Encoded map type usage)
+ *
  * ```ts
  * import type { SerializedDataMap } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  *
@@ -199,7 +208,8 @@ export declare namespace SerializedDataMap {
   /**
    * Encoded string-keyed record accepted by {@link SerializedDataMap}.
    *
-   * @example
+   * **Example** (Encoded record keys count)
+   *
    * ```ts
    * import type { SerializedDataMap } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
    *
@@ -219,7 +229,8 @@ export declare namespace SerializedDataMap {
 /**
  * Value schema for string-keyed maps of serializable Box payload fragments.
  *
- * @example
+ * **Example** (Decode and encode map)
+ *
  * ```ts
  * import { SerializedDataMap } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"
@@ -246,7 +257,8 @@ export const SerializedDataMap = S.Record(
 /**
  * Runtime value type decoded by {@link SerializedDataMap}.
  *
- * @example
+ * **Example** (Decoded map runtime type)
+ *
  * ```ts
  * import { SerializedDataMap } from "@beep/box/experimental/domain/values/SerializedData/SerializedData.model"
  * import * as S from "effect/Schema"

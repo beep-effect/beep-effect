@@ -81,7 +81,8 @@ type PendingRequests = HashMap.HashMap<string, Deferred.Deferred<O.Option<Unknow
 /**
  * Input for {@link computeObsAuthentication}.
  *
- * @example
+ * **Example** (Make authentication options)
+ *
  * ```ts
  * import { ComputeObsAuthenticationOptions } from "@beep/obs"
  *
@@ -134,7 +135,8 @@ const ComputeObsAuthentication = Fn({
  * Compute the obs-websocket `Identify` authentication string:
  * `base64(sha256(base64(sha256(password + salt)) + challenge))`.
  *
- * @example
+ * **Example** (Compute authentication string)
+ *
  * ```ts
  * import { computeObsAuthentication } from "@beep/obs"
  *
@@ -189,7 +191,8 @@ const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError
 /**
  * Runtime shape exposed by the {@link ObsProtocol} service.
  *
- * @example
+ * **Example** (Take first protocol event)
+ *
  * ```ts
  * import type { ObsProtocolShape } from "@beep/obs"
  * import { Stream } from "effect"
@@ -487,7 +490,8 @@ const connect = Effect.fn($I`connect`)(function* (
 /**
  * Effect service for the low-level obs-websocket v5 protocol session.
  *
- * @example
+ * **Example** (Build protocol layer)
+ *
  * ```ts
  * import { ObsProtocol } from "@beep/obs"
  *
@@ -504,7 +508,8 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    * and complete the handshake. The session lives until the surrounding scope
    * closes.
    *
-   * @example
+   * **Example** (Connect and request version)
+   *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
    * import { Effect } from "effect"
@@ -525,7 +530,8 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    * {@link Socket.Socket}. This is the test seam: pair it with `Socket.make`
    * to drive the protocol against an in-memory fake server.
    *
-   * @example
+   * **Example** (Connect with fake socket)
+   *
    * ```ts
    * import { ObsProtocol, resolveObsConfig } from "@beep/obs"
    *
@@ -544,10 +550,13 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    * during layer acquisition; the layer fails with {@link ObsError} when the
    * server is unreachable, closes early, or rejects authentication.
    *
+   * **Details**
+   *
    * Provide `Socket.layerWebSocketConstructorGlobal` from
    * `effect/unstable/socket` for the Bun runtime (global `WebSocket`).
    *
-   * @example
+   * **Example** (Layer with global WebSocket)
+   *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
    * import { Layer } from "effect"

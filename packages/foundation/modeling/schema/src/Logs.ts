@@ -13,7 +13,8 @@ const $I = $SchemaId.create("Logs");
 /**
  * Supported log levels including global enable-all and disable-all sentinels.
  *
- * @example
+ * **Example** (Decode and inspect LogLevel)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LogLevel } from "@beep/schema/Logs"
@@ -25,8 +26,8 @@ const $I = $SchemaId.create("Logs");
  * LogLevel.is.Debug("Debug") // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const LogLevel = LiteralKit(["All", "Fatal", "Error", "Warn", "Info", "Debug", "Trace", "None"]).pipe(
   $I.annoteSchema("LogLevel", {
@@ -37,7 +38,8 @@ export const LogLevel = LiteralKit(["All", "Fatal", "Error", "Warn", "Info", "De
 /**
  * Runtime type for `LogLevel`.
  *
- * @example
+ * **Example** (Annotate LogLevel value)
+ *
  * ```ts
  * import { LogLevel } from "@beep/schema/Logs"
  *
@@ -45,15 +47,16 @@ export const LogLevel = LiteralKit(["All", "Fatal", "Error", "Warn", "Info", "De
  * console.log(LogLevel.Options.includes(level))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LogLevel = typeof LogLevel.Type;
 
 /**
  * Supported log severities emitted by the logger (excludes `All` and `None`).
  *
- * @example
+ * **Example** (Decode LogSeverity values)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { LogSeverity } from "@beep/schema/Logs"
@@ -64,8 +67,8 @@ export type LogLevel = typeof LogLevel.Type;
  * LogSeverity.Enum.Warn  // "Warn"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const LogSeverity = LiteralKit(["Fatal", "Error", "Warn", "Info", "Debug", "Trace"]).pipe(
   $I.annoteSchema("LogSeverity", {
@@ -76,7 +79,8 @@ export const LogSeverity = LiteralKit(["Fatal", "Error", "Warn", "Info", "Debug"
 /**
  * Runtime type for `LogSeverity`.
  *
- * @example
+ * **Example** (Annotate LogSeverity value)
+ *
  * ```ts
  * import { LogSeverity } from "@beep/schema/Logs"
  *
@@ -84,7 +88,7 @@ export const LogSeverity = LiteralKit(["Fatal", "Error", "Warn", "Info", "Debug"
  * console.log(LogSeverity.Options.includes(severity))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LogSeverity = typeof LogSeverity.Type;

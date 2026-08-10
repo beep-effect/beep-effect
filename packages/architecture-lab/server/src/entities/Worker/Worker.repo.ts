@@ -38,7 +38,8 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
 /**
  * Build the in-memory Worker repository used by the fast architecture lab proof.
  *
- * @example
+ * **Example** (Create worker then list)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { makeInMemoryWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
@@ -63,7 +64,6 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  *
  * @effects Allocates an in-memory `Ref` and mutates that process-local store
  * for create, get, and list repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -138,7 +138,8 @@ const getDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.getDrizzle"
 /**
  * Build a Drizzle-backed Worker repository used by live persistence tests.
  *
- * @example
+ * **Example** (List with unavailable catch)
+ *
  * ```ts
  * import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
  * import { Effect } from "effect"
@@ -155,7 +156,6 @@ const getDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.getDrizzle"
  * @effects Requires `PostgresDrizzle`; executes `select` and `insert`
  * statements against the Worker table and redacts driver failures to
  * `WorkerRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -198,7 +198,8 @@ export const makeDrizzleWorkerRepository = Effect.fn("ArchitectureLab.WorkerRepo
 /**
  * Build the default Worker repository for normal slice tests.
  *
- * @example
+ * **Example** (Default repository list count)
+ *
  * ```ts
  * import { makeWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
  * import { Effect } from "effect"

@@ -46,12 +46,14 @@ const PortDecimalString = S.String.check(
 /**
  * Branded schema for usable transport-layer port numbers.
  *
- * @remarks
+ * **Details**
+ *
  * Transport protocols use 16-bit port-number spaces, but this schema excludes
  * port `0` because it is reserved in the IANA TCP/UDP registry and commonly
  * used by local APIs as an allocation sentinel rather than a service port.
  *
- * @example
+ * **Example** (Decode HTTPS port number)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -75,7 +77,8 @@ export const Port = S.Int.check(PortRange).pipe(
 /**
  * Type-level value inferred from {@link Port}.
  *
- * @example
+ * **Example** (Narrow unknown to Port)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
@@ -96,12 +99,14 @@ export type Port = typeof Port.Type;
 /**
  * Codec that decodes decimal port strings into branded {@link Port} values.
  *
- * @remarks
+ * **Details**
+ *
  * The encoded side accepts only ASCII decimal digits before number decoding,
  * avoiding JavaScript number-coercion forms such as whitespace or hexadecimal
  * strings.
  *
- * @example
+ * **Example** (Decode decimal port string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -125,7 +130,8 @@ export const PortFromString = PortDecimalString.pipe(
 /**
  * Type-level value inferred from {@link PortFromString}.
  *
- * @example
+ * **Example** (Decoded string as Port type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

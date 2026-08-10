@@ -121,7 +121,8 @@ const collectStarCards = Effect.fnUntraced(function* (
 /**
  * Create research cards for cloned and starred repositories.
  *
- * @example
+ * **Example** (Create repo and star cards)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { repoCardImpl } from "@beep/repo-cli/commands/Research/internal/RepoCardRun"
@@ -137,6 +138,7 @@ const collectStarCards = Effect.fnUntraced(function* (
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

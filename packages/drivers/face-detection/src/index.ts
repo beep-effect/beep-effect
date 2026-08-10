@@ -1,13 +1,15 @@
 /**
  * `@beep/face-detection` ONNX face detection driver package.
  *
- * @remarks
+ * **Details**
+ *
  * This package owns the technical boundary for YuNet-compatible ONNX face
  * detection: model-session loading, image preprocessing, tensor
  * post-processing, and schema-first detection results. Product triage,
  * persistence, and policy decisions belong in downstream packages.
  *
- * @example
+ * **Example** (Create image detection request)
+ *
  * ```ts
  * import { FaceDetectionImageRequest } from "@beep/face-detection"
  *
@@ -27,7 +29,8 @@
 /**
  * Public ONNX face detection driver error exports.
  *
- * @example
+ * **Example** (Construct FaceDetectionError instance)
+ *
  * ```ts
  * import { FaceDetectionError } from "@beep/face-detection"
  *
@@ -38,14 +41,15 @@
  * console.log(error.operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export * from "./FaceDetection.errors.ts";
 /**
  * Public ONNX face detection driver model exports.
  *
- * @example
+ * **Example** (Make FaceDetectionImageRequest model)
+ *
  * ```ts
  * import { FaceDetectionImageRequest } from "@beep/face-detection"
  *
@@ -58,14 +62,15 @@ export * from "./FaceDetection.errors.ts";
  * console.log(request.topK)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export * from "./FaceDetection.models.ts";
 /**
  * Public ONNX face detection driver service exports.
  *
- * @example
+ * **Example** (Create face detection service)
+ *
  * ```ts
  * import { makeFaceDetectionService } from "@beep/face-detection"
  *
@@ -73,7 +78,7 @@ export * from "./FaceDetection.models.ts";
  * console.log(typeof service.withDetector)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./FaceDetection.service.ts";

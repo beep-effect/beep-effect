@@ -86,12 +86,14 @@ const formHook = createFormHook({
  * pre-registered. Pair with the schema-first builders in
  * `@beep/form/core/FormOptions`.
  *
- * @remarks
+ * **Details**
+ *
  * The returned form instance owns all TanStack form state and exposes the
  * registered field components through `form.AppField`. Field components should
  * be rendered inside `<form.AppForm>` so their provider-backed hooks resolve.
  *
- * @example
+ * **Example** (Schema-backed login form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"
@@ -127,7 +129,8 @@ export const useAppForm = formHook.useAppForm;
 /**
  * Builds a reusable sub-form component over a shared form instance.
  *
- * @example
+ * **Example** (Reusable profile sub-form)
+ *
  * ```tsx
  * import { withForm } from "@beep/form/hooks/useAppForm"
  *
@@ -154,7 +157,8 @@ export const withForm = formHook.withForm;
  * Builds a reusable, remappable field-group component (address, password +
  * confirm, amount + currency, …).
  *
- * @example
+ * **Example** (Remappable address field group)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { withFieldGroup } from "@beep/form/hooks/useAppForm"

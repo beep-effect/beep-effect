@@ -55,11 +55,14 @@ class ExtractEntitiesSuccess extends S.Class<ExtractEntitiesSuccess>($I`ExtractE
  * Defines the agent-facing tool contract for extracting built-in and custom
  * named entities from text.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs entity values, entity types, token
  * boundaries, and character offsets for dates, money, emails, URLs, or learned
  * custom patterns.
  *
- * @example
+ * **Example** (Decode ExtractEntities parameters)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExtractEntities } from "@beep/nlp-processing/Tools/ExtractEntities"

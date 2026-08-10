@@ -20,7 +20,8 @@ import * as internal from "./generated/iso4217.ts";
  * numeric code, decimal digits, human-readable currency name, and an
  * array of countries where the currency is used.
  *
- * @example
+ * **Example** (USD currency entry lookup)
+ *
  * ```typescript
  * import { CurrencyCodeDataByCode, type CurrencyCodeData } from "@beep/data/CurrencyCodes"
  *
@@ -36,7 +37,8 @@ export type CurrencyCodeData = (typeof internal.CurrencyCodeDataValues)[number];
 /**
  * Union of all ISO 4217 three-letter currency code strings.
  *
- * @example
+ * **Example** (Assign USD and EUR codes)
+ *
  * ```typescript
  * import type { CurrencyCode } from "@beep/data/CurrencyCodes"
  *
@@ -53,7 +55,8 @@ export type CurrencyCode = CurrencyCodeData["code"];
 /**
  * Stable source metadata for the generated ISO 4217 dataset.
  *
- * @example
+ * **Example** (Access dataset source metadata)
+ *
  * ```typescript
  * import { CurrencyCodeDataMetadata } from "@beep/data/CurrencyCodes"
  * import type { CurrencyCodeDataMetadata as CurrencyCodeDataMetadataShape } from "@beep/data/CurrencyCodes"
@@ -74,13 +77,16 @@ export type CurrencyCodeDataMetadata = typeof internal.CurrencyCodeDataMetadata;
 /**
  * Complete array of all active ISO 4217 currency entries.
  *
+ * **Details**
+ *
  * Each entry contains a `code` (three-letter), `number` (three-digit),
  * `digits` (decimal places), `currency` (human name), and `countries`
  * (array of country names where the currency is used).
  *
  * Sourced from the official ISO 4217 published list.
  *
- * @example
+ * **Example** (Find USD in currency array)
+ *
  * ```typescript
  * import { CurrencyCodeDataValues } from "@beep/data/CurrencyCodes"
  *
@@ -96,7 +102,8 @@ export const CurrencyCodeDataValues: typeof internal.CurrencyCodeDataValues = in
 /**
  * Stable source metadata for the generated ISO 4217 dataset.
  *
- * @example
+ * **Example** (Check published date value)
+ *
  * ```typescript
  * import { CurrencyCodeDataMetadata } from "@beep/data/CurrencyCodes"
  *
@@ -111,7 +118,8 @@ export const CurrencyCodeDataMetadata: typeof internal.CurrencyCodeDataMetadata 
 /**
  * Published date reported by the official ISO 4217 List One feed.
  *
- * @example
+ * **Example** (Assert published date string)
+ *
  * ```typescript
  * import { CurrencyCodeDataPublished } from "@beep/data/CurrencyCodes"
  *
@@ -126,7 +134,8 @@ export const CurrencyCodeDataPublished: typeof internal.CurrencyCodeDataPublishe
 /**
  * Official source URL for the ISO 4217 List One feed.
  *
- * @example
+ * **Example** (Verify source URL path)
+ *
  * ```typescript
  * import { CurrencyCodeDataSourceUrl } from "@beep/data/CurrencyCodes"
  *
@@ -141,7 +150,8 @@ export const CurrencyCodeDataSourceUrl: typeof internal.CurrencyCodeDataSourceUr
 /**
  * SHA-256 digest of the official source payload used for the generated dataset.
  *
- * @example
+ * **Example** (Check SHA-256 digest length)
+ *
  * ```typescript
  * import { CurrencyCodeDataSourceSha256 } from "@beep/data/CurrencyCodes"
  *
@@ -157,7 +167,8 @@ export const CurrencyCodeDataSourceSha256: typeof internal.CurrencyCodeDataSourc
 /**
  * ISO 4217 currency entries keyed by alphabetic code.
  *
- * @example
+ * **Example** (Lookup EUR decimal digits)
+ *
  * ```typescript
  * import { CurrencyCodeDataByCode } from "@beep/data/CurrencyCodes"
  *
@@ -172,7 +183,8 @@ export const CurrencyCodeDataByCode: typeof internal.CurrencyCodeDataByCode = in
 /**
  * ISO 4217 alphabetic code literals.
  *
- * @example
+ * **Example** (Check USD code is included)
+ *
  * ```typescript
  * import { CurrencyCodeDataCodeValues } from "@beep/data/CurrencyCodes"
  *
@@ -188,7 +200,8 @@ export const CurrencyCodeDataCodeValues: typeof internal.CurrencyCodeDataCodeVal
 /**
  * ISO 4217 currency names keyed by alphabetic code.
  *
- * @example
+ * **Example** (Lookup USD currency name)
+ *
  * ```typescript
  * import { CurrencyCodeDataNameByCode } from "@beep/data/CurrencyCodes"
  *
@@ -204,7 +217,8 @@ export const CurrencyCodeDataNameByCode: typeof internal.CurrencyCodeDataNameByC
 /**
  * ISO 4217 alphabetic code to currency-name literal pairs.
  *
- * @example
+ * **Example** (Find USD code-name pair)
+ *
  * ```typescript
  * import { CurrencyCodeDataCodeNamePairs } from "@beep/data/CurrencyCodes"
  *

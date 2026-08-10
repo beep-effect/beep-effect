@@ -9,9 +9,8 @@
 /**
  * Citation-signal model exports.
  *
- * **Example**
+ * **Example** (Import CitationSignal)
  *
- * @example
  * ```ts
  * import { CitationSignal } from "@beep/law-practice-domain/values";
  * ```

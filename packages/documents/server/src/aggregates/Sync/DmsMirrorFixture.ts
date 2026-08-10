@@ -45,7 +45,8 @@ const $I = $DocumentsServerId.create("aggregates/Sync/DmsMirrorFixture");
 /**
  * Mirror verb addressed by fixture call counts and failure injection.
  *
- * @example
+ * **Example** (Assert uploadFile verb)
+ *
  * ```ts
  * import { DmsMirrorFixtureVerb } from "@beep/documents-server/aggregates/Sync"
  *
@@ -75,7 +76,8 @@ export const DmsMirrorFixtureVerb = LiteralKit([
 /**
  * Runtime type for {@link DmsMirrorFixtureVerb}.
  *
- * @example
+ * **Example** (Type pollEvents string)
+ *
  * ```ts
  * import type { DmsMirrorFixtureVerb } from "@beep/documents-server/aggregates/Sync"
  *
@@ -91,7 +93,8 @@ export type DmsMirrorFixtureVerb = typeof DmsMirrorFixtureVerb.Type;
 /**
  * Per-verb call counts observed by the fixture since construction.
  *
- * @example
+ * **Example** (Decode per-verb call counts)
+ *
  * ```ts
  * import { DmsMirrorFixtureCounts } from "@beep/documents-server/aggregates/Sync"
  * import * as S from "effect/Schema"
@@ -139,7 +142,8 @@ export class DmsMirrorFixtureCounts extends S.Class<DmsMirrorFixtureCounts>($I`D
 /**
  * One node of the fixture's synthetic remote tree keyed by mirror-root-relative path.
  *
- * @example
+ * **Example** (Decode folder tree node)
+ *
  * ```ts
  * import { DmsMirrorFixtureNode } from "@beep/documents-server/aggregates/Sync"
  * import * as S from "effect/Schema"
@@ -178,7 +182,8 @@ export class DmsMirrorFixtureNode extends S.Class<DmsMirrorFixtureNode>($I`DmsMi
 /**
  * Test-facing control surface of the deterministic DMS mirror fixture.
  *
- * @example
+ * **Example** (Construct idle control handle)
+ *
  * ```ts
  * import { DmsMirrorFixtureCounts, type DmsMirrorFixtureHandleShape } from "@beep/documents-server/aggregates/Sync"
  * import { Effect } from "effect"
@@ -216,7 +221,8 @@ export interface DmsMirrorFixtureHandleShape {
 /**
  * Context tag for the fixture control surface.
  *
- * @example
+ * **Example** (Read fixture handle key)
+ *
  * ```ts
  * import { DmsMirrorFixtureHandle } from "@beep/documents-server/aggregates/Sync"
  *
@@ -284,7 +290,8 @@ const nodeOf = (item: FixtureItemState): DmsMirrorFixtureNode =>
 /**
  * Build one deterministic in-memory DMS mirror fixture instance.
  *
- * @example
+ * **Example** (Ensure folder and snapshot)
+ *
  * ```ts
  * import { makeDmsMirrorFixture } from "@beep/documents-server/aggregates/Sync"
  * import { EnsureFolderInput } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -303,7 +310,6 @@ const nodeOf = (item: FixtureItemState): DmsMirrorFixtureNode =>
  * @effects Allocates in-memory `Ref` state for the remote tree, event log,
  * call counts, requested stream positions, and injected failures; every mirror
  * verb mutates that process-local state.
- *
  * @category testing
  * @since 0.0.0
  */
@@ -544,7 +550,8 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
  * Tests injecting foreign events "under the mirror root" use this as the
  * event's `parentRemoteId`.
  *
- * @example
+ * **Example** (Print synthetic root id)
+ *
  * ```ts
  * import { DMS_MIRROR_FIXTURE_ROOT_ID } from "@beep/documents-server/aggregates/Sync"
  *
@@ -566,7 +573,8 @@ const connectedAvailability = DmsMirrorAvailability.of({
  * Deterministic fixture layer providing the DMS mirror port, a connected
  * availability probe, and the fixture control handle from one shared state.
  *
- * @example
+ * **Example** (Inspect fixture layer value)
+ *
  * ```ts
  * import { DmsMirrorFixtureLayer } from "@beep/documents-server/aggregates/Sync"
  *

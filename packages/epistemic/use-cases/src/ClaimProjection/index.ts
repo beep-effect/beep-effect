@@ -8,7 +8,8 @@
 /**
  * Claim projection contract exports.
  *
- * @example
+ * **Example** (Project empty claims)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimProjection from "@beep/epistemic-use-cases/ClaimProjection"

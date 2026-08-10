@@ -16,7 +16,8 @@ import type { FieldOption } from "../core/Options.ts";
  * label/description/options/placeholder; binding props
  * (`items`/`value`/`onValueChange`/`name`) are owned by the field.
  *
- * @example
+ * **Example** (Satisfy combobox field props)
+ *
  * ```ts
  * import type { ComboboxFieldProps } from "@beep/form/fields/ComboboxField"
  *
@@ -47,7 +48,8 @@ export interface ComboboxFieldProps
  * Schema-bound single-select combobox with base-ui's built-in filtering over a
  * fixed option set.
  *
- * @example
+ * **Example** (Country select combobox form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import { ComboboxField } from "@beep/form/fields/ComboboxField"

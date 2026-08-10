@@ -15,7 +15,8 @@ const $I = $EpistemicDomainId.create("values/ClaimProjection/ClaimProjectionView
  * Count of claims in each lifecycle state. One key per {@link ClaimLifecycle}
  * state so the projection is total and deterministic.
  *
- * @example
+ * **Example** (Decode lifecycle state counts)
+ *
  * ```ts
  * import { ClaimStateCounts } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -50,7 +51,8 @@ export class ClaimStateCounts extends S.Class<ClaimStateCounts>($I`ClaimStateCou
  * yields a structurally-equal view, and it carries no write capability. The
  * `admittedKeys` are sorted for stable, referentially-equal rebuilds.
  *
- * @example
+ * **Example** (Decode projection view data)
+ *
  * ```ts
  * import { ClaimProjectionView } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"

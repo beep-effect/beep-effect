@@ -17,7 +17,8 @@ const $I = $PostgresId.create("PostgresSqlState.models");
 /**
  * PostgreSQL SQLSTATE names mapped to five-character SQLSTATE codes.
  *
- * @example
+ * **Example** (Lookup unique violation code)
+ *
  * ```ts
  * import { PostgresErrorCodeByName } from "@beep/postgres"
  *
@@ -306,7 +307,8 @@ const PgErrorCodeValues = A.dedupe(A.map(PgErrorNameValues, (name) => PostgresEr
 /**
  * PostgreSQL SQLSTATE name.
  *
- * @example
+ * **Example** (Assign unique violation name)
+ *
  * ```ts
  * import type { PgErrorName } from "@beep/postgres"
  *
@@ -322,7 +324,8 @@ export type PgErrorName = typeof PgErrorName.Type;
 /**
  * PostgreSQL SQLSTATE code.
  *
- * @example
+ * **Example** (Assign unique violation code)
+ *
  * ```ts
  * import type { PgErrorCode } from "@beep/postgres"
  *
@@ -338,7 +341,8 @@ export type PgErrorCode = typeof PgErrorCode.Type;
 /**
  * Non-empty SQLSTATE entry array preserving the canonical source order.
  *
- * @example
+ * **Example** (Read first SQLSTATE entry)
+ *
  * ```ts
  * import { pgErrorEntries } from "@beep/postgres"
  *
@@ -369,7 +373,8 @@ const appendPgErrorAlias = (
 /**
  * All SQLSTATE names that map to each SQLSTATE code.
  *
- * @example
+ * **Example** (List aliases for code)
+ *
  * ```ts
  * import { PgErrorAliasesByCode } from "@beep/postgres"
  *
@@ -389,12 +394,14 @@ export const PgErrorAliasesByCode = A.reduce(
 /**
  * Canonical SQLSTATE name for each SQLSTATE code.
  *
- * @remarks
+ * **Details**
+ *
  * PostgreSQL exposes a few duplicate names for the same SQLSTATE code. This
  * record keeps the first source-order name as canonical while
  * {@link PgErrorAliasesByCode} preserves every alias.
  *
- * @example
+ * **Example** (Get canonical name for code)
+ *
  * ```ts
  * import { PgErrorCanonicalNameByCode } from "@beep/postgres"
  *
@@ -416,7 +423,8 @@ const PgErrorAliasesLookup: Readonly<Record<string, A.NonEmptyReadonlyArray<PgEr
 /**
  * Schema for PostgreSQL SQLSTATE codes.
  *
- * @example
+ * **Example** (Decode SQLSTATE code schema)
+ *
  * ```ts
  * import { PgErrorCode } from "@beep/postgres"
  * import * as S from "effect/Schema"
@@ -438,7 +446,8 @@ export const PgErrorCode = LiteralKit(PgErrorCodeValues).pipe(
 /**
  * Schema for PostgreSQL SQLSTATE names.
  *
- * @example
+ * **Example** (Decode SQLSTATE name schema)
+ *
  * ```ts
  * import { PgErrorName } from "@beep/postgres"
  * import * as S from "effect/Schema"
@@ -460,7 +469,8 @@ export const PgErrorName = LiteralKit(PgErrorNameValues).pipe(
 /**
  * Predicate for known PostgreSQL SQLSTATE codes.
  *
- * @example
+ * **Example** (Check known SQLSTATE code)
+ *
  * ```ts
  * import { isPgErrorCode } from "@beep/postgres"
  *
@@ -476,7 +486,8 @@ export const isPgErrorCode = S.is(PgErrorCode);
 /**
  * Resolve the canonical SQLSTATE name for a code.
  *
- * @example
+ * **Example** (Resolve name from code)
+ *
  * ```ts
  * import { getPgErrorName } from "@beep/postgres"
  *
@@ -493,7 +504,8 @@ export const getPgErrorName = (code: string): O.Option<PgErrorName> =>
 /**
  * Resolve every SQLSTATE alias name for a code.
  *
- * @example
+ * **Example** (Resolve aliases from code)
+ *
  * ```ts
  * import { getPgErrorAliases } from "@beep/postgres"
  *

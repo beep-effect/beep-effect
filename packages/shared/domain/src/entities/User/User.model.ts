@@ -16,7 +16,8 @@ const $I = $SharedDomainId.create("entities/User/User.model");
 /**
  * Shared-kernel human account entity schema.
  *
- * @example
+ * **Example** (Read user table name)
+ *
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/User"
  *

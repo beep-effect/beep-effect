@@ -144,7 +144,8 @@ const baselineFor = (repoPath: string): number => {
  * `ManagedRuntime.make` calls in test files while preserving the current
  * legacy baseline counts.
  *
- * @example
+ * **Example** (Manual runtime rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -153,6 +154,7 @@ const baselineFor = (repoPath: string): number => {
  *
  * strictEqual(description?.includes("@effect/vitest"), true)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

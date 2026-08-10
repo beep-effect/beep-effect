@@ -1,0 +1,24 @@
+{
+    "name": "@pulumi/gharunners",
+    "version": "7.10.1",
+    "main": "bin/index.js",
+    "scripts": {
+        "build": "tsc",
+        "postinstall": "node ./scripts/postinstall.js"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.238.0",
+        "@types/node": "^20",
+        "typescript": "^4.7.0"
+    },
+    "pulumi": {
+        "resource": true,
+        "name": "terraform-module",
+        "version": "0.2.2",
+        "parameterization": {
+            "name": "ghaRunners",
+            "version": "7.10.1",
+            "value": "ewogICJtb2R1bGUiOiAiZ2l0aHViLWF3cy1ydW5uZXJzL2dpdGh1Yi1ydW5uZXIvYXdzIiwKICAidmVyc2lvbiI6ICI3LjEwLjEiLAogICJwYWNrYWdlTmFtZSI6ICJnaGFSdW5uZXJzIgp9"
+        }
+    }
+}

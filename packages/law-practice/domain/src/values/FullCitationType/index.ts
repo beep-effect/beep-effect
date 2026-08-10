@@ -9,9 +9,8 @@
 /**
  * FullCitationType model exports.
  *
- * **Example**
+ * **Example** (Import FullCitationType export)
  *
- * @example
  * ```ts
  * import { FullCitationType } from "@beep/law-practice-domain/values";
  * ```

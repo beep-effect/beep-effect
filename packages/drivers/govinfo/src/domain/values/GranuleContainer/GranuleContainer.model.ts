@@ -15,11 +15,13 @@ const $I = $GovinfoId.create("domain/values/GranuleContainer/GranuleContainer.mo
 /**
  * Paginated GovInfo granule listing for a package.
  *
- * @remarks
+ * **Details**
+ *
  * Package granule listings expose subsections of a document package and use
  * `offsetMark`/page URLs for traversal, similar to collection pages.
  *
- * @example
+ * **Example** (Decode package granule listing)
+ *
  * ```ts
  * import { GranuleContainer } from "@beep/govinfo/domain/values/GranuleContainer/GranuleContainer.model";
  * import * as S from "effect/Schema";
@@ -98,7 +100,8 @@ export class GranuleContainer extends S.Class<GranuleContainer>($I`GranuleContai
 /**
  * Companion namespace for {@link GranuleContainer} encoded helpers.
  *
- * @example
+ * **Example** (Decode empty granule container)
+ *
  * ```ts
  * import { GranuleContainer } from "@beep/govinfo/domain/values/GranuleContainer/GranuleContainer.model";
  * import * as S from "effect/Schema";
@@ -123,7 +126,8 @@ export declare namespace GranuleContainer {
   /**
    * Encoded JSON shape accepted by {@link GranuleContainer}.
    *
-   * @example
+   * **Example** (Encode decoded granule container)
+   *
    * ```ts
    * import { GranuleContainer } from "@beep/govinfo/domain/values/GranuleContainer/GranuleContainer.model";
    * import * as S from "effect/Schema";

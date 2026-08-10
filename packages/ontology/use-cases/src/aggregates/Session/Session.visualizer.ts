@@ -46,7 +46,8 @@ const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uin
 /**
  * Visualizer fold level.
  *
- * @example
+ * **Example** (Assign L2 fold level)
+ *
  * ```ts
  * import { OntologyFoldLevel } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -67,7 +68,8 @@ export const OntologyFoldLevel = LiteralKit(["L0", "L1", "L2", "L3"]).pipe(
 /**
  * Type for {@link OntologyFoldLevel}.
  *
- * @example
+ * **Example** (Type L1 fold level)
+ *
  * ```ts
  * import { OntologyFoldLevel } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -84,7 +86,8 @@ export type OntologyFoldLevel = typeof OntologyFoldLevel.Type;
 /**
  * Label level-of-detail selected for the projected viewport.
  *
- * @example
+ * **Example** (Assign key label detail)
+ *
  * ```ts
  * import { OntologyLabelLevelOfDetail } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -105,7 +108,8 @@ export const OntologyLabelLevelOfDetail = LiteralKit(["full", "key", "hidden"]).
 /**
  * Type for {@link OntologyLabelLevelOfDetail}.
  *
- * @example
+ * **Example** (Type hidden label detail)
+ *
  * ```ts
  * import { OntologyLabelLevelOfDetail } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -122,7 +126,8 @@ export type OntologyLabelLevelOfDetail = typeof OntologyLabelLevelOfDetail.Type;
 /**
  * Pinned node position preserved across worker projections.
  *
- * @example
+ * **Example** (Create pinned node)
+ *
  * ```ts
  * import { OntologyPinnedNode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -152,7 +157,8 @@ export class OntologyPinnedNode extends S.Class<OntologyPinnedNode>($I`OntologyP
 /**
  * Worker graph projection options.
  *
- * @example
+ * **Example** (Default projection options)
+ *
  * ```ts
  * import { defaultOntologyGraphProjectionOptions } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -187,7 +193,8 @@ export class OntologyGraphProjectionOptions extends S.Class<OntologyGraphProject
 /**
  * Default worker graph projection options.
  *
- * @example
+ * **Example** (Create default options)
+ *
  * ```ts
  * import { defaultOntologyGraphProjectionOptions } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -216,7 +223,8 @@ export const defaultOntologyGraphProjectionOptions = (): OntologyGraphProjection
 /**
  * Graph node metadata paired with typed-array buffers.
  *
- * @example
+ * **Example** (Create graph node)
+ *
  * ```ts
  * import { OntologyGraphNode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -258,7 +266,8 @@ export class OntologyGraphNode extends S.Class<OntologyGraphNode>($I`OntologyGra
 /**
  * Graph edge metadata paired with typed-array buffers.
  *
- * @example
+ * **Example** (Create graph edge)
+ *
  * ```ts
  * import { OntologyGraphEdge } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -298,7 +307,8 @@ export class OntologyGraphEdge extends S.Class<OntologyGraphEdge>($I`OntologyGra
 /**
  * Fold cluster summary produced by the worker.
  *
- * @example
+ * **Example** (Create fold cluster)
+ *
  * ```ts
  * import { OntologyGraphCluster } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -332,7 +342,8 @@ export class OntologyGraphCluster extends S.Class<OntologyGraphCluster>($I`Ontol
 /**
  * Aggregate graph projection statistics.
  *
- * @example
+ * **Example** (Create projection stats)
+ *
  * ```ts
  * import { OntologyGraphProjectionStats } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -366,7 +377,8 @@ export class OntologyGraphProjectionStats extends S.Class<OntologyGraphProjectio
 /**
  * Typed-array graph projection consumed by the visualizer client.
  *
- * @example
+ * **Example** (Create graph projection)
+ *
  * ```ts
  * import { OntologyGraphProjection, OntologyGraphProjectionStats } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -436,7 +448,8 @@ export class OntologyGraphProjection extends S.Class<OntologyGraphProjection>($I
 /**
  * Graph editing gesture emitted by the viewport halo overlay.
  *
- * @example
+ * **Example** (Create instantiate gesture)
+ *
  * ```ts
  * import { OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -484,7 +497,8 @@ export const OntologyGraphGesture = LiteralKit(["connect", "delete", "expand", "
 /**
  * Type for {@link OntologyGraphGesture}.
  *
- * @example
+ * **Example** (Type connect gesture)
+ *
  * ```ts
  * import { OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -506,7 +520,8 @@ export type OntologyGraphGesture = typeof OntologyGraphGesture.Type;
 /**
  * Predicate autocomplete suggestion for graph gestures.
  *
- * @example
+ * **Example** (Create predicate suggestion)
+ *
  * ```ts
  * import { OntologyPredicateSuggestion } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -1382,7 +1397,8 @@ const relationshipsFromSnapshot = (snapshot: OntologySnapshot): ReadonlyArray<Re
 /**
  * Build a full graph projection from the shared ontology snapshot.
  *
- * @example
+ * **Example** (Build full projection)
+ *
  * ```ts
  * import { buildOntologyGraphProjection, defaultOntologyGraphProjectionOptions, OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -1422,7 +1438,8 @@ export const buildOntologyGraphProjection: {
 /**
  * Input for applying a graph projection delta.
  *
- * @example
+ * **Example** (Create delta input)
+ *
  * ```ts
  * import { emptySessionChangeDelta } from "@beep/ontology-domain/aggregates/Session"
  * import { ApplyOntologyGraphProjectionDeltaInput, defaultOntologyGraphProjectionOptions, OntologyGraphProjection, OntologyGraphProjectionStats, OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
@@ -1495,7 +1512,8 @@ export class ApplyOntologyGraphProjectionDeltaInput extends S.Class<ApplyOntolog
 /**
  * Apply a session delta to an existing graph projection without full graph diffing.
  *
- * @example
+ * **Example** (Apply projection delta)
+ *
  * ```ts
  * import { ApplyOntologyGraphProjectionDeltaInput, applyOntologyGraphProjectionDelta, buildOntologyGraphProjection, defaultOntologyGraphProjectionOptions, OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
  * import { emptySessionChangeDelta } from "@beep/ontology-domain/aggregates/Session"
@@ -1597,7 +1615,8 @@ const quadChange = (
 /**
  * Convert a halo graph gesture into undoable ontology change operations.
  *
- * @example
+ * **Example** (Convert gesture to operations)
+ *
  * ```ts
  * import { graphGestureChangeOperations, OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -1626,7 +1645,8 @@ export const graphGestureChangeOperations = (gesture: OntologyGraphGesture): Rea
 /**
  * Build predicate autocomplete suggestions from the current snapshot.
  *
- * @example
+ * **Example** (Build autocomplete suggestions)
+ *
  * ```ts
  * import { predicateAutocompleteSuggestions, OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
  *

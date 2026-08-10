@@ -13,7 +13,8 @@ const $I = $SchemaId.create("KebabStr");
 /**
  * Branded kebab-case string schema with a lowercase leading letter.
  *
- * @example
+ * **Example** (Decode kebab-case string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { KebabCaseStr } from "@beep/schema"
@@ -22,8 +23,8 @@ const $I = $SchemaId.create("KebabStr");
  * console.log(value) // "my-role-2"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const KebabCaseStr = NonEmptyTrimmedStr.pipe(
   S.check(
@@ -46,7 +47,8 @@ export const KebabCaseStr = NonEmptyTrimmedStr.pipe(
 /**
  * Type for {@link KebabCaseStr}.
  *
- * @example
+ * **Example** (Type a kebab-case string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { KebabCaseStr } from "@beep/schema"
@@ -56,7 +58,7 @@ export const KebabCaseStr = NonEmptyTrimmedStr.pipe(
  * console.log(role)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type KebabCaseStr = typeof KebabCaseStr.Type;

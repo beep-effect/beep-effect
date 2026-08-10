@@ -23,7 +23,8 @@ import type { PgliteClientValue } from "./PgliteClient.service.ts";
 /**
  * Default docker-free in-memory PGlite test layer.
  *
- * @example
+ * **Example** (Import and log layer)
+ *
  * ```ts
  * import { PgliteTestLayer } from "@beep/pglite"
  *

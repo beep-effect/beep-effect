@@ -37,7 +37,8 @@ import type { JSX } from "react";
  * The markdown shortcut transformers registered by {@link EditorComposer} —
  * exported so apps can compose their own plugin stacks.
  *
- * @example
+ * **Example** (Import markdown transformers)
+ *
  * ```ts
  * import { markdownTransformers } from "@beep/editor/composer"
  *
@@ -52,7 +53,8 @@ export const markdownTransformers = TRANSFORMERS;
 /**
  * React props for {@link EditorComposer}.
  *
- * @example
+ * **Example** (Type EditorComposer props)
+ *
  * ```ts
  * import type { EditorComposerProps } from "@beep/editor/composer"
  *
@@ -83,7 +85,8 @@ export interface EditorComposerProps {
 /**
  * React props for {@link EditorWireComposer}.
  *
- * @example
+ * **Example** (Type wire composer props)
+ *
  * ```ts
  * import type { EditorWireComposerProps } from "@beep/editor/composer"
  *
@@ -113,7 +116,8 @@ export interface EditorWireComposerProps extends Omit<EditorComposerProps, "init
  * Editable Lexical composer over the `@beep/lexical-schema` v1 node
  * vocabulary with markdown shortcuts.
  *
- * @example
+ * **Example** (Render draft editor)
+ *
  * ```tsx
  * import { EditorComposer } from "@beep/editor/composer"
  *
@@ -201,7 +205,8 @@ export function EditorComposer({
  * never reach a load or save callback. A changed compatible `input` remounts
  * the inner editor with its canonical encoded state.
  *
- * @example
+ * **Example** (Mount wire composer)
+ *
  * ```tsx
  * import { EditorWireComposer } from "@beep/editor/composer"
  *

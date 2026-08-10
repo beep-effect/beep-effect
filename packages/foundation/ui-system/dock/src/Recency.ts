@@ -25,7 +25,8 @@ const eventGroupId = (event: DockEvent): O.Option<GroupId> => ("groupId" in even
 /**
  * Projects group touches from accepted events in event order.
  *
- * @example
+ * **Example** (Project group touches from events)
+ *
  * ```ts
  * import { GroupId, GroupUpdatedEvent, touchedGroupsInEvents } from "@beep/dock"
  *
@@ -44,10 +45,13 @@ export const touchedGroupsInEvents: (events: ReadonlyArray<DockEvent>) => Readon
 /**
  * Projects newest-first deduplicated group recency from the operation feed.
  *
- * @remarks Only successful changed mutation completions contribute; failures,
+ * **Gotchas**
+ *
+ * Only successful changed mutation completions contribute; failures,
  * snapshot saves, and unchanged results preserve the current recency.
  *
- * @example
+ * **Example** (Newest-first group recency)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, touchedGroups } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -88,10 +92,13 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
 /**
  * Derives a most-recently-used group atom from a host feed atom.
  *
- * @remarks Hosts can use this projection to dispatch MRU-on-close activation
+ * **Details**
+ *
+ * Hosts can use this projection to dispatch MRU-on-close activation
  * while the kernel retains zipper promotion without storing MRU state.
  *
- * @example
+ * **Example** (MRU groups from feed atom)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeMruGroupsAtom } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"

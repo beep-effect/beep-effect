@@ -14,7 +14,8 @@ import type { EdgeEncodedSchema, EdgeIso } from "./Graph.encoded.ts";
 /**
  * Schema for validating existing `Graph.Edge` instances.
  *
- * @example
+ * **Example** (Build EdgeFromSelf schema)
+ *
  * ```ts
  * import { EdgeFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -23,8 +24,8 @@ import type { EdgeEncodedSchema, EdgeIso } from "./Graph.encoded.ts";
  * console.log(S.isSchema(EdgeSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface EdgeFromSelf<Data extends S.Top>
   extends S.declareConstructor<
@@ -40,7 +41,8 @@ export interface EdgeFromSelf<Data extends S.Top>
 /**
  * Schema for transforming encoded edge payloads into `Graph.Edge` instances.
  *
- * @example
+ * **Example** (Build EdgeTransform schema)
+ *
  * ```ts
  * import { EdgeTransform } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -49,8 +51,8 @@ export interface EdgeFromSelf<Data extends S.Top>
  * console.log(S.isSchema(EdgeSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface EdgeTransform<Data extends S.Top>
   extends S.decodeTo<EdgeFromSelf<S.toType<Data>>, EdgeEncodedSchema<Data>> {
@@ -61,7 +63,8 @@ export interface EdgeTransform<Data extends S.Top>
 /**
  * Schema for graph edges.
  *
- * @example
+ * **Example** (Build Edge schema)
+ *
  * ```ts
  * import { Edge } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -70,8 +73,8 @@ export interface EdgeTransform<Data extends S.Top>
  * console.log(S.isSchema(EdgeSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toType<Data>>, EdgeEncodedSchema<Data>> {
   readonly data: Data;
@@ -82,7 +85,8 @@ export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toTy
  * Schema for validating existing `Graph.Edge` instances while applying the
  * provided payload schema.
  *
- * @example
+ * **Example** (Validate Edge with payload)
+ *
  * ```ts
  * import { EdgeFromSelf } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -93,8 +97,8 @@ export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toTy
  *
  * @param data - Schema for edge payloads.
  * @returns Schema that validates runtime `Graph.Edge` values.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data> => {
   const schema = S.declareConstructor<Graph_.Edge<Data["Type"]>, Graph_.Edge<Data["Encoded"]>, EdgeIso<Data>>()(
@@ -154,7 +158,8 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
  * Schema that transforms encoded edge objects into `Graph.Edge` instances and
  * encodes them back to the same object shape.
  *
- * @example
+ * **Example** (Transform encoded edge objects)
+ *
  * ```ts
  * import { EdgeTransform } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -165,8 +170,8 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
  *
  * @param data - Schema for edge payloads.
  * @returns Edge transform schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Data> => {
   const decodedEdge = data.pipe(S.toType, EdgeEncoded);
@@ -201,9 +206,12 @@ export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Dat
 /**
  * Schema for graph edges. This is an alias of {@link EdgeTransform}.
  *
+ * **Details**
+ *
  * Decodes an `{ source, target, data }` object into a `Graph.Edge` instance.
  *
- * @example
+ * **Example** (Decode edge object shape)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -216,8 +224,8 @@ export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Dat
  *
  * @param data - Schema for edge payloads.
  * @returns Edge schema.
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Edge = <Data extends S.Top>(data: Data): Edge<Data> =>
   ((schema) =>

@@ -219,7 +219,7 @@ const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): Reado
     A.some(args, isTurboConcurrencyArg)
       ? args
       : Bun.env.CI === "true"
-        ? ["--concurrency=4", ...args]
+        ? ["--concurrency=2", ...args]
         : ["--concurrency=3", ...args]
   );
 const bunScriptStep = (label: string, source: string) =>
@@ -338,7 +338,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=4",
+        "--concurrency=2",
         "--force",
         "--filter=@beep/schema",
         "--dry=json",
@@ -357,7 +357,7 @@ describe("quality task adapter", () => {
         "turbo",
         "run",
         "audit",
-        "--concurrency=4",
+        "--concurrency=2",
         "--cache=local:rw",
         "--filter=@beep/schema",
       ]);
@@ -902,7 +902,7 @@ describe("quality task adapter", () => {
       "turbo",
       "run",
       "check",
-      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
+      ...(Bun.env.CI === "true" ? ["--concurrency=2"] : ["--cache=local:rw", "--concurrency=3"]),
       "--affected",
       "--summarize",
     ]);
@@ -1229,7 +1229,9 @@ describe("quality task adapter", () => {
 
   it("runs combined root coverage tasks in ratchet mode", () => {
     const passthroughTasks = ["build", "check", "test", "coverage", "audit", "lint", "docgen"] as const;
-    const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]));
+    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]))
+    );
 
     expect(steps[0]).toMatchObject({
       label: "lint:fix",
@@ -1249,7 +1251,9 @@ describe("quality task adapter", () => {
   });
 
   it("runs root coverage as the ratchet gate by default", () => {
-    const steps = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    );
 
     expect(steps).toHaveLength(1);
     expect(steps[0]).toMatchObject({
@@ -1281,8 +1285,8 @@ describe("quality task adapter", () => {
   });
 
   it("honors an explicit fast-check seed for exploratory coverage runs", () => {
-    const steps = withEnvVar("BEEP_FC_SEED", "8675309", () =>
-      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
+      withEnvVar("BEEP_FC_SEED", "8675309", () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -1292,9 +1296,8 @@ describe("quality task adapter", () => {
   });
 
   it("keeps report-only coverage reserved for baseline regeneration", () => {
-    const steps = rootQualityStepsForTesting(
-      "/repo",
-      getInvocation(["coverage", "--write-baseline", "--concurrency=1"])
+    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--write-baseline", "--concurrency=1"]))
     );
 
     expect(steps).toHaveLength(1);
@@ -1493,6 +1496,16 @@ describe("quality task adapter", () => {
     expect(steps[0]?.args).toContain("test:integration:parallel");
     expect(steps[0]?.args).toContain("--summarize");
     expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
+  });
+
+  it("drops caller concurrency flags from the serial SQL pass instead of duplicating turbo's", () => {
+    const steps = rootQualityStepsForTesting(
+      "/repo",
+      getInvocation(["test", "--integration", "--concurrency=1", "--summarize"])
+    );
+
+    expect(steps[1]?.args).toEqual(expectedTurboArgs("test:integration:serial", ["--concurrency=1", "--summarize"]));
+    expect(A.filter([...(steps[1]?.args ?? [])], (arg) => arg.startsWith("--concurrency"))).toHaveLength(1);
   });
 
   it("requires explicit test SQL URLs over generic application defaults", () => {

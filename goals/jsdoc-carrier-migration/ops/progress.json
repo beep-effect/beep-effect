@@ -8,19 +8,36 @@
   "phases": {
     "P0_law_and_packet": "done",
     "P1_codemod": "done",
-    "P2_generators": "pending",
-    "P3_migration": "pending",
-    "P4_close": "pending"
+    "P2_generators": "done",
+    "P3_migration": "done",
+    "P4_close": "done"
   },
   "coreItems": {
-    "C1_law_contradiction_fix": { "status": "done" },
-    "C2_codemod_extract_apply_verify": { "status": "done" },
-    "C3_conservation_law_and_proof_manifest": { "status": "done" },
-    "C4_title_pass_via_proxy": { "status": "pending" },
-    "C5_generator_templates": { "status": "pending" },
-    "C6_residue_overrides": { "status": "pending" },
-    "C7_gate_swap_repo_wide_zero": { "status": "pending" },
-    "C8_baseline_rewrite": { "status": "pending" }
+    "C1_law_contradiction_fix": {
+      "status": "done"
+    },
+    "C2_codemod_extract_apply_verify": {
+      "status": "done"
+    },
+    "C3_conservation_law_and_proof_manifest": {
+      "status": "done"
+    },
+    "C4_title_pass_via_proxy": {
+      "status": "done"
+    },
+    "C5_generator_templates": {
+      "status": "done",
+      "note": "P2 measured the real surface at 21 outputs / 10 emitters, not 18 / 9: the census's path-regex missed header-generated Html.model.ts + Html.meta.ts (350 examples) and the apps/professional-desktop sync-migration-bundle generator entirely. 20 of 21 outputs regenerate law-compliant. Residual: acp schema.gen.ts (342 @example) \u2014 regeneration materializes a pre-existing staleness bomb (16.6k-line rewrite, schemaNumber governance failures, S.Unknown->S.Json breaking Acp.errors.ts) that needs its own acp-resync PR before DoD item 2 can close; the acp emitter itself is converted, so that future regeneration emits titled sections. Also fixed en route: sync-data-to-ts iana-timezones regeneration had been broken since PR #456 (tar suffix collision asia/australasia)."
+    },
+    "C6_residue_overrides": {
+      "status": "done"
+    },
+    "C7_gate_swap_repo_wide_zero": {
+      "status": "done"
+    },
+    "C8_baseline_rewrite": {
+      "status": "done"
+    }
   },
   "measurements": {
     "measuredAtCommit": "dbbad11e15",
@@ -36,6 +53,6 @@
     "generatedExamples": 1065,
     "residueCount": 32,
     "residueNote": "Measured 2026-08-06 by the P1 full-corpus dry run (`beep quality jsdoc-migrate apply --dry-run --synthetic-titles`) on branch feat/jsdoc-migrate-codemod at base 3c56d2f823: 1,899 affected files, 11,674 affected blocks, 11,642 rewrite cleanly, residue 32 = 31 unfenced-example (fence addition is outside both conservation clauses, so they auto-quarantine) + 1 shape-regression (FullCaseCitation.toBlueBook carries a fence inside @remarks content, which would surface as an untitled Example section). Binding was fully clean: 11,674 extract anchors bijected with 11,674 synthetic records, zero hash or kind mismatches, zero duplicate anchors corpus-wide. The census's 114 unfenced count was regex-based and included fenced examples with a caption line before the fence, which the codemod converts cleanly; the census's zero-collision claim missed 188 bare untitled `**Example**` markers sitting directly above a legacy tag, which the codemod now consumes into the titled section (conservation- and oracle-checked).",
-    "stableTails": "unfencedExamples (114) and multiExampleBlocks (19) held constant across both measurements while 340 examples retired — the pathological tails are not eroded by ordinary work and will still be there at P3."
+    "stableTails": "unfencedExamples (114) and multiExampleBlocks (19) held constant across both measurements while 340 examples retired \u2014 the pathological tails are not eroded by ordinary work and will still be there at P3."
   }
 }

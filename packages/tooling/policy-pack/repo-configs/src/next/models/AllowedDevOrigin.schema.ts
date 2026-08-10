@@ -16,7 +16,8 @@ const allowedDevOriginPattern =
 /**
  * A hostname or leading-wildcard hostname entry for Next.js `allowedDevOrigins`.
  *
- * @example
+ * **Example** (Decode wildcard dev origin)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -24,6 +25,7 @@ const allowedDevOriginPattern =
  * const program = S.decodeUnknownEffect(AllowedDevOrigin)("*.local-origin.dev")
  * console.log(Effect.runPromise(program))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -47,13 +49,15 @@ export const AllowedDevOrigin = S.Trim.check(
 /**
  * Hostname entry for one element of Next.js `allowedDevOrigins`.
  *
- * @example
+ * **Example** (Type hostname origin entry)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { AllowedDevOrigin } from "@beep/repo-configs/next"
  * const origin: AllowedDevOrigin = S.decodeSync(AllowedDevOrigin)("local-origin.dev")
  * console.log(origin)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

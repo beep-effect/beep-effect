@@ -8,7 +8,8 @@
 /**
  * Package version constant.
  *
- * @example
+ * **Example** (Create versioned InstanceId)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { InstanceId, VERSION } from "@beep/wink"

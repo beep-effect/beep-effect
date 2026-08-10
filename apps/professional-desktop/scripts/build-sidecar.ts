@@ -13,7 +13,7 @@ import { $ } from "bun";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
-class MissingTargetTripleError extends S.TaggedErrorClass<MissingTargetTripleError>()("MissingTargetTripleError", {
+class MissingTargetTripleError extends S.TaggedError<MissingTargetTripleError>()("MissingTargetTripleError", {
   message: S.String,
 }) {}
 
