@@ -41,6 +41,7 @@ export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
+export * from "../commands/Yeet/internal/Provenance.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";
 export * from "../commands/Yeet/internal/PullRequest.ts";
 export * from "../commands/Yeet/internal/QualityIssueIndex.ts";

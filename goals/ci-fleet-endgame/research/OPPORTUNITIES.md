@@ -1,5 +1,24 @@
 # Opportunities
 
+## Burst reaper kills busy workers mid-job
+
+- **Work:** Post-merge main run for PR #633 on the manual burst fleet.
+- **Friction:** The TTL reaper terminates on age alone, without checking
+  whether the runner is executing a job. All three burst workers launched
+  04:33Z were terminated at 06:05:19Z (TTL-90 plus reaper period) exactly 90
+  seconds after the heavy lanes started on them: main run `31360612950` lost
+  Check and Coverage Regression mid-step and cancelled Test Integration,
+  turning an infrastructure event into a red main run needing manual
+  relaunch-and-rerun.
+- **Evidence:** Instances `i-047e8aef0ce1cb51b`, `i-0e13088d0c37de391`,
+  `i-0b32615510035c84e`, all `User initiated (2026-08-10 06:05:19 GMT)`; job
+  steps `Run verification lane` conclusion `cancelled` at 06:05:2x.
+- **Proposal:** Retire the class via P2 cutover — the controller's scale-down
+  only retires idle runners, and ephemeral one-job-one-VM workers cannot be
+  reaped mid-job by design. If the burst path must live longer, teach the
+  reaper to skip runners whose GitHub registration reports `busy` and sweep
+  them on the next cycle instead.
+
 ## Prove worker east-west isolation with two live workers
 
 - **Work:** P1 red-team review of the worker network-isolation evidence.
