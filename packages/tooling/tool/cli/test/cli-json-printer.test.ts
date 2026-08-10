@@ -1,9 +1,11 @@
 import {
+  CommandJsonOutput,
   DEFAULT_JSON_FORMATTING_OPTIONS,
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   formatDurationSeconds,
   logTaggedSummary,
   makeTaggedLogger,
+  printCommandJson,
   renderPrettyCommandJson,
 } from "@beep/repo-cli/test/Cli";
 import { describe, expect, it } from "@effect/vitest";
@@ -60,6 +62,23 @@ describe("internal/cli/Json renderPrettyCommandJson", () => {
 });
 
 describe("internal/cli/Json printCommandJson", () => {
+  it.effect(
+    "routes output through an injected writer",
+    Effect.fnUntraced(function* () {
+      const chunks: Array<string> = [];
+
+      yield* printCommandJson({ ok: true }).pipe(
+        Effect.provideService(CommandJsonOutput, (text) =>
+          Effect.sync(() => {
+            chunks.push(text);
+          })
+        )
+      );
+
+      expect(chunks).toEqual(['{"ok":true}\n']);
+    })
+  );
+
   it("emits payloads larger than 64 KiB intact across a process boundary", () => {
     const payload = { value: "x".repeat(70_000) };
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
