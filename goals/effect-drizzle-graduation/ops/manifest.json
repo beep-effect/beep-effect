@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/effect-drizzle-graduation",
   "lifecycle": "active",
-  "mission": "Graduate scratchpad/bsl into packages/ecosystem/effect-drizzle: charter the ecosystem package family in the architecture standards (P0 docs PR), move the module with @effect/vitest harness and family gates (P1), and integrate the family quality lanes (P2).",
+  "mission": "Graduate scratchpad/bsl into packages/ecosystem/effect-drizzle: charter the ecosystem package family in the architecture standards (P0 docs PR); move the module with the @effect/vitest harness, the member tstyche lane, and the inverted-import gate (P1); integrate family CI — bundle probe and member-lane wiring (P2).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

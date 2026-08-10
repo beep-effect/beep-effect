@@ -1312,8 +1312,9 @@ artifact must not carry. Inverting the import polarity at a family boundary
 makes publishability a structural property the repo can lint, rather than a
 per-package promise. Family creation, polarity, style-law scoping,
 artifact/peer/release/gate posture, and sequencing were locked by operator
-grill 2026-08-10; the charter's promotion/demotion mechanics in doc 14 were
-authored in the P0 docs PR and ratified through its review. Execution is
+grill 2026-08-10; the charter's promotion/demotion mechanics and release-lane
+operational detail in doc 14 (including the operator-only `private` flip)
+were authored in the P0 docs PR and ratified through its review. Execution is
 tracked in `goals/effect-drizzle-graduation`.
 
 ## Known Unknowns
