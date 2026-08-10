@@ -14,6 +14,8 @@ export * as Derive from "./derive.ts";
 export * as pg from "./pg.ts";
 export { make } from "./kit.ts";
 export type { Dialect, EntityFactory, PgKit, PgKitConfig } from "./kit.ts";
+export { makeRepository, VersionConflictError } from "./repository.ts";
+export type { Repository, VersionKey } from "./repository.ts";
 export {
   Model,
   VariantField,

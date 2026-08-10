@@ -17,6 +17,7 @@ import {
   type ValidateFields,
 } from "./factory.ts";
 import * as Pg from "./pg.ts";
+import { makeRepository } from "./repository.ts";
 import { schema } from "./schema.ts";
 import * as Table from "./TableExtras.ts";
 import { toPgTable } from "./table.ts";
@@ -117,6 +118,7 @@ export interface PgKit<Defaults extends FieldsInput> {
   readonly Model: typeof Model;
   readonly Entity: EntityFactory<Defaults>;
   readonly Table: typeof Table;
+  readonly Repository: typeof makeRepository;
   readonly schema: typeof schema;
   readonly toPgTable: typeof toPgTable;
 }
@@ -204,5 +206,13 @@ export const make = <const Defaults extends FieldsInput>(
     };
   }
 
-  return { pg: Pg, Model, Entity, Table, schema, toPgTable };
+  return {
+    pg: Pg,
+    Model,
+    Entity,
+    Table,
+    Repository: makeRepository,
+    schema,
+    toPgTable,
+  };
 };

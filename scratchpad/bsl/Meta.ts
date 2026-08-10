@@ -276,6 +276,7 @@ export const Meta = S.Struct({
   hasDefault: S.Boolean,
   default: S.UndefinedOr(Default),
   generated: S.Union([Generated, S.Literal(false)]),
+  version: S.Boolean,
   columnName: S.UndefinedOr(S.String),
   references: S.UndefinedOr(References),
 }).pipe(
@@ -308,6 +309,7 @@ export type Meta = typeof Meta.Type;
  *   hasDefault: false,
  *   default: undefined,
  *   generated: false,
+ *   version: false,
  *   columnName: undefined,
  *   references: undefined
  * }).primaryKey) // false
@@ -324,6 +326,7 @@ export const Empty = S.Struct({
   hasDefault: S.Literal(false),
   default: S.Undefined,
   generated: S.Literal(false),
+  version: S.Literal(false),
   columnName: S.Undefined,
   references: S.Undefined,
 }).pipe(
@@ -361,6 +364,7 @@ export const empty: Empty = Empty.make({
   hasDefault: false,
   default: undefined,
   generated: false,
+  version: false,
   columnName: undefined,
   references: undefined,
 });
@@ -442,6 +446,8 @@ export const merge = <const M extends Meta, const P extends Patch>(
     default: (current: M["default"]) => mergeField(current, patch, "default"),
     generated: (current: M["generated"]) =>
       mergeField(current, patch, "generated"),
+    version: (current: M["version"]) =>
+      mergeField(current, patch, "version"),
     columnName: (current: M["columnName"]) =>
       mergeField(current, patch, "columnName"),
     references: (current: M["references"]) =>

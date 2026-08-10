@@ -265,7 +265,16 @@ export type ColumnsOf<F extends FieldsInput> = {
 type PlainVariants<
   Sch extends S.Top,
   M extends Meta.Meta
-> = M["generated"] extends false
+> = M["version"] extends true
+  ? VariantSchema.Field<{
+      readonly select: Sch;
+      readonly insert: S.optionalKey<Sch>;
+      readonly update: Sch;
+      readonly json: Sch;
+      readonly jsonCreate: Sch;
+      readonly jsonUpdate: Sch;
+    }>
+  : M["generated"] extends false
   ? VariantSchema.Field<{
       readonly select: Sch;
       readonly insert: M["hasDefault"] extends true ? S.optionalKey<Sch> : Sch;
@@ -336,6 +345,22 @@ type PrimaryKeyKeys<F extends FieldsInput> = {
   [K in keyof F]: Field.MetaFrom<F[K]>["primaryKey"] extends true ? K : never;
 }[keyof F];
 
+type VersionKeys<F extends FieldsInput> = {
+  [K in keyof F]: Field.MetaFrom<F[K]>["version"] extends true ? K : never;
+}[keyof F];
+
+type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] extends true
+  ? Field.MetaFrom<I>["column"] extends {
+      readonly kind: PgColumn.IdentityKind;
+    }
+    ? Field.MetaFrom<I>["generated"] extends false
+      ? Field.MetaFrom<I>["identity"] extends false
+        ? unknown
+        : Field.BslTypeError<"version fields cannot use identity generation">
+      : Field.BslTypeError<"version fields cannot be generated">
+    : Field.BslTypeError<"version fields require an explicit integer-family column">
+  : unknown;
+
 /**
  * Per-key and whole-model compile-time validation for a field record.
  *
@@ -359,10 +384,13 @@ type PrimaryKeyKeys<F extends FieldsInput> = {
 export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: [Derive.ResolvedColumn<F[K]>] extends [never]
     ? Field.BslTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
-    : unknown;
+    : ValidateVersionField<F[K]>;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
   ? Field.BslTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
-  : unknown);
+  : unknown) &
+  (IsUnion<VersionKeys<F>> extends true
+    ? Field.BslTypeError<"model declares multiple optimistic-version fields">
+    : unknown);
 
 // ---------------------------------------------------------------------------
 // The class type
@@ -497,6 +525,17 @@ const effectiveSchema = (
   schema: Field.AnySchema,
   meta: Meta.Meta
 ): Field.AnySchema => {
+  if (meta.version) {
+    const select = Derive.selectSchemaOf(schema);
+    return V.Field({
+      select,
+      insert: S.optionalKey(select),
+      update: select,
+      json: select,
+      jsonCreate: select,
+      jsonUpdate: select,
+    });
+  }
   if (VariantSchema.isField(schema)) return schema;
   if (Meta.Generated.guards.identityAlways(meta.generated)) {
     return V.Field({
@@ -550,6 +589,7 @@ export function makeModelClass(
     {
       columns: R.empty<string, Meta.Meta>(),
       primaryKeys: 0,
+      versionFields: 0,
       schemaFields: R.empty<string, Field.AnySchema>(),
     },
     (state, [key, input]) => {
@@ -586,6 +626,24 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      if (
+        field.meta.version &&
+        !S.is(PgColumn.IdentityKind)(classified.column.kind)
+      ) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
+          fieldName: key,
+        });
+      }
+      if (
+        field.meta.version &&
+        (field.meta.identity !== false || field.meta.generated !== false)
+      ) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' cannot use identity or generated-column semantics.`,
+          fieldName: key,
+        });
+      }
       const bounded = PgColumn.Spec.guards.varchar(classified.column)
         ? O.some({ kind: "varchar", length: classified.column.length })
         : PgColumn.Spec.guards.char(classified.column)
@@ -610,6 +668,7 @@ export function makeModelClass(
       return {
         columns: R.set(state.columns, key, resolvedMeta),
         primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
+        versionFields: state.versionFields + (field.meta.version ? 1 : 0),
         schemaFields: R.set(
           state.schemaFields,
           key,
@@ -622,6 +681,13 @@ export function makeModelClass(
   if (state.primaryKeys > 1) {
     throw ModelInvariantError.make({
       message: `Model '${identifier}' declares ${state.primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
+      fieldName: "(model)",
+    });
+  }
+
+  if (state.versionFields > 1) {
+    throw ModelInvariantError.make({
+      message: `Model '${identifier}' declares ${state.versionFields} optimistic-version fields; at most one is allowed.`,
       fieldName: "(model)",
     });
   }

@@ -19,6 +19,11 @@ import {
   _compatibleVarchar,
   _defaultThenGenerated,
   _badEnumBroadString,
+  _badGeneratedThenVersion,
+  _badIdentityThenVersion,
+  _badVersionColumn,
+  _badVersionThenGenerated,
+  _badVersionThenIdentity,
   _charWithoutMaxLength,
   _entityFkMismatch,
   _enumValueMismatch,
@@ -29,6 +34,7 @@ import {
   _nullablePrimaryKey,
   _kitDefaultCollision,
   _twoPrimaryKeys,
+  _twoVersions,
   _unboundedVarchar,
   _uuidTextFkMismatch,
   auditSchema,
@@ -37,7 +43,9 @@ import {
   ExplicitVariantModel,
   mechanicalTable,
   Organization,
+  OrganizationId,
   User,
+  UserId,
   userTable,
 } from "./fixtures.ts";
 
@@ -75,10 +83,13 @@ describe("toPgTable", () => {
           "email",
           "id",
           "name",
+          "nickname",
           "org_id",
+          "row_version",
           "search_name",
           "settings",
           "status",
+          "updated_at",
         ],
         Order.String
       )
@@ -91,7 +102,7 @@ describe("toPgTable", () => {
         O.getOrUndefined
       )
     ).toBe("always");
-    expect(column("created_at").hasDefault).toBe(true);
+    expect(column("created_at").hasDefault).toBe(false);
     expect(column("status").default).toBe("active");
     expect(column("search_name").generated).toBeDefined();
   });
@@ -136,17 +147,28 @@ describe("variant truth table", () => {
     expect(R.keys(User.update.fields)).toContain("id");
     expect(R.keys(User.insert.fields)).not.toContain("searchName");
     expect(R.keys(User.update.fields)).not.toContain("searchName");
-    expect(
-      S.is(User.insert)({
-        orgId: 1,
+    const insert = Effect.runSync(
+      SchemaParser.makeEffect(User.insert)({
+        orgId: OrganizationId.make(1),
         email: "a@example.com",
         name: "A",
         bio: null,
+        nickname: O.none(),
         settings: { theme: "dark" },
         active: true,
+        rowVersion: 1,
       })
-    ).toBe(true);
-    expect(S.is(User.update)({ id: 1 })).toBe(true);
+    );
+    const update = Effect.runSync(
+      SchemaParser.makeEffect(User.update)({
+        id: UserId.make(1),
+        rowVersion: 1,
+      })
+    );
+    const { rowVersion: _rowVersion, ...withoutVersion } = update;
+    expect(S.is(User.insert)(insert)).toBe(true);
+    expect(S.is(User.update)(update)).toBe(true);
+    expect(S.is(User.update)(withoutVersion)).toBe(false);
     expect(S.is(User.update)({})).toBe(false);
     expect(R.keys(User.jsonCreate.fields)).not.toContain("searchName");
   });
@@ -196,6 +218,8 @@ describe("kit write strategies", () => {
     expect(R.keys(AuditedRecord.update.fields)).not.toContain("createdAt");
     expect(R.keys(AuditedRecord.insert.fields)).toContain("updatedAt");
     expect(R.keys(AuditedRecord.update.fields)).toContain("updatedAt");
+    expect(R.keys(AuditedRecord.update.fields)).toContain("rowVersion");
+    expect(R.keys(AuditedRecord.json.fields)).toContain("rowVersion");
     expect(AuditedRecord.bsl.columns.createdAt.column.kind).toBe("timestamp");
     expect(AuditedRecord.bsl.columns.updatedAt.column.kind).toBe("timestamp");
   });
@@ -407,6 +431,12 @@ describe("schema corroboration and invariants", () => {
     ).toThrow();
     expect(_needsExplicitColumn).toThrow();
     expect(_twoPrimaryKeys).toThrow();
+    expect(_twoVersions).toThrow("optimistic-version fields");
+    expect(_badVersionColumn).toThrow("integer-family column");
+    expect(_badVersionThenIdentity).toThrow("identity or generated");
+    expect(_badIdentityThenVersion).toThrow("identity or generated");
+    expect(_badVersionThenGenerated).toThrow("identity or generated");
+    expect(_badGeneratedThenVersion).toThrow("identity or generated");
     expect(_nullablePrimaryKey).toThrow();
     expect(_defaultThenGenerated).toThrow();
     expect(_generatedThenDefault).toThrow();

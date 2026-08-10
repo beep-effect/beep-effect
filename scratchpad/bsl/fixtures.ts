@@ -43,7 +43,7 @@ export const auditKit = make({
   defaultColumns: (pg) => ({
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
-    rowVersion: PosInt.pipe(pg.integer(), pg.default(1)),
+    rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
   }),
   defaultExtras: (columns) => [
     Table.check(
@@ -164,7 +164,7 @@ export class Organization extends Model<Organization>($I`Organization`)(
   ]
 ) {}
 
-export class User extends Model<User>($I`User`)(
+export class User extends auditKit.Entity<User>($I`User`)(
   {
     id: UserId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
     orgId: OrganizationId,
@@ -174,10 +174,10 @@ export class User extends Model<User>($I`User`)(
     ),
     name: S.String,
     bio: S.NullOr(S.String),
+    nickname: S.OptionFromNullOr(S.String),
     settings: S.Struct({ theme: S.String }),
     active: S.Boolean,
-    status: S.String.pipe(pg.text(), pg.default("active")),
-    createdAt: S.String.pipe(pg.timestamp(), pg.defaultNow()),
+    status: RecordStatus.pipe(pg.enum("record_status"), pg.default("active")),
     searchName: S.String.pipe(
       pg.text(),
       pg.generated(sql<string>`lower(name)`)
@@ -198,6 +198,17 @@ export const userRepository = SqlModel.makeRepository(User, {
   spanPrefix: "User",
   idColumn: "id",
 });
+
+export const userOptimisticRepository = auditKit.Repository(User, {
+  spanPrefix: "User",
+  idColumn: "id",
+});
+
+export const _repositoryNeedsVersion = auditKit.Repository(
+  // @ts-expect-error invariant: optimistic repositories require one version marker
+  Organization,
+  { spanPrefix: "Organization", idColumn: "id" }
+);
 
 export class Membership extends Model<Membership>($I`Membership`)(
   {
@@ -250,6 +261,7 @@ type OrganizationUpdateVariant = (typeof Organization.update)["Type"];
 type AuditedSelectVariant = (typeof AuditedRecord)["Type"];
 type AuditedInsertVariant = (typeof AuditedRecord.insert)["Type"];
 type AuditedUpdateVariant = (typeof AuditedRecord.update)["Type"];
+type AuditedJsonVariant = (typeof AuditedRecord.json)["Type"];
 type BareJunctionSelectVariant = (typeof BareJunction)["Type"];
 type MechanicalSelectRow = typeof mechanicalTable.$inferSelect;
 type MechanicalInsertRow = typeof mechanicalTable.$inferInsert;
@@ -264,8 +276,8 @@ export type _selectActive = Expect<Equal<SelectRow["active"], boolean>>;
 export type _insertIdAbsent = Expect<
   Equal<"id" extends keyof InsertRow ? true : false, false>
 >;
-export type _insertCreatedAtOptional = Expect<
-  Equal<undefined extends InsertRow["createdAt"] ? true : false, true>
+export type _insertCreatedAtRequired = Expect<
+  Equal<undefined extends InsertRow["createdAt"] ? true : false, false>
 >;
 export type _insertEmailRequired = Expect<Equal<InsertRow["email"], string>>;
 export type _variantInsertIdAbsent = Expect<
@@ -280,8 +292,8 @@ export type _variantUpdateIdRequired = Expect<
 export type _variantDefaultOptional = Expect<
   IsOptional<UserInsertVariant, "status">
 >;
-export type _variantCreatedAtOptional = Expect<
-  IsOptional<UserInsertVariant, "createdAt">
+export type _variantCreatedAtRequired = Expect<
+  Equal<IsOptional<UserInsertVariant, "createdAt">, false>
 >;
 export type _variantUpdateEmailOptional = Expect<
   IsOptional<UserUpdateVariant, "email">
@@ -339,6 +351,15 @@ export type _kitUpdateUpdatedAtPresent = Expect<
 >;
 export type _kitUpdateCreatedAtAbsent = Expect<
   Equal<"createdAt" extends keyof AuditedUpdateVariant ? true : false, false>
+>;
+export type _kitInsertRowVersionOptional = Expect<
+  IsOptional<AuditedInsertVariant, "rowVersion">
+>;
+export type _kitUpdateRowVersionRequired = Expect<
+  Equal<IsOptional<AuditedUpdateVariant, "rowVersion">, false>
+>;
+export type _kitJsonRowVersionPresent = Expect<
+  Equal<"rowVersion" extends keyof AuditedJsonVariant ? true : false, true>
 >;
 export type _bareModelOptsOutOfDefaults = Expect<
   Equal<
@@ -464,6 +485,70 @@ export const _badBigserialBigint = () =>
 export const _badSmallserial = () =>
   // @ts-expect-error invariant: smallserial requires a number-encoded schema
   S.String.pipe(pg.smallserial());
+export const _badVersionColumn = () => {
+  class BadVersionColumn extends Model<BadVersionColumn>(
+    $I`BadVersionColumn`
+  )({
+    value: S.String.pipe(
+      pg.text(),
+      // @ts-expect-error invariant: optimistic versions require integer-family columns
+      pg.version()
+    ),
+  }) {}
+  return BadVersionColumn;
+};
+export const _badVersionThenIdentity = () => {
+  class BadVersionThenIdentity extends Model<BadVersionThenIdentity>(
+    $I`BadVersionThenIdentity`
+  )({
+    value: S.Int.pipe(
+      pg.integer(),
+      pg.version(),
+      // @ts-expect-error invariant: version fields cannot use identity generation
+      pg.identity()
+    ),
+  }) {}
+  return BadVersionThenIdentity;
+};
+export const _badIdentityThenVersion = () => {
+  class BadIdentityThenVersion extends Model<BadIdentityThenVersion>(
+    $I`BadIdentityThenVersion`
+  )({
+    value: S.Int.pipe(
+      pg.integer(),
+      pg.identity(),
+      // @ts-expect-error invariant: identity-generated fields cannot be versions
+      pg.version()
+    ),
+  }) {}
+  return BadIdentityThenVersion;
+};
+export const _badVersionThenGenerated = () => {
+  class BadVersionThenGenerated extends Model<BadVersionThenGenerated>(
+    $I`BadVersionThenGenerated`
+  )({
+    value: S.Int.pipe(
+      pg.integer(),
+      pg.version(),
+      // @ts-expect-error invariant: version fields cannot be generated
+      pg.unsafeGeneratedSql("1")
+    ),
+  }) {}
+  return BadVersionThenGenerated;
+};
+export const _badGeneratedThenVersion = () => {
+  class BadGeneratedThenVersion extends Model<BadGeneratedThenVersion>(
+    $I`BadGeneratedThenVersion`
+  )({
+    value: S.Int.pipe(
+      pg.integer(),
+      pg.unsafeGeneratedSql("1"),
+      // @ts-expect-error invariant: generated fields cannot be versions
+      pg.version()
+    ),
+  }) {}
+  return BadGeneratedThenVersion;
+};
 export const _charWithoutMaxLength = () => S.String.pipe(pg.char());
 
 export const _kitDefaultCollision = () => {
@@ -510,6 +595,15 @@ export const _twoPrimaryKeys = () => {
     two: S.Finite.pipe(pg.integer(), pg.primaryKey()),
   }) {}
   return TwoPrimaryKeys;
+};
+
+export const _twoVersions = () => {
+  // @ts-expect-error invariant: a model may declare at most one optimistic-version field
+  class TwoVersions extends Model<TwoVersions>($I`TwoVersions`)({
+    leftVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
+    rightVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
+  }) {}
+  return TwoVersions;
 };
 
 export const _nullablePrimaryKey = () => {

@@ -965,6 +965,11 @@ type ValidateNotDefaulted<I extends Field.Input> =
     ? unknown
     : Field.BslTypeError<"default and generated are mutually exclusive">;
 
+type ValidateNotVersion<I extends Field.Input> =
+  Field.MetaFrom<I>["version"] extends false
+    ? unknown
+    : Field.BslTypeError<"version fields are mutually exclusive with identity and generated columns">;
+
 /**
  * Apply PostgreSQL identity generation after an integer-family column setter.
  *
@@ -986,7 +991,8 @@ export function identity<const K extends "always" | "byDefault" = "always">(
   input: I &
     ValidateIdentity<I> &
     ValidateNotDefaulted<I> &
-    ValidateNotGenerated<I>
+    ValidateNotGenerated<I> &
+    ValidateNotVersion<I>
 ) => Field.Patched<
   I,
   K extends "always"
@@ -1170,6 +1176,47 @@ export const unsafeDefaultSql =
  */
 export const defaultSql = unsafeDefaultSql;
 
+type ValidateVersionColumn<I extends Field.Input> =
+  Field.MetaFrom<I>["column"] extends {
+    readonly kind: PgColumn.IdentityKind;
+  }
+    ? unknown
+    : Field.BslTypeError<"version() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint)">;
+
+type ValidateVersionCompatibility<I extends Field.Input> =
+  Field.MetaFrom<I>["identity"] extends false
+    ? Field.MetaFrom<I>["generated"] extends false
+      ? unknown
+      : Field.BslTypeError<"version fields cannot be generated">
+    : Field.BslTypeError<"version fields cannot use identity generation">;
+
+/**
+ * Mark one integer-family field as the optimistic-concurrency token.
+ *
+ * **Details**
+ *
+ * The field is optional on insert so its SQL default applies, required on
+ * update as the expected version, and present on selected and JSON rows.
+ *
+ * **Example** (Mark a row version)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { default as defaultValue, integer, version } from "./pg.ts"
+ *
+ * console.log(S.Int.pipe(integer(), defaultValue(1), version()).meta.version) // true
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const version =
+  () =>
+  <I extends Field.Input>(
+    input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I>
+  ): Field.Patched<I, { readonly version: true }> =>
+    Field.patch(input, { version: true });
+
 /**
  * Set a typed stored generated expression omitted from write variants.
  *
@@ -1189,7 +1236,10 @@ export const defaultSql = unsafeDefaultSql;
 export const generated =
   <Carrier>(expression: SQL<Carrier>) =>
   <I extends Field.Input>(
-    input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I>
+    input: I &
+      ValidateExpression<I, Carrier> &
+      ValidateNotDefaulted<I> &
+      ValidateNotVersion<I>
   ): Field.Patched<I, { readonly generated: Meta.GeneratedSqlExpr<Carrier> }> =>
     Field.patch(input, {
       generated: { _tag: "sqlExpr", expression },
@@ -1213,7 +1263,7 @@ export const generated =
 export const unsafeGeneratedSql =
   (sql: string) =>
   <I extends Field.Input>(
-    input: I & ValidateNotDefaulted<I>
+    input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>
   ): Field.Patched<I, { readonly generated: Meta.UnsafeGeneratedSql }> =>
     Field.patch(input, {
       generated: Meta.Generated.cases.unsafeSql.make({ sql }),
