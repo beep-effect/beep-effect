@@ -52,6 +52,7 @@ Start with the smallest boundary that owns the meaning:
 | Product language deliberately shared by multiple slices | `shared/*`, after the shared-kernel promotion gate. |
 | External engines, SDKs, services, frameworks, or browser platform wrappers | `drivers/*`. |
 | Domain-agnostic reusable substrate owned by this repo | `foundation/*`, after the specific-home-first routing test. |
+| Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
 | Typed application/runtime configuration contracts | The slice or shared `config` package. |
 | Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
 | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
@@ -163,11 +164,15 @@ Non-slice artifacts are never `misc`.
 - `foundation` owns domain-agnostic reusable substrate
 - `drivers` owns flat repo-level technical boundary wrappers
 - `tooling` owns developer-operational code packages
+- `ecosystem` owns flat publishable libraries authored for external
+  consumption; member `src/` and runtime dependency edges are `@beep/*`-free,
+  and published-package standards supersede repo style laws inside members
+  (see [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md))
 
 Every non-slice artifact declares exactly one family so readers, reviewers, and
 tooling can infer the intended boundary before opening the first file. `kind`
 is required only for families that intentionally declare a kind segment;
-`drivers` remains the flat family exception.
+`drivers` and `ecosystem` remain the flat family exceptions.
 
 `packages/_internal/db-admin` is a narrow durable internal exception for
 repository-owned database migration aggregation and generated migration SQL.

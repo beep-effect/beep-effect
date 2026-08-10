@@ -1267,6 +1267,41 @@ strings in a public repository is a leak vector regardless of scanner
 posture; gitleaks remains the fail-closed backstop that catches sanitizer
 bugs.
 
+## 2026-08-10: Add The `ecosystem` Package Family
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a fourth non-slice family: `ecosystem`
+(`packages/ecosystem/<name>` = `@beep/<name>` = the npm name; flat, like
+`drivers`). Members are repo-authored libraries built for external consumption
+and consumed in-repo like any third-party dependency. The family charter is
+`14-ecosystem-packages.md`: member `src/` and runtime manifest edges are
+`@beep/*`-free while tests and `devDependencies` are unrestricted;
+published-package standards supersede repo effect-first style laws inside
+members; artifacts are ESM-only with strict exports maps, `sideEffects:
+false`, `stripInternal` declarations, and peers-only runtime dependencies;
+members stay `private: true` until upstream peers are stable. Members run a
+member-scoped tstyche type-test lane — a deliberate, family-scoped exception
+to the 2026-08 repo-wide type-test removal above, because a member's published
+`.d.ts` is its product and a type-level regression is a user-facing break.
+First member: `@beep/effect-drizzle`, graduated from `scratchpad/bsl`
+(PR #651); it owns schema-derived projection/DDL/repositories, while
+`@beep/drizzle` (drivers) keeps execution — the shared-tables projection
+contract now points at `@beep/effect-drizzle`.
+
+Rationale:
+
+The `scratchpad/bsl` experiment produced a library whose audience is the wider
+effect ecosystem, not this repo's product. No existing family fits: `drivers`
+wraps external engines for internal consumption, `foundation` is internal
+substrate, and both may import `@beep/*` freely — the exact thread a published
+artifact must not carry. Inverting the import polarity at a family boundary
+makes publishability a structural property the repo can lint, rather than a
+per-package promise. Decisions locked by operator grill 2026-08-10; execution
+tracked in `goals/effect-drizzle-graduation`.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
