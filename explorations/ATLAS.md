@@ -112,21 +112,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
-- [`fleet-coordination`](./fleet-coordination/README.md) — graduate-stage: ~13
-  agent checkouts on one workstation duplicating each other’s fixes and rotting
-  each other’s in-flight PRs. Research verdict is a derived **mirror**, not a
-  message board — derive early, deliver ambiently, enforce late — shipped
-  through the reserved `AgentBrief.fleet` field. First goal graduated 2026-08-06:
-  [`fleet-mirror`](../goals/fleet-mirror/README.md) (D6), scoped to the
-  **derivation rung**, which the capability check proved depends on nothing
-  unmerged, and shipped 2026-08-08 as `beep worktree fleet` (#621); the
-  **delivery rung** stays here, no longer gated on PR-I — Claude Code 2.1.224
-  shipped cross-session messaging, a non-hook push T3 had ruled out
-  ([`T6`](./fleet-coordination/research/T6-cross-session-messaging.md)). Grill #1
-  locked D1–D5 and disposed four questions; en route it killed `law-pulse.sh`
-  ever reaching the model (fixed here), `beep yeet` being a gate, `flock`
-  releasing on holder death, and merge queue at this repo’s measured shape (19%
-  main gauntlet pass rate).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   capture-stage: bind model qualification to the exact model, adapter,
   modality, prompt, wrapper, decoding configuration, and artifact digest —
@@ -361,6 +346,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`fleet-coordination`](./fleet-coordination/README.md) — graduated
+  2026-08-10 into the retained
+  [`fleet-mirror`](../goals/fleet-mirror/README.md) goal with no open design
+  questions. Rung 1 shipped 2026-08-08 as `beep worktree fleet` (#621); rung
+  1.5 adds the positive-only Claude session-registry liveness probe and
+  live-first contested rendering. D7 keeps rung 2 in the same goal as
+  **push-to-reachable plus pull-for-everyone**, with the mirror authoritative
+  because messaging cannot cover the full fleet. Research verdict: derive a
+  mirror, not a message board — derive early, deliver ambiently, enforce late.
 - [`graphnosis-prior-art`](./graphnosis-prior-art/README.md) — graduated
   2026-08-06 (opened same day) into
   [`goals/epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md)

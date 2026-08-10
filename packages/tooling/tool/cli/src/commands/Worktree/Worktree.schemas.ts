@@ -156,7 +156,8 @@ export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<Worktre
  * **Details**
  *
  * Applied uniformly to the transcript-mtime and worktree-mtime probes. The
- * process-cwd probe is instantaneous and does not use a window.
+ * process-cwd and claude-session probes are instantaneous and do not use a
+ * window.
  *
  * **Example** (Read the liveness window)
  *
@@ -259,18 +260,32 @@ export type FleetLiveness = typeof FleetLiveness.Type;
 /**
  * The probe that produced a `live` liveness verdict.
  *
+ * **Details**
+ *
+ * `claude-session` is the session-registry probe: a registry entry under
+ * `~/.claude/sessions/` whose PID survived the `procStart` reuse guard and
+ * whose recorded working directory sits at or under the checkout. It carries
+ * no PID — the probe member is evidence of *how* liveness was measured, not a
+ * handle to the session.
+ *
  * **Example** (Read a probe member)
  *
  * ```ts
  * import { FleetLivenessProbe } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(FleetLivenessProbe.Enum["process-cwd"]) // "process-cwd"
+ * console.log(FleetLivenessProbe.Enum["claude-session"]) // "claude-session"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const FleetLivenessProbe = LiteralKit(["process-cwd", "transcript-mtime", "worktree-mtime"]).pipe(
+export const FleetLivenessProbe = LiteralKit([
+  "process-cwd",
+  "transcript-mtime",
+  "worktree-mtime",
+  "claude-session",
+]).pipe(
   $I.annoteSchema("FleetLivenessProbe", {
     description: "The probe that produced a live liveness verdict.",
   })
@@ -283,6 +298,51 @@ export const FleetLivenessProbe = LiteralKit(["process-cwd", "transcript-mtime",
  * @since 0.0.0
  */
 export type FleetLivenessProbe = typeof FleetLivenessProbe.Type;
+
+/**
+ * The fields the fleet liveness probe consumes from one on-disk Claude Code
+ * session-registry entry (`~/.claude/sessions/<pid>.json`).
+ *
+ * **Details**
+ *
+ * The registry entry carries many more fields; decoding tolerates and drops
+ * them. `procStart` is the PID-reuse guard: it must equal field 22
+ * (`starttime`) of `/proc/<pid>/stat`, or the entry is a stale file over a
+ * recycled PID and contributes nothing.
+ *
+ * **Gotchas**
+ *
+ * A registry entry proves a session *existed* with this PID and working
+ * directory — only the `/proc` starttime comparison upgrades that to "is
+ * still running". Never treat a decoded entry as liveness by itself.
+ *
+ * **Example** (Construct a registry entry)
+ *
+ * ```ts
+ * import { FleetSessionRegistryEntry } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const entry = FleetSessionRegistryEntry.make({
+ *   pid: 244216,
+ *   procStart: "220635",
+ *   cwd: "/projects/beep-effect",
+ * })
+ * console.log(entry.procStart) // "220635"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetSessionRegistryEntry extends S.Class<FleetSessionRegistryEntry>($I`FleetSessionRegistryEntry`)(
+  {
+    pid: S.Finite,
+    procStart: S.String,
+    cwd: S.String,
+  },
+  $I.annote("FleetSessionRegistryEntry", {
+    description:
+      "The pid, procStart reuse guard, and working directory the fleet liveness probe reads from one Claude Code session-registry entry.",
+  })
+) {}
 
 /**
  * One probe's reading during liveness classification.
@@ -333,7 +393,11 @@ export type FleetProbeReading = typeof FleetProbeReading.Type;
  * `processMatches` counts readable processes whose working directory sits
  * inside the checkout; `processScanComplete` is `false` when any process's
  * working directory was unreadable, because an unreadable process could be
- * inside this checkout.
+ * inside this checkout. `sessionMatches` counts session-registry entries that
+ * survived the `procStart` reuse guard and whose recorded working directory
+ * sits at or under the checkout — a positive-only probe, so `0` never
+ * contributes toward `dormant`: the registry covers Claude Code sessions
+ * only, never codex sessions, editors, or a human with a dirty tree.
  *
  * **Example** (Readings that leave liveness unknown)
  *
@@ -343,6 +407,7 @@ export type FleetProbeReading = typeof FleetProbeReading.Type;
  * const readings = FleetLivenessReadings.make({
  *   processMatches: 0,
  *   processScanComplete: false,
+ *   sessionMatches: 0,
  *   transcript: { _tag: "absent" },
  *   worktreeMtime: { _tag: "measured", ageSeconds: 86_400 },
  * })
@@ -356,6 +421,7 @@ export class FleetLivenessReadings extends S.Class<FleetLivenessReadings>($I`Fle
   {
     processMatches: S.Finite,
     processScanComplete: S.Boolean,
+    sessionMatches: S.Finite,
     transcript: FleetProbeReading,
     worktreeMtime: FleetProbeReading,
   },
