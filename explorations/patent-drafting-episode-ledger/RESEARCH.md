@@ -168,13 +168,15 @@ defer refusal semantics to rung 2.
 ### Corrections and hygiene carried into the ledger
 
 The lane files correct inherited anchors (the `:428-490` span, two SPEC
-off-by-N cites), retitle two papers, merge P018/P019 as one work (T3-F4's
-evidence count is one lower than the seed suggests), and record that the
-parent catalog has `url: null` for all 17 papers — Lane B re-discovered
-every URL, carried in its §11 per-URL ledger, with
-[`research/SOURCES.md`](./research/SOURCES.md) §3 pointing at that ledger
-(the sibling pattern); promoting the URLs into the parent catalog is
-deferred to align/PR 2. One method hazard is recorded for future lanes: a
+off-by-N cites), retitle two papers, and merge P018/P019 as one work (18
+parent-catalog rows but 17 distinct works; T3-F4's evidence count is one
+lower than the seed suggests). Lane B re-discovered and verified public URLs
+for 15 rows, carried in its §11 per-URL ledger; this research-stage PR
+promoted those URLs into the parent catalog while P005/P025/P030 remained
+`url: null`, as recorded by the 2026-08-08 PR-staging amendment in
+[`DECISIONS.md`](./DECISIONS.md). [`research/SOURCES.md`](./research/SOURCES.md)
+§3 points at that ledger and the parent promotion record. One method hazard
+is recorded for future lanes: a
 summarizing fetch on a very long MPEP page falsely reported a section
 absent; only a full-page read is evidence of absence (Lane B §12).
 

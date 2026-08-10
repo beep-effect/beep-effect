@@ -34,13 +34,14 @@ mined for this wedge; links, not copies. The two deepened plays (`ADHD-2`,
 `ADHD-3`) are not verified findings — research Lane B re-grounded their
 boundary language against the primary public sources 2026-08-06
 ([`02-drafting-episode-frame.md`](./02-drafting-episode-frame.md)).
-Catalog hygiene found by Lane B (§11): the parent `00-catalog.json` has
-`url: null` for all 17 papers behind this wedge's nuggets — every URL was
-re-discovered this lane and lives in the lane file's §11; two papers were
-retitled at source (D1, D2) and distillates P018/P019 are one work (D3), so
-T3-F4's evidence count is one source lower than the seed suggests.
-Promotion of these findings into the parent catalog is a parent-packet act
-that pends align/PR 2, per the sibling precedent.
+Catalog hygiene found by Lane B (§11): the wedge draws on 18 parent-catalog
+paper rows (17 distinct works because P018/P019 are one work). This
+research-stage PR promoted verified public URLs for 15 rows into the parent
+`00-catalog.json`; P005 and P025 had no discoverable public URL, and P030 had
+no matching entry in the lane ledger, so those three remain `url: null`.
+The lane's §11 carries the per-URL evidence. Two papers were retitled at
+source (D1, D2), and the P018/P019 correction (D3) means T3-F4's independent
+evidence count is one source lower than the seed suggests.
 
 ## 2. Upstream repositories & licenses
 
