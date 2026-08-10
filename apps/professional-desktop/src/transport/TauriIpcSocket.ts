@@ -72,7 +72,8 @@ const SidecarEvent = {
  * frame is decoded as a non-empty string at the boundary instead of trusting an
  * `unknown` event payload.
  *
- * @example
+ * **Example** (Validate inbound frame schema)
+ *
  * ```ts
  * import { InboundFrame } from "@/transport/TauriIpcSocket"
  * import * as S from "effect/Schema"
@@ -105,7 +106,8 @@ const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-close
  * reason. Nullable wire fields decode to `Option` at the boundary so absence is
  * explicit downstream (see effect-first EF-17).
  *
- * @example
+ * **Example** (Make terminated closed payload)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { SidecarClosedPayload } from "@/transport/TauriIpcSocket"
@@ -196,7 +198,8 @@ const toSidecarSendError = (cause: unknown): SidecarSendError => {
  * stay `unknown` here and are decoded downstream in the stream pipeline, so the
  * synchronous Tauri callbacks only offer onto the queue and never spawn fibers.
  *
- * @example
+ * **Example** (Construct Rx inbound event)
+ *
  * ```ts
  * import { InboundEvent } from "@/transport/TauriIpcSocket"
  *
@@ -465,7 +468,8 @@ const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
  * The `Socket` service that backs the IPC rpc client, bridged to the sidecar's
  * stdio through the Tauri Rust shell.
  *
- * @example
+ * **Example** (Confirm Layer instance)
+ *
  * ```ts
  * import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket"
  * import { Layer } from "effect"

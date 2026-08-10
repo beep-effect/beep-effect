@@ -55,7 +55,8 @@ const OipContactHttpApiAppLayer = makeOipContactHttpApiAppLayer(submitContact);
 /**
  * Builds a Web-standard OIP contact handler with an injected submit workflow.
  *
- * @example
+ * **Example** (Building handler with submit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeOipContactHttpApiWebHandlerWithSubmit } from "@beep/oip-web/app/api/contact/ContactHttpApiRoute"
@@ -78,7 +79,8 @@ export const makeOipContactHttpApiWebHandlerWithSubmit = (
 /**
  * Web-standard request handler for the OIP contact API.
  *
- * @example
+ * **Example** (Typing the contact handler)
+ *
  * ```ts
  * import { oipContactHttpApiWebHandler } from "@beep/oip-web/app/api/contact/ContactHttpApiRoute"
  *

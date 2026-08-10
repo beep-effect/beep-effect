@@ -14,7 +14,8 @@ import * as P from "effect/Predicate";
  * `Error` with a non-empty message, then any object carrying a non-empty
  * `message` string, otherwise `fallback`.
  *
- * @example
+ * **Example** (Extracting message or fallback)
+ *
  * ```ts
  * import { failureMessageOr } from "@/lib/failureMessage"
  *

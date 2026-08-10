@@ -66,7 +66,8 @@ const readContactFormPayload = Effect.fn("OipContact.readContactFormPayload")(fu
 /**
  * Builds an OIP form-post redirect response using an injected contact workflow.
  *
- * @example
+ * **Example** (Running with injected submit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ContactSubmissionResponse } from "@beep/oip-web/contact"
@@ -111,7 +112,8 @@ export const contactRequestResponseWithSubmit: {
 /**
  * Builds an OIP contact route response inside an Effect runtime.
  *
- * @example
+ * **Example** (Running contact request program)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {

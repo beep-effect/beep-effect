@@ -2,6 +2,7 @@ import {
   OntologyFilePath,
   OntologyFileStore,
   OntologyFileStoreError,
+  ReadOntologyFileResult,
   SerializeTurtleResult,
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
@@ -37,6 +38,28 @@ const provideStore = (readError: OntologyFileStoreError["reason"], writes: Ref.R
   Effect.provideService(OntologyFileStore, store(readError, writes));
 
 describe("ontology workspace seed", () => {
+  it.effect(
+    "preserves an existing starter document",
+    Effect.fnUntraced(function* () {
+      const writes = yield* Ref.make(0);
+      const existingStore = OntologyFileStore.of({
+        read: Effect.fn("OntologyWorkspaceSeedTest.OntologyFileStore.readExisting")((request) =>
+          Effect.succeed(ReadOntologyFileResult.make({ path: request.path, source: "existing ontology" }))
+        ),
+        write: Effect.fn("OntologyWorkspaceSeedTest.OntologyFileStore.writeExisting")(() =>
+          Ref.update(writes, (count) => count + 1)
+        ),
+      });
+
+      yield* seedPizzaTutorial().pipe(
+        Effect.provideService(OntologyFileStore, existingStore),
+        Effect.provideService(TurtleCodec, codec)
+      );
+
+      expect(yield* Ref.get(writes)).toBe(0);
+    })
+  );
+
   it.effect(
     "seeds the starter document when it is absent",
     Effect.fnUntraced(function* () {

@@ -59,7 +59,8 @@ const ReviewStatusBase = LiteralKit(["approved", "needs_review"]);
 /**
  * Review state for public claims that need launch approval.
  *
- * @example
+ * **Example** (Access needs_review enum value)
+ *
  * ```ts
  * import { ReviewStatus } from "@beep/oip-web/content"
  *
@@ -84,7 +85,8 @@ export const ReviewStatus = ReviewStatusBase.pipe(
 /**
  * Runtime type for {@link ReviewStatus}.
  *
- * @example
+ * **Example** (Assign approved status type)
+ *
  * ```ts
  * import type { ReviewStatus } from "@beep/oip-web/content"
  *
@@ -104,7 +106,8 @@ export type ReviewStatus = typeof ReviewStatus.Type;
 /**
  * Review note attached to a public website claim.
  *
- * @example
+ * **Example** (Create approved review gate)
+ *
  * ```ts
  * import { ReviewGate } from "@beep/oip-web/content"
  *
@@ -132,7 +135,8 @@ export class ReviewGate extends S.Class<ReviewGate>($I`ReviewGate`)(
 /**
  * External link displayed by the public site.
  *
- * @example
+ * **Example** (Create external link instance)
+ *
  * ```ts
  * import { ExternalLink } from "@beep/oip-web/content"
  *
@@ -160,7 +164,8 @@ export class ExternalLink extends S.Class<ExternalLink>($I`ExternalLink`)(
 /**
  * Social platform the OIP firm maintains a public profile on.
  *
- * @example
+ * **Example** (Access instagram enum value)
+ *
  * ```ts
  * import { SocialPlatform } from "@beep/oip-web/content"
  *
@@ -190,7 +195,8 @@ export const SocialPlatform = LiteralKit([
 /**
  * Runtime type for {@link SocialPlatform}.
  *
- * @example
+ * **Example** (Assign instagram platform type)
+ *
  * ```ts
  * import type { SocialPlatform } from "@beep/oip-web/content"
  *
@@ -206,7 +212,8 @@ export type SocialPlatform = typeof SocialPlatform.Type;
 /**
  * Public social media profile link for the OIP firm.
  *
- * @example
+ * **Example** (Create Instagram social link)
+ *
  * ```ts
  * import { SocialLink } from "@beep/oip-web/content"
  *
@@ -240,7 +247,8 @@ export class SocialLink extends S.Class<SocialLink>($I`SocialLink`)(
 /**
  * Runtime asset reference served from the OIP app public folder.
  *
- * @example
+ * **Example** (Create site asset reference)
+ *
  * ```ts
  * import { SiteAsset } from "@beep/oip-web/content"
  *
@@ -271,7 +279,8 @@ export class SiteAsset extends S.Class<SiteAsset>($I`SiteAsset`)(
 /**
  * Top-level metadata used by Next.js and JSON-LD generation.
  *
- * @example
+ * **Example** (Create site metadata content)
+ *
  * ```ts
  * import { SiteMetadataContent } from "@beep/oip-web/content"
  *
@@ -307,7 +316,8 @@ export class SiteMetadataContent extends S.Class<SiteMetadataContent>($I`SiteMet
 /**
  * Anchor navigation item.
  *
- * @example
+ * **Example** (Create contact nav item)
+ *
  * ```ts
  * import { NavItem } from "@beep/oip-web/content"
  *
@@ -331,7 +341,8 @@ export class NavItem extends S.Class<NavItem>($I`NavItem`)(
 /**
  * A single rotating hero background clip: a poster still plus its background video.
  *
- * @example
+ * **Example** (Create hero clip with assets)
+ *
  * ```ts
  * import { HeroClip, SiteAsset } from "@beep/oip-web/content"
  *
@@ -360,7 +371,8 @@ export class HeroClip extends S.Class<HeroClip>($I`HeroClip`)(
 /**
  * Hero opening claim and rotating background media.
  *
- * @example
+ * **Example** (Create hero content instance)
+ *
  * ```ts
  * import { HeroClip, HeroContent, NavItem, SiteAsset } from "@beep/oip-web/content"
  *
@@ -398,7 +410,8 @@ export class HeroContent extends S.Class<HeroContent>($I`HeroContent`)(
 /**
  * Biographical bridge panel.
  *
- * @example
+ * **Example** (Create about panel instance)
+ *
  * ```ts
  * import { AboutPanel, SiteAsset } from "@beep/oip-web/content"
  *
@@ -430,7 +443,8 @@ export class AboutPanel extends S.Class<AboutPanel>($I`AboutPanel`)(
 /**
  * Practice-area summary.
  *
- * @example
+ * **Example** (Create practice area summary)
+ *
  * ```ts
  * import { PracticeArea } from "@beep/oip-web/content"
  *
@@ -460,7 +474,8 @@ export class PracticeArea extends S.Class<PracticeArea>($I`PracticeArea`)(
 /**
  * Selected matter summary.
  *
- * @example
+ * **Example** (Create matter item instance)
+ *
  * ```ts
  * import { ExternalLink, MatterItem, ReviewGate, SiteAsset } from "@beep/oip-web/content"
  *
@@ -501,7 +516,8 @@ export class MatterItem extends S.Class<MatterItem>($I`MatterItem`)(
 /**
  * Client logo reference.
  *
- * @example
+ * **Example** (Create client logo reference)
+ *
  * ```ts
  * import { ClientLogo, ReviewGate, SiteAsset } from "@beep/oip-web/content"
  *
@@ -535,7 +551,8 @@ export class ClientLogo extends S.Class<ClientLogo>($I`ClientLogo`)(
 /**
  * Press item summary.
  *
- * @example
+ * **Example** (Create press item summary)
+ *
  * ```ts
  * import { ExternalLink, PressItem } from "@beep/oip-web/content"
  *
@@ -571,7 +588,8 @@ export class PressItem extends S.Class<PressItem>($I`PressItem`)(
 /**
  * Public contact and legal notice content.
  *
- * @example
+ * **Example** (Create contact content instance)
+ *
  * ```ts
  * import { ContactContent, ReviewGate } from "@beep/oip-web/content"
  *
@@ -607,7 +625,8 @@ export class ContactContent extends S.Class<ContactContent>($I`ContactContent`)(
 /**
  * Complete content contract for the OIP public site.
  *
- * @example
+ * **Example** (Instantiate from site content)
+ *
  * ```ts
  * import { OipSiteContent, oipSiteContent } from "@beep/oip-web/content"
  *
@@ -645,7 +664,8 @@ export class OipSiteContent extends S.Class<OipSiteContent>($I`OipSiteContent`)(
 /**
  * Decodes unknown input into {@link OipSiteContent}.
  *
- * @example
+ * **Example** (Decode content to Result)
+ *
  * ```ts
  * import { Result } from "effect"
  * import { decodeOipSiteContentResult, oipSiteContent } from "@beep/oip-web/content"
@@ -662,7 +682,8 @@ export const decodeOipSiteContentResult = OipSiteContent.decodeUnknownResult;
 /**
  * Decodes unknown input into {@link OipSiteContent} in an Effect workflow.
  *
- * @example
+ * **Example** (Decode content in Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeOipSiteContent, oipSiteContent } from "@beep/oip-web/content"

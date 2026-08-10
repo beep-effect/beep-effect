@@ -26,11 +26,14 @@ const safeJsonScript = (value: unknown) =>
 /**
  * Allows the search-param aware home route to block during the first render.
  *
+ * **Details**
+ *
  * Next.js framework config export: opts the route out of blocking-prerender
  * errors (`blocking-prerender-dynamic`). Consumed by the framework, not by
  * application imports.
  *
- * @example
+ * **Example** (Logging the instant value)
+ *
  * ```ts
  * import { instant } from "@beep/oip-web/app/page"
  *
@@ -46,7 +49,8 @@ export const instant = false;
 /**
  * Generates page metadata from runtime OIP content.
  *
- * @example
+ * **Example** (Awaiting generateMetadata result)
+ *
  * ```ts
  * import { generateMetadata } from "@beep/oip-web/app/page"
  *
@@ -96,7 +100,8 @@ export function generateMetadata(): Promise<Metadata> {
 /**
  * Renders the OIP public home page.
  *
- * @example
+ * **Example** (Awaiting Home component render)
+ *
  * ```tsx
  * import Home from "@beep/oip-web/app/page"
  *

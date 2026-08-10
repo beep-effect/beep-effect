@@ -20,7 +20,8 @@ const isThemeMode = S.is(ThemeMode);
 /**
  * Persisted desktop theme preference.
  *
- * @example
+ * **Example** (Confirm atom object type)
+ *
  * ```ts
  * import { workbenchThemeModeAtom } from "@/theme/Theme.atoms"
  *
@@ -40,11 +41,14 @@ export const workbenchThemeModeAtom = Atom.kvs({
 /**
  * One-time migration from MUI's legacy raw-string theme preference.
  *
+ * **Details**
+ *
  * The new Atom store owns a schema-encoded key. Existing new-format state wins;
  * a missing new key accepts only a valid legacy theme literal and persists it
  * through the schema store before the live preference atom mounts.
  *
- * @example
+ * **Example** (Verify Effect return)
+ *
  * ```ts
  * import { migrateWorkbenchThemeMode } from "@/theme/Theme.atoms"
  * import { Effect } from "effect"
@@ -77,7 +81,8 @@ const systemThemeModeAtom = Atom.make((get) => {
 /**
  * Effective light/dark mode after resolving the persisted system preference.
  *
- * @example
+ * **Example** (Confirm atom object type)
+ *
  * ```ts
  * import { resolvedWorkbenchThemeModeAtom } from "@/theme/Theme.atoms"
  *
@@ -94,7 +99,8 @@ export const resolvedWorkbenchThemeModeAtom = Atom.readable((get) =>
 /**
  * Runtime action that toggles the effective desktop color scheme.
  *
- * @example
+ * **Example** (Confirm atom object type)
+ *
  * ```ts
  * import { toggleWorkbenchThemeAtom } from "@/theme/Theme.atoms"
  *

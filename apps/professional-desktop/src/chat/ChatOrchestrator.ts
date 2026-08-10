@@ -77,7 +77,8 @@ const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
  * Project a `@beep/md` {@link Document} to plain text for the turn-kernel
  * history.
  *
- * @example
+ * **Example** (Convert document to plain text)
+ *
  * ```ts
  * import { userDocument } from "@/chat/ChatFixtures"
  * import { documentToPlainText } from "@/chat/ChatOrchestrator"
@@ -950,7 +951,8 @@ const trackedThreadTurn = (
  * these directly without the rpc transport, and {@link ChatHandlersLive} adapts
  * them onto {@link ChatRpcs}.
  *
- * @example
+ * **Example** (Compose operations from services)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { Thread } from "@beep/workspace-use-cases/server"
@@ -1090,7 +1092,8 @@ const makeChatOperationsWith = (
  * Construct an isolated set of chat orchestration operations over
  * already-acquired services.
  *
- * @example
+ * **Example** (Construct isolated chat operations)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { Thread } from "@beep/workspace-use-cases/server"
@@ -1149,7 +1152,8 @@ const makeChatHandlers = (operations: ChatOperations) =>
  * an {@link AgentTurnKernel}, a {@link Thread.ThreadStore}, and a
  * {@link UsageRecordSink}.
  *
- * @example
+ * **Example** (Verify handlers live layer)
+ *
  * ```ts
  * import { ChatHandlersLive } from "@/chat/ChatOrchestrator"
  * import { Layer } from "effect"

@@ -10,15 +10,15 @@
   "packages": {
     "@beep/acp": {
       "path": "packages/drivers/acp",
-      "lines": 65.06,
-      "statements": 64.84,
+      "lines": 57.88,
+      "statements": 57.84,
       "branches": 42.22,
-      "functions": 36.53,
+      "functions": 33.08,
       "uncovered": {
-        "lines": 225,
-        "statements": 232,
+        "lines": 334,
+        "statements": 341,
         "branches": 52,
-        "functions": 165
+        "functions": 273
       }
     },
     "@beep/agents-client": {

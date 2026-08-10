@@ -21,7 +21,8 @@ const contactClientBaseUrl = (): string =>
 /**
  * Accepted OIP contact response body.
  *
- * @example
+ * **Example** (Making accepted response body)
+ *
  * ```ts
  * import { ContactSubmissionAccepted } from "@beep/oip-web/contact"
  *
@@ -49,7 +50,8 @@ export class ContactSubmissionAccepted extends S.Class<ContactSubmissionAccepted
 /**
  * Rejected OIP contact response body.
  *
- * @example
+ * **Example** (Making rejected response body)
+ *
  * ```ts
  * import { ContactSubmissionRejected } from "@beep/oip-web/contact"
  *
@@ -77,7 +79,8 @@ export class ContactSubmissionRejected extends S.Class<ContactSubmissionRejected
 /**
  * Browser wire payload for OIP contact submissions.
  *
- * @example
+ * **Example** (Creating contact submission payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { ContactSubmissionPayload } from "@beep/oip-web/contact"
@@ -107,7 +110,8 @@ export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
 /**
  * Type for {@link ContactSubmissionPayload}.
  *
- * @example
+ * **Example** (Typing contact submission payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import type { ContactSubmissionPayload } from "@beep/oip-web/contact"
@@ -130,7 +134,8 @@ export type ContactSubmissionPayload = typeof ContactSubmissionPayload.Type;
 /**
  * HttpApi group for OIP contact intake endpoints, composed into {@link OipHttpApi}.
  *
- * @example
+ * **Example** (Accessing contact group identifier)
+ *
  * ```ts
  * import { OipHttpApi } from "@beep/oip-web/contact"
  *
@@ -151,7 +156,8 @@ const OipContactHttpApiGroup = HttpApiGroup.make("contact").add(
 /**
  * Public OIP HttpApi contract.
  *
- * @example
+ * **Example** (Logging public API identifier)
+ *
  * ```ts
  * import { OipHttpApi } from "@beep/oip-web/contact"
  *
@@ -166,7 +172,8 @@ export const OipHttpApi = HttpApi.make("OipHttpApi").add(OipContactHttpApiGroup)
 /**
  * Atom-enabled HttpApi client for OIP browser workflows.
  *
- * @example
+ * **Example** (Creating contact submit mutation)
+ *
  * ```ts
  * import { OipContactHttpApiClient } from "@beep/oip-web/contact"
  *

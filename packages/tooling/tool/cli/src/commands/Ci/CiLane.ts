@@ -635,6 +635,11 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
     cwd: repoRoot,
   });
 
+// Lint and Test Unit still run on hosted 16GB ubuntu-24.04 runners (check.yml),
+// not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
+// instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
+const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+
 const turboRootLaneStep = (
   repoRoot: string,
   laneId: CiLaneId,
@@ -769,9 +774,8 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      // The two heaviest package checks (repo-cli, epistemic-server) OOM a 16GB
-      // hosted runner when their tsgo processes overlap, so the check lane runs
-      // serial; the smaller tasks dominate the count, not the wall clock.
+      // Fresh Check graphs can overlap the largest tsgo processes and OOM even
+      // on 32GB fleet workers, so this lane stays serial.
       check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
@@ -821,7 +825,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=2"], options)],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=3"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
@@ -852,7 +856,7 @@ export const ciLaneStepsForTesting: {
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
-      lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", A.empty<string>(), options)],
+      lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
       "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
       nix: () => [
         QualityTaskStep.make({
@@ -891,7 +895,9 @@ export const ciLaneStepsForTesting: {
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
-      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
+      "test-unit": () => [
+        turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG], options),
+      ],
     })
 );
 

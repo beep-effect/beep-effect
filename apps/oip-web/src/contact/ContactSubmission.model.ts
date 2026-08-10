@@ -82,7 +82,8 @@ const ContactSubmissionStatusBase = LiteralKit(["accepted", "rejected"]);
 /**
  * Public contact submission status.
  *
- * @example
+ * **Example** (Accessing accepted enum value)
+ *
  * ```ts
  * import { ContactSubmissionStatus } from "@beep/oip-web/contact"
  *
@@ -107,7 +108,8 @@ export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
 /**
  * Type for {@link ContactSubmissionStatus}.
  *
- * @example
+ * **Example** (Typing accepted status string)
+ *
  * ```ts
  * import type { ContactSubmissionStatus } from "@beep/oip-web/contact"
  *
@@ -123,7 +125,8 @@ export type ContactSubmissionStatus = typeof ContactSubmissionStatus.Type;
 /**
  * Non-empty public contact response message text.
  *
- * @example
+ * **Example** (Assigning received message text)
+ *
  * ```ts
  * import { ContactResponseMessage } from "@beep/oip-web/contact"
  *
@@ -144,7 +147,8 @@ export const ContactResponseMessage = S.NonEmptyString.pipe(
 /**
  * Type for {@link ContactResponseMessage}.
  *
- * @example
+ * **Example** (Typing rejection message string)
+ *
  * ```ts
  * import type { ContactResponseMessage } from "@beep/oip-web/contact"
  *
@@ -160,7 +164,8 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
 /**
  * Browser-submitted OIP contact form payload.
  *
- * @example
+ * **Example** (Decoding form submission payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
@@ -217,7 +222,8 @@ const ContactSubmissionFormSubmittedAt = S.Union([NonNegativeInt, ContactSubmiss
 /**
  * Normalized browser form payload before the contact domain schema decodes it.
  *
- * @example
+ * **Example** (Making normalized form payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { ContactSubmissionFormPayload } from "@beep/oip-web/contact"
@@ -298,7 +304,8 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
 /**
  * Effectfully converts browser form data into the contact submission wire payload.
  *
- * @example
+ * **Example** (Effectfully converting FormData)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { contactSubmissionPayloadFromFormDataEffect } from "@beep/oip-web/contact"
@@ -321,7 +328,8 @@ export const contactSubmissionPayloadFromFormDataEffect = (formData: FormData) =
 /**
  * Converts browser form data into the contact submission wire payload.
  *
- * @example
+ * **Example** (Converting FormData to payload)
+ *
  * ```ts
  * import { contactSubmissionPayloadFromFormData } from "@beep/oip-web/contact"
  *
@@ -349,7 +357,8 @@ export const contactSubmissionPayloadFromFormData = (formData: FormData): Contac
 /**
  * Public contact submission response.
  *
- * @example
+ * **Example** (Creating accepted response object)
+ *
  * ```ts
  * import { ContactSubmissionResponse } from "@beep/oip-web/contact"
  *
@@ -377,7 +386,8 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
 /**
  * Decodes unknown input into a contact submission.
  *
- * @example
+ * **Example** (Decoding unknown input payload)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"

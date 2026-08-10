@@ -26,7 +26,8 @@ const bridgedDockAtoms = Atom.family((graph: DesktopDockGraph) =>
  * Mirrors one atom from a dock graph's private registry into the application
  * registry.
  *
- * @example
+ * **Example** (Bridge dock atom dual-arity)
+ *
  * ```tsx
  * import type { DesktopDockGraph } from "@/workspace/dock.atoms"
  * import { dockAtomBridge } from "@/workspace/dock-react.atoms"
@@ -51,7 +52,8 @@ export const dockAtomBridge: {
 /**
  * Mirrors the focused dock group once the adapter API has arrived.
  *
- * @example
+ * **Example** (Check atom factory type)
+ *
  * ```ts
  * import { focusedDockGroupAtom } from "@/workspace/dock-react.atoms"
  *
