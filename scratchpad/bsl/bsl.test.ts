@@ -2,11 +2,17 @@
 import { describe, expect, it } from "bun:test";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig, type PgColumn } from "drizzle-orm/pg-core";
+import { Order, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as AST from "effect/SchemaAST";
 import { Model as EffectModel } from "effect/unstable/schema";
 import * as Derive from "./derive.ts";
 import * as Field from "./Field.ts";
+import * as PgColumnSchema from "./PgColumn.ts";
 import * as pg from "./pg.ts";
 import {
   _compatibleVarchar,
@@ -29,33 +35,48 @@ import {
 
 const userConfig = getTableConfig(userTable);
 
-const column = (name: string): PgColumn => {
-  const found = userConfig.columns.find((candidate) => candidate.name === name);
-  if (found === undefined) throw new Error(`column '${name}' missing`);
-  return found;
-};
+const column = (name: string): PgColumn =>
+  O.getOrThrowWith(
+    A.findFirst(userConfig.columns, (candidate) => candidate.name === name),
+    () => new Error(`column '${name}' missing`)
+  );
+
+const first = <A>(values: ReadonlyArray<A>, label: string): A =>
+  O.getOrThrowWith(A.head(values), () => new Error(`${label} missing`));
 
 describe("toPgTable", () => {
   it("projects names, nullability, identities, defaults, and generation", () => {
     expect(getTableName(userTable)).toBe("user");
-    expect(userConfig.columns.map((candidate) => candidate.name).sort()).toEqual(
-      [
-        "active",
-        "bio",
-        "created_at",
-        "email",
-        "id",
-        "name",
-        "org_id",
-        "search_name",
-        "settings",
-        "status",
-      ].sort()
+    expect(
+      A.sort(
+        A.map(userConfig.columns, (candidate) => candidate.name),
+        Order.String
+      )
+    ).toEqual(
+      A.sort(
+        [
+          "active",
+          "bio",
+          "created_at",
+          "email",
+          "id",
+          "name",
+          "org_id",
+          "search_name",
+          "settings",
+          "status",
+        ],
+        Order.String
+      )
     );
     expect(column("name").notNull).toBe(true);
     expect(column("bio").notNull).toBe(false);
     expect(column("id").primary).toBe(true);
-    expect(column("id").generatedIdentity?.type).toBe("always");
+    expect(
+      O.fromUndefinedOr(column("id").generatedIdentity?.type).pipe(
+        O.getOrUndefined
+      )
+    ).toBe("always");
     expect(column("created_at").hasDefault).toBe(true);
     expect(column("status").default).toBe("active");
     expect(column("search_name").generated).toBeDefined();
@@ -71,28 +92,36 @@ describe("toPgTable", () => {
 
   it("emits table-level indexes, uniques, checks, and composite primary keys", () => {
     expect(userConfig.indexes).toHaveLength(1);
-    expect(userConfig.indexes[0]?.config.name).toBe("user_email_idx");
-    expect(userConfig.indexes[0]?.config.method).toBe("btree");
-    expect(userConfig.indexes[0]?.config.where).toBeDefined();
-    expect(userConfig.uniqueConstraints.map((constraint) => constraint.name)).toContain("user_org_email_unique");
-    expect(userConfig.checks.map((check) => check.name)).toContain("user_email_check");
+    const userIndex = first(userConfig.indexes, "user index");
+    expect(userIndex.config.name).toBe("user_email_idx");
+    expect(userIndex.config.method).toBe("btree");
+    expect(userIndex.config.where).toBeDefined();
+    expect(
+      A.map(userConfig.uniqueConstraints, (constraint) => constraint.name)
+    ).toContain("user_org_email_unique");
+    expect(A.map(userConfig.checks, (check) => check.name)).toContain(
+      "user_email_check"
+    );
 
     const membershipConfig = getTableConfig(bslSchema.tables.membership);
     expect(membershipConfig.primaryKeys).toHaveLength(1);
-    expect(membershipConfig.primaryKeys[0]?.name).toBe("membership_pk");
-    expect(membershipConfig.primaryKeys[0]?.columns.map((candidate) => candidate.name)).toEqual([
-      "organization_id",
-      "user_id",
-    ]);
+    const membershipPrimaryKey = first(
+      membershipConfig.primaryKeys,
+      "membership primary key"
+    );
+    expect(membershipPrimaryKey.name).toBe("membership_pk");
+    expect(
+      A.map(membershipPrimaryKey.columns, (candidate) => candidate.name)
+    ).toEqual(["organization_id", "user_id"]);
   });
 });
 
 describe("variant truth table", () => {
   it("omits generated fields and makes defaults insert-optional", () => {
-    expect(Object.keys(User.insert.fields)).not.toContain("id");
-    expect(Object.keys(User.update.fields)).not.toContain("id");
-    expect(Object.keys(User.insert.fields)).not.toContain("searchName");
-    expect(Object.keys(User.update.fields)).not.toContain("searchName");
+    expect(R.keys(User.insert.fields)).not.toContain("id");
+    expect(R.keys(User.update.fields)).not.toContain("id");
+    expect(R.keys(User.insert.fields)).not.toContain("searchName");
+    expect(R.keys(User.update.fields)).not.toContain("searchName");
     expect(
       S.is(User.insert)({
         orgId: 1,
@@ -106,8 +135,8 @@ describe("variant truth table", () => {
   });
 
   it("keeps identity-by-default present in update and optional in insert", () => {
-    expect(Object.keys(Organization.insert.fields)).toContain("id");
-    expect(Object.keys(Organization.update.fields)).toContain("id");
+    expect(R.keys(Organization.insert.fields)).toContain("id");
+    expect(R.keys(Organization.update.fields)).toContain("id");
     expect(
       S.is(Organization.insert)({
         parentOrgId: null,
@@ -117,35 +146,61 @@ describe("variant truth table", () => {
       })
     ).toBe(true);
     const organizationConfig = getTableConfig(bslSchema.tables.organization);
-    expect(organizationConfig.columns.find((candidate) => candidate.name === "id")?.generatedIdentity?.type).toBe(
-      "byDefault"
-    );
+    expect(
+      O.flatMap(
+        A.findFirst(
+          organizationConfig.columns,
+          (candidate) => candidate.name === "id"
+        ),
+        (candidate) => O.fromUndefinedOr(candidate.generatedIdentity?.type)
+      ).pipe(O.getOrUndefined)
+    ).toBe("byDefault");
   });
 
   it("preserves author-supplied VariantSchema.Field membership", () => {
-    expect(Object.keys(ExplicitVariantModel.insert.fields)).toContain("value");
-    expect(Object.keys(ExplicitVariantModel.update.fields)).toContain("value");
+    expect(R.keys(ExplicitVariantModel.insert.fields)).toContain("value");
+    expect(R.keys(ExplicitVariantModel.update.fields)).toContain("value");
   });
 });
 
 describe("schema assembly", () => {
   it("emits direct and self-referential foreign keys", () => {
     const userForeignKeys = getTableConfig(bslSchema.tables.user).foreignKeys;
-    const organizationForeignKeys = getTableConfig(bslSchema.tables.organization).foreignKeys;
+    const organizationForeignKeys = getTableConfig(
+      bslSchema.tables.organization
+    ).foreignKeys;
     expect(userForeignKeys).toHaveLength(1);
-    expect(userForeignKeys[0]?.reference().columns[0]?.name).toBe("org_id");
-    expect(userForeignKeys[0]?.reference().foreignColumns[0]?.name).toBe("id");
+    const userForeignKey = first(userForeignKeys, "user foreign key");
+    const userReference = userForeignKey.reference();
+    expect(first(userReference.columns, "user reference column").name).toBe(
+      "org_id"
+    );
+    expect(
+      first(userReference.foreignColumns, "user referenced column").name
+    ).toBe("id");
     expect(organizationForeignKeys).toHaveLength(1);
-    expect(organizationForeignKeys[0]?.reference().columns[0]?.name).toBe("parent_org_id");
-    expect(organizationForeignKeys[0]?.onDelete).toBe("set null");
+    const organizationForeignKey = first(
+      organizationForeignKeys,
+      "organization foreign key"
+    );
+    expect(
+      first(
+        organizationForeignKey.reference().columns,
+        "organization reference column"
+      ).name
+    ).toBe("parent_org_id");
+    expect(organizationForeignKey.onDelete).toBe("set null");
   });
 
   it("feeds its config to installed defineRelations and derives optionality", () => {
-    expect(() => defineRelations(bslSchema.tables, bslSchema.relationsConfig)).not.toThrow();
+    expect(() =>
+      defineRelations(bslSchema.tables, bslSchema.relationsConfig)
+    ).not.toThrow();
     const userRelations = bslSchema.relations.user?.relations;
     const organizationRelations = bslSchema.relations.organization?.relations;
     expect(
-      P.hasProperty(userRelations, "org") && P.hasProperty(userRelations.org, "optional")
+      P.hasProperty(userRelations, "org") &&
+        P.hasProperty(userRelations.org, "optional")
         ? userRelations.org.optional
         : undefined
     ).toBe(false);
@@ -165,6 +220,37 @@ describe("schema assembly", () => {
 });
 
 describe("schema corroboration and invariants", () => {
+  it("colocates AST derivation and Drizzle compilation with column specs", () => {
+    expect(
+      PgColumnSchema.Spec.fromSchemaAST(AST.toEncoded(S.String.ast)).pipe(
+        O.getOrThrow
+      )
+    ).toEqual(PgColumnSchema.Text.make({}));
+    expect(
+      PgColumnSchema.Spec.fromSchemaAST(AST.toEncoded(S.Date.ast)).pipe(
+        O.isNone
+      )
+    ).toBe(true);
+    expect(
+      typeof PgColumnSchema.Text.toDrizzleBuilder(
+        PgColumnSchema.Text.make({}),
+        "body"
+      ).notNull
+    ).toBe("function");
+    expect(
+      typeof pipe(
+        PgColumnSchema.Varchar.make({ length: 80 }),
+        PgColumnSchema.Spec.toDrizzleBuilder("summary")
+      ).notNull
+    ).toBe("function");
+    expect(
+      typeof PgColumnSchema.Spec.toDrizzleBuilder(
+        PgColumnSchema.Varchar.make({ length: 80 }),
+        "summary"
+      ).notNull
+    ).toBe("function");
+  });
+
   it("scans maxLength checks without mutating the schema", () => {
     expect(_incompatibleVarchar).toThrow("maxLength 500");
     expect(_compatibleVarchar).not.toThrow();
@@ -193,7 +279,9 @@ describe("schema corroboration and invariants", () => {
 
   it("refuses ambiguous encodings and mirrors model invariants at runtime", () => {
     expect(() => Derive.classify(S.Unknown, "u")).toThrow();
-    expect(() => Derive.classify(S.Union([S.String, S.Finite]), "mixed")).toThrow();
+    expect(() =>
+      Derive.classify(S.Union([S.String, S.Finite]), "mixed")
+    ).toThrow();
     expect(_needsExplicitColumn).toThrow();
     expect(_twoPrimaryKeys).toThrow();
     expect(_nullablePrimaryKey).toThrow();
@@ -204,13 +292,27 @@ describe("schema corroboration and invariants", () => {
 
 describe("varchar authoring modes", () => {
   it("derives the length from the schema's isMaxLength check", () => {
-    const derived = Field.from(S.String.check(S.isMaxLength(320)).pipe(pg.varchar()));
-    expect(derived.meta.column).toEqual({ kind: "varchar", ident: "varchar", length: 320 });
+    const derived = Field.from(
+      S.String.check(S.isMaxLength(320)).pipe(pg.varchar())
+    );
+    expect(derived.meta.column).toEqual({
+      kind: "varchar",
+      ident: "varchar",
+      length: 320,
+    });
   });
 
   it("takes the tightest bound when several maxLength checks exist", () => {
-    const derived = Field.from(S.String.check(S.isMaxLength(100)).check(S.isMaxLength(64)).pipe(pg.varchar()));
-    expect(derived.meta.column).toEqual({ kind: "varchar", ident: "varchar", length: 64 });
+    const derived = Field.from(
+      S.String.check(S.isMaxLength(100))
+        .check(S.isMaxLength(64))
+        .pipe(pg.varchar())
+    );
+    expect(derived.meta.column).toEqual({
+      kind: "varchar",
+      ident: "varchar",
+      length: 64,
+    });
   });
 
   it("refuses derive mode when no maxLength check exists", () => {
@@ -219,16 +321,39 @@ describe("varchar authoring modes", () => {
 
   it("injects isMaxLength into unbounded plain schemas so domain and DDL agree", () => {
     const injected = Field.from(S.String.pipe(pg.varchar(50)));
-    const accepts = S.is(injected.schema as S.Top);
+    if (!S.isSchema(injected.schema)) {
+      throw new Error(
+        "varchar injection unexpectedly produced a variant field"
+      );
+    }
+    const accepts = S.is(injected.schema);
     expect(accepts("x".repeat(50))).toBe(true);
     expect(accepts("x".repeat(51))).toBe(false);
     expect(injected.schema.pipe(Derive.maxLengths)).toEqual([50]);
   });
 
+  it("injects varchar bounds on the encoded side of transformed schemas", () => {
+    const injected = Field.from(S.FiniteFromString.pipe(pg.varchar(2)));
+    if (!S.isSchema(injected.schema)) {
+      throw new Error(
+        "varchar injection unexpectedly produced a variant field"
+      );
+    }
+    expect(S.decodeUnknownSync(injected.schema)("42")).toBe(42);
+    expect(() => S.decodeUnknownSync(injected.schema)("123")).toThrow();
+    expect(injected.schema.pipe(Derive.maxLengths)).toEqual([2]);
+  });
+
   it("verifies instead of double-injecting when the schema already carries a bound", () => {
-    const verified = Field.from(S.String.check(S.isMaxLength(50)).pipe(pg.varchar(80)));
+    const verified = Field.from(
+      S.String.check(S.isMaxLength(50)).pipe(pg.varchar(80))
+    );
     expect(verified.schema.pipe(Derive.maxLengths)).toEqual([50]);
-    expect(verified.meta.column).toEqual({ kind: "varchar", ident: "varchar", length: 80 });
+    expect(verified.meta.column).toEqual({
+      kind: "varchar",
+      ident: "varchar",
+      length: 80,
+    });
   });
 });
 

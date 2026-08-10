@@ -14,21 +14,70 @@ import type * as S from "effect/Schema";
 import { VariantSchema } from "effect/unstable/schema";
 import * as Meta from "./Meta.ts";
 
+/**
+ * Runtime marker carried by every BSL field wrapper.
+ *
+ * **Example** (Read the field marker)
+ *
+ * ```ts
+ * import { TypeId } from "./Field.ts"
+ *
+ * console.log(Symbol.keyFor(TypeId)) // "@beep/bsl/Field"
+ * ```
+ *
+ * @category symbols
+ * @since 0.0.0
+ */
 export const TypeId: unique symbol = Symbol.for("@beep/bsl/Field");
+/**
+ * Type of the runtime BSL field marker.
+ *
+ * @category symbols
+ * @since 0.0.0
+ */
 export type TypeId = typeof TypeId;
 
-/** Schemas a field can wrap: a plain schema or a variant-aware field. */
+/**
+ * Schema forms a BSL field can wrap.
+ *
+ * **Gotchas**
+ *
+ * Effect's current existential is `VariantSchema.Field<any>` internally. A
+ * concrete config is invariant and rejects valid literal variant records, so
+ * this mirrors Effect's erased-field boundary rather than widening BSL data.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AnySchema = S.Top | VariantSchema.Field<any>;
 
-export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> extends Pipeable.Pipeable {
+/**
+ * Pipeable wrapper correlating one schema with its SQL metadata.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface Field<out Sch extends AnySchema, out M extends Meta.Meta>
+  extends Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
   readonly schema: Sch;
   readonly meta: M;
 }
 
+/**
+ * Existential BSL field used at runtime boundaries.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type Any = Field<AnySchema, Meta.Meta>;
 
-/** Everything a combinator accepts: bare schema, variant field, or an existing Field. */
+/**
+ * Bare schema, variant field, or existing BSL field accepted by combinators.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type Input = AnySchema | Any;
 
 const Proto = {
@@ -38,40 +87,138 @@ const Proto = {
   },
 };
 
-export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(schema: Sch, meta: M): Field<Sch, M> => {
+/**
+ * Construct the correlated schema-and-metadata field wrapper.
+ *
+ * **Example** (Construct a field)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { make } from "./Field.ts"
+ * import { empty } from "./Meta.ts"
+ *
+ * console.log(make(S.String, empty).schema === S.String) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
+  schema: Sch,
+  meta: M
+): Field<Sch, M> => {
   const self = Object.create(Proto);
   self.schema = schema;
   self.meta = meta;
   return self;
 };
 
+/**
+ * Test whether an unknown value is a BSL field wrapper.
+ *
+ * **Example** (Recognize a field)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { isField, make } from "./Field.ts"
+ * import { empty } from "./Meta.ts"
+ *
+ * console.log(isField(make(S.String, empty))) // true
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
 export const isField = (u: unknown): u is Any => P.hasProperty(u, TypeId);
 
-/** The schema type an Input resolves to. */
-export type SchemaFrom<I extends Input> = I extends Field<infer Sch, any> ? Sch : Extract<I, AnySchema>;
+/**
+ * Schema type obtained by normalizing an {@link Input}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SchemaFrom<I extends Input> = I extends Field<infer Sch, Meta.Meta>
+  ? Sch
+  : Extract<I, AnySchema>;
 
-/** The meta type an Input resolves to (bare inputs start at Empty). */
-export type MetaFrom<I extends Input> = I extends Field<any, infer M> ? M : Meta.Empty;
+/**
+ * The metadata type an input resolves to; bare schemas start at {@link Meta.Empty}.
+ *
+ * **Example** (Resolve bare metadata)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import type { MetaFrom } from "./Field.ts"
+ * import type { Empty } from "./Meta.ts"
+ *
+ * declare const metadata: MetaFrom<typeof S.String>
+ * const empty: Empty = metadata
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M>
+  ? M
+  : Meta.Empty;
 
-/** Normalize any Input into a Field. */
-export const from = <I extends Input>(input: I): Field<SchemaFrom<I>, MetaFrom<I>> => {
+/**
+ * Normalize a bare schema, variant field, or existing field into one wrapper.
+ *
+ * **Example** (Normalize a bare schema)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { from } from "./Field.ts"
+ *
+ * console.log(from(S.String).meta.primaryKey) // false
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export function from<I extends Input>(
+  input: I
+): Field<SchemaFrom<I>, MetaFrom<I>>;
+export function from(input: Input): Any {
   if (isField(input)) {
-    // Audited boundary: isField cannot narrow the generic I; the runtime value
-    // is exactly the Field the type computes.
-    return input as Field<SchemaFrom<I>, MetaFrom<I>>;
+    return input;
   }
-  return make(input as SchemaFrom<I>, Meta.empty as MetaFrom<I>);
-};
+  return make(input, Meta.empty);
+}
 
-/** The resulting Field type after applying a meta patch to an Input. */
-export type Patched<I extends Input, Patch extends Meta.Patch> = Field<SchemaFrom<I>, Meta.Merge<MetaFrom<I>, Patch>>;
+/**
+ * Field type produced after applying a metadata patch to an input.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
+  SchemaFrom<I>,
+  Meta.Merge<MetaFrom<I>, Patch>
+>;
 
 /**
  * Apply a meta patch to any Input. This is the single runtime seam every
  * combinator goes through, so the merge logic and its type correlation live
  * in exactly one place.
+ *
+ * **Example** (Mark a field unique)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { patch } from "./Field.ts"
+ *
+ * console.log(patch(S.String, { unique: true }).meta.unique) // true
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
  */
-export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I, p: Patch): Patched<I, Patch> => {
+export const patch = <I extends Input, const Patch extends Meta.Patch>(
+  input: I,
+  p: Patch
+): Patched<I, Patch> => {
   const f = from(input);
   return make(f.schema, Meta.merge(f.meta, p));
 };
@@ -81,8 +228,10 @@ export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I,
 // ---------------------------------------------------------------------------
 
 /**
- * The encoded (database-facing) type of an Input. Variant fields contribute
- * their `select` variant — the database row representation.
+ * Encoded database-facing type of an input; variant fields use `select`.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type EncodedOf<I extends Input> = SchemaEncoded<SchemaFrom<I>>;
 
@@ -93,31 +242,54 @@ type SchemaEncoded<Sch> = Sch extends VariantSchema.Field<infer Config>
       : never
     : never
   : Sch extends S.Top
-    ? Sch["Encoded"]
-    : never;
+  ? Sch["Encoded"]
+  : never;
 
 // ---------------------------------------------------------------------------
 // Combinator parameter validation
 // ---------------------------------------------------------------------------
 
 /**
- * Carrier for compile-time BSL diagnostics. When a combinator's input violates
- * its constraint, the parameter type resolves to this interface and the
- * message literal shows up in the assignability error at the pipe callsite.
+ * Carrier for compile-time BSL diagnostics at a combinator callsite.
+ *
+ * **Details**
+ *
+ * When a constraint fails, its message literal appears in the assignability
+ * diagnostic on the offending pipe call.
+ *
+ * **Example** (Describe a field error)
+ *
+ * ```ts
+ * import type { BslTypeError } from "./Field.ts"
+ *
+ * type RequiresString = BslTypeError<"requires a string schema">
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export interface BslTypeError<Msg extends string> {
   readonly "~bsl.error": Msg;
 }
 
 /**
- * Validates that an Input's encoded type (ignoring `null`) is assignable to
- * `Allowed`. Resolves to `unknown` (no-op intersection) on success and to a
- * BslTypeError carrying `Msg` on failure — surfacing the error AT the
- * combinator call, not downstream.
+ * Validate an input's non-null encoded carrier against an allowed SQL carrier.
+ *
+ * **Example** (Validate a string carrier)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import type { ValidateEncoded } from "./Field.ts"
+ *
+ * type Valid = ValidateEncoded<typeof S.String, string, "expected string">
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
-export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exclude<EncodedOf<I>, null>] extends [
-  Allowed,
-]
+export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
+  Exclude<EncodedOf<I>, null>
+] extends [Allowed]
   ? unknown
   : BslTypeError<Msg>;
 
@@ -125,6 +297,22 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exc
  * Validates that an Input's encoded type does not admit `null`. Used by
  * `primaryKey()` so a nullable primary key fails at the pipe callsite.
  */
-export type ValidateNonNullable<I extends Input, Msg extends string> = null extends EncodedOf<I>
-  ? BslTypeError<Msg>
-  : unknown;
+/**
+ * Reject inputs whose encoded database representation admits `null`.
+ *
+ * **Example** (Validate a primary-key carrier)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import type { ValidateNonNullable } from "./Field.ts"
+ *
+ * type Valid = ValidateNonNullable<typeof S.String, "must not be nullable">
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type ValidateNonNullable<
+  I extends Input,
+  Msg extends string
+> = null extends EncodedOf<I> ? BslTypeError<Msg> : unknown;

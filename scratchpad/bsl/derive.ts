@@ -20,17 +20,40 @@
  * absence must be represented as `null` in selected rows.
  */
 import { $ScratchpadId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { thunkFalse, thunkTrue } from "@beep/utils";
+import { flow, Match, Struct } from "effect";
+import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as AST from "effect/SchemaAST";
 import { VariantSchema } from "effect/unstable/schema";
 import type * as Field from "./Field.ts";
-import type * as PgColumn from "./PgColumn.ts";
+import * as PgColumn from "./PgColumn.ts";
 
 const $I = $ScratchpadId.create("bsl/derive");
 
-export class DeriveColumnError extends TaggedErrorClass<DeriveColumnError>($I`DeriveColumnError`)(
+/**
+ * Error raised when an encoded schema AST cannot determine one SQL column.
+ *
+ * **Example** (Construct a derivation error)
+ *
+ * ```ts
+ * import { DeriveColumnError } from "./derive.ts"
+ *
+ * const error = DeriveColumnError.make({ message: "ambiguous", fieldName: "value", astTag: "Union" })
+ * console.log(error._tag) // "DeriveColumnError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class DeriveColumnError extends TaggedErrorClass<DeriveColumnError>(
+  $I`DeriveColumnError`
+)(
   "DeriveColumnError",
   {
     message: S.String,
@@ -38,25 +61,73 @@ export class DeriveColumnError extends TaggedErrorClass<DeriveColumnError>($I`De
     astTag: S.String,
   },
   $I.annote("DeriveColumnError", {
-    description: "A bare schema field's column could not be derived from its encoded AST.",
+    description:
+      "A bare schema field's column could not be derived from its encoded AST.",
   })
 ) {}
 
-/**
- * Structural contract for EntityId schemas (matches the statics every
- * `EntityId.factory` codec carries). Number-encoded EntityId fields derive
- * `integer` columns and, at the factory level, a foreign-key reference.
- */
-export interface EntityIdLike {
+type EntityIdLikeShape = {
   readonly tableName: string;
   readonly entityType: string;
-}
+};
 
-export const isEntityIdLike = (u: unknown): u is EntityIdLike =>
-  P.hasProperty(u, "tableName") &&
-  P.isString(u.tableName) &&
-  P.hasProperty(u, "entityType") &&
-  P.isString(u.entityType);
+const isNonEmptyString = S.is(S.NonEmptyString);
+
+/**
+ * Structural contract for the statics carried by EntityId schemas.
+ *
+ * **Details**
+ *
+ * Number-encoded EntityId fields derive integer columns and automatic
+ * foreign-key references.
+ *
+ * **Example** (Recognize EntityId statics)
+ *
+ * ```ts
+ * import { EntityIdLike } from "./derive.ts"
+ *
+ * console.log(EntityIdLike.is({ tableName: "user", entityType: "User" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EntityIdLike = S.declare<EntityIdLikeShape>(
+  (input): input is EntityIdLikeShape =>
+    P.hasProperty(input, "tableName") &&
+    isNonEmptyString(input.tableName) &&
+    P.hasProperty(input, "entityType") &&
+    isNonEmptyString(input.entityType)
+).pipe(
+  $I.annoteSchema("EntityIdLike", {
+    description: "Static identity metadata carried by an EntityId schema.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Decoded static identity metadata recognized by {@link EntityIdLike}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EntityIdLike = typeof EntityIdLike.Type;
+
+/**
+ * Tests unknown input for the EntityId static metadata contract.
+ *
+ * **Example** (Reject incomplete metadata)
+ *
+ * ```ts
+ * import { isEntityIdLike } from "./derive.ts"
+ *
+ * console.log(isEntityIdLike({ tableName: "user" })) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isEntityIdLike = EntityIdLike.is;
 
 // ---------------------------------------------------------------------------
 // Type-level derivation
@@ -64,7 +135,12 @@ export const isEntityIdLike = (u: unknown): u is EntityIdLike =>
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
-/** The select-side schema of an Input's schema (variant fields contribute `select`). */
+/**
+ * Select-side schema type of an input; variant fields contribute `select`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type SelectSchemaOf<Sch> = Sch extends VariantSchema.Field<infer Config>
   ? Config extends { readonly select: infer Sel }
     ? Sel
@@ -74,49 +150,77 @@ export type SelectSchemaOf<Sch> = Sch extends VariantSchema.Field<infer Config>
 type DeriveFromEncoded<E> = IsAny<E> extends true
   ? never
   : [E] extends [never]
-    ? never
-    : [E] extends [string]
-      ? PgColumn.Text
-      : [E] extends [boolean]
-        ? PgColumn.Bool
-        : [E] extends [bigint]
-          ? PgColumn.Bigint<"bigint">
-          : [E] extends [number]
-            ? PgColumn.DoublePrecision
-            : [E] extends [Date]
-              ? never // Declarations require explicit metadata (pg.timestamp)
-              : [E] extends [Uint8Array]
-                ? never // explicit pg.bytea
-                : [E] extends [object]
-                  ? PgColumn.Jsonb
-                  : never;
+  ? never
+  : [E] extends [string]
+  ? PgColumn.Text
+  : [E] extends [boolean]
+  ? PgColumn.Bool
+  : [E] extends [bigint]
+  ? PgColumn.Bigint<"bigint">
+  : [E] extends [number]
+  ? PgColumn.DoublePrecision
+  : [E] extends [Date]
+  ? never // Declarations require explicit metadata (pg.timestamp)
+  : [E] extends [Uint8Array]
+  ? never // explicit pg.bytea
+  : [E] extends [object]
+  ? PgColumn.Jsonb
+  : never;
 
 /**
  * The column spec a bare Input derives, or `never` when derivation is
  * ambiguous and explicit metadata is required.
+ *
+ * @category models
+ * @since 0.0.0
  */
-export type Derived<I extends Field.Input> =
-  SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & { readonly tableName: infer TableName extends string }
-    ? [Exclude<Field.EncodedOf<I>, null>] extends [number]
-      ? PgColumn.Integer<PgColumn.EntityIdIdent<TableName>>
-      : never
-    : DeriveFromEncoded<Exclude<Field.EncodedOf<I>, null>>;
+export type Derived<I extends Field.Input> = SelectSchemaOf<
+  Field.SchemaFrom<I>
+> extends EntityIdLike & {
+  readonly tableName: infer TableName extends string;
+}
+  ? [Exclude<Field.EncodedOf<I>, null>] extends [number]
+    ? PgColumn.Integer<PgColumn.EntityIdIdent<TableName>>
+    : never
+  : DeriveFromEncoded<Exclude<Field.EncodedOf<I>, null>>;
 
-/** The column spec an Input resolves to: explicit metadata wins, else derivation. */
+/**
+ * Column descriptor an input resolves to: explicit metadata wins, then derivation.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ResolvedColumn<I extends Field.Input> =
-  Field.MetaFrom<I>["column"] extends PgColumn.Spec ? Field.MetaFrom<I>["column"] : Derived<I>;
+  Field.MetaFrom<I>["column"] extends PgColumn.Spec
+    ? Field.MetaFrom<I>["column"]
+    : Derived<I>;
 
 // ---------------------------------------------------------------------------
 // Runtime derivation (mirrors the type-level policy exactly)
 // ---------------------------------------------------------------------------
 
-/** The select-side schema of a field input's schema at runtime. */
+/**
+ * Return the select-side schema used as the database representation.
+ *
+ * **Example** (Select a plain schema)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { selectSchemaOf } from "./derive.ts"
+ *
+ * console.log(selectSchemaOf(S.String) === S.String) // true
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const selectSchemaOf = (schema: Field.AnySchema): S.Top => {
   if (VariantSchema.isField(schema)) {
     const select: unknown = schema.schemas["select"];
     if (S.isSchema(select)) return select;
     throw DeriveColumnError.make({
-      message: "Variant field has no select schema; the select variant is the database row representation.",
+      message:
+        "Variant field has no select schema; the select variant is the database row representation.",
       fieldName: "(unknown)",
       astTag: "VariantField",
     });
@@ -133,137 +237,189 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
   throw DeriveColumnError.make({ message, fieldName, astTag });
 };
 
-const classifyNode = (node: AST.AST, fieldName: string, visited: WeakSet<object>): PgColumn.Spec => {
-  switch (node._tag) {
-    case "String":
-    case "TemplateLiteral":
-      return { kind: "text", ident: "text" };
-    case "Boolean":
-      return { kind: "boolean", ident: "boolean" };
-    case "BigInt":
-      return { kind: "bigint", ident: "bigint", mode: "bigint" };
-    case "Number":
-      return { kind: "doublePrecision", ident: "doublePrecision" };
-    case "Literal": {
-      const literal = node.literal;
-      if (P.isString(literal)) return { kind: "text", ident: "text" };
-      if (P.isNumber(literal)) return { kind: "doublePrecision", ident: "doublePrecision" };
-      if (P.isBoolean(literal)) return { kind: "boolean", ident: "boolean" };
-      return fail(fieldName, node._tag, `Literal of type ${typeof literal} cannot derive a column.`);
-    }
-    case "Enum":
-      return { kind: "text", ident: "text" };
-    case "Objects":
-    case "Arrays":
-      return { kind: "jsonb", ident: "jsonb" };
-    case "Suspend": {
-      if (visited.has(node)) {
-        return fail(fieldName, node._tag, "Recursive schema cycle; provide explicit column metadata.");
-      }
-      visited.add(node);
-      return classifyNode(node.thunk(), fieldName, visited);
-    }
-    default:
-      return fail(
-        fieldName,
-        node._tag,
-        `Encoded AST node '${node._tag}' does not derive a column; provide explicit metadata (e.g. pg.timestamp, pg.integer).`
-      );
-  }
-};
-
 /**
  * Derive `{ column, nullable }` for a field input from its encoded AST.
  * Explicit metadata should be consulted first; this is the bare-schema path
  * and the nullability oracle for both paths.
+ *
+ * **Example** (Classify a nullable string)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { classify } from "./derive.ts"
+ *
+ * console.log(classify(S.NullOr(S.String), "bio").nullable) // true
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
-export const classify = (schema: Field.AnySchema, fieldName: string): Classified => {
+export const classify = (
+  schema: Field.AnySchema,
+  fieldName: string
+): Classified => {
   const select = selectSchemaOf(schema);
   const encoded = AST.toEncoded(select.ast);
-  const visited = new WeakSet<object>();
-
-  const members: Array<AST.AST> = encoded._tag === "Union" ? [...encoded.types] : [encoded];
-  let nullable = false;
-  const rest: Array<AST.AST> = [];
-  for (const member of members) {
-    if (member._tag === "Null") {
-      nullable = true;
-    } else if (member._tag === "Undefined" || member._tag === "Void") {
-      fail(fieldName, member._tag, "Encoded 'undefined' cannot reach a SQL row; represent absence as null.");
-    } else {
-      rest.push(member);
-    }
+  const members = P.isTagged(encoded, "Union") ? encoded.types : A.of(encoded);
+  const invalidAbsence = A.findFirst(
+    members,
+    P.or(P.isTagged("Undefined"), P.isTagged("Void"))
+  );
+  if (O.isSome(invalidAbsence)) {
+    fail(
+      fieldName,
+      invalidAbsence.value._tag,
+      "Encoded 'undefined' cannot reach a SQL row; represent absence as null."
+    );
   }
-  if (rest.length === 0) {
-    fail(fieldName, encoded._tag, "Only null remains after stripping; provide explicit column metadata.");
+  const nullable = A.some(members, P.isTagged("Null"));
+  const rest = A.filter(members, P.not(P.isTagged("Null")));
+
+  if (A.isArrayEmpty(rest)) {
+    fail(
+      fieldName,
+      encoded._tag,
+      "Only null remains after stripping; provide explicit column metadata."
+    );
   }
 
   if (isEntityIdLike(select)) {
-    const allNumbers = rest.every((member) => member._tag === "Number");
+    const allNumbers = A.every(rest, P.isTagged("Number"));
     if (allNumbers) {
       return {
-        column: { kind: "integer", ident: `entityId<"${select.tableName}">` },
+        column: PgColumn.Integer.make({
+          ident: `entityId<"${select.tableName}">`,
+        }),
         nullable,
       };
     }
   }
 
-  const specs = rest.map((member) => classifyNode(member, fieldName, visited));
-  const first = specs[0]!;
-  const agree = specs.every((spec) => spec.kind === first.kind);
+  const specs = A.map(rest, (member) =>
+    O.getOrElse(PgColumn.Spec.fromSchemaAST(member), () =>
+      fail(
+        fieldName,
+        member._tag,
+        `Encoded AST node '${member._tag}' does not derive a column; provide explicit metadata (e.g. pg.timestamp, pg.integer).`
+      )
+    )
+  );
+  const first = A.head(specs).pipe(
+    O.getOrElse(() =>
+      fail(
+        fieldName,
+        encoded._tag,
+        "No encoded members remain after null stripping."
+      )
+    )
+  );
+  const agree = A.every(specs, P.Struct({ kind: Eq.equals(first.kind) }));
   if (!agree) {
     fail(
       fieldName,
       "Union",
-      `Union members derive different columns (${specs.map((spec) => spec.kind).join(", ")}); provide explicit metadata.`
+      `Union members derive different columns (${A.join(
+        A.map(specs, (spec) => spec.kind),
+        ", "
+      )}); provide explicit metadata.`
     );
   }
   return { column: first, nullable };
 };
 
-/** Nullability of a field input's encoded select representation. */
-export const isNullable = (schema: Field.AnySchema): boolean => {
-  const select = selectSchemaOf(schema);
-  const encoded = AST.toEncoded(select.ast);
-  if (encoded._tag !== "Union") return encoded._tag === "Null";
-  return encoded.types.some((member) => member._tag === "Null");
-};
+/**
+ * Test nullability of a field input's encoded select representation.
+ *
+ * **Example** (Detect encoded nullability)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { isNullable } from "./derive.ts"
+ *
+ * console.log(isNullable(S.NullOr(S.String))) // true
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isNullable = flow(
+  selectSchemaOf,
+  flow(Struct.get("ast"), AST.toEncoded),
+  Match.type<AST.AST>().pipe(
+    Match.withReturnType<boolean>(),
+    Match.tags({
+      Union: P.Struct({
+        types: A.some(P.isTagged("Null")),
+      }),
+      Null: thunkTrue,
+    }),
+    Match.orElse(thunkFalse)
+  )
+);
 
-const maxLengthFromCheck = (check: AST.Check<unknown>, found: Array<number>): void => {
+const maxLengthFromCheck = (
+  check: AST.Check<unknown>
+): ReadonlyArray<number> => {
   const representation = check.annotations?.representation;
-  if (
+  const current =
     representation?.id === "effect/schema/isMaxLength" &&
     P.hasProperty(representation.payload, "maxLength") &&
     P.isNumber(representation.payload.maxLength)
-  ) {
-    found.push(representation.payload.maxLength);
-  }
-  if (check._tag === "FilterGroup") {
-    for (const nested of check.checks) maxLengthFromCheck(nested, found);
-  }
+      ? A.of(representation.payload.maxLength)
+      : A.empty<number>();
+  return P.isTagged(check, "FilterGroup")
+    ? A.appendAll(current, A.flatMap(check.checks, maxLengthFromCheck))
+    : current;
 };
 
-const collectMaxLengths = (node: AST.AST, found: Array<number>, visited: WeakSet<object>): void => {
-  if (visited.has(node)) return;
-  visited.add(node);
-  if (node.checks !== undefined) {
-    for (const check of node.checks) maxLengthFromCheck(check, found);
+const collectMaxLengths: {
+  (visited: ReadonlyArray<AST.AST>): (node: AST.AST) => ReadonlyArray<number>;
+  (node: AST.AST, visited: ReadonlyArray<AST.AST>): ReadonlyArray<number>;
+} = dual(
+  2,
+  (node: AST.AST, visited: ReadonlyArray<AST.AST>): ReadonlyArray<number> => {
+    if (A.some(visited, Eq.equals(node))) return A.empty();
+    const nextVisited = A.append(visited, node);
+    const collectNested = collectMaxLengths(nextVisited);
+    const checks = O.fromUndefinedOr(node.checks).pipe(
+      O.map(A.flatMap(maxLengthFromCheck)),
+      O.getOrElse(A.empty<number>)
+    );
+    const encodings = O.fromUndefinedOr(node.encoding).pipe(
+      O.map(A.flatMap((link) => collectNested(link.to))),
+      O.getOrElse(A.empty<number>)
+    );
+    const nested = Match.type<AST.AST>().pipe(
+      Match.withReturnType<ReadonlyArray<number>>(),
+      Match.tags({
+        Union: ({ types }) => A.flatMap(types, collectNested),
+        Suspend: (suspend) => collectNested(suspend.thunk()),
+        Declaration: ({ typeParameters }) =>
+          A.flatMap(typeParameters, collectNested),
+      }),
+      Match.orElse(A.empty<number>)
+    )(node);
+    return A.appendAll(A.appendAll(checks, encodings), nested);
   }
-  if (node.encoding !== undefined) {
-    for (const link of node.encoding) collectMaxLengths(link.to, found, visited);
-  }
-  if (node._tag === "Union") {
-    for (const member of node.types) collectMaxLengths(member, found, visited);
-  } else if (node._tag === "Suspend") {
-    collectMaxLengths(node.thunk(), found, visited);
-  } else if (node._tag === "Declaration") {
-    for (const parameter of node.typeParameters) collectMaxLengths(parameter, found, visited);
-  }
-};
+);
 
-/** All installed `S.isMaxLength` payloads visible on the encoded select schema. */
-export const maxLengths = (schema: Field.AnySchema): ReadonlyArray<number> => {
-  const found: Array<number> = [];
-  collectMaxLengths(AST.toEncoded(selectSchemaOf(schema).ast), found, new WeakSet<object>());
-  return found;
-};
+/**
+ * Collect every installed `S.isMaxLength` bound on the encoded select schema.
+ *
+ * **Example** (Read a maximum length)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { maxLengths } from "./derive.ts"
+ *
+ * console.log(maxLengths(S.String.check(S.isMaxLength(50)))) // [50]
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const maxLengths = flow(
+  selectSchemaOf,
+  flow(Struct.get("ast"), AST.toEncoded),
+  collectMaxLengths(A.empty())
+);

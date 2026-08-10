@@ -1,5 +1,6 @@
 /** Compile-time and runtime fixtures for BSL round two. */
 import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { sql } from "drizzle-orm";
 import * as S from "effect/Schema";
 import { Model, VariantField } from "./factory.ts";
@@ -10,13 +11,21 @@ import { toPgTable } from "./table.ts";
 
 const $I = $ScratchpadId.create("bsl/fixtures");
 
-const entityId = <const TableName extends string, const EntityType extends string, Sch extends S.Top>(
+const entityId = <
+  const TableName extends string,
+  const EntityType extends string,
+  Sch extends S.Top
+>(
   id: Sch,
   tableName: TableName,
   entityType: EntityType
-) => Object.assign(id, Object.freeze({ tableName, entityType }));
+) => id.pipe(SchemaUtils.withStatics(() => ({ tableName, entityType })));
 
-export const UserId = entityId(S.Finite.pipe(S.brand("UserId")), "user", "User");
+export const UserId = entityId(
+  S.Finite.pipe(S.brand("UserId")),
+  "user",
+  "User"
+);
 export const OrganizationId = entityId(
   S.Finite.pipe(S.brand("OrganizationId")),
   "organization",
@@ -30,8 +39,14 @@ export const NullableOrganizationId = entityId(
 
 export class Organization extends Model<Organization>($I`Organization`)(
   {
-    id: OrganizationId.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
-    parentOrgId: NullableOrganizationId.pipe(pg.references(OrganizationId, { onDelete: "set null" })),
+    id: OrganizationId.pipe(
+      pg.integer(),
+      pg.identity("byDefault"),
+      pg.primaryKey()
+    ),
+    parentOrgId: NullableOrganizationId.pipe(
+      pg.references(OrganizationId, { onDelete: "set null" })
+    ),
     slug: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
     name: S.String,
     code: S.String,
@@ -42,7 +57,7 @@ export class Organization extends Model<Organization>($I`Organization`)(
       using: "btree",
       where: sql<boolean>`${t.slug} <> ''`,
     }),
-    Table.check("organization_name_check", sql<boolean>`${t.name} <> ''`),
+    Table.check(sql<boolean>`${t.name} <> ''`, "organization_name_check"),
   ]
 ) {}
 
@@ -50,14 +65,20 @@ export class User extends Model<User>($I`User`)(
   {
     id: UserId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
     orgId: OrganizationId,
-    email: S.String.check(S.isMaxLength(320)).pipe(pg.varchar(320), pg.unique()),
+    email: S.String.check(S.isMaxLength(320)).pipe(
+      pg.varchar(320),
+      pg.unique()
+    ),
     name: S.String,
     bio: S.NullOr(S.String),
     settings: S.Struct({ theme: S.String }),
     active: S.Boolean,
     status: S.String.pipe(pg.text(), pg.default("active")),
     createdAt: S.String.pipe(pg.timestamp(), pg.defaultNow()),
-    searchName: S.String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
+    searchName: S.String.pipe(
+      pg.text(),
+      pg.generated(sql<string>`lower(name)`)
+    ),
   },
   (t) => [
     Table.compositeUnique("user_org_email_unique", [t.orgId, t.email]),
@@ -65,7 +86,7 @@ export class User extends Model<User>($I`User`)(
       using: "btree",
       where: sql<boolean>`${t.active} = true`,
     }),
-    Table.check("user_email_check", sql<boolean>`${t.email} <> ''`),
+    Table.check("user_email_check")(sql<boolean>`${t.email} <> ''`),
   ]
 ) {}
 
@@ -75,21 +96,38 @@ export class Membership extends Model<Membership>($I`Membership`)(
     userId: UserId,
     role: S.String.pipe(pg.text(), pg.default("member")),
   },
-  (t) => [Table.compositePrimaryKey("membership_pk", [t.organizationId, t.userId])]
+  (t) => [
+    Table.compositePrimaryKey("membership_pk", [t.organizationId, t.userId]),
+  ]
 ) {}
 
-export class ExplicitVariantModel extends Model<ExplicitVariantModel>($I`ExplicitVariantModel`)({
-  value: VariantField({ select: S.String, insert: S.String, update: S.String }).pipe(
-    pg.text(),
-    pg.generated(sql<string>`lower(value)`)
-  ),
+export class ExplicitVariantModel extends Model<ExplicitVariantModel>(
+  $I`ExplicitVariantModel`
+)({
+  value: VariantField({
+    select: S.String,
+    insert: S.String,
+    update: S.String,
+  }).pipe(pg.text(), pg.generated(sql<string>`lower(value)`)),
 }) {}
 
 export const userTable = toPgTable(User);
-export const bslSchema = schema({ user: User, organization: Organization, membership: Membership });
+export const bslSchema = schema({
+  user: User,
+  organization: Organization,
+  membership: Membership,
+});
 
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
-type MutualExtends<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
+  ? 1
+  : 2
+  ? true
+  : false;
+type MutualExtends<A, B> = [A] extends [B]
+  ? [B] extends [A]
+    ? true
+    : false
+  : false;
 type Expect<_T extends true> = never;
 type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
 
@@ -103,32 +141,64 @@ type OrganizationUpdateVariant = (typeof Organization.update)["Type"];
 export type _selectId = Expect<Equal<SelectRow["id"], number>>;
 export type _selectEmail = Expect<Equal<SelectRow["email"], string>>;
 export type _selectBio = Expect<Equal<SelectRow["bio"], string | null>>;
-export type _selectSettings = Expect<MutualExtends<SelectRow["settings"], { readonly theme: string }>>;
+export type _selectSettings = Expect<
+  MutualExtends<SelectRow["settings"], { readonly theme: string }>
+>;
 export type _selectActive = Expect<Equal<SelectRow["active"], boolean>>;
-export type _insertIdAbsent = Expect<Equal<"id" extends keyof InsertRow ? true : false, false>>;
-export type _insertCreatedAtOptional = Expect<Equal<undefined extends InsertRow["createdAt"] ? true : false, true>>;
+export type _insertIdAbsent = Expect<
+  Equal<"id" extends keyof InsertRow ? true : false, false>
+>;
+export type _insertCreatedAtOptional = Expect<
+  Equal<undefined extends InsertRow["createdAt"] ? true : false, true>
+>;
 export type _insertEmailRequired = Expect<Equal<InsertRow["email"], string>>;
-export type _variantInsertIdAbsent = Expect<Equal<"id" extends keyof UserInsertVariant ? true : false, false>>;
-export type _variantUpdateIdAbsent = Expect<Equal<"id" extends keyof UserUpdateVariant ? true : false, false>>;
-export type _variantDefaultOptional = Expect<IsOptional<UserInsertVariant, "status">>;
-export type _variantCreatedAtOptional = Expect<IsOptional<UserInsertVariant, "createdAt">>;
-export type _variantUpdateEmailOptional = Expect<IsOptional<UserUpdateVariant, "email">>;
-export type _identityByDefaultInsertPresent = Expect<Equal<"id" extends keyof OrganizationInsertVariant ? true : false, true>>;
-export type _identityByDefaultInsertOptional = Expect<IsOptional<OrganizationInsertVariant, "id">>;
-export type _identityByDefaultUpdatePresent = Expect<Equal<"id" extends keyof OrganizationUpdateVariant ? true : false, true>>;
-export type _identityByDefaultUpdateOptional = Expect<IsOptional<OrganizationUpdateVariant, "id">>;
-export type _emailIsVarchar = Expect<Equal<(typeof User)["bsl"]["columns"]["email"]["column"]["ident"], "varchar">>;
+export type _variantInsertIdAbsent = Expect<
+  Equal<"id" extends keyof UserInsertVariant ? true : false, false>
+>;
+export type _variantUpdateIdAbsent = Expect<
+  Equal<"id" extends keyof UserUpdateVariant ? true : false, false>
+>;
+export type _variantDefaultOptional = Expect<
+  IsOptional<UserInsertVariant, "status">
+>;
+export type _variantCreatedAtOptional = Expect<
+  IsOptional<UserInsertVariant, "createdAt">
+>;
+export type _variantUpdateEmailOptional = Expect<
+  IsOptional<UserUpdateVariant, "email">
+>;
+export type _identityByDefaultInsertPresent = Expect<
+  Equal<"id" extends keyof OrganizationInsertVariant ? true : false, true>
+>;
+export type _identityByDefaultInsertOptional = Expect<
+  IsOptional<OrganizationInsertVariant, "id">
+>;
+export type _identityByDefaultUpdatePresent = Expect<
+  Equal<"id" extends keyof OrganizationUpdateVariant ? true : false, true>
+>;
+export type _identityByDefaultUpdateOptional = Expect<
+  IsOptional<OrganizationUpdateVariant, "id">
+>;
+export type _emailIsVarchar = Expect<
+  Equal<(typeof User)["bsl"]["columns"]["email"]["column"]["ident"], "varchar">
+>;
 export type _orgIdIdentity = Expect<
-  Equal<(typeof User)["bsl"]["columns"]["orgId"]["column"]["ident"], 'entityId<"organization">'>
+  Equal<
+    (typeof User)["bsl"]["columns"]["orgId"]["column"]["ident"],
+    'entityId<"organization">'
+  >
 >;
 export type _userIdIdentity = Expect<
-  Equal<(typeof User)["bsl"]["columns"]["id"]["column"]["ident"], 'entityId<"user">'>
+  Equal<
+    (typeof User)["bsl"]["columns"]["id"]["column"]["ident"],
+    'entityId<"user">'
+  >
 >;
 
 // Negative matrix: each assertion names the rejected invariant.
 
 // @ts-expect-error invariant: varchar requires a string-encoded schema
-export const _badVarchar = S.Finite.pipe(pg.varchar(80));
+export const _badVarchar = () => S.Finite.pipe(pg.varchar(80));
 // @ts-expect-error invariant: text requires a string-encoded schema
 export const _badText = S.Finite.pipe(pg.text());
 // @ts-expect-error invariant: uuid requires a string-encoded schema
@@ -159,16 +229,25 @@ export const _badTimestampDate = S.String.pipe(pg.timestamp({ mode: "date" }));
 export const _badDefaultNow = S.String.pipe(pg.text(), pg.defaultNow());
 // @ts-expect-error invariant: a default value must match the encoded carrier
 export const _badDefaultValue = S.String.pipe(pg.text(), pg.default(1));
-// @ts-expect-error invariant: a typed default expression carrier must match the field
-export const _badDefaultExpr = S.String.pipe(pg.text(), pg.defaultExpr(sql<number>`1`));
-// @ts-expect-error invariant: a generated expression carrier must match the field
-export const _badGeneratedExpr = S.String.pipe(pg.text(), pg.generated(sql<number>`1`));
+export const _badDefaultExpr = S.String.pipe(
+  pg.text(),
+  // @ts-expect-error invariant: a typed default expression carrier must match the field
+  pg.defaultExpr(sql<number>`1`)
+);
+export const _badGeneratedExpr = S.String.pipe(
+  pg.text(),
+  // @ts-expect-error invariant: a generated expression carrier must match the field
+  pg.generated(sql<number>`1`)
+);
 // @ts-expect-error invariant: identity requires an explicit integer-family column
 export const _badIdentityMissingColumn = S.Finite.pipe(pg.identity());
 // @ts-expect-error invariant: identity rejects non-integer column families
 export const _badIdentityText = S.String.pipe(pg.text(), pg.identity());
-// @ts-expect-error invariant: nullable schemas cannot be primary keys
-export const _badNullablePk = S.NullOr(S.String).pipe(pg.text(), pg.primaryKey());
+export const _badNullablePk = S.NullOr(S.String).pipe(
+  pg.text(),
+  // @ts-expect-error invariant: nullable schemas cannot be primary keys
+  pg.primaryKey()
+);
 // @ts-expect-error invariant: generated identity-always keys are absent from insert
 export type _badInsertIdShape = UserInsertVariant["id"];
 // @ts-expect-error invariant: generated identity-always keys are absent from update
@@ -189,26 +268,35 @@ export class CallbackTyping extends Model<CallbackTyping>($I`CallbackTyping`)(
     // @ts-expect-error invariant: composite primary key requires at least two columns
     Table.compositePrimaryKey("callback_bad_pk", [t.one]),
     // @ts-expect-error invariant: checks require typed SQL, never a bare string
-    Table.check("callback_bad_check", "one <> ''"),
+    Table.check("callback_bad_check")("one <> ''"),
     // @ts-expect-error invariant: partial index predicates require typed SQL
     Table.index("callback_bad_where", [t.one], { where: "one <> ''" }),
   ]
 ) {}
 
 export const _needsExplicitColumn = () => {
-  // @ts-expect-error invariant: Date declarations require explicit pg.timestamp metadata
-  class NeedsExplicitColumn extends Model<NeedsExplicitColumn>($I`NeedsExplicitColumn`)({ at: S.Date }) {}
+  class NeedsExplicitColumn extends Model<NeedsExplicitColumn>(
+    $I`NeedsExplicitColumn`
+  )({
+    // @ts-expect-error invariant: Date declarations require explicit pg.timestamp metadata
+    at: S.Date,
+  }) {}
   return NeedsExplicitColumn;
 };
 
 export const _twoPrimaryKeys = () => {
   // @ts-expect-error invariant: multiple inline primary keys require a composite table node instead
-  class TwoPrimaryKeys extends Model<TwoPrimaryKeys>($I`TwoPrimaryKeys`)({ one: S.Finite.pipe(pg.integer(), pg.primaryKey()), two: S.Finite.pipe(pg.integer(), pg.primaryKey()) }) {}
+  class TwoPrimaryKeys extends Model<TwoPrimaryKeys>($I`TwoPrimaryKeys`)({
+    one: S.Finite.pipe(pg.integer(), pg.primaryKey()),
+    two: S.Finite.pipe(pg.integer(), pg.primaryKey()),
+  }) {}
   return TwoPrimaryKeys;
 };
 
 export const _nullablePrimaryKey = () => {
-  class NullablePrimaryKey extends Model<NullablePrimaryKey>($I`NullablePrimaryKey`)({
+  class NullablePrimaryKey extends Model<NullablePrimaryKey>(
+    $I`NullablePrimaryKey`
+  )({
     // @ts-expect-error invariant: nullable schemas cannot be primary keys
     id: S.NullOr(S.Finite).pipe(pg.integer(), pg.primaryKey()),
   }) {}
@@ -216,7 +304,9 @@ export const _nullablePrimaryKey = () => {
 };
 
 export const _defaultThenGenerated = () => {
-  class DefaultThenGenerated extends Model<DefaultThenGenerated>($I`DefaultThenGenerated`)({
+  class DefaultThenGenerated extends Model<DefaultThenGenerated>(
+    $I`DefaultThenGenerated`
+  )({
     value: S.String.pipe(
       pg.text(),
       pg.default("x"),
@@ -228,7 +318,9 @@ export const _defaultThenGenerated = () => {
 };
 
 export const _generatedThenDefault = () => {
-  class GeneratedThenDefault extends Model<GeneratedThenDefault>($I`GeneratedThenDefault`)({
+  class GeneratedThenDefault extends Model<GeneratedThenDefault>(
+    $I`GeneratedThenDefault`
+  )({
     value: S.String.pipe(
       pg.text(),
       pg.unsafeGeneratedSql("lower(value)"),
@@ -240,14 +332,20 @@ export const _generatedThenDefault = () => {
 };
 
 export const _incompatibleVarchar = () => {
-  class IncompatibleVarchar extends Model<IncompatibleVarchar>($I`IncompatibleVarchar`)({
-    value: S.String.check(S.isMaxLength(500)).check(S.isMinLength(1)).pipe(pg.varchar(50)),
+  class IncompatibleVarchar extends Model<IncompatibleVarchar>(
+    $I`IncompatibleVarchar`
+  )({
+    value: S.String.check(S.isMaxLength(500))
+      .check(S.isMinLength(1))
+      .pipe(pg.varchar(50)),
   }) {}
   return IncompatibleVarchar;
 };
 
 export const _compatibleVarchar = () => {
-  class CompatibleVarchar extends Model<CompatibleVarchar>($I`CompatibleVarchar`)({
+  class CompatibleVarchar extends Model<CompatibleVarchar>(
+    $I`CompatibleVarchar`
+  )({
     value: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
   }) {}
   return CompatibleVarchar;
@@ -272,16 +370,24 @@ export const _uuidTextFkMismatch = () =>
   // @ts-expect-error invariant: uuid and text SQL identities are not interchangeable
   schema({ text_target: TextTarget, uuid_source: UuidSource });
 
-class WrongEntitySource extends Model<WrongEntitySource>($I`WrongEntitySource`)({
-  userId: OrganizationId.pipe(pg.references(UserId)),
-}) {}
+class WrongEntitySource extends Model<WrongEntitySource>($I`WrongEntitySource`)(
+  {
+    userId: OrganizationId.pipe(pg.references(UserId)),
+  }
+) {}
 
 export const _entityFkMismatch = () =>
   // @ts-expect-error invariant: different EntityId SQL domains are not interchangeable
-  schema({ user: User, organization: Organization, wrong_entity_source: WrongEntitySource });
+  schema({
+    user: User,
+    organization: Organization,
+    wrong_entity_source: WrongEntitySource,
+  });
 
 const MissingId = entityId(S.Finite, "missing_table", "Missing");
-class MissingSource extends Model<MissingSource>($I`MissingSource`)({ missingId: MissingId }) {}
+class MissingSource extends Model<MissingSource>($I`MissingSource`)({
+  missingId: MissingId,
+}) {}
 
 export const _missingTarget = () =>
   // @ts-expect-error invariant: every reference target must be present in Bsl.schema
