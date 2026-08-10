@@ -128,7 +128,10 @@ const greptileIssueLimitExceeded = (issueCount: number | undefined, limit: numbe
  * @category testing
  * @since 0.0.0
  */
-export const greptileIssueLimitExceededForTesting = greptileIssueLimitExceeded;
+export const greptileIssueLimitExceededForTesting: {
+  (limit: number): (issueCount: number | undefined) => boolean;
+  (issueCount: number | undefined, limit: number): boolean;
+} = dual(2, greptileIssueLimitExceeded);
 
 /**
  * Derive blocking closeout issues from review-thread and Greptile gate inputs.

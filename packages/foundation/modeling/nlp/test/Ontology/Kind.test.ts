@@ -28,7 +28,7 @@ const allKinds: ReadonlyArray<Kind.TextKind> = [
 ];
 
 const kindArbitrary = fc.constantFrom(...allKinds);
-const KindContainmentArbitrary = S.toArbitrary(Kind.KindContainment);
+const KindContainmentArbitrary = S.toArbitrary(Kind.KindContainment)(fc);
 
 describe("TextKind schema", () => {
   it("accepts every declared kind", () => {
@@ -72,7 +72,7 @@ describe("Containment poset", () => {
     fc.assert(
       fc.property(KindContainmentArbitrary, (containment) => {
         const encoded = Effect.runSync(S.encodeEffect(Kind.KindContainment)(containment));
-        const decoded = Effect.runSync(S.decodeUnknownEffect(Kind.KindContainment)(encoded));
+        const decoded = Effect.runSync(S.decodeEffect(Kind.KindContainment)(encoded));
 
         expect(decoded).toEqual(containment);
       })

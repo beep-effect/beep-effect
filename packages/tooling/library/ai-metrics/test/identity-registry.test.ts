@@ -415,7 +415,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         expect(yield* fs.exists(`${registryPath}.tmp`)).toBe(false);
 
         const json = yield* identityRegistryToJson(registry);
-        const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry))(json);
+        const decoded = yield* S.decodeEffect(S.fromJsonString(AiMetricsIdentityRegistry))(json);
         expect(decoded.registryVersion).toBe("ai-metrics-identity-registry/v1");
         expect(A.length(decoded.roots)).toBe(1);
 

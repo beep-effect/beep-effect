@@ -23,7 +23,7 @@ describe("Logging", () => {
 
   it("round-trips schema-derived pretty logger configs", () => {
     fc.assert(
-      fc.property(S.toArbitrary(PrettyLoggerConfig), (pretty) => {
+      fc.property(S.toArbitrary(PrettyLoggerConfig)(fc), (pretty) => {
         const decoded = O.flatMap(
           S.encodeOption(PrettyLoggerConfig)(pretty),
           S.decodeUnknownOption(PrettyLoggerConfig)
@@ -36,7 +36,7 @@ describe("Logging", () => {
 
   it("round-trips schema-derived banner options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RenderLogBannerOptions), (options) => {
+      fc.property(S.toArbitrary(RenderLogBannerOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(RenderLogBannerOptions)(options),
           S.decodeUnknownOption(RenderLogBannerOptions)

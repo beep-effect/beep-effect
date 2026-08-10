@@ -28,7 +28,7 @@ const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 const publicIdFor = (id: PosInt): string => `${WORKSPACE_TABLE_NAME}_a${id}`;
 
 const baseWorkspaceEntity = (id: PosInt, vaultRootPath: O.Option<WorkspaceVaultRootPath>): Workspace =>
-  S.decodeUnknownSync(Workspace)({
+  S.decodeSync(Workspace)({
     createdAt: id,
     createdByPrincipal: SYSTEM_PRINCIPAL,
     entityType: "WorkspaceWorkspace",

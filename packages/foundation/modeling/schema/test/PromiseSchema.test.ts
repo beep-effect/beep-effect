@@ -7,7 +7,7 @@ describe("PromiseSchema", () => {
     const value = globalThis.Promise.resolve(1);
 
     expect(isPromise(value)).toBe(true);
-    expect(S.decodeUnknownSync(PromiseSchema)(value)).toBe(value);
+    expect(S.decodeSync(PromiseSchema)(value)).toBe(value);
   });
 
   it("accepts Promise subclasses", () => {
@@ -16,7 +16,7 @@ describe("PromiseSchema", () => {
     const value = DerivedPromise.resolve(1);
 
     expect(isPromise(value)).toBe(true);
-    expect(S.decodeUnknownSync(PromiseSchema)(value)).toBe(value);
+    expect(S.decodeSync(PromiseSchema)(value)).toBe(value);
   });
 
   it("rejects promise-like objects that are not native promises", () => {

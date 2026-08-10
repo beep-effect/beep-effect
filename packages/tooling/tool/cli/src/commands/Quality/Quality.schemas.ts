@@ -6,11 +6,15 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
 import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
@@ -127,19 +131,7 @@ export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
  * @category models
  * @since 0.0.0
  */
-export const LintPolicySubcommand = LiteralKit([
-  "circular",
-  "deprecated-apis",
-  "goal-packets",
-  "identity-registry",
-  "package-test-imports",
-  "policy",
-  "reflection-artifacts",
-  "roadmap-refs",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-]).pipe(
+export const LintPolicySubcommand = LiteralKit(LINT_POLICY_SUBCOMMANDS).pipe(
   $I.annoteSchema("LintPolicySubcommand", {
     description: "Lint policy subcommands that remain owned by the full command tree.",
   })
@@ -327,7 +319,10 @@ export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`Package
  * @category decoding
  * @since 0.0.0
  */
-export const decodePackageJsonDocument = S.decodeUnknownEffect(S.fromJsonString(PackageJsonDocument));
+export const decodePackageJsonDocument: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<PackageJsonDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<PackageJsonDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(PackageJsonDocument)));
 
 /**
  * Explicit machine profile used to tune future quality scheduling.
@@ -723,7 +718,10 @@ export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowF
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGithubChecksFallowFeatureMatrix = S.decodeUnknownEffect(GithubChecksFallowFeatureMatrix);
+export const decodeGithubChecksFallowFeatureMatrix: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<GithubChecksFallowFeatureMatrix, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<GithubChecksFallowFeatureMatrix, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(GithubChecksFallowFeatureMatrix));
 
 /**
  * Stage label for a GitHub check collector lane.

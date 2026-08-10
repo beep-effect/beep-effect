@@ -25,7 +25,7 @@ const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration
   return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
 };
 
-const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics).map((metrics) =>
+const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics)(fc).map((metrics) =>
   Types.ExecutionMetrics.make({
     ...metrics,
     duration: finiteNonNegativeMillis(metrics.duration),
@@ -34,7 +34,7 @@ const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.Exe
 const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -189,7 +189,7 @@ describe("ResultStore", () => {
         timestamp: result.timestamp,
       });
       const encoded = yield* S.encodeEffect(ResultStore.StoredResult)(stored);
-      const decoded = yield* S.decodeUnknownEffect(ResultStore.StoredResult)(encoded);
+      const decoded = yield* S.decodeEffect(ResultStore.StoredResult)(encoded);
 
       expect(S.is(ResultStore.StoredResult)(decoded)).toBe(true);
       expect(S.is(ResultStore.AnyOperationResult)(decoded.result)).toBe(true);

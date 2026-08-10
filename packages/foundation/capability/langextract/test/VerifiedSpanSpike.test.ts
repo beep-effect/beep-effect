@@ -332,23 +332,23 @@ describe("verified-span hostile-text contract", () => {
     ).toThrow();
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(TextOffsetRange)({
+        S.decodeResult(TextOffsetRange)({
           end: 1,
           start: 2,
           unit: "unicode-code-point",
         })
       )
     ).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Utf16TextRange)({ endChar: 0, startChar: 0 }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(Utf16TextRange)({ endChar: 0, startChar: 0 }))).toBe(true);
   });
 
   it("derives only ordered, round-trippable ranges from both schemas", () =>
     fc.assert(
-      fc.property(S.toArbitrary(TextOffsetRange), S.toArbitrary(Utf16TextRange), (offsetRange, utf16Range) => {
+      fc.property(S.toArbitrary(TextOffsetRange)(fc), S.toArbitrary(Utf16TextRange)(fc), (offsetRange, utf16Range) => {
         const encodedOffsetRange = Result.getOrThrow(S.encodeUnknownResult(TextOffsetRange)(offsetRange));
         const encodedUtf16Range = Result.getOrThrow(S.encodeUnknownResult(Utf16TextRange)(utf16Range));
-        const decodedOffsetRange = Result.getOrThrow(S.decodeUnknownResult(TextOffsetRange)(encodedOffsetRange));
-        const decodedUtf16Range = Result.getOrThrow(S.decodeUnknownResult(Utf16TextRange)(encodedUtf16Range));
+        const decodedOffsetRange = Result.getOrThrow(S.decodeResult(TextOffsetRange)(encodedOffsetRange));
+        const decodedUtf16Range = Result.getOrThrow(S.decodeResult(Utf16TextRange)(encodedUtf16Range));
 
         expect(offsetRange.start).toBeLessThan(offsetRange.end);
         expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);

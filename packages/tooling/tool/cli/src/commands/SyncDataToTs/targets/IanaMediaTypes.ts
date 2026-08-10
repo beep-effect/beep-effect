@@ -509,7 +509,7 @@ const acquireIanaMediaTypesFromCanonical = Effect.fn("SyncDataToTs.IanaMediaType
   const content = yield* fs
     .readFileString(path.resolve(repoRoot, canonicalPath))
     .pipe(SyncDataToTsError.mapError("Failed to read checked-in IANA media types data", targetId, canonicalPath));
-  const canonical = yield* S.decodeUnknownEffect(S.fromJsonString(IanaMediaTypesCanonical))(content).pipe(
+  const canonical = yield* S.decodeEffect(S.fromJsonString(IanaMediaTypesCanonical))(content).pipe(
     SyncDataToTsError.mapError("Failed to decode checked-in IANA media types data", targetId, canonicalPath)
   );
   return yield* projectIanaMediaTypes(

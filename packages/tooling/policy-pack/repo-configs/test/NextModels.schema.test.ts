@@ -61,18 +61,18 @@ describe("Next shared schemas", () => {
 
   it("round-trips schema-derived primitive values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(FileSizeSuffix), (value) => expectRoundTrip(FileSizeSuffix, value)),
+      fc.property(S.toArbitrary(FileSizeSuffix)(fc), (value) => expectRoundTrip(FileSizeSuffix, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(SizeLimit), (value) => expectRoundTrip(SizeLimit, value)),
+      fc.property(S.toArbitrary(SizeLimit)(fc), (value) => expectRoundTrip(SizeLimit, value)),
       fcRuns(25)
     );
   });
 });
 
 describe("Next route schemas", () => {
-  const routeHasArbitrary = S.toArbitrary(RouteHas);
+  const routeHasArbitrary = S.toArbitrary(RouteHas)(fc);
 
   it("accepts route predicates and public route config shapes", () =>
     Effect.runPromise(
@@ -139,22 +139,24 @@ describe("Next route schemas", () => {
 
   it("round-trips redirect status-code values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedirectStatusCodeValue), (value) => expectRoundTrip(RedirectStatusCodeValue, value)),
+      fc.property(S.toArbitrary(RedirectStatusCodeValue)(fc), (value) =>
+        expectRoundTrip(RedirectStatusCodeValue, value)
+      ),
       fcRuns(25)
     );
   });
 
   it("round-trips route object schemas that do not contain never fields", () => {
     fc.assert(
-      fc.property(S.toArbitrary(Rewrite), (value) => expectRoundTrip(Rewrite, value)),
+      fc.property(S.toArbitrary(Rewrite)(fc), (value) => expectRoundTrip(Rewrite, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(Header), (value) => expectRoundTrip(Header, value)),
+      fc.property(S.toArbitrary(Header)(fc), (value) => expectRoundTrip(Header, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(Middleware), (value) => expectRoundTrip(Middleware, value)),
+      fc.property(S.toArbitrary(Middleware)(fc), (value) => expectRoundTrip(Middleware, value)),
       fcRuns(25)
     );
   });
@@ -201,14 +203,14 @@ describe("Next route schemas", () => {
 describe("Next image schemas", () => {
   it("round-trips schema-derived complete image configs", () => {
     fc.assert(
-      fc.property(S.toArbitrary(ImageConfigComplete), (value) => expectRoundTrip(ImageConfigComplete, value)),
+      fc.property(S.toArbitrary(ImageConfigComplete)(fc), (value) => expectRoundTrip(ImageConfigComplete, value)),
       fcRuns(25)
     );
   });
 
   it("round-trips schema-derived partial image configs", () => {
     fc.assert(
-      fc.property(S.toArbitrary(ImageConfig), (value) => expectRoundTrip(ImageConfig, value)),
+      fc.property(S.toArbitrary(ImageConfig)(fc), (value) => expectRoundTrip(ImageConfig, value)),
       fcRuns(25)
     );
   });

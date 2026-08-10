@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { daysInGregorianMonth, isGregorianLeapYear } from "./LocalDate.calendar.ts";
 import * as LocalDate from "./LocalDate.model.ts";
+import type * as Ordering from "effect/Ordering";
 import type * as AST from "effect/SchemaAST";
 import type { CalendarParts } from "./LocalDate.calendar.ts";
 
@@ -97,7 +98,10 @@ export const makeOption = (input: CalendarParts): O.Option<LocalDate.Model> => L
  * @since 0.0.0
  */
 export const makeEffect = (input: CalendarParts): Effect.Effect<LocalDate.Model, S.SchemaError> =>
-  LocalDate.Model.makeEffect(input);
+  pipe(
+    LocalDate.Model.makeEffect(input),
+    Effect.mapError((issue) => new S.SchemaError(issue))
+  );
 
 /**
  * Type guard for `LocalDate` model instances.
@@ -199,7 +203,7 @@ const LocalDateEquivalence = S.toEquivalence(LocalDate.Model);
  * @since 0.0.0
  */
 export const fromString = (dateString: string): Effect.Effect<LocalDate.Model, S.SchemaError> =>
-  S.decodeUnknownEffect(LocalDateFromString)(dateString);
+  S.decodeEffect(LocalDateFromString)(dateString);
 
 /**
  * Create a `LocalDate` from a JavaScript `Date` using UTC calendar components.
@@ -320,10 +324,8 @@ const toOrderTuple = (date: LocalDate.Model): readonly [number, number, number] 
  * @category utilities
  * @since 0.0.0
  */
-export const Order: Ord.Order<LocalDate.Model> = Ord.mapInput(
-  Ord.Tuple([Ord.Number, Ord.Number, Ord.Number]),
-  toOrderTuple
-);
+export const Order: ((right: LocalDate.Model) => (left: LocalDate.Model) => Ordering.Ordering) &
+  Ord.Order<LocalDate.Model> = dual(2, Ord.mapInput(Ord.Tuple([Ord.Number, Ord.Number, Ord.Number]), toOrderTuple));
 
 /**
  * Test whether one LocalDate is chronologically before another.

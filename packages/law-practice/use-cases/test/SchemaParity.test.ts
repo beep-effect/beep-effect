@@ -27,7 +27,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -94,7 +94,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   });
 
   it("preserves the spike EntityInput encoded audit envelope", () => {
-    const decoded = S.decodeUnknownSync(EntityInput)({
+    const decoded = S.decodeSync(EntityInput)({
       createdAt: 1,
       createdByPrincipal: { component: "Runtime", kind: "System" },
       entityType: "LawPracticeClaim",

@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -408,10 +409,21 @@ const snapshotPackages = (entries: ReadonlyArray<CoverageSnapshotEntry>): Record
  * @category testing
  * @since 0.0.0
  */
-export const mergeCoverageBaselinePackagesForTesting = (
-  previous: Record<string, CoveragePackageBaseline>,
-  entries: ReadonlyArray<CoverageSnapshotEntry>
-): Record<string, CoveragePackageBaseline> => ({ ...previous, ...snapshotPackages(entries) });
+export const mergeCoverageBaselinePackagesForTesting: {
+  (
+    entries: ReadonlyArray<CoverageSnapshotEntry>
+  ): (previous: Record<string, CoveragePackageBaseline>) => Record<string, CoveragePackageBaseline>;
+  (
+    previous: Record<string, CoveragePackageBaseline>,
+    entries: ReadonlyArray<CoverageSnapshotEntry>
+  ): Record<string, CoveragePackageBaseline>;
+} = dual(
+  2,
+  (
+    previous: Record<string, CoveragePackageBaseline>,
+    entries: ReadonlyArray<CoverageSnapshotEntry>
+  ): Record<string, CoveragePackageBaseline> => ({ ...previous, ...snapshotPackages(entries) })
+);
 
 /**
  * Committed entries an unscoped replacement would delete without meaning to.
@@ -434,16 +446,29 @@ export const mergeCoverageBaselinePackagesForTesting = (
  * @category testing
  * @since 0.0.0
  */
-export const baselineEntriesLostByReplacement = (
-  previousNames: ReadonlyArray<string>,
-  measuredNames: ReadonlyArray<string>,
-  workspaceNames: ReadonlyArray<string>
-): ReadonlyArray<string> =>
-  pipe(
-    previousNames,
-    A.filter((name) => !A.contains(measuredNames, name) && A.contains(workspaceNames, name)),
-    A.sort(Order.String)
-  );
+export const baselineEntriesLostByReplacement: {
+  (
+    measuredNames: ReadonlyArray<string>,
+    workspaceNames: ReadonlyArray<string>
+  ): (previousNames: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (
+    previousNames: ReadonlyArray<string>,
+    measuredNames: ReadonlyArray<string>,
+    workspaceNames: ReadonlyArray<string>
+  ): ReadonlyArray<string>;
+} = dual(
+  3,
+  (
+    previousNames: ReadonlyArray<string>,
+    measuredNames: ReadonlyArray<string>,
+    workspaceNames: ReadonlyArray<string>
+  ): ReadonlyArray<string> =>
+    pipe(
+      previousNames,
+      A.filter((name) => !A.contains(measuredNames, name) && A.contains(workspaceNames, name)),
+      A.sort(Order.String)
+    )
+);
 
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
   repoRoot: string,
@@ -728,7 +753,17 @@ const compareCoverage = (
  * @category testing
  * @since 0.0.0
  */
-export const compareCoverageRegressionSnapshotsForTesting = compareCoverage;
+export const compareCoverageRegressionSnapshotsForTesting: {
+  (
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): (baseline: CoverageRegressionBaseline) => CoverageComparisonResult;
+  (
+    baseline: CoverageRegressionBaseline,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): CoverageComparisonResult;
+} = dual(3, compareCoverage);
 
 const renderCoverageFailures = (failures: ReadonlyArray<CoverageComparisonFailure>): ReadonlyArray<string> =>
   A.map(

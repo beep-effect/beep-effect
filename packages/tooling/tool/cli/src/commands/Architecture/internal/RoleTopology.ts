@@ -263,13 +263,19 @@ export const exportsForRole: {
  * @category constructors
  * @since 0.0.0
  */
-export const rolePlanFor = (target: ArchitecturePlanTarget, role: ArchitectureSliceRole): ArchitectureSliceRolePlan =>
-  ArchitectureSliceRolePlan.make({
-    role,
-    packageName: packageNameForRole(target, role),
-    path: pathForRole(target, role),
-    exports: exportsForRole(target, role),
-  });
+export const rolePlanFor: {
+  (role: ArchitectureSliceRole): (target: ArchitecturePlanTarget) => ArchitectureSliceRolePlan;
+  (target: ArchitecturePlanTarget, role: ArchitectureSliceRole): ArchitectureSliceRolePlan;
+} = dual(
+  2,
+  (target: ArchitecturePlanTarget, role: ArchitectureSliceRole): ArchitectureSliceRolePlan =>
+    ArchitectureSliceRolePlan.make({
+      role,
+      packageName: packageNameForRole(target, role),
+      path: pathForRole(target, role),
+      exports: exportsForRole(target, role),
+    })
+);
 
 /**
  * Tests whether a target is the canonical architecture-lab WorkItem target.

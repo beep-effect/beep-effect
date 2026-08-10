@@ -7,7 +7,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const portMinimum = 1;
 const portMaximum = 65_535;
-const PortArbitrary = S.toArbitrary(Port);
+const PortArbitrary = S.toArbitrary(Port)(fc);
 
 describe("Port", () => {
   const decode = S.decodeUnknownEffect(Port);
@@ -81,7 +81,7 @@ describe("PortFromString", () => {
   it.effect(
     "encodes branded transport ports back to decimal strings",
     Effect.fnUntraced(function* () {
-      const value = yield* S.decodeUnknownEffect(Port)(443);
+      const value = yield* S.decodeEffect(Port)(443);
 
       expect(yield* encode(value)).toBe("443");
     })

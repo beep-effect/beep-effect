@@ -21,7 +21,7 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
 import { TaggedErrorClass } from "@beep/schema";
-import { A, O as OptionUtils } from "@beep/utils";
+import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph, MutableHashMap, MutableHashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -528,6 +528,13 @@ export const filterNodes: {
 // =============================================================================
 
 /**
+ * Walkers take an optional `start` list, so arity alone cannot decide the call
+ * style. A `TextGraph` is never an array, which makes the subject decidable.
+ */
+const isTraversalDataFirst = (args: IArguments): boolean =>
+  args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !A.isArray(args[0]));
+
+/**
  * Create a depth-first walker over text nodes.
  *
  * **Example** (Depth-first walk values)
@@ -543,8 +550,14 @@ export const filterNodes: {
  * @category sequencing
  * @since 0.0.0
  */
-export const dfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const dfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a breadth-first walker over text nodes.
@@ -562,8 +575,14 @@ export const dfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): G
  * @category sequencing
  * @since 0.0.0
  */
-export const bfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const bfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a topological walker where parents precede children.

@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
-const PgliteErrorArbitrary = S.toArbitrary(PgliteError);
+const PgliteErrorArbitrary = S.toArbitrary(PgliteError)(fc);
 const encodePgliteError = S.encodeUnknownResult(PgliteError);
 const decodePgliteError = S.decodeUnknownResult(PgliteError);
 

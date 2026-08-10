@@ -19,13 +19,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ThreadArbitrary = S.toArbitrary(ThreadModel);
+const ThreadArbitrary = S.toArbitrary(ThreadModel)(fc);
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
-const MessageArbitrary = S.toArbitrary(MessageModel);
+const MessageArbitrary = S.toArbitrary(MessageModel)(fc);
 const MessageEquivalence = S.toEquivalence(MessageModel);
-const TurnArbitrary = S.toArbitrary(TurnModel);
+const TurnArbitrary = S.toArbitrary(TurnModel)(fc);
 const TurnEquivalence = S.toEquivalence(TurnModel);
-const WorkspaceArbitrary = S.toArbitrary(WorkspaceModel);
+const WorkspaceArbitrary = S.toArbitrary(WorkspaceModel)(fc);
 const WorkspaceEquivalence = S.toEquivalence(WorkspaceModel);
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {

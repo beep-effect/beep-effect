@@ -12,8 +12,12 @@
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { O } from "@beep/utils";
 import { Match } from "effect";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+import { LibpffError } from "./Libpff.errors.ts";
 import type { ExportArchiveOperation } from "@beep/file-processing/Operation";
-import type { LibpffError } from "./Libpff.errors.ts";
+
+const isLibpffError = S.is(LibpffError);
 
 /**
  * Engine name reported by every libpff engine descriptor and operation error.
@@ -170,38 +174,51 @@ const operationErrorContext = (operation: ExportArchiveOperation) => ({
  * @category constructors
  * @since 0.0.0
  */
-export const libpffOperationError = (
-  operation: ExportArchiveOperation,
-  error: LibpffError,
-  options: LibpffOperationErrorOptions = {}
-): FileProcessingOperationError =>
-  Match.value(error.reason).pipe(
-    Match.when("engine-unavailable", () =>
-      FileProcessingOperationError.fromReason("engine-unavailable", {
-        ...operationErrorContext(operation),
-        message: options.engineUnavailableMessage ?? LIBPFF_ENGINE_UNAVAILABLE_MESSAGE,
-      })
-    ),
-    Match.when("timeout", () =>
-      FileProcessingOperationError.fromReason("operation-timed-out", {
-        ...operationErrorContext(operation),
-        message: options.timeoutMessage ?? defaultTimeoutMessage,
-      })
-    ),
-    Match.when("output-limit", () =>
-      FileProcessingOperationError.fromReason("output-limit-exceeded", {
-        ...operationErrorContext(operation),
-        message: outputLimitMessage,
-      })
-    ),
-    Match.whenOr("config", "process", () =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        ...operationErrorContext(operation),
-        message: options.exportFailedMessage ?? defaultExportFailedMessage,
-        ...O.getSomesStruct({
-          details: O.map(error.exitCode, (exitCode) => ({ exitCode: `${exitCode}` })),
-        }),
-      })
-    ),
-    Match.exhaustive
-  );
+export const libpffOperationError: {
+  (
+    error: LibpffError,
+    options?: LibpffOperationErrorOptions
+  ): (operation: ExportArchiveOperation) => FileProcessingOperationError;
+  (
+    operation: ExportArchiveOperation,
+    error: LibpffError,
+    options?: LibpffOperationErrorOptions
+  ): FileProcessingOperationError;
+} = dual(
+  (args) => !isLibpffError(args[0]),
+  (
+    operation: ExportArchiveOperation,
+    error: LibpffError,
+    options: LibpffOperationErrorOptions = {}
+  ): FileProcessingOperationError =>
+    Match.value(error.reason).pipe(
+      Match.when("engine-unavailable", () =>
+        FileProcessingOperationError.fromReason("engine-unavailable", {
+          ...operationErrorContext(operation),
+          message: options.engineUnavailableMessage ?? LIBPFF_ENGINE_UNAVAILABLE_MESSAGE,
+        })
+      ),
+      Match.when("timeout", () =>
+        FileProcessingOperationError.fromReason("operation-timed-out", {
+          ...operationErrorContext(operation),
+          message: options.timeoutMessage ?? defaultTimeoutMessage,
+        })
+      ),
+      Match.when("output-limit", () =>
+        FileProcessingOperationError.fromReason("output-limit-exceeded", {
+          ...operationErrorContext(operation),
+          message: outputLimitMessage,
+        })
+      ),
+      Match.whenOr("config", "process", () =>
+        FileProcessingOperationError.fromReason("archive-export-failed", {
+          ...operationErrorContext(operation),
+          message: options.exportFailedMessage ?? defaultExportFailedMessage,
+          ...O.getSomesStruct({
+            details: O.map(error.exitCode, (exitCode) => ({ exitCode: `${exitCode}` })),
+          }),
+        })
+      ),
+      Match.exhaustive
+    )
+);

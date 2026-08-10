@@ -856,6 +856,8 @@ export const buildExtractionPlan = (options: BuildExtractionPlanOptions): Extrac
   });
 };
 
+type EpochToVideoSeconds = (epochMs: number) => number;
+
 /**
  * Convert a witness wall-clock timestamp to seconds on the video timeline,
  * clamped to `[0, max(0, videoDurationSeconds - END_SEEK_GUARD_SECONDS)]`.
@@ -888,11 +890,11 @@ export const buildExtractionPlan = (options: BuildExtractionPlanOptions): Extrac
  * @since 0.0.0
  */
 export const epochToVideoSeconds: {
-  (videoDurationSeconds: number): (clockSync: ClockSync) => (epochMs: number) => number;
-  (clockSync: ClockSync, videoDurationSeconds: number): (epochMs: number) => number;
+  (videoDurationSeconds: number): (clockSync: ClockSync) => EpochToVideoSeconds;
+  (clockSync: ClockSync, videoDurationSeconds: number): EpochToVideoSeconds;
 } = dual(
   2,
-  (clockSync: ClockSync, videoDurationSeconds: number) =>
+  (clockSync: ClockSync, videoDurationSeconds: number): EpochToVideoSeconds =>
     (epochMs: number): number =>
       N.round(
         Math.min(

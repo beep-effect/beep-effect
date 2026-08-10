@@ -387,7 +387,10 @@ export const prePushShaMismatchesForTesting = prePushShaMismatches;
  * @category testing
  * @since 0.0.0
  */
-export const publishPathsOutsideIntentForTesting = publishPathsOutsideIntent;
+export const publishPathsOutsideIntentForTesting: {
+  (observedPaths: ReadonlyArray<string>): (intendedPaths: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (intendedPaths: ReadonlyArray<string>, observedPaths: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, publishPathsOutsideIntent);
 
 /**
  * Return reviewed paths that can be passed to `git add` without failing on
@@ -405,7 +408,10 @@ export const publishPathsOutsideIntentForTesting = publishPathsOutsideIntent;
  * @category testing
  * @since 0.0.0
  */
-export const publishRestagePathsForTesting = publishRestagePaths;
+export const publishRestagePathsForTesting: {
+  (existingPaths: ReadonlyArray<string>): (intendedPaths: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (intendedPaths: ReadonlyArray<string>, existingPaths: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, publishRestagePaths);
 
 /**
  * Return the warning Yeet prints when publish push target differs from branch
@@ -426,7 +432,10 @@ export const publishRestagePathsForTesting = publishRestagePaths;
  * @category testing
  * @since 0.0.0
  */
-export const publishUpstreamMismatchWarningForTesting = publishUpstreamMismatchWarning;
+export const publishUpstreamMismatchWarningForTesting: {
+  (upstream: string): (branch: string) => O.Option<string>;
+  (branch: string, upstream: string): O.Option<string>;
+} = dual(2, publishUpstreamMismatchWarning);
 
 /**
  * Summarize refused publish paths as count, top-level entries, and capped
@@ -464,7 +473,10 @@ export const summarizePublishPathsForTesting = summarizePublishPaths;
  * @category testing
  * @since 0.0.0
  */
-export const partiallyStagedPathsForTesting = partiallyStagedPaths;
+export const partiallyStagedPathsForTesting: {
+  (unstagedPaths: ReadonlyArray<string>): (stagedPaths: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (stagedPaths: ReadonlyArray<string>, unstagedPaths: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, partiallyStagedPaths);
 
 /**
  * Return branch-changed paths that were also changed on the base ref since the
@@ -482,7 +494,10 @@ export const partiallyStagedPathsForTesting = partiallyStagedPaths;
  * @category testing
  * @since 0.0.0
  */
-export const overlappingBasePathsForTesting = overlappingBasePaths;
+export const overlappingBasePathsForTesting: {
+  (basePaths: ReadonlyArray<string>): (branchPaths: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (branchPaths: ReadonlyArray<string>, basePaths: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, overlappingBasePaths);
 
 /**
  * Park unstaged tracked and untracked residue before a staged-only publish.

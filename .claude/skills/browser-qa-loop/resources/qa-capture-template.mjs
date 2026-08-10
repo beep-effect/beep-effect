@@ -92,7 +92,12 @@ const dragTab = async (fromKey, target) => {
   await page.mouse.down();
   await page.mouse.move(box.x + 40, box.y + 40, { steps: 8 });
   await page.mouse.move(target.x, target.y, { steps: 24 });
-  return { finish: async () => { await page.mouse.up(); await settle(); } };
+  return {
+    finish: async () => {
+      await page.mouse.up();
+      await settle();
+    },
+  };
 };
 const groupBox = (groupId) => page.locator(`[data-group-id='${groupId}']`).first().boundingBox();
 // Mid-gesture cancel injection: dispatches pointercancel on the element that
@@ -129,7 +134,12 @@ if (COLLECTOR && BEACON) {
   }));
   assert(record, "stale v1 removed", keys.v1 === null);
   const actives = await page.$$eval("[role='tab'][data-active='true']", (els) => els.map((el) => el.textContent ?? ""));
-  assert(record, "locked actives", ["Explorer", "Graph", "Inspector", "Chat"].every((label) => actives.some((text) => text.includes(label))), actives.join("|"));
+  assert(
+    record,
+    "locked actives",
+    ["Explorer", "Graph", "Inspector", "Chat"].every((label) => actives.some((text) => text.includes(label))),
+    actives.join("|")
+  );
   await shot(record, "boot");
   drainConsole(record);
 }
@@ -145,7 +155,14 @@ if (COLLECTOR && BEACON) {
     assert(record, `${key} opened`, (await page.$(tabSelector(key))) !== null);
   }
   await shot(record, "tools-open");
-  for (const key of ["ontology-explorer", "ontology-document", "ontology-graph", "ontology-source", "ontology-inspector", "ontology-changelog"]) {
+  for (const key of [
+    "ontology-explorer",
+    "ontology-document",
+    "ontology-graph",
+    "ontology-source",
+    "ontology-inspector",
+    "ontology-changelog",
+  ]) {
     await page.click("[data-desktop-ontology-menu]");
     await settle(200);
     await page.click(`[data-panel-menu-item='${key}']`);
@@ -217,7 +234,11 @@ if (COLLECTOR && BEACON) {
     if (!group || !center) return null;
     const g = group.getBoundingClientRect();
     const c = center.getBoundingClientRect();
-    return { width: g.width, height: g.height, sameColumn: Math.abs(g.left - c.left) < 4 && Math.abs(g.width - c.width) < 4 };
+    return {
+      width: g.width,
+      height: g.height,
+      sameColumn: Math.abs(g.left - c.left) < 4 && Math.abs(g.width - c.width) < 4,
+    };
   });
   assert(record, "split scoped to center column", landed !== null && landed.sameColumn, JSON.stringify(landed));
   assert(record, "inserted row respects minima", landed !== null && landed.height >= 200, `h=${landed?.height}`);
@@ -237,7 +258,12 @@ if (COLLECTOR && BEACON) {
   void drag;
   const after = await page.$$eval("[data-group-id]", (els) => els.length);
   assert(record, "no layout change after Escape", after === before, `${before}->${after}`);
-  const sourceHome = await page.evaluate(() => document.querySelector("[data-panel-id='surface-ontology-source']")?.closest("[data-group-id]")?.getAttribute("data-group-id"));
+  const sourceHome = await page.evaluate(() =>
+    document
+      .querySelector("[data-panel-id='surface-ontology-source']")
+      ?.closest("[data-group-id]")
+      ?.getAttribute("data-group-id")
+  );
   assert(record, "source stayed in center", sourceHome === "desktop-ontology-center", String(sourceHome));
   drainConsole(record);
 }
@@ -265,10 +291,15 @@ if (COLLECTOR && BEACON) {
   await page.mouse.up();
   await settle(500);
   const moved = await page.$eval("[data-floating-pane]", (el) => el.getBoundingClientRect().toJSON());
-  assert(record, "header drag translates by pointer delta only",
-    Math.abs(moved.left - before.left - 160) <= 2 && Math.abs(moved.top - before.top - 120) <= 2 &&
-    Math.abs(moved.width - before.width) <= 1 && Math.abs(moved.height - before.height) <= 1,
-    `d=(${(moved.left - before.left).toFixed(0)},${(moved.top - before.top).toFixed(0)}) size ${moved.width}x${moved.height}`);
+  assert(
+    record,
+    "header drag translates by pointer delta only",
+    Math.abs(moved.left - before.left - 160) <= 2 &&
+      Math.abs(moved.top - before.top - 120) <= 2 &&
+      Math.abs(moved.width - before.width) <= 1 &&
+      Math.abs(moved.height - before.height) <= 1,
+    `d=(${(moved.left - before.left).toFixed(0)},${(moved.top - before.top).toFixed(0)}) size ${moved.width}x${moved.height}`
+  );
   const selectionClean = await page.evaluate(() => window.getSelection()?.isCollapsed !== false);
   assert(record, "no native selection after header drag", selectionClean);
   await shot(record, "moved");
@@ -296,7 +327,9 @@ if (COLLECTOR && BEACON) {
   await settle(600);
   await page.click("button[aria-label^='Dock group']");
   await settle(600);
-  const kept = await page.evaluate(() => document.querySelector("[data-testid='chat-app']")?.__qaMark === "keepalive-check");
+  const kept = await page.evaluate(
+    () => document.querySelector("[data-testid='chat-app']")?.__qaMark === "keepalive-check"
+  );
   assert(record, "chat node identity survives ontology re-layout", kept);
   await shot(record, "after-relayout");
   drainConsole(record);
@@ -357,7 +390,12 @@ if (COLLECTOR && BEACON) {
     await page.mouse.move(box2.x + 260, box2.y + box2.height / 2, { steps: 8 });
     await settle(300);
     const widthAfterMove = (await groupBox("desktop-ontology-left")).width;
-    assert(record, "pointercancel stops resize tracking", Math.abs(widthAfterMove - widthAtCancel) <= 2, `${widthAtCancel}->${widthAfterMove}`);
+    assert(
+      record,
+      "pointercancel stops resize tracking",
+      Math.abs(widthAfterMove - widthAtCancel) <= 2,
+      `${widthAtCancel}->${widthAfterMove}`
+    );
     await page.mouse.up();
     await settle(300);
   } else {
@@ -383,7 +421,9 @@ if (COLLECTOR && BEACON) {
   assert(record, "restored groups reach visible geometry", settled);
   const groups = await page.$$eval("[data-group-id]", (els) => els.map((el) => el.getAttribute("data-group-id")));
   assert(record, "layout restored with extra split", groups.length >= 4, groups.join(","));
-  const sparqlBox = await page.$eval(tabSelector("ontology-sparql"), (el) => el.getBoundingClientRect().width).catch(() => 0);
+  const sparqlBox = await page
+    .$eval(tabSelector("ontology-sparql"), (el) => el.getBoundingClientRect().width)
+    .catch(() => 0);
   assert(record, "sparql tab visibly restored", sparqlBox > 20, `w=${sparqlBox}`);
   await shot(record, "restored");
   drainConsole(record);
@@ -400,7 +440,9 @@ if (video && VIDEO_DIR) {
 }
 await browser.close();
 writeFileSync(`${OUT}manifest.json`, JSON.stringify(manifest, null, 2));
-const failures = manifest.scenarios.flatMap((s) => s.assertions.filter((a) => !a.ok).map((a) => `${s.name}: ${a.name} (${a.detail})`));
+const failures = manifest.scenarios.flatMap((s) =>
+  s.assertions.filter((a) => !a.ok).map((a) => `${s.name}: ${a.name} (${a.detail})`)
+);
 console.log(JSON.stringify({ scenarios: manifest.scenarios.length, failures }, null, 2));
 console.log(failures.length === 0 ? "CAPTURE-GREEN" : `CAPTURE-FAILURES: ${failures.length}`);
 // `qa record` mirrors the harness exit (RecordOutcome.exitCode); exitCode (not

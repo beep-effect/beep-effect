@@ -14,6 +14,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { DiagnosticCategory, Node } from "ts-morph";
 import { SymbolKind, symbolCategoryFromKind } from "./TSMorph.model.ts";
+import type * as Ordering from "effect/Ordering";
 import type {
   ClassDeclaration,
   ConstructorDeclaration,
@@ -116,9 +117,10 @@ const bySymbolStartLineAscending: Order.Order<TsMorphSymbol> = Order.mapInput(
  * @category utilities
  * @since 0.0.0
  */
-export const byTsMorphSymbolAscending: Order.Order<TsMorphSymbol> = Order.combine(
-  bySymbolNameAscending,
-  Order.combine(bySymbolFilePathAscending, bySymbolStartLineAscending)
+export const byTsMorphSymbolAscending: ((that: TsMorphSymbol) => (self: TsMorphSymbol) => Ordering.Ordering) &
+  Order.Order<TsMorphSymbol> = dual(
+  2,
+  Order.combine(bySymbolNameAscending, Order.combine(bySymbolFilePathAscending, bySymbolStartLineAscending))
 );
 
 const byDiagnosticStartLineAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput(
@@ -171,9 +173,15 @@ const byDiagnosticCodeAscending: Order.Order<TsMorphDiagnostic> = Order.mapInput
  * @category utilities
  * @since 0.0.0
  */
-export const byNormalizedDiagnosticAscending: Order.Order<TsMorphDiagnostic> = Order.combine(
-  byDiagnosticStartLineAscending,
-  Order.combine(byDiagnosticStartColumnAscending, byDiagnosticCodeAscending)
+export const byNormalizedDiagnosticAscending: ((
+  that: TsMorphDiagnostic
+) => (self: TsMorphDiagnostic) => Ordering.Ordering) &
+  Order.Order<TsMorphDiagnostic> = dual(
+  2,
+  Order.combine(
+    byDiagnosticStartLineAscending,
+    Order.combine(byDiagnosticStartColumnAscending, byDiagnosticCodeAscending)
+  )
 );
 
 const firstSignatureLine = (text: string): string =>

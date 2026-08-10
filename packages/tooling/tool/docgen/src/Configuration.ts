@@ -389,7 +389,7 @@ export const defaultCompilerOptions = {
   skipLibCheck: true,
   strict: true,
   target: "es2022",
-} as const satisfies S.Schema.Type<typeof CompilerOptionsShape>;
+} as const satisfies typeof CompilerOptionsShape.Type;
 
 class PackageJsonSchema extends S.Class<PackageJsonSchema>($I`PackageJsonSchema`)({
   homepage: S.String,
@@ -452,7 +452,7 @@ const readDocgenConfig = Effect.fn("Configuration.readDocgenConfig")(function* (
 const readTSConfig = Effect.fn("Configuration.readTSConfig")(function* (
   fileName: string
 ): Effect.fn.Return<
-  S.Schema.Type<typeof CompilerOptionsShape>,
+  typeof CompilerOptionsShape.Type,
   Domain.DocgenError,
   FileSystem.FileSystem | Path.Path | Domain.Process
 > {
@@ -492,7 +492,7 @@ const resolveCompilerOptions = (
   fromCLI: O.Option<CompilerOptionsInput>,
   fromDocgenJson: O.Option<CompilerOptionsInput>
 ): Effect.Effect<
-  S.Schema.Type<typeof CompilerOptionsShape>,
+  typeof CompilerOptionsShape.Type,
   Domain.DocgenError,
   FileSystem.FileSystem | Path.Path | Domain.Process
 > => {

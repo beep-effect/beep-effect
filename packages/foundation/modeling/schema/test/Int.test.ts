@@ -7,7 +7,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const int64Minimum = -BigInt("9223372036854775808");
 const int64Maximum = BigInt("9223372036854775807");
-const Int64Arbitrary = S.toArbitrary(Int64);
+const Int64Arbitrary = S.toArbitrary(Int64)(fc);
 
 describe("Int64", () => {
   const decode = S.decodeUnknownEffect(Int64);
@@ -82,7 +82,7 @@ describe("Int64FromString", () => {
   it.effect(
     "encodes signed 64-bit BigInts back to decimal strings",
     Effect.fnUntraced(function* () {
-      const value = yield* S.decodeUnknownEffect(Int64)(int64Maximum);
+      const value = yield* S.decodeEffect(Int64)(int64Maximum);
 
       expect(yield* encode(value)).toBe("9223372036854775807");
     })

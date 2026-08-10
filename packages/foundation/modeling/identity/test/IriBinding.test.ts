@@ -13,7 +13,7 @@ describe("@beep/identity IRI binding", () => {
   });
 
   it("derives exact IRI and CURIE literals through create and compose chains", () => {
-    const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" });
+    const { $BeepId } = make({ authority: "https://ns.beep.sh/", prefix: "beep" })("beep");
     const modules = $BeepId.compose("ontology", "schema");
     const model = modules.$OntologyId.create("Ontology.models").create("HttpUrl");
 

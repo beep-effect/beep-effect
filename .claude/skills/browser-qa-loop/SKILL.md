@@ -96,7 +96,9 @@ screenshots-only loop.
 `packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts`. The judge
 emits ONE fenced JSON block; `judge-ingest` is the only writer of
 `inventory.json`/`inventory.md`; `beep qa judge-lint --round N` re-validates
-any round (use it in campaign exit checks). Findings carry evidence refs
+any round (use it in campaign exit checks). The prompt's lens list is bound to
+the `QaLens` schema; run `bun run beep lint judge-rubric` after changing it.
+Findings carry evidence refs
 (artifact path + event sequence refs + frame ranges) and a `resolvedInRound`
 field maintained across rounds.
 

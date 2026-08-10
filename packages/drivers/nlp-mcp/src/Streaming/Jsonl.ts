@@ -15,6 +15,7 @@ import { $NlpMcpId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { Effect, Order, pipe, Random, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { streamLines } from "./TextStream.ts";
@@ -192,17 +193,28 @@ const streamIndexedLines = (
  * @category streams
  * @since 0.0.0
  */
-export const streamJsonl = (
-  filePath: string,
-  options: (typeof JsonlReadOptions)["~type.make.in"] = {}
-): Stream.Stream<unknown, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> => {
-  const readOptions = JsonlReadOptions.make(options);
-  return streamIndexedLines(filePath).pipe(
-    readOptions.skipInvalid
-      ? Stream.filterMap(([line, lineNumber]) => parseLine(line, lineNumber))
-      : Stream.mapEffect(([line, lineNumber]) => Effect.fromResult(parseLine(line, lineNumber)))
-  );
-};
+export const streamJsonl: {
+  (
+    options?: (typeof JsonlReadOptions)["~type.make.in"]
+  ): (filePath: string) => Stream.Stream<unknown, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof JsonlReadOptions)["~type.make.in"]
+  ): Stream.Stream<unknown, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof JsonlReadOptions)["~type.make.in"] = {}
+  ): Stream.Stream<unknown, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> => {
+    const readOptions = JsonlReadOptions.make(options);
+    return streamIndexedLines(filePath).pipe(
+      readOptions.skipInvalid
+        ? Stream.filterMap(([line, lineNumber]) => parseLine(line, lineNumber))
+        : Stream.mapEffect(([line, lineNumber]) => Effect.fromResult(parseLine(line, lineNumber)))
+    );
+  }
+);
 
 /**
  * Stream per-line parse results, never failing on malformed JSON.
@@ -243,11 +255,24 @@ export const streamJsonlResults = (
  * @category utilities
  * @since 0.0.0
  */
-export const readJsonl = (
-  filePath: string,
-  options: (typeof JsonlReadOptions)["~type.make.in"] = {}
-): Effect.Effect<ReadonlyArray<unknown>, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> =>
-  Stream.runCollect(streamJsonl(filePath, options));
+export const readJsonl: {
+  (
+    options?: (typeof JsonlReadOptions)["~type.make.in"]
+  ): (
+    filePath: string
+  ) => Effect.Effect<ReadonlyArray<unknown>, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    filePath: string,
+    options?: (typeof JsonlReadOptions)["~type.make.in"]
+  ): Effect.Effect<ReadonlyArray<unknown>, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    filePath: string,
+    options: (typeof JsonlReadOptions)["~type.make.in"] = {}
+  ): Effect.Effect<ReadonlyArray<unknown>, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> =>
+    Stream.runCollect(streamJsonl(filePath, options))
+);
 
 /**
  * Compute aggregate parse statistics for a JSONL file.

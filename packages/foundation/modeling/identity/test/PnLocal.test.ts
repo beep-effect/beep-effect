@@ -82,7 +82,7 @@ describe("PnLocal", () => {
 
   it("round-trips generated safe PN_LOCAL schema values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(SafePnLocal), (local) => {
+      fc.property(S.toArbitrary(SafePnLocal)(fc), (local) => {
         const decoded = O.flatMap(S.encodeOption(SafePnLocal)(local), S.decodeUnknownOption(SafePnLocal));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
@@ -93,7 +93,7 @@ describe("PnLocal", () => {
 
   it("round-trips generated safe PN_PREFIX schema values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(SafePnPrefix), (prefix) => {
+      fc.property(S.toArbitrary(SafePnPrefix)(fc), (prefix) => {
         const decoded = O.flatMap(S.encodeOption(SafePnPrefix)(prefix), S.decodeUnknownOption(SafePnPrefix));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
@@ -104,7 +104,7 @@ describe("PnLocal", () => {
 
   it("round-trips generated escaped PN_LOCAL schema values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(EscapedPnLocal), (local) => {
+      fc.property(S.toArbitrary(EscapedPnLocal)(fc), (local) => {
         const decoded = O.flatMap(S.encodeOption(EscapedPnLocal)(local), S.decodeUnknownOption(EscapedPnLocal));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);

@@ -70,6 +70,7 @@ import { guardLiteralArg } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
 import { Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -466,20 +467,26 @@ const endStatePlanStep = (state: SweepGitState): SweepPlanStep =>
  * @category planning
  * @since 0.0.0
  */
-export const buildSweepPlan = (state: SweepGitState, createdAt: string): SweepPlan =>
-  SweepPlan.make({
-    schemaVersion: "yeet-sweep-plan/v1",
-    createdAt,
-    branch: state.branch,
-    steps: [
-      fetchPrunePlanStep(),
-      ffMainPlanStep(state),
-      deleteLocalBranchPlanStep(state),
-      deleteRemoteBranchPlanStep(state),
-      lockfileInstallPlanStep(state),
-      endStatePlanStep(state),
-    ],
-  });
+export const buildSweepPlan: {
+  (createdAt: string): (state: SweepGitState) => SweepPlan;
+  (state: SweepGitState, createdAt: string): SweepPlan;
+} = dual(
+  2,
+  (state: SweepGitState, createdAt: string): SweepPlan =>
+    SweepPlan.make({
+      schemaVersion: "yeet-sweep-plan/v1",
+      createdAt,
+      branch: state.branch,
+      steps: [
+        fetchPrunePlanStep(),
+        ffMainPlanStep(state),
+        deleteLocalBranchPlanStep(state),
+        deleteRemoteBranchPlanStep(state),
+        lockfileInstallPlanStep(state),
+        endStatePlanStep(state),
+      ],
+    })
+);
 
 type CommandProbe = {
   readonly exitCode: number;
@@ -865,19 +872,27 @@ const runRemoteDeletionStep = (
  * @category planning
  * @since 0.0.0
  */
-export const revalidateLocalDeletion = (
-  cwd: string,
-  state: SweepGitState
-): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  observeSha(cwd, `refs/heads/${state.branch}`).pipe(
-    Effect.map((fresh) =>
-      tipsMatch(fresh, state.localTip)
-        ? O.none<string>()
-        : O.some(
-            `refs/heads/${state.branch} moved since planning (planned ${optionText(state.localTip)}, now ${optionText(fresh)})`
-          )
+export const revalidateLocalDeletion: {
+  (
+    state: SweepGitState
+  ): (cwd: string) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+  (cwd: string, state: SweepGitState): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  (
+    cwd: string,
+    state: SweepGitState
+  ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+    observeSha(cwd, `refs/heads/${state.branch}`).pipe(
+      Effect.map((fresh) =>
+        tipsMatch(fresh, state.localTip)
+          ? O.none<string>()
+          : O.some(
+              `refs/heads/${state.branch} moved since planning (planned ${optionText(state.localTip)}, now ${optionText(fresh)})`
+            )
+      )
     )
-  );
+);
 
 /**
  * Re-verify against the live remote that `origin/<branch>` still points at the
@@ -911,29 +926,37 @@ export const revalidateLocalDeletion = (
  * @category planning
  * @since 0.0.0
  */
-export const revalidateRemoteDeletion = (
-  cwd: string,
-  state: SweepGitState
-): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  captureGit(cwd, ["ls-remote", "origin", `refs/heads/${state.branch}`]).pipe(
-    Effect.map((probe) => {
-      if (probeUnreliable(probe)) {
-        return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
-      }
-      const fresh = pipe(
-        optionFromNonEmpty(probe.output),
-        O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
-      );
-      if (O.isNone(fresh)) {
-        return O.some(`origin/${state.branch} no longer exists; nothing to delete`);
-      }
-      return tipsMatch(fresh, state.remoteTip)
-        ? O.none<string>()
-        : O.some(
-            `origin/${state.branch} moved since planning (planned ${optionText(state.remoteTip)}, now ${optionText(fresh)})`
-          );
-    })
-  );
+export const revalidateRemoteDeletion: {
+  (
+    state: SweepGitState
+  ): (cwd: string) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+  (cwd: string, state: SweepGitState): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  (
+    cwd: string,
+    state: SweepGitState
+  ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+    captureGit(cwd, ["ls-remote", "origin", `refs/heads/${state.branch}`]).pipe(
+      Effect.map((probe) => {
+        if (probeUnreliable(probe)) {
+          return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
+        }
+        const fresh = pipe(
+          optionFromNonEmpty(probe.output),
+          O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
+        );
+        if (O.isNone(fresh)) {
+          return O.some(`origin/${state.branch} no longer exists; nothing to delete`);
+        }
+        return tipsMatch(fresh, state.remoteTip)
+          ? O.none<string>()
+          : O.some(
+              `origin/${state.branch} moved since planning (planned ${optionText(state.remoteTip)}, now ${optionText(fresh)})`
+            );
+      })
+    )
+);
 
 const guardedDeletion = (
   revalidate: Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>,
@@ -984,29 +1007,31 @@ const guardedDeletion = (
  * @category constructors
  * @since 0.0.0
  */
-export const refreshNotCompletedHandoff = (
-  state: SweepGitState,
-  localMain: O.Option<string>,
-  trackingMain: O.Option<string>
-): SweepStepNeedsOperator =>
-  SweepStepNeedsOperator.make({
-    reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds${O.match(
-      state.mainWorktreePath,
-      {
-        onNone: () =>
-          `. Re-running here cannot fix it — clear whatever blocks the ${state.mainBranch} fast-forward first`,
-        onSome: (holder) => `. ${holder} holds ${state.mainBranch}, so only that worktree can refresh it`,
-      }
-    )}`,
-    // Both interpolations are POSIX-quoted because this string is COPIED into
-    // a shell: worktree paths routinely contain whitespace, and
-    // `guardLiteralArg` only refuses option-like values — it does not escape
-    // metacharacters, so it is not a substitute for quoting here.
-    operatorCommand: O.match(state.mainWorktreePath, {
-      onNone: () => "bun run beep yeet sweep",
-      onSome: (holder) => `cd ${shellQuote(holder)} && bun run beep yeet sweep --branch ${shellQuote(state.branch)}`,
-    }),
-  });
+export const refreshNotCompletedHandoff: {
+  (localMain: O.Option<string>, trackingMain: O.Option<string>): (state: SweepGitState) => SweepStepNeedsOperator;
+  (state: SweepGitState, localMain: O.Option<string>, trackingMain: O.Option<string>): SweepStepNeedsOperator;
+} = dual(
+  3,
+  (state: SweepGitState, localMain: O.Option<string>, trackingMain: O.Option<string>): SweepStepNeedsOperator =>
+    SweepStepNeedsOperator.make({
+      reason: `${state.mainBranch} was not refreshed to origin/${state.mainBranch} (local ${optionText(localMain)}, origin ${optionText(trackingMain)}); bun.lock state is unknown and dependencies are unreconciled until the refresh succeeds${O.match(
+        state.mainWorktreePath,
+        {
+          onNone: () =>
+            `. Re-running here cannot fix it — clear whatever blocks the ${state.mainBranch} fast-forward first`,
+          onSome: (holder) => `. ${holder} holds ${state.mainBranch}, so only that worktree can refresh it`,
+        }
+      )}`,
+      // Both interpolations are POSIX-quoted because this string is COPIED into
+      // a shell: worktree paths routinely contain whitespace, and
+      // `guardLiteralArg` only refuses option-like values — it does not escape
+      // metacharacters, so it is not a substitute for quoting here.
+      operatorCommand: O.match(state.mainWorktreePath, {
+        onNone: () => "bun run beep yeet sweep",
+        onSome: (holder) => `cd ${shellQuote(holder)} && bun run beep yeet sweep --branch ${shellQuote(state.branch)}`,
+      }),
+    })
+);
 
 // The observed lockfile forecast predates the sweep's own fetch/fast-forward,
 // so the executed decision re-diffs the actual update window: the main tip

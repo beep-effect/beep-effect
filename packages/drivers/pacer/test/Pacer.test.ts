@@ -44,9 +44,9 @@ const roundTrips = Effect.fn("PacerTest.roundTrips")(function* <Schema extends S
 });
 
 const sampleSchemaValues = <Schema extends S.Constraint>(schema: Schema, seed: number): ReadonlyArray<Schema["Type"]> =>
-  fc.sample(S.toArbitrary(schema), { numRuns: 24, seed });
+  fc.sample(S.toArbitrary(schema)(fc), { numRuns: 24, seed });
 
-const CourtCaseSearchDtoArbitrary = S.toArbitrary(Pacer.CourtCaseSearchDto);
+const CourtCaseSearchDtoArbitrary = S.toArbitrary(Pacer.CourtCaseSearchDto)(fc);
 
 const assertRoundTrips = Effect.fn("PacerTest.assertRoundTrips")(function* <Schema extends S.Constraint>(
   schema: Schema,

@@ -40,7 +40,7 @@ describe("Xml", () => {
   it.effect(
     "maps invalid XML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(XmlTextToUnknown)("<people><name>Ada</people>"));
+      const result = yield* Effect.exit(S.decodeEffect(XmlTextToUnknown)("<people><name>Ada</people>"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {

@@ -48,12 +48,12 @@ const CapturedSanityRequestBody = S.Struct({
   query: S.String,
 });
 const CapturedSanityRequestBodyJson = S.fromJsonString(CapturedSanityRequestBody);
-const ConfigInputArbitrary = S.toArbitrary(SanityConfigInput).filter((config) => config.apiToken === undefined);
-const QueryParamValueArbitrary = S.toArbitrary(SanityQueryParamValue);
-const QueryRequestArbitrary = S.toArbitrary(SanityQueryRequest);
-const QueryResponseArbitrary = S.toArbitrary(SanityQueryResponse);
-const ErrorReasonArbitrary = S.toArbitrary(SanityErrorReason);
-const ErrorOptionsArbitrary = S.toArbitrary(SanityErrorOptions).map((options) =>
+const ConfigInputArbitrary = S.toArbitrary(SanityConfigInput)(fc).filter((config) => config.apiToken === undefined);
+const QueryParamValueArbitrary = S.toArbitrary(SanityQueryParamValue)(fc);
+const QueryRequestArbitrary = S.toArbitrary(SanityQueryRequest)(fc);
+const QueryResponseArbitrary = S.toArbitrary(SanityQueryResponse)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(SanityErrorReason)(fc);
+const ErrorOptionsArbitrary = S.toArbitrary(SanityErrorOptions)(fc).map((options) =>
   SanityErrorOptions.make(
     O.getSomesStruct({
       status: O.fromUndefinedOr(options.status),
@@ -194,10 +194,10 @@ describe("@beep/sanity", () => {
       status: 500,
       url: "https://api.sanity.io/v2025-05-14/data/query/production",
     });
-    expect(Result.isFailure(S.decodeUnknownResult(SanityQueryResponse)({ ms: -1, result: null }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(SanityQueryResponse)({ ms: -1, result: null }))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(SanityError)({
+        S.decodeResult(SanityError)({
           _tag: "SanityError",
           reason: "response status",
           status: 99,

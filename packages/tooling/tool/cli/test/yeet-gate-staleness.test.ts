@@ -142,7 +142,7 @@ describe("gate staleness reporting", () => {
   it("renders a clean pass as a line rather than as nothing", () => {
     // "The check ran and found nothing" and "the check never ran" must not look
     // identical — that is the same missing-provenance failure this catches.
-    expect(renderYeetGateStalenessBlock([])).toBe("gate staleness: none");
+    expect(renderYeetGateStalenessBlock([], [])).toBe("gate staleness: none");
   });
 
   it("preserves an absent artifact as unproven in operator output", () => {
@@ -156,16 +156,19 @@ describe("gate staleness reporting", () => {
   });
 
   it("names the artifact, the newer input, and the regenerate command", () => {
-    const rendered = renderYeetGateStalenessBlock([
-      GateStale.make({
-        artifactPath: descriptor.artifactPath,
-        gateId: descriptor.gateId,
-        kind: "baseline",
-        newestInputPath: "packages/x/src/X.ts",
-        regenerateCommand: descriptor.regenerateCommand,
-        skewMs: 5_000,
-      }),
-    ]);
+    const rendered = renderYeetGateStalenessBlock(
+      [
+        GateStale.make({
+          artifactPath: descriptor.artifactPath,
+          gateId: descriptor.gateId,
+          kind: "baseline",
+          newestInputPath: "packages/x/src/X.ts",
+          regenerateCommand: descriptor.regenerateCommand,
+          skewMs: 5_000,
+        }),
+      ],
+      []
+    );
 
     expect(rendered).toContain(descriptor.artifactPath);
     expect(rendered).toContain("packages/x/src/X.ts");

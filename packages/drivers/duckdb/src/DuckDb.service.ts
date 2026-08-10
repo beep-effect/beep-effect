@@ -417,7 +417,7 @@ const makeConnectionClient = (
 
 const makeNodeClient = (options: DuckDbConnectionOptions): DuckDbClient => {
   const getConnection = acquireSharedConnection(options);
-  const connectionLock = Effect.runSync(Semaphore.make(1));
+  const connectionLock = Semaphore.makeUnsafe(1);
   const useNodeConnection = Effect.fn("DuckDb.useNodeConnection")(function* <A, R>(
     operation: DuckDbOperation,
     use: NativeUse<A, R>

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-10T12:11:22.233Z
+Generated: 2026-08-10T19:15:54.045Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 61 |
-| publicModules | 2494 |
-| publicExports | 16244 |
+| publicModules | 2498 |
+| publicExports | 16292 |
 | openModules | 407 |
 | openExports | 133 |
 | missingExportExamples | 5 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1335 | 46 | 10 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 177 | 1344 | 46 | 10 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -121,7 +121,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 202 | 4 | 1 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 19 | 288 | 0 | 0 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 21 | 322 | 0 | 0 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
@@ -152,7 +152,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 95 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 96 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 97 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
-| 98 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 260 | 1674 | 24 | 0 |
+| 98 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1679 | 24 | 0 |
 | 99 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 47 | 8 | 4 |
 | 100 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 213 | 1 | 1 |
 | 101 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -358,8 +358,8 @@ Export findings:
 - `src/commands/CreatePackage/CreatePackage.command.ts:91` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:342` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:393` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:343` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:412` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
 - `src/commands/Quality/Quality.command.ts:595` `runBunAudit` (const) - 1 documentation section/link violation(s)

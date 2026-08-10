@@ -86,7 +86,7 @@ const makeRepositoryStackLayer = () =>
     Layer.effect(EdgeAuthorityRepository, makeDrizzleEdgeAuthorityRepository())
   ).pipe(Layer.provideMerge(makeExternalLayer(1)), Layer.fresh);
 
-const systemPrincipal = Result.getOrThrow(S.decodeUnknownResult(Principal)(systemPrincipalInput));
+const systemPrincipal = Result.getOrThrow(S.decodeResult(Principal)(systemPrincipalInput));
 const candidatePublicId = PublicEntityId.factory(Epistemic.ContradictionCandidateId);
 const instant = DateTime.makeUnsafe(1_000);
 

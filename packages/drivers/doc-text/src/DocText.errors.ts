@@ -8,6 +8,7 @@
 import { $I as $RootId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RootId.create("doc-text").create("DocText.errors");
@@ -55,6 +56,8 @@ export const DocTextErrorReason = DocTextErrorReasonBase.pipe(
  * @since 0.0.0
  */
 export type DocTextErrorReason = typeof DocTextErrorReason.Type;
+
+const isDocTextErrorReason = S.is(DocTextErrorReason);
 
 /**
  * Options used when constructing {@link DocTextError} instances.
@@ -129,14 +132,17 @@ export class DocTextError extends TaggedErrorClass<DocTextError>($I`DocTextError
    * @category constructors
    * @since 0.0.0
    */
-  static readonly fromReason = (
-    reason: DocTextErrorReason,
-    options: DocTextErrorOptions = DocTextErrorOptions.make({})
-  ): DocTextError =>
-    DocTextError.make({
-      cause: O.fromUndefinedOr(options.cause),
-      reason,
-    });
+  static readonly fromReason: {
+    (options?: DocTextErrorOptions): (reason: DocTextErrorReason) => DocTextError;
+    (reason: DocTextErrorReason, options?: DocTextErrorOptions): DocTextError;
+  } = dual(
+    (args) => isDocTextErrorReason(args[0]),
+    (reason: DocTextErrorReason, options: DocTextErrorOptions = DocTextErrorOptions.make({})): DocTextError =>
+      DocTextError.make({
+        cause: O.fromUndefinedOr(options.cause),
+        reason,
+      })
+  );
 }
 
 /**

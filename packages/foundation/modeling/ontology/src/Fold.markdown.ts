@@ -14,6 +14,7 @@ import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { flow, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -31,7 +32,7 @@ const $I = $OntologyId.create("Fold/markdown");
 /**
  * Link rendering modes for the Markdown projection.
  *
- * **Example** (Validate portable link mode)
+ * **Example** (Guard a link mode literal)
  *
  * ```ts
  * import { MarkdownLinkMode } from "@beep/ontology"
@@ -52,7 +53,7 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 /**
  * Runtime type for {@link MarkdownLinkMode}.
  *
- * **Example** (Assign obsidian link mode)
+ * **Example** (Annotate a link mode value)
  *
  * ```ts
  * import type { MarkdownLinkMode } from "@beep/ontology"
@@ -69,7 +70,7 @@ export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
 /**
  * Normalized options accepted by {@link toMarkdown}.
  *
- * **Example** (Make portable MarkdownOptions)
+ * **Example** (Construct portable link options)
  *
  * ```ts
  * import { MarkdownOptions } from "@beep/ontology"
@@ -217,34 +218,7 @@ const factLine = (ontology: AssembledOntology, fact: AssembledFact, linkMode: Ma
 
 const decodeLinkMode = S.decodeUnknownOption(MarkdownLinkMode);
 
-/**
- * Project an assembled ontology into deterministic Markdown.
- *
- * **Example** (Project ontology to Markdown)
- *
- * ```ts
- * import { make } from "@beep/identity"
- * import { fold, toMarkdown } from "@beep/ontology"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- *
- * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")
- *
- * class Claim extends S.Class<Claim>($I`Claim`)(
- *   { text: S.String },
- *   $I.class("Claim", { description: "A patent claim." })
- * ) {}
- *
- * const markdown = toMarkdown(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
- * )
- * console.log(markdown.startsWith("# Patent Core")) // true
- * ```
- *
- * @category projections
- * @since 0.0.0
- */
-export const toMarkdown = (ontology: AssembledOntology, options: MarkdownOptionsInput = {}): string => {
+const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInput = {}): string => {
   const normalized = MarkdownOptions.make({
     linkMode: pipe(
       decodeLinkMode(options.linkMode),
@@ -291,3 +265,35 @@ export const toMarkdown = (ontology: AssembledOntology, options: MarkdownOptions
     A.join("\n\n")
   );
 };
+
+/**
+ * Project an assembled ontology into deterministic Markdown.
+ *
+ * **Example** (Render a folded ontology as Markdown)
+ *
+ * ```ts
+ * import { make } from "@beep/identity"
+ * import { fold, toMarkdown } from "@beep/ontology"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")
+ *
+ * class Claim extends S.Class<Claim>($I`Claim`)(
+ *   { text: S.String },
+ *   $I.class("Claim", { description: "A patent claim." })
+ * ) {}
+ *
+ * const markdown = toMarkdown(
+ *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ * )
+ * console.log(markdown.startsWith("# Patent Core")) // true
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const toMarkdown: {
+  (options?: MarkdownOptionsInput): (ontology: AssembledOntology) => string;
+  (ontology: AssembledOntology, options?: MarkdownOptionsInput): string;
+} = dual((args) => P.hasProperty(args[0], "baseIri"), toMarkdownImpl);

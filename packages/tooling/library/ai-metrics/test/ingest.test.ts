@@ -94,8 +94,23 @@ import { Effect, Encoding, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Re
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
+
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -171,6 +186,23 @@ const rejectingSpanSender: Layer.Layer<AiMetricsOtlpSpanSender> = Layer.succeed(
   })
 );
 
+const succeedingThenRejectingSpanSender = (calls: Ref.Ref<number>): Layer.Layer<AiMetricsOtlpSpanSender> =>
+  Layer.succeed(
+    AiMetricsOtlpSpanSender,
+    AiMetricsOtlpSpanSender.of({
+      send: Effect.fn("AiMetricsOtlpSpanSender.send")(function* () {
+        const call = yield* Ref.getAndUpdate(calls, (value) => value + 1);
+        if (call === 0) {
+          return;
+        }
+        return yield* AiMetricsOtlpExportError.make({
+          cause: { exportResultCode: 1 },
+          message: "The AI metrics OTLP collector did not accept the exported spans.",
+        });
+      }),
+    })
+  );
+
 const spanIdsByName = (
   projections: ReadonlyArray<AiMetricsOtlpSpanProjection>,
   spanName: string
@@ -185,7 +217,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeUnknownSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -567,7 +599,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const dataRoot = path.join(tmpDir, "metrics");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
           const sourcePath = path.join(tmpDir, "home/.codex/sessions/codex.jsonl");
-          const content = '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}';
+          const content = [
+            '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}',
+            '{"type":"event_msg","timestamp":"2026-05-05T10:02:00Z"}',
+          ].join("\n");
 
           yield* writeText(path.join(tmpDir, "repo", "AGENTS.md"), "# Test agent guide\n");
 
@@ -674,10 +709,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             // three. Note sourceRows/archiveRows below stay at 3 -- those ids still embed
             // the run id by design, and if they moved this change hit more than intended.
             expect(sessionRows).toEqual([{ count: "1" }]);
-            // Three runs over byte-identical content must yield ONE turn row. This
-            // previously asserted "3", encoding the duplication that grew the store to
-            // 5.43M rows over ~516K distinct raw_event_hash across 1,222 runs.
-            expect(turnRows).toEqual([{ count: "1" }]);
+            // Three runs over two byte-identical turns must yield TWO rows. The old
+            // per-run identity duplicated each turn and grew the store to 5.43M rows
+            // over ~516K distinct raw_event_hash across 1,222 runs.
+            expect(turnRows).toEqual([{ count: "2" }]);
             // ...and it must retain the FIRST run's id. The OTLP export selects
             // `WHERE ingest_run_id = <this run>`, so if a re-ingest rewrote this to the
             // current run, every previously-seen turn would be re-exported to Phoenix
@@ -704,7 +739,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             // Un-exported turns are visible even though they belong to forwarder-1 and
             // the latest run is forwarder-3.
             const pending = yield* readAiMetricsOtlpSpanProjections;
-            expect(pending.turnIds.length).toBe(1);
+            expect(pending.turnIds.length).toBe(2);
 
             // Span identity is content-addressed, so re-reading identical content yields
             // byte-identical ids. That is what lets Phoenix's uq_spans_span_id collapse a
@@ -728,8 +763,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
               pending.projections,
               A.filter((projection) => projection.spanName === "ai_metrics.agent.session")
             );
-            expect(turnProjections.length).toBe(1);
-            expect(sessionProjections.length).toBe(1);
+            expect(turnProjections.length).toBe(2);
+            expect(sessionProjections.length, "session projection count").toBe(1);
             const turnSpan = pipe(turnProjections, A.head, O.getOrThrow);
             const sessionSpan = pipe(sessionProjections, A.head, O.getOrThrow);
             expect(turnSpan.traceId).toMatch(/^[0-9a-f]{32}$/u);
@@ -754,6 +789,51 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const afterRejectedExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterRejectedExport.turnIds).toEqual(pending.turnIds);
 
+            // Reproduce the review-found boundary exactly: more than 512 distinct
+            // sessions used to put an entire session-only prefix on the wire. An
+            // accepted first request then marked zero turns, so the next retry rebuilt
+            // and resent the identical prefix forever.
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_sessions
+                 (agent_session_id, agent_task_id, ingest_run_id, source_kind,
+                  source_path_hash, source_role, session_id_hash,
+                  parent_session_id_hash, parent_thread_id_hash, forked_from_id_hash,
+                  thread_spawn, agent_role_hash, agent_nickname_hash, started_at,
+                  config_snapshot_id)
+               SELECT 'review-session-' || range::VARCHAR, agent_task_id, ingest_run_id,
+                      source_kind, 'review-source-' || range::VARCHAR, source_role,
+                      session_id_hash, parent_session_id_hash, parent_thread_id_hash,
+                      forked_from_id_hash, thread_spawn, agent_role_hash,
+                      agent_nickname_hash, started_at, config_snapshot_id
+               FROM (SELECT * FROM ai_metrics_sessions LIMIT 1), range(512)`
+            );
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_turns
+                 (turn_id, ingest_run_id, agent_session_id, source_kind,
+                  source_path_hash, source_role, line_number, event_name,
+                  raw_event_hash, timestamp, otlp_exported_at_epoch_ms)
+               SELECT 'review-turn-' || range::VARCHAR, ingest_run_id,
+                      'review-session-' || range::VARCHAR, source_kind,
+                      'review-source-' || range::VARCHAR, source_role, 1, event_name,
+                      'review-raw-' || range::VARCHAR, timestamp, NULL
+               FROM (SELECT * FROM ai_metrics_turns LIMIT 1), range(512)`
+            );
+            const beforePartialExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(beforePartialExport.turnIds.length, "production-shaped pending turn count").toBe(514);
+
+            // A later chunk can fail after Phoenix has acknowledged an earlier one. The
+            // acknowledged prefix must stay closed or every retry refills the collector
+            // queue with that prefix and permanently starves the remaining turns.
+            const senderCalls = yield* Ref.make(0);
+            const partialExit = yield* runAiMetricsOtlpExport(exportInput).pipe(
+              provideScopedLayer(succeedingThenRejectingSpanSender(senderCalls)),
+              Effect.exit
+            );
+            expect(Exit.isFailure(partialExit)).toBe(true);
+            const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(afterPartialExport.turnIds.length, "partial checkpoint turn count").toBe(258);
+            const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
+
             // The forwarder exports through runAiMetricsOtlpExport, which reads and
             // delivers as one unit, so that entry point must close the watermark itself.
             // With marking only in the standalone export command, nothing would ever be
@@ -762,7 +842,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const exported = yield* runAiMetricsOtlpExport(exportInput).pipe(
               provideScopedLayer(recordingSpanSender(delivered))
             );
-            expect(exported.turnSpanCount).toBe(1);
+            expect(exported.turnSpanCount, "remaining export turn count").toBe(258);
 
             const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterSuccessfulExport.turnIds).toEqual([]);
@@ -777,10 +857,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
 
             // Exactly one delivery carried spans, and it carried the ids read before it.
             const deliveries = yield* Ref.get(delivered);
-            expect(A.map(deliveries, (batch) => batch.length)).toEqual([2, 0]);
-            expect(spanIdsByName(pipe(deliveries, A.head, O.getOrThrow), "ai_metrics.agent.turn")).toEqual([
-              turnSpan.spanId,
-            ]);
+            expect(A.map(deliveries, (batch) => batch.length)).toEqual([512, 3]);
+            expect(spanIdsByName(A.flatten(deliveries), "ai_metrics.agent.turn")).toEqual(remainingTurnSpanIds);
 
             // Marking is safe to call with an empty batch.
             yield* markAiMetricsOtlpTurnsExported([]);
@@ -1109,14 +1187,16 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "rejects relative timer executable paths",
     Effect.fn(function* () {
-      expect(() =>
-        AiMetricsForwarderTimerInput.make({
-          command: ["bun", "run", "beep"],
-          lockPath: "%t/beep-ai-metrics-forwarder.lock",
-          statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
-          workingDirectory: "/repo/beep-effect",
-        })
-      ).toThrow("absolute executable path");
+      expectSchemaMakeToFail(
+        () =>
+          AiMetricsForwarderTimerInput.make({
+            command: ["bun", "run", "beep"],
+            lockPath: "%t/beep-ai-metrics-forwarder.lock",
+            statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
+            workingDirectory: "/repo/beep-effect",
+          }),
+        "absolute executable path"
+      );
     })
   );
 

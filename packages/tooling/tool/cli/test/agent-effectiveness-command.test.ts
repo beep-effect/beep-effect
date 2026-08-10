@@ -27,10 +27,10 @@ const encodeDoctorReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffective
 const encodeAnnotationCheckReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
 const encodePhoenixSyncResult = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const encodePromptBundle = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
-const DoctorReportArbitrary = S.toArbitrary(AgentEffectivenessDoctorReport);
-const AnnotationCheckReportArbitrary = S.toArbitrary(AgentEffectivenessAnnotationCheckReport);
-const PhoenixSyncResultArbitrary = S.toArbitrary(AgentEffectivenessPhoenixSyncResult);
-const PromptBundleArbitrary = S.toArbitrary(AgentEffectivenessPromptBundle);
+const DoctorReportArbitrary = S.toArbitrary(AgentEffectivenessDoctorReport)(fc);
+const AnnotationCheckReportArbitrary = S.toArbitrary(AgentEffectivenessAnnotationCheckReport)(fc);
+const PhoenixSyncResultArbitrary = S.toArbitrary(AgentEffectivenessPhoenixSyncResult)(fc);
+const PromptBundleArbitrary = S.toArbitrary(AgentEffectivenessPromptBundle)(fc);
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);

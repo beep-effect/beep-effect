@@ -127,7 +127,7 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
   const maxOutputBytes = yield* Config.int(BEEP_TIKA_MAX_OUTPUT_BYTES_ENV).pipe(Config.option);
   const timeoutMillis = yield* Config.int(BEEP_TIKA_TIMEOUT_MILLIS_ENV).pipe(Config.option);
 
-  return yield* S.decodeUnknownEffect(TikaServerEngineConfig)({
+  return yield* S.decodeEffect(TikaServerEngineConfig)({
     baseUrl,
     ...O.getSomesStruct({ maxOutputBytes, timeoutMillis }),
   });

@@ -814,7 +814,7 @@ const decodeRequest = <Sch extends S.Top>(schema: Sch, resource: string) => {
   return (rawRequest: unknown): Effect.Effect<Sch["Type"], M365Error, Sch["DecodingServices"]> =>
     isDecodedRequest(rawRequest)
       ? Effect.succeed(rawRequest)
-      : S.decodeUnknownEffect(schema)(rawRequest).pipe(
+      : S.decodeEffect(schema)(rawRequest).pipe(
           Effect.mapError((cause) => M365Error.fromReason("request encoding", { cause, resource }))
         );
 };
@@ -932,7 +932,7 @@ const executeJson = Effect.fnUntraced(function* <Schema extends S.Top>(
       M365Error.fromReason("response decoding", { cause, resource, status: response.status, url })
     )
   );
-  return yield* S.decodeUnknownEffect(schema)(body).pipe(
+  return yield* S.decodeEffect(schema)(body).pipe(
     Effect.mapError((cause) =>
       M365Error.fromReason("response decoding", { cause, resource, status: response.status, url })
     )
@@ -1047,14 +1047,14 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
     O.match({
       onNone: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
       onSome: (value) =>
-        S.decodeUnknownEffect(M365ScopesFromCsv)(value).pipe(
+        S.decodeEffect(M365ScopesFromCsv)(value).pipe(
           Effect.map(O.some),
           Effect.mapError((cause) => M365Error.fromReason("config", { cause }))
         ),
     })
   );
 
-  return yield* S.decodeUnknownEffect(M365ConfigInput)({
+  return yield* S.decodeEffect(M365ConfigInput)({
     clientId,
     tenantId,
     ...getSomesStruct({

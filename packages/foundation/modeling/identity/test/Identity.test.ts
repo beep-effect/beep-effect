@@ -41,8 +41,8 @@ describe("@beep/identity", () => {
   });
 
   it("normalizes package constructor bases through the schema codec", () => {
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
     expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
@@ -50,7 +50,7 @@ describe("@beep/identity", () => {
 
   it("round-trips generated base constructor input values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BaseIdentityInput), (base) => {
+      fc.property(S.toArbitrary(BaseIdentityInput)(fc), (base) => {
         const decoded = O.flatMap(S.encodeOption(BaseIdentityInput)(base), S.decodeUnknownOption(BaseIdentityInput));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);

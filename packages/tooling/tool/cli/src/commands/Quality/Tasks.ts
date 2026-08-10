@@ -23,6 +23,7 @@ import {
   Ref,
 } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -1475,6 +1476,7 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
   repoCliStep(
     repoRoot,
     "lint:package-test-imports",
@@ -1519,10 +1521,14 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
  * @category utilities
  * @since 0.0.0
  */
-export const rootLintPolicyStepsForTesting = (
-  repoRoot: string,
-  files?: ReadonlyArray<string>
-): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files);
+export const rootLintPolicyStepsForTesting: {
+  (files?: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
+    rootRepoLintPolicySteps(repoRoot, files)
+);
 
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
@@ -1559,7 +1565,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
   yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
 });
@@ -2113,4 +2119,7 @@ export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeCh
  * @category utilities
  * @since 0.0.0
  */
-export const lintFixChangedStepForTesting = lintFixChangedStep;
+export const lintFixChangedStepForTesting: {
+  (files: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+  (repoRoot: string, files: ReadonlyArray<string>): QualityTaskStep;
+} = dual(2, lintFixChangedStep);

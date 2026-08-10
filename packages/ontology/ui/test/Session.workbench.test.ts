@@ -21,7 +21,7 @@ import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import type { ChangeEvent } from "react";
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-1");
+const sessionId = S.decodeSync(SessionId)("session-1");
 
 type TreeItem = {
   readonly id: string;

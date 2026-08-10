@@ -8,6 +8,7 @@
 import { $ExiftoolId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
@@ -786,7 +787,9 @@ export class WriteXmpPacketRequest extends S.Class<WriteXmpPacketRequest>($I`Wri
  * @category decoding
  * @since 0.0.0
  */
-export const decodeReadTagsRequest = ReadTagsRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on ReadTagsRequest.decodeEffect.
+export const decodeReadTagsRequest: (input: unknown) => Effect.Effect<ReadTagsRequest, S.SchemaError> =
+  ReadTagsRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-tags request.
@@ -806,7 +809,9 @@ export const decodeReadTagsRequest = ReadTagsRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeWriteTagsRequest = WriteTagsRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on WriteTagsRequest.decodeEffect.
+export const decodeWriteTagsRequest: (input: unknown) => Effect.Effect<WriteTagsRequest, S.SchemaError> =
+  WriteTagsRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-XMP-packet request.
@@ -831,4 +836,6 @@ export const decodeWriteTagsRequest = WriteTagsRequest.decodeEffect;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeWriteXmpPacketRequest = WriteXmpPacketRequest.decodeEffect;
+// Unary by contract: no dual because input is unknown; options stays on WriteXmpPacketRequest.decodeEffect.
+export const decodeWriteXmpPacketRequest: (input: unknown) => Effect.Effect<WriteXmpPacketRequest, S.SchemaError> =
+  WriteXmpPacketRequest.decodeEffect;

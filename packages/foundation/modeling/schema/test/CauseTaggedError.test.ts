@@ -166,7 +166,7 @@ describe("CauseTaggedError", () => {
     const cause = new Error("kapow");
 
     fc.assert(
-      fc.property(S.toArbitrary(S.String), (operation) => {
+      fc.property(S.toArbitrary(S.String)(fc), (operation) => {
         const error = OperationError.new(cause, "boom", { operation });
         expect(error.operation).toBe(operation);
       }),

@@ -10,6 +10,7 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { commandTextForStep } from "../../../internal/repo-run/index.ts";
@@ -357,7 +358,12 @@ const proofLockDisposition = (
  * @category testing
  * @since 0.0.0
  */
-export const proofLockDispositionForTesting = proofLockDisposition;
+export const proofLockDispositionForTesting: {
+  (
+    ownerAlive: boolean
+  ): (state: O.Option<YeetProofLockState>) => "replace-stale" | "refuse-active" | "refuse-unreadable";
+  (state: O.Option<YeetProofLockState>, ownerAlive: boolean): "replace-stale" | "refuse-active" | "refuse-unreadable";
+} = dual(2, proofLockDisposition);
 
 // Atomic exclusive create: succeeds only when this process is the one that
 // created the lock. `flag: "wx"` maps to O_CREAT | O_EXCL so two concurrent

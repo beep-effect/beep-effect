@@ -13,11 +13,11 @@ describe("ThreadTimeline", () => {
   it.effect(
     "decodes a thread timeline with resolved message and tool-call items",
     Effect.fnUntraced(function* () {
-      const threadId = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeUnknownEffect(WorkspaceIdentity.TurnId)(20);
+      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
+      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
       const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
 
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
         threadId: 10,
         turns: [
           {
@@ -43,9 +43,9 @@ describe("ThreadTimeline", () => {
   it.effect(
     "keeps thread input and timeline encoded shapes stable",
     Effect.fnUntraced(function* () {
-      const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(7);
-      const threadId = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeUnknownEffect(WorkspaceIdentity.TurnId)(20);
+      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(7);
+      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
+      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
       const content = Document.make({ children: [] });
       const encodedContent = yield* S.encodeEffect(Document)(content);
 
@@ -91,7 +91,7 @@ describe("ThreadTimeline", () => {
       expect(Thread.TimelineItem.is(timeline.turns[0]?.items[0])).toBe(true);
 
       expect(
-        yield* S.decodeUnknownEffect(Thread.TimelineTurn)({
+        yield* S.decodeEffect(Thread.TimelineTurn)({
           turnId: 20,
           turnIndex: 0,
           parentTurnId: null,
@@ -132,7 +132,7 @@ describe("ThreadTimeline", () => {
       const encode = S.encodeSync(schema);
       const equivalent = S.toEquivalence(schema);
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => equivalent(decode(encode(value)), value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => equivalent(decode(encode(value)), value)),
         fcRuns(5)
       );
     }
@@ -176,7 +176,7 @@ describe("ThreadTimeline", () => {
     "keeps a timeline with no edits intact, in turn order",
     Effect.fnUntraced(function* () {
       const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
         threadId: 10,
         turns: [
           {

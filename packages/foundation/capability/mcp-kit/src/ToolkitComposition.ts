@@ -20,6 +20,7 @@
 
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import { decideSourceAuthMount, SourceAuthDecision } from "./SourceAuth.ts";
 import type { Config } from "effect";
 import type { SourceAuthRegistration } from "./SourceAuth.ts";
@@ -85,10 +86,16 @@ export interface GatedLayer<ROut, E, RIn> {
  * @category constructors
  * @since 0.0.0
  */
-export const gatedLayer = <ROut, E, RIn>(
-  registration: SourceAuthRegistration,
-  layer: Layer.Layer<ROut, E, RIn>
-): GatedLayer<ROut, E, RIn> => ({ registration, layer });
+export const gatedLayer: {
+  <ROut, E, RIn>(registration: SourceAuthRegistration, layer: Layer.Layer<ROut, E, RIn>): GatedLayer<ROut, E, RIn>;
+  <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>): (registration: SourceAuthRegistration) => GatedLayer<ROut, E, RIn>;
+} = dual(
+  2,
+  <ROut, E, RIn>(registration: SourceAuthRegistration, layer: Layer.Layer<ROut, E, RIn>): GatedLayer<ROut, E, RIn> => ({
+    registration,
+    layer,
+  })
+);
 
 /**
  * Folds credential-gated layers into a single layer, applying the hybrid

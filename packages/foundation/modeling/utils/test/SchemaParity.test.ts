@@ -20,7 +20,7 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 const expectSchemaRoundTrips = <C extends S.Codec<unknown, unknown>>(schema: C): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
 
   fc.assert(
     fc.property(arbitrary, (value) => {

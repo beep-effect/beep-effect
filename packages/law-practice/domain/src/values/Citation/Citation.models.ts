@@ -60,7 +60,7 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
 const parentheticalCitationsToArbitrary: () => (
   fc: typeof FastCheck
 ) => FastCheck.Arbitrary<ReadonlyArray<Citation.Type>> = () => (fc) =>
-  fc.array(S.toArbitrary(DocketCitation), { maxLength: 2 });
+  fc.array(S.toArbitrary(DocketCitation)(fc), { maxLength: 2 });
 
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).

@@ -1226,6 +1226,47 @@ is accepted, documented, and reversible from git history plus the committed
 ledger. Supersedes the 08-testing promise that the architecture proof carries
 focused type tests.
 
+## 2026-08-08: Top-Level research/ Owns Machine-Generated Intel Packets
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a top-level `research/` directory owned by the nightly
+autonomous research routine: dated immutable packets
+(`research/<YYYY-MM-DD>/` with `REPORT.md`, `SOURCES.md`,
+`SUGGESTED_ACTIONS.md`, `PROMPT.md`, `claims.jsonl`, `RUN.json`) plus
+single-writer cross-run state under `research/ledger/`. The routine extends
+the existing `beep research` CLI family under a `nightly` sub-namespace
+(schemas co-located with the family in v1; claim tuples promote to
+`@beep/epistemic-domain` in v2 behind a backfill go/no-go experiment).
+Governing rules: per-packet truth with derived-only rebuildable indexes;
+sanitize-at-write for scraped content with gitleaks fail-closed and a
+`research/**` typos exemption; process-separation blinding (search/synthesis
+stages receive no repo checkout; the writer composes from structured records
+without a checkout; only the publisher touches the clone, scoped to the new
+packet plus `research/ledger/`); no explorations
+ceremony — `RUN.json.frictions[]` carries the friction receipts; machine
+proposes / human admits (nothing auto-appends to `explorations/INBOX.md` or
+`goals/`); PR-only delivery from a dedicated clone. Conventions authority:
+`research/README.md`. Work packet: `goals/nightly-research-routine`.
+
+Rationale:
+
+The nightly packets are a different trust domain from both neighbors: public
+and repo-tracked (unlike the private out-of-repo vault the `beep research`
+family already manages) and machine-generated (unlike `explorations/`, the
+human fuzzy front end whose ceremony — manifests, ATLAS sync, reflections —
+encodes human judgment nothing automated performs). Reusing the `research`
+noun inside one CLI family keeps a single discovery surface and reuses proven
+plumbing (DuckDB catalog runners, markdown-truth/derived-index split, the
+`install-timers` systemd precedent). Single-writer ledger placement avoids
+hot-file merge conflicts by construction. Sanitize-at-write is mandatory
+rather than scanner-exemption because republishing token-shaped scraped
+strings in a public repository is a leak vector regardless of scanner
+posture; gitleaks remains the fail-closed backstop that catches sanitizer
+bugs.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

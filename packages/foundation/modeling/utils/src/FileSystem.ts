@@ -334,11 +334,17 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
  * @category combinators
  * @since 0.0.0
  */
-export const rmSync = (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError> =>
-  Effect.try({
-    try: () => NFS().rmSync(path, options),
-    catch: toPlatformError("rmSync", path),
-  });
+export const rmSync: {
+  (options?: RmSyncOptions): (path: string) => Effect.Effect<void, PlatformError.PlatformError>;
+  (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError>;
+} = dual(
+  (args) => P.isString(args[0]),
+  (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError> =>
+    Effect.try({
+      try: () => NFS().rmSync(path, options),
+      catch: toPlatformError("rmSync", path),
+    })
+);
 
 /**
  * Renames (moves) a path from `oldPath` to `newPath`.
@@ -374,6 +380,34 @@ export const renameSync: {
     })
 );
 
+function readdirSyncImpl(path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
+function readdirSyncImpl(
+  path: string,
+  options: { readonly withFileTypes: true }
+): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+function readdirSyncImpl(
+  path: string,
+  options?: ReaddirSyncOptions
+): Effect.Effect<ReadonlyArray<string | NodeDirent>, PlatformError.PlatformError> {
+  return Effect.try({
+    try: (): ReadonlyArray<string | NodeDirent> =>
+      options?.withFileTypes === true ? NFS().readdirSync(path, { withFileTypes: true }) : NFS().readdirSync(path),
+    catch: toPlatformError("readdirSync", path),
+  });
+}
+
+type ReaddirSyncDataLast = (options: {
+  readonly withFileTypes: true;
+}) => (path: string) => Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+
+type ReaddirSyncDataFirst = {
+  (path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
+  (
+    path: string,
+    options: { readonly withFileTypes: true }
+  ): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+};
+
 /**
  * Lists the entries of a directory.
  *
@@ -400,21 +434,10 @@ export const renameSync: {
  * @category getters
  * @since 0.0.0
  */
-export function readdirSync(path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
-export function readdirSync(
-  path: string,
-  options: { readonly withFileTypes: true }
-): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
-export function readdirSync(
-  path: string,
-  options?: ReaddirSyncOptions
-): Effect.Effect<ReadonlyArray<string | NodeDirent>, PlatformError.PlatformError> {
-  return Effect.try({
-    try: (): ReadonlyArray<string | NodeDirent> =>
-      options?.withFileTypes === true ? NFS().readdirSync(path, { withFileTypes: true }) : NFS().readdirSync(path),
-    catch: toPlatformError("readdirSync", path),
-  });
-}
+export const readdirSync: ReaddirSyncDataLast & ReaddirSyncDataFirst = dual<ReaddirSyncDataLast, ReaddirSyncDataFirst>(
+  (args) => P.isString(args[0]),
+  readdirSyncImpl
+);
 
 /**
  * Returns effect's `FileSystem.File.Info` for a path.

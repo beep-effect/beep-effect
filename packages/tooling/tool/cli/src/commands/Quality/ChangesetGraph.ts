@@ -518,7 +518,17 @@ const makeSummary = (
  * @category utilities
  * @since 0.0.0
  */
-export const makeChangesetGraphSummary = makeSummary;
+export const makeChangesetGraphSummary: {
+  (
+    changesetFiles: ReadonlyArray<string>,
+    references: ReadonlyArray<ChangesetGraphPackageReference>
+  ): (workspacePackageNames: ReadonlyArray<string>) => ChangesetGraphSummary;
+  (
+    workspacePackageNames: ReadonlyArray<string>,
+    changesetFiles: ReadonlyArray<string>,
+    references: ReadonlyArray<ChangesetGraphPackageReference>
+  ): ChangesetGraphSummary;
+} = dual(3, makeSummary);
 
 /**
  * Run the non-mutating changeset package graph guard.

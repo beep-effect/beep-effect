@@ -32,6 +32,7 @@ import {
   Result,
 } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -171,7 +172,10 @@ export const mungeClaudeProjectPath = repoPathToClaudeProjectName;
  * @category formatting
  * @since 0.0.0
  */
-export const tokenizeHomePath = (home: string, path: string): string => {
+export const tokenizeHomePath: {
+  (home: string, path: string): string;
+  (path: string): (home: string) => string;
+} = dual(2, (home: string, path: string): string => {
   const normalizedHome = Str.replace(/\/+$/u, "")(home);
   if (Str.isEmpty(normalizedHome)) {
     return path;
@@ -180,7 +184,7 @@ export const tokenizeHomePath = (home: string, path: string): string => {
     return "~";
   }
   return Str.startsWith(`${normalizedHome}/`)(path) ? `~/${Str.slice(Str.length(normalizedHome) + 1)(path)}` : path;
-};
+});
 
 const tokenizeConfiguredHomePath = (home: O.Option<string>, path: string): string =>
   pipe(
@@ -294,11 +298,10 @@ const shellQuoteDirectory = (directory: string): string => {
  * @category formatting
  * @since 0.0.0
  */
-export const resumeCommandFor = (
-  harness: PrProvenanceHarness,
-  directory: string,
-  sessionId: O.Option<string>
-): string =>
+export const resumeCommandFor: {
+  (harness: PrProvenanceHarness, directory: string, sessionId: O.Option<string>): string;
+  (directory: string, sessionId: O.Option<string>): (harness: PrProvenanceHarness) => string;
+} = dual(3, (harness: PrProvenanceHarness, directory: string, sessionId: O.Option<string>): string =>
   PrProvenanceHarness.$match(harness, {
     "claude-code": () =>
       O.match(sessionId, {
@@ -312,7 +315,8 @@ export const resumeCommandFor = (
         O.getOrElse(() => "codex resume --last")
       )}`,
     unknown: () => `cd ${shellQuoteDirectory(directory)} &&\n  claude --resume`,
-  });
+  })
+);
 
 const encodePrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PrProvenance));
 

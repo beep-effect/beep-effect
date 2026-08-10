@@ -54,9 +54,18 @@
           "Equal": "Eq"
         },
         "diagnosticSeverity": {
+          // Every rule the compiler ships is listed explicitly, and every one is an error.
+          // Rules omitted from this map run at their upstream default, so silence here
+          // would not mean "disabled" — it would mean "whatever upstream decided", which
+          // changes under us on every compiler bump. `beep quality tsgo-rules` enforces
+          // both halves: the listed set must match the installed compiler exactly, and no
+          // entry may be anything other than "error".
+          "abortControllerInEffect": "error",
           "anyUnknownInErrorContext": "error",
           "asyncFunction": "error",
           "catchAllToMapError": "error",
+          "catchChainToFirstSuccessOf": "error",
+          "catchTagToCatchReason": "error",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
           "catchUnfailableEffect": "error",
@@ -78,6 +87,7 @@
           "extendsNativeError": "error",
           "flatMapToMap": "error",
           "floatingEffect": "error",
+          "floatingEffectInVitest": "error",
           "genericEffectServices": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
@@ -101,6 +111,7 @@
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
           "missingLayerContext": "error",
+          "missingPipeableSignature": "error",
           "missingReturnYieldStar": "error",
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
@@ -113,14 +124,20 @@
           "outdatedApi": "error",
           "overriddenSchemaConstructor": "error",
           "preferSchemaOverJson": "error",
+          "preferSchemaTypeProperty": "error",
+          "preferTypedSchemaDecoder": "error",
+          "preferUnsafeConstructor": "error",
           "processEnv": "error",
           "processEnvInEffect": "error",
+          "promiseInEffectSuccess": "error",
           "redundantOrDie": "error",
           "redundantMapError": "error",
           "redundantSchemaTagIdentifier": "error",
           "returnEffectInGen": "error",
           "runEffectInsideEffect": "error",
+          "schemaLiteralNonFinite": "error",
           "schemaNumber": "error",
+          "schemaOpaqueInstanceMember": "error",
           "schemaStructWithTag": "error",
           "schemaSyncInEffect": "error",
           "schemaUnionOfLiterals": "error",
@@ -128,6 +145,7 @@
           "serviceNotAsClass": "error",
           "strictBooleanExpressions": "error",
           "strictEffectProvide": "error",
+          "syncToSucceed": "error",
           "tryCatchInEffectGen": "error",
           "unknownInEffectCatch": "error",
           "unnecessaryArrowBlock": "error",

@@ -102,8 +102,8 @@ const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManif
 const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
 const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
 const decodeDriverPackageMetadata = S.decodeUnknownSync(DriverPackageMetadata);
-const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig);
-const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig);
+const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig)(fc);
+const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig)(fc);
 const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",

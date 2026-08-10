@@ -337,10 +337,13 @@ export const normalizeYeetMonitorIssueCommentForTesting = normalizeIssueComment;
  * @category formatting
  * @since 0.0.0
  */
-export const yeetCommentExcerpt = (body: string, maxLength: number): string => {
+export const yeetCommentExcerpt: {
+  (maxLength: number): (body: string) => string;
+  (body: string, maxLength: number): string;
+} = dual(2, (body: string, maxLength: number): string => {
   const normalized = pipe(body, stripTerminalControlSequences, Str.replace(/\s+/gu, " "), Str.trim);
   return Str.length(normalized) <= maxLength ? normalized : `${pipe(normalized, Str.takeLeft(maxLength))}…`;
-};
+});
 
 const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerptLength);
 

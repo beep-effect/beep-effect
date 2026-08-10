@@ -286,6 +286,17 @@
         "functions": ["normalizeJSDocCategoryKey"],
         "maxCognitive": 12,
         "reason": "Pre-existing slug normalizer body unchanged by the jsdoc-carrier migration; Fallow audit attributes its cognitive finding as introduced when only the JSDoc carrier grammar changes. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/internal/cli/MixedOutputJson.ts"
+        ],
+        "functions": [
+          "jsonObjectTextFromMixedOutput",
+          "jsonObjectTextFromRight"
+        ],
+        "maxCognitive": 20,
+        "reason": "Forward scanning preserves linear mixed-output recovery; a bounded reverse fallback resynchronizes after unmatched opening braces without making balanced-object floods quadratic. Review by 2026-11-10: re-measure both passes and reduce or remove these measured ceilings when a simpler equivalent is proven."
       }
     ]
   },

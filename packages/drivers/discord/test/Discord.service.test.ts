@@ -53,12 +53,12 @@ class DiscordTestHttp extends Context.Service<DiscordTestHttp, DiscordTestHttpSh
 ) {}
 
 const decodeMessageBody = S.decodeUnknownEffect(CapturedDiscordMessageBody);
-const ConfigInputArbitrary = S.toArbitrary(DiscordConfigInput);
-const ChannelRequestArbitrary = S.toArbitrary(DiscordChannelRequest);
-const CreateMessageRequestArbitrary = S.toArbitrary(DiscordCreateMessageRequest);
-const ChannelProofArbitrary = S.toArbitrary(DiscordChannelProof);
-const MessageProofArbitrary = S.toArbitrary(DiscordMessageProof);
-const ErrorReasonArbitrary = S.toArbitrary(DiscordErrorReason);
+const ConfigInputArbitrary = S.toArbitrary(DiscordConfigInput)(fc);
+const ChannelRequestArbitrary = S.toArbitrary(DiscordChannelRequest)(fc);
+const CreateMessageRequestArbitrary = S.toArbitrary(DiscordCreateMessageRequest)(fc);
+const ChannelProofArbitrary = S.toArbitrary(DiscordChannelProof)(fc);
+const MessageProofArbitrary = S.toArbitrary(DiscordMessageProof)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(DiscordErrorReason)(fc);
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
@@ -137,7 +137,7 @@ const makeLayer = () =>
 describe("@beep/discord", () => {
   it("keeps encoded Discord schema wire shapes byte-identical", () => {
     const decodedConfig = Result.getOrThrow(
-      S.decodeUnknownResult(DiscordConfigInput)({ baseUrl: "https://discord.example.test/api/v10///" })
+      S.decodeResult(DiscordConfigInput)({ baseUrl: "https://discord.example.test/api/v10///" })
     );
     const fullChannelProof = DiscordChannelProof.make({
       channelId,
@@ -193,10 +193,10 @@ describe("@beep/discord", () => {
       messageId,
       status: 200,
     });
-    expect(Result.getOrThrow(S.decodeUnknownResult(DiscordErrorReason)("transport"))).toBe("transport");
+    expect(Result.getOrThrow(S.decodeResult(DiscordErrorReason)("transport"))).toBe("transport");
     expect(
       Result.getOrThrow(
-        S.decodeUnknownResult(DiscordError)({
+        S.decodeResult(DiscordError)({
           _tag: "DiscordError",
           cause: "transport failed",
           method: "GET",
@@ -208,7 +208,7 @@ describe("@beep/discord", () => {
     ).toEqual(fullError);
     expect(
       Result.getOrThrow(
-        S.decodeUnknownResult(DiscordError)({
+        S.decodeResult(DiscordError)({
           _tag: "DiscordError",
           reason: "request",
         })
@@ -235,7 +235,7 @@ describe("@beep/discord", () => {
         ErrorReasonArbitrary,
         (config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason) => {
           const normalizedConfig = Result.getOrThrow(
-            S.decodeUnknownResult(DiscordConfigInput)(Result.getOrThrow(S.encodeResult(DiscordConfigInput)(config)))
+            S.decodeResult(DiscordConfigInput)(Result.getOrThrow(S.encodeResult(DiscordConfigInput)(config)))
           );
 
           expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);
