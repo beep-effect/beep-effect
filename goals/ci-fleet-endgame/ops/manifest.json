@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ci-fleet-endgame",
   "lifecycle": "active",
-  "statusNote": "Activated 2026-08-08 by speed-loop decision 54; P1 Pulumi bridge spike and non-serving shadow deploy are next.",
+  "statusNote": "P1 is complete; asymmetric cache and baked AMI work now precede the P2 cutover.",
   "mission": "Deliver both co-primary CI endgames: an on-demand worker-per-job system and no required job that waits 20 minutes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -55,8 +55,8 @@
     {
       "id": "P1",
       "name": "Bridge spike and shadow deploy",
-      "status": "in-progress",
-      "statusNote": "Controller deployed to production (122 resources, shadow label beep-ec2-heavy-shadow) and webhook-activated via repository hook; bridge PR #632 carries the source. Shadow acceptance (probe + red-team gates) outstanding before P2."
+      "status": "complete",
+      "statusNote": "Probe 31352410248 proved one-job-one-VM lifecycle and teardown; red-team gate run 31354960508 passed all three gates."
     },
     {
       "id": "P2",
