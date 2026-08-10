@@ -55,7 +55,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
       const typedNotifications = yield* Ref.make<Array<unknown>>([]);
       const handle = yield* makeHandle();
       const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess(handle);
+      const acpLayer = AcpClient.layerChildProcess({ handle });
       const context = yield* Layer.buildWithScope(acpLayer, scope);
 
       const ext = yield* Effect.gen(function* () {
@@ -150,7 +150,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
     Effect.fnUntraced(function* () {
       const handle = yield* makeHandle({ ACP_MOCK_BAD_TYPED_REQUEST: "1" });
       const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess(handle);
+      const acpLayer = AcpClient.layerChildProcess({ handle });
       const context = yield* Layer.buildWithScope(acpLayer, scope);
 
       const result = yield* Effect.gen(function* () {
@@ -221,7 +221,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
       const typedNotifications = yield* Ref.make<Array<unknown>>([]);
       const handle = yield* makeHandle();
       const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess(handle);
+      const acpLayer = AcpClient.layerChildProcess({ handle });
       const context = yield* Layer.buildWithScope(acpLayer, scope);
 
       yield* Effect.gen(function* () {
@@ -298,7 +298,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
       const successfulHandlers = yield* Ref.make(0);
       const handle = yield* makeHandle();
       const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess(handle);
+      const acpLayer = AcpClient.layerChildProcess({ handle });
       const context = yield* Layer.buildWithScope(acpLayer, scope);
 
       yield* Effect.gen(function* () {

@@ -89,7 +89,7 @@ type SourceEntry = {
  * what makes declared supersession meaningful.
  */
 const observation = Effect.fnUntraced(function* (name: string, text: string) {
-  const hex = yield* S.decodeUnknownEffect(Sha256HexFromBytes)(utf8.encode(text));
+  const hex = yield* S.decodeEffect(Sha256HexFromBytes)(utf8.encode(text));
   const digest = `sha256:${hex}`;
   const encoded = {
     extractor: { name: "utf8", version: "1" },
@@ -214,7 +214,7 @@ const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =
   Layer.mergeAll(CandorPolicyLive, readerLayer(build), resolverLayer(build)).pipe(Layer.provideMerge(TestCrypto));
 
 const evaluateFiling = Effect.fnUntraced(function* () {
-  const citingApplication = yield* S.decodeUnknownEffect(CitingApplicationIdentity)(FILING_ENCODED);
+  const citingApplication = yield* S.decodeEffect(CitingApplicationIdentity)(FILING_ENCODED);
   const policy = yield* CandorPolicy;
   return yield* policy.evaluate(CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(1) }));
 });

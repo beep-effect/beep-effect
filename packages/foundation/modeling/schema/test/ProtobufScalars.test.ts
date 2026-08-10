@@ -93,7 +93,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     const isFixed32 = S.is(Fixed32);
 
     fc.assert(
-      fc.property(S.toArbitrary(Uint32), (value) => {
+      fc.property(S.toArbitrary(Uint32)(fc), (value) => {
         expect(isUint32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(uint32Minimum);
@@ -103,7 +103,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Fixed32), (value) => {
+      fc.property(S.toArbitrary(Fixed32)(fc), (value) => {
         expect(isFixed32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(uint32Minimum);
@@ -118,7 +118,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     const isSfixed32 = S.is(Sfixed32);
 
     fc.assert(
-      fc.property(S.toArbitrary(Sint32), (value) => {
+      fc.property(S.toArbitrary(Sint32)(fc), (value) => {
         expect(isSint32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(sint32Minimum);
@@ -128,7 +128,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Sfixed32), (value) => {
+      fc.property(S.toArbitrary(Sfixed32)(fc), (value) => {
         expect(isSfixed32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(sint32Minimum);
@@ -177,7 +177,7 @@ describe("protobuf floating-point scalar schemas", () => {
     const isDouble = S.is(Double);
 
     fc.assert(
-      fc.property(S.toArbitrary(Float), (value) => {
+      fc.property(S.toArbitrary(Float)(fc), (value) => {
         expect(isFloat(value)).toBe(true);
         expect(isProtobufFloatValue(value)).toBe(true);
       }),
@@ -185,7 +185,7 @@ describe("protobuf floating-point scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Double), (value) => {
+      fc.property(S.toArbitrary(Double)(fc), (value) => {
         expect(isDouble(value)).toBe(true);
         expect(typeof value).toBe("number");
       }),
@@ -311,7 +311,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     const isFixed64 = S.is(Fixed64);
 
     fc.assert(
-      fc.property(S.toArbitrary(Uint64), (value) => {
+      fc.property(S.toArbitrary(Uint64)(fc), (value) => {
         expect(isUint64(value)).toBe(true);
         expect(value >= uint64Minimum).toBe(true);
         expect(value <= uint64Maximum).toBe(true);
@@ -320,7 +320,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Fixed64), (value) => {
+      fc.property(S.toArbitrary(Fixed64)(fc), (value) => {
         expect(isFixed64(value)).toBe(true);
         expect(value >= uint64Minimum).toBe(true);
         expect(value <= uint64Maximum).toBe(true);
@@ -334,7 +334,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     const isSfixed64 = S.is(Sfixed64);
 
     fc.assert(
-      fc.property(S.toArbitrary(Sint64), (value) => {
+      fc.property(S.toArbitrary(Sint64)(fc), (value) => {
         expect(isSint64(value)).toBe(true);
         expect(value >= sint64Minimum).toBe(true);
         expect(value <= sint64Maximum).toBe(true);
@@ -343,7 +343,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Sfixed64), (value) => {
+      fc.property(S.toArbitrary(Sfixed64)(fc), (value) => {
         expect(isSfixed64(value)).toBe(true);
         expect(value >= sint64Minimum).toBe(true);
         expect(value <= sint64Maximum).toBe(true);
@@ -380,7 +380,7 @@ describe("protobuf bytes scalar schema", () => {
     const isBytes = S.is(Bytes);
 
     fc.assert(
-      fc.property(S.toArbitrary(Bytes), (value) => {
+      fc.property(S.toArbitrary(Bytes)(fc), (value) => {
         expect(isBytes(value)).toBe(true);
         expect(value).toBeInstanceOf(Uint8Array);
       }),

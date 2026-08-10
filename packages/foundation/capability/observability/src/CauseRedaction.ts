@@ -47,7 +47,7 @@ const $I = $ObservabilityId.create("CauseRedaction");
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 const decodeNonNegativeInt = (input: number): NonNegativeInt =>
-  Result.getOrThrowWith(S.decodeUnknownResult(NonNegativeInt)(input), schemaIssueToError);
+  Result.getOrThrowWith(S.decodeResult(NonNegativeInt)(input), schemaIssueToError);
 
 /**
  * Placeholder substituted for any redacted secret-shaped token or home path.
@@ -387,7 +387,7 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
  */
 export const redactCauseSummary: {
   (summary: CauseSummary, options?: RedactCauseOptions): RedactedCause;
-  (options: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;
+  (options?: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;
 } = dual(isRedactionDataFirst, redactCauseSummaryImpl);
 
 const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) ? input : Cause.fail(input));
@@ -424,7 +424,7 @@ const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) 
 export const redactCause: {
   // Data-last first: the catch-all `(input: unknown, ...)` overload would
   // otherwise absorb a lone options argument and hide the curried form.
-  (options: RedactCauseOptions): (input: unknown) => RedactedCause;
+  (options?: RedactCauseOptions): (input: unknown) => RedactedCause;
   (input: unknown, options?: RedactCauseOptions): RedactedCause;
 } = dual(
   isRedactionDataFirst,
@@ -512,7 +512,7 @@ export class RedactedCauseError extends TaggedErrorClass<RedactedCauseError>($I`
  */
 export const redactCauseEffect: {
   (input: unknown, options?: RedactCauseOptions): Effect.Effect<RedactedCause>;
-  (options: RedactCauseOptions): (input: unknown) => Effect.Effect<RedactedCause>;
+  (options?: RedactCauseOptions): (input: unknown) => Effect.Effect<RedactedCause>;
 } = dual(
   isRedactionDataFirst,
   Effect.fn("observability.redact_cause")(function* (input: unknown, options: RedactCauseOptions = defaultOptions) {

@@ -6,9 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/CreateCaptions.schemas");
 
@@ -210,4 +212,7 @@ export class CreateCaptionFilesSummary extends S.Class<CreateCaptionFilesSummary
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCreateCaptionFilesOptions = S.decodeUnknownEffect(CreateCaptionFilesOptions);
+export const decodeCreateCaptionFilesOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CreateCaptionFilesOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CreateCaptionFilesOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CreateCaptionFilesOptions));

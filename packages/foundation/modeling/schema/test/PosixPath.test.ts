@@ -8,12 +8,10 @@ describe("PosixPath", () => {
   });
 
   it("accepts already normalized paths", () => {
-    expect(S.decodeUnknownSync(PosixPath)("packages/foundation/modeling/schema")).toBe(
-      "packages/foundation/modeling/schema"
-    );
+    expect(S.decodeSync(PosixPath)("packages/foundation/modeling/schema")).toBe("packages/foundation/modeling/schema");
   });
 
   it("rejects paths that still contain backslashes", () => {
-    expect(() => S.decodeUnknownSync(PosixPath)("packages\\common\\schema")).toThrow("Expected a string matching");
+    expect(() => S.decodeSync(PosixPath)("packages\\common\\schema")).toThrow("Expected a string matching");
   });
 });

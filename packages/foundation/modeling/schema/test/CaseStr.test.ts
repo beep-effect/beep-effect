@@ -6,7 +6,7 @@ import { FastCheck as fc } from "effect/testing";
 
 describe("KebabCaseStr", () => {
   const decode = S.decodeUnknownSync(KebabCaseStr);
-  const arbitrary = S.toArbitrary(KebabCaseStr);
+  const arbitrary = S.toArbitrary(KebabCaseStr)(fc);
 
   it("accepts lowercase kebab-case values that start with a letter", () => {
     expect(decode("command")).toBe("command");
@@ -33,7 +33,7 @@ describe("KebabCaseStr", () => {
 
 describe("PascalCaseStr", () => {
   const decode = S.decodeUnknownSync(PascalCaseStr);
-  const arbitrary = S.toArbitrary(PascalCaseStr);
+  const arbitrary = S.toArbitrary(PascalCaseStr)(fc);
 
   it("accepts PascalCase values", () => {
     expect(decode("WorkflowStatus")).toBe("WorkflowStatus");
@@ -60,7 +60,7 @@ describe("PascalCaseStr", () => {
 
 describe("SnakeCaseStr", () => {
   const decode = S.decodeUnknownSync(SnakeCaseStr);
-  const arbitrary = S.toArbitrary(SnakeCaseStr);
+  const arbitrary = S.toArbitrary(SnakeCaseStr)(fc);
 
   it("accepts lowercase snake_case values", () => {
     expect(decode("workflow_status")).toBe("workflow_status");

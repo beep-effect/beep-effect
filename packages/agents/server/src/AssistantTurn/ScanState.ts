@@ -10,6 +10,7 @@ import { Fn, SchemaUtils } from "@beep/schema";
 import { isNonNegative } from "@beep/schema/Number";
 import { Match } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AgentsServerId.create("AssistantTurn/ScanState");
@@ -210,7 +211,10 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
 // down by a fast-check property test (test/scanChunk.test.ts); extracting helpers
 // would scatter the single-pass state without reducing real complexity.
 // fallow-ignore-next-line complexity -- single-pass brace and string scanner is a POC port guarded by property tests
-export const scanChunk = (state: ScanState, text: string): [ScanState, Array<string>] => {
+export const scanChunk: {
+  (text: string): (state: ScanState) => [ScanState, Array<string>];
+  (state: ScanState, text: string): [ScanState, Array<string>];
+} = dual(2, (state: ScanState, text: string): [ScanState, Array<string>] => {
   const result = scanChunkResult({ state, text });
   return [
     {
@@ -222,4 +226,4 @@ export const scanChunk = (state: ScanState, text: string): [ScanState, Array<str
     },
     result.completed,
   ];
-};
+});

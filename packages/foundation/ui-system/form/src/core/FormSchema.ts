@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 /**
@@ -55,7 +56,7 @@ export type ToFormSchemaOptions = NonNullable<Parameters<typeof S.toStandardSche
  * @category models
  * @since 0.0.0
  */
-export type FormSchema<A, I> = ReturnType<typeof S.toStandardSchemaV1<S.Codec<A, I>>>;
+export interface FormSchema<A, I> extends ReturnType<typeof S.toStandardSchemaV1<S.Codec<A, I>>> {}
 
 /**
  * Converts an effect schema into the Standard Schema that TanStack validators
@@ -71,16 +72,24 @@ export type FormSchema<A, I> = ReturnType<typeof S.toStandardSchemaV1<S.Codec<A,
  * **Example** (Converting Struct to Standard Schema)
  *
  * ```ts
+ * import { pipe } from "effect"
  * import * as S from "effect/Schema"
  * import { toFormSchema } from "@beep/form/core/FormSchema"
  *
  * const schema = S.Struct({ name: S.String })
  * const standard = toFormSchema(schema)
- * console.log(standard["~standard"].vendor) // "effect"
+ * const piped = pipe(schema, toFormSchema({ parseOptions: { errors: "all" } }))
+ * console.log(standard["~standard"].vendor, piped["~standard"].vendor) // "effect" "effect"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const toFormSchema = <A, I>(schema: S.Codec<A, I>, options?: ToFormSchemaOptions): FormSchema<A, I> =>
-  S.toStandardSchemaV1(schema, options);
+export const toFormSchema: {
+  (options?: ToFormSchemaOptions): <A, I>(schema: S.Codec<A, I>) => FormSchema<A, I>;
+  <A, I>(schema: S.Codec<A, I>, options?: ToFormSchemaOptions): FormSchema<A, I>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <A, I>(schema: S.Codec<A, I>, options?: ToFormSchemaOptions): FormSchema<A, I> =>
+    S.toStandardSchemaV1(schema, options)
+);

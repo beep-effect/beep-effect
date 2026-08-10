@@ -102,6 +102,6 @@ describe("CryptoWalletAddress", () => {
       address: CryptoWalletAddress,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ address: "invalid" })).toThrow(`at ["address"]`);
+    expect(() => S.decodeSync(Payload)({ address: "invalid" })).toThrow(`at ["address"]`);
   });
 });

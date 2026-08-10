@@ -43,12 +43,14 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, DateTime, Effect, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
@@ -292,11 +294,17 @@ const epochMillis = (value: string | null): O.Option<number> =>
  * @category mapping
  * @since 0.0.0
  */
-export const ciTimestampSpanSeconds = (from: string | null, to: string | null): O.Option<number> =>
-  pipe(
-    O.zipWith(epochMillis(from), epochMillis(to), (start, end) => (end - start) / 1_000),
-    O.filter((seconds) => seconds >= 0)
-  );
+export const ciTimestampSpanSeconds: {
+  (to: string | null): (from: string | null) => O.Option<number>;
+  (from: string | null, to: string | null): O.Option<number>;
+} = dual(
+  2,
+  (from: string | null, to: string | null): O.Option<number> =>
+    pipe(
+      O.zipWith(epochMillis(from), epochMillis(to), (start, end) => (end - start) / 1_000),
+      O.filter((seconds) => seconds >= 0)
+    )
+);
 
 /**
  * Pickup latency for a job, defined only on the first attempt.
@@ -476,11 +484,22 @@ export const ciLaneTimingRow = (job: CiWorkflowJob): CiLaneTimingRow =>
  * @category mapping
  * @since 0.0.0
  */
-export const withCiLanePeakRss = (
-  rows: ReadonlyArray<CiLaneTimingRow>,
-  peakRssByJobName: Readonly<Record<string, number>>
-): ReadonlyArray<CiLaneTimingRow> =>
-  A.map(rows, (row) => CiLaneTimingRow.make({ ...row, peakRssBytes: O.fromNullishOr(peakRssByJobName[row.jobName]) }));
+export const withCiLanePeakRss: {
+  (
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): (rows: ReadonlyArray<CiLaneTimingRow>) => ReadonlyArray<CiLaneTimingRow>;
+  (
+    rows: ReadonlyArray<CiLaneTimingRow>,
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): ReadonlyArray<CiLaneTimingRow>;
+} = dual(
+  2,
+  (
+    rows: ReadonlyArray<CiLaneTimingRow>,
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): ReadonlyArray<CiLaneTimingRow> =>
+    A.map(rows, (row) => CiLaneTimingRow.make({ ...row, peakRssBytes: O.fromNullishOr(peakRssByJobName[row.jobName]) }))
+);
 
 const numberOrder = Order.Number;
 
@@ -658,7 +677,10 @@ export const renderCiLaneTimingsSummary = (report: CiLaneTimingsReport): string 
  * @category codecs
  * @since 0.0.0
  */
-export const decodeCiWorkflowJobsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
+export const decodeCiWorkflowJobsPage: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<CiWorkflowJobsPage, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<CiWorkflowJobsPage, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage)));
 
 class CiWorkflowRun extends S.Class<CiWorkflowRun>($I`CiWorkflowRun`)(
   { id: S.Finite },

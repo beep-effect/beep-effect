@@ -7,7 +7,6 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import type * as Equivalence from "effect/Equivalence";
 
 const $I = $LawPracticeDomainId.create("values/LegalActContent/LegalActContent.model");
 
@@ -165,4 +164,5 @@ export class LegalActContent extends S.Class<LegalActContent>($I`LegalActContent
  * @category utilities
  * @since 0.0.0
  */
-export const legalActContentEquivalence: Equivalence.Equivalence<LegalActContent> = S.toEquivalence(LegalActContent);
+export const legalActContentEquivalence: SchemaUtils.DualEquivalence<LegalActContent> =
+  SchemaUtils.toEquivalence(LegalActContent);

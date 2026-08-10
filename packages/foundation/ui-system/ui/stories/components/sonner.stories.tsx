@@ -53,6 +53,9 @@ const meta = {
     closeButton: false,
     expand: false,
   },
+  beforeEach: () => {
+    toast.dismiss();
+  },
 } satisfies Meta<typeof Toaster>;
 
 export default meta;

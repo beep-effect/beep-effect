@@ -14,6 +14,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   CaptureDate,
@@ -24,6 +25,8 @@ import {
   GitCommitSha,
   GitHubRepoSlug,
 } from "./Findings.capture.schemas.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.schemas");
 
@@ -405,4 +408,7 @@ export class CodexFindingsIngestOptions extends S.Class<CodexFindingsIngestOptio
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCodexFindingsIngestOptions = S.decodeUnknownEffect(CodexFindingsIngestOptions);
+export const decodeCodexFindingsIngestOptions: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CodexFindingsIngestOptions, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CodexFindingsIngestOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CodexFindingsIngestOptions));

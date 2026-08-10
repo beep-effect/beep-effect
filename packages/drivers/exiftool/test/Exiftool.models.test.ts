@@ -36,7 +36,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   const decode = S.decodeUnknownSync(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -74,7 +74,7 @@ describe("@beep/exiftool models", () => {
     const decodeErrorOptions = S.decodeUnknownSync(ExiftoolErrorFromUnknownOptions);
     fc.assert(
       fc.property(
-        S.toArbitrary(ExiftoolErrorFromUnknownOptions).filter((options) => O.isNone(options.cause)),
+        S.toArbitrary(ExiftoolErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
         (options) => {
           expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
         }

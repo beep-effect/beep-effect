@@ -382,7 +382,7 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 describe("practice KG projections", () => {
   it("generates schema-valid fixture source rows", () => {
     fc.assert(
-      fc.property(S.toArbitrary(S.String), (value) => {
+      fc.property(S.toArbitrary(S.String)(fc), (value) => {
         expect(S.is(S.String)(value)).toBe(true);
       }),
       { numRuns: 10 }
@@ -398,14 +398,14 @@ describe("practice KG projections", () => {
     });
     expect(options.maxTextBytes).toBe(2_097_152);
     expect(options.bundleOut).toBeUndefined();
-    const decoded = S.decodeUnknownSync(PracticeKgOptions)({
+    const decoded = S.decodeSync(PracticeKgOptions)({
       corpusRoot: "/corpus",
       includeRefresh: false,
       overwrite: false,
       skipEmails: true,
     });
     expect(decoded.maxTextBytes).toBe(2_097_152);
-    const spineRow = S.decodeUnknownSync(PracticeKgToolResult)({
+    const spineRow = S.decodeSync(PracticeKgToolResult)({
       bundle_version: "2026-07-27-01",
       data: { columns: ["family"], rows: [["10008"]] },
       epistemic_status: "derived-from-official-records",

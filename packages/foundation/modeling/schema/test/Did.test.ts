@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const DidArbitrary = S.toArbitrary(Did);
+const DidArbitrary = S.toArbitrary(Did)(fc);
 const decodeDid = S.decodeUnknownEffect(Did);
 
 const invalidDidExamples = [

@@ -816,14 +816,20 @@ const statusFromKindLetter = (letter: string): PatentStatus =>
  * import * as O from "effect/Option"
  * import { getStatusFromKindCode } from "@beep/law-practice-domain"
  *
- * console.log(getStatusFromKindCode("US", O.some("B2")))
+ * console.log(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") }))
  * // "granted"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const getStatusFromKindCode = (country?: string, kindCode: O.Option<string> = O.none()): PatentStatus =>
+export const getStatusFromKindCode = ({
+  country,
+  kindCode = O.none(),
+}: {
+  readonly country?: string | undefined;
+  readonly kindCode?: O.Option<string> | undefined;
+} = {}): PatentStatus =>
   pipe(
     O.fromNullishOr(country),
     O.flatMap(toOfficeCodeOption),
@@ -893,14 +899,20 @@ const kindCodeExplanationTable = (country: O.Option<string>): Readonly<Record<st
  * import { getKindCodeExplanation } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
  *
- * const explanation = getKindCodeExplanation("EP", "A1")
+ * const explanation = getKindCodeExplanation({ country: "EP", kindCode: "A1" })
  * console.log(O.getOrElse(explanation, () => "Unknown kind code"))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const getKindCodeExplanation = (country?: string, kindCode?: string): O.Option<string> =>
+export const getKindCodeExplanation = ({
+  country,
+  kindCode,
+}: {
+  readonly country?: string | undefined;
+  readonly kindCode?: string | undefined;
+} = {}): O.Option<string> =>
   pipe(
     O.fromNullishOr(kindCode),
     O.map(toUpperTrimmed),
@@ -1041,9 +1053,11 @@ const patentDisplayFormatted = (
  * import { getPatentDisplay } from "@beep/law-practice-domain"
  *
  * const display = getPatentDisplay({
- *   patent_number: "7654321",
- *   country: "US",
- *   kind_code: "B2"
+ *   metadata: {
+ *     patent_number: "7654321",
+ *     country: "US",
+ *     kind_code: "B2"
+ *   }
  * })
  * console.log(display.formatted)
  * // "US 7,654,321 B2"
@@ -1052,7 +1066,13 @@ const patentDisplayFormatted = (
  * @category utilities
  * @since 0.0.0
  */
-export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null, content?: string): PatentDisplay => {
+export const getPatentDisplay = ({
+  metadata,
+  content,
+}: {
+  readonly metadata?: PatentDisplayMetadata.Encoded | null | undefined;
+  readonly content?: string | undefined;
+} = {}): PatentDisplay => {
   const input = makePatentDisplayInput(metadata);
   const rawNumber = patentDisplayRawNumber(input);
   const fromNumber = parsePatentReference(rawNumber);
@@ -1061,7 +1081,7 @@ export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null
   const kindCode = patentDisplayKindCode(input, fromNumber, fromContent);
   const number = patentDisplayNumber(rawNumber, fromNumber, fromContent);
   const formatted = patentDisplayFormatted(country, number, kindCode);
-  const status = getStatusFromKindCode(country, kindCode);
+  const status = getStatusFromKindCode({ country, kindCode });
 
   return PatentDisplay.make({
     country,
@@ -1278,8 +1298,10 @@ const figureFromUrl = (url: string, label: O.Option<string>, alt: O.Option<strin
  * ```ts
  * import { extractPatentFigures } from "@beep/law-practice-domain"
  *
- * const figures = extractPatentFigures(undefined, {
- *   img1: "https://example.com/patents/fig-1.png"
+ * const figures = extractPatentFigures({
+ *   imageUrls: {
+ *     img1: "https://example.com/patents/fig-1.png"
+ *   }
  * })
  * console.log(figures.length)
  * // 1
@@ -1288,10 +1310,13 @@ const figureFromUrl = (url: string, label: O.Option<string>, alt: O.Option<strin
  * @category utilities
  * @since 0.0.0
  */
-export const extractPatentFigures = (
-  content?: string,
-  imageUrls?: Readonly<Record<string, string>> | null
-): ReadonlyArray<PatentFigure> => {
+export const extractPatentFigures = ({
+  content,
+  imageUrls,
+}: {
+  readonly content?: string | undefined;
+  readonly imageUrls?: Readonly<Record<string, string>> | null | undefined;
+} = {}): ReadonlyArray<PatentFigure> => {
   const apiFigures = pipe(
     O.fromNullishOr(imageUrls),
     O.map((urls) =>
@@ -1364,7 +1389,11 @@ const sectionCapture = (pattern: RegExp, content: string, maxChars: number): O.O
  * import * as O from "effect/Option"
  * import { parsePatentSections } from "@beep/law-practice-domain"
  *
- * const sections = parsePatentSections("## Abstract\nA compact tool.\n\n## Claims\n1. A tool.", ["abstract", "claims"], 400)
+ * const sections = parsePatentSections({
+ *   content: "## Abstract\nA compact tool.\n\n## Claims\n1. A tool.",
+ *   requestedSections: ["abstract", "claims"],
+ *   maxCharsPerSection: 400
+ * })
  * console.log(O.isSome(sections.claims))
  * // true
  * ```
@@ -1372,11 +1401,15 @@ const sectionCapture = (pattern: RegExp, content: string, maxChars: number): O.O
  * @category utilities
  * @since 0.0.0
  */
-export const parsePatentSections = (
-  content: string,
-  requestedSections?: ReadonlyArray<PatentSectionKind>,
-  maxCharsPerSection = 8000
-): PatentSections => {
+export const parsePatentSections = ({
+  content,
+  requestedSections,
+  maxCharsPerSection = 8000,
+}: {
+  readonly content: string;
+  readonly requestedSections?: ReadonlyArray<PatentSectionKind> | undefined;
+  readonly maxCharsPerSection?: number | undefined;
+}): PatentSections => {
   const requested = pipe(O.fromNullishOr(requestedSections), O.filter(A.isReadonlyArrayNonEmpty));
   const section = (kind: PatentSectionKind, value: O.Option<string>): O.Option<string> =>
     wantsSection(requested, kind) ? value : O.none();
@@ -1433,14 +1466,20 @@ const formatReference = (reference: PatentReference): O.Option<string> =>
  * ```ts
  * import { extractPatentNumber } from "@beep/law-practice-domain"
  *
- * console.log(extractPatentNumber("**Patent Number:** US 7,654,321 B2"))
+ * console.log(extractPatentNumber({ content: "**Patent Number:** US 7,654,321 B2" }))
  * // "US 7654321 B2"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const extractPatentNumber = (content: string, fallbackTitle?: string): string =>
+export const extractPatentNumber = ({
+  content,
+  fallbackTitle,
+}: {
+  readonly content: string;
+  readonly fallbackTitle?: string | undefined;
+}): string =>
   pipe(
     A.getSomes([
       firstCapture(/\*\*Patent Number:?\*\*\s*([A-Z]{2}\s*(?:RE|PP|D|H)?[\d,]+\s*[A-Z]?\d?)/iu, content),

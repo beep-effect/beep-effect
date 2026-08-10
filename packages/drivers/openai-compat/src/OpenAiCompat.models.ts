@@ -11,7 +11,10 @@ import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
@@ -1200,7 +1203,12 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
  * @category codecs
  * @since 0.0.0
  */
-export const decodeChatCompletionResponse = OpenAiCompatChatCompletionResponse.decodeUnknownEffect;
+export const decodeChatCompletionResponse: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): (input: unknown) => Effect.Effect<OpenAiCompatChatCompletionResponse, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<OpenAiCompatChatCompletionResponse, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, OpenAiCompatChatCompletionResponse.decodeUnknownEffect);
 
 /**
  * Decodes an unknown value into an OpenAI-compatible chat completion stream chunk.
@@ -1219,4 +1227,7 @@ export const decodeChatCompletionResponse = OpenAiCompatChatCompletionResponse.d
  * @category codecs
  * @since 0.0.0
  */
-export const decodeChatCompletionChunk = OpenAiCompatChatCompletionChunk.decodeUnknownEffect;
+export const decodeChatCompletionChunk: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<OpenAiCompatChatCompletionChunk, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<OpenAiCompatChatCompletionChunk, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, OpenAiCompatChatCompletionChunk.decodeUnknownEffect);

@@ -22,12 +22,12 @@ const IDLE_TTL_MS = 40;
 
 const openSession = createSession(
   CreateSessionInput.make({
-    id: S.decodeUnknownSync(SessionId)("session-1"),
+    id: S.decodeSync(SessionId)("session-1"),
     baseDataset: makeDataset([]),
   })
 );
 
-const openPath = S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl");
+const openPath = S.decodeSync(OntologyFilePath)("fixtures/demo.ttl");
 
 describe("ontology workbench state lifetime", () => {
   it.live(

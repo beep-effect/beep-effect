@@ -8,7 +8,7 @@ import { FastCheck as fc } from "effect/testing";
 import { Response } from "effect/unstable/ai";
 
 const JsonAnthropicToolJsonResponse = S.fromJsonString(AnthropicToolJsonResponse);
-const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse);
+const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse)(fc);
 
 describe("Anthropic repair helpers", () => {
   it.effect(
@@ -49,7 +49,7 @@ describe("Anthropic repair helpers", () => {
       expect(result.usage.outputTokens.total).toBe(3);
 
       const encoded = yield* S.encodeEffect(JsonAnthropicToolJsonResponse)(result);
-      const decoded = yield* S.decodeUnknownEffect(JsonAnthropicToolJsonResponse)(encoded);
+      const decoded = yield* S.decodeEffect(JsonAnthropicToolJsonResponse)(encoded);
       expect(yield* S.encodeEffect(JsonAnthropicToolJsonResponse)(decoded)).toBe(encoded);
     })
   );
@@ -61,7 +61,7 @@ describe("Anthropic repair helpers", () => {
           const encoded = S.encodeOption(JsonAnthropicToolJsonResponse)(response);
           const reencoded = O.flatMap(encoded, (json) =>
             O.flatMap(
-              S.decodeUnknownOption(JsonAnthropicToolJsonResponse)(json),
+              S.decodeOption(JsonAnthropicToolJsonResponse)(json),
               S.encodeOption(JsonAnthropicToolJsonResponse)
             )
           );

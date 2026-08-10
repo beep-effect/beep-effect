@@ -78,7 +78,7 @@ describe("@beep/editor node registration", () => {
     });
 
     fc.assert(
-      fc.property(S.toArbitrary(SerializedEditorState), (state) => {
+      fc.property(S.toArbitrary(SerializedEditorState)(fc), (state) => {
         editor.setEditorState(editor.parseEditorState(S.encodeSync(EditorStateFromJson)(state)));
         expect(Result.isSuccess(S.decodeUnknownResult(SerializedEditorState)(editor.getEditorState().toJSON()))).toBe(
           true

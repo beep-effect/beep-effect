@@ -329,7 +329,7 @@ const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlCon
   Result.match(S.encodeResult(HtmlRoot)(root), {
     onFailure: () => Effect.fail(snapshotFailure()),
     onSuccess: (encoded) =>
-      Result.match(S.decodeUnknownResult(HtmlRoot)(encoded), {
+      Result.match(S.decodeResult(HtmlRoot)(encoded), {
         onFailure: () => Effect.fail(snapshotFailure()),
         onSuccess: flow(freezeTree, Effect.succeed),
       }),

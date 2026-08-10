@@ -120,7 +120,7 @@ describe("grant fixtures", () => {
   it("produces a byte-stable digest across reconstructions", () => {
     // The acceptance test chains ledger rows against this digest, so a fixture
     // that drifts between runs would make the chain unreproducible.
-    const grant = S.decodeUnknownSync(ExecutionGrant)({
+    const grant = S.decodeSync(ExecutionGrant)({
       budget: { maxToolCalls: null },
       expiresAt: 86_400_000,
       operation: "ontology_publish_provenance",

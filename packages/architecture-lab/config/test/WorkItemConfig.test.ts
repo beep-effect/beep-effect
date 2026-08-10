@@ -70,10 +70,10 @@ describe("WorkItem configuration", () => {
 
     fc.assert(
       fc.property(
-        S.toArbitrary(WorkItemPublicConfig),
-        S.toArbitrary(WorkItemServerConfig),
-        S.toArbitrary(WorkItemSecretConfig),
-        S.toArbitrary(WorkItemConfigValue),
+        S.toArbitrary(WorkItemPublicConfig)(fc),
+        S.toArbitrary(WorkItemServerConfig)(fc),
+        S.toArbitrary(WorkItemSecretConfig)(fc),
+        S.toArbitrary(WorkItemConfigValue)(fc),
         (publicConfig, serverConfig, secretConfig, configValue) =>
           Equal.equals(decodePublicConfig(encodePublicConfig(publicConfig)), publicConfig) &&
           Equal.equals(decodeServerConfig(encodeServerConfig(serverConfig)), serverConfig) &&

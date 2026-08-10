@@ -16,6 +16,7 @@
 
 import { A, O } from "@beep/utils";
 import { Console, Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { dual } from "effect/Function";
 import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlagWith } from "../../internal/cli/Flags.ts";
@@ -196,10 +197,15 @@ const liveCheckoutSet = (checkouts: ReadonlyArray<FleetCheckout>): MutableHashSe
  * @category formatting
  * @since 0.0.0
  */
-export const rankContestedPaths = (
-  contested: ReadonlyArray<FleetContestedPath>,
-  checkouts: ReadonlyArray<FleetCheckout>
-): ReadonlyArray<FleetContestedPath> => {
+export const rankContestedPaths: {
+  (
+    contested: ReadonlyArray<FleetContestedPath>,
+    checkouts: ReadonlyArray<FleetCheckout>
+  ): ReadonlyArray<FleetContestedPath>;
+  (
+    checkouts: ReadonlyArray<FleetCheckout>
+  ): (contested: ReadonlyArray<FleetContestedPath>) => ReadonlyArray<FleetContestedPath>;
+} = dual(2, (contested: ReadonlyArray<FleetContestedPath>, checkouts: ReadonlyArray<FleetCheckout>) => {
   const live = liveCheckoutSet(checkouts);
   const liveClaimants = (entry: FleetContestedPath): number =>
     A.length(A.filter(entry.checkouts, (checkout) => MutableHashSet.has(live, checkout)));
@@ -213,7 +219,7 @@ export const rankContestedPaths = (
       )
     )
   );
-};
+});
 
 const CONTESTED_SWAMPING_SHARE = 0.5;
 
@@ -255,10 +261,10 @@ const contestedClaims = (
  * @category formatting
  * @since 0.0.0
  */
-export const contestedSwampingNotes = (
-  contested: ReadonlyArray<FleetContestedPath>,
-  checkouts: ReadonlyArray<FleetCheckout>
-): ReadonlyArray<string> => {
+export const contestedSwampingNotes: {
+  (contested: ReadonlyArray<FleetContestedPath>, checkouts: ReadonlyArray<FleetCheckout>): ReadonlyArray<string>;
+  (checkouts: ReadonlyArray<FleetCheckout>): (contested: ReadonlyArray<FleetContestedPath>) => ReadonlyArray<string>;
+} = dual(2, (contested: ReadonlyArray<FleetContestedPath>, checkouts: ReadonlyArray<FleetCheckout>) => {
   if (contested.length <= CONTESTED_RENDER_LIMIT) {
     return A.empty();
   }
@@ -271,7 +277,7 @@ export const contestedSwampingNotes = (
       `  note: ${row.path} claims ${claimCount(row.path)}/${contested.length} contested rows` +
       ` (dirty: ${countLabel(row.dirtyCount)})`
   );
-};
+});
 
 const contestedLines = (
   contested: ReadonlyArray<FleetContestedPath>,

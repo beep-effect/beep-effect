@@ -38,7 +38,7 @@ const withTempDirectory = <Result, Error, Requirements>(
     (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))
   ).pipe(provideScopedLayer(PlatformLayer));
 
-const attemptId = S.decodeUnknownSync(UUID)("550e8400-e29b-41d4-a716-446655440000");
+const attemptId = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440000");
 
 const contextForRoot = (repoRoot: string): RepoRunContext =>
   RepoRunContext.make({

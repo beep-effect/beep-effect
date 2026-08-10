@@ -24,12 +24,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"]);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
-const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger);
-const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger);
-const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber);
-const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber);
-const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
+const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger)(fc);
+const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger)(fc);
+const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber)(fc);
+const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber)(fc);
+const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber)(fc);
 
 describe("@beep/html attribute microsyntaxes", () => {
   it("derives valid presence and integer values from the production schemas", () =>
@@ -59,8 +59,8 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(S.is(HeadingOffset)(8)).toBe(true);
     expect(S.is(HeadingOffset)(-1)).toBe(false);
     expect(S.is(HeadingOffset)(9)).toBe(false);
-    expect(S.decodeUnknownSync(Popover)("")).toBe("auto");
-    expect(S.decodeUnknownSync(Popover)("auto")).toBe("auto");
+    expect(S.decodeSync(Popover)("")).toBe("auto");
+    expect(S.decodeSync(Popover)("auto")).toBe("auto");
     expect(S.is(Popover)("")).toBe(false);
   });
 
@@ -71,7 +71,7 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(S.is(HtmlPositiveInteger)(1)).toBe(true);
     expect(S.is(HtmlPositiveInteger)(0)).toBe(false);
     expect(
-      S.decodeUnknownSync(Li)({
+      S.decodeSync(Li)({
         _tag: "li",
         children: [],
         value: -2,
@@ -112,11 +112,11 @@ describe("@beep/html attribute microsyntaxes", () => {
     ));
 
   it("normalizes token lists to lowercase registry order and one space", () => {
-    expect(S.decodeUnknownSync(Rel)("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
+    expect(S.decodeSync(Rel)("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
     expect(S.encodeSync(Rel)("noopener noreferrer")).toBe("noopener noreferrer");
     expect(() => Rel.make("noreferrer noopener")).toThrow();
 
-    const decoded = S.decodeUnknownSync(Anchor)({
+    const decoded = S.decodeSync(Anchor)({
       _tag: "a",
       rel: "NOREFERRER  noopener",
       children: [],
@@ -135,7 +135,7 @@ describe("@beep/html attribute microsyntaxes", () => {
     for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
       const value = `noopener${separator}noreferrer`;
       expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
-      expect(() => S.decodeUnknownSync(Rel)(value)).toThrow();
+      expect(() => S.decodeSync(Rel)(value)).toThrow();
       expect(() => Rel.make(value)).toThrow();
     }
   });
@@ -177,7 +177,7 @@ describe("@beep/html attribute microsyntaxes", () => {
 
   it("keeps the case-distinguishing ol type keyword contract", () => {
     for (const value of ["a", "A", "i", "I"] as const) {
-      const decoded = Result.getOrThrow(S.decodeUnknownResult(Ol)({ _tag: "ol", children: [], type: value }));
+      const decoded = Result.getOrThrow(S.decodeResult(Ol)({ _tag: "ol", children: [], type: value }));
       expect(Result.getOrThrow(S.encodeResult(Ol)(decoded)).type).toBe(value);
     }
     expect(() => S.decodeUnknownSync(Ol)({ _tag: "ol", children: [], type: "ALPHA" })).toThrow();
@@ -190,11 +190,11 @@ describe("@beep/html attribute microsyntaxes", () => {
         const encoded = [..."image"]
           .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
           .join("");
-        const canonical = Result.getOrThrow(S.decodeUnknownResult(Enumerated)(encoded));
+        const canonical = Result.getOrThrow(S.decodeResult(Enumerated)(encoded));
         expect(canonical).toBe("image");
         const reencoded = Result.getOrThrow(S.encodeResult(Enumerated)(canonical));
         expect(reencoded).toBe("image");
-        expect(Result.getOrThrow(S.decodeUnknownResult(Enumerated)(reencoded))).toBe(canonical);
+        expect(Result.getOrThrow(S.decodeResult(Enumerated)(reencoded))).toBe(canonical);
         if (encoded !== canonical) {
           expect(() => Reflect.apply(Enumerated.make, Enumerated, [encoded])).toThrow();
         }
@@ -202,14 +202,14 @@ describe("@beep/html attribute microsyntaxes", () => {
       fcRuns(50)
     );
     for (const invalid of [" image", "image ", "ımage"]) {
-      expect(Result.isFailure(S.decodeUnknownResult(Enumerated)(invalid))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(Enumerated)(invalid))).toBe(true);
     }
-    expect(Result.isFailure(S.decodeUnknownResult(makeAsciiCaseInsensitiveEnumerated(["k"]))("\u212A"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(makeAsciiCaseInsensitiveEnumerated(["k"]))("\u212A"))).toBe(true);
   });
 
   it("canonicalizes the exact enumerated global-attribute inventory", () => {
     const decoded = Result.getOrThrow(
-      S.decodeUnknownResult(GlobalAttributesStruct)({
+      S.decodeResult(GlobalAttributesStruct)({
         autocapitalize: "SENTENCES",
         autocorrect: "ON",
         contenteditable: "",
@@ -251,8 +251,8 @@ describe("@beep/html attribute microsyntaxes", () => {
           "  NOOPENER   noreferrer "
         ),
         (input) => {
-          const canonical = S.decodeUnknownSync(Rel)(input);
-          expect(S.decodeUnknownSync(Rel)(S.encodeSync(Rel)(canonical))).toBe(canonical);
+          const canonical = S.decodeSync(Rel)(input);
+          expect(S.decodeSync(Rel)(S.encodeSync(Rel)(canonical))).toBe(canonical);
         }
       ),
       fcRuns(50)
@@ -262,7 +262,7 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(S.is(AutocompleteAttribute)("section-checkout shipping email")).toBe(true);
     expect(S.is(AutocompleteAttribute)("shipping unknown-field")).toBe(false);
     expect(S.is(AutocompleteAttribute)("shipping\u00a0email")).toBe(false);
-    expect(S.decodeUnknownSync(AutocompleteAttribute)(" SECTION-Checkout   SHIPPING Email ")).toBe(
+    expect(S.decodeSync(AutocompleteAttribute)(" SECTION-Checkout   SHIPPING Email ")).toBe(
       "section-checkout shipping email"
     );
     expect(S.encodeSync(AutocompleteAttribute)("section-checkout shipping email")).toBe(

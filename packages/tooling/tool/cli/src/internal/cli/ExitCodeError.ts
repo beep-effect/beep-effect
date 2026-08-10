@@ -8,7 +8,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
+import { P } from "@beep/utils";
 import { Effect, Runtime } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/ExitCodeError");
@@ -60,5 +62,11 @@ export class CliReportedExit extends TaggedErrorClass<CliReportedExit>($I`CliRep
  * @category errors
  * @since 0.0.0
  */
-export const failWithReportedExit = (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
-  Effect.fail(CliReportedExit.make({ message, exitCode }));
+export const failWithReportedExit: {
+  (exitCode?: number): (message: string) => Effect.Effect<never, CliReportedExit>;
+  (message: string, exitCode?: number): Effect.Effect<never, CliReportedExit>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
+    Effect.fail(CliReportedExit.make({ message, exitCode }))
+);

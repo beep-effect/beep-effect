@@ -1279,7 +1279,7 @@ export declare namespace NpmPackageJson {
    * @category models
    * @since 0.0.0
    */
-  export type Type = S.Schema.Type<typeof NpmPackageJson>;
+  export type Type = NpmPackageJson;
   /**
    * Encoded representation for {@link NpmPackageJson}.
    *
@@ -1310,7 +1310,7 @@ export declare namespace PackageJson {
    * @category models
    * @since 0.0.0
    */
-  export type Type = S.Schema.Type<typeof PackageJson>;
+  export type Type = PackageJson;
   /**
    * Encoded representation for {@link PackageJson}.
    *

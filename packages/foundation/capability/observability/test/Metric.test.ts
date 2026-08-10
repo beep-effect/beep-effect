@@ -32,7 +32,7 @@ describe("Metric", () => {
 
   it("round-trips schema-derived track duration options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(TrackDurationOptions), (options) => {
+      fc.property(S.toArbitrary(TrackDurationOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(TrackDurationOptions)(options),
           S.decodeUnknownOption(TrackDurationOptions)

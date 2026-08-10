@@ -14,7 +14,7 @@ import { NonEmptyTrimmedStr } from "./String.ts";
 const $I = $SchemaId.create("URL");
 
 const isURLStr = (u: unknown): u is URLStr =>
-  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeUnknownOption(S.URLFromString)(u));
+  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeOption(S.URLFromString)(u));
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",

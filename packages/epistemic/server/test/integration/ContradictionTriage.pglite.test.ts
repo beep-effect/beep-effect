@@ -90,7 +90,7 @@ const decodeEvidenceIds = flow(S.decodeUnknownResult(S.NonEmptyArray(EpistemicId
 const isReceiptKey = S.is(ContradictionReceiptKey);
 const receiptKeyEquivalent = S.toEquivalence(ContradictionReceiptKey);
 const systemPrincipalEncoded = { component: "Runtime", kind: "System" } as const;
-const systemPrincipal = Result.getOrThrow(S.decodeUnknownResult(Principal)(systemPrincipalEncoded));
+const systemPrincipal = Result.getOrThrow(S.decodeResult(Principal)(systemPrincipalEncoded));
 const contradictionCandidatePublicId = PublicEntityId.factory(ContradictionIdentity.ContradictionCandidateId);
 const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
   ContradictionReviewScope.of({ orgId, sourceScopeRef: "workspace:1" });

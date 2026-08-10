@@ -5,8 +5,8 @@ import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const { report, value: SafeObjectArbitrary } = S.toArbitrary(SafeObject, { report: true });
-const SafeObjectFromObjectKeywordArbitrary = S.toArbitrary(SafeObjectFromObjectKeyword);
+const SafeObjectArbitrary = S.toArbitrary(SafeObject)(fc);
+const SafeObjectFromObjectKeywordArbitrary = S.toArbitrary(SafeObjectFromObjectKeyword)(fc);
 
 describe("SafeObject", () => {
   const decode = S.decodeUnknownEffect(SafeObject);
@@ -62,10 +62,8 @@ describe("SafeObject", () => {
     })
   );
 
-  it("derives warning-free arbitrary values that round-trip", () => {
+  it("derives arbitrary values that round-trip", () => {
     const isSafeObject = S.is(SafeObject);
-
-    expect(report.warnings).toEqual([]);
 
     fc.assert(
       fc.property(SafeObjectArbitrary, (value) => {

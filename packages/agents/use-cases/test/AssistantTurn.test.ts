@@ -34,7 +34,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
   it("models history as a role-tagged union of user and assistant items", () => {
-    const decoded = S.decodeUnknownSync(TurnHistoryItem)({ role: "user", text: "hello" });
+    const decoded = S.decodeSync(TurnHistoryItem)({ role: "user", text: "hello" });
     const user = userItem("hello");
     const assistant = assistantItem("hi");
 
@@ -83,7 +83,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }
@@ -104,7 +104,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
 
       const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata);
       const json = yield* S.encodeEffect(JsonProviderUsage)(usage);
-      const decoded = yield* S.decodeUnknownEffect(JsonProviderUsage)(json);
+      const decoded = yield* S.decodeEffect(JsonProviderUsage)(json);
 
       expect(decoded).toStrictEqual(usage);
       expect(O.isNone(decoded.stopReason)).toBe(true);

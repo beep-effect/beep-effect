@@ -83,20 +83,20 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   expect(encode(schema, decoded)).toEqual(encoded);
 };
 
-const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput);
-const EndpointArbitrary = S.toArbitrary(XAiEndpoint);
-const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions);
-const ErrorArbitrary = S.toArbitrary(XAiError);
-const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl);
-const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode);
-const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions);
-const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName);
-const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar);
-const QueryValueArbitrary = S.toArbitrary(XAiQueryValue);
-const ResponseArbitrary = S.toArbitrary(XAiResponse);
-const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent);
-const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl);
-const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent);
+const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput)(fc);
+const EndpointArbitrary = S.toArbitrary(XAiEndpoint)(fc);
+const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions)(fc);
+const ErrorArbitrary = S.toArbitrary(XAiError)(fc);
+const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl)(fc);
+const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode)(fc);
+const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions)(fc);
+const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName)(fc);
+const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar)(fc);
+const QueryValueArbitrary = S.toArbitrary(XAiQueryValue)(fc);
+const ResponseArbitrary = S.toArbitrary(XAiResponse)(fc);
+const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent)(fc);
+const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl)(fc);
+const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent)(fc);
 
 const endpointIds = () => sortStrings(A.map(XAI_ENDPOINTS, (descriptor) => descriptor.id));
 
@@ -264,6 +264,10 @@ const requestFor = (descriptor: XAiEndpointDescriptor): XAiRequestOptions => {
 };
 
 describe("@beep/xai", () => {
+  it("constructs language models in data-last form", () => {
+    expect(XAiLanguageModel.model()("grok-4")).toBeDefined();
+  });
+
   it("keeps encoded xAI schema wire shapes byte-identical", () => {
     const descriptor = XAI_ENDPOINTS[0];
     if (descriptor === undefined) {
@@ -365,11 +369,11 @@ describe("@beep/xai", () => {
     expect(encode(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions)).toEqual({
       model: "grok-3",
     });
-    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpStatusCode)(99))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiHttpStatusCode)(99))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
   });
 
   it("round-trips crispened xAI schemas through their encoded form", () => {

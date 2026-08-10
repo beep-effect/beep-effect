@@ -47,7 +47,7 @@ port = 5432
   it.effect(
     "maps invalid TOML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(TomlTextToUnknown)("invalid = = ="));
+      const result = yield* Effect.exit(S.decodeEffect(TomlTextToUnknown)("invalid = = ="));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {

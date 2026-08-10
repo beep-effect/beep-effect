@@ -204,15 +204,15 @@ export const makeOntologyMcpTransportLayer = (options: {
   // layer's output is `never`.
   const governedHttpClient = Layer.fresh(FetchHttpClient.layer).pipe(
     Layer.provide(
-      GovernedEgressLive(
-        GovernedEgressOptions.make({
+      GovernedEgressLive({
+        grant: GovernedEgressOptions.make({
           grantTtl: ontologySessionGrantTtl,
           operation: GrantOperation.make("http-egress"),
           purpose: GrantPurpose.make("ontology-provenance-publication"),
           resource: GrantResource.make("ontology-workspace"),
         }),
-        options.egressFetch
-      )
+        baseFetch: options.egressFetch,
+      })
     )
   );
   const publish = sanitizedToolkit(OntologyPublishToolkit).pipe(

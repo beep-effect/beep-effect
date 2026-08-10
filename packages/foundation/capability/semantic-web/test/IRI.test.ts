@@ -20,20 +20,18 @@ describe("@beep/semantic-web IRI compatibility re-export", () => {
 
 describe("IRI", () => {
   it("accepts representative internationalized and relative forms through the facade", () => {
-    expect(S.decodeUnknownSync(IRI)("https://例え.テスト/δοκιμή?q=値#片段")).toBe(
-      "https://例え.テスト/δοκιμή?q=値#片段"
-    );
-    expect(S.decodeUnknownSync(AbsoluteIRI)("mailto:用户@example.org")).toBe("mailto:用户@example.org");
-    expect(S.decodeUnknownSync(IRIReference)("../résumé/δοκιμή?x=値#片段")).toBe("../résumé/δοκιμή?x=値#片段");
-    expect(S.decodeUnknownSync(RelativeIRIReference)("folder/child:leaf")).toBe("folder/child:leaf");
+    expect(S.decodeSync(IRI)("https://例え.テスト/δοκιμή?q=値#片段")).toBe("https://例え.テスト/δοκιμή?q=値#片段");
+    expect(S.decodeSync(AbsoluteIRI)("mailto:用户@example.org")).toBe("mailto:用户@example.org");
+    expect(S.decodeSync(IRIReference)("../résumé/δοκιμή?x=値#片段")).toBe("../résumé/δοκιμή?x=値#片段");
+    expect(S.decodeSync(RelativeIRIReference)("folder/child:leaf")).toBe("folder/child:leaf");
   });
 
   it("rejects invalid facade inputs with the RDF schema diagnostics", () => {
-    expect(() => S.decodeUnknownSync(IRI)("https://example.com/%ZZ")).toThrow("Expected a valid RFC 3987 IRI");
-    expect(() => S.decodeUnknownSync(AbsoluteIRI)("https://example.com/path#frag")).toThrow(
+    expect(() => S.decodeSync(IRI)("https://example.com/%ZZ")).toThrow("Expected a valid RFC 3987 IRI");
+    expect(() => S.decodeSync(AbsoluteIRI)("https://example.com/path#frag")).toThrow(
       "Expected a valid RFC 3987 absolute IRI"
     );
-    expect(() => S.decodeUnknownSync(RelativeIRIReference)("folder:child/leaf")).toThrow(
+    expect(() => S.decodeSync(RelativeIRIReference)("folder:child/leaf")).toThrow(
       "Expected a valid RFC 3987 relative IRI reference"
     );
   });

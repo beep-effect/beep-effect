@@ -12,7 +12,7 @@ const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Pro
   Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 const sortedRuleNames = [...RULE_NAMES].sort();
-const RuleRegistryArbitrary = S.toArbitrary(RuleRegistrySchema);
+const RuleRegistryArbitrary = S.toArbitrary(RuleRegistrySchema)(fc);
 const decodeRuleRegistry = S.decodeUnknownSync(RuleRegistrySchema);
 const encodeRuleRegistry = S.encodeSync(RuleRegistrySchema);
 

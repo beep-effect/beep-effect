@@ -12,7 +12,7 @@ import { AtomRegistry } from "effect/unstable/reactivity";
 // app thirty seconds.
 const IDLE_TTL_MS = 40;
 
-const olderThread = S.decodeUnknownSync(WorkspaceIdentity.ThreadId)(7);
+const olderThread = S.decodeSync(WorkspaceIdentity.ThreadId)(7);
 
 describe("selected thread lifetime", () => {
   it.live(

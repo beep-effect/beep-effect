@@ -173,7 +173,7 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
           return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
-        return Effect.mapBothEager(SchemaParser.decodeUnknownEffect(values)(A.fromIterable(input), options), {
+        return Effect.mapBothEager(SchemaParser.decodeEffect(values)(A.fromIterable(input), options), {
           onSuccess: MutableHashSet_.fromIterable,
           onFailure: (issue) => new SchemaIssue.Composite(ast, [new SchemaIssue.Pointer(["values"], issue)]),
         });

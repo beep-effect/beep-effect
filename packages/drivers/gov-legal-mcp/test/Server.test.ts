@@ -323,22 +323,16 @@ describe("gov-legal MCP frozen contract", () => {
           S.encodeEffect(McpSchema.Tool)(tool).pipe(Effect.flatMap(S.decodeUnknownEffect(McpSchema.Tool)))
         );
         const listing = McpSchema.ListToolsResult.make({ tools });
-        yield* S.decodeUnknownEffect(McpSchema.ListToolsResult)(
-          yield* S.encodeEffect(McpSchema.ListToolsResult)(listing)
-        );
+        yield* S.decodeEffect(McpSchema.ListToolsResult)(yield* S.encodeEffect(McpSchema.ListToolsResult)(listing));
 
-        const titlesArguments = yield* S.decodeUnknownEffect(EcfrListTitlesParams)({});
-        const searchArguments = yield* S.decodeUnknownEffect(EcfrSearchParams)(ecfrSearchArguments);
-        const structureArguments = yield* S.decodeUnknownEffect(EcfrDatedTitleParams)(ecfrStructureArguments);
+        const titlesArguments = yield* S.decodeEffect(EcfrListTitlesParams)({});
+        const searchArguments = yield* S.decodeEffect(EcfrSearchParams)(ecfrSearchArguments);
+        const structureArguments = yield* S.decodeEffect(EcfrDatedTitleParams)(ecfrStructureArguments);
         const govinfoSearchArguments = yield* S.decodeUnknownEffect(Search.Payload)(govinfoArguments);
-        yield* S.decodeUnknownEffect(EcfrListTitlesParams)(
-          yield* S.encodeEffect(EcfrListTitlesParams)(titlesArguments)
-        );
-        yield* S.decodeUnknownEffect(EcfrSearchParams)(yield* S.encodeEffect(EcfrSearchParams)(searchArguments));
-        yield* S.decodeUnknownEffect(EcfrDatedTitleParams)(
-          yield* S.encodeEffect(EcfrDatedTitleParams)(structureArguments)
-        );
-        yield* S.decodeUnknownEffect(Search.Payload)(yield* S.encodeEffect(Search.Payload)(govinfoSearchArguments));
+        yield* S.decodeEffect(EcfrListTitlesParams)(yield* S.encodeEffect(EcfrListTitlesParams)(titlesArguments));
+        yield* S.decodeEffect(EcfrSearchParams)(yield* S.encodeEffect(EcfrSearchParams)(searchArguments));
+        yield* S.decodeEffect(EcfrDatedTitleParams)(yield* S.encodeEffect(EcfrDatedTitleParams)(structureArguments));
+        yield* S.decodeEffect(Search.Payload)(yield* S.encodeEffect(Search.Payload)(govinfoSearchArguments));
 
         const requests = [
           { name: "ecfr_list_titles", arguments: {} },
@@ -346,7 +340,7 @@ describe("gov-legal MCP frozen contract", () => {
           { name: "ecfr_get_structure", arguments: ecfrStructureArguments },
           { name: "govinfo_search", arguments: govinfoArguments },
         ];
-        yield* Effect.forEach(requests, (request) => S.decodeUnknownEffect(McpSchema.CallTool.payloadSchema)(request));
+        yield* Effect.forEach(requests, (request) => S.decodeEffect(McpSchema.CallTool.payloadSchema)(request));
 
         const titles = yield* server.callTool(A.getUnsafe(requests, 0));
         const search = yield* server.callTool(A.getUnsafe(requests, 1));
@@ -362,10 +356,10 @@ describe("gov-legal MCP frozen contract", () => {
         const searchResult = yield* S.decodeUnknownEffect(SearchResultsResponse)(search.structuredContent);
         const structureResult = yield* S.decodeUnknownEffect(StructureNode)(structure.structuredContent);
         const govinfoResult = yield* S.decodeUnknownEffect(Search.Success)(govinfo.structuredContent);
-        yield* S.decodeUnknownEffect(TitlesResponse)(yield* S.encodeEffect(TitlesResponse)(titlesResult));
-        yield* S.decodeUnknownEffect(SearchResultsResponse)(yield* S.encodeEffect(SearchResultsResponse)(searchResult));
-        yield* S.decodeUnknownEffect(StructureNode)(yield* S.encodeEffect(StructureNode)(structureResult));
-        yield* S.decodeUnknownEffect(Search.Success)(yield* S.encodeEffect(Search.Success)(govinfoResult));
+        yield* S.decodeEffect(TitlesResponse)(yield* S.encodeEffect(TitlesResponse)(titlesResult));
+        yield* S.decodeEffect(SearchResultsResponse)(yield* S.encodeEffect(SearchResultsResponse)(searchResult));
+        yield* S.decodeEffect(StructureNode)(yield* S.encodeEffect(StructureNode)(structureResult));
+        yield* S.decodeEffect(Search.Success)(yield* S.encodeEffect(Search.Success)(govinfoResult));
       })
     );
 
@@ -536,7 +530,7 @@ describe("gov-legal MCP frozen contract", () => {
   );
 });
 
-const ToolNameCandidateArbitrary = S.toArbitrary(ToolNameCandidate);
+const ToolNameCandidateArbitrary = S.toArbitrary(ToolNameCandidate)(fc);
 
 const encodeThrowing = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
@@ -633,7 +627,7 @@ describe("tool-name report determinism", () => {
         assert.isFalse(Str.includes("\r")(rendered));
         assert.isTrue(Str.endsWith("\n")(rendered));
         assert.isFalse(Str.endsWith("\n\n")(rendered));
-        yield* S.decodeUnknownEffect(S.fromJsonString(ToolNameCollisionReport))(rendered);
+        yield* S.decodeEffect(S.fromJsonString(ToolNameCollisionReport))(rendered);
       })
     );
   });

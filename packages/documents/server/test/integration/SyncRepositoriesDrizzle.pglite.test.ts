@@ -50,7 +50,7 @@ const makeMigrationCapableLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -66,12 +66,12 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
-const remoteId = S.decodeUnknownSync(RemoteItemId)("9001");
-const syncItemOne = S.decodeUnknownSync(Documents.SyncItemId)(1);
-const zeroAttempts = S.decodeUnknownSync(NonNegativeInt)(0);
-const generationOne = S.decodeUnknownSync(NonNegativeInt)(1);
+const remoteId = S.decodeSync(RemoteItemId)("9001");
+const syncItemOne = S.decodeSync(Documents.SyncItemId)(1);
+const zeroAttempts = S.decodeSync(NonNegativeInt)(0);
+const generationOne = S.decodeSync(NonNegativeInt)(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({

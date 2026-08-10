@@ -123,7 +123,7 @@ describe("@beep/file-processing SourceText", () => {
 
   it("derives only relationally valid source-text pages", () =>
     fc.assert(
-      fc.property(S.toArbitrary(SourceTextPage), (page) => {
+      fc.property(S.toArbitrary(SourceTextPage)(fc), (page) => {
         expect(page.pageIndex).toBeLessThan(page.pageCount);
         expect(page.startOffset).toBeLessThanOrEqual(page.endOffset);
         expect(page.endOffset).toBeLessThanOrEqual(page.totalCodeUnits);

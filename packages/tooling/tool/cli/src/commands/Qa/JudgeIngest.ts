@@ -121,7 +121,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
       ),
     onSome: Effect.succeed,
   });
-  const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(block).pipe(
+  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(block).pipe(
     QaCommandError.mapError("qa judge-ingest could not parse the judge's final JSON block.")
   );
   return yield* decodeQaInventory(parsed).pipe(

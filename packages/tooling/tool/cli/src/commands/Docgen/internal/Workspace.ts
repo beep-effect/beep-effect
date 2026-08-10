@@ -356,11 +356,7 @@ export const discoverDocgenWorkspacePackages: (
  */
 export const resolveDocgenWorkspacePackage: {
   (
-    selector: string,
     options?: ResolveDocgenWorkspacePackageOptions
-  ): Effect.Effect<DocgenWorkspacePackage, DomainError | NoSuchFileError, FileSystem.FileSystem | Path.Path | FsUtils>;
-  (
-    options: ResolveDocgenWorkspacePackageOptions
   ): (
     selector: string
   ) => Effect.Effect<
@@ -368,6 +364,10 @@ export const resolveDocgenWorkspacePackage: {
     DomainError | NoSuchFileError,
     FileSystem.FileSystem | Path.Path | FsUtils
   >;
+  (
+    selector: string,
+    options?: ResolveDocgenWorkspacePackageOptions
+  ): Effect.Effect<DocgenWorkspacePackage, DomainError | NoSuchFileError, FileSystem.FileSystem | Path.Path | FsUtils>;
 } = dual(
   isResolveDocgenWorkspacePackageDataFirst,
   Effect.fn("DocgenOperations.resolveDocgenWorkspacePackage")(function* (

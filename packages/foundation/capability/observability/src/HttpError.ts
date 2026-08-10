@@ -49,11 +49,11 @@ const serverStatusAttributes = <Status extends number>(status: Status) =>
     status_class: "5xx",
   }) as const;
 
-type StatusErrorPipeableCause = Error | object | number | boolean | bigint | symbol | null | undefined;
-
 type StatusErrorConstructor<ErrorValue> = {
+  // Data-first first: a lone `string` binds to `message`, so the data-last
+  // overload never absorbs it even though its `cause` accepts `unknown`.
   (message: string, cause?: unknown): ErrorValue;
-  (cause: StatusErrorPipeableCause): (message: string) => ErrorValue;
+  (cause?: unknown): (message: string) => ErrorValue;
 };
 
 const isStatusErrorDataFirst = (args: IArguments): boolean => args.length >= 2 || P.isString(args[0]);

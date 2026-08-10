@@ -1590,7 +1590,7 @@ const normalizeQuery = (
     O.match({
       onNone: () => Effect.succeed(O.none<VeniceAIEncodedQuery>()),
       onSome: (value) =>
-        S.decodeUnknownEffect(VeniceAIEncodedQuery)(value).pipe(
+        S.decodeEffect(VeniceAIEncodedQuery)(value).pipe(
           Effect.map(O.some),
           Effect.mapError(() => VeniceAIError.fromDescriptor(descriptor, "request encoding"))
         ),

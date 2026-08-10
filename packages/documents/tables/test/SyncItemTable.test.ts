@@ -16,7 +16,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SyncItemArbitrary = S.toArbitrary(DomainSyncItem.SyncItem);
+const SyncItemArbitrary = S.toArbitrary(DomainSyncItem.SyncItem)(fc);
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
 
 const indexConfigNamed = (name: string) =>

@@ -413,6 +413,11 @@ export interface ForgetfulOperation<A, B, R = never, E = never> {
   readonly name: string;
 }
 
+interface Adjunction<A, B, R, E> {
+  readonly aggregate: ForgetfulOperation<B, A, R, E>;
+  readonly expand: FreeOperation<A, B, R, E>;
+}
+
 /**
  * Pair a free expansion with its aggregation operation.
  *
@@ -434,13 +439,16 @@ export interface ForgetfulOperation<A, B, R = never, E = never> {
  * @category constructors
  * @since 0.0.0
  */
-export const makeAdjunction = <A, B, R, E>(
-  free: FreeOperation<A, B, R, E>,
-  forgetful: ForgetfulOperation<B, A, R, E>
-): {
-  readonly expand: FreeOperation<A, B, R, E>;
-  readonly aggregate: ForgetfulOperation<B, A, R, E>;
-} => ({ expand: free, aggregate: forgetful });
+export const makeAdjunction: {
+  <A, B, R, E>(free: FreeOperation<A, B, R, E>, forgetful: ForgetfulOperation<B, A, R, E>): Adjunction<A, B, R, E>;
+  <A, B, R, E>(forgetful: ForgetfulOperation<B, A, R, E>): (free: FreeOperation<A, B, R, E>) => Adjunction<A, B, R, E>;
+} = dual(
+  2,
+  <A, B, R, E>(free: FreeOperation<A, B, R, E>, forgetful: ForgetfulOperation<B, A, R, E>): Adjunction<A, B, R, E> => ({
+    expand: free,
+    aggregate: forgetful,
+  })
+);
 
 // =============================================================================
 // Utility Operations

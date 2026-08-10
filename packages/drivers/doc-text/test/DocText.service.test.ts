@@ -31,7 +31,7 @@ const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = encode(schema, value);
       const decoded = decode(schema, encoded);
 
@@ -43,13 +43,9 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: 
 };
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
   ),
 });
@@ -67,7 +63,7 @@ const makeOperation = Effect.fn("DocTextTest.makeOperation")(function* (
   bytes: Uint8Array,
   maxMaterializedBytes?: number
 ) {
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)(`fixture.${extension}`);
+  const relativePath = yield* S.decodeEffect(PosixPath)(`fixture.${extension}`);
 
   return ExtractFileOperation.make({
     format,

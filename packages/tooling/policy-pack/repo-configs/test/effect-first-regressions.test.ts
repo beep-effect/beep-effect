@@ -1,9 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSnapshotCodegen";
+import { resolveImportSpecifierImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
+import * as O from "effect/Option";
 
 const docsEslintConfigPath = fileURLToPath(new URL("../src/eslint/DocsESLintConfig.ts", import.meta.url));
 const requireCategoryTagRulePath = fileURLToPath(new URL("../src/eslint/RequireCategoryTagRule.ts", import.meta.url));
@@ -92,5 +94,12 @@ layer(NodeServices.layer)("effect-first regressions", (it) => {
         expect(actualGeneratedSnapshot).toBe(expectedGeneratedSnapshot);
       })
     );
+
+    it("resolves import kinds in data-first and data-last forms", () => {
+      expect(O.getOrUndefined(resolveImportSpecifierImportKind({ importKind: "type" }))).toBe("type");
+      expect(O.getOrUndefined(resolveImportSpecifierImportKind({}, "value"))).toBe("value");
+      expect(O.getOrUndefined(resolveImportSpecifierImportKind("type")({ importKind: "value" }))).toBe("value");
+      expect(O.isNone(resolveImportSpecifierImportKind(undefined)({}))).toBe(true);
+    });
   });
 });

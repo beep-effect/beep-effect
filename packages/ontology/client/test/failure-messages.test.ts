@@ -15,7 +15,7 @@ import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeUnknownSync(SessionId)("session-1"),
+    id: S.decodeSync(SessionId)("session-1"),
     baseDataset: makeDataset([]),
   })
 );

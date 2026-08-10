@@ -212,7 +212,7 @@ const roundOrDiscovered = (
   O.match(round, {
     onNone,
     onSome: (value) =>
-      S.decodeUnknownEffect(RoundNumber)(value).pipe(
+      S.decodeEffect(RoundNumber)(value).pipe(
         QaCommandError.mapError(`qa --round ${value} is not a positive round number.`)
       ),
   });

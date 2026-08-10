@@ -539,7 +539,7 @@ describe("converter round trips over the whole schema", () => {
     toInsert: (entity: Schema["Type"]) => Result.Result<Insert, S.SchemaError>,
     fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>
   ): void => {
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const equivalent = S.toEquivalence(schema);
 
     fc.assert(

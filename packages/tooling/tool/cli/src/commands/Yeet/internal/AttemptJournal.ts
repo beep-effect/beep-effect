@@ -6,15 +6,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetVerdict } from "./Verdict.ts";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
@@ -135,7 +138,10 @@ const encodeEvent = S.encodeUnknownEffect(S.fromJsonString(YeetAttemptJournalEve
  * @category decoding
  * @since 0.0.0
  */
-export const decodeYeetAttemptJournalEvent = S.decodeUnknownEffect(S.fromJsonString(YeetAttemptJournalEvent));
+export const decodeYeetAttemptJournalEvent: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<YeetAttemptJournalEvent, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<YeetAttemptJournalEvent, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(YeetAttemptJournalEvent)));
 
 /**
  * Resolve the branch-scoped attempt journal path.

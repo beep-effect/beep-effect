@@ -30,9 +30,9 @@ import {
 } from "./Pcl.models.ts";
 import type { Effect } from "effect";
 
-const caseArbitrary = S.toArbitrary(CaseResult);
-const partyArbitrary = S.toArbitrary(PartyResult);
-const receiptArbitrary = S.toArbitrary(Receipt);
+const caseArbitrary = S.toArbitrary(CaseResult)(FastCheck);
+const partyArbitrary = S.toArbitrary(PartyResult)(FastCheck);
+const receiptArbitrary = S.toArbitrary(Receipt)(FastCheck);
 
 /**
  * Generate schema-valid case rows with deterministic FastCheck seeding.
