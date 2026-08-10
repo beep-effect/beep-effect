@@ -577,6 +577,33 @@ const fetchText = (url: string) =>
   })
 ```
 
+### EF-22b: `Result` boundaries must be lifted with `Effect.fromResult`
+
+- A `Result` is not an `Effect`. `Effect.gen` and `Effect.fn` / `Effect.fnUntraced`
+  constrain their yields to `Effect<any, any, any>`, and `Result` carries a
+  different TypeId, so `yield* someResult` is rejected.
+- Lift it with `Effect.fromResult`, whose signature is
+  `<A, E>(result: Result<A, E>) => Effect<A, E>`.
+- This is the standing contract for the `to<Entity>Insert` table converters,
+  which return `Result` by design; every call site inside a generator bridges.
+- The diagnostic is easy to misread. In the common shape
+  `it.effect(name, Effect.fnUntraced(function* () { ... }))` the error is a
+  `TS2769` "No overload matches this call" wall whose root cause
+  (`Property '[TypeId]' is missing in type 'Success<…>'`) sits several frames
+  down. Bypass the type error and the fiber dies at runtime with
+  `Fiber.runLoop: Not a valid effect`.
+
+Example:
+
+```ts
+import { Effect } from "effect"
+
+const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDisposition) {
+  const row = yield* Effect.fromResult(toCandorDispositionInsert(disposition))
+  return yield* write(row)
+})
+```
+
 ### EF-23: Resource lifetime must be explicit and scoped
 
 - Use `Effect.acquireUseRelease` for acquisition/use/release flows.

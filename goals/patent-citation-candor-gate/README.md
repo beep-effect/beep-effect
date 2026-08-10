@@ -101,6 +101,48 @@ owner-directed scope widening — see the SPEC's "no unrelated refactors" criter
 | IDS fact families as presence-only facts | `packages/law-practice/domain/src/entities/IdsSubmissionFact/` — candidate window (never a compliance label), 1.17(p)/(v) fees, 1.97(e) statement + 1.98(a)(4) assertion, 1.98 content presence, office treatment as observed, own operative date per act |
 | Live filing-promotion consultation | **Deferred** — SPEC decisions 10 and 11; see `research/01-gate-shape-check.md` |
 
+## Unowned Follow-Ons (audited 2026-08-10)
+
+This packet is closed, so nothing below is scheduled. The audit that produced this
+list checked every active goal and exploration: **no packet owns any of the five.**
+Decision 55's "revival by citation" makes this section the citation target — a
+future packet claims an item by naming it here, rather than rediscovering it.
+
+Two are already normative elsewhere and are listed for routing only:
+
+1. **Cross-slice filing-promotion consultation + its `foundation/capability` gate
+   port.** Recorded in SPEC decisions 10 and 11, the Criterion-to-Proof map above,
+   and the SPEC's pending Exception Ledger row, with
+   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) as
+   standing evidence. Unowned, not unrecorded.
+2. **Widening the quantified gate set** so examiner-observed events gate in their
+   own right. Parked by SPEC decision 4 and named-not-graduated in
+   `explorations/patent-citation-candor-gate/MAP.md`. Unowned, not unrecorded.
+
+Three lived only in the 2026-08-05 reflection until this audit and would have been
+lost with it:
+
+3. **No ST.13 ↔ USPTO-normalized conversion on `CitingApplicationIdentity`,** so a
+   filing recorded under both representations gates twice. This is deliberate —
+   translating an eight-digit USPTO number to ST.13 needs USPTO's
+   series-code-to-year table, and inventing one would fabricate legal identity. The
+   reflection assigns it to "the reference-reconciliation follow-on"; **that packet
+   does not exist.** Whoever mints it inherits this.
+4. **The Drizzle repository filters by jsonb equality on the encoded citing
+   application, and `citing_application` carries no index** — only `org_id` and
+   `source` are indexed. Correct and index-free today; a filing with many events
+   will table-scan. A generated column or an expression index is the answer when
+   volume justifies it.
+5. **No shared `Crypto.Crypto` test layer in `@beep/test-utils`,** so every proof
+   reaching `verifyTextAnchor` supplies its own via `BunCrypto.layer`,
+   `NodeCrypto.layer`, or a hand-roll. Sharper than the reflection's version: the
+   only *real* Web-Crypto hand-roll is
+   `packages/law-practice/use-cases/test/CandorPolicy.test.ts`, so promoting a real
+   layer would deduplicate exactly one site — but the identity-stub shape
+   (`digest: (_algorithm, data) => Effect.succeed(data)`,
+   `randomBytes: (size) => new Uint8Array(size).fill(1)`) already repeats verbatim
+   in three files. The stub is what has earned promotion, not the real layer.
+
 ## Notes
 
 - One packet, two strict rungs: rung 1 is the in-memory domain proof

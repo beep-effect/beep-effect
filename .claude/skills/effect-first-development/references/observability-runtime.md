@@ -13,6 +13,7 @@ Loaded on demand from `effect-first-development/SKILL.md`. Repository laws win o
 - [14) JSON parse / stringify with Schema](#14-json-parse--stringify-with-schema)
 - [15) Runtime boundary for running effects](#15-runtime-boundary-for-running-effects)
 - [16) Promise boundaries with `Effect.tryPromise`](#16-promise-boundaries-with-effecttrypromise)
+- [16b) `Result` boundaries with `Effect.fromResult`](#16b-result-boundaries-with-effectfromresult)
 - [17) Scoped resource safety](#17-scoped-resource-safety)
 
 ### 10) Observability and metrics
@@ -193,6 +194,23 @@ const fetchBody = (url: string) =>
     try: () => fetch(url).then((response) => response.text()),
     catch: (cause) => new HttpRequestError({ url, message: String(cause) })
   })
+```
+
+### 16b) `Result` boundaries with `Effect.fromResult`
+
+A `Result` is not an `Effect` — generator yields are constrained to
+`Effect<any, any, any>`, so `yield* someResult` is rejected. The error arrives as an
+opaque `TS2769` "No overload matches this call" wall; bypass it and the fiber dies with
+`Fiber.runLoop: Not a valid effect`. The `to<Entity>Insert` table converters return
+`Result` by design, so every generator call site bridges. Law: `EF-22b`.
+
+```ts
+import { Effect } from "effect"
+
+const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDisposition) {
+  const row = yield* Effect.fromResult(toCandorDispositionInsert(disposition))
+  return yield* write(row)
+})
 ```
 
 ### 17) Scoped resource safety
