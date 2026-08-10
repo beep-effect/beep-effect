@@ -1,4 +1,11 @@
-/** Dialect-neutral collection of finite encoded string literals. */
+/**
+ * Collects finite string-literal domains from encoded Effect schemas.
+ *
+ * Dialect enum combinators share this traversal so runtime values and
+ * type-level literal unions follow the same schema boundary.
+ *
+ * @since 0.0.0
+ */
 import {
   append,
   appendAll,
@@ -54,16 +61,6 @@ const stringLiteralsFromAST = (
 
 /**
  * Collect a finite non-empty encoded string-literal union for a dialect adapter.
- *
- * **Example** (Collect two encoded values)
- *
- * ```ts
- * import { Literals } from "effect/Schema"
- * import { stringLiteralValues } from "./literals.ts"
- *
- * const Status = Literals(["draft", "active"])
- * console.log(stringLiteralValues(Status, (schema) => schema))
- * ```
  *
  * @category getters
  * @since 0.0.0

@@ -1,4 +1,11 @@
-/** SQLite model projection onto real `sqliteTable` builders. */
+/**
+ * Projects SQLite models onto real Drizzle `sqliteTable` builders.
+ *
+ * Encoded carriers, SQLite metadata, generated enum checks, and table extras
+ * share one projection path used by standalone tables and schema assembly.
+ *
+ * @since 0.0.0
+ */
 import { is as isDrizzleEntity, sql } from "drizzle-orm";
 import type { $Type, BuildColumns, HasDefault, HasGenerated, IsPrimaryKey, NotNull } from "drizzle-orm/column-builder";
 import {
@@ -75,7 +82,27 @@ type ApplyPrimaryKey<B, C extends SqliteColumn.Spec, M extends Meta.Meta> =
       : IsPrimaryKey<B>
     : B;
 
-/** Exact installed Drizzle builder type produced for one SQLite field. */
+/**
+ * Projects one schema-owned field to its exact Drizzle SQLite builder type.
+ *
+ * **Details**
+ *
+ * Encoded carrier, nullability, defaults, generation, and primary-key state
+ * become the Drizzle brands consumed by model inference.
+ *
+ * **Example** (Project a SQLite text builder)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { BuilderFor } from "@beep/effect-drizzle/sqlite"
+ *
+ * type StringBuilder = BuilderFor<typeof String>
+ * // => non-null SQLiteTextBuilder with string data
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
 export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
   ApplyGenerated<
     ApplyDefault<
@@ -91,11 +118,46 @@ export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
   Field.MetaFrom<I>
 >;
 
+/**
+ * Projects a SQLite field record to key-preserving Drizzle builder types.
+ *
+ * **Example** (Project SQLite builders)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { BuildersOf } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Builders = BuildersOf<{ readonly name: typeof String }>
+ * type NameBuilder = Builders["name"] // => builder for the name field
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
 export type BuildersOf<F extends FieldsInput> = {
   readonly [K in keyof F & string]: BuilderFor<F[K]>;
 };
 
-/** Fully typed Drizzle SQLite table projected from one model. */
+/**
+ * Projects one model type to its complete Drizzle SQLite table type.
+ *
+ * **Details**
+ *
+ * The result preserves model field keys and every builder brand used by
+ * `$inferSelect` and `$inferInsert`.
+ *
+ * **Example** (Name a projected SQLite table)
+ *
+ * ```ts
+ * import type { AnyModel, TableOf } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Table = TableOf<AnyModel>
+ * type Dialect = Table["_"]["dialect"] // => "sqlite"
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
 export type TableOf<M extends AnyModel> = SQLiteTableWithColumns<{
   name: string;
   schema: undefined;
@@ -157,6 +219,26 @@ const buildColumn = (
   );
 };
 
+/**
+ * Adds assembly-owned Drizzle extras beside a model's declared SQLite extras.
+ *
+ * **Details**
+ *
+ * Automatic enum checks run first, model extras second, and additional extras
+ * last. Schema assembly uses this seam for resolved foreign keys.
+ *
+ * **Example** (Declare no additional SQLite extras)
+ *
+ * ```ts
+ * import type { AdditionalExtras, AnyModel } from "@beep/effect-drizzle/sqlite"
+ *
+ * const none: AdditionalExtras<AnyModel> = () => []
+ * none({}) // => []
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
 export type AdditionalExtras<M extends AnyModel> = (
   columns: TableExtras.BoundColumns<M["sql"]["fields"]>,
 ) => ReadonlyArray<SQLiteTableExtraConfigValue>;
@@ -198,7 +280,40 @@ const enumChecks = (
     return [check(`${model.sql.tableName}_${snakeCase(key)}_enum_check`, sql`${column} in (${values})`)];
   });
 
-/** Project a model to a real Drizzle SQLite table. */
+/**
+ * Projects one model class into a real, fully typed Drizzle SQLite table.
+ *
+ * **When to use**
+ *
+ * Use when a standalone table needs no cross-model reference wiring. Use
+ * `schema` when foreign keys or RQBv2 relations are involved.
+ *
+ * **Details**
+ *
+ * Projection compiles storage classes, emits one `CHECK` per enum field, then
+ * appends model-declared and caller-supplied table extras.
+ *
+ * **Gotchas**
+ *
+ * SQLite enums are table-local checks rather than shared schema objects, so the
+ * same logical enum used on multiple tables produces multiple constraints.
+ * Arrays are rejected before projection because SQLite has no array columns.
+ *
+ * **Example** (Project a SQLite model)
+ *
+ * ```ts
+ * import { getTableName } from "drizzle-orm"
+ * import { String } from "effect/Schema"
+ * import { Model, toSqliteTable } from "@beep/effect-drizzle/sqlite"
+ *
+ * class User extends Model<User>("User")({ name: String }) {}
+ *
+ * getTableName(toSqliteTable(User)) // => "user"
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
 export function toSqliteTable<M extends AnyModel>(
   model: M,
   additionalExtras?: AdditionalExtras<M>,

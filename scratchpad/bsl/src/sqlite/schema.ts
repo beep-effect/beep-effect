@@ -1,4 +1,11 @@
-/** Cross-model SQLite assembly: typed FK validation, DDL, and RQBv2 relations. */
+/**
+ * Assembles SQLite models into validated Drizzle schema objects.
+ *
+ * The assembler resolves foreign keys, projects tables, and derives RQBv2
+ * relations while preserving SQLite's storage-class constraints.
+ *
+ * @since 0.0.0
+ */
 import {
   defineRelations,
   is as isDrizzleEntity,
@@ -46,12 +53,17 @@ import * as SqliteColumn from "./Column.ts";
 import { type TableOf, toSqliteTable } from "./table.ts";
 
 /**
- * Error raised when a cross-model reference cannot be resolved or validated.
+ * Reports a cross-model reference failure during SQLite schema assembly.
+ *
+ * **Details**
+ *
+ * Source table, field, and target table remain available for diagnosing
+ * dynamic or type-suppressed registries.
  *
  * **Example** (Construct an assembly error)
  *
  * ```ts
- * import { SchemaAssemblyError } from "./schema.ts"
+ * import { SchemaAssemblyError } from "@beep/effect-drizzle/sqlite"
  *
  * const error = SchemaAssemblyError.make({
  *   message: "missing target",
@@ -59,9 +71,11 @@ import { type TableOf, toSqliteTable } from "./table.ts";
  *   fieldName: "orgId",
  *   targetTable: "organization"
  * })
- * console.log(error._tag) // "SchemaAssemblyError"
+ * error._tag // => "SchemaAssemblyError"
+ * error.fieldName // => "orgId"
  * ```
  *
+ * @see {@link schema} for the assembly boundary that raises this error.
  * @category errors
  * @since 0.0.0
  */
@@ -81,16 +95,22 @@ export class SchemaAssemblyError extends TaggedError<SchemaAssemblyError>(
 ) {}
 
 /**
- * String-keyed collection of @beep/effect-drizzle models accepted by {@link schema}.
+ * Describes the string-keyed SQLite model registry accepted by {@link schema}.
+ *
+ * **Details**
+ *
+ * Registry keys become projected-table and relation-helper keys while model
+ * table names retain their own snake-case derivation.
  *
  * **Example** (Accept a model registry)
  *
  * ```ts
- * import {  } from "effect/Record"
- * import type { ModelRecord } from "./schema.ts"
+ * import { String } from "effect/Schema"
+ * import { Model, type ModelRecord } from "@beep/effect-drizzle/sqlite"
  *
- * const names = (models: ModelRecord) => Object.keys(models)
- * console.log(names)
+ * class User extends Model<User>("User")({ name: String }) {}
+ * type Models = { readonly user: typeof User }
+ * type Accepted = Models extends ModelRecord ? true : false // => true
  * ```
  *
  * @category models
@@ -192,7 +212,36 @@ type SchemaFailures<Models extends ModelRecord> = {
 }[keyof Models];
 
 /**
- * No-op on success or a readable carrier for incompatible references.
+ * Reduces a SQLite model registry to `unknown` or a readable reference diagnostic.
+ *
+ * **Details**
+ *
+ * Validation compares SQLite storage identity and encoded carrier for every
+ * declared reference; array depth remains zero by dialect law.
+ *
+ * **Example** (Inspect SQLite reference validation)
+ *
+ * ```ts
+ * import { Int, String } from "effect/Schema"
+ * import { Model, integer, primaryKey, references, text, type ValidateSchema } from "@beep/effect-drizzle/sqlite"
+ *
+ * class UserId {
+ *   static readonly tableName = "user"
+ *   static readonly entityType = "User"
+ * }
+ * class User extends Model<User>("User")({ id: Int.pipe(integer(), primaryKey()) }) {}
+ * class Membership extends Model<Membership>("Membership")({
+ *   userId: Int.pipe(integer(), references(UserId))
+ * }) {}
+ * class Broken extends Model<Broken>("Broken")({
+ *   userId: String.pipe(text(), references(UserId))
+ * }) {}
+ *
+ * type Accepted = ValidateSchema<{ user: typeof User; membership: typeof Membership }>
+ * // => unknown
+ * type Rejected = ValidateSchema<{ user: typeof User; broken: typeof Broken }>
+ * // => ~effect-drizzle.error: "foreign-key SQL identities do not match"
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -202,17 +251,18 @@ export type ValidateSchema<Models extends ModelRecord> = [SchemaFailures<Models>
   : SchemaFailures<Models>;
 
 /**
- * Key-preserving Drizzle table projection of a @beep/effect-drizzle model registry.
+ * Projects registry keys to their exact Drizzle SQLite table types.
  *
  * **Example** (Name a projected registry)
  *
  * ```ts
- * import type { ModelRecord, TablesOf } from "./schema.ts"
+ * import type { ModelRecord, TablesOf } from "@beep/effect-drizzle/sqlite"
  *
  * type Tables = TablesOf<ModelRecord>
+ * type UserTable = Tables["user"] // => projected SQLite table
  * ```
  *
- * @category models
+ * @category projections
  * @since 0.0.0
  */
 export type TablesOf<Models extends ModelRecord> = {
@@ -220,14 +270,20 @@ export type TablesOf<Models extends ModelRecord> = {
 };
 
 /**
- * Drizzle RQBv2 relation-builder callback for a @beep/effect-drizzle model registry.
+ * Types the RQBv2 relation-builder callback derived for a SQLite registry.
+ *
+ * **Details**
+ *
+ * Forward, reverse, and recognized two-key junction relations share the same
+ * key-preserving table projection.
  *
  * **Example** (Name a relation config)
  *
  * ```ts
- * import type { ModelRecord, RelationsConfig } from "./schema.ts"
+ * import type { ModelRecord, RelationsConfig } from "@beep/effect-drizzle/sqlite"
  *
  * type Config = RelationsConfig<ModelRecord>
+ * // => callback from typed tables to an RQBv2 relation configuration
  * ```
  *
  * @category models
@@ -238,15 +294,20 @@ export type RelationsConfig<Models extends ModelRecord> = (
 ) => RelationsBuilderConfig<TablesOf<Models>>;
 
 /**
- * Complete cross-model @beep/effect-drizzle assembly returned by {@link schema}.
+ * Describes the complete SQLite assembly returned by {@link schema}.
+ *
+ * **Details**
+ *
+ * The assembly retains source models, projected tables, the reusable relation
+ * callback, and Drizzle's processed relation object.
  *
  * **Example** (Read assembled tables)
  *
  * ```ts
- * import type { Assembly, ModelRecord } from "./schema.ts"
+ * import type { Assembly, ModelRecord } from "@beep/effect-drizzle/sqlite"
  *
- * declare const assembly: Assembly<ModelRecord>
- * console.log(assembly.tables)
+ * type UserAssembly = Assembly<ModelRecord>
+ * type Tables = UserAssembly["tables"] // => key-preserving Drizzle tables
  * ```
  *
  * @category models
@@ -442,20 +503,40 @@ const collectJunctions = (
   );
 
 /**
- * Assemble models into mutually wired Drizzle tables and RQBv2 relations.
+ * Assembles models into wired SQLite tables and RQBv2 relations.
+ *
+ * **When to use**
+ *
+ * Use when models share references or callers need one Drizzle schema object
+ * for migrations and relational queries. Use `toSqliteTable` for a standalone
+ * model without cross-model wiring.
+ *
+ * **Details**
+ *
+ * Assembly validates every foreign key, projects all tables, applies generated
+ * enum checks and declared extras, then derives relations deterministically.
+ *
+ * **Gotchas**
+ *
+ * SQLite has no native named enum object. Each enum field becomes a table-local
+ * `CHECK`, so repeating one logical enum across tables duplicates its constraint.
+ * Foreign-key equality still requires matching storage identity and carrier.
  *
  * **Example** (Assemble one model)
  *
  * ```ts
  * import { String } from "effect/Schema"
- * import { Model } from "./model.ts"
- * import { schema } from "./schema.ts"
+ * import { getTableName } from "drizzle-orm"
+ * import { Model, schema } from "@beep/effect-drizzle/sqlite"
  *
  * class User extends Model<User>("User")({ name: String }) {}
- * console.log(schema({ user: User }).tables.user !== undefined) // true
+ * const assembly = schema({ user: User })
+ *
+ * getTableName(assembly.tables.user) // => "user"
  * ```
  *
- * @category constructors
+ * @see {@link ValidateSchema} for compile-time reference validation.
+ * @category factories
  * @since 0.0.0
  */
 export function schema<const Models extends ModelRecord>(

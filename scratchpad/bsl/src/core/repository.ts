@@ -1,4 +1,11 @@
-/** Optimistic repositories derived from @beep/effect-drizzle model metadata. */
+/**
+ * Derives optimistic repositories from model SQL metadata.
+ *
+ * The repository layer delegates ordinary CRUD to Effect SQL and owns the
+ * atomic compare-and-increment update required by versioned models.
+ *
+ * @since 0.0.0
+ */
 import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
 import type { Effect, Success } from "effect/Effect";
 import { findFirst } from "effect/Array";
@@ -16,7 +23,12 @@ import type * as Field from "./Field.ts";
 import { ModelInvariantError, type AnyModel } from "./model.ts";
 
 /**
- * Error returned when an optimistic update matches no current row version.
+ * Reports an optimistic update whose id/version pair matched no current row.
+ *
+ * **When to use**
+ *
+ * Use to recover from concurrent writes at a repository boundary, usually by
+ * reloading the entity or asking the caller to retry.
  *
  * **Details**
  *
@@ -26,12 +38,15 @@ import { ModelInvariantError, type AnyModel } from "./model.ts";
  * **Example** (Construct a version conflict)
  *
  * ```ts
- * import { VersionConflictError } from "./repository.ts"
+ * import { VersionConflictError } from
+ *   "@beep/effect-drizzle"
  *
  * const error = VersionConflictError.make({ table: "user", id: 1, expectedVersion: 2 })
- * console.log(error._tag) // "VersionConflictError"
+ * error._tag // => "VersionConflictError"
+ * error.expectedVersion // => 2
  * ```
  *
+ * @see {@link makeRepository} for the operation that produces this error.
  * @category errors
  * @since 0.0.0
  */
@@ -57,9 +72,30 @@ type IdKey<M extends EffectModel.Any> = keyof M["Type"] &
   string;
 
 /**
- * Field key marked as the model's optimistic version.
+ * Selects the field key marked as a model's optimistic version.
  *
- * @category models
+ * **Details**
+ *
+ * The projection inspects resolved SQL metadata and returns `never` when the
+ * model has no version field.
+ *
+ * **Example** (Infer a version key)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import { Model, type VersionKey } from
+ *   "@beep/effect-drizzle"
+ * import { default as defaultValue, integer, version } from
+ *   "@beep/effect-drizzle/pg"
+ *
+ * class User extends Model<User>("User")({
+ *   revision: Int.pipe(integer(), defaultValue(1), version())
+ * }) {}
+ *
+ * type Key = VersionKey<typeof User> // => "revision"
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export type VersionKey<M extends AnyModel> = {
@@ -79,9 +115,46 @@ type NativeRepository<M extends EffectModel.Any, Id extends IdKey<M>> = Success<
 >;
 
 /**
- * CRUD repository whose update is an atomic compare-and-increment operation.
+ * Exposes CRUD with an atomic compare-and-increment update operation.
  *
- * @category models
+ * **When to use**
+ *
+ * Use as an application port when writes must reject stale versions without a
+ * preceding read.
+ *
+ * **Details**
+ *
+ * Insert, lookup, and delete retain Effect SQL's native repository behavior.
+ * Update locates by id and expected version, excludes both from `SET`, and
+ * increments the stored version in the same statement.
+ *
+ * **Gotchas**
+ *
+ * The update payload must contain both the row id and current version even
+ * though neither value is written verbatim. Missing rows and stale rows both
+ * fail with {@link VersionConflictError}.
+ *
+ * **Example** (Name an optimistic repository port)
+ *
+ * ```ts
+ * import { Int, String } from "effect/Schema"
+ * import { Model, type Repository } from
+ *   "@beep/effect-drizzle"
+ * import { default as defaultValue, identity, integer, primaryKey, version } from
+ *   "@beep/effect-drizzle/pg"
+ *
+ * class User extends Model<User>("User")({
+ *   id: Int.pipe(integer(), identity("always"), primaryKey()),
+ *   email: String,
+ *   revision: Int.pipe(integer(), defaultValue(1), version())
+ * }) {}
+ *
+ * type UserRepository = Repository<typeof User, "id">
+ * // => CRUD port whose update can fail with VersionConflictError
+ * ```
+ *
+ * @see {@link makeRepository} for deriving this port from model metadata.
+ * @category repositories
  * @since 0.0.0
  */
 export type Repository<M extends EffectModel.Any, Id extends IdKey<M>> = Pick<
@@ -137,19 +210,65 @@ const requireVersion = (record: UnknownRecord, key: string, table: string): numb
 };
 
 /**
- * Build a repository whose version field is discovered from `pg.version()`.
+ * Builds a repository whose version field is discovered from model metadata.
  *
- * **Example** (Build an optimistic repository effect)
+ * **When to use**
+ *
+ * Use when a model has exactly one `version()` field and updates must be
+ * optimistic rather than Effect SQL's native id-only update.
+ *
+ * **Details**
+ *
+ * Repository acquisition is an Effect requiring `SqlClient`. The generated
+ * update performs one `UPDATE ... WHERE id = ... AND version = ... RETURNING`
+ * statement and increments the version inside SQL.
+ *
+ * **Gotchas**
+ *
+ * The id field must remain in the model's update variant as a row locator, and
+ * the version field is required in every update payload. A zero-row result
+ * deliberately cannot distinguish a missing id from a stale version.
+ *
+ * **Example** (Run an optimistic repository)
  *
  * ```ts
- * import { User } from "./fixtures.ts"
- * import { makeRepository } from "./repository.ts"
+ * import { PgliteTestLayer } from
+ *   "@beep/pglite"
+ * import { gen, provide, runPromise } from "effect/Effect"
+ * import { Int, String } from "effect/Schema"
+ * import { SqlClient } from "effect/unstable/sql/SqlClient"
+ * import { Model, makeRepository } from
+ *   "@beep/effect-drizzle"
+ * import { default as defaultValue, identity, integer, primaryKey, version } from
+ *   "@beep/effect-drizzle/pg"
  *
- * const repository = makeRepository(User, { spanPrefix: "User", idColumn: "id" })
- * console.log(repository)
+ * class User extends Model<User>("User")({
+ *   id: Int.pipe(integer(), identity("always"), primaryKey()),
+ *   email: String,
+ *   revision: Int.pipe(integer(), defaultValue(1), version())
+ * }) {}
+ *
+ * const program = gen(function*() {
+ *   const sql = yield* SqlClient
+ *   yield* sql`create table user (
+ *     id integer generated always as identity primary key,
+ *     email text not null,
+ *     revision integer not null default 1
+ *   )`
+ *   const repository = yield* makeRepository(User, {
+ *     spanPrefix: "User",
+ *     idColumn: "id"
+ *   })
+ *   return yield* repository.insert({ email: "ada@example.com" })
+ * })
+ *
+ * await runPromise(provide(program, PgliteTestLayer))
+ * // => User { id: 1, email: "ada@example.com", revision: 1 }
  * ```
  *
- * @category constructors
+ * @see {@link Repository} for the returned CRUD surface.
+ * @see {@link VersionConflictError} for stale or missing update matches.
+ * @category factories
  * @since 0.0.0
  */
 export const makeRepository = <const M extends RepositoryModel, const Id extends IdKey<M>>(

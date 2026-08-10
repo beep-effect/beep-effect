@@ -16,7 +16,7 @@ Create a PostgreSQL kit when several models share audit columns or table constra
 
 ```ts
 import { getTableName, sql } from "drizzle-orm"
-import * as S from "effect/Schema"
+import { Int, Literals, NullOr, String, Struct, isMaxLength } from "effect/Schema"
 import { Model as EffectModel } from "effect/unstable/schema"
 import { make } from "@beep/effect-drizzle"
 import { Table } from "@beep/effect-drizzle/pg"
@@ -26,7 +26,7 @@ const db = make({
   defaultColumns: (pg) => ({
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
-    rowVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version())
+    rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version())
   }),
   defaultExtras: (columns) => [
     Table.check(
@@ -43,24 +43,24 @@ Define models by piping SQL intent through Effect schemas. Bare schemas are deri
 const { Entity, Model, pg, schema, toPgTable, Repository } = db
 
 class Account extends Entity<Account>("Account")({
-  id: S.Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
-  email: S.String.check(S.isMaxLength(320)).pipe(
+  id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+  email: String.check(isMaxLength(320)).pipe(
     pg.varchar(320),
     pg.unique()
   ),
-  status: S.Literals(["active", "disabled"]).pipe(
+  status: Literals(["active", "disabled"]).pipe(
     pg.enum("account_status")
   ),
-  displayName: S.String,
-  settings: S.Struct({ theme: S.String }),
-  nickname: S.NullOr(S.String)
+  displayName: String,
+  settings: Struct({ theme: String }),
+  nickname: NullOr(String)
 }) {}
 
 class Membership extends Model<Membership>("Membership")(
   {
-    accountId: S.Int.pipe(pg.integer()),
-    organizationId: S.Int.pipe(pg.integer()),
-    role: S.Literals(["owner", "member"]).pipe(pg.enum())
+    accountId: Int.pipe(pg.integer()),
+    organizationId: Int.pipe(pg.integer()),
+    role: Literals(["owner", "member"]).pipe(pg.enum())
   },
   (columns) => [
     Table.compositePrimaryKey("membership_pk", [
@@ -76,9 +76,9 @@ const database = schema({
   membership: Membership
 })
 
-console.log(Account.sql.tableName) // "account"
-console.log(getTableName(accountTable)) // "account"
-console.log(getTableName(database.tables.account)) // "account"
+Account.sql.tableName // => "account"
+getTableName(accountTable) // => "account"
+getTableName(database.tables.account) // => "account"
 
 const AccountRepository = Repository(Account, {
   spanPrefix: "Account",

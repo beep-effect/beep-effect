@@ -1,4 +1,11 @@
-/** Dialect kit factory for invariant model defaults and shared @beep/effect-drizzle operators. */
+/**
+ * Creates dialect-bound modeling kits with invariant entity defaults.
+ *
+ * A kit fixes one SQL dialect, shared columns, and shared table extras once,
+ * while retaining the bare model factory as an explicit opt-out.
+ *
+ * @since 0.0.0
+ */
 import { contains, findFirst } from "effect/Array";
 import { fromUndefinedOr, isSome, match } from "effect/Option";
 import { isFunction } from "effect/Predicate";
@@ -33,14 +40,23 @@ import * as SqliteTable from "./sqlite/extras.ts";
 import { toSqliteTable } from "./sqlite/table.ts";
 
 /**
- * SQL dialects supported by {@link make}.
+ * Narrows the SQL dialects accepted by {@link make}.
  *
- * **Example** (Check the PostgreSQL dialect)
+ * **When to use**
+ *
+ * Use when validating configuration before selecting a dialect kit.
+ *
+ * **Details**
+ *
+ * The public root entrypoint exposes the literal union `"pg" | "sqlite"` for
+ * configuration and kit-selection signatures.
+ *
+ * **Example** (Select the PostgreSQL dialect)
  *
  * ```ts
- * import { Dialect } from "./kit.ts"
+ * import type { Dialect } from "@beep/effect-drizzle"
  *
- * console.log(Dialect.is.pg("pg")) // true
+ * type PostgreSQL = Extract<Dialect, "pg"> // => "pg"
  * ```
  *
  * @category schemas
@@ -53,17 +69,37 @@ export const Dialect = {
   },
 };
 /**
- * SQL dialect literal represented by {@link Dialect}.
- *
- * @category models
- * @since 0.0.0
  */
 export type Dialect = "pg" | "sqlite";
 
 /**
- * PostgreSQL kit configuration with invariant default fields and table extras.
+ * Configures invariant PostgreSQL fields and table extras for {@link make}.
  *
- * @category models
+ * **When to use**
+ *
+ * Use when every entity in a PostgreSQL slice must share columns or constraints.
+ *
+ * **Details**
+ *
+ * `defaultColumns` receives the PostgreSQL combinator namespace. Default extras
+ * run before model-local extras against the merged field record.
+ *
+ * **Gotchas**
+ *
+ * A kit entity cannot redeclare a default field key; use the bare `Model`
+ * returned by the kit when a table must opt out.
+ *
+ * **Example** (Describe PostgreSQL defaults)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { PgKitConfig } from "@beep/effect-drizzle"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Config = PgKitConfig<Defaults> // => PostgreSQL kit configuration
+ * ```
+ *
+ * @category configuration
  * @since 0.0.0
  */
 export interface PgKitConfig<Defaults extends PgFieldsInput> {
@@ -73,9 +109,33 @@ export interface PgKitConfig<Defaults extends PgFieldsInput> {
 }
 
 /**
- * SQLite kit configuration with invariant default fields and table extras.
+ * Configures invariant SQLite fields and table extras for {@link make}.
  *
- * @category models
+ * **When to use**
+ *
+ * Use when every entity in a SQLite slice must share columns or constraints.
+ *
+ * **Details**
+ *
+ * `defaultColumns` receives only SQLite operators, preventing PostgreSQL
+ * descriptor families from entering the merged model.
+ *
+ * **Gotchas**
+ *
+ * SQLite has no array column operator, and default field keys cannot be
+ * overridden by kit entities.
+ *
+ * **Example** (Describe SQLite defaults)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { SqliteKitConfig } from "@beep/effect-drizzle"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Config = SqliteKitConfig<Defaults> // => SQLite kit configuration
+ * ```
+ *
+ * @category configuration
  * @since 0.0.0
  */
 export interface SqliteKitConfig<Defaults extends SqliteFieldsInput> {
@@ -126,9 +186,35 @@ type ValidateMergedSqliteFields<
   : unknown);
 
 /**
- * Defaults-injected model factory returned by a PostgreSQL kit.
+ * Builds PostgreSQL entity models with a kit's invariant fields and extras.
  *
- * @category models
+ * **When to use**
+ *
+ * Use when a table participates in the kit's shared entity contract; use the
+ * sibling bare `Model` for junctions or deliberate opt-outs.
+ *
+ * **Details**
+ *
+ * Default fields precede own fields, and default extras precede model extras.
+ * All model statics and variants observe the merged field record.
+ *
+ * **Gotchas**
+ *
+ * A colliding key produces a readable `~effect-drizzle.error` at compile time
+ * and a `ModelInvariantError` if the type boundary is bypassed.
+ *
+ * **Example** (Name a PostgreSQL entity factory)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { EntityFactory } from "@beep/effect-drizzle"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Entity = EntityFactory<Defaults> // => defaults-injected model factory
+ * ```
+ *
+ * @see {@link Model} for the bare model factory without kit defaults.
+ * @category factories
  * @since 0.0.0
  */
 export interface EntityFactory<Defaults extends PgFieldsInput> {
@@ -141,9 +227,32 @@ export interface EntityFactory<Defaults extends PgFieldsInput> {
 }
 
 /**
- * Defaults-injected model factory returned by a SQLite kit.
+ * Builds SQLite entity models with a kit's invariant fields and extras.
  *
- * @category models
+ * **When to use**
+ *
+ * Use when a SQLite table participates in the kit's shared entity contract.
+ *
+ * **Details**
+ *
+ * Default and own fields form one model before SQLite validation, projection,
+ * or relation assembly runs.
+ *
+ * **Gotchas**
+ *
+ * A default-field collision is rejected statically and again at runtime.
+ *
+ * **Example** (Name a SQLite entity factory)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { SqliteEntityFactory } from "@beep/effect-drizzle"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Entity = SqliteEntityFactory<Defaults> // => defaults-injected SQLite factory
+ * ```
+ *
+ * @category factories
  * @since 0.0.0
  */
 export interface SqliteEntityFactory<Defaults extends SqliteFieldsInput> {
@@ -156,7 +265,23 @@ export interface SqliteEntityFactory<Defaults extends SqliteFieldsInput> {
 }
 
 /**
- * Operators returned by the PostgreSQL branch of {@link make}.
+ * Describes the PostgreSQL vocabulary returned by {@link make}.
+ *
+ * **Details**
+ *
+ * The kit keeps column operators, bare and defaults-injected model factories,
+ * table extras, repository construction, assembly, and projection on one
+ * dialect-bound object.
+ *
+ * **Example** (Infer a PostgreSQL kit)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { PgKit } from "@beep/effect-drizzle"
+ *
+ * type Kit = PgKit<{ readonly version: typeof Int }>
+ * type Entity = Kit["Entity"] // => EntityFactory<{ readonly version: typeof Int }>
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -172,7 +297,22 @@ export interface PgKit<Defaults extends PgFieldsInput> {
 }
 
 /**
- * Operators returned by the SQLite branch of {@link make}.
+ * Describes the SQLite vocabulary returned by {@link make}.
+ *
+ * **Details**
+ *
+ * The absence of PostgreSQL-only operators, especially arrays and native enum
+ * objects, is represented by the returned surface rather than runtime flags.
+ *
+ * **Example** (Infer a SQLite kit)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import type { SqliteKit } from "@beep/effect-drizzle"
+ *
+ * type Kit = SqliteKit<{ readonly version: typeof Int }>
+ * type Dialect = keyof Pick<Kit, "sqlite"> // => "sqlite"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -187,26 +327,7 @@ export interface SqliteKit<Defaults extends SqliteFieldsInput> {
   readonly toSqliteTable: typeof toSqliteTable;
 }
 
-/**
- * Create a dialect kit with immutable entity defaults.
- *
- * **Example** (Create a PostgreSQL kit)
- *
- * ```ts
- * import { Int } from "effect/Schema"
- * import { make } from "./kit.ts"
- *
- * const kit = make({
- *   dialect: "pg",
- *   defaultColumns: (pg) => ({ version: Int.pipe(pg.integer(), pg.default(1)) }),
- *   defaultExtras: () => []
- * })
- * console.log(kit.pg.integer)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
+/** Builds the internal PostgreSQL kit after overload selection. */
 const makePgKit = (config: PgKitConfig<PgFieldsInput>): object => {
   const defaults = config.defaultColumns(Pg);
   const defaultKeys = Object.keys(defaults);
@@ -295,6 +416,47 @@ const makeSqliteKit = (
   };
 };
 
+/**
+ * Creates a dialect kit whose entity defaults and extras are fixed once.
+ *
+ * **When to use**
+ *
+ * Use when a model family shares audit columns, optimistic versions, table
+ * constraints, or another invariant that should not be repeated per entity.
+ *
+ * **Details**
+ *
+ * The returned kit contains the selected dialect namespace, bare `Model`,
+ * defaults-injected `Entity`, `Table`, repository factory, schema assembler,
+ * and table projector. Default extras execute before entity-local extras.
+ *
+ * **Gotchas**
+ *
+ * Kit defaults are application-schema policy. Do not pair an Effect constructor
+ * clock such as `Model.DateTimeUpdate` with a database `defaultNow()` for the
+ * same field, or two clocks can disagree.
+ *
+ * **Example** (Create a PostgreSQL kit)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import { make } from "@beep/effect-drizzle"
+ *
+ * const kit = make({
+ *   dialect: "pg",
+ *   defaultColumns: (pg) => ({ version: Int.pipe(pg.integer(), pg.default(1)) }),
+ *   defaultExtras: () => []
+ * })
+ *
+ * kit.pg.integer // => PostgreSQL integer combinator
+ * kit.Entity // => defaults-injected model factory
+ * ```
+ *
+ * @see {@link PgKitConfig} for PostgreSQL defaults and extras.
+ * @see {@link SqliteKitConfig} for SQLite defaults and extras.
+ * @category factories
+ * @since 0.0.0
+ */
 export function make<const Defaults extends PgFieldsInput>(
   config: PgKitConfig<Defaults>,
 ): PgKit<Defaults>;

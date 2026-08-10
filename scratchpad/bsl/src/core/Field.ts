@@ -7,6 +7,8 @@
  * `Rebuild`), so — following the `VariantSchema.Field` precedent — the field
  * is a small pipeable wrapper `{ schema, meta }` whose combinators transform
  * both the runtime value and the phantom generics without loss.
+ *
+ * @since 0.0.0
  */
 import { pipeArguments } from "effect/Pipeable";
 import type { Pipeable } from "effect/Pipeable";
@@ -17,14 +19,6 @@ import * as Meta from "./Meta.ts";
 
 /**
  * Runtime marker carried by every @beep/effect-drizzle field wrapper.
- *
- * **Example** (Read the field marker)
- *
- * ```ts
- * import { TypeId } from "./Field.ts"
- *
- * console.log(Symbol.keyFor(TypeId)) // "@beep/effect-drizzle/Field"
- * ```
  *
  * @category symbols
  * @since 0.0.0
@@ -90,16 +84,6 @@ const Proto = {
 /**
  * Construct the correlated schema-and-metadata field wrapper.
  *
- * **Example** (Construct a field)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { make } from "./Field.ts"
- * import { empty } from "./Meta.ts"
- *
- * console.log(make(String, empty).schema === String) // true
- * ```
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -115,16 +99,6 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
 
 /**
  * Test whether an unknown value is a @beep/effect-drizzle field wrapper.
- *
- * **Example** (Recognize a field)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { isField, make } from "./Field.ts"
- * import { empty } from "./Meta.ts"
- *
- * console.log(isField(make(String, empty))) // true
- * ```
  *
  * @category guards
  * @since 0.0.0
@@ -143,17 +117,6 @@ export type SchemaFrom<I extends Input> =
 /**
  * The metadata type an input resolves to; bare schemas start at {@link Meta.Empty}.
  *
- * **Example** (Resolve bare metadata)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import type { MetaFrom } from "./Field.ts"
- * import type { Empty } from "./Meta.ts"
- *
- * declare const metadata: MetaFrom<typeof String>
- * const empty: Empty = metadata
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -161,15 +124,6 @@ export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M 
 
 /**
  * Normalize a bare schema, variant field, or existing field into one wrapper.
- *
- * **Example** (Normalize a bare schema)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { from } from "./Field.ts"
- *
- * console.log(from(String).meta.primaryKey) // false
- * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -197,15 +151,6 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
  * Apply a meta patch to any Input. This is the single runtime seam every
  * combinator goes through, so the merge logic and its type correlation live
  * in exactly one place.
- *
- * **Example** (Mark a field unique)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { patch } from "./Field.ts"
- *
- * console.log(patch(String, { unique: true }).meta.unique) // true
- * ```
  *
  * @category combinators
  * @since 0.0.0
@@ -253,14 +198,6 @@ type SchemaEncoded<Sch> =
  * When a constraint fails, its message literal appears in the assignability
  * diagnostic on the offending pipe call.
  *
- * **Example** (Describe a field error)
- *
- * ```ts
- * import type { SqlTypeError } from "./Field.ts"
- *
- * type RequiresString = SqlTypeError<"requires a string schema">
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -270,15 +207,6 @@ export interface SqlTypeError<Msg extends string> {
 
 /**
  * Validate an input's non-null encoded carrier against an allowed SQL carrier.
- *
- * **Example** (Validate a string carrier)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import type { ValidateEncoded } from "./Field.ts"
- *
- * type Valid = ValidateEncoded<typeof String, string, "expected string">
- * ```
  *
  * @category validation
  * @since 0.0.0
@@ -295,15 +223,6 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
  */
 /**
  * Reject inputs whose encoded database representation admits `null`.
- *
- * **Example** (Validate a primary-key carrier)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import type { ValidateNonNullable } from "./Field.ts"
- *
- * type Valid = ValidateNonNullable<typeof String, "must not be nullable">
- * ```
  *
  * @category validation
  * @since 0.0.0

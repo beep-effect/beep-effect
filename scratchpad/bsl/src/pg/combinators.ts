@@ -8,6 +8,8 @@
  * audited merge seam.
  *
  * Usage: `NonEmptyString.pipe(pg.varchar(320), pg.unique())`.
+ *
+ * @since 0.0.0
  */
 import type { SQL } from "drizzle-orm";
 import {
@@ -84,7 +86,7 @@ const isStringTypeSchema = (schema: Top): schema is Schema<string> =>
  * import { text } from "@beep/effect-drizzle/pg"
  *
  * const field = String.pipe(text())
- * console.log(field.meta.column?.kind) // "text"
+ * field.meta.column?.kind // => "text"
  * ```
  *
  * @category combinators
@@ -139,8 +141,14 @@ const boundedString = (
 };
 
 /**
- * Varchar column with three authoring modes, so the length is written exactly
- * once:
+ * Sets a varchar column while keeping schema and storage bounds aligned.
+ *
+ * **When to use**
+ *
+ * Use when a string needs a database length bound. Prefer `text()` when no
+ * meaningful maximum exists and `char()` only for genuinely fixed-width data.
+ *
+ * **Details**
  *
  * - `pg.varchar()` — DERIVE: the length comes from the schema's `isMaxLength`
  *   check (tightest bound wins); no check is a loud construction error.
@@ -151,6 +159,11 @@ const boundedString = (
  *   the column enforces. Variant-field inputs are verify-only (their per-variant
  *   codecs are author-owned).
  *
+ * **Gotchas**
+ *
+ * Derive mode fails without an `isMaxLength` check. An explicit length on a
+ * variant field verifies existing codecs but never rewrites them.
+ *
  * **Example** (Derive varchar length)
  *
  * ```ts
@@ -158,7 +171,7 @@ const boundedString = (
  * import { varchar } from "@beep/effect-drizzle/pg"
  *
  * const field = String.check(isMaxLength(320)).pipe(varchar())
- * console.log(field.meta.column?.kind) // "varchar"
+ * field.meta.column?.kind // => "varchar"
  * ```
  *
  * @category combinators
@@ -190,10 +203,20 @@ type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null
 /**
  * Set a real PostgreSQL enum column whose values come from the encoded schema.
  *
+ * **When to use**
+ *
+ * Use when a finite string domain should become a reusable PostgreSQL enum;
+ * use `varchar` or `text` for open-ended strings.
+ *
  * **Details**
  *
  * Omitting the name derives it from the declaring model field key. A broad
  * string schema is rejected because PostgreSQL enum values must be finite.
+ *
+ * **Gotchas**
+ *
+ * Omitting the name is safe only inside model construction, where the field key
+ * resolves it. Assembly requires repeated enum names to use identical values.
  *
  * **Example** (Set a named enum)
  *
@@ -201,7 +224,8 @@ type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null
  * import { Literals } from "effect/Schema"
  * import { enum as pgEnum } from "@beep/effect-drizzle/pg"
  *
- * console.log(Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
+ * Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind
+ * // => "enum"
  * ```
  *
  * @category combinators
@@ -246,7 +270,16 @@ export function enum_(name?: string): unknown {
 export { enum_ as enum };
 
 /**
- * Set an explicitly unsafe custom PostgreSQL type with no carrier validation.
+ * Sets an explicitly unsafe custom PostgreSQL type with no carrier validation.
+ *
+ * **When to use**
+ *
+ * Use when extension or domain types are not modeled by the built-in combinators.
+ *
+ * **Gotchas**
+ *
+ * The SQL type string is emitted verbatim, and foreign-key compatibility uses
+ * exact `custom<...>` identity rather than validating the schema carrier.
  *
  * **Example** (Set a tsvector column)
  *
@@ -254,7 +287,7 @@ export { enum_ as enum };
  * import { String } from "effect/Schema"
  * import { unsafeCustom } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(unsafeCustom("tsvector")).meta.column?.ident)
+ * String.pipe(unsafeCustom("tsvector")).meta.column?.ident // => "custom<tsvector>"
  * ```
  *
  * @category combinators
@@ -273,7 +306,12 @@ export const unsafeCustom =
     });
 
 /**
- * Set a string-carried PostgreSQL numeric column.
+ * Sets an exact PostgreSQL numeric column carried as a string.
+ *
+ * **Details**
+ *
+ * Precision and scale are optional Drizzle configuration; string encoding
+ * avoids narrowing arbitrary-precision decimal values to JavaScript numbers.
  *
  * **Example** (Set numeric precision and scale)
  *
@@ -281,7 +319,7 @@ export const unsafeCustom =
  * import { String } from "effect/Schema"
  * import { numeric } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(numeric(10, 2)).meta.column?.kind) // "numeric"
+ * String.pipe(numeric(10, 2)).meta.column?.kind // => "numeric"
  * ```
  *
  * @category combinators
@@ -309,7 +347,12 @@ export function numeric(precision?: number, scale?: number): unknown {
 }
 
 /**
- * Set a PostgreSQL date column in string or JavaScript Date mode.
+ * Sets a PostgreSQL date column in string or JavaScript `Date` mode.
+ *
+ * **When to use**
+ *
+ * Use with string mode for ISO date carriers and date mode only when the encoded
+ * schema deliberately exposes JavaScript `Date` values to the driver.
  *
  * **Example** (Set string date mode)
  *
@@ -317,7 +360,7 @@ export function numeric(precision?: number, scale?: number): unknown {
  * import { String } from "effect/Schema"
  * import { date } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(date()).meta.column?.kind) // "date"
+ * String.pipe(date()).meta.column?.kind // => "date"
  * ```
  *
  * @category combinators
@@ -345,7 +388,16 @@ export function date(options?: { readonly mode: "date" }): unknown {
 }
 
 /**
- * Set a fixed-width PostgreSQL char column with varchar-style length authoring.
+ * Sets a fixed-width PostgreSQL char column with varchar-style length authoring.
+ *
+ * **When to use**
+ *
+ * Use with truly fixed-width codes; use `varchar` for bounded variable text.
+ *
+ * **Details**
+ *
+ * Omitted length derives the tightest schema maximum, while an explicit length
+ * verifies or injects the matching schema bound under the same rules as `varchar`.
  *
  * **Example** (Derive a char length)
  *
@@ -353,7 +405,7 @@ export function date(options?: { readonly mode: "date" }): unknown {
  * import { String, isMaxLength } from "effect/Schema"
  * import { char } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.check(isMaxLength(2)).pipe(char()).meta.column?.kind)
+ * String.check(isMaxLength(2)).pipe(char()).meta.column?.kind // => "char"
  * ```
  *
  * @category combinators
@@ -373,7 +425,12 @@ export function char(length?: number): unknown {
 }
 
 /**
- * Set a PostgreSQL JSON column distinct from JSONB.
+ * Sets textual PostgreSQL JSON storage distinct from JSONB.
+ *
+ * **When to use**
+ *
+ * Use when preserving the input JSON text representation matters; use `jsonb`
+ * for normalized binary JSON and its indexing/operator support.
  *
  * **Example** (Set JSON storage)
  *
@@ -381,7 +438,7 @@ export function char(length?: number): unknown {
  * import { Boolean, Struct } from "effect/Schema"
  * import { json } from "@beep/effect-drizzle/pg"
  *
- * console.log(Struct({ ok: Boolean }).pipe(json()).meta.column?.ident)
+ * Struct({ ok: Boolean }).pipe(json()).meta.column?.ident // => "json"
  * ```
  *
  * @category combinators
@@ -396,7 +453,12 @@ export const json =
     Field.patch(input, { column: PgColumn.Json.make({}) });
 
 /**
- * Set a PostgreSQL single-precision real column.
+ * Sets a PostgreSQL single-precision real column.
+ *
+ * **When to use**
+ *
+ * Use when single precision is intentional; ordinary number derivation
+ * and `doublePrecision()` retain wider precision.
  *
  * **Example** (Set real storage)
  *
@@ -404,7 +466,7 @@ export const json =
  * import { Number } from "effect/Schema"
  * import { real } from "@beep/effect-drizzle/pg"
  *
- * console.log(Number.pipe(real()).meta.column?.ident) // "real"
+ * Number.pipe(real()).meta.column?.ident // => "real"
  * ```
  *
  * @category combinators
@@ -418,7 +480,12 @@ export const real =
     Field.patch(input, { column: PgColumn.Real.make({}) });
 
 /**
- * Set a PostgreSQL bigserial column and mark it defaulted.
+ * Sets a PostgreSQL bigserial column and marks inserts as defaulted.
+ *
+ * **When to use**
+ *
+ * Use with legacy serial semantics at bigint range. Prefer
+ * `bigint(...).pipe(identity())` when explicit identity policy is required.
  *
  * **Example** (Set number-mode bigserial)
  *
@@ -426,7 +493,7 @@ export const real =
  * import { Int } from "effect/Schema"
  * import { bigserial } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(bigserial("number")).meta.hasDefault) // true
+ * Int.pipe(bigserial("number")).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -461,7 +528,7 @@ export function bigserial(mode: "number" | "bigint"): unknown {
 }
 
 /**
- * Set a PostgreSQL smallserial column and mark it defaulted.
+ * Sets a PostgreSQL smallserial column and marks inserts as defaulted.
  *
  * **Example** (Set smallserial storage)
  *
@@ -469,7 +536,7 @@ export function bigserial(mode: "number" | "bigint"): unknown {
  * import { Int } from "effect/Schema"
  * import { smallserial } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(smallserial()).meta.hasDefault) // true
+ * Int.pipe(smallserial()).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -494,7 +561,7 @@ export const smallserial =
  * import { String } from "effect/Schema"
  * import { uuid } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(uuid()).meta.column?.kind) // "uuid"
+ * String.pipe(uuid()).meta.column?.kind // => "uuid"
  * ```
  *
  * @category combinators
@@ -515,7 +582,12 @@ type IntegerColumn<I extends Field.Input> =
     : PgColumn.Integer;
 
 /**
- * Set a PostgreSQL integer column on a number-encoded schema.
+ * Sets a PostgreSQL integer column on a number-encoded schema.
+ *
+ * **Details**
+ *
+ * EntityId schemas retain an `entityId<...>` identity for foreign-key equality;
+ * ordinary number schemas use the plain `integer` identity.
  *
  * **Example** (Set an integer column)
  *
@@ -523,7 +595,7 @@ type IntegerColumn<I extends Field.Input> =
  * import { Int } from "effect/Schema"
  * import { integer } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(integer()).meta.column?.kind) // "integer"
+ * Int.pipe(integer()).meta.column?.kind // => "integer"
  * ```
  *
  * @category combinators
@@ -552,7 +624,7 @@ export const integer = () => {
  * import { Int } from "effect/Schema"
  * import { smallint } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(smallint()).meta.column?.kind) // "smallint"
+ * Int.pipe(smallint()).meta.column?.kind // => "smallint"
  * ```
  *
  * @category combinators
@@ -574,7 +646,7 @@ export const smallint =
  * import { Finite } from "effect/Schema"
  * import { doublePrecision } from "@beep/effect-drizzle/pg"
  *
- * console.log(Finite.pipe(doublePrecision()).meta.column?.kind) // "doublePrecision"
+ * Finite.pipe(doublePrecision()).meta.column?.kind // => "doublePrecision"
  * ```
  *
  * @category combinators
@@ -589,7 +661,12 @@ export const doublePrecision =
     Field.patch(input, { column: PgColumn.DoublePrecision.make({}) });
 
 /**
- * Set a bigint column; mode determines the required encoded carrier.
+ * Sets a bigint column whose mode matches the encoded carrier.
+ *
+ * **When to use**
+ *
+ * Use with number mode only within JavaScript's safe integer range; use bigint mode
+ * when the schema and callers carry native `bigint` values.
  *
  * **Example** (Set a native-bigint column)
  *
@@ -597,7 +674,7 @@ export const doublePrecision =
  * import { BigInt } from "effect/Schema"
  * import { bigint } from "@beep/effect-drizzle/pg"
  *
- * console.log(BigInt.pipe(bigint("bigint")).meta.column?.kind) // "bigint"
+ * BigInt.pipe(bigint("bigint")).meta.column?.kind // => "bigint"
  * ```
  *
  * @category combinators
@@ -621,7 +698,12 @@ export function bigint(mode: "number" | "bigint"): unknown {
 }
 
 /**
- * Set a PostgreSQL serial column and mark it as defaulted.
+ * Sets a PostgreSQL serial column and marks inserts as defaulted.
+ *
+ * **When to use**
+ *
+ * Use with legacy serial semantics. Prefer `integer().pipe(identity())` when the
+ * choice between identity-always and identity-by-default matters.
  *
  * **Example** (Set a serial column)
  *
@@ -629,7 +711,7 @@ export function bigint(mode: "number" | "bigint"): unknown {
  * import { Int } from "effect/Schema"
  * import { serial } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(serial()).meta.hasDefault) // true
+ * Int.pipe(serial()).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -651,7 +733,7 @@ export const serial =
  * import { Boolean } from "effect/Schema"
  * import { boolean } from "@beep/effect-drizzle/pg"
  *
- * console.log(Boolean.pipe(boolean()).meta.column?.kind) // "boolean"
+ * Boolean.pipe(boolean()).meta.column?.kind // => "boolean"
  * ```
  *
  * @category combinators
@@ -665,7 +747,12 @@ export const boolean =
     Field.patch(input, { column: PgColumn.Bool.make({}) });
 
 /**
- * Set a PostgreSQL JSONB column on an object-encoded schema.
+ * Sets normalized PostgreSQL JSONB storage on an object-encoded schema.
+ *
+ * **When to use**
+ *
+ * Use with queryable and indexable structured data; use `json()` when textual
+ * representation preservation is required.
  *
  * **Example** (Set a JSONB column)
  *
@@ -673,7 +760,7 @@ export const boolean =
  * import { String, Struct } from "effect/Schema"
  * import { jsonb } from "@beep/effect-drizzle/pg"
  *
- * console.log(Struct({ theme: String }).pipe(jsonb()).meta.column?.kind) // "jsonb"
+ * Struct({ theme: String }).pipe(jsonb()).meta.column?.kind // => "jsonb"
  * ```
  *
  * @category combinators
@@ -696,7 +783,7 @@ export const jsonb =
  * import { Uint8Array } from "effect/Schema"
  * import { bytea } from "@beep/effect-drizzle/pg"
  *
- * console.log(Uint8Array.pipe(bytea()).meta.column?.kind) // "bytea"
+ * Uint8Array.pipe(bytea()).meta.column?.kind // => "bytea"
  * ```
  *
  * @category combinators
@@ -711,7 +798,18 @@ export const bytea =
     Field.patch(input, { column: PgColumn.Bytea.make({}) });
 
 /**
- * Set a timestamp column; mode determines the string or Date carrier.
+ * Sets a timestamp column with explicit carrier and timezone policy.
+ *
+ * **When to use**
+ *
+ * Use with string mode for Effect's ISO-encoded date-time schemas and date mode only
+ * for schemas encoded as JavaScript `Date`. Disable timezone only for deliberately
+ * zone-free database values.
+ *
+ * **Gotchas**
+ *
+ * Carrier mode is an encoded-side choice, not a Type-side convenience. A
+ * millis-encoded schema does not fit timestamp storage.
  *
  * **Example** (Set a string timestamp)
  *
@@ -719,7 +817,7 @@ export const bytea =
  * import { String } from "effect/Schema"
  * import { timestamp } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(timestamp()).meta.column?.kind) // "timestamp"
+ * String.pipe(timestamp()).meta.column?.kind // => "timestamp"
  * ```
  *
  * @category combinators
@@ -783,17 +881,29 @@ const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.Arra
   );
 
 /**
- * Declare a PostgreSQL array over an explicitly compiled scalar element.
+ * Declares a PostgreSQL array over an explicitly compiled scalar element.
+ *
+ * **Details**
+ *
+ * The scalar element owns the column descriptor; the outer schema must match
+ * its encoded element at the declared depth. Dimensions range from one to five.
+ *
+ * **Gotchas**
+ *
+ * The element must have exactly one scalar column combinator. Arrays cannot be
+ * primary keys, identity columns, or optimistic versions, and SQLite exposes no
+ * corresponding operator.
  *
  * **Example** (Declare a two-dimensional text array)
  *
  * ```ts
  * import { Array, String } from "effect/Schema"
- * import * as pg from "@beep/effect-drizzle/pg"
+ * import { array, text } from "@beep/effect-drizzle/pg"
  *
  * const matrix = Array(Array(String)).pipe(
- *   pg.array(String.pipe(pg.text()), "[][]")
+ *   array(String.pipe(text()), "[][]")
  * )
+ * matrix.meta.dimensions // => 2
  * ```
  *
  * @category combinators
@@ -855,7 +965,12 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
 // ---------------------------------------------------------------------------
 
 /**
- * Mark a non-nullable field as the inline primary key.
+ * Marks a non-nullable field as the inline primary key.
+ *
+ * **Gotchas**
+ *
+ * A model accepts at most one inline key; use `Table.compositePrimaryKey` for
+ * multi-column keys. Arrays and nullable carriers are rejected.
  *
  * **Example** (Mark a primary key)
  *
@@ -863,7 +978,7 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
  * import { String } from "effect/Schema"
  * import { primaryKey } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(primaryKey()).meta.primaryKey) // true
+ * String.pipe(primaryKey()).meta.primaryKey // => true
  * ```
  *
  * @category combinators
@@ -890,7 +1005,7 @@ export const primaryKey =
  * import { String } from "effect/Schema"
  * import { unique } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(unique()).meta.unique) // true
+ * String.pipe(unique()).meta.unique // => true
  * ```
  *
  * @category combinators
@@ -924,7 +1039,23 @@ type ValidateNotArray<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] e
   : Field.SqlTypeError<"array fields cannot use primary-key, identity, or version semantics">;
 
 /**
- * Apply PostgreSQL identity generation after an integer-family column setter.
+ * Applies PostgreSQL identity generation after an integer-family column setter.
+ *
+ * **When to use**
+ *
+ * Use with `always` when callers must never author inserted ids, and `byDefault`
+ * when explicit ids remain allowed. Use serial combinators for legacy policy.
+ *
+ * **Details**
+ *
+ * Identity-always is absent from insert but remains required in update as the
+ * row locator. Identity-by-default is insert-optional and not generated.
+ *
+ * **Gotchas**
+ *
+ * Update membership for identity-always does not put the id in `SET`; repository
+ * code consumes it in `WHERE`. Identity requires an explicit integer-family
+ * column and is incompatible with defaults, versions, and arrays.
  *
  * **Example** (Apply always identity generation)
  *
@@ -932,7 +1063,7 @@ type ValidateNotArray<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] e
  * import { Int } from "effect/Schema"
  * import { identity, integer } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(integer(), identity()).meta.identity) // "always"
+ * Int.pipe(integer(), identity()).meta.identity // => "always"
  * ```
  *
  * @category combinators
@@ -990,7 +1121,12 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
   : Field.SqlTypeError<"SQL expression carrier must equal the field's encoded carrier">;
 
 /**
- * Set a typed literal default matching the encoded database carrier.
+ * Sets a typed literal default matching the encoded database carrier.
+ *
+ * **Details**
+ *
+ * The field becomes insert-optional while the literal stays correlated with
+ * the schema's encoded type.
  *
  * **Example** (Set a literal default)
  *
@@ -998,7 +1134,7 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
  * import { String } from "effect/Schema"
  * import { default as defaultValue } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(defaultValue("active")).meta.hasDefault) // true
+ * String.pipe(defaultValue("active")).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -1017,7 +1153,12 @@ export const default_ =
 export { default_ as default };
 
 /**
- * Set a typed SQL default expression.
+ * Sets a typed SQL default expression with carrier equality checking.
+ *
+ * **When to use**
+ *
+ * Use when PostgreSQL should compute an insert default and typed Drizzle SQL
+ * can represent it.
  *
  * **Example** (Set an expression default)
  *
@@ -1026,7 +1167,7 @@ export { default_ as default };
  * import { String } from "effect/Schema"
  * import { defaultExpr } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault) // true
+ * String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -1054,7 +1195,16 @@ type ValidateTimestamp<I extends Field.Input> =
     : Field.SqlTypeError<"defaultNow() requires an explicit pg.timestamp column first">;
 
 /**
- * Set the PostgreSQL current-time default after a timestamp column setter.
+ * Sets PostgreSQL's current time as a timestamp database default.
+ *
+ * **When to use**
+ *
+ * Use when PostgreSQL is the single authority for an insert timestamp.
+ *
+ * **Gotchas**
+ *
+ * Do not combine this database clock with an Effect constructor default for
+ * the same field; two clocks can disagree.
  *
  * **Example** (Set the current-time default)
  *
@@ -1062,7 +1212,7 @@ type ValidateTimestamp<I extends Field.Input> =
  * import { String } from "effect/Schema"
  * import { defaultNow, timestamp } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(timestamp(), defaultNow()).meta.hasDefault) // true
+ * String.pipe(timestamp(), defaultNow()).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -1079,7 +1229,15 @@ export const defaultNow =
     });
 
 /**
- * Set an explicitly unsafe raw-SQL default.
+ * Sets an explicitly unsafe raw-SQL default.
+ *
+ * **When to use**
+ *
+ * Use when only trusted raw SQL can represent the default.
+ *
+ * **Gotchas**
+ *
+ * The string bypasses carrier checking, parameterization, and escaping.
  *
  * **Example** (Set a raw default)
  *
@@ -1087,7 +1245,7 @@ export const defaultNow =
  * import { String } from "effect/Schema"
  * import { unsafeDefaultSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault) // true
+ * String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -1106,13 +1264,17 @@ export const unsafeDefaultSql =
 /**
  * Compatibility alias for {@link unsafeDefaultSql}.
  *
+ * **Gotchas**
+ *
+ * The alias is equally unsafe; its older name does not communicate that boundary.
+ *
  * **Example** (Use the compatibility alias)
  *
  * ```ts
  * import { String } from "effect/Schema"
  * import { defaultSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(defaultSql("current_user")).meta.hasDefault) // true
+ * String.pipe(defaultSql("current_user")).meta.hasDefault // => true
  * ```
  *
  * @deprecated Use the explicitly unsafe-named {@link unsafeDefaultSql}.
@@ -1135,12 +1297,22 @@ type ValidateVersionCompatibility<I extends Field.Input> =
     : Field.SqlTypeError<"version fields cannot use identity generation">;
 
 /**
- * Mark one integer-family field as the optimistic-concurrency token.
+ * Marks one integer-family field as the optimistic-concurrency token.
+ *
+ * **When to use**
+ *
+ * Use with `makeRepository` when updates must compare and increment one version
+ * atomically.
  *
  * **Details**
  *
  * The field is optional on insert so its SQL default applies, required on
  * update as the expected version, and present on selected and JSON rows.
+ *
+ * **Gotchas**
+ *
+ * Every update payload must include the current version. Version fields cannot
+ * also use identity, generated-column, or array semantics.
  *
  * **Example** (Mark a row version)
  *
@@ -1148,7 +1320,7 @@ type ValidateVersionCompatibility<I extends Field.Input> =
  * import { Int } from "effect/Schema"
  * import { default as defaultValue, integer, version } from "@beep/effect-drizzle/pg"
  *
- * console.log(Int.pipe(integer(), defaultValue(1), version()).meta.version) // true
+ * Int.pipe(integer(), defaultValue(1), version()).meta.version // => true
  * ```
  *
  * @category combinators
@@ -1162,7 +1334,12 @@ export const version =
     Field.patch(input, { version: true });
 
 /**
- * Set a typed stored generated expression omitted from write variants.
+ * Sets a typed stored generated expression omitted from author writes.
+ *
+ * **Details**
+ *
+ * The expression carrier must equal the field's encoded carrier. The field
+ * remains readable through select and JSON variants.
  *
  * **Example** (Set a generated expression)
  *
@@ -1171,7 +1348,7 @@ export const version =
  * import { String } from "effect/Schema"
  * import { generated } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(generated(sql<string>`lower(name)`)).meta.generated !== false) // true
+ * String.pipe(generated(sql<string>`lower(name)`)).meta.generated._tag // => "sqlExpr"
  * ```
  *
  * @category combinators
@@ -1187,7 +1364,15 @@ export const generated =
     });
 
 /**
- * Set an explicitly unsafe stored generated expression.
+ * Sets an explicitly unsafe stored generated expression.
+ *
+ * **When to use**
+ *
+ * Use when only trusted raw SQL can represent the generated expression.
+ *
+ * **Gotchas**
+ *
+ * The raw statement bypasses carrier checking and escaping.
  *
  * **Example** (Set a raw generated expression)
  *
@@ -1195,7 +1380,7 @@ export const generated =
  * import { String } from "effect/Schema"
  * import { unsafeGeneratedSql } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated !== false) // true
+ * String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated._tag // => "unsafeSql"
  * ```
  *
  * @category combinators
@@ -1211,7 +1396,11 @@ export const unsafeGeneratedSql =
     });
 
 /**
- * Override the physical column name when snake-case derivation is insufficient.
+ * Overrides the physical column name while preserving the model field key.
+ *
+ * **When to use**
+ *
+ * Use with legacy schemas or names that differ from snake-case derivation.
  *
  * **Example** (Override a column name)
  *
@@ -1219,7 +1408,7 @@ export const unsafeGeneratedSql =
  * import { String } from "effect/Schema"
  * import { columnName } from "@beep/effect-drizzle/pg"
  *
- * console.log(String.pipe(columnName("legacy_name")).meta.columnName) // "legacy_name"
+ * String.pipe(columnName("legacy_name")).meta.columnName // => "legacy_name"
  * ```
  *
  * @category combinators
@@ -1234,15 +1423,27 @@ export const columnName =
  * Foreign key to another entity, read from its EntityId statics — the
  * reference target needs zero extra spelling beyond the action policy.
  *
+ * **Details**
+ *
+ * The target table comes from `tableName`, the target column is `id`, and
+ * delete/update actions remain optional policy.
+ *
+ * **Gotchas**
+ *
+ * Assembly compares SQL identity, encoded carrier, and array depth. Two
+ * number-like fields with different EntityId identities do not silently match.
+ *
  * **Example** (Reference an EntityId schema)
  *
  * ```ts
  * import { Int } from "effect/Schema"
- * import { withStatics } from "../internal/statics.ts"
  * import { references } from "@beep/effect-drizzle/pg"
  *
- * const UserId = withStatics(Int, () => ({ tableName: "user", entityType: "User" }))
- * console.log(Int.pipe(references(UserId)).meta.references?.tableName) // "user"
+ * class UserId {
+ *   static readonly tableName = "user"
+ *   static readonly entityType = "User"
+ * }
+ * Int.pipe(references(UserId)).meta.references?.tableName // => "user"
  * ```
  *
  * @category combinators

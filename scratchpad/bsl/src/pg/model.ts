@@ -1,5 +1,5 @@
 /**
- * The @beep/effect-drizzle model class factory.
+ * Builds PostgreSQL-aware Effect model classes from schema-owned fields.
  *
  * `class User extends EffectDrizzle.Model<User>($I\`User\`)({ ... }) {}` produces an
  * Effect schema class (via @beep/effect-drizzle's own `VariantSchema.make` instance — the same
@@ -12,6 +12,8 @@
  *   a `~effect-drizzle.error` message literal;
  * - construction time: runtime checks mirror the same rules (nullable PK,
  *   multiple PKs) as tagged errors, catching hand-built field nodes.
+ *
+ * @since 0.0.0
  */
 import { findFirst, last as lastArray, reduce } from "effect/Array";
 import {
@@ -40,37 +42,10 @@ import { type AnyModel as CoreAnyModel, ModelInvariantError } from "../core/mode
 import * as PgColumn from "./Column.ts";
 import type * as TableExtras from "./extras.ts";
 
-/**
- * Error raised when resolved model metadata violates a @beep/effect-drizzle invariant.
- *
- * **Example** (Construct a model invariant error)
- *
- * ```ts
- * import { ModelInvariantError } from "./model.ts"
- *
- * const error = ModelInvariantError.make({ message: "invalid primary key", fieldName: "id" })
- * console.log(error._tag) // "ModelInvariantError"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
+// Re-export the owning root error for internal dialect modules.
 export { ModelInvariantError };
 
-/**
- * Fixed @beep/effect-drizzle model-variant domain.
- *
- * **Example** (Check a model variant)
- *
- * ```ts
- * import { Variant } from "./model.ts"
- *
- * console.log(Variant.is.select("select")) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
+// Re-export the owning shared variant helpers for dialect internals.
 export {
   extract,
   FieldExcept,
@@ -82,15 +57,21 @@ export {
 } from "../core/variant.ts";
 
 /**
- * String-keyed field declaration accepted by the @beep/effect-drizzle model factory.
+ * Describes the string-keyed field record accepted by {@link Model}.
+ *
+ * **Details**
+ *
+ * Each property is either an Effect schema or a pipeable field that already
+ * carries SQL metadata.
  *
  * **Example** (Declare a field record)
  *
  * ```ts
  * import { String } from "effect/Schema"
- * import type { FieldsInput } from "./model.ts"
+ * import type { FieldsInput } from "@beep/effect-drizzle"
  *
- * const fields: FieldsInput = { name: String }
+ * type UserFields = { readonly name: typeof String }
+ * type Accepted = UserFields extends FieldsInput ? true : false // => true
  * ```
  *
  * @category models
@@ -131,7 +112,22 @@ export type ResolvedMetaOf<I extends Field.Input, Key extends string = string> =
 >;
 
 /**
- * Key-preserving resolved metadata record for a field declaration.
+ * Projects every declared field to its resolved PostgreSQL metadata.
+ *
+ * **Details**
+ *
+ * Keys are preserved while explicit metadata, encoded-carrier derivation,
+ * physical names, and EntityId references are merged.
+ *
+ * **Example** (Project field metadata)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { ColumnsOf } from "@beep/effect-drizzle"
+ *
+ * type Columns = ColumnsOf<{ readonly displayName: typeof String }>
+ * type Column = Columns["displayName"]["column"] // => PostgreSQL text descriptor
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -170,7 +166,30 @@ type PlainVariants<Sch extends Top, M extends Meta.Meta> = M["version"] extends 
         }>;
 
 /**
- * Variant-aware schema after applying @beep/effect-drizzle's default and generated truth table.
+ * Applies SQL write strategy to a field's six Effect model variants.
+ *
+ * **Details**
+ *
+ * Ordinary fields appear everywhere, with defaults optional on insert and all
+ * ordinary updates optional. Generated expressions are read-only. Identity-
+ * always fields remain in update only as row locators, and version fields are
+ * optional on insert but required on update.
+ *
+ * **Gotchas**
+ *
+ * Identity-always update membership does not authorize changing the identity;
+ * repository updates consume it for `WHERE`. Explicit `VariantField` inputs
+ * retain their author-defined membership instead of this derived truth table.
+ *
+ * **Example** (Infer effective membership)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { EffectiveSchema } from "@beep/effect-drizzle"
+ *
+ * type NameField = EffectiveSchema<typeof String>
+ * type Update = NameField["schemas"]["update"] // => optional String schema
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -184,15 +203,6 @@ export type EffectiveSchema<I extends Field.Input> =
 
 /**
  * Effective variant-aware schema record derived from a @beep/effect-drizzle field record.
- *
- * **Example** (Unwrap model fields)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import type { UnwrappedFields } from "./model.ts"
- *
- * type Fields = UnwrappedFields<{ readonly name: typeof String }>
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -272,10 +282,15 @@ type ValidateResolvedColumn<I extends Field.Input> = Field.Input extends I
  * **Example** (Validate a model field record)
  *
  * ```ts
- * import { String } from "effect/Schema"
- * import type { ValidateFields } from "./model.ts"
+ * import { Date as DateSchema, String } from "effect/Schema"
+ * import type { ValidateFields } from "@beep/effect-drizzle"
  *
- * type Valid = ValidateFields<{ readonly name: typeof String }>
+ * type Accepted = ValidateFields<{ readonly name: typeof String }>
+ * // => { readonly name: unknown }
+ *
+ * type Rejected = ValidateFields<{ readonly createdAt: typeof DateSchema }>
+ * // => createdAt carries ~effect-drizzle.error:
+ * // "this field's encoded type does not derive a column — add explicit metadata (...)"
  * ```
  *
  * @category validation
@@ -300,15 +315,6 @@ export type ValidateFields<F extends FieldsInput> = {
 /**
  * Compile-time diagnostic returned when {@link Model} omits its self type.
  *
- * **Example** (Inspect the diagnostic)
- *
- * ```ts
- * import type { MissingSelfGeneric } from "./model.ts"
- *
- * declare const diagnostic: MissingSelfGeneric
- * console.log(diagnostic)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -316,15 +322,22 @@ export type MissingSelfGeneric =
   `Missing \`Self\` generic — use \`class Self extends EffectDrizzle.Model<Self>(identifier)({ ... }) {}\``;
 
 /**
- * @beep/effect-drizzle metadata statics attached to every generated model class.
+ * Metadata statics attached by `@beep/effect-drizzle` to every generated model class.
+ *
+ * **Details**
+ *
+ * `sql` retains the derived table name, original field record, resolved column
+ * metadata, and optional table-extras callback.
  *
  * **Example** (Read model statics)
  *
  * ```ts
- * import type { FieldsInput, Statics } from "./model.ts"
+ * import { String } from "effect/Schema"
+ * import type { Statics } from "@beep/effect-drizzle"
  *
- * declare const model: Statics<FieldsInput>
- * console.log(model.sql.tableName)
+ * type UserStatics = Statics<{ readonly name: typeof String }>
+ * type Fields = UserStatics["sql"]["fields"]
+ * // => { readonly name: typeof String }
  * ```
  *
  * @category models
@@ -340,14 +353,22 @@ export interface Statics<F extends FieldsInput> {
 }
 
 /**
- * Complete Effect variant class plus the @beep/effect-drizzle statics for a field record.
+ * Combines an Effect variant class with resolved SQL statics.
+ *
+ * **Details**
+ *
+ * The class constructor represents the select variant and exposes all six
+ * operation schemas as statics alongside `sql` metadata.
  *
  * **Example** (Name a generated model type)
  *
  * ```ts
- * import type { FieldsInput, ModelClass } from "./model.ts"
+ * import { String } from "effect/Schema"
+ * import type { ModelClass } from "@beep/effect-drizzle"
  *
- * type Generated = ModelClass<object, FieldsInput>
+ * interface User { readonly name: string }
+ * type Generated = ModelClass<User, { readonly name: typeof String }>
+ * type Insert = Generated["insert"]["Type"] // => { readonly name: string }
  * ```
  *
  * @category models
@@ -362,15 +383,23 @@ export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
 } & Statics<F>;
 
 /**
- * Structural bound accepted by the table and cross-model projectors.
+ * Structural model bound accepted by PostgreSQL projectors and assembly.
+ *
+ * **When to use**
+ *
+ * Use as a generic constraint for utilities that consume any PostgreSQL model
+ * without preserving its exact fields.
  *
  * **Example** (Accept any @beep/effect-drizzle model)
  *
  * ```ts
- * import type { AnyModel } from "./model.ts"
+ * import { String } from "effect/Schema"
+ * import { Model, type AnyModel } from "@beep/effect-drizzle"
  *
  * const tableName = (model: AnyModel) => model.sql.tableName
- * console.log(tableName)
+ * class User extends Model<User>("User")({ name: String }) {}
+ *
+ * tableName(User) // => "user"
  * ```
  *
  * @category models
@@ -602,19 +631,38 @@ export function makeModelClass(
 }
 
 /**
- * Build a variant-aware model class whose fields own their resolved SQL metadata.
+ * Builds a PostgreSQL model class whose schemas own resolved SQL metadata.
+ *
+ * **When to use**
+ *
+ * Use when standalone models and tables intentionally opt out of kit
+ * defaults; use a kit's `Entity` factory for invariant shared columns.
+ *
+ * **Details**
+ *
+ * The identifier's final segment becomes a snake-case table name. Field
+ * schemas drive model variants, Drizzle column metadata, automatic EntityId
+ * references, and optional table extras from one declaration.
+ *
+ * **Gotchas**
+ *
+ * Supply the class itself as `Self`. PostgreSQL and SQLite column descriptors
+ * cannot be mixed, and constructor-time validation still runs if type errors
+ * were suppressed.
  *
  * **Example** (Define a @beep/effect-drizzle model)
  *
  * ```ts
  * import { String } from "effect/Schema"
- * import { Model } from "./model.ts"
+ * import { Model } from "@beep/effect-drizzle"
  *
  * class User extends Model<User>("User")({ name: String }) {}
- * console.log(User.sql.tableName) // "user"
+ * User.sql.tableName // => "user"
+ * Object.keys(User.insert.fields) // => ["name"]
  * ```
  *
- * @category constructors
+ * @see {@link ValidateFields} for compile-time model invariants.
+ * @category factories
  * @since 0.0.0
  */
 export function Model<Self = never>(

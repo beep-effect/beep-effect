@@ -13,6 +13,8 @@
  * record without assertions. Cross-table foreign keys arrive through
  * `schema.ts`; declared table extras and per-column unique metadata share this
  * single projection path.
+ *
+ * @since 0.0.0
  */
 import { sql } from "drizzle-orm";
 import type {
@@ -183,18 +185,24 @@ type ElementAtDepth<Carrier, Dimensions extends PgColumn.ArrayDimension> = Dimen
     : never;
 
 /**
- * Exact Drizzle builder type produced for one @beep/effect-drizzle field.
+ * Projects one schema-owned field to its exact Drizzle PostgreSQL builder type.
+ *
+ * **Details**
+ *
+ * Encoded carrier, nullability, defaults, generation, identity, primary-key
+ * state, and array depth become the Drizzle brands used by model inference.
  *
  * **Example** (Project a string field builder)
  *
  * ```ts
  * import { String } from "effect/Schema"
- * import type { BuilderFor } from "./table.ts"
+ * import type { BuilderFor } from "@beep/effect-drizzle/pg"
  *
  * type StringBuilder = BuilderFor<typeof String>
+ * // => non-null PgTextBuilder with string data
  * ```
  *
- * @category models
+ * @category projections
  * @since 0.0.0
  */
 export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
@@ -218,18 +226,19 @@ export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
 >;
 
 /**
- * Key-preserving Drizzle builder projection of a @beep/effect-drizzle field record.
+ * Projects a field record to key-preserving Drizzle builder types.
  *
  * **Example** (Project a builder record)
  *
  * ```ts
  * import { String } from "effect/Schema"
- * import type { BuildersOf } from "./table.ts"
+ * import type { BuildersOf } from "@beep/effect-drizzle/pg"
  *
  * type Builders = BuildersOf<{ readonly name: typeof String }>
+ * type NameBuilder = Builders["name"] // => builder for the name field
  * ```
  *
- * @category models
+ * @category projections
  * @since 0.0.0
  */
 export type BuildersOf<F extends FieldsInput> = {
@@ -237,18 +246,24 @@ export type BuildersOf<F extends FieldsInput> = {
 };
 
 /**
- * Fully typed Drizzle PostgreSQL table projected from a @beep/effect-drizzle model.
+ * Projects one model type to its complete Drizzle PostgreSQL table type.
+ *
+ * **Details**
+ *
+ * The result preserves model field keys and every builder brand used by
+ * `$inferSelect` and `$inferInsert`.
  *
  * **Example** (Name a projected table)
  *
  * ```ts
- * import type { AnyModel } from "./model.ts"
- * import type { TableOf } from "./table.ts"
+ * import type { AnyModel } from "@beep/effect-drizzle"
+ * import type { TableOf } from "@beep/effect-drizzle/pg"
  *
  * type Table = TableOf<AnyModel>
+ * type Dialect = Table["_"]["dialect"] // => "pg"
  * ```
  *
- * @category models
+ * @category tables
  * @since 0.0.0
  */
 export type TableOf<M extends AnyModel> = PgTableWithColumns<{
@@ -331,18 +346,24 @@ const buildColumn = (
 };
 
 /**
- * Additional table-extra callback evaluated beside model-declared extras.
+ * Adds assembly-owned Drizzle extras beside a model's declared extras.
+ *
+ * **Details**
+ *
+ * Model extras are emitted first and additional extras second. Schema assembly
+ * uses this seam for foreign keys after every model reference is known.
  *
  * **Example** (Declare no additional extras)
  *
  * ```ts
- * import type { AnyModel } from "./model.ts"
- * import type { AdditionalExtras } from "./table.ts"
+ * import type { AnyModel } from "@beep/effect-drizzle"
+ * import type { AdditionalExtras } from "@beep/effect-drizzle/pg"
  *
  * const none: AdditionalExtras<AnyModel> = () => []
+ * none({}) // => []
  * ```
  *
- * @category models
+ * @category tables
  * @since 0.0.0
  */
 export type AdditionalExtras<M extends AnyModel> = (
@@ -373,21 +394,36 @@ const invokeDeclaredExtras = (
 };
 
 /**
- * Project a @beep/effect-drizzle model class into a fully typed Drizzle PostgreSQL table.
+ * Projects one model class into a real, fully typed Drizzle PostgreSQL table.
+ *
+ * **When to use**
+ *
+ * Use when a standalone table needs no cross-model reference wiring. Use
+ * `schema` when foreign keys, shared enum instances, or relations are involved.
+ *
+ * **Details**
+ *
+ * Projection compiles resolved columns, then emits model extras followed by
+ * caller-supplied extras through Drizzle's public `pgTable` API.
+ *
+ * **Gotchas**
+ *
+ * A standalone enum field creates its own enum instance. Cross-table enum
+ * sharing and conflicting-value detection require assembly through `schema`.
  *
  * **Example** (Project a model)
  *
  * ```ts
  * import { getTableName } from "drizzle-orm"
  * import { String } from "effect/Schema"
- * import { Model } from "./model.ts"
- * import { toPgTable } from "./table.ts"
+ * import { Model } from "@beep/effect-drizzle"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
  *
  * class User extends Model<User>("User")({ name: String }) {}
- * console.log(getTableName(toPgTable(User))) // "user"
+ * getTableName(toPgTable(User)) // => "user"
  * ```
  *
- * @category conversions
+ * @category tables
  * @since 0.0.0
  */
 export function toPgTable<M extends AnyModel>(

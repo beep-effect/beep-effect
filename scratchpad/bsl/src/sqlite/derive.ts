@@ -29,14 +29,6 @@ export { DeriveColumnError, isEntityIdLike };
 /**
  * SQLite derivation view of the dialect-neutral EntityId static schema.
  *
- * **Example** (Recognize EntityId metadata)
- *
- * ```ts
- * import { EntityIdLike } from "./derive.ts"
- *
- * console.log(EntityIdLike.is({ tableName: "user", entityType: "User" })) // true
- * ```
- *
  * @category schemas
  * @since 0.0.0
  */

@@ -1,4 +1,11 @@
-/** Dialect-neutral graph records and deterministic relation naming. */
+/**
+ * Builds deterministic relation names and RQBv2 relation configurations.
+ *
+ * Dialect assemblers provide resolved tables and foreign-key edges; this
+ * module turns that graph into forward, reverse, and junction relations.
+ *
+ * @since 0.0.0
+ */
 import {
   type AnyRelation,
   is as isDrizzleEntity,
@@ -130,17 +137,6 @@ const invokeRelationFactory = (
 
 /**
  * Build the dialect-neutral direct, reverse, and junction relation configuration.
- *
- * **Example** (Create an empty relation configuration)
- *
- * ```ts
- * import { makeRelationsConfig } from "./assembly.ts"
- *
- * const config = makeRelationsConfig({}, {}, [], [], (message) => {
- *   throw new Error(message)
- * })
- * console.log(typeof config) // "function"
- * ```
  *
  * @category constructors
  * @since 0.0.0

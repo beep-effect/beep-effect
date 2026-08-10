@@ -1,4 +1,11 @@
-/** Internal SQL intent records shared by dialect implementations. */
+/**
+ * Defines dialect-neutral SQL intent carried beside Effect schemas.
+ *
+ * Metadata records defaults, generation, keys, references, and physical
+ * naming before a dialect projector compiles those choices to Drizzle.
+ *
+ * @since 0.0.0
+ */
 import type { SQL } from "drizzle-orm";
 import { taggedEnum } from "effect/Data";
 import type { TaggedEnum } from "effect/Data";

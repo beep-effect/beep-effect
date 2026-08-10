@@ -73,15 +73,6 @@ import * as PgColumn from "./Column.ts";
 /**
  * Error raised when an encoded schema AST cannot determine one SQL column.
  *
- * **Example** (Construct a derivation error)
- *
- * ```ts
- * import { DeriveColumnError } from "./derive.ts"
- *
- * const error = DeriveColumnError.make({ message: "ambiguous", fieldName: "value", astTag: "Union" })
- * console.log(error._tag) // "DeriveColumnError"
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
@@ -90,28 +81,12 @@ export { DeriveColumnError };
 /**
  * PostgreSQL derivation view of the dialect-neutral EntityId static schema.
  *
- * **Example** (Recognize EntityId metadata)
- *
- * ```ts
- * import { EntityIdLike } from "./derive.ts"
- *
- * console.log(EntityIdLike.is({ tableName: "user", entityType: "User" })) // true
- * ```
- *
  * @category schemas
  * @since 0.0.0
  */
 export const EntityIdLike = EntityIdLikeSchema;
 /**
  * Test unknown input for EntityId schema statics.
- *
- * **Example** (Reject incomplete metadata)
- *
- * ```ts
- * import { isEntityIdLike } from "./derive.ts"
- *
- * console.log(isEntityIdLike({ tableName: "user" })) // false
- * ```
  *
  * @category guards
  * @since 0.0.0
@@ -205,15 +180,6 @@ export type ResolvedColumn<I extends Field.Input> =
 /**
  * Return the select-side schema used as the database representation.
  *
- * **Example** (Select a plain schema)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { selectSchemaOf } from "./derive.ts"
- *
- * console.log(selectSchemaOf(String) === String) // true
- * ```
- *
  * @category getters
  * @since 0.0.0
  */
@@ -236,15 +202,6 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * Explicit metadata should be consulted first; this is the bare-schema path
  * and the nullability oracle for both paths.
  *
- * **Example** (Classify a nullable string)
- *
- * ```ts
- * import { NullOr, String } from "effect/Schema"
- * import { classify } from "./derive.ts"
- *
- * console.log(classify(NullOr(String), "bio").nullable) // true
- * ```
- *
  * @category getters
  * @since 0.0.0
  */
@@ -265,15 +222,6 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
 
 /**
  * Test nullability of a field input's encoded select representation.
- *
- * **Example** (Detect encoded nullability)
- *
- * ```ts
- * import { NullOr, String } from "effect/Schema"
- * import { isNullable } from "./derive.ts"
- *
- * console.log(isNullable(NullOr(String))) // true
- * ```
  *
  * @category guards
  * @since 0.0.0
@@ -395,15 +343,6 @@ const stringLiteralsFromAST = (
  * Nullable literal schemas are accepted after stripping `null`; broad strings,
  * templates, and mixed literal families return `None`.
  *
- * **Example** (Collect enum values)
- *
- * ```ts
- * import { Literals } from "effect/Schema"
- * import { stringLiteralValues } from "./derive.ts"
- *
- * console.log(stringLiteralValues(Literals(["draft", "active"])).pipe)
- * ```
- *
  * @category getters
  * @since 0.0.0
  */
@@ -459,15 +398,6 @@ const collectMaxLengths: {
 
 /**
  * Collect every installed `isMaxLength` bound on the encoded select schema.
- *
- * **Example** (Read a maximum length)
- *
- * ```ts
- * import { String, isMaxLength } from "effect/Schema"
- * import { maxLengths } from "./derive.ts"
- *
- * console.log(maxLengths(String.check(isMaxLength(50)))) // [50]
- * ```
  *
  * @category getters
  * @since 0.0.0

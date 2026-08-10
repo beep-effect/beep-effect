@@ -1,4 +1,11 @@
-/** Dialect-neutral structural contract for EntityId schema statics. */
+/**
+ * Recognizes EntityId schemas through their stable structural metadata.
+ *
+ * Dialect model factories use these statics to derive integer storage and
+ * automatic references without importing an application identity package.
+ *
+ * @since 0.0.0
+ */
 import { hasProperty } from "effect/Predicate";
 import { NonEmptyString, annotate, declare, is } from "effect/Schema";
 
@@ -11,19 +18,6 @@ const isNonEmptyString = is(NonEmptyString);
 
 /**
  * Structural statics carried by dialect-free EntityId schemas.
- *
- * **Example** (Recognize EntityId statics)
- *
- * ```ts
- * import { Int } from "effect/Schema"
- * import { isEntityIdLike } from "./entity-id.ts"
- *
- * const UserId = Object.assign(Int.annotate({ identifier: "UserId" }), {
- *   tableName: "user",
- *   entityType: "User"
- * })
- * console.log(isEntityIdLike(UserId)) // true
- * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -51,15 +45,6 @@ export type EntityIdLike = typeof EntityIdLike.Type;
 
 /**
  * Test unknown input for EntityId schema statics.
- *
- * **Example** (Reject an ordinary schema)
- *
- * ```ts
- * import { String } from "effect/Schema"
- * import { isEntityIdLike } from "./entity-id.ts"
- *
- * console.log(isEntityIdLike(String)) // false
- * ```
  *
  * @category guards
  * @since 0.0.0

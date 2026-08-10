@@ -1,4 +1,11 @@
-/** Dialect-neutral encoded-AST classification algorithm. */
+/**
+ * Classifies encoded Effect schema ASTs into dialect column descriptors.
+ *
+ * The shared traversal strips nullability, rejects ambiguous unions, and lets
+ * each dialect supply the carrier-to-column policy without duplicating it.
+ *
+ * @since 0.0.0
+ */
 import { every, filter, findFirst, head, isArrayEmpty, join, map, of, some } from "effect/Array";
 import { getOrElse, isSome } from "effect/Option";
 import type { Option } from "effect/Option";

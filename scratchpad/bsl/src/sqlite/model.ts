@@ -1,4 +1,11 @@
-/** Variant-aware SQLite model factory with dialect-family validation. */
+/**
+ * Builds SQLite-aware Effect model classes from schema-owned fields.
+ *
+ * Encoded carriers are classified into SQLite storage classes, then the same
+ * metadata drives model variants, Drizzle projection, and relation assembly.
+ *
+ * @since 0.0.0
+ */
 import { reduce } from "effect/Array";
 import {
   fromUndefinedOr,
@@ -37,7 +44,26 @@ export {
   variants,
 } from "../core/variant.ts";
 
-/** String-keyed SQLite field declarations. */
+/**
+ * Describes the string-keyed field record accepted by SQLite {@link Model}.
+ *
+ * **Details**
+ *
+ * Each property is either an Effect schema or a field carrying SQLite metadata.
+ *
+ * **Example** (Describe SQLite fields)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { FieldsInput } from "@beep/effect-drizzle/sqlite"
+ *
+ * type UserFields = { readonly name: typeof String }
+ * type Accepted = UserFields extends FieldsInput ? true : false // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface FieldsInput {
   readonly [key: string]: Field.Input;
 }
@@ -60,7 +86,27 @@ export type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
   { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
 >;
 
-/** Resolved SQLite metadata for every declared field. */
+/**
+ * Projects every declared field to its resolved SQLite metadata.
+ *
+ * **Details**
+ *
+ * Explicit metadata, storage-class derivation, and EntityId references merge
+ * without losing field keys.
+ *
+ * **Example** (Project SQLite field metadata)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { ColumnsOf } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Columns = ColumnsOf<{ readonly displayName: typeof String }>
+ * type Column = Columns["displayName"]["column"] // => SQLite text descriptor
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ColumnsOf<F extends FieldsInput> = {
   readonly [K in keyof F]: ResolvedMetaOf<F[K]>;
 };
@@ -87,7 +133,33 @@ type PlainVariants<Sch extends Top, M extends Meta.Meta> = M["version"] extends 
       ? VariantSchema.Field<{ readonly select: Sch; readonly update: Sch; readonly json: Sch }>
       : VariantSchema.Field<{ readonly select: Sch; readonly json: Sch }>;
 
-/** Effective model schema after the common write-strategy truth table. */
+/**
+ * Applies SQL write strategy to a SQLite field's six model variants.
+ *
+ * **Details**
+ *
+ * Defaults make inserts optional, generated expressions are read-only,
+ * identity row locators remain available on update, and optimistic versions
+ * are required on update.
+ *
+ * **Gotchas**
+ *
+ * Update membership for a database-assigned id is locator policy, not permission
+ * to modify the primary key. Explicit variant fields keep their own membership.
+ *
+ * **Example** (Infer SQLite update membership)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { EffectiveSchema } from "@beep/effect-drizzle/sqlite"
+ *
+ * type NameField = EffectiveSchema<typeof String>
+ * type Update = NameField["schemas"]["update"] // => optional String schema
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EffectiveSchema<I extends Field.Input> =
   Field.SchemaFrom<I> extends VariantSchema.Field.Any
     ? Field.SchemaFrom<I>
@@ -136,7 +208,36 @@ type ValidateResolvedColumn<I extends Field.Input> = Field.Input extends I
     ? Field.SqlTypeError<"this field's encoded type does not derive a SQLite column — add explicit sqlite metadata">
     : unknown;
 
-/** Per-key and whole-model SQLite validation. */
+/**
+ * Validates per-field and whole-model SQLite invariants at compile time.
+ *
+ * **Details**
+ *
+ * Accepted keys reduce to `unknown`. Rejections carry a readable
+ * `~effect-drizzle.error` on the offending key or complete model.
+ *
+ * **Gotchas**
+ *
+ * SQLite rejects every array dimension and every descriptor from another
+ * dialect; those constraints are part of the type result, not runtime flags.
+ *
+ * **Example** (Inspect SQLite validation results)
+ *
+ * ```ts
+ * import { Date as DateSchema, String } from "effect/Schema"
+ * import type { ValidateFields } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Accepted = ValidateFields<{ readonly name: typeof String }>
+ * // => { readonly name: unknown }
+ *
+ * type Rejected = ValidateFields<{ readonly createdAt: typeof DateSchema }>
+ * // => createdAt carries ~effect-drizzle.error:
+ * // "this field's encoded type does not derive a SQLite column — add explicit sqlite metadata"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: ValidateSpecFamily<F[K]> &
     ValidateDimensions<F[K]> &
@@ -152,7 +253,28 @@ export type ValidateFields<F extends FieldsInput> = {
 export type MissingSelfGeneric =
   "Missing `Self` generic — use `class Self extends sqlite.Model<Self>(identifier)({ ... }) {}`";
 
-/** SQLite metadata statics attached to every generated model. */
+/**
+ * Captures SQLite metadata statics attached to every generated model.
+ *
+ * **Details**
+ *
+ * `sql` retains the table name, original fields, resolved columns, and optional
+ * extras callback used by projection and assembly.
+ *
+ * **Example** (Inspect static field types)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { Statics } from "@beep/effect-drizzle/sqlite"
+ *
+ * type UserStatics = Statics<{ readonly name: typeof String }>
+ * type Fields = UserStatics["sql"]["fields"]
+ * // => { readonly name: typeof String }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface Statics<F extends FieldsInput> {
   readonly sql: {
     readonly tableName: string;
@@ -162,7 +284,28 @@ export interface Statics<F extends FieldsInput> {
   };
 }
 
-/** Complete SQLite model class. */
+/**
+ * Combines an Effect variant class with resolved SQLite statics.
+ *
+ * **Details**
+ *
+ * The constructor represents selected rows and the six operation schemas are
+ * exposed as statics beside the SQL metadata.
+ *
+ * **Example** (Name a SQLite model class)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import type { ModelClass } from "@beep/effect-drizzle/sqlite"
+ *
+ * interface User { readonly name: string }
+ * type Generated = ModelClass<User, { readonly name: typeof String }>
+ * type Insert = Generated["insert"]["Type"] // => { readonly name: string }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
   Self,
   UnwrappedFields<F>,
@@ -170,7 +313,28 @@ export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
 > & { readonly [Va in Variant]: VariantSchema.Extract<Va, VariantSchema.Struct<UnwrappedFields<F>>> } &
   Statics<F>;
 
-/** Structural bound accepted by SQLite projectors and assembly. */
+/**
+ * Structural model bound accepted by SQLite projectors and assembly.
+ *
+ * **When to use**
+ *
+ * Use as a generic constraint when exact model fields do not need preservation.
+ *
+ * **Example** (Accept any SQLite model)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Model, type AnyModel } from "@beep/effect-drizzle/sqlite"
+ *
+ * const tableName = (model: AnyModel) => model.sql.tableName
+ * class User extends Model<User>("User")({ name: String }) {}
+ *
+ * tableName(User) // => "user"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface AnyModel extends CoreAnyModel {
   readonly sql: {
     readonly tableName: string;
@@ -343,7 +507,41 @@ export function makeModelClass(
   return withStatics(Base, () => ({ sql: { tableName, fields, columns: state.columns, extras } }));
 }
 
-/** Build a variant-aware SQLite model. */
+/**
+ * Builds a SQLite model class whose schemas own resolved storage metadata.
+ *
+ * **When to use**
+ *
+ * Use when standalone SQLite models and tables opt out of kit defaults;
+ * use a SQLite kit's `Entity` for invariant shared fields.
+ *
+ * **Details**
+ *
+ * The final identifier segment becomes a snake-case table name. The model
+ * factory derives SQLite storage classes, variants, references, and table extras
+ * from one field declaration.
+ *
+ * **Gotchas**
+ *
+ * SQLite has no array columns. Database-assigned keys must be number-mode
+ * `INTEGER PRIMARY KEY`, and PostgreSQL descriptors are rejected.
+ *
+ * **Example** (Define a SQLite model)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Model } from "@beep/effect-drizzle/sqlite"
+ *
+ * class User extends Model<User>("User")({ name: String }) {}
+ *
+ * User.sql.tableName // => "user"
+ * Object.keys(User.insert.fields) // => ["name"]
+ * ```
+ *
+ * @see {@link ValidateFields} for SQLite model invariants.
+ * @category factories
+ * @since 0.0.0
+ */
 export function Model<Self = never>(identifier: string): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
   annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>,

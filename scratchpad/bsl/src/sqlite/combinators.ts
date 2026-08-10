@@ -1,4 +1,11 @@
-/** Pipeable SQLite column setters and shared SQL modifiers. */
+/**
+ * Defines pipeable SQLite storage-class setters and SQL modifiers.
+ *
+ * Encoded carriers constrain every setter at the call site. SQLite-specific
+ * omissions are deliberate: in particular, this module has no array operator.
+ *
+ * @since 0.0.0
+ */
 import type { SQL } from "drizzle-orm";
 import { fromUndefinedOr, getOrElse } from "effect/Option";
 import * as Field from "../core/Field.ts";
@@ -7,14 +14,24 @@ import * as SqliteColumn from "./Column.ts";
 import { DeriveColumnError, isEntityIdLike, stringLiteralValues, type EntityIdLike } from "./derive.ts";
 
 /**
- * Set SQLite TEXT storage in string or JSON mode.
+ * Sets SQLite TEXT storage in string or JSON mode.
+ *
+ * **When to use**
+ *
+ * Use with string mode for textual carriers and JSON mode for structured values
+ * that should remain text-backed rather than BLOB-backed.
+ *
+ * **Details**
+ *
+ * JSON mode delegates serialization to Drizzle while retaining SQLite's TEXT
+ * storage class.
  *
  * **Example** (Store text)
  *
  * ```ts
  * import { String } from "effect/Schema"
  * import { text } from "@beep/effect-drizzle/sqlite"
- * String.pipe(text())
+ * String.pipe(text()).meta.column?.mode // => "text"
  * ```
  *
  * @category combinators
@@ -39,14 +56,24 @@ type IntegerColumn<I extends Field.Input> =
     : SqliteColumn.Integer<"number", "integer">;
 
 /**
- * Set SQLite INTEGER storage in an installed Drizzle mode.
+ * Sets SQLite INTEGER storage in number, boolean, or timestamp mode.
+ *
+ * **When to use**
+ *
+ * Use with the mode matching the encoded carrier; number mode is also required for
+ * database-assigned rowid keys and optimistic versions.
+ *
+ * **Details**
+ *
+ * Number-encoded EntityId schemas retain an `entityId<...>` storage identity
+ * so foreign keys cannot cross domain identities accidentally.
  *
  * **Example** (Store an integer)
  *
  * ```ts
  * import { Int } from "effect/Schema"
  * import { integer } from "@beep/effect-drizzle/sqlite"
- * Int.pipe(integer())
+ * Int.pipe(integer()).meta.column?.mode // => "number"
  * ```
  *
  * @category combinators
@@ -83,7 +110,7 @@ export function integer(options?: { readonly mode: SqliteColumn.IntegerMode }): 
  * import { Finite } from "effect/Schema"
  * import { real } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(Finite.pipe(real()).meta.column?.kind) // "real"
+ * Finite.pipe(real()).meta.column?.kind // => "real"
  * ```
  *
  * @category combinators
@@ -95,7 +122,12 @@ export const real = () => <I extends Field.Input>(
   Field.patch(input, { column: SqliteColumn.Real.make({}) });
 
 /**
- * Set SQLite BLOB storage in buffer, JSON, or bigint mode.
+ * Sets SQLite BLOB storage in buffer, JSON, or bigint mode.
+ *
+ * **When to use**
+ *
+ * Use with buffer mode for bytes, JSON mode for structured binary storage, and
+ * bigint mode for native bigint carriers.
  *
  * **Example** (Store a bigint as a blob)
  *
@@ -103,7 +135,7 @@ export const real = () => <I extends Field.Input>(
  * import { BigInt } from "effect/Schema"
  * import { blob } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(BigInt.pipe(blob({ mode: "bigint" })).meta.column?.kind) // "blob"
+ * BigInt.pipe(blob({ mode: "bigint" })).meta.column?.kind // => "blob"
  * ```
  *
  * @category combinators
@@ -124,7 +156,12 @@ export function blob(options: { readonly mode: SqliteColumn.BlobMode }): unknown
 }
 
 /**
- * Set SQLite NUMERIC storage in string, number, or bigint mode.
+ * Sets SQLite NUMERIC storage in string, number, or bigint mode.
+ *
+ * **When to use**
+ *
+ * Use with string mode to preserve decimal precision; choose number or bigint only
+ * when the schema's encoded carrier already owns that tradeoff.
  *
  * **Example** (Preserve a numeric string)
  *
@@ -132,7 +169,7 @@ export function blob(options: { readonly mode: SqliteColumn.BlobMode }): unknown
  * import { String } from "effect/Schema"
  * import { numeric } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(numeric()).meta.column?.kind) // "numeric"
+ * String.pipe(numeric()).meta.column?.kind // => "numeric"
  * ```
  *
  * @category combinators
@@ -167,14 +204,30 @@ type ValidateEnum<I extends Field.Input> = [Exclude<Field.EncodedOf<I>, null>] e
 type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null>, string>;
 
 /**
- * Compile a literal string domain to TEXT plus a table-local CHECK.
+ * Compiles a finite string domain to TEXT plus a table-local `CHECK`.
+ *
+ * **When to use**
+ *
+ * Use when a literal schema should be enforced by SQLite without inventing a
+ * native enum type that the dialect does not provide.
+ *
+ * **Details**
+ *
+ * Values come from the encoded schema, so the domain is never restated in SQL
+ * metadata. Projection emits the check automatically.
+ *
+ * **Gotchas**
+ *
+ * Each table receives its own check. Reusing one logical enum across tables
+ * duplicates the constraint, and broad string schemas are rejected.
  *
  * **Example** (Declare a checked domain)
  *
  * ```ts
  * import { Literals } from "effect/Schema"
  * import { enum as sqliteEnum } from "@beep/effect-drizzle/sqlite"
- * Literals(["draft", "active"]).pipe(sqliteEnum())
+ * Literals(["draft", "active"]).pipe(sqliteEnum()).meta.column?.values
+ * // => ["draft", "active"]
  * ```
  *
  * @category combinators
@@ -208,7 +261,12 @@ type ValidateNotVersion<I extends Field.Input> = Field.MetaFrom<I>["version"] ex
   : Field.SqlTypeError<"version fields are mutually exclusive with db-assigned keys and generated columns">;
 
 /**
- * Mark a non-null field as an inline primary key.
+ * Marks a non-null field as an inline primary key.
+ *
+ * **Gotchas**
+ *
+ * A model accepts at most one inline key; use `Table.compositePrimaryKey` for
+ * multi-column keys.
  *
  * **Example** (Declare a text primary key)
  *
@@ -216,7 +274,7 @@ type ValidateNotVersion<I extends Field.Input> = Field.MetaFrom<I>["version"] ex
  * import { String } from "effect/Schema"
  * import { primaryKey, text } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(text(), primaryKey()).meta.primaryKey) // true
+ * String.pipe(text(), primaryKey()).meta.primaryKey // => true
  * ```
  *
  * @category combinators
@@ -227,7 +285,7 @@ export const primaryKey = () => <I extends Field.Input>(
 ): Field.Patched<I, { readonly primaryKey: true }> => Field.patch(input, { primaryKey: true });
 
 /**
- * Mark a field as uniquely constrained.
+ * Marks a field as carrying a single-column unique constraint.
  *
  * **Example** (Declare a unique field)
  *
@@ -235,7 +293,7 @@ export const primaryKey = () => <I extends Field.Input>(
  * import { String } from "effect/Schema"
  * import { unique } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(unique()).meta.unique) // true
+ * String.pipe(unique()).meta.unique // => true
  * ```
  *
  * @category combinators
@@ -249,14 +307,29 @@ type ValidateRowidKey<I extends Field.Input> = Field.MetaFrom<I>["column"] exten
   : Field.SqlTypeError<"autoIncrement() requires sqlite.integer number mode">;
 
 /**
- * Declare an INTEGER PRIMARY KEY AUTOINCREMENT value assigned by SQLite.
+ * Declares an `INTEGER PRIMARY KEY AUTOINCREMENT` value assigned by SQLite.
+ *
+ * **When to use**
+ *
+ * Use with SQLite rowid-backed surrogate keys. Ordinary primary keys should use
+ * `primaryKey()` without database assignment.
+ *
+ * **Details**
+ *
+ * The field becomes primary, insert-optional, and identity-by-default in one
+ * correlated metadata change.
+ *
+ * **Gotchas**
+ *
+ * SQLite requires number-mode `integer()` and does not support PostgreSQL's
+ * separate identity-always policy.
  *
  * **Example** (Declare a database-assigned key)
  *
  * ```ts
  * import { Int } from "effect/Schema"
  * import { autoIncrement, integer } from "@beep/effect-drizzle/sqlite"
- * Int.pipe(integer(), autoIncrement())
+ * Int.pipe(integer(), autoIncrement()).meta.identity // => "byDefault"
  * ```
  *
  * @category combinators
@@ -282,7 +355,12 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [Exc
   : Field.SqlTypeError<"SQL expression carrier must equal the field's encoded carrier">;
 
 /**
- * Set a literal SQL default and make the insert field optional.
+ * Sets a literal SQL default that matches the encoded carrier.
+ *
+ * **Details**
+ *
+ * The insert variant becomes optional while selected and update values retain
+ * the schema's encoded type.
  *
  * **Example** (Default a status)
  *
@@ -290,7 +368,7 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [Exc
  * import { Literals } from "effect/Schema"
  * import { default as defaultValue } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(Literals(["draft", "active"]).pipe(defaultValue("draft")).meta.hasDefault) // true
+ * Literals(["draft", "active"]).pipe(defaultValue("draft")).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -303,7 +381,12 @@ export const default_ = <const Value>(value: Value) => <I extends Field.Input>(
 export { default_ as default };
 
 /**
- * Set a typed SQLite expression default.
+ * Sets a typed SQLite expression default with carrier equality checking.
+ *
+ * **When to use**
+ *
+ * Use when the database, rather than the application constructor, should
+ * compute an insert default and a typed Drizzle expression is available.
  *
  * **Example** (Default from an expression)
  *
@@ -312,7 +395,7 @@ export { default_ as default };
  * import { String } from "effect/Schema"
  * import { defaultExpr } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(defaultExpr(sql<string>`lower('A')`)).meta.hasDefault) // true
+ * String.pipe(defaultExpr(sql<string>`lower('A')`)).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -328,7 +411,16 @@ type ValidateTimestampText<I extends Field.Input> = Field.MetaFrom<I>["column"] 
   : Field.SqlTypeError<"defaultNow() requires sqlite.text string storage">;
 
 /**
- * Set SQLite's current time as an ISO-text default.
+ * Sets SQLite's current time as an ISO-text database default.
+ *
+ * **When to use**
+ *
+ * Use when SQLite is the single authority for an insert timestamp.
+ *
+ * **Gotchas**
+ *
+ * Do not combine this database clock with an Effect model constructor default
+ * for the same field; two clocks can produce inconsistent values.
  *
  * **Example** (Default an ISO timestamp)
  *
@@ -336,7 +428,7 @@ type ValidateTimestampText<I extends Field.Input> = Field.MetaFrom<I>["column"] 
  * import { String } from "effect/Schema"
  * import { defaultNow, text } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(text(), defaultNow()).meta.hasDefault) // true
+ * String.pipe(text(), defaultNow()).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -348,7 +440,15 @@ export const defaultNow = () => <I extends Field.Input>(
   Field.patch(input, { default: Meta.Default.now(), hasDefault: true });
 
 /**
- * Set an explicitly unsafe raw SQLite default.
+ * Sets an explicitly unsafe raw SQLite default.
+ *
+ * **When to use**
+ *
+ * Use when only trusted raw SQL can represent the default.
+ *
+ * **Gotchas**
+ *
+ * The string bypasses carrier checking, parameterization, and escaping.
  *
  * **Example** (Use a trusted SQLite expression)
  *
@@ -356,7 +456,7 @@ export const defaultNow = () => <I extends Field.Input>(
  * import { String } from "effect/Schema"
  * import { unsafeDefaultSql } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(unsafeDefaultSql("lower('A')")).meta.hasDefault) // true
+ * String.pipe(unsafeDefaultSql("lower('A')")).meta.hasDefault // => true
  * ```
  *
  * @category combinators
@@ -367,7 +467,11 @@ export const unsafeDefaultSql = (sql: string) => <I extends Field.Input>(
 ): Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true }> =>
   Field.patch(input, { default: Meta.Default.unsafeSql({ sql }), hasDefault: true });
 /**
- * Alias for {@link unsafeDefaultSql}.
+ * Compatibility alias for {@link unsafeDefaultSql}.
+ *
+ * **Gotchas**
+ *
+ * The alias is equally unsafe; its older name does not communicate that boundary.
  *
  * **Example** (Use the compatibility alias)
  *
@@ -375,9 +479,10 @@ export const unsafeDefaultSql = (sql: string) => <I extends Field.Input>(
  * import { String } from "effect/Schema"
  * import { defaultSql } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(defaultSql("lower('A')")).meta.hasDefault) // true
+ * String.pipe(defaultSql("lower('A')")).meta.hasDefault // => true
  * ```
  *
+ * @deprecated Use the explicitly unsafe-named {@link unsafeDefaultSql}.
  * @category combinators
  * @since 0.0.0
  */
@@ -391,7 +496,17 @@ type ValidateVersionCompatibility<I extends Field.Input> = Field.MetaFrom<I>["id
   : Field.SqlTypeError<"version fields cannot use db-assigned key generation">;
 
 /**
- * Mark one number-mode integer as the optimistic version.
+ * Marks one number-mode integer as the optimistic concurrency token.
+ *
+ * **Details**
+ *
+ * The field is optional on insert, required on update, and interpreted as the
+ * expected version by the optimistic repository.
+ *
+ * **Gotchas**
+ *
+ * Update payloads must include the current value. Version fields cannot also
+ * be generated or database-assigned keys.
  *
  * **Example** (Declare a row version)
  *
@@ -399,7 +514,7 @@ type ValidateVersionCompatibility<I extends Field.Input> = Field.MetaFrom<I>["id
  * import { Int } from "effect/Schema"
  * import { integer, version } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(Int.pipe(integer(), version()).meta.version) // true
+ * Int.pipe(integer(), version()).meta.version // => true
  * ```
  *
  * @category combinators
@@ -410,7 +525,12 @@ export const version = () => <I extends Field.Input>(
 ): Field.Patched<I, { readonly version: true }> => Field.patch(input, { version: true });
 
 /**
- * Set a typed SQLite generated expression.
+ * Sets a typed stored generated expression omitted from author writes.
+ *
+ * **Details**
+ *
+ * The expression carrier must equal the field's encoded carrier. The field
+ * remains in selected and JSON rows but disappears from insert and update.
  *
  * **Example** (Generate a normalized value)
  *
@@ -419,7 +539,7 @@ export const version = () => <I extends Field.Input>(
  * import { String } from "effect/Schema"
  * import { generated } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(generated(sql<string>`lower(name)`)).meta.generated)
+ * String.pipe(generated(sql<string>`lower(name)`)).meta.generated._tag // => "sqlExpr"
  * ```
  *
  * @category combinators
@@ -431,7 +551,15 @@ export const generated = <Carrier>(expression: SQL<Carrier>) => <I extends Field
   Field.patch(input, { generated: { _tag: "sqlExpr", expression } });
 
 /**
- * Set an explicitly unsafe raw generated expression.
+ * Sets an explicitly unsafe stored generated expression.
+ *
+ * **When to use**
+ *
+ * Use when only trusted raw SQL can represent the generated expression.
+ *
+ * **Gotchas**
+ *
+ * The raw statement bypasses carrier checking and escaping.
  *
  * **Example** (Generate from trusted SQL)
  *
@@ -439,7 +567,7 @@ export const generated = <Carrier>(expression: SQL<Carrier>) => <I extends Field
  * import { String } from "effect/Schema"
  * import { unsafeGeneratedSql } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated)
+ * String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated._tag // => "unsafeSql"
  * ```
  *
  * @category combinators
@@ -451,7 +579,11 @@ export const unsafeGeneratedSql = (sql: string) => <I extends Field.Input>(
   Field.patch(input, { generated: Meta.Generated.unsafeSql({ sql }) });
 
 /**
- * Override the physical SQLite column name.
+ * Overrides the physical SQLite column name while preserving the field key.
+ *
+ * **When to use**
+ *
+ * Use with legacy schemas or names that differ from the default snake-case policy.
  *
  * **Example** (Choose a physical name)
  *
@@ -459,7 +591,7 @@ export const unsafeGeneratedSql = (sql: string) => <I extends Field.Input>(
  * import { String } from "effect/Schema"
  * import { columnName } from "@beep/effect-drizzle/sqlite"
  *
- * console.log(String.pipe(columnName("display_name")).meta.columnName) // "display_name"
+ * String.pipe(columnName("display_name")).meta.columnName // => "display_name"
  * ```
  *
  * @category combinators
@@ -470,7 +602,17 @@ export const columnName = <const Name extends string>(name: Name) => <I extends 
 ): Field.Patched<I, { readonly columnName: Name }> => Field.patch(input, { columnName: name });
 
 /**
- * Attach an EntityId-derived foreign-key reference.
+ * Attaches a foreign-key target derived from EntityId statics.
+ *
+ * **Details**
+ *
+ * The target table comes from `tableName`, the target column is `id`, and
+ * delete/update actions remain optional policy.
+ *
+ * **Gotchas**
+ *
+ * Assembly compares SQLite storage identity and encoded carrier, so two
+ * number-like fields with different EntityId identities do not silently match.
  *
  * **Example** (Inspect a reference target)
  *
@@ -482,7 +624,7 @@ export const columnName = <const Name extends string>(name: Name) => <I extends 
  *   tableName: "organization",
  *   entityType: "Organization"
  * })
- * console.log(Int.pipe(references(OrganizationId)).meta.references?.tableName) // "organization"
+ * Int.pipe(references(OrganizationId)).meta.references?.tableName // => "organization"
  * ```
  *
  * @category combinators

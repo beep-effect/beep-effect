@@ -1,4 +1,12 @@
-/** Public root surface for the experimental `@beep/effect-drizzle` package. */
+/**
+ * Defines schema-first SQL models, dialect kits, and optimistic repositories.
+ *
+ * The root entrypoint owns dialect-neutral modeling decisions. Dialect-specific
+ * column and table operators live in the PostgreSQL and SQLite subpaths.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 export { make } from "./kit.ts";
 export type {
   Dialect,
