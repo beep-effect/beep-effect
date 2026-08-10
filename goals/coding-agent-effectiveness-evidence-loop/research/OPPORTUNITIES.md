@@ -224,3 +224,46 @@ stamped 2026-08-10 but was lived on 2026-08-05/06.
 What would have prevented it: a packet that names implementation surfaces in its
 SPEC gets its ledger file at mint time, empty, rather than at first friction. Cheap
 enough to fold into the packet template.
+
+## 2026-08-10 — Turbo force does not invalidate TypeScript's stale build graph
+
+Lived while trying to publish the docs-only candor-gate session closeout branch.
+`bun run beep yeet verify` failed `quality:build` and `quality:check` on seven
+TypeScript errors in `packages/drivers/xai/src/XAi.service.ts`, which this branch
+does not touch. A detached probe of `origin/main` at `10902ab196` reproduced the
+same seven errors, while hosted run `31369531689` reports `Check`, `Build`, and
+`Test Unit` green on that exact SHA. This is inherited, but inheritance alone does
+not explain why the authoritative local gate and hosted gate disagree.
+
+The cheap stale-state explanations did not survive:
+
+- `bun install` completed under Bun `1.3.14`, re-linked the workspaces, patched and
+  verified the Effect language-service binary, left the tracked tree unchanged,
+  and the package-local XAI check still produced all seven errors.
+- `TURBO_FORCE=1 bun run build --filter=@beep/xai...` bypassed Turbo's task cache;
+  eight dependency builds passed and `@beep/xai` failed on the same seven errors.
+  The underlying package command remained `tsc -b tsconfig.json` without
+  TypeScript's own `--force`, so this did not prove that the compiler's incremental
+  graph had been rebuilt.
+- `bun run beep ci lane check` locally invoked the hosted-shaped
+  `bun run check -- --concurrency=1`; `@beep/xai` was a cache miss and failed on
+  the same seven errors. The independent tsgo test and smoke steps passed, and the
+  composite correctly returned exit 2.
+
+The hosted Check lane was not cache-masked: it reported remote caching disabled,
+`@beep/xai#check` as `cache bypass, force executing` with Turbo hash
+`f28e6025ed84a7bb`, and passed. But Actions had first run `git clean -ffdx` and a
+frozen install. A disposable detached worktree at the same `10902ab196` SHA also
+passed XAI after a clean frozen install, using the same Bun version, tsgo version,
+and patched compiler SHA-256 as the failing checkout.
+
+That isolated the difference to checkout-local derived state. Running
+`bunx tsgo -b packages/drivers/xai/tsconfig.json --force` in the failing checkout
+regenerated TypeScript's incremental graph; the ordinary package check then passed
+without any source, lockfile, dependency, or compiler-binary change. Root cause:
+stale TypeScript build info survived both `bun install` and the Turbo-level forced
+build. What would have prevented the dead end: when the Effect tsgo patch or its
+dependent type graph changes, invalidate the workspace `node_modules/.tmp/*.tsbuildinfo`
+state or expose a supported root command that performs an actual `tsgo -b --force`.
+The operator guidance must distinguish Turbo cache invalidation from TypeScript
+incremental-state invalidation; they are independent layers.
