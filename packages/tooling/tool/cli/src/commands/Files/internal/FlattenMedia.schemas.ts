@@ -6,8 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/FlattenMedia.schemas");
 
@@ -87,4 +90,7 @@ export class FlattenMediaSummary extends S.Class<FlattenMediaSummary>($I`Flatten
  * @category decoding
  * @since 0.0.0
  */
-export const decodeFlattenMediaOptions = S.decodeUnknownEffect(FlattenMediaOptions);
+export const decodeFlattenMediaOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<FlattenMediaOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<FlattenMediaOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(FlattenMediaOptions));

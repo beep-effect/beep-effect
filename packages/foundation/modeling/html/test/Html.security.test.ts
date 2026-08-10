@@ -54,8 +54,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute);
-const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute);
+const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute)(fc);
+const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute)(fc);
 const text = (value: string): Text => Text.make({ value });
 const fragment = (...children: HtmlFragment["children"]): HtmlFragment => HtmlFragment.make({ children });
 
@@ -162,8 +162,8 @@ describe("@beep/html safe policy", () => {
   it("keeps schema-derived safe URL attributes at their codec fixed points", () =>
     fc.assert(
       fc.property(SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary, (href, src) => {
-        expect(S.decodeUnknownSync(SafeUrlAttribute)(S.encodeSync(SafeUrlAttribute)(href))).toBe(href);
-        expect(S.decodeUnknownSync(SafeImageUrlAttribute)(S.encodeSync(SafeImageUrlAttribute)(src))).toBe(src);
+        expect(S.decodeSync(SafeUrlAttribute)(S.encodeSync(SafeUrlAttribute)(href))).toBe(href);
+        expect(S.decodeSync(SafeImageUrlAttribute)(S.encodeSync(SafeImageUrlAttribute)(src))).toBe(src);
       }),
       fcRuns(100)
     ));
@@ -253,7 +253,7 @@ describe("@beep/html safe policy", () => {
     ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
 
     for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
-      const decoded = S.decodeUnknownSync(Anchor)({
+      const decoded = S.decodeSync(Anchor)({
         _tag: "a",
         children: [{ _tag: "#text", value: "link" }],
         href: "https://example.com",
@@ -263,7 +263,7 @@ describe("@beep/html safe policy", () => {
       expect(Exit.isSuccess(safeExit(fragment(decoded)))).toBe(true);
     }
     for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
-      const decoded = S.decodeUnknownSync(Anchor)({
+      const decoded = S.decodeSync(Anchor)({
         _tag: "a",
         children: [{ _tag: "#text", value: "link" }],
         href: "https://example.com",
@@ -415,7 +415,7 @@ describe("@beep/html canonical serialization", () => {
       '<svg href="javascript:alert(1)" onload="alert(&quot;x&quot;)" style="fill:red" xlink:href="data:image/svg+xml?a=1&amp;b=2"></svg>'
     );
     expect(() =>
-      S.decodeUnknownSync(ForeignElement)({
+      S.decodeSync(ForeignElement)({
         _tag: "#foreign",
         namespace: "svg",
         name: 'svg onload="x"',

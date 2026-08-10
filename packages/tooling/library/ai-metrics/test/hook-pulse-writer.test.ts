@@ -583,7 +583,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     // round-trip half proves the NDJSON line the ledger stores is lossless for
     // every such row, which is what P4 replay actually depends on.
     fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
         const line = encodeHookPulseRow(value);
 
         expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);

@@ -19,7 +19,7 @@ const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 describe("Sha256Hex", () => {
   const decode = S.decodeUnknownSync(Sha256Hex);
-  const arbitrary = S.toArbitrary(Sha256Hex);
+  const arbitrary = S.toArbitrary(Sha256Hex)(fc);
 
   it("accepts canonical lowercase digests", () => {
     expect(decode(knownDigest)).toBe(knownDigest);
@@ -75,7 +75,7 @@ describe("Sha256HexFromBytes", () => {
 
   it.effect("forbids encoding the digest back to source bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
     })
@@ -104,7 +104,7 @@ describe("Sha256HexFromHexBytes", () => {
 
   it.effect("forbids encoding the digest back to source hex bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
     })

@@ -11,7 +11,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
-const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem);
+const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem)(fc);
 const WorkItemEquivalence = S.toEquivalence(DomainWorkItem.WorkItem);
 const fixedTimestamp = DateTime.toDateUtc(DateTime.makeUnsafe(0));
 

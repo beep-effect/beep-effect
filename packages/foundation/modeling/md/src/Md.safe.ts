@@ -16,6 +16,7 @@ import { $MdId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Match, pipe, Result } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -25,6 +26,8 @@ import {
   UserContentLinkUrlPolicySpec,
 } from "./Md.escape.ts";
 import { Document, FootnoteIdentifier, Inline, Inline as InlineSchema } from "./Md.model.ts";
+import type { Effect } from "effect";
+import type * as AST from "effect/SchemaAST";
 import type { Block, FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.safe");
@@ -609,7 +612,10 @@ export type SafeDocument = typeof SafeDocument.Type;
  * @category validation
  * @since 0.0.0
  */
-export const decodeSafeDocument = S.decodeUnknownResult(SafeDocument);
+export const decodeSafeDocument: {
+  (options?: AST.ParseOptions): (input: unknown) => Result.Result<SafeDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Result.Result<SafeDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownResult(SafeDocument));
 
 /**
  * Decodes unknown input into a safe document as an Effect.
@@ -627,7 +633,10 @@ export const decodeSafeDocument = S.decodeUnknownResult(SafeDocument);
  * @category validation
  * @since 0.0.0
  */
-export const decodeSafeDocumentEffect = S.decodeUnknownEffect(SafeDocument);
+export const decodeSafeDocumentEffect: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SafeDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SafeDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SafeDocument));
 
 /**
  * Decodes unknown input into a safe document and throws on failure.

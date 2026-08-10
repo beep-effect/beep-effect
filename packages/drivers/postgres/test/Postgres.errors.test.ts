@@ -1,7 +1,7 @@
 import { createColors } from "@beep/colors";
 import {
   extractPostgresDiagnostics,
-  formatPostgresError,
+  formatPostgresErrorWith,
   formatSql,
   getPgErrorAliases,
   getPgErrorName,
@@ -110,7 +110,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)
+  arbitrary = S.toArbitrary(schema)(fc)
 ): void => {
   fc.assert(
     fc.property(arbitrary, (value) => {
@@ -202,7 +202,7 @@ describe("PostgresError", () => {
   });
 
   it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
-    const postgresErrorArbitrary = S.toArbitrary(PostgresError).map((error) =>
+    const postgresErrorArbitrary = S.toArbitrary(PostgresError)(fc).map((error) =>
       PostgresError.make({
         operation: error.operation,
         cause: O.none(),
@@ -268,7 +268,7 @@ describe("PostgresError", () => {
 
     expect(PostgresError.fromUnknown("diagnostics", error)).toBe(error);
     expect(extractPostgresDiagnostics(error)).toBe(error);
-    expect(formatPostgresError(error, createColors(false))).toContain("23505");
+    expect(formatPostgresErrorWith(createColors(false))(error)).toContain("23505");
   });
 
   it("unwraps Cause.fail pg-like failures", () => {
@@ -380,19 +380,22 @@ describe("PostgresError", () => {
 describe("Postgres formatting", () => {
   it("formats SQL and parameters with a disabled color palette", () => {
     const rendered = formatSql("select * from users where id = $1", [1], createColors(false));
+    const dataLast = formatSql([1], createColors(false))("select * from users where id = $1");
+    const defaults = formatSql()("select 1");
 
     expect(rendered).toContain("select");
     expect(rendered).toContain("from");
     expect(rendered).toContain("$1=1");
+    expect(dataLast).toBe(rendered);
+    expect(defaults).toContain("select");
   });
 
   it("formats Postgres errors", () => {
-    const rendered = formatPostgresError(
+    const rendered = formatPostgresErrorWith(createColors(false))(
       PostgresError.fromUnknown("query", {
         code: "23505",
         message: "duplicate key",
-      }),
-      createColors(false)
+      })
     );
 
     expect(rendered).toContain("POSTGRES ERROR");
@@ -415,12 +418,11 @@ describe("Postgres formatting", () => {
   });
 
   it("formats Postgres errors with invalid SQL without throwing", () => {
-    const rendered = formatPostgresError(
+    const rendered = formatPostgresErrorWith(createColors(false))(
       PostgresError.fromUnknown("query", new Error("syntax failed"), {
         query: "select '",
         params: ["still, opaque"],
-      }),
-      createColors(false)
+      })
     );
 
     expect(rendered).toContain("POSTGRES ERROR");
@@ -429,12 +431,11 @@ describe("Postgres formatting", () => {
   });
 
   it("formats Postgres errors with invalid Date params without throwing", () => {
-    const rendered = formatPostgresError(
+    const rendered = formatPostgresErrorWith(createColors(false))(
       PostgresError.fromUnknown("query", new Error("syntax failed"), {
         query: "select $1",
         params: [Reflect.construct(NativeDate, ["invalid"]) as Date],
-      }),
-      createColors(false)
+      })
     );
 
     expect(rendered).toContain("POSTGRES ERROR");
@@ -458,12 +459,11 @@ describe("Postgres formatting", () => {
         throw new Error("cannot format");
       },
     };
-    const rendered = formatPostgresError(
+    const rendered = formatPostgresErrorWith(createColors(false))(
       PostgresError.fromUnknown("query", new Error("syntax failed"), {
         params: [[unprintable]],
         query: "select $1",
-      }),
-      createColors(false)
+      })
     );
 
     expect(rendered).toContain("POSTGRES ERROR");
@@ -478,12 +478,11 @@ describe("Postgres formatting", () => {
   });
 
   it("formats Postgres errors with hostile proxy and Date subclass params without throwing", () => {
-    const rendered = formatPostgresError(
+    const rendered = formatPostgresErrorWith(createColors(false))(
       PostgresError.fromUnknown("query", new Error("syntax failed"), {
         query: "select $1, $2",
         params: [makeHostileProxy(), new HostileDate()],
-      }),
-      createColors(false)
+      })
     );
 
     expect(rendered).toContain("POSTGRES ERROR");
@@ -492,14 +491,15 @@ describe("Postgres formatting", () => {
   });
 
   it("formats hostile proxy errors without throwing", () => {
-    const rendered = formatPostgresError(makeHostileProxy(), createColors(false));
+    const rendered = formatPostgresErrorWith(createColors(false))(makeHostileProxy());
 
     expect(rendered).toContain("POSTGRES ERROR");
   });
 
   it("formats Cause values with hostile reason boundaries without throwing", () => {
-    const hostileReasonRendered = formatPostgresError(makeCauseWithHostileReason(), createColors(false));
-    const throwingReasonsRendered = formatPostgresError(makeCauseWithThrowingReasons(), createColors(false));
+    const renderPlain = formatPostgresErrorWith(createColors(false));
+    const hostileReasonRendered = renderPlain(makeCauseWithHostileReason());
+    const throwingReasonsRendered = renderPlain(makeCauseWithThrowingReasons());
 
     expect(hostileReasonRendered).toContain("POSTGRES ERROR");
     expect(throwingReasonsRendered).toContain("POSTGRES ERROR");
@@ -519,7 +519,7 @@ describe("Postgres formatting", () => {
         params: ["a@example.com"],
       }
     );
-    const rendered = formatPostgresError(Cause.fail(causeError), createColors(false));
+    const rendered = formatPostgresErrorWith(createColors(false))(Cause.fail(causeError));
 
     expect(rendered).toContain("operation query");
     expect(rendered).toContain("23505");

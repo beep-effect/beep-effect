@@ -79,18 +79,19 @@ export const decodeTestOperationIdentifiers = Effect.fn("FileProcessingTest.deco
     { readonly artifactId: ArtifactId; readonly digest: ContentDigest; readonly operationId: OperationId },
     S.SchemaError
   > {
-    const artifactId = yield* S.decodeUnknownEffect(ArtifactId)(`artifact:${testIdentifierHex}`);
-    const digest = yield* S.decodeUnknownEffect(ContentDigest)(`sha256:${testIdentifierHex}`);
-    const operationId = yield* S.decodeUnknownEffect(OperationId)(`operation:${testIdentifierHex}`);
+    const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${testIdentifierHex}`);
+    const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${testIdentifierHex}`);
+    const operationId = yield* S.decodeEffect(OperationId)(`operation:${testIdentifierHex}`);
     return { artifactId, digest, operationId };
   }
 );
 
+// fallow-ignore-next-line code-duplication -- synthetic fixtures keep their own engine-specific error wording
 const decodeTestArtifactPath = (
   path: string,
   operation: ExportArchiveOperation
 ): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  S.decodeUnknownEffect(PosixPath)(path).pipe(
+  S.decodeEffect(PosixPath)(path).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {
         artifactId: operation.source.id,

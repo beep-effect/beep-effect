@@ -15,7 +15,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -88,7 +88,7 @@ describe("Failure constructors", () => {
   });
 
   it("notSupported honors an explicit message", () => {
-    const err = Backend.notSupported("wink", "extractRelations", "lite model has no RE");
+    const err = Backend.notSupported("wink", "extractRelations", { message: "lite model has no RE" });
     expect(err.message).toBe("lite model has no RE");
   });
 
@@ -127,7 +127,7 @@ describe("Tagged errors are schema-decodable", () => {
     Effect.fnUntraced(function* () {
       const err = Backend.notSupported("wink", "posTag");
       const encoded = yield* S.encodeEffect(Backend.BackendNotSupported)(err);
-      const decoded = yield* S.decodeUnknownEffect(Backend.BackendNotSupported)(encoded);
+      const decoded = yield* S.decodeEffect(Backend.BackendNotSupported)(encoded);
       expect(decoded.backend).toBe("wink");
       expect(decoded.operation).toBe("posTag");
     })

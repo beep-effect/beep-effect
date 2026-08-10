@@ -31,7 +31,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { Readable } from "node:stream";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -320,7 +320,7 @@ const folderSource = (id: string, name: string, parentId: string) => ({
   type: "folder",
 });
 
-const staleRemoteFileId = S.decodeUnknownSync(RemoteItemId)("file-9");
+const staleRemoteFileId = S.decodeSync(RemoteItemId)("file-9");
 
 const boxEvent = (eventId: string, eventType: string, source?: Record<string, unknown>): Record<string, unknown> => ({
   eventId,

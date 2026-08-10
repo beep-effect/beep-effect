@@ -20,7 +20,7 @@ import { RpcTest } from "effect/unstable/rpc";
 import { RuntimeTest } from "@/runtime/Layer";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
 
-const instant = Result.getOrThrow(S.decodeUnknownResult(EntitySchema.DateTimeFromMillis)(2_000));
+const instant = Result.getOrThrow(S.decodeResult(EntitySchema.DateTimeFromMillis)(2_000));
 
 describe("@beep/professional-desktop desktop rpc contract", () => {
   it.effect(

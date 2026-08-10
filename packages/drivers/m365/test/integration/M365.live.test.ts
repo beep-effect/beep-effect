@@ -46,7 +46,7 @@ pipe(
       describe.concurrent("@beep/m365 live integration", () => {
         const LiveLayer = M365.makeLiveLayer(
           Result.getOrThrow(
-            S.decodeUnknownResult(M365ConfigInput)({
+            S.decodeResult(M365ConfigInput)({
               clientId: env.clientId,
               tenantId: env.tenantId,
               tokenCachePath: env.tokenCachePath,

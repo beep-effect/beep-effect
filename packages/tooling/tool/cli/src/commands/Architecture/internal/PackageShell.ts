@@ -89,16 +89,19 @@ const packageShellExportsForRole = ArchitecturePackageRole.$match({
  * @category constructors
  * @since 0.0.0
  */
-export const packageShellRolePlanFor = (
-  target: ArchitecturePlanTarget,
-  role: ArchitecturePackageRole
-): ArchitectureSliceRolePlan =>
-  ArchitectureSliceRolePlan.make({
-    role,
-    packageName: packageNameForRole(target, role),
-    path: pathForRole(target, role),
-    exports: packageShellExportsForRole(role),
-  });
+export const packageShellRolePlanFor: {
+  (role: ArchitecturePackageRole): (target: ArchitecturePlanTarget) => ArchitectureSliceRolePlan;
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): ArchitectureSliceRolePlan;
+} = dual(
+  2,
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): ArchitectureSliceRolePlan =>
+    ArchitectureSliceRolePlan.make({
+      role,
+      packageName: packageNameForRole(target, role),
+      path: pathForRole(target, role),
+      exports: packageShellExportsForRole(role),
+    })
+);
 
 const packageShellDescriptionForRole = (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): string => {
   const contextLabel = Str.replaceAll("-", " ")(Str.kebabCase(target.boundedContext));
@@ -207,22 +210,25 @@ const packageShellDevDependenciesForRole = (role: ArchitecturePackageRole): R.Re
  * @category constructors
  * @since 0.0.0
  */
-export const shellPackageJsonOperationFor = (
-  target: ArchitecturePlanTarget,
-  role: ArchitecturePackageRole
-): WritePackageJsonOperation =>
-  WritePackageJsonOperation.make({
-    kind: "write-package-json",
-    role,
-    path: `${pathForRole(target, role)}/package.json`,
-    packageName: packageNameForRole(target, role),
-    packageDescription: packageShellDescriptionForRole(target, role),
-    repositoryDirectory: pathForRole(target, role),
-    exports: packageShellExportsForRole(role),
-    dependencies: packageShellDependenciesForRole(target, role),
-    devDependencies: packageShellDevDependenciesForRole(role),
-    description: `Write structured ${role} package manifest for ${target.boundedContext}.`,
-  });
+export const shellPackageJsonOperationFor: {
+  (role: ArchitecturePackageRole): (target: ArchitecturePlanTarget) => WritePackageJsonOperation;
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): WritePackageJsonOperation;
+} = dual(
+  2,
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): WritePackageJsonOperation =>
+    WritePackageJsonOperation.make({
+      kind: "write-package-json",
+      role,
+      path: `${pathForRole(target, role)}/package.json`,
+      packageName: packageNameForRole(target, role),
+      packageDescription: packageShellDescriptionForRole(target, role),
+      repositoryDirectory: pathForRole(target, role),
+      exports: packageShellExportsForRole(role),
+      dependencies: packageShellDependenciesForRole(target, role),
+      devDependencies: packageShellDevDependenciesForRole(role),
+      description: `Write structured ${role} package manifest for ${target.boundedContext}.`,
+    })
+);
 
 const packageShellAgentsContent = (
   target: ArchitecturePlanTarget,

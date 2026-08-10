@@ -1,3 +1,4 @@
+import plugin from "@beep/lint-rules/oxlint";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -10,6 +11,36 @@ const run = <A2, E>(program: Effect.Effect<A2, E, NodeServices.NodeServices>): P
   Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 describe("oxlint rules", () => {
+  it("runs the global process rule in-process", () => {
+    const reports: Array<unknown> = [];
+    const rule = plugin.rules["no-global-process-runtime"];
+    if (!("createOnce" in rule)) {
+      throw new Error("Expected the global process rule to use createOnce");
+    }
+    const visitors = rule.createOnce({
+      cwd: process.cwd(),
+      filename: "fixture.ts",
+      report: (finding: unknown) => reports.push(finding),
+    } as never);
+
+    visitors.before?.();
+    visitors.MemberExpression?.({
+      computed: false,
+      object: {
+        computed: false,
+        object: { name: "globalThis", type: "Identifier" },
+        optional: false,
+        property: { name: "process", type: "Identifier" },
+        type: "MemberExpression",
+      },
+      optional: false,
+      property: { name: "platform", type: "Identifier" },
+      type: "MemberExpression",
+    } as never);
+
+    expect(reports).toHaveLength(1);
+  });
+
   for (const rule of OXLINT_RULES) {
     const { invalid, valid } = OXLINT_SOURCES[rule];
 

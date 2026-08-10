@@ -275,16 +275,19 @@ const assertResolvedAddressesAllowed: (
  * @category predicates
  * @since 0.0.0
  */
-export const isBlockedRemoteHost = (
-  hostname: string,
-  options: { readonly allowlist?: ReadonlyArray<string> | undefined } = {}
-): boolean => {
-  const host = normalizeHost(hostname);
-  if (isAllowlisted(host, options.allowlist)) {
-    return false;
+export const isBlockedRemoteHost: {
+  (options?: { readonly allowlist?: ReadonlyArray<string> | undefined }): (hostname: string) => boolean;
+  (hostname: string, options?: { readonly allowlist?: ReadonlyArray<string> | undefined }): boolean;
+} = dual(
+  (args) => P.isString(args[0]),
+  (hostname: string, options: { readonly allowlist?: ReadonlyArray<string> | undefined } = {}): boolean => {
+    const host = normalizeHost(hostname);
+    if (isAllowlisted(host, options.allowlist)) {
+      return false;
+    }
+    return isInternalHost(host);
   }
-  return isInternalHost(host);
-};
+);
 
 /**
  * Fail-closed assertion that a hostname does not target internal network space.

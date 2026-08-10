@@ -303,7 +303,7 @@ const EvidenceSourceHighlightSchema = EvidenceSourceHighlightStruct.mapFields(id
   .annotate({
     toArbitrary: () => (fc) =>
       fc
-        .tuple(fc.nat(10_000), fc.integer({ min: 1, max: 10_000 }), S.toArbitraryLazy(SourceTextIdentity)(fc))
+        .tuple(fc.nat(10_000), fc.integer({ min: 1, max: 10_000 }), S.toArbitrary(SourceTextIdentity)(fc))
         .map(([startChar, width, source]) =>
           EvidenceSourceHighlightStruct.make({
             endChar: NonNegativeInt.make(startChar + width),
@@ -377,9 +377,9 @@ const EvidenceSourcePageHighlightBoundsCheck = S.makeFilter(
     message: "Expected highlight.endChar to be less than or equal to page.totalCodeUnits.",
   }
 );
-const evidenceIdArbitrary = S.toArbitraryLazy(SharedEpistemic.EvidenceId);
-const evidenceSourceHighlightArbitrary = S.toArbitraryLazy(EvidenceSourceHighlight);
-const sourceTextPageArbitrary = S.toArbitraryLazy(SourceTextPage);
+const evidenceIdArbitrary = S.toArbitrary(SharedEpistemic.EvidenceId);
+const evidenceSourceHighlightArbitrary = S.toArbitrary(EvidenceSourceHighlight);
+const sourceTextPageArbitrary = S.toArbitrary(SourceTextPage);
 
 const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity)
   .check(EvidenceSourcePageIdentityCheck, EvidenceSourcePageHighlightBoundsCheck)

@@ -47,6 +47,7 @@ import {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
+import type { SchemaIssue } from "effect";
 import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
 
 const $I = $LexicalSchemaId.create("Lexical.codec");
@@ -133,16 +134,24 @@ const HeadingLevelTag = MappedLiteralKit([
   ["h6", 6],
 ] as const);
 
+// effect 4.0.0-beta.105 makes `makeEffect` honest about failing with a raw
+// `SchemaIssue.Issue`; this module's boundary is `S.SchemaError`, so node
+// construction funnels through this normalizer.
+const asSchemaError = <A, R>(
+  effect: Effect.Effect<A, S.SchemaError | SchemaIssue.Issue, R>
+): Effect.Effect<A, S.SchemaError, R> =>
+  Effect.mapError(effect, (error) => (S.isSchemaError(error) ? error : new S.SchemaError(error)));
+
 const textLeaf: {
   (text: string, format: TextFormatMask): Effect.Effect<TextNode, S.SchemaError>;
   (format: TextFormatMask): (text: string) => Effect.Effect<TextNode, S.SchemaError>;
 } = dual(
   2,
   (text: string, format: TextFormatMask): Effect.Effect<TextNode, S.SchemaError> =>
-    TextNode.makeEffect({ detail: emptyTextDetail, format, mode: "normal", style: "", text })
+    asSchemaError(TextNode.makeEffect({ detail: emptyTextDetail, format, mode: "normal", style: "", text }))
 );
 
-const lineBreak = () => LineBreakNode.makeEffect({});
+const lineBreak = () => asSchemaError(LineBreakNode.makeEffect({}));
 
 const mdInlineText = Match.type<Md.Inline>().pipe(
   Match.tagsExhaustive({
@@ -242,7 +251,7 @@ const inlineToLexical = (
           ? inlinesToLexical(node.children, format, true)
           : Effect.flatMap(inlinesToLexical(node.children, format, true), (children) =>
               Effect.flatMap(decodeSafeUrl(node.href), (url) =>
-                Effect.map(LinkNode.makeEffect({ url, children, title: node.title }), A.of<LexicalNode>)
+                Effect.map(asSchemaError(LinkNode.makeEffect({ url, children, title: node.title })), A.of<LexicalNode>)
               )
             ),
       // Images normally degrade to links so the destination survives. Inside
@@ -252,7 +261,10 @@ const inlineToLexical = (
           ? Effect.map(textLeaf(node.alt, format), A.of<LexicalNode>)
           : Effect.flatMap(textLeaf(node.alt, format), (alt) =>
               Effect.flatMap(decodeSafeUrl(node.src), (url) =>
-                Effect.map(LinkNode.makeEffect({ url, children: [alt], title: node.title }), A.of<LexicalNode>)
+                Effect.map(
+                  asSchemaError(LinkNode.makeEffect({ url, children: [alt], title: node.title })),
+                  A.of<LexicalNode>
+                )
               )
             ),
       br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
@@ -270,11 +282,13 @@ const listItemsToLexical = (
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.forEach(items, (item, index) =>
     Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
-      ListItemNode.makeEffect({
-        checked: O.fromUndefinedOr(item.checked),
-        value: PosInt.make(index + start),
-        children,
-      })
+      asSchemaError(
+        ListItemNode.makeEffect({
+          checked: O.fromUndefinedOr(item.checked),
+          value: PosInt.make(index + start),
+          children,
+        })
+      )
     )
   );
 
@@ -286,7 +300,7 @@ const listItemChildrenToLexical = (
       Md.Inline.is(child)
         ? inlineToLexical(child, emptyTextFormat)
         : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
-          ? Effect.map(blockToLexical(child), A.of<LexicalNode>)
+          ? Effect.map(asSchemaError(blockToLexical(child)), A.of<LexicalNode>)
           : Effect.map(textLeaf(mdBlockText(child), emptyTextFormat), A.of<LexicalNode>)
     ),
     A.flatten
@@ -299,7 +313,7 @@ const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<Lexic
 
 const blockTextParagraph = (block: Md.Block): Effect.Effect<ParagraphNode, S.SchemaError> =>
   Effect.flatMap(textLeaf(mdBlockText(block), emptyTextFormat), (text) =>
-    ParagraphNode.makeEffect({ children: [text] })
+    asSchemaError(ParagraphNode.makeEffect({ children: [text] }))
   );
 
 type ArtifactRef = {

@@ -97,7 +97,7 @@ const taskFixtures: ReadonlyArray<TaskFixture> = [
   },
 ];
 
-const fixturePath = (relativePath: string): OntologyFilePath => S.decodeUnknownSync(OntologyFilePath)(relativePath);
+const fixturePath = (relativePath: string): OntologyFilePath => S.decodeSync(OntologyFilePath)(relativePath);
 
 const fixtureFilePath = (relativePath: string): string =>
   fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url));
@@ -148,7 +148,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
   const cq = yield* readTextFixture(`${fixture.id}/cq.sparql`);
   const reference = yield* parseFixture(fixturePath(`${fixture.id}/reference.ttl`));
   const shapes = yield* parseFixture(fixturePath(`${fixture.id}/shapes.ttl`));
-  const sessionId = yield* S.decodeUnknownEffect(SessionId)(`ontoauthor-${fixture.id}`);
+  const sessionId = yield* S.decodeEffect(SessionId)(`ontoauthor-${fixture.id}`);
   const baseSession = createSession(
     CreateSessionInput.make({
       id: sessionId,

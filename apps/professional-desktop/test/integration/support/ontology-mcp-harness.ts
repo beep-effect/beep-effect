@@ -6,6 +6,7 @@ import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-case
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, Redacted, Ref } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as McpSchema from "effect/unstable/ai/McpSchema";
@@ -21,7 +22,10 @@ import type { Scope } from "effect";
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
 const socketTransportConfig = Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
-export const decodeOntologyFilePath = S.decodeUnknownEffect(OntologyFilePath);
+// unary by contract: `options` stays reachable through `S.decodeUnknownEffect(OntologyFilePath)`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeOntologyFilePath: (input: unknown) => Effect.Effect<OntologyFilePath, S.SchemaError> =
+  S.decodeUnknownEffect(OntologyFilePath);
 const encodeOpenInspectRequest = S.encodeUnknownEffect(OpenInspectRequest);
 const decodeOpenInspectResponse = S.decodeUnknownEffect(OpenInspectResponse);
 const NodeHttp = process.getBuiltinModule("node:http");
@@ -183,18 +187,13 @@ const makeMcpClientProtocol = (useSocketTransport: boolean) =>
     ),
   }).pipe(Layer.provideMerge(RpcSerialization.layerJsonRpc()));
 
-export const withHttpServer = <A2, E>(
-  options: TransportOptions,
-  run: (
-    root: string,
-    ontologyPath: OntologyFilePath,
-    useSocketTransport: boolean
-  ) => Effect.Effect<
-    A2,
-    E,
-    HttpClient.HttpClient | FileSystem.FileSystem | Path.Path | RpcClient.Protocol | Scope.Scope
-  >
-) =>
+type WithHttpServerRun<A2, E> = (
+  root: string,
+  ontologyPath: OntologyFilePath,
+  useSocketTransport: boolean
+) => Effect.Effect<A2, E, HttpClient.HttpClient | FileSystem.FileSystem | Path.Path | RpcClient.Protocol | Scope.Scope>;
+
+const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>) =>
   Effect.scoped(
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
@@ -229,6 +228,11 @@ export const withHttpServer = <A2, E>(
       );
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
+
+export const withHttpServer: {
+  <A2, E>(run: WithHttpServerRun<A2, E>): (options: TransportOptions) => ReturnType<typeof withHttpServerImpl<A2, E>>;
+  <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>): ReturnType<typeof withHttpServerImpl<A2, E>>;
+} = dual(2, withHttpServerImpl);
 
 export const makeMcpClient = Effect.fn("OntologyMcpHttpTest.makeClient")(function* () {
   const client = yield* RpcClient.make(McpSchema.ClientRpcs);

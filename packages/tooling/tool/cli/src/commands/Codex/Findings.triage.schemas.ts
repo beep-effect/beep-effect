@@ -15,7 +15,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   CaptureDate,
@@ -26,6 +27,8 @@ import {
   GitHubRepoSlug,
 } from "./Findings.capture.schemas.ts";
 import { CodexPacketBranch, CodexRecordId } from "./Findings.schemas.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.triage.schemas");
 
@@ -488,7 +491,10 @@ export class CodexTriageLedger extends S.Class<CodexTriageLedger>($I`CodexTriage
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCodexTriageLedger = S.decodeUnknownEffect(CodexTriageLedger);
+export const decodeCodexTriageLedger: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CodexTriageLedger, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CodexTriageLedger, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CodexTriageLedger));
 
 /**
  * Encode a ledger to its JSON wire shape.
@@ -527,4 +533,7 @@ export const decodeCodexTriageLedger = S.decodeUnknownEffect(CodexTriageLedger);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeCodexTriageLedger = S.encodeUnknownSync(CodexTriageLedger);
+export const encodeCodexTriageLedger: {
+  (options?: AST.ParseOptions): (input: unknown) => typeof CodexTriageLedger.Encoded;
+  (input: unknown, options?: AST.ParseOptions): typeof CodexTriageLedger.Encoded;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownSync(CodexTriageLedger));

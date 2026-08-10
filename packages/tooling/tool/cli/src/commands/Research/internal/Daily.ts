@@ -133,7 +133,7 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
   yield* step(
     "history-sift",
     historySiftImpl(
-      yield* S.decodeUnknownEffect(ResearchHistorySiftOptions)({
+      yield* S.decodeEffect(ResearchHistorySiftOptions)({
         browser: options.browser,
         sinceDays: options.sinceDays,
         vaultRoot: options.vaultRoot,

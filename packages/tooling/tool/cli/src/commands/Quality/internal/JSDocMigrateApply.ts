@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { formatJsonc, writeArtifact } from "../../../internal/artifacts/index.ts";
@@ -199,6 +200,14 @@ export const computeJSDocMigrateBinding = (input: {
   });
 };
 
+// Named so the pipeable-signature matcher can relate the data-first and
+// data-last returns; module-local to stay out of the schema-first lint's
+// exported-type-literal surface.
+interface MigratedOrphanPartition {
+  readonly migrated: ReadonlyArray<string>;
+  readonly missing: ReadonlyArray<string>;
+}
+
 /**
  * Split orphan record anchors into already-migrated blocks and true orphans.
  *
@@ -230,22 +239,33 @@ export const computeJSDocMigrateBinding = (input: {
  * @category use-cases
  * @since 0.0.0
  */
-export const partitionMigratedOrphans = (
-  orphanAnchors: ReadonlyArray<string>,
-  currentBlocksByAnchor: MutableHashMap.MutableHashMap<string, { readonly affected: boolean }>
-): { readonly migrated: ReadonlyArray<string>; readonly missing: ReadonlyArray<string> } => {
-  const migrated: Array<string> = [];
-  const missing: Array<string> = [];
-  for (const anchor of orphanAnchors) {
-    const block = MutableHashMap.get(currentBlocksByAnchor, anchor);
-    if (O.isSome(block) && !block.value.affected) {
-      A.appendInPlace(migrated, anchor);
-    } else {
-      A.appendInPlace(missing, anchor);
+export const partitionMigratedOrphans: {
+  (
+    currentBlocksByAnchor: MutableHashMap.MutableHashMap<string, { readonly affected: boolean }>
+  ): (orphanAnchors: ReadonlyArray<string>) => MigratedOrphanPartition;
+  (
+    orphanAnchors: ReadonlyArray<string>,
+    currentBlocksByAnchor: MutableHashMap.MutableHashMap<string, { readonly affected: boolean }>
+  ): MigratedOrphanPartition;
+} = dual(
+  2,
+  (
+    orphanAnchors: ReadonlyArray<string>,
+    currentBlocksByAnchor: MutableHashMap.MutableHashMap<string, { readonly affected: boolean }>
+  ): MigratedOrphanPartition => {
+    const migrated: Array<string> = [];
+    const missing: Array<string> = [];
+    for (const anchor of orphanAnchors) {
+      const block = MutableHashMap.get(currentBlocksByAnchor, anchor);
+      if (O.isSome(block) && !block.value.affected) {
+        A.appendInPlace(migrated, anchor);
+      } else {
+        A.appendInPlace(missing, anchor);
+      }
     }
+    return { migrated, missing };
   }
-  return { migrated, missing };
-};
+);
 
 const bindingIsClean = (report: JSDocMigrateBindingReport): boolean =>
   A.isReadonlyArrayEmpty(report.orphanRecordAnchors) &&

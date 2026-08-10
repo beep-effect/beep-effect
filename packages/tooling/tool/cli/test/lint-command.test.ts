@@ -448,7 +448,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Example.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -466,7 +466,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               'import * as fc from "fast-check";',
               'import * as S from "effect/Schema";',
               "const Worker = S.Struct({ id: S.String, retryCount: S.Int });",
-              "const WorkerArbitrary = S.toArbitrary(Worker);",
+              "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
               "export const staticChecks = [",
               '  S.decodeUnknownEffect(Worker)({ id: "a", retryCount: 1 }),',
               '  S.decodeUnknownEffect(Worker)({ id: "b", retryCount: 2 }),',
@@ -576,7 +576,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Sync.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))

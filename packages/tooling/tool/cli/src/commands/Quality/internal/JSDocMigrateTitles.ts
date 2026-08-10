@@ -465,7 +465,7 @@ const chatCompletionContent = (
             const snippet = Str.slice(0, 240)(bodyText);
             return Effect.fail(migrateTitlesError(`Proxy returned HTTP ${candidate.status}: ${snippet}`));
           }
-          return S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(bodyText).pipe(
+          return S.decodeEffect(S.fromJsonString(S.Unknown))(bodyText).pipe(
             Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response body is not JSON.")),
             Effect.flatMap((body) =>
               decodeChatCompletion(body).pipe(

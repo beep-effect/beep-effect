@@ -46,6 +46,6 @@ describe("Slug", () => {
       slug: Slug,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ slug: "my_post" })).toThrow(`at ["slug"]`);
+    expect(() => S.decodeSync(Payload)({ slug: "my_post" })).toThrow(`at ["slug"]`);
   });
 });

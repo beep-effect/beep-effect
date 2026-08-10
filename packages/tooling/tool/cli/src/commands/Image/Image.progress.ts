@@ -50,6 +50,15 @@ export const renderExtractFramesEvent: {
   })
 );
 
+/** Sink invoked once per FFmpeg event while frames are extracted. */
+type ExtractFramesEventSink = (event: FFmpegEvent) => Effect.Effect<void, never>;
+
+/**
+ * An {@link ExtractFramesEventSink} when progress can be displayed, `undefined`
+ * when stdout is not a TTY and FFmpeg progress must stay unobserved.
+ */
+type ExtractFramesEventSinkOrUndefined = ExtractFramesEventSink | undefined;
+
 /**
  * Build a TTY-only FFmpeg event sink.
  *
@@ -69,8 +78,10 @@ export const renderExtractFramesEvent: {
  * @since 0.0.0
  */
 export const makeExtractFramesEvents: {
-  (terminal: Terminal.Terminal, label: string): ((event: FFmpegEvent) => Effect.Effect<void, never>) | undefined;
-  (label: string): (terminal: Terminal.Terminal) => ((event: FFmpegEvent) => Effect.Effect<void, never>) | undefined;
-} = dual(2, (terminal: Terminal.Terminal, label: string) =>
-  process.stdout.isTTY === true ? (event: FFmpegEvent) => renderExtractFramesEvent(terminal, label, event) : undefined
+  (terminal: Terminal.Terminal, label: string): ExtractFramesEventSinkOrUndefined;
+  (label: string): (terminal: Terminal.Terminal) => ExtractFramesEventSinkOrUndefined;
+} = dual(
+  2,
+  (terminal: Terminal.Terminal, label: string): ExtractFramesEventSinkOrUndefined =>
+    process.stdout.isTTY === true ? (event: FFmpegEvent) => renderExtractFramesEvent(terminal, label, event) : undefined
 );

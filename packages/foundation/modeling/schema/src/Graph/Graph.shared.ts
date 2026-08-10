@@ -157,18 +157,19 @@ export const makeInvalidGraphIssue = (message: string): SchemaIssue.InvalidValue
  * ```ts
  * import { makeGraphConstructionIssue } from "../../src/Graph/Graph.shared.ts"
  *
- * const issue = makeGraphConstructionIssue("node", 0, 1)
+ * const issue = makeGraphConstructionIssue({ entity: "node", expected: 0, received: 1 })
  * console.log(issue._tag)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeGraphConstructionIssue = (
-  entity: "node" | "edge",
-  expected: number,
-  received: number
-): SchemaIssue.InvalidValue => makeInvalidGraphIssue(`Expected ${entity} index ${expected}, got ${received}`);
+export const makeGraphConstructionIssue = (mismatch: {
+  readonly entity: "node" | "edge";
+  readonly expected: number;
+  readonly received: number;
+}): SchemaIssue.InvalidValue =>
+  makeInvalidGraphIssue(`Expected ${mismatch.entity} index ${mismatch.expected}, got ${mismatch.received}`);
 
 /** @internal */
 /**
@@ -345,6 +346,29 @@ export const formatGraph: {
   }
 );
 
+/**
+ * Either graph representation accepted by {@link makeGraphEquivalence}.
+ */
+type GraphValue<Node, Edge> =
+  | Graph_.Graph<Node, Edge, GraphKindValue>
+  | Graph_.MutableGraph<Node, Edge, GraphKindValue>;
+
+/**
+ * Structural equivalence between two graphs.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the data-first and data-last returns of {@link makeGraphEquivalence}.
+ */
+type GraphEquivalence<Node, Edge> = (self: GraphValue<Node, Edge>, that: GraphValue<Node, Edge>) => boolean;
+
+/**
+ * The node-equivalence application step of the data-last
+ * {@link makeGraphEquivalence} form.
+ */
+type GraphEquivalenceForNodes<Node, Edge> = (
+  nodeEquivalence: (self: Node, that: Node) => boolean
+) => GraphEquivalence<Node, Edge>;
+
 /** @internal */
 /**
  * Builds a structural equivalence for two graphs given per-node and per-edge equivalences.
@@ -369,31 +393,18 @@ export const formatGraph: {
  * @since 0.0.0
  */
 export const makeGraphEquivalence: {
+  <Node, Edge>(edgeEquivalence: (self: Edge, that: Edge) => boolean): GraphEquivalenceForNodes<Node, Edge>;
   <Node, Edge>(
     nodeEquivalence: (self: Node, that: Node) => boolean,
     edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ): (
-    self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-    that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-  ) => boolean;
-  <Node, Edge>(
-    edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ): (
-    nodeEquivalence: (self: Node, that: Node) => boolean
-  ) => (
-    self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-    that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-  ) => boolean;
+  ): GraphEquivalence<Node, Edge>;
 } = dual(
   2,
   <Node, Edge>(
     nodeEquivalence: (self: Node, that: Node) => boolean,
     edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ) =>
-    (
-      self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-      that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-    ): boolean => {
+  ): GraphEquivalence<Node, Edge> =>
+    (self: GraphValue<Node, Edge>, that: GraphValue<Node, Edge>): boolean => {
       const selfEncoded = toRawGraphEncoded(self);
       const thatEncoded = toRawGraphEncoded(that);
 

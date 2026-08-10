@@ -89,6 +89,9 @@ extend-exclude = [
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",
+  # Dependency patches: unified-diff context lines truncate mid-word by
+  # format design, which reads as a typo to the checker.
+  "patches/*.patch",
   # Nightly research packets contain sanitized machine-generated source excerpts.
   "research/**",
   "bun.lock",

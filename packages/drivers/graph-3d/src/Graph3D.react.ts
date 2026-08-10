@@ -34,7 +34,7 @@ import type { Graph3DRenderHandle } from "./Graph3D.renderer.ts";
  * const projection = generateSyntheticGraph3DProjection(SyntheticGraph3DOptions.make({}))
  *
  * const useDemo = () => {
- *   const { containerRef, handle, error } = useGraph3DHandle(projection)
+ *   const { containerRef, handle, error } = useGraph3DHandle({ projection })
  *   return { containerRef, mounted: handle !== undefined, error }
  * }
  *
@@ -44,16 +44,17 @@ import type { Graph3DRenderHandle } from "./Graph3D.renderer.ts";
  * @category react
  * @since 0.0.0
  */
-export const useGraph3DHandle = (
-  projection: Graph3DProjection,
-  onNodeSelect?: (nodeIndex: number | undefined) => void
-): {
+export const useGraph3DHandle = (options: {
+  readonly projection: Graph3DProjection;
+  readonly onNodeSelect?: ((nodeIndex: number | undefined) => void) | undefined;
+}): {
   // Inline structural result: a live DOM ref and an imperative handle are
   // runtime capabilities, not data to model as an exported schema.
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
   readonly error: string | undefined;
   readonly handle: Graph3DRenderHandle | undefined;
 } => {
+  const { projection, onNodeSelect } = options;
   const containerRef = useRef<HTMLDivElement>(null);
   const [handle, setHandle] = useState<Graph3DRenderHandle | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -113,7 +114,7 @@ export const useGraph3DHandle = (
  * import type { Graph3DRenderHandle } from "@beep/graph-3d/browser"
  *
  * const useOverlay = (handle: Graph3DRenderHandle | undefined) => {
- *   const fps = useGraph3DFps(handle)
+ *   const fps = useGraph3DFps({ handle })
  *   return `fps ${fps.toFixed(1)}`
  * }
  *
@@ -123,7 +124,11 @@ export const useGraph3DHandle = (
  * @category react
  * @since 0.0.0
  */
-export const useGraph3DFps = (handle: Graph3DRenderHandle | undefined, sampleIntervalMs = 500): number => {
+export const useGraph3DFps = (options: {
+  readonly handle: Graph3DRenderHandle | undefined;
+  readonly sampleIntervalMs?: number | undefined;
+}): number => {
+  const { handle, sampleIntervalMs = 500 } = options;
   const [fps, setFps] = useState(0);
 
   useEffect(() => {

@@ -51,7 +51,7 @@ describe("FileName", () => {
       fileName: FileName,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ fileName: "bad/name.txt" })).toThrow(`at ["fileName"]`);
+    expect(() => S.decodeSync(Payload)({ fileName: "bad/name.txt" })).toThrow(`at ["fileName"]`);
   });
 
   it("decodes object schemas with a fileName property", () => {
@@ -64,7 +64,7 @@ describe("FileName", () => {
   });
 
   it("derives only-valid names from the schema arbitrary and round-trips them", () => {
-    const arbitrary = S.toArbitrary(FileName);
+    const arbitrary = S.toArbitrary(FileName)(fc);
     const isFileName = S.is(FileName);
 
     fc.assert(

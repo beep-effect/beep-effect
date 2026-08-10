@@ -35,7 +35,7 @@ describe("Jsonl", () => {
     "rejects malformed trailing lines instead of returning a parsed prefix",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.decodeUnknownEffect(JsonlTextToUnknown)(`{"name":"Ada","age":36}
+        S.decodeEffect(JsonlTextToUnknown)(`{"name":"Ada","age":36}
 {invalid}
 `)
       );

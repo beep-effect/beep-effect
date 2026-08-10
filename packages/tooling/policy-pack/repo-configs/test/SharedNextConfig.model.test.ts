@@ -151,7 +151,7 @@ describe("Shared Next.js config preset", () => {
   });
 
   it("applies secure-header object defaults through the schema", () => {
-    const config = Result.getOrThrow(S.decodeUnknownResult(SecureHeadersConfig)({}));
+    const config = Result.getOrThrow(S.decodeResult(SecureHeadersConfig)({}));
 
     expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
   });
@@ -164,7 +164,7 @@ describe("Shared Next.js config preset", () => {
 
       expect(makeSecureHeaders(partialConfig)).toEqual([...DEFAULT_BEEP_SECURE_HEADERS, additionalHeader]);
 
-      const config = withSecureHeaders({}, partialConfig);
+      const config = withSecureHeaders(partialConfig)({});
       const headers = yield* Effect.promise(() => Promise.resolve(config.headers?.()));
 
       expect(headers?.[0]?.source).toBe("/(.*)");
@@ -174,15 +174,15 @@ describe("Shared Next.js config preset", () => {
 
   it("round-trips defaulted shared feature schemas", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextMdxConfig), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
+      fc.property(S.toArbitrary(BeepNextMdxConfig)(fc), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextPwaConfig), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
+      fc.property(S.toArbitrary(BeepNextPwaConfig)(fc), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(SecureHeadersConfig), (value) => expectRoundTrip(SecureHeadersConfig, value)),
+      fc.property(S.toArbitrary(SecureHeadersConfig)(fc), (value) => expectRoundTrip(SecureHeadersConfig, value)),
       fcRuns(25)
     );
   });

@@ -255,26 +255,49 @@ const zipWithOperationBuilder = <A, B, C, D, R1, E1, R2, E2>(
 /**
  * Build an {@link OperationBuilder} from name, schemas, and an effectful arrow.
  *
+ * **Details**
+ *
+ * Supplying the schemas and the arrow without the name yields a data-last
+ * builder that takes the name last, so an operation can be named from a `pipe`.
+ *
  * **Example** (Make effectful length)
  *
  * ```ts
  * import { makeOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import { Effect, pipe } from "effect"
  *
  * const length = makeOperation("len", S.String, S.Finite, (s) => Effect.succeed(s.length))
+ * const named = pipe("len", makeOperation(S.String, S.Finite, (s: string) => Effect.succeed(s.length)))
+ *
  * Effect.runPromise(length.run("Effect")).then(console.log) // 6
+ * Effect.runPromise(named.run("Effect")).then(console.log) // 6
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeOperation = <A, B, R = never, E = never>(
-  name: string,
-  inputSchema: S.Schema<A>,
-  outputSchema: S.Schema<B>,
-  f: NLPOperation<A, B, R, E>
-): OperationBuilder<A, B, R, E> => new OperationBuilder(f, inputSchema, outputSchema, name);
+export const makeOperation: {
+  <A, B, R = never, E = never>(
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): (name: string) => OperationBuilder<A, B, R, E>;
+  <A, B, R = never, E = never>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): OperationBuilder<A, B, R, E>;
+} = dual(
+  4,
+  <A, B, R = never, E = never>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): OperationBuilder<A, B, R, E> => new OperationBuilder(f, inputSchema, outputSchema, name)
+);
 
 /**
  * Build an {@link OperationBuilder} from a structured {@link OperationDefinition}.
@@ -305,26 +328,44 @@ export const fromDefinition = <A, B, R, E>(definition: OperationDefinition<A, B,
 /**
  * Build a pure (context-free, infallible) operation from a plain function.
  *
+ * **Details**
+ *
+ * Supplying the schemas and the function without the name yields a data-last
+ * builder that takes the name last, so an operation can be named from a `pipe`.
+ *
  * **Example** (Make pure uppercase)
  *
  * ```ts
  * import { makePureOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import { Effect, pipe } from "effect"
  *
  * const upper = makePureOperation("upper", S.String, S.String, (s) => s.toUpperCase())
+ * const named = pipe("upper", makePureOperation(S.String, S.String, (s: string) => s.toUpperCase()))
+ *
  * Effect.runPromise(upper.run("effect")).then(console.log) // "EFFECT"
+ * Effect.runPromise(named.run("effect")).then(console.log) // "EFFECT"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makePureOperation = <A, B>(
-  name: string,
-  inputSchema: S.Schema<A>,
-  outputSchema: S.Schema<B>,
-  f: (input: A) => B
-): OperationBuilder<A, B> => new OperationBuilder(flow(f, Effect.succeed), inputSchema, outputSchema, name);
+export const makePureOperation: {
+  <A, B>(
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: (input: A) => B
+  ): (name: string) => OperationBuilder<A, B>;
+  <A, B>(name: string, inputSchema: S.Schema<A>, outputSchema: S.Schema<B>, f: (input: A) => B): OperationBuilder<A, B>;
+} = dual(
+  4,
+  <A, B>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: (input: A) => B
+  ): OperationBuilder<A, B> => new OperationBuilder(flow(f, Effect.succeed), inputSchema, outputSchema, name)
+);
 
 /**
  * Functor map for {@link OperationBuilder}, exposed as a dual helper for
@@ -539,6 +580,30 @@ export const traverse =
     Effect.forEach(inputs, (input) => operation.run(input));
 
 /**
+ * The aggregated result carried by a {@link Monoid.Monoid} over carrier `M`.
+ *
+ * **Details**
+ *
+ * `Aggregated<M>` distributes to `M` for every instantiation, so it denotes
+ * exactly the monoid carrier it is applied to. Spelling an aggregation's result
+ * through it keeps the carrier a deferred, named reference in both halves of a
+ * data-first / data-last pair, which is what relates the two signatures.
+ *
+ * **Example** (Naming an aggregated result)
+ *
+ * ```ts
+ * import type { Aggregated } from "@beep/nlp/Operations/Composable"
+ *
+ * const totalCharacters: Aggregated<number> = 8
+ * console.log(totalCharacters) // 8
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type Aggregated<M> = M extends unknown ? M : never;
+
+/**
  * Aggregate an array of values into a single value using a {@link Monoid.Monoid}.
  *
  * **Example** (Aggregate total characters)
@@ -556,8 +621,8 @@ export const traverse =
  * @since 0.0.0
  */
 export const aggregate: {
-  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M): (values: ReadonlyArray<A>) => M;
-  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M;
+  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M): (values: ReadonlyArray<A>) => Aggregated<M>;
+  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): Aggregated<M>;
 } = dual(
   3,
   <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M =>

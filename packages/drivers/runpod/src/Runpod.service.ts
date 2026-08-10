@@ -476,7 +476,7 @@ const decodeJsonResponse = Effect.fnUntraced(function* <Response>(
   );
 
   return yield* pipe(
-    S.decodeUnknownEffect(responseSchema)(body),
+    S.decodeEffect(responseSchema)(body),
     Effect.mapError((cause) => RunpodError.fromDescriptor(descriptor, "response decoding", { cause }))
   );
 });
@@ -710,7 +710,7 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
   rawRequest: RunpodRawRequest
 ) {
   const decodedRequest = yield* pipe(
-    S.decodeUnknownEffect(RunpodRawRequest)(rawRequest),
+    S.decodeEffect(RunpodRawRequest)(rawRequest),
     Effect.mapError((cause) =>
       RunpodError.raw({
         cause,

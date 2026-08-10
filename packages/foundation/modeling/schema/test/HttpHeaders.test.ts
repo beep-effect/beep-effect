@@ -76,10 +76,10 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "COEP",
     headerName: "Cross-Origin-Embedder-Policy",
     validValue: "require-corp",
-    optionArbitrary: S.toArbitrary(CrossOriginEmbedderPolicyOption),
-    decodeDisabled: (input) => S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader)(input),
+    optionArbitrary: S.toArbitrary(CrossOriginEmbedderPolicyOption)(fc),
+    decodeDisabled: (input) => S.decodeSync(CrossOriginEmbedderPolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader),
-    decodeValid: () => S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader)("require-corp"),
+    decodeValid: () => S.decodeSync(CrossOriginEmbedderPolicyHeader)("require-corp"),
     createValueValid: () => CrossOriginEmbedderPolicyHeader.createValue("require-corp").pipe(Effect.orDie),
     createValid: () => CrossOriginEmbedderPolicyHeader.create("require-corp").pipe(Effect.orDie),
     createInvalid: () => CrossOriginEmbedderPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -88,10 +88,10 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "COOP",
     headerName: "Cross-Origin-Opener-Policy",
     validValue: "same-origin",
-    optionArbitrary: S.toArbitrary(CrossOriginOpenerPolicyOption),
-    decodeDisabled: (input) => S.decodeUnknownSync(CrossOriginOpenerPolicyHeader)(input),
+    optionArbitrary: S.toArbitrary(CrossOriginOpenerPolicyOption)(fc),
+    decodeDisabled: (input) => S.decodeSync(CrossOriginOpenerPolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginOpenerPolicyHeader),
-    decodeValid: () => S.decodeUnknownSync(CrossOriginOpenerPolicyHeader)("same-origin"),
+    decodeValid: () => S.decodeSync(CrossOriginOpenerPolicyHeader)("same-origin"),
     createValueValid: () => CrossOriginOpenerPolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginOpenerPolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginOpenerPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -100,10 +100,10 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     label: "CORP",
     headerName: "Cross-Origin-Resource-Policy",
     validValue: "same-origin",
-    optionArbitrary: S.toArbitrary(CrossOriginResourcePolicyOption),
-    decodeDisabled: (input) => S.decodeUnknownSync(CrossOriginResourcePolicyHeader)(input),
+    optionArbitrary: S.toArbitrary(CrossOriginResourcePolicyOption)(fc),
+    decodeDisabled: (input) => S.decodeSync(CrossOriginResourcePolicyHeader)(input),
     decodeOption: S.decodeUnknownSync(CrossOriginResourcePolicyHeader),
-    decodeValid: () => S.decodeUnknownSync(CrossOriginResourcePolicyHeader)("same-origin"),
+    decodeValid: () => S.decodeSync(CrossOriginResourcePolicyHeader)("same-origin"),
     createValueValid: () => CrossOriginResourcePolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginResourcePolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginResourcePolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -112,12 +112,12 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
 
 describe("Secure header schemas", () => {
   it("derives cross-origin option examples directly from the source schema", () => {
-    const optionArbitrary = S.toArbitrary(CrossOriginEmbedderPolicyOption);
+    const optionArbitrary = S.toArbitrary(CrossOriginEmbedderPolicyOption)(fc);
 
     fc.assert(
       fc.property(optionArbitrary, (option) => {
         expectHeader(
-          S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader)(option),
+          S.decodeSync(CrossOriginEmbedderPolicyHeader)(option),
           "Cross-Origin-Embedder-Policy",
           P.isString(option) ? option : undefined
         );
@@ -189,7 +189,7 @@ describe("Secure header schemas", () => {
       ] as const;
       const expected = "max-age=123, enforce, report-uri=https://example.com/report";
 
-      expectHeader(yield* S.decodeUnknownEffect(ExpectCTHeader)(encoded), "Expect-CT", expected);
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)(encoded), "Expect-CT", expected);
 
       // `createValue` is typed for the decoded option but decodes its argument
       // as if it were encoded, so with `reportURI` present no value satisfies
@@ -205,15 +205,11 @@ describe("Secure header schemas", () => {
 
   it.effect("handles Expect-CT disabled and default-enabled forms", () =>
     Effect.gen(function* () {
-      expectHeader(yield* S.decodeUnknownEffect(ExpectCTHeader)(undefined), "Expect-CT", undefined);
-      expectHeader(yield* S.decodeUnknownEffect(ExpectCTHeader)(false), "Expect-CT", undefined);
-      expectHeader(yield* S.decodeUnknownEffect(ExpectCTHeader)(true), "Expect-CT", "max-age=86400");
-      expectHeader(yield* S.decodeUnknownEffect(ExpectCTHeader)([true, {}]), "Expect-CT", "max-age=86400");
-      expectHeader(
-        yield* S.decodeUnknownEffect(ExpectCTHeader)([true, { enforce: false }]),
-        "Expect-CT",
-        "max-age=86400"
-      );
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)(undefined), "Expect-CT", undefined);
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)(false), "Expect-CT", undefined);
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)(true), "Expect-CT", "max-age=86400");
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)([true, {}]), "Expect-CT", "max-age=86400");
+      expectHeader(yield* S.decodeEffect(ExpectCTHeader)([true, { enforce: false }]), "Expect-CT", "max-age=86400");
 
       yield* Effect.promise(() =>
         Promise.resolve(expect(run(ExpectCTHeader.createValue())).resolves.toEqual(O.none()))
@@ -244,7 +240,7 @@ describe("Secure header schemas", () => {
   it.effect("formats HSTS defaults and tuple options", () =>
     Effect.gen(function* () {
       expectHeader(
-        yield* S.decodeUnknownEffect(ForceHttpsRedirectHeader)(undefined),
+        yield* S.decodeEffect(ForceHttpsRedirectHeader)(undefined),
         "Strict-Transport-Security",
         "max-age=63072000"
       );
@@ -264,23 +260,19 @@ describe("Secure header schemas", () => {
 
   it.effect("handles HSTS direct, disabled, and sparse tuple forms", () =>
     Effect.gen(function* () {
+      expectHeader(yield* S.decodeEffect(ForceHttpsRedirectHeader)(false), "Strict-Transport-Security", undefined);
       expectHeader(
-        yield* S.decodeUnknownEffect(ForceHttpsRedirectHeader)(false),
-        "Strict-Transport-Security",
-        undefined
-      );
-      expectHeader(
-        yield* S.decodeUnknownEffect(ForceHttpsRedirectHeader)(true),
+        yield* S.decodeEffect(ForceHttpsRedirectHeader)(true),
         "Strict-Transport-Security",
         "max-age=63072000"
       );
       expectHeader(
-        yield* S.decodeUnknownEffect(ForceHttpsRedirectHeader)([true, {}]),
+        yield* S.decodeEffect(ForceHttpsRedirectHeader)([true, {}]),
         "Strict-Transport-Security",
         "max-age=63072000"
       );
       expectHeader(
-        yield* S.decodeUnknownEffect(ForceHttpsRedirectHeader)([true, { maxAge: 120 }]),
+        yield* S.decodeEffect(ForceHttpsRedirectHeader)([true, { maxAge: 120 }]),
         "Strict-Transport-Security",
         "max-age=120"
       );
@@ -306,7 +298,7 @@ describe("Secure header schemas", () => {
       const option = ["allow-from", { uri: "https://example.com/frame" }] as const;
 
       expectHeader(
-        yield* S.decodeUnknownEffect(FrameGuardHeader)(option),
+        yield* S.decodeEffect(FrameGuardHeader)(option),
         "X-Frame-Options",
         "allow-from https://example.com/frame"
       );
@@ -322,10 +314,10 @@ describe("Secure header schemas", () => {
 
   it.effect("handles Frame-Guard default, direct, disabled, and invalid allow-from forms", () =>
     Effect.gen(function* () {
-      expectHeader(yield* S.decodeUnknownEffect(FrameGuardHeader)(undefined), "X-Frame-Options", "deny");
-      expectHeader(yield* S.decodeUnknownEffect(FrameGuardHeader)(false), "X-Frame-Options", undefined);
-      expectHeader(yield* S.decodeUnknownEffect(FrameGuardHeader)("deny"), "X-Frame-Options", "deny");
-      expectHeader(yield* S.decodeUnknownEffect(FrameGuardHeader)("sameorigin"), "X-Frame-Options", "sameorigin");
+      expectHeader(yield* S.decodeEffect(FrameGuardHeader)(undefined), "X-Frame-Options", "deny");
+      expectHeader(yield* S.decodeEffect(FrameGuardHeader)(false), "X-Frame-Options", undefined);
+      expectHeader(yield* S.decodeEffect(FrameGuardHeader)("deny"), "X-Frame-Options", "deny");
+      expectHeader(yield* S.decodeEffect(FrameGuardHeader)("sameorigin"), "X-Frame-Options", "sameorigin");
 
       yield* Effect.promise(() =>
         Promise.resolve(expect(run(FrameGuardHeader.createValue())).resolves.toEqual(O.some("deny")))
@@ -345,10 +337,10 @@ describe("Secure header schemas", () => {
 
   it.effect("uses secure defaults for NoOpen, NoSniff, and permitted cross-domain policies", () =>
     Effect.gen(function* () {
-      expectHeader(yield* S.decodeUnknownEffect(NoOpenHeader)(undefined), "X-Download-Options", "noopen");
-      expectHeader(yield* S.decodeUnknownEffect(NoSniffHeader)(undefined), "X-Content-Type-Options", "nosniff");
+      expectHeader(yield* S.decodeEffect(NoOpenHeader)(undefined), "X-Download-Options", "noopen");
+      expectHeader(yield* S.decodeEffect(NoSniffHeader)(undefined), "X-Content-Type-Options", "nosniff");
       expectHeader(
-        yield* S.decodeUnknownEffect(PermittedCrossDomainPoliciesHeader)(undefined),
+        yield* S.decodeEffect(PermittedCrossDomainPoliciesHeader)(undefined),
         "X-Permitted-Cross-Domain-Policies",
         "none"
       );
@@ -367,17 +359,17 @@ describe("Secure header schemas", () => {
 
   it.effect("disables and validates one-value security headers", () =>
     Effect.gen(function* () {
-      expectHeader(yield* S.decodeUnknownEffect(NoOpenHeader)(false), "X-Download-Options", undefined);
-      expectHeader(yield* S.decodeUnknownEffect(NoSniffHeader)(false), "X-Content-Type-Options", undefined);
+      expectHeader(yield* S.decodeEffect(NoOpenHeader)(false), "X-Download-Options", undefined);
+      expectHeader(yield* S.decodeEffect(NoSniffHeader)(false), "X-Content-Type-Options", undefined);
       expectHeader(
-        yield* S.decodeUnknownEffect(PermittedCrossDomainPoliciesHeader)(false),
+        yield* S.decodeEffect(PermittedCrossDomainPoliciesHeader)(false),
         "X-Permitted-Cross-Domain-Policies",
         undefined
       );
-      expectHeader(yield* S.decodeUnknownEffect(NoOpenHeader)("noopen"), "X-Download-Options", "noopen");
-      expectHeader(yield* S.decodeUnknownEffect(NoSniffHeader)("nosniff"), "X-Content-Type-Options", "nosniff");
+      expectHeader(yield* S.decodeEffect(NoOpenHeader)("noopen"), "X-Download-Options", "noopen");
+      expectHeader(yield* S.decodeEffect(NoSniffHeader)("nosniff"), "X-Content-Type-Options", "nosniff");
       expectHeader(
-        yield* S.decodeUnknownEffect(PermittedCrossDomainPoliciesHeader)("master-only"),
+        yield* S.decodeEffect(PermittedCrossDomainPoliciesHeader)("master-only"),
         "X-Permitted-Cross-Domain-Policies",
         "master-only"
       );
@@ -419,7 +411,7 @@ describe("Secure header schemas", () => {
       } as const;
 
       expectHeader(
-        yield* S.decodeUnknownEffect(PermissionsPolicyHeader)(option),
+        yield* S.decodeEffect(PermissionsPolicyHeader)(option),
         "Permissions-Policy",
         'camera=(), microphone=(self), geolocation=("https://example.com")'
       );
@@ -458,15 +450,11 @@ describe("Secure header schemas", () => {
         },
       } as const;
 
-      expectHeader(yield* S.decodeUnknownEffect(PermissionsPolicyHeader)(undefined), "Permissions-Policy", undefined);
-      expectHeader(yield* S.decodeUnknownEffect(PermissionsPolicyHeader)(false), "Permissions-Policy", undefined);
+      expectHeader(yield* S.decodeEffect(PermissionsPolicyHeader)(undefined), "Permissions-Policy", undefined);
+      expectHeader(yield* S.decodeEffect(PermissionsPolicyHeader)(false), "Permissions-Policy", undefined);
+      expectHeader(yield* S.decodeEffect(PermissionsPolicyHeader)({ directives: {} }), "Permissions-Policy", undefined);
       expectHeader(
-        yield* S.decodeUnknownEffect(PermissionsPolicyHeader)({ directives: {} }),
-        "Permissions-Policy",
-        undefined
-      );
-      expectHeader(
-        yield* S.decodeUnknownEffect(PermissionsPolicyHeader)(option),
+        yield* S.decodeEffect(PermissionsPolicyHeader)(option),
         "Permissions-Policy",
         'autoplay=*, fullscreen=(self "https://example.com"), payment=("https://pay.example")'
       );
@@ -498,7 +486,7 @@ describe("Secure header schemas", () => {
       const option = ["no-referrer", "origin", "strict-origin-when-cross-origin"] as const;
 
       expectHeader(
-        yield* S.decodeUnknownEffect(ReferrerPolicyHeader)(option),
+        yield* S.decodeEffect(ReferrerPolicyHeader)(option),
         "Referrer-Policy",
         "no-referrer, origin, strict-origin-when-cross-origin"
       );
@@ -517,10 +505,10 @@ describe("Secure header schemas", () => {
     Effect.gen(function* () {
       const reportOption = ["report", { uri: "https://example.com/report" }] as const;
 
-      expectHeader(yield* S.decodeUnknownEffect(XSSProtectionHeader)(undefined), "X-XSS-Protection", "1");
-      expectHeader(yield* S.decodeUnknownEffect(XSSProtectionHeader)(false), "X-XSS-Protection", "0");
+      expectHeader(yield* S.decodeEffect(XSSProtectionHeader)(undefined), "X-XSS-Protection", "1");
+      expectHeader(yield* S.decodeEffect(XSSProtectionHeader)(false), "X-XSS-Protection", "0");
       expectHeader(
-        yield* S.decodeUnknownEffect(XSSProtectionHeader)(reportOption),
+        yield* S.decodeEffect(XSSProtectionHeader)(reportOption),
         "X-XSS-Protection",
         "1; report=https://example.com/report"
       );
@@ -549,7 +537,7 @@ describe("Secure header schemas", () => {
       };
 
       expectHeader(
-        yield* S.decodeUnknownEffect(ContentSecurityPolicyHeader)(option),
+        yield* S.decodeEffect(ContentSecurityPolicyHeader)(option),
         "Content-Security-Policy-Report-Only",
         "script-src 'self'; report-uri https://example.com/csp"
       );
@@ -616,16 +604,8 @@ describe("Secure header schemas", () => {
       expect(createContentSecurityPolicyOptionHeaderValue({ directives: { sandbox: true } })).toEqual(
         O.some("sandbox")
       );
-      expectHeader(
-        yield* S.decodeUnknownEffect(ContentSecurityPolicyHeader)(undefined),
-        "Content-Security-Policy",
-        undefined
-      );
-      expectHeader(
-        yield* S.decodeUnknownEffect(ContentSecurityPolicyHeader)(false),
-        "Content-Security-Policy",
-        undefined
-      );
+      expectHeader(yield* S.decodeEffect(ContentSecurityPolicyHeader)(undefined), "Content-Security-Policy", undefined);
+      expectHeader(yield* S.decodeEffect(ContentSecurityPolicyHeader)(false), "Content-Security-Policy", undefined);
       yield* Effect.promise(() =>
         Promise.resolve(expect(run(ContentSecurityPolicyHeader.createValue())).resolves.toEqual(O.none()))
       );
@@ -639,7 +619,7 @@ describe("Secure header schemas", () => {
         O.isNone(yield* Effect.promise(() => Promise.resolve(run(ContentSecurityPolicyHeader.create(false)))))
       ).toBe(true);
 
-      const emptyDecode = runExit(S.decodeUnknownEffect(ContentSecurityPolicyHeader)({ directives: {} }));
+      const emptyDecode = runExit(S.decodeEffect(ContentSecurityPolicyHeader)({ directives: {} }));
       expect(Exit.isFailure(emptyDecode)).toBe(true);
     })
   );

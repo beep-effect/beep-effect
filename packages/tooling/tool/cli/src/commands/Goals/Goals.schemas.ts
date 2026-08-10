@@ -16,10 +16,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.schemas");
 
@@ -484,4 +486,7 @@ export class GoalManifest extends S.Class<GoalManifest>($I`GoalManifest`)(
  * @category decoding
  * @since 0.0.0
  */
-export const decodeGoalManifest = S.decodeUnknownEffect(GoalManifest);
+export const decodeGoalManifest: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<GoalManifest, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<GoalManifest, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(GoalManifest));

@@ -16,7 +16,7 @@ describe("EgressDenied", () => {
   });
 
   it("round-trips through its schema", () => {
-    const decoded = S.decodeUnknownSync(EgressDenied)({ _tag: "EgressDenied" });
+    const decoded = S.decodeSync(EgressDenied)({ _tag: "EgressDenied" });
 
     expect(EgressDenied.is(decoded)).toBe(true);
     expect(EgressDenied.is({ _tag: "SomethingElse" })).toBe(false);

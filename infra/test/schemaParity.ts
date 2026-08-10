@@ -7,7 +7,7 @@ export const expectSchemaRoundTrip = <A, E>(schema: S.Codec<A, E, never, never>)
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Effect.runSync(S.encodeUnknownEffect(schema)(value));
       const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
 

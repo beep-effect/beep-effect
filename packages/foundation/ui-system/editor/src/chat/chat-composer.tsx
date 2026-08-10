@@ -608,7 +608,7 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
   const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? maxAttachmentBytes;
   const resolvedOnAttach = mountConfig?.onAttach ?? onAttach;
   const resolvedOnSend = mountConfig?.onSend ?? onSend;
-  const resolvedSlashItems = O.getOrElse(S.decodeUnknownOption(SlashItems)(slashItems), () => defaultChatSlashItems);
+  const resolvedSlashItems = O.getOrElse(S.decodeOption(SlashItems)(slashItems), () => defaultChatSlashItems);
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
     Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );

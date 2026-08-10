@@ -211,7 +211,7 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeUnknownEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -270,7 +270,7 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeUnknownEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
       expect(
         pipe(
           Str.split("\n")(footer),

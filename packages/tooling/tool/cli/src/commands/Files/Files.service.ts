@@ -1363,14 +1363,14 @@ const buildNormalizePlan = Effect.fn("Files.buildNormalizePlan")(function* (
 
   for (const file of collection.files) {
     const sourceStem = path.basename(file.name, file.extension);
-    const uniqueTarget = uniqueNormalizeTargetName(sourceStem, options.format, usedTargetNames);
-    usedTargetNames = uniqueTarget.usedTargetNames;
-    const outputPath = path.join(outputDirectory, uniqueTarget.targetName);
+    const targetName = uniqueNormalizeTargetName(sourceStem, options.format, usedTargetNames);
+    usedTargetNames = HashSet.add(usedTargetNames, targetName);
+    const outputPath = path.join(outputDirectory, targetName);
 
     planInputs = A.append(planInputs, {
       file,
       outputPath,
-      targetName: uniqueTarget.targetName,
+      targetName,
     });
   }
   const entries = yield* runFilesProgressForEach(
@@ -1557,10 +1557,10 @@ const buildArchivePoorCandidatesPlan = Effect.fn("Files.buildArchivePoorCandidat
       continue;
     }
 
-    const uniqueTarget = uniqueArchiveTargetName(sourceStem, file.extension, usedTargetNames);
-    usedTargetNames = uniqueTarget.usedTargetNames;
-    const archivePath = path.join(archiveDirectory, uniqueTarget.targetName);
-    const targetStem = path.basename(uniqueTarget.targetName, file.extension);
+    const archiveTargetName = uniqueArchiveTargetName(sourceStem, file.extension, usedTargetNames);
+    usedTargetNames = HashSet.add(usedTargetNames, archiveTargetName);
+    const archivePath = path.join(archiveDirectory, archiveTargetName);
+    const targetStem = path.basename(archiveTargetName, file.extension);
     const sidecarPlan = yield* collectArchiveSidecars(
       sourceStem,
       targetStem,
@@ -1574,7 +1574,7 @@ const buildArchivePoorCandidatesPlan = Effect.fn("Files.buildArchivePoorCandidat
     entries = A.append(
       entries,
       ArchivePoorCandidatesEntry.make({
-        archiveName: uniqueTarget.targetName,
+        archiveName: archiveTargetName,
         archivePath,
         archiveRelativePath: path.relative(archiveDirectory, archivePath),
         decision: "archive",

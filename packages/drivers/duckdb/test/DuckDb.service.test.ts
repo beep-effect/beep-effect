@@ -103,7 +103,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 

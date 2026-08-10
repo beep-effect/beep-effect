@@ -68,7 +68,7 @@ const withToolkit = <A2, E>(
       const platformPath = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-tools-" });
       yield* fileSystem.writeFileString(platformPath.join(root, "ontology.ttl"), fixtureSource);
-      const path = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.ttl");
+      const path = yield* S.decodeEffect(OntologyFilePath)("ontology.ttl");
       return yield* Effect.gen(function* () {
         const tools = yield* OntologyToolService;
         return yield* run(tools, path, root);
@@ -103,8 +103,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
           })
         );
         const validation = yield* tools.validate(ValidateOntologyRequest.make({ path }));
-        const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.prov.ttl");
-        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.dataset.ttl");
+        const provPath = yield* S.decodeEffect(OntologyFilePath)("ontology.prov.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("ontology.dataset.ttl");
         const provenance = yield* tools.exportProvenance(
           ExportProvenanceRequest.make({
             path,
@@ -140,8 +140,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const platformPath = yield* Path.Path;
         const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
-        const unrelatedPath = yield* S.decodeUnknownEffect(OntologyFilePath)("unrelated.ttl");
-        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.dataset.ttl");
+        const unrelatedPath = yield* S.decodeEffect(OntologyFilePath)("unrelated.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("ontology.dataset.ttl");
         const unrelatedSource = "@prefix ex: <https://unrelated.example/> .\nex:subject ex:predicate ex:object .\n";
         const unrelatedTarget = platformPath.join(root, unrelatedPath);
         yield* fileSystem.writeFileString(unrelatedTarget, unrelatedSource);
@@ -171,13 +171,11 @@ describe("ontology agent toolkit real-engine handlers", () => {
       Effect.gen(function* () {
         const platformPath = yield* Path.Path;
         const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
-        const sourceAlias = yield* S.decodeUnknownEffect(OntologyFilePath)("./ontology.ttl");
-        const absoluteSourceAlias = yield* S.decodeUnknownEffect(OntologyFilePath)(
-          platformPath.join(root, "ontology.ttl")
-        );
-        const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)("prov.ttl");
-        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("dataset.ttl");
-        const datasetAlias = yield* S.decodeUnknownEffect(OntologyFilePath)("./prov.ttl");
+        const sourceAlias = yield* S.decodeEffect(OntologyFilePath)("./ontology.ttl");
+        const absoluteSourceAlias = yield* S.decodeEffect(OntologyFilePath)(platformPath.join(root, "ontology.ttl"));
+        const provPath = yield* S.decodeEffect(OntologyFilePath)("prov.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("dataset.ttl");
+        const datasetAlias = yield* S.decodeEffect(OntologyFilePath)("./prov.ttl");
 
         const sourceRefusal = yield* Effect.flip(
           tools.exportProvenance(

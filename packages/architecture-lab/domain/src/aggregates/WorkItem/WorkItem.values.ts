@@ -60,7 +60,7 @@ export const WorkItemId = S.NonEmptyString.pipe(
  * @category entity-ids
  * @since 0.0.0
  */
-export type WorkItemId = S.Schema.Type<typeof WorkItemId>;
+export type WorkItemId = typeof WorkItemId.Type;
 
 /**
  * Human-readable title carried by a WorkItem aggregate.
@@ -109,7 +109,7 @@ export const WorkItemTitle = S.NonEmptyString.pipe(
  * @category value-objects
  * @since 0.0.0
  */
-export type WorkItemTitle = S.Schema.Type<typeof WorkItemTitle>;
+export type WorkItemTitle = typeof WorkItemTitle.Type;
 
 /**
  * Closed lifecycle vocabulary for WorkItem state transitions.

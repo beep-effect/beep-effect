@@ -182,7 +182,7 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
  * import { HashSet } from "effect"
  * import { uniqueNormalizeTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueNormalizeTargetName("image", "png", HashSet.empty())
+ * const targetName = uniqueNormalizeTargetName("image", "png", HashSet.empty())
  * ```
  *
  * @param stem - Source file stem.
@@ -193,22 +193,9 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
  * @since 0.0.0
  */
 export const uniqueNormalizeTargetName: {
-  (
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>) => {
+  (format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string => {
   const extension = `.${format}`;
   let suffix = 0;
   let targetName = `${stem}${extension}`;
@@ -218,10 +205,7 @@ export const uniqueNormalizeTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**
@@ -233,7 +217,7 @@ export const uniqueNormalizeTargetName: {
  * import { HashSet } from "effect"
  * import { uniqueArchiveTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
+ * const targetName = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
  * ```
  *
  * @param stem - Source file stem.
@@ -244,22 +228,9 @@ export const uniqueNormalizeTargetName: {
  * @since 0.0.0
  */
 export const uniqueArchiveTargetName: {
-  (
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>) => {
+  (extension: string, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string => {
   let suffix = 0;
   let targetName = `${stem}${extension}`;
 
@@ -268,10 +239,7 @@ export const uniqueArchiveTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**

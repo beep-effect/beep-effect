@@ -97,7 +97,7 @@ export const RuleNameSchema = S.Literals(RULE_NAMES);
  * @category type-level
  * @since 0.1.0
  */
-export type RuleName = S.Schema.Type<typeof RuleNameSchema>;
+export type RuleName = typeof RuleNameSchema.Type;
 
 /**
  * Schema-backed literal domain for rule diagnostic severities.
@@ -138,7 +138,7 @@ export const RuleSeveritySchema = S.Literals(["warn", "error"]);
  * @category type-level
  * @since 0.1.0
  */
-export type RuleSeverity = S.Schema.Type<typeof RuleSeveritySchema>;
+export type RuleSeverity = typeof RuleSeveritySchema.Type;
 
 class RuleMetadataSchema extends S.Class<RuleMetadataSchema>("RuleMetadataSchema")({
   name: RuleNameSchema,
@@ -148,7 +148,7 @@ class RuleMetadataSchema extends S.Class<RuleMetadataSchema>("RuleMetadataSchema
   scope: S.OptionFromNullOr(S.String),
 }) {}
 
-type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
+type RuleMetadata = RuleMetadataSchema;
 
 /**
  * Schema for the finite rule registry keyed by rule slug.
@@ -196,7 +196,7 @@ export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistr
  * @category configuration
  * @since 0.1.0
  */
-export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeUnknownSync(RuleRegistrySchema)({
+export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeSync(RuleRegistrySchema)({
   "no-native-error": {
     name: "no-native-error",
     severity: "error",

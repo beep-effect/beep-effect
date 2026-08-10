@@ -47,7 +47,7 @@ export const layerLocalLgtmServer: {
       readonly shouldPublishDevToolsSpan?: DevToolsSpanFilter | undefined;
     }
   ): Layer.Layer<never, never, HttpClient.HttpClient>;
-  (options: {
+  (options?: {
     readonly shouldPublishDevToolsSpan?: DevToolsSpanFilter | undefined;
   }): (config: ServerObservabilityConfig) => Layer.Layer<never, never, HttpClient.HttpClient>;
 } = dual(

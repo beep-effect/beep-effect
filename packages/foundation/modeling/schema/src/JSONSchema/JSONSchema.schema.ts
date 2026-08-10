@@ -60,7 +60,8 @@ const getSubSchemaDepthIdentifier = (fc: typeof FastCheck): FastCheck.DepthIdent
 // recursive draw pays that derivation again.
 let nodeArbitrary: FastCheck.Arbitrary<Node.Type> | undefined;
 
-const getNodeArbitrary = (): FastCheck.Arbitrary<Node.Type> => (nodeArbitrary ??= S.toArbitrary(Node));
+const getNodeArbitrary = (fc: typeof FastCheck): FastCheck.Arbitrary<Node.Type> =>
+  (nodeArbitrary ??= S.toArbitrary(Node)(fc));
 
 // Explicit types on the arbitrary factories are load-bearing: they keep the
 // closures' bodies (which reference `Node`) out of the class's own type
@@ -69,14 +70,14 @@ const subSchemaArbitrary = (fc: typeof FastCheck): FastCheck.Arbitrary<SubSchema
   fc.oneof(
     { maxDepth: 2, depthIdentifier: getSubSchemaDepthIdentifier(fc) },
     { arbitrary: fc.boolean(), weight: 4 },
-    { arbitrary: fc.constant(null).chain(getNodeArbitrary), weight: 1 }
+    { arbitrary: fc.constant(null).chain(() => getNodeArbitrary(fc)), weight: 1 }
   );
 
 const subSchemaToArbitrary: () => (fc: typeof FastCheck) => FastCheck.Arbitrary<SubSchema.Type> = () =>
   subSchemaArbitrary;
 
 const nodeToArbitrary: () => (fc: typeof FastCheck) => FastCheck.Arbitrary<Node.Type> = () => (fc) =>
-  fc.constant(null).chain(getNodeArbitrary);
+  fc.constant(null).chain(() => getNodeArbitrary(fc));
 
 const subSchemaRecordArbitrary = (
   fc: typeof FastCheck
@@ -610,9 +611,13 @@ export class Document extends S.Class<Document>($I`Document`)(
     definitions: S.Record(S.String, NodeCodec)
       .annotate({
         toArbitrary: () => (fc) =>
-          fc.dictionary(fc.constantFrom("User", "Item", "A1"), fc.constant(null).chain(getNodeArbitrary), {
-            maxKeys: 2,
-          }),
+          fc.dictionary(
+            fc.constantFrom("User", "Item", "A1"),
+            fc.constant(null).chain(() => getNodeArbitrary(fc)),
+            {
+              maxKeys: 2,
+            }
+          ),
       })
       .pipe(SchemaUtils.withKeyDefaults({}))
       .annotateKey({ description: "Definitions hoisted out of the root schema, keyed by definition name." }),

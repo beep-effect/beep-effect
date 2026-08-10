@@ -45,7 +45,7 @@ const largeDocumentBagPayload: Record<string, unknown> = {
 };
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);

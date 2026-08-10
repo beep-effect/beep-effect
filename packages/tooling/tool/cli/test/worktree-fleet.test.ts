@@ -117,6 +117,11 @@ describe("classifyFleetLiveness", () => {
     expect(classifyFleetLiveness(oneMinuteOld, 30).status).toBe("dormant");
     expect(classifyFleetLiveness(oneMinuteOld, 120).status).toBe("live");
   });
+
+  it("treats an explicit undefined window as the curried default form", () => {
+    const oneMinuteOld = readings({ worktreeMtime: { _tag: "measured", ageSeconds: 60 } });
+    expect(classifyFleetLiveness(undefined)(oneMinuteOld)).toEqual(classifyFleetLiveness(oneMinuteOld));
+  });
 });
 
 describe("parseStatusPorcelainZ", () => {

@@ -128,7 +128,7 @@ describe("TikaServerEngineConfig", () => {
 
   it("round-trips schema-derived Tika Server config through encoded form", () =>
     fc.assert(
-      fc.property(S.toArbitrary(TikaServerEngineConfig), (config) => {
+      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
         expectRoundTrip(TikaServerEngineConfig, config);
       }),
       fcRuns(25)
@@ -143,12 +143,12 @@ describe("TikaServerEngineConfig", () => {
   });
 
   it("rejects a base URL carrying a query string or fragment", () => {
-    const withQuery = S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/?token=x" });
-    const withFragment = S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/#frag" });
+    const withQuery = S.decodeResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/?token=x" });
+    const withFragment = S.decodeResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/#frag" });
 
     expect(Result.isFailure(withQuery)).toBe(true);
     expect(Result.isFailure(withFragment)).toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(TikaServerEngineConfig)({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
   });
 
   it("accepts http and https base URLs", () => {
@@ -176,7 +176,7 @@ describe("TikaServerEngineConfig", () => {
     // "A:/" is the counterexample the round-trip property surfaced: stripping
     // its trailing slash changed the URL's identity because it is opaque.
     for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", "A:/"]) {
-      expect(Result.isFailure(S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl }))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(TikaServerEngineConfig)({ baseUrl }))).toBe(true);
     }
   });
 });

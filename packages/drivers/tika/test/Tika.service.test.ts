@@ -15,11 +15,11 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation);
-const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason);
-const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions);
-const TikaErrorArbitrary = S.toArbitrary(TikaError);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation)(fc);
+const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason)(fc);
+const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions)(fc);
+const TikaErrorArbitrary = S.toArbitrary(TikaError)(fc);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExtractFileOperation = S.encodeEffect(ExtractFileOperation);
@@ -40,13 +40,9 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"),
+  digest: S.decodeEffect(ContentDigest)("sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
   ),
 });

@@ -84,7 +84,7 @@ const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, f
 });
 
 const parseJsonObject = Effect.fn(function* (content: string, filePath: string) {
-  return yield* S.decodeUnknownEffect(S.fromJsonString(JsonObject))(content).pipe(
+  return yield* S.decodeEffect(S.fromJsonString(JsonObject))(content).pipe(
     Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
   );
 });
@@ -295,7 +295,7 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
     const relativeDir = toPosixPath(path.relative(rootDir, absoluteDir));
     const packageJsonPath = path.join(absoluteDir, "package.json");
     const packageJsonContent = yield* readFileString(packageJsonPath);
-    const packageJson = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(packageJsonContent).pipe(
+    const packageJson = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(packageJsonContent).pipe(
       Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${packageJsonPath}"`)),
       Effect.flatMap(
         Effect.fnUntraced(function* (parsed) {

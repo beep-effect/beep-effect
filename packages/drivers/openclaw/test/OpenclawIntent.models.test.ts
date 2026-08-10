@@ -25,12 +25,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference);
-const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion);
-const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey);
-const GatewayIntentArbitrary = S.toArbitrary(OpenclawGatewayIntent);
-const TelegramIntentArbitrary = S.toArbitrary(OpenclawTelegramIntent);
-const DeploymentIntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent);
+const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference)(fc);
+const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion)(fc);
+const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey)(fc);
+const GatewayIntentArbitrary = S.toArbitrary(OpenclawGatewayIntent)(fc);
+const TelegramIntentArbitrary = S.toArbitrary(OpenclawTelegramIntent)(fc);
+const DeploymentIntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
 
 const sameProviderApiKey = S.toEquivalence(OpenclawProviderApiKey);
 const sameGatewayIntent = S.toEquivalence(OpenclawGatewayIntent);
@@ -237,22 +237,20 @@ describe("@beep/openclaw intent models", () => {
         (reference, version, apiKey, gateway, telegram, deployment) => {
           expect(
             Result.getOrThrow(
-              S.decodeUnknownResult(OpenclawSecretReference)(
+              S.decodeResult(OpenclawSecretReference)(
                 Result.getOrThrow(S.encodeResult(OpenclawSecretReference)(reference))
               )
             )
           ).toBe(reference);
           expect(
             Result.getOrThrow(
-              S.decodeUnknownResult(OpenclawTargetVersion)(
-                Result.getOrThrow(S.encodeResult(OpenclawTargetVersion)(version))
-              )
+              S.decodeResult(OpenclawTargetVersion)(Result.getOrThrow(S.encodeResult(OpenclawTargetVersion)(version)))
             )
           ).toBe(version);
           expect(
             sameProviderApiKey(
               Result.getOrThrow(
-                S.decodeUnknownResult(OpenclawProviderApiKey)(
+                S.decodeResult(OpenclawProviderApiKey)(
                   Result.getOrThrow(S.encodeResult(OpenclawProviderApiKey)(apiKey))
                 )
               ),
@@ -262,9 +260,7 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameGatewayIntent(
               Result.getOrThrow(
-                S.decodeUnknownResult(OpenclawGatewayIntent)(
-                  Result.getOrThrow(S.encodeResult(OpenclawGatewayIntent)(gateway))
-                )
+                S.decodeResult(OpenclawGatewayIntent)(Result.getOrThrow(S.encodeResult(OpenclawGatewayIntent)(gateway)))
               ),
               gateway
             )
@@ -272,7 +268,7 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameTelegramIntent(
               Result.getOrThrow(
-                S.decodeUnknownResult(OpenclawTelegramIntent)(
+                S.decodeResult(OpenclawTelegramIntent)(
                   Result.getOrThrow(S.encodeResult(OpenclawTelegramIntent)(telegram))
                 )
               ),
@@ -282,7 +278,7 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameDeploymentIntent(
               Result.getOrThrow(
-                S.decodeUnknownResult(OpenclawDeploymentIntent)(
+                S.decodeResult(OpenclawDeploymentIntent)(
                   Result.getOrThrow(S.encodeResult(OpenclawDeploymentIntent)(deployment))
                 )
               ),
