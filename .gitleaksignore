@@ -88,3 +88,7 @@ goals/repo-crispening-orchestration/ops/inventory/S5/beep__shared-domain.json:ge
 # 4.0.0-beta.104 refresh. Same Config.redacted JSDoc sample, now at line 1484.
 cb5d50cf0a7e6ca0cf7b31be33f2ed931b36e92e:packages/effect/src/Config.ts:generic-api-key:1484
 .repos/effect/packages/effect/src/Config.ts:generic-api-key:1484
+
+# False positive in the immutable Effect subtree squash used by the
+# 4.0.0-beta.105 refresh. Same Config.redacted JSDoc sample at line 1484.
+ceebcebce7e0ffff8dd377f524e05c9ceafde756:packages/effect/src/Config.ts:generic-api-key:1484

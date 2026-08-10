@@ -1926,6 +1926,9 @@
       ],
       "@beep/law-practice-server/LegalPositionRecord": [
         "./packages/law-practice/server/src/LegalPositionRecord/index.ts"
+      ],
+      "@beep/schema/FileInfo": [
+        "./packages/foundation/modeling/schema/src/FileInfo.ts"
       ]
     }
   }

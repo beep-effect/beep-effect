@@ -6,7 +6,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { CauseTaggedError } from "@beep/schema";
-import { Console, Effect, Result } from "effect";
+import { Context, Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
@@ -54,6 +54,47 @@ export const DEFAULT_JSON_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
  * @since 0.0.0
  */
 export const DEFAULT_JSON_PRETTY_MAX_LENGTH = 500_000;
+
+/**
+ * Injectable sink for complete machine-readable command output.
+ *
+ * **Details**
+ *
+ * The default writes directly to stdout so payloads are not capped by Bun's
+ * platform Console. In-process callers can provide this reference with a
+ * capturing or silent writer without leaking output to the host process.
+ *
+ * **Example** (Capture command JSON without writing to stdout)
+ *
+ * ```ts
+ * import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/internal/cli/Json"
+ * import { Effect } from "effect"
+ *
+ * const chunks: Array<string> = []
+ * const program = printCommandJson({ ok: true }).pipe(
+ *   Effect.provideService(
+ *     CommandJsonOutput,
+ *     (text) => Effect.sync(() => {
+ *       chunks.push(text)
+ *     })
+ *   )
+ * )
+ *
+ * console.log(program)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const CommandJsonOutput: Context.Reference<(text: string) => Effect.Effect<void>> = Context.Reference(
+  $I`CommandJsonOutput`,
+  {
+    defaultValue: () => (text: string) =>
+      Effect.sync(() => {
+        process.stdout.write(text);
+      }),
+  }
+);
 
 /**
  * Failure raised when a command cannot encode a machine-readable JSON payload.
@@ -196,6 +237,13 @@ export const formatJsonValue = (value: unknown): string =>
 /**
  * Encode and print an arbitrary JSON-compatible command payload.
  *
+ * **Details**
+ *
+ * Writes directly to stdout at this process boundary rather than through
+ * `Console.log`. Bun's platform Console truncates one log entry at 64 KiB,
+ * which can turn a valid large command payload into invalid JSON; stdout
+ * preserves the complete encoded document.
+ *
  * **Example** (Print a machine-readable command result)
  *
  * ```ts
@@ -212,7 +260,7 @@ export const formatJsonValue = (value: unknown): string =>
 export const printCommandJson = Effect.fn("RepoCli.Json.printCommandJson")(function* (
   value: unknown
 ): Effect.fn.Return<void, CliJsonError> {
-  yield* Console.log(
-    yield* encodeCommandJson(value).pipe(CliJsonError.mapError("Failed to encode command JSON output."))
-  );
+  const encoded = yield* encodeCommandJson(value).pipe(CliJsonError.mapError("Failed to encode command JSON output."));
+  const write = yield* CommandJsonOutput;
+  yield* write(`${encoded}\n`);
 });

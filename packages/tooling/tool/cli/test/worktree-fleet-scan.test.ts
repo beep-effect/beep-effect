@@ -1,12 +1,19 @@
-import { FleetMirrorService, FleetMirrorServiceLive, FleetScanOptions } from "@beep/repo-cli/commands/Worktree";
-import { A, O } from "@beep/utils";
+import {
+  FleetMirrorService,
+  FleetMirrorServiceLive,
+  FleetScanOptions,
+  parseProcStatStartTime,
+} from "@beep/repo-cli/commands/Worktree";
+import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import type { FleetCheckout, FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 60_000;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const README_BASE = "# fleet fixture\n\nshared line\n";
 const README_BETA = "# fleet fixture\n\nshared line (beta)\n";
@@ -67,8 +74,8 @@ const initScratchFleet = Effect.fn("FleetScanTest.initScratchFleet")(function* (
   const beta = path.join(fleetRoot, "beta");
 
   yield* fs.makeDirectory(fleetRoot, { recursive: true });
-  // An empty home keeps the transcript probe hermetic: it measures "absent",
-  // never the developer's real ~/.claude/projects tree.
+  // An empty home keeps the transcript and session-registry probes hermetic:
+  // they measure "absent", never the developer's real ~/.claude tree.
   yield* fs.makeDirectory(homeDir, { recursive: true });
   yield* runGit(tmpDir, ["init", "--bare", "--quiet", "--initial-branch=main", originPath]);
 
@@ -294,6 +301,90 @@ describe("fleet mirror scan", () => {
           // -uall expands the untracked directory, so the row counts the file.
           expect(checkoutAt(snapshot, fixture.alpha).dirtyCount).toBe(1);
           expect(checkoutAt(snapshot, fixture.beta).dirtyCount).toBe(1);
+        })
+      ),
+    SCAN_TIMEOUT_MILLIS
+  );
+
+  it.live(
+    "classifies live with claude-session evidence from a confirmed registry entry recorded in a subdirectory",
+    () =>
+      withScratchFleet((fixture) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+
+          // The test runner's own /proc identity makes the fixture entry pass
+          // the starttime reuse guard against a genuinely live process.
+          const stat = yield* fs.readFileString("/proc/self/stat");
+          const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
+          const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
+          const procStart = O.getOrThrowWith(
+            parseProcStatStartTime(stat),
+            () => new Error("Failed to parse starttime from /proc/self/stat.")
+          );
+
+          const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
+          yield* fs.makeDirectory(sessionsDir, { recursive: true });
+          // Real registry entries carry many more fields than the probe reads;
+          // the fixture keeps a representative sample to prove tolerant decode.
+          const registryEntry = yield* encodeJson({
+            pid: numericPid,
+            sessionId: "fixture-session",
+            cwd: path.join(fixture.beta, "notes"),
+            procStart,
+            version: "2.1.226",
+            kind: "interactive",
+            status: "busy",
+            messagingSocketPath: null,
+          });
+          yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), registryEntry);
+
+          const snapshot = yield* scanFixture(fixture);
+
+          const betaRow = checkoutAt(snapshot, fixture.beta);
+          expect(betaRow.liveness).toBe("live");
+          // The recorded cwd is a subdirectory, so the at-or-under join credits beta.
+          expect(betaRow.livenessEvidence).toContain("claude-session");
+          expect(checkoutAt(snapshot, fixture.alpha).livenessEvidence).not.toContain("claude-session");
+        })
+      ),
+    SCAN_TIMEOUT_MILLIS
+  );
+
+  it.live(
+    "contributes nothing for recycled-PID, dead-PID, or malformed registry entries",
+    () =>
+      withScratchFleet((fixture) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+
+          const stat = yield* fs.readFileString("/proc/self/stat");
+          const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
+          const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
+
+          const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
+          yield* fs.makeDirectory(sessionsDir, { recursive: true });
+          // A stale file over a recycled PID: the process is alive, but its starttime differs.
+          const recycledEntry = yield* encodeJson({
+            pid: numericPid,
+            procStart: "1",
+            cwd: fixture.beta,
+          });
+          yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), recycledEntry);
+          // A PID beyond pid_max, so /proc/<pid>/stat cannot exist.
+          const deadEntry = yield* encodeJson({ pid: 999999999, procStart: "1", cwd: fixture.beta });
+          yield* fs.writeFileString(path.join(sessionsDir, "999999999.json"), deadEntry);
+          // An entry that does not decode.
+          yield* fs.writeFileString(path.join(sessionsDir, "12345.json"), "not json");
+
+          const snapshot = yield* scanFixture(fixture);
+
+          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+          for (const row of snapshot.checkouts) {
+            expect(row.livenessEvidence).not.toContain("claude-session");
+          }
         })
       ),
     SCAN_TIMEOUT_MILLIS

@@ -303,3 +303,38 @@ with the fact/ignorance distinction, this generalizes to a law the build must
 follow: **every field in the fleet snapshot is either measured, or `unknown`.
 Nothing is inferred from a proxy, and nothing defaults to the safe-sounding
 value.**
+
+---
+
+## 2026-08-10 — D7. Harden rung 1 in place; keep delivery push-plus-pull in the same goal.
+
+**Question.** Does the registry liveness probe ship, and does rung 2 use
+push-to-reachable plus pull-for-everyone in a new packet or the retained
+`fleet-mirror` goal?
+
+**Answer.** Ship rung 1.5 in [`goals/fleet-mirror`](../../goals/fleet-mirror/README.md):
+add `claude-session` to the closed evidence domain, accept only registry entries
+whose `procStart` matches `/proc/<pid>/stat` field 22, and use the confirmed
+registry `cwd` only as positive `live` evidence. Rank the truncated text view of
+contested paths by live claimant count and note any checkout claiming more than
+half the rows; keep the canonical JSON ordering unchanged.
+
+Rung 2 also resumes in `goals/fleet-mirror`; it does **not** open a second
+packet. Its fixed shape is **push to reachable sessions plus pull for
+everyone**. Push is an opportunistic, targeted acceleration of the mirror's
+facts, never the authority and never the only delivery path.
+
+**Rationale.** The registry changes only `unknown → live`: no entry, unreadable
+state, malformed JSON, a dead PID, or a PID-reuse mismatch contributes nothing.
+That preserves the measured-or-`unknown` law while replacing a 13.2%-readable
+cwd lookup with a 99.7%-readable starttime guard for Claude sessions. Ranking is
+a renderer concern because the full contested index is already correct; changing
+the snapshot would conflate presentation priority with canonical data.
+
+Messaging does not justify a new ownership boundary. Detection, targeting,
+pull, and push all consume the same fleet snapshot, and T6's socket-less live
+session proves reachability is incomplete. Keeping both delivery halves beside
+the mirror avoids a competing source of truth. The socket's missing cause stays
+measured-and-unexplained, but is dispositioned rather than investigated: the
+pull fallback makes that cause non-blocking unless later coverage measurements
+show otherwise.
