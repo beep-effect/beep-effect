@@ -3,7 +3,7 @@
  *
  * Every combinator is parameter-constrained: an incompatible schema fails to
  * satisfy the input intersection, so the compile error lands AT the pipe
- * callsite with a readable `~bsl.error` message — not downstream where the
+ * callsite with a readable `~effect-drizzle.error` message — not downstream where the
  * field gets used. All combinators funnel through `Field.patch`, the single
  * audited merge seam.
  *
@@ -13,15 +13,16 @@ import type { SQL } from "drizzle-orm";
 import { Match } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { constFalse, constTrue } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as AST from "effect/SchemaAST";
 import { VariantSchema } from "effect/unstable/schema";
-import * as Field from "./Field.ts";
-import * as Meta from "./Meta.ts";
-import * as PgColumn from "./PgColumn.ts";
+import * as Field from "../core/Field.ts";
+import * as Meta from "../core/Meta.ts";
+import * as PgColumn from "./Column.ts";
 import {
   DeriveColumnError,
   arrayElementAST,
@@ -31,30 +32,25 @@ import {
   stringLiteralValues,
   type EntityIdLike,
 } from "./derive.ts";
-import { thunkTrue, thunkFalse } from "@beep/utils";
 
 // ---------------------------------------------------------------------------
 // Column setters
 // ---------------------------------------------------------------------------
 
-const isStringTypeAst = (
-  node: AST.AST,
-  visited: ReadonlyArray<AST.Suspend> = A.empty()
-): boolean =>
+const isStringTypeAst = (node: AST.AST, visited: ReadonlyArray<AST.Suspend> = A.empty()): boolean =>
   Match.type<AST.AST>().pipe(
     Match.tags({
-      String: thunkTrue,
-      TemplateLiteral: thunkTrue,
+      String: constTrue,
+      TemplateLiteral: constTrue,
       Literal: ({ literal }) => P.isString(literal),
       Enum: ({ enums }) => A.every(enums, ([, value]) => P.isString(value)),
-      Union: ({ types }) =>
-        A.every(types, (member) => isStringTypeAst(member, visited)),
+      Union: ({ types }) => A.every(types, (member) => isStringTypeAst(member, visited)),
       Suspend: (suspend) =>
         A.some(visited, Eq.equals(suspend))
           ? false
           : isStringTypeAst(suspend.thunk(), A.append(visited, suspend)),
     }),
-    Match.orElse(thunkFalse)
+    Match.orElse(constFalse),
   )(node);
 
 const isStringTypeSchema = (schema: S.Top): schema is S.Schema<string> =>
@@ -67,7 +63,7 @@ const isStringTypeSchema = (schema: S.Top): schema is S.Schema<string> =>
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { text } from "./pg.ts"
+ * import { text } from "@beep/effect-drizzle/pg"
  *
  * const field = S.String.pipe(text())
  * console.log(field.meta.column?.kind) // "text"
@@ -79,12 +75,7 @@ const isStringTypeSchema = (schema: S.Top): schema is S.Schema<string> =>
 export const text =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        string,
-        "pg.text requires a string-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, string, "pg.text requires a string-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Text }> =>
     Field.patch(input, { column: PgColumn.Text.make({}) });
 
@@ -92,7 +83,7 @@ const boundedString = (
   input: Field.Input,
   length: number | undefined,
   kind: "varchar" | "char",
-  spec: (length: number) => PgColumn.Varchar | PgColumn.Char
+  spec: (length: number) => PgColumn.Varchar | PgColumn.Char,
 ): Field.Any => {
   const f = Field.from(input);
   const bounds = maxLengths(f.schema);
@@ -121,13 +112,8 @@ const boundedString = (
             astTag: AST.toType(encodedSchema.ast)._tag,
           });
         }
-        const evolved = S.flip(
-          encodedSchema.check(S.isMaxLength(resolvedLength))
-        );
-        return Field.make(
-          evolved,
-          Meta.merge(f.meta, { column: spec(resolvedLength) })
-        );
+        const evolved = S.flip(encodedSchema.check(S.isMaxLength(resolvedLength)));
+        return Field.make(evolved, Meta.merge(f.meta, { column: spec(resolvedLength) }));
       }
       return Field.patch(f, { column: spec(resolvedLength) });
     },
@@ -151,7 +137,7 @@ const boundedString = (
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { varchar } from "./pg.ts"
+ * import { varchar } from "@beep/effect-drizzle/pg"
  *
  * const field = S.String.check(S.isMaxLength(320)).pipe(varchar())
  * console.log(field.meta.column?.kind) // "varchar"
@@ -161,42 +147,27 @@ const boundedString = (
  * @since 0.0.0
  */
 export function varchar(): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.varchar requires a string-encoded schema"
-    >
+  input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Varchar }>;
 export function varchar<const L extends number>(
-  length: L
+  length: L,
 ): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.varchar requires a string-encoded schema"
-    >
+  input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Varchar<L> }>;
 export function varchar(length?: number): unknown {
   return (input: Field.Input): Field.Any =>
     boundedString(input, length, "varchar", (resolved) =>
-      PgColumn.Varchar.make({ length: resolved })
+      PgColumn.Varchar.make({ length: resolved }),
     );
 }
 
-type ValidateEnum<I extends Field.Input> = [
-  Exclude<Field.EncodedOf<I>, null>
-] extends [string]
+type ValidateEnum<I extends Field.Input> = [Exclude<Field.EncodedOf<I>, null>] extends [string]
   ? string extends Exclude<Field.EncodedOf<I>, null>
-    ? Field.BslTypeError<"pg.enum requires a finite union of encoded string literals">
+    ? Field.SqlTypeError<"pg.enum requires a finite union of encoded string literals">
     : unknown
-  : Field.BslTypeError<"pg.enum requires a finite union of encoded string literals">;
+  : Field.SqlTypeError<"pg.enum requires a finite union of encoded string literals">;
 
-type EnumValue<I extends Field.Input> = Extract<
-  Exclude<Field.EncodedOf<I>, null>,
-  string
->;
+type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null>, string>;
 
 /**
  * Set a real PostgreSQL enum column whose values come from the encoded schema.
@@ -209,36 +180,32 @@ type EnumValue<I extends Field.Input> = Extract<
  * **Example** (Set a named enum)
  *
  * ```ts
- * import { LiteralKit } from "@beep/schema"
- * import { enum as pgEnum } from "./pg.ts"
+ * import * as S from "effect/Schema"
+ * import { enum as pgEnum } from "@beep/effect-drizzle/pg"
  *
- * console.log(LiteralKit(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
+ * console.log(S.Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
 export function enum_(): <I extends Field.Input>(
-  input: I & ValidateEnum<I>
+  input: I & ValidateEnum<I>,
 ) => Field.Patched<I, { readonly column: PgColumn.Enum<"", EnumValue<I>> }>;
 export function enum_<const Name extends string>(
-  name: Name
+  name: Name,
 ): <I extends Field.Input>(
-  input: I & ValidateEnum<I>
+  input: I & ValidateEnum<I>,
 ) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>> }>;
 export function enum_(name?: string): unknown {
   return (input: Field.Input): Field.Any => {
-    const values = O.getOrElse(
-      stringLiteralValues(Field.from(input).schema),
-      () => {
-        throw DeriveColumnError.make({
-          message:
-            "pg.enum requires a finite non-empty union of encoded string literals.",
-          fieldName: "(unknown — set at model definition)",
-          astTag: "(encoded literals)",
-        });
-      }
-    );
+    const values = O.getOrElse(stringLiteralValues(Field.from(input).schema), () => {
+      throw DeriveColumnError.make({
+        message: "pg.enum requires a finite non-empty union of encoded string literals.",
+        fieldName: "(unknown — set at model definition)",
+        astTag: "(encoded literals)",
+      });
+    });
     const explicitName = O.fromUndefinedOr(name);
     if (O.isSome(explicitName) && !S.is(S.NonEmptyString)(explicitName.value)) {
       throw DeriveColumnError.make({
@@ -267,7 +234,7 @@ export { enum_ as enum };
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { unsafeCustom } from "./pg.ts"
+ * import { unsafeCustom } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(unsafeCustom("tsvector")).meta.column?.ident)
  * ```
@@ -278,18 +245,13 @@ export { enum_ as enum };
 export const unsafeCustom =
   <const SqlType extends string>(sqlType: SqlType) =>
   <I extends Field.Input>(
-    input: I
+    input: I,
   ): Field.Patched<I, { readonly column: PgColumn.Custom<SqlType> }> =>
     Field.patch(input, {
-      // Literal construction (not Custom.make): the schema constructor widens
-      // `ident` to `custom<${string}>`, losing the SqlType literal this
-      // combinator exists to preserve; the annotated return type still checks
-      // the record against Custom<SqlType> structurally.
-      column: {
-        kind: "custom",
+      column: PgColumn.Custom.make({
         ident: `custom<${sqlType}>`,
         sqlType,
-      },
+      }),
     });
 
 /**
@@ -299,7 +261,7 @@ export const unsafeCustom =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { numeric } from "./pg.ts"
+ * import { numeric } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(numeric(10, 2)).meta.column?.kind) // "numeric"
  * ```
@@ -308,42 +270,18 @@ export const unsafeCustom =
  * @since 0.0.0
  */
 export function numeric(): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.numeric requires a string-encoded schema"
-    >
-) => Field.Patched<
-  I,
-  { readonly column: PgColumn.Numeric<undefined, undefined> }
->;
+  input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">,
+) => Field.Patched<I, { readonly column: PgColumn.Numeric<undefined, undefined> }>;
 export function numeric<const Precision extends number>(
-  precision: Precision
-): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.numeric requires a string-encoded schema"
-    >
-) => Field.Patched<
-  I,
-  { readonly column: PgColumn.Numeric<Precision, undefined> }
->;
-export function numeric<
-  const Precision extends number,
-  const Scale extends number
->(
   precision: Precision,
-  scale: Scale
 ): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.numeric requires a string-encoded schema"
-    >
+  input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">,
+) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, undefined> }>;
+export function numeric<const Precision extends number, const Scale extends number>(
+  precision: Precision,
+  scale: Scale,
+): <I extends Field.Input>(
+  input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale> }>;
 export function numeric(precision?: number, scale?: number): unknown {
   return (input: Field.Input): Field.Any =>
@@ -359,7 +297,7 @@ export function numeric(precision?: number, scale?: number): unknown {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { date } from "./pg.ts"
+ * import { date } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(date()).meta.column?.kind) // "date"
  * ```
@@ -369,21 +307,12 @@ export function numeric(precision?: number, scale?: number): unknown {
  */
 export function date(): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.date (string mode) requires a string-encoded schema"
-    >
+    Field.ValidateEncoded<I, string, "pg.date (string mode) requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"string"> }>;
 export function date(options: {
   readonly mode: "date";
 }): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<
-      I,
-      Date,
-      "pg.date (date mode) requires a Date-encoded schema"
-    >
+  input: I & Field.ValidateEncoded<I, Date, "pg.date (date mode) requires a Date-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"date"> }>;
 export function date(options?: { readonly mode: "date" }): unknown {
   return (input: Field.Input): Field.Any =>
@@ -404,7 +333,7 @@ export function date(options?: { readonly mode: "date" }): unknown {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { char } from "./pg.ts"
+ * import { char } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.check(S.isMaxLength(2)).pipe(char()).meta.column?.kind)
  * ```
@@ -413,20 +342,16 @@ export function date(options?: { readonly mode: "date" }): unknown {
  * @since 0.0.0
  */
 export function char(): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">
+  input: I & Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Char }>;
 export function char<const Length extends number>(
-  length: Length
+  length: Length,
 ): <I extends Field.Input>(
-  input: I &
-    Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">
+  input: I & Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Char<Length> }>;
 export function char(length?: number): unknown {
   return (input: Field.Input): Field.Any =>
-    boundedString(input, length, "char", (resolved) =>
-      PgColumn.Char.make({ length: resolved })
-    );
+    boundedString(input, length, "char", (resolved) => PgColumn.Char.make({ length: resolved }));
 }
 
 /**
@@ -436,7 +361,7 @@ export function char(length?: number): unknown {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { json } from "./pg.ts"
+ * import { json } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Struct({ ok: S.Boolean }).pipe(json()).meta.column?.ident)
  * ```
@@ -448,11 +373,7 @@ export const json =
   () =>
   <I extends Field.Input>(
     input: I &
-      Field.ValidateEncoded<
-        I,
-        object,
-        "pg.json requires an object- or array-encoded schema"
-      >
+      Field.ValidateEncoded<I, object, "pg.json requires an object- or array-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Json }> =>
     Field.patch(input, { column: PgColumn.Json.make({}) });
 
@@ -463,7 +384,7 @@ export const json =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { real } from "./pg.ts"
+ * import { real } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Number.pipe(real()).meta.column?.ident) // "real"
  * ```
@@ -474,12 +395,7 @@ export const json =
 export const real =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.real requires a number-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, number, "pg.real requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Real }> =>
     Field.patch(input, { column: PgColumn.Real.make({}) });
 
@@ -490,7 +406,7 @@ export const real =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { bigserial } from "./pg.ts"
+ * import { bigserial } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(bigserial("number")).meta.hasDefault) // true
  * ```
@@ -500,11 +416,7 @@ export const real =
  */
 export function bigserial(mode: "number"): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      number,
-      "pg.bigserial('number') requires a number-encoded schema"
-    >
+    Field.ValidateEncoded<I, number, "pg.bigserial('number') requires a number-encoded schema">,
 ) => Field.Patched<
   I,
   {
@@ -514,11 +426,7 @@ export function bigserial(mode: "number"): <I extends Field.Input>(
 >;
 export function bigserial(mode: "bigint"): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      bigint,
-      "pg.bigserial('bigint') requires a bigint-encoded schema"
-    >
+    Field.ValidateEncoded<I, bigint, "pg.bigserial('bigint') requires a bigint-encoded schema">,
 ) => Field.Patched<
   I,
   {
@@ -541,7 +449,7 @@ export function bigserial(mode: "number" | "bigint"): unknown {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { smallserial } from "./pg.ts"
+ * import { smallserial } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(smallserial()).meta.hasDefault) // true
  * ```
@@ -552,16 +460,8 @@ export function bigserial(mode: "number" | "bigint"): unknown {
 export const smallserial =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.smallserial requires a number-encoded schema"
-      >
-  ): Field.Patched<
-    I,
-    { readonly column: PgColumn.Smallserial; readonly hasDefault: true }
-  > =>
+    input: I & Field.ValidateEncoded<I, number, "pg.smallserial requires a number-encoded schema">,
+  ): Field.Patched<I, { readonly column: PgColumn.Smallserial; readonly hasDefault: true }> =>
     Field.patch(input, {
       column: PgColumn.Smallserial.make({}),
       hasDefault: true,
@@ -574,7 +474,7 @@ export const smallserial =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { uuid } from "./pg.ts"
+ * import { uuid } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(uuid()).meta.column?.kind) // "uuid"
  * ```
@@ -585,12 +485,7 @@ export const smallserial =
 export const uuid =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        string,
-        "pg.uuid requires a string-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, string, "pg.uuid requires a string-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Uuid }> =>
     Field.patch(input, { column: PgColumn.Uuid.make({}) });
 
@@ -608,7 +503,7 @@ type IntegerColumn<I extends Field.Input> =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { integer } from "./pg.ts"
+ * import { integer } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(integer()).meta.column?.kind) // "integer"
  * ```
@@ -618,18 +513,11 @@ type IntegerColumn<I extends Field.Input> =
  */
 export const integer = () => {
   function apply<I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.integer requires a number-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, number, "pg.integer requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: IntegerColumn<I> }>;
   function apply(input: Field.Input): Field.Any {
     const schema = Field.from(input).schema;
-    const ident: "integer" | PgColumn.EntityIdIdent<string> = isEntityIdLike(
-      schema
-    )
+    const ident: "integer" | PgColumn.EntityIdIdent<string> = isEntityIdLike(schema)
       ? `entityId<"${schema.tableName}">`
       : "integer";
     return Field.patch(input, { column: PgColumn.Integer.make({ ident }) });
@@ -644,7 +532,7 @@ export const integer = () => {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { smallint } from "./pg.ts"
+ * import { smallint } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(smallint()).meta.column?.kind) // "smallint"
  * ```
@@ -655,12 +543,7 @@ export const integer = () => {
 export const smallint =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.smallint requires a number-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, number, "pg.smallint requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Smallint }> =>
     Field.patch(input, { column: PgColumn.Smallint.make({}) });
 
@@ -671,7 +554,7 @@ export const smallint =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { doublePrecision } from "./pg.ts"
+ * import { doublePrecision } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Finite.pipe(doublePrecision()).meta.column?.kind) // "doublePrecision"
  * ```
@@ -683,11 +566,7 @@ export const doublePrecision =
   () =>
   <I extends Field.Input>(
     input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.doublePrecision requires a number-encoded schema"
-      >
+      Field.ValidateEncoded<I, number, "pg.doublePrecision requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.DoublePrecision }> =>
     Field.patch(input, { column: PgColumn.DoublePrecision.make({}) });
 
@@ -698,7 +577,7 @@ export const doublePrecision =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { bigint } from "./pg.ts"
+ * import { bigint } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.BigInt.pipe(bigint("bigint")).meta.column?.kind) // "bigint"
  * ```
@@ -707,24 +586,16 @@ export const doublePrecision =
  * @since 0.0.0
  */
 export function bigint(
-  mode: "number"
+  mode: "number",
 ): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      number,
-      "pg.bigint('number') requires a number-encoded schema"
-    >
+    Field.ValidateEncoded<I, number, "pg.bigint('number') requires a number-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Bigint<"number"> }>;
 export function bigint(
-  mode: "bigint"
+  mode: "bigint",
 ): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      bigint,
-      "pg.bigint('bigint') requires a bigint-encoded schema"
-    >
+    Field.ValidateEncoded<I, bigint, "pg.bigint('bigint') requires a bigint-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Bigint<"bigint"> }>;
 export function bigint(mode: "number" | "bigint"): unknown {
   return (input: Field.Input): Field.Any =>
@@ -738,7 +609,7 @@ export function bigint(mode: "number" | "bigint"): unknown {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { serial } from "./pg.ts"
+ * import { serial } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(serial()).meta.hasDefault) // true
  * ```
@@ -749,16 +620,8 @@ export function bigint(mode: "number" | "bigint"): unknown {
 export const serial =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        number,
-        "pg.serial requires a number-encoded schema"
-      >
-  ): Field.Patched<
-    I,
-    { readonly column: PgColumn.Serial; readonly hasDefault: true }
-  > =>
+    input: I & Field.ValidateEncoded<I, number, "pg.serial requires a number-encoded schema">,
+  ): Field.Patched<I, { readonly column: PgColumn.Serial; readonly hasDefault: true }> =>
     Field.patch(input, { column: PgColumn.Serial.make({}), hasDefault: true });
 
 /**
@@ -768,7 +631,7 @@ export const serial =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { boolean } from "./pg.ts"
+ * import { boolean } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Boolean.pipe(boolean()).meta.column?.kind) // "boolean"
  * ```
@@ -779,12 +642,7 @@ export const serial =
 export const boolean =
   () =>
   <I extends Field.Input>(
-    input: I &
-      Field.ValidateEncoded<
-        I,
-        boolean,
-        "pg.boolean requires a boolean-encoded schema"
-      >
+    input: I & Field.ValidateEncoded<I, boolean, "pg.boolean requires a boolean-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Bool }> =>
     Field.patch(input, { column: PgColumn.Bool.make({}) });
 
@@ -795,7 +653,7 @@ export const boolean =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { jsonb } from "./pg.ts"
+ * import { jsonb } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Struct({ theme: S.String }).pipe(jsonb()).meta.column?.kind) // "jsonb"
  * ```
@@ -807,11 +665,7 @@ export const jsonb =
   () =>
   <I extends Field.Input>(
     input: I &
-      Field.ValidateEncoded<
-        I,
-        object,
-        "pg.jsonb requires an object- or array-encoded schema"
-      >
+      Field.ValidateEncoded<I, object, "pg.jsonb requires an object- or array-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Jsonb }> =>
     Field.patch(input, { column: PgColumn.Jsonb.make({}) });
 
@@ -822,7 +676,7 @@ export const jsonb =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { bytea } from "./pg.ts"
+ * import { bytea } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Uint8Array.pipe(bytea()).meta.column?.kind) // "bytea"
  * ```
@@ -834,11 +688,7 @@ export const bytea =
   () =>
   <I extends Field.Input>(
     input: I &
-      Field.ValidateEncoded<
-        I,
-        Uint8Array,
-        "pg.bytea requires a Uint8Array-encoded schema"
-      >
+      Field.ValidateEncoded<I, Uint8Array, "pg.bytea requires a Uint8Array-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Bytea }> =>
     Field.patch(input, { column: PgColumn.Bytea.make({}) });
 
@@ -849,7 +699,7 @@ export const bytea =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { timestamp } from "./pg.ts"
+ * import { timestamp } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(timestamp()).meta.column?.kind) // "timestamp"
  * ```
@@ -862,32 +712,21 @@ export function timestamp<const TZ extends boolean = true>(options?: {
   readonly withTimezone?: TZ;
 }): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      string,
-      "pg.timestamp (string mode) requires a string-encoded schema"
-    >
+    Field.ValidateEncoded<I, string, "pg.timestamp (string mode) requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Timestamp<"string", TZ> }>;
 export function timestamp<const TZ extends boolean = true>(options: {
   readonly mode: "date";
   readonly withTimezone?: TZ;
 }): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      Date,
-      "pg.timestamp (date mode) requires a Date-encoded schema"
-    >
+    Field.ValidateEncoded<I, Date, "pg.timestamp (date mode) requires a Date-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Timestamp<"date", TZ> }>;
 export function timestamp(options?: {
   readonly mode?: "string" | "date";
   readonly withTimezone?: boolean;
 }): unknown {
   return (input: Field.Input): Field.Any => {
-    const withTimezone = O.getOrElse(
-      O.fromUndefinedOr(options?.withTimezone),
-      thunkTrue
-    );
+    const withTimezone = O.getOrElse(O.fromUndefinedOr(options?.withTimezone), constTrue);
     return Field.patch(input, {
       column: PgColumn.Timestamp.make({
         ident: withTimezone ? "timestamptz" : "timestamp",
@@ -900,24 +739,21 @@ export function timestamp(options?: {
 
 type ArrayPatch<
   Element extends Field.Input,
-  Dimensions extends Exclude<PgColumn.ArrayDimension, 0>
+  Dimensions extends Exclude<PgColumn.ArrayDimension, 0>,
 > = {
   readonly column: Exclude<Field.MetaFrom<Element>["column"], undefined>;
   readonly dimensions: Dimensions;
 };
 
-type ValidateArrayModifiers<I extends Field.Input> =
-  Field.MetaFrom<I>["primaryKey"] extends true
-    ? Field.BslTypeError<"array fields cannot be primary keys">
-    : Field.MetaFrom<I>["identity"] extends false
+type ValidateArrayModifiers<I extends Field.Input> = Field.MetaFrom<I>["primaryKey"] extends true
+  ? Field.SqlTypeError<"array fields cannot be primary keys">
+  : Field.MetaFrom<I>["identity"] extends false
     ? Field.MetaFrom<I>["version"] extends false
       ? unknown
-      : Field.BslTypeError<"array fields cannot be optimistic versions">
-    : Field.BslTypeError<"array fields cannot use identity generation">;
+      : Field.SqlTypeError<"array fields cannot be optimistic versions">
+    : Field.SqlTypeError<"array fields cannot use identity generation">;
 
-const dimension = (
-  suffix: PgColumn.ArrayDimensionString
-): Exclude<PgColumn.ArrayDimension, 0> =>
+const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.ArrayDimension, 0> =>
   Match.value(suffix).pipe(
     Match.withReturnType<Exclude<PgColumn.ArrayDimension, 0>>(),
     Match.when("[]", () => 1),
@@ -925,7 +761,7 @@ const dimension = (
     Match.when("[][][]", () => 3),
     Match.when("[][][][]", () => 4),
     Match.when("[][][][][]", () => 5),
-    Match.exhaustive
+    Match.exhaustive,
   );
 
 /**
@@ -935,7 +771,7 @@ const dimension = (
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import * as pg from "./pg.ts"
+ * import * as pg from "@beep/effect-drizzle/pg"
  *
  * const matrix = S.Array(S.Array(S.String)).pipe(
  *   pg.array(S.String.pipe(pg.text()), "[][]")
@@ -946,47 +782,36 @@ const dimension = (
  * @since 0.0.0
  */
 export function array<const Element extends Field.Input>(
-  element: Element & Field.ValidateArrayElement<Element>
+  element: Element & Field.ValidateArrayElement<Element>,
 ): <I extends Field.Input>(
-  input: I &
-    Field.ValidateArrayEncoded<I, Element, 1> &
-    ValidateArrayModifiers<I>
+  input: I & Field.ValidateArrayEncoded<I, Element, 1> & ValidateArrayModifiers<I>,
 ) => Field.Patched<I, ArrayPatch<Element, 1>>;
 export function array<
   const Element extends Field.Input,
-  const Suffix extends PgColumn.ArrayDimensionString
+  const Suffix extends PgColumn.ArrayDimensionString,
 >(
   element: Element & Field.ValidateArrayElement<Element>,
-  suffix: Suffix
+  suffix: Suffix,
 ): <I extends Field.Input>(
   input: I &
     Field.ValidateArrayEncoded<I, Element, PgColumn.DimensionOf<Suffix>> &
-    ValidateArrayModifiers<I>
+    ValidateArrayModifiers<I>,
 ) => Field.Patched<I, ArrayPatch<Element, PgColumn.DimensionOf<Suffix>>>;
-export function array(
-  element: Field.Input,
-  suffix: PgColumn.ArrayDimensionString = "[]"
-): unknown {
+export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionString = "[]"): unknown {
   return (input: Field.Input): Field.Any => {
     const outer = Field.from(input);
     const base = Field.from(element);
     const dimensions = dimension(suffix);
     if (P.isUndefined(base.meta.column) || base.meta.dimensions !== 0) {
       throw DeriveColumnError.make({
-        message:
-          "pg.array requires an element schema with one explicit scalar column combinator.",
+        message: "pg.array requires an element schema with one explicit scalar column combinator.",
         fieldName: "(unknown — set at model definition)",
         astTag: "(array element)",
       });
     }
-    if (
-      outer.meta.primaryKey ||
-      outer.meta.identity !== false ||
-      outer.meta.version
-    ) {
+    if (outer.meta.primaryKey || outer.meta.identity !== false || outer.meta.version) {
       throw DeriveColumnError.make({
-        message:
-          "pg.array is incompatible with primaryKey, identity, and version semantics.",
+        message: "pg.array is incompatible with primaryKey, identity, and version semantics.",
         fieldName: "(unknown — set at model definition)",
         astTag: "(array modifiers)",
       });
@@ -995,8 +820,7 @@ export function array(
     const baseElement = encodedAST(base.schema);
     if (!Eq.equals(outerElement, baseElement)) {
       throw DeriveColumnError.make({
-        message:
-          "pg.array outer schema does not match the element schema at the declared depth.",
+        message: "pg.array outer schema does not match the element schema at the declared depth.",
         fieldName: "(unknown — set at model definition)",
         astTag: outerElement._tag,
       });
@@ -1019,7 +843,7 @@ export function array(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { primaryKey } from "./pg.ts"
+ * import { primaryKey } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(primaryKey()).meta.primaryKey) // true
  * ```
@@ -1035,7 +859,7 @@ export const primaryKey =
         I,
         "primaryKey() forbids a nullable schema — a primary key cannot admit null"
       > &
-      ValidateNotArray<I>
+      ValidateNotArray<I>,
   ): Field.Patched<I, { readonly primaryKey: true }> =>
     Field.patch(input, { primaryKey: true });
 
@@ -1046,7 +870,7 @@ export const primaryKey =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { unique } from "./pg.ts"
+ * import { unique } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(unique()).meta.unique) // true
  * ```
@@ -1056,37 +880,30 @@ export const primaryKey =
  */
 export const unique =
   () =>
-  <I extends Field.Input>(
-    input: I
-  ): Field.Patched<I, { readonly unique: true }> =>
+  <I extends Field.Input>(input: I): Field.Patched<I, { readonly unique: true }> =>
     Field.patch(input, { unique: true });
 
-type ValidateIdentity<I extends Field.Input> =
-  Field.MetaFrom<I>["column"] extends {
-    readonly kind: PgColumn.IdentityKind;
-  }
-    ? unknown
-    : Field.BslTypeError<"identity() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint) — bare number schemas derive doublePrecision">;
+type ValidateIdentity<I extends Field.Input> = Field.MetaFrom<I>["column"] extends {
+  readonly kind: PgColumn.IdentityKind;
+}
+  ? unknown
+  : Field.SqlTypeError<"identity() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint) — bare number schemas derive doublePrecision">;
 
-type ValidateNotGenerated<I extends Field.Input> =
-  Field.MetaFrom<I>["generated"] extends false
-    ? unknown
-    : Field.BslTypeError<"default and generated are mutually exclusive">;
+type ValidateNotGenerated<I extends Field.Input> = Field.MetaFrom<I>["generated"] extends false
+  ? unknown
+  : Field.SqlTypeError<"default and generated are mutually exclusive">;
 
-type ValidateNotDefaulted<I extends Field.Input> =
-  Field.MetaFrom<I>["hasDefault"] extends false
-    ? unknown
-    : Field.BslTypeError<"default and generated are mutually exclusive">;
+type ValidateNotDefaulted<I extends Field.Input> = Field.MetaFrom<I>["hasDefault"] extends false
+  ? unknown
+  : Field.SqlTypeError<"default and generated are mutually exclusive">;
 
-type ValidateNotVersion<I extends Field.Input> =
-  Field.MetaFrom<I>["version"] extends false
-    ? unknown
-    : Field.BslTypeError<"version fields are mutually exclusive with identity and generated columns">;
+type ValidateNotVersion<I extends Field.Input> = Field.MetaFrom<I>["version"] extends false
+  ? unknown
+  : Field.SqlTypeError<"version fields are mutually exclusive with identity and generated columns">;
 
-type ValidateNotArray<I extends Field.Input> =
-  Field.MetaFrom<I>["dimensions"] extends 0
-    ? unknown
-    : Field.BslTypeError<"array fields cannot use primary-key, identity, or version semantics">;
+type ValidateNotArray<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] extends 0
+  ? unknown
+  : Field.SqlTypeError<"array fields cannot use primary-key, identity, or version semantics">;
 
 /**
  * Apply PostgreSQL identity generation after an integer-family column setter.
@@ -1095,7 +912,7 @@ type ValidateNotArray<I extends Field.Input> =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { identity, integer } from "./pg.ts"
+ * import { identity, integer } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(integer(), identity()).meta.identity) // "always"
  * ```
@@ -1104,14 +921,14 @@ type ValidateNotArray<I extends Field.Input> =
  * @since 0.0.0
  */
 export function identity<const K extends "always" | "byDefault" = "always">(
-  kind?: K
+  kind?: K,
 ): <I extends Field.Input>(
   input: I &
     ValidateIdentity<I> &
     ValidateNotDefaulted<I> &
     ValidateNotGenerated<I> &
     ValidateNotVersion<I> &
-    ValidateNotArray<I>
+    ValidateNotArray<I>,
 ) => Field.Patched<
   I,
   K extends "always"
@@ -1124,35 +941,35 @@ export function identity<const K extends "always" | "byDefault" = "always">(
 >;
 export function identity(kind?: "always" | "byDefault"): unknown {
   return (input: Field.Input): Field.Any => {
-    const resolved = O.getOrElse(
+    const resolved: Exclude<Meta.IdentityMode, false> = O.getOrElse(
       O.fromUndefinedOr(kind),
-      Meta.Identity.thunk.always
+      (): "always" => "always",
     );
     return Field.patch(
       input,
       resolved === "always"
         ? {
             identity: resolved,
-            generated: Meta.Generated.cases.identityAlways.make({}),
+            generated: Meta.Generated.identityAlways(),
           }
-        : { identity: resolved, hasDefault: true, generated: false }
+        : { identity: resolved, hasDefault: true, generated: false },
     );
   };
 }
 
 type ValidateDefaultValue<I extends Field.Input, Value> = [Value] extends [
-  Exclude<Field.EncodedOf<I>, null>
+  Exclude<Field.EncodedOf<I>, null>,
 ]
   ? unknown
-  : Field.BslTypeError<"default() value must match the field's encoded carrier">;
+  : Field.SqlTypeError<"default() value must match the field's encoded carrier">;
 
 type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
-  Exclude<Field.EncodedOf<I>, null>
+  Exclude<Field.EncodedOf<I>, null>,
 ]
   ? [Exclude<Field.EncodedOf<I>, null>] extends [Carrier]
     ? unknown
-    : Field.BslTypeError<"SQL expression carrier must equal the field's encoded carrier">
-  : Field.BslTypeError<"SQL expression carrier must equal the field's encoded carrier">;
+    : Field.SqlTypeError<"SQL expression carrier must equal the field's encoded carrier">
+  : Field.SqlTypeError<"SQL expression carrier must equal the field's encoded carrier">;
 
 /**
  * Set a typed literal default matching the encoded database carrier.
@@ -1161,7 +978,7 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { default as defaultValue } from "./pg.ts"
+ * import { default as defaultValue } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(defaultValue("active")).meta.hasDefault) // true
  * ```
@@ -1172,11 +989,8 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
 export const default_ =
   <const Value>(value: Value) =>
   <I extends Field.Input>(
-    input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>
-  ): Field.Patched<
-    I,
-    { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true }
-  > =>
+    input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>,
+  ): Field.Patched<I, { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true }> =>
     Field.patch(input, {
       default: { _tag: "value", value },
       hasDefault: true,
@@ -1192,7 +1006,7 @@ export { default_ as default };
  * ```ts
  * import { sql } from "drizzle-orm"
  * import * as S from "effect/Schema"
- * import { defaultExpr } from "./pg.ts"
+ * import { defaultExpr } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault) // true
  * ```
@@ -1203,7 +1017,7 @@ export { default_ as default };
 export const defaultExpr =
   <Carrier>(expression: SQL<Carrier>) =>
   <I extends Field.Input>(
-    input: I & ValidateExpression<I, Carrier> & ValidateNotGenerated<I>
+    input: I & ValidateExpression<I, Carrier> & ValidateNotGenerated<I>,
   ): Field.Patched<
     I,
     {
@@ -1219,7 +1033,7 @@ export const defaultExpr =
 type ValidateTimestamp<I extends Field.Input> =
   Field.MetaFrom<I>["column"] extends PgColumn.Timestamp
     ? unknown
-    : Field.BslTypeError<"defaultNow() requires an explicit pg.timestamp column first">;
+    : Field.SqlTypeError<"defaultNow() requires an explicit pg.timestamp column first">;
 
 /**
  * Set the PostgreSQL current-time default after a timestamp column setter.
@@ -1228,7 +1042,7 @@ type ValidateTimestamp<I extends Field.Input> =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { defaultNow, timestamp } from "./pg.ts"
+ * import { defaultNow, timestamp } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(timestamp(), defaultNow()).meta.hasDefault) // true
  * ```
@@ -1239,13 +1053,10 @@ type ValidateTimestamp<I extends Field.Input> =
 export const defaultNow =
   () =>
   <I extends Field.Input>(
-    input: I & ValidateTimestamp<I> & ValidateNotGenerated<I>
-  ): Field.Patched<
-    I,
-    { readonly default: Meta.DefaultNow; readonly hasDefault: true }
-  > =>
+    input: I & ValidateTimestamp<I> & ValidateNotGenerated<I>,
+  ): Field.Patched<I, { readonly default: Meta.DefaultNow; readonly hasDefault: true }> =>
     Field.patch(input, {
-      default: Meta.Default.cases.now.make({}),
+      default: Meta.Default.now(),
       hasDefault: true,
     });
 
@@ -1256,7 +1067,7 @@ export const defaultNow =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { unsafeDefaultSql } from "./pg.ts"
+ * import { unsafeDefaultSql } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault) // true
  * ```
@@ -1267,13 +1078,10 @@ export const defaultNow =
 export const unsafeDefaultSql =
   (sql: string) =>
   <I extends Field.Input>(
-    input: I & ValidateNotGenerated<I>
-  ): Field.Patched<
-    I,
-    { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true }
-  > =>
+    input: I & ValidateNotGenerated<I>,
+  ): Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true }> =>
     Field.patch(input, {
-      default: Meta.Default.cases.unsafeSql.make({ sql }),
+      default: Meta.Default.unsafeSql({ sql }),
       hasDefault: true,
     });
 
@@ -1284,7 +1092,7 @@ export const unsafeDefaultSql =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { defaultSql } from "./pg.ts"
+ * import { defaultSql } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(defaultSql("current_user")).meta.hasDefault) // true
  * ```
@@ -1295,19 +1103,18 @@ export const unsafeDefaultSql =
  */
 export const defaultSql = unsafeDefaultSql;
 
-type ValidateVersionColumn<I extends Field.Input> =
-  Field.MetaFrom<I>["column"] extends {
-    readonly kind: PgColumn.IdentityKind;
-  }
-    ? unknown
-    : Field.BslTypeError<"version() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint)">;
+type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends {
+  readonly kind: PgColumn.IdentityKind;
+}
+  ? unknown
+  : Field.SqlTypeError<"version() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint)">;
 
 type ValidateVersionCompatibility<I extends Field.Input> =
   Field.MetaFrom<I>["identity"] extends false
     ? Field.MetaFrom<I>["generated"] extends false
       ? unknown
-      : Field.BslTypeError<"version fields cannot be generated">
-    : Field.BslTypeError<"version fields cannot use identity generation">;
+      : Field.SqlTypeError<"version fields cannot be generated">
+    : Field.SqlTypeError<"version fields cannot use identity generation">;
 
 /**
  * Mark one integer-family field as the optimistic-concurrency token.
@@ -1321,7 +1128,7 @@ type ValidateVersionCompatibility<I extends Field.Input> =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { default as defaultValue, integer, version } from "./pg.ts"
+ * import { default as defaultValue, integer, version } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.Int.pipe(integer(), defaultValue(1), version()).meta.version) // true
  * ```
@@ -1332,10 +1139,7 @@ type ValidateVersionCompatibility<I extends Field.Input> =
 export const version =
   () =>
   <I extends Field.Input>(
-    input: I &
-      ValidateVersionColumn<I> &
-      ValidateVersionCompatibility<I> &
-      ValidateNotArray<I>
+    input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateNotArray<I>,
   ): Field.Patched<I, { readonly version: true }> =>
     Field.patch(input, { version: true });
 
@@ -1347,7 +1151,7 @@ export const version =
  * ```ts
  * import { sql } from "drizzle-orm"
  * import * as S from "effect/Schema"
- * import { generated } from "./pg.ts"
+ * import { generated } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(generated(sql<string>`lower(name)`)).meta.generated !== false) // true
  * ```
@@ -1358,10 +1162,7 @@ export const version =
 export const generated =
   <Carrier>(expression: SQL<Carrier>) =>
   <I extends Field.Input>(
-    input: I &
-      ValidateExpression<I, Carrier> &
-      ValidateNotDefaulted<I> &
-      ValidateNotVersion<I>
+    input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I> & ValidateNotVersion<I>,
   ): Field.Patched<I, { readonly generated: Meta.GeneratedSqlExpr<Carrier> }> =>
     Field.patch(input, {
       generated: { _tag: "sqlExpr", expression },
@@ -1374,7 +1175,7 @@ export const generated =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { unsafeGeneratedSql } from "./pg.ts"
+ * import { unsafeGeneratedSql } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated !== false) // true
  * ```
@@ -1385,10 +1186,10 @@ export const generated =
 export const unsafeGeneratedSql =
   (sql: string) =>
   <I extends Field.Input>(
-    input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>
+    input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>,
   ): Field.Patched<I, { readonly generated: Meta.UnsafeGeneratedSql }> =>
     Field.patch(input, {
-      generated: Meta.Generated.cases.unsafeSql.make({ sql }),
+      generated: Meta.Generated.unsafeSql({ sql }),
     });
 
 /**
@@ -1398,7 +1199,7 @@ export const unsafeGeneratedSql =
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { columnName } from "./pg.ts"
+ * import { columnName } from "@beep/effect-drizzle/pg"
  *
  * console.log(S.String.pipe(columnName("legacy_name")).meta.columnName) // "legacy_name"
  * ```
@@ -1408,9 +1209,7 @@ export const unsafeGeneratedSql =
  */
 export const columnName =
   <const N extends string>(name: N) =>
-  <I extends Field.Input>(
-    input: I
-  ): Field.Patched<I, { readonly columnName: N }> =>
+  <I extends Field.Input>(input: I): Field.Patched<I, { readonly columnName: N }> =>
     Field.patch(input, { columnName: name });
 
 /**
@@ -1420,11 +1219,11 @@ export const columnName =
  * **Example** (Reference an EntityId schema)
  *
  * ```ts
- * import { SchemaUtils } from "@beep/schema"
  * import * as S from "effect/Schema"
- * import { references } from "./pg.ts"
+ * import { withStatics } from "../internal/statics.ts"
+ * import { references } from "@beep/effect-drizzle/pg"
  *
- * const UserId = S.Int.pipe(SchemaUtils.withStatics(() => ({ tableName: "user", entityType: "User" })))
+ * const UserId = withStatics(S.Int, () => ({ tableName: "user", entityType: "User" }))
  * console.log(S.Int.pipe(references(UserId)).meta.references?.tableName) // "user"
  * ```
  *
@@ -1437,14 +1236,11 @@ export const references =
     options?: {
       readonly onDelete?: Meta.FkAction;
       readonly onUpdate?: Meta.FkAction;
-    }
+    },
   ) =>
   <I extends Field.Input>(
-    input: I
-  ): Field.Patched<
-    I,
-    { readonly references: Meta.References<Id["tableName"], "id"> }
-  > => {
+    input: I,
+  ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> => {
     const ref: Meta.References<Id["tableName"], "id"> = {
       tableName: id.tableName,
       columnName: "id",

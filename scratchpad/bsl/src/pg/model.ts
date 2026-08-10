@@ -1,42 +1,42 @@
 /**
- * The BSL model class factory.
+ * The @beep/effect-drizzle model class factory.
  *
- * `class User extends Bsl.Model<User>($I\`User\`)({ ... }) {}` produces an
- * Effect schema class (via BSL's own `VariantSchema.make` instance — the same
+ * `class User extends EffectDrizzle.Model<User>($I\`User\`)({ ... }) {}` produces an
+ * Effect schema class (via @beep/effect-drizzle's own `VariantSchema.make` instance — the same
  * six variants as effect's `Model`, so `SqlModel.makeRepository` compatibility
- * stays structural) with `bsl` statics carrying the resolved SQL metadata.
+ * stays structural) with `sql` statics carrying the resolved SQL metadata.
  *
  * Whole-model invariants are enforced twice, at different altitudes:
  * - compile time: the `fields` parameter intersects `ValidateFields<F>`, so an
  *   underivable column or a second primary key fails on the offending key with
- *   a `~bsl.error` message literal;
+ *   a `~effect-drizzle.error` message literal;
  * - construction time: runtime checks mirror the same rules (nullable PK,
  *   multiple PKs) as tagged errors, catching hand-built field nodes.
  */
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { VariantSchema } from "effect/unstable/schema";
+import { snakeCase } from "../internal/case.ts";
+import { withStatics } from "../internal/statics.ts";
+import { factory as V, type Variant } from "../core/variant.ts";
 import * as Derive from "./derive.ts";
-import * as Field from "./Field.ts";
-import * as Meta from "./Meta.ts";
-import * as PgColumn from "./PgColumn.ts";
-import type * as TableExtras from "./TableExtras.ts";
-
-const $I = $ScratchpadId.create("bsl/factory");
+import * as Field from "../core/Field.ts";
+import * as Meta from "../core/Meta.ts";
+import { type AnyModel as CoreAnyModel, ModelInvariantError } from "../core/model.ts";
+import * as PgColumn from "./Column.ts";
+import type * as TableExtras from "./extras.ts";
 
 /**
- * Error raised when resolved model metadata violates a BSL invariant.
+ * Error raised when resolved model metadata violates a @beep/effect-drizzle invariant.
  *
  * **Example** (Construct a model invariant error)
  *
  * ```ts
- * import { ModelInvariantError } from "./factory.ts"
+ * import { ModelInvariantError } from "./model.ts"
  *
  * const error = ModelInvariantError.make({ message: "invalid primary key", fieldName: "id" })
  * console.log(error._tag) // "ModelInvariantError"
@@ -45,26 +45,15 @@ const $I = $ScratchpadId.create("bsl/factory");
  * @category errors
  * @since 0.0.0
  */
-export class ModelInvariantError extends TaggedErrorClass<ModelInvariantError>(
-  $I`ModelInvariantError`
-)(
-  "ModelInvariantError",
-  {
-    message: S.String,
-    fieldName: S.String,
-  },
-  $I.annote("ModelInvariantError", {
-    description: "A BSL model declaration violates a SQL invariant.",
-  })
-) {}
+export { ModelInvariantError };
 
 /**
- * Fixed BSL model-variant domain.
+ * Fixed @beep/effect-drizzle model-variant domain.
  *
  * **Example** (Check a model variant)
  *
  * ```ts
- * import { Variant } from "./factory.ts"
+ * import { Variant } from "./model.ts"
  *
  * console.log(Variant.is.select("select")) // true
  * ```
@@ -72,141 +61,24 @@ export class ModelInvariantError extends TaggedErrorClass<ModelInvariantError>(
  * @category schemas
  * @since 0.0.0
  */
-export const Variant = LiteralKit([
-  "select",
-  "insert",
-  "update",
-  "json",
-  "jsonCreate",
-  "jsonUpdate",
-]).pipe(
-  $I.annoteSchema("Variant", {
-    description:
-      "Fixed BSL model variant family shared by schema construction and extraction.",
-  })
-);
-/**
- * Model-variant literal represented by {@link Variant}.
- *
- * @category models
- * @since 0.0.0
- */
-export type Variant = typeof Variant.Type;
+export {
+  extract,
+  FieldExcept,
+  FieldOnly,
+  fieldEvolve,
+  Variant,
+  VariantField,
+  variants,
+} from "../core/variant.ts";
 
 /**
- * Ordered literal tuple supplied to the Effect variant factory.
- *
- * **Example** (Read configured variants)
- *
- * ```ts
- * import { variants } from "./factory.ts"
- *
- * console.log(variants[0]) // "select"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const variants = Variant.Options;
-
-const V = VariantSchema.make({ variants, defaultVariant: Variant.Enum.select });
-
-/**
- * Build an explicitly variant-specific BSL field.
- *
- * **Example** (Define select and insert schemas)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { VariantField } from "./factory.ts"
- *
- * const field = VariantField({ select: S.String, insert: S.String })
- * console.log(field.schemas.select === S.String) // true
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const VariantField = V.Field;
-
-/**
- * Include one schema only in the selected BSL variants.
- *
- * **Example** (Create a select-only field)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { FieldOnly } from "./factory.ts"
- *
- * const field = S.String.pipe(FieldOnly(["select"]))
- * console.log(field.schemas.select === S.String) // true
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export const FieldOnly = V.FieldOnly;
-
-/**
- * Include one schema in every BSL variant except the selected variants.
- *
- * **Example** (Omit a generated field from writes)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { FieldExcept } from "./factory.ts"
- *
- * const field = S.String.pipe(FieldExcept(["insert", "update"]))
- * console.log(field.schemas.insert) // undefined
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export const FieldExcept = V.FieldExcept;
-
-/**
- * Evolve selected schemas of a plain or variant-aware field.
- *
- * **Example** (Allow null in the update schema)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { fieldEvolve } from "./factory.ts"
- *
- * const field = fieldEvolve(S.String, { update: (schema) => S.NullOr(schema) })
- * console.log(field.schemas.update !== undefined) // true
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export const fieldEvolve = V.fieldEvolve;
-
-/**
- * Extract one BSL variant from a variant-aware struct.
- *
- * **Example** (Inspect the extractor)
- *
- * ```ts
- * import { extract } from "./factory.ts"
- *
- * console.log(typeof extract("select")) // "function"
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export const extract = V.extract;
-
-/**
- * String-keyed field declaration accepted by the BSL model factory.
+ * String-keyed field declaration accepted by the @beep/effect-drizzle model factory.
  *
  * **Example** (Declare a field record)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import type { FieldsInput } from "./factory.ts"
+ * import type { FieldsInput } from "./model.ts"
  *
  * const fields: FieldsInput = { name: S.String }
  * ```
@@ -222,18 +94,17 @@ export interface FieldsInput {
 // Resolved metadata (explicit meta + derivation + EntityId auto-references)
 // ---------------------------------------------------------------------------
 
-type AutoRef<I extends Field.Input> =
-  Field.MetaFrom<I>["references"] extends Meta.References
-    ? Field.MetaFrom<I>["references"]
-    : Field.MetaFrom<I>["primaryKey"] extends true
+type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Meta.References
+  ? Field.MetaFrom<I>["references"]
+  : Field.MetaFrom<I>["primaryKey"] extends true
     ? undefined
     : Derive.SelectSchemaOf<Field.SchemaFrom<I>> extends Derive.EntityIdLike & {
-        readonly tableName: infer TableName extends string;
-      }
-    ? [Exclude<Field.EncodedOf<I>, null>] extends [number]
-      ? Meta.References<TableName, "id">
-      : undefined
-    : undefined;
+          readonly tableName: infer TableName extends string;
+        }
+      ? [Exclude<Field.EncodedOf<I>, null>] extends [number]
+        ? Meta.References<TableName, "id">
+        : undefined
+      : undefined;
 
 /**
  * Metadata after column derivation and automatic reference resolution.
@@ -241,10 +112,7 @@ type AutoRef<I extends Field.Input> =
  * @category models
  * @since 0.0.0
  */
-export type ResolvedMetaOf<
-  I extends Field.Input,
-  Key extends string = string
-> = Meta.Merge<
+export type ResolvedMetaOf<I extends Field.Input, Key extends string = string> = Meta.Merge<
   Field.MetaFrom<I>,
   {
     readonly column: PgColumn.ResolveName<Derive.ResolvedColumn<I>, Key>;
@@ -262,10 +130,7 @@ export type ColumnsOf<F extends FieldsInput> = {
   readonly [K in keyof F]: ResolvedMetaOf<F[K], K & string>;
 };
 
-type PlainVariants<
-  Sch extends S.Top,
-  M extends Meta.Meta
-> = M["version"] extends true
+type PlainVariants<Sch extends S.Top, M extends Meta.Meta> = M["version"] extends true
   ? VariantSchema.Field<{
       readonly select: Sch;
       readonly insert: S.optionalKey<Sch>;
@@ -275,27 +140,27 @@ type PlainVariants<
       readonly jsonUpdate: Sch;
     }>
   : M["generated"] extends false
-  ? VariantSchema.Field<{
-      readonly select: Sch;
-      readonly insert: M["hasDefault"] extends true ? S.optionalKey<Sch> : Sch;
-      readonly update: S.optionalKey<Sch>;
-      readonly json: Sch;
-      readonly jsonCreate: Sch;
-      readonly jsonUpdate: Sch;
-    }>
-  : M["generated"] extends Meta.GeneratedIdentityAlways
-  ? VariantSchema.Field<{
-      readonly select: Sch;
-      readonly update: Sch;
-      readonly json: Sch;
-    }>
-  : VariantSchema.Field<{
-      readonly select: Sch;
-      readonly json: Sch;
-    }>;
+    ? VariantSchema.Field<{
+        readonly select: Sch;
+        readonly insert: M["hasDefault"] extends true ? S.optionalKey<Sch> : Sch;
+        readonly update: S.optionalKey<Sch>;
+        readonly json: Sch;
+        readonly jsonCreate: Sch;
+        readonly jsonUpdate: Sch;
+      }>
+    : M["generated"] extends Meta.GeneratedIdentityAlways
+      ? VariantSchema.Field<{
+          readonly select: Sch;
+          readonly update: Sch;
+          readonly json: Sch;
+        }>
+      : VariantSchema.Field<{
+          readonly select: Sch;
+          readonly json: Sch;
+        }>;
 
 /**
- * Variant-aware schema after applying BSL's default and generated truth table.
+ * Variant-aware schema after applying @beep/effect-drizzle's default and generated truth table.
  *
  * @category models
  * @since 0.0.0
@@ -304,17 +169,17 @@ export type EffectiveSchema<I extends Field.Input> =
   Field.SchemaFrom<I> extends VariantSchema.Field.Any
     ? Field.SchemaFrom<I>
     : Field.SchemaFrom<I> extends S.Top
-    ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
-    : never;
+      ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
+      : never;
 
 /**
- * Effective variant-aware schema record derived from a BSL field record.
+ * Effective variant-aware schema record derived from a @beep/effect-drizzle field record.
  *
  * **Example** (Unwrap model fields)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import type { UnwrappedFields } from "./factory.ts"
+ * import type { UnwrappedFields } from "./model.ts"
  *
  * type Fields = UnwrappedFields<{ readonly name: typeof S.String }>
  * ```
@@ -330,16 +195,8 @@ export type UnwrappedFields<F extends FieldsInput> = {
 // Compile-time model validation (intersection validator)
 // ---------------------------------------------------------------------------
 
-type IsUnionInner<T, U> = T extends unknown
-  ? [U] extends [T]
-    ? false
-    : true
-  : never;
-type IsUnion<T> = [T] extends [never]
-  ? false
-  : true extends IsUnionInner<T, T>
-  ? true
-  : false;
+type IsUnionInner<T, U> = T extends unknown ? ([U] extends [T] ? false : true) : never;
+type IsUnion<T> = [T] extends [never] ? false : true extends IsUnionInner<T, T> ? true : false;
 
 type PrimaryKeyKeys<F extends FieldsInput> = {
   [K in keyof F]: Field.MetaFrom<F[K]>["primaryKey"] extends true ? K : never;
@@ -352,27 +209,26 @@ type VersionKeys<F extends FieldsInput> = {
 type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] extends true
   ? Field.MetaFrom<I>["dimensions"] extends 0
     ? Field.MetaFrom<I>["column"] extends {
-      readonly kind: PgColumn.IdentityKind;
-    }
-    ? Field.MetaFrom<I>["generated"] extends false
-      ? Field.MetaFrom<I>["identity"] extends false
-        ? unknown
-        : Field.BslTypeError<"version fields cannot use identity generation">
-      : Field.BslTypeError<"version fields cannot be generated">
-      : Field.BslTypeError<"version fields require an explicit integer-family column">
-    : Field.BslTypeError<"array fields cannot be optimistic versions">
+        readonly kind: PgColumn.IdentityKind;
+      }
+      ? Field.MetaFrom<I>["generated"] extends false
+        ? Field.MetaFrom<I>["identity"] extends false
+          ? unknown
+          : Field.SqlTypeError<"version fields cannot use identity generation">
+        : Field.SqlTypeError<"version fields cannot be generated">
+      : Field.SqlTypeError<"version fields require an explicit integer-family column">
+    : Field.SqlTypeError<"array fields cannot be optimistic versions">
   : unknown;
 
-type ValidateArrayField<I extends Field.Input> =
-  Field.MetaFrom<I>["dimensions"] extends 0
-    ? unknown
-    : Field.MetaFrom<I>["primaryKey"] extends true
-    ? Field.BslTypeError<"array fields cannot be primary keys">
+type ValidateArrayField<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] extends 0
+  ? unknown
+  : Field.MetaFrom<I>["primaryKey"] extends true
+    ? Field.SqlTypeError<"array fields cannot be primary keys">
     : Field.MetaFrom<I>["identity"] extends false
-    ? Field.MetaFrom<I>["version"] extends false
-      ? unknown
-      : Field.BslTypeError<"array fields cannot be optimistic versions">
-    : Field.BslTypeError<"array fields cannot use identity generation">;
+      ? Field.MetaFrom<I>["version"] extends false
+        ? unknown
+        : Field.SqlTypeError<"array fields cannot be optimistic versions">
+      : Field.SqlTypeError<"array fields cannot use identity generation">;
 
 /**
  * Per-key and whole-model compile-time validation for a field record.
@@ -380,13 +236,13 @@ type ValidateArrayField<I extends Field.Input> =
  * **Details**
  *
  * Success resolves each key to `unknown`; a violation resolves to a
- * `BslTypeError` whose literal message appears on the offending key.
+ * `SqlTypeError` whose literal message appears on the offending key.
  *
  * **Example** (Validate a model field record)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import type { ValidateFields } from "./factory.ts"
+ * import type { ValidateFields } from "./model.ts"
  *
  * type Valid = ValidateFields<{ readonly name: typeof S.String }>
  * ```
@@ -396,13 +252,13 @@ type ValidateArrayField<I extends Field.Input> =
  */
 export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: [Derive.ResolvedColumn<F[K]>] extends [never]
-    ? Field.BslTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
+    ? Field.SqlTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
     : ValidateVersionField<F[K]> & ValidateArrayField<F[K]>;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
-  ? Field.BslTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
+  ? Field.SqlTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
   : unknown) &
   (IsUnion<VersionKeys<F>> extends true
-    ? Field.BslTypeError<"model declares multiple optimistic-version fields">
+    ? Field.SqlTypeError<"model declares multiple optimistic-version fields">
     : unknown);
 
 // ---------------------------------------------------------------------------
@@ -415,7 +271,7 @@ export type ValidateFields<F extends FieldsInput> = {
  * **Example** (Inspect the diagnostic)
  *
  * ```ts
- * import type { MissingSelfGeneric } from "./factory.ts"
+ * import type { MissingSelfGeneric } from "./model.ts"
  *
  * declare const diagnostic: MissingSelfGeneric
  * console.log(diagnostic)
@@ -425,25 +281,25 @@ export type ValidateFields<F extends FieldsInput> = {
  * @since 0.0.0
  */
 export type MissingSelfGeneric =
-  `Missing \`Self\` generic — use \`class Self extends Bsl.Model<Self>(identifier)({ ... }) {}\``;
+  `Missing \`Self\` generic — use \`class Self extends EffectDrizzle.Model<Self>(identifier)({ ... }) {}\``;
 
 /**
- * BSL metadata statics attached to every generated model class.
+ * @beep/effect-drizzle metadata statics attached to every generated model class.
  *
  * **Example** (Read model statics)
  *
  * ```ts
- * import type { FieldsInput, Statics } from "./factory.ts"
+ * import type { FieldsInput, Statics } from "./model.ts"
  *
  * declare const model: Statics<FieldsInput>
- * console.log(model.bsl.tableName)
+ * console.log(model.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export interface Statics<F extends FieldsInput> {
-  readonly bsl: {
+  readonly sql: {
     readonly tableName: string;
     readonly fields: F;
     readonly columns: ColumnsOf<F>;
@@ -452,12 +308,12 @@ export interface Statics<F extends FieldsInput> {
 }
 
 /**
- * Complete Effect variant class plus the BSL statics for a field record.
+ * Complete Effect variant class plus the @beep/effect-drizzle statics for a field record.
  *
  * **Example** (Name a generated model type)
  *
  * ```ts
- * import type { FieldsInput, ModelClass } from "./factory.ts"
+ * import type { FieldsInput, ModelClass } from "./model.ts"
  *
  * type Generated = ModelClass<object, FieldsInput>
  * ```
@@ -470,35 +326,30 @@ export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
   UnwrappedFields<F>,
   S.Struct<VariantSchema.ExtractFields<"select", UnwrappedFields<F>, true>>
 > & {
-  readonly [Va in Variant]: VariantSchema.Extract<
-    Va,
-    VariantSchema.Struct<UnwrappedFields<F>>
-  >;
+  readonly [Va in Variant]: VariantSchema.Extract<Va, VariantSchema.Struct<UnwrappedFields<F>>>;
 } & Statics<F>;
 
 /**
  * Structural bound accepted by the table and cross-model projectors.
  *
- * **Example** (Accept any BSL model)
+ * **Example** (Accept any @beep/effect-drizzle model)
  *
  * ```ts
- * import type { AnyModel } from "./factory.ts"
+ * import type { AnyModel } from "./model.ts"
  *
- * const tableName = (model: AnyModel) => model.bsl.tableName
+ * const tableName = (model: AnyModel) => model.sql.tableName
  * console.log(tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface AnyModel {
-  readonly bsl: {
+export interface AnyModel extends CoreAnyModel {
+  readonly sql: {
     readonly tableName: string;
     readonly fields: FieldsInput;
-    readonly columns: Record<string, Meta.Meta>;
-    readonly extras:
-      | ((columns: never) => ReadonlyArray<TableExtras.Node>)
-      | undefined;
+    readonly columns: Record<string, Meta.Meta<PgColumn.Spec>>;
+    readonly extras: ((columns: never) => ReadonlyArray<TableExtras.Node>) | undefined;
   };
 }
 
@@ -507,16 +358,14 @@ export interface AnyModel {
 // ---------------------------------------------------------------------------
 
 const deriveTableName = (identifier: string): string => {
-  const last = O.getOrElse(
-    A.last(Str.split(identifier, "/")),
-    () => identifier
-  );
-  return Str.snakeCase(last);
+  const last = O.getOrElse(A.last(Str.split(identifier, "/")), () => identifier);
+  return snakeCase(last);
 };
 
 const resolveReferences = (
   meta: Meta.Meta,
-  select: unknown
+  select: unknown,
+  fieldName: string,
 ): Meta.References | undefined => {
   const explicit = O.fromUndefinedOr(meta.references);
   const derived =
@@ -528,16 +377,20 @@ const resolveReferences = (
           onUpdate: undefined,
         })
       : O.none<Meta.References>();
-  return explicit.pipe(
+  const resolved = explicit.pipe(
     O.orElse(() => derived),
-    O.getOrUndefined
+    O.getOrUndefined,
   );
+  if (P.isNotUndefined(resolved) && !Meta.isReferences(resolved)) {
+    throw ModelInvariantError.make({
+      message: `Field '${fieldName}' has an invalid reference descriptor.`,
+      fieldName,
+    });
+  }
+  return resolved;
 };
 
-const effectiveSchema = (
-  schema: Field.AnySchema,
-  meta: Meta.Meta
-): Field.AnySchema => {
+const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySchema => {
   if (meta.version) {
     const select = Derive.selectSchemaOf(schema);
     return V.Field({
@@ -550,7 +403,7 @@ const effectiveSchema = (
     });
   }
   if (VariantSchema.isField(schema)) return schema;
-  if (Meta.Generated.guards.identityAlways(meta.generated)) {
+  if (Meta.Generated.$is("identityAlways")(meta.generated)) {
     return V.Field({
       select: schema,
       update: schema,
@@ -574,7 +427,7 @@ const effectiveSchema = (
 };
 
 /**
- * Build one BSL model class after its public factory has validated the field set.
+ * Build one @beep/effect-drizzle model class after its public factory has validated the field set.
  *
  * **Details**
  *
@@ -588,19 +441,19 @@ export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
   annotations: S.Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<F> | undefined
+  extras: TableExtras.Callback<F> | undefined,
 ): ModelClass<Self, F>;
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,
   annotations: S.Annotations.Annotations | undefined,
-  extras: TableExtras.Callback<FieldsInput> | undefined
+  extras: TableExtras.Callback<FieldsInput> | undefined,
 ): object {
   const tableName = deriveTableName(identifier);
   const state = A.reduce(
     R.toEntries(fields),
     {
-      columns: R.empty<string, Meta.Meta>(),
+      columns: R.empty<string, Meta.Meta<PgColumn.Spec>>(),
       primaryKeys: 0,
       versionFields: 0,
       schemaFields: R.empty<string, Field.AnySchema>(),
@@ -608,12 +461,21 @@ export function makeModelClass(
     (state, [key, input]) => {
       const field = Field.from(input);
       const select = Derive.selectSchemaOf(field.schema);
-      const classified = P.isNotUndefined(field.meta.column)
-        ? {
-            column: field.meta.column,
-            nullable: Derive.isNullable(field.schema),
+      const classified = O.match(O.fromUndefinedOr(field.meta.column), {
+        onNone: () => Derive.classify(field.schema, key),
+        onSome: (column) => {
+          if (!PgColumn.isSpec(column)) {
+            throw ModelInvariantError.make({
+              message: `Field '${key}' has an invalid PostgreSQL column descriptor.`,
+              fieldName: key,
+            });
           }
-        : Derive.classify(field.schema, key);
+          return {
+            column,
+            nullable: Derive.isNullable(field.schema),
+          };
+        },
+      });
 
       if (field.meta.primaryKey && classified.nullable) {
         throw ModelInvariantError.make({
@@ -623,19 +485,14 @@ export function makeModelClass(
       }
       if (
         field.meta.dimensions !== 0 &&
-        (field.meta.primaryKey ||
-          field.meta.identity !== false ||
-          field.meta.version)
+        (field.meta.primaryKey || field.meta.identity !== false || field.meta.version)
       ) {
         throw ModelInvariantError.make({
           message: `Array field '${key}' cannot use primary-key, identity, or version semantics.`,
           fieldName: key,
         });
       }
-      if (
-        field.meta.identity !== false &&
-        !S.is(PgColumn.IdentityKind)(classified.column.kind)
-      ) {
+      if (field.meta.identity !== false && !PgColumn.isIdentityKind(classified.column.kind)) {
         throw ModelInvariantError.make({
           message: `Identity on '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
           fieldName: key,
@@ -650,19 +507,13 @@ export function makeModelClass(
           fieldName: key,
         });
       }
-      if (
-        field.meta.version &&
-        !S.is(PgColumn.IdentityKind)(classified.column.kind)
-      ) {
+      if (field.meta.version && !PgColumn.isIdentityKind(classified.column.kind)) {
         throw ModelInvariantError.make({
           message: `Version field '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
           fieldName: key,
         });
       }
-      if (
-        field.meta.version &&
-        (field.meta.identity !== false || field.meta.generated !== false)
-      ) {
+      if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
         throw ModelInvariantError.make({
           message: `Version field '${key}' cannot use identity or generated-column semantics.`,
           fieldName: key,
@@ -671,12 +522,12 @@ export function makeModelClass(
       const bounded = PgColumn.Spec.guards.varchar(classified.column)
         ? O.some({ kind: "varchar", length: classified.column.length })
         : PgColumn.Spec.guards.char(classified.column)
-        ? O.some({ kind: "char", length: classified.column.length })
-        : O.none<{ readonly kind: string; readonly length: number }>();
+          ? O.some({ kind: "char", length: classified.column.length })
+          : O.none<{ readonly kind: string; readonly length: number }>();
       if (O.isSome(bounded)) {
         const incompatible = A.findFirst(
           Derive.maxLengths(field.schema),
-          (maxLength) => maxLength > bounded.value.length
+          (maxLength) => maxLength > bounded.value.length,
         );
         if (O.isSome(incompatible)) {
           throw ModelInvariantError.make({
@@ -687,19 +538,15 @@ export function makeModelClass(
       }
       const resolvedMeta = Meta.merge(field.meta, {
         column: PgColumn.resolveName(classified.column, key),
-        references: resolveReferences(field.meta, select),
+        references: resolveReferences(field.meta, select, key),
       });
       return {
         columns: R.set(state.columns, key, resolvedMeta),
         primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
         versionFields: state.versionFields + (field.meta.version ? 1 : 0),
-        schemaFields: R.set(
-          state.schemaFields,
-          key,
-          effectiveSchema(field.schema, resolvedMeta)
-        ),
+        schemaFields: R.set(state.schemaFields, key, effectiveSchema(field.schema, resolvedMeta)),
       };
-    }
+    },
   );
 
   if (state.primaryKeys > 1) {
@@ -717,46 +564,40 @@ export function makeModelClass(
   }
 
   const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
-  return SchemaUtils.withStatics(Base, () => ({
-    bsl: { tableName, fields, columns: state.columns, extras },
+  return withStatics(Base, () => ({
+    sql: { tableName, fields, columns: state.columns, extras },
   }));
 }
 
 /**
  * Build a variant-aware model class whose fields own their resolved SQL metadata.
  *
- * **Example** (Define a BSL model)
+ * **Example** (Define a @beep/effect-drizzle model)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Model } from "./factory.ts"
+ * import { Model } from "./model.ts"
  *
  * class User extends Model<User>("User")({ name: S.String }) {}
- * console.log(User.bsl.tableName) // "user"
+ * console.log(User.sql.tableName) // "user"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
 export function Model<Self = never>(
-  identifier: string
+  identifier: string,
 ): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
-  annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<F>
+  annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<F>,
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>;
 export function Model(identifier: string): unknown {
   return (
     fields: FieldsInput,
-    annotationsOrExtras?:
-      | S.Annotations.Annotations
-      | TableExtras.Callback<FieldsInput>
+    annotationsOrExtras?: S.Annotations.Annotations | TableExtras.Callback<FieldsInput>,
   ): object => {
-    const extras = P.isFunction(annotationsOrExtras)
-      ? annotationsOrExtras
-      : undefined;
-    const annotations = P.isFunction(annotationsOrExtras)
-      ? undefined
-      : annotationsOrExtras;
+    const extras = P.isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+    const annotations = P.isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
     return makeModelClass(identifier, fields, annotations, extras);
   };
 }

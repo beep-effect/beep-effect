@@ -1,7 +1,5 @@
-/** Live PostgreSQL execution proofs for BSL round four. */
+/** Live PostgreSQL execution proofs for @beep/effect-drizzle round four. */
 import { PgliteClient } from "@beep/pglite";
-import { $ScratchpadId } from "@beep/identity";
-import { Str } from "@beep/utils";
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { pushSchema } from "drizzle-kit/api-postgres";
@@ -11,42 +9,36 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as SchemaParser from "effect/SchemaParser";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
 import * as SqlModel from "effect/unstable/sql/SqlModel";
 import {
-  bslSchema,
+  effectDrizzleSchema,
   ArrayRecord,
   Organization,
   User,
   userOptimisticRepository,
   userRepository,
 } from "./fixtures.ts";
-import {
-  makeLiveTestSupport,
-  type LiveTestSupport,
-} from "./live.test-support.ts";
-import { VersionConflictError } from "./repository.ts";
+import { makeLiveTestSupport, type LiveTestSupport } from "./live.test-support.ts";
+import { VersionConflictError } from "../src/index.ts";
 
-const $I = $ScratchpadId.create("bsl/live.test");
-
-const RelationId = S.Struct({ id: S.Finite }).pipe(
-  $I.annoteSchema("RelationId", {
-    description: "Minimal related-row shape asserted by the BSL live suite.",
-  })
-);
+const RelationId = S.Struct({ id: S.Finite }).annotate({
+  identifier: "@beep/effect-drizzle/test/RelationId",
+  description: "Minimal related-row shape asserted by the @beep/effect-drizzle live suite.",
+});
 const UserRelationRows = S.Array(
   S.Struct({
     id: S.Finite,
     org: RelationId,
     organizationsThroughMembership: S.Array(RelationId),
-  })
-).pipe(
-  $I.annoteSchema("UserRelationRows", {
-    description: "User relation rows decoded from live RQBv2 queries.",
-  })
-);
+  }),
+).annotate({
+  identifier: "@beep/effect-drizzle/test/UserRelationRows",
+  description: "User relation rows decoded from live RQBv2 queries.",
+});
 const OrganizationRelationRows = S.Array(
   S.Struct({
     id: S.Finite,
@@ -54,17 +46,13 @@ const OrganizationRelationRows = S.Array(
     childOrgs: S.Array(RelationId),
     users: S.Array(RelationId),
     usersThroughMembership: S.Array(RelationId),
-  })
-).pipe(
-  $I.annoteSchema("OrganizationRelationRows", {
-    description: "Organization relation rows decoded from live RQBv2 queries.",
-  })
-);
+  }),
+).annotate({
+  identifier: "@beep/effect-drizzle/test/OrganizationRelationRows",
+  description: "Organization relation rows decoded from live RQBv2 queries.",
+});
 
-const invokeFindMany = (
-  query: unknown,
-  config: unknown
-): Promise<unknown> => {
+const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
   if (P.hasProperty(query, "findMany") && P.isFunction(query.findMany)) {
     return Reflect.apply(query.findMany, query, [config]);
   }
@@ -72,8 +60,8 @@ const invokeFindMany = (
 };
 
 const drizzleExports: Record<string, unknown> = {
-  ...bslSchema.enums,
-  ...bslSchema.tables,
+  ...effectDrizzleSchema.enums,
+  ...effectDrizzleSchema.tables,
 };
 
 let live = O.none<LiveTestSupport>();
@@ -86,29 +74,29 @@ const support = (): LiveTestSupport =>
 const isVersionConflict = S.is(VersionConflictError);
 
 const organizationRepository = SqlModel.makeRepository(Organization, {
-  tableName: Organization.bsl.tableName,
+  tableName: Organization.sql.tableName,
   spanPrefix: "Organization",
   idColumn: "id",
 });
 
 const arrayRecordRepository = SqlModel.makeRepository(ArrayRecord, {
-  tableName: ArrayRecord.bsl.tableName,
+  tableName: ArrayRecord.sql.tableName,
   spanPrefix: "ArrayRecord",
   idColumn: "id",
 });
 
-const createOrganization = Effect.fn("BslLiveTest.createOrganization")(
-  function* (suffix: string) {
-    const repository = yield* organizationRepository;
-    const request = yield* SchemaParser.makeEffect(Organization.insert)({
-      parentOrgId: null,
-      slug: `round-four-${suffix}`,
-      name: `Round Four ${suffix}`,
-      code: `R4-${suffix}`,
-    });
-    return yield* repository.insert(request);
-  }
-);
+const createOrganization = Effect.fn("EffectDrizzleLiveTest.createOrganization")(function* (
+  suffix: string,
+) {
+  const repository = yield* organizationRepository;
+  const request = yield* SchemaParser.makeEffect(Organization.insert)({
+    parentOrgId: null,
+    slug: `round-four-${suffix}`,
+    name: `Round Four ${suffix}`,
+    code: `R4-${suffix}`,
+  });
+  return yield* repository.insert(request);
+});
 
 const setupLive = Effect.gen(function* () {
   const current = yield* makeLiveTestSupport;
@@ -116,24 +104,20 @@ const setupLive = Effect.gen(function* () {
   const result = yield* Effect.tryPromise(() =>
     current.run(
       Effect.gen(function* () {
-      const client = yield* PgliteClient;
+        const client = yield* PgliteClient;
         if (!(client.pglite instanceof PGlite)) {
           throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
         }
         const db = drizzle({ client: client.pglite });
-        const migration = yield* Effect.tryPromise(() =>
-          pushSchema(drizzleExports, db)
-        );
+        const migration = yield* Effect.tryPromise(() => pushSchema(drizzleExports, db));
         yield* Effect.tryPromise(() => migration.apply());
-        const noOp = yield* Effect.tryPromise(() =>
-          pushSchema(drizzleExports, db)
-        );
+        const noOp = yield* Effect.tryPromise(() => pushSchema(drizzleExports, db));
         return {
           migrationStatements: migration.sqlStatements,
           noOpStatements: noOp.sqlStatements,
         };
-      })
-    )
+      }),
+    ),
   );
   migrationStatements = result.migrationStatements;
   noOpStatements = result.noOpStatements;
@@ -145,24 +129,16 @@ afterAll(() =>
   O.match(live, {
     onNone: () => Promise.resolve(),
     onSome: (current) => current.close(),
-  })
+  }),
 );
 
-describe.serial("BSL live PGlite gauntlet", () => {
-  it("applies drizzle-kit DDL from the BSL projection and regenerates to no-op", () => {
+describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
+  it("applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op", () => {
     expect(A.isReadonlyArrayNonEmpty(migrationStatements)).toBe(true);
-    expect(
-      A.some(migrationStatements, Str.includes('CREATE TABLE "user"'))
-    ).toBe(true);
-    expect(
-      A.some(migrationStatements, Str.includes("record_status"))
-    ).toBe(true);
-    expect(A.some(migrationStatements, Str.includes('"labels" text[]'))).toBe(
-      true
-    );
-    expect(A.some(migrationStatements, Str.includes('"matrix" text[][]'))).toBe(
-      true
-    );
+    expect(A.some(migrationStatements, Str.includes('CREATE TABLE "user"'))).toBe(true);
+    expect(A.some(migrationStatements, Str.includes("record_status"))).toBe(true);
+    expect(A.some(migrationStatements, Str.includes('"labels" text[]'))).toBe(true);
+    expect(A.some(migrationStatements, Str.includes('"matrix" text[][]'))).toBe(true);
     expect(noOpStatements).toEqual([]);
   });
 
@@ -185,9 +161,8 @@ describe.serial("BSL live PGlite gauntlet", () => {
           ["a", "b"],
           ["c", "d"],
         ]);
-      })
-    )
-  );
+      }),
+    ));
 
   it("executes the installed SqlModel repository and Option codec", () =>
     support().runRepository(
@@ -216,24 +191,17 @@ describe.serial("BSL live PGlite gauntlet", () => {
         yield* repository.delete(inserted.id);
         const missing = yield* Effect.option(repository.findById(inserted.id));
         expect(inserted.id).toBeGreaterThan(0);
-        expect(DateTime.formatIso(inserted.createdAt)).toBe(
-          DateTime.formatIso(insert.createdAt)
-        );
-        expect(DateTime.formatIso(inserted.updatedAt)).toBe(
-          DateTime.formatIso(insert.updatedAt)
-        );
+        expect(DateTime.formatIso(inserted.createdAt)).toBe(DateTime.formatIso(insert.createdAt));
+        expect(DateTime.formatIso(inserted.updatedAt)).toBe(DateTime.formatIso(insert.updatedAt));
         expect(found.id).toBe(inserted.id);
         expect(inserted.nickname.pipe(O.isNone)).toBe(true);
         expect(updated.id).toBe(inserted.id);
         expect(updated.name).toBe("Native Repository Updated");
         expect(updated.nickname.pipe(O.getOrUndefined)).toBe("round-four");
-        expect(DateTime.formatIso(updated.updatedAt)).toBe(
-          DateTime.formatIso(update.updatedAt)
-        );
+        expect(DateTime.formatIso(updated.updatedAt)).toBe(DateTime.formatIso(update.updatedAt));
         expect(missing.pipe(O.isNone)).toBe(true);
-      })
-    )
-  );
+      }),
+    ));
 
   it("increments versions and rejects stale concurrent writers", () =>
     support().runRepository(
@@ -269,7 +237,7 @@ describe.serial("BSL live PGlite gauntlet", () => {
         expect(winner.rowVersion).toBe(2);
         expect(winner.name).toBe("First Writer");
         expect(DateTime.formatIso(winner.updatedAt)).toBe(
-          DateTime.formatIso(firstRequest.updatedAt)
+          DateTime.formatIso(firstRequest.updatedAt),
         );
         expect(current.rowVersion).toBe(2);
         expect(current.name).toBe("First Writer");
@@ -279,9 +247,8 @@ describe.serial("BSL live PGlite gauntlet", () => {
         expect(conflict.table).toBe("user");
         expect(conflict.id).toBe(snapshot.id);
         expect(conflict.expectedVersion).toBe(1);
-      })
-    )
-  );
+      }),
+    ));
 
   it("round-trips valid enums and surfaces invalid values as SqlError", () =>
     support().runRepository(
@@ -302,17 +269,16 @@ describe.serial("BSL live PGlite gauntlet", () => {
         const sql = yield* SqlClient.SqlClient;
         const invalid = yield* Effect.flip(
           sql`
-            update ${sql(User.bsl.tableName)}
+            update ${sql(User.sql.tableName)}
             set ${sql("status")} = ${"not-a-record-status"}
             where ${sql("id")} = ${valid.id}
-          `
+          `,
         );
         yield* repository.delete(valid.id);
         expect(valid.status).toBe("draft");
         expect(invalid.pipe(SqlError.isSqlError)).toBe(true);
-      })
-    )
-  );
+      }),
+    ));
 
   it("queries forward, reverse, self, and junction relations through RQBv2", () =>
     Effect.runPromise(
@@ -322,49 +288,41 @@ describe.serial("BSL live PGlite gauntlet", () => {
             Effect.gen(function* () {
               const organizations = yield* organizationRepository;
               const users = yield* userOptimisticRepository;
-              const rootRequest = yield* SchemaParser.makeEffect(
-                Organization.insert
-              )({
+              const rootRequest = yield* SchemaParser.makeEffect(Organization.insert)({
                 parentOrgId: null,
                 slug: "round-five-root",
                 name: "Round Five Root",
                 code: "R5-ROOT",
               });
               const root = yield* organizations.insert(rootRequest);
-              const childRequest = yield* SchemaParser.makeEffect(
-                Organization.insert
-              )({
+              const childRequest = yield* SchemaParser.makeEffect(Organization.insert)({
                 parentOrgId: root.id,
                 slug: "round-five-child",
                 name: "Round Five Child",
                 code: "R5-CHILD",
               });
               const child = yield* organizations.insert(childRequest);
-              const directRequest = yield* SchemaParser.makeEffect(User.insert)(
-                {
-                  orgId: root.id,
-                  email: "round-five-direct@example.com",
-                  name: "Round Five Direct",
-                  bio: null,
-                  nickname: O.none(),
-                  settings: { theme: "direct" },
-                  active: true,
-                  status: "active",
-                }
-              );
+              const directRequest = yield* SchemaParser.makeEffect(User.insert)({
+                orgId: root.id,
+                email: "round-five-direct@example.com",
+                name: "Round Five Direct",
+                bio: null,
+                nickname: O.none(),
+                settings: { theme: "direct" },
+                active: true,
+                status: "active",
+              });
               const direct = yield* users.insert(directRequest);
-              const memberRequest = yield* SchemaParser.makeEffect(User.insert)(
-                {
-                  orgId: child.id,
-                  email: "round-five-member@example.com",
-                  name: "Round Five Member",
-                  bio: null,
-                  nickname: O.none(),
-                  settings: { theme: "member" },
-                  active: true,
-                  status: "draft",
-                }
-              );
+              const memberRequest = yield* SchemaParser.makeEffect(User.insert)({
+                orgId: child.id,
+                email: "round-five-member@example.com",
+                name: "Round Five Member",
+                bio: null,
+                nickname: O.none(),
+                settings: { theme: "member" },
+                active: true,
+                status: "draft",
+              });
               const member = yield* users.insert(memberRequest);
               const sql = yield* SqlClient.SqlClient;
               yield* sql`
@@ -372,8 +330,8 @@ describe.serial("BSL live PGlite gauntlet", () => {
                 values (${root.id}, ${member.id}, ${"member"})
               `;
               return { root, child, direct, member };
-            })
-          )
+            }),
+          ),
         );
 
         const queried = yield* Effect.tryPromise(() =>
@@ -381,13 +339,11 @@ describe.serial("BSL live PGlite gauntlet", () => {
             Effect.gen(function* () {
               const client = yield* PgliteClient;
               if (!(client.pglite instanceof PGlite)) {
-                throw new Error(
-                  "PgliteTestLayer did not expose a concrete PGlite client"
-                );
+                throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
               }
               const db = drizzle({
                 client: client.pglite,
-                relations: bslSchema.relations,
+                relations: effectDrizzleSchema.relations,
               });
               const usersUnknown = yield* Effect.tryPromise(() =>
                 invokeFindMany(db.query.user, {
@@ -395,7 +351,7 @@ describe.serial("BSL live PGlite gauntlet", () => {
                     org: true,
                     organizationsThroughMembership: true,
                   },
-                })
+                }),
               );
               const organizationsUnknown = yield* Effect.tryPromise(() =>
                 invokeFindMany(db.query.organization, {
@@ -405,50 +361,36 @@ describe.serial("BSL live PGlite gauntlet", () => {
                     users: true,
                     usersThroughMembership: true,
                   },
-                })
+                }),
               );
-              const users = yield* S.decodeUnknownEffect(UserRelationRows)(
-                usersUnknown
-              );
-              const organizations = yield* S.decodeUnknownEffect(
-                OrganizationRelationRows
-              )(organizationsUnknown);
+              const users = yield* S.decodeUnknownEffect(UserRelationRows)(usersUnknown);
+              const organizations =
+                yield* S.decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
               return { users, organizations };
-            })
-          )
+            }),
+          ),
         );
 
         const direct = O.getOrThrow(
-          A.findFirst(queried.users, (row) => row.id === seeded.direct.id)
+          A.findFirst(queried.users, (row) => row.id === seeded.direct.id),
         );
         const member = O.getOrThrow(
-          A.findFirst(queried.users, (row) => row.id === seeded.member.id)
+          A.findFirst(queried.users, (row) => row.id === seeded.member.id),
         );
         const root = O.getOrThrow(
-          A.findFirst(
-            queried.organizations,
-            (row) => row.id === seeded.root.id
-          )
+          A.findFirst(queried.organizations, (row) => row.id === seeded.root.id),
         );
         const child = O.getOrThrow(
-          A.findFirst(
-            queried.organizations,
-            (row) => row.id === seeded.child.id
-          )
+          A.findFirst(queried.organizations, (row) => row.id === seeded.child.id),
         );
         expect(direct.org.id).toBe(seeded.root.id);
         expect(child.parentOrg?.id).toBe(seeded.root.id);
-        expect(A.map(root.childOrgs, (row) => row.id)).toContain(
-          seeded.child.id
-        );
+        expect(A.map(root.childOrgs, (row) => row.id)).toContain(seeded.child.id);
         expect(A.map(root.users, (row) => row.id)).toContain(seeded.direct.id);
-        expect(A.map(root.usersThroughMembership, (row) => row.id)).toContain(
-          seeded.member.id
+        expect(A.map(root.usersThroughMembership, (row) => row.id)).toContain(seeded.member.id);
+        expect(A.map(member.organizationsThroughMembership, (row) => row.id)).toContain(
+          seeded.root.id,
         );
-        expect(
-          A.map(member.organizationsThroughMembership, (row) => row.id)
-        ).toContain(seeded.root.id);
-      })
-    )
-  );
+      }),
+    ));
 });

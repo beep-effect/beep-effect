@@ -1,12 +1,11 @@
-/** Dialect kit factory for invariant model defaults and shared BSL operators. */
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+/** Dialect kit factory for invariant model defaults and shared @beep/effect-drizzle operators. */
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import type * as S from "effect/Schema";
-import * as Field from "./Field.ts";
+import * as Struct from "effect/Struct";
+import * as Field from "./core/Field.ts";
 import {
   type FieldsInput,
   type MissingSelfGeneric,
@@ -15,14 +14,12 @@ import {
   ModelInvariantError,
   makeModelClass,
   type ValidateFields,
-} from "./factory.ts";
-import * as Pg from "./pg.ts";
-import { makeRepository } from "./repository.ts";
-import { schema } from "./schema.ts";
-import * as Table from "./TableExtras.ts";
-import { toPgTable } from "./table.ts";
-
-const $I = $ScratchpadId.create("bsl/kit");
+} from "./pg/model.ts";
+import * as Pg from "./pg/combinators.ts";
+import { makeRepository } from "./core/repository.ts";
+import { schema } from "./pg/schema.ts";
+import * as Table from "./pg/extras.ts";
+import { toPgTable } from "./pg/table.ts";
 
 /**
  * SQL dialects supported by {@link make}.
@@ -38,18 +35,18 @@ const $I = $ScratchpadId.create("bsl/kit");
  * @category schemas
  * @since 0.0.0
  */
-export const Dialect = LiteralKit(["pg"]).pipe(
-  $I.annoteSchema("Dialect", {
-    description: "SQL dialect implemented by a BSL kit configuration.",
-  })
-);
+export const Dialect = {
+  is: {
+    pg: (value: unknown): value is "pg" => value === "pg",
+  },
+};
 /**
  * SQL dialect literal represented by {@link Dialect}.
  *
  * @category models
  * @since 0.0.0
  */
-export type Dialect = typeof Dialect.Type;
+export type Dialect = "pg";
 
 /**
  * PostgreSQL kit configuration with invariant default fields and table extras.
@@ -63,29 +60,32 @@ export interface PgKitConfig<Defaults extends FieldsInput> {
   readonly defaultExtras?: Table.Callback<Defaults> | undefined;
 }
 
-type Merged<Defaults extends FieldsInput, Own extends FieldsInput> = Defaults &
-  Own;
+type Merged<Defaults extends FieldsInput, Own extends FieldsInput> = Defaults & Own;
 
-type ValidateCollision<
-  Defaults extends FieldsInput,
-  Own extends FieldsInput
-> = {
+function mergeFields<Defaults extends FieldsInput, Own extends FieldsInput>(
+  defaults: Defaults,
+  own: Own,
+): Merged<Defaults, Own>;
+function mergeFields(defaults: FieldsInput, own: FieldsInput): FieldsInput {
+  return Struct.assign(defaults, own);
+}
+
+type ValidateCollision<Defaults extends FieldsInput, Own extends FieldsInput> = {
   readonly [K in keyof Own]: K extends keyof Defaults
-    ? Field.BslTypeError<`'${K &
-        string}' is a kit default column — remove it or use Model`>
+    ? Field.SqlTypeError<`'${K & string}' is a kit default column — remove it or use Model`>
     : unknown;
 };
 
 type ValidateMergedFields<
   Defaults extends FieldsInput,
   Own extends FieldsInput,
-  Effective extends FieldsInput = Merged<Defaults, Own>
+  Effective extends FieldsInput = Merged<Defaults, Own>,
 > = {
   readonly [K in keyof Own]: K extends keyof ValidateFields<Effective>
     ? ValidateFields<Effective>[K]
     : unknown;
-} & (ValidateFields<Effective> extends Field.BslTypeError<infer Message>
-  ? Field.BslTypeError<Message>
+} & (ValidateFields<Effective> extends Field.SqlTypeError<infer Message>
+  ? Field.SqlTypeError<Message>
   : unknown);
 
 /**
@@ -95,16 +95,12 @@ type ValidateMergedFields<
  * @since 0.0.0
  */
 export interface EntityFactory<Defaults extends FieldsInput> {
-  <Self = never>(identifier: string): <const Own extends FieldsInput>(
-    ownFields: Own &
-      ValidateCollision<Defaults, Own> &
-      ValidateMergedFields<Defaults, Own>,
-    annotationsOrExtras?:
-      | S.Annotations.Annotations
-      | Table.Callback<Merged<Defaults, Own>>
-  ) => [Self] extends [never]
-    ? MissingSelfGeneric
-    : ModelClass<Self, Merged<Defaults, Own>>;
+  <Self = never>(
+    identifier: string,
+  ): <const Own extends FieldsInput>(
+    ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
+    annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+  ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
 }
 
 /**
@@ -144,11 +140,11 @@ export interface PgKit<Defaults extends FieldsInput> {
  * @since 0.0.0
  */
 export const make = <const Defaults extends FieldsInput>(
-  config: PgKitConfig<Defaults>
+  config: PgKitConfig<Defaults>,
 ): PgKit<Defaults> => {
   if (!Dialect.is.pg(config.dialect)) {
     throw ModelInvariantError.make({
-      message: `Unsupported BSL kit dialect '${config.dialect}'.`,
+      message: `Unsupported @beep/effect-drizzle kit dialect '${config.dialect}'.`,
       fieldName: "(dialect)",
     });
   }
@@ -156,27 +152,18 @@ export const make = <const Defaults extends FieldsInput>(
   const defaultKeys = R.keys<string, Field.Input>(defaults);
 
   function Entity<Self = never>(
-    identifier: string
+    identifier: string,
   ): <const Own extends FieldsInput>(
-    ownFields: Own &
-      ValidateCollision<Defaults, Own> &
-      ValidateMergedFields<Defaults, Own>,
-    annotationsOrExtras?:
-      | S.Annotations.Annotations
-      | Table.Callback<Merged<Defaults, Own>>
-  ) => [Self] extends [never]
-    ? MissingSelfGeneric
-    : ModelClass<Self, Merged<Defaults, Own>>;
+    ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
+    annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+  ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
   function Entity(identifier: string): unknown {
     return <const Own extends FieldsInput>(
       ownFields: Own,
-      annotationsOrExtras?:
-        | S.Annotations.Annotations
-        | Table.Callback<Merged<Defaults, Own>>
+      annotationsOrExtras?: S.Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
     ): object => {
-      const collision = A.findFirst(
-        R.keys<string, Field.Input>(ownFields),
-        (key) => A.contains(defaultKeys, key)
+      const collision = A.findFirst(R.keys<string, Field.Input>(ownFields), (key) =>
+        A.contains(defaultKeys, key),
       );
       if (O.isSome(collision)) {
         throw ModelInvariantError.make({
@@ -184,13 +171,9 @@ export const make = <const Defaults extends FieldsInput>(
           fieldName: collision.value,
         });
       }
-      const fields = { ...defaults, ...ownFields };
-      const modelExtras = P.isFunction(annotationsOrExtras)
-        ? annotationsOrExtras
-        : undefined;
-      const annotations = P.isFunction(annotationsOrExtras)
-        ? undefined
-        : annotationsOrExtras;
+      const fields = mergeFields(defaults, ownFields);
+      const modelExtras = P.isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+      const annotations = P.isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
       const extras: Table.Callback<typeof fields> = (columns) =>
         A.appendAll(
           O.match(O.fromUndefinedOr(config.defaultExtras), {
@@ -200,7 +183,7 @@ export const make = <const Defaults extends FieldsInput>(
           O.match(O.fromUndefinedOr(modelExtras), {
             onNone: A.empty<Table.Node>,
             onSome: (callback) => callback(columns),
-          })
+          }),
         );
       return makeModelClass(identifier, fields, annotations, extras);
     };

@@ -1,47 +1,37 @@
-/** Compile-time and runtime fixtures for BSL round two. */
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+/** Compile-time and runtime consumer fixtures. */
 import { sql } from "drizzle-orm";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { SqlModel } from "effect/unstable/sql";
-import { Model, VariantField } from "./factory.ts";
-import * as Field from "./Field.ts";
-import { make } from "./kit.ts";
-import { makeRepository } from "./repository.ts";
-import * as pg from "./pg.ts";
-import * as PgColumn from "./PgColumn.ts";
-import { schema } from "./schema.ts";
-import * as Table from "./TableExtras.ts";
-import { toPgTable } from "./table.ts";
-
-const $I = $ScratchpadId.create("bsl/fixtures");
+import { make, makeRepository, Model, VariantField } from "../src/index.ts";
+import * as Field from "../src/core/Field.ts";
+import * as Meta from "../src/core/Meta.ts";
+import * as PgColumn from "../src/pg/Column.ts";
+import * as pg from "../src/pg/index.ts";
+import { schema, Table, toPgTable } from "../src/pg/index.ts";
 
 const PosInt = S.Int.check(
   S.isGreaterThan(0, {
-    identifier: $I`PosIntPositiveCheck`,
+    identifier: "PosIntPositiveCheck",
     title: "Positive Integer",
     description: "Checks that a row version is a positive integer.",
     message: "Expected a positive integer.",
-  })
-).pipe(
-  $I.annoteSchema("PosInt", {
-    description: "Positive integer used by kit row-version defaults.",
-  })
-);
+  }),
+).annotate({
+  identifier: "@beep/effect-drizzle/test/PosInt",
+  description: "Positive integer used by kit row-version defaults.",
+});
 
-export const RecordStatus = LiteralKit(["draft", "active"]).pipe(
-  $I.annoteSchema("RecordStatus", {
-    description: "Lifecycle status stored in the shared record_status enum.",
-  })
-);
-export const RecordSource = LiteralKit(["web", "api"]).pipe(
-  $I.annoteSchema("RecordSource", {
-    description: "Creation source stored in a field-derived PostgreSQL enum.",
-  })
-);
+export const RecordStatus = S.Literals(["draft", "active"]).annotate({
+  identifier: "@beep/effect-drizzle/test/RecordStatus",
+  description: "Lifecycle status stored in the shared record_status enum.",
+});
+export const RecordSource = S.Literals(["web", "api"]).annotate({
+  identifier: "@beep/effect-drizzle/test/RecordSource",
+  description: "Creation source stored in a field-derived PostgreSQL enum.",
+});
 
 export const auditKit = make({
   dialect: "pg",
@@ -51,55 +41,34 @@ export const auditKit = make({
     rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
   }),
   defaultExtras: (columns) => [
-    Table.check(
-      sql<boolean>`${columns.rowVersion} > 0`,
-      "kit_row_version_positive"
-    ),
+    Table.check(sql<boolean>`${columns.rowVersion} > 0`, "kit_row_version_positive"),
   ],
 });
 
-export class AuditedRecord extends auditKit.Entity<AuditedRecord>(
-  $I`AuditedRecord`
-)(
+export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord")(
   {
     name: S.String,
     status: RecordStatus.pipe(pg.enum("record_status")),
     source: RecordSource.pipe(pg.enum()),
     search: S.String.pipe(pg.unsafeCustom("tsvector")),
   },
-  (columns) => [
-    Table.check(
-      sql<boolean>`${columns.name} <> ''`,
-      "audited_record_name_non_empty"
-    ),
-  ]
+  (columns) => [Table.check(sql<boolean>`${columns.name} <> ''`, "audited_record_name_non_empty")],
 ) {}
 
-export class AuditedEvent extends auditKit.Entity<AuditedEvent>(
-  $I`AuditedEvent`
-)({
+export class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
   label: S.String,
   status: RecordStatus.pipe(pg.enum("record_status")),
 }) {}
 
-export class BareJunction extends auditKit.Model<BareJunction>(
-  $I`BareJunction`
-)(
+export class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
   {
     leftId: S.Int.pipe(pg.integer()),
     rightId: S.Int.pipe(pg.integer()),
   },
-  (columns) => [
-    Table.compositePrimaryKey("bare_junction_pk", [
-      columns.leftId,
-      columns.rightId,
-    ]),
-  ]
+  (columns) => [Table.compositePrimaryKey("bare_junction_pk", [columns.leftId, columns.rightId])],
 ) {}
 
-export class MechanicalColumns extends Model<MechanicalColumns>(
-  $I`MechanicalColumns`
-)({
+export class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
   amount: S.String.pipe(pg.numeric(10, 2)),
   calendarDate: S.String.pipe(pg.date()),
   objectDate: S.Date.pipe(pg.date({ mode: "date" })),
@@ -122,38 +91,39 @@ export const auditSchema = auditKit.schema({
 const entityId = <
   const TableName extends string,
   const EntityType extends string,
-  Sch extends S.Top
+  Sch extends S.Top,
 >(
   id: Sch,
   tableName: TableName,
-  entityType: EntityType
-) => id.pipe(SchemaUtils.withStatics(() => ({ tableName, entityType })));
+  entityType: EntityType,
+): Sch & { readonly tableName: TableName; readonly entityType: EntityType } =>
+  attachStatics(id, { tableName, entityType });
 
-export const UserId = entityId(
-  S.Finite.pipe(S.brand("UserId")),
-  "user",
-  "User"
-);
+function attachStatics<Self extends object, Statics extends object>(
+  self: Self,
+  statics: Statics,
+): Self & Statics;
+function attachStatics(self: object, statics: object): object {
+  return Object.assign(self, statics);
+}
+
+export const UserId = entityId(S.Finite.pipe(S.brand("UserId")), "user", "User");
 export const OrganizationId = entityId(
   S.Finite.pipe(S.brand("OrganizationId")),
   "organization",
-  "Organization"
+  "Organization",
 );
 export const NullableOrganizationId = entityId(
   S.NullOr(S.Finite.pipe(S.brand("OrganizationId"))),
   "organization",
-  "Organization"
+  "Organization",
 );
 
-export class Organization extends Model<Organization>($I`Organization`)(
+export class Organization extends Model<Organization>("Organization")(
   {
-    id: OrganizationId.pipe(
-      pg.integer(),
-      pg.identity("byDefault"),
-      pg.primaryKey()
-    ),
+    id: OrganizationId.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
     parentOrgId: NullableOrganizationId.pipe(
-      pg.references(OrganizationId, { onDelete: "set null" })
+      pg.references(OrganizationId, { onDelete: "set null" }),
     ),
     slug: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
     name: S.String,
@@ -166,27 +136,21 @@ export class Organization extends Model<Organization>($I`Organization`)(
       where: sql<boolean>`${t.slug} <> ''`,
     }),
     Table.check(sql<boolean>`${t.name} <> ''`, "organization_name_check"),
-  ]
+  ],
 ) {}
 
-export class User extends auditKit.Entity<User>($I`User`)(
+export class User extends auditKit.Entity<User>("User")(
   {
     id: UserId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
     orgId: OrganizationId,
-    email: S.String.check(S.isMaxLength(320)).pipe(
-      pg.varchar(320),
-      pg.unique()
-    ),
+    email: S.String.check(S.isMaxLength(320)).pipe(pg.varchar(320), pg.unique()),
     name: S.String,
     bio: S.NullOr(S.String),
     nickname: S.OptionFromNullOr(S.String),
     settings: S.Struct({ theme: S.String }),
     active: S.Boolean,
     status: RecordStatus.pipe(pg.enum("record_status"), pg.default("active")),
-    searchName: S.String.pipe(
-      pg.text(),
-      pg.generated(sql<string>`lower(name)`)
-    ),
+    searchName: S.String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
   },
   (t) => [
     Table.compositeUnique("user_org_email_unique", [t.orgId, t.email]),
@@ -195,11 +159,11 @@ export class User extends auditKit.Entity<User>($I`User`)(
       where: sql<boolean>`${t.active} = true`,
     }),
     Table.check("user_email_check")(sql<boolean>`${t.email} <> ''`),
-  ]
+  ],
 ) {}
 
 export const userRepository = SqlModel.makeRepository(User, {
-  tableName: User.bsl.tableName,
+  tableName: User.sql.tableName,
   spanPrefix: "User",
   idColumn: "id",
 });
@@ -209,25 +173,24 @@ export const userOptimisticRepository = auditKit.Repository(User, {
   idColumn: "id",
 });
 
+// @effect-diagnostics deterministicKeys:off
 class CodecService extends Context.Service<
   CodecService,
   { readonly normalize: (value: string) => string }
->()($I`CodecService`) {}
+>()("@beep/effect-drizzle/test/fixtures/CodecService") {}
 
 const ServiceString = S.String.pipe(
   S.decodeTo(S.String, {
     decode: SchemaGetter.transformOrFail((value) =>
-      CodecService.use((service) => Effect.succeed(service.normalize(value)))
+      CodecService.use((service) => Effect.succeed(service.normalize(value))),
     ),
     encode: SchemaGetter.transformOrFail((value) =>
-      CodecService.use((service) => Effect.succeed(service.normalize(value)))
+      CodecService.use((service) => Effect.succeed(service.normalize(value))),
     ),
-  })
+  }),
 );
 
-class ServiceCodecRecord extends Model<ServiceCodecRecord>(
-  $I`ServiceCodecRecord`
-)({
+class ServiceCodecRecord extends Model<ServiceCodecRecord>("ServiceCodecRecord")({
   id: S.Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
   value: ServiceString.pipe(pg.text()),
   rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
@@ -241,48 +204,39 @@ const serviceCodecRepository = makeRepository(ServiceCodecRecord, {
 export const _repositoryNeedsVersion = auditKit.Repository(
   // @ts-expect-error invariant: optimistic repositories require one version marker
   Organization,
-  { spanPrefix: "Organization", idColumn: "id" }
+  { spanPrefix: "Organization", idColumn: "id" },
 );
 
-export class Membership extends Model<Membership>($I`Membership`)(
+export class Membership extends Model<Membership>("Membership")(
   {
     organizationId: OrganizationId,
     userId: UserId,
     role: S.String.pipe(pg.text(), pg.default("member")),
   },
-  (t) => [
-    Table.compositePrimaryKey("membership_pk", [t.organizationId, t.userId]),
-  ]
+  (t) => [Table.compositePrimaryKey("membership_pk", [t.organizationId, t.userId])],
 ) {}
 
-class DualOrgLink extends Model<DualOrgLink>($I`DualOrgLink`)({
+class DualOrgLink extends Model<DualOrgLink>("DualOrgLink")({
   primaryOrgId: OrganizationId,
   secondaryOrgId: OrganizationId,
 }) {}
 
-export class ArrayRecord extends Model<ArrayRecord>($I`ArrayRecord`)({
+export class ArrayRecord extends Model<ArrayRecord>("ArrayRecord")({
   id: S.Int.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
-  labels: S.Array(S.String).pipe(
-    pg.array(S.String.pipe(pg.text())),
-    pg.unique()
-  ),
-  matrix: S.String.pipe(S.Array, S.Array,
+  labels: S.Array(S.String).pipe(pg.array(S.String.pipe(pg.text())), pg.unique()),
+  matrix: S.String.pipe(
+    S.Array,
+    S.Array,
     pg.array(S.String.pipe(pg.text()), "[][]"),
-    pg.default([["seed"]])
+    pg.default([["seed"]]),
   ),
 }) {}
 
-export class EnumArrayRecord extends Model<EnumArrayRecord>(
-  $I`EnumArrayRecord`
-)({
-  statuses: S.Array(RecordStatus).pipe(
-    pg.array(RecordStatus.pipe(pg.enum("record_status")))
-  ),
+export class EnumArrayRecord extends Model<EnumArrayRecord>("EnumArrayRecord")({
+  statuses: S.Array(RecordStatus).pipe(pg.array(RecordStatus.pipe(pg.enum("record_status")))),
 }) {}
 
-export class ExplicitVariantModel extends Model<ExplicitVariantModel>(
-  $I`ExplicitVariantModel`
-)({
+export class ExplicitVariantModel extends Model<ExplicitVariantModel>("ExplicitVariantModel")({
   value: VariantField({
     select: S.String,
     insert: S.String,
@@ -291,7 +245,7 @@ export class ExplicitVariantModel extends Model<ExplicitVariantModel>(
 }) {}
 
 export const userTable = toPgTable(User);
-export const bslSchema = schema({
+export const effectDrizzleSchema = schema({
   user: User,
   organization: Organization,
   membership: Membership,
@@ -304,16 +258,9 @@ export const dualOrgLinkSchema = schema({
   dual_org_link: DualOrgLink,
 });
 
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
-  ? 1
-  : 2
-  ? true
-  : false;
-type MutualExtends<A, B> = [A] extends [B]
-  ? [B] extends [A]
-    ? true
-    : false
-  : false;
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+type MutualExtends<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 type Expect<_T extends true> = never;
 type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
 
@@ -331,17 +278,12 @@ type AuditedJsonVariant = (typeof AuditedRecord.json)["Type"];
 type BareJunctionSelectVariant = (typeof BareJunction)["Type"];
 type MechanicalSelectRow = typeof mechanicalTable.$inferSelect;
 type MechanicalInsertRow = typeof mechanicalTable.$inferInsert;
-type ArraySelectRow = (typeof bslSchema.tables.array_record)["$inferSelect"];
-type ArrayInsertRow = (typeof bslSchema.tables.array_record)["$inferInsert"];
+type ArraySelectRow = (typeof effectDrizzleSchema.tables.array_record)["$inferSelect"];
+type ArrayInsertRow = (typeof effectDrizzleSchema.tables.array_record)["$inferInsert"];
 type ServiceRepository = Effect.Success<typeof serviceCodecRepository>;
 type ServiceInsert = ReturnType<ServiceRepository["insert"]>;
-type ServiceInsertRequirements = ServiceInsert extends Effect.Effect<
-  unknown,
-  unknown,
-  infer Requirements
->
-  ? Requirements
-  : never;
+type ServiceInsertRequirements =
+  ServiceInsert extends Effect.Effect<unknown, unknown, infer Requirements> ? Requirements : never;
 
 export type _selectId = Expect<Equal<SelectRow["id"], number>>;
 export type _selectEmail = Expect<Equal<SelectRow["email"], string>>;
@@ -350,9 +292,7 @@ export type _selectSettings = Expect<
   MutualExtends<SelectRow["settings"], { readonly theme: string }>
 >;
 export type _selectActive = Expect<Equal<SelectRow["active"], boolean>>;
-export type _insertIdAbsent = Expect<
-  Equal<"id" extends keyof InsertRow ? true : false, false>
->;
+export type _insertIdAbsent = Expect<Equal<"id" extends keyof InsertRow ? true : false, false>>;
 export type _insertCreatedAtRequired = Expect<
   Equal<undefined extends InsertRow["createdAt"] ? true : false, false>
 >;
@@ -363,44 +303,28 @@ export type _variantInsertIdAbsent = Expect<
 export type _variantUpdateIdPresent = Expect<
   Equal<"id" extends keyof UserUpdateVariant ? true : false, true>
 >;
-export type _variantUpdateIdRequired = Expect<
-  Equal<IsOptional<UserUpdateVariant, "id">, false>
->;
-export type _variantDefaultOptional = Expect<
-  IsOptional<UserInsertVariant, "status">
->;
+export type _variantUpdateIdRequired = Expect<Equal<IsOptional<UserUpdateVariant, "id">, false>>;
+export type _variantDefaultOptional = Expect<IsOptional<UserInsertVariant, "status">>;
 export type _variantCreatedAtRequired = Expect<
   Equal<IsOptional<UserInsertVariant, "createdAt">, false>
 >;
-export type _variantUpdateEmailOptional = Expect<
-  IsOptional<UserUpdateVariant, "email">
->;
+export type _variantUpdateEmailOptional = Expect<IsOptional<UserUpdateVariant, "email">>;
 export type _identityByDefaultInsertPresent = Expect<
   Equal<"id" extends keyof OrganizationInsertVariant ? true : false, true>
 >;
-export type _identityByDefaultInsertOptional = Expect<
-  IsOptional<OrganizationInsertVariant, "id">
->;
+export type _identityByDefaultInsertOptional = Expect<IsOptional<OrganizationInsertVariant, "id">>;
 export type _identityByDefaultUpdatePresent = Expect<
   Equal<"id" extends keyof OrganizationUpdateVariant ? true : false, true>
 >;
-export type _identityByDefaultUpdateOptional = Expect<
-  IsOptional<OrganizationUpdateVariant, "id">
->;
+export type _identityByDefaultUpdateOptional = Expect<IsOptional<OrganizationUpdateVariant, "id">>;
 export type _emailIsVarchar = Expect<
-  Equal<(typeof User)["bsl"]["columns"]["email"]["column"]["ident"], "varchar">
+  Equal<(typeof User)["sql"]["columns"]["email"]["column"]["ident"], "varchar">
 >;
 export type _orgIdIdentity = Expect<
-  Equal<
-    (typeof User)["bsl"]["columns"]["orgId"]["column"]["ident"],
-    'entityId<"organization">'
-  >
+  Equal<(typeof User)["sql"]["columns"]["orgId"]["column"]["ident"], 'entityId<"organization">'>
 >;
 export type _userIdIdentity = Expect<
-  Equal<
-    (typeof User)["bsl"]["columns"]["id"]["column"]["ident"],
-    'entityId<"user">'
-  >
+  Equal<(typeof User)["sql"]["columns"]["id"]["column"]["ident"], 'entityId<"user">'>
 >;
 export type _generatedJsonCreateAbsent = Expect<
   Equal<"searchName" extends keyof UserJsonCreateVariant ? true : false, false>
@@ -417,9 +341,7 @@ export type _kitSelectUpdatedAt = Expect<
     (typeof EffectModel.DateTimeUpdate.schemas.select)["Type"]
   >
 >;
-export type _kitSelectRowVersion = Expect<
-  Equal<AuditedSelectVariant["rowVersion"], number>
->;
+export type _kitSelectRowVersion = Expect<Equal<AuditedSelectVariant["rowVersion"], number>>;
 export type _kitInsertUpdatedAtPresent = Expect<
   Equal<"updatedAt" extends keyof AuditedInsertVariant ? true : false, true>
 >;
@@ -429,9 +351,7 @@ export type _kitUpdateUpdatedAtPresent = Expect<
 export type _kitUpdateCreatedAtAbsent = Expect<
   Equal<"createdAt" extends keyof AuditedUpdateVariant ? true : false, false>
 >;
-export type _kitInsertRowVersionOptional = Expect<
-  IsOptional<AuditedInsertVariant, "rowVersion">
->;
+export type _kitInsertRowVersionOptional = Expect<IsOptional<AuditedInsertVariant, "rowVersion">>;
 export type _kitUpdateRowVersionRequired = Expect<
   Equal<IsOptional<AuditedUpdateVariant, "rowVersion">, false>
 >;
@@ -439,46 +359,28 @@ export type _kitJsonRowVersionPresent = Expect<
   Equal<"rowVersion" extends keyof AuditedJsonVariant ? true : false, true>
 >;
 export type _bareModelOptsOutOfDefaults = Expect<
-  Equal<
-    "createdAt" extends keyof BareJunctionSelectVariant ? true : false,
-    false
-  >
+  Equal<"createdAt" extends keyof BareJunctionSelectVariant ? true : false, false>
 >;
 export type _literalEnumIdentity = Expect<
   Equal<
-    (typeof AuditedRecord)["bsl"]["columns"]["status"]["column"]["ident"],
+    (typeof AuditedRecord)["sql"]["columns"]["status"]["column"]["ident"],
     "enum<record_status>"
   >
 >;
 export type _derivedEnumIdentity = Expect<
-  Equal<
-    (typeof AuditedRecord)["bsl"]["columns"]["source"]["column"]["ident"],
-    "enum<source>"
-  >
+  Equal<(typeof AuditedRecord)["sql"]["columns"]["source"]["column"]["ident"], "enum<source>">
 >;
-export type _numericSelectCarrier = Expect<
-  Equal<MechanicalSelectRow["amount"], string>
->;
-export type _dateSelectCarrier = Expect<
-  Equal<MechanicalSelectRow["objectDate"], Date>
->;
-export type _bigserialSelectCarrier = Expect<
-  Equal<MechanicalSelectRow["nativeSequence"], bigint>
->;
-export type _bigserialInsertOptional = Expect<
-  IsOptional<MechanicalInsertRow, "largeSequence">
->;
+export type _numericSelectCarrier = Expect<Equal<MechanicalSelectRow["amount"], string>>;
+export type _dateSelectCarrier = Expect<Equal<MechanicalSelectRow["objectDate"], Date>>;
+export type _bigserialSelectCarrier = Expect<Equal<MechanicalSelectRow["nativeSequence"], bigint>>;
+export type _bigserialInsertOptional = Expect<IsOptional<MechanicalInsertRow, "largeSequence">>;
 export type _arraySelectLabels = Expect<
   ArraySelectRow["labels"] extends ReadonlyArray<string> ? true : false
 >;
 export type _arraySelectMatrix = Expect<
-  ArraySelectRow["matrix"] extends ReadonlyArray<ReadonlyArray<string>>
-    ? true
-    : false
+  ArraySelectRow["matrix"] extends ReadonlyArray<ReadonlyArray<string>> ? true : false
 >;
-export type _arrayInsertMatrixOptional = Expect<
-  IsOptional<ArrayInsertRow, "matrix">
->;
+export type _arrayInsertMatrixOptional = Expect<IsOptional<ArrayInsertRow, "matrix">>;
 export type _repositoryCarriesCodecServices = Expect<
   CodecService extends ServiceInsertRequirements ? true : false
 >;
@@ -520,12 +422,12 @@ export const _badDefaultValue = S.String.pipe(pg.text(), pg.default(1));
 export const _badDefaultExpr = S.String.pipe(
   pg.text(),
   // @ts-expect-error invariant: a typed default expression carrier must match the field
-  pg.defaultExpr(sql<number>`1`)
+  pg.defaultExpr(sql<number>`1`),
 );
 export const _badGeneratedExpr = S.String.pipe(
   pg.text(),
   // @ts-expect-error invariant: a generated expression carrier must match the field
-  pg.generated(sql<number>`1`)
+  pg.generated(sql<number>`1`),
 );
 // @ts-expect-error invariant: identity requires an explicit integer-family column
 export const _badIdentityMissingColumn = S.Finite.pipe(pg.identity());
@@ -534,7 +436,7 @@ export const _badIdentityText = S.String.pipe(pg.text(), pg.identity());
 export const _badNullablePk = S.NullOr(S.String).pipe(
   pg.text(),
   // @ts-expect-error invariant: nullable schemas cannot be primary keys
-  pg.primaryKey()
+  pg.primaryKey(),
 );
 // @ts-expect-error invariant: generated identity-always keys are absent from insert
 export type _badInsertIdShape = UserInsertVariant["id"];
@@ -579,171 +481,203 @@ export const _badSmallserial = () =>
 export const _badArrayCarrier = () =>
   S.Array(S.Finite).pipe(
     // @ts-expect-error invariant: the outer array carrier must match its element declaration
-    pg.array(S.String.pipe(pg.text()))
+    pg.array(S.String.pipe(pg.text())),
   );
 export const _badArrayDepth = () =>
   S.Array(S.String).pipe(
     // @ts-expect-error invariant: declared dimensions must match the encoded array depth
-    pg.array(S.String.pipe(pg.text()), "[][]")
+    pg.array(S.String.pipe(pg.text()), "[][]"),
   );
 export const _badArrayBareElement = () =>
   S.Array(S.String).pipe(
     // @ts-expect-error invariant: array elements require an explicit base column combinator
-    pg.array(S.String)
+    pg.array(S.String),
   );
 export const _badArrayThenPrimaryKey = () => {
-  class BadArrayThenPrimaryKey extends Model<BadArrayThenPrimaryKey>(
-    $I`BadArrayThenPrimaryKey`
-  )({
+  class BadArrayThenPrimaryKey extends Model<BadArrayThenPrimaryKey>("BadArrayThenPrimaryKey")({
     value: S.Array(S.String).pipe(
       pg.array(S.String.pipe(pg.text())),
       // @ts-expect-error invariant: array fields cannot be primary keys
-      pg.primaryKey()
+      pg.primaryKey(),
     ),
   }) {}
   return BadArrayThenPrimaryKey;
 };
 export const _badPrimaryKeyThenArray = () => {
-  class BadPrimaryKeyThenArray extends Model<BadPrimaryKeyThenArray>(
-    $I`BadPrimaryKeyThenArray`
-  )({
+  class BadPrimaryKeyThenArray extends Model<BadPrimaryKeyThenArray>("BadPrimaryKeyThenArray")({
     value: S.Array(S.String).pipe(
       pg.primaryKey(),
       // @ts-expect-error invariant: primary-key fields cannot become arrays
-      pg.array(S.String.pipe(pg.text()))
+      pg.array(S.String.pipe(pg.text())),
     ),
   }) {}
   return BadPrimaryKeyThenArray;
 };
 export const _badArrayThenIdentity = () => {
-  class BadArrayThenIdentity extends Model<BadArrayThenIdentity>(
-    $I`BadArrayThenIdentity`
-  )({
+  class BadArrayThenIdentity extends Model<BadArrayThenIdentity>("BadArrayThenIdentity")({
     value: S.Array(S.Int).pipe(
       pg.array(S.Int.pipe(pg.integer())),
       // @ts-expect-error invariant: array fields cannot use identity generation
-      pg.identity()
+      pg.identity(),
     ),
   }) {}
   return BadArrayThenIdentity;
 };
 export const _badIdentityThenArray = () => {
-  class BadIdentityThenArray extends Model<BadIdentityThenArray>(
-    $I`BadIdentityThenArray`
-  )({
+  class BadIdentityThenArray extends Model<BadIdentityThenArray>("BadIdentityThenArray")({
     value: Field.patch(S.Array(S.Int), {
       column: PgColumn.Integer.make({ ident: "integer" }),
     }).pipe(
       pg.identity(),
       // @ts-expect-error invariant: identity fields cannot become arrays
-      pg.array(S.Int.pipe(pg.integer()))
+      pg.array(S.Int.pipe(pg.integer())),
     ),
   }) {}
   return BadIdentityThenArray;
 };
 export const _badArrayThenVersion = () => {
-  class BadArrayThenVersion extends Model<BadArrayThenVersion>(
-    $I`BadArrayThenVersion`
-  )({
+  class BadArrayThenVersion extends Model<BadArrayThenVersion>("BadArrayThenVersion")({
     value: S.Array(S.Int).pipe(
       pg.array(S.Int.pipe(pg.integer())),
       // @ts-expect-error invariant: array fields cannot be optimistic versions
-      pg.version()
+      pg.version(),
     ),
   }) {}
   return BadArrayThenVersion;
 };
 export const _badVersionThenArray = () => {
-  class BadVersionThenArray extends Model<BadVersionThenArray>(
-    $I`BadVersionThenArray`
-  )({
+  class BadVersionThenArray extends Model<BadVersionThenArray>("BadVersionThenArray")({
     value: Field.patch(S.Array(S.Int), {
       column: PgColumn.Integer.make({ ident: "integer" }),
     }).pipe(
       pg.version(),
       // @ts-expect-error invariant: version fields cannot become arrays
-      pg.array(S.Int.pipe(pg.integer()))
+      pg.array(S.Int.pipe(pg.integer())),
     ),
   }) {}
   return BadVersionThenArray;
 };
 export const _badVersionColumn = () => {
-  class BadVersionColumn extends Model<BadVersionColumn>(
-    $I`BadVersionColumn`
-  )({
+  class BadVersionColumn extends Model<BadVersionColumn>("BadVersionColumn")({
     value: S.String.pipe(
       pg.text(),
       // @ts-expect-error invariant: optimistic versions require integer-family columns
-      pg.version()
+      pg.version(),
     ),
   }) {}
   return BadVersionColumn;
 };
 export const _badVersionThenIdentity = () => {
-  class BadVersionThenIdentity extends Model<BadVersionThenIdentity>(
-    $I`BadVersionThenIdentity`
-  )({
+  class BadVersionThenIdentity extends Model<BadVersionThenIdentity>("BadVersionThenIdentity")({
     value: S.Int.pipe(
       pg.integer(),
       pg.version(),
       // @ts-expect-error invariant: version fields cannot use identity generation
-      pg.identity()
+      pg.identity(),
     ),
   }) {}
   return BadVersionThenIdentity;
 };
 export const _badIdentityThenVersion = () => {
-  class BadIdentityThenVersion extends Model<BadIdentityThenVersion>(
-    $I`BadIdentityThenVersion`
-  )({
+  class BadIdentityThenVersion extends Model<BadIdentityThenVersion>("BadIdentityThenVersion")({
     value: S.Int.pipe(
       pg.integer(),
       pg.identity(),
       // @ts-expect-error invariant: identity-generated fields cannot be versions
-      pg.version()
+      pg.version(),
     ),
   }) {}
   return BadIdentityThenVersion;
 };
 export const _badVersionThenGenerated = () => {
-  class BadVersionThenGenerated extends Model<BadVersionThenGenerated>(
-    $I`BadVersionThenGenerated`
-  )({
+  class BadVersionThenGenerated extends Model<BadVersionThenGenerated>("BadVersionThenGenerated")({
     value: S.Int.pipe(
       pg.integer(),
       pg.version(),
       // @ts-expect-error invariant: version fields cannot be generated
-      pg.unsafeGeneratedSql("1")
+      pg.unsafeGeneratedSql("1"),
     ),
   }) {}
   return BadVersionThenGenerated;
 };
 export const _badGeneratedThenVersion = () => {
-  class BadGeneratedThenVersion extends Model<BadGeneratedThenVersion>(
-    $I`BadGeneratedThenVersion`
-  )({
+  class BadGeneratedThenVersion extends Model<BadGeneratedThenVersion>("BadGeneratedThenVersion")({
     value: S.Int.pipe(
       pg.integer(),
       pg.unsafeGeneratedSql("1"),
       // @ts-expect-error invariant: generated fields cannot be versions
-      pg.version()
+      pg.version(),
     ),
   }) {}
   return BadGeneratedThenVersion;
 };
 export const _charWithoutMaxLength = () => S.String.pipe(pg.char());
 
+export const _badTimestampCorrelation = () =>
+  PgColumn.Timestamp.make({
+    // @ts-expect-error invariant: timestamp identity must agree with withTimezone
+    ident: "timestamp",
+    mode: "string",
+    withTimezone: true,
+  });
+
+export const _badHandBuiltColumn = () => {
+  const field = Field.make(
+    S.String,
+    Meta.merge(Meta.empty, {
+      column: {
+        _tag: "text",
+        kind: "text",
+        // @ts-expect-error invariant: hand-built column descriptors require string identities
+        ident: 1,
+      },
+    }),
+  );
+  class BadHandBuiltColumn extends Model<BadHandBuiltColumn>("BadHandBuiltColumn")({
+    // @ts-expect-error invariant: the hand-built field is deliberately outside the validated model domain
+    value: field,
+  }) {}
+  return BadHandBuiltColumn;
+};
+
+export const _badHandBuiltReference = () => {
+  const field = Field.make(
+    S.String,
+    Meta.merge(Meta.empty, {
+      references: {
+        tableName: "target",
+        columnName: "id",
+        // @ts-expect-error invariant: hand-built reference actions use the FkAction domain
+        onDelete: "explode",
+        onUpdate: undefined,
+      },
+    }),
+  );
+  class BadHandBuiltReference extends Model<BadHandBuiltReference>("BadHandBuiltReference")({
+    // @ts-expect-error invariant: the hand-built field is deliberately outside the validated model domain
+    value: field,
+  }) {}
+  return BadHandBuiltReference;
+};
+
+export const _badExtrasCallback = () => {
+  class BadExtrasCallback extends Model<BadExtrasCallback>("BadExtrasCallback")(
+    { value: S.String },
+    // @ts-expect-error invariant: extras callbacks must return valid PostgreSQL extra nodes
+    () => [{ _tag: "index", name: "", columns: [] }],
+  ) {}
+  return toPgTable(BadExtrasCallback);
+};
+
 export const _kitDefaultCollision = () => {
-  class KitDefaultCollision extends auditKit.Entity<KitDefaultCollision>(
-    $I`KitDefaultCollision`
-  )({
+  class KitDefaultCollision extends auditKit.Entity<KitDefaultCollision>("KitDefaultCollision")({
     // @ts-expect-error invariant: kit default columns cannot be overridden
     createdAt: S.String.pipe(pg.timestamp()),
   }) {}
   return KitDefaultCollision;
 };
 
-export class CallbackTyping extends Model<CallbackTyping>($I`CallbackTyping`)(
+export class CallbackTyping extends Model<CallbackTyping>("CallbackTyping")(
   { one: S.String, two: S.String },
   (t) => [
     Table.index("callback_good_idx", [t.one]),
@@ -757,13 +691,11 @@ export class CallbackTyping extends Model<CallbackTyping>($I`CallbackTyping`)(
     Table.check("callback_bad_check")("one <> ''"),
     // @ts-expect-error invariant: partial index predicates require typed SQL
     Table.index("callback_bad_where", [t.one], { where: "one <> ''" }),
-  ]
+  ],
 ) {}
 
 export const _needsExplicitColumn = () => {
-  class NeedsExplicitColumn extends Model<NeedsExplicitColumn>(
-    $I`NeedsExplicitColumn`
-  )({
+  class NeedsExplicitColumn extends Model<NeedsExplicitColumn>("NeedsExplicitColumn")({
     // @ts-expect-error invariant: Date declarations require explicit pg.timestamp metadata
     at: S.Date,
   }) {}
@@ -772,7 +704,7 @@ export const _needsExplicitColumn = () => {
 
 export const _twoPrimaryKeys = () => {
   // @ts-expect-error invariant: multiple inline primary keys require a composite table node instead
-  class TwoPrimaryKeys extends Model<TwoPrimaryKeys>($I`TwoPrimaryKeys`)({
+  class TwoPrimaryKeys extends Model<TwoPrimaryKeys>("TwoPrimaryKeys")({
     one: S.Finite.pipe(pg.integer(), pg.primaryKey()),
     two: S.Finite.pipe(pg.integer(), pg.primaryKey()),
   }) {}
@@ -781,7 +713,7 @@ export const _twoPrimaryKeys = () => {
 
 export const _twoVersions = () => {
   // @ts-expect-error invariant: a model may declare at most one optimistic-version field
-  class TwoVersions extends Model<TwoVersions>($I`TwoVersions`)({
+  class TwoVersions extends Model<TwoVersions>("TwoVersions")({
     leftVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
     rightVersion: S.Int.pipe(pg.integer(), pg.default(1), pg.version()),
   }) {}
@@ -789,9 +721,7 @@ export const _twoVersions = () => {
 };
 
 export const _nullablePrimaryKey = () => {
-  class NullablePrimaryKey extends Model<NullablePrimaryKey>(
-    $I`NullablePrimaryKey`
-  )({
+  class NullablePrimaryKey extends Model<NullablePrimaryKey>("NullablePrimaryKey")({
     // @ts-expect-error invariant: nullable schemas cannot be primary keys
     id: S.NullOr(S.Finite).pipe(pg.integer(), pg.primaryKey()),
   }) {}
@@ -799,65 +729,55 @@ export const _nullablePrimaryKey = () => {
 };
 
 export const _defaultThenGenerated = () => {
-  class DefaultThenGenerated extends Model<DefaultThenGenerated>(
-    $I`DefaultThenGenerated`
-  )({
+  class DefaultThenGenerated extends Model<DefaultThenGenerated>("DefaultThenGenerated")({
     value: S.String.pipe(
       pg.text(),
       pg.default("x"),
       // @ts-expect-error invariant: default and generated are mutually exclusive
-      pg.unsafeGeneratedSql("lower(value)")
+      pg.unsafeGeneratedSql("lower(value)"),
     ),
   }) {}
   return DefaultThenGenerated;
 };
 
 export const _generatedThenDefault = () => {
-  class GeneratedThenDefault extends Model<GeneratedThenDefault>(
-    $I`GeneratedThenDefault`
-  )({
+  class GeneratedThenDefault extends Model<GeneratedThenDefault>("GeneratedThenDefault")({
     value: S.String.pipe(
       pg.text(),
       pg.unsafeGeneratedSql("lower(value)"),
       // @ts-expect-error invariant: generated and default are mutually exclusive
-      pg.default("x")
+      pg.default("x"),
     ),
   }) {}
   return GeneratedThenDefault;
 };
 
 export const _incompatibleVarchar = () => {
-  class IncompatibleVarchar extends Model<IncompatibleVarchar>(
-    $I`IncompatibleVarchar`
-  )({
-    value: S.String.check(S.isMaxLength(500))
-      .check(S.isMinLength(1))
-      .pipe(pg.varchar(50)),
+  class IncompatibleVarchar extends Model<IncompatibleVarchar>("IncompatibleVarchar")({
+    value: S.String.check(S.isMaxLength(500)).check(S.isMinLength(1)).pipe(pg.varchar(50)),
   }) {}
   return IncompatibleVarchar;
 };
 
 export const _compatibleVarchar = () => {
-  class CompatibleVarchar extends Model<CompatibleVarchar>(
-    $I`CompatibleVarchar`
-  )({
+  class CompatibleVarchar extends Model<CompatibleVarchar>("CompatibleVarchar")({
     value: S.String.check(S.isMaxLength(50)).pipe(pg.varchar(50)),
   }) {}
   return CompatibleVarchar;
 };
 
 export const _unboundedVarchar = () => {
-  class UnboundedVarchar extends Model<UnboundedVarchar>($I`UnboundedVarchar`)({
+  class UnboundedVarchar extends Model<UnboundedVarchar>("UnboundedVarchar")({
     value: S.String.pipe(pg.varchar(50)),
   }) {}
   return UnboundedVarchar;
 };
 
 const TextTargetId = entityId(S.String, "text_target", "TextTarget");
-class TextTarget extends Model<TextTarget>($I`TextTarget`)({
+class TextTarget extends Model<TextTarget>("TextTarget")({
   id: TextTargetId.pipe(pg.text(), pg.primaryKey()),
 }) {}
-class UuidSource extends Model<UuidSource>($I`UuidSource`)({
+class UuidSource extends Model<UuidSource>("UuidSource")({
   targetId: TextTargetId.pipe(pg.uuid(), pg.references(TextTargetId)),
 }) {}
 
@@ -865,11 +785,9 @@ export const _uuidTextFkMismatch = () =>
   // @ts-expect-error invariant: uuid and text SQL identities are not interchangeable
   schema({ text_target: TextTarget, uuid_source: UuidSource });
 
-class WrongEntitySource extends Model<WrongEntitySource>($I`WrongEntitySource`)(
-  {
-    userId: OrganizationId.pipe(pg.references(UserId)),
-  }
-) {}
+class WrongEntitySource extends Model<WrongEntitySource>("WrongEntitySource")({
+  userId: OrganizationId.pipe(pg.references(UserId)),
+}) {}
 
 export const _entityFkMismatch = () =>
   // @ts-expect-error invariant: different EntityId SQL domains are not interchangeable
@@ -880,52 +798,39 @@ export const _entityFkMismatch = () =>
   });
 
 const MissingId = entityId(S.Finite, "missing_table", "Missing");
-class MissingSource extends Model<MissingSource>($I`MissingSource`)({
+class MissingSource extends Model<MissingSource>("MissingSource")({
   missingId: MissingId,
 }) {}
 
 export const _missingTarget = () =>
-  // @ts-expect-error invariant: every reference target must be present in Bsl.schema
+  // @ts-expect-error invariant: every reference target must be present in EffectDrizzle.schema
   schema({ missing_source: MissingSource });
 
-const MismatchStatusOne = LiteralKit(["draft", "active"]).pipe(
-  $I.annoteSchema("MismatchStatusOne", {
-    description:
-      "First declaration used to prove enum assembly mismatch errors.",
-  })
-);
-const MismatchStatusTwo = LiteralKit(["draft", "disabled"]).pipe(
-  $I.annoteSchema("MismatchStatusTwo", {
-    description:
-      "Conflicting declaration used to prove enum assembly mismatch errors.",
-  })
-);
-class EnumShapeOne extends Model<EnumShapeOne>($I`EnumShapeOne`)({
+const MismatchStatusOne = S.Literals(["draft", "active"]).annotate({
+  identifier: "@beep/effect-drizzle/test/MismatchStatusOne",
+  description: "First declaration used to prove enum assembly mismatch errors.",
+});
+const MismatchStatusTwo = S.Literals(["draft", "disabled"]).annotate({
+  identifier: "@beep/effect-drizzle/test/MismatchStatusTwo",
+  description: "Conflicting declaration used to prove enum assembly mismatch errors.",
+});
+class EnumShapeOne extends Model<EnumShapeOne>("EnumShapeOne")({
   status: MismatchStatusOne.pipe(pg.enum("mismatch_status")),
 }) {}
-class EnumShapeTwo extends Model<EnumShapeTwo>($I`EnumShapeTwo`)({
+class EnumShapeTwo extends Model<EnumShapeTwo>("EnumShapeTwo")({
   status: MismatchStatusTwo.pipe(pg.enum("mismatch_status")),
 }) {}
 
 export const _enumValueMismatch = () =>
   schema({ enum_shape_one: EnumShapeOne, enum_shape_two: EnumShapeTwo });
 
-const ArrayTextId = entityId(
-  S.Array(S.String),
-  "array_text_target",
-  "ArrayTextTarget"
-);
-class ArrayTextTarget extends Model<ArrayTextTarget>($I`ArrayTextTarget`)({
-  id: ArrayTextId.pipe(
-    pg.array(S.String.pipe(pg.text())),
-    pg.unique()
-  ),
+const ArrayTextId = entityId(S.Array(S.String), "array_text_target", "ArrayTextTarget");
+class ArrayTextTarget extends Model<ArrayTextTarget>("ArrayTextTarget")({
+  id: ArrayTextId.pipe(pg.array(S.String.pipe(pg.text())), pg.unique()),
 }) {}
-class ScalarArraySource extends Model<ScalarArraySource>($I`ScalarArraySource`)(
-  {
-    targetId: S.String.pipe(pg.text(), pg.references(ArrayTextId)),
-  }
-) {}
+class ScalarArraySource extends Model<ScalarArraySource>("ScalarArraySource")({
+  targetId: S.String.pipe(pg.text(), pg.references(ArrayTextId)),
+}) {}
 
 export const _scalarArrayFkMismatch = () =>
   // @ts-expect-error invariant: scalar and array SQL identities are incompatible
@@ -937,21 +842,13 @@ export const _scalarArrayFkMismatch = () =>
 const MatrixTextId = entityId(
   S.String.pipe(S.Array, S.Array),
   "matrix_text_target",
-  "MatrixTextTarget"
+  "MatrixTextTarget",
 );
-class MatrixTextTarget extends Model<MatrixTextTarget>($I`MatrixTextTarget`)({
-  id: MatrixTextId.pipe(
-    pg.array(S.String.pipe(pg.text()), "[][]"),
-    pg.unique()
-  ),
+class MatrixTextTarget extends Model<MatrixTextTarget>("MatrixTextTarget")({
+  id: MatrixTextId.pipe(pg.array(S.String.pipe(pg.text()), "[][]"), pg.unique()),
 }) {}
-class ShallowArraySource extends Model<ShallowArraySource>(
-  $I`ShallowArraySource`
-)({
-  targetId: S.Array(S.String).pipe(
-    pg.array(S.String.pipe(pg.text())),
-    pg.references(MatrixTextId)
-  ),
+class ShallowArraySource extends Model<ShallowArraySource>("ShallowArraySource")({
+  targetId: S.Array(S.String).pipe(pg.array(S.String.pipe(pg.text())), pg.references(MatrixTextId)),
 }) {}
 
 export const _arrayDepthFkMismatch = () =>
@@ -964,13 +861,13 @@ export const _arrayDepthFkMismatch = () =>
 const CollisionTargetId = entityId(
   S.Finite.pipe(S.brand("CollisionTargetId")),
   "collision_target",
-  "CollisionTarget"
+  "CollisionTarget",
 );
-class CollisionTarget extends Model<CollisionTarget>($I`CollisionTarget`)({
+class CollisionTarget extends Model<CollisionTarget>("CollisionTarget")({
   id: CollisionTargetId.pipe(pg.integer(), pg.primaryKey()),
   collisionSources: S.String.pipe(S.brand("CollisionValue")),
 }) {}
-class CollisionSource extends Model<CollisionSource>($I`CollisionSource`)({
+class CollisionSource extends Model<CollisionSource>("CollisionSource")({
   targetId: CollisionTargetId,
 }) {}
 

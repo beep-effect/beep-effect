@@ -1,5 +1,5 @@
 /**
- * The BSL field node: one correlated value owning an Effect schema AND its
+ * The @beep/effect-drizzle field node: one correlated value owning an Effect schema AND its
  * SQL metadata, with both visible to the type system.
  *
  * This is the load-bearing design decision of the experiment. Effect v4
@@ -15,22 +15,22 @@ import { VariantSchema } from "effect/unstable/schema";
 import * as Meta from "./Meta.ts";
 
 /**
- * Runtime marker carried by every BSL field wrapper.
+ * Runtime marker carried by every @beep/effect-drizzle field wrapper.
  *
  * **Example** (Read the field marker)
  *
  * ```ts
  * import { TypeId } from "./Field.ts"
  *
- * console.log(Symbol.keyFor(TypeId)) // "@beep/bsl/Field"
+ * console.log(Symbol.keyFor(TypeId)) // "@beep/effect-drizzle/Field"
  * ```
  *
  * @category symbols
  * @since 0.0.0
  */
-export const TypeId: unique symbol = Symbol.for("@beep/bsl/Field");
+export const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
- * Type of the runtime BSL field marker.
+ * Type of the runtime @beep/effect-drizzle field marker.
  *
  * @category symbols
  * @since 0.0.0
@@ -38,13 +38,13 @@ export const TypeId: unique symbol = Symbol.for("@beep/bsl/Field");
 export type TypeId = typeof TypeId;
 
 /**
- * Schema forms a BSL field can wrap.
+ * Schema forms a @beep/effect-drizzle field can wrap.
  *
  * **Gotchas**
  *
  * Effect's current existential is `VariantSchema.Field<any>` internally. A
  * concrete config is invariant and rejects valid literal variant records, so
- * this mirrors Effect's erased-field boundary rather than widening BSL data.
+ * this mirrors Effect's erased-field boundary rather than widening @beep/effect-drizzle data.
  *
  * @category models
  * @since 0.0.0
@@ -65,7 +65,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta>
 }
 
 /**
- * Existential BSL field used at runtime boundaries.
+ * Existential @beep/effect-drizzle field used at runtime boundaries.
  *
  * @category models
  * @since 0.0.0
@@ -73,7 +73,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta>
 export type Any = Field<AnySchema, Meta.Meta>;
 
 /**
- * Bare schema, variant field, or existing BSL field accepted by combinators.
+ * Bare schema, variant field, or existing @beep/effect-drizzle field accepted by combinators.
  *
  * @category models
  * @since 0.0.0
@@ -105,7 +105,7 @@ const Proto = {
  */
 export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
   schema: Sch,
-  meta: M
+  meta: M,
 ): Field<Sch, M> => {
   const self = Object.create(Proto);
   self.schema = schema;
@@ -114,7 +114,7 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
 };
 
 /**
- * Test whether an unknown value is a BSL field wrapper.
+ * Test whether an unknown value is a @beep/effect-drizzle field wrapper.
  *
  * **Example** (Recognize a field)
  *
@@ -137,9 +137,8 @@ export const isField = (u: unknown): u is Any => P.hasProperty(u, TypeId);
  * @category models
  * @since 0.0.0
  */
-export type SchemaFrom<I extends Input> = I extends Field<infer Sch, Meta.Meta>
-  ? Sch
-  : Extract<I, AnySchema>;
+export type SchemaFrom<I extends Input> =
+  I extends Field<infer Sch, Meta.Meta> ? Sch : Extract<I, AnySchema>;
 
 /**
  * The metadata type an input resolves to; bare schemas start at {@link Meta.Empty}.
@@ -158,9 +157,7 @@ export type SchemaFrom<I extends Input> = I extends Field<infer Sch, Meta.Meta>
  * @category models
  * @since 0.0.0
  */
-export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M>
-  ? M
-  : Meta.Empty;
+export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M : Meta.Empty;
 
 /**
  * Normalize a bare schema, variant field, or existing field into one wrapper.
@@ -177,9 +174,7 @@ export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M>
  * @category constructors
  * @since 0.0.0
  */
-export function from<I extends Input>(
-  input: I
-): Field<SchemaFrom<I>, MetaFrom<I>>;
+export function from<I extends Input>(input: I): Field<SchemaFrom<I>, MetaFrom<I>>;
 export function from(input: Input): Any {
   if (isField(input)) {
     return input;
@@ -217,7 +212,7 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
  */
 export const patch = <I extends Input, const Patch extends Meta.Patch>(
   input: I,
-  p: Patch
+  p: Patch,
 ): Patched<I, Patch> => {
   const f = from(input);
   return make(f.schema, Meta.merge(f.meta, p));
@@ -235,22 +230,23 @@ export const patch = <I extends Input, const Patch extends Meta.Patch>(
  */
 export type EncodedOf<I extends Input> = SchemaEncoded<SchemaFrom<I>>;
 
-type SchemaEncoded<Sch> = Sch extends VariantSchema.Field<infer Config>
-  ? Config extends { readonly select: infer Sel }
-    ? Sel extends S.Top
-      ? Sel["Encoded"]
+type SchemaEncoded<Sch> =
+  Sch extends VariantSchema.Field<infer Config>
+    ? Config extends { readonly select: infer Sel }
+      ? Sel extends S.Top
+        ? Sel["Encoded"]
+        : never
       : never
-    : never
-  : Sch extends S.Top
-  ? Sch["Encoded"]
-  : never;
+    : Sch extends S.Top
+      ? Sch["Encoded"]
+      : never;
 
 // ---------------------------------------------------------------------------
 // Combinator parameter validation
 // ---------------------------------------------------------------------------
 
 /**
- * Carrier for compile-time BSL diagnostics at a combinator callsite.
+ * Carrier for compile-time @beep/effect-drizzle diagnostics at a combinator callsite.
  *
  * **Details**
  *
@@ -260,16 +256,16 @@ type SchemaEncoded<Sch> = Sch extends VariantSchema.Field<infer Config>
  * **Example** (Describe a field error)
  *
  * ```ts
- * import type { BslTypeError } from "./Field.ts"
+ * import type { SqlTypeError } from "./Field.ts"
  *
- * type RequiresString = BslTypeError<"requires a string schema">
+ * type RequiresString = SqlTypeError<"requires a string schema">
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export interface BslTypeError<Msg extends string> {
-  readonly "~bsl.error": Msg;
+export interface SqlTypeError<Msg extends string> {
+  readonly "~effect-drizzle.error": Msg;
 }
 
 /**
@@ -288,10 +284,10 @@ export interface BslTypeError<Msg extends string> {
  * @since 0.0.0
  */
 export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
-  Exclude<EncodedOf<I>, null>
+  Exclude<EncodedOf<I>, null>,
 ] extends [Allowed]
   ? unknown
-  : BslTypeError<Msg>;
+  : SqlTypeError<Msg>;
 
 /**
  * Validates that an Input's encoded type does not admit `null`. Used by
@@ -312,23 +308,18 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
  * @category validation
  * @since 0.0.0
  */
-export type ValidateNonNullable<
-  I extends Input,
-  Msg extends string
-> = null extends EncodedOf<I> ? BslTypeError<Msg> : unknown;
+export type ValidateNonNullable<I extends Input, Msg extends string> =
+  null extends EncodedOf<I> ? SqlTypeError<Msg> : unknown;
 
-type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> =
-  Dimensions extends 1
-    ? ReadonlyArray<Carrier>
-    : Dimensions extends 2
+type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> = Dimensions extends 1
+  ? ReadonlyArray<Carrier>
+  : Dimensions extends 2
     ? ReadonlyArray<ReadonlyArray<Carrier>>
     : Dimensions extends 3
-    ? ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>
-    : Dimensions extends 4
-    ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
-    : ReadonlyArray<
-        ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
-      >;
+      ? ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>
+      : Dimensions extends 4
+        ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
+        : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>;
 
 /**
  * Validate that an array element declaration owns one scalar column spec.
@@ -336,12 +327,11 @@ type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> =
  * @category validation
  * @since 0.0.0
  */
-export type ValidateArrayElement<I extends Input> =
-  MetaFrom<I>["column"] extends undefined
-    ? BslTypeError<"pg.array requires an element schema with an explicit base column combinator">
-    : MetaFrom<I>["dimensions"] extends 0
+export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extends undefined
+  ? SqlTypeError<"pg.array requires an element schema with an explicit base column combinator">
+  : MetaFrom<I>["dimensions"] extends 0
     ? unknown
-    : BslTypeError<"pg.array element declarations must be scalar">;
+    : SqlTypeError<"pg.array element declarations must be scalar">;
 
 /**
  * Validate an outer schema against an element carrier and declared array depth.
@@ -352,13 +342,9 @@ export type ValidateArrayElement<I extends Input> =
 export type ValidateArrayEncoded<
   I extends Input,
   Element extends Input,
-  Dimensions extends 1 | 2 | 3 | 4 | 5
-> = [Exclude<EncodedOf<I>, null>] extends [
-  ArrayCarrier<EncodedOf<Element>, Dimensions>
-]
-  ? [ArrayCarrier<EncodedOf<Element>, Dimensions>] extends [
-      Exclude<EncodedOf<I>, null>
-    ]
+  Dimensions extends 1 | 2 | 3 | 4 | 5,
+> = [Exclude<EncodedOf<I>, null>] extends [ArrayCarrier<EncodedOf<Element>, Dimensions>]
+  ? [ArrayCarrier<EncodedOf<Element>, Dimensions>] extends [Exclude<EncodedOf<I>, null>]
     ? unknown
-    : BslTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">
-  : BslTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">;
+    : SqlTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">
+  : SqlTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">;
