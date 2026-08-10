@@ -26,14 +26,38 @@ checkouts share one filesystem, one kernel, one user.
 
 ## Next Open Question
 
-**Rung 2 only, and not blocking.** When speed-loop PR-I lands
-`AgentBrief.fleet`, does ambient delivery ride into
-[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) as a second phase, or
-open its own packet? Nothing waits on the answer.
+**Rung 2 only, and not blocking — but the gate moved.** Claude Code 2.1.224
+shipped cross-session messaging, so delivery no longer waits on speed-loop PR-I
+landing `AgentBrief.fleet`. The question is now its shape: push reaches only
+sessions that bound a messaging socket, and whether a message is delivered,
+held, or dropped is decided by the **receiver's** permission mode, which the
+sender cannot see. So does rung 2 become *push to the reachable, pull for
+everyone*, and does it ride into
+[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) or open its own
+packet? See [`T6`](./research/T6-cross-session-messaging.md).
 
-**Rung 1 graduated 2026-08-06** as `goals/fleet-mirror` (D6) — derivation only,
-executable today. This exploration stays `active` because rung 2 remains
-unbuilt.
+**Rung 1 shipped 2026-08-08** as `beep worktree fleet` (#621) — derivation only.
+This exploration stays `active` because rung 2 remains unbuilt, and now carries
+a bounded **rung 1.5**: adopt the on-disk session registry as the liveness probe
+(T6 §4), which converts `unknown → live` on a 99.7%-readable measurement where
+rung 1's `/proc` probe reaches 13.2%. Rung 1.5 is not a classifier tweak — the
+`evidence` field is a closed literal domain, so it needs a schema change first;
+T6 §4 carries the schema-first order. Needs an operator go before it opens.
+
+**Third question, open and unexplained.** `beep-effect3-e3` runs 2.1.226,
+`kind: interactive`, `status: busy`, and records `messagingSocketPath: null`, so
+it is unreachable by peer messaging while fully alive (T6 §3.1). The documented
+candidates are feature-flag evaluation being disabled for that session, bare
+mode, or provider. Recorded as **measured and unexplained** rather than guessed,
+per this packet's binding law. It matters because it bounds how much of the
+fleet rung 2's push half can ever cover.
+
+These three questions are mirrored in
+[`ops/manifest.json`](./ops/manifest.json) `openQuestions`; the manifest is the
+machine-readable copy and this section is the prose one. They are open
+questions, not decisions — [`DECISIONS.md`](./DECISIONS.md) is the align-stage
+log of questions already *answered* (question → answer → rationale), so nothing
+lands there until one of these resolves.
 
 ## Read This First
 
@@ -42,7 +66,8 @@ unbuilt.
 3. [`MAP.md`](./MAP.md) — the goal packet, sequencing edges, verified capability check, first vertical slice.
 4. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
 5. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
-6. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface.
+6. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) — friction ledger.
+7. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface · [`T6`](./research/T6-cross-session-messaging.md) cross-session messaging (2026-08-09 addendum; kills T3 §4.4).
 
 ## Cross-Session Coordination
 
@@ -56,8 +81,57 @@ across the two sessions and ratified as speed-loop grill decisions 34–38:
 The negotiation had to be relayed by hand through the operator, because the
 capability this packet is about does not exist yet.
 
+**Corrected 2026-08-09** — it exists: Claude Code 2.1.224 shipped cross-session
+messaging. The sentence is kept because its lesson survives its premise. The
+2026-08-08 runner-migration notice *still* came by hand, and
+[`T6`](./research/T6-cross-session-messaging.md) §3.1 measures why: that same
+`beep-effect3` session is alive, `busy`, and on the current version, yet records
+`messagingSocketPath: null` — reachable by the operator, not by a peer. Having
+the capability is not the same as the capability covering the fleet.
+
 ## Trail
 
+- 2026-08-10: friction ledger opened
+  ([`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)) with three
+  receipts, two of them found by **dogfooding rung 1 on a real question** —
+  "would filing this receipt into `goals/ci-fleet-endgame` collide with the
+  sessions working it?" The mirror answered correctly and immediately (three
+  live checkouts contend there, so the receipt was filed here instead), and the
+  same snapshot exposed a defect in its own output: the contested index is an
+  unweighted union, so one checkout with 5133 dirty files occupies 895 of 1185
+  contested rows. Presentation defect, not correctness — no field is falsely
+  `clean` — and it folds into rung 1.5. The third receipt is the sharpest: the
+  first receipt was **filed wrong** and corrected the same day after PR #635
+  review, having indicted `flake-quarantine` from a single log line without
+  reading the module that implements it. The gate already did the serial rerun
+  the receipt demanded. The corrected finding is real and narrower: arbitration
+  is per-package while the flake is per-lane-execution, so clearing `@beep/ui`
+  standalone and rerunning the lane just handed the same environment condition a
+  fresh roll, which landed on `@beep/box`.
+- 2026-08-09: **the delivery gate moved** — Claude Code 2.1.224 shipped
+  cross-session messaging (`ListAgents` / `SendMessage`, same-machine over a
+  per-session Unix socket, *"never through Anthropic servers"*), which **kills
+  [`T3`](./research/T3-delivery-vector.md) §4.4** — "is there a non-hook external
+  push? Honestly: no" — and unblocks rung 2 from PR-I.
+  [`T6`](./research/T6-cross-session-messaging.md) re-measures the delta and
+  finds the sharper result underneath it: **rung 1 built its liveness probe on
+  the wrong primitive.** T3 §4.5 had already found the on-disk session registry;
+  rung 1 used `/proc` cwd attribution instead and hit the wall that made
+  `dormant` unreachable. Measured across the full PID space this host reads
+  `/proc/<pid>/stat` for **1430 of 1435** processes and `/proc/<pid>/cwd` for
+  **189** — and the registry *supplies* the `cwd`, leaving only a PID-reuse
+  check (`procStart` == `stat` field 22, verified exact on all four live
+  sessions) against the 99.7%-readable file. That is rung 1.5: a pure
+  `unknown → live` conversion with the measured-or-`unknown` law untouched.
+  The track's specimen is the reason the mirror survives its own transport:
+  `beep-effect3-e3` — the CI/infra session that hand-relayed the runner-migration
+  notice the day before — is alive, `busy`, interactive, on 2.1.226, and binds
+  **no messaging socket**, so the registry sees it and `ListAgents` does not.
+  Deriving liveness from peer reachability would have marked the fleet's busiest
+  checkout not-live: a falsely-negative field, which is exactly what the packet's
+  binding law forbids. Also applied, from §7: `isolatePeerMachines: true` in user
+  settings, because cross-machine replies route through Anthropic servers and
+  `~/.claude/rules/oip-confidentiality.md` governs that path.
 - 2026-08-06: **rung 1 graduated** into
   [`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) (D6) — derivation
   only; rung 2 stays here until PR-I lands `AgentBrief.fleet`. Same day, PR-E
