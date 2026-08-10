@@ -16,6 +16,7 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { Context, Effect, flow, Layer, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
@@ -556,7 +557,10 @@ const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMe
   const turnProjections = A.flatMap(groups, (group) => group.turns);
 
   return AiMetricsOtlpSpanProjectionBatch.make({
-    projections: A.appendAll(sessionProjections, turnProjections),
+    // Keep each session next to its turns. If all session roots lead the array, a
+    // backlog with 512+ sessions can acknowledge a session-only chunk without closing
+    // a single turn watermark, so every retry starts from the same prefix.
+    projections: A.flatMap(groups, (group) => A.prepend(group.turns, group.session)),
     sessionSpanCount: A.length(sessionProjections),
     turnIds: A.map(rows, (row) => row.turnId),
     turnSpanCount: A.length(turnProjections),
@@ -763,28 +767,13 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
 
   const resource = resourceFor(input);
   const timestamp = hrTimeFrom(yield* Effect.clockWith((clock) => clock.currentTimeMillis));
-  const spans = A.map(projections, readableSpanFor(resource, timestamp));
+  const toReadableSpan = readableSpanFor(resource, timestamp);
 
   yield* Effect.acquireUseRelease(
     // Protobuf, not JSON: Phoenix answers OTLP/JSON with HTTP 415
     // ("Unsupported content type: application/json").
     Effect.sync(() => new OTLPTraceExporter({ url: input.endpoint.traceUrl })),
-    // Chunked and sequential. A drain can carry tens of thousands of turns, and one
-    // request that large is the backpressure collapse this work exists to prevent --
-    // the retired BatchSpanProcessor was doing this chunking for us.
-    //
-    // A mid-drain failure therefore leaves earlier chunks delivered and the watermark
-    // still open, so the next run re-sends them. That is safe precisely because span
-    // ids are content-addressed: the collector recognises the repeats and keeps one
-    // copy. Under a delivery scheme without stable ids this chunking would be a bug.
-    (exporter) =>
-      Effect.forEach(
-        A.chunksOf(spans, AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE),
-        (chunk) => deliverSpans(exporter, chunk),
-        {
-          discard: true,
-        }
-      ),
+    (exporter) => deliverSpans(exporter, A.map(projections, toReadableSpan)),
     (exporter) => Effect.promise(() => exporter.shutdown()).pipe(Effect.ignore)
   );
 });
@@ -878,12 +867,25 @@ const withOtlpExportSpan =
 
 const runAiMetricsOtlpProjectionBatchExportUntraced: (
   input: AiMetricsOtlpExportInput,
-  batch: AiMetricsOtlpSpanProjectionBatch
+  batch: AiMetricsOtlpSpanProjectionBatch,
+  onChunkDelivered: (
+    projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
+  ) => Effect.Effect<void, AiMetricsOtlpExportError>
 ) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender> = Effect.fn(
   "AiMetrics.runAiMetricsOtlpProjectionBatchExport.untraced"
-)(function* (input, batch) {
+)(function* (input, batch, onChunkDelivered) {
   const sender = yield* AiMetricsOtlpSpanSender;
-  yield* sender.send(input, batch.projections);
+  // The orchestrator owns both the chunk boundary and its durable acknowledgement.
+  // A pluggable sender therefore cannot report success while silently ignoring the
+  // checkpoint callback: successful delivery returns here before the watermark closes.
+  yield* Effect.forEach(
+    A.chunksOf(batch.projections, AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE),
+    Effect.fnUntraced(function* (chunk) {
+      yield* sender.send(input, chunk);
+      yield* onChunkDelivered(chunk);
+    }),
+    { discard: true }
+  );
 
   return AiMetricsOtlpExportResult.make({
     endpointTraceUrl: input.endpoint.traceUrl,
@@ -952,7 +954,12 @@ export const runAiMetricsOtlpProjectionBatchExport: {
     input: AiMetricsOtlpExportInput
   ) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender>;
 } = dual(2, (input: AiMetricsOtlpExportInput, batch: AiMetricsOtlpSpanProjectionBatch) =>
-  runAiMetricsOtlpProjectionBatchExportUntraced(input, batch).pipe(withOtlpExportSpan(input))
+  runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, () => Effect.void).pipe(withOtlpExportSpan(input))
+);
+
+const turnIdsFor: (projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) => ReadonlyArray<string> = flow(
+  A.map((projection) => pipe(O.fromNullishOr(projection.attributes["ai_metrics.turn_id"]), O.filter(P.isString))),
+  A.getSomes
 );
 
 /**
@@ -1012,16 +1019,13 @@ export const runAiMetricsOtlpExport: (
 )(
   function* (input) {
     const batch = yield* readAiMetricsOtlpSpanProjections;
-    // Ordering is the whole point: delivery first, and only an acknowledged delivery
-    // reaches the mark. A rejected batch fails here, leaving the watermark open so the
-    // next run re-reads exactly these turns. Marking before or without confirmation is
-    // what makes a watermark lie.
-    const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch);
-    // Closing the watermark belongs here, not only in the callers. This is the entry
-    // point the forwarder uses (exportForwarderDerivedOtlp), and it reads and exports
-    // as one unit. If marking lived solely in the standalone export command, every
-    // forwarder run would re-emit every unexported turn forever.
-    yield* markAiMetricsOtlpTurnsExported(batch.turnIds);
+    const duckdb = yield* DuckDb;
+    // Ordering is the whole point: each chunk is delivered first, then only that
+    // acknowledged chunk reaches the mark. A rejected chunk fails before its checkpoint,
+    // while earlier chunks stay closed so a retry resumes instead of replaying the prefix.
+    const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
+      markAiMetricsOtlpTurnsExported(turnIdsFor(projections)).pipe(Effect.provideService(DuckDb, duckdb))
+    );
 
     return result;
   },
