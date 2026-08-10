@@ -584,8 +584,10 @@ const fetchText = (url: string) =>
   different TypeId, so `yield* someResult` is rejected.
 - Lift it with `Effect.fromResult`, whose signature is
   `<A, E>(result: Result<A, E>) => Effect<A, E>`.
-- This is the standing contract for the `to<Entity>Insert` table converters,
-  which return `Result` by design; every call site inside a generator bridges.
+- For table converters whose declared return type is `Result`, including the
+  schema-encoding `to<Entity>Insert` converters, every generator call site
+  bridges. Direct-value insert converters are already values and must not be
+  passed to `Effect.fromResult`.
 - The diagnostic is easy to misread. In the common shape
   `it.effect(name, Effect.fnUntraced(function* () { ... }))` the error is a
   `TS2769` "No overload matches this call" wall whose root cause

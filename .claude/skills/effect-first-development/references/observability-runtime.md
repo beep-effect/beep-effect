@@ -201,8 +201,10 @@ const fetchBody = (url: string) =>
 A `Result` is not an `Effect` — generator yields are constrained to
 `Effect<any, any, any>`, so `yield* someResult` is rejected. The error arrives as an
 opaque `TS2769` "No overload matches this call" wall; bypass it and the fiber dies with
-`Fiber.runLoop: Not a valid effect`. The `to<Entity>Insert` table converters return
-`Result` by design, so every generator call site bridges. Law: `EF-22b`.
+`Fiber.runLoop: Not a valid effect`. When a table converter's declared return type
+is `Result`, including schema-encoding `to<Entity>Insert` converters, every
+generator call site bridges. Direct-value insert converters are already values and
+must not be passed to `Effect.fromResult`. Law: `EF-22b`.
 
 ```ts
 import { Effect } from "effect"
