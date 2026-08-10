@@ -1,25 +1,49 @@
 /**
  * Pull request provenance detection and Markdown rendering for Yeet publish.
  *
+ * **Gotchas**
+ *
+ * Claude transcript discovery is deliberately bounded to the current checkout
+ * and its main clone. Sessions launched from a third directory are left to the
+ * interactive `claude --resume` picker.
+ *
+ * When multiple Claude sessions share one checkout, the newest recent
+ * transcript wins. Modification time cannot honestly identify which concurrent
+ * session invoked publish, so the footer may select the other live session.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { shellQuote } from "@beep/repo-ai-metrics";
+import { repoPathToClaudeProjectName, shellQuote } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Config, ConfigProvider, Context, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
+import {
+  Clock,
+  Config,
+  ConfigProvider,
+  Context,
+  Duration,
+  Effect,
+  FileSystem,
+  Order,
+  Path,
+  pipe,
+  Result,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { runGitOutput } from "./GitExec.ts";
 import type { PlatformError } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Provenance");
 const recentClaudeSessionWindow = Duration.hours(6);
+const futureClaudeSessionSkew = Duration.minutes(1);
 const provenanceDetectionTimeout = Duration.seconds(2);
 const PrProvenanceAbsolutePath = S.String.check(
   S.isPattern(/^\//u, {
@@ -80,7 +104,7 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  *   branch: "feat/example",
  *   clonePath: "/home/user/beep-effect",
  *   harness: "codex",
- *   resumeCommand: "cd '/home/user/beep-effect' && codex resume --last",
+ *   resumeCommand: "cd '/home/user/beep-effect' &&\n  codex resume --last",
  *   sessionId: O.none(),
  *   worktreePath: O.none(),
  * })
@@ -101,8 +125,8 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
     clonePath: PrProvenanceAbsolutePath,
     harness: PrProvenanceHarness,
     resumeCommand: S.String,
-    sessionId: S.Option(S.String),
-    worktreePath: S.Option(PrProvenanceAbsolutePath),
+    sessionId: S.OptionFromNullOr(S.String),
+    worktreePath: S.OptionFromNullOr(PrProvenanceAbsolutePath),
   },
   $I.annote("PrProvenance", {
     description: "Origin and paste-ready resume command recorded in a Yeet pull request body.",
@@ -118,7 +142,7 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
  * import { mungeClaudeProjectPath } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(mungeClaudeProjectPath("/home/user/beep.effect"))
- * // -home-user-beep-effect
+ * // -home-user-beep.effect
  * ```
  *
  * @param launchPath - Absolute path the harness session was launched from.
@@ -126,7 +150,7 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
  * @category utilities
  * @since 0.0.0
  */
-export const mungeClaudeProjectPath = (launchPath: string): string => Str.replace(/[/.]/gu, "-")(launchPath);
+export const mungeClaudeProjectPath = repoPathToClaudeProjectName;
 
 const sessionOrder = Order.mapInput(
   Order.Number,
@@ -149,7 +173,7 @@ const sessionOrder = Order.mapInput(
  * @param launchPaths - Absolute checkout and clone paths to inspect.
  * @param nowMillis - Current epoch milliseconds used for the six-hour bound.
  * @returns The launch path and session id of the newest recent transcript.
- * @category discovery
+ * @category detection
  * @since 0.0.0
  */
 export const findRecentClaudeSession = Effect.fn("PrProvenance.findRecentClaudeSession")(function* (
@@ -196,7 +220,11 @@ export const findRecentClaudeSession = Effect.fn("PrProvenance.findRecentClaudeS
   );
   return pipe(
     candidates,
-    A.filter((candidate) => nowMillis - candidate[2] <= Duration.toMillis(recentClaudeSessionWindow)),
+    A.filter(
+      (candidate) =>
+        candidate[2] >= nowMillis - Duration.toMillis(recentClaudeSessionWindow) &&
+        candidate[2] <= nowMillis + Duration.toMillis(futureClaudeSessionSkew)
+    ),
     A.sort(sessionOrder),
     A.head,
     O.map(([launchPath, sessionId]) => [launchPath, sessionId] as const)
@@ -230,12 +258,19 @@ export const resumeCommandFor = (
   PrProvenanceHarness.$match(harness, {
     "claude-code": () =>
       O.match(sessionId, {
-        onNone: () => `cd ${shellQuote(directory)} && claude --resume`,
-        onSome: (id) => `cd ${shellQuote(directory)} && claude --resume ${shellQuote(id)}`,
+        onNone: () => `cd ${shellQuote(directory)} &&\n  claude --resume`,
+        onSome: (id) => `cd ${shellQuote(directory)} &&\n  claude --resume ${shellQuote(id)}`,
       }),
-    codex: () => `cd ${shellQuote(directory)} && codex resume --last`,
-    unknown: () => `cd ${shellQuote(directory)} && claude --resume`,
+    codex: () =>
+      `cd ${shellQuote(directory)} &&\n  ${pipe(
+        sessionId,
+        O.map((id) => `codex resume ${shellQuote(id)}`),
+        O.getOrElse(() => "codex resume --last")
+      )}`,
+    unknown: () => `cd ${shellQuote(directory)} &&\n  claude --resume`,
   });
+
+const encodePrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PrProvenance));
 
 /**
  * Render provenance as the trailing Markdown section of a pull request body.
@@ -250,7 +285,7 @@ export const resumeCommandFor = (
  *   branch: "feat/example",
  *   clonePath: "/repo",
  *   harness: "unknown",
- *   resumeCommand: "cd '/repo' && claude --resume",
+ *   resumeCommand: "cd '/repo' &&\n  claude --resume",
  *   sessionId: O.none(),
  *   worktreePath: O.none(),
  * }))
@@ -268,7 +303,7 @@ export const renderPrProvenance = (provenance: PrProvenance): string => {
     O.map((worktreePath) => `- Worktree: \`${worktreePath}\`\n`),
     O.getOrElse(() => "")
   );
-  const command = Str.replace(" && ", " &&\n  ")(provenance.resumeCommand);
+  const encoded = pipe(provenance, encodePrProvenanceJson, Result.getOrThrow, renderPrettyCommandJson, Str.trimEnd);
   return `---
 
 ## Provenance
@@ -280,8 +315,12 @@ ${worktreeLine}- Branch: \`${provenance.branch}\`
 Resume this session:
 
 \`\`\`sh
-${command}
+${provenance.resumeCommand}
 \`\`\`
+
+<!-- yeet-provenance
+${encoded}
+-->
 `;
 };
 
@@ -317,26 +356,44 @@ export class PrProvenanceService extends Context.Service<PrProvenanceService, Pr
 
 type PrProvenanceRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
-const makeUnknownProvenance = (clonePath: string, branch: string): PrProvenance =>
+const makeUnknownProvenance = (
+  clonePath: string,
+  checkoutPath: string,
+  worktreePath: O.Option<string>,
+  branch: string
+): PrProvenance =>
   PrProvenance.make({
     branch,
     clonePath,
     harness: "unknown",
-    resumeCommand: resumeCommandFor("unknown", clonePath, O.none()),
+    resumeCommand: resumeCommandFor("unknown", checkoutPath, O.none()),
     sessionId: O.none(),
-    worktreePath: O.none(),
+    worktreePath,
   });
 
-const hasCodexEnvironment = Effect.fn("PrProvenance.hasCodexEnvironment")(function* () {
+/**
+ * Detect Codex markers and read its exact resumable thread id.
+ *
+ * **Example** (Inspect the active environment provider)
+ *
+ * ```ts
+ * import { detectCodexEnvironment } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(detectCodexEnvironment.pipe !== undefined)
+ * ```
+ *
+ * @returns Whether any `CODEX_` marker exists and the exact thread id when set.
+ * @category detection
+ * @since 0.0.0
+ */
+export const detectCodexEnvironment = Effect.fn("PrProvenance.detectCodexEnvironment")(function* () {
   const provider = yield* ConfigProvider.ConfigProvider;
-  const root = yield* provider.load([]);
-  if (root === undefined || !P.isTagged("Record")(root)) {
-    return false;
-  }
-  return pipe(root.keys, A.fromIterable, A.some(Str.startsWith("CODEX_")));
+  const codexNode = yield* provider.load(["CODEX"]);
+  const threadId = yield* Config.option(Config.string("CODEX_THREAD_ID"));
+  return [O.isSome(threadId) || P.isTagged("Record")(codexNode), threadId] as const;
 });
 
-const detectPrProvenanceImpl = Effect.fn("PrProvenance.detectImpl")(function* (cwd: string, branch: string) {
+const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: string) {
   const path = yield* Path.Path;
   const [commonDirectoryOutput, checkoutOutput] = yield* Effect.all(
     [runGitOutput(cwd, ["rev-parse", "--git-common-dir"]), runGitOutput(cwd, ["rev-parse", "--show-toplevel"])],
@@ -345,6 +402,49 @@ const detectPrProvenanceImpl = Effect.fn("PrProvenance.detectImpl")(function* (c
   const checkoutPath = path.resolve(Str.trim(checkoutOutput));
   const clonePath = path.dirname(path.resolve(checkoutPath, Str.trim(commonDirectoryOutput)));
   const worktreePath = checkoutPath === clonePath ? O.none<string>() : O.some(checkoutPath);
+  return [clonePath, checkoutPath, worktreePath] as const;
+});
+
+/**
+ * Detect harness provenance after Git has resolved clone and checkout paths.
+ *
+ * **Example** (Build a bounded harness detector)
+ *
+ * ```ts
+ * import { detectPrProvenanceFromPaths } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const detection = detectPrProvenanceFromPaths("/repo", "/repo", O.none(), "feat/example")
+ * console.log(detection.pipe !== undefined)
+ * ```
+ *
+ * @param clonePath - Absolute main clone path resolved by Git.
+ * @param checkoutPath - Absolute current checkout or linked-worktree path.
+ * @param worktreePath - Current checkout when it differs from the main clone.
+ * @param branch - Branch being published.
+ * @returns Detected harness provenance with Git identity preserved.
+ * @category detection
+ * @since 0.0.0
+ */
+export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPaths")(function* (
+  clonePath: string,
+  checkoutPath: string,
+  worktreePath: O.Option<string>,
+  branch: string
+) {
+  const path = yield* Path.Path;
+  const [isCodex, codexThreadId] = yield* detectCodexEnvironment();
+  if (isCodex) {
+    return PrProvenance.make({
+      branch,
+      clonePath,
+      harness: "codex",
+      resumeCommand: resumeCommandFor("codex", checkoutPath, codexThreadId),
+      sessionId: codexThreadId,
+      worktreePath,
+    });
+  }
+
   const home = yield* Config.option(Config.string("HOME"));
   const nowMillis = yield* Clock.currentTimeMillis;
   const claudeSession = yield* pipe(
@@ -367,13 +467,11 @@ const detectPrProvenanceImpl = Effect.fn("PrProvenance.detectImpl")(function* (c
     });
   }
 
-  const isCodex = yield* hasCodexEnvironment();
-  const harness = isCodex ? "codex" : "unknown";
   return PrProvenance.make({
     branch,
     clonePath,
-    harness,
-    resumeCommand: resumeCommandFor(harness, clonePath, O.none()),
+    harness: "unknown",
+    resumeCommand: resumeCommandFor("unknown", checkoutPath, O.none()),
     sessionId: O.none(),
     worktreePath,
   });
@@ -384,13 +482,23 @@ const makePrProvenanceService = Effect.fn("PrProvenanceService.make")(function* 
   const runtimeContext = yield* Effect.context<PrProvenanceRequirements>();
   return PrProvenanceService.of({
     detect: Effect.fn("PrProvenanceService.detect")((cwd, branch) => {
-      const fallback = makeUnknownProvenance(path.resolve(cwd), branch);
-      return detectPrProvenanceImpl(cwd, branch).pipe(
+      const checkoutFallback = path.resolve(cwd);
+      const gitFallback = makeUnknownProvenance(checkoutFallback, checkoutFallback, O.none(), branch);
+      return detectGitPaths(cwd).pipe(
         Effect.provide(runtimeContext),
-        Effect.catchCause(() => Effect.succeed(fallback)),
-        Effect.timeoutOrElse({
-          duration: provenanceDetectionTimeout,
-          orElse: () => Effect.succeed(fallback),
+        Effect.matchCauseEffect({
+          onFailure: () => Effect.succeed(gitFallback),
+          onSuccess: ([clonePath, checkoutPath, worktreePath]) => {
+            const fallback = makeUnknownProvenance(clonePath, checkoutPath, worktreePath, branch);
+            return detectPrProvenanceFromPaths(clonePath, checkoutPath, worktreePath, branch).pipe(
+              Effect.provide(runtimeContext),
+              Effect.catchCause(() => Effect.succeed(fallback)),
+              Effect.timeoutOrElse({
+                duration: provenanceDetectionTimeout,
+                orElse: () => Effect.succeed(fallback),
+              })
+            );
+          },
         })
       );
     }),
