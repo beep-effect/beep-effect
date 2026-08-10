@@ -500,7 +500,8 @@ const DockStageBoundary = ({ children }: { readonly children: ReactNode }): JSX.
  * Crash boundary around one dock surface: transient render crashes self-heal
  * with fresh remounts, persistent ones degrade to a manual-reload card.
  *
- * @example
+ * **Example** (Wrap surface in boundary)
+ *
  * ```tsx
  * import { SurfaceBoundary } from "@/App"
  *
@@ -907,7 +908,8 @@ const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Ele
  * The desktop application root: builds the dock workspace graph (with any
  * persisted layout restored) and renders the shell inside its registry.
  *
- * @example
+ * **Example** (Reference App component)
+ *
  * ```tsx
  * import { App } from "@/App"
  *

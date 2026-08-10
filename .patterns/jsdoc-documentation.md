@@ -19,7 +19,7 @@ dependency on `@effect/jsdocs`.
 - Examples compile through the docgen TypeScript gate. Never remove an Example to
   hide a compilation error.
 - New and touched documentation uses titled `**Example** (Title)` sections.
-- `@remarks`, `@module`, and `@template` are forbidden in new work.
+- `@remarks` is forbidden. `@module` and `@template` are forbidden in new work.
 - Example code uses Effect patterns and contains no `any`, type assertions,
   `declare` statements, empty generator bodies, or deprecated `@effect/schema`
   imports.
@@ -59,10 +59,11 @@ enforces it.
 
 Enforcement is repo-wide and is not advisory. The zero-legacy check in
 `bun run beep quality jsdoc-ratchet` fails when any non-generated
-`packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`. Pass
-`--include-generated` to scan generator outputs as well (needed when proving a
-codegen emitter; the default non-generated scope cannot prove generated
-compliance). The gate inspects whole files, not diff hunks.
+`{packages,apps}/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`.
+Pass `--include-generated` to scan generator outputs in the same workspace
+corpus as well (needed when proving a codegen emitter; the default non-generated
+scope cannot prove generated compliance). The gate inspects whole files, not
+diff hunks.
 
 For inventory presence the totals ratchet still counts either a valid Example
 section or a legacy tag. That is a scoring detail of the fail-on-growth comparison,
@@ -383,7 +384,7 @@ use Details or Gotchas for general semantics.
 
 ## Forbidden patterns
 
-- `@remarks`, `@module`, or `@template` in new or touched documentation.
+- `@remarks`, or `@module` / `@template` in new or touched documentation.
 - An undescribed `@see`.
 - Duplicate, empty, out-of-order, or post-Example body sections.
 - An untitled Example, duplicate Example title, multiple fences in one Example,
@@ -404,8 +405,8 @@ use Details or Gotchas for general semantics.
       observable, and compilable.
 - [ ] Pure type-level exports have useful prose; Examples are included only when
       pedagogically valuable.
-- [ ] No loose `ts` fences or legacy carriers remain in files whose documentation
-      was touched.
+- [ ] No loose `ts` fences exist in touched documentation, and no legacy carriers
+      remain anywhere under `{packages,apps}/**/src`.
 - [ ] Every `@see` has a purpose phrase; every deprecation links a replacement.
 - [ ] Conditional tags add information beyond the signature and follow tag order.
 - [ ] Imports use canonical namespace aliases.

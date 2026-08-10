@@ -166,11 +166,14 @@ const VaultSyncConflictsList = ({
  * Floating vault sync status surface: provider connection badge, sync trigger,
  * reconciliation counts, and the open drift records with per-row review.
  *
+ * **Details**
+ *
  * While Box is not connected (no `CLOUD_BOX_TOKEN`), the panel shows setup
  * guidance and keeps the sync trigger disabled instead of surfacing a failing
  * remote call.
  *
- * @example
+ * **Example** (Create React element)
+ *
  * ```ts
  * import { VaultSyncPanel } from "@/sync/VaultSyncPanel"
  * import { createElement } from "react"

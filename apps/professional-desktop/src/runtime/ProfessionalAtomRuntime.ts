@@ -20,7 +20,8 @@ professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
 /**
  * Browser runtime mounted by the Professional Desktop Atom provider.
  *
- * @example
+ * **Example** (Verify fn is function)
+ *
  * ```ts
  * import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime"
  *
@@ -32,13 +33,29 @@ professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
  */
 export const professionalBrowserRuntime = professionalAtomRuntimeFactory(Layer.empty);
 
-// Browser-local persistence service backing the storage runtime.
-const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);
+/**
+ * Browser-local persistence service shared by the runtime and bootstrap
+ * migrations that must complete before persisted atoms mount.
+ *
+ * **Example** (Confirm is a Layer)
+ *
+ * ```ts
+ * import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(ProfessionalStorageLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);
 
 /**
  * Shared browser-storage runtime for app-owned persisted atoms.
  *
- * @example
+ * **Example** (Verify storage fn type)
+ *
  * ```ts
  * import { professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime"
  *
@@ -53,11 +70,14 @@ export const professionalStorageRuntime = professionalAtomRuntimeFactory(Profess
 /**
  * The active application registry, exposed through the browser Atom runtime.
  *
+ * **Details**
+ *
  * Dock renderers temporarily enter a private dock registry, so the shell passes
  * this registry back to portaled application surfaces without reading React
  * context directly.
  *
- * @example
+ * **Example** (Assert registry is object)
+ *
  * ```ts
  * import { professionalAtomRegistryAtom } from "@/runtime/ProfessionalAtomRuntime"
  *

@@ -32,10 +32,13 @@ const DesktopIntakeRpcs = WorkspaceVaultRpcs.merge(DocumentsRpcs, VaultDirectory
 /**
  * Desktop RPC context used by document intake and workspace-vault atoms.
  *
+ * **Details**
+ *
  * Exported so runtime-atom tests can provide deterministic service layers
  * without opening a transport.
  *
- * @example
+ * **Example** (Check runtime function type)
+ *
  * ```ts
  * import { DesktopIntakeClient } from "@/intake/Intake.atoms"
  *
@@ -56,7 +59,8 @@ const workspaceVaultKey = (workspaceId: WorkspaceIdentity.WorkspaceId) => `works
 /**
  * Largest file accepted by the renderer intake path.
  *
- * @example
+ * **Example** (Log size in megabytes)
+ *
  * ```ts
  * import { MAX_INTAKE_FILE_BYTES } from "@/intake/Intake.atoms"
  *
@@ -86,7 +90,8 @@ const IntakeFileSize = S.Int.check(
 /**
  * File metadata inspected before desktop intake reads any bytes.
  *
- * @example
+ * **Example** (Create file metadata)
+ *
  * ```ts
  * import { IntakeFileMetadata } from "@/intake/Intake.atoms"
  *
@@ -110,7 +115,8 @@ class IntakeFileMetadata extends S.Class<IntakeFileMetadata>($I`IntakeFileMetada
 /**
  * Decide whether a file must be rejected before its bytes are materialized.
  *
- * @example
+ * **Example** (Refuse empty file)
+ *
  * ```ts
  * import { intakeRefusal } from "@/intake/Intake.atoms"
  *
@@ -159,7 +165,8 @@ const IntakeResultEntryKind = LiteralKit(["document", "failure"]).pipe(
 /**
  * Exhaustive outcome for one file submitted to desktop intake.
  *
- * @example
+ * **Example** (Create failure result entry)
+ *
  * ```ts
  * import { IntakeResultEntry } from "@/intake/Intake.atoms"
  *
@@ -186,7 +193,8 @@ export const IntakeResultEntry = IntakeResultEntryKind.mapMembers(
 /**
  * Runtime type for {@link IntakeResultEntry}.
  *
- * @example
+ * **Example** (Type a failure result)
+ *
  * ```ts
  * import { IntakeResultEntry } from "@/intake/Intake.atoms"
  *
@@ -242,7 +250,8 @@ const VaultSelectionStateKind = LiteralKit(["idle", "choosing", "saving", "faile
 /**
  * Exhaustive workspace vault selection state machine.
  *
- * @example
+ * **Example** (Create choosing vault state)
+ *
  * ```ts
  * import { VaultSelectionState } from "@/intake/Intake.atoms"
  *
@@ -271,7 +280,8 @@ export const VaultSelectionState = VaultSelectionStateKind.mapMembers(
 /**
  * Runtime type for {@link VaultSelectionState}.
  *
- * @example
+ * **Example** (Type an idle vault state)
+ *
  * ```ts
  * import { VaultSelectionState } from "@/intake/Intake.atoms"
  *
@@ -287,7 +297,8 @@ export type VaultSelectionState = typeof VaultSelectionState.Type;
 /**
  * Per-workspace renderer state for document intake.
  *
- * @example
+ * **Example** (Create initial intake state)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { DocumentIntakeState, VaultSelectionState } from "@/intake/Intake.atoms"
@@ -377,7 +388,8 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
 /**
  * Per-workspace document intake renderer state.
  *
- * @example
+ * **Example** (Check atoms factory type)
+ *
  * ```ts
  * import { documentIntakeStateAtoms } from "@/intake/Intake.atoms"
  *
@@ -394,7 +406,8 @@ export const documentIntakeStateAtoms = Atom.family((_workspaceId: WorkspaceIden
 /**
  * Per-workspace hidden file-input element bridge.
  *
- * @example
+ * **Example** (Check atoms factory type)
+ *
  * ```ts
  * import { intakeFileInputAtoms } from "@/intake/Intake.atoms"
  *
@@ -411,7 +424,8 @@ export const intakeFileInputAtoms = Atom.family((_workspaceId: WorkspaceIdentity
 /**
  * Atom family that reads the workspace vault configuration over desktop RPC.
  *
- * @example
+ * **Example** (Create vault config query)
+ *
  * ```ts
  * import { workspaceVaultConfigAtom } from "@/intake/Intake.atoms"
  * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
@@ -430,7 +444,8 @@ export const workspaceVaultConfigAtom = Atom.family((workspaceId: WorkspaceIdent
 /**
  * Browser-side dropped document input before the default filing context is attached.
  *
- * @example
+ * **Example** (Create dropped document input)
+ *
  * ```ts
  * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
  * import { DroppedDocumentInput } from "@/intake/Intake.atoms"
@@ -463,7 +478,8 @@ export class DroppedDocumentInput extends S.Class<DroppedDocumentInput>($I`Dropp
 /**
  * Attach the default filing context to a typed dropped document input.
  *
- * @example
+ * **Example** (Attach default filing context)
+ *
  * ```ts
  * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
  * import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms"
@@ -561,7 +577,8 @@ const logIntakeCause = (
  * selected workspace root. All status and query updates occur inside the atom
  * runtime.
  *
- * @example
+ * **Example** (Check action family type)
+ *
  * ```ts
  * import { chooseWorkspaceVaultAtoms } from "@/intake/Intake.atoms"
  *
@@ -781,7 +798,8 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
  * Runtime action family that processes a file batch sequentially and appends
  * typed outcomes to the workspace intake state.
  *
- * @example
+ * **Example** (Check action family type)
+ *
  * ```ts
  * import { intakeFilesAtoms } from "@/intake/Intake.atoms"
  *
@@ -801,7 +819,8 @@ export const intakeFilesAtoms = Atom.family((workspaceId: WorkspaceIdentity.Work
  * Workspace-scoped runtime actions for drag-and-drop and hidden file-input
  * browser events.
  *
- * @example
+ * **Example** (Access drop event actions)
+ *
  * ```ts
  * import { intakeDomEventAtoms } from "@/intake/Intake.atoms"
  * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
@@ -874,7 +893,8 @@ const clearIntakeResultsAtoms = Atom.family((workspaceId: WorkspaceIdentity.Work
 /**
  * Runtime action family that owns the hidden file-input DOM reference.
  *
- * @example
+ * **Example** (Check action family type)
+ *
  * ```ts
  * import { setIntakeFileInputAtoms } from "@/intake/Intake.atoms"
  *
@@ -895,7 +915,8 @@ export const setIntakeFileInputAtoms = Atom.family((workspaceId: WorkspaceIdenti
 /**
  * Runtime action family that resets and invokes the hidden file input.
  *
- * @example
+ * **Example** (Check action family type)
+ *
  * ```ts
  * import { openIntakeFilePickerAtoms } from "@/intake/Intake.atoms"
  *
@@ -1001,7 +1022,8 @@ const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
  * One read for the document-intake surface: intake state, vault configuration
  * flags, and the stable action record, keyed by workspace.
  *
- * @example
+ * **Example** (Inspect the surface atom family)
+ *
  * ```ts
  * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
  *

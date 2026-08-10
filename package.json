@@ -383,7 +383,7 @@
     "create-package": "bun run beep create-package",
     "deps:update": "bunx syncpack update --target=latest --dependency-types=catalog",
     "dev": "bunx turbo run dev",
-    "docgen": "bunx turbo run docgen --cache=local:rw --concurrency=2 && bun run docs:aggregate",
+    "docgen": "bunx turbo run docgen --cache=local:rw --concurrency=3 && bun run docs:aggregate",
     "docgen:affected": "bun run docgen:local -- --parallel=3",
     "docgen:local": "bun run beep docgen local",
     "docs:aggregate": "beep-cli docgen aggregate",

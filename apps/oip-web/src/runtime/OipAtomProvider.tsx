@@ -20,7 +20,8 @@ function OipAtomRuntimeMount({ children }: { readonly children: ReactNode }) {
 /**
  * Provides the OIP app-local Atom registry and browser runtime.
  *
- * @example
+ * **Example** (Rendering atom provider)
+ *
  * ```tsx
  * import { OipAtomProvider } from "@beep/oip-web/runtime/OipAtomProvider"
  *

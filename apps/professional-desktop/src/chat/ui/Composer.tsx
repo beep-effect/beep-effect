@@ -85,7 +85,8 @@ function ComposerSafetyWarning({ message }: { readonly message: string }): JSX.E
  * The thread composer. Persists drafts, loads edit targets, and dispatches
  * send/edit turns.
  *
- * @example
+ * **Example** (Log Composer component name)
+ *
  * ```tsx
  * import { Composer } from "@/chat/ui/Composer"
  *

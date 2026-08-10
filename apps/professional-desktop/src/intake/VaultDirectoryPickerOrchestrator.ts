@@ -52,7 +52,8 @@ const pickWith = Effect.fn("professional_desktop.intake.pick_vault_directory_pro
  * Open the sidecar host's native folder dialog (kdialog, then zenity) and
  * resolve with the picked absolute directory path, or `None` on cancel.
  *
- * @example
+ * **Example** (Creating host picker Effect)
+ *
  * ```ts
  * import { pickVaultDirectoryOnHost } from "@/intake/VaultDirectoryPickerOrchestrator"
  *
@@ -101,7 +102,8 @@ export const pickVaultDirectoryOnHost = (
 /**
  * RPC handler layer that opens the sidecar host's native folder dialog.
  *
- * @example
+ * **Example** (Confirming handlers Layer)
+ *
  * ```ts
  * import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator"
  * import { Layer } from "effect"

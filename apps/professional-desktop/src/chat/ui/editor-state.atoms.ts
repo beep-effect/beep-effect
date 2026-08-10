@@ -23,7 +23,8 @@ import type * as Md from "@beep/md/Md.model";
 /**
  * Per-document serialized-editor-state projection, keyed by the `Md.Document`.
  *
- * @example
+ * **Example** (Check typeof is function)
+ *
  * ```ts
  * import { documentEditorStateAtom } from "@/chat/ui/editor-state.atoms"
  *

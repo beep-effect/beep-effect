@@ -138,7 +138,8 @@ const Graph3DSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
 /**
  * Exhaustive lifecycle state for the graph-3d spike renderer.
  *
- * @example
+ * **Example** (Creating rendering status)
+ *
  * ```ts
  * import { Graph3DSpikeStatus } from "@/spikes/Graph3DSpike"
  *
@@ -280,7 +281,8 @@ const heapMb = (): O.Option<number> =>
  * and a timed stress pass of twenty projection updates with select/clear
  * rewrites.
  *
- * @example
+ * **Example** (Checking spike enablement)
+ *
  * ```ts
  * import { Graph3DSpike } from "@/spikes/Graph3DSpike"
  *

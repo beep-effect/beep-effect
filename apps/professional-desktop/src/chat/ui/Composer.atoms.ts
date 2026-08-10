@@ -41,7 +41,8 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * text, duplicate footnote definitions — yields a refusal that gates sending
  * until the draft is edited into safe content.
  *
- * @example
+ * **Example** (Classify legacy RawNormalization gate)
+ *
  * ```ts
  * import { prepareComposerDocumentSafetyGate } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -73,7 +74,8 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * original persisted `Document`, before Lexical can lossily project trusted raw
  * nodes to plain text.
  *
- * @example
+ * **Example** (Get initial None safety gate)
+ *
  * ```ts
  * import { composerDocumentSafetyGateAtoms } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
@@ -184,7 +186,8 @@ const cancelComposerEditAtom = professionalBrowserRuntime.fn<void>()(
  * Stable editor-change handler that delegates draft projection and state writes
  * to the professional atom runtime.
  *
- * @example
+ * **Example** (Verify change handler atoms type)
+ *
  * ```ts
  * import { composerSerializedChangeHandlerAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -276,7 +279,8 @@ interface ComposerShellView {
  * One read for the composer shell: edit state, streaming flag, seeded content,
  * remount key, refusal banner, and the stable stop/cancel handlers.
  *
- * @example
+ * **Example** (Invoke confirm normalization handler)
+ *
  * ```ts
  * import { composerShellAtoms } from "@/chat/ui/Composer.atoms"
  *
@@ -320,7 +324,8 @@ interface ComposerSurfaceView {
  * stable handlers, all keyed by the same `(threadId, seed)` pair so the
  * component never re-derives the double family application.
  *
- * @example
+ * **Example** (Verify cancel edit handler type)
+ *
  * ```ts
  * import { composerSurfaceAtoms } from "@/chat/ui/Composer.atoms"
  *

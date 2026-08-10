@@ -56,7 +56,8 @@ const oipTheme = createAppTheme(oipThemeOptions);
 /**
  * Provides the OIP theme while reusing the shared `@beep/ui` theme base.
  *
- * @example
+ * **Example** (Providing theme to children)
+ *
  * ```tsx
  * import { OipThemeProvider } from "@beep/oip-web/components/OipThemeProvider"
  *

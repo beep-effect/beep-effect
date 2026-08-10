@@ -20,7 +20,8 @@ const SERVER_URL = resolveChatRpcHttpUrl();
  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued
  * per-launch bearer token required when HTTP exposes vault/document RPCs.
  *
- * @example
+ * **Example** (Build protocol layer)
+ *
  * ```ts
  * import { makeDesktopHttpProtocolLive } from "@/transport/DesktopHttpProtocol"
  * import { Layer } from "effect"

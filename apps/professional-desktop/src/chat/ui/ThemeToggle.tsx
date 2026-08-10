@@ -21,7 +21,8 @@ import type { JSX } from "react";
 /**
  * The theme toggle button.
  *
- * @example
+ * **Example** (Log ThemeToggle component name)
+ *
  * ```tsx
  * import { ThemeToggle } from "@/chat/ui/ThemeToggle"
  *

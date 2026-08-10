@@ -101,7 +101,8 @@ const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
 /**
  * Sidecar observability layer: OTLP export plus optional Effect DevTools.
  *
- * @example
+ * **Example** (Verifying Layer instance)
+ *
  * ```ts
  * import { ObservabilityLive } from "@/runtime/Observability"
  * import { Layer } from "effect"

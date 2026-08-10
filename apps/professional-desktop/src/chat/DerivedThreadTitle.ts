@@ -38,7 +38,8 @@ const DerivedThreadTitleCanonical = S.NonEmptyString.pipe(
 /**
  * Normalized title candidate derived from the first non-empty user message line.
  *
- * @example
+ * **Example** (Decode trimmed title candidate)
+ *
  * ```ts
  * import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle"
  * import * as S from "effect/Schema"

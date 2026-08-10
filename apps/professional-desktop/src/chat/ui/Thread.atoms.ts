@@ -33,7 +33,8 @@ const threadBottomAtoms = Atom.family((_threadId: WorkspaceIdentity.ThreadId) =>
 /**
  * Runtime action that starts editing one user turn.
  *
- * @example
+ * **Example** (Check typeof is object)
+ *
  * ```ts
  * import { editThreadTurnAtom } from "@/chat/ui/Thread.atoms"
  *
@@ -52,7 +53,8 @@ export const editThreadTurnAtom = professionalBrowserRuntime.fn<EditTarget>()(
 /**
  * Runtime action family that owns the transcript viewport DOM reference.
  *
- * @example
+ * **Example** (Check typeof is function)
+ *
  * ```ts
  * import { setThreadViewportAtoms } from "@/chat/ui/Thread.atoms"
  *
@@ -73,7 +75,8 @@ export const setThreadViewportAtoms = Atom.family((threadId: WorkspaceIdentity.T
 /**
  * Runtime action family that owns the transcript bottom-sentinel DOM reference.
  *
- * @example
+ * **Example** (Check typeof is function)
+ *
  * ```ts
  * import { setThreadBottomAtoms } from "@/chat/ui/Thread.atoms"
  *
@@ -95,7 +98,8 @@ export const setThreadBottomAtoms = Atom.family((threadId: WorkspaceIdentity.Thr
  * Runtime action family that follows transcript updates while the reader
  * remains pinned near the bottom.
  *
- * @example
+ * **Example** (Check typeof is function)
+ *
  * ```ts
  * import { scrollThreadAtoms } from "@/chat/ui/Thread.atoms"
  *
@@ -134,7 +138,8 @@ export const scrollThreadAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
  * Runtime action family that reconciles optimistic turns after an
  * authoritative timeline refresh and follows the resulting transcript.
  *
- * @example
+ * **Example** (Check typeof is function)
+ *
  * ```ts
  * import { reconcileThreadTimelineAtoms } from "@/chat/ui/Thread.atoms"
  *
@@ -235,7 +240,8 @@ interface ThreadTranscriptView {
  * branch-truncation rule — an edited turn and the exchange it produced are
  * gone for good, not merely hidden while the replacement streams.
  *
- * @example
+ * **Example** (Inspect the atom family)
+ *
  * ```ts
  * import { visibleThreadTurnsAtoms } from "@/chat/ui/Thread.atoms"
  *

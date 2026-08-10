@@ -73,11 +73,15 @@ export const runHandler = Effect.fnUntraced(function* <A, B>({ handler, method, 
 function decodeExtRequestRegistration<A, I>({ handler, method, payload }: DecodeExtRequestRegistrationOptions<A, I>) {
   return (params: unknown): Effect.Effect<unknown, AcpError.AcpError> =>
     S.decodeUnknownEffect(payload)(params).pipe(
-      Effect.mapError((error) =>
-        AcpError.AcpRequestError.invalidParams(`Invalid ${method} payload: ${formatSchemaIssue(error.issue)}`, {
-          issue: error.issue,
-        })
-      ),
+      Effect.mapError((error) => {
+        // The JSON-RPC error `data` field is wire JSON (the generated Error
+        // schema validates it as S.Json), so carry the rendered issue rather
+        // than the live SchemaIssue object, which is not a JSON value.
+        const rendered = formatSchemaIssue(error.issue);
+        return AcpError.AcpRequestError.invalidParams(`Invalid ${method} payload: ${rendered}`, {
+          issue: rendered,
+        });
+      }),
       Effect.flatMap(handler)
     );
 }

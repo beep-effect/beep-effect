@@ -58,7 +58,8 @@ const withCsp = (cspHeader: string) => (response: NextResponse) => {
 /**
  * Adds a per-request CSP nonce to OIP document responses.
  *
- * @example
+ * **Example** (Assigning proxy handler)
+ *
  * ```ts
  * import type { NextRequest, NextResponse } from "next/server"
  * import { proxy } from "@beep/oip-web/proxy"
@@ -91,7 +92,8 @@ export function proxy(request: NextRequest): NextResponse {
 /**
  * Route matcher for the OIP CSP proxy.
  *
- * @example
+ * **Example** (Logging matcher source)
+ *
  * ```ts
  * import { config } from "@beep/oip-web/proxy"
  *

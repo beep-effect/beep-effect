@@ -52,10 +52,13 @@ const decodeSessionId = S.decodeUnknownEffect(SessionId);
 /**
  * Writes the starter document when — and only when — it is absent.
  *
+ * **Details**
+ *
  * Exported for the regression test that pins the one behaviour that matters
  * here: a read failure that is *not* absence must never lead to a write.
  *
- * @example
+ * **Example** (Confirming seed Effect)
+ *
  * ```ts
  * import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed"
  * import { Effect } from "effect"
@@ -107,10 +110,13 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
 /**
  * Seeds the starter ontology document on sidecar boot.
  *
+ * **Details**
+ *
  * A seeding failure must never take the sidecar down — the workbench is still
  * usable with any other document — so the cause is logged and swallowed.
  *
- * @example
+ * **Example** (Confirming seed Layer)
+ *
  * ```ts
  * import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed"
  * import { Layer } from "effect"

@@ -38,7 +38,8 @@ function PresentChatTurnError({ failure }: { readonly failure: ChatActionError }
  * existing toast system. The agents client only exposes atom state; the UI
  * package stays at this app boundary.
  *
- * @example
+ * **Example** (Import and log name)
+ *
  * ```tsx
  * import { ChatTurnErrorToasts } from "@/chat/ui/ChatTurnErrorToasts"
  *

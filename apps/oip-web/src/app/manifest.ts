@@ -10,7 +10,8 @@ import type { MetadataRoute } from "next";
 /**
  * Returns the static web manifest for oip web.
  *
- * @example
+ * **Example** (Logging the manifest name)
+ *
  * ```ts
  * import manifest from "@beep/oip-web/app/manifest"
  *

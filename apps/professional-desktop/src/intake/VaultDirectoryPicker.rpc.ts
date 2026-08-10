@@ -17,7 +17,8 @@ const $I = $ProfessionalDesktopId.create("intake/VaultDirectoryPicker.rpc");
 /**
  * Client-safe native vault directory picker failure.
  *
- * @example
+ * **Example** (Creating error with message)
+ *
  * ```ts
  * import { VaultDirectoryPickError } from "@/intake/VaultDirectoryPicker.rpc"
  *
@@ -48,11 +49,14 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
  * when the user cancels. The wire form stays `string | null`; the decoded
  * success value is the `Option`.
  *
+ * **Details**
+ *
  * Browser-mode counterpart of the Tauri shell's `select_vault_directory`
  * command; only exposed over HTTP when the per-launch session token guards the
  * full desktop RPC group.
  *
- * @example
+ * **Example** (Retrieving registered request)
+ *
  * ```ts
  * import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc"
  *
@@ -71,7 +75,8 @@ const PickVaultDirectoryRpc = Rpc.make("PickVaultDirectory", {
 /**
  * Native vault directory picker RPC group served by the desktop sidecar.
  *
- * @example
+ * **Example** (Checking request registration)
+ *
  * ```ts
  * import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc"
  *

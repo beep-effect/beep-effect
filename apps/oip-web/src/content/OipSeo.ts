@@ -24,7 +24,8 @@ const profileUrls = (content: OipSiteContent): ReadonlyArray<string> =>
 /**
  * Builds conservative JSON-LD graph data for the OIP website.
  *
- * @example
+ * **Example** (Building JSON-LD graph)
+ *
  * ```ts
  * import { makeJsonLdGraph, oipSiteContent } from "@beep/oip-web/content"
  *
@@ -81,7 +82,8 @@ export const makeJsonLdGraph = (content: OipSiteContent) => ({
  * for use in Next.js `twitter` metadata. Returns `undefined` when no X profile
  * is present.
  *
- * @example
+ * **Example** (Deriving Twitter handle)
+ *
  * ```ts
  * import { oipSiteContent, oipTwitterHandle } from "@beep/oip-web/content"
  *
@@ -103,7 +105,8 @@ export const oipTwitterHandle = (content: OipSiteContent): string | undefined =>
 /**
  * Builds `llms.txt` content from reviewed OIP site content.
  *
- * @example
+ * **Example** (Generating llms.txt content)
+ *
  * ```ts
  * import { makeLlmsText, oipSiteContent } from "@beep/oip-web/content"
  *

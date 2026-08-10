@@ -67,7 +67,8 @@ const createThreadFailureToastBindingAtom = professionalBrowserRuntime.atom((get
 /**
  * Renders the workspace thread list with creation and selection controls.
  *
- * @example
+ * **Example** (Log Sidebar component name)
+ *
  * ```tsx
  * import { Sidebar } from "@/chat/ui/Sidebar"
  *

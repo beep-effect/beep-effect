@@ -15,7 +15,8 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
 /**
  * Transport probe result returned by the desktop sidecar.
  *
- * @example
+ * **Example** (Create transport instance)
+ *
  * ```ts
  * import { SidecarTransport } from "@/transport/SidecarTransport"
  *

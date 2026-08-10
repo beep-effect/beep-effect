@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-10T10:06:06.477Z
+Generated: 2026-08-10T19:30:19.003Z
 
 ## Scope
 
@@ -11,13 +11,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 134 |
-| cleanPackages | 68 |
+| cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 63 |
-| publicModules | 2496 |
-| publicExports | 16246 |
+| packagesNeedingRemediation | 61 |
+| publicModules | 2499 |
+| publicExports | 16293 |
 | openModules | 407 |
-| openExports | 160 |
+| openExports | 133 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 546 |
+| multiple-description-paragraphs | 521 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -39,7 +39,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | malformed-example | 0 |
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
-| forbidden-remarks | 2 |
+| forbidden-remarks | 0 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1335 | 46 | 10 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1340 | 46 | 10 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -104,7 +104,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 47 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 0 |
 | 48 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 35 | 1 | 0 |
 | 49 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 12 | 0 | 0 |
-| 50 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 83 | 0 | 5 |
+| 50 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 83 | 0 | 0 |
 | 51 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 52 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
 | 53 | `@beep/agents-tables` | `packages/agents/tables` | clean | 6 | 14 | 0 | 0 |
@@ -114,14 +114,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 57 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |
 | 58 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 803 | 51 | 36 |
 | 59 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 251 | 4 | 0 |
-| 60 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 5 | 10 | 0 | 2 |
+| 60 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 5 | 10 | 0 | 0 |
 | 61 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 62 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 107 | 4 | 0 |
 | 63 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
 | 64 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 202 | 4 | 1 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 19 | 287 | 0 | 0 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 21 | 322 | 0 | 0 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 81 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
 | 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 83 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
-| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 179 | 25 | 20 |
+| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 181 | 25 | 0 |
 | 85 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 2 |
 | 86 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 89 | 0 | 0 |
 | 87 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |
@@ -152,7 +152,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 95 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 96 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 97 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
-| 98 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 260 | 1674 | 24 | 0 |
+| 98 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1679 | 24 | 0 |
 | 99 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 47 | 8 | 4 |
 | 100 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 213 | 1 | 1 |
 | 101 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -354,7 +354,7 @@ Module findings:
 
 Export findings:
 - `src/commands/Ci/CiLane.ts:329` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:762` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:767` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:91` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
@@ -527,17 +527,6 @@ Path: `packages/tooling/test-kit/test-utils`
 Module findings:
 - `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
-### @beep/oip-web
-
-Path: `apps/oip-web`
-
-Export findings:
-- `src/app/layout.tsx:154` `instant` (const) - 1 documentation section/link violation(s)
-- `src/app/page.tsx:44` `instant` (const) - 1 documentation section/link violation(s)
-- `src/components/BackToTop.tsx:68` `BackToTop` (function) - 1 documentation section/link violation(s)
-- `src/components/MattersCarousel.tsx:49` `MattersCarousel` (function) - 1 documentation section/link violation(s)
-- `src/components/ThemeModeToggle.tsx:29` `ThemeModeToggle` (function) - 1 documentation section/link violation(s)
-
 ### @beep/exiftool
 
 Path: `packages/drivers/exiftool`
@@ -665,14 +654,6 @@ Module findings:
 - `src/Md.escape.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Md.html.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Md.safe.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/practice-kg-mcp
-
-Path: `apps/practice-kg-mcp`
-
-Export findings:
-- `src/runtime/Layer.ts:53` `makePracticeKgBuildLayer` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Pglite.ts:33` `makePracticeKgPgliteLayer` (const) - 1 documentation section/link violation(s)
 
 ### @beep/law-practice-use-cases
 
@@ -812,28 +793,6 @@ Module findings:
 - `src/transport/IpcSpikePanel.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/transport/TauriIpcSocket.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/workspace/dock.atoms.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/chat/UsageRecordSink.ts:119` `UsageRecordSinkInMemory` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:139` `sidebarPercentAtom` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:196` `clampSidebarPercent` (const) - 1 documentation section/link violation(s)
-- `src/chat/ui/layout.atoms.ts:218` `sidebarSize` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:150` `CONTRADICTION_QA_ANCHOR_START` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1009` `seedContradictionQaFixtures` (const) - 1 documentation section/link violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1110` `ContradictionQaSeedLive` (const) - 1 documentation section/link violation(s)
-- `src/intake/Intake.atoms.ts:48` `DesktopIntakeClient` (class) - 1 documentation section/link violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:70` `seedPizzaTutorial` (const) - 1 documentation section/link violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:124` `OntologyWorkspaceSeedLive` (const) - 1 documentation section/link violation(s)
-- `src/runtime/BrowserFailure.atoms.ts:132` `reportedBrowserFailureAtoms` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Migrations.ts:113` `SidecarReadyMarker` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Pglite.ts:90` `ChatDbCompatibilityMarker` (const) - 1 documentation section/link violation(s)
-- `src/runtime/Pglite.ts:221` `ensureCompatibleChatDbDataDir` (const) - 1 documentation section/link violation(s)
-- `src/runtime/ProfessionalAtomRuntime.ts:70` `professionalAtomRegistryAtom` (const) - 1 documentation section/link violation(s)
-- `src/sync/Sync.atoms.ts:240` `vaultSyncStatusAtom` (const) - 1 documentation section/link violation(s)
-- `src/sync/Sync.atoms.ts:381` `vaultSyncCommandAtoms` (const) - 1 documentation section/link violation(s)
-- `src/sync/VaultSyncOrchestrator.ts:74` `VaultSyncHandlersLive` (const) - 1 documentation section/link violation(s)
-- `src/sync/VaultSyncPanel.tsx:185` `VaultSyncPanel` (function) - 1 documentation section/link violation(s)
-- `src/workspace/ProfessionalWorkspace.ts:26` `DEFAULT_PROFESSIONAL_WORKSPACE_ID` (const) - 1 documentation section/link violation(s)
 
 ### @beep/epistemic-domain
 

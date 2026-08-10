@@ -73,11 +73,14 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * Marker written into data directories already opened by the in-process
  * desktop PGlite runtime.
  *
+ * **Details**
+ *
  * The `v<N>` suffix is part of the on-disk compatibility contract for the
  * embedded `@beep/pglite` / `@electric-sql/pglite` line. Bump the marker
  * whenever that storage compatibility contract changes.
  *
- * @example
+ * **Example** (Checking marker prefix)
+ *
  * ```ts
  * import { ChatDbCompatibilityMarker } from "@/runtime/Pglite"
  *
@@ -130,7 +133,8 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
 /**
  * Mark a data directory after the in-process PGlite runtime has opened it.
  *
- * @example
+ * **Example** (Marking data directory)
+ *
  * ```ts
  * import { markCompatibleChatDbDataDir } from "@/runtime/Pglite"
  * import { Effect } from "effect"
@@ -195,6 +199,8 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  * Ensure a desktop chat database directory is safe for the current in-process
  * PGlite runtime.
  *
+ * **Details**
+ *
  * Fresh directories are prepared. Already-marked and unmarked PGlite-looking
  * directories are first opened through the new driver; compatible stores are
  * retained, while stores that fail the probe are left untouched and fail boot
@@ -205,7 +211,8 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  * and its migrations apply successfully. Unreadable directories fail boot
  * instead of being quarantined.
  *
- * @example
+ * **Example** (Ensuring directory compatibility)
+ *
  * ```ts
  * import { ensureCompatibleChatDbDataDir } from "@/runtime/Pglite"
  * import { Effect } from "effect"
@@ -323,7 +330,8 @@ const materializeBtreeGistBundle = Effect.gen(function* () {
  * Build a PGlite layer with the desktop sidecar's bundled binary assets and
  * bundled extensions.
  *
- * @example
+ * **Example** (Building bundled PGlite layer)
+ *
  * ```ts
  * import { makeBundledPgliteLayer } from "@/runtime/Pglite"
  *
@@ -353,7 +361,8 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
  * database every sidecar repository (the Drizzle ThreadStore, the Drizzle
  * usage-record sink) runs against.
  *
- * @example
+ * **Example** (Verifying Layer type)
+ *
  * ```ts
  * import { PgliteDrizzleLive } from "@/runtime/Pglite"
  * import { Layer } from "effect"
