@@ -338,6 +338,9 @@ export class CiFleetController extends pulumi.ComponentResource {
         enable_managed_runner_security_group: false,
         enable_organization_runners: false,
         /**
+         * Require an exact label-set match so ordinary `self-hosted` jobs
+         * cannot reach the shadow fleet without naming its dedicated label.
+         *
          * **Gotchas**
          *
          * Default labels plus any-match webhook filtering widened the shadow
