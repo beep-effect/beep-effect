@@ -7,6 +7,7 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { redactCauseForClient } from "@beep/observability";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("lib/failureMessage");
@@ -17,15 +18,26 @@ const MessageBearing = S.Struct({ message: S.NonEmptyString }).pipe(
   })
 );
 
-const hasMessage = S.is(MessageBearing);
+const isMessageBearing = S.is(MessageBearing);
+
+// Struct parsing reads fields with own-property semantics (`Object.hasOwn`), but
+// the failures that reach this boundary carry `message` on the prototype: every
+// `Error` subclass that overrides `get message()`, and Effect's own
+// `SchemaError` / `PlatformError` / `Config.Error`. Projecting the own-or-
+// inherited read into a fresh carrier keeps the schema as the message contract
+// without losing those causes to the fallback.
+const hasMessage = (cause: unknown): boolean =>
+  P.isObject(cause) && isMessageBearing({ message: Reflect.get(cause, "message") });
 
 /**
  * Best-effort human-readable message from an unknown failure cause, falling
  * back to `fallback` when no non-empty `message` string can be read: any
- * object carrying a non-empty `message` string (including `Error`s) yields
- * its redacted message, otherwise `fallback`.
+ * non-array object whose own or inherited `message` is a non-empty string —
+ * plain shapes, `Error`s, and prototype-getter errors such as Effect's
+ * `SchemaError` — yields its redacted message, otherwise `fallback`.
  *
- * @example
+ * **Example** (Render an unknown failure)
+ *
  * ```ts
  * import { failureMessageOr } from "@/lib/failureMessage"
  *

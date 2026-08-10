@@ -820,51 +820,58 @@ const DesktopShell = ({
 
 // The shell's bootstrap decision as data: registry, then transport probe,
 // then protocol binding, folded in order so an earlier failure short-circuits.
-const DesktopBootstrapState = LiteralKit(["preparing", "connecting", "binding", "failed", "ready"]).toTaggedUnion(
-  "kind"
-)({
-  preparing: {},
-  connecting: {},
-  binding: {},
-  failed: {
-    cause: S.Unknown,
-    heading: S.String,
-    source: BrowserFailureSource,
-  },
-  ready: { transport: SidecarTransport },
-});
-
-const desktopBootstrapAtom = Atom.make((get): typeof DesktopBootstrapState.Type =>
-  AsyncResult.match(get(professionalAtomRegistryAtom), {
-    onInitial: () => DesktopBootstrapState.cases.preparing.make({}),
-    onFailure: (failure) =>
-      DesktopBootstrapState.cases.failed.make({
-        cause: failure.cause,
-        heading: "Application state unavailable",
-        source: "app_registry",
-      }),
-    onSuccess: () =>
-      AsyncResult.match(get(sidecarTransportAtom), {
-        onInitial: () => DesktopBootstrapState.cases.connecting.make({}),
-        onFailure: (failure) =>
-          DesktopBootstrapState.cases.failed.make({
-            cause: failure.cause,
-            heading: "Desktop transport unavailable",
-            source: "desktop_transport",
-          }),
-        onSuccess: ({ value: transport }) =>
-          AsyncResult.match(get(protocolLayerBindingAtom), {
-            onInitial: () => DesktopBootstrapState.cases.binding.make({}),
-            onFailure: (failure) =>
-              DesktopBootstrapState.cases.failed.make({
-                cause: failure.cause,
-                heading: "Desktop transport unavailable",
-                source: "desktop_transport",
-              }),
-            onSuccess: () => DesktopBootstrapState.cases.ready.make({ transport }),
-          }),
-      }),
+const DesktopBootstrapState = LiteralKit(["preparing", "connecting", "binding", "failed", "ready"])
+  .toTaggedUnion("kind")({
+    preparing: {},
+    connecting: {},
+    binding: {},
+    failed: {
+      cause: S.Unknown,
+      heading: S.String,
+      source: BrowserFailureSource,
+    },
+    ready: { transport: SidecarTransport },
   })
+  .pipe(
+    $I.annoteSchema("DesktopBootstrapState", {
+      description: "Desktop shell bootstrap decision: registry, transport probe, then protocol binding.",
+    })
+  );
+
+type DesktopBootstrapState = typeof DesktopBootstrapState.Type;
+
+const desktopBootstrapAtom = Atom.make(
+  (get): DesktopBootstrapState =>
+    AsyncResult.match(get(professionalAtomRegistryAtom), {
+      onInitial: () => DesktopBootstrapState.cases.preparing.make({}),
+      onFailure: (failure) =>
+        DesktopBootstrapState.cases.failed.make({
+          cause: failure.cause,
+          heading: "Application state unavailable",
+          source: "app_registry",
+        }),
+      onSuccess: () =>
+        AsyncResult.match(get(sidecarTransportAtom), {
+          onInitial: () => DesktopBootstrapState.cases.connecting.make({}),
+          onFailure: (failure) =>
+            DesktopBootstrapState.cases.failed.make({
+              cause: failure.cause,
+              heading: "Desktop transport unavailable",
+              source: "desktop_transport",
+            }),
+          onSuccess: ({ value: transport }) =>
+            AsyncResult.match(get(protocolLayerBindingAtom), {
+              onInitial: () => DesktopBootstrapState.cases.binding.make({}),
+              onFailure: (failure) =>
+                DesktopBootstrapState.cases.failed.make({
+                  cause: failure.cause,
+                  heading: "Desktop transport unavailable",
+                  source: "desktop_transport",
+                }),
+              onSuccess: () => DesktopBootstrapState.cases.ready.make({ transport }),
+            }),
+        }),
+    })
 );
 
 // Inside the graph-registry provider: probe the transport, bind the protocol

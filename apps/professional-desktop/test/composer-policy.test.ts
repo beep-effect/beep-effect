@@ -1,16 +1,11 @@
 import { documentToEditorState } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
-import { it, layer } from "@effect/vitest";
+import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Str from "effect/String";
 import { describe, expect } from "vitest";
-import {
-  ComposerPolicy,
-  ComposerPolicyLive,
-  ComposerSendDecision,
-  composerPolicy,
-  MAX_MESSAGE_CHARACTERS,
-} from "@/chat/ui/ComposerPolicy";
+import { ComposerSendDecision, composerPolicy, MAX_MESSAGE_CHARACTERS } from "@/chat/ui/ComposerPolicy";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 
 const textDocument = (value: string): Md.Document =>
@@ -98,6 +93,21 @@ describe("composerPolicy.decideSend", () => {
     })
   );
 
+  it.effect("accepts a safe draft exactly at the character limit", () =>
+    Effect.gen(function* () {
+      const boundary = textDocument(Str.repeat(MAX_MESSAGE_CHARACTERS)("a"));
+      expect(Str.length(renderPlainTextUnsafe(boundary))).toBe(MAX_MESSAGE_CHARACTERS);
+      const state = yield* documentToEditorState(boundary);
+      const decision = composerPolicy.decideSend({
+        gateOpen: false,
+        seed: boundary,
+        state,
+        turnActive: false,
+      });
+      expect(decisionSummary(decision)).toBe("send");
+    })
+  );
+
   it.effect("refuses an over-limit draft with an error notice", () =>
     Effect.gen(function* () {
       const oversized = textDocument(Str.repeat(MAX_MESSAGE_CHARACTERS + 1)("a"));
@@ -109,22 +119,6 @@ describe("composerPolicy.decideSend", () => {
         turnActive: false,
       });
       expect(decisionSummary(decision)).toBe("refuse:error");
-    })
-  );
-});
-
-layer(ComposerPolicyLive)("ComposerPolicy service", (it) => {
-  it.effect("resolves the live policy through ComposerPolicyLive", () =>
-    Effect.gen(function* () {
-      const policy = yield* ComposerPolicy;
-      const state = yield* documentToEditorState(textDocument("hello"));
-      const decision = policy.decideSend({
-        gateOpen: true,
-        seed: textDocument("hello"),
-        state,
-        turnActive: false,
-      });
-      expect(decisionSummary(decision)).toBe("gated");
     })
   );
 });

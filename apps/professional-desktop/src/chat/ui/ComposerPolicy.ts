@@ -1,9 +1,12 @@
 /**
  * Pure send decision policy for the desktop chat composer.
  *
+ * **Details**
+ *
  * The composer's editor contract demands synchronous boolean answers, so the
- * policy is a synchronous pure service: handlers gather registry inputs, ask
- * for one {@link ComposerSendDecision}, and apply it with a single match.
+ * policy is a plain synchronous module value rather than an Effect service:
+ * handlers gather registry inputs, ask for one {@link ComposerSendDecision},
+ * and apply it with a single match.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -16,7 +19,7 @@ import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
 import { LiteralKit } from "@beep/schema";
 import { A, flow, Str } from "@beep/utils";
-import { Context, Layer, Match, Result, Tuple } from "effect";
+import { Match, Result, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { SerializedEditorState } from "@beep/lexical-schema";
@@ -27,7 +30,8 @@ const $I = $ProfessionalDesktopId.create("chat/ui/ComposerPolicy");
 /**
  * Maximum characters one sent message may carry.
  *
- * @example
+ * **Example** (Read the composer character ceiling)
+ *
  * ```ts
  * import { MAX_MESSAGE_CHARACTERS } from "@/chat/ui/ComposerPolicy"
  *
@@ -78,7 +82,8 @@ const ComposerNoticeKind = LiteralKit(["decode-error", "error", "info"]).pipe(
 /**
  * Typed notification commands emitted by the composer state machine.
  *
- * @example
+ * **Example** (Build an informational notice)
+ *
  * ```ts
  * import { ComposerNotice } from "@/chat/ui/ComposerPolicy"
  *
@@ -111,7 +116,8 @@ export type ComposerNotice = typeof ComposerNotice.Type;
  * Inline refusal emitted when a draft contains trusted raw nodes or a URL that
  * is outside the user-content allow list. The general draft remains untouched.
  *
- * @example
+ * **Example** (Build an inline safety refusal)
+ *
  * ```ts
  * import { ComposerSafetyRefusal } from "@/chat/ui/ComposerPolicy"
  *
@@ -133,7 +139,8 @@ export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`Com
 ) {}
 
 /**
- * Per-category presence flags for a set of document safety violations.
+ * Presence flags for the document safety violation categories that earn their
+ * own refusal phrasing; a raw node needs no flag because it is the fallback.
  *
  * @category models
  * @since 0.0.0
@@ -141,7 +148,6 @@ export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`Com
 class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
   {
     footnote: S.Boolean,
-    raw: S.Boolean,
     scalar: S.Boolean,
     url: S.Boolean,
   },
@@ -151,7 +157,6 @@ class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`Document
 ) {
   static readonly empty = DocumentViolationFlags.make({
     footnote: false,
-    raw: false,
     scalar: false,
     url: false,
   });
@@ -168,7 +173,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
     Match.value(issue).pipe(
       Match.tagsExhaustive({
         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
-        RawNode: () => ({ ...flags, raw: true }),
+        RawNode: () => flags,
         InvalidScalar: () => ({ ...flags, scalar: true }),
         UnsafeUrl: () => ({ ...flags, url: true }),
       })
@@ -205,11 +210,23 @@ const documentViolationReason = flow(
 /**
  * The refusal copy shown when a still-unsafe document blocks the editor.
  *
- * @example
+ * **Gotchas**
+ *
+ * Trusted raw nodes carry no presence flag of their own, so an issue list that
+ * names no footnote, scalar, or URL violation renders the raw-node phrasing.
+ * Callers pass a non-empty violation list; an empty one would read as a raw-node
+ * refusal.
+ *
+ * **Example** (Explain a trusted raw node refusal)
+ *
  * ```ts
+ * import { RawNodeSafetyViolation } from "@beep/md/Md.safe"
  * import { unsafeDocumentMessage } from "@/chat/ui/ComposerPolicy"
  *
- * console.log(unsafeDocumentMessage([])) // "This draft contains trusted raw Markdown or HTML. Edit or replace that content before sending."
+ * const issue = RawNodeSafetyViolation.make({ path: ["children", 0], nodeTag: "rawHtml" })
+ *
+ * console.log(unsafeDocumentMessage([issue]))
+ * // "This draft contains trusted raw Markdown or HTML. Edit or replace that content before sending."
  * ```
  *
  * @category validation
@@ -225,7 +242,8 @@ const keptDraftSafetyMessage = (issues: ReadonlyArray<DocumentSafetyViolation>):
  * Rebuilds editable children while retaining persistence-owned frontmatter,
  * which is intentionally outside the Lexical wire vocabulary.
  *
- * @example
+ * **Example** (Rebuild a document from editor state)
+ *
  * ```ts
  * import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy"
  * import { documentToEditorState } from "@beep/lexical-schema"
@@ -259,7 +277,8 @@ export const composerDocumentFromEditorState: {
  * refused with an inline safety refusal, or accepted with the safe content to
  * dispatch.
  *
- * @example
+ * **Example** (Build a gated decision)
+ *
  * ```ts
  * import { ComposerSendDecision } from "@/chat/ui/ComposerPolicy"
  *
@@ -305,30 +324,14 @@ interface ComposerSendInput {
 }
 
 /**
- * Service shape for the composer decision policy.
+ * Call shape of the composer decision policy.
  *
- * @category services
+ * @category policies
  * @since 0.0.0
  */
 export type ComposerPolicyShape = {
   readonly decideSend: (input: ComposerSendInput) => ComposerSendDecision;
 };
-
-/**
- * The composer decision policy as a `Context.Service`, provided to the
- * professional Atom runtime through `ComposerPolicyLive`.
- *
- * @example
- * ```ts
- * import { ComposerPolicy } from "@/chat/ui/ComposerPolicy"
- *
- * console.log(typeof ComposerPolicy) // "function"
- * ```
- *
- * @category services
- * @since 0.0.0
- */
-export class ComposerPolicy extends Context.Service<ComposerPolicy, ComposerPolicyShape>()($I`ComposerPolicy`) {}
 
 const refuseWith = (notice: ComposerNotice): ComposerSendDecision => ComposerSendDecision.cases.refuse.make({ notice });
 
@@ -359,19 +362,26 @@ const acceptWithinLimit = (content: SafeDocument, plainText: string): ComposerSe
 };
 
 /**
- * The live, pure composer decision policy.
+ * The pure composer decision policy every composer handler calls directly.
  *
- * @example
+ * **Details**
+ *
+ * Handlers import this value rather than resolving a service, because the
+ * editor's send hook is a synchronous closure with no Effect context to yield
+ * from.
+ *
+ * **Example** (Inspect the policy entry point)
+ *
  * ```ts
  * import { composerPolicy } from "@/chat/ui/ComposerPolicy"
  *
  * console.log(typeof composerPolicy.decideSend) // "function"
  * ```
  *
- * @category services
+ * @category policies
  * @since 0.0.0
  */
-export const composerPolicy: ComposerPolicyShape = ComposerPolicy.of({
+export const composerPolicy: ComposerPolicyShape = {
   decideSend: ({ gateOpen, seed, state, turnActive }) => {
     if (gateOpen) return ComposerSendDecision.cases.gated.make({});
     if (turnActive) return streamingRefusal;
@@ -388,20 +398,4 @@ export const composerPolicy: ComposerPolicyShape = ComposerPolicy.of({
       onSuccess: (safe) => acceptWithinLimit(safe, renderPlainTextUnsafe(safe)),
     });
   },
-});
-
-/**
- * Layer providing {@link ComposerPolicy} to the professional Atom runtime.
- *
- * @example
- * ```ts
- * import { ComposerPolicyLive } from "@/chat/ui/ComposerPolicy"
- * import { Layer } from "effect"
- *
- * console.log(Layer.isLayer(ComposerPolicyLive)) // true
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const ComposerPolicyLive = Layer.succeed(ComposerPolicy, composerPolicy);
+};

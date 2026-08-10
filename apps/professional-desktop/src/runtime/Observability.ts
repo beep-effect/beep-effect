@@ -37,10 +37,7 @@ import { FetchHttpClient } from "effect/unstable/http";
 const localDevToolsHostnames = HashSet.make("localhost", "127.0.0.1", "::1", "[::1]");
 
 const isLocalDevToolsUrl = (url: string): boolean =>
-  Result.try({
-    try: () => HashSet.has(localDevToolsHostnames, new URL(url).hostname),
-    catch: Result.fail,
-  }).pipe(
+  Result.try(() => HashSet.has(localDevToolsHostnames, new URL(url).hostname)).pipe(
     Result.match({
       onFailure: thunkFalse,
       onSuccess: identity,

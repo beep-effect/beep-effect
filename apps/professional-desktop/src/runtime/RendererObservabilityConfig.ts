@@ -7,6 +7,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { LogLevel } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("runtime/RendererObservabilityConfig");
@@ -14,11 +15,17 @@ const $I = $ProfessionalDesktopId.create("runtime/RendererObservabilityConfig");
 /**
  * Observability context decoded from the native desktop shell at bootstrap.
  *
- * Required fields must be non-empty; `buildCommit` and `otlpUrl` are absent as
- * `Option` values rather than `undefined`, so consumers never re-test presence
- * or emptiness by hand.
+ * **Details**
  *
- * @example
+ * Required fields must be non-empty, and `logLevel` is bound to the canonical
+ * `LogLevel` domain that `@beep/agents-client` already guards its
+ * `__BEEP_LOG_LEVEL__` reader with, so shell drift fails the bootstrap decode
+ * loudly instead of being coerced to `Info` downstream. `buildCommit` and
+ * `otlpUrl` are absent as `Option` values rather than `undefined`, so consumers
+ * never re-test presence or emptiness by hand.
+ *
+ * **Example** (Decode a native shell payload)
+ *
  * ```ts
  * import { RendererObservabilityConfig } from "@/runtime/RendererObservabilityConfig"
  * import { Effect } from "effect"
@@ -40,7 +47,7 @@ export class RendererObservabilityConfig extends S.Class<RendererObservabilityCo
     buildCommit: S.OptionFromOptional(S.NonEmptyString),
     deploymentEnvironment: S.NonEmptyString,
     launchId: S.NonEmptyString,
-    logLevel: S.NonEmptyString,
+    logLevel: LogLevel,
     otlpUrl: S.OptionFromOptional(S.NonEmptyString),
     qaSessionId: S.NonEmptyString,
   },

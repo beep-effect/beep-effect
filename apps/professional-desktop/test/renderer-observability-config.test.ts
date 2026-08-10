@@ -39,6 +39,13 @@ describe("RendererObservabilityConfig", () => {
     })
   );
 
+  it.effect("rejects a log level outside the canonical domain", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(RendererObservabilityConfig.decode({ ...required, logLevel: "Verbose" }));
+      expect(exit._tag).toBe("Failure");
+    })
+  );
+
   it.effect("rejects an empty optional string instead of silently skipping it", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(RendererObservabilityConfig.decode({ ...required, otlpUrl: "" }));

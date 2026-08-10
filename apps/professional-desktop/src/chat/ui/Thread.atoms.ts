@@ -189,18 +189,29 @@ const turnHasSiblings = (
   O.isSome(resolvableParentTurnId(allTurns, turn)) ||
   A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId));
 
+// The sibling scan is quadratic in the timeline and depends on nothing else,
+// so it owns its own atom: streaming writes land once per block and must not
+// drag the whole walk along behind them.
+const threadSiblingTurnIdsAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
+  Atom.make((get): HashSet.HashSet<WorkspaceIdentity.TurnId> => {
+    const timelineTurns = O.match(AsyncResult.value(get(threadTimelineAtoms(threadId))), {
+      onNone: A.empty<ThreadUseCases.TimelineTurn>,
+      onSome: (value) => value.turns,
+    });
+    return HashSet.fromIterable(
+      A.map(
+        A.filter(timelineTurns, (turn) => turnHasSiblings(timelineTurns, turn)),
+        (turn) => turn.turnId
+      )
+    );
+  })
+);
+
 /**
  * The thread transcript exactly as it must render now: active-branch turns
  * after edit truncation, the optimistic turns still awaiting evidence, the
  * turn streaming into this thread, precomputed sibling markers, and the
  * timeline load flags.
- *
- * @example
- * ```ts
- * import { visibleThreadTurnsAtoms } from "@/chat/ui/Thread.atoms"
- *
- * console.log(typeof visibleThreadTurnsAtoms === "function") // true
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -274,12 +285,7 @@ export const visibleThreadTurnsAtoms = Atom.family((threadId: WorkspaceIdentity.
       O.map((index) => A.take(allTurns, index)),
       O.getOrElse(() => allTurns)
     );
-    const siblingTurnIds = HashSet.fromIterable(
-      A.map(
-        A.filter(timelineTurns, (turn) => turnHasSiblings(timelineTurns, turn)),
-        (turn) => turn.turnId
-      )
-    );
+    const siblingTurnIds = get(threadSiblingTurnIdsAtoms(threadId));
     return {
       turns,
       unreconciled: displayedUnreconciled,

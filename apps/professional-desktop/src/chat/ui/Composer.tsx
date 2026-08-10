@@ -8,14 +8,21 @@
  * mention source, send wiring, and attachment-transport status. The foundation
  * owns the mechanism; this file owns the meaning.
  *
- * The composer surfaces content via `onSerializedChange`; the latest serialized
- * state is held in a per-thread atom and the persisted draft is mirrored into
- * {@link draftAtoms} on every change. Loading a draft or an {@link editTargetAtom}
- * content is done by recomputing `initialState` and remounting via a changing
- * `key`. On submit the state is projected to a `@beep/md` document via
- * {@link editorStateToDocument} and dispatched through {@link runTurnAtom} as a
- * {@link SendTurnRequest} (new message) or {@link EditTurnRequest} (edit target).
- * Plain Enter sends (the foundation `SendPlugin`); Stop interrupts the turn fiber.
+ * This file reads two view models and renders; it holds no send logic of its own.
+ * {@link composerShellAtoms} supplies the per-thread shell — edit-target state and
+ * its cancel handler, streaming and stop, the seed document to load, the remount
+ * `key` that reloads it, and the seed-time {@link ComposerSafetyRefusal} banner.
+ * {@link composerSurfaceAtoms} supplies the per-seed surface — the safety gate
+ * that drives `sendDisabled`, plus the two stable handlers the foundation calls
+ * (`onSerializedChange` on every keystroke, `onSend` on submit).
+ *
+ * Behind those views, `ComposerPolicy` decides send-versus-rewrite-versus-refuse
+ * and projects the editor state to a `@beep/md` document, and `Composer.atoms.ts`
+ * mirrors the persisted draft and dispatches the decided turn through
+ * {@link runTurnAtom}. Plain Enter sends (the foundation `SendPlugin`); Stop
+ * interrupts the turn fiber. A draft that fails the safety policy is refused, not
+ * confirmable: Send stays disabled and the banner is message-only, so refused
+ * content is never echoed back into the editor.
  *
  * @packageDocumentation
  * @category components

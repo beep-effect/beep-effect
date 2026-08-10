@@ -44,7 +44,9 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
 
 /**
  * RPC that opens a native folder dialog on the sidecar host and resolves with
- * the picked absolute directory path, or `null` when the user cancels.
+ * `Option.some(path)` carrying the picked absolute directory, or `Option.none()`
+ * when the user cancels. The wire form stays `string | null`; the decoded
+ * success value is the `Option`.
  *
  * Browser-mode counterpart of the Tauri shell's `select_vault_directory`
  * command; only exposed over HTTP when the per-launch session token guards the

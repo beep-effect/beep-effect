@@ -921,18 +921,18 @@ export const openIntakeFilePickerAtoms = Atom.family((workspaceId: WorkspaceIden
 );
 
 /**
- * One read for the document intake surface: intake state, vault-configuration
- * flags, and the runtime-backed actions, so components consume a single view
- * model instead of a hook wall keyed by the same workspace id.
+ * The document intake view model consumed by `DocumentIntakeTarget`: current
+ * intake state, the vault-configuration flags derived from the workspace vault
+ * config, and the runtime-bound action dispatchers.
  *
- * @example
- * ```ts
- * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ * **Details**
  *
- * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
- * ```
+ * `actions` is computed independently of `state`, so a component can hand its
+ * callbacks to children without re-binding them whenever intake state moves.
+ * `configured` and `needsOnboarding` are mutually exclusive and both `false`
+ * until the workspace vault configuration resolves.
  *
- * @category atoms
+ * @category models
  * @since 0.0.0
  */
 export interface DocumentIntakeSurface {
@@ -953,21 +953,20 @@ export interface DocumentIntakeSurface {
 }
 
 /**
- * Per-workspace document intake surface view model.
+ * Stable, non-reactive action record for the document intake surface, keyed by
+ * workspace.
  *
- * @example
- * ```ts
- * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ * **Details**
  *
- * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
- * ```
+ * The actions read no reactive state, so this atom computes once per workspace
+ * and every closure — including the file-input React ref callback — stays
+ * referentially stable across intake state changes. Each dispatcher mounts the
+ * atom it writes to, keeping those fibers subscribed for as long as the record
+ * is observed.
  *
  * @category atoms
  * @since 0.0.0
  */
-// Actions read no reactive state, so this atom computes once per workspace and
-// every closure — including the file-input React ref callback — stays
-// referentially stable across intake state changes.
 const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   Atom.make((get): DocumentIntakeSurface["actions"] => {
     const domEvents = intakeDomEventAtoms(workspaceId);

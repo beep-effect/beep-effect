@@ -523,6 +523,7 @@ const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeSourceTextDigest = S.decodeUnknownEffect(SourceTextDigest);
 const decodeEvidenceIds = S.decodeUnknownEffect(S.NonEmptyArray(EpistemicIdentity.EvidenceId));
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
+const evidenceSpanEquivalent = S.toEquivalence(EvidenceSpan);
 const sourceBytes = new TextEncoder().encode(CONTRADICTION_QA_SOURCE_TEXT);
 
 const fixtureValidFrom = instant(1_767_225_600_000);
@@ -563,7 +564,7 @@ const evidenceMatches = (actual: Evidence, expected: Evidence): boolean =>
   Eq.equals(actual.orgId, expected.orgId) &&
   Eq.equals(actual.artifactFixtureKey, expected.artifactFixtureKey) &&
   Eq.equals(actual.spanFixtureKey, expected.spanFixtureKey) &&
-  S.toEquivalence(EvidenceSpan)(actual.span, expected.span) &&
+  evidenceSpanEquivalent(actual.span, expected.span) &&
   Eq.equals(actual.createdAt, expected.createdAt) &&
   Eq.equals(actual.source, expected.source);
 

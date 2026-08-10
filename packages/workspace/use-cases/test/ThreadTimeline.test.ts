@@ -111,15 +111,15 @@ describe("ThreadTimeline", () => {
     })
   );
 
-  it("class-derived is guards narrow timeline items", () => {
+  it("union-derived guards discriminate timeline items by kind", () => {
     const content = S.encodeSync(Document)(Document.make({ children: [] }));
     const message = S.decodeUnknownSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
     const toolCall = S.decodeUnknownSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
 
-    expect(Thread.TimelineMessageItem.is(message)).toBe(true);
-    expect(Thread.TimelineMessageItem.is(toolCall)).toBe(false);
-    expect(Thread.TimelineToolCallItem.is(toolCall)).toBe(true);
-    expect(Thread.TimelineToolCallItem.is(message)).toBe(false);
+    expect(Thread.TimelineItem.guards.message(message)).toBe(true);
+    expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
+    expect(Thread.TimelineItem.guards.tool_call(toolCall)).toBe(true);
+    expect(Thread.TimelineItem.guards.tool_call(message)).toBe(false);
   });
 
   it("schema-derived arbitraries round-trip through exported schemas", () => {

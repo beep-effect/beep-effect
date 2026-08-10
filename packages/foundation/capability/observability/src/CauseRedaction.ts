@@ -603,7 +603,9 @@ const logAtRedactedCauseLevel = (level: RedactedCauseLogLevel, message: string):
  *
  * The active span receives only the stable Cause tag and sanitized fingerprint.
  * The log receives the sanitized message and optional bounded detail. Runtime
- * minimum log level filtering remains authoritative.
+ * minimum log level filtering remains authoritative. Call data-first as
+ * `logRedactedCause(cause, options)`, or partially apply
+ * `logRedactedCause(options)` for `Effect.tapCause` and `Effect.catchCause`.
  *
  * **Example** (Log sanitized cause attributes)
  *

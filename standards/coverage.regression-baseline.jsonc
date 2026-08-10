@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-08-08T10:06:10.989Z",
-  "git_sha": "ea9076431e8083e2f25e6c8015b129ba4f959290",
+  "generated_at": "2026-08-10T10:21:21.205Z",
+  "git_sha": "1c60c63b7bfb2edc95ab19fc3af86dc9ec9c387a",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -322,8 +322,8 @@
     },
     "@beep/db-admin": {
       "path": "packages/_internal/db-admin",
-      "lines": 91.3,
-      "statements": 92,
+      "lines": 92.3,
+      "statements": 92.85,
       "branches": 100,
       "functions": 80,
       "uncovered": {
@@ -530,8 +530,8 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 93.16,
-      "statements": 91.68,
+      "lines": 93.14,
+      "statements": 91.66,
       "branches": 100,
       "functions": 77.98,
       "uncovered": {
@@ -790,23 +790,23 @@
     },
     "@beep/law-practice-domain": {
       "path": "packages/law-practice/domain",
-      "lines": 57.54,
-      "statements": 57.3,
+      "lines": 62.33,
+      "statements": 62.26,
       "branches": 40.35,
-      "functions": 15.82,
+      "functions": 16.75,
       "uncovered": {
-        "lines": 211,
-        "statements": 219,
+        "lines": 232,
+        "statements": 240,
         "branches": 34,
-        "functions": 133
+        "functions": 154
       }
     },
     "@beep/law-practice-server": {
       "path": "packages/law-practice/server",
-      "lines": 96.74,
-      "statements": 96.66,
-      "branches": 82.31,
-      "functions": 92.66,
+      "lines": 97.16,
+      "statements": 97.07,
+      "branches": 82.55,
+      "functions": 93.95,
       "uncovered": {
         "lines": 16,
         "statements": 17,
@@ -829,15 +829,15 @@
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 68.68,
-      "statements": 69.52,
-      "branches": 84.61,
-      "functions": 47.76,
+      "lines": 71.06,
+      "statements": 71.77,
+      "branches": 88.23,
+      "functions": 56.09,
       "uncovered": {
-        "lines": 62,
-        "statements": 64,
+        "lines": 68,
+        "statements": 70,
         "branches": 4,
-        "functions": 35
+        "functions": 36
       }
     },
     "@beep/lexical-schema": {
@@ -1245,12 +1245,12 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 70.86,
-      "statements": 69.54,
-      "branches": 61.66,
-      "functions": 59.87,
+      "lines": 70.96,
+      "statements": 69.6,
+      "branches": 61.82,
+      "functions": 59.98,
       "uncovered": {
-        "lines": 670,
+        "lines": 669,
         "statements": 748,
         "branches": 184,
         "functions": 447
@@ -1336,15 +1336,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 68.84,
-      "statements": 68.56,
-      "branches": 54.67,
-      "functions": 60.24,
+      "lines": 68.98,
+      "statements": 68.69,
+      "branches": 54.79,
+      "functions": 60.57,
       "uncovered": {
-        "lines": 7988,
-        "statements": 8381,
-        "branches": 4341,
-        "functions": 2936
+        "lines": 8187,
+        "statements": 8599,
+        "branches": 4469,
+        "functions": 3011
       }
     },
     "@beep/repo-configs": {
@@ -1375,8 +1375,8 @@
     },
     "@beep/repo-utils": {
       "path": "packages/tooling/library/repo-utils",
-      "lines": 75.66,
-      "statements": 75.07,
+      "lines": 75.67,
+      "statements": 75.08,
       "branches": 55.01,
       "functions": 56.99,
       "uncovered": {
@@ -1414,10 +1414,10 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 92.97,
+      "lines": 92.98,
       "statements": 92.13,
       "branches": 87.17,
-      "functions": 87.04,
+      "functions": 87.05,
       "uncovered": {
         "lines": 275,
         "statements": 324,
@@ -1440,8 +1440,8 @@
     },
     "@beep/shared-domain": {
       "path": "packages/shared/domain",
-      "lines": 99.65,
-      "statements": 99.67,
+      "lines": 99.66,
+      "statements": 99.68,
       "branches": 97.43,
       "functions": 100,
       "uncovered": {
@@ -1635,10 +1635,10 @@
     },
     "@beep/workspace-use-cases": {
       "path": "packages/workspace/use-cases",
-      "lines": 92,
-      "statements": 90,
+      "lines": 91.3,
+      "statements": 88.46,
       "branches": 100,
-      "functions": 90.9,
+      "functions": 88.88,
       "uncovered": {
         "lines": 2,
         "statements": 3,

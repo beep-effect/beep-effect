@@ -11,16 +11,11 @@ import { ClientObservabilityLive } from "@beep/agents-client";
 import { Layer } from "effect";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import { ComposerPolicyLive } from "@/chat/ui/ComposerPolicy";
 
 const professionalAtomRuntimeFactory = Atom.context({
   memoMap: Layer.makeMemoMapUnsafe(),
 });
 professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
-
-// The application Context.Service layers every professional browser runtime
-// atom can reach. Grown as policy moves out of atom closures into services.
-const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
 
 /**
  * Browser runtime mounted by the Professional Desktop Atom provider.
@@ -35,7 +30,7 @@ const ProfessionalDesktopServicesLive = Layer.mergeAll(ComposerPolicyLive);
  * @category atoms
  * @since 0.0.0
  */
-export const professionalBrowserRuntime = professionalAtomRuntimeFactory(ProfessionalDesktopServicesLive);
+export const professionalBrowserRuntime = professionalAtomRuntimeFactory(Layer.empty);
 
 // Browser-local persistence service backing the storage runtime.
 const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);

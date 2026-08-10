@@ -79,7 +79,7 @@ export const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pip
 export const focusedDockGroupAtom = Atom.family((graph: DesktopDockGraph) =>
   Atom.make((get) =>
     O.match(get(dockApiAtom), {
-      onNone: () => O.none<GroupId>(),
+      onNone: O.none<GroupId>,
       onSome: (api) => get(dockAtomBridge(graph, api.atoms.focusedGroup)),
     })
   )
