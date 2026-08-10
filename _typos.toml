@@ -84,6 +84,8 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
+  "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",

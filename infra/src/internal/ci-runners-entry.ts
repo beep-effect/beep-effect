@@ -5,9 +5,17 @@
  * @since 0.0.0
  */
 
+import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
 
 const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
+const controller = new CiFleetController("ci-fleet-controller", {
+  config: loadCiFleetControllerConfig(),
+  region: stack.region,
+  subnetIds: [stack.publicSubnetAId, stack.publicSubnetBId],
+  vpcId: stack.vpcId,
+  workerSecurityGroupId: stack.workerSecurityGroupId,
+});
 
 /**
  * Dedicated fleet VPC identifier.
@@ -112,3 +120,11 @@ export const reaperFunctionName = stack.reaperFunctionName;
  * @since 0.0.0
  */
 export const flowLogGroupName = stack.flowLogGroupName;
+
+/**
+ * Terraform-module controller webhook output containing the API Gateway endpoint.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const controllerWebhook = controller.webhook;

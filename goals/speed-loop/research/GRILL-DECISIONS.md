@@ -485,3 +485,89 @@ decisions close them:
     the three questions AND the distillation contract — closeout
     reflection is redefined as a distillation of the packet's
     continuously-captured friction ledger; schema and lint untouched.
+
+## Closeout and runner-endgame decisions (2026-08-08)
+
+51. **Wrap-up scope: docs + ALL small widgets.** "Wrap-up before the CI lane
+    reopens" includes the four repo-cli implementation widgets — #84
+    (`yeet verify --merged`), #88 (gate-staleness), #89 (quarantine
+    fingerprints), #90 (collector columns) — not just docs/decisions/
+    teardown. They ship as one implementation PR before the closeout flip.
+    Mid-flight addendum to #89 (operator-observed live failure, PR #626):
+    a THIRD fingerprint — install-step infra failure (prebuilt-binary
+    download timeout → source-build fallback → missing system header),
+    jobs-API detectable, rerun-once semantics.
+52. **#84 ships FULL, now.** The merged-tree verify tier materializes
+    `origin/main`-merge preview in a detached worktree and runs the
+    repo-level battery there — the largest widget, shipped whole rather
+    than staged. Ratified against live evidence: the night's merge
+    treadmill (INDEX regenerated three times; two semantically-mixed trees
+    caught only by hosted lanes) and #608's latent `S.TaggedErrorClass`
+    compile break are exactly this gap biting.
+53. **#86/#87 (ledger sidecar + sigil grammar): SUPERSEDED by
+    basic-memory.** PR #604's adoption of basic-memory + codegraph as the
+    shared agent knowledge plane replaces the bespoke machine-readable
+    ledger sidecar; the #NN sigil overload is tolerated in the retained
+    ledger and disambiguated in prose where it matters.
+54. **Runner endgame graduates as ONE successor packet:
+    `goals/ci-fleet-endgame`.** #91 (controller adopt-vs-build), #92
+    (baked AMI), #93 (resource-weight campaign), #94 (asymmetric cache)
+    move together into the successor charter; speed-loop closes
+    completed-retained without absorbing weeks of fleet work. Charter is
+    CO-PRIMARY by operator correction: (1) an on-demand worker-per-job
+    system — "the single biggest win even if we struggle to get under
+    20 minute jobs" — AND (2) no job waits 20 minutes; neither subordinate.
+55. **Earlier grilled-but-unshipped widgets: PARK in the retained
+    ledger.** The ranked cheap bundle (#82 publish status line, #76, #73,
+    #83 verdict staleness) and the PR-G family (#75 repo-level battery,
+    #60 regenerate-map, #77 publish --reconcile, …) stay recorded with
+    their grill outcomes in the retained ledger; any future packet may
+    revive them by citation, and none block closeout.
+56. **Lane policy: REOPEN after speed-loop closes.** The CI lane does not
+    stay closed for the endgame; it reopens once the closeout PR merges,
+    and ci-fleet-endgame proceeds as the active packet on the normal
+    shared lane.
+57. **THE adoption decision (endgame): amend the invariant, ADOPT
+    github-aws-runners/terraform-aws-github-runner.** "Workers carry no
+    AWS credentials" is formally amended to: workers carry a scoped,
+    permissions-boundaried, deny-by-default, self-referential runner role;
+    the single-use JIT registration token is deleted at registration. The
+    module (v7.10.x, ephemeral one-job-one-VM, JIT via SSM-pull) requires
+    it; the account's launch-with-profile IAM Deny is lifted for the runner
+    role only. Full record, alternatives, and tripwires:
+    `research/runner-endgame-decision-record.md` in the successor packet.
+58. **Deployment vehicle: Pulumi, not a Terraform dep.** Operator verbatim:
+    "Ideally we use pulumi instead of add terraform as a dep if we can."
+    Spike Pulumi's terraform-module bridge inside the existing `infra/`
+    program (same S3 backend + passphrase); a minimal Terraform root is
+    fallback only if the bridge chokes on the module's lambda artifacts.
+59. **Velocity correction: the module deploy is hours, not weeks.** The
+    operator has run this exact module in production before ("took less
+    than 1 hour"). The endgame's phased ceremony covers the wrapping
+    (porcelain, cache, AMI, observability) — never the deploy itself.
+    Execution resequenced module-first; the performance layer follows on
+    its own track.
+60. **GitHub App: repo-scoped, KMS, 1Password.** Installed on beep-effect
+    only; private key + webhook secret in SSM SecureString under KMS;
+    source-of-truth copy in 1Password (`op://BEEP_CI`). Future repos
+    re-run the install step rather than widening blast radius now.
+61. **Cost gates: $100/mo projection, $200/mo absolute ceiling.** The
+    standing 20%-over-projection rule halts expansion; ceiling breach is a
+    hard stop + re-decision. Spend is usage-shaped (scale-to-zero): VM
+    minutes only while a job runs; standing costs are storage-class
+    pennies.
+62. **Spot posture: spot everywhere + on-demand failover on capacity
+    errors.** Diversified types, price-capacity-optimized. Standing
+    tripwire: >2 interruption-caused re-runs/week moves Coverage and Test
+    Integration to on-demand.
+63. **RunsOn fallback licensing: free non-commercial tier.** Defensibility
+    rests on the usage — a public personal learning repo — not the
+    registering email (a personal email is cleaner but is presentation,
+    not substance). Nothing registers unless an adoption tripwire fires;
+    the adopted module is Apache-2.0. Related closures recorded with the
+    decision record: fork-PR trust posture resolved by prior hardening
+    (all-outside-collaborator approval + read-only workflow tokens,
+    verified live); container-IMDS boundary, RO-cache-token exposure,
+    4h/month maintenance budget, break-glass retention, reaper TTL, and
+    single-runner-config-first all accepted as defaults, revisited on
+    evidence.

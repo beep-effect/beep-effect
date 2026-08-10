@@ -7,6 +7,13 @@
  */
 
 /**
+ * Act frame element reference value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ActFrameElementRef/index.ts";
+/**
  * Annotation-citation value-object exports.
  *
  * **Example** (Import the annotation-citation value objects)
@@ -164,6 +171,19 @@ export * from "./ComponentSpan/index.ts";
  * @since 0.0.0
  */
 export * from "./ConstitutionalCitation/index.ts";
+/**
+ * Constitution-outcome vocabulary exports.
+ *
+ * **Example** (Import the constitution-outcome vocabulary)
+ *
+ * ```ts
+ * import { ConstitutionOutcome } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ConstitutionOutcome/index.ts";
 /**
  * Context-options value-object exports.
  *
@@ -324,6 +344,32 @@ export * from "./HistoryLink/index.ts";
  */
 export * from "./HistorySignal/index.ts";
 /**
+ * Hohfeldian legal position and derivation exports.
+ *
+ * **Example** (Import the position derivations)
+ *
+ * ```ts
+ * import { correlativePosition, oppositePosition } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./HohfeldPosition/index.ts";
+/**
+ * Hohfeldian position-kind vocabulary exports.
+ *
+ * **Example** (Import the position-kind vocabulary)
+ *
+ * ```ts
+ * import { HohfeldPositionKind } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./HohfeldPositionKind/index.ts";
+/**
  * Journal-citation value-object exports.
  *
  * **Example** (Import the journal-citation value objects)
@@ -357,6 +403,59 @@ export * from "./KgNodeKind/index.ts";
  * @since 0.0.0
  */
 export * from "./KindCode/index.ts";
+/**
+ * Legal act content value-object exports.
+ *
+ * **Example** (Import the legal act content value objects)
+ *
+ * ```ts
+ * import { LegalActContent } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalActContent/index.ts";
+/**
+ * Legal opposition candidate input value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalOppositionCandidateInput/index.ts";
+/**
+ * Legal role value-object exports.
+ *
+ * **Example** (Import the legal role value objects)
+ *
+ * ```ts
+ * import { LegalRole } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalRole/index.ts";
+/**
+ * Legal scope context value-object exports.
+ *
+ * **Example** (Import the legal scope context value objects)
+ *
+ * ```ts
+ * import { LegalScopeContext } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalScopeContext/index.ts";
+/**
+ * Legal verdict family value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalVerdictFamily/index.ts";
 /**
  * Legislative-material-citation value-object exports.
  *
@@ -396,6 +495,13 @@ export * from "./LocalOrdinanceCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./NeutralCitation/index.ts";
+/**
+ * Norm source reference value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./NormSourceReference/index.ts";
 /**
  * Observation version reference value-object exports.
  *
@@ -437,6 +543,19 @@ export * from "./ParallelGroup/index.ts";
  */
 export * from "./ParentheticalType/index.ts";
 /**
+ * Party kind vocabulary exports.
+ *
+ * **Example** (Import the party kind vocabulary)
+ *
+ * ```ts
+ * import { PartyKind } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PartyKind/index.ts";
+/**
  * Canonical patent document triplet value-object exports.
  *
  * @category value-objects
@@ -465,6 +584,19 @@ export * from "./PatentNumber/index.ts";
  */
 export * from "./PatentOffice/index.ts";
 /**
+ * Permission-status vocabulary exports.
+ *
+ * **Example** (Import the permission-status vocabulary)
+ *
+ * ```ts
+ * import { PermissionStatus } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PermissionStatus/index.ts";
+/**
  * Pincite value-object exports.
  *
  * **Example** (Import the pincite value objects)
@@ -491,6 +623,13 @@ export * from "./PracticeKgEpistemicStatus/index.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKgProvenanceKind/index.ts";
+/**
+ * Priority basis value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PriorityBasis/index.ts";
 /**
  * Public-law-citation value-object exports.
  *
@@ -602,6 +741,19 @@ export * from "./SessionLawCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./ShortFormCitationType/index.ts";
+/**
+ * Source norm reference value-object exports.
+ *
+ * **Example** (Import the source norm reference value objects)
+ *
+ * ```ts
+ * import { SourceNormRef } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./SourceNormRef/index.ts";
 /**
  * Span value-object exports.
  *
