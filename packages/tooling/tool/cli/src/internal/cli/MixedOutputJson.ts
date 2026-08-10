@@ -22,13 +22,46 @@ const isEscapedQuote = (output: string, index: number): boolean => {
   return backslashCount % 2 === 1;
 };
 
-// One forward pass tracks brace depth and string state; each time a top-level
-// `{...}` span balances, the candidate is decoded immediately and only the
-// latest decodable candidate is retained. Top-level spans are disjoint, so the
-// combined slice-and-decode work stays O(n) over the whole input — accumulating
-// spans in an immutable array (or rescanning backward per closing brace) is
-// quadratic on outputs with many balanced objects and let a large untruncated
-// subprocess buffer hang the CLI.
+const jsonObjectTextFromRight = (output: string): O.Option<string> => {
+  let depth = 0;
+  let closeIndex = -1;
+  let inString = false;
+
+  for (let cursor = Str.length(output) - 1; cursor >= 0; cursor -= 1) {
+    const char = characterAt(output, cursor);
+    if (depth > 0 && char === '"' && !isEscapedQuote(output, cursor)) {
+      inString = !inString;
+      continue;
+    }
+    if (inString) {
+      continue;
+    }
+    if (char === "}") {
+      if (depth === 0) {
+        closeIndex = cursor;
+      }
+      depth += 1;
+      continue;
+    }
+    if (char === "{" && depth > 0) {
+      depth -= 1;
+      if (depth === 0) {
+        const candidate = Str.slice(cursor, closeIndex + 1)(output);
+        if (O.isSome(decodeJsonTextOption(candidate))) {
+          return O.some(candidate);
+        }
+      }
+    }
+  }
+
+  return O.none();
+};
+
+// The forward pass decodes disjoint top-level spans and retains only the latest.
+// If an unmatched opening brace leaves a later object nested, one bounded reverse
+// pass decodes disjoint spans from the end. Accumulating spans (or rescanning per
+// closing brace) is quadratic on balanced-object floods and let a large
+// untruncated subprocess buffer hang the CLI.
 /**
  * Extract the last decodable top-level JSON object from mixed command output.
  *
@@ -69,5 +102,5 @@ export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> 
     }
   }
 
-  return latest;
+  return depth > 0 && !inString ? O.orElse(jsonObjectTextFromRight(output), () => latest) : latest;
 };

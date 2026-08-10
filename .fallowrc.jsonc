@@ -291,9 +291,13 @@
         "files": [
           "packages/tooling/tool/cli/src/internal/cli/MixedOutputJson.ts"
         ],
-        "functions": ["jsonObjectTextFromMixedOutput"],
-        "maxCognitive": 21,
-        "reason": "Single-pass brace and string-state scanner preserves linear mixed-output recovery without fragmenting one state machine. Review by 2026-11-10: re-measure after scanner changes and reduce or remove the override when a simpler equivalent is proven."
+        "functions": [
+          "jsonObjectTextFromMixedOutput",
+          "jsonObjectTextFromRight"
+        ],
+        "maxCognitive": 23,
+        "maxCrap": 44,
+        "reason": "Forward scanning preserves linear mixed-output recovery; a bounded reverse fallback resynchronizes after unmatched opening braces without making balanced-object floods quadratic. Review by 2026-11-10: re-measure both passes and reduce or remove these measured ceilings when a simpler equivalent is proven."
       }
     ]
   },
