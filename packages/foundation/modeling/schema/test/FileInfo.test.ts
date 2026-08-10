@@ -44,7 +44,7 @@ describe("FileInfo", () => {
   });
 
   it("decodes another supported case and applies the same defaults", () => {
-    const info = S.decodeUnknownSync(FileInfo)({
+    const info = S.decodeSync(FileInfo)({
       type: "Directory",
       dev: 2,
       mode: 0o755,
@@ -58,7 +58,7 @@ describe("FileInfo", () => {
 
   it("decodes provided optional stat fields to Some", () => {
     const mtime = DateTime.toDateUtc(DateTime.makeUnsafe(1_700_000_000_000));
-    const info = S.decodeUnknownSync(FileInfo)({
+    const info = S.decodeSync(FileInfo)({
       type: "File",
       dev: 1,
       mode: 0o644,
@@ -75,7 +75,7 @@ describe("FileInfo", () => {
   it("round-trips through encode and decode", () => {
     const info = FileInfo.cases.SymbolicLink.make({ dev: 3, mode: 0o777, size: FileSystem.Size(8n) });
     const encoded = S.encodeSync(FileInfo)(info);
-    const decoded = S.decodeUnknownSync(FileInfo)(encoded);
+    const decoded = S.decodeSync(FileInfo)(encoded);
 
     expect(decoded).toEqual(info);
   });
@@ -98,7 +98,7 @@ describe("FileInfo", () => {
     fc.assert(
       fc.property(arbitrary, (info) => {
         expect(isFileInfo(info)).toBe(true);
-        expect(S.decodeUnknownSync(FileInfo)(S.encodeSync(FileInfo)(info))).toEqual(info);
+        expect(S.decodeSync(FileInfo)(S.encodeSync(FileInfo)(info))).toEqual(info);
       }),
       fcRuns(50)
     );
