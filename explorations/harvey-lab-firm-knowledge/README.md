@@ -38,6 +38,12 @@ verify-completeness §5).
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
 
+- 2026-08-08 (shipping): the packet's two live-defect finds shipped on
+  `feat/judge-rubric-lint-and-json-salvage` (beep lint judge-rubric +
+  unfenced-JSON salvage; full yeet verify green; PR held for the CI lane
+  freeze). Strategy pass landed 4 more reports (harvey-landscape-*,
+  beep-kg-profile, beep-kg-direction); verdict synthesized in RESEARCH.md.
+
 - 2026-08-08 (later): mining workflow completed (12 opus-5 agents, ~2.5M
   tokens; 12 reports in research/). Verify pass: 286 fact-checks (251
   confirmed), 20 opportunities → 6 KEEP / 2 KEEP-cond / 10 WEAKEN / 2 KILL;
