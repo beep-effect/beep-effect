@@ -2,7 +2,6 @@ import {
   computeJSDocMigrateBinding,
   documentationShapeViolations,
   isPackageSourceFile,
-  isPackageSourceFileIncludingGenerated,
   jsdocMigrateBlockStats,
   jsdocMigrateConservationFindings,
   jsdocMigrateExtractRecordsForFile,
@@ -10,7 +9,6 @@ import {
   jsdocMigrateSourceHash,
   jsdocMigrateTitleRecordsFromResponse,
   jsdocMigrateTitlesPrompt,
-  jsdocZeroLegacyGeneratedResiduals,
   partitionMigratedOrphans,
   rewriteJSDocMigrateBlock,
   scanJSDocMigrateBlocks,
@@ -687,14 +685,11 @@ describe("JSDocMigrateApply orphan tolerance", () => {
   });
 });
 
-describe("JSDoc zero-legacy path predicates", () => {
-  it("excludes generated paths from the default non-generated scope and includes them when asked", () => {
+describe("JSDoc cleanup-on-touch path predicate", () => {
+  it("includes hand-authored package source and excludes generated source", () => {
     const hand = "packages/shared/schema/src/Kits.ts";
     const generated = "packages/drivers/acp/src/_generated/schema.gen.ts";
     expect(isPackageSourceFile(hand)).toBe(true);
     expect(isPackageSourceFile(generated)).toBe(false);
-    expect(isPackageSourceFileIncludingGenerated(hand)).toBe(true);
-    expect(isPackageSourceFileIncludingGenerated(generated)).toBe(true);
-    expect(jsdocZeroLegacyGeneratedResiduals).toContain(generated);
   });
 });

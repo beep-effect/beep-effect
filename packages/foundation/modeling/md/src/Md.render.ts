@@ -844,6 +844,8 @@ export const renderPlainTextUnsafe = (document: Document): string => renderWithU
 /**
  * Selects the output a {@link PureRenderAdapter} produces for a document.
  *
+ * **Details**
+ *
  * Spelled as a deferred conditional alias so the data-first and data-last
  * signatures of {@link renderWithUnsafe} share a single named return type.
  * Every concrete instantiation resolves back to `Output`.

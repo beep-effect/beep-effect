@@ -569,7 +569,8 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
 /**
  * Transport plus agent options accepted by {@link layer}.
  *
- * @example
+ * **Example** (Configuring an ACP agent layer)
+ *
  * ```ts
  * import type * as Stdio from "effect/Stdio"
  * import type { AcpAgentLayerOptions } from "@beep/acp/agent"

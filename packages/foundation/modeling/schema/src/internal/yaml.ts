@@ -22,13 +22,7 @@ type YamlRuntime = {
 
 type YamlModule = typeof YamlPackage;
 
-/**
- * Public schema module export.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type YamlParseResult = Result.Result<unknown, ReadonlyArray<string>>;
+type YamlParseResult = Result.Result<unknown, ReadonlyArray<string>>;
 
 type YamlModuleLoader = () => YamlModule;
 

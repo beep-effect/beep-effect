@@ -255,9 +255,10 @@ const zipWithOperationBuilder = <A, B, C, D, R1, E1, R2, E2>(
 /**
  * Build an {@link OperationBuilder} from name, schemas, and an effectful arrow.
  *
+ * **Details**
+ *
  * Supplying the schemas and the arrow without the name yields a data-last
  * builder that takes the name last, so an operation can be named from a `pipe`.
- *
  *
  * **Example** (Make effectful length)
  *
@@ -327,9 +328,10 @@ export const fromDefinition = <A, B, R, E>(definition: OperationDefinition<A, B,
 /**
  * Build a pure (context-free, infallible) operation from a plain function.
  *
+ * **Details**
+ *
  * Supplying the schemas and the function without the name yields a data-last
  * builder that takes the name last, so an operation can be named from a `pipe`.
- *
  *
  * **Example** (Make pure uppercase)
  *

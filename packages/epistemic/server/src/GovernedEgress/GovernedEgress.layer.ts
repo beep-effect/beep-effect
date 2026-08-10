@@ -69,7 +69,8 @@ export interface GovernedEgressLiveOptions {
 /**
  * Build the governed egress `Fetch` layer from composition-root options.
  *
- * @example
+ * **Example** (Building the governed egress layer)
+ *
  * ```ts
  * import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress"
  * import { GrantOperation, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant"

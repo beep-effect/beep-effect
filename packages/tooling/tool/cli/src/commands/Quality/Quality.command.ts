@@ -2093,17 +2093,13 @@ const jsdocRatchetCommand = Command.make(
     writeBaseline: Flag.boolean("write-baseline").pipe(
       Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
     ),
-    includeGenerated: Flag.boolean("include-generated").pipe(
-      Flag.withDescription("Scan generated package sources in the zero-legacy check (default is non-generated only)")
-    ),
   },
-  ({ baseline, includeGenerated, inventory, writeBaseline }) =>
+  ({ baseline, inventory, writeBaseline }) =>
     runQualityProgram(
       runJSDocRatchet({
         baselinePath: baseline,
         inventoryPath: inventory,
         writeBaseline,
-        includeGenerated,
       })
     )
 ).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));

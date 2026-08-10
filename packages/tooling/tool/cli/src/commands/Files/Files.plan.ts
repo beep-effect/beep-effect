@@ -176,11 +176,6 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
 /**
  * Allocate a unique normalize output name for a source stem and format.
  *
- * @param stem - Source file stem.
- * @param format - Normalize output format.
- * @param usedTargetNames - Names already allocated in this plan.
- * @returns The allocated target name; callers add it to their allocation set.
- *
  * **Example** (Unique normalize target name)
  *
  * ```ts
@@ -215,11 +210,6 @@ export const uniqueNormalizeTargetName: {
 
 /**
  * Allocate a unique archive output name for a source stem and extension.
- *
- * @param stem - Source file stem.
- * @param extension - Source extension, including the leading dot.
- * @param usedTargetNames - Names already allocated in this plan.
- * @returns The allocated target name; callers add it to their allocation set.
  *
  * **Example** (Unique archive target name)
  *

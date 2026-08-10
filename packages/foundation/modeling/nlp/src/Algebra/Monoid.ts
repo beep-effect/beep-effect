@@ -59,6 +59,8 @@ export interface Monoid<A> {
  * Helper to create a Monoid instance from its identity element and its
  * associative operation.
  *
+ * **Details**
+ *
  * The identity element and the operation are co-equal fields of the same
  * algebraic structure rather than a subject and an argument, so they are
  * supplied together as a single options object.

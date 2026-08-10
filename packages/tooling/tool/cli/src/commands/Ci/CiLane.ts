@@ -848,7 +848,6 @@ export const ciLaneStepsForTesting: {
           "jsdoc-ratchet",
           "--inventory",
           JSDOC_CI_INVENTORY_JSON_PATH,
-          "--include-generated",
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],

@@ -290,6 +290,7 @@ export const layer = (
  * @category constructors
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication -- provider adapters intentionally mirror the shared Effect AI model surface
 export const model: {
   (
     config?: OpenAiCompatLanguageModelConfig | undefined

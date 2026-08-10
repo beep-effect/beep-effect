@@ -80,7 +80,7 @@ export const orderAsc: {
  *
  * Spelled as a deferred conditional alias so the data-first and data-last
  * signatures of {@link prefix} share a single named return type. Every concrete
- * instantiation resolves back to `` `${Pre}${S}` ``.
+ * instantiation resolves back to the corresponding concatenated template-literal type.
  *
  * @category type-level
  * @since 0.0.0
@@ -172,7 +172,7 @@ export const prefixThunk: {
  *
  * Spelled as a deferred conditional alias so the data-first and data-last
  * signatures of {@link postfix} share a single named return type. Every
- * concrete instantiation resolves back to `` `${S}${Post}` ``.
+ * concrete instantiation resolves back to the corresponding concatenated template-literal type.
  *
  * @category type-level
  * @since 0.0.0

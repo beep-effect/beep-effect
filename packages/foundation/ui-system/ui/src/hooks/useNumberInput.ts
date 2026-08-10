@@ -380,6 +380,8 @@ type SpinParamsValue = {
 /**
  * Convert editable number-input text into a number when the text is parseable.
  *
+ * **Details**
+ *
  * Empty strings and invalid numeric strings normalize to `Option.none()`.
  *
  * **Example** (Parse editable text into a number)
@@ -404,6 +406,8 @@ export const toNumber: (input: unknown) => O.Option<number> = S.decodeUnknownOpt
 
 /**
  * Format an optional numeric value using a fixed decimal precision.
+ *
+ * **Details**
  *
  * Invalid numeric values normalize to an empty string so the hook can safely render
  * controlled inputs.
@@ -440,6 +444,8 @@ export const numberToString: {
 
 /**
  * Compute the effective step multiplier for an increment or decrement gesture.
+ *
+ * **Details**
  *
  * Holding `meta` or `ctrl` applies a fine-grained `0.1x` multiplier, while `shift`
  * applies a coarse `10x` multiplier. The returned value is clamped so precision
@@ -705,6 +711,8 @@ const effectiveStep = (provided: number | undefined, params: SpinParamsValue): n
 
 /**
  * Low-level hook that manages string and numeric boundary state for a number input.
+ *
+ * **Details**
  *
  * Use this when you need number parsing, formatting, and range-aware increment/decrement
  * behavior but want to build your own DOM event handlers on top.

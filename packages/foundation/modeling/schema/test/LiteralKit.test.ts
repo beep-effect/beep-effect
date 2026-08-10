@@ -17,7 +17,7 @@ import { FastCheck as fc } from "effect/testing";
 const createRuntimeLiteralKit = (
   literals: ReadonlyArray<unknown>,
   enumMapping: ReadonlyArray<readonly [unknown, string]>
-): unknown => Function.prototype.apply.call(LiteralKit, undefined, [literals, enumMapping]);
+): unknown => Function.prototype.apply.call(LiteralKit, undefined, [{ literals, enumMapping }]);
 
 describe("LiteralKit", () => {
   const Status = LiteralKit([1, 20n, true, false, "hello"]);

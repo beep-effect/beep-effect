@@ -39,8 +39,24 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc } from "effect/testing";
+
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
 
 const { report: PandocDocumentArbitraryReport, value: PandocDocumentArbitrary } = S.toArbitrary(PandocDocument, {
   report: true,
@@ -276,11 +292,13 @@ describe("Pandoc.codec", () => {
       meta: {},
     };
 
-    expect(() =>
-      Table.make({
-        payload: [["", [], []], null, [], null, [], null],
-      })
-    ).toThrow("Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.");
+    expectSchemaMakeToFail(
+      () =>
+        Table.make({
+          payload: [["", [], []], null, [], null, [], null],
+        }),
+      "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts."
+    );
     expect(() => Effect.runSync(decodePandocJsonStrict(wire))).toThrow();
 
     const lossless = Effect.runSync(decodePandocJsonLossless(wire));
@@ -365,14 +383,17 @@ describe("Pandoc.codec", () => {
   it("rejects known names from semantic unknown constructors and retains valid future constructors", () => {
     expect(pinnedPandocConstructorNames).toHaveLength(78);
     for (const name of pinnedPandocConstructorNames) {
-      expect(() => UnknownBlock.make({ wire: { t: name } })).toThrow(
+      expectSchemaMakeToFail(
+        () => UnknownBlock.make({ wire: { t: name } }),
         "Expected a future Pandoc constructor name that is not already known."
       );
     }
-    expect(() => UnknownInline.make({ wire: { c: 42, t: "Row" } })).toThrow(
+    expectSchemaMakeToFail(
+      () => UnknownInline.make({ wire: { c: 42, t: "Row" } }),
       "Expected a future Pandoc constructor name that is not already known."
     );
-    expect(() => UnknownMeta.make({ wire: { c: 42, t: "Citation" } })).toThrow(
+    expectSchemaMakeToFail(
+      () => UnknownMeta.make({ wire: { c: 42, t: "Citation" } }),
       "Expected a future Pandoc constructor name that is not already known."
     );
 

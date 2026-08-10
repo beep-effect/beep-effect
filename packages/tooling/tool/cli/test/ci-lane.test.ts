@@ -140,7 +140,6 @@ describe("ciLaneStepsForTesting", () => {
       "jsdoc-ratchet",
       "--inventory",
       ".beep/ci/jsdoc-documentation.inventory.jsonc",
-      "--include-generated",
     ]);
   });
 

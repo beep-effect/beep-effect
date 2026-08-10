@@ -54,6 +54,7 @@ export const encodeJsonl: {
   Effect.map(S.encodeEffect(S.fromJsonString(schema))(value), (encoded) => encoder.encode(`${encoded}\n`))
 );
 
+// fallow-ignore-next-line code-duplication -- test transport stays independent from the package-internal process adapter
 export const makeChildStdio = (handle: ChildProcessSpawner.ChildProcessHandle) =>
   Stdio.make({
     args: Effect.succeed([]),

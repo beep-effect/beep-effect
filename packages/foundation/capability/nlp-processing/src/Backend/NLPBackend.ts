@@ -462,10 +462,11 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
 /**
  * Construct a {@link BackendNotSupported} failure with a default message.
  *
+ * **Details**
+ *
  * The overriding message travels in an options object — as it does on
  * {@link BackendNotSupported.forOperation} — so the backend name can be applied
  * last from a `pipe` without the two strings becoming ambiguous.
- *
  *
  * **Example** (Build not-supported failure)
  *

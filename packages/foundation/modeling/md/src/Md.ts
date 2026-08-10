@@ -715,9 +715,10 @@ export const a: {
 /**
  * Creates an inline image.
  *
+ * **Details**
+ *
  * Alternate text lives in the options object so the constructor keeps a single
  * positional argument; omitting it yields the empty alt text.
- *
  *
  * **Example** (Create inline image)
  *

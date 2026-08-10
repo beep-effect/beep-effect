@@ -32,7 +32,8 @@ import type { DockEngine } from "./DockEngine.service.ts";
 /**
  * Console observability layer installed in each isolated Atom graph.
  *
- * @example
+ * **Example** (Installing console observability)
+ *
  * ```ts
  * import { DockAtomObservabilityLive } from "@beep/dock"
  * import { Effect, Layer } from "effect"
@@ -179,9 +180,12 @@ interface DockAtomsSessionEffect<E> extends ReturnType<typeof makeDockAtomsWithI
 /**
  * Builds a validated isolated Atom session from caller-provided services.
  *
- * @remarks Layer construction failures remain typed in the returned Effect.
+ * **Details**
  *
- * @example
+ * Layer construction failures remain typed in the returned Effect.
+ *
+ * **Example** (Building a session with services)
+ *
  * ```ts
  * import { DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtomsWith, makeDockSnapshotStoreMemory } from "@beep/dock"
  * import { Effect, Layer } from "effect"
@@ -214,7 +218,8 @@ export const makeDockAtomsWith: {
 /**
  * Builds a validated isolated Atom session with live in-memory services.
  *
- * @example
+ * **Example** (Building an in-memory session)
+ *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtoms } from "@beep/dock"
  * import { Effect } from "effect"

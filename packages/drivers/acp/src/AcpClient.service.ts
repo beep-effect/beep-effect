@@ -674,7 +674,8 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
 /**
  * Child-process handle plus client options accepted by {@link layerChildProcess}.
  *
- * @example
+ * **Example** (Configuring a child-process client)
+ *
  * ```ts
  * import type { ChildProcessSpawner } from "effect/unstable/process"
  * import type { AcpClientChildProcessOptions } from "@beep/acp/client"
