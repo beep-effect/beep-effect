@@ -635,6 +635,11 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
     cwd: repoRoot,
   });
 
+// Test Unit still runs on hosted 16GB ubuntu-24.04 runners (check.yml), not the
+// 32GB beep-ec2-heavy fleet, so it keeps the 16GB-survival turbo cap instead of
+// inheriting the fleet default that boundedRootTurboArgs applies in CI.
+const HOSTED_TEST_UNIT_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+
 const turboRootLaneStep = (
   repoRoot: string,
   laneId: CiLaneId,
@@ -888,7 +893,9 @@ export const ciLaneStepsForTesting: {
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
-      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit"], options)],
+      "test-unit": () => [
+        turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_TEST_UNIT_TURBO_CONCURRENCY_ARG], options),
+      ],
     })
 );
 

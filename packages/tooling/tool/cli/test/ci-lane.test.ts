@@ -108,7 +108,7 @@ describe("ciLaneStepsForTesting", () => {
 
   it("splits the test lanes into CI's unit and integration shapes", () => {
     const unit = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-unit", prShapeOptions));
-    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--affected", "--summarize"]);
+    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--concurrency=2", "--affected", "--summarize"]);
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
