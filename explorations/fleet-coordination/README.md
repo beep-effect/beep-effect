@@ -49,7 +49,8 @@ rung 1's `/proc` probe reaches 13.2%.
 3. [`MAP.md`](./MAP.md) — the goal packet, sequencing edges, verified capability check, first vertical slice.
 4. [`RESEARCH.md`](./RESEARCH.md) — the distilled landscape and what died.
 5. [`research/SYNTHESIS.md`](./research/SYNTHESIS.md) — full cross-track synthesis, five options, recommended sequence.
-6. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface · [`T6`](./research/T6-cross-session-messaging.md) cross-session messaging (2026-08-09 addendum; kills T3 §4.4).
+6. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) — friction ledger.
+7. Track deliverables only as needed: [`T1`](./research/T1-prior-art.md) prior art · [`T2`](./research/T2-theory.md) blackboard/lease theory · [`T3`](./research/T3-delivery-vector.md) delivery vectors · [`T4`](./research/T4-merge-queue.md) merge queue · [`T5`](./research/T5-derivation.md) derivation surface · [`T6`](./research/T6-cross-session-messaging.md) cross-session messaging (2026-08-09 addendum; kills T3 §4.4).
 
 ## Cross-Session Coordination
 
