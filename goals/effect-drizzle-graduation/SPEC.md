@@ -47,9 +47,17 @@ Higher sources outrank lower sources when they conflict.
   `goals/effect-drizzle-graduation/**`, `goals/INDEX.md`.
 - P1: `packages/ecosystem/effect-drizzle/**` (git-mv from
   `scratchpad/bsl`), its manifest/tsconfig/turbo wiring, `@effect/vitest`
-  harness migration, inverted-import gate in repo lint, governance
-  registrations, suppression removals, `scratchpad/bsl` retirement.
-- P2: family quality lanes (tstyche lane for members, bundle probe in CI),
+  harness migration, the member tstyche lane (created with the package),
+  inverted-import gate in repo lint, governance registrations, suppression
+  removals, `scratchpad/bsl` retirement. Known family-encoding surfaces P1
+  must extend (inventoried by the P0 review panel): `BeepPackageFamily` +
+  manifest tagged union in
+  `packages/tooling/library/repo-utils/src/schemas/PackageJson.ts`,
+  `VALID_FAMILIES` + family roots in the create-package command, the root
+  `package.json` workspaces globs, `syncpack.config.ts`, style-law scan
+  scoping (`EffectImports.ts`, `TerseEffect.ts`), and the lint shard routing
+  in `Lint.command.ts`.
+- P2: family CI integration (bundle probe, CI wiring for the member lanes),
   docgen surface, closeout artifacts.
 
 ## Constraints
@@ -79,16 +87,21 @@ operator:
    `@effect/vitest` `layer()` in P1.
 6. **Artifact**: ESM-only, exports map exposing exactly `.`, `./pg`,
    `./sqlite`, `./package.json`; `sideEffects: false`; declarations built with
-   `stripInternal` so `@internal` symbols vanish from published `.d.ts`.
+   `stripInternal` so `@internal` symbols vanish from published `.d.ts`; the
+   root `make` convenience stays, with its bundle cost documented.
 7. **Publish gate**: `private: true` until effect v4 stable AND drizzle 1.0
    final (the drizzle-kit rc-skew preload must be dead first). Changesets +
-   release lane wired but dormant; peers pinned exact meanwhile.
+   release lane wired but dormant; peers pinned exact meanwhile. Pre-npm
+   feedback flows through the public repository.
 8. **Gates**: standard workspace lanes + family additions — inverted-import
    gate promoted from the package boundary test into repo lint; a tstyche lane
-   scoped to ecosystem members at package creation (a deliberate, documented
-   exception to the 2026-08 repo-wide type-test removal — the DECISIONS entry
-   must cross-reference it); instantiation budgets only after pinned-machine
-   repeated sampling; bundle probe in CI.
+   scoped to ecosystem members, created at package creation (P1; a deliberate,
+   documented exception to the 2026-08 repo-wide type-test removal — the
+   DECISIONS entry must cross-reference it) covering the derived-table/
+   variant/metadata/FK/kit matrix with exact `~effect-drizzle.error` literal
+   pinning via `.toRaiseError` and multi-TypeScript targets validating the
+   peer range; instantiation budgets only after pinned-machine repeated
+   sampling; bundle probe in CI (P2).
 9. **Sequencing**: P0 docs-only PR → P1 package-creation PR → P2 quality
    integration PR. Each phase lands as its own PR driven to mergeable via
    yeet. Packet-state flips and the closeout reflection land in the same PR as
@@ -100,10 +113,11 @@ operator:
       glossary term, decision entry, and the shared-tables projection line all
       agree; packet registered in `goals/INDEX.md`; PR merged.
 - [ ] P1: `packages/ecosystem/effect-drizzle` builds, checks, tests, and
-      docgens green through standard lanes; the inverted-import gate fails on
-      a deliberate `@beep/*` import in `src/`; `scratchpad/bsl` is retired;
-      PR merged.
-- [ ] P2: family lanes (tstyche member lane, bundle probe) run in CI;
+      docgens green through standard lanes; the member tstyche lane exists and
+      passes (matrix + exact `~effect-drizzle.error` literals via
+      `.toRaiseError`); the inverted-import gate fails on a deliberate
+      `@beep/*` import in `src/`; `scratchpad/bsl` is retired; PR merged.
+- [ ] P2: family lanes (member tstyche, bundle probe) run in CI;
       manifest/README/INDEX flipped and closeout reflection landed in the
       final PR; PR merged.
 - [ ] No unrelated refactors or formatting churn.

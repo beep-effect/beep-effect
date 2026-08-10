@@ -37,9 +37,11 @@ The contract is **"publishable from the monorepo,"** not "extractable
 repo-free." A member is allowed to depend on repo tooling to be built, tested,
 and proven — it is not allowed to make its consumers depend on any of it.
 
-The gate runs in two places: as a package-local boundary test inside the
-member, and as a repo lint lane so a violating import fails repo-wide checks,
-not just the member's own suite.
+The gate belongs in two places: a package-local boundary test inside the
+member, and a repo lint lane so a violating import fails repo-wide checks, not
+just the member's own suite. Enforcement is pending automation until the first
+member lands: the boundary test and lint lane ship with the member-creation
+phase of `goals/effect-drizzle-graduation` (P1).
 
 ## Style-Law Scoping
 
@@ -48,9 +50,9 @@ repo's effect-first style laws where they conflict. The member is read by
 outsiders, bundled by consumers, and type-checked in projects that never see
 this repo's conventions:
 
-- Named imports from effect module paths (`import { taggedEnum } from
-  "effect/Data"`) instead of namespace imports — tree-shaking for consumers
-  outweighs the repo's namespace idiom.
+- Named imports from effect module paths — for example
+  `import { taggedEnum } from "effect/Data"` — instead of namespace imports;
+  tree-shaking for consumers outweighs the repo's namespace idiom.
 - Native helpers where behavior is equivalent (`["a", "b"].map(...)`) instead
   of mandatory effect helper modules — bundle size outweighs idiom
   consistency.
@@ -79,8 +81,9 @@ Worked example: `@beep/drizzle` (drivers) keeps EXECUTION — the SQL service,
 transactions, error normalization for this repo's runtime.
 `@beep/effect-drizzle` (ecosystem) owns schema-derived PROJECTION — deriving
 drizzle tables, DDL, and repositories from effect/Schema models — and the
-repo consumes it exactly as any outside project would. Generic table projection therefore lives
-in `@beep/effect-drizzle`; the shared-tables contract points there.
+repo consumes it exactly as any outside project would. Generic table
+projection therefore lives in `@beep/effect-drizzle`; the shared-tables
+contract points there.
 
 A capability belongs in `ecosystem` only when the repo would build and
 maintain it even if the repo were not its consumer. Anything whose design is
@@ -93,7 +96,9 @@ Members publish a deliberately strict artifact:
 
 - ESM-only (`"type": "module"`); no dual-format builds.
 - An exports map naming exactly the supported entry points (plus
-  `./package.json`); no wildcards, so deep imports are impossible.
+  `./package.json`); no wildcards, so deep imports are impossible. A root
+  entry point may stay alongside granular subpaths as a convenience whose
+  bundle cost is documented.
 - `sideEffects: false`, with pure annotations where a bundler needs help.
 - Declarations built with `stripInternal`: `@internal` symbols do not exist
   in the published `.d.ts`.
@@ -106,8 +111,9 @@ Members publish a deliberately strict artifact:
 Members are wired into changesets and the release lane at creation but stay
 dormant: `private: true` until every upstream peer is stable enough that the
 published artifact needs no compatibility shims (for the first member: effect
-v4 stable AND drizzle 1.0 final). Flipping `private` is an operator decision
-recorded in the member's README, never a side effect of other work.
+v4 stable AND drizzle 1.0 final). Pre-npm feedback flows through the public
+repository meanwhile. Flipping `private` is an operator decision, never a side
+effect of other work.
 
 ## Gate Profile
 
@@ -115,14 +121,19 @@ Members run the standard workspace lanes (check, test, lint, docgen) plus
 family additions:
 
 - the inverted-import gate in repo lint (see above);
-- a member-scoped tstyche type-test lane. This is a deliberate exception to
-  the 2026-08 repo-wide type-test removal (see `DECISIONS.md`): for an
-  ecosystem member the published `.d.ts` IS the product, and a type-level
-  regression is a user-facing break, so members pay the lane cost the rest of
-  the repo deliberately dropped;
+- a member-scoped tstyche type-test lane, created with the member itself.
+  This is a deliberate exception to the 2026-08 repo-wide type-test removal
+  (see `DECISIONS.md`): for an ecosystem member the published `.d.ts` IS the
+  product, and a type-level regression is a user-facing break, so members pay
+  the lane cost the rest of the repo deliberately dropped;
 - a bundle probe in CI, so size regressions are visible per PR;
 - instantiation budgets only after repeated sampling on a pinned machine —
   a noisy budget is worse than none.
+
+For the first member these additions land through
+`goals/effect-drizzle-graduation`: the boundary test, repo lint gate, and
+member tstyche lane at package creation (P1); CI wiring for the family lanes
+and the bundle probe in the quality-integration phase (P2).
 
 ## Promotion And Demotion
 

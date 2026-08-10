@@ -52,7 +52,8 @@ opened.
   OUT — future packet chartered by
   `scratchpad/bsl/research/baseentity-migration-plan.md`.
 - npm publication stays gated (`private: true`) until effect v4 stable and
-  drizzle 1.0 final; the unscoped `effect-drizzle` npm-name ask is the
-  operator's own parallel action.
+  drizzle 1.0 final; pre-npm feedback flows through the public repository
+  meanwhile, and the unscoped `effect-drizzle` npm-name ask is the operator's
+  own parallel action.
 - The member-scoped tstyche lane is a deliberate exception to the 2026-08
   repo-wide type-test removal; the DECISIONS entry cross-references it.

@@ -78,7 +78,7 @@ back here for the rationale once the shape clicks.
 | [`04-rich-domain-model.md`](04-rich-domain-model.md)                 | Why the repo prefers hybrid rich domain models over anemic data bags.          |
 | [`05-layer-composition.md`](05-layer-composition.md)                 | Why slice-local Layer composition replaces runtime God Layers.                 |
 | [`06-configuration-boundaries.md`](06-configuration-boundaries.md)   | Why config is a typed contract package, not env access or a constants dump.    |
-| [`07-non-slice-families.md`](07-non-slice-families.md)               | Why foundation, drivers, and tooling need explicit topology grammar.           |
+| [`07-non-slice-families.md`](07-non-slice-families.md)               | Why non-slice families (foundation, drivers, tooling, ecosystem) need explicit topology grammar. |
 | [`08-testing.md`](./08-testing.md)                                   | Testing strategy: domain in isolation, use-case stubs, fixture ownership, contract tests, slice-isolation guarantee. |
 | [`09-errors-across-boundaries.md`](./09-errors-across-boundaries.md) | Error translation across hexagonal boundaries: who translates, where, what the function looks like. |
 | [`10-cross-slice-coordination.md`](./10-cross-slice-coordination.md) | Workflow / saga / process-manager governance; future `shared/use-cases` event contracts; God Process Manager anti-pattern. |

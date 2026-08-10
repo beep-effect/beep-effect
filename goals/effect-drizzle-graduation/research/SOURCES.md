@@ -17,7 +17,7 @@
 | `grill` | Graduation grill locked decisions (9) | this repo | `scratchpad/bsl/research/graduation-decisions.md` | family, gates, sequencing | normative — reproduced in SPEC Constraints |
 | `pubstd` | Published-package standards (import law, `@internal`, tstyche, JSDoc escaping, tooling audit) | this repo | `scratchpad/bsl/research/publishing-standards.md` | style-law scoping | normative for member code |
 | `jsdoc` | Measured effect JSDoc grammar | this repo | `scratchpad/bsl/research/effect-jsdoc-conventions.md` | docs | port into member docgen posture |
-| `rounds` | Round 3-7.5 briefs + reports with Fable post-review notes | this repo | `scratchpad/bsl/research/round*-{brief,report}.md` | design history | reference |
+| `rounds` | Round 2-7.5 briefs + reports with Fable post-review notes | this repo | `scratchpad/bsl/research/round*-{brief,report}.md` | design history | reference |
 | `qloop` | Quality-loop inventories (44 defects), verification charter, PR #651 findings | this repo | `scratchpad/bsl/research/quality-loop/` | quality bar | reference |
 | `basemig` | BaseEntity migration plan | this repo | `scratchpad/bsl/research/baseentity-migration-plan.md` | future adoption packet | reference only — OUT of scope here |
 
@@ -30,7 +30,7 @@ operator reopening the decision.
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| `Effect-TS/effect` (v4, `.repos/effect-v4` / effect-smol) | MIT | port-with-attribution | VariantSchema/Model integration surface, JSDoc grammar |
+| `Effect-TS/effect` (v4 source checkout at `.repos/effect`; effect-smol lineage) | MIT | port-with-attribution | VariantSchema/Model integration surface, JSDoc grammar |
 | `drizzle-team/drizzle-orm` (1.0.0-rc) | Apache-2.0 | port-with-attribution | column builder types, `Set*` brands, dialect DDL semantics |
 
 ## 3. External research sources
