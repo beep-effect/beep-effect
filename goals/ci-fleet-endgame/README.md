@@ -44,10 +44,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — spike the Pulumi terraform-module bridge and deploy the adopted
-`github-aws-runners/terraform-aws-github-runner` module on a non-serving shadow
-label. Module-first is the velocity path; cache, baked AMI, resource-weight,
-and observability work follow as the co-primary performance track.
+P1 is complete. Execution now moves through P3 asymmetric cache and P4 baked
+AMI before P2 cuts the heavy lane over to one-job-one-VM workers. This order
+preserves the security and cost gains without regressing heavy-lane wall time
+against the warm manual-burst baseline.
 
 ## Binding decisions
 
@@ -68,6 +68,10 @@ medium only with recorded justification. (Operator instruction, 2026-08-08.)
 
 ## Latest Evidence
 
+- Probe `31352410248` proved the complete one-job-one-VM lifecycle in 90
+  seconds, including a 10-second teardown lag after job completion.
+- Red-team run `31354960508` passed the GitHub App secret, S3, and tailnet/LAN
+  denial gates on worker `beep-ci-i-042d5d6635358917a`.
 - PRs #600, #603, #611, #618, and #620 established the hardened workflow,
   owned-runner foundation, and heavy-lane cutover.
 - The supervised burst landed an eight-PR merge wave and supplied the
