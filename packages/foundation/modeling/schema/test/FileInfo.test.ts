@@ -22,32 +22,36 @@ describe("FileInfoType", () => {
 });
 
 describe("FileInfo", () => {
-  it("constructs tagged cases and defaults optional stat fields to None", () => {
-    const info = FileInfo.cases.File.make({ dev: 1, mode: 0o644, size: FileSystem.Size(12n) });
+  it("constructs typed cases compatible with File.Info and defaults optional stat fields to None", () => {
+    const info: FileSystem.File.Info = FileInfo.cases.File.make({
+      dev: 1,
+      mode: 0o644,
+      size: FileSystem.Size(12n),
+    });
 
-    expect(info._tag).toBe("File");
+    expect(info.type).toBe("File");
     expect(info.size).toBe(12n);
     expect(O.isNone(info.mtime)).toBe(true);
     expect(O.isNone(info.ino)).toBe(true);
     expect(O.isNone(info.blksize)).toBe(true);
   });
 
-  it("constructs every entry kind with a matching tag", () => {
+  it("constructs every entry kind with a matching type", () => {
     for (const kind of FileInfoType.Options) {
       const info = FileInfo.cases[kind].make({ dev: 1, mode: 0o600, size: FileSystem.Size(0n) });
-      expect(info._tag).toBe(kind);
+      expect(info.type).toBe(kind);
     }
   });
 
   it("decodes another supported case and applies the same defaults", () => {
     const info = S.decodeUnknownSync(FileInfo)({
-      _tag: "Directory",
+      type: "Directory",
       dev: 2,
       mode: 0o755,
       size: 0n,
     });
 
-    expect(info._tag).toBe("Directory");
+    expect(info.type).toBe("Directory");
     expect(O.isNone(info.birthtime)).toBe(true);
     expect(O.isNone(info.blocks)).toBe(true);
   });
@@ -55,7 +59,7 @@ describe("FileInfo", () => {
   it("decodes provided optional stat fields to Some", () => {
     const mtime = DateTime.toDateUtc(DateTime.makeUnsafe(1_700_000_000_000));
     const info = S.decodeUnknownSync(FileInfo)({
-      _tag: "File",
+      type: "File",
       dev: 1,
       mode: 0o644,
       size: 42n,
@@ -76,10 +80,10 @@ describe("FileInfo", () => {
     expect(decoded).toEqual(info);
   });
 
-  it("rejects unsupported tags", () => {
+  it("rejects unsupported types", () => {
     expect(() =>
       S.decodeUnknownSync(FileInfo)({
-        _tag: "Device",
+        type: "Device",
         dev: 1,
         mode: 0o600,
         size: 0n,

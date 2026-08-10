@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * File-system entry kinds are represented as a `_tag`-discriminated union.
+ * File-system entry kinds are represented as a `type`-discriminated union.
  * Platform-dependent stat fields decode to `Option` and default to `None` when
  * omitted during construction.
  *
@@ -15,7 +15,7 @@
  *
  * const info = FileInfo.cases.File.make({ dev: 1, mode: 0o644, size: FileSystem.Size(12n) });
  *
- * console.log(info._tag); // "File"
+ * console.log(info.type); // "File"
  * ```
  *
  * @packageDocumentation
@@ -84,7 +84,8 @@ export const FileInfoType = LiteralKit([
   .pipe(
     SchemaUtils.withStatics((schema) => ({
       makeMember: <const Type extends typeof schema.Type>(typeLiteral: S.Literal<Type>) =>
-        S.TaggedStruct(typeLiteral.literal, {
+        S.Struct({
+          type: S.tag(typeLiteral.literal),
           mtime: OptionalStatDate("Last content-modification time when reported by the file system."),
           atime: OptionalStatDate("Last access time when reported by the file system."),
           birthtime: OptionalStatDate("Creation time when reported by the file system."),
@@ -136,7 +137,7 @@ export type FileInfoType = typeof FileInfoType.Type;
  *
  * const info = FileInfo.cases.Directory.make({ dev: 1, mode: 0o755, size: FileSystem.Size(0n) });
  *
- * console.log(info._tag); // "Directory"
+ * console.log(info.type); // "Directory"
  * ```
  *
  * @category schemas
@@ -154,7 +155,7 @@ export const FileInfo = FileInfoType.mapMembers(
     FileInfoType.makeMember,
   ])
 ).pipe(
-  S.toTaggedUnion("_tag"),
+  S.toTaggedUnion("type"),
   $I.annoteSchema("FileInfo", {
     description: "File-system stat metadata discriminated by entry kind.",
     documentation:
@@ -173,7 +174,7 @@ export const FileInfo = FileInfoType.mapMembers(
  *
  * const info: FileInfo = FileInfo.cases.Socket.make({ dev: 1, mode: 0o600, size: FileSystem.Size(0n) });
  *
- * console.log(info._tag); // "Socket"
+ * console.log(info.type); // "Socket"
  * ```
  *
  * @category type-level
