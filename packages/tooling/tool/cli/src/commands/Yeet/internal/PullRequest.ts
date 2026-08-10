@@ -16,6 +16,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
+import { makePrProvenanceServiceLive, renderPrProvenance } from "./Provenance.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -181,7 +182,11 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
     Effect.map(Str.trim),
     Effect.orElseSucceed(() => "")
@@ -197,7 +202,9 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   const proofSection = Str.isNonEmpty(laneSummary)
     ? laneSummary
     : "- full local proof still running (start-pr-early); see the verdict artifact for final lane results";
-  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n`;
+  const provenanceService = yield* makePrProvenanceServiceLive();
+  const provenance = yield* provenanceService.detect(context.repoRoot, context.branch);
+  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n\n${renderPrProvenance(provenance)}`;
 });
 
 /**
