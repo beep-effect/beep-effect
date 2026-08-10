@@ -681,10 +681,10 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 85.6,
-      "statements": 85.5,
-      "branches": 72.2,
-      "functions": 69.0
+      "lines": 86.75,
+      "statements": 86.8,
+      "branches": 73.99,
+      "functions": 71.39
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
