@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-08T16:32:19.323Z
+Generated: 2026-08-08T22:39:16.632Z
 
 ## Scope
 
@@ -14,11 +14,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 63 |
-| publicModules | 2419 |
-| publicExports | 16006 |
+| publicModules | 2420 |
+| publicExports | 16013 |
 | openModules | 407 |
-| openExports | 157 |
-| missingExportExamples | 0 |
+| openExports | 162 |
+| missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1335 | 47 | 10 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1335 | 46 | 10 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -147,7 +147,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 90 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 91 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
 | 92 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 310 | 9 | 0 |
-| 93 | `@beep/infra` | `infra` | needs-remediation | 8 | 89 | 2 | 19 |
+| 93 | `@beep/infra` | `infra` | needs-remediation | 9 | 96 | 3 | 24 |
 | 94 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 95 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 96 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
@@ -306,7 +306,6 @@ Path: `packages/tooling/tool/cli`
 
 Module findings:
 - `src/commands/Ci/CiLane.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/commands/Ci/LaneTimings.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Codegen/Codegen.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/commands/Codex/Findings.command.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -884,10 +883,16 @@ Module findings:
 Path: `infra`
 
 Module findings:
+- `src/CiFleetController.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CiRunners.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
+- `src/CiFleetController.ts:92` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:126` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:150` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:170` `loadCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:205` `CiFleetController` (class) - missing @example
 - `src/OpenClaw.ts:401` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:571` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:765` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)

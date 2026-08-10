@@ -63,6 +63,7 @@
   "ignorePatterns": [
     "goals/**",
     "scratchpad/**",
+    "infra/ci-runners/sdks/**",
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
