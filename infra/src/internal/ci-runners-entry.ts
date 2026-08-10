@@ -12,7 +12,6 @@ const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const controller = new CiFleetController("ci-fleet-controller", {
   config: loadCiFleetControllerConfig(),
   region: stack.region,
-  resolvedAmiId: stack.resolvedAmiId,
   subnetIds: [stack.publicSubnetAId, stack.publicSubnetBId],
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,

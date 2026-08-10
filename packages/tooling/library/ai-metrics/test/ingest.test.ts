@@ -2028,6 +2028,83 @@ volumes:
   );
 
   it.effect(
+    "collapses a legacy session row onto one that already carries the content id",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            const contentSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000mixed-transcript").pipe(
+              Effect.map((digest) => `session-${digest}`)
+            );
+            const legacySessionId = yield* hashPublicTextSha256(
+              "session\u0000run-old\u0000codex\u0000mixed-transcript"
+            ).pipe(Effect.map((digest) => `session-${digest}`));
+
+            // A store caught mid-transition: one row already minted under the new content
+            // key by a post-upgrade ingest, and one still holding the old per-run key. The
+            // migration's other collision branch -- legacy sibling versus legacy sibling --
+            // never reaches this shape, and getting it wrong violates the primary key.
+            yield* Effect.forEach(
+              [
+                { agentSessionId: contentSessionId, ingestRunId: "run-new", turnId: "turn-new" },
+                { agentSessionId: legacySessionId, ingestRunId: "run-old", turnId: "turn-old" },
+              ],
+              Effect.fnUntraced(function* (row) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_sessions (
+                     agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+                   ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'mixed-transcript', 'primary', 'snapshot')`,
+                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, $agentSessionId, 'codex', 'mixed-transcript',
+                     'primary', 1, 'event', $turnId, NULL
+                   )`,
+                  row
+                );
+              }),
+              { discard: true }
+            );
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-agent-session-id-v2'`
+            );
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+            const turns = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", agent_session_id AS "agentSessionId"
+               FROM ai_metrics_turns ORDER BY turn_id`
+            );
+
+            // The legacy row loses to the row that already holds the content id, and its
+            // turn follows -- no primary-key violation, and nothing orphaned behind the
+            // exporter's INNER join.
+            expect(sessions).toEqual([{ agentSessionId: contentSessionId }]);
+            expect(turns).toEqual([
+              { agentSessionId: contentSessionId, turnId: "turn-new" },
+              { agentSessionId: contentSessionId, turnId: "turn-old" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
     "collapses per-run session rows and repoints their turns",
     Effect.fn(function* () {
       yield* withTempDirectory(
@@ -2042,10 +2119,10 @@ volumes:
             // Ids exactly as the previous release minted them: rowId("session", [runId,
             // kind, pathHash]) => `session-${sha256("session\0<parts joined by \0>")}`.
             const legacySessionId = (ingestRunId: string) =>
-              hashPublicTextSha256(`session ${ingestRunId} codex grown-transcript`).pipe(
+              hashPublicTextSha256(`session\u0000${ingestRunId}\u0000codex\u0000grown-transcript`).pipe(
                 Effect.map((digest) => `session-${digest}`)
               );
-            const expectedSessionId = yield* hashPublicTextSha256("session codex grown-transcript").pipe(
+            const expectedSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000grown-transcript").pipe(
               Effect.map((digest) => `session-${digest}`)
             );
 
