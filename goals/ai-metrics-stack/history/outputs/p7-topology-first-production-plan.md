@@ -2,22 +2,16 @@
 
 ## Status
 
-Decision-complete and partially implemented. P7a/b landed without disturbing
-the active P6 seven-day proof. Final P7e production closeout remains pending
-until the proof window can be credited. P7c provider/gateway metrics and P7d
-dashboard expansion are follow-up capabilities, not V1 blockers, when their
-metrics remain explicitly unavailable and not scored.
-
-P7 must not rewrite the P6 proof while it is running. This slice turns the
-workstation-owned proof into a hybrid mirror plus retention topology with
-explicit ownership and privacy boundaries, while deferring provider or gateway
-enrichment.
+Completed for V1 on 2026-08-10. P7a/b landed without disturbing the credited P6
+evidence; P7f closes the live OTLP retry-starvation defect, and P7e records the
+final scorecard plus confirmed dankserver mirror. P7c provider/gateway metrics
+and P7d dashboard expansion remain follow-up capabilities, not V1 blockers,
+while their metrics remain explicitly unavailable and not scored.
 
 ## Goal
 
 Move from workstation-owned live collection to a production collection topology
-that can answer the same scorecard questions without depending on a mutable
-developer checkout.
+whose durable data and scorecard history do not depend on a developer checkout.
 
 The center of gravity is topology first:
 
@@ -34,8 +28,8 @@ The center of gravity is topology first:
 
 Chosen topology: hybrid derived mirror.
 
-- Raw encrypted transcripts remain workstation-local in the existing AI metrics
-  raw archive.
+- Raw encrypted transcripts remain workstation-local under
+  `/home/elpresidank/.local/state/beep/ai-metrics`, outside every repository.
 - Derived/report/status artifacts may sync to dankserver only after a P7-safe
   allowlist export step.
 - The default remote mirror root is
@@ -44,6 +38,9 @@ Chosen topology: hybrid derived mirror.
   `--confirm p7-derived-mirror` before rsync writes.
 - P7 retention mutations remain local-root workflows in this slice; remote
   mirror pruning is still an operator-managed follow-up.
+- The active user timer executes from the clean `beep-effect` checkout, but its
+  absolute XDG data root means changing or removing another checkout cannot
+  fragment production history. No checkout holds `.beep/ai-metrics`.
 
 ## Trust Boundary
 
@@ -66,6 +63,10 @@ Explicit exclusions from the remote mirror:
   paths
 - repo root, home dir, and source file paths
 - ciphertext, nonce, and raw archive key material
+
+The V1 bundle contains its manifest, mirror status, and allowlisted Parquet
+tables. It does not copy the workstation's report files; sanitized scorecard
+rows travel in `ai_metrics_scorecards.parquet`.
 
 ## Doctrine Fit
 
@@ -148,7 +149,7 @@ Implemented workflows:
 `delete` and `compact` default to dry-run, require an explicit time window, and
 require `--confirm p7-retention-window` for real mutation. The restore drill
 verifies raw archive decrypt plus content-hash integrity, then replays into a
-disposable derived root without mutating the active P6 data root.
+disposable derived root without mutating the production XDG data root.
 
 Acceptance gates:
 
@@ -202,14 +203,39 @@ Acceptance gates:
 - redacted payload proof for any new backend
 - operator command or infra path that can reproduce the deployment
 
+## P7f: Forwarder Durability
+
+Status: completed for V1
+
+The July durability work already made derived turn ingestion content-addressed
+and OTLP delivery at-least-once. The 2026-08-10 live closeout found the remaining
+failure mode: the sender used 512-span requests but closed the durable watermark
+only after the entire pending backlog succeeded. Phoenix's bounded queue could
+accept a prefix, reject a later chunk, and make every retry refill the queue with
+that same prefix.
+
+P7f now checkpoints every acknowledged chunk before sending the next one. Stable
+span ids preserve safety if delivery succeeds immediately before a checkpoint
+write fails, while normal HTTP 503 pressure resumes from the first unacknowledged
+turn instead of starving the tail. The regression suite covers a delivered
+prefix followed by a rejected chunk.
+
+The live timer keeps `--parquet-mode none` to avoid unnecessary per-run snapshot
+cost. This does not gate P7e: `mirror build` creates fresh allowlisted Parquet
+directly from the current DuckDB tables. The 50-file/32-MiB production budgets
+are also the adopted transaction bound; oversized manual backfills must remain
+explicitly chunked rather than becoming one unbounded forwarder run. Sanitized
+underlying OTLP status/cause reporting and Phoenix per-ingress capacity
+telemetry remain operational improvements, not V1 data-durability blockers.
+
 ## P7e: Production Readiness
 
-Status: pending
+Status: completed on 2026-08-10
 
-P7e is the V1 closeout pass after the credited P6 report exists. V1 is complete
-when the stack can survive normal operator use without relying on the mutable
-development checkout and when unavailable provider/gateway metrics are explicit
-rather than silently treated as measured values.
+P7e is the V1 closeout pass after the credited P6 report exists. Durable state
+now lives outside every checkout, the bounded timer and progressive OTLP
+watermark survive normal operator use, and unavailable provider/gateway metrics
+remain explicit rather than silently treated as measured values.
 
 Completion gates:
 
@@ -223,3 +249,7 @@ Completion gates:
   unavailable and not scored
 - final scorecard explains which data came from raw archive, derived storage,
   OTLP traces, labels, benchmarks, and provider/gateway enrichment
+
+Every V1 gate above is closed. Runtime, report, mirror, row-count, and privacy
+proof is recorded in
+[p7e-production-readiness-closeout.md](./p7e-production-readiness-closeout.md).
