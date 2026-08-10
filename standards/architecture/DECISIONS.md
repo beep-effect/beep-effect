@@ -1243,8 +1243,9 @@ the existing `beep research` CLI family under a `nightly` sub-namespace
 Governing rules: per-packet truth with derived-only rebuildable indexes;
 sanitize-at-write for scraped content with gitleaks fail-closed and a
 `research/**` typos exemption; process-separation blinding (search/synthesis
-stages receive no repo checkout — only the writer/publisher stage touches the
-clone, scoped to the new packet plus `research/ledger/`); no explorations
+stages receive no repo checkout; the writer composes from structured records
+without a checkout; only the publisher touches the clone, scoped to the new
+packet plus `research/ledger/`); no explorations
 ceremony — `RUN.json.frictions[]` carries the friction receipts; machine
 proposes / human admits (nothing auto-appends to `explorations/INBOX.md` or
 `goals/`); PR-only delivery from a dedicated clone. Conventions authority:

@@ -32,8 +32,9 @@ front end) and from the private out-of-repo knowledge vault managed by the
   quoted evidence in `SOURCES.md`. gitleaks stays fully authoritative over
   `research/**`; only the typos gate is path-exempted here.
 - **Blinding:** research runs are blinded to `research/**` except the digest
-  handed to them — search/synthesis stages receive no repo checkout; only the
-  writer/publisher stage touches this tree, scoped to the new packet dir plus
+  handed to them — search/synthesis stages receive no repo checkout. The
+  writer composes from structured records without a checkout; only the
+  publisher touches this tree, scoped to the new packet dir plus
   `research/ledger/`.
 - **Machine proposes, human admits:** nothing here auto-appends to
   `explorations/INBOX.md` or `goals/`. Actions graduate when a human fires a

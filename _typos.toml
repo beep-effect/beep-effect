@@ -89,6 +89,8 @@ extend-exclude = [
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",
+  # Nightly research packets contain sanitized machine-generated source excerpts.
+  "research/**",
   "bun.lock",
   "*.snap",
   ".repos/**",

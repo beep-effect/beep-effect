@@ -10,7 +10,7 @@ here are the working decomposition; keep both in sync on phase flips.
 - [x] `AGENTS.md` Docs & Knowledge law line.
 - [x] `research/README.md` conventions authority.
 - [x] This goal packet (README / SPEC / PLAN / GOAL / manifest).
-- [ ] `_typos.toml` path exemption for `research/**` (ship with P1 if preferred).
+- [x] `_typos.toml` path exemption for `research/**`.
 
 ## P1 — v0 Pipeline
 
