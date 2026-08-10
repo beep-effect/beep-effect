@@ -8,7 +8,7 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegNum, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, SchemaIssue, SchemaTransformation } from "effect";
+import { Config, Effect, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -547,10 +547,94 @@ const isHookPulseNotificationType = S.is(HookPulseNotificationType);
 const areHookPulseEventsEquivalent = S.toEquivalence(HookPulseEvent);
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
 const sha256HexPattern = /^[0-9a-f]{64}$/u;
-const privateReference = (value: string) =>
+
+/**
+ * Salt the hook-pulse codecs hash private identifiers with, resolved exactly as `.claude/hooks/hook-pulse.sh` resolves its own.
+ *
+ * **Details**
+ *
+ * Three rungs, in the writer's order: `BEEP_HOOK_PULSE_HASH_SALT`, then
+ * `BEEP_AI_METRICS_HASH_SALT`, then absent. The first salts this instrument
+ * alone; the second is the repo-wide ai-metrics salt, so a machine that already
+ * exports one groups hook rows under the same pseudonyms as the rest of the
+ * stack. Absent resolves to `undefined`, which {@link hashPrivateIdentifier}
+ * turns into `AI_METRICS_LOCAL_INSECURE_HASH_SALT` — the same constant the shell
+ * falls back to, so an unconfigured clone produces digests both halves
+ * reproduce.
+ *
+ * Read through `Config` rather than the environment directly because
+ * `ConfigProvider` is a `Context.Reference` whose default is
+ * `ConfigProvider.fromEnv()`. The requirement channel therefore stays `never`
+ * and the codecs' types are unchanged, while a caller — a test, or a replay
+ * pass reconciling against an archived corpus — can still pin an explicit
+ * provider.
+ *
+ * **Gotchas**
+ *
+ * A whitespace-only first rung is a value, not an absence. It wins the
+ * precedence contest and is only then collapsed to the insecure default; it
+ * does not fall through to the second rung, and `${BEEP_HOOK_PULSE_HASH_SALT:-}`
+ * in the shell does not fall through either. That lone input is where a shell
+ * reading and a trim-first reading could disagree while both looked correct.
+ *
+ * Pinning a `ConfigProvider` that carries neither variable is the escape hatch
+ * for replaying a pre-cutover corpus: it reproduces the library-default
+ * digests those rows were written with, whatever the ambient environment
+ * exports.
+ *
+ * **Example** (Pin the salt for a deterministic decode)
+ *
+ * ```ts
+ * import { hookPulseHashSalt } from "@beep/repo-ai-metrics"
+ * import { ConfigProvider, Effect } from "effect"
+ *
+ * const pinned = Effect.provideService(
+ *   hookPulseHashSalt,
+ *   ConfigProvider.ConfigProvider,
+ *   ConfigProvider.fromEnv({ env: { BEEP_HOOK_PULSE_HASH_SALT: "fixture-salt" } })
+ * )
+ *
+ * console.log(Effect.runSync(pinned)) // "fixture-salt"
+ * ```
+ *
+ * @see {@link HookPulseV1FromRawEvent} for the codec that hashes with this salt.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hookPulseHashSalt: Config.Config<string | undefined> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
+  Config.orElse(() => Config.string("BEEP_AI_METRICS_HASH_SALT")),
+  Config.withDefault(undefined)
+);
+
+const privateReference = (value: string, hashSalt: string | undefined) =>
   sha256HexPattern.test(value)
     ? Effect.succeed(Sha256Hex.make(value))
-    : hashPrivateIdentifier(value, undefined).pipe(Effect.map(Sha256Hex.make));
+    : hashPrivateIdentifier(value, hashSalt).pipe(Effect.map(Sha256Hex.make));
+
+// The salt is a per-decode constant, not a per-field one, so it is resolved once
+// here and threaded down. `.claude/hooks/hook-pulse.sh` walks the identical
+// precedence, and `hook-pulse-writer.test.ts` proves the two halves agree by
+// running the real writer under a test salt and recomputing its digests here.
+// A `ConfigError` is folded into the caller's hashing-failure issue: with
+// `fromEnv` it is unreachable (all lookups are synchronous and absence is
+// absorbed by `withDefault`), and a second issue message would claim a
+// distinction the codec cannot actually observe.
+const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
+  readonly cwd: string;
+  readonly sessionId: string;
+  readonly transcriptPath: O.Option<string>;
+}) {
+  const hashSalt = yield* hookPulseHashSalt;
+
+  return yield* Effect.all({
+    sessionId: privateReference(input.sessionId, hashSalt),
+    cwd: privateReference(input.cwd, hashSalt),
+    transcriptPath: O.match(input.transcriptPath, {
+      onNone: () => Effect.succeed(O.none<Sha256Hex>()),
+      onSome: (value) => privateReference(value, hashSalt).pipe(Effect.map(O.some)),
+    }),
+  });
+});
 
 // Only fields semantically bound to exactly one event belong here. `toolName`,
 // `toolUseId`, and `durationMs` are deliberately left unconstrained: their
@@ -796,13 +880,10 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
     HookPulseV1,
     SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
       decode: (input) =>
-        Effect.all({
-          sessionId: privateReference(input.sessionId),
-          cwd: privateReference(input.cwd),
-          transcriptPath: O.match(O.fromUndefinedOr(input.transcriptPath), {
-            onNone: () => Effect.succeed(O.none<Sha256Hex>()),
-            onSome: (value) => privateReference(value).pipe(Effect.map(O.some)),
-          }),
+        hookPulsePrivateReferences({
+          cwd: input.cwd,
+          sessionId: input.sessionId,
+          transcriptPath: O.fromUndefinedOr(input.transcriptPath),
         }).pipe(
           Effect.mapError(
             () =>
@@ -893,10 +974,10 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
     HookPulseV1,
     SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
       decode: (input) =>
-        Effect.all({
-          sessionId: privateReference(input.event.session_id),
-          cwd: privateReference(input.event.cwd),
-          transcriptPath: privateReference(input.event.transcript_path),
+        hookPulsePrivateReferences({
+          cwd: input.event.cwd,
+          sessionId: input.event.session_id,
+          transcriptPath: O.some(input.event.transcript_path),
         }).pipe(
           Effect.mapError(
             () =>
@@ -928,7 +1009,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               toolName: input.event.tool_name,
               toolUseId: input.event.tool_use_id,
               promptId: input.event.prompt_id,
-              transcriptPath: O.some(privateRefs.transcriptPath),
+              transcriptPath: privateRefs.transcriptPath,
               permissionMode: input.event.permission_mode,
               notificationType: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.notificationType,

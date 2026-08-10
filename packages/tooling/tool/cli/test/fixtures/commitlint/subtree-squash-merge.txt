@@ -1,0 +1,12 @@
+chore(deps): update catalog to Effect 4.0.0-beta.103 (#587)
+
+* Squashed '.repos/effect/' changes from 721b9f0d32..931f573749
+
+931f573749 Update scoped test guidance for v4 (#7078)
+8f63cce636 Fix failed OTLP exports consume delta checkpoints (#7037)
+82a3fbfce8 Route provider-executed tool results into the assistant message in Prompt.fromResponseParts (#6836)
+5b3ab384c4 Use local server in NodeHttpClient tests (#6929)
+2b9b2105eb Use local server in HttpClient tests (#6930)
+
+git-subtree-dir: .repos/effect
+git-subtree-split: 931f5737490e54f682c473abdf4bf046ac9ffd34

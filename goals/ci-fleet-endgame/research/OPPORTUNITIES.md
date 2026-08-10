@@ -90,3 +90,22 @@
 
   Validate on the shadow label before the `beep-ec2-heavy` cutover, and confirm
   the shipped logs contain no JIT config before treating the group as durable.
+
+## The resource-weight ratchet inherits the beta.104 epistemic kill set
+
+- **Work:** PR #607 (effect `4.0.0-beta.104` subtree refresh) — keeping the
+  hosted heavy lanes alive on 16 GB runners while the fleet work landed.
+- **Friction:** single cold compiles exceeded runner memory. Turbo concurrency
+  was walked 4 → 3 → 2 → 1 across five heads and fully serial still died:
+  `packages/epistemic/server` `tsc -b` alone killed a runner. Only the CLI-side
+  advisory swap step plus serial lane caps (both stopgaps, landed in #607) got
+  the PR green.
+- **Evidence:** `explorations/graphnosis-prior-art/research/OPPORTUNITIES.md`
+  (the beta.104 heavy-lane receipt, lines 35–52). The recurring kill set:
+  `epistemic/server`, `epistemic/client`, `epistemic/ui`, `db-admin`,
+  `ontology/client`, `tooling/tool/cli`, `apps/storybook`.
+- **Proposal:** the resource-weight ratchet work (SPEC.md target surfaces,
+  PLAN.md P5) should inherit this kill set as its first ranked target list —
+  re-run the instantiation census post-beta.104 and drive the epistemic slice
+  down first. This is the real fix behind the #607 stopgaps; the swap step and
+  serial caps should be retired once the slice fits cold in runner memory.

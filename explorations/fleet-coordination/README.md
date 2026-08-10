@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -26,38 +26,18 @@ checkouts share one filesystem, one kernel, one user.
 
 ## Next Open Question
 
-**Rung 2 only, and not blocking — but the gate moved.** Claude Code 2.1.224
-shipped cross-session messaging, so delivery no longer waits on speed-loop PR-I
-landing `AgentBrief.fleet`. The question is now its shape: push reaches only
-sessions that bound a messaging socket, and whether a message is delivered,
-held, or dropped is decided by the **receiver's** permission mode, which the
-sender cannot see. So does rung 2 become *push to the reachable, pull for
-everyone*, and does it ride into
-[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md) or open its own
-packet? See [`T6`](./research/T6-cross-session-messaging.md).
+None. [`D7`](./DECISIONS.md) closes the remaining branches in one ownership
+line: rung 1.5 ships as a bounded hardening of
+[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md), and rung 2 returns to
+that same retained goal as **push to reachable sessions plus pull for
+everyone**. Cross-session push is an opportunistic accelerator; the derived
+mirror remains the source of truth and fallback.
 
-**Rung 1 shipped 2026-08-08** as `beep worktree fleet` (#621) — derivation only.
-This exploration stays `active` because rung 2 remains unbuilt, and now carries
-a bounded **rung 1.5**: adopt the on-disk session registry as the liveness probe
-(T6 §4), which converts `unknown → live` on a 99.7%-readable measurement where
-rung 1's `/proc` probe reaches 13.2%. Rung 1.5 is not a classifier tweak — the
-`evidence` field is a closed literal domain, so it needs a schema change first;
-T6 §4 carries the schema-first order. Needs an operator go before it opens.
-
-**Third question, open and unexplained.** `beep-effect3-e3` runs 2.1.226,
-`kind: interactive`, `status: busy`, and records `messagingSocketPath: null`, so
-it is unreachable by peer messaging while fully alive (T6 §3.1). The documented
-candidates are feature-flag evaluation being disabled for that session, bare
-mode, or provider. Recorded as **measured and unexplained** rather than guessed,
-per this packet's binding law. It matters because it bounds how much of the
-fleet rung 2's push half can ever cover.
-
-These three questions are mirrored in
-[`ops/manifest.json`](./ops/manifest.json) `openQuestions`; the manifest is the
-machine-readable copy and this section is the prose one. They are open
-questions, not decisions — [`DECISIONS.md`](./DECISIONS.md) is the align-stage
-log of questions already *answered* (question → answer → rationale), so nothing
-lands there until one of these resolves.
+The socket-less `beep-effect3-e3` specimen in [`T6`](./research/T6-cross-session-messaging.md)
+§3.1 stays measured-and-unexplained, but it is no longer an open design branch:
+the pull half is required precisely because reachability cannot be assumed.
+Investigate the missing socket only if measured push coverage later proves too
+low; do not guess at its cause now.
 
 ## Read This First
 
@@ -91,6 +71,14 @@ the capability is not the same as the capability covering the fleet.
 
 ## Trail
 
+- 2026-08-10: **packet closed with no open questions.** Rung 1.5 added the
+  positive-only Claude session-registry probe with the `/proc` `starttime`
+  PID-reuse guard, ranked contested text output by live claimants, and flags a
+  checkout that swamps the truncated index. D7 also fixed rung 2's shape and
+  ownership: push-to-reachable plus pull-for-everyone, continuing in
+  `goals/fleet-mirror` rather than opening a competing packet. The unexplained
+  socket-less live session is accepted as evidence for the pull fallback, not
+  retained as an investigation obligation. Status flipped to `graduated`.
 - 2026-08-10: friction ledger opened
   ([`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)) with three
   receipts, two of them found by **dogfooding rung 1 on a real question** —

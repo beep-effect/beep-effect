@@ -39,8 +39,9 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { resolveDataRoot } from "../AIMetrics/AIMetrics.config.ts";
 import { runAgentEffectivenessEvalScoreCommand } from "./internal/EvalScorer.ts";
 import type {
   AgentEffectivenessAnnotationCheckReport,
@@ -57,7 +58,6 @@ import type { HttpClient } from "effect/unstable/http";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.command");
 
-const defaultAgentEffectivenessDataRoot = ".beep/ai-metrics";
 const agentEffectivenessPhoenixBaseUrlEnvVar = "BEEP_AGENT_EFFECTIVENESS_PHOENIX_BASE_URL";
 const defaultAgentEffectivenessPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
 const agentEffectivenessPhoenixBaseUrlConfig = Config.string(agentEffectivenessPhoenixBaseUrlEnvVar).pipe(
@@ -73,10 +73,6 @@ const targetFlag = Flag.choiceWithValue("target", [
 ]).pipe(
   Flag.withDefault(AiMetricsDeployTarget.Enum.dankserver),
   Flag.withDescription("Agent-effectiveness evidence target")
-);
-const dataRootFlag = Flag.string("data-root").pipe(
-  Flag.withDefault(defaultAgentEffectivenessDataRoot),
-  Flag.withDescription("AI metrics data root")
 );
 const phoenixBaseUrlFlag = Flag.string("phoenix-base-url").pipe(
   Flag.withFallbackConfig(agentEffectivenessPhoenixBaseUrlConfig),
@@ -320,7 +316,7 @@ const renderPhoenixSyncResult: {
 
 class MakeDoctorProgramOptions extends S.Class<MakeDoctorProgramOptions>($I`MakeDoctorProgramOptions`)(
   {
-    dataRoot: S.String,
+    dataRoot: S.Option(S.String),
     json: S.Boolean,
     noPhoenix: S.Boolean,
     phoenixBaseUrl: S.String,
@@ -332,101 +328,59 @@ class MakeDoctorProgramOptions extends S.Class<MakeDoctorProgramOptions>($I`Make
   })
 ) {}
 
-const makeDoctorProgram = Effect.fn("AgentEffectiveness.makeDoctorProgram")(function* ({
-  dataRoot,
-  json,
-  noPhoenix,
-  phoenixBaseUrl,
-  target,
-  workerEvalReportPath,
-}: MakeDoctorProgramOptions) {
+// Every doctor-shaped handler resolves the same data root, builds the same
+// `AgentEffectivenessDoctorInput`, and provides the same layers around whatever it derives
+// from that input; only the derivation and the rendering tail differ.
+const runDoctorInputProgram = Effect.fn("AgentEffectiveness.runDoctorInputProgram")(function* <A, E, R>(
+  { dataRoot, noPhoenix, phoenixBaseUrl, target, workerEvalReportPath }: MakeDoctorProgramOptions,
+  derive: (input: AgentEffectivenessDoctorInput) => Effect.Effect<A, E, R>
+) {
+  const resolvedDataRoot = yield* resolveDataRoot(dataRoot, target);
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
-      dataRoot,
+      dataRoot: resolvedDataRoot,
       noPhoenix,
       phoenixBaseUrl,
       target,
       workerEvalReportPath,
     }),
-    makeAgentEffectivenessDoctorReport,
-    provideAgentEffectivenessLayers(dataRoot),
-    Effect.flatMap(renderDoctorReport(json))
+    derive,
+    provideAgentEffectivenessLayers(resolvedDataRoot)
   );
 });
 
-const makeAnnotationPlanProgram = Effect.fn("AgentEffectiveness.makeAnnotationPlanProgram")(function* ({
-  dataRoot,
-  json,
-  noPhoenix,
-  phoenixBaseUrl,
-  target,
-  workerEvalReportPath,
-}: MakeDoctorProgramOptions) {
-  return yield* pipe(
-    AgentEffectivenessDoctorInput.make({
-      dataRoot,
-      noPhoenix,
-      phoenixBaseUrl,
-      target,
-      workerEvalReportPath,
-    }),
-    AgentEffectivenessAnnotationPlanInput.new,
-    makeAgentEffectivenessAnnotationPlan,
-    provideAgentEffectivenessLayers(dataRoot),
-    Effect.flatMap(renderAnnotationPlan(json))
-  );
+const deriveAnnotationPlan = flow(AgentEffectivenessAnnotationPlanInput.new, makeAgentEffectivenessAnnotationPlan);
+
+const makeDoctorProgram = Effect.fn("AgentEffectiveness.makeDoctorProgram")(function* (
+  options: MakeDoctorProgramOptions
+) {
+  const report = yield* runDoctorInputProgram(options, makeAgentEffectivenessDoctorReport);
+  return yield* renderDoctorReport(report, options.json);
 });
 
-const makeAnnotationCheckProgram = Effect.fn("AgentEffectiveness.makeAnnotationCheckProgram")(function* ({
-  dataRoot,
-  json,
-  noPhoenix,
-  phoenixBaseUrl,
-  target,
-  workerEvalReportPath,
-}: MakeDoctorProgramOptions) {
-  return yield* pipe(
-    AgentEffectivenessDoctorInput.make({
-      dataRoot,
-      noPhoenix,
-      phoenixBaseUrl,
-      target,
-      workerEvalReportPath,
-    }),
-    AgentEffectivenessAnnotationPlanInput.new,
-    makeAgentEffectivenessAnnotationPlan,
-    provideAgentEffectivenessLayers(dataRoot),
-    Effect.map(makeAgentEffectivenessAnnotationCheckReport),
-    Effect.tap(renderAnnotationCheck(json)),
-    Effect.flatMap((report) =>
-      AgentEffectivenessStatus.is.failed(report.status)
-        ? failWithReportedExit("agent-effectiveness annotations check failed.")
-        : Effect.void
-    )
-  );
+const makeAnnotationPlanProgram = Effect.fn("AgentEffectiveness.makeAnnotationPlanProgram")(function* (
+  options: MakeDoctorProgramOptions
+) {
+  const plan = yield* runDoctorInputProgram(options, deriveAnnotationPlan);
+  return yield* renderAnnotationPlan(plan, options.json);
 });
 
-const makeDatasetBundleProgram = Effect.fn("AgentEffectiveness.makeDatasetBundleProgram")(function* ({
-  dataRoot,
-  json,
-  noPhoenix,
-  phoenixBaseUrl,
-  target,
-  workerEvalReportPath,
-}: MakeDoctorProgramOptions) {
-  return yield* pipe(
-    AgentEffectivenessDoctorInput.make({
-      dataRoot,
-      noPhoenix,
-      phoenixBaseUrl,
-      target,
-      workerEvalReportPath,
-    }),
-    makeAgentEffectivenessDoctorReport,
-    provideAgentEffectivenessLayers(dataRoot),
-    Effect.map(makeAgentEffectivenessDatasetBundle),
-    Effect.flatMap(renderDatasetBundle(json))
-  );
+const makeAnnotationCheckProgram = Effect.fn("AgentEffectiveness.makeAnnotationCheckProgram")(function* (
+  options: MakeDoctorProgramOptions
+) {
+  const plan = yield* runDoctorInputProgram(options, deriveAnnotationPlan);
+  const report = makeAgentEffectivenessAnnotationCheckReport(plan);
+  yield* renderAnnotationCheck(report, options.json);
+  return yield* AgentEffectivenessStatus.is.failed(report.status)
+    ? failWithReportedExit("agent-effectiveness annotations check failed.")
+    : Effect.void;
+});
+
+const makeDatasetBundleProgram = Effect.fn("AgentEffectiveness.makeDatasetBundleProgram")(function* (
+  options: MakeDoctorProgramOptions
+) {
+  const report = yield* runDoctorInputProgram(options, makeAgentEffectivenessDoctorReport);
+  return yield* renderDatasetBundle(makeAgentEffectivenessDatasetBundle(report), options.json);
 });
 
 const makePromptBundleProgram = Effect.fn("AgentEffectiveness.makePromptBundleProgram")(function* (
@@ -440,21 +394,15 @@ const makePromptBundleProgram = Effect.fn("AgentEffectiveness.makePromptBundlePr
   );
 });
 
-const makeExperimentBundleProgram = Effect.fn("AgentEffectiveness.makeExperimentBundleProgram")(function* ({
-  dataRoot,
-  json,
-  ...rest
-}: MakeDoctorProgramOptions) {
+const makeExperimentBundleProgram = Effect.fn("AgentEffectiveness.makeExperimentBundleProgram")(function* (
+  options: MakeDoctorProgramOptions
+) {
+  const report = yield* runDoctorInputProgram(options, makeAgentEffectivenessDoctorReport);
   return yield* pipe(
-    AgentEffectivenessDoctorInput.make({
-      dataRoot,
-      ...rest,
-    }),
-    makeAgentEffectivenessDoctorReport,
-    provideAgentEffectivenessLayers(dataRoot),
-    Effect.map(makeAgentEffectivenessDatasetBundle),
-    Effect.map(makeAgentEffectivenessExperimentBundle),
-    Effect.flatMap(renderExperimentBundle(json))
+    report,
+    makeAgentEffectivenessDatasetBundle,
+    makeAgentEffectivenessExperimentBundle,
+    renderExperimentBundle(options.json)
   );
 });
 
@@ -480,6 +428,7 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
   workerEvalReportPath,
   write,
 }: MakePhoenixSyncProgramOptions) {
+  const resolvedDataRoot = yield* resolveDataRoot(dataRoot, target);
   const makePhoenixSyncInput = pipe(
     confirmPhoenixWrite,
     O.match({
@@ -490,7 +439,7 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
 
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
-      dataRoot,
+      dataRoot: resolvedDataRoot,
       noPhoenix,
       phoenixBaseUrl,
       target,
@@ -499,7 +448,7 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
     AgentEffectivenessAnnotationPlanInput.new,
     makePhoenixSyncInput,
     syncAgentEffectivenessPhoenix,
-    provideAgentEffectivenessPhoenixLayers(dataRoot, phoenixBaseUrl),
+    provideAgentEffectivenessPhoenixLayers(resolvedDataRoot, phoenixBaseUrl),
     Effect.tap(renderPhoenixSyncResult(json)),
     Effect.flatMap((result) =>
       AgentEffectivenessStatus.is.failed(result.status)
@@ -507,6 +456,42 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
         : Effect.void
     )
   );
+});
+
+class MakeEvalScoreProgramOptions extends S.Class<MakeEvalScoreProgramOptions>($I`MakeEvalScoreProgramOptions`)(
+  {
+    dataRoot: S.Option(S.String),
+    dir: S.String,
+    json: S.Boolean,
+    record: S.Boolean,
+    taskPath: S.String,
+  },
+  $I.annote("MakeEvalScoreProgramOptions", {
+    description: "Eval scorer flags before the AI metrics data root is resolved.",
+  })
+) {}
+
+// `evals score` carries no `--target` flag, so the fallback rung is always the
+// workstation's XDG store rather than a deploy target's server-owned root. The
+// root is resolved only when recording: pure fixture scoring must not depend on
+// HOME/XDG_STATE_HOME in hermetic environments.
+const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram")(function* ({
+  dataRoot,
+  dir,
+  json,
+  record,
+  taskPath,
+}: MakeEvalScoreProgramOptions) {
+  const resolvedDataRoot = record
+    ? O.some(yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
+    : O.none<string>();
+  return yield* runAgentEffectivenessEvalScoreCommand({
+    dataRoot: resolvedDataRoot,
+    dir,
+    json,
+    record,
+    taskPath,
+  });
 });
 
 const doctorCommand = Command.make(
@@ -643,7 +628,7 @@ const evalsScoreCommand = Command.make(
     record: evalRecordFlag,
     taskPath: evalTaskManifestFlag,
   },
-  flow(runAgentEffectivenessEvalScoreCommand, runAgentEffectivenessProgram)
+  flow(makeEvalScoreProgram, runAgentEffectivenessProgram)
 ).pipe(Command.withDescription("Score a SkillOpt eval fixture with completion and repo-law checks"));
 
 const evalsCommand = Command.make("evals", {}, () =>
@@ -651,16 +636,24 @@ const evalsCommand = Command.make("evals", {}, () =>
 ).pipe(Command.withDescription("Run SkillOpt eval scorer commands"), Command.withSubcommands([evalsScoreCommand]));
 
 /**
- * Agent-effectiveness root command.
+ * Root of the `agent-effectiveness` command tree: doctor, annotations, bundles, and evals.
  *
- * **Example** (Run agent effectiveness command)
+ * **Details**
+ *
+ * Invoked with no subcommand it prints the available subcommands rather than
+ * doing work. Subcommands that read the metrics store take `--data-root`, which
+ * falls back to `BEEP_AI_METRICS_DATA_ROOT` and then to the XDG state store, so
+ * they address the same store the collector writes.
+ *
+ * **Example** (Mounting the command tree in a CLI entrypoint)
  *
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
- * import { Command } from "effect/unstable/cli"
  * import { Effect } from "effect"
+ * import { Command } from "effect/unstable/cli"
  *
  * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })
+ *
  * console.log(Effect.isEffect(run)) // true
  * ```
  *
