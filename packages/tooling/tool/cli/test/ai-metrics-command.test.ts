@@ -274,7 +274,9 @@ const waitForCapturedOtlpTraceRequest = (
   requests: ReadonlyArray<CapturedOtlpRequest>
 ): Effect.Effect<CapturedOtlpRequest, string> =>
   findCapturedOtlpTraceRequest(requests).pipe(
-    Effect.retry(Schedule.max([Schedule.spaced(Duration.millis(25)), Schedule.recurs(200)]))
+    // Schedule.max continues while ANY sub-schedule continues, so pairing an infinite
+    // `spaced` with `recurs` never terminates; the delay must ride on `recurs` itself.
+    Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(25)))))
   );
 
 describe("ai-metrics command", () => {
