@@ -6,7 +6,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { CauseTaggedError } from "@beep/schema";
-import { Console, Effect, Result } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
@@ -196,6 +196,13 @@ export const formatJsonValue = (value: unknown): string =>
 /**
  * Encode and print an arbitrary JSON-compatible command payload.
  *
+ * **Details**
+ *
+ * Writes directly to stdout at this process boundary rather than through
+ * `Console.log`. Bun's platform Console truncates one log entry at 64 KiB,
+ * which can turn a valid large command payload into invalid JSON; stdout
+ * preserves the complete encoded document.
+ *
  * **Example** (Print a machine-readable command result)
  *
  * ```ts
@@ -212,7 +219,8 @@ export const formatJsonValue = (value: unknown): string =>
 export const printCommandJson = Effect.fn("RepoCli.Json.printCommandJson")(function* (
   value: unknown
 ): Effect.fn.Return<void, CliJsonError> {
-  yield* Console.log(
-    yield* encodeCommandJson(value).pipe(CliJsonError.mapError("Failed to encode command JSON output."))
-  );
+  const encoded = yield* encodeCommandJson(value).pipe(CliJsonError.mapError("Failed to encode command JSON output."));
+  yield* Effect.sync(() => {
+    process.stdout.write(`${encoded}\n`);
+  });
 });
