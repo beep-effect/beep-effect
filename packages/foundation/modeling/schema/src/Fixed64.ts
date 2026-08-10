@@ -33,13 +33,15 @@ const Fixed64BigInt = S.BigInt.check(Fixed64Range);
 /**
  * Branded schema for protobuf `fixed64` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes and can expose `fixed64` as eight fixed bytes from `Long`,
  * `number`, decimal `string`, or `bigint` values. This schema accepts those
  * protobufjs-compatible input shapes and normalizes them to `bigint` before
  * enforcing the unsigned fixed-width 64-bit range.
  *
- * @example
+ * **Example** (Decode fixed64 from string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -67,7 +69,8 @@ export const Fixed64 = ProtobufInt64Input.pipe(S.decodeTo(Fixed64BigInt, decodeP
 /**
  * Type-level value inferred from {@link Fixed64}.
  *
- * @example
+ * **Example** (Narrow Fixed64 with is)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Fixed64 } from "@beep/schema/Fixed64"

@@ -24,13 +24,15 @@ const MarkPayloadJson = S.fromJsonString(MarkPayload);
 /**
  * Read the live collector handle, failing politely when no session is running.
  *
- * @example
+ * **Example** (Verify Effect return)
+ *
  * ```ts
  * import { requireLiveHandle } from "@beep/repo-cli/commands/Qa/Control"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(requireLiveHandle("/repo/.beep/qa"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -74,13 +76,15 @@ const postToCollector = Effect.fn("QaControl.postToCollector")(function* (
 /**
  * Ask the live collector to stop, releasing the recorder from its wait.
  *
- * @example
+ * **Example** (Verify Effect return)
+ *
  * ```ts
  * import { stopLiveSession } from "@beep/repo-cli/commands/Qa/Control"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(stopLiveSession("/repo/.beep/qa"))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -95,10 +99,13 @@ export const stopLiveSession = Effect.fn("QaControl.stopLiveSession")(function* 
 /**
  * Append a semantic marker to the live session's witness log.
  *
+ * **Details**
+ *
  * The witness marker model carries a label only, so `data` is appended to the
  * label rather than travelling in a separate field.
  *
- * @example
+ * **Example** (Mark session with label)
+ *
  * ```ts
  * import { markLiveSession } from "@beep/repo-cli/commands/Qa/Control"
  * import { Effect } from "effect"
@@ -106,6 +113,7 @@ export const stopLiveSession = Effect.fn("QaControl.stopLiveSession")(function* 
  *
  * console.log(Effect.isEffect(markLiveSession("/repo/.beep/qa", "gesture:sash-drag", O.none()))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

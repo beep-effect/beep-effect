@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.model");
 /**
  * User or team work area.
  *
- * @example
+ * **Example** (Log Workspace table name)
+ *
  * ```ts
  * import { Workspace } from "@beep/workspace-domain"
  *

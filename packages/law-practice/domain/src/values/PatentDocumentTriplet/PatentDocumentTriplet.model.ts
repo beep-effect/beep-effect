@@ -28,6 +28,8 @@ const CanonicalPatentDocumentNumber = S.String.check(
 /**
  * Canonical display triplet for identifying a published patent document.
  *
+ * **Details**
+ *
  * WIPO ST.1 defines the minimum data elements for identifying a patent
  * document as the ST.3 office code, the ST.6 publication number, the ST.16
  * kind-of-document code, and the publication date. This value object captures
@@ -38,7 +40,8 @@ const CanonicalPatentDocumentNumber = S.String.check(
  * a valid ST.3 office code, a comma-grouped ST.6 publication number containing
  * at most 13 digits, and a valid ST.16 kind code separated by single spaces.
  *
- * @example
+ * **Example** (Validate patent document format)
+ *
  * ```ts
  * import { PatentDocumentTriplet } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -72,7 +75,8 @@ export const PatentDocumentTriplet = S.TemplateLiteral([
 /**
  * Type-level brand produced by {@link PatentDocumentTriplet}.
  *
- * @example
+ * **Example** (Decode branded patent triplet)
+ *
  * ```ts
  * import { PatentDocumentTriplet } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

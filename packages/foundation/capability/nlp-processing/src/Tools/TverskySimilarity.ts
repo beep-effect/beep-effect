@@ -61,10 +61,13 @@ class TverskySimilaritySuccess extends S.Class<TverskySimilaritySuccess>($I`Tver
  * Defines the agent-facing tool contract for asymmetric Tversky similarity
  * over token sets.
  *
+ * **Details**
+ *
  * Use this tool when one text should be treated as the reference and omission
  * versus extra-token penalties need separate `alpha` and `beta` weights.
  *
- * @example
+ * **Example** (Decode Tversky parameters)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity"

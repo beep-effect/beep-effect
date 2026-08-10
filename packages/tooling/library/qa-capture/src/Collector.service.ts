@@ -40,16 +40,20 @@ const $I = $QaCaptureId.create("Collector.service");
  * Placeholder sequence carried by server-side markers (`POST /mark`) before
  * canonical re-sequencing.
  *
+ * **Details**
+ *
  * The collector rewrites EVERY accepted event's seq with one monotone
  * session-wide counter at ingest (witness counters restart per navigation, so
  * raw page-local seqs collide across page loads). This constant only fills
  * the schema-required field on a server-minted marker until that rewrite.
  *
- * @example
+ * **Example** (Log server marker seq base)
+ *
  * ```ts
  * import { SERVER_MARKER_SEQ_BASE } from "@beep/qa-capture"
  * console.log(SERVER_MARKER_SEQ_BASE)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -65,12 +69,14 @@ const encodeEventLine = S.encodeUnknownEffect(EventLine);
 /**
  * TCP port a collector may bind, including `0` for an ephemeral port.
  *
- * @example
+ * **Example** (Make ephemeral bind port)
+ *
  * ```ts
  * import { CollectorBindPort } from "@beep/qa-capture"
  * const port = CollectorBindPort.make(0)
  * console.log(port)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -106,13 +112,15 @@ export const CollectorBindPort = S.Int.check(
 /**
  * TCP port a collector may bind, including `0` for an ephemeral port.
  *
- * @example
+ * **Example** (Type annotated bind port)
+ *
  * ```ts
  * import { CollectorBindPort } from "@beep/qa-capture"
  * import type { CollectorBindPort as CollectorBindPortValue } from "@beep/qa-capture"
  * const port: CollectorBindPortValue = CollectorBindPort.make(43117)
  * console.log(port)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -121,7 +129,8 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
 /**
  * Options accepted by {@link Collector} `serve`.
  *
- * @example
+ * **Example** (Make collector serve options)
+ *
  * ```ts
  * import { CollectorServeOptions } from "@beep/qa-capture"
  * import * as O from "effect/Option"
@@ -134,6 +143,7 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
  * })
  * console.log(options.port)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -195,12 +205,14 @@ export class CollectorServeOptions extends S.Class<CollectorServeOptions>($I`Col
 /**
  * Live view of a serving collector returned by {@link Collector} `serve`.
  *
- * @example
+ * **Example** (Inspect running collector port)
+ *
  * ```ts
  * import type { CollectorRunning } from "@beep/qa-capture"
  * const inspect = (running: CollectorRunning) => running.port
  * console.log(inspect)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -215,13 +227,15 @@ export interface CollectorRunning {
 /**
  * Runtime shape exposed by the {@link Collector} service.
  *
- * @example
+ * **Example** (Stub collector service shape)
+ *
  * ```ts
  * import type { CollectorShape } from "@beep/qa-capture"
  * import { Effect } from "effect"
  * const service: CollectorShape = { serve: () => Effect.die("not implemented") }
  * console.log(service)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -471,12 +485,14 @@ const makeService = Effect.fnUntraced(function* () {
 /**
  * Effect service that runs the witness event collector.
  *
- * @example
+ * **Example** (Access collector layer)
+ *
  * ```ts
  * import { Collector } from "@beep/qa-capture"
  * const layer = Collector.layer
  * console.log(layer)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -484,12 +500,14 @@ export class Collector extends Context.Service<Collector, CollectorShape>()($I`C
   /**
    * Live collector layer over the witness, file-system, and path services.
    *
-   * @example
+   * **Example** (Import live collector layer)
+   *
    * ```ts
    * import { Collector } from "@beep/qa-capture"
    * const layer = Collector.layer
    * console.log(layer)
    * ```
+   *
    * @category layers
    * @since 0.0.0
    */

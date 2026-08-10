@@ -13,12 +13,14 @@ const $I = $LawPracticeDomainId.create("values/KgNodeKind");
 /**
  * Node kinds admitted to the deterministic practice knowledge-graph spine.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The set is closed, and its members double as the `kind` discriminator persisted
  * on every `kg_node` row. Adding a kind is a projection-schema change, not a
  * local edit — every projection that fans out over node kinds must handle it.
  *
- * @example
+ * **Example** (Decode and guard node kinds)
+ *
  * ```ts
  * import { KgNodeKind } from "@beep/law-practice-domain/values"
  * import * as S from "effect/Schema"
@@ -31,7 +33,6 @@ const $I = $LawPracticeDomainId.create("values/KgNodeKind");
  * ```
  *
  * @see {@link KgEdgePredicate} for the predicates admitted between these nodes.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -52,7 +53,8 @@ export const KgNodeKind = LiteralKit([
 /**
  * Runtime type for {@link KgNodeKind}.
  *
- * @example
+ * **Example** (Type prosecution spine kinds)
+ *
  * ```ts
  * import type { KgNodeKind } from "@beep/law-practice-domain/values"
  *

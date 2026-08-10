@@ -33,7 +33,8 @@ const CuidStateLive = Layer.effect(
  * In-memory ThreadStore layer for fast workspace proofs, requiring host crypto
  * while providing the canonical CUID state internally.
  *
- * @example
+ * **Example** (Log in-memory ThreadStore layer)
+ *
  * ```ts
  * import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread"
  *
@@ -51,7 +52,8 @@ export const ThreadStoreInMemoryLayer = Layer.effect(ThreadStore, makeInMemoryTh
  * Drizzle-backed ThreadStore layer requiring a {@link @beep/postgres#PostgresDrizzle}
  * database and host crypto while providing the canonical CUID state internally.
  *
- * @example
+ * **Example** (Log Drizzle ThreadStore layer)
+ *
  * ```ts
  * import { ThreadStoreDrizzleLayer } from "@beep/workspace-server/aggregates/Thread"
  *
@@ -68,7 +70,8 @@ export const ThreadStoreDrizzleLayer = Layer.effect(ThreadStore, makeDrizzleThre
 /**
  * Default ThreadStore layer (in-memory) for normal slice tests.
  *
- * @example
+ * **Example** (Log default ThreadStore layer)
+ *
  * ```ts
  * import { ThreadStoreLive } from "@beep/workspace-server/aggregates/Thread"
  *

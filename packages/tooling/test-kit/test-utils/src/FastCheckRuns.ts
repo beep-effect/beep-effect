@@ -16,12 +16,14 @@
  * Re-exported env-max fast-check run-count helpers (`fcRuns`,
  * `envFcNumRunsFloor`, `parseFcNumRunsFloor`, `DEFAULT_FC_NUM_RUNS`).
  *
- * @example
+ * **Example** (Re-exported fcRuns helper)
+ *
  * ```ts
  * import { fcRuns } from "@beep/test-utils"
  *
  * console.log(fcRuns(40).numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */

@@ -15,7 +15,8 @@ const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
 /**
  * Persisted skill record referenced by fixture-backed agents.
  *
- * @example
+ * **Example** (Log Skill table name)
+ *
  * ```ts
  * import { Skill } from "@beep/agents-domain"
  *

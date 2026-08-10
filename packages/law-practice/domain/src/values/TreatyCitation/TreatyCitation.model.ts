@@ -15,14 +15,15 @@ const $I = $LawPracticeDomainId.create("values/TreatyCitation/TreatyCitation.mod
 /**
  * Treaty-series citation (#309).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and tags itself with the
  * `treaty` discriminant. Covers both series-number forms (T.I.A.S. No. 1502)
  * and volume-series-page forms (1155 U.N.T.S. 331); every own field is optional
  * and modeled as `Option` with a `None` constructor default.
  *
- * **Example**
+ * **Example** (Make U.N.T.S. treaty citation)
  *
- * @example
  * ```ts
  * import { TreatyCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -116,7 +117,8 @@ export class TreatyCitation extends S.Class<TreatyCitation>($I`TreatyCitation`)(
 /**
  * Companion namespace for `TreatyCitation`.
  *
- * @example
+ * **Example** (Alias Encoded wire type)
+ *
  * ```ts
  * import type { TreatyCitation } from "@beep/law-practice-domain"
  *
@@ -130,9 +132,8 @@ export declare namespace TreatyCitation {
   /**
    * Wire-encoded representation of a decoded {@link TreatyCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { TreatyCitation } from "@beep/law-practice-domain"
    *

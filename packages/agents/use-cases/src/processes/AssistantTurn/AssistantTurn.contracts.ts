@@ -29,7 +29,8 @@ const BlockIndex = S.Int.check(
  * The plain-text prompt projection of a single thread item. The kernel consumes
  * a history of these to generate the next assistant turn.
  *
- * @example
+ * **Example** (Create user history item)
+ *
  * ```ts
  * import { UserTurnHistoryItem } from "@beep/agents-use-cases/public"
  *
@@ -53,7 +54,8 @@ export class UserTurnHistoryItem extends S.Class<UserTurnHistoryItem>($I`UserTur
 /**
  * The plain-text prompt projection of a single assistant-authored thread item.
  *
- * @example
+ * **Example** (Create assistant history item)
+ *
  * ```ts
  * import { AssistantTurnHistoryItem } from "@beep/agents-use-cases/public"
  *
@@ -79,7 +81,8 @@ export class AssistantTurnHistoryItem extends S.Class<AssistantTurnHistoryItem>(
 /**
  * Plain-text prompt projection of a thread item consumed by the turn kernel.
  *
- * @example
+ * **Example** (Decode turn history item)
+ *
  * ```ts
  * import { TurnHistoryItem } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -101,7 +104,8 @@ export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistor
 /**
  * Runtime type for {@link TurnHistoryItem}.
  *
- * @example
+ * **Example** (Annotate history item type)
+ *
  * ```ts
  * import type { TurnHistoryItem } from "@beep/agents-use-cases/public"
  *
@@ -119,7 +123,8 @@ export type TurnHistoryItem = typeof TurnHistoryItem.Type;
  * Blocks may be emitted out of order on the wire, so the index restores the
  * persisted order.
  *
- * @example
+ * **Example** (Index decoded assistant block)
+ *
  * ```ts
  * import type { IndexedBlock } from "@beep/agents-use-cases/public"
  * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
@@ -151,7 +156,8 @@ export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
  * turn. The optional stop reason encodes as JSON `null`, keeping the contract
  * safe across RPC and jsonb boundaries.
  *
- * @example
+ * **Example** (Make provider usage metadata)
+ *
  * ```ts
  * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
  * import { NonNegativeInt } from "@beep/schema"
@@ -196,7 +202,8 @@ export class ProviderUsageMetadata extends S.Class<ProviderUsageMetadata>($I`Pro
 /**
  * Stream event carrying one completed assistant block.
  *
- * @example
+ * **Example** (Inspect block event make)
+ *
  * ```ts
  * import { AssistantTurnBlockEvent, IndexedBlock } from "@beep/agents-use-cases/public"
  *
@@ -221,7 +228,8 @@ export class AssistantTurnBlockEvent extends S.Class<AssistantTurnBlockEvent>($I
  * Terminal stream signal carrying provider usage for a successfully finalized
  * assistant turn.
  *
- * @example
+ * **Example** (Inspect finalization make)
+ *
  * ```ts
  * import { AssistantTurnFinalization, ProviderUsageMetadata } from "@beep/agents-use-cases/public"
  *
@@ -249,7 +257,8 @@ const AssistantTurnEventTag = LiteralKit(["block", "finalization"]);
 /**
  * Tagged assistant-turn kernel stream event.
  *
- * @example
+ * **Example** (Access finalization case)
+ *
  * ```ts
  * import { AssistantTurnEvent } from "@beep/agents-use-cases/public"
  *
@@ -271,7 +280,8 @@ export const AssistantTurnEvent = AssistantTurnEventTag.mapMembers(
 /**
  * Runtime type for {@link AssistantTurnEvent}.
  *
- * @example
+ * **Example** (Extract event type field)
+ *
  * ```ts
  * import type { AssistantTurnEvent } from "@beep/agents-use-cases/public"
  *

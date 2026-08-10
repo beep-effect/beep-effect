@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for EVM address schemas.
  *
- * @example
+ * **Example** (Import EVM address namespace)
+ *
  * ```ts
  * import * as EvmAddress from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"

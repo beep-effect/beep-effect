@@ -37,12 +37,15 @@ const lastUserPrompt = (history: ReadonlyArray<TurnHistoryItem>): O.Option<strin
  * a given history. Exposed as a pure helper so contract tests can assert the
  * exact sequence without consuming a stream.
  *
+ * **Details**
+ *
  * For a non-empty last-user prompt `p` the script is: an `h2` heading "Echo",
  * a paragraph "You said: &lt;p&gt;", a two-item bullet list, and a `text` code
  * block echoing `p`. For an empty prompt or no user item, a single paragraph
  * "No input." is produced.
  *
- * @example
+ * **Example** (Scripted blocks for history)
+ *
  * ```ts
  * import { fixtureBlocksFor } from "@beep/agents-use-cases/proof"
  *
@@ -96,7 +99,8 @@ const toIndexedBlocks = (history: ReadonlyArray<TurnHistoryItem>): ReadonlyArray
 /**
  * Exact provider usage emitted by every deterministic fixture turn.
  *
- * @example
+ * **Example** (Log fixture token counts)
+ *
  * ```ts
  * import { fixtureProviderUsage } from "@beep/agents-use-cases/proof"
  *
@@ -117,7 +121,8 @@ export const fixtureProviderUsage = ProviderUsageMetadata.make({
 /**
  * Build the fixture kernel's completed block events and terminal usage signal.
  *
- * @example
+ * **Example** (Events ending in finalization)
+ *
  * ```ts
  * import { fixtureEventsFor } from "@beep/agents-use-cases/proof"
  *
@@ -139,7 +144,8 @@ export const fixtureEventsFor = (history: ReadonlyArray<TurnHistoryItem>): Reado
  * {@link fixtureBlocksFor} sequence as indexed block events followed by the
  * deterministic {@link fixtureProviderUsage} finalization signal.
  *
- * @example
+ * **Example** (Provide kernel and collect)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"

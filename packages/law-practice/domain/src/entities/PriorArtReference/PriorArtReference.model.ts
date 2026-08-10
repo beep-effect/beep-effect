@@ -15,10 +15,13 @@ const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtRefer
 /**
  * Prior-art reference entity cited by an office action.
  *
+ * **Details**
+ *
  * Captures the examiner-cited document number and title while linking back to
  * the office action fixture that introduced the reference.
  *
- * @example
+ * **Example** (Decode PriorArtReference with Schema)
+ *
  * ```ts
  * import { PriorArtReference } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

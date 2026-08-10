@@ -14,13 +14,15 @@ const $I = $SchemaId.create("SafeObject");
 /**
  * Brands a string-keyed unknown record as a safe object.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Inputs need not use a plain-object prototype. Decoding follows
  * {@link UnknownRecord} by copying enumerable own string-keyed properties into
  * a new ordinary object. The brand is nominal and does not guarantee JSON
  * serialization or sanitize property names.
  *
- * @example
+ * **Example** (Decode branded safe object)
+ *
  * ```ts
  * import { SafeObject } from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
@@ -45,7 +47,8 @@ export const SafeObject = UnknownRecord.pipe(
 /**
  * Runtime type inferred from {@link SafeObject}.
  *
- * @example
+ * **Example** (Construct typed SafeObject)
+ *
  * ```ts
  * import { SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject"
  * import type { SafeObject } from "@beep/schema/SafeObject"
@@ -62,7 +65,8 @@ export type SafeObject = typeof SafeObject.Type;
 /**
  * Normalizes any JavaScript object-keyword value into a safe object.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Decoding shallow-copies enumerable own string-keyed properties into a new
  * ordinary object before applying {@link SafeObject}. Arrays become
  * index-keyed records, functions contribute their enumerable own properties,
@@ -70,7 +74,8 @@ export type SafeObject = typeof SafeObject.Type;
  * Encoding returns the normalized record as an `object`; it cannot reconstruct
  * the original container or prototype.
  *
- * @example
+ * **Example** (Normalize array into object)
+ *
  * ```ts
  * import { SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject"
  * import { Effect } from "effect"
@@ -108,7 +113,8 @@ export const SafeObjectFromObjectKeyword = S.ObjectKeyword.pipe(
 /**
  * Runtime type inferred from {@link SafeObjectFromObjectKeyword}.
  *
- * @example
+ * **Example** (Construct typed normalized object)
+ *
  * ```ts
  * import { SafeObjectFromObjectKeyword as SafeObjectSchema } from "@beep/schema/SafeObject"
  * import type { SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject"
@@ -125,7 +131,8 @@ export type SafeObjectFromObjectKeyword = typeof SafeObjectFromObjectKeyword.Typ
 /**
  * Concise namespace alias for {@link SafeObject}.
  *
- * @example
+ * **Example** (Decode via namespace alias)
+ *
  * ```ts
  * import * as SafeObject from "@beep/schema/SafeObject"
  * import { Effect } from "effect"

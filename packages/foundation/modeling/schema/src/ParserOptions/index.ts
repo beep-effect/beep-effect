@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for CSV parser option schemas.
  *
- * @example
+ * **Example** (Import parser options module)
+ *
  * ```ts
  * import * as ParserOptions from "@beep/schema/ParserOptions"
  *

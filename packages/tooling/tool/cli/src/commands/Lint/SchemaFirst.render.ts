@@ -206,10 +206,12 @@ const logActiveAdvisories = Effect.fn("logActiveAdvisories")(function* (
 /**
  * Internal rendering adapter for schema-first lint output.
  *
- * @example
+ * **Example** (Logging SchemaFirstRender)
+ *
  * ```ts
  * console.log("SchemaFirstRender")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

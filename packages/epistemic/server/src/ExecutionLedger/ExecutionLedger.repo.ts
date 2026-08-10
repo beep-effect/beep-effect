@@ -70,7 +70,8 @@ const readUnavailable =
 /**
  * Build the Drizzle-backed execution ledger repository.
  *
- * @example
+ * **Example** (Factory returns an Effect)
+ *
  * ```ts
  * import { makeDrizzleExecutionLedger } from "@beep/epistemic-server/ExecutionLedger"
  * import { Effect } from "effect"

@@ -71,7 +71,8 @@ const PrCloseoutGateStatus = LiteralKit(["passed", "blocked", "unknown", "writte
 /**
  * Durable PR closeout gate state.
  *
- * @example
+ * **Example** (Create passed gate state)
+ *
  * ```ts
  * import { PrCloseoutGateState } from "@beep/repo-cli/commands/Yeet"
  *
@@ -83,6 +84,7 @@ const PrCloseoutGateStatus = LiteralKit(["passed", "blocked", "unknown", "writte
  * })
  * console.log(state.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,7 +110,8 @@ export class PrCloseoutGateState extends S.Class<PrCloseoutGateState>($I`PrClose
 /**
  * One review-thread write action performed during closeout.
  *
- * @example
+ * **Example** (Create reply write action)
+ *
  * ```ts
  * import { PrCloseoutWriteAction } from "@beep/repo-cli/test/Yeet"
  *
@@ -120,6 +123,7 @@ export class PrCloseoutGateState extends S.Class<PrCloseoutGateState>($I`PrClose
  * })
  * console.log(action.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -101,7 +101,8 @@ const awaitRecordState = Effect.fn("Obs.awaitRecordState")(
 /**
  * Runtime shape exposed by the {@link Obs} service.
  *
- * @example
+ * **Example** (Take first event stream)
+ *
  * ```ts
  * import type { ObsShape } from "@beep/obs"
  * import { Stream } from "effect"
@@ -348,7 +349,8 @@ const connectAndMake = Effect.fn("Obs.connectAndMake")(function* (
 /**
  * Effect service for high-level OBS recording control.
  *
- * @example
+ * **Example** (Access Obs service layer)
+ *
  * ```ts
  * import { Obs } from "@beep/obs"
  *
@@ -365,7 +367,8 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    * the composition and test seam: provide a stubbed protocol to exercise the
    * high-level operations without a live OBS.
    *
-   * @example
+   * **Example** (Verify Obs layer type)
+   *
    * ```ts
    * import { Obs } from "@beep/obs"
    * import { Layer } from "effect"
@@ -386,11 +389,14 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    * (missing password, close code 4009) mean the server was reachable, so
    * they fail immediately without spawning or retrying.
    *
+   * **Details**
+   *
    * Provide `Socket.layerWebSocketConstructorGlobal` from
    * `effect/unstable/socket` (Bun global WebSocket) plus a platform
    * `ChildProcessSpawner` layer.
    *
-   * @example
+   * **Example** (Verify makeLayer result)
+   *
    * ```ts
    * import { Obs } from "@beep/obs"
    * import { Layer } from "effect"

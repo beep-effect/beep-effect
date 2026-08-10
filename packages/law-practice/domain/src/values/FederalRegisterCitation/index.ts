@@ -9,9 +9,8 @@
 /**
  * FederalRegisterCitation model exports.
  *
- * **Example**
+ * **Example** (Import FederalRegisterCitation model)
  *
- * @example
  * ```ts
  * import { FederalRegisterCitation } from "@beep/law-practice-domain/values";
  * ```

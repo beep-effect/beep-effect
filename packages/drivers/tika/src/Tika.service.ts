@@ -26,7 +26,8 @@ import type { TikaError } from "./Tika.errors.ts";
 /**
  * Tika file-processing engine descriptor.
  *
- * @example
+ * **Example** (Log descriptor name)
+ *
  * ```ts
  * import { TikaFileProcessingEngineDescriptor } from "@beep/tika"
  *
@@ -81,7 +82,8 @@ const decodeSourceText = (operation: ExtractFileOperation): Effect.Effect<string
 /**
  * Create the P1 Tika file-processing engine.
  *
- * @example
+ * **Example** (Create processing engine)
+ *
  * ```ts
  * import { makeTikaFileProcessingEngine } from "@beep/tika"
  *
@@ -172,7 +174,8 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
 /**
  * P1 Tika file-processing engine value.
  *
- * @example
+ * **Example** (Check supported formats)
+ *
  * ```ts
  * import { TikaFileProcessingEngine } from "@beep/tika"
  *

@@ -1,12 +1,14 @@
 /**
  * Department of Labor driver package boundary.
  *
- * @remarks
+ * **Details**
+ *
  * The current public surface exposes package metadata only. DOL API schemas,
  * endpoint clients, and services should be documented on their owning modules
  * before they are re-exported here.
  *
- * @example
+ * **Example** (Log package version label)
+ *
  * ```ts
  * import { VERSION } from "@beep/dol"
  *
@@ -21,11 +23,13 @@
 /**
  * Package version for the Department of Labor driver package.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the package release marker, not a Department of Labor API version.
  * Model upstream API versions separately when endpoint modules are added.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/dol"
  *

@@ -58,7 +58,8 @@ const parseHexChannel = (hexBody: string, start: number): number =>
 /**
  * Decode a boundary hex color into normalized RGB channel values.
  *
- * @example
+ * **Example** (Decode hex to RGB)
+ *
  * ```ts
  * import { hexToRgbValue } from "../../src/Color/Color.hex.ts"
  *
@@ -95,7 +96,8 @@ const toHexChannel = (value: number): string =>
 /**
  * Encode RGB channel values into a canonical hex color.
  *
- * @example
+ * **Example** (Encode RGB to hex)
+ *
  * ```ts
  * import { rgbToHexValue } from "../../src/Color/Color.hex.ts"
  *
@@ -116,7 +118,8 @@ export const rgbToHexValue = ({ r, g, b }: RgbEncoded): HexColor =>
 /**
  * Boundary schema for hex color input strings.
  *
- * @example
+ * **Example** (Decode short hex input)
+ *
  * ```ts
  * import { HexColorInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -125,8 +128,8 @@ export const rgbToHexValue = ({ r, g, b }: RgbEncoded): HexColor =>
  * console.log(input)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HexColorInput = S.String.check(HexColorInputChecks).pipe(
   $I.annoteSchema("HexColorInput", {
@@ -137,7 +140,8 @@ export const HexColorInput = S.String.check(HexColorInputChecks).pipe(
 /**
  * Type for {@link HexColorInput}.
  *
- * @example
+ * **Example** (Type annotated hex input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HexColorInput } from "@beep/schema/Color"
@@ -146,15 +150,16 @@ export const HexColorInput = S.String.check(HexColorInputChecks).pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HexColorInput = typeof HexColorInput.Type;
 
 /**
  * Canonical lowercase six-digit hex color schema.
  *
- * @example
+ * **Example** (Decode canonical hex color)
+ *
  * ```ts
  * import { HexColor } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -163,8 +168,8 @@ export type HexColorInput = typeof HexColorInput.Type;
  * console.log(color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HexColor = S.String.check(HexColorChecks).pipe(
   S.brand("HexColor"),
@@ -179,7 +184,8 @@ export const HexColor = S.String.check(HexColorChecks).pipe(
 /**
  * Type for {@link HexColor}.
  *
- * @example
+ * **Example** (Type annotated hex color)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HexColor } from "@beep/schema/Color"
@@ -188,15 +194,16 @@ export const HexColor = S.String.check(HexColorChecks).pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HexColor = typeof HexColor.Type;
 
 /**
  * Canonicalization schema from boundary hex input to canonical hex output.
  *
- * @example
+ * **Example** (Normalize short hex input)
+ *
  * ```ts
  * import { NormalizeHexColor } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -205,8 +212,8 @@ export type HexColor = typeof HexColor.Type;
  * console.log(color)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NormalizeHexColor = HexColorInput.pipe(
   S.decodeTo(
@@ -224,7 +231,8 @@ export const NormalizeHexColor = HexColorInput.pipe(
 /**
  * Type for {@link NormalizeHexColor}.
  *
- * @example
+ * **Example** (Type annotated normalized hex)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NormalizeHexColor } from "@beep/schema/Color"
@@ -233,7 +241,7 @@ export const NormalizeHexColor = HexColorInput.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NormalizeHexColor = typeof NormalizeHexColor.Type;

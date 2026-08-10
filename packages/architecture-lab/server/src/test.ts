@@ -14,7 +14,8 @@ import { WorkerServerLayer } from "./entities/Worker/index.ts";
 /**
  * Test architecture lab server layer.
  *
- * @example
+ * **Example** (List workers with test layer)
+ *
  * ```ts
  * import { WorkerServer } from "@beep/architecture-lab-server/entities/Worker"
  * import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test"

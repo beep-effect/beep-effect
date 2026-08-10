@@ -24,7 +24,8 @@ const configurationFields = {
 /**
  * Adds one provider instance.
  *
- * @example
+ * **Example** (Make add provider command)
+ *
  * ```ts
  * import { AddProviderInstanceCommand } from "@beep/agents-use-cases/public"
  * import * as Domain from "@beep/agents-domain/entities/ProviderInstance"
@@ -38,6 +39,7 @@ const configurationFields = {
  * })
  * console.log(command.kind) // "claude"
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -49,7 +51,8 @@ export class AddProviderInstanceCommand extends S.Class<AddProviderInstanceComma
 /**
  * Updates one provider instance's configuration.
  *
- * @example
+ * **Example** (Make update provider command)
+ *
  * ```ts
  * import { UpdateProviderInstanceCommand } from "@beep/agents-use-cases/public"
  * import * as Domain from "@beep/agents-domain/entities/ProviderInstance"
@@ -65,6 +68,7 @@ export class AddProviderInstanceCommand extends S.Class<AddProviderInstanceComma
  * })
  * console.log(command.label) // "Work"
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -78,12 +82,14 @@ export class UpdateProviderInstanceCommand extends S.Class<UpdateProviderInstanc
 /**
  * Removes one provider instance.
  *
- * @example
+ * **Example** (Make remove provider command)
+ *
  * ```ts
  * import { RemoveProviderInstanceCommand } from "@beep/agents-use-cases/public"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * console.log(RemoveProviderInstanceCommand.make({ id: Agents.ProviderInstanceId.make(1) }).id) // 1
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -97,12 +103,14 @@ export class RemoveProviderInstanceCommand extends S.Class<RemoveProviderInstanc
 /**
  * Probes one provider instance and persists its resulting auth snapshot.
  *
- * @example
+ * **Example** (Make probe provider command)
+ *
  * ```ts
  * import { ProbeProviderInstanceCommand } from "@beep/agents-use-cases/public"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * console.log(ProbeProviderInstanceCommand.make({ id: Agents.ProviderInstanceId.make(1) }).id) // 1
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */
@@ -116,12 +124,14 @@ export class ProbeProviderInstanceCommand extends S.Class<ProbeProviderInstanceC
 /**
  * Loads one provider instance by id.
  *
- * @example
+ * **Example** (Make get provider query)
+ *
  * ```ts
  * import { GetProviderInstanceQuery } from "@beep/agents-use-cases/public"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * console.log(GetProviderInstanceQuery.make({ id: Agents.ProviderInstanceId.make(1) }).id) // 1
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */
@@ -133,11 +143,13 @@ export class GetProviderInstanceQuery extends S.Class<GetProviderInstanceQuery>(
 /**
  * Lists all provider instances.
  *
- * @example
+ * **Example** (Make list providers query)
+ *
  * ```ts
  * import { ListProviderInstancesQuery } from "@beep/agents-use-cases/public"
  * console.log(ListProviderInstancesQuery.make({}))
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */

@@ -31,7 +31,8 @@ const INSTANCE_MEMBER_MESSAGE = "Classes extending Schema.Opaque must not have i
  * Oxlint rule that reports instance fields and methods on classes extending
  * `Schema.Opaque`, keeping opaque schema wrappers data-only.
  *
- * @example
+ * **Example** (Opaque fields rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -40,6 +41,7 @@ const INSTANCE_MEMBER_MESSAGE = "Classes extending Schema.Opaque must not have i
  *
  * strictEqual(description, "Disallow instance members in Schema.Opaque classes")
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

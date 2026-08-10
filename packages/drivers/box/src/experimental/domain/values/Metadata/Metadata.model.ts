@@ -12,10 +12,12 @@ const $I = $BoxId.create("entities/Metadata/Metadata.model");
 /**
  * Experimental value object for Box metadata template instance data.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty Metadata)
+ *
  * ```ts
  * import { Metadata } from "@beep/box/experimental/domain/values/Metadata/Metadata.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Metadata extends S.Class<Metadata>($I`Metadata`)(
 /**
  * Type-level companion namespace for {@link Metadata} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Metadata)
+ *
  * ```ts
  * import { Metadata } from "@beep/box/experimental/domain/values/Metadata/Metadata.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Metadata {
   /**
    * Encoded payload accepted by the {@link Metadata} value-object schema.
    *
-   * @example
+   * **Example** (Encode Metadata to Encoded)
+   *
    * ```ts
    * import { Metadata } from "@beep/box/experimental/domain/values/Metadata/Metadata.model";
    * import * as S from "effect/Schema";

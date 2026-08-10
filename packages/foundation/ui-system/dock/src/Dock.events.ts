@@ -16,7 +16,8 @@ const $I = $DockId.create("Dock.events");
 /**
  * Event recording a panel installation.
  *
- * @example
+ * **Example** (Make panel opened event)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelOpenedEvent } from "@beep/dock"
  *
@@ -41,7 +42,8 @@ export class PanelOpenedEvent extends S.Class<PanelOpenedEvent>($I`PanelOpenedEv
 /**
  * Event recording a newly active panel.
  *
- * @example
+ * **Example** (Make panel activated event)
+ *
  * ```ts
  * import { GroupId, PanelActivatedEvent, PanelId } from "@beep/dock"
  *
@@ -66,7 +68,8 @@ export class PanelActivatedEvent extends S.Class<PanelActivatedEvent>($I`PanelAc
 /**
  * Event recording a panel title replacement.
  *
- * @example
+ * **Example** (Make title changed event)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelTitleChangedEvent } from "@beep/dock"
  *
@@ -85,7 +88,8 @@ export class PanelTitleChangedEvent extends S.Class<PanelTitleChangedEvent>($I`P
 /**
  * Event recording a panel view replacement.
  *
- * @example
+ * **Example** (Make view changed event)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelViewChangedEvent, TextPanelView } from "@beep/dock"
  *
@@ -104,7 +108,8 @@ export class PanelViewChangedEvent extends S.Class<PanelViewChangedEvent>($I`Pan
 /**
  * Event recording a panel rendering-policy replacement.
  *
- * @example
+ * **Example** (Make render mode event)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelRenderModeChangedEvent } from "@beep/dock"
  *
@@ -123,7 +128,8 @@ export class PanelRenderModeChangedEvent extends S.Class<PanelRenderModeChangedE
 /**
  * Event recording replacement or removal of a custom tab renderer.
  *
- * @example
+ * **Example** (Clear panel tab component)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelTabComponentChangedEvent } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -147,7 +153,8 @@ export class PanelTabComponentChangedEvent extends S.Class<PanelTabComponentChan
 /**
  * Event recording replacement or removal of panel size constraints.
  *
- * @example
+ * **Example** (Update panel size constraints)
+ *
  * ```ts
  * import { GroupId, PanelConstraints, PanelConstraintsChangedEvent, PanelId } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -180,7 +187,8 @@ export class PanelConstraintsChangedEvent extends S.Class<PanelConstraintsChange
 /**
  * Event recording an atomic panel move between groups.
  *
- * @example
+ * **Example** (Move panel across groups)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelMovedEvent } from "@beep/dock"
  *
@@ -206,7 +214,8 @@ export class PanelMovedEvent extends S.Class<PanelMovedEvent>($I`PanelMovedEvent
 /**
  * Event recording a panel reorder within one group.
  *
- * @example
+ * **Example** (Reorder panel by index)
+ *
  * ```ts
  * import { GroupId, PanelId, PanelReorderedEvent } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -226,7 +235,8 @@ export class PanelReorderedEvent extends S.Class<PanelReorderedEvent>($I`PanelRe
 /**
  * Event recording a whole-group merge in source order.
  *
- * @example
+ * **Example** (Merge groups in order)
+ *
  * ```ts
  * import { GroupId, GroupMergedEvent, PanelId } from "@beep/dock"
  *
@@ -247,7 +257,8 @@ export class GroupMergedEvent extends S.Class<GroupMergedEvent>($I`GroupMergedEv
 /**
  * Event recording a whole-group relocation through a new split.
  *
- * @example
+ * **Example** (Move group into split)
+ *
  * ```ts
  * import { GroupId, GroupMovedEvent, SplitId } from "@beep/dock"
  *
@@ -266,7 +277,8 @@ export class GroupMovedEvent extends S.Class<GroupMovedEvent>($I`GroupMovedEvent
 /**
  * Event recording a group metadata update.
  *
- * @example
+ * **Example** (Update group metadata)
+ *
  * ```ts
  * import { GroupId, GroupUpdatedEvent } from "@beep/dock"
  *
@@ -285,7 +297,8 @@ export class GroupUpdatedEvent extends S.Class<GroupUpdatedEvent>($I`GroupUpdate
 /**
  * Event recording a panel close and topology collapse.
  *
- * @example
+ * **Example** (Close panel with collapse)
+ *
  * ```ts
  * import { GroupId, PanelClosedEvent, PanelId } from "@beep/dock"
  *
@@ -310,7 +323,8 @@ export class PanelClosedEvent extends S.Class<PanelClosedEvent>($I`PanelClosedEv
 /**
  * Event recording a bounded split-ratio change.
  *
- * @example
+ * **Example** (Resize split by ratio)
+ *
  * ```ts
  * import { SplitId, SplitRatio, SplitResizedEvent } from "@beep/dock"
  *
@@ -335,7 +349,8 @@ export class SplitResizedEvent extends S.Class<SplitResizedEvent>($I`SplitResize
 /**
  * Event recording an atomic workspace clear.
  *
- * @example
+ * **Example** (Clear the workspace)
+ *
  * ```ts
  * import { WorkspaceClearedEvent } from "@beep/dock"
  *
@@ -358,7 +373,8 @@ export class WorkspaceClearedEvent extends S.Class<WorkspaceClearedEvent>($I`Wor
 /**
  * Event recording installation of a validated snapshot.
  *
- * @example
+ * **Example** (Restore validated snapshot)
+ *
  * ```ts
  * import { WorkspaceRestoredEvent } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -384,7 +400,8 @@ export class WorkspaceRestoredEvent extends S.Class<WorkspaceRestoredEvent>($I`W
 /**
  * Event recording entry into maximized mode.
  *
- * @example
+ * **Example** (Maximize a group)
+ *
  * ```ts
  * import { GroupId, GroupMaximizedEvent } from "@beep/dock"
  *
@@ -403,7 +420,8 @@ export class GroupMaximizedEvent extends S.Class<GroupMaximizedEvent>($I`GroupMa
 /**
  * Event recording exit from maximized mode.
  *
- * @example
+ * **Example** (Restore maximized group)
+ *
  * ```ts
  * import { GroupId, GroupRestoredEvent } from "@beep/dock"
  *
@@ -421,7 +439,8 @@ export class GroupRestoredEvent extends S.Class<GroupRestoredEvent>($I`GroupRest
 /**
  * Event recording a docked group becoming floating.
  *
- * @example
+ * **Example** (Float a docked group)
+ *
  * ```ts
  * import { GroupFloatedEvent, GroupId } from "@beep/dock"
  *
@@ -439,7 +458,8 @@ export class GroupFloatedEvent extends S.Class<GroupFloatedEvent>($I`GroupFloate
 /**
  * Event recording a floating group returning to the dock tree.
  *
- * @example
+ * **Example** (Dock a floating group)
+ *
  * ```ts
  * import { GroupDockedEvent, GroupId } from "@beep/dock"
  *
@@ -457,7 +477,8 @@ export class GroupDockedEvent extends S.Class<GroupDockedEvent>($I`GroupDockedEv
 /**
  * Event recording a floating member move or z-order change.
  *
- * @example
+ * **Example** (Move floating group)
+ *
  * ```ts
  * import { FloatingGroupMovedEvent, GroupId } from "@beep/dock"
  *
@@ -500,7 +521,8 @@ const DockEventKind = LiteralKit([
 /**
  * Tagged codec for all domain events.
  *
- * @example
+ * **Example** (Create tagged dock event)
+ *
  * ```ts
  * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock"
  *
@@ -545,7 +567,8 @@ export const DockEvent = DockEventKind.mapMembers(
 /**
  * Decoded complete dock domain event.
  *
- * @example
+ * **Example** (Annotate dock event type)
+ *
  * ```ts
  * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock"
  *

@@ -28,10 +28,13 @@ const CODE_FENCE_OPENER = /^[ \t]*`{3,}([\w-]+)?[ \t]?$/;
 /**
  * Whether the caret sits inside a code block.
  *
+ * **Details**
+ *
  * Enter belongs to the code block there: a composer that sent the message on Enter
  * inside one would let you write exactly one line of code.
  *
- * @example
+ * **Example** (Caret inside code block)
+ *
  * ```ts
  * import { $isInsideCodeBlock } from "@beep/editor/chat/code-fence"
  * import { $createCodeNode, CodeNode } from "@lexical/code"
@@ -61,9 +64,12 @@ export const $isInsideCodeBlock = (): boolean => {
 /**
  * Open a code block when the caret ends a paragraph that holds only a fence opener.
  *
+ * **Details**
+ *
  * Returns whether the fence was taken, so the caller knows Enter is spent.
  *
- * @example
+ * **Example** (Open fence from triple backticks)
+ *
  * ```ts
  * import { $openCodeFence } from "@beep/editor/chat/code-fence"
  * import { CodeNode } from "@lexical/code"

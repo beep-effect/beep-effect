@@ -43,7 +43,8 @@ const heading = (editor: LexicalEditor, tag: HeadingTagType): void => setBlock(e
 /**
  * Formatting / insert `/` items over the schema-safe block vocabulary.
  *
- * @example
+ * **Example** (Log default slash items)
+ *
  * ```ts
  * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
  *

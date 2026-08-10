@@ -16,7 +16,8 @@ const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.error
  * the claim's current state (e.g. skipping a state, moving backwards, or
  * advancing past `admitted`).
  *
- * @example
+ * **Example** (Make invalid transition error)
+ *
  * ```ts
  * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
  *
@@ -41,7 +42,8 @@ export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransit
   /**
    * Build a {@link ClaimInvalidTransition} from a from/to state pair.
    *
-   * @example
+   * **Example** (Build error from states)
+   *
    * ```ts
    * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
    *
@@ -60,7 +62,8 @@ export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransit
 /**
  * Union of every claim lifecycle error.
  *
- * @example
+ * **Example** (Decode lifecycle error union)
+ *
  * ```ts
  * import { ClaimInvalidTransition, ClaimLifecycleError } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -85,7 +88,8 @@ export const ClaimLifecycleError = S.Union([ClaimInvalidTransition]).pipe(
 /**
  * Runtime type for {@link ClaimLifecycleError}.
  *
- * @example
+ * **Example** (Annotate with error type)
+ *
  * ```ts
  * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
  * import type { ClaimLifecycleError } from "@beep/epistemic-domain"

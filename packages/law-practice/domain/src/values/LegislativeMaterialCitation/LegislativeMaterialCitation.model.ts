@@ -16,15 +16,16 @@ const $I = $LawPracticeDomainId.create("values/LegislativeMaterialCitation/Legis
 /**
  * Legislative-material citation (#308).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and tags the union member with
  * `type: "legislativeMaterial"`. The `kind` discriminator distinguishes a
  * committee/conference report (H.R. Rep. No. 94-1487) from a Congressional
  * Record cite (112 Cong. Rec. 1234); the remaining components are optional and
  * populated only when the parser recognizes them.
  *
- * **Example**
+ * **Example** (Make report citation)
  *
- * @example
  * ```ts
  * import { LegislativeMaterialCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -116,7 +117,8 @@ export class LegislativeMaterialCitation extends S.Class<LegislativeMaterialCita
 /**
  * Companion namespace for `LegislativeMaterialCitation`.
  *
- * @example
+ * **Example** (Alias Encoded companion type)
+ *
  * ```ts
  * import type { LegislativeMaterialCitation } from "@beep/law-practice-domain"
  *
@@ -130,9 +132,8 @@ export declare namespace LegislativeMaterialCitation {
   /**
    * Wire-encoded representation of a decoded {@link LegislativeMaterialCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { LegislativeMaterialCitation } from "@beep/law-practice-domain"
    *

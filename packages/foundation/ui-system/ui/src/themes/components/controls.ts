@@ -87,7 +87,8 @@ const iconSize = 24; // 1.5rem icon size
 /**
  * Controls theme theme value.
  *
- * @example
+ * **Example** (Import controls theme)
+ *
  * ```ts
  * import { controlsTheme } from "@beep/ui/themes/components/controls"
  *

@@ -15,7 +15,8 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the agents table projections.
  *
- * @example
+ * **Example** (Validate provider instance table name)
+ *
  * ```ts
  * import { DbSchema } from "@beep/agents-tables/tables"
  * import { getTableName } from "drizzle-orm"
@@ -38,7 +39,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the agents Drizzle schema object.
  *
- * @example
+ * **Example** (Access typed table name)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/agents-tables/tables"
  *

@@ -21,7 +21,8 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the documents sync-state table projections.
  *
- * @example
+ * **Example** (Validate sync table names)
+ *
  * ```ts
  * import { DbSchema } from "@beep/documents-tables/tables"
  * import { getTableName } from "drizzle-orm"
@@ -48,7 +49,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the documents Drizzle schema object.
  *
- * @example
+ * **Example** (Type-safe schema assignment)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/documents-tables/tables"
  *

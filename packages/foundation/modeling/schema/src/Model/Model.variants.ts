@@ -16,9 +16,12 @@ const {
   /**
    * A base class used for creating domain model schemas.
    *
+   * **Details**
+   *
    * It supports common variants for database and JSON apis.
    *
-   * @example
+   * **Example** (Group model variant schemas)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -53,7 +56,8 @@ const {
   /**
    * Define a variant-aware field by supplying a schema per variant key.
    *
-   * @example
+   * **Example** (Empty Field definition)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -69,7 +73,8 @@ const {
   /**
    * Create a field present on every variant except the listed ones.
    *
-   * @example
+   * **Example** (Exclude insert and update)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -85,7 +90,8 @@ const {
   /**
    * Create a field present only on the listed variants.
    *
-   * @example
+   * **Example** (JSON-only string field)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -101,7 +107,8 @@ const {
   /**
    * Create a raw variant struct without producing a class.
    *
-   * @example
+   * **Example** (Empty variant struct)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -117,7 +124,8 @@ const {
   /**
    * Create a discriminated union of variant structs with per-variant accessors.
    *
-   * @example
+   * **Example** (Tagged A and B union)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -136,7 +144,8 @@ const {
   /**
    * Extract the schema for a specific variant from a variant struct.
    *
-   * @example
+   * **Example** (Extract insert schema)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -153,7 +162,8 @@ const {
   /**
    * Transform variant schemas inside an existing field using per-variant mappers.
    *
-   * @example
+   * **Example** (Empty fieldEvolve mappers)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -174,7 +184,8 @@ const {
 /**
  * Constraint type satisfied by any Model class produced by {@link Class}.
  *
- * @example
+ * **Example** (Access Account fields type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -184,8 +195,8 @@ const {
  * console.log(Object.keys(fields))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Any = S.Top & {
   readonly fields: S.Struct.Fields;
@@ -199,7 +210,8 @@ export type Any = S.Top & {
 /**
  * Union of database variant keys: `"select"`, `"insert"`, `"update"`.
  *
- * @example
+ * **Example** (Satisfy insert database key)
+ *
  * ```ts
  * import type { VariantsDatabase } from "@beep/schema/Model"
  *
@@ -207,15 +219,16 @@ export type Any = S.Top & {
  * console.log(variant)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type VariantsDatabase = "select" | "insert" | "update";
 
 /**
  * Union of JSON variant keys: `"json"`, `"jsonCreate"`, `"jsonUpdate"`.
  *
- * @example
+ * **Example** (Satisfy jsonCreate key)
+ *
  * ```ts
  * import type { VariantsJson } from "@beep/schema/Model"
  *
@@ -223,15 +236,16 @@ export type VariantsDatabase = "select" | "insert" | "update";
  * console.log(variant)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type VariantsJson = "json" | "jsonCreate" | "jsonUpdate";
 
 /**
  * Union of all model variant keys.
  *
- * @example
+ * **Example** (Satisfy jsonUpdate key)
+ *
  * ```ts
  * import type { Variant } from "@beep/schema/Model"
  *
@@ -239,15 +253,16 @@ export type VariantsJson = "json" | "jsonCreate" | "jsonUpdate";
  * console.log(variant)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Variant = (typeof modelVariants)[number];
 
 /**
  * Default model variant used as the class schema.
  *
- * @example
+ * **Example** (Satisfy select default key)
+ *
  * ```ts
  * import type { DefaultVariant } from "@beep/schema/Model"
  *
@@ -255,8 +270,8 @@ export type Variant = (typeof modelVariants)[number];
  * console.log(variant)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type DefaultVariant = "select";
 
@@ -280,7 +295,8 @@ type InheritStaticMembers<C, Static> = C & Pick<Static, Exclude<keyof Static, ke
 /**
  * Materialized class constructor shape produced by {@link Class}.
  *
- * @example
+ * **Example** (Account ClassShape check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -290,8 +306,8 @@ type InheritStaticMembers<C, Static> = C & Pick<Static, Exclude<keyof Static, ke
  * console.log(Account satisfies AccountShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ClassShape<
   Self,
@@ -306,7 +322,8 @@ export {
   /**
    * A base class used for creating domain model schemas.
    *
-   * @example
+   * **Example** (Group class insert schema)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -321,7 +338,8 @@ export {
   /**
    * Extract the schema for a specific variant from a variant struct.
    *
-   * @example
+   * **Example** (Extract insert schema)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -337,7 +355,8 @@ export {
   /**
    * Define a variant-aware field by supplying a schema per variant key.
    *
-   * @example
+   * **Example** (Empty Field definition)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -352,7 +371,8 @@ export {
   /**
    * Create a field present on every variant except the listed ones.
    *
-   * @example
+   * **Example** (Exclude insert and update)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -368,7 +388,8 @@ export {
   /**
    * Create a field present only on the listed variants.
    *
-   * @example
+   * **Example** (JSON-only string field)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -384,7 +405,8 @@ export {
   /**
    * Transform variant schemas inside an existing field using per-variant mappers.
    *
-   * @example
+   * **Example** (Empty fieldEvolve mappers)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -399,7 +421,8 @@ export {
   /**
    * Create a raw variant struct without producing a class.
    *
-   * @example
+   * **Example** (Empty variant struct)
+   *
    * ```ts
    * import * as Model from "@beep/schema/Model"
    *
@@ -414,7 +437,8 @@ export {
   /**
    * Create a discriminated union of variant structs with per-variant accessors.
    *
-   * @example
+   * **Example** (Tagged A and B union)
+   *
    * ```ts
    * import * as S from "effect/Schema"
    * import * as Model from "@beep/schema/Model"
@@ -434,7 +458,8 @@ export {
 /**
  * Extract the raw variant field record from a variant struct.
  *
- * @example
+ * **Example** (Raw fields from struct)
+ *
  * ```ts
  * import * as Model from "@beep/schema/Model"
  *
@@ -444,8 +469,8 @@ export {
  * console.log(raw)
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const fields: <A extends VariantSchema.Struct<TUnsafe.Any>>(self: A) => A[typeof VariantSchema.TypeId] =
   VariantSchema.fields;
@@ -453,7 +478,8 @@ export const fields: <A extends VariantSchema.Struct<TUnsafe.Any>>(self: A) => A
 /**
  * Wrap a value so it overrides the default generated by an {@link Overridable} field.
  *
- * @example
+ * **Example** (Group class with Override)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
@@ -465,8 +491,8 @@ export const fields: <A extends VariantSchema.Struct<TUnsafe.Any>>(self: A) => A
  * console.log(Group)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Override: <A>(value: A) => A & Brand<"Override"> = VariantSchema.Override;
 
@@ -474,7 +500,8 @@ export const Override: <A>(value: A) => A & Brand<"Override"> = VariantSchema.Ov
  * Schema whose constructor can supply a generated default unless callers pass
  * {@link Override}.
  *
- * @example
+ * **Example** (Overridable name default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -484,15 +511,16 @@ export const Override: <A>(value: A) => A & Brand<"Override"> = VariantSchema.Ov
  * console.log(S.isSchema(Name))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export interface Overridable<S extends S.Top & S.WithoutConstructorDefault> extends VariantSchema.Overridable<S> {}
 
 /**
  * Upstream-compatible spelling for {@link Overridable}.
  *
- * @example
+ * **Example** (Overrideable name default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -502,8 +530,8 @@ export interface Overridable<S extends S.Top & S.WithoutConstructorDefault> exte
  * console.log(S.isSchema(Name))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault> extends VariantSchema.Overridable<S> {}
 
@@ -511,7 +539,8 @@ export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault> ext
  * Build an `Overridable` schema that falls back to `defaultValue` during
  * constructor creation.
  *
- * @example
+ * **Example** (Overridable name default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -521,15 +550,16 @@ export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault> ext
  * console.log(S.isSchema(Name))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Overridable: typeof VariantSchema.Overridable = VariantSchema.Overridable;
 
 /**
  * Upstream-compatible spelling for {@link Overridable}.
  *
- * @example
+ * **Example** (Overrideable name default)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -539,7 +569,7 @@ export const Overridable: typeof VariantSchema.Overridable = VariantSchema.Overr
  * console.log(S.isSchema(Name))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const Overrideable: typeof Overridable = Overridable;

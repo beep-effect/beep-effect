@@ -103,7 +103,8 @@ const resourceOperations = (resource: TutorialResourceSeed): ReadonlyArray<Chang
 /**
  * Generate typed ontology change operations for the ported pizza tutorial.
  *
- * @example
+ * **Example** (Generate pizza tutorial ops)
+ *
  * ```ts
  * import { pizzaTutorialChangeOperations } from "@beep/ontology-use-cases/aggregates/Session"
  *

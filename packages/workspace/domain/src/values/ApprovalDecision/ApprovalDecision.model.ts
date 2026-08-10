@@ -12,7 +12,8 @@ const $I = $WorkspaceDomainId.create("values/ApprovalDecision/ApprovalDecision.m
 /**
  * Review decision vocabulary for approval gates.
  *
- * @example
+ * **Example** (Check pending decision)
+ *
  * ```ts
  * import { ApprovalDecision } from "@beep/workspace-domain"
  *
@@ -31,7 +32,8 @@ export const ApprovalDecision = LiteralKit(["pending"]).pipe(
 /**
  * Runtime type for {@link ApprovalDecision}.
  *
- * @example
+ * **Example** (Type pending decision value)
+ *
  * ```ts
  * import type { ApprovalDecision } from "@beep/workspace-domain"
  *

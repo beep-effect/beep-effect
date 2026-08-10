@@ -20,7 +20,8 @@ const $I = $UtilsId.create("StructPath");
 /**
  * Schema for dot-delimited paths or path segment arrays.
  *
- * @example
+ * **Example** (Import PathInput schema)
+ *
  * ```ts
  * import { PathInput } from "@beep/utils/Struct"
  *
@@ -40,7 +41,8 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]).pipe(
 /**
  * Runtime path input accepted by struct lookup helpers.
  *
- * @example
+ * **Example** (Typed path segment array)
+ *
  * ```ts
  * import type { PathInput } from "@beep/utils/Struct"
  *
@@ -64,7 +66,8 @@ const PathLookupSchema = S.TaggedUnion({
 /**
  * Tagged result returned by a runtime path lookup.
  *
- * @example
+ * **Example** (Access found property)
+ *
  * ```ts
  * import type { PathLookup } from "@beep/utils/internal/StructPath"
  *
@@ -88,7 +91,8 @@ const makeFound = (value: unknown): PathLookup =>
 /**
  * Converts a path lookup result into its `Option` value channel.
  *
- * @example
+ * **Example** (Convert lookup to Option)
+ *
  * ```ts
  * import { lookupAtPath, pathLookupToOption } from "@beep/utils/internal/StructPath"
  *
@@ -153,7 +157,8 @@ const lookupParts = (self: unknown, parts: A.NonEmptyReadonlyArray<string>): Pat
 /**
  * Looks up a value at a dot-delimited path or path segment array.
  *
- * @example
+ * **Example** (Lookup nested path value)
+ *
  * ```ts
  * import { lookupAtPath } from "@beep/utils/internal/StructPath"
  *
@@ -179,7 +184,8 @@ export const lookupAtPath: {
 /**
  * Unsafely returns a value at a path, or `undefined` when absent.
  *
- * @example
+ * **Example** (Unsafe nested path get)
+ *
  * ```ts
  * import { unsafeDotGet } from "@beep/utils/internal/StructPath"
  *

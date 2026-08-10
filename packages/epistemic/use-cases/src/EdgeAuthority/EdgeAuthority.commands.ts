@@ -117,6 +117,8 @@ const RecordEdgeFactFields = S.Struct({
 /**
  * Assert a fact about a logical edge over a known valid-time interval.
  *
+ * **Details**
+ *
  * `validFrom` is required, not optional-with-a-default: the donor's null
  * valid-time hole is the reason an edge can participate in supersession without
  * anyone knowing when it started being true, and a required field is the
@@ -126,7 +128,8 @@ const RecordEdgeFactFields = S.Struct({
  *
  * `identity.orgScope` must denote `orgId`; see {@link OrgScopeAgreementCheck}.
  *
- * @example
+ * **Example** (Decode RecordEdgeFact command)
+ *
  * ```ts
  * import { RecordEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import * as S from "effect/Schema"
@@ -189,6 +192,8 @@ const SupersedeEdgeFactFields = S.Struct({
 /**
  * Replace the version a caller believes is the open head of a logical edge.
  *
+ * **Details**
+ *
  * `expectedVersion` is the caller's optimistic claim about the head; the
  * repository compares it under a row lock and refuses with a typed
  * `SupersessionConflict` when it disagrees. `validFrom` is required for the same
@@ -201,7 +206,8 @@ const SupersedeEdgeFactFields = S.Struct({
  * donor rule in one field: a belief that stopped being true at noon stopped
  * being true at noon, no matter when anyone noticed.
  *
- * @example
+ * **Example** (Decode SupersedeEdgeFact command)
+ *
  * ```ts
  * import { SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import * as S from "effect/Schema"
@@ -244,11 +250,14 @@ export class SupersedeEdgeFact extends S.Class<SupersedeEdgeFact>($I`SupersedeEd
  * Ask what was believed about a logical edge at a point on both axes: what was
  * true at `validAt`, as far as anyone knew at `knownAt`.
  *
+ * **Details**
+ *
  * The two instants are independent on purpose. Holding `validAt` fixed and
  * moving `knownAt` forward replays how belief about one moment changed; that is
  * the question a non-bitemporal store cannot answer at all.
  *
- * @example
+ * **Example** (Decode EdgeAsOfQuery command)
+ *
  * ```ts
  * import { EdgeAsOfQuery } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import * as S from "effect/Schema"

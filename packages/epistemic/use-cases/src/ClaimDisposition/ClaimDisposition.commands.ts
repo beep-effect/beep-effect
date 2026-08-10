@@ -21,12 +21,15 @@ const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.comman
 /**
  * Decoded append payload for one durable claim disposition.
  *
+ * **Details**
+ *
  * The `id` and `publicId` a caller supplies are the identity it reserves for the
  * row; the SERIAL primary key is assigned by the database on insert and the
  * persistence converter drops the supplied value, so `id` matters only to
  * in-memory implementations that have no database to assign one.
  *
- * @example
+ * **Example** (Decode append payload)
+ *
  * ```ts
  * import { ClaimDispositionAppend } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -73,7 +76,8 @@ export class ClaimDispositionAppend extends S.Class<ClaimDispositionAppend>($I`C
 /**
  * Build the {@link ClaimDisposition} entity a decoded append payload denotes.
  *
- * @example
+ * **Example** (Build entity from append)
+ *
  * ```ts
  * import { ClaimDispositionAppend, appendClaimDisposition } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

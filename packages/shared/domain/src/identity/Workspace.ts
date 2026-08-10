@@ -14,7 +14,8 @@ const make = EntityId.factory("workspace", $I);
 /**
  * Workspace entity identifier.
  *
- * @example
+ * **Example** (Log WorkspaceId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -31,7 +32,8 @@ export const WorkspaceId = make("workspace", {
 /**
  * Runtime type for {@link WorkspaceId}.
  *
- * @example
+ * **Example** (Decode WorkspaceId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -52,7 +54,8 @@ export type WorkspaceId = typeof WorkspaceId.Type;
 /**
  * Email artifact entity identifier.
  *
- * @example
+ * **Example** (Log EmailArtifactId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -69,7 +72,8 @@ export const EmailArtifactId = make("email_artifact", {
 /**
  * Runtime type for {@link EmailArtifactId}.
  *
- * @example
+ * **Example** (Decode EmailArtifactId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -90,7 +94,8 @@ export type EmailArtifactId = typeof EmailArtifactId.Type;
 /**
  * Candidate project entity identifier.
  *
- * @example
+ * **Example** (Log CandidateProjectId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -107,7 +112,8 @@ export const CandidateProjectId = make("candidate_project", {
 /**
  * Runtime type for {@link CandidateProjectId}.
  *
- * @example
+ * **Example** (Decode CandidateProjectId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -128,7 +134,8 @@ export type CandidateProjectId = typeof CandidateProjectId.Type;
 /**
  * Candidate task entity identifier.
  *
- * @example
+ * **Example** (Log CandidateTaskId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -145,7 +152,8 @@ export const CandidateTaskId = make("candidate_task", {
 /**
  * Runtime type for {@link CandidateTaskId}.
  *
- * @example
+ * **Example** (Decode CandidateTaskId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -166,7 +174,8 @@ export type CandidateTaskId = typeof CandidateTaskId.Type;
 /**
  * Candidate draft entity identifier.
  *
- * @example
+ * **Example** (Log CandidateDraftId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -183,7 +192,8 @@ export const CandidateDraftId = make("candidate_draft", {
 /**
  * Runtime type for {@link CandidateDraftId}.
  *
- * @example
+ * **Example** (Decode CandidateDraftId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -204,7 +214,8 @@ export type CandidateDraftId = typeof CandidateDraftId.Type;
 /**
  * Approval gate entity identifier.
  *
- * @example
+ * **Example** (Log ApprovalGateId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -221,7 +232,8 @@ export const ApprovalGateId = make("approval_gate", {
 /**
  * Runtime type for {@link ApprovalGateId}.
  *
- * @example
+ * **Example** (Decode ApprovalGateId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -242,7 +254,8 @@ export type ApprovalGateId = typeof ApprovalGateId.Type;
 /**
  * Context packet entity identifier.
  *
- * @example
+ * **Example** (Log ContextPacketId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -259,7 +272,8 @@ export const ContextPacketId = make("context_packet", {
 /**
  * Runtime type for {@link ContextPacketId}.
  *
- * @example
+ * **Example** (Decode ContextPacketId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -280,7 +294,8 @@ export type ContextPacketId = typeof ContextPacketId.Type;
 /**
  * Thread entity identifier.
  *
- * @example
+ * **Example** (Log ThreadId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -297,7 +312,8 @@ export const ThreadId = make("thread", {
 /**
  * Runtime type for {@link ThreadId}.
  *
- * @example
+ * **Example** (Decode ThreadId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -318,7 +334,8 @@ export type ThreadId = typeof ThreadId.Type;
 /**
  * Turn entity identifier.
  *
- * @example
+ * **Example** (Log TurnId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -335,7 +352,8 @@ export const TurnId = make("turn", {
 /**
  * Runtime type for {@link TurnId}.
  *
- * @example
+ * **Example** (Decode TurnId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -356,7 +374,8 @@ export type TurnId = typeof TurnId.Type;
 /**
  * Message entity identifier.
  *
- * @example
+ * **Example** (Log MessageId entity type)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -373,7 +392,8 @@ export const MessageId = make("message", {
 /**
  * Runtime type for {@link MessageId}.
  *
- * @example
+ * **Example** (Decode MessageId with Schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"

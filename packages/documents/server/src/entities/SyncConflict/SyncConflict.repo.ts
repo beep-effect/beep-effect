@@ -75,11 +75,14 @@ const matchesRemoteEvent =
 /**
  * Build the in-memory SyncConflict repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * `record` deduplicates by provider event within one workspace: when the
  * seed's `remoteEventId` is present and a record already exists for the same
  * workspace, provider, and event, that record is returned unchanged.
  *
- * @example
+ * **Example** (Import in-memory factory)
+ *
  * ```ts
  * import { makeInMemorySyncConflictRepository } from "@beep/documents-server/entities/SyncConflict"
  *
@@ -88,7 +91,6 @@ const matchesRemoteEvent =
  *
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for record, list, and review repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -158,7 +160,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncConflict repository used by live persistence tests.
  *
- * @example
+ * **Example** (Import Drizzle factory)
+ *
  * ```ts
  * import { makeDrizzleSyncConflictRepository } from "@beep/documents-server/entities/SyncConflict"
  *
@@ -168,7 +171,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncConflict table and redacts driver
  * failures to `SyncConflictRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

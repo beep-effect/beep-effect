@@ -31,12 +31,14 @@ const $I = $RepoCliId.create("commands/VersionSync/VersionSync.schemas");
 /**
  * A single version pin location with its current and expected values.
  *
- * @example
+ * **Example** (Import VersionDriftItem schema)
+ *
  * ```ts
  * import { VersionDriftItem } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionDriftItem !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -63,13 +65,15 @@ const VersionCategoryKit = LiteralKit(["bun", "node", "docker", "biome", "effect
 /**
  * Version category for grouping drift items.
  *
- * @example
+ * **Example** (Annotate VersionCategory type)
+ *
  * ```ts
  * import type { VersionCategory } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategory | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -81,12 +85,14 @@ export const VersionCategory = VersionCategoryKit.pipe(
 /**
  * Literal option tuple for version categories.
  *
- * @example
+ * **Example** (Import category options tuple)
+ *
  * ```ts
  * import { VersionCategoryOptions } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionCategoryOptions !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -94,13 +100,15 @@ export const VersionCategoryOptions = VersionCategoryKit.Options;
 /**
  * Version category for grouping drift items.
  *
- * @example
+ * **Example** (Annotate VersionCategory type)
+ *
  * ```ts
  * import type { VersionCategory } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategory | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,13 +123,15 @@ const VersionCategoryStatusKit = LiteralKit(["ok", "drift", "unpinned", "error"]
 /**
  * Status of a version category.
  *
- * @example
+ * **Example** (Annotate status type)
+ *
  * ```ts
  * import type { VersionCategoryStatus } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategoryStatus | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -133,12 +143,14 @@ export const VersionCategoryStatus = VersionCategoryStatusKit.pipe(
 /**
  * Pattern-matching helper for version category status literals.
  *
- * @example
+ * **Example** (Import status match helper)
+ *
  * ```ts
  * import { VersionCategoryStatusMatch } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionCategoryStatusMatch !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,12 +158,14 @@ export const VersionCategoryStatusMatch = VersionCategoryStatusKit.$match;
 /**
  * Enum mapping for version category status literals.
  *
- * @example
+ * **Example** (Import status enum mapping)
+ *
  * ```ts
  * import { VersionCategoryStatusEnum } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionCategoryStatusEnum !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -159,12 +173,14 @@ export const VersionCategoryStatusEnum = VersionCategoryStatusKit.Enum;
 /**
  * Thunk helpers for version category status literals.
  *
- * @example
+ * **Example** (Import status thunk helpers)
+ *
  * ```ts
  * import { VersionCategoryStatusThunk } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionCategoryStatusThunk !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -172,13 +188,15 @@ export const VersionCategoryStatusThunk = VersionCategoryStatusKit.thunk;
 /**
  * Status of a version category.
  *
- * @example
+ * **Example** (Annotate status type)
+ *
  * ```ts
  * import type { VersionCategoryStatus } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategoryStatus | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -267,14 +285,16 @@ class VersionCategoryReportEffect extends S.Class<VersionCategoryReportEffect>($
 /**
  * Report for a single version category (bun, node, docker, biome, or effect).
  *
- * @returns Tagged union schema keyed by `category`.
- * @example
+ * **Example** (Annotate category report type)
+ *
  * ```ts
  * import type { VersionCategoryReport } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategoryReport | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
+ * @returns Tagged union schema keyed by `category`.
  * @category models
  * @since 0.0.0
  */
@@ -295,13 +315,15 @@ export const VersionCategoryReport = VersionCategory.mapMembers(
 /**
  * Report for a single version category (bun, node, docker, or biome).
  *
- * @example
+ * **Example** (Annotate category report type)
+ *
  * ```ts
  * import type { VersionCategoryReport } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionCategoryReport | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -310,12 +332,14 @@ export type VersionCategoryReport = typeof VersionCategoryReport.Type;
 /**
  * Full version sync report across all categories.
  *
- * @example
+ * **Example** (Import full sync report)
+ *
  * ```ts
  * import { VersionSyncReport } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionSyncReport !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -332,13 +356,15 @@ export class VersionSyncReport extends S.Class<VersionSyncReport>($I`VersionSync
 /**
  * Command execution mode.
  *
- * @example
+ * **Example** (Annotate sync mode type)
+ *
  * ```ts
  * import type { VersionSyncMode } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionSyncMode | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -347,12 +373,14 @@ export const VersionSyncMode = RunMode;
 /**
  * Pattern-matching helper for version-sync mode literals.
  *
- * @example
+ * **Example** (Import mode match helper)
+ *
  * ```ts
  * import { VersionSyncModeMatch } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionSyncModeMatch !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -361,13 +389,15 @@ export const VersionSyncModeMatch = RunModeMatch;
 /**
  * Command execution mode.
  *
- * @example
+ * **Example** (Annotate sync mode type)
+ *
  * ```ts
  * import type { VersionSyncMode } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionSyncMode | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -426,14 +456,16 @@ class VersionSyncOptionsDryRun extends S.Class<VersionSyncOptionsDryRun>($I`Vers
 /**
  * Resolved command options after flag parsing.
  *
- * @returns Tagged union schema keyed by `mode`.
- * @example
+ * **Example** (Annotate options type)
+ *
  * ```ts
  * import type { VersionSyncOptions } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionSyncOptions | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
+ * @returns Tagged union schema keyed by `mode`.
  * @category models
  * @since 0.0.0
  */
@@ -449,13 +481,15 @@ export const VersionSyncOptions = VersionSyncMode.mapMembers(
 /**
  * Resolved command options after flag parsing.
  *
- * @example
+ * **Example** (Annotate options type)
+ *
  * ```ts
  * import type { VersionSyncOptions } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * const example: VersionSyncOptions | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -464,12 +498,14 @@ export type VersionSyncOptions = typeof VersionSyncOptions.Type;
 /**
  * YAML location to update in write mode.
  *
- * @example
+ * **Example** (Import update location schema)
+ *
  * ```ts
  * import { VersionSyncUpdateLocation } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionSyncUpdateLocation !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -486,12 +522,14 @@ export class VersionSyncUpdateLocation extends S.Class<VersionSyncUpdateLocation
 /**
  * Resolver output consumed by reporting and write-mode services.
  *
- * @example
+ * **Example** (Import resolution schema)
+ *
  * ```ts
  * import { VersionSyncResolution } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
  *
  * console.log(typeof VersionSyncResolution !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

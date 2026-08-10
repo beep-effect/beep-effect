@@ -8,7 +8,8 @@
 /**
  * Namespace export for agent-domain entity schemas.
  *
- * @example
+ * **Example** (Log Agent entity type)
+ *
  * ```ts
  * import { Entities } from "@beep/agents-domain"
  *
@@ -22,7 +23,8 @@ export * as Entities from "./entities/index.ts";
 /**
  * Root export for agent-domain entity schemas.
  *
- * @example
+ * **Example** (Log Agent and Skill)
+ *
  * ```ts
  * import { Agent, Skill } from "@beep/agents-domain"
  *
@@ -36,7 +38,8 @@ export * from "./entities/index.ts";
 /**
  * Namespace export for assistant-content value objects.
  *
- * @example
+ * **Example** (Decode AssistantBlock value)
+ *
  * ```ts
  * import { Values } from "@beep/agents-domain"
  * import * as S from "effect/Schema"
@@ -55,7 +58,8 @@ export * as Values from "./values/index.ts";
 /**
  * Root export for assistant-content value objects.
  *
- * @example
+ * **Example** (Decode empty AssistantContent)
+ *
  * ```ts
  * import { AssistantContent } from "@beep/agents-domain"
  * import * as S from "effect/Schema"

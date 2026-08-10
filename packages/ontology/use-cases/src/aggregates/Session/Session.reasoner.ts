@@ -51,7 +51,8 @@ const INFERRED_GRAPH = makeNamedNode(graphPartitionIri("inferred"));
 /**
  * Structural inference module.
  *
- * @example
+ * **Example** (Assign closure module value)
+ *
  * ```ts
  * import { OntologyInferenceModule } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -72,7 +73,8 @@ export const OntologyInferenceModule = LiteralKit(["closure", "domainRange", "di
 /**
  * Type for {@link OntologyInferenceModule}.
  *
- * @example
+ * **Example** (Assign domainRange module type)
+ *
  * ```ts
  * import { OntologyInferenceModule } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -89,7 +91,8 @@ export type OntologyInferenceModule = typeof OntologyInferenceModule.Type;
 /**
  * Inference recompute mode for a module.
  *
- * @example
+ * **Example** (Assign incremental recompute mode)
+ *
  * ```ts
  * import { OntologyInferenceRecomputeMode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -110,7 +113,8 @@ export const OntologyInferenceRecomputeMode = LiteralKit(["full", "incremental",
 /**
  * Type for {@link OntologyInferenceRecomputeMode}.
  *
- * @example
+ * **Example** (Assign full recompute mode)
+ *
  * ```ts
  * import { OntologyInferenceRecomputeMode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -127,7 +131,8 @@ export type OntologyInferenceRecomputeMode = typeof OntologyInferenceRecomputeMo
 /**
  * Changed signature role used by inference invalidation.
  *
- * @example
+ * **Example** (Assign predicate signature role)
+ *
  * ```ts
  * import { OntologyInferenceSignatureRole } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -148,7 +153,8 @@ export const OntologyInferenceSignatureRole = LiteralKit(["subject", "predicate"
 /**
  * Type for {@link OntologyInferenceSignatureRole}.
  *
- * @example
+ * **Example** (Assign object signature role)
+ *
  * ```ts
  * import { OntologyInferenceSignatureRole } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -165,7 +171,8 @@ export type OntologyInferenceSignatureRole = typeof OntologyInferenceSignatureRo
 /**
  * Signature touched by the session change log since the last inference pass.
  *
- * @example
+ * **Example** (Make changed signature)
+ *
  * ```ts
  * import { OntologyInferenceChangedSignature } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -195,7 +202,8 @@ export class OntologyInferenceChangedSignature extends S.Class<OntologyInference
 /**
  * Result for one structural inference module.
  *
- * @example
+ * **Example** (Make module result)
+ *
  * ```ts
  * import { OntologyInferenceModuleResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -227,7 +235,8 @@ export class OntologyInferenceModuleResult extends S.Class<OntologyInferenceModu
 /**
  * Structural disjointness violation derived from asserted plus inferred types.
  *
- * @example
+ * **Example** (Make disjointness violation)
+ *
  * ```ts
  * import { OntologyDisjointnessViolation } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -259,7 +268,8 @@ export class OntologyDisjointnessViolation extends S.Class<OntologyDisjointnessV
 /**
  * Complete structural inference result for an ontology session.
  *
- * @example
+ * **Example** (Make complete inference result)
+ *
  * ```ts
  * import { OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -301,7 +311,8 @@ export class OntologyInferenceResult extends S.Class<OntologyInferenceResult>($I
 /**
  * Input for structural inference over an ontology session.
  *
- * @example
+ * **Example** (Make session inference input)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { InferOntologySessionInput } from "@beep/ontology-use-cases/aggregates/Session"
@@ -337,7 +348,8 @@ export class InferOntologySessionInput extends S.Class<InferOntologySessionInput
 /**
  * Reasoner service shape.
  *
- * @example
+ * **Example** (Type-check reasoner shape)
+ *
  * ```ts
  * import type { OntologyReasonerShape } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -838,7 +850,8 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
 /**
  * Build a session partition set with inferred quads in the derived inferred partition.
  *
- * @example
+ * **Example** (Build inferred graph partitions)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { inferredSessionGraphPartitions, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
@@ -884,7 +897,8 @@ export const inferredSessionGraphPartitions: {
 /**
  * Reasoner service tag.
  *
- * @example
+ * **Example** (Yield reasoner from Effect)
+ *
  * ```ts
  * import { OntologyReasoner } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -907,7 +921,8 @@ export class OntologyReasoner extends Context.Service<OntologyReasoner, Ontology
 /**
  * Live domain-native structural reasoner.
  *
- * @example
+ * **Example** (Reference live reasoner layer)
+ *
  * ```ts
  * import { OntologyReasonerLive } from "@beep/ontology-use-cases/aggregates/Session"
  *

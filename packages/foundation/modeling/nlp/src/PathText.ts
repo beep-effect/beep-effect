@@ -28,12 +28,14 @@ const pathFragmentVariants = (input: string): ReadonlyArray<string> => {
 /**
  * Canonicalize a path-like phrase for file and module lookup.
  *
- * @remarks
+ * **Details**
+ *
  * Backslashes are normalized to forward slashes and repeated separators are
  * collapsed after query-phrase cleanup. The result is suitable for matching
  * user prose against both filesystem paths and package module specifiers.
  *
- * @example
+ * **Example** (Normalize backslash path phrase)
+ *
  * ```typescript
  * import * as PathText from "@beep/nlp/PathText"
  *
@@ -49,12 +51,14 @@ export const normalizePathPhrase = flow(QueryText.normalizePhrase, Str.replace(/
 /**
  * Check whether normalized text is shaped like a single path or module token.
  *
- * @remarks
+ * **Details**
+ *
  * The predicate accepts scoped package names, dots, slashes, underscores, and
  * dashes, but rejects whitespace. It is a lightweight classifier for query
  * routing, not a filesystem existence check.
  *
- * @example
+ * **Example** (Classify path-like tokens)
+ *
  * ```typescript
  * import * as PathText from "@beep/nlp/PathText"
  *
@@ -71,12 +75,14 @@ export const isPathLike = (input: string): boolean => /^[A-Za-z0-9_./@-]+$/.test
 /**
  * Generate source-file lookup variants from a path fragment.
  *
- * @remarks
+ * **Details**
+ *
  * Variants include the normalized path, leading `./` removal, TypeScript
  * extension removal, basename, and basename without extension, preserving order
  * and removing duplicates.
  *
- * @example
+ * **Example** (Generate file path variants)
+ *
  * ```typescript
  * import * as PathText from "@beep/nlp/PathText"
  *
@@ -93,11 +99,13 @@ export const filePathVariants = pathFragmentVariants;
 /**
  * Generate import-specifier lookup variants from a module fragment.
  *
- * @remarks
+ * **Details**
+ *
  * This shares the same normalization as file paths because package subpaths and
  * local source paths are both queried from user text in the repository graph.
  *
- * @example
+ * **Example** (Generate module specifier variants)
+ *
  * ```typescript
  * import * as PathText from "@beep/nlp/PathText"
  *

@@ -9,7 +9,8 @@
 /**
  * Span model exports.
  *
- * @example
+ * **Example** (Importing Span exports)
+ *
  * ```ts
  * import { Span } from "@beep/law-practice-domain/values";
  * ```

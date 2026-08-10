@@ -8,7 +8,8 @@
 /**
  * Converts a union type into an intersection type.
  *
- * @example
+ * **Example** (Converting union to intersection)
+ *
  * ```ts
  * import type { TUtils } from "@beep/types"
  *
@@ -33,7 +34,8 @@ export type UnionToIntersection<Union> = (Union extends unknown ? (value: Union)
 /**
  * Expands an object type into a readable readonly property map.
  *
- * @example
+ * **Example** (Simplifying intersection object type)
+ *
  * ```ts
  * import type { TUtils } from "@beep/types"
  *

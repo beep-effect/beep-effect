@@ -14,7 +14,8 @@ const $I = $RepoUtilsId.create("JSDoc/models/ASTSignal.model");
  * Deterministic heuristic for auto-classifying code elements
  * from the AST without LLM inference.
  *
- * @example
+ * **Example** (Build signal with confidence)
+ *
  * ```ts
  * import { ASTSignal } from "@beep/repo-utils/JSDoc/models/ASTSignal.model"
  *
@@ -25,6 +26,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/ASTSignal.model");
  * })
  * console.log(signal.confidence)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

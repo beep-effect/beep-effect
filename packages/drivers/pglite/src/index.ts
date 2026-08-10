@@ -12,22 +12,24 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/pglite"
  *
  * console.log(VERSION)
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const VERSION = "0.0.0" as const;
 
 /**
  * Public PGlite driver error exports.
  *
- * @example
+ * **Example** (Create error from unknown)
+ *
  * ```ts
  * import { PgliteError } from "@beep/pglite"
  *
@@ -35,28 +37,30 @@ export const VERSION = "0.0.0" as const;
  * console.log(error.operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export * from "./Pglite.errors.ts";
 /**
  * Public PGlite in-memory test layer exports.
  *
- * @example
+ * **Example** (Import test layer)
+ *
  * ```ts
  * import { PgliteTestLayer } from "@beep/pglite"
  *
  * console.log(PgliteTestLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export * from "./Pglite.test-layer.ts";
 /**
  * Public PGlite client service and layer exports.
  *
- * @example
+ * **Example** (Create layer with dataDir)
+ *
  * ```ts
  * import { makeLayer } from "@beep/pglite"
  *
@@ -64,7 +68,7 @@ export * from "./Pglite.test-layer.ts";
  * console.log(layer)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export * from "./PgliteClient.service.ts";

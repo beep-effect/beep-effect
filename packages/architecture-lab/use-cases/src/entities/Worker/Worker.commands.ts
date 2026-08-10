@@ -16,7 +16,8 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
 /**
  * Command payload accepted by the Worker creation use case.
  *
- * @example
+ * **Example** (Make CreateWorkerCommand payload)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { CreateWorkerCommand } from "@beep/architecture-lab-use-cases/entities/Worker"
@@ -55,7 +56,8 @@ export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateW
 /**
  * Query payload for loading one Worker by id.
  *
- * @example
+ * **Example** (Make GetWorkerQuery by id)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { GetWorkerQuery } from "@beep/architecture-lab-use-cases/entities/Worker"
@@ -86,7 +88,8 @@ export class GetWorkerQuery extends S.Class<GetWorkerQuery>($I`GetWorkerQuery`)(
 /**
  * Query payload for listing Workers, optionally constrained by lifecycle status.
  *
- * @example
+ * **Example** (List workers by status)
+ *
  * ```ts
  * import { ListWorkersQuery } from "@beep/architecture-lab-use-cases/entities/Worker"
  * import * as O from "effect/Option"

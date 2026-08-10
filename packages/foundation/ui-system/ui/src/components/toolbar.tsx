@@ -24,7 +24,8 @@ import type { ComponentProps, ElementType, ReactNode } from "react";
 /**
  * Toolbar component.
  *
- * @example
+ * **Example** (Import Toolbar component)
+ *
  * ```tsx
  * import { Toolbar } from "@beep/ui/components/toolbar"
  *
@@ -41,7 +42,8 @@ export function Toolbar({ className, ...props }: ToolbarPrimitive.Root.Props) {
 /**
  * Toolbar toggle group component.
  *
- * @example
+ * **Example** (Import ToolbarToggleGroup component)
+ *
  * ```tsx
  * import { ToolbarToggleGroup } from "@beep/ui/components/toolbar"
  *
@@ -87,7 +89,8 @@ export function ToolbarToggleGroup({
 /**
  * Toolbar link component.
  *
- * @example
+ * **Example** (Import ToolbarLink component)
+ *
  * ```tsx
  * import { ToolbarLink } from "@beep/ui/components/toolbar"
  *
@@ -104,7 +107,8 @@ export function ToolbarLink({ className, ...props }: ToolbarPrimitive.Link.Props
 /**
  * Toolbar separator component.
  *
- * @example
+ * **Example** (Import ToolbarSeparator component)
+ *
  * ```tsx
  * import { ToolbarSeparator } from "@beep/ui/components/toolbar"
  *
@@ -183,7 +187,8 @@ type ToolbarButtonProps = ToolbarToggleButtonProps | ToolbarActionButtonProps;
 /**
  * Toolbar button component.
  *
- * @example
+ * **Example** (Import ToolbarButton component)
+ *
  * ```tsx
  * import { ToolbarButton } from "@beep/ui/components/toolbar"
  *
@@ -247,7 +252,8 @@ export const ToolbarButton = withTooltip(function ToolbarButton(props: ToolbarBu
 /**
  * Toolbar split button component.
  *
- * @example
+ * **Example** (Import ToolbarSplitButton component)
+ *
  * ```tsx
  * import { ToolbarSplitButton } from "@beep/ui/components/toolbar"
  *
@@ -266,7 +272,8 @@ type ToolbarSplitButtonPrimaryProps = ComponentProps<"span"> & VariantProps<type
 /**
  * Toolbar split button primary component.
  *
- * @example
+ * **Example** (Import ToolbarSplitButtonPrimary component)
+ *
  * ```tsx
  * import { ToolbarSplitButtonPrimary } from "@beep/ui/components/toolbar"
  *
@@ -304,7 +311,8 @@ export function ToolbarSplitButtonPrimary({
 /**
  * Toolbar split button secondary component.
  *
- * @example
+ * **Example** (Import ToolbarSplitButtonSecondary component)
+ *
  * ```tsx
  * import { ToolbarSplitButtonSecondary } from "@beep/ui/components/toolbar"
  *
@@ -342,7 +350,8 @@ export function ToolbarSplitButtonSecondary({
 /**
  * Toolbar toggle item component.
  *
- * @example
+ * **Example** (Import ToolbarToggleItem component)
+ *
  * ```tsx
  * import { ToolbarToggleItem } from "@beep/ui/components/toolbar"
  *
@@ -364,7 +373,8 @@ export function ToolbarToggleItem({
 /**
  * Toolbar group component.
  *
- * @example
+ * **Example** (Import ToolbarGroup component)
+ *
  * ```tsx
  * import { ToolbarGroup } from "@beep/ui/components/toolbar"
  *
@@ -423,7 +433,8 @@ function withTooltip<T extends ElementType>(Component: T) {
 /**
  * Toolbar menu group component.
  *
- * @example
+ * **Example** (Import ToolbarMenuGroup component)
+ *
  * ```tsx
  * import { ToolbarMenuGroup } from "@beep/ui/components/toolbar"
  *

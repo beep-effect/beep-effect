@@ -85,7 +85,8 @@ const validateVaultRoot = Effect.fn("Workspace.WorkspaceVaultStore.validateVault
 /**
  * Builds an in-memory workspace vault store for deterministic tests.
  *
- * @example
+ * **Example** (Import in-memory store factory)
+ *
  * ```ts
  * import { makeInMemoryWorkspaceVaultStore } from "@beep/workspace-server/aggregates/Workspace"
  *
@@ -136,7 +137,8 @@ const workspaceTable = DbSchema.workspace;
 /**
  * Builds a Drizzle-backed workspace vault store.
  *
- * @example
+ * **Example** (Import Drizzle store factory)
+ *
  * ```ts
  * import { makeDrizzleWorkspaceVaultStore } from "@beep/workspace-server/aggregates/Workspace"
  *
@@ -198,7 +200,8 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
 /**
  * Default workspace vault store factory.
  *
- * @example
+ * **Example** (Import default store factory)
+ *
  * ```ts
  * import { makeWorkspaceVaultStore } from "@beep/workspace-server/aggregates/Workspace"
  *

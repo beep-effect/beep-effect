@@ -40,10 +40,13 @@ class BagOfWordsSuccess extends S.Class<BagOfWordsSuccess>($I`BagOfWordsSuccess`
  * Defines the agent-facing tool contract for computing a bag-of-words
  * term-frequency table from text.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs normalized term counts for matching,
  * feature generation, or lightweight relevance scoring.
  *
- * @example
+ * **Example** (Decode parameters schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BagOfWords } from "@beep/nlp-processing/Tools/BagOfWords"

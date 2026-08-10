@@ -23,17 +23,21 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 /**
  * Default docgen exclude globs for repo packages.
  *
- * @remarks
+ * **Details**
+ *
  * These are source-relative globs applied before examples are compiled. Keep
  * generated and internal-package policy in the caller's config; this list is
  * only the repo-managed default backfill.
- * @example
+ *
+ * **Example** (Check internal exclude glob)
+ *
  * ```ts
  * import { DEFAULT_DOCGEN_EXCLUDE } from "@beep/repo-utils/schemas/DocgenConfig"
  * const internalGlob = "src/internal/**" + "/*.ts"
  * const excludesInternalSources = DEFAULT_DOCGEN_EXCLUDE.some((glob) => glob === internalGlob)
  * console.log(excludesInternalSources) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -42,7 +46,8 @@ export const DEFAULT_DOCGEN_EXCLUDE = ["src/internal/**/*.ts"] as const;
 /**
  * Input used to build the canonical repo docgen config for a package.
  *
- * @example
+ * **Example** (Build docgen config input)
+ *
  * ```ts
  * import { CanonicalDocgenConfigInput } from "@beep/repo-utils/schemas/DocgenConfig"
  * const input = CanonicalDocgenConfigInput.make({
@@ -53,6 +58,7 @@ export const DEFAULT_DOCGEN_EXCLUDE = ["src/internal/**/*.ts"] as const;
  * })
  * console.log(input.packageRelativePath) // "packages/example"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -79,11 +85,14 @@ export class CanonicalDocgenConfigInput extends S.Class<CanonicalDocgenConfigInp
 /**
  * Managed TypeScript compiler options used for docgen examples.
  *
- * @remarks
+ * **Details**
+ *
  * This shape intentionally mirrors the strict options docgen writes into each
  * package's `docgen.json`; examples should fail fast on unused locals,
  * unresolved aliases, and non-erasable TypeScript syntax.
- * @example
+ *
+ * **Example** (Make strict compiler options)
+ *
  * ```ts
  * import { CanonicalDocgenExamplesCompilerOptions } from "@beep/repo-utils/schemas/DocgenConfig"
  * const options = CanonicalDocgenExamplesCompilerOptions.make({
@@ -115,6 +124,7 @@ export class CanonicalDocgenConfigInput extends S.Class<CanonicalDocgenConfigInp
  * })
  * console.log(options.moduleResolution) // "bundler"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -156,7 +166,8 @@ export class CanonicalDocgenExamplesCompilerOptions extends S.Class<CanonicalDoc
 /**
  * Canonical repo docgen config payload.
  *
- * @example
+ * **Example** (Build canonical docgen config)
+ *
  * ```ts
  * import {
  *   CanonicalDocgenConfig,
@@ -197,6 +208,7 @@ export class CanonicalDocgenExamplesCompilerOptions extends S.Class<CanonicalDoc
  * })
  * console.log(config.exclude[0] === internalGlob) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,9 +232,8 @@ const isReadonlyUnknownRecord = (value: unknown): value is Readonly<Record<strin
 /**
  * Convert canonical docgen compiler options to a plain JSON-compatible object.
  *
- * @param options - Canonical docgen examples compiler options model to serialize.
- * @returns A JSON-compatible record mirroring the compiler option fields.
- * @example
+ * **Example** (Serialize compiler options JSON)
+ *
  * ```ts
  * import {
  *   CanonicalDocgenExamplesCompilerOptions,
@@ -259,6 +270,9 @@ const isReadonlyUnknownRecord = (value: unknown): value is Readonly<Record<strin
  * )
  * console.log(json.moduleResolution) // "bundler"
  * ```
+ *
+ * @param options - Canonical docgen examples compiler options model to serialize.
+ * @returns A JSON-compatible record mirroring the compiler option fields.
  * @category models
  * @since 0.0.0
  */
@@ -296,7 +310,8 @@ export const toDocgenExamplesCompilerOptionsJson = (
  * JSON-compatible mirror of {@link CanonicalDocgenConfig}, returned by
  * {@link toCanonicalDocgenConfigJson}.
  *
- * @example
+ * **Example** (Make JSON config shape)
+ *
  * ```ts
  * import { CanonicalDocgenConfigJsonShape } from "@beep/repo-utils/schemas/DocgenConfig"
  * const json = CanonicalDocgenConfigJsonShape.make({
@@ -307,6 +322,7 @@ export const toDocgenExamplesCompilerOptionsJson = (
  * })
  * console.log(json.srcLink.endsWith("/src/")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -327,12 +343,14 @@ export class CanonicalDocgenConfigJsonShape extends S.Class<CanonicalDocgenConfi
 /**
  * Runtime type for {@link CanonicalDocgenConfigJsonShape}.
  *
- * @example
+ * **Example** (Accept JSON config type)
+ *
  * ```ts
  * import type { CanonicalDocgenConfigJson } from "@beep/repo-utils/schemas/DocgenConfig"
  * const acceptJson = (_value: CanonicalDocgenConfigJson) => undefined
  * console.log(acceptJson)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -341,9 +359,8 @@ export type CanonicalDocgenConfigJson = (typeof CanonicalDocgenConfigJsonShape)[
 /**
  * Convert the canonical docgen config model to a plain JSON-compatible object.
  *
- * @param config - Canonical docgen config model to serialize.
- * @returns A JSON-compatible object mirroring the docgen config fields.
- * @example
+ * **Example** (Serialize docgen config JSON)
+ *
  * ```ts
  * import {
  *   CanonicalDocgenConfig,
@@ -386,6 +403,9 @@ export type CanonicalDocgenConfigJson = (typeof CanonicalDocgenConfigJsonShape)[
  * )
  * console.log(json.srcLink.endsWith("/src/")) // true
  * ```
+ *
+ * @param config - Canonical docgen config model to serialize.
+ * @returns A JSON-compatible object mirroring the docgen config fields.
  * @category models
  * @since 0.0.0
  */
@@ -399,14 +419,14 @@ export const toCanonicalDocgenConfigJson = (config: CanonicalDocgenConfig): Cano
 /**
  * Build the canonical repo docgen config for a package.
  *
- * @remarks
+ * **Details**
+ *
  * The output is rooted from the package directory back to the repo root, so the
  * same builder works for shallow packages such as `packages/schema` and nested
  * packages such as `packages/tooling/library/repo-utils`.
- * @effects
- * Requires the `Path.Path` service to compute the root-relative schema
- * reference; it does not read or write files.
- * @example
+ *
+ * **Example** (Create package srcLink config)
+ *
  * ```ts
  * import { Effect, Path } from "effect"
  * import {
@@ -427,6 +447,10 @@ export const toCanonicalDocgenConfigJson = (config: CanonicalDocgenConfig): Cano
  * )
  * console.log(srcLink.endsWith("/packages/example/src/")) // true
  * ```
+ *
+ * @effects
+ * Requires the `Path.Path` service to compute the root-relative schema
+ * reference; it does not read or write files.
  * @category models
  * @since 0.0.0
  */
@@ -474,6 +498,8 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
 /**
  * Merge managed docgen fields into an existing parsed `docgen.json` document.
  *
+ * **Details**
+ *
  * Existing package-local extras are preserved. The default `exclude` field is only
  * backfilled when it is absent so package-specific exclusions survive sync.
  * Managed `@beep/*` entries in `examplesCompilerOptions.paths` are pruned:
@@ -481,7 +507,8 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
  * symlinks and package export maps, so those mappings are dead configuration.
  * Package-local custom aliases (for example an app's `@/*`) survive.
  *
- * @example
+ * **Example** (Preserve package exclude extras)
+ *
  * ```ts
  * import {
  *   CanonicalDocgenConfig,
@@ -525,6 +552,7 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
  * const exclude = merged.exclude
  * console.log(Array.isArray(exclude) && exclude[0] === generatedGlob) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

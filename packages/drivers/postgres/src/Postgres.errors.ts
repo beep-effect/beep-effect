@@ -19,7 +19,8 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
 /**
  * Optional diagnostic context captured while normalizing Postgres-adjacent failures.
  *
- * @example
+ * **Example** (Make context with options)
+ *
  * ```ts
  * import { PostgresErrorContext } from "@beep/postgres"
  * import * as O from "effect/Option"
@@ -342,7 +343,8 @@ const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
 /**
  * Technical failure raised by the `@beep/postgres` driver boundary.
  *
- * @example
+ * **Example** (Create error from unknown)
+ *
  * ```ts
  * import { PostgresError } from "@beep/postgres"
  *
@@ -412,7 +414,8 @@ export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresEr
   /**
    * Normalize an unknown Postgres-adjacent failure into a {@link PostgresError}.
    *
-   * @example
+   * **Example** (Normalize unknown failure)
+   *
    * ```ts
    * import { PostgresError } from "@beep/postgres"
    *
@@ -466,7 +469,8 @@ export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresEr
 /**
  * Normalize unknown Postgres-adjacent failures into structured diagnostics.
  *
- * @example
+ * **Example** (Extract diagnostics from error)
+ *
  * ```ts
  * import { extractPostgresDiagnostics } from "@beep/postgres"
  *

@@ -15,11 +15,14 @@ const patentNumberDigitsPattern = /^[0-9]+$/;
 /**
  * Canonical WIPO ST.6 patent publication number.
  *
+ * **Details**
+ *
  * WIPO ST.6 recommends that the publication number itself contain digits only
  * and no more than 13 digits. ST.3 office codes and ST.16 kind codes are
  * associated metadata and are intentionally not part of this value.
  *
- * @example
+ * **Example** (Validate digit-only numbers)
+ *
  * ```ts
  * import { PatentNumber } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -60,7 +63,8 @@ export const PatentNumber = S.String.check(
 /**
  * Type-level brand produced by {@link PatentNumber}.
  *
- * @example
+ * **Example** (Decode branded patent number)
+ *
  * ```ts
  * import { PatentNumber } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"

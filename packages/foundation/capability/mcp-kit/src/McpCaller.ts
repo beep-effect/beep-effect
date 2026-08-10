@@ -13,9 +13,12 @@ import * as S from "effect/Schema";
 
 const $I = $McpKitId.create("McpCaller");
 
-/** Initialized MCP caller identity assigned by the server transport.
+/**
+ *  Initialized MCP caller identity assigned by the server transport.
  *
- * @remarks `clientId` identifies one **protocol exchange**, not one session:
+ * **Gotchas**
+ *
+ * `clientId` identifies one **protocol exchange**, not one session:
  * the HTTP protocol mints it per request (`RpcServer.ts` `clientId++` inside
  * the per-request effect), so consecutive `tools/call` posts of one MCP
  * session carry different values. `sessionId` is the transport-assigned
@@ -23,13 +26,16 @@ const $I = $McpKitId.create("McpCaller");
  * and is the only stable per-session key available to a dispatch. It is
  * `None` for transports that do not issue one (stdio), where the connection
  * itself is the session.
- * @example
+ *
+ * **Example** (Make identity with clientId)
+ *
  * ```ts
  * import { McpCallerIdentity } from "@beep/mcp-kit"
  * import { NonNegativeInt } from "@beep/schema"
  * const caller = McpCallerIdentity.make({ clientId: NonNegativeInt.make(1) })
  * console.log(caller.clientId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -48,13 +54,17 @@ export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerId
   })
 ) {}
 
-/** Request-local initialized MCP caller, absent outside a real tool dispatch.
- * @example
+/**
+ *  Request-local initialized MCP caller, absent outside a real tool dispatch.
+ *
+ * **Example** (Read current MCP caller)
+ *
  * ```ts
  * import { CurrentMcpCaller } from "@beep/mcp-kit"
  * import { Effect } from "effect"
  * console.log(Effect.runSync(CurrentMcpCaller))
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

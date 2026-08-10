@@ -58,7 +58,8 @@ const ParserOptionsErrorBase: TaggedErrorClassFromFields<
 /**
  * A parser header configuration input.
  *
- * @example
+ * **Example** (Decode header value input)
+ *
  * ```ts
  * import { HeaderValueInput } from "@beep/schema/ParserOptions"
  * import * as S from "effect/Schema"
@@ -78,16 +79,6 @@ export const HeaderValueInput = S.Union([S.Boolean, HeaderArray, HeaderTransform
 
 /**
  * {@inheritDoc HeaderValueInput}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { HeaderValueInput } from "@beep/schema/ParserOptions"
- *
- * const headers: HeaderValueInput = S.decodeUnknownSync(HeaderValueInput)(true)
- * console.log(headers)
- * ```
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -96,7 +87,8 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
 /**
  * A parser options configuration error.
  *
- * @example
+ * **Example** (Create parser options error)
+ *
  * ```ts
  * import { Error as ParserOptionsError } from "@beep/schema/ParserOptions"
  * import * as O from "effect/Option"
@@ -131,12 +123,15 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
 /**
  * Schema-backed CSV parser options.
  *
+ * **Details**
+ *
  * Derived runtime fields from the original implementation such as
  * `escapedDelimiter`, `escapeChar`, `supportsComments`, `limitRows`, and
  * `NEXT_TOKEN_REGEXP` are exposed as getters so the schema stays focused on the
  * true input/configuration surface.
  *
- * @example
+ * **Example** (Create parser options)
+ *
  * ```ts
  * import { ParserOptions } from "@beep/schema/ParserOptions"
  *
@@ -224,7 +219,8 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
 /**
  * Encoded/raw constructor input for {@link ParserOptions}.
  *
- * @example
+ * **Example** (Satisfy parser options args)
+ *
  * ```ts
  * import type { ParserOptionsArgs } from "@beep/schema/ParserOptions"
  *

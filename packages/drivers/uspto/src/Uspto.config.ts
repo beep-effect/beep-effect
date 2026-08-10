@@ -16,7 +16,8 @@ const $I = $UsptoId.create("Uspto.config");
 /**
  * Default USPTO Open Data Portal API base URL.
  *
- * @example
+ * **Example** (Log default API URL)
+ *
  * ```ts
  * import { USPTO_API_URL } from "@beep/uspto"
  *
@@ -44,7 +45,8 @@ const UsptoApiUrl = S.String.pipe(
 /**
  * Runtime configuration accepted by {@link Uspto.makeLayer}.
  *
- * @example
+ * **Example** (Create config with redacted key)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import { UsptoConfigInput } from "@beep/uspto"

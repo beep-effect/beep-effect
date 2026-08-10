@@ -14,7 +14,8 @@ import * as S from "effect/Schema";
 /**
  * Drizzle table projection for architecture lab Worker entities.
  *
- * @example
+ * **Example** (Inspect table columns)
+ *
  * ```ts
  * import { workerTable } from "@beep/architecture-lab-tables/entities/Worker"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -36,7 +37,8 @@ export const workerTable = EntityTable.pgTableFrom(DomainWorker.Worker);
 /**
  * Physical Postgres table name derived from the Worker entity definition.
  *
- * @example
+ * **Example** (Read physical table name)
+ *
  * ```ts
  * import { WORKER_TABLE_NAME } from "@beep/architecture-lab-tables/entities/Worker"
  *
@@ -56,7 +58,8 @@ export const WORKER_TABLE_NAME = workerTable.definition.tableName;
 /**
  * Selected row shape returned by queries against {@link workerTable}.
  *
- * @example
+ * **Example** (Satisfy selected row shape)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
@@ -89,7 +92,8 @@ export type WorkerRow = typeof workerTable.$inferSelect;
 /**
  * Insert row shape accepted by writes to {@link workerTable}.
  *
- * @example
+ * **Example** (Type insert row shape)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
@@ -124,7 +128,8 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
 /**
  * Encode a Worker entity into the insert row accepted by {@link workerTable}.
  *
- * @example
+ * **Example** (Encode entity to insert)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
@@ -159,7 +164,8 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
 /**
  * Decode a selected Worker row back into the domain entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,

@@ -9,7 +9,8 @@
 /**
  * Package version for the ontology use-case role.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-use-cases"
  *

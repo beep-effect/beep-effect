@@ -18,7 +18,8 @@ const contexts = createFormHookContexts();
 /**
  * React context carrying the active field API to a registered field component.
  *
- * @example
+ * **Example** (Wire contexts into form hook)
+ *
  * ```ts
  * import { createFormHook } from "@tanstack/react-form"
  * import { fieldContext } from "@beep/form/core/contexts"
@@ -42,7 +43,8 @@ export const fieldContext = contexts.fieldContext;
 /**
  * Hook returning the active field API inside a registered field component.
  *
- * @example
+ * **Example** (Read active field name)
+ *
  * ```tsx
  * import { useFieldContext } from "@beep/form/core/contexts"
  *
@@ -61,7 +63,8 @@ export const useFieldContext = contexts.useFieldContext;
 /**
  * React context carrying the active form API to a registered form component.
  *
- * @example
+ * **Example** (Pass formContext to createFormHook)
+ *
  * ```ts
  * import { createFormHook } from "@tanstack/react-form"
  * import { fieldContext } from "@beep/form/core/contexts"
@@ -85,7 +88,8 @@ export const formContext = contexts.formContext;
 /**
  * Hook returning the active form API inside a registered form component.
  *
- * @example
+ * **Example** (Subscribe to isSubmitting state)
+ *
  * ```tsx
  * import { useFormContext } from "@beep/form/core/contexts"
  *

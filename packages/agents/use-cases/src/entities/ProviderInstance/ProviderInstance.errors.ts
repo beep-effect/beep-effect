@@ -11,13 +11,17 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.errors");
 
-/** Requested provider instance does not exist.
- * @example
+/**
+ *  Requested provider instance does not exist.
+ *
+ * **Example** (Make not-found error)
+ *
  * ```ts
  * import { ProviderInstanceNotFound } from "@beep/agents-use-cases/public"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * console.log(ProviderInstanceNotFound.make({ providerInstanceId: Agents.ProviderInstanceId.make(1) })._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -27,14 +31,18 @@ export class ProviderInstanceNotFound extends TaggedErrorClass<ProviderInstanceN
   $I.annote("ProviderInstanceNotFound", { description: "The requested provider instance does not exist." })
 ) {}
 
-/** Provider CLI is logged out and requires the supplied domain guidance.
- * @example
+/**
+ *  Provider CLI is logged out and requires the supplied domain guidance.
+ *
+ * **Example** (Make unauthenticated error)
+ *
  * ```ts
  * import { ProviderUnauthenticated } from "@beep/agents-use-cases/public"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * const error = ProviderUnauthenticated.make({ providerInstanceId: Agents.ProviderInstanceId.make(1), guidance: "Run `codex login` in your terminal, then probe again." })
  * console.log(error.guidance)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -44,13 +52,17 @@ export class ProviderUnauthenticated extends TaggedErrorClass<ProviderUnauthenti
   $I.annote("ProviderUnauthenticated", { description: "The provider CLI is unauthenticated and requires login." })
 ) {}
 
-/** Provider probing or persistence is temporarily unavailable.
- * @example
+/**
+ *  Provider probing or persistence is temporarily unavailable.
+ *
+ * **Example** (Make probe unavailable error)
+ *
  * ```ts
  * import { ProviderProbeUnavailable } from "@beep/agents-use-cases/public"
  * const error = ProviderProbeUnavailable.make({ guidance: "Check the configured binary path, then probe again." })
  * console.log(error._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -62,12 +74,16 @@ export class ProviderProbeUnavailable extends TaggedErrorClass<ProviderProbeUnav
   })
 ) {}
 
-/** Tagged union of client-safe provider-instance failures.
- * @example
+/**
+ *  Tagged union of client-safe provider-instance failures.
+ *
+ * **Example** (Check action error membership)
+ *
  * ```ts
  * import { ProviderActionError, ProviderProbeUnavailable } from "@beep/agents-use-cases/public"
  * console.log(ProviderActionError.is(ProviderProbeUnavailable.make({ guidance: "Try again." }))) // true
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -81,13 +97,17 @@ export const ProviderActionError = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime type for {@link ProviderActionError}.
- * @example
+/**
+ *  Runtime type for {@link ProviderActionError}.
+ *
+ * **Example** (Type action error value)
+ *
  * ```ts
  * import { ProviderProbeUnavailable, type ProviderActionError } from "@beep/agents-use-cases/public"
  * const error: ProviderActionError = ProviderProbeUnavailable.make({ guidance: "Try again." })
  * console.log(error._tag)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

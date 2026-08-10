@@ -21,12 +21,15 @@ const getErrorMessage = (value: unknown): O.Option<string> =>
 /**
  * Technical failure raised by the `@beep/pglite` driver boundary.
  *
+ * **Details**
+ *
  * `operation` identifies the driver operation that failed (for example
  * `"connect"`). The originating defect is preserved in `cause`. These are
  * driver-internal failures: server adapters translate them into port-declared
  * errors and they never escape as themselves.
  *
- * @example
+ * **Example** (Create error from unknown)
+ *
  * ```ts
  * import { PgliteError } from "@beep/pglite"
  *
@@ -63,7 +66,8 @@ export class PgliteError extends TaggedErrorClass<PgliteError>($I`PgliteError`)(
   /**
    * Normalize an unknown PGlite-adjacent failure into a {@link PgliteError}.
    *
-   * @example
+   * **Example** (Normalize unknown failure)
+   *
    * ```ts
    * import { PgliteError } from "@beep/pglite"
    *

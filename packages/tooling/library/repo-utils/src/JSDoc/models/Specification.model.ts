@@ -12,13 +12,15 @@ const $I = $RepoUtilsId.create("JSDoc/models/Specification.model");
 /**
  * Enumerates canonical standards that define a documentation tag.
  *
- * @example
+ * **Example** (Check tsdocCore specification)
+ *
  * ```ts
  * import { Specification } from "@beep/repo-utils/JSDoc/models/Specification.model"
  *
  * const source = Specification.Enum.tsdocCore
  * console.log(Specification.is.tsdocCore(source))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,7 +52,8 @@ export const Specification = LiteralKit([
 /**
  * Union of canonical documentation standards represented by {@link Specification}.
  *
- * @example
+ * **Example** (Accept Specification type)
+ *
  * ```ts
  * import type { Specification } from "@beep/repo-utils/JSDoc/models/Specification.model"
  *
@@ -58,6 +61,7 @@ export const Specification = LiteralKit([
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

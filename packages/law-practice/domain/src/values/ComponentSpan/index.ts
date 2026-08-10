@@ -9,9 +9,8 @@
 /**
  * Component-span model exports.
  *
- * **Example**
+ * **Example** (Import CaseComponentSpan)
  *
- * @example
  * ```ts
  * import { CaseComponentSpan } from "@beep/law-practice-domain/values";
  * ```

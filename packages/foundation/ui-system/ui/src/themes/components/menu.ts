@@ -9,7 +9,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Menu theme theme value.
  *
- * @example
+ * **Example** (Import and log menuTheme)
+ *
  * ```ts
  * import { menuTheme } from "@beep/ui/themes/components/menu"
  *

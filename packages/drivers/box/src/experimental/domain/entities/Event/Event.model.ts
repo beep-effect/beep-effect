@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Event/Event.model");
 /**
  * Experimental schema anchor for entries emitted by Box event streams.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode Event)
+ *
  * ```ts
  * import { Event } from "@beep/box/experimental/domain/entities/Event/Event.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Event extends S.Class<Event>($I`Event`)(
 /**
  * Type-level companion namespace for {@link Event} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Event)
+ *
  * ```ts
  * import { Event } from "@beep/box/experimental/domain/entities/Event/Event.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Event {
   /**
    * Encoded payload accepted by the {@link Event} entity schema.
    *
-   * @example
+   * **Example** (Encode Event payload)
+   *
    * ```ts
    * import { Event } from "@beep/box/experimental/domain/entities/Event/Event.model";
    * import * as S from "effect/Schema";

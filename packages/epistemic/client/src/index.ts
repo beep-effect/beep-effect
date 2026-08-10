@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/epistemic-client`.
  *
- * @example
+ * **Example** (Compare package VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/epistemic-client"
  *

@@ -53,7 +53,8 @@ const NPath = (): typeof import("node:path") => {
  * `fromFileUrl` (URL to path) and `toFileUrl` (path to URL). Both are
  * `Effect`-returning and fail with `PlatformError.BadArgument` on invalid input.
  *
- * @example
+ * **Example** (Round-trip file URL conversion)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { fromFileUrl, toFileUrl } from "@beep/utils/Path"
@@ -70,7 +71,8 @@ export { fromFileUrl, toFileUrl } from "./NodeUrl.ts";
 /**
  * A parsed path, mirroring effect's `Path.Parsed` (and Node's `ParsedPath`).
  *
- * @example
+ * **Example** (Parsed path object shape)
+ *
  * ```ts
  * import type { Parsed } from "@beep/utils/Path"
  *
@@ -87,7 +89,8 @@ export type Parsed = PlatformPath.Path.Parsed;
  * The platform-specific path segment separator (`"/"` on POSIX, `"\\"` on
  * Windows).
  *
- * @example
+ * **Example** (Platform separator type check)
+ *
  * ```ts
  * import { sep } from "@beep/utils/Path"
  *
@@ -102,7 +105,8 @@ export const sep: string = globalThis.process?.getBuiltinModule?.("node:path")?.
 /**
  * Joins path segments into a single normalized path.
  *
- * @example
+ * **Example** (Join path segments)
+ *
  * ```ts
  * import { join } from "@beep/utils/Path"
  *
@@ -117,7 +121,8 @@ export const join = (...paths: ReadonlyArray<string>): string => NPath().join(..
 /**
  * Resolves a sequence of path segments into an absolute path.
  *
- * @example
+ * **Example** (Resolve absolute path)
+ *
  * ```ts
  * import { resolve } from "@beep/utils/Path"
  *
@@ -132,7 +137,8 @@ export const resolve = (...pathSegments: ReadonlyArray<string>): string => NPath
 /**
  * Normalizes a path, collapsing `.`/`..` segments and redundant separators.
  *
- * @example
+ * **Example** (Collapse dots and separators)
+ *
  * ```ts
  * import { normalize } from "@beep/utils/Path"
  *
@@ -147,7 +153,8 @@ export const normalize: (path: string) => string = (path) => NPath().normalize(p
 /**
  * Computes the relative path from `from` to `to`.
  *
- * @example
+ * **Example** (Relative path between dirs)
+ *
  * ```ts
  * import { relative } from "@beep/utils/Path"
  *
@@ -165,7 +172,8 @@ export const relative: {
 /**
  * Returns the last portion of a path, optionally stripping `suffix`.
  *
- * @example
+ * **Example** (Basename with suffix strip)
+ *
  * ```ts
  * import { basename } from "@beep/utils/Path"
  *
@@ -183,7 +191,8 @@ export const basename: {
 /**
  * Returns the directory portion of a path.
  *
- * @example
+ * **Example** (Directory portion of path)
+ *
  * ```ts
  * import { dirname } from "@beep/utils/Path"
  *
@@ -198,7 +207,8 @@ export const dirname: (path: string) => string = (path) => NPath().dirname(path)
 /**
  * Returns the extension of a path, including the leading dot.
  *
- * @example
+ * **Example** (Extension with leading dot)
+ *
  * ```ts
  * import { extname } from "@beep/utils/Path"
  *
@@ -213,7 +223,8 @@ export const extname: (path: string) => string = (path) => NPath().extname(path)
 /**
  * Reports whether a path is absolute.
  *
- * @example
+ * **Example** (Check absolute path)
+ *
  * ```ts
  * import { isAbsolute } from "@beep/utils/Path"
  *
@@ -228,7 +239,8 @@ export const isAbsolute: (path: string) => boolean = (path) => NPath().isAbsolut
 /**
  * Parses a path into its `root`/`dir`/`base`/`ext`/`name` components.
  *
- * @example
+ * **Example** (Parse path components)
+ *
  * ```ts
  * import { parse } from "@beep/utils/Path"
  *
@@ -243,7 +255,8 @@ export const parse: (path: string) => Parsed = (path) => NPath().parse(path);
 /**
  * Formats a {@link Parsed}-shaped object back into a path string.
  *
- * @example
+ * **Example** (Format Parsed into path)
+ *
  * ```ts
  * import { format } from "@beep/utils/Path"
  *
@@ -258,7 +271,8 @@ export const format: (pathObject: Partial<Parsed>) => string = (pathObject) => N
 /**
  * Returns the equivalent namespace-prefixed path (a no-op outside Windows).
  *
- * @example
+ * **Example** (Namespace-prefixed path result)
+ *
  * ```ts
  * import { toNamespacedPath } from "@beep/utils/Path"
  *

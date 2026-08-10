@@ -80,7 +80,8 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
 /**
  * Live handler layer for the USPTO MCP toolkit.
  *
- * @example
+ * **Example** (Providing live layer dependencies)
+ *
  * ```ts
  * import { UsptoToolkitHandlersLive } from "@beep/uspto-mcp/UsptoHandlers"
  * import { Uspto, UsptoConfigInput } from "@beep/uspto"

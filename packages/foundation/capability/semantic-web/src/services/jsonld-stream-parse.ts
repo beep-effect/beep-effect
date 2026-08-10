@@ -35,7 +35,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * Streaming adapter mode.
  *
- * @example
+ * **Example** (Decode buffered-fallback mode)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -57,7 +58,8 @@ export const JsonLdStreamMode = LiteralKit(["true-streaming", "buffered-fallback
 /**
  * Type for {@link JsonLdStreamMode}.
  *
- * @example
+ * **Example** (Accept stream mode type)
+ *
  * ```ts
  * import type { JsonLdStreamMode } from "@beep/semantic-web/services/jsonld-stream-parse"
  *
@@ -65,15 +67,16 @@ export const JsonLdStreamMode = LiteralKit(["true-streaming", "buffered-fallback
  * console.log(acceptJsonLdStreamMode)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type JsonLdStreamMode = typeof JsonLdStreamMode.Type;
 
 /**
  * JSON-LD UTF-8 text chunk stream.
  *
- * @example
+ * **Example** (Decode text chunk stream)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -108,7 +111,8 @@ export class JsonLdTextChunkStream extends S.Class<JsonLdTextChunkStream>($I`Jso
 /**
  * JSON-LD UTF-8 byte chunk stream.
  *
- * @example
+ * **Example** (Decode byte chunk stream)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -143,7 +147,8 @@ export class JsonLdByteChunkStream extends S.Class<JsonLdByteChunkStream>($I`Jso
 /**
  * Streaming parse input union.
  *
- * @example
+ * **Example** (Decode text parse input)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -170,7 +175,8 @@ export const JsonLdStreamParseInput = S.Union([JsonLdTextChunkStream, JsonLdByte
 /**
  * Type for {@link JsonLdStreamParseInput}.
  *
- * @example
+ * **Example** (Accept parse input type)
+ *
  * ```ts
  * import type { JsonLdStreamParseInput } from "@beep/semantic-web/services/jsonld-stream-parse"
  *
@@ -178,15 +184,16 @@ export const JsonLdStreamParseInput = S.Union([JsonLdTextChunkStream, JsonLdByte
  * console.log(acceptJsonLdStreamParseInput)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type JsonLdStreamParseInput = typeof JsonLdStreamParseInput.Type;
 
 /**
  * Streaming parse request.
  *
- * @example
+ * **Example** (Decode stream parse request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -223,7 +230,8 @@ export class JsonLdStreamParseRequest extends S.Class<JsonLdStreamParseRequest>(
 /**
  * Streaming parse result.
  *
- * @example
+ * **Example** (Decode stream parse result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -258,7 +266,8 @@ export class JsonLdStreamParseResult extends S.Class<JsonLdStreamParseResult>($I
 /**
  * Streaming parse error reason.
  *
- * @example
+ * **Example** (Decode parseFailure reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -284,7 +293,8 @@ export const JsonLdStreamParseErrorReason = LiteralKit([
 /**
  * Type for {@link JsonLdStreamParseErrorReason}.
  *
- * @example
+ * **Example** (Check parseFailure reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdStreamParseErrorReason } from "@beep/semantic-web/services/jsonld-stream-parse"
@@ -301,7 +311,8 @@ export type JsonLdStreamParseErrorReason = typeof JsonLdStreamParseErrorReason.T
 /**
  * Typed streaming parse error.
  *
- * @example
+ * **Example** (Make unsupportedEncoding error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { JsonLdStreamParseError } from "@beep/semantic-web/services/jsonld-stream-parse"
@@ -334,7 +345,8 @@ export class JsonLdStreamParseError extends TaggedErrorClass<JsonLdStreamParseEr
 /**
  * JSON-LD streaming parse service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { JsonLdStreamParseServiceShape } from "@beep/semantic-web/services/jsonld-stream-parse"
  *
@@ -342,8 +354,8 @@ export class JsonLdStreamParseError extends TaggedErrorClass<JsonLdStreamParseEr
  * console.log(acceptJsonLdStreamParseServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface JsonLdStreamParseServiceShape {
   readonly parse: (request: JsonLdStreamParseRequest) => Effect.Effect<JsonLdStreamParseResult, JsonLdStreamParseError>;
@@ -352,7 +364,8 @@ export interface JsonLdStreamParseServiceShape {
 /**
  * JSON-LD streaming parse service tag.
  *
- * @example
+ * **Example** (Provide and run parse)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

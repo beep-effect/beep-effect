@@ -19,7 +19,8 @@ const $I = $SchemaId.create("Cuid");
 /**
  * Produces a SHA-512 digest for the provided byte array.
  *
- * @example
+ * **Example** (SHA-512 digest length)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -33,7 +34,6 @@ const $I = $SchemaId.create("Cuid");
  *
  * @effects
  * Reads the `Crypto` service to compute a digest; it performs no writes.
- *
  * @category utilities
  * @since 0.0.0
  */
@@ -49,7 +49,8 @@ const INITIAL_COUNT_MAX = 476782367;
 /**
  * Branded schema for canonical CUID strings.
  *
- * @example
+ * **Example** (Decode branded CUID)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Cuid } from "@beep/schema/Cuid"
@@ -75,7 +76,8 @@ export const Cuid = S.String.pipe(
 /**
  * Type for {@link Cuid}.
  *
- * @example
+ * **Example** (Typed CUID decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { Cuid } from "@beep/schema/Cuid"
@@ -93,7 +95,8 @@ export type Cuid = typeof Cuid.Type;
 /**
  * Type guard for {@link Cuid}.
  *
- * @example
+ * **Example** (Check CUID string)
+ *
  * ```ts
  * import { isCuid } from "@beep/schema/Cuid"
  *
@@ -109,7 +112,8 @@ export const isCuid: (value: string) => value is Cuid = Cuid.is;
 /**
  * Seed data used to produce a deterministic CUID value.
  *
- * @example
+ * **Example** (Make CUID seed)
+ *
  * ```ts
  * import { CuidSeed } from "@beep/schema/Cuid"
  *
@@ -135,7 +139,8 @@ export class CuidSeed extends S.Class<CuidSeed>($I`CuidSeed`)(
 /**
  * Service that produces deterministic CUID seeds.
  *
- * @example
+ * **Example** (Next deterministic seed)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -187,7 +192,8 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
 /**
  * Effect that generates a branded {@link Cuid}.
  *
- * @example
+ * **Example** (Generate branded CUID)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -201,7 +207,6 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
  *
  * @effects Requires {@link CuidState} and `effect/Crypto`; `CuidState.Default`
  * provides the clock-backed seed state while callers provide platform crypto.
- *
  * @category constructors
  * @since 0.0.0
  */

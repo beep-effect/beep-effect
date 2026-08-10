@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/CandidateProject/CandidateProject
 /**
  * Candidate project proposed by an agent.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import { CandidateProject } from "@beep/workspace-domain"
  *

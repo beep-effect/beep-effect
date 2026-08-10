@@ -23,7 +23,8 @@ const $I = $PacerId.create("pacer/Pacer.errors");
 /**
  * Failure reasons for the PACER Authentication API.
  *
- * @example
+ * **Example** (Log invalid credentials reason)
+ *
  * ```ts
  * import { PacerAuthErrorReason } from "@beep/pacer"
  *
@@ -49,7 +50,8 @@ export const PacerAuthErrorReason = LiteralKit([
 /**
  * Type for {@link PacerAuthErrorReason}.
  *
- * @example
+ * **Example** (Type alias for auth reason)
+ *
  * ```ts
  * import { PacerAuthErrorReason } from "@beep/pacer"
  * import type { PacerAuthErrorReason as PacerAuthErrorReasonType } from "@beep/pacer"
@@ -66,7 +68,8 @@ export type PacerAuthErrorReason = typeof PacerAuthErrorReason.Type;
 /**
  * Failure raised by the PACER Authentication boundary.
  *
- * @example
+ * **Example** (Create error from login result)
+ *
  * ```ts
  * import { PacerAuthError } from "@beep/pacer"
  *
@@ -130,7 +133,8 @@ export class PacerAuthError extends TaggedErrorClass<PacerAuthError>($I`PacerAut
 /**
  * Failure reasons for the PCL Case Locator API, mapped from HTTP status codes.
  *
- * @example
+ * **Example** (Log too-many-requests reason)
+ *
  * ```ts
  * import { PacerPclErrorReason } from "@beep/pacer"
  *
@@ -158,7 +162,8 @@ export const PacerPclErrorReason = LiteralKit([
 /**
  * Type for {@link PacerPclErrorReason}.
  *
- * @example
+ * **Example** (Type alias for PCL reason)
+ *
  * ```ts
  * import { PacerPclErrorReason } from "@beep/pacer"
  * import type { PacerPclErrorReason as PacerPclErrorReasonType } from "@beep/pacer"
@@ -175,7 +180,8 @@ export type PacerPclErrorReason = typeof PacerPclErrorReason.Type;
 /**
  * Failure raised by the PCL Case Locator boundary.
  *
- * @example
+ * **Example** (Create error from HTTP status)
+ *
  * ```ts
  * import { PacerPclError } from "@beep/pacer"
  *
@@ -243,7 +249,8 @@ export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclEr
 /**
  * Failure raised while loading PACER configuration / secrets.
  *
- * @example
+ * **Example** (Make config error with message)
+ *
  * ```ts
  * import { PacerConfigError } from "@beep/pacer"
  *

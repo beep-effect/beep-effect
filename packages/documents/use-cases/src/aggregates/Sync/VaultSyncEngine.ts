@@ -36,7 +36,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
 /**
  * Point-in-time vault sync status read model for one workspace mirror.
  *
- * @example
+ * **Example** (Decode vault sync status)
+ *
  * ```ts
  * import { VaultSyncStatus } from "@beep/documents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -100,11 +101,13 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
 /**
  * Internal typed failure raised by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * The member set is exactly the failures reachable through the engine's ports:
  * vault scanning, the DMS mirror adapter, and the four sync repositories.
  *
- * @example
+ * **Example** (Decode tagged scan failure)
+ *
  * ```ts
  * import { VaultScanFailed, VaultSyncError } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as S from "effect/Schema"
@@ -141,7 +144,8 @@ export const VaultSyncError = S.Union([
 /**
  * Runtime type for {@link VaultSyncError}.
  *
- * @example
+ * **Example** (Type a vault sync error)
+ *
  * ```ts
  * import { VaultScanFailed, type VaultSyncError } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -157,7 +161,8 @@ export type VaultSyncError = typeof VaultSyncError.Type;
 /**
  * Input for one full push-and-poll sync pass over a workspace vault.
  *
- * @example
+ * **Example** (Construct sync-once input)
+ *
  * ```ts
  * import { SyncOnceInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -190,7 +195,8 @@ export class SyncOnceInput extends S.Class<SyncOnceInput>($I`SyncOnceInput`)(
 /**
  * Input for reading the current vault sync status of one workspace.
  *
- * @example
+ * **Example** (Construct status query input)
+ *
  * ```ts
  * import { VaultSyncStatusInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -219,7 +225,8 @@ export class VaultSyncStatusInput extends S.Class<VaultSyncStatusInput>($I`Vault
 /**
  * Input for listing the open drift records of one workspace.
  *
- * @example
+ * **Example** (Construct list-conflicts input)
+ *
  * ```ts
  * import { ListOpenConflictsInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -248,12 +255,14 @@ export class ListOpenConflictsInput extends S.Class<ListOpenConflictsInput>($I`L
 /**
  * Input for marking one drift record as reviewed.
  *
- * @remarks
+ * **Details**
+ *
  * `workspaceId` scopes the review: the engine verifies the drift record belongs
  * to this workspace before marking it, so a conflict id from one workspace
  * cannot be reviewed under another workspace's request.
  *
- * @example
+ * **Example** (Construct mark-reviewed input)
+ *
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -288,11 +297,13 @@ export class MarkConflictReviewedInput extends S.Class<MarkConflictReviewedInput
  * Vault sync engine shape implemented by the documents server and consumed by
  * the desktop orchestrator.
  *
- * @remarks
+ * **Details**
+ *
  * `syncOnce` runs one full push-and-poll pass and returns the resulting
  * status; `status` reads without mutating.
  *
- * @example
+ * **Example** (Implement stub engine shape)
+ *
  * ```ts
  * import {
  *   VaultScanFailed,
@@ -346,7 +357,8 @@ export interface VaultSyncEngineShape {
 /**
  * Context tag for the vault sync engine port.
  *
- * @example
+ * **Example** (Provide engine service tag)
+ *
  * ```ts
  * import {
  *   VaultScanFailed,

@@ -11,7 +11,8 @@ import { Workspace } from "@beep/workspace-domain/entities/Workspace";
 /**
  * Workspace persistence table.
  *
- * @example
+ * **Example** (Read workspace table name)
+ *
  * ```ts
  * import { Table } from "@beep/workspace-tables/entities/Workspace"
  *

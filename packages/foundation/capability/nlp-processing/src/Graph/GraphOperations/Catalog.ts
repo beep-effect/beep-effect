@@ -34,20 +34,22 @@ import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } fro
 /**
  * Backend-backed operation that splits document text into sentence children.
  *
- * @remarks
+ * **Details**
+ *
  * Each detected sentence becomes a child node of the source leaf. Execution
  * requires {@link Backend.NLPBackend}; backend failures are captured through the
  * operation's typed error channel.
  *
- * @example
+ * **Example** (Log sentencize category)
+ *
  * ```ts
  * import { sentencize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(sentencize.category) // "expansion"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
   apply: Effect.fn("Catalog.sentencize")(function* (node) {
@@ -63,19 +65,21 @@ export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, B
 /**
  * Backend-backed operation that splits text into token children.
  *
- * @remarks
+ * **Details**
+ *
  * Tokenization expands one input leaf into zero or more token payloads while the
  * graph executor handles parent linkage and result caching.
  *
- * @example
+ * **Example** (Log tokenize category)
+ *
  * ```ts
  * import { tokenize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(tokenize.category) // "expansion"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
   apply: Effect.fn("Catalog.tokenize")(function* (node) {
@@ -91,20 +95,22 @@ export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Bac
 /**
  * Backend-backed operation that emits part-of-speech annotation nodes.
  *
- * @remarks
+ * **Details**
+ *
  * Apply this to token or sentence leaves depending on the backend's contract.
  * The emitted {@link POSNode}s retain token text, tag, position, timestamp, and
  * optional metadata supplied by the backend.
  *
- * @example
+ * **Example** (Log posTag name)
+ *
  * ```ts
  * import { posTag } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(posTag.name) // "posTag"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
   apply: Effect.fn("Catalog.posTag")(function* (node) {
@@ -120,19 +126,21 @@ export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Back
 /**
  * Backend-backed operation that emits canonical lemma nodes.
  *
- * @remarks
+ * **Details**
+ *
  * Lemma nodes are child annotations of the source text leaf; repeated execution
  * can be cached by operation name and source node id.
  *
- * @example
+ * **Example** (Log lemmatize name)
+ *
  * ```ts
  * import { lemmatize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(lemmatize.name) // "lemmatize"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
   apply: Effect.fn("Catalog.lemmatize")(function* (node) {
@@ -148,18 +156,20 @@ export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend,
 /**
  * Backend-backed operation that emits named-entity annotation nodes.
  *
- * @remarks
+ * **Details**
+ *
  * Entity spans are relative to the source text payload supplied to the backend.
  *
- * @example
+ * **Example** (Log extractEntities name)
+ *
  * ```ts
  * import { extractEntities } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(extractEntities.name) // "extractEntities"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
@@ -176,19 +186,21 @@ export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPB
 /**
  * Backend-backed operation that emits syntactic dependency arcs for a sentence.
  *
- * @remarks
+ * **Details**
+ *
  * The operation is intended for sentence-like leaves. Feed it token fragments
  * only when the active backend accepts token-local dependency parsing.
  *
- * @example
+ * **Example** (Log parseDependencies name)
+ *
  * ```ts
  * import { parseDependencies } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(parseDependencies.name) // "parseDependencies"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
@@ -205,20 +217,22 @@ export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backen
 /**
  * Backend-backed operation that emits semantic relation annotations.
  *
- * @remarks
+ * **Details**
+ *
  * Relation extraction typically assumes entity context is recoverable from the
  * source text or backend model. The graph operation itself only receives one leaf
  * payload and does not inspect sibling entity nodes.
  *
- * @example
+ * **Example** (Log extractRelations name)
+ *
  * ```ts
  * import { extractRelations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(extractRelations.name) // "extractRelations"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
@@ -237,15 +251,16 @@ export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.N
 /**
  * Pure transformation that lowercases each source leaf.
  *
- * @example
+ * **Example** (Log toLowerCase category)
+ *
  * ```ts
  * import { toLowerCase } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(toLowerCase.category) // "transformation"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
   description: "Convert text to lowercase.",
@@ -256,15 +271,16 @@ export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
 /**
  * Pure transformation that uppercases each source leaf.
  *
- * @example
+ * **Example** (Log toUpperCase category)
+ *
  * ```ts
  * import { toUpperCase } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(toUpperCase.category) // "transformation"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
   description: "Convert text to uppercase.",
@@ -275,15 +291,16 @@ export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
 /**
  * Pure transformation that trims leading and trailing whitespace.
  *
- * @example
+ * **Example** (Log trim category)
+ *
  * ```ts
  * import { trim } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(trim.category) // "transformation"
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export const trim: Op.GraphOperation<string, string> = Op.transform({
   description: "Remove leading and trailing whitespace.",
@@ -294,19 +311,21 @@ export const trim: Op.GraphOperation<string, string> = Op.transform({
 /**
  * Standard operations keyed by their public catalog names.
  *
- * @remarks
+ * **Details**
+ *
  * Backend-backed entries require `NLPBackend` when executed. Pure string
  * transformations can run with only the graph executor and result store.
  *
- * @example
+ * **Example** (Log tokenize operation name)
+ *
  * ```ts
  * import { StandardOperations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(StandardOperations.tokenize.name) // "tokenize"
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const StandardOperations = {
   extractEntities,
@@ -324,14 +343,15 @@ export const StandardOperations = {
 /**
  * List the stable operation names exposed by {@link StandardOperations}.
  *
- * @example
+ * **Example** (Check tokenize name listed)
+ *
  * ```ts
  * import { getOperationNames } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
  * console.log(getOperationNames().includes("tokenize")) // true
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const getOperationNames = (): ReadonlyArray<string> => A.fromIterable(Struct.keys(StandardOperations));

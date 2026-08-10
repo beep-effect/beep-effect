@@ -40,7 +40,8 @@ const WhitespaceCodePoint = S.String.check(
 /**
  * Version of the locator-only normalization contract implemented here.
  *
- * @example
+ * **Example** (Log normalization version constant)
+ *
  * ```ts
  * import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "@beep/langextract/VerifiedSpan"
  *
@@ -55,7 +56,8 @@ export const VERIFIED_SPAN_NORMALIZATION_VERSION = "1";
 /**
  * Offset units accepted at explicit foreign-boundary adapters.
  *
- * @example
+ * **Example** (Check offset unit membership)
+ *
  * ```ts
  * import { TextOffsetUnit } from "@beep/langextract/VerifiedSpan"
  *
@@ -74,7 +76,8 @@ export const TextOffsetUnit = LiteralKit(["unicode-code-point", "utf16-code-unit
 /**
  * Type for {@link TextOffsetUnit}.
  *
- * @example
+ * **Example** (Annotate offset unit type)
+ *
  * ```ts
  * import type { TextOffsetUnit } from "@beep/langextract/VerifiedSpan"
  *
@@ -127,7 +130,8 @@ const TextOffsetRangeSchema = TextOffsetRangeStruct.mapFields(identity)
 /**
  * Half-open incoming offset range with an explicit unit.
  *
- * @example
+ * **Example** (Create half-open offset range)
+ *
  * ```ts
  * import { TextOffsetRange } from "@beep/langextract/VerifiedSpan"
  * import { NonNegativeInt } from "@beep/schema"
@@ -186,7 +190,8 @@ const Utf16TextRangeSchema = Utf16TextRangeStruct.mapFields(identity)
 /**
  * Canonical half-open UTF-16 code-unit range.
  *
- * @example
+ * **Example** (Create UTF-16 text range)
+ *
  * ```ts
  * import { Utf16TextRange } from "@beep/langextract/VerifiedSpan"
  * import { NonNegativeInt } from "@beep/schema"
@@ -211,9 +216,12 @@ export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
 /**
  * One raw source chunk at an explicit global UTF-16 offset.
  *
+ * **Details**
+ *
  * Separators are part of `text`; reconstruction never inserts one.
  *
- * @example
+ * **Example** (Create raw text chunk)
+ *
  * ```ts
  * import { RawTextChunk } from "@beep/langextract/VerifiedSpan"
  * import { NonNegativeInt } from "@beep/schema"
@@ -245,7 +253,8 @@ export class RawTextChunk extends S.Class<RawTextChunk>($I`RawTextChunk`)(
 /**
  * Machine-readable strict-span mapping failures.
  *
- * @example
+ * **Example** (Check error reason membership)
+ *
  * ```ts
  * import { VerifiedSpanErrorReason } from "@beep/langextract/VerifiedSpan"
  *
@@ -271,7 +280,8 @@ export const VerifiedSpanErrorReason = LiteralKit([
 /**
  * Type for {@link VerifiedSpanErrorReason}.
  *
- * @example
+ * **Example** (Annotate error reason type)
+ *
  * ```ts
  * import type { VerifiedSpanErrorReason } from "@beep/langextract/VerifiedSpan"
  *
@@ -287,7 +297,8 @@ export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
 /**
  * Sanitized strict-span mapping failure.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { VerifiedSpanError } from "@beep/langextract/VerifiedSpan"
  *
@@ -422,11 +433,14 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
 /**
  * Normalize text only for deterministic location.
  *
+ * **Details**
+ *
  * The result uses NFKC, straight quote equivalents, and collapsed whitespace.
  * It is never evidence text: successful APIs always recover and emit a raw
  * source slice.
  *
- * @example
+ * **Example** (Normalize locator candidate text)
+ *
  * ```ts
  * import { normalizeTextLocator } from "@beep/langextract/VerifiedSpan"
  *
@@ -552,10 +566,13 @@ const locatePreparedRawText = Effect.fnUntraced(function* (
 /**
  * Locate one normalized candidate and recover its unique exact raw slice.
  *
+ * **Details**
+ *
  * Case folding and fuzzy/lesser matching are deliberately absent. Multiple raw
  * occurrences fail as ambiguous rather than choosing the first.
  *
- * @example
+ * **Example** (Locate unique raw slice)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { locateRawText } from "@beep/langextract/VerifiedSpan"
@@ -585,10 +602,13 @@ export const locateRawText = Effect.fn("VerifiedSpan.locateRawText")(function* (
 /**
  * Convert one declared half-open range into canonical UTF-16 offsets.
  *
+ * **Details**
+ *
  * Ranges that split a surrogate pair, exceed the source, or are empty/reversed
  * fail closed.
  *
- * @example
+ * **Example** (Convert range to UTF-16)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -647,10 +667,13 @@ export const convertTextOffsetRange = Effect.fn("VerifiedSpan.convertTextOffsetR
 /**
  * Reconstruct one exact raw source from explicit contiguous chunks.
  *
+ * **Details**
+ *
  * Each chunk start is global UTF-16. Separators must already be present in
  * chunk text; gaps, overlaps, and empty input fail closed.
  *
- * @example
+ * **Example** (Reconstruct source from chunks)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RawTextChunk, reconstructSourceText } from "@beep/langextract/VerifiedSpan"
@@ -691,11 +714,14 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
 /**
  * Strictly locate direct `GroundedExtraction[]` candidate text in raw source.
  *
+ * **Details**
+ *
  * Legacy alignment status, span, and `matchedText` are not authorization
  * inputs: each candidate's original `text` is independently located under the
  * strict normalization contract.
  *
- * @example
+ * **Example** (Locate grounded extraction texts)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { GroundedExtraction } from "@beep/langextract/Extraction"

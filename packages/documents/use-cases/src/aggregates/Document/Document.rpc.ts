@@ -14,7 +14,8 @@ import { IntakeDroppedFilePayload } from "./DocumentIntake.ts";
 /**
  * RPC used by the desktop app to intake one dropped file.
  *
- * @example
+ * **Example** (Registered RPC equality check)
+ *
  * ```ts
  * import { DocumentsRpcs, IntakeDroppedFileRpc } from "@beep/documents-use-cases/public"
  *
@@ -34,7 +35,8 @@ export const IntakeDroppedFileRpc = Rpc.make("IntakeDroppedFile", {
 /**
  * Documents RPC group exposed by the professional desktop server.
  *
- * @example
+ * **Example** (Check request registration)
+ *
  * ```ts
  * import { DocumentsRpcs } from "@beep/documents-use-cases/public"
  *

@@ -9,9 +9,8 @@
 /**
  * ParallelGroup model exports.
  *
- * **Example**
+ * **Example** (Import ParallelGroup model)
  *
- * @example
  * ```ts
  * import { ParallelGroup } from "@beep/law-practice-domain/values";
  * ```

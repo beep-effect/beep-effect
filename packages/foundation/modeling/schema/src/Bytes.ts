@@ -26,12 +26,14 @@ const BytesLength = S.makeFilter<globalThis.Uint8Array<ArrayBufferLike>>(
 /**
  * Branded schema for protobuf `bytes` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs reads `bytes` as `Uint8Array` and writes `bytes` from
  * `Uint8Array` or base64 strings. This schema models the decoded binary value
  * as a branded `Uint8Array`.
  *
- * @example
+ * **Example** (Decode Uint8Array bytes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -59,7 +61,8 @@ export const Bytes = S.Uint8Array.annotate({
 /**
  * Type-level value inferred from {@link Bytes}.
  *
- * @example
+ * **Example** (Narrow unknown to Bytes)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Bytes } from "@beep/schema/Bytes"

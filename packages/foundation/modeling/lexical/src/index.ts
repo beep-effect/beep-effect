@@ -9,7 +9,8 @@
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/lexical-schema"
  *
@@ -25,7 +26,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * Pure plain-text projections over serialized Lexical state.
  *
- * @example
+ * **Example** (Project linebreak to text)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -42,7 +44,8 @@ export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
 /**
  * Md ↔ Lexical codecs over the canonical `@beep/md` AST.
  *
- * @example
+ * **Example** (Read artifact URI prefix)
+ *
  * ```ts
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema"
  *
@@ -63,7 +66,8 @@ export {
 /**
  * Schema-first models of Lexical's serialized editor state.
  *
- * @example
+ * **Example** (Decode linebreak node)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"

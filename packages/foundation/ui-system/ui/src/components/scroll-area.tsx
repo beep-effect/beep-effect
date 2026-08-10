@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Scroll area component.
  *
- * @example
+ * **Example** (Import ScrollArea component)
+ *
  * ```tsx
  * import { ScrollArea } from "@beep/ui/components/scroll-area"
  *
@@ -40,7 +41,8 @@ function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.
 /**
  * Scroll bar component.
  *
- * @example
+ * **Example** (Import ScrollBar component)
+ *
  * ```tsx
  * import { ScrollBar } from "@beep/ui/components/scroll-area"
  *

@@ -45,7 +45,8 @@ const wikilinkFor = (cardPath: string, title: string | null): string => {
 /**
  * Write the daily research digest note from catalog rows.
  *
- * @example
+ * **Example** (Write vault digest note)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { digestImpl } from "@beep/repo-cli/commands/Research/internal/Digest"
@@ -54,6 +55,7 @@ const wikilinkFor = (cardPath: string, title: string | null): string => {
  * const program = digestImpl(ResearchDigestOptions.make({ vaultRoot: "/repo/.research" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

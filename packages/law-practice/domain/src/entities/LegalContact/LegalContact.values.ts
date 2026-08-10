@@ -15,7 +15,8 @@ const LegalContactRoleBase = LiteralKit(["founder"]);
 /**
  * Legal contact role accepted by the law-practice proof fixtures.
  *
- * @example
+ * **Example** (Decode founder role value)
+ *
  * ```ts
  * import { LegalContactRole } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -41,7 +42,8 @@ export const LegalContactRole = LegalContactRoleBase.pipe(
 /**
  * Type-level literal union produced by {@link LegalContactRole}.
  *
- * @example
+ * **Example** (Satisfy founder role type)
+ *
  * ```ts
  * import type { LegalContactRole } from "@beep/law-practice-domain"
  *

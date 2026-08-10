@@ -31,7 +31,8 @@ const $I = $McpKitId.create("FieldTier");
 /**
  * Named progressive-disclosure field tier.
  *
- * @example
+ * **Example** (Access minimal enum value)
+ *
  * ```ts
  * import { FieldTierName } from "@beep/mcp-kit"
  *
@@ -52,7 +53,8 @@ export const FieldTierName = LiteralKit(["minimal", "balanced", "complete"]).pip
 /**
  * Runtime type for {@link FieldTierName}.
  *
- * @example
+ * **Example** (Satisfy FieldTierName type)
+ *
  * ```ts
  * import type { FieldTierName } from "@beep/mcp-kit"
  *
@@ -70,7 +72,8 @@ export type FieldTierName = typeof FieldTierName.Type;
  * conceptual payload: `minimal` (smallest), `balanced`, and `complete`
  * (largest).
  *
- * @example
+ * **Example** (Satisfy three-tier schema set)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { FieldTierSet } from "@beep/mcp-kit"
@@ -103,7 +106,8 @@ export interface FieldTierSet<
  * anchor the generic constraint that all three tiers describe the same
  * conceptual payload.
  *
- * @example
+ * **Example** (Define named field tiers)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { defineFieldTiers } from "@beep/mcp-kit"
@@ -134,7 +138,8 @@ const fieldNamesOf = (struct: S.Struct<S.Struct.Fields>): ReadonlyArray<string> 
  * Removes null- and undefined-valued keys from a plain record, shrinking its
  * encoded JSON size.
  *
- * @example
+ * **Example** (Strip nullish record keys)
+ *
  * ```ts
  * import { stripNulls } from "@beep/mcp-kit"
  *
@@ -158,7 +163,8 @@ const pickFields = (value: Record<string, unknown>, fields: ReadonlyArray<string
  * Projects a plain payload record down to one named field tier's field set,
  * then strips null-valued fields.
  *
- * @example
+ * **Example** (Project payload to minimal)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { defineFieldTiers, projectFieldTier } from "@beep/mcp-kit"
@@ -200,7 +206,8 @@ export const projectFieldTier: {
  * Estimates a value's serialized JSON size in bytes/characters, used as a
  * proxy for a caller's token/size budget.
  *
- * @example
+ * **Example** (Estimate object JSON size)
+ *
  * ```ts
  * import { estimateJsonSize } from "@beep/mcp-kit"
  *
@@ -221,7 +228,8 @@ const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options
  * {@link FetchableHandle}. The kit does not mint handles itself — UUID
  * generation, TTL policy, and out-of-band storage are consumer-owned.
  *
- * @example
+ * **Example** (Make oversized field projection)
+ *
  * ```ts
  * import { OversizedFieldProjection } from "@beep/mcp-kit"
  * import { NonNegativeInt } from "@beep/schema"
@@ -256,7 +264,8 @@ export class OversizedFieldProjection extends S.Class<OversizedFieldProjection>(
  * identifier plus a TTL expiry the caller can use to fetch the full payload
  * out-of-band, instead of receiving it embedded in a tool result.
  *
- * @example
+ * **Example** (Make fetchable handle)
+ *
  * ```ts
  * import { FetchableHandle } from "@beep/mcp-kit"
  * import { NonNegativeInt } from "@beep/schema"
@@ -302,7 +311,8 @@ export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle
  * `minimal` did not fit, carrying a {@link FetchableHandle} minted by the
  * caller instead of an oversized inline payload.
  *
- * @example
+ * **Example** (Make inline projection outcome)
+ *
  * ```ts
  * import { FieldProjectionOutcome } from "@beep/mcp-kit"
  *
@@ -338,7 +348,8 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
 /**
  * Inline or fetchable outcome of projecting a payload within a caller's size budget.
  *
- * @example
+ * **Example** (Type FieldProjectionOutcome value)
+ *
  * ```ts
  * import { FieldProjectionOutcome as FieldProjectionOutcomeValue } from "@beep/mcp-kit"
  * import type { FieldProjectionOutcome } from "@beep/mcp-kit"
@@ -370,7 +381,8 @@ type ProjectWithinBudgetOptions = {
  * with the oversized `minimal` projection and its size, and the result is
  * returned as the `Fetchable` outcome.
  *
- * @example
+ * **Example** (Project within budget bytes)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NonNegativeInt } from "@beep/schema"
@@ -426,7 +438,8 @@ export const projectWithinBudget: {
  * field name once per row, `columns` lists each field name once and `rows`
  * carries only the values, in `columns` order.
  *
- * @example
+ * **Example** (Make columnar envelope)
+ *
  * ```ts
  * import { ColumnarEnvelope } from "@beep/mcp-kit"
  *
@@ -470,7 +483,8 @@ export class ColumnarEnvelope extends S.Class<ColumnarEnvelope>($I`ColumnarEnvel
  * silently drop fields. Cells missing from a given row are filled with
  * `null`.
  *
- * @example
+ * **Example** (Reshape rows to columnar)
+ *
  * ```ts
  * import { toColumnarEnvelope } from "@beep/mcp-kit"
  *

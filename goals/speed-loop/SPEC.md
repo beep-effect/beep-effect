@@ -33,6 +33,12 @@ probe-gated candidates each measure under ~30 seconds of full-sweep (or
 equivalent per-PR wall) saving**. The closing cycle writes the final
 reflection and flips the packet.
 
+**Superseded 2026-08-08:** signed operator decisions 54-55 close the packet
+by graduating the runner-endgame program to `goals/ci-fleet-endgame` and
+parking the residual widgets in the retained ledger. The numeric rule above
+is preserved as the loop's original design; the operator-decision path is
+the completion that actually fired.
+
 ## Constraints
 
 - All quality-speedup packet constraints inherit (instrument-before-treating,

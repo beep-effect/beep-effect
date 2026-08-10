@@ -35,12 +35,14 @@ class LawComponentScores extends S.Class<LawComponentScores>($I`LawComponentScor
  * Completion-lane score for one eval task: the fraction of required skill
  * steps satisfied, paired with the violations that reduced it.
  *
- * @example
+ * **Example** (Make full completion result)
+ *
  * ```ts
  * import { CompletionResult } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * const result = CompletionResult.make({ fraction: 1, violations: [] })
  * ```
+ *
  * @category scoring
  * @since 0.0.0
  */
@@ -58,12 +60,14 @@ export class CompletionResult extends S.Class<CompletionResult>($I`CompletionRes
  * Law-evaluation violations for one eval task, grouped by the schema-first,
  * tsgo, and biome lanes.
  *
- * @example
+ * **Example** (Make empty law evaluation)
+ *
  * ```ts
  * import { LawEvaluation } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * const evaluation = LawEvaluation.make({ schemaFirst: [], tsgo: [], biome: [] })
  * ```
+ *
  * @category scoring
  * @since 0.0.0
  */
@@ -82,15 +86,17 @@ export class LawEvaluation extends S.Class<LawEvaluation>($I`LawEvaluation`)(
  * Resolve the primary rule id for a skill-opt task, falling back to
  * `"completion"` when the task declares no rule ids.
  *
- * @param task - The skill-opt task manifest whose declared `ruleIds` are inspected.
- * @returns The first declared rule id, or `"completion"` when the task lists none.
- * @example
+ * **Example** (Resolve primary rule id)
+ *
  * ```ts
  * import { firstRuleId } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * declare const task: Parameters<typeof firstRuleId>[0]
  * const ruleId: string = firstRuleId(task)
  * ```
+ *
+ * @param task - The skill-opt task manifest whose declared `ruleIds` are inspected.
+ * @returns The first declared rule id, or `"completion"` when the task lists none.
  * @category scoring
  * @since 0.0.0
  */
@@ -104,14 +110,16 @@ export const firstRuleId = (task: SkillOptTaskManifest): string =>
 /**
  * Round a raw score to the report's fixed six-digit precision.
  *
- * @param value - The raw, unrounded score to normalize for the report.
- * @returns The score rounded to the report's fixed six-digit precision.
- * @example
+ * **Example** (Round score six digits)
+ *
  * ```ts
  * import { roundScore } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * roundScore(0.5833349) // 0.583335
  * ```
+ *
+ * @param value - The raw, unrounded score to normalize for the report.
+ * @returns The score rounded to the report's fixed six-digit precision.
  * @category scoring
  * @since 0.0.0
  */
@@ -138,12 +146,14 @@ const violationKey = (violation: AgentEffectivenessEvalViolation): string =>
  * Deduplicate violations by identity and sort them into the report's stable
  * source/file/line/rule/message order.
  *
- * @example
+ * **Example** (Sort empty violations)
+ *
  * ```ts
  * import { sortViolations } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * const ordered = sortViolations([])
  * ```
+ *
  * @category scoring
  * @since 0.0.0
  */
@@ -224,12 +234,14 @@ const buildAgentEffectivenessEvalScoreReport = (
 /**
  * Internal score-report builder functions used by the eval scorer facade.
  *
- * @example
+ * **Example** (Aggregate law fraction)
+ *
  * ```ts
  * import { EvalScoring } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
  * console.log(EvalScoring.aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })) // 0.583333
  * ```
+ *
  * @category scoring
  * @since 0.0.0
  */

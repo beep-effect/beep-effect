@@ -15,10 +15,13 @@ const $I = $SchemaId.create("DomainModel");
 /**
  * Default audit and bookkeeping fields for persisted domain models.
  *
+ * **Details**
+ *
  * The base intentionally does not include an `id` field. Derived models add the
  * branded identifier that belongs to their aggregate or entity.
  *
- * @example
+ * **Example** (List default field names)
+ *
  * ```ts
  * import { defaultFields } from "@beep/schema/DomainModel"
  *
@@ -27,8 +30,8 @@ const $I = $SchemaId.create("DomainModel");
  * console.log(fieldNames)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const defaultFields = {
   createdAt: Model.DateTimeInsertFromNumber,
@@ -44,7 +47,8 @@ export const defaultFields = {
 /**
  * Base class for persisted domain models that share audit metadata.
  *
- * @example
+ * **Example** (Extend model with branded id)
+ *
  * ```ts
  * import { DomainModel } from "@beep/schema/DomainModel"
  * import * as Model from "@beep/schema/Model"
@@ -59,8 +63,8 @@ export const defaultFields = {
  * console.log(Organization.insert)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DomainModel extends Model.Class<DomainModel>($I`DomainModel`)(
   defaultFields,

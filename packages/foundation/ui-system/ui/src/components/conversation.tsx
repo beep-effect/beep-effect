@@ -16,7 +16,8 @@ import type { ComponentProps } from "react";
 /**
  * Conversation props type.
  *
- * @example
+ * **Example** (Describe ConversationProps className)
+ *
  * ```ts
  * import type { ConversationProps } from "@beep/ui/components/conversation"
  *
@@ -33,7 +34,8 @@ export type ConversationProps = ComponentProps<typeof StickToBottom>;
 /**
  * Conversation component.
  *
- * @example
+ * **Example** (Import Conversation component)
+ *
  * ```tsx
  * import { Conversation } from "@beep/ui/components/conversation"
  *
@@ -56,7 +58,8 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
 /**
  * Conversation content props type.
  *
- * @example
+ * **Example** (Describe content props className)
+ *
  * ```ts
  * import type { ConversationContentProps } from "@beep/ui/components/conversation"
  *
@@ -73,7 +76,8 @@ export type ConversationContentProps = ComponentProps<typeof StickToBottom.Conte
 /**
  * Conversation content component.
  *
- * @example
+ * **Example** (Import ConversationContent component)
+ *
  * ```tsx
  * import { ConversationContent } from "@beep/ui/components/conversation"
  *
@@ -90,7 +94,8 @@ export const ConversationContent = ({ className, ...props }: ConversationContent
 /**
  * Conversation empty state props type.
  *
- * @example
+ * **Example** (Describe empty state props)
+ *
  * ```ts
  * import type { ConversationEmptyStateProps } from "@beep/ui/components/conversation"
  *
@@ -111,7 +116,8 @@ export type ConversationEmptyStateProps = Omit<ComponentProps<"div">, "title"> &
 /**
  * Conversation empty state component.
  *
- * @example
+ * **Example** (Import empty state component)
+ *
  * ```tsx
  * import { ConversationEmptyState } from "@beep/ui/components/conversation"
  *
@@ -148,7 +154,8 @@ export const ConversationEmptyState = ({
 /**
  * Conversation scroll button props type.
  *
- * @example
+ * **Example** (Describe scroll button props)
+ *
  * ```ts
  * import type { ConversationScrollButtonProps } from "@beep/ui/components/conversation"
  *
@@ -166,7 +173,8 @@ export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 /**
  * Conversation scroll button component.
  *
- * @example
+ * **Example** (Import scroll button component)
+ *
  * ```tsx
  * import { ConversationScrollButton } from "@beep/ui/components/conversation"
  *

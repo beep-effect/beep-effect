@@ -8,7 +8,8 @@
 /**
  * ProviderInstance table metadata namespace.
  *
- * @example
+ * **Example** (Log ProviderInstance table name)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-tables/entities"
  *

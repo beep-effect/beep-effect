@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for Force HTTPS redirect schemas.
  *
- * @example
+ * **Example** (Import and check Header key)
+ *
  * ```ts
  * import * as ForceHttpsRedirect from "@beep/schema/ForceHttpsRedirect"
  *

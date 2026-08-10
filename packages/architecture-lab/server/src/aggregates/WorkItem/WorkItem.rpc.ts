@@ -11,7 +11,8 @@ import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-ca
 /**
  * Build RPC-style WorkItem handlers from the public use-case facade.
  *
- * @example
+ * **Example** (Mock use-cases and get work item)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { makeWorkItemRpcHandlers } from "@beep/architecture-lab-server/aggregates/WorkItem"
@@ -45,7 +46,6 @@ import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-ca
  *
  * @effects Returned handlers execute the injected WorkItem use-case effects
  * without changing their typed success or failure channels.
- *
  * @category handlers
  * @since 0.0.0
  */

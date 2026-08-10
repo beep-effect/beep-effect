@@ -15,7 +15,8 @@ const $I = $DocumentsServerId.create("aggregates/Sync/VaultSync.config");
 /**
  * Environment variable controlling the maximum push attempts per operation.
  *
- * @example
+ * **Example** (Log max attempts env)
+ *
  * ```ts
  * import { DOCUMENTS_SYNC_MAX_ATTEMPTS_ENV } from "@beep/documents-server/aggregates/Sync"
  *
@@ -30,7 +31,8 @@ export const DOCUMENTS_SYNC_MAX_ATTEMPTS_ENV = "DOCUMENTS_SYNC_MAX_ATTEMPTS";
 /**
  * Environment variable controlling the maximum remote-event pages polled per sync pass.
  *
- * @example
+ * **Example** (Log event page limit env)
+ *
  * ```ts
  * import { DOCUMENTS_SYNC_EVENT_PAGE_LIMIT_ENV } from "@beep/documents-server/aggregates/Sync"
  *
@@ -45,7 +47,8 @@ export const DOCUMENTS_SYNC_EVENT_PAGE_LIMIT_ENV = "DOCUMENTS_SYNC_EVENT_PAGE_LI
 /**
  * Default maximum push attempts before an operation fails terminally.
  *
- * @example
+ * **Example** (Log default max attempts)
+ *
  * ```ts
  * import { DOCUMENTS_SYNC_DEFAULT_MAX_ATTEMPTS } from "@beep/documents-server/aggregates/Sync"
  *
@@ -60,7 +63,8 @@ export const DOCUMENTS_SYNC_DEFAULT_MAX_ATTEMPTS = PosInt.make(3);
 /**
  * Default maximum remote-event pages polled per sync pass.
  *
- * @example
+ * **Example** (Log default page limit)
+ *
  * ```ts
  * import { DOCUMENTS_SYNC_DEFAULT_EVENT_PAGE_LIMIT } from "@beep/documents-server/aggregates/Sync"
  *
@@ -75,7 +79,8 @@ export const DOCUMENTS_SYNC_DEFAULT_EVENT_PAGE_LIMIT = PosInt.make(100);
 /**
  * Resolved configuration value for the vault sync engine.
  *
- * @example
+ * **Example** (Make vault sync config)
+ *
  * ```ts
  * import { VaultSyncConfigValue } from "@beep/documents-server/aggregates/Sync"
  * import { PosInt } from "@beep/schema"
@@ -107,7 +112,8 @@ export class VaultSyncConfigValue extends S.Class<VaultSyncConfigValue>($I`Vault
 /**
  * Typed runtime configuration service for the vault sync engine.
  *
- * @example
+ * **Example** (Log config service key)
+ *
  * ```ts
  * import { VaultSyncConfig } from "@beep/documents-server/aggregates/Sync"
  *
@@ -121,7 +127,8 @@ export class VaultSyncConfig extends Context.Service<VaultSyncConfig, VaultSyncC
   /**
    * Escape hatch building a config layer from an explicit value.
    *
-   * @example
+   * **Example** (Build layer from value)
+   *
    * ```ts
    * import { VaultSyncConfig, VaultSyncConfigValue } from "@beep/documents-server/aggregates/Sync"
    * import { PosInt } from "@beep/schema"
@@ -153,7 +160,8 @@ const readVaultSyncConfig = Effect.fn($I`readVaultSyncConfig`)(function* () {
 /**
  * Live configuration layer backed by the ambient Effect ConfigProvider.
  *
- * @example
+ * **Example** (Log live config layer)
+ *
  * ```ts
  * import { VaultSyncConfigLayer } from "@beep/documents-server/aggregates/Sync"
  *

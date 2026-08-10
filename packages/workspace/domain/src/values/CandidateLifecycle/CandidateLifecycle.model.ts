@@ -12,7 +12,8 @@ const $I = $WorkspaceDomainId.create("values/CandidateLifecycle/CandidateLifecyc
 /**
  * Candidate lifecycle vocabulary for proof outputs.
  *
- * @example
+ * **Example** (Check candidate lifecycle)
+ *
  * ```ts
  * import { CandidateLifecycle } from "@beep/workspace-domain"
  *
@@ -31,7 +32,8 @@ export const CandidateLifecycle = LiteralKit(["candidate"]).pipe(
 /**
  * Runtime type for {@link CandidateLifecycle}.
  *
- * @example
+ * **Example** (Type candidate lifecycle value)
+ *
  * ```ts
  * import type { CandidateLifecycle } from "@beep/workspace-domain"
  *

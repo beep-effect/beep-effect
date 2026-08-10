@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/Folder/Folder.model");
 /**
  * Experimental schema anchor for Box folder metadata resources.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty Folder)
+ *
  * ```ts
  * import { Folder } from "@beep/box/experimental/domain/entities/Folder/Folder.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class Folder extends S.Class<Folder>($I`Folder`)(
 /**
  * Type-level companion namespace for {@link Folder} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode Folder)
+ *
  * ```ts
  * import { Folder } from "@beep/box/experimental/domain/entities/Folder/Folder.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace Folder {
   /**
    * Encoded payload accepted by the {@link Folder} entity schema.
    *
-   * @example
+   * **Example** (Encode Folder.Encoded payload)
+   *
    * ```ts
    * import { Folder } from "@beep/box/experimental/domain/entities/Folder/Folder.model";
    * import * as S from "effect/Schema";

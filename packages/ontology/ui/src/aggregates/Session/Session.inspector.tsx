@@ -182,7 +182,8 @@ const OntologyAddTripleForm = (): JSX.Element => {
 /**
  * Selected-resource details, Add Triple form, and graph gestures.
  *
- * @example
+ * **Example** (Import OntologyInspectorRegion)
+ *
  * ```tsx
  * import { OntologyInspectorRegion } from "@beep/ontology-ui"
  *

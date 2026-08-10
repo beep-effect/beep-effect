@@ -30,15 +30,16 @@ const ROOT_KEY = "@beep/root";
 /**
  * Build a complete dependency index for the entire monorepo.
  *
+ * **Details**
+ *
  * For every workspace package and the root, reads its `package.json`,
  * classifies each dependency as workspace-internal or external NPM,
  * and returns a HashMap mapping each package name to its `WorkspaceDeps`.
  *
  * The root directory is indexed under `"@beep/root"`.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @returns A HashMap mapping package names to their classified dependencies.
- * @example
+ * **Example** (Index monorepo dependencies)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex"
@@ -46,6 +47,9 @@ const ROOT_KEY = "@beep/root";
  * const program = buildRepoDependencyIndex(".")
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @returns A HashMap mapping package names to their classified dependencies.
  * @category utilities
  * @since 0.0.0
  */

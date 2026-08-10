@@ -25,15 +25,16 @@ const SupportedPathFamilyKit = LiteralKit([
 /**
  * Literal union of file-path families recognized by {@link FilePath}.
  *
- * @example
+ * **Example** (Check supported path family)
+ *
  * ```ts
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
  * console.log(SupportedPathFamily.Options.includes("posixAbsolute"))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
   $I.annoteSchema("SupportedPathFamily", {
@@ -44,7 +45,8 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
 /**
  * Type for {@link SupportedPathFamily}.
  *
- * @example
+ * **Example** (Decode path family literal)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
@@ -53,8 +55,8 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SupportedPathFamily = typeof SupportedPathFamily.Type;
 
@@ -123,11 +125,14 @@ const FilePathChecks = S.makeFilterGroup(
 /**
  * Branded schema for file path strings that are valid on at least one major OS.
  *
+ * **Details**
+ *
  * Validates POSIX absolute, POSIX relative, Windows drive, Windows UNC, and
  * Windows relative path families. Rejects empty strings, embedded NUL bytes,
  * bare root paths, and unsupported Windows namespace prefixes.
  *
- * @example
+ * **Example** (Decode valid file paths)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
@@ -138,7 +143,8 @@ const FilePathChecks = S.makeFilterGroup(
  * const relative = decode("src/index.ts")
  * ```
  *
- * @example
+ * **Example** (Reject bare root paths)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
@@ -149,8 +155,8 @@ const FilePathChecks = S.makeFilterGroup(
  * console.log(is("src/index.ts")) // true
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const FilePath = S.String.check(FilePathChecks).pipe(
   S.brand("FilePath"),
@@ -162,7 +168,8 @@ export const FilePath = S.String.check(FilePathChecks).pipe(
 /**
  * Branded file path string type extracted from {@link FilePath}.
  *
- * @example
+ * **Example** (Type annotated file path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
@@ -171,7 +178,7 @@ export const FilePath = S.String.check(FilePathChecks).pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FilePath = typeof FilePath.Type;

@@ -46,7 +46,8 @@ const DatePickerScope = makeScopedAtom((defaultValue: Date | undefined) =>
  * A single-date picker composed from {@link Popover} and {@link Calendar}. Supports
  * both controlled (`value` + `onValueChange`) and uncontrolled (`defaultValue`) usage.
  *
- * @example
+ * **Example** (Import DatePicker component)
+ *
  * ```tsx
  * import { DatePicker } from "@beep/ui/components/date-picker"
  *
@@ -108,7 +109,8 @@ function DatePickerInner(props: DatePickerProps) {
 /**
  * Date picker component export.
  *
- * @example
+ * **Example** (Import DatePicker export)
+ *
  * ```tsx
  * import { DatePicker } from "@beep/ui/components/date-picker"
  *

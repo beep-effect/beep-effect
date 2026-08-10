@@ -9,9 +9,8 @@
 /**
  * DocketCitation model exports.
  *
- * **Example**
+ * **Example** (Import DocketCitation)
  *
- * @example
  * ```ts
  * import { DocketCitation } from "@beep/law-practice-domain/values";
  * ```

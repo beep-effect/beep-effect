@@ -21,7 +21,8 @@ const $I = $ChalkId.create("Domain");
 /**
  * Modifier style names accepted by the Chalk runtime.
  *
- * @example
+ * **Example** (Assign bold modifier name)
+ *
  * ```ts
  * import type { ModifierStyleName } from "./AnsiStyles.ts"
  *
@@ -37,7 +38,8 @@ export type ModifierStyleName = ModifierName;
 /**
  * Foreground color style names accepted by the Chalk runtime.
  *
- * @example
+ * **Example** (Assign cyan foreground name)
+ *
  * ```ts
  * import type { ForegroundStyleName } from "./AnsiStyles.ts"
  *
@@ -53,7 +55,8 @@ export type ForegroundStyleName = ForegroundColorName;
 /**
  * Background color style names accepted by the Chalk runtime.
  *
- * @example
+ * **Example** (Assign bgBlue background name)
+ *
  * ```ts
  * import type { BackgroundStyleName } from "./AnsiStyles.ts"
  *
@@ -71,7 +74,8 @@ export type { StyleName } from "./ChalkSchema.ts";
 /**
  * Open and close ANSI escape sequences for a style.
  *
- * @example
+ * **Example** (Create open close styler entry)
+ *
  * ```ts
  * import { StylerEntry } from "./AnsiStyles.ts"
  *
@@ -178,7 +182,8 @@ const backgroundStyles: Record<BackgroundStyleName, StylerEntry> = R.map(backgro
 /**
  * ANSI escape builders grouped by modifier, foreground color, and background color.
  *
- * @example
+ * **Example** (Access red color open code)
+ *
  * ```ts
  * import { ansiStyles } from "./AnsiStyles.ts"
  *
@@ -210,7 +215,8 @@ export const ansiStyles = {
 /**
  * Look up the ANSI style entry for a known Chalk style name.
  *
- * @example
+ * **Example** (Look up bold style entry)
+ *
  * ```ts
  * import { getStyleEntry } from "./AnsiStyles.ts"
  *
@@ -253,7 +259,8 @@ const renderMonochromeAnsi256 = (red: number): number => (red < 8 ? 16 : renderE
 /**
  * Convert RGB channel values to an ANSI 256 color index.
  *
- * @example
+ * **Example** (Convert RGB to ANSI 256)
+ *
  * ```ts
  * import { rgbToAnsi256 } from "./AnsiStyles.ts"
  *
@@ -288,7 +295,8 @@ export const rgbToAnsi256: {
 /**
  * Convert a hexadecimal color string to an RGB tuple.
  *
- * @example
+ * **Example** (Convert hex color to RGB)
+ *
  * ```ts
  * import { hexToRgb } from "./AnsiStyles.ts"
  *
@@ -333,7 +341,8 @@ const ansi256ToAnsiColorCube = (code: number): number => {
 /**
  * Convert an ANSI 256 color index to a basic ANSI color code.
  *
- * @example
+ * **Example** (Convert ANSI 256 to basic)
+ *
  * ```ts
  * import { ansi256ToAnsi } from "./AnsiStyles.ts"
  *
@@ -361,7 +370,8 @@ export const ansi256ToAnsi = (code: number): number =>
 /**
  * Convert RGB values to a basic ANSI color code.
  *
- * @example
+ * **Example** (Convert RGB to basic ANSI)
+ *
  * ```ts
  * import { rgbToAnsi } from "./AnsiStyles.ts"
  *
@@ -382,7 +392,8 @@ export const rgbToAnsi: {
 /**
  * Convert a hexadecimal color string to an ANSI 256 color index.
  *
- * @example
+ * **Example** (Convert hex to ANSI 256)
+ *
  * ```ts
  * import { hexToAnsi256 } from "./AnsiStyles.ts"
  *
@@ -401,7 +412,8 @@ export const hexToAnsi256 = (hex: string): number => {
 /**
  * Convert a hexadecimal color string to a basic ANSI color code.
  *
- * @example
+ * **Example** (Convert hex to basic ANSI)
+ *
  * ```ts
  * import { hexToAnsi } from "./AnsiStyles.ts"
  *
@@ -447,7 +459,8 @@ const renderAnsi256Model = (type: StyleChannel, arguments_: ReadonlyArray<number
 /**
  * Render an ANSI opening escape for an RGB, hexadecimal, or ANSI 256 color model.
  *
- * @example
+ * **Example** (Render RGB model open escape)
+ *
  * ```ts
  * import { getModelAnsi } from "./AnsiStyles.ts"
  *

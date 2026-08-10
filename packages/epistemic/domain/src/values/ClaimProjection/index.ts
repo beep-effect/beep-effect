@@ -8,7 +8,8 @@
 /**
  * Claim projection read-model exports.
  *
- * @example
+ * **Example** (Decode a ClaimProjectionView)
+ *
  * ```ts
  * import { ClaimProjectionView } from "@beep/epistemic-domain/values/ClaimProjection"
  * import * as S from "effect/Schema"
@@ -20,7 +21,7 @@
  * })
  * console.log(view.admittedKeys)
  * ```
-
+ *
  * @category read-models
  * @since 0.0.0
  */

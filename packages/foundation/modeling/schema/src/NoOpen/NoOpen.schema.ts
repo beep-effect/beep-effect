@@ -25,7 +25,8 @@ const NoOpenValueBase = LiteralKit([defaultValue]);
 /**
  * Schema for the `X-Download-Options` header value.
  *
- * @example
+ * **Example** (Validate noopen header value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenValue } from "@beep/schema/NoOpen"
@@ -46,7 +47,8 @@ export const NoOpenValue = NoOpenValueBase.pipe(
 /**
  * Type for the `X-Download-Options` header value.
  *
- * @example
+ * **Example** (Assign noopen type value)
+ *
  * ```ts
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
@@ -64,7 +66,8 @@ const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.Options]);
 /**
  * Schema for enabled or disabled `X-Download-Options` options.
  *
- * @example
+ * **Example** (Decode noopen option value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
@@ -85,7 +88,8 @@ export const NoOpenOption = NoOpenOptionBase.pipe(
 /**
  * Type for enabled or disabled `X-Download-Options` options.
  *
- * @example
+ * **Example** (Type decoded noopen option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenOption } from "@beep/schema/NoOpen"
@@ -102,7 +106,8 @@ export type NoOpenOption = typeof NoOpenOption.Type;
 /**
  * Model for a rendered `X-Download-Options` response header.
  *
- * @example
+ * **Example** (Make response header model)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { NoOpenResponseHeader } from "@beep/schema/NoOpen"
@@ -129,7 +134,8 @@ type NoOpenResponseHeaderEncoded = typeof NoOpenResponseHeader.Encoded;
 /**
  * Schema that renders X-Download-Options options into a response header.
  *
- * @example
+ * **Example** (Decode into response header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"
@@ -203,7 +209,8 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
 /**
  * Type for rendered `X-Download-Options` response headers.
  *
- * @example
+ * **Example** (Type decoded response header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { NoOpenHeader } from "@beep/schema/NoOpen"

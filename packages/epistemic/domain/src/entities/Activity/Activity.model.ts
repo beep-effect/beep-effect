@@ -17,7 +17,8 @@ const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
 /**
  * Provenance activity captured for an epistemic runtime proof.
  *
- * @example
+ * **Example** (Decoding Activity from data)
+ *
  * ```ts
  * import { Activity } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

@@ -13,7 +13,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Accessible checkbox control with checked and invalid styling.
  *
- * @example
+ * **Example** (Default checked terms checkbox)
+ *
  * ```tsx
  * import { Checkbox } from "@beep/ui/components/checkbox"
  *

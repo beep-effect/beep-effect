@@ -44,7 +44,8 @@ const publicIdFor = (entityType: string, id: number) => `${Str.snakeCase(entityT
 /**
  * Build the BaseEntity audit envelope for a spike entity decode.
  *
- * @example
+ * **Example** (Build spike entity input)
+ *
  * ```ts
  * import { spikeEntityInput } from "./spikeEntity.ts"
  *
@@ -79,7 +80,8 @@ export const spikeEntityInput: {
 /**
  * Schema-backed BaseEntity audit-envelope input used by the spike shim.
  *
- * @example
+ * **Example** (Create typed entity input)
+ *
  * ```ts
  * import { EntityInput, spikeEntityInput } from "./spikeEntity.ts"
  *

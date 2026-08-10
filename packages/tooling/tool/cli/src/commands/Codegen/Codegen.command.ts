@@ -29,10 +29,12 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
 /**
  * File extensions recognised as TypeScript source modules during barrel generation.
  *
- * @example
+ * **Example** (Log TS extensions label)
+ *
  * ```ts
  * console.log("TS_EXTENSIONS")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -96,15 +98,19 @@ const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPat
 /**
  * Convert a TypeScript filename to its corresponding source import specifier.
  *
+ * **Details**
+ *
  * Uses the repository's uniform `.ts` source specifier and prepends `./` so the
  * result is a valid relative import path (e.g. `"View.tsx"` becomes `"./View.ts"`).
  *
- * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with the uniform `.ts` source extension.
- * @example
+ * **Example** (Log toImportPath label)
+ *
  * ```ts
  * console.log("toImportPath")
  * ```
+ *
+ * @param name - The TypeScript filename (may include a sub-path prefix).
+ * @returns A relative import specifier with the uniform `.ts` source extension.
  * @category utilities
  * @since 0.0.0
  */
@@ -119,10 +125,12 @@ const toImportPath = (name: string): string => {
  * Alphabetical `Order` instance used to sort discovered module paths deterministically
  * before emitting barrel re-exports.
  *
- * @example
+ * **Example** (Log alphabetical order label)
+ *
  * ```ts
  * console.log("alphabetical")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -135,16 +143,20 @@ const alphabetical: Order.Order<string> = Str.orderAsc;
 /**
  * Recursively discover exportable TypeScript modules under `srcDir`.
  *
+ * **Details**
+ *
  * Returns relative paths from `srcDir` (e.g. `"FsUtils.ts"`, `"errors/index.ts"`).
  * Skips `index.ts` at the root level, `internal/` directories, and test files.
+ *
+ * **Example** (Log discoverModules label)
+ *
+ * ```ts
+ * console.log("discoverModules")
+ * ```
  *
  * @param srcDir - Absolute path to the `src/` directory to scan.
  * @returns An unsorted array of relative file paths suitable for barrel re-export.
  * @depends FileSystem, Path
- * @example
- * ```ts
- * console.log("discoverModules")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -195,16 +207,20 @@ const discoverModules = Effect.fn(function* (srcDir: string) {
 /**
  * Build the barrel file content from a sorted list of module relative paths.
  *
+ * **Details**
+ *
  * Produces a string containing a JSDoc header and one `export * from ...` statement
  * per module, each annotated with `@since 0.0.0` as required by `@beep/repo-docgen`.
+ *
+ * **Example** (Log buildBarrelContent label)
+ *
+ * ```ts
+ * console.log("buildBarrelContent")
+ * ```
  *
  * @param packageName - Used in the module description header comment.
  * @param modules - Sorted list of relative file paths (e.g. `"FsUtils.ts"`).
  * @returns The full content of the generated `index.ts` barrel file.
- * @example
- * ```ts
- * console.log("buildBarrelContent")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -230,10 +246,12 @@ const buildBarrelContent = (packageName: string, modules: ReadonlyArray<string>)
  * CLI command that scans a package's `src/` directory and generates (or previews)
  * an `index.ts` barrel file with `export *` re-exports for every discovered module.
  *
- * @example
+ * **Example** (Log codegenCommand label)
+ *
  * ```ts
  * console.log("codegenCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
