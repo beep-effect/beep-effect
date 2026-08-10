@@ -59,8 +59,9 @@ mergeable PR a human can click-merge in the morning.
 systemd **user** units installed by `beep research nightly install-timer`:
 trigger at boot/login plus `OnUnitActiveSec` daily tick; the wrapper proceeds
 only when the last-successful-run stamp is ≥24h old; `Persistent=true`.
-Machine stays off overnight — the run rides the morning boot. A second weekly
-timer drives the Sunday consolidation run (v1).
+Machine stays off overnight — the run rides the morning boot. In v1, the
+single Sunday daily run also performs weekly consolidation; there is no second
+timer, branch, or packet competing for that date.
 
 ## 5. Model & quota routing
 
@@ -105,10 +106,13 @@ Novelty-rate-over-time is the routine's health metric.
 ## 9. Environment & checkout
 
 Dedicated full clone `~/YeeBois/projects/beep-effect-nightly` owned
-exclusively by the routine: fetch + reset to `origin/main` per run,
-`bun install` when the lockfile moved, branch `research/<date>`. Never a
-worktree of the working clone (shared turbo cache). CLIProxyAPI
-`xai.inject-x-search: true` is a standing prerequisite.
+exclusively by the routine. Before resetting, the publisher checks for an open
+PR from an earlier `research/<date>` branch; while one exists, the next run is
+blocked without advancing the last-successful-run stamp. Otherwise it fetches
+and resets to `origin/main`, runs `bun install` when the lockfile moved, and
+creates branch `research/<date>`. Never a worktree of the working clone (shared
+turbo cache). CLIProxyAPI `xai.inject-x-search: true` is a standing
+prerequisite.
 
 ## 10. Scanner gates
 

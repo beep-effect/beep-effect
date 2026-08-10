@@ -23,10 +23,12 @@ here are the working decomposition; keep both in sync on phase flips.
       publisher (packet write, ledger append, red-first PR via yeet,
       failure attribution, RUN.json, OTEL export).
 - [ ] `beep research nightly install-timer` extending `internal/Timers.ts`
-      (boot/login + daily tick, ≥24h stamp guard, weekly consolidation timer
-      stub disabled until P2).
+      (boot/login + daily tick, ≥24h stamp guard).
 - [ ] `beep research nightly digest` — rebuild derived indexes from committed
       truth (never committed).
+- [ ] `beep research nightly status` — report timer/stamp state, any blocking
+      prior research PR, the latest run result, and its PR/check state without
+      invoking a model.
 - [ ] Dedicated clone bootstrap doc/script (`~/YeeBois/projects/beep-effect-nightly`).
 - [ ] Grok CLI fallback lane (`grok -p … --output-format streaming-json`)
       behind a flag.
@@ -39,7 +41,8 @@ here are the working decomposition; keep both in sync on phase flips.
       diffs to (add-with-evidence, retire-after-N-dry-runs).
 - [ ] Refutation quota wired into search stage.
 - [ ] Demurrage/tombstone reaper + tombstone resurrection rule.
-- [ ] Weekly Sunday consolidation run (trends, reaper sweep, weekly digest).
+- [ ] Extend the single Sunday daily run with consolidation (trends, reaper
+      sweep, weekly digest); do not create a second packet or branch.
 - [ ] Novelty-rate Grafana panel on dankserver.
 
 ## P3 — v2 Experiments (gated)
