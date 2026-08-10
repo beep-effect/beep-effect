@@ -93,11 +93,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md).
   Third wedge
   [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
-  OPENED 2026-08-06 (capture stage). Next: the FunctionalUnit extension on
+  OPENED 2026-08-06, research stage complete 2026-08-08 — its align session
+  is Benjamin's. Next behind it: the FunctionalUnit extension on
   Benjamin's call.
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
-  capture-stage third wedge of the `legal-patent-kg-deepening` routing matrix
-  (opened 2026-08-06): a law-owned, append-only `DraftingEpisode` product
+  research-stage third wedge of the `legal-patent-kg-deepening` routing matrix
+  (opened 2026-08-06; research complete 2026-08-08): a law-owned, append-only
+  `DraftingEpisode` product
   record — closed event union + pure replay fold over outline, retrieval,
   chunk generation, limitation support, deterministic validation, bounded
   retry, correction delta, and attorney disposition — whose first rung is the
@@ -108,8 +110,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   as lossy rebuildable projections with recent-raw fallback — the resolved
   remo2/remo3 boundaries binding (no persistent graph store; no projection
   becomes authority; the 2026-08-06 operator dev-memory role change leaves
-  the product/operator boundary untouched). Eleven nuggets seeded verbatim;
-  two research lanes locked; the align session is Benjamin's.
+  the product/operator boundary untouched). Research highlights: the
+  never-compute boundary proved two-sided from MPEP/statute primary text;
+  the recent-raw fallback is prescribed by no source; PR #575's law-practice
+  lane gives rung 2 a payload-bearing append-only precedent; a new sixth
+  align branch (the live runtime approval vocabulary cannot represent
+  refusal). Six align branches wait; the align session is Benjamin's, with
+  BRIEF gated behind it.
 - [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
   spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
   instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
@@ -126,19 +133,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
-- [`fleet-coordination`](./fleet-coordination/README.md) — graduate-stage: ~13
-  agent checkouts on one workstation duplicating each other’s fixes and rotting
-  each other’s in-flight PRs. Research verdict is a derived **mirror**, not a
-  message board — derive early, deliver ambiently, enforce late — shipped
-  through the reserved `AgentBrief.fleet` field. First goal graduated 2026-08-06:
-  [`fleet-mirror`](../goals/fleet-mirror/README.md) (D6), scoped to the
-  **derivation rung**, which the capability check proved depends on nothing
-  unmerged; the **delivery rung** stays here, gated on PR-I landing
-  `AgentBrief`/`OwnershipClaim`. Grill #1
-  locked D1–D5 and disposed four questions; en route it killed `law-pulse.sh`
-  ever reaching the model (fixed here), `beep yeet` being a gate, `flock`
-  releasing on holder death, and merge queue at this repo’s measured shape (19%
-  main gauntlet pass rate).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   capture-stage: bind model qualification to the exact model, adapter,
   modality, prompt, wrapper, decoding configuration, and artifact digest —
@@ -373,6 +367,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`fleet-coordination`](./fleet-coordination/README.md) — graduated
+  2026-08-10 into the retained
+  [`fleet-mirror`](../goals/fleet-mirror/README.md) goal with no open design
+  questions. Rung 1 shipped 2026-08-08 as `beep worktree fleet` (#621); rung
+  1.5 adds the positive-only Claude session-registry liveness probe and
+  live-first contested rendering. D7 keeps rung 2 in the same goal as
+  **push-to-reachable plus pull-for-everyone**, with the mirror authoritative
+  because messaging cannot cover the full fleet. Research verdict: derive a
+  mirror, not a message board — derive early, deliver ambiently, enforce late.
 - [`graphnosis-prior-art`](./graphnosis-prior-art/README.md) — graduated
   2026-08-06 (opened same day) into
   [`goals/epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md)

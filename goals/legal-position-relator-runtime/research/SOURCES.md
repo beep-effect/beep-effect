@@ -80,6 +80,42 @@ per-portion discipline table: exploration
 [`research/02-position-relator-legal-frame.md`](../../../explorations/legal-position-relator-runtime/research/02-position-relator-legal-frame.md)
 §3.
 
+### Clean-room / attribution record (rung 2)
+
+Recorded 2026-08-07 as the rung-2 domain schemas landed. The repository-level
+notice for the Apache-2.0 portion is the new `## TNO (flint-ontology) —
+Apache-2.0 material` section of [`THIRD_PARTY_NOTICES.md`](../../../THIRD_PARTY_NOTICES.md).
+
+**Ported with attribution (top-level Apache-2.0).** Three shipped files carry
+the TNO notice header, in the live Graphiti style
+(`packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts:16-25`):
+
+- `packages/law-practice/domain/src/values/NormSourceReference/NormSourceReference.model.ts`
+  — the source-reference-per-element discipline.
+- `packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts` and
+  `.../ActFrame/ActFrame.values.ts` — the frame/slot/precondition shape and the
+  `creates`/`terminates` pair.
+
+What was **not** taken: eFLINT's execution semantics (the P100 correction).
+Nothing evaluates a precondition, fires a transition, or derives a violation.
+The positions a frame names are this goal's own Hohfeldian kind-and-content
+pairs, `derivationKind` is a non-empty **set** rather than a single act type,
+and preconditions carry an explicit present/absent polarity so a negative
+operative fact is first-class.
+
+**Clean-room re-expression (MPL-2.0 `flint-ontology/shacl/`).** The
+hard/advisory severity split shipped as `CorrectionSeverity` in
+`packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.values.ts`
+is a re-expression of a **concept only**. Neither `shacl/*.ttl` file was
+consulted or copied during authoring: no shape text, no SPARQL constraint
+bodies, and no file structure. MPL §1.4's scope is file-level rather than
+novelty-level, so this record is made regardless of how unremarkable a
+two-member severity vocabulary is. The file carries a header stating the same.
+Consistent with the SPEC's Non-Goals, no executable validation shape ships:
+severity is a recorded field on a transcribed report, and the live
+three-member `ShaclSeverity` in `@beep/semantic-web` is neither adopted nor
+imported.
+
 ## 3. External research sources
 
 The UFO-L and FLINT/eFLINT **papers** are cited, never vendored. Only the CEUR

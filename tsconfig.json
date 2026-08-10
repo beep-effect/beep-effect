@@ -1899,6 +1899,36 @@
       ],
       "@beep/law-practice-use-cases/CandorRecord": [
         "./packages/law-practice/use-cases/src/CandorRecord/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LegalPositionRelatorPolicy": [
+        "./packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/ActFrame": [
+        "./packages/law-practice/domain/src/entities/ActFrame/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/CorrectionDelta": [
+        "./packages/law-practice/domain/src/entities/CorrectionDelta/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/LegalOppositionCandidate": [
+        "./packages/law-practice/domain/src/entities/LegalOppositionCandidate/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/LegalPositionRelator": [
+        "./packages/law-practice/domain/src/entities/LegalPositionRelator/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/PowerExercise": [
+        "./packages/law-practice/domain/src/entities/PowerExercise/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LegalPositionRecord": [
+        "./packages/law-practice/use-cases/src/LegalPositionRecord/index.ts"
+      ],
+      "@beep/schema/HashSet": [
+        "./packages/foundation/modeling/schema/src/HashSet.ts"
+      ],
+      "@beep/law-practice-server/LegalPositionRecord": [
+        "./packages/law-practice/server/src/LegalPositionRecord/index.ts"
+      ],
+      "@beep/schema/FileInfo": [
+        "./packages/foundation/modeling/schema/src/FileInfo.ts"
       ]
     }
   }

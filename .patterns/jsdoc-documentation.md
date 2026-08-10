@@ -269,6 +269,27 @@ Run a bounded edit-loop check with:
 bun run docgen:local
 ```
 
+`docgen:local` plans from `origin/main...HEAD` plus dirty worktree files, but it
+refuses rather than narrows when a global input moved. Changing the root
+`bun.lock`, `package.json`, `turbo.json`, `.bun-version`, `tsconfig.json`,
+`tsconfig.base.json`, `tsconfig.packages.json`, or anything under
+`packages/tooling/tool/docgen/` or `packages/tooling/tool/cli/src/commands/Docgen/`
+marks the plan `full-required`, and the bare script then prints
+`full docgen proof required` and exits non-zero. Only `--allow-full` (what the
+hosted `quality:docgen` lane passes) or `--full` executes the repo-wide proof.
+An explicit package selector remains a bounded edit loop even on such a branch:
+
+```bash
+bun run docgen:local -- --package <package>
+```
+
+Package selection bypasses changed-file planning and stays scoped unless `--full`
+is explicit. The bare automatic loop is unavailable after a global input moves;
+the package-scoped loop is still available when the operator can name the affected
+package. The trigger list is a hand-maintained exact-path constant in
+`packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`, not a Turbo
+`globalDependencies` declaration.
+
 Use the full-repo `bun run docgen` only when full proof is required. The report-only
 quality subject remains available as:
 
@@ -306,6 +327,13 @@ Core combinators may use named imports from the root `effect` module, for exampl
   method call.
 - For `Effect<A, E, R>` results, do not restate the channels in tags. Use prose for
   non-obvious failure or environment semantics.
+- A `Fn` method takes its type from its `output` schema. When that output is
+  `EffectSchema<A, E, R>()` with a non-`never` `R`, the requirement channel
+  travels with the method, so `Effect.runPromise(shape.method(x))` fails to
+  typecheck even when the fixture implementation needs nothing. Either provide
+  the requirements first — `Effect.runPromise(Effect.provide(shape.method(x), deps))`
+  — or compose the effect without running it. A `Fn` whose output declares
+  `R = never` runs normally.
 - Document a `dual` operation once on the outer declaration unless its call forms
   have meaningfully different semantics.
 

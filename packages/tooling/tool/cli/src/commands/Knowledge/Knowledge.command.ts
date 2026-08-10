@@ -50,12 +50,25 @@ const refsJsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the 
 const renderFinding = (finding: KnowledgeFinding): string =>
   `  ${finding.findingId} ${finding.kind} ${finding.location.path}: ${finding.message}`;
 
+const indentDetail = (detail: string): string =>
+  A.join(
+    A.map(Str.split(/\r?\n/u)(detail), (line) => `  ${line}`),
+    "\n"
+  );
+
 // A skipped run must never read as a clean one, so the missing coverage is named on the same line
-// as the policy rather than left for the reader to infer from absent findings.
-const renderProbePolicy = (report: KnowledgeSemanticDeltaReport): string =>
-  KnowledgeProbePolicy.is.enabled(report.probePolicy)
-    ? `probe-policy: ${report.probePolicy}`
-    : `probe-policy: ${report.probePolicy} (not checked: ${A.join(KNOWLEDGE_PROBE_DEPENDENT_KINDS, ", ")})`;
+// as the policy rather than left for the reader to infer from absent findings, and an involuntary
+// skip prints the failure that caused it right underneath.
+const renderProbePolicy = (report: KnowledgeSemanticDeltaReport): string => {
+  if (KnowledgeProbePolicy.is.enabled(report.probePolicy)) {
+    return `probe-policy: ${report.probePolicy}`;
+  }
+  const line = `probe-policy: ${report.probePolicy} (not checked: ${A.join(KNOWLEDGE_PROBE_DEPENDENT_KINDS, ", ")})`;
+  return O.match(report.probeSkipDetail, {
+    onNone: () => line,
+    onSome: (detail) => `${line}\n${indentDetail(detail)}`,
+  });
+};
 
 const renderHumanReport = (report: KnowledgeSemanticDeltaReport): string => {
   const section = (label: string, findings: ReadonlyArray<KnowledgeFinding>): string =>
@@ -144,9 +157,12 @@ const runSemanticDelta = Effect.fn("KnowledgeCommand.runSemanticDelta")(function
  *
  * **Gotchas**
  *
- * On a pull request from a fork the run declines to execute archive-local probes, and both the human
- * report and the JSON `probePolicy` field say so. Read that line before treating an empty
- * `introduced` bucket as full coverage.
+ * Probe coverage is lost in two ways, and both the human report and the JSON `probePolicy` field say
+ * which one happened. On a pull request from a fork the run declines to execute archive-local probes
+ * at all (`skipped-untrusted-context`); when the merge-base archive's own probe cannot boot — the
+ * branch deleted a workspace export the base revision still imports — the run degrades instead of
+ * failing (`skipped-base-boot-failure`) and prints the boot failure under the policy line. Read that
+ * line before treating an empty `introduced` bucket as full coverage.
  *
  * **Example** (Read the subcommand identity)
  *
