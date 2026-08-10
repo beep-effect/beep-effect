@@ -10,9 +10,11 @@ import { is as isDrizzleEntity, sql } from "drizzle-orm";
 import type { $Type, BuildColumns, HasDefault, HasGenerated, IsPrimaryKey, NotNull } from "drizzle-orm/column-builder";
 import {
   check,
+  getTableConfig,
   SQLiteDialect,
   SQLiteColumn,
   sqliteTable,
+  uniqueKeyName,
 } from "drizzle-orm/sqlite-core";
 import type {
   SQLiteBigIntBuilder,
@@ -48,6 +50,8 @@ import * as SqliteColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
 import * as TableExtras from "./extras.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
+import { validateSchemaNames, type SchemaName } from "../core/assembly.ts";
+import { ModelInvariantError } from "../core/model.ts";
 
 const sqliteDialect = new SQLiteDialect();
 const assertSchemaExpression = (expression: import("drizzle-orm").SQL, context: string): void =>
@@ -345,7 +349,7 @@ export function toSqliteTable(
       return set(builders, key, buildColumn(key, meta, Derive.isNullable(Field.from(input).schema)));
     },
   );
-  return sqliteTable(model.sql.tableName, builders, (columns) => {
+  const table = sqliteTable(model.sql.tableName, builders, (columns) => {
     const bound: TableExtras.BoundColumns<FieldsInput> = columns;
     const automatic = enumChecks(model, bound);
     const declared = match(fromUndefinedOr(model.sql.extras), {
@@ -365,4 +369,25 @@ export function toSqliteTable(
     });
     return [...automatic, ...declared, ...additional];
   });
+  if (additionalExtras === undefined) {
+    const config = getTableConfig(table);
+    const named = (owner: string, kind: string, name: string | undefined): ReadonlyArray<SchemaName> =>
+      name === undefined ? [] : [{ owner, kind, name }];
+    validateSchemaNames([
+      { owner: "table", kind: "table", name: config.name },
+      ...config.indexes.map((value, index): SchemaName => ({ owner: `index:${index}`, kind: "index", name: value.config.name })),
+      ...config.primaryKeys.flatMap((value, index) => named(`primary-key:${index}`, "primary-key constraint", value.getName())),
+      ...config.uniqueConstraints.map((value, index): SchemaName => ({ owner: `unique:${index}`, kind: "unique constraint", name: value.getName() })),
+      ...config.columns.filter((column) => column.isUnique).map((column, index): SchemaName => ({
+        owner: `inline-unique:${index}`,
+        kind: "unique constraint",
+        name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+      })),
+      ...config.checks.map((value, index): SchemaName => ({ owner: `check:${index}`, kind: "check constraint", name: value.name })),
+      ...config.foreignKeys.map((value, index): SchemaName => ({ owner: `foreign-key:${index}`, kind: "foreign-key constraint", name: value.getName() })),
+    ], "sqlite", (message, sourceTable, fieldName) => {
+      throw ModelInvariantError.make({ message, fieldName: `${sourceTable}:${fieldName}` });
+    });
+  }
+  return table;
 }

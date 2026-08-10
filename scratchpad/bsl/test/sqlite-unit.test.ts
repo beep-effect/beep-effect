@@ -11,7 +11,11 @@ import { SchemaAssemblyError as SqliteSchemaAssemblyError } from "../src/sqlite/
 import {
   _pgSpecInSqlite,
   _sqliteBadVariantVersion,
+  _sqliteBareDeclaration,
   _sqliteBlobDefault,
+  _sqliteBytesJsonMode,
+  _sqliteDateJsonMode,
+  _sqliteDateJsonModelMirror,
   _sqliteDimensions,
   _sqliteDuplicatePhysicalTableNames,
   _sqliteCaseFoldColumnCollision,
@@ -34,6 +38,8 @@ import {
   _sqliteNulDefault,
   _sqliteNullableCompositePrimaryRuntime,
   _sqliteNumericStringMode,
+  _nullableSqliteVersion,
+  _nullableSqliteVersionModelMirror,
   _sqliteParameterizedCheck,
   _sqliteParameterizedDefault,
   _sqliteParameterizedGenerated,
@@ -48,6 +54,8 @@ import {
   sqliteExactKeyResolutionSchema,
   sqliteKit,
   sqliteFiniteNumeric,
+  sqliteFiniteReal,
+  sqliteBareRealRejectsNaN,
   sqliteUserTable,
   sqliteUniquePhysicalResolutionSchema,
   SqlitePlainPrimary,
@@ -76,6 +84,8 @@ describe("SQLite Wave E value and structure invariants", () => {
     expect(is(sqliteBoundedInteger.schema)(1.5)).toBe(false);
     expect(is(sqliteFiniteNumeric.schema)(Number.POSITIVE_INFINITY)).toBe(false);
     expect(is(sqliteBoundedBigintNumeric.schema)(9_223_372_036_854_775_808n)).toBe(false);
+    expect(is(sqliteFiniteReal.schema)(Number.NaN)).toBe(false);
+    expect(sqliteBareRealRejectsNaN).toBe(true);
   });
 
   it("rejects invalid defaults and parameterized schema expressions", () => {
@@ -183,6 +193,12 @@ describe("SQLite derivation and family invariants", () => {
     expect(_sqliteMalformedCorrelatedSpec).toThrow("invalid or foreign SQLite column descriptor");
     expect(_sqliteMissingEnumValues).toThrow("invalid or foreign SQLite column descriptor");
     expect(_sqliteBadVariantVersion).toThrow("explicit VariantSchema.Field");
+    expect(_sqliteDateJsonMode).toThrow("array- or record-encoded schema");
+    expect(_sqliteDateJsonModelMirror).toThrow("array- or record-encoded schema");
+    expect(_sqliteBytesJsonMode).toThrow("array- or record-encoded schema");
+    expect(_sqliteBareDeclaration).toThrow("Declaration");
+    expect(_nullableSqliteVersion).toThrow("nullable schema");
+    expect(_nullableSqliteVersionModelMirror).toThrow("cannot be nullable");
     expect(_sqliteNulEnum).toThrow("NUL (U+0000)");
     expect(sqliteDedupedEnum.meta.column.values).toEqual(["draft", "active"]);
     expect(_sqliteNonUniqueForeignKey).toThrow("primary-key or unique column");

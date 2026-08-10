@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { numeric, sqliteTable } from "drizzle-orm/sqlite-core";
+import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
 import { formatIso } from "effect/DateTime";
 import {
@@ -32,6 +32,7 @@ import {
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
+  Date as DateSchema,
   Finite,
   String as StringSchema,
   Struct as StructSchema,
@@ -256,6 +257,42 @@ describe.serial("@beep/effect-drizzle live SQLite gauntlet", () => {
           .get(),
       ).toEqual({ storage: "real" });
       expect(() => db.select().from(bigints).all()).toThrow();
+    } finally {
+      client.close();
+    }
+  });
+
+  it("probes bun:sqlite NaN binding before the SQLite REAL refinement", () => {
+    const client = new Database(":memory:");
+    try {
+      client.exec("create table nan_binding_probe (value real)");
+      client.query("insert into nan_binding_probe values (?)").run(Number.NaN);
+      expect(client.query("select value, typeof(value) as storage from nan_binding_probe").get()).toEqual({
+        value: null,
+        storage: "null",
+      });
+    } finally {
+      client.close();
+    }
+  });
+
+  it("probes Date corruption through Drizzle SQLite JSON mode", () => {
+    const client = new Database(":memory:");
+    try {
+      const table = sqliteTable("date_json_mode_probe", {
+        value: text("value", { mode: "json" }).$type<Date>(),
+      });
+      client.exec("create table date_json_mode_probe (value text not null)");
+      // @effect-diagnostics-next-line globalDate:off -- live probe for Drizzle's Date JSON behavior.
+      const date = new Date("2026-08-10T00:00:00.000Z");
+      const db = drizzle({ client });
+      db.insert(table).values({ value: date }).run();
+      const selected = db.select().from(table).get();
+      expect(client.query("select value from date_json_mode_probe").get()).toEqual({
+        value: "\"2026-08-10T00:00:00.000Z\"",
+      });
+      expect(typeof selected?.value).toBe("string");
+      expect(is(DateSchema)(selected?.value)).toBe(false);
     } finally {
       client.close();
     }

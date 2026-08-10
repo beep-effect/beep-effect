@@ -1,5 +1,5 @@
 /** SQLite column derivation from encoded Effect schema carriers. */
-import { some } from "effect/Array";
+import { every, filter, some } from "effect/Array";
 import { none, some as someOption } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
@@ -39,6 +39,7 @@ export const EntityIdLike = EntityIdLikeSchema;
 export type EntityIdLike = EntityIdLikeType;
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
+type JsonCarrier = ReadonlyArray<unknown> | { readonly [key: string]: unknown };
 
 /** Select-side schema type of a plain schema or variant field. */
 /** @internal */
@@ -54,10 +55,23 @@ type DeriveFromEncoded<E> =
   : [E] extends [boolean] ? SqliteColumn.Integer<"boolean", "integer">
   : [E] extends [bigint] ? SqliteColumn.Blob<"bigint">
   : [E] extends [number] ? SqliteColumn.Real
-  : [E] extends [Date] ? never
-  : [E] extends [Uint8Array] ? never
-  : [E] extends [object] ? SqliteColumn.Text<"json">
+  : E extends ReadonlyArray<unknown> ? SqliteColumn.Text<"json">
+  : E extends { readonly [key: string]: unknown } ? SqliteColumn.Text<"json">
   : never;
+
+/** Require every non-null encoded member to be an array or string-keyed record. */
+/** @internal */
+export const isStructuralJson = (schema: Field.AnySchema): boolean => {
+  const members = filter(
+    flattenEncoded(toEncoded(selectSchemaOf(schema).ast), "(unknown)"),
+    (member) => member._tag !== "Null",
+  );
+  return members.length > 0 && every(members, (member) => member._tag === "Objects" || member._tag === "Arrays");
+};
+
+/** Structural JSON carrier shared by SQLite JSON-mode combinator constraints. */
+/** @internal */
+export type StructuralJson = JsonCarrier;
 
 /** SQLite descriptor derived from an encoded carrier, or `never` when ambiguous. */
 /** @internal */

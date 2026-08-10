@@ -26,6 +26,7 @@ import {
   empty,
   every,
   findFirst,
+  head,
   isArray,
   isReadonlyArrayEmpty,
   match as matchArray,
@@ -73,6 +74,7 @@ import {
   carrier as schemaCarrier,
   exactLengths,
   isEntityIdLike,
+  isNullable,
   maxLengths,
   selectSchemaOf,
   stringLiteralValues,
@@ -249,10 +251,25 @@ const fixedString = (input: Field.Input, length: number | undefined): Field.Any 
             astTag: "(checks)",
           });
         },
-        onNonEmpty: (nonEmptyLengths) =>
-          Field.patch(field, {
-            column: PgColumn.Char.make({ length: min(nonEmptyLengths, NumberOrder) }),
-          }),
+        onNonEmpty: (nonEmptyLengths) => {
+          const resolvedLength = getOrElse(head(nonEmptyLengths), () => {
+            throw DeriveColumnError.make({
+              message: "pg.char() derive mode found no exact-length checks.",
+              fieldName: "(unknown — set at model definition)",
+              astTag: "(checks)",
+            });
+          });
+          if (!every(nonEmptyLengths, (current) => current === resolvedLength)) {
+            throw DeriveColumnError.make({
+              message: "pg.char() derive mode requires all reachable exact schema lengths to agree.",
+              fieldName: "(unknown — set at model definition)",
+              astTag: "(checks)",
+            });
+          }
+          return Field.patch(field, {
+            column: PgColumn.Char.make({ length: resolvedLength }),
+          });
+        },
       }),
     onSome: (resolvedLength) => {
       if (isSome(findFirst(lengths, (current) => current !== resolvedLength))) {
@@ -1564,12 +1581,19 @@ export const version =
       ValidateVersionColumn<I> &
       ValidateVersionCompatibility<I> &
       ValidateVersionSchema<I> &
+      Field.ValidateNonNullable<I, "version() forbids a nullable schema"> &
       ValidateNotArray<I>,
   ): Field.Patched<I, { readonly version: true }> => {
     const field = Field.from(input);
     if (VariantSchema.isField(field.schema)) {
       throw ModelInvariantError.make({
         message: "version() cannot own an explicit VariantSchema.Field.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    if (isNullable(field.schema)) {
+      throw ModelInvariantError.make({
+        message: "version() forbids a nullable schema.",
         fieldName: "(unknown — set at model definition)",
       });
     }

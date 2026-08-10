@@ -15,7 +15,7 @@
  *
  * @since 0.0.0
  */
-import { findFirst, last as lastArray, reduce, some as someArray } from "effect/Array";
+import { every, findFirst, last as lastArray, reduce } from "effect/Array";
 import {
   fromUndefinedOr,
   getOrElse,
@@ -238,7 +238,9 @@ type VersionKeys<F extends FieldsInput> = {
 type ValidateVersionField<I extends Field.Input> = Field.Input extends I
   ? unknown
   : Field.MetaFrom<I>["version"] extends true
-  ? Field.MetaFrom<I>["dimensions"] extends 0
+  ? null extends Field.EncodedOf<I>
+    ? Field.SqlTypeError<"version fields cannot be nullable">
+    : Field.MetaFrom<I>["dimensions"] extends 0
     ? Field.MetaFrom<I>["column"] extends
         | PgColumn.Integer
         | PgColumn.Smallint
@@ -657,6 +659,12 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      if (field.meta.version && classified.nullable) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' cannot be nullable.`,
+          fieldName: key,
+        });
+      }
       if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
         throw ModelInvariantError.make({
           message: `Version field '${key}' cannot use identity or generated-column semantics.`,
@@ -665,7 +673,8 @@ export function makeModelClass(
       }
       if (PgColumn.Spec.guards.char(classified.column)) {
         const char = classified.column;
-        if (!someArray(Derive.exactLengths(field.schema), (length) => length === char.length)) {
+        const lengths = Derive.exactLengths(field.schema);
+        if (lengths.length === 0 || !every(lengths, (length) => length === char.length)) {
           throw ModelInvariantError.make({
             message: `char(${char.length}) on '${key}' requires an exact matching schema length.`,
             fieldName: key,

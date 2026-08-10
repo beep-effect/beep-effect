@@ -3,14 +3,18 @@ import { sql } from "drizzle-orm";
 import { getTableConfig as getSqliteTableConfig } from "drizzle-orm/sqlite-core";
 import {
   BigInt,
+  Date as DateSchema,
   Finite,
   Int,
   Literals,
   NullOr,
+  Number as NumberSchema,
   OptionFromNullOr,
   String,
   Uint8Array as Uint8ArraySchema,
   brand,
+  instanceOf,
+  is,
 } from "effect/Schema";
 import type { Top } from "effect/Schema";
 import { Model as EffectModel } from "effect/unstable/schema";
@@ -201,6 +205,59 @@ export const _sqliteBadVariantVersion = () =>
     // @ts-expect-error invariant: optimistic versions cannot override explicit variant membership
     sqlite.version(),
   );
+
+export const _sqliteDateJsonMode = () =>
+  DateSchema.pipe(
+    // @ts-expect-error invariant: SQLite JSON mode accepts only arrays and string-keyed records
+    sqlite.text({ mode: "json" }),
+  );
+
+export const _sqliteBytesJsonMode = () =>
+  Uint8ArraySchema.pipe(
+    // @ts-expect-error invariant: SQLite JSON mode rejects declaration-backed byte arrays
+    sqlite.blob({ mode: "json" }),
+  );
+
+export const _sqliteDateJsonModelMirror = () => {
+  const field = Field.make(
+    DateSchema,
+    Meta.merge(Meta.empty, { column: SqliteColumn.Text.make({ mode: "json" }) }),
+  );
+  class SqliteDateJsonModelMirror extends SqliteModel<SqliteDateJsonModelMirror>(
+    "SqliteDateJsonModelMirror",
+  )({
+    value: field,
+  }) {}
+  return SqliteDateJsonModelMirror;
+};
+
+export const _sqliteBareDeclaration = () => {
+  class SqliteBareDeclaration extends SqliteModel<SqliteBareDeclaration>(
+    "SqliteBareDeclaration",
+  )({
+    // @ts-expect-error invariant: declaration-backed objects do not derive SQLite JSON storage
+    value: instanceOf(RegExp),
+  }) {}
+  return SqliteBareDeclaration;
+};
+
+export const _nullableSqliteVersion = () =>
+  NullOr(Int).pipe(
+    sqlite.integer(),
+    // @ts-expect-error invariant: optimistic versions cannot be nullable
+    sqlite.version(),
+  );
+
+export const _nullableSqliteVersionModelMirror = () => {
+  const version = Field.patch(NullOr(Int).pipe(sqlite.integer()), { version: true });
+  class NullableSqliteVersion extends SqliteModel<NullableSqliteVersion>(
+    "NullableSqliteVersion",
+  )({
+    // @ts-expect-error invariant: runtime mirror rejects hand-built nullable versions
+    version,
+  }) {}
+  return NullableSqliteVersion;
+};
 
 export const _sqliteMalformedCorrelatedSpec = () => {
   const field = Field.make(
@@ -401,6 +458,13 @@ export const _sqliteDuplicateConstraintNamespace = () => {
 const SqliteWaveEString = String.annotate({ identifier: "SqliteWaveEString" });
 export const sqliteBoundedInteger = Int.pipe(sqlite.integer());
 export const sqliteFiniteNumeric = Finite.pipe(sqlite.numeric({ mode: "number" }));
+// @effect-diagnostics-next-line schemaNumber:off -- proves sqlite.real refines the broad carrier.
+export const sqliteFiniteReal = NumberSchema.pipe(sqlite.real());
+export class SqliteBareReal extends SqliteModel<SqliteBareReal>("SqliteBareReal")({
+  // @effect-diagnostics-next-line schemaNumber:off -- proves bare REAL derivation refines NaN.
+  value: NumberSchema,
+}) {}
+export const sqliteBareRealRejectsNaN = !is(SqliteBareReal.insert)({ value: Number.NaN });
 export const sqliteBoundedBigintNumeric = BigInt.pipe(sqlite.numeric({ mode: "bigint" }));
 export const _sqliteNumericStringMode = () =>
   // @ts-expect-error invariant: NUMERIC string mode is representation-lossy; use text()

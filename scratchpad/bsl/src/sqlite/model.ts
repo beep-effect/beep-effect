@@ -18,7 +18,7 @@ import {
 } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
-import { flip, is, optionalKey } from "effect/Schema";
+import { Finite, flip, is, makeFilter, optionalKey } from "effect/Schema";
 import type { Annotations, Struct as StructSchema, Top } from "effect/Schema";
 import { split } from "effect/String";
 import { last } from "effect/Array";
@@ -208,7 +208,9 @@ type ValidateDimensions<I extends Field.Input> = Field.MetaFrom<I>["dimensions"]
   ? unknown
   : Field.SqlTypeError<"SQLite has no array columns; dimensions must be zero">;
 type ValidateVersion<I extends Field.Input> = Field.MetaFrom<I>["version"] extends true
-  ? Field.MetaFrom<I>["column"] extends SqliteColumn.Integer<"number">
+  ? null extends Field.EncodedOf<I>
+    ? Field.SqlTypeError<"version fields cannot be nullable">
+    : Field.MetaFrom<I>["column"] extends SqliteColumn.Integer<"number">
     ? Field.MetaFrom<I>["identity"] extends false
       ? Field.MetaFrom<I>["generated"] extends false
         ? unknown
@@ -464,6 +466,31 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
   });
 };
 
+const finiteRealSchema = (schema: Field.AnySchema): Field.AnySchema => {
+  const accepts = is(Finite);
+  const refine = (current: Top): Top =>
+    flip(
+      flip(current).check(
+        makeFilter<unknown>((value) => value === null || accepts(value), {
+          identifier: "@beep/effect-drizzle/SqliteRealDomain",
+          title: "SQLite REAL domain",
+          description: "Excludes non-finite numbers that bun:sqlite cannot bind faithfully.",
+          message: "SQLite REAL requires a finite encoded number.",
+        }),
+      ),
+    );
+  return VariantSchema.isField(schema)
+    ? V.fieldEvolve(schema, {
+        select: refine,
+        insert: refine,
+        update: refine,
+        json: refine,
+        jsonCreate: refine,
+        jsonUpdate: refine,
+      })
+    : refine(schema);
+};
+
 /** Shared runtime seam used by bare SQLite models and SQLite kit entities. */
 /** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
@@ -524,6 +551,16 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      if (
+        ((SqliteColumn.Spec.guards.text(classified.column) && classified.column.mode === "json") ||
+          (SqliteColumn.Spec.guards.blob(classified.column) && classified.column.mode === "json")) &&
+        !Derive.isStructuralJson(field.schema)
+      ) {
+        throw ModelInvariantError.make({
+          message: `SQLite JSON field '${key}' requires an array- or record-encoded schema.`,
+          fieldName: key,
+        });
+      }
       if (field.meta.primaryKey && classified.nullable) {
         throw ModelInvariantError.make({
           message: `Primary key '${key}' derives a nullable encoded representation.`,
@@ -557,6 +594,12 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      if (field.meta.version && classified.nullable) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' cannot be nullable.`,
+          fieldName: key,
+        });
+      }
       if (field.meta.version && (field.meta.identity !== false || field.meta.generated !== false)) {
         throw ModelInvariantError.make({
           message: `Version field '${key}' cannot use identity or generated-column semantics.`,
@@ -568,12 +611,15 @@ export function makeModelClass(
         column: classified.column,
         references: resolveReferences(field.meta, select, key),
       });
+      const faithfulSchema = SqliteColumn.Spec.guards.real(classified.column)
+        ? finiteRealSchema(field.schema)
+        : field.schema;
       return {
         columns: set(state.columns, key, resolved),
         primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
         versionFields: state.versionFields + (field.meta.version ? 1 : 0),
         ordinaryColumns: state.ordinaryColumns + (field.meta.generated === false ? 1 : 0),
-        schemaFields: set(state.schemaFields, key, effectiveSchema(field.schema, resolved)),
+        schemaFields: set(state.schemaFields, key, effectiveSchema(faithfulSchema, resolved)),
       };
     },
   );

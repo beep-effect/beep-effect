@@ -12,7 +12,7 @@ import {
   type RelationsBuilder,
   type RelationsBuilderConfig,
 } from "drizzle-orm";
-import { foreignKey, getTableConfig, SQLiteColumn as DrizzleSqliteColumn } from "drizzle-orm/sqlite-core";
+import { foreignKey, getTableConfig, SQLiteColumn as DrizzleSqliteColumn, uniqueKeyName } from "drizzle-orm/sqlite-core";
 import {
   contains,
   findFirst,
@@ -574,6 +574,11 @@ const collectSchemaNames = (
     ...config.indexes.map((value, index): SchemaName => ({ owner: `index:${key}:${index}`, kind: "index", name: value.config.name })),
     ...config.primaryKeys.flatMap((value, index) => named(`primary-key:${key}:${index}`, "primary-key constraint", value.getName())),
     ...config.uniqueConstraints.map((value, index): SchemaName => ({ owner: `unique:${key}:${index}`, kind: "unique constraint", name: value.getName() })),
+    ...config.columns.filter((column) => column.isUnique).map((column, index): SchemaName => ({
+      owner: `inline-unique:${key}:${index}`,
+      kind: "unique constraint",
+      name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+    })),
     ...config.checks.map((value, index): SchemaName => ({ owner: `check:${key}:${index}`, kind: "check constraint", name: value.name })),
     ...config.foreignKeys.map((value, index): SchemaName => ({ owner: `foreign-key:${key}:${index}`, kind: "foreign-key constraint", name: value.getName() })),
   ];

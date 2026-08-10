@@ -15,9 +15,11 @@ import {
   Int,
   Literals,
   NullOr,
+  Number as NumberSchema,
   OptionFromNullOr,
   String,
   Struct,
+  Union,
   Uint8Array as Uint8ArraySchema,
   brand,
   decodeTo,
@@ -837,6 +839,26 @@ export const _declarationNeedsExplicitColumn = () => {
   return DeclarationNeedsExplicitColumn;
 };
 
+export const _mixedExactCharWidths = () =>
+  Union([
+    String.check(isLengthBetween(2, 2)),
+    String.check(isLengthBetween(3, 3)),
+  ]).pipe(pg.char());
+
+export const _mixedExactCharWidthsModelMirror = () => {
+  const field = Field.make(
+    Union([
+      String.check(isLengthBetween(2, 2)),
+      String.check(isLengthBetween(3, 3)),
+    ]),
+    Meta.merge(Meta.empty, { column: PgColumn.Char.make({ length: 2 }) }),
+  );
+  class MixedExactCharWidths extends Model<MixedExactCharWidths>("MixedExactCharWidths")({
+    value: field,
+  }) {}
+  return MixedExactCharWidths;
+};
+
 class NamedRepositoryModel extends Model<NamedRepositoryModel>("NamedRepositoryModel")({
   id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
   displayName: String.pipe(pg.columnName("legacy_name")),
@@ -856,6 +878,21 @@ export const _repositoryNonUniqueLocator = () => ({
     spanPrefix: "UserNonUniqueLocator",
     // @ts-expect-error invariant: repository locators must be primary-key or unique fields
     idColumn: "name",
+  }),
+});
+
+class NullableUniqueRepositoryModel extends Model<NullableUniqueRepositoryModel>(
+  "NullableUniqueRepositoryModel",
+)({
+  email: NullOr(String).pipe(pg.text(), pg.unique()),
+  rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
+}) {}
+
+export const _repositoryNullableUniqueLocator = () => ({
+  repository: makeRepository(NullableUniqueRepositoryModel, {
+    spanPrefix: "NullableUniqueRepositoryModel",
+    // @ts-expect-error invariant: nullable unique fields cannot locate repository rows
+    idColumn: "email",
   }),
 });
 
@@ -883,6 +920,22 @@ export const _twoVersions = () => {
     rightVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
   }) {}
   return TwoVersions;
+};
+
+export const _nullablePgVersion = () =>
+  NullOr(Int).pipe(
+    pg.integer(),
+    // @ts-expect-error invariant: optimistic versions cannot be nullable
+    pg.version(),
+  );
+
+export const _nullablePgVersionModelMirror = () => {
+  const version = Field.patch(NullOr(Int).pipe(pg.integer()), { version: true });
+  class NullablePgVersion extends Model<NullablePgVersion>("NullablePgVersion")({
+    // @ts-expect-error invariant: runtime mirror rejects hand-built nullable versions
+    version,
+  }) {}
+  return NullablePgVersion;
 };
 
 export const _nullablePrimaryKey = () => {
@@ -1200,6 +1253,18 @@ export const _pgInvalidFiniteDefault = () => {
     value: Finite.pipe(pg.real(), pg.default(Number.POSITIVE_INFINITY)),
   }) {}
   return InvalidFiniteDefault;
+};
+
+// @effect-diagnostics-next-line schemaNumber:off -- PostgreSQL float8 intentionally preserves NaN.
+export const pgNaNPreservingFloat = NumberSchema.pipe(pg.doublePrecision());
+
+export const _pgStandaloneGeneratedNameTooLong = () => {
+  class StandaloneGeneratedNameValidationTable extends Model<StandaloneGeneratedNameValidationTable>(
+    "StandaloneGeneratedNameValidationTable",
+  )({
+    individuallyValidLongUniqueColumnName: String.pipe(pg.text(), pg.unique()),
+  }) {}
+  return toPgTable(StandaloneGeneratedNameValidationTable);
 };
 export const _pgNulDefault = () => {
   class NulDefault extends Model<NulDefault>("NulDefault")({

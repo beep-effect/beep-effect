@@ -8,18 +8,22 @@
  */
 import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
 import type { Effect, Success } from "effect/Effect";
-import { findFirst } from "effect/Array";
+import { findFirst, some as someArray } from "effect/Array";
 import { getOrElse, isSome, map } from "effect/Option";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
-import { Int, NonEmptyString, TaggedError, Unknown, is } from "effect/Schema";
+import { isTagged } from "effect/Predicate";
+import { Int, NonEmptyString, TaggedError, Unknown, is, isSchema } from "effect/Schema";
 import type { SchemaError } from "effect/Schema";
+import { toEncoded } from "effect/SchemaAST";
 import type { Model as EffectModel } from "effect/unstable/schema";
+import { VariantSchema } from "effect/unstable/schema";
 import { SqlClient } from "effect/unstable/sql/SqlClient";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
 import { findOne } from "effect/unstable/sql/SqlSchema";
 import { isUnknownRecord, type UnknownRecord } from "../internal/guards.ts";
-import type * as Field from "./Field.ts";
+import * as Field from "./Field.ts";
+import { flattenEncoded } from "./classification.ts";
 import { ModelInvariantError, type AnyModel } from "./model.ts";
 
 /**
@@ -67,7 +71,10 @@ export class VersionConflictError extends TaggedError<VersionConflictError>(
 type RepositoryModel = EffectModel.Any & AnyModel;
 
 type LocatorKey<M extends AnyModel> = {
-  readonly [K in keyof M["sql"]["columns"] & string]: M["sql"]["columns"][K] extends {
+  readonly [K in keyof M["sql"]["columns"] & keyof M["sql"]["fields"] & string]:
+  null extends Field.EncodedOf<M["sql"]["fields"][K]>
+    ? never
+    : M["sql"]["columns"][K] extends {
     readonly version: true;
   }
     ? never
@@ -261,6 +268,20 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
   if (!locator.primaryKey && !locator.unique) {
     throw ModelInvariantError.make({
       message: `Repository locator '${idColumn}' must be a primary-key or unique field.`,
+      fieldName: idColumn,
+    });
+  }
+  const locatorInput = getOrElse(get(model.sql.fields, idColumn), () => {
+    throw ModelInvariantError.make({
+      message: `Repository locator '${idColumn}' is not a model field.`,
+      fieldName: idColumn,
+    });
+  });
+  const locatorSchema = Field.from(locatorInput).schema;
+  const select = VariantSchema.isField(locatorSchema) ? locatorSchema.schemas.select : locatorSchema;
+  if (!isSchema(select) || someArray(flattenEncoded(toEncoded(select.ast), idColumn), isTagged("Null"))) {
+    throw ModelInvariantError.make({
+      message: `Repository locator '${idColumn}' must have a non-null encoded schema.`,
       fieldName: idColumn,
     });
   }

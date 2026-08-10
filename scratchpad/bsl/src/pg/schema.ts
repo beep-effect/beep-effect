@@ -12,7 +12,7 @@ import {
   type RelationsBuilder,
   type RelationsBuilderConfig,
 } from "drizzle-orm";
-import { foreignKey, PgColumn as DrizzlePgColumn } from "drizzle-orm/pg-core";
+import { foreignKey, PgColumn as DrizzlePgColumn, uniqueKeyName } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import {
   contains,
@@ -617,6 +617,16 @@ const collectSchemaNames = (
       ...config.indexes.flatMap((value, index) => named(`index:${key}:${index}`, "index", value.config.name)),
       ...config.primaryKeys.flatMap((value, index) => named(`primary-key:${key}:${index}`, "primary-key constraint", value.getName())),
       ...config.uniqueConstraints.flatMap((value, index) => named(`unique:${key}:${index}`, "unique constraint", value.getName())),
+      ...config.columns.filter((column) => column.primary).map((_, index): SchemaName => ({
+        owner: `inline-primary-key:${key}:${index}`,
+        kind: "primary-key constraint",
+        name: `${config.name}_pkey`,
+      })),
+      ...config.columns.filter((column) => column.isUnique).map((column, index): SchemaName => ({
+        owner: `inline-unique:${key}:${index}`,
+        kind: "unique constraint",
+        name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+      })),
       ...config.checks.map((value, index): SchemaName => ({ owner: `check:${key}:${index}`, kind: "check constraint", name: value.name })),
       ...config.foreignKeys.map((value, index): SchemaName => ({ owner: `foreign-key:${key}:${index}`, kind: "foreign-key constraint", name: value.getName() })),
     ];

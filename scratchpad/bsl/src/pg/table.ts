@@ -53,7 +53,7 @@ import type {
   SetNotNull,
   SetDimensions,
 } from "drizzle-orm/pg-core";
-import { PgDialect, pgTable } from "drizzle-orm/pg-core";
+import { getTableConfig, PgDialect, pgTable, uniqueKeyName } from "drizzle-orm/pg-core";
 import { pipe } from "effect/Function";
 import {
   exhaustive,
@@ -68,6 +68,8 @@ import { flatMap, fromUndefinedOr, getOrElse, getOrUndefined, match } from "effe
 import { isFunction } from "effect/Predicate";
 import { empty, get, set } from "effect/Record";
 import { snakeCase } from "../internal/case.ts";
+import { validateSchemaNames, type SchemaName } from "../core/assembly.ts";
+import { ModelInvariantError } from "../core/model.ts";
 import * as Derive from "./derive.ts";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
@@ -465,7 +467,7 @@ export function toPgTable(
       );
     },
   );
-  return pgTable(model.sql.tableName, builders, (columns) => {
+  const table = pgTable(model.sql.tableName, builders, (columns) => {
     const bound: TableExtras.BoundColumns<FieldsInput> = columns;
     const declared = match(fromUndefinedOr(model.sql.extras), {
       onNone: () => [],
@@ -484,4 +486,30 @@ export function toPgTable(
     });
     return [...declared, ...additional];
   });
+  if (additionalExtras === undefined) {
+    const config = getTableConfig(table);
+    const named = (owner: string, kind: string, name: string | undefined): ReadonlyArray<SchemaName> =>
+      name === undefined ? [] : [{ owner, kind, name }];
+    validateSchemaNames([
+      { owner: "table", kind: "table", name: config.name },
+      ...config.indexes.flatMap((value, index) => named(`index:${index}`, "index", value.config.name)),
+      ...config.primaryKeys.flatMap((value, index) => named(`primary-key:${index}`, "primary-key constraint", value.getName())),
+      ...config.uniqueConstraints.flatMap((value, index) => named(`unique:${index}`, "unique constraint", value.getName())),
+      ...config.columns.filter((column) => column.primary).map((_, index): SchemaName => ({
+        owner: `inline-primary-key:${index}`,
+        kind: "primary-key constraint",
+        name: `${config.name}_pkey`,
+      })),
+      ...config.columns.filter((column) => column.isUnique).map((column, index): SchemaName => ({
+        owner: `inline-unique:${index}`,
+        kind: "unique constraint",
+        name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+      })),
+      ...config.checks.map((value, index): SchemaName => ({ owner: `check:${index}`, kind: "check constraint", name: value.name })),
+      ...config.foreignKeys.map((value, index): SchemaName => ({ owner: `foreign-key:${index}`, kind: "foreign-key constraint", name: value.getName() })),
+    ], "pg", (message, sourceTable, fieldName) => {
+      throw ModelInvariantError.make({ message, fieldName: `${sourceTable}:${fieldName}` });
+    });
+  }
+  return table;
 }

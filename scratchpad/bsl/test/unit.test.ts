@@ -56,6 +56,8 @@ import {
   _charWithMaximumOnly,
   _charWithWrongExactLength,
   _charWithoutExactRuntimeMirror,
+  _mixedExactCharWidths,
+  _mixedExactCharWidthsModelMirror,
   _compatibleVarchar,
   _defaultThenGenerated,
   _badEnumBroadString,
@@ -105,6 +107,7 @@ import {
   _pgParameterizedDefault,
   _pgParameterizedGenerated,
   _pgParameterizedPartialIndex,
+  _pgStandaloneGeneratedNameTooLong,
   _pgSetDefaultWithoutDefault,
   _pgSetNullNonNullable,
   _pgTooManyColumns,
@@ -112,6 +115,7 @@ import {
   _pgVarcharTooWide,
   _repositoryColumnNameOverride,
   _repositoryNonUniqueLocator,
+  _repositoryNullableUniqueLocator,
   _repositoryVersionLocator,
   _kitDefaultCollision,
   _badIdentityThenArray,
@@ -120,6 +124,8 @@ import {
   _scalarArrayFkMismatch,
   _twoPrimaryKeys,
   _twoVersions,
+  _nullablePgVersion,
+  _nullablePgVersionModelMirror,
   _unboundedVarchar,
   _uuidTextFkMismatch,
   _runtimeArrayCarrierMismatch,
@@ -144,6 +150,7 @@ import {
   pgBoundedSmallint,
   pgCheckedNumeric,
   pgCheckedUuid,
+  pgNaNPreservingFloat,
   User,
   UserId,
   userTable,
@@ -171,6 +178,7 @@ describe("PostgreSQL name invariants", () => {
     expect(_pgDuplicateConstraintNamespace).toThrow(pg.SchemaAssemblyError);
     expect(_pgTableEnumNamespaceCollision).toThrow("Schema-global name");
     expect(_pgTableEnumNamespaceCollision).toThrow(pg.SchemaAssemblyError);
+    expect(_pgStandaloneGeneratedNameTooLong).toThrow("63 UTF-8 bytes");
   });
 });
 
@@ -463,6 +471,8 @@ describe("mechanical column kinds", () => {
     expect(_charWithMaximumOnly).toThrow("isLengthBetween");
     expect(_charWithWrongExactLength).toThrow("exact schema length");
     expect(_charWithoutExactRuntimeMirror).toThrow("exact matching schema length");
+    expect(_mixedExactCharWidths).toThrow("all reachable exact schema lengths to agree");
+    expect(_mixedExactCharWidthsModelMirror).toThrow("exact matching schema length");
     expect(
       Field.from(StringSchema.check(isLengthBetween(3, 3)).pipe(pg.char())).meta.column,
     ).toEqual({
@@ -687,6 +697,8 @@ describe("schema corroboration and invariants", () => {
     expect(_badGeneratedThenVersion).toThrow("identity or generated");
     expect(_badBigintVersion).toThrow("number-encoded integer-family");
     expect(_badVariantVersion).toThrow("explicit VariantSchema.Field");
+    expect(_nullablePgVersion).toThrow("nullable schema");
+    expect(_nullablePgVersionModelMirror).toThrow("cannot be nullable");
     expect(_nullablePrimaryKey).toThrow();
     expect(_defaultThenGenerated).toThrow();
     expect(_generatedThenDefault).toThrow();
@@ -696,7 +708,12 @@ describe("schema corroboration and invariants", () => {
   it("rejects unsafe optimistic repository construction synchronously", () => {
     expect(_repositoryVersionLocator).toThrow("cannot be the optimistic-version field");
     expect(_repositoryNonUniqueLocator).toThrow("primary-key or unique field");
+    expect(_repositoryNullableUniqueLocator).toThrow("non-null encoded schema");
     expect(_repositoryColumnNameOverride).toThrow("columnName override on 'displayName'");
+  });
+
+  it("preserves PostgreSQL NaN semantics", () => {
+    expect(is(Field.from(pgNaNPreservingFloat).schema)(Number.NaN)).toBe(true);
   });
 
   it("validates plain descriptors at their remaining author-input seams", () => {

@@ -27,7 +27,14 @@ import { factory as V } from "../core/variant.ts";
 import { assertSqlName, type ValidateSqlName } from "../core/names.ts";
 import { assignStatics } from "../internal/statics.ts";
 import * as SqliteColumn from "./Column.ts";
-import { DeriveColumnError, isEntityIdLike, stringLiteralValues, type EntityIdLike } from "./derive.ts";
+import {
+  DeriveColumnError,
+  isEntityIdLike,
+  isNullable,
+  isStructuralJson,
+  stringLiteralValues,
+  type EntityIdLike,
+} from "./derive.ts";
 
 const evolveSchemas = (
   schema: Field.AnySchema,
@@ -127,13 +134,21 @@ export function text(): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "sqlite.text requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Text<"text"> }>;
 export function text(options: { readonly mode: "json" }): <I extends Field.Input>(
-  input: I & Field.ValidateEncoded<I, object, "sqlite.text({ mode: 'json' }) requires an object-encoded schema">,
+  input: I & Field.ValidateEncoded<I, import("./derive.ts").StructuralJson, "sqlite.text({ mode: 'json' }) requires an array- or record-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Text<"json"> }>;
 export function text(options?: { readonly mode: "json" }): unknown {
-  return (input: Field.Input): Field.Any =>
-    Field.patch(input, {
+  return (input: Field.Input): Field.Any => {
+    const field = Field.from(input);
+    if (options?.mode === "json" && !isStructuralJson(field.schema)) {
+      throw ModelInvariantError.make({
+        message: "sqlite.text({ mode: 'json' }) requires an array- or record-encoded schema.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    return Field.patch(field, {
       column: SqliteColumn.Text.make({ mode: options?.mode === "json" ? "json" : "text" }),
     });
+  };
 }
 
 type IntegerColumn<I extends Field.Input> =
@@ -206,7 +221,7 @@ export function integer(options?: { readonly mode: SqliteColumn.IntegerMode }): 
 export const real = () => <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, number, "sqlite.real requires a number-encoded schema">,
 ): Field.Patched<I, { readonly column: SqliteColumn.Real }> =>
-  Field.patch(input, { column: SqliteColumn.Real.make({}) });
+  Field.patch(injectNumberChecks(input, [isFinite()]), { column: SqliteColumn.Real.make({}) });
 
 /**
  * Sets SQLite BLOB storage in buffer, JSON, or bigint mode.
@@ -232,14 +247,22 @@ export function blob(options: { readonly mode: "buffer" }): <I extends Field.Inp
   input: I & Field.ValidateEncoded<I, Uint8Array, "sqlite.blob buffer mode requires a Uint8Array-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Blob<"buffer"> }>;
 export function blob(options: { readonly mode: "json" }): <I extends Field.Input>(
-  input: I & Field.ValidateEncoded<I, object, "sqlite.blob json mode requires an object-encoded schema">,
+  input: I & Field.ValidateEncoded<I, import("./derive.ts").StructuralJson, "sqlite.blob json mode requires an array- or record-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Blob<"json"> }>;
 export function blob(options: { readonly mode: "bigint" }): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, bigint, "sqlite.blob bigint mode requires a bigint-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Blob<"bigint"> }>;
 export function blob(options: { readonly mode: SqliteColumn.BlobMode }): unknown {
-  return (input: Field.Input): Field.Any =>
-    Field.patch(input, { column: SqliteColumn.Blob.make({ mode: options.mode }) });
+  return (input: Field.Input): Field.Any => {
+    const field = Field.from(input);
+    if (options.mode === "json" && !isStructuralJson(field.schema)) {
+      throw ModelInvariantError.make({
+        message: "sqlite.blob json mode requires an array- or record-encoded schema.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    return Field.patch(field, { column: SqliteColumn.Blob.make({ mode: options.mode }) });
+  };
 }
 
 /**
@@ -632,12 +655,22 @@ type ValidateVersionSchema<I extends Field.Input> = Field.SchemaFrom<I> extends 
  * @since 0.0.0
  */
 export const version = () => <I extends Field.Input>(
-  input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateVersionSchema<I>,
+  input: I &
+    ValidateVersionColumn<I> &
+    ValidateVersionCompatibility<I> &
+    ValidateVersionSchema<I> &
+    Field.ValidateNonNullable<I, "version() forbids a nullable schema">,
 ): Field.Patched<I, { readonly version: true }> => {
   const field = Field.from(input);
   if (VariantSchema.isField(field.schema)) {
     throw ModelInvariantError.make({
       message: "version() cannot own an explicit VariantSchema.Field.",
+      fieldName: "(unknown — set at model definition)",
+    });
+  }
+  if (isNullable(field.schema)) {
+    throw ModelInvariantError.make({
+      message: "version() forbids a nullable schema.",
       fieldName: "(unknown — set at model definition)",
     });
   }
