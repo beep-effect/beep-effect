@@ -24,6 +24,8 @@ import * as Meta from "./Meta.ts";
 import * as PgColumn from "./PgColumn.ts";
 import {
   DeriveColumnError,
+  arrayElementAST,
+  encodedAST,
   isEntityIdLike,
   maxLengths,
   stringLiteralValues,
@@ -896,6 +898,116 @@ export function timestamp(options?: {
   };
 }
 
+type ArrayPatch<
+  Element extends Field.Input,
+  Dimensions extends Exclude<PgColumn.ArrayDimension, 0>
+> = {
+  readonly column: Exclude<Field.MetaFrom<Element>["column"], undefined>;
+  readonly dimensions: Dimensions;
+};
+
+type ValidateArrayModifiers<I extends Field.Input> =
+  Field.MetaFrom<I>["primaryKey"] extends true
+    ? Field.BslTypeError<"array fields cannot be primary keys">
+    : Field.MetaFrom<I>["identity"] extends false
+    ? Field.MetaFrom<I>["version"] extends false
+      ? unknown
+      : Field.BslTypeError<"array fields cannot be optimistic versions">
+    : Field.BslTypeError<"array fields cannot use identity generation">;
+
+const dimension = (
+  suffix: PgColumn.ArrayDimensionString
+): Exclude<PgColumn.ArrayDimension, 0> =>
+  Match.value(suffix).pipe(
+    Match.withReturnType<Exclude<PgColumn.ArrayDimension, 0>>(),
+    Match.when("[]", () => 1),
+    Match.when("[][]", () => 2),
+    Match.when("[][][]", () => 3),
+    Match.when("[][][][]", () => 4),
+    Match.when("[][][][][]", () => 5),
+    Match.exhaustive
+  );
+
+/**
+ * Declare a PostgreSQL array over an explicitly compiled scalar element.
+ *
+ * **Example** (Declare a two-dimensional text array)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as pg from "./pg.ts"
+ *
+ * const matrix = S.Array(S.Array(S.String)).pipe(
+ *   pg.array(S.String.pipe(pg.text()), "[][]")
+ * )
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function array<const Element extends Field.Input>(
+  element: Element & Field.ValidateArrayElement<Element>
+): <I extends Field.Input>(
+  input: I &
+    Field.ValidateArrayEncoded<I, Element, 1> &
+    ValidateArrayModifiers<I>
+) => Field.Patched<I, ArrayPatch<Element, 1>>;
+export function array<
+  const Element extends Field.Input,
+  const Suffix extends PgColumn.ArrayDimensionString
+>(
+  element: Element & Field.ValidateArrayElement<Element>,
+  suffix: Suffix
+): <I extends Field.Input>(
+  input: I &
+    Field.ValidateArrayEncoded<I, Element, PgColumn.DimensionOf<Suffix>> &
+    ValidateArrayModifiers<I>
+) => Field.Patched<I, ArrayPatch<Element, PgColumn.DimensionOf<Suffix>>>;
+export function array(
+  element: Field.Input,
+  suffix: PgColumn.ArrayDimensionString = "[]"
+): unknown {
+  return (input: Field.Input): Field.Any => {
+    const outer = Field.from(input);
+    const base = Field.from(element);
+    const dimensions = dimension(suffix);
+    if (P.isUndefined(base.meta.column) || base.meta.dimensions !== 0) {
+      throw DeriveColumnError.make({
+        message:
+          "pg.array requires an element schema with one explicit scalar column combinator.",
+        fieldName: "(unknown — set at model definition)",
+        astTag: "(array element)",
+      });
+    }
+    if (
+      outer.meta.primaryKey ||
+      outer.meta.identity !== false ||
+      outer.meta.version
+    ) {
+      throw DeriveColumnError.make({
+        message:
+          "pg.array is incompatible with primaryKey, identity, and version semantics.",
+        fieldName: "(unknown — set at model definition)",
+        astTag: "(array modifiers)",
+      });
+    }
+    const outerElement = arrayElementAST(outer.schema, dimensions);
+    const baseElement = encodedAST(base.schema);
+    if (!Eq.equals(outerElement, baseElement)) {
+      throw DeriveColumnError.make({
+        message:
+          "pg.array outer schema does not match the element schema at the declared depth.",
+        fieldName: "(unknown — set at model definition)",
+        astTag: outerElement._tag,
+      });
+    }
+    return Field.patch(outer, {
+      column: base.meta.column,
+      dimensions,
+    });
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Modifiers
 // ---------------------------------------------------------------------------
@@ -922,7 +1034,8 @@ export const primaryKey =
       Field.ValidateNonNullable<
         I,
         "primaryKey() forbids a nullable schema — a primary key cannot admit null"
-      >
+      > &
+      ValidateNotArray<I>
   ): Field.Patched<I, { readonly primaryKey: true }> =>
     Field.patch(input, { primaryKey: true });
 
@@ -970,6 +1083,11 @@ type ValidateNotVersion<I extends Field.Input> =
     ? unknown
     : Field.BslTypeError<"version fields are mutually exclusive with identity and generated columns">;
 
+type ValidateNotArray<I extends Field.Input> =
+  Field.MetaFrom<I>["dimensions"] extends 0
+    ? unknown
+    : Field.BslTypeError<"array fields cannot use primary-key, identity, or version semantics">;
+
 /**
  * Apply PostgreSQL identity generation after an integer-family column setter.
  *
@@ -992,7 +1110,8 @@ export function identity<const K extends "always" | "byDefault" = "always">(
     ValidateIdentity<I> &
     ValidateNotDefaulted<I> &
     ValidateNotGenerated<I> &
-    ValidateNotVersion<I>
+    ValidateNotVersion<I> &
+    ValidateNotArray<I>
 ) => Field.Patched<
   I,
   K extends "always"
@@ -1213,7 +1332,10 @@ type ValidateVersionCompatibility<I extends Field.Input> =
 export const version =
   () =>
   <I extends Field.Input>(
-    input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I>
+    input: I &
+      ValidateVersionColumn<I> &
+      ValidateVersionCompatibility<I> &
+      ValidateNotArray<I>
   ): Field.Patched<I, { readonly version: true }> =>
     Field.patch(input, { version: true });
 

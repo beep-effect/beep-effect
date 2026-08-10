@@ -270,6 +270,7 @@ export type GeneratedIdentityAlways =
  */
 export const Meta = S.Struct({
   column: S.UndefinedOr(PgColumn.Spec),
+  dimensions: PgColumn.ArrayDimension,
   primaryKey: S.Boolean,
   unique: S.Boolean,
   identity: Identity,
@@ -303,6 +304,7 @@ export type Meta = typeof Meta.Type;
  *
  * console.log(Empty.make({
  *   column: undefined,
+ *   dimensions: 0,
  *   primaryKey: false,
  *   unique: false,
  *   identity: false,
@@ -320,6 +322,7 @@ export type Meta = typeof Meta.Type;
  */
 export const Empty = S.Struct({
   column: S.Undefined,
+  dimensions: S.Literal(0),
   primaryKey: S.Literal(false),
   unique: S.Literal(false),
   identity: S.Literal(false),
@@ -358,6 +361,7 @@ export type Empty = typeof Empty.Type;
  */
 export const empty: Empty = Empty.make({
   column: undefined,
+  dimensions: 0,
   primaryKey: false,
   unique: false,
   identity: false,
@@ -436,6 +440,8 @@ export const merge = <const M extends Meta, const P extends Patch>(
 ): Merge<M, P> => {
   const evolver = {
     column: (current: M["column"]) => mergeField(current, patch, "column"),
+    dimensions: (current: M["dimensions"]) =>
+      mergeField(current, patch, "dimensions"),
     primaryKey: (current: M["primaryKey"]) =>
       mergeField(current, patch, "primaryKey"),
     unique: (current: M["unique"]) => mergeField(current, patch, "unique"),

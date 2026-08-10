@@ -20,6 +20,49 @@ type BaseServices =
 type RepositoryServices = Pglite.PgliteClient | SqlClient.SqlClient;
 
 /**
+ * Pin PGlite timestamp parsers to the string carrier used by BSL timestamp schemas.
+ *
+ * **Example** (Pin one caller-owned client)
+ *
+ * ```ts
+ * import { PGlite } from "@electric-sql/pglite"
+ * import { pinStringTimestampParsers } from "./live.test-support.ts"
+ *
+ * const client = pinStringTimestampParsers(new PGlite())
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const pinStringTimestampParsers = (client: PGlite): PGlite => {
+  client.parsers[types.TIMESTAMP] = identity;
+  client.parsers[types.TIMESTAMPTZ] = identity;
+  return client;
+};
+
+/**
+ * Construct the camel-query/snake-result repository view over one PGlite client.
+ *
+ * **Example** (Construct a repository layer)
+ *
+ * ```ts
+ * import { PGlite } from "@electric-sql/pglite"
+ * import { makeCamelSnakeRepositoryLayer } from "./live.test-support.ts"
+ *
+ * const layer = makeCamelSnakeRepositoryLayer(new PGlite())
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeCamelSnakeRepositoryLayer = (client: PGlite) =>
+  Pglite.layer({
+    liveClient: client,
+    transformQueryNames: Str.snakeCase,
+    transformResultNames: Str.camelCase,
+  });
+
+/**
  * One scoped in-memory database plus runners for raw and model-key SQL views.
  *
  * **Details**
@@ -82,14 +125,9 @@ export const makeLiveTestSupport = Effect.gen(function* () {
   if (!(client.pglite instanceof PGlite)) {
     throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
   }
-  client.pglite.parsers[types.TIMESTAMP] = identity;
-  client.pglite.parsers[types.TIMESTAMPTZ] = identity;
+  const pglite = pinStringTimestampParsers(client.pglite);
   const repositoryContext = yield* Layer.buildWithScope(
-    Pglite.layer({
-      liveClient: client.pglite,
-      transformQueryNames: Str.snakeCase,
-      transformResultNames: Str.camelCase,
-    }),
+    makeCamelSnakeRepositoryLayer(pglite),
     scope
   );
   return makeSupport(scope, context, repositoryContext);

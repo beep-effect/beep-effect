@@ -52,14 +52,7 @@ export class VersionConflictError extends TaggedErrorClass<VersionConflictError>
   })
 ) {}
 
-type ServiceFreeCodec = S.ConstraintCodec<unknown, unknown, never, never>;
-
-type RepositoryModel = EffectModel.Any &
-  AnyModel &
-  ServiceFreeCodec & {
-    readonly insert: EffectModel.Any["insert"] & ServiceFreeCodec;
-    readonly update: EffectModel.Any["update"] & ServiceFreeCodec;
-  };
+type RepositoryModel = EffectModel.Any & AnyModel;
 
 type IdKey<M extends EffectModel.Any> =
   & keyof M["Type"]
@@ -196,7 +189,12 @@ export const makeRepository = <
     });
     const idColumn: string = options.idColumn;
     const versionColumn = findVersionColumn(model);
-    const updateSchema = SqlSchema.findOne({
+    const updateSchema = SqlSchema.findOne<
+      M["update"],
+      M,
+      SqlError,
+      never
+    >({
       Request: model.update,
       Result: model,
       execute: (request) => {

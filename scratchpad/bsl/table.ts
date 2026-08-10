@@ -50,6 +50,7 @@ import type {
   SetIdentity,
   SetIsPrimaryKey,
   SetNotNull,
+  SetDimensions,
 } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 import { Match, pipe } from "effect";
@@ -144,6 +145,43 @@ type ApplyIdentity<B, M extends Meta.Meta> = M["identity"] extends
   | "byDefault"
   ? SetIdentity<B, M["identity"]>
   : B;
+type ApplyDimensions<B, M extends Meta.Meta> = M["dimensions"] extends 0
+  ? B
+  : SetDimensions<B, M["dimensions"]>;
+type ElementAtDepth<Carrier, Dimensions extends PgColumn.ArrayDimension> =
+  Dimensions extends 0
+    ? Carrier
+    : Carrier extends ReadonlyArray<infer Element>
+    ? Dimensions extends 1
+      ? Element
+      : Dimensions extends 2
+      ? Element extends ReadonlyArray<infer Element2>
+        ? Element2
+        : never
+      : Dimensions extends 3
+      ? Element extends ReadonlyArray<infer Element2>
+        ? Element2 extends ReadonlyArray<infer Element3>
+          ? Element3
+          : never
+        : never
+      : Dimensions extends 4
+      ? Element extends ReadonlyArray<infer Element2>
+        ? Element2 extends ReadonlyArray<infer Element3>
+          ? Element3 extends ReadonlyArray<infer Element4>
+            ? Element4
+            : never
+          : never
+        : never
+      : Element extends ReadonlyArray<infer Element2>
+      ? Element2 extends ReadonlyArray<infer Element3>
+        ? Element3 extends ReadonlyArray<infer Element4>
+          ? Element4 extends ReadonlyArray<infer Element5>
+            ? Element5
+            : never
+          : never
+        : never
+      : never
+    : never;
 
 /**
  * Exact Drizzle builder type produced for one BSL field.
@@ -166,8 +204,14 @@ export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
       ApplyDefault<
         ApplyNotNull<
           Set$Type<
-            BuilderBase<Derive.ResolvedColumn<I>>,
-            Exclude<Field.EncodedOf<I>, null>
+            ApplyDimensions<
+              BuilderBase<Derive.ResolvedColumn<I>>,
+              Field.MetaFrom<I>
+            >,
+            ElementAtDepth<
+              Exclude<Field.EncodedOf<I>, null>,
+              Field.MetaFrom<I>["dimensions"]
+            >
           >,
           NullableOf<I>
         >,
@@ -258,7 +302,16 @@ const buildColumn = (
         ).pipe(O.getOrUndefined)
       )
     : pipe(spec, PgColumn.Spec.toDrizzleBuilder(name, meta.identity));
-  const withNullability = nullable ? base : base.notNull();
+  const withDimensions = Match.value(meta.dimensions).pipe(
+    Match.when(0, () => base),
+    Match.when(1, () => base.array("[]")),
+    Match.when(2, () => base.array("[][]")),
+    Match.when(3, () => base.array("[][][]")),
+    Match.when(4, () => base.array("[][][][]")),
+    Match.when(5, () => base.array("[][][][][]")),
+    Match.exhaustive
+  );
+  const withNullability = nullable ? withDimensions : withDimensions.notNull();
   const withPrimaryKey = meta.primaryKey
     ? withNullability.primaryKey()
     : withNullability;

@@ -1,5 +1,6 @@
 /** Live PostgreSQL execution proofs for BSL round four. */
 import { PgliteClient } from "@beep/pglite";
+import { $ScratchpadId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
@@ -8,6 +9,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaParser from "effect/SchemaParser";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
@@ -15,6 +17,7 @@ import * as SqlError from "effect/unstable/sql/SqlError";
 import * as SqlModel from "effect/unstable/sql/SqlModel";
 import {
   bslSchema,
+  ArrayRecord,
   Organization,
   User,
   userOptimisticRepository,
@@ -25,6 +28,48 @@ import {
   type LiveTestSupport,
 } from "./live.test-support.ts";
 import { VersionConflictError } from "./repository.ts";
+
+const $I = $ScratchpadId.create("bsl/live.test");
+
+const RelationId = S.Struct({ id: S.Finite }).pipe(
+  $I.annoteSchema("RelationId", {
+    description: "Minimal related-row shape asserted by the BSL live suite.",
+  })
+);
+const UserRelationRows = S.Array(
+  S.Struct({
+    id: S.Finite,
+    org: RelationId,
+    organizationsThroughMembership: S.Array(RelationId),
+  })
+).pipe(
+  $I.annoteSchema("UserRelationRows", {
+    description: "User relation rows decoded from live RQBv2 queries.",
+  })
+);
+const OrganizationRelationRows = S.Array(
+  S.Struct({
+    id: S.Finite,
+    parentOrg: S.NullOr(RelationId),
+    childOrgs: S.Array(RelationId),
+    users: S.Array(RelationId),
+    usersThroughMembership: S.Array(RelationId),
+  })
+).pipe(
+  $I.annoteSchema("OrganizationRelationRows", {
+    description: "Organization relation rows decoded from live RQBv2 queries.",
+  })
+);
+
+const invokeFindMany = (
+  query: unknown,
+  config: unknown
+): Promise<unknown> => {
+  if (P.hasProperty(query, "findMany") && P.isFunction(query.findMany)) {
+    return Reflect.apply(query.findMany, query, [config]);
+  }
+  return Promise.reject(new Error("RQBv2 findMany is unavailable"));
+};
 
 const drizzleExports: Record<string, unknown> = {
   ...bslSchema.enums,
@@ -43,6 +88,12 @@ const isVersionConflict = S.is(VersionConflictError);
 const organizationRepository = SqlModel.makeRepository(Organization, {
   tableName: Organization.bsl.tableName,
   spanPrefix: "Organization",
+  idColumn: "id",
+});
+
+const arrayRecordRepository = SqlModel.makeRepository(ArrayRecord, {
+  tableName: ArrayRecord.bsl.tableName,
+  spanPrefix: "ArrayRecord",
   idColumn: "id",
 });
 
@@ -106,8 +157,37 @@ describe.serial("BSL live PGlite gauntlet", () => {
     expect(
       A.some(migrationStatements, Str.includes("record_status"))
     ).toBe(true);
+    expect(A.some(migrationStatements, Str.includes('"labels" text[]'))).toBe(
+      true
+    );
+    expect(A.some(migrationStatements, Str.includes('"matrix" text[][]'))).toBe(
+      true
+    );
     expect(noOpStatements).toEqual([]);
   });
+
+  it("round-trips one- and two-dimensional arrays through the model repository", () =>
+    support().runRepository(
+      Effect.gen(function* () {
+        const repository = yield* arrayRecordRepository;
+        const request = yield* SchemaParser.makeEffect(ArrayRecord.insert)({
+          labels: ["round-five", "array"],
+          matrix: [
+            ["a", "b"],
+            ["c", "d"],
+          ],
+        });
+        const inserted = yield* repository.insert(request);
+        const selected = yield* repository.findById(inserted.id);
+        yield* repository.delete(inserted.id);
+        expect(selected.labels).toEqual(["round-five", "array"]);
+        expect(selected.matrix).toEqual([
+          ["a", "b"],
+          ["c", "d"],
+        ]);
+      })
+    )
+  );
 
   it("executes the installed SqlModel repository and Option codec", () =>
     support().runRepository(
@@ -230,6 +310,144 @@ describe.serial("BSL live PGlite gauntlet", () => {
         yield* repository.delete(valid.id);
         expect(valid.status).toBe("draft");
         expect(invalid.pipe(SqlError.isSqlError)).toBe(true);
+      })
+    )
+  );
+
+  it("queries forward, reverse, self, and junction relations through RQBv2", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const seeded = yield* Effect.tryPromise(() =>
+          support().runRepository(
+            Effect.gen(function* () {
+              const organizations = yield* organizationRepository;
+              const users = yield* userOptimisticRepository;
+              const rootRequest = yield* SchemaParser.makeEffect(
+                Organization.insert
+              )({
+                parentOrgId: null,
+                slug: "round-five-root",
+                name: "Round Five Root",
+                code: "R5-ROOT",
+              });
+              const root = yield* organizations.insert(rootRequest);
+              const childRequest = yield* SchemaParser.makeEffect(
+                Organization.insert
+              )({
+                parentOrgId: root.id,
+                slug: "round-five-child",
+                name: "Round Five Child",
+                code: "R5-CHILD",
+              });
+              const child = yield* organizations.insert(childRequest);
+              const directRequest = yield* SchemaParser.makeEffect(User.insert)(
+                {
+                  orgId: root.id,
+                  email: "round-five-direct@example.com",
+                  name: "Round Five Direct",
+                  bio: null,
+                  nickname: O.none(),
+                  settings: { theme: "direct" },
+                  active: true,
+                  status: "active",
+                }
+              );
+              const direct = yield* users.insert(directRequest);
+              const memberRequest = yield* SchemaParser.makeEffect(User.insert)(
+                {
+                  orgId: child.id,
+                  email: "round-five-member@example.com",
+                  name: "Round Five Member",
+                  bio: null,
+                  nickname: O.none(),
+                  settings: { theme: "member" },
+                  active: true,
+                  status: "draft",
+                }
+              );
+              const member = yield* users.insert(memberRequest);
+              const sql = yield* SqlClient.SqlClient;
+              yield* sql`
+                insert into membership (organization_id, user_id, role)
+                values (${root.id}, ${member.id}, ${"member"})
+              `;
+              return { root, child, direct, member };
+            })
+          )
+        );
+
+        const queried = yield* Effect.tryPromise(() =>
+          support().run(
+            Effect.gen(function* () {
+              const client = yield* PgliteClient;
+              if (!(client.pglite instanceof PGlite)) {
+                throw new Error(
+                  "PgliteTestLayer did not expose a concrete PGlite client"
+                );
+              }
+              const db = drizzle({
+                client: client.pglite,
+                relations: bslSchema.relations,
+              });
+              const usersUnknown = yield* Effect.tryPromise(() =>
+                invokeFindMany(db.query.user, {
+                  with: {
+                    org: true,
+                    organizationsThroughMembership: true,
+                  },
+                })
+              );
+              const organizationsUnknown = yield* Effect.tryPromise(() =>
+                invokeFindMany(db.query.organization, {
+                  with: {
+                    parentOrg: true,
+                    childOrgs: true,
+                    users: true,
+                    usersThroughMembership: true,
+                  },
+                })
+              );
+              const users = yield* S.decodeUnknownEffect(UserRelationRows)(
+                usersUnknown
+              );
+              const organizations = yield* S.decodeUnknownEffect(
+                OrganizationRelationRows
+              )(organizationsUnknown);
+              return { users, organizations };
+            })
+          )
+        );
+
+        const direct = O.getOrThrow(
+          A.findFirst(queried.users, (row) => row.id === seeded.direct.id)
+        );
+        const member = O.getOrThrow(
+          A.findFirst(queried.users, (row) => row.id === seeded.member.id)
+        );
+        const root = O.getOrThrow(
+          A.findFirst(
+            queried.organizations,
+            (row) => row.id === seeded.root.id
+          )
+        );
+        const child = O.getOrThrow(
+          A.findFirst(
+            queried.organizations,
+            (row) => row.id === seeded.child.id
+          )
+        );
+        expect(direct.org.id).toBe(seeded.root.id);
+        expect(child.parentOrg?.id).toBe(seeded.root.id);
+        expect(A.map(root.childOrgs, (row) => row.id)).toContain(
+          seeded.child.id
+        );
+        expect(A.map(root.users, (row) => row.id)).toContain(seeded.direct.id);
+        expect(A.map(root.usersThroughMembership, (row) => row.id)).toContain(
+          seeded.member.id
+        );
+        expect(
+          A.map(member.organizationsThroughMembership, (row) => row.id)
+        ).toContain(seeded.root.id);
       })
     )
   );

@@ -2,12 +2,17 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { sql } from "drizzle-orm";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { SqlModel } from "effect/unstable/sql";
 import { Model, VariantField } from "./factory.ts";
+import * as Field from "./Field.ts";
 import { make } from "./kit.ts";
+import { makeRepository } from "./repository.ts";
 import * as pg from "./pg.ts";
+import * as PgColumn from "./PgColumn.ts";
 import { schema } from "./schema.ts";
 import * as Table from "./TableExtras.ts";
 import { toPgTable } from "./table.ts";
@@ -204,6 +209,35 @@ export const userOptimisticRepository = auditKit.Repository(User, {
   idColumn: "id",
 });
 
+class CodecService extends Context.Service<
+  CodecService,
+  { readonly normalize: (value: string) => string }
+>()($I`CodecService`) {}
+
+const ServiceString = S.String.pipe(
+  S.decodeTo(S.String, {
+    decode: SchemaGetter.transformOrFail((value) =>
+      CodecService.use((service) => Effect.succeed(service.normalize(value)))
+    ),
+    encode: SchemaGetter.transformOrFail((value) =>
+      CodecService.use((service) => Effect.succeed(service.normalize(value)))
+    ),
+  })
+);
+
+class ServiceCodecRecord extends Model<ServiceCodecRecord>(
+  $I`ServiceCodecRecord`
+)({
+  id: S.Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+  value: ServiceString.pipe(pg.text()),
+  rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
+}) {}
+
+const serviceCodecRepository = makeRepository(ServiceCodecRecord, {
+  spanPrefix: "ServiceCodecRecord",
+  idColumn: "id",
+});
+
 export const _repositoryNeedsVersion = auditKit.Repository(
   // @ts-expect-error invariant: optimistic repositories require one version marker
   Organization,
@@ -221,6 +255,31 @@ export class Membership extends Model<Membership>($I`Membership`)(
   ]
 ) {}
 
+class DualOrgLink extends Model<DualOrgLink>($I`DualOrgLink`)({
+  primaryOrgId: OrganizationId,
+  secondaryOrgId: OrganizationId,
+}) {}
+
+export class ArrayRecord extends Model<ArrayRecord>($I`ArrayRecord`)({
+  id: S.Int.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
+  labels: S.Array(S.String).pipe(
+    pg.array(S.String.pipe(pg.text())),
+    pg.unique()
+  ),
+  matrix: S.String.pipe(S.Array, S.Array,
+    pg.array(S.String.pipe(pg.text()), "[][]"),
+    pg.default([["seed"]])
+  ),
+}) {}
+
+export class EnumArrayRecord extends Model<EnumArrayRecord>(
+  $I`EnumArrayRecord`
+)({
+  statuses: S.Array(RecordStatus).pipe(
+    pg.array(RecordStatus.pipe(pg.enum("record_status")))
+  ),
+}) {}
+
 export class ExplicitVariantModel extends Model<ExplicitVariantModel>(
   $I`ExplicitVariantModel`
 )({
@@ -236,6 +295,13 @@ export const bslSchema = schema({
   user: User,
   organization: Organization,
   membership: Membership,
+  array_record: ArrayRecord,
+  enum_array_record: EnumArrayRecord,
+});
+
+export const dualOrgLinkSchema = schema({
+  organization: Organization,
+  dual_org_link: DualOrgLink,
 });
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
@@ -265,6 +331,17 @@ type AuditedJsonVariant = (typeof AuditedRecord.json)["Type"];
 type BareJunctionSelectVariant = (typeof BareJunction)["Type"];
 type MechanicalSelectRow = typeof mechanicalTable.$inferSelect;
 type MechanicalInsertRow = typeof mechanicalTable.$inferInsert;
+type ArraySelectRow = (typeof bslSchema.tables.array_record)["$inferSelect"];
+type ArrayInsertRow = (typeof bslSchema.tables.array_record)["$inferInsert"];
+type ServiceRepository = Effect.Success<typeof serviceCodecRepository>;
+type ServiceInsert = ReturnType<ServiceRepository["insert"]>;
+type ServiceInsertRequirements = ServiceInsert extends Effect.Effect<
+  unknown,
+  unknown,
+  infer Requirements
+>
+  ? Requirements
+  : never;
 
 export type _selectId = Expect<Equal<SelectRow["id"], number>>;
 export type _selectEmail = Expect<Equal<SelectRow["email"], string>>;
@@ -391,6 +468,20 @@ export type _bigserialSelectCarrier = Expect<
 export type _bigserialInsertOptional = Expect<
   IsOptional<MechanicalInsertRow, "largeSequence">
 >;
+export type _arraySelectLabels = Expect<
+  ArraySelectRow["labels"] extends ReadonlyArray<string> ? true : false
+>;
+export type _arraySelectMatrix = Expect<
+  ArraySelectRow["matrix"] extends ReadonlyArray<ReadonlyArray<string>>
+    ? true
+    : false
+>;
+export type _arrayInsertMatrixOptional = Expect<
+  IsOptional<ArrayInsertRow, "matrix">
+>;
+export type _repositoryCarriesCodecServices = Expect<
+  CodecService extends ServiceInsertRequirements ? true : false
+>;
 
 // Negative matrix: each assertion names the rejected invariant.
 
@@ -485,6 +576,97 @@ export const _badBigserialBigint = () =>
 export const _badSmallserial = () =>
   // @ts-expect-error invariant: smallserial requires a number-encoded schema
   S.String.pipe(pg.smallserial());
+export const _badArrayCarrier = () =>
+  S.Array(S.Finite).pipe(
+    // @ts-expect-error invariant: the outer array carrier must match its element declaration
+    pg.array(S.String.pipe(pg.text()))
+  );
+export const _badArrayDepth = () =>
+  S.Array(S.String).pipe(
+    // @ts-expect-error invariant: declared dimensions must match the encoded array depth
+    pg.array(S.String.pipe(pg.text()), "[][]")
+  );
+export const _badArrayBareElement = () =>
+  S.Array(S.String).pipe(
+    // @ts-expect-error invariant: array elements require an explicit base column combinator
+    pg.array(S.String)
+  );
+export const _badArrayThenPrimaryKey = () => {
+  class BadArrayThenPrimaryKey extends Model<BadArrayThenPrimaryKey>(
+    $I`BadArrayThenPrimaryKey`
+  )({
+    value: S.Array(S.String).pipe(
+      pg.array(S.String.pipe(pg.text())),
+      // @ts-expect-error invariant: array fields cannot be primary keys
+      pg.primaryKey()
+    ),
+  }) {}
+  return BadArrayThenPrimaryKey;
+};
+export const _badPrimaryKeyThenArray = () => {
+  class BadPrimaryKeyThenArray extends Model<BadPrimaryKeyThenArray>(
+    $I`BadPrimaryKeyThenArray`
+  )({
+    value: S.Array(S.String).pipe(
+      pg.primaryKey(),
+      // @ts-expect-error invariant: primary-key fields cannot become arrays
+      pg.array(S.String.pipe(pg.text()))
+    ),
+  }) {}
+  return BadPrimaryKeyThenArray;
+};
+export const _badArrayThenIdentity = () => {
+  class BadArrayThenIdentity extends Model<BadArrayThenIdentity>(
+    $I`BadArrayThenIdentity`
+  )({
+    value: S.Array(S.Int).pipe(
+      pg.array(S.Int.pipe(pg.integer())),
+      // @ts-expect-error invariant: array fields cannot use identity generation
+      pg.identity()
+    ),
+  }) {}
+  return BadArrayThenIdentity;
+};
+export const _badIdentityThenArray = () => {
+  class BadIdentityThenArray extends Model<BadIdentityThenArray>(
+    $I`BadIdentityThenArray`
+  )({
+    value: Field.patch(S.Array(S.Int), {
+      column: PgColumn.Integer.make({ ident: "integer" }),
+    }).pipe(
+      pg.identity(),
+      // @ts-expect-error invariant: identity fields cannot become arrays
+      pg.array(S.Int.pipe(pg.integer()))
+    ),
+  }) {}
+  return BadIdentityThenArray;
+};
+export const _badArrayThenVersion = () => {
+  class BadArrayThenVersion extends Model<BadArrayThenVersion>(
+    $I`BadArrayThenVersion`
+  )({
+    value: S.Array(S.Int).pipe(
+      pg.array(S.Int.pipe(pg.integer())),
+      // @ts-expect-error invariant: array fields cannot be optimistic versions
+      pg.version()
+    ),
+  }) {}
+  return BadArrayThenVersion;
+};
+export const _badVersionThenArray = () => {
+  class BadVersionThenArray extends Model<BadVersionThenArray>(
+    $I`BadVersionThenArray`
+  )({
+    value: Field.patch(S.Array(S.Int), {
+      column: PgColumn.Integer.make({ ident: "integer" }),
+    }).pipe(
+      pg.version(),
+      // @ts-expect-error invariant: version fields cannot become arrays
+      pg.array(S.Int.pipe(pg.integer()))
+    ),
+  }) {}
+  return BadVersionThenArray;
+};
 export const _badVersionColumn = () => {
   class BadVersionColumn extends Model<BadVersionColumn>(
     $I`BadVersionColumn`
@@ -727,3 +909,73 @@ class EnumShapeTwo extends Model<EnumShapeTwo>($I`EnumShapeTwo`)({
 
 export const _enumValueMismatch = () =>
   schema({ enum_shape_one: EnumShapeOne, enum_shape_two: EnumShapeTwo });
+
+const ArrayTextId = entityId(
+  S.Array(S.String),
+  "array_text_target",
+  "ArrayTextTarget"
+);
+class ArrayTextTarget extends Model<ArrayTextTarget>($I`ArrayTextTarget`)({
+  id: ArrayTextId.pipe(
+    pg.array(S.String.pipe(pg.text())),
+    pg.unique()
+  ),
+}) {}
+class ScalarArraySource extends Model<ScalarArraySource>($I`ScalarArraySource`)(
+  {
+    targetId: S.String.pipe(pg.text(), pg.references(ArrayTextId)),
+  }
+) {}
+
+export const _scalarArrayFkMismatch = () =>
+  // @ts-expect-error invariant: scalar and array SQL identities are incompatible
+  schema({
+    array_text_target: ArrayTextTarget,
+    scalar_array_source: ScalarArraySource,
+  });
+
+const MatrixTextId = entityId(
+  S.String.pipe(S.Array, S.Array),
+  "matrix_text_target",
+  "MatrixTextTarget"
+);
+class MatrixTextTarget extends Model<MatrixTextTarget>($I`MatrixTextTarget`)({
+  id: MatrixTextId.pipe(
+    pg.array(S.String.pipe(pg.text()), "[][]"),
+    pg.unique()
+  ),
+}) {}
+class ShallowArraySource extends Model<ShallowArraySource>(
+  $I`ShallowArraySource`
+)({
+  targetId: S.Array(S.String).pipe(
+    pg.array(S.String.pipe(pg.text())),
+    pg.references(MatrixTextId)
+  ),
+}) {}
+
+export const _arrayDepthFkMismatch = () =>
+  // @ts-expect-error invariant: foreign-key array depths must match
+  schema({
+    matrix_text_target: MatrixTextTarget,
+    shallow_array_source: ShallowArraySource,
+  });
+
+const CollisionTargetId = entityId(
+  S.Finite.pipe(S.brand("CollisionTargetId")),
+  "collision_target",
+  "CollisionTarget"
+);
+class CollisionTarget extends Model<CollisionTarget>($I`CollisionTarget`)({
+  id: CollisionTargetId.pipe(pg.integer(), pg.primaryKey()),
+  collisionSources: S.String.pipe(S.brand("CollisionValue")),
+}) {}
+class CollisionSource extends Model<CollisionSource>($I`CollisionSource`)({
+  targetId: CollisionTargetId,
+}) {}
+
+export const _reverseRelationCollision = () =>
+  schema({
+    collision_target: CollisionTarget,
+    collision_source: CollisionSource,
+  });

@@ -94,6 +94,67 @@ export const IdentityMode = LiteralKit(["always", "byDefault", false]).pipe(
 export type IdentityMode = typeof IdentityMode.Type;
 
 /**
+ * PostgreSQL array depth carried by BSL field metadata.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ArrayDimension = LiteralKit([0, 1, 2, 3, 4, 5]).pipe(
+  $I.annoteSchema("ArrayDimension", {
+    description: "PostgreSQL scalar or array depth supported by Drizzle rc4.",
+  })
+);
+/**
+ * PostgreSQL scalar or array depth.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArrayDimension = typeof ArrayDimension.Type;
+
+/**
+ * Drizzle rc4 array-dimension spelling accepted by `.array(...)`.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ArrayDimensionString = LiteralKit([
+  "[]",
+  "[][]",
+  "[][][]",
+  "[][][][]",
+  "[][][][][]",
+]).pipe(
+  $I.annoteSchema("ArrayDimensionString", {
+    description: "Literal PostgreSQL array suffixes supported by Drizzle rc4.",
+  })
+);
+/**
+ * Drizzle rc4 array-dimension suffix.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArrayDimensionString = typeof ArrayDimensionString.Type;
+
+/**
+ * Convert a Drizzle array suffix to its numeric depth.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DimensionOf<Suffix extends ArrayDimensionString> =
+  Suffix extends "[]"
+    ? 1
+    : Suffix extends "[][]"
+    ? 2
+    : Suffix extends "[][][]"
+    ? 3
+    : Suffix extends "[][][][]"
+    ? 4
+    : 5;
+
+/**
  * Fluent Drizzle builder surface used after a column spec is compiled.
  *
  * **Details**
@@ -110,6 +171,8 @@ export interface DrizzleBuilder extends AnyPgColumnBuilder {
   unique(name?: string): DrizzleBuilder;
   default(value: unknown): DrizzleBuilder;
   generatedAlwaysAs(value: SQL): DrizzleBuilder;
+  array(): DrizzleBuilder;
+  array(dimensions: ArrayDimensionString): DrizzleBuilder;
 }
 
 const applyIdentity = (
@@ -161,6 +224,13 @@ export const DbIdent = S.Union([
   S.TemplateLiteral(['entityId<"', S.NonEmptyString, '">']),
   S.TemplateLiteral(["enum<", S.String, ">"]),
   S.TemplateLiteral(["custom<", S.String, ">"]),
+  S.TemplateLiteral([
+    "array<",
+    S.String,
+    ",",
+    LiteralKit([1, 2, 3, 4, 5]),
+    ">",
+  ]),
 ]).pipe(
   $I.annoteSchema("DbIdent", {
     description:
@@ -1327,6 +1397,54 @@ export type Kind = Spec["kind"];
 export type IdentOf<C extends Spec> = C["ident"];
 
 /**
+ * SQL identity including an optional PostgreSQL array depth.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StorageIdent<
+  C extends Spec,
+  Dimensions extends ArrayDimension
+> = Dimensions extends 0
+  ? IdentOf<C>
+  : `array<${IdentOf<C>},${Dimensions}>`;
+
+/**
+ * Resolve the runtime SQL identity for a scalar or array column.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const storageIdent = (
+  spec: Spec,
+  dimensions: ArrayDimension
+): DbIdent =>
+  dimensions === 0 ? spec.ident : `array<${spec.ident},${dimensions}>`;
+
+/**
+ * Wrap a scalar carrier in recursively readonly arrays.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArrayCarrier<
+  Carrier,
+  Dimensions extends ArrayDimension
+> = Dimensions extends 0
+  ? Carrier
+  : Dimensions extends 1
+  ? ReadonlyArray<Carrier>
+  : Dimensions extends 2
+  ? ReadonlyArray<ReadonlyArray<Carrier>>
+  : Dimensions extends 3
+  ? ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>
+  : Dimensions extends 4
+  ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
+  : ReadonlyArray<
+      ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
+    >;
+
+/**
  * Bidirectional literal equality used by foreign-key validation.
  *
  * **Example** (Compare SQL identities)
@@ -1472,6 +1590,29 @@ export const CarrierTag = LiteralKit([
 export type CarrierTag = typeof CarrierTag.Type;
 
 /**
+ * Runtime SQL carrier identity including PostgreSQL array depth.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Carrier = S.Struct({
+  tag: CarrierTag,
+  dimensions: ArrayDimension,
+}).pipe(
+  $I.annoteSchema("Carrier", {
+    description:
+      "Runtime scalar carrier family and PostgreSQL array depth used by foreign-key validation.",
+  })
+);
+/**
+ * Runtime SQL carrier identity.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Carrier = typeof Carrier.Type;
+
+/**
  * Return the runtime carrier family for a PostgreSQL descriptor.
  *
  * **Example** (Resolve a carrier family)
@@ -1508,3 +1649,14 @@ export const carrierTag = Spec.match({
   timestamp: ({ mode }) => mode,
   bytea: CarrierTag.thunk.bytes,
 });
+
+/**
+ * Resolve the runtime carrier identity for a scalar or array column.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const carrier = (
+  spec: Spec,
+  dimensions: ArrayDimension
+): Carrier => Carrier.make({ tag: carrierTag(spec), dimensions });

@@ -16,6 +16,12 @@ import * as Field from "./Field.ts";
 import * as PgColumnSchema from "./PgColumn.ts";
 import * as pg from "./pg.ts";
 import {
+  _arrayDepthFkMismatch,
+  _badArrayCarrier,
+  _badArrayDepth,
+  _badArrayThenIdentity,
+  _badArrayThenPrimaryKey,
+  _badArrayThenVersion,
   _compatibleVarchar,
   _defaultThenGenerated,
   _badEnumBroadString,
@@ -32,14 +38,21 @@ import {
   _missingTarget,
   _needsExplicitColumn,
   _nullablePrimaryKey,
+  _reverseRelationCollision,
   _kitDefaultCollision,
+  _badIdentityThenArray,
+  _badPrimaryKeyThenArray,
+  _badVersionThenArray,
+  _scalarArrayFkMismatch,
   _twoPrimaryKeys,
   _twoVersions,
   _unboundedVarchar,
   _uuidTextFkMismatch,
   auditSchema,
+  ArrayRecord,
   AuditedRecord,
   bslSchema,
+  dualOrgLinkSchema,
   ExplicitVariantModel,
   mechanicalTable,
   Organization,
@@ -310,6 +323,50 @@ describe("mechanical column kinds", () => {
   });
 });
 
+describe("PostgreSQL arrays", () => {
+  const config = getTableConfig(bslSchema.tables.array_record);
+  const arrayColumn = (name: string): PgColumn =>
+    columnFrom(config.columns, name);
+
+  it("projects scalar builders once with dimensions, defaults, unique, and enum support", () => {
+    expect(arrayColumn("labels").getSQLType()).toBe("text");
+    expect(arrayColumn("labels").dimensions).toBe(1);
+    expect(arrayColumn("labels").isUnique).toBe(true);
+    expect(arrayColumn("matrix").getSQLType()).toBe("text");
+    expect(arrayColumn("matrix").dimensions).toBe(2);
+    expect(arrayColumn("matrix").default).toEqual([["seed"]]);
+    const enumConfig = getTableConfig(bslSchema.tables.enum_array_record);
+    const statuses = columnFrom(enumConfig.columns, "statuses");
+    expect(statuses.getSQLType()).toBe("record_status");
+    expect(statuses.dimensions).toBe(1);
+  });
+
+  it("keeps bare array and object schemas on the existing jsonb derivation", () => {
+    expect(Derive.classify(S.Array(S.String), "bareArray")).toEqual({
+      column: { kind: "jsonb", ident: "jsonb" },
+      nullable: false,
+    });
+    expect(ArrayRecord.bsl.columns.labels.column.ident).toBe("text");
+    expect(ArrayRecord.bsl.columns.labels.dimensions).toBe(1);
+  });
+
+  it("rejects carrier, depth, and write-strategy mismatches at runtime", () => {
+    expect(_badArrayCarrier).toThrow("does not match");
+    expect(_badArrayDepth).toThrow("ReadonlyArray");
+    expect(_badArrayThenPrimaryKey).toThrow("Array field");
+    expect(_badPrimaryKeyThenArray).toThrow("incompatible");
+    expect(_badArrayThenIdentity).toThrow("Array field");
+    expect(_badIdentityThenArray).toThrow("incompatible");
+    expect(_badArrayThenVersion).toThrow("Array field");
+    expect(_badVersionThenArray).toThrow("incompatible");
+  });
+
+  it("rejects scalar-array and array-depth foreign keys", () => {
+    expect(_scalarArrayFkMismatch).toThrow("array<text,1>");
+    expect(_arrayDepthFkMismatch).toThrow("array<text,1>");
+  });
+});
+
 describe("schema assembly", () => {
   it("emits direct and self-referential foreign keys", () => {
     const userForeignKeys = getTableConfig(bslSchema.tables.user).foreignKeys;
@@ -357,12 +414,27 @@ describe("schema assembly", () => {
         ? organizationRelations.parentOrg.optional
         : undefined
     ).toBe(true);
+    expect(P.hasProperty(organizationRelations, "users")).toBe(true);
+    expect(P.hasProperty(organizationRelations, "childOrgs")).toBe(true);
+    expect(
+      P.hasProperty(organizationRelations, "usersThroughMembership")
+    ).toBe(true);
+    expect(
+      P.hasProperty(userRelations, "organizationsThroughMembership")
+    ).toBe(true);
+  });
+
+  it("disambiguates multiple reverse edges by the source relation field", () => {
+    const relations = dualOrgLinkSchema.relations.organization?.relations;
+    expect(P.hasProperty(relations, "dualOrgLinksByPrimaryOrg")).toBe(true);
+    expect(P.hasProperty(relations, "dualOrgLinksBySecondaryOrg")).toBe(true);
   });
 
   it("throws tagged errors for missing and incompatible targets", () => {
     expect(_missingTarget).toThrow("missing_table");
     expect(_uuidTextFkMismatch).toThrow("uuid");
     expect(_entityFkMismatch).toThrow('entityId<"organization">');
+    expect(_reverseRelationCollision).toThrow("collides");
   });
 });
 

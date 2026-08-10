@@ -316,3 +316,49 @@ export type ValidateNonNullable<
   I extends Input,
   Msg extends string
 > = null extends EncodedOf<I> ? BslTypeError<Msg> : unknown;
+
+type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> =
+  Dimensions extends 1
+    ? ReadonlyArray<Carrier>
+    : Dimensions extends 2
+    ? ReadonlyArray<ReadonlyArray<Carrier>>
+    : Dimensions extends 3
+    ? ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>
+    : Dimensions extends 4
+    ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
+    : ReadonlyArray<
+        ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
+      >;
+
+/**
+ * Validate that an array element declaration owns one scalar column spec.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type ValidateArrayElement<I extends Input> =
+  MetaFrom<I>["column"] extends undefined
+    ? BslTypeError<"pg.array requires an element schema with an explicit base column combinator">
+    : MetaFrom<I>["dimensions"] extends 0
+    ? unknown
+    : BslTypeError<"pg.array element declarations must be scalar">;
+
+/**
+ * Validate an outer schema against an element carrier and declared array depth.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type ValidateArrayEncoded<
+  I extends Input,
+  Element extends Input,
+  Dimensions extends 1 | 2 | 3 | 4 | 5
+> = [Exclude<EncodedOf<I>, null>] extends [
+  ArrayCarrier<EncodedOf<Element>, Dimensions>
+]
+  ? [ArrayCarrier<EncodedOf<Element>, Dimensions>] extends [
+      Exclude<EncodedOf<I>, null>
+    ]
+    ? unknown
+    : BslTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">
+  : BslTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">;

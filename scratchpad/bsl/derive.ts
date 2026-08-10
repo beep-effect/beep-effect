@@ -357,6 +357,81 @@ export const isNullable = flow(
   )
 );
 
+const nonNullEncodedAST = (schema: Field.AnySchema): AST.AST => {
+  const encoded = AST.toEncoded(selectSchemaOf(schema).ast);
+  if (!P.isTagged(encoded, "Union")) return encoded;
+  if (!A.some(encoded.types, P.isTagged("Null"))) return encoded;
+  const members = A.filter(encoded.types, P.not(P.isTagged("Null")));
+  return O.getOrElse(A.head(members), () =>
+    fail(
+      "(unknown)",
+      encoded._tag,
+      "An array schema must retain one encoded member after stripping null."
+    )
+  );
+};
+
+/**
+ * Resolve the scalar encoded AST under an exact PostgreSQL array depth.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const arrayElementAST = (
+  schema: Field.AnySchema,
+  dimensions: Exclude<PgColumn.ArrayDimension, 0>
+): AST.AST => {
+  const current = A.reduce(
+    A.range(1, dimensions),
+    nonNullEncodedAST(schema),
+    (node) => {
+      if (P.isTagged(node, "Arrays")) {
+        if (
+          A.isReadonlyArrayNonEmpty(node.elements) ||
+          node.rest.length !== 1
+        ) {
+          fail(
+            "(unknown)",
+            node._tag,
+            `pg.array expected one homogeneous encoded element at depth ${dimensions}.`
+          );
+        }
+        return O.getOrElse(A.head(node.rest), () =>
+          fail(
+            "(unknown)",
+            node._tag,
+            `pg.array expected an encoded ReadonlyArray at depth ${dimensions}.`
+          )
+        );
+      }
+      return fail(
+        "(unknown)",
+        node._tag,
+        `pg.array expected an encoded ReadonlyArray at depth ${dimensions}.`
+      );
+    }
+  );
+  if (P.isTagged(current, "Arrays")) {
+    fail(
+      "(unknown)",
+      current._tag,
+      `pg.array encoded depth exceeds the declared depth ${dimensions}.`
+    );
+  }
+  return current;
+};
+
+/**
+ * Return the non-null encoded AST used by a scalar element declaration.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const encodedAST = flow(
+  selectSchemaOf,
+  flow(Struct.get("ast"), AST.toEncoded)
+);
+
 const stringLiteralsFromAST = (
   node: AST.AST,
   visited: ReadonlyArray<AST.Suspend> = A.empty()

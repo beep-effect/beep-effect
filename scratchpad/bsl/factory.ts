@@ -350,7 +350,8 @@ type VersionKeys<F extends FieldsInput> = {
 }[keyof F];
 
 type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] extends true
-  ? Field.MetaFrom<I>["column"] extends {
+  ? Field.MetaFrom<I>["dimensions"] extends 0
+    ? Field.MetaFrom<I>["column"] extends {
       readonly kind: PgColumn.IdentityKind;
     }
     ? Field.MetaFrom<I>["generated"] extends false
@@ -358,8 +359,20 @@ type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] 
         ? unknown
         : Field.BslTypeError<"version fields cannot use identity generation">
       : Field.BslTypeError<"version fields cannot be generated">
-    : Field.BslTypeError<"version fields require an explicit integer-family column">
+      : Field.BslTypeError<"version fields require an explicit integer-family column">
+    : Field.BslTypeError<"array fields cannot be optimistic versions">
   : unknown;
+
+type ValidateArrayField<I extends Field.Input> =
+  Field.MetaFrom<I>["dimensions"] extends 0
+    ? unknown
+    : Field.MetaFrom<I>["primaryKey"] extends true
+    ? Field.BslTypeError<"array fields cannot be primary keys">
+    : Field.MetaFrom<I>["identity"] extends false
+    ? Field.MetaFrom<I>["version"] extends false
+      ? unknown
+      : Field.BslTypeError<"array fields cannot be optimistic versions">
+    : Field.BslTypeError<"array fields cannot use identity generation">;
 
 /**
  * Per-key and whole-model compile-time validation for a field record.
@@ -384,7 +397,7 @@ type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] 
 export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: [Derive.ResolvedColumn<F[K]>] extends [never]
     ? Field.BslTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
-    : ValidateVersionField<F[K]>;
+    : ValidateVersionField<F[K]> & ValidateArrayField<F[K]>;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
   ? Field.BslTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
   : unknown) &
@@ -605,6 +618,17 @@ export function makeModelClass(
       if (field.meta.primaryKey && classified.nullable) {
         throw ModelInvariantError.make({
           message: `Primary key '${key}' derives a nullable encoded representation.`,
+          fieldName: key,
+        });
+      }
+      if (
+        field.meta.dimensions !== 0 &&
+        (field.meta.primaryKey ||
+          field.meta.identity !== false ||
+          field.meta.version)
+      ) {
+        throw ModelInvariantError.make({
+          message: `Array field '${key}' cannot use primary-key, identity, or version semantics.`,
           fieldName: key,
         });
       }
