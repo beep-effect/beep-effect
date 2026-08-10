@@ -380,3 +380,209 @@ export const IdsSubmissionFactId = make("ids_submission_fact", {
  * @since 0.0.0
  */
 export type IdsSubmissionFactId = typeof IdsSubmissionFactId.Type;
+
+/**
+ * Party entity identifier.
+ *
+ * **Details**
+ *
+ * A party is generic legal identity that references an existing party-like
+ * record by opaque text reference rather than by a foreign-key edge. The id
+ * therefore names the party itself, never the record it points at.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.PartyId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const PartyId = make("party", {
+  description: "Identifier for a law-practice party entity.",
+});
+
+/**
+ * Runtime type for {@link PartyId}.
+ *
+ * @see {@link PartyId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type PartyId = typeof PartyId.Type;
+
+/**
+ * Legal position relator entity identifier.
+ *
+ * **Details**
+ *
+ * A relator stores exactly one advantage-side directed legal position and
+ * derives every other view of it. Because the correlative end is never
+ * persisted, one id names one whole correlative pair rather than one half of
+ * it, and a second id for the burden side would itself be the drift the
+ * one-stored-relation rule exists to prevent.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.LegalPositionRelatorId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const LegalPositionRelatorId = make("legal_position_relator", {
+  description: "Identifier for a law-practice legal position relator entity.",
+});
+
+/**
+ * Runtime type for {@link LegalPositionRelatorId}.
+ *
+ * @see {@link LegalPositionRelatorId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type LegalPositionRelatorId = typeof LegalPositionRelatorId.Type;
+
+/**
+ * Power exercise entity identifier.
+ *
+ * **Details**
+ *
+ * A relator's grounding is a lineage reference to the exercise that produced
+ * it and to the founding exercise of the relator whose power was exercised, so
+ * the id is registered with the relator that requires it. The exercise entity
+ * it names lands with the transition-event vocabulary; this registration
+ * reserves its entity type and gives that lineage reference a type to point at.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.PowerExerciseId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const PowerExerciseId = make("power_exercise", {
+  description: "Identifier for a law-practice power exercise entity.",
+});
+
+/**
+ * Runtime type for {@link PowerExerciseId}.
+ *
+ * @see {@link PowerExerciseId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type PowerExerciseId = typeof PowerExerciseId.Type;
+
+/**
+ * Act frame entity identifier.
+ *
+ * **Details**
+ *
+ * An act frame is one recorded reading of a norm as an act that moves legal
+ * positions. Because it is an interpretation rather than the norm itself, the
+ * id names whose reading it is, and a second reading of the same provision
+ * takes a fresh id rather than replacing the first.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.ActFrameId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const ActFrameId = make("act_frame", {
+  description: "Identifier for a law-practice act frame entity.",
+});
+
+/**
+ * Runtime type for {@link ActFrameId}.
+ *
+ * @see {@link ActFrameId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type ActFrameId = typeof ActFrameId.Type;
+
+/**
+ * Correction delta entity identifier.
+ *
+ * **Details**
+ *
+ * A correction delta records one proposed change to a recorded interpretation
+ * together with what a reviewer did about it. Deltas are append-only, so an id
+ * names one correction as it was proposed and reviewed; revising it appends a
+ * further delta naming the earlier id.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.CorrectionDeltaId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const CorrectionDeltaId = make("correction_delta", {
+  description: "Identifier for a law-practice correction delta entity.",
+});
+
+/**
+ * Runtime type for {@link CorrectionDeltaId}.
+ *
+ * @see {@link CorrectionDeltaId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type CorrectionDeltaId = typeof CorrectionDeltaId.Type;
+
+/**
+ * Legal opposition candidate entity identifier.
+ *
+ * **Details**
+ *
+ * A legal opposition candidate records that two stored relations were screened
+ * as prima facie opposed. Candidates are append-only, so the id names one
+ * screening; a later attorney assignment about the same pair is recorded on
+ * that screening rather than replacing it, and a second party's priority basis
+ * takes a fresh id.
+ *
+ * **Example** (Read the registered entity type)
+ *
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.LegalOppositionCandidateId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const LegalOppositionCandidateId = make("legal_opposition_candidate", {
+  description: "Identifier for a law-practice legal opposition candidate entity.",
+});
+
+/**
+ * Runtime type for {@link LegalOppositionCandidateId}.
+ *
+ * @see {@link LegalOppositionCandidateId} for the runtime schema and entity-type metadata.
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type LegalOppositionCandidateId = typeof LegalOppositionCandidateId.Type;

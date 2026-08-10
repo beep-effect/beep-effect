@@ -7,6 +7,13 @@
  */
 
 /**
+ * Act frame entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./ActFrame/index.ts";
+/**
  * Candor disposition entity and value-object exports.
  *
  * @category entities
@@ -20,6 +27,13 @@ export * from "./CandorDisposition/index.ts";
  * @since 0.0.0
  */
 export * from "./Claim/index.ts";
+/**
+ * Correction delta entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./CorrectionDelta/index.ts";
 /**
  * Distinction entity and value-object exports.
  *
@@ -56,6 +70,20 @@ export * from "./LegalClient/index.ts";
  */
 export * from "./LegalContact/index.ts";
 /**
+ * Legal opposition candidate entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./LegalOppositionCandidate/index.ts";
+/**
+ * Legal position relator entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./LegalPositionRelator/index.ts";
+/**
  * Matter entity and value-object exports.
  *
  * @category entities
@@ -70,6 +98,13 @@ export * from "./Matter/index.ts";
  */
 export * from "./OfficeAction/index.ts";
 /**
+ * Party entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./Party/index.ts";
+/**
  * Patent asset entity and value-object exports.
  *
  * @category entities
@@ -83,6 +118,13 @@ export * from "./PatentAsset/index.ts";
  * @since 0.0.0
  */
 export * from "./PatentCitationEvent/index.ts";
+/**
+ * Power exercise entity and value-object exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./PowerExercise/index.ts";
 /**
  * Prior-art reference entity export surface.
  *
