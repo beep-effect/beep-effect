@@ -10,6 +10,7 @@ import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
@@ -23,6 +24,7 @@ import type { PlatformError } from "effect";
 const $I = $RepoAiMetricsId.create("identity-registry");
 
 const identityRegistryVersion = "ai-metrics-identity-registry/v1";
+const hashSaltNamespaceMarker = "ai-metrics-hash-salt-namespace/v1";
 const identityDirName = "identity";
 const registryFileName = "registry.json";
 const lockFileName = "registry.lock";
@@ -172,9 +174,12 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
  *
  * **Details**
  *
- * `hashSaltStatus` is stamped so a store re-salted between runs is detectable:
- * every digest in the file changes meaning when the salt changes, and a reader
- * that cannot tell would silently treat the same root as two.
+ * `hashSaltStatus` and a salted namespace fingerprint are stamped so a store
+ * re-salted between runs is detectable, including rotation between two
+ * operator-provided salts. Every digest in the file changes meaning when the
+ * salt changes, and a reader that cannot tell would silently treat the same
+ * root as two. The fingerprint is optional only for decoding the pre-fingerprint
+ * v1 shape; a populated legacy registry is refused and must be rebuilt.
  *
  * **Example** (An empty registry)
  *
@@ -198,6 +203,9 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
 export class AiMetricsIdentityRegistry extends S.Class<AiMetricsIdentityRegistry>($I`AiMetricsIdentityRegistry`)(
   {
     generatedAtEpochMillis: S.Finite,
+    hashSaltNamespaceId: S.OptionFromOptionalKey(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<string>()))
+    ),
     hashSaltStatus: AiMetricsHashSaltStatus,
     registryVersion: S.Literal(identityRegistryVersion),
     roots: S.Array(AiMetricsCanonicalRoot),
@@ -839,13 +847,17 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const existing = yield* readAiMetricsIdentityRegistry(input.dataRoot);
 
   const hashSaltStatus = resolveAiMetricsHashSaltStatus(input.hashSalt);
+  const hashSaltNamespaceId = yield* hashPrivateIdentifier(hashSaltNamespaceMarker, input.hashSalt).pipe(
+    Effect.mapError(identityRegistryFailure("Failed to derive the AI metrics hash-salt namespace id."))
+  );
   const existingPopulated =
     A.isReadonlyArrayNonEmpty(existing.roots) || A.isReadonlyArrayNonEmpty(existing.sourceInstances);
-  if (existingPopulated && existing.hashSaltStatus !== hashSaltStatus) {
+  const existingNamespaceMatches = pipe(existing.hashSaltNamespaceId, O.exists(Eq.equals(hashSaltNamespaceId)));
+  if (existingPopulated && (!Eq.equals(existing.hashSaltStatus, hashSaltStatus) || !existingNamespaceMatches)) {
     return yield* AiMetricsIdentityRegistryError.make({
       cause: { existing: existing.hashSaltStatus, incoming: hashSaltStatus },
       message:
-        `Refusing to merge the AI metrics identity registry across hash-salt namespaces (persisted: ${existing.hashSaltStatus}, current run: ${hashSaltStatus}). ` +
+        `Refusing to merge the AI metrics identity registry across hash-salt namespaces (persisted status: ${existing.hashSaltStatus}, current status: ${hashSaltStatus}; the persisted fingerprint is missing or differs). ` +
         `Digests hashed under different salts are not joinable. Delete ${identityRegistryPath(pathApi, input.dataRoot)} to rebuild the registry in the current namespace, or use a separate data root per salt.`,
     });
   }
@@ -877,6 +889,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
 
   const registry = AiMetricsIdentityRegistry.make({
     generatedAtEpochMillis: nowEpochMillis,
+    hashSaltNamespaceId: O.some(hashSaltNamespaceId),
     hashSaltStatus,
     registryVersion: identityRegistryVersion,
     roots: pipe(A.fromIterable(MutableHashMap.values(rootsById)), A.sort(byRootId)),

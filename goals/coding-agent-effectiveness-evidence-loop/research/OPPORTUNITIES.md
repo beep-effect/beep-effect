@@ -3,6 +3,22 @@
 Receipts recorded at the moment the friction happened, per the repo law in
 `AGENTS.md` (§Docs & Knowledge). Newest first.
 
+## 2026-08-10 — checked-in agent permissions blocked routine GitHub closeout
+
+- **Doing:** updating PR #638, resolving its GraphQL review threads, and cleaning
+  merged local/remote PR branches.
+- **Evidence:** `.claude/settings.json` denied every mutating `gh api` spelling,
+  all `gh api graphql` calls, `git branch -d/-D`, and
+  `git push origin --delete`; the Yeet skill consequently documented remote
+  cleanup as an operator-only handoff. The repo-local Codex config carried no
+  approval/sandbox override, so trusted clones could also inherit a mode that
+  blocks network or `.git` writes.
+- **Prevented by:** allow the `gh` CLI in Claude while retaining the force-push,
+  admin-merge, and repository-deletion denies; let authorized local/remote
+  branch deletion run after exact-target checks; set trusted Codex checkouts to
+  no-prompt/full-access mode and document capability separately from
+  authorization.
+
 ## 2026-08-10 — parked branches pay a 197-hunk tax for comment-only campaigns
 
 - **Doing:** merging latest `main` into the parked `feat/evidence-loop-p0-and-fixes`

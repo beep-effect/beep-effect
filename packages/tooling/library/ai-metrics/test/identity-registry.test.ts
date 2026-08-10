@@ -314,6 +314,35 @@ describe("@beep/repo-ai-metrics identity registry", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("refuses rotation between two provided hash salts", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const clonePath = pathApi.join(tmpDir, "clone");
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const homeDir = pathApi.join(tmpDir, "home");
+        yield* makeClone(clonePath);
+
+        const upsertWithSalt = (salt: string) =>
+          upsertAiMetricsIdentityRegistry(
+            AiMetricsIdentityRegistryUpsertInput.make({
+              dataRoot,
+              hashSalt: salt,
+              homeDir,
+              rootPath: clonePath,
+              sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+            })
+          );
+
+        yield* upsertWithSalt("provided-salt-a");
+        const failure = yield* Effect.flip(upsertWithSalt("provided-salt-b"));
+
+        expect(failure._tag).toBe("AiMetricsIdentityRegistryError");
+        expect(failure.message).toContain("hash-salt namespaces");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("appends a second root without disturbing the first and keeps the arrays sorted", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {

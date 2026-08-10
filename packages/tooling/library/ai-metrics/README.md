@@ -106,7 +106,9 @@ defaulting to depth 8, 1000 files, 512 KiB per file, and 8 MiB total) bound the
 rest, and `bounds.truncationReason` names whichever bound fired. Each included
 file is tagged `session` or `baseline`, with `sessionHash` and `baselineHash`
 alongside the unchanged `configHash`, and `stageTimings` reports the cost of the
-enumerate, read, hash, diff, and write stages.
+enumerate, read, hash, and diff stages. The real artifact-write duration is
+measured around the filesystem operations and emitted as the
+`ai_metrics.config_snapshot.write_millis` span attribute.
 
 The first bounded snapshot taken after an unbounded one reports every file the
 old walk wrongly included as removed and produces a new `configHash`. That is the
