@@ -295,8 +295,7 @@
           "jsonObjectTextFromMixedOutput",
           "jsonObjectTextFromRight"
         ],
-        "maxCognitive": 23,
-        "maxCrap": 44,
+        "maxCognitive": 20,
         "reason": "Forward scanning preserves linear mixed-output recovery; a bounded reverse fallback resynchronizes after unmatched opening braces without making balanced-object floods quadratic. Review by 2026-11-10: re-measure both passes and reduce or remove these measured ceilings when a simpler equivalent is proven."
       }
     ]

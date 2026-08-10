@@ -22,30 +22,38 @@ const isEscapedQuote = (output: string, index: number): boolean => {
   return backslashCount % 2 === 1;
 };
 
+const scansAsStringCharacter = (
+  output: string,
+  index: number,
+  char: string | undefined,
+  state: { depth: number; inString: boolean }
+): boolean => {
+  if (state.depth > 0 && char === '"' && !isEscapedQuote(output, index)) {
+    state.inString = !state.inString;
+    return true;
+  }
+  return state.inString;
+};
+
 const jsonObjectTextFromRight = (output: string): O.Option<string> => {
-  let depth = 0;
+  const state = { depth: 0, inString: false };
   let closeIndex = -1;
-  let inString = false;
 
   for (let cursor = Str.length(output) - 1; cursor >= 0; cursor -= 1) {
     const char = characterAt(output, cursor);
-    if (depth > 0 && char === '"' && !isEscapedQuote(output, cursor)) {
-      inString = !inString;
-      continue;
-    }
-    if (inString) {
+    if (scansAsStringCharacter(output, cursor, char, state)) {
       continue;
     }
     if (char === "}") {
-      if (depth === 0) {
+      if (state.depth === 0) {
         closeIndex = cursor;
       }
-      depth += 1;
+      state.depth += 1;
       continue;
     }
-    if (char === "{" && depth > 0) {
-      depth -= 1;
-      if (depth === 0) {
+    if (char === "{" && state.depth > 0) {
+      state.depth -= 1;
+      if (state.depth === 0) {
         const candidate = Str.slice(cursor, closeIndex + 1)(output);
         if (O.isSome(decodeJsonTextOption(candidate))) {
           return O.some(candidate);
@@ -70,30 +78,25 @@ const jsonObjectTextFromRight = (output: string): O.Option<string> => {
  */
 export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> => {
   let latest: O.Option<string> = O.none();
-  let depth = 0;
+  const state = { depth: 0, inString: false };
   let openIndex = -1;
-  let inString = false;
   const length = Str.length(output);
 
   for (let cursor = 0; cursor < length; cursor += 1) {
     const char = characterAt(output, cursor);
-    if (depth > 0 && char === '"' && !isEscapedQuote(output, cursor)) {
-      inString = !inString;
-      continue;
-    }
-    if (inString) {
+    if (scansAsStringCharacter(output, cursor, char, state)) {
       continue;
     }
     if (char === "{") {
-      if (depth === 0) {
+      if (state.depth === 0) {
         openIndex = cursor;
       }
-      depth += 1;
+      state.depth += 1;
       continue;
     }
-    if (char === "}" && depth > 0) {
-      depth -= 1;
-      if (depth === 0) {
+    if (char === "}" && state.depth > 0) {
+      state.depth -= 1;
+      if (state.depth === 0) {
         const candidate = Str.slice(openIndex, cursor + 1)(output);
         if (O.isSome(decodeJsonTextOption(candidate))) {
           latest = O.some(candidate);
@@ -102,5 +105,5 @@ export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> 
     }
   }
 
-  return depth > 0 && !inString ? O.orElse(jsonObjectTextFromRight(output), () => latest) : latest;
+  return state.depth > 0 && !state.inString ? O.orElse(jsonObjectTextFromRight(output), () => latest) : latest;
 };
