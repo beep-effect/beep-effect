@@ -148,9 +148,9 @@ jobs:
           fi
           exit "${failed}"
 
-      - name: Gate C - deny east-west network access
+      - name: Gate C - deny tailnet and LAN reachability
         if: ${{ always() && inputs.redteam }}
-        id: gate_c
+        id: gate_c_tailnet_lan
         continue-on-error: true
         shell: bash
         run: |
@@ -185,10 +185,10 @@ jobs:
             echo "GATE B_S3: FAIL"
             failed=1
           fi
-          if [[ "${{ steps.gate_c.outcome }}" == success ]]; then
-            echo "GATE C_EAST_WEST: PASS"
+          if [[ "${{ steps.gate_c_tailnet_lan.outcome }}" == success ]]; then
+            echo "GATE C_TAILNET_LAN: PASS"
           else
-            echo "GATE C_EAST_WEST: FAIL"
+            echo "GATE C_TAILNET_LAN: FAIL"
             failed=1
           fi
           exit "${failed}"

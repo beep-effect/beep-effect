@@ -103,3 +103,29 @@ other workers.
 but `10.0.0.1` is outside this VPC's `10.88.0.0/16` — a connection failure
 there is not evidence of intra-VPC isolation. The empty ingress list above is
 the real east-west control. Do not let the green gate overstate its reach.
+
+## Live red-team gates: PASS
+
+Red-team run `31354960508`, dispatched against `feat/ci-fleet-redteam` with
+`redteam=true`, concluded `success`. All three gates passed on runner
+`beep-ci-i-042d5d6635358917a` (instance `i-042d5d6635358917a`).
+
+| Gate | Result | Live worker evidence |
+| --- | --- | --- |
+| A — GitHub App secrets | PASS | `DENIED AS EXPECTED` for both `/github-action-runners/app/github_app_key_base64` and `/github-action-runners/app/github_app_webhook_secret` |
+| B — S3 | PASS | `DENIED AS EXPECTED` for `list-buckets` |
+| C — tailnet and LAN reachability | PASS | `DENIED AS EXPECTED` for `100.100.100.100`, `192.168.1.1`, and `10.0.0.1` |
+
+Gate B returned the expected identity-policy denial:
+
+```text
+An error occurred (AccessDenied) when calling the ListBuckets operation: User:
+arn:aws:sts::832907639880:assumed-role/beep-ci-runner-84212b72/i-042d5d6635358917a is not
+authorized to perform: s3:ListAllMyBuckets because no identity-based policy allows the
+s3:ListAllMyBuckets action
+```
+
+Gate C proves that the worker has no tailnet or LAN bridge. It does **not**
+prove intra-VPC isolation: `10.0.0.1` is outside this VPC's `10.88.0.0/16`.
+The worker security group's empty ingress list remains the real east-west
+control.
