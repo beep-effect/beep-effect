@@ -21,36 +21,25 @@ import { Effect, Layer } from "effect";
 import { dual } from "effect/Function";
 
 /**
- * Default local data root for repo AI metrics storage.
- *
- * **Example** (Path with default root)
- *
- * ```ts
- * import { DEFAULT_AI_METRICS_DATA_ROOT, aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
- *
- * console.log(aiMetricsDerivedDuckDbPath(DEFAULT_AI_METRICS_DATA_ROOT))
- * // .beep/ai-metrics/derived/ai-metrics.duckdb
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const DEFAULT_AI_METRICS_DATA_ROOT = ".beep/ai-metrics";
-
-/**
  * Resolve the derived DuckDB database path under an AI metrics data root.
  *
- * **Example** (Resolve derived database path)
+ * **Details**
+ *
+ * The helper only shapes a path; it never invents a root. Resolve the root with
+ * {@link resolveAiMetricsDataRoot} first, so the derived store always lands in
+ * the canonical location rather than beside whichever clone is running.
+ *
+ * **Example** (Locating the derived store under a resolved root)
  *
  * ```ts
  * import { aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
  *
- * console.log(aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
- * // .beep/ai-metrics/derived/ai-metrics.duckdb
+ * console.log(aiMetricsDerivedDuckDbPath("/home/dev/.local/state/beep/ai-metrics"))
+ * // /home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb
  * ```
  *
- * @param dataRoot - Local AI metrics data root, e.g. {@link DEFAULT_AI_METRICS_DATA_ROOT}.
- * @returns The `derived/ai-metrics.duckdb` path relative to `dataRoot`.
+ * @param dataRoot - Resolved AI metrics data root.
+ * @returns The `derived/ai-metrics.duckdb` path beneath `dataRoot`.
  * @category utilities
  * @since 0.0.0
  */
@@ -67,21 +56,35 @@ export const aiMetricsDerivedDuckDbPath = (dataRoot: string): string => `${dataR
  * effect; every other requirement, and the error channel, pass through
  * unchanged so callers keep their own typed failure by mapping afterwards.
  *
- * **Example** (Scoped DuckDB query effect)
+ * **Gotchas**
+ *
+ * Each call opens its own connection. Wrapping several small queries separately
+ * pays the connection cost once per call, so batch related reads into a single
+ * wrapped effect instead of wrapping each query.
+ *
+ * **Example** (Read a count through a discharged connection scope)
  *
  * ```ts
- * import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics"
  * import { DuckDb } from "@beep/duckdb"
+ * import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ *
  * const rowCount = Effect.gen(function* () {
  *   const duckdb = yield* DuckDb
  *   const rows = yield* duckdb.query("SELECT count(*) AS n FROM ai_metrics_ingest_runs")
  *   return rows.length
  * })
- * const program = withAiMetricsDuckDb(rowCount, aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
- * console.log(program)
+ *
+ * // `DuckDb` is discharged by the wrapper, so `runPromise` accepts the program directly.
+ * const program = withAiMetricsDuckDb(
+ *   rowCount,
+ *   aiMetricsDerivedDuckDbPath("/home/dev/.local/state/beep/ai-metrics")
+ * )
+ *
+ * Effect.runPromise(program).then((count: number) => console.log(count))
  * ```
  *
+ * @see {@link aiMetricsDerivedDuckDbPath} for the derived database path this wrapper expects.
  * @category utilities
  * @since 0.0.0
  */

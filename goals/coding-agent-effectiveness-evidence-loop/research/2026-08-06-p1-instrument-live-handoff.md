@@ -128,12 +128,19 @@ Two consequences for anyone reading the corpus:
   verification recipe below recomputes from the live salt instead of quoting a
   digest, deliberately.
 
-Known divergence, unchanged and now *active*: `privateReference` in
-`hook-pulse.ts` calls `hashPrivateIdentifier(value, undefined)` unconditionally,
-so the codec still hashes with the default. Writer rows arrive already 64-hex and
-pass through untouched, and nothing outside `hook-pulse.ts` consumes the codec's
-raw-event path today, so this is latent for the baseline. It must be resolved
-before P4 replay reconciles v2 wait spans against this ledger.
+Known divergence, **resolved in this PR**: `privateReference` in `hook-pulse.ts`
+called `hashPrivateIdentifier(value, undefined)` unconditionally, so the codec
+hashed with the default while the writer honoured the operator salt. Writer rows
+arrive already 64-hex and pass through untouched, and nothing outside
+`hook-pulse.ts` consumed the codec's raw-event path, so it stayed latent for the
+baseline — but it had to be closed before P4 replay reconciles v2 wait spans
+against this ledger. The codec now resolves the same salt rungs as the writer
+(`BEEP_HOOK_PULSE_HASH_SALT`, then `BEEP_AI_METRICS_HASH_SALT`, then the
+published local default) through the exported `hookPulseHashSalt` config, and a
+parity test runs the real writer under a test salt and recomputes its digests in
+TypeScript on all three rungs. Nothing about the corpus boundary changes: the
+~1,700 pre-cutover rows remain a separate namespace and are still never
+re-migrated.
 
 ## Sampling power: a day-1 risk to the baseline's value
 
@@ -191,8 +198,10 @@ leave the instrument alone.
 Remaining, and safe to do in parallel:
 
 1. P0 storage cutover, by a separate actor, per PLAN.md.
-2. Resolve the `privateReference` salt divergence before P4 replay (above). Not
-   urgent, but it is now a real inconsistency rather than a hypothetical one.
+2. ~~Resolve the `privateReference` salt divergence before P4 replay (above).~~
+   Done in this PR: the codec resolves the writer's own salt rungs, checked by a
+   writer-versus-codec parity test. Pre-cutover rows stay a separate namespace
+   and are not re-migrated.
 
 Do **not** re-run the plan-approval check to "get more samples" — the baseline
 collects those naturally, and a deliberately fast approval is not a sample of the

@@ -106,20 +106,21 @@ fi
 # machine that already exports one groups hook rows under the same pseudonyms as
 # the rest of the stack; the first rung salts this instrument on its own.
 #
-# KNOWN DIVERGENCE, deliberate and narrow. Every other ai-metrics producer
-# threads an operator salt (`source-discovery.ts`, `retention.ts`,
+# Both halves walk this chain. `hookPulseHashSalt` in `hook-pulse.ts` resolves
+# the same two variables in the same order — through `Config`, so the ambient
+# `ConfigProvider` supplies them — and falls back to the same published
+# constant, so a row this writer appends and a row the codec derives from the
+# same raw event carry identical digests on every rung. That matters because
+# every other ai-metrics producer (`source-discovery.ts`, `retention.ts`,
 # `forwarder.ts` — which provisions `BEEP_AI_METRICS_HASH_SALT` from 1Password
-# via `op read`), so honouring it here keeps hook rows in the same pseudonym
-# namespace as the rest of the stack. But `privateReference` in
-# `hook-pulse.ts` calls `hashPrivateIdentifier(value, undefined)`
-# unconditionally, keeping that schema transform pure and therefore always on
-# the insecure default. Consequence on a machine with a real salt exported:
-# rows this writer appends cannot be grouped with rows the *codec* produces
-# from raw events or migrated legacy records, because the two use different
-# salts for the same identifier. Rows already 64-hex pass `privateReference`
-# through untouched, so nothing is double-hashed; only cross-producer joins
-# are affected. Unconfigured clones — the common case, and what the
-# conformance tests pin — agree exactly.
+# via `op read`) threads an operator salt, so honouring it here is what keeps
+# hook rows in the same pseudonym namespace as the rest of the stack. The
+# parity test in `hook-pulse-writer.test.ts` runs this script under an explicit
+# test salt and recomputes its digests in TypeScript, so the agreement is
+# checked rather than asserted. Rows that arrive already 64-hex still pass
+# `privateReference` through untouched, so nothing is ever double-hashed.
+# Rows written before the operator cutover are a separate namespace and are
+# never re-migrated.
 hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}"
 case "${hash_salt}" in
   *[![:space:]]*) ;;

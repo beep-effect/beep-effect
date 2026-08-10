@@ -10,11 +10,12 @@ spike ran 2026-08-01 and passed — see
 Its **First step** (hook-semantics verification) is **complete**: all three
 wait classes emit distinguishable, sessionId-bearing events, so `HookPulseV1`
 schema authoring may now begin — subject to the seven spike amendments folded
-into the P1 section below. P0 storage-cutover preparation is permitted in
-parallel by a separate actor. P2–P8 are not current until the manifest marks
-their predecessors' exit criteria met; the "proceeds in parallel" notes below
-describe scheduling intent between phases, never permission to start ahead of
-this section.
+into the P1 section below. **P0 is complete (2026-08-07)** — code, atomic
+store cutover, and live verification all landed; evidence in
+`history/outputs/2026-08-07-p0-cutover.md`. P2–P8 are not current until the
+manifest marks their predecessors' exit criteria met; the "proceeds in
+parallel" notes below describe scheduling intent between phases, never
+permission to start ahead of this section.
 
 Numbering map to the source audit plan (scratch/codex thread + ADHD
 amendments): audit P0→P0, P0.5→P1, P1→P2, P1.5→P3, P2→P4, P3→P5, P4→P6,
@@ -24,7 +25,7 @@ P5→P7, P6→P8.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Storage cutover + identity registry | pending | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. |
+| P0 Storage cutover + identity registry | complete (2026-08-07) | Clone-independent canonical store, source registry, bounded config snapshots. | Store serves all clones; snapshots have stage timings; nested worktrees are independent roots. Met — see `history/outputs/2026-08-07-p0-cutover.md`. |
 | P1 Sequence-break instrument | in-progress | Hooks + hook-pulse ledger + notifications + circuit breaker + kill switch; first wait reduction measured. | Baseline captured, notifications live, interrupted time-series recorded; breaker kills retry storms. (First step done 2026-08-01: hook semantics verified.) |
 | P2 Telemetry-v2 truth model | pending | FlightRecord + IngestManifest write contract with the five evidence-integrity laws. | Schemas land with fixtures; Claude + Codex emitters flowing; tombstones + leases working. |
 | P3 Yeet mistrial + proof durability | pending | Exhibit-required verdicts, mistrial outcome, per-lane durable proofs, `yeet doctor`. | Exhibit-less failure undecodable; interrupted publish resumes as cache hit; doctor names blocking edge. |
@@ -35,6 +36,11 @@ P5→P7, P6→P8.
 | P8 Guarded canary + close | pending | One reversible wait treatment in a disposable worktree; closeout. | Paired-trial win with CI excluding zero + Goodhart guardrails green; reflection + status flip in final PR. |
 
 ## P0 — Storage cutover and identity registry
+
+**DONE 2026-08-07.** All three bullets shipped and verified live; the atomic
+cutover executed with byte-identical census gates. Evidence and the one
+residual (the beep-effect clone pulls merged `main` so the timer unit runs
+post-P0 code) are in `history/outputs/2026-08-07-p0-cutover.md`.
 
 - Move the canonical store to
   `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`; precedence
