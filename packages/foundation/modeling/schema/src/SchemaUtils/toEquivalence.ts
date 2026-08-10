@@ -10,11 +10,14 @@ import * as S from "effect/Schema";
 /**
  * Dual-call equivalence function produced by {@link toEquivalence}.
  *
+ * **Details**
+ *
  * A dual equivalence compares two schema-decoded values directly, or accepts
  * the right-hand value first and returns a pipe-friendly comparator for the
  * left-hand value.
  *
- * @example
+ * **Example** (Dual equivalence call forms)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { toEquivalence, type DualEquivalence } from "@beep/schema/SchemaUtils/toEquivalence"
@@ -38,12 +41,15 @@ export type DualEquivalence<A> = {
  * Create a schema-backed equivalence function with data-first and data-last
  * call signatures.
  *
+ * **Details**
+ *
  * The returned function delegates value comparison to `S.toEquivalence(schema)`
  * while adding a pipe-friendly unary form. Use this when a schema-modeled
  * value should be compared according to the schema rather than ad-hoc
  * equality checks.
  *
- * @example
+ * **Example** (Schema-backed dual equivalence)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import * as S from "effect/Schema"

@@ -12,15 +12,16 @@ import { $I } from "./HttpStatus.shared.ts";
  * 421 “Misdirected Request” – The request was directed to a server unable to
  * produce a response.
  *
- * @example
+ * **Example** (Log MisdirectedRequest literal)
+ *
  * ```ts
  * import { MisdirectedRequest } from "@beep/schema/HttpStatus"
  *
  * console.log(MisdirectedRequest.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MisdirectedRequest = S.Literal(421).pipe(
   $I.annoteSchema("MisdirectedRequest", {
@@ -31,17 +32,8 @@ export const MisdirectedRequest = S.Literal(421).pipe(
 
 /**
  * {@inheritDoc MisdirectedRequest}
- *
- * @example
- * ```ts
- * import type { MisdirectedRequest } from "@beep/schema/HttpStatus"
- *
- * const status: MisdirectedRequest = 421
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type MisdirectedRequest = typeof MisdirectedRequest.Type;
 
@@ -51,15 +43,16 @@ export type MisdirectedRequest = typeof MisdirectedRequest.Type;
  * response. If you stumble upon this error, check out our article about the
  * 422 Error Code.
  *
- * @example
+ * **Example** (Log UnprocessableEntity literal)
+ *
  * ```ts
  * import { UnprocessableEntity } from "@beep/schema/HttpStatus"
  *
  * console.log(UnprocessableEntity.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UnprocessableEntity = S.Literal(422).pipe(
   $I.annoteSchema("UnprocessableEntity", {
@@ -71,32 +64,24 @@ export const UnprocessableEntity = S.Literal(422).pipe(
 
 /**
  * {@inheritDoc UnprocessableEntity}
- *
- * @example
- * ```ts
- * import type { UnprocessableEntity } from "@beep/schema/HttpStatus"
- *
- * const status: UnprocessableEntity = 422
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UnprocessableEntity = typeof UnprocessableEntity.Type;
 
 /**
  * 423 “Locked” – The resource that is being accessed is locked.
  *
- * @example
+ * **Example** (Log Locked literal)
+ *
  * ```ts
  * import { Locked } from "@beep/schema/HttpStatus"
  *
  * console.log(Locked.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Locked = S.Literal(423).pipe(
   $I.annoteSchema("Locked", {
@@ -107,17 +92,8 @@ export const Locked = S.Literal(423).pipe(
 
 /**
  * {@inheritDoc Locked}
- *
- * @example
- * ```ts
- * import type { Locked } from "@beep/schema/HttpStatus"
- *
- * const status: Locked = 423
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Locked = typeof Locked.Type;
 
@@ -125,15 +101,16 @@ export type Locked = typeof Locked.Type;
  * 424 “Failed Dependency” – The request failed because it depended on another
  * request that failed as well.
  *
- * @example
+ * **Example** (Log FailedDependency literal)
+ *
  * ```ts
  * import { FailedDependency } from "@beep/schema/HttpStatus"
  *
  * console.log(FailedDependency.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const FailedDependency = S.Literal(424).pipe(
   $I.annoteSchema("FailedDependency", {
@@ -145,17 +122,8 @@ export const FailedDependency = S.Literal(424).pipe(
 
 /**
  * {@inheritDoc FailedDependency}
- *
- * @example
- * ```ts
- * import type { FailedDependency } from "@beep/schema/HttpStatus"
- *
- * const status: FailedDependency = 424
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type FailedDependency = typeof FailedDependency.Type;
 
@@ -163,15 +131,16 @@ export type FailedDependency = typeof FailedDependency.Type;
  * 425 “Too Early” – This error indicates that the server is unwilling to risk
  * processing a request that might be replayed.
  *
- * @example
+ * **Example** (Log TooEarly literal)
+ *
  * ```ts
  * import { TooEarly } from "@beep/schema/HttpStatus"
  *
  * console.log(TooEarly.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const TooEarly = S.Literal(425).pipe(
   $I.annoteSchema("TooEarly", {
@@ -183,17 +152,8 @@ export const TooEarly = S.Literal(425).pipe(
 
 /**
  * {@inheritDoc TooEarly}
- *
- * @example
- * ```ts
- * import type { TooEarly } from "@beep/schema/HttpStatus"
- *
- * const status: TooEarly = 425
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type TooEarly = typeof TooEarly.Type;
 
@@ -202,15 +162,16 @@ export type TooEarly = typeof TooEarly.Type;
  * protocols as indicated by the upgrade header sent in response. It is willing
  * to accept the request if the client upgrades to another protocol.
  *
- * @example
+ * **Example** (Log UpgradeRequired literal)
+ *
  * ```ts
  * import { UpgradeRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(UpgradeRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UpgradeRequired = S.Literal(426).pipe(
   $I.annoteSchema("UpgradeRequired", {
@@ -222,17 +183,8 @@ export const UpgradeRequired = S.Literal(426).pipe(
 
 /**
  * {@inheritDoc UpgradeRequired}
- *
- * @example
- * ```ts
- * import type { UpgradeRequired } from "@beep/schema/HttpStatus"
- *
- * const status: UpgradeRequired = 426
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UpgradeRequired = typeof UpgradeRequired.Type;
 
@@ -243,15 +195,16 @@ export type UpgradeRequired = typeof UpgradeRequired.Type;
  * uses PUT to upload the new version while another party may have also altered
  * the same resource.
  *
- * @example
+ * **Example** (Log PreconditionRequired literal)
+ *
  * ```ts
  * import { PreconditionRequired } from "@beep/schema/HttpStatus"
  *
  * console.log(PreconditionRequired.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PreconditionRequired = S.Literal(428).pipe(
   $I.annoteSchema("PreconditionRequired", {
@@ -263,17 +216,8 @@ export const PreconditionRequired = S.Literal(428).pipe(
 
 /**
  * {@inheritDoc PreconditionRequired}
- *
- * @example
- * ```ts
- * import type { PreconditionRequired } from "@beep/schema/HttpStatus"
- *
- * const status: PreconditionRequired = 428
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PreconditionRequired = typeof PreconditionRequired.Type;
 
@@ -290,15 +234,16 @@ export type PreconditionRequired = typeof PreconditionRequired.Type;
  * guide: Let’s Encrypt errors “429 Too Many Requests”, “No Domains
  * Authorized,” and “Certificate is not for the chosen domain.”
  *
- * @example
+ * **Example** (Log TooManyRequests literal)
+ *
  * ```ts
  * import { TooManyRequests } from "@beep/schema/HttpStatus"
  *
  * console.log(TooManyRequests.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const TooManyRequests = S.Literal(429).pipe(
   $I.annoteSchema("TooManyRequests", {
@@ -310,17 +255,8 @@ export const TooManyRequests = S.Literal(429).pipe(
 
 /**
  * {@inheritDoc TooManyRequests}
- *
- * @example
- * ```ts
- * import type { TooManyRequests } from "@beep/schema/HttpStatus"
- *
- * const status: TooManyRequests = 429
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type TooManyRequests = typeof TooManyRequests.Type;
 
@@ -329,15 +265,16 @@ export type TooManyRequests = typeof TooManyRequests.Type;
  * because its individual header fields or all combined header fields are too
  * large. The client may submit a new request if the size is reduced.
  *
- * @example
+ * **Example** (Log header fields literal)
+ *
  * ```ts
  * import { RequestHeaderFieldsTooLarge } from "@beep/schema/HttpStatus"
  *
  * console.log(RequestHeaderFieldsTooLarge.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RequestHeaderFieldsTooLarge = S.Literal(431).pipe(
   $I.annoteSchema("RequestHeaderFieldsTooLarge", {
@@ -349,17 +286,8 @@ export const RequestHeaderFieldsTooLarge = S.Literal(431).pipe(
 
 /**
  * {@inheritDoc RequestHeaderFieldsTooLarge}
- *
- * @example
- * ```ts
- * import type { RequestHeaderFieldsTooLarge } from "@beep/schema/HttpStatus"
- *
- * const status: RequestHeaderFieldsTooLarge = 431
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type RequestHeaderFieldsTooLarge = typeof RequestHeaderFieldsTooLarge.Type;
 
@@ -368,15 +296,16 @@ export type RequestHeaderFieldsTooLarge = typeof RequestHeaderFieldsTooLarge.Typ
  * which the server is legally bound to deny access, such as a web page
  * censored by the government.
  *
- * @example
+ * **Example** (Log legal reasons literal)
+ *
  * ```ts
  * import { UnavailableForLegalReasons } from "@beep/schema/HttpStatus"
  *
  * console.log(UnavailableForLegalReasons.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UnavailableForLegalReasons = S.Literal(451).pipe(
   $I.annoteSchema("UnavailableForLegalReasons", {
@@ -388,16 +317,7 @@ export const UnavailableForLegalReasons = S.Literal(451).pipe(
 
 /**
  * {@inheritDoc UnavailableForLegalReasons}
- *
- * @example
- * ```ts
- * import type { UnavailableForLegalReasons } from "@beep/schema/HttpStatus"
- *
- * const status: UnavailableForLegalReasons = 451
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type UnavailableForLegalReasons = typeof UnavailableForLegalReasons.Type;

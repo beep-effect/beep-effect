@@ -103,8 +103,11 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
-// goals/quality-speedup/research/instantiation-census.md §5.
-const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
+// goals/quality-speedup/research/instantiation-census.md §5. After the Blacksmith
+// exit (#600) halved lane CPUs, even 4 concurrent package checks (4 tsgo + 4 bun
+// wrappers) OOM-killed standard ubuntu-24.04 runners mid-lane on every branch,
+// including main — 2 is the widest cap the 16GB hosted VMs survive.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -484,6 +487,13 @@ const isTurboCacheControlArg = (arg: string): boolean =>
 
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
+
+// The serial integration phase always pins --concurrency=1 (shared-SQL tests
+// serialize by design); a caller-supplied concurrency flag would reach turbo
+// twice, which it rejects as a duplicate argument.
+const withoutTurboConcurrencyArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
+  (arg) => !isTurboConcurrencyArg(arg)
+);
 
 const isExplicitTurboScopeArg = (arg: string): boolean =>
   Str.startsWith("--filter")(arg) || Str.startsWith("--since")(arg);
@@ -1224,7 +1234,7 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
 
 const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...args]),
+  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)]),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -1432,7 +1442,12 @@ const rootTestSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
     ...optionalQualityTaskStep({
       enabled: lanes.integration,
       step: () =>
-        turboStep(repoRoot, "test:integration:serial", ["test:integration:serial"], ["--concurrency=1", ...lanes.args]),
+        turboStep(
+          repoRoot,
+          "test:integration:serial",
+          ["test:integration:serial"],
+          ["--concurrency=1", ...withoutTurboConcurrencyArgs(lanes.args)]
+        ),
     }),
   ];
 };

@@ -74,7 +74,7 @@ jobs:
             install_typos: "false"
           - id: check
             name: Check
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 120
             uses_turbo: "true"
             install_typos: "false"
@@ -86,19 +86,19 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
           - id: coverage
             name: Coverage Regression
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 80
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
             name: Docgen
-            runner: ubuntu-24.04
+            runner: beep-ec2-heavy
             timeout_minutes: 60
             uses_turbo: "false"
             install_typos: "false"
@@ -554,7 +554,7 @@ jobs:
   build:
     name: Build
     if: github.event_name == 'push'
-    runs-on: ubuntu-24.04
+    runs-on: beep-ec2-heavy
     timeout-minutes: 40
     permissions:
       contents: read

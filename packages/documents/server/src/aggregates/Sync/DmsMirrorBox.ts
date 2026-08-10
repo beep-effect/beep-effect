@@ -66,7 +66,8 @@ const $I = $DocumentsServerId.create("aggregates/Sync/DmsMirrorBox");
 /**
  * Environment variable selecting the Box mirror root folder name.
  *
- * @example
+ * **Example** (Log env variable name)
+ *
  * ```ts
  * import { BOX_MIRROR_ROOT_NAME_ENV } from "@beep/documents-server/aggregates/Sync"
  *
@@ -81,7 +82,8 @@ export const BOX_MIRROR_ROOT_NAME_ENV = "DOCUMENTS_SYNC_BOX_MIRROR_ROOT";
 /**
  * Default Box folder name that receives the mirrored vault tree.
  *
- * @example
+ * **Example** (Log default root name)
+ *
  * ```ts
  * import { BOX_MIRROR_DEFAULT_ROOT_NAME } from "@beep/documents-server/aggregates/Sync"
  *
@@ -96,7 +98,8 @@ export const BOX_MIRROR_DEFAULT_ROOT_NAME = "beep-vault";
 /**
  * Resolved configuration value for the Box DMS mirror adapter.
  *
- * @example
+ * **Example** (Make config with root name)
+ *
  * ```ts
  * import { BoxMirrorConfigValue } from "@beep/documents-server/aggregates/Sync"
  *
@@ -121,7 +124,8 @@ export class BoxMirrorConfigValue extends S.Class<BoxMirrorConfigValue>($I`BoxMi
 /**
  * Typed runtime configuration service for the Box DMS mirror adapter.
  *
- * @example
+ * **Example** (Log config service key)
+ *
  * ```ts
  * import { BoxMirrorConfig } from "@beep/documents-server/aggregates/Sync"
  *
@@ -135,7 +139,8 @@ export class BoxMirrorConfig extends Context.Service<BoxMirrorConfig, BoxMirrorC
   /**
    * Escape hatch building a config layer from an explicit value.
    *
-   * @example
+   * **Example** (Build layer from value)
+   *
    * ```ts
    * import { BoxMirrorConfig, BoxMirrorConfigValue } from "@beep/documents-server/aggregates/Sync"
    *
@@ -161,7 +166,8 @@ const readBoxMirrorConfig = Effect.fn($I`readBoxMirrorConfig`)(function* () {
 /**
  * Live configuration layer backed by the ambient Effect ConfigProvider.
  *
- * @example
+ * **Example** (Log live config layer)
+ *
  * ```ts
  * import { BoxMirrorConfigLayer } from "@beep/documents-server/aggregates/Sync"
  *
@@ -493,11 +499,14 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
 /**
  * Build the Box-backed {@link DmsMirror} implementation.
  *
+ * **Details**
+ *
  * The mirror root folder (named by {@link BoxMirrorConfig}) is ensured lazily
  * under the Box root on the first remote operation and cached for the life of
  * the service. A `none` parent in port inputs addresses that mirror root.
  *
- * @example
+ * **Example** (Log mirror constructor)
+ *
  * ```ts
  * import { makeDmsMirrorBox } from "@beep/documents-server/aggregates/Sync"
  *
@@ -689,7 +698,8 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
 /**
  * Box-backed {@link DmsMirror} layer; requires `Box` and {@link BoxMirrorConfig}.
  *
- * @example
+ * **Example** (Log Box mirror layer)
+ *
  * ```ts
  * import { DmsMirrorBoxLayer } from "@beep/documents-server/aggregates/Sync"
  *
@@ -705,7 +715,8 @@ export const DmsMirrorBoxLayer = Layer.effect(DmsMirror, makeDmsMirrorBox());
  * Convenience Box-backed {@link DmsMirror} layer with environment-backed
  * configuration; still requires the `Box` driver service.
  *
- * @example
+ * **Example** (Log live mirror layer)
+ *
  * ```ts
  * import { DmsMirrorBoxLive } from "@beep/documents-server/aggregates/Sync"
  *
@@ -751,13 +762,16 @@ type MirrorProbeCacheEntry = {
 /**
  * Availability layer probing the Box mirror adapter.
  *
+ * **Details**
+ *
  * The probe resolves the mirror-root folder id (cached for
  * {@link MIRROR_ROOT_CACHE_TTL}): success reports `connected: true` with
  * `rootRemoteId` set; any driver failure reports `connected: false` without
  * failing the probe. Applications supply their own disconnected variant when no
  * Box credentials are configured.
  *
- * @example
+ * **Example** (Log availability layer)
+ *
  * ```ts
  * import { DmsMirrorAvailabilityBoxLayer } from "@beep/documents-server/aggregates/Sync"
  *

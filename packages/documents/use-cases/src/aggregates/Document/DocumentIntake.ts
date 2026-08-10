@@ -20,7 +20,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/DocumentIntake");
 /**
  * Client payload for app-level dropped-file intake.
  *
- * @example
+ * **Example** (Make dropped-file client payload)
+ *
  * ```ts
  * import { DefaultVaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
  * import { IntakeDroppedFilePayload } from "@beep/documents-use-cases/public"
@@ -67,7 +68,8 @@ export class IntakeDroppedFilePayload extends S.Class<IntakeDroppedFilePayload>(
 /**
  * Server-side input for dropped-file intake after workspace vault resolution.
  *
- * @example
+ * **Example** (Make dropped-file server input)
+ *
  * ```ts
  * import { DefaultVaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
  * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
@@ -118,7 +120,8 @@ export class IntakeDroppedFileInput extends S.Class<IntakeDroppedFileInput>($I`I
 /**
  * Document intake service shape.
  *
- * @example
+ * **Example** (Stub intake service shape)
+ *
  * ```ts
  * import type { DocumentIntakeShape } from "@beep/documents-use-cases/public"
  * import { Effect } from "effect"
@@ -139,7 +142,8 @@ export interface DocumentIntakeShape {
 /**
  * Document intake service contract.
  *
- * @example
+ * **Example** (Provide DocumentIntake service)
+ *
  * ```ts
  * import { DocumentIntake } from "@beep/documents-use-cases/public"
  * import type { DocumentIntakeShape } from "@beep/documents-use-cases/public"

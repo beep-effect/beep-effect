@@ -37,7 +37,8 @@ const FolioIriToken = S.NonEmptyString.pipe(
 /**
  * Source type of the loaded FOLIO ontology.
  *
- * @example
+ * **Example** (Checking github source type)
+ *
  * ```ts
  * import { SourceType } from "@beep/ontology/Ontology.models"
  *
@@ -56,7 +57,8 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
 /**
  * Runtime type for {@link SourceType}.
  *
- * @example
+ * **Example** (Assigning github source type)
+ *
  * ```ts
  * import type { SourceType } from "@beep/ontology/Ontology.models"
  *
@@ -72,7 +74,8 @@ export type SourceType = typeof SourceType.Type;
 /**
  * HTTP URL string metadata shape from the OpenAPI document.
  *
- * @example
+ * **Example** (Inspecting HttpUrl schema AST)
+ *
  * ```ts
  * import { HttpUrl } from "@beep/ontology/Ontology.models"
  *
@@ -104,7 +107,8 @@ export const HttpUrl = S.String.check(
 /**
  * Runtime type for {@link HttpUrl}.
  *
- * @example
+ * **Example** (Assigning ontology HTTP URL)
+ *
  * ```ts
  * import type { HttpUrl } from "@beep/ontology/Ontology.models"
  *
@@ -120,7 +124,8 @@ export type HttpUrl = typeof HttpUrl.Type;
 /**
  * Information about the loaded FOLIO ontology graph.
  *
- * @example
+ * **Example** (Inspecting GraphInfo schema AST)
+ *
  * ```ts
  * import { GraphInfo } from "@beep/ontology/Ontology.models"
  *
@@ -214,7 +219,8 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
 /**
  * Health status of the FOLIO API.
  *
- * @example
+ * **Example** (Checking healthy status value)
+ *
  * ```ts
  * import { HealthStatus } from "@beep/ontology/Ontology.models"
  *
@@ -233,7 +239,8 @@ export const HealthStatus = LiteralKit(["healthy", "unhealthy"]).pipe(
 /**
  * Runtime type for {@link HealthStatus}.
  *
- * @example
+ * **Example** (Assigning healthy status value)
+ *
  * ```ts
  * import type { HealthStatus } from "@beep/ontology/Ontology.models"
  *
@@ -249,7 +256,8 @@ export type HealthStatus = typeof HealthStatus.Type;
 /**
  * Response model for the health check endpoint.
  *
- * @example
+ * **Example** (Inspecting HealthResponse schema AST)
+ *
  * ```ts
  * import { HealthResponse } from "@beep/ontology/Ontology.models"
  *
@@ -279,7 +287,8 @@ export class HealthResponse extends S.Class<HealthResponse>($I`HealthResponse`)(
 /**
  * OWL class model for the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLClass schema AST)
+ *
  * ```ts
  * import { OWLClass } from "@beep/ontology/Ontology.models"
  *
@@ -478,7 +487,8 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
 /**
  * OWL object property model for the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLObjectProperty schema AST)
+ *
  * ```ts
  * import { OWLObjectProperty } from "@beep/ontology/Ontology.models"
  *
@@ -580,7 +590,8 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
 /**
  * A collection of OWL class objects from the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLClassList schema AST)
+ *
  * ```ts
  * import { OWLClassList } from "@beep/ontology/Ontology.models"
  *
@@ -624,7 +635,8 @@ export class OWLClassList extends S.Class<OWLClassList>($I`OWLClassList`)(
 /**
  * A collection of OWL object properties from the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLObjectPropertyList schema AST)
+ *
  * ```ts
  * import { OWLObjectPropertyList } from "@beep/ontology/Ontology.models"
  *
@@ -659,7 +671,8 @@ export class OWLObjectPropertyList extends S.Class<OWLObjectPropertyList>($I`OWL
 /**
  * Relevance score attached to an OWL search result.
  *
- * @example
+ * **Example** (Inspecting OWLSearchScore schema AST)
+ *
  * ```ts
  * import { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
@@ -678,7 +691,8 @@ export const OWLSearchScore = S.Finite.pipe(
 /**
  * Runtime type for {@link OWLSearchScore}.
  *
- * @example
+ * **Example** (Assigning search relevance score)
+ *
  * ```ts
  * import type { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
@@ -694,7 +708,8 @@ export type OWLSearchScore = typeof OWLSearchScore.Type;
 /**
  * Tuple containing an OWL class and its relevance score.
  *
- * @example
+ * **Example** (Inspecting OWLSearchResult schema AST)
+ *
  * ```ts
  * import { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
@@ -713,7 +728,8 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
 /**
  * Runtime type for {@link OWLSearchResult}.
  *
- * @example
+ * **Example** (Referencing OWLSearchResult type)
+ *
  * ```ts
  * import type { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
@@ -728,7 +744,8 @@ export type OWLSearchResult = typeof OWLSearchResult.Type;
 /**
  * Search results containing FOLIO ontology classes with relevance scores.
  *
- * @example
+ * **Example** (Inspecting OWLSearchResults schema AST)
+ *
  * ```ts
  * import { OWLSearchResults } from "@beep/ontology/Ontology.models"
  *
@@ -766,7 +783,8 @@ export class OWLSearchResults extends S.Class<OWLSearchResults>($I`OWLSearchResu
 /**
  * Location segment in a validation error.
  *
- * @example
+ * **Example** (Inspecting location segment schema AST)
+ *
  * ```ts
  * import { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
@@ -785,7 +803,8 @@ export const ValidationErrorLocationSegment = S.Union([S.String, S.Int]).pipe(
 /**
  * Runtime type for {@link ValidationErrorLocationSegment}.
  *
- * @example
+ * **Example** (Assigning body location segment)
+ *
  * ```ts
  * import type { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
@@ -801,7 +820,8 @@ export type ValidationErrorLocationSegment = typeof ValidationErrorLocationSegme
 /**
  * Validation error detail emitted by the API.
  *
- * @example
+ * **Example** (Inspecting ValidationError schema AST)
+ *
  * ```ts
  * import { ValidationError } from "@beep/ontology/Ontology.models"
  *
@@ -845,7 +865,8 @@ export class ValidationError extends S.Class<ValidationError>($I`ValidationError
 /**
  * HTTP validation error response emitted by the API.
  *
- * @example
+ * **Example** (Inspecting HTTPValidationError schema AST)
+ *
  * ```ts
  * import { HTTPValidationError } from "@beep/ontology/Ontology.models"
  *

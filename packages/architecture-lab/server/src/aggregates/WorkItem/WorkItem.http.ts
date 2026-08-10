@@ -26,7 +26,8 @@ const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: type
 /**
  * HTTP status values emitted by the WorkItem proof protocol adapter.
  *
- * @example
+ * **Example** (Create status from number)
+ *
  * ```ts
  * import {
  *   WorkItemHttpStatus,
@@ -53,7 +54,8 @@ export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
 /**
  * Runtime type for {@link WorkItemHttpStatus}.
  *
- * @example
+ * **Example** (Type a status parameter)
+ *
  * ```ts
  * import type { WorkItemHttpStatus } from "@beep/architecture-lab-server/aggregates/WorkItem"
  *
@@ -70,7 +72,8 @@ export type WorkItemHttpStatus = typeof WorkItemHttpStatus.Type;
 /**
  * Minimal HTTP response envelope used by the architecture lab proof.
  *
- * @example
+ * **Example** (Make HTTP response envelope)
+ *
  * ```ts
  * import { WorkItemHttpResponse } from "@beep/architecture-lab-server/aggregates/WorkItem"
  *
@@ -103,7 +106,8 @@ export class WorkItemHttpResponse extends S.Class<WorkItemHttpResponse>($I`WorkI
 /**
  * Convert a public WorkItem failure to an HTTP response envelope.
  *
- * @example
+ * **Example** (Map not-found to 404)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { toWorkItemHttpError } from "@beep/architecture-lab-server/aggregates/WorkItem"
@@ -139,7 +143,8 @@ const toSuccess =
 /**
  * Build HTTP-style WorkItem handlers from the public use-case facade.
  *
- * @example
+ * **Example** (Build handlers from facade)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { makeWorkItemHttpHandlers } from "@beep/architecture-lab-server/aggregates/WorkItem"
@@ -173,7 +178,6 @@ const toSuccess =
  *
  * @effects Returned handlers execute the injected WorkItem use-case effects and
  * convert typed WorkItem action failures to HTTP response envelopes.
- *
  * @category handlers
  * @since 0.0.0
  */

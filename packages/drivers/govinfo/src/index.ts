@@ -39,7 +39,8 @@ export * from "./Govinfo.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log version)
+ *
  * ```ts
  * import { VERSION } from "@beep/govinfo"
  *

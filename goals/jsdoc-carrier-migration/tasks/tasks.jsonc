@@ -75,7 +75,7 @@
       "id": "jcm-008",
       "rank": 8,
       "phase": "P2",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["jcm-001"],
       "title": "Fix the 9 repo-owned generator templates",
       "detail": "Emit **Example** (Title) sections instead of @example. Mechanical titles are acceptable in generated output. Targets: drivers/{box,acp,runpod,ecfr,gov-legal-mcp} (bun run generate), foundation/primitive/data and foundation/modeling/rdf (beep sync-data-to-ts), foundation/modeling/html (bun run generate), tooling/library/ai-sync (package-local emitter). Then regenerate the 18 files. Independent of P1 — can run in parallel."
@@ -84,7 +84,8 @@
       "id": "jcm-009",
       "rank": 9,
       "phase": "P3",
-      "status": "pending",
+      "status": "done",
+      "note": "Done in P3 (PR #608): 11,622 title records frozen in data/titles.jsonl via the local Grok proxy; titles machine-validated (unique, non-empty, law-grammatical) by the P3 verify pass.",
       "blockedBy": ["jcm-006", "jcm-007", "jcm-008"],
       "title": "Run the title pass and freeze titles.jsonl",
       "detail": "All 13,265 blocks. Spot-check title quality across families before freezing — once P3 opens, titles.jsonl is an input, not a working file."
@@ -93,7 +94,8 @@
       "id": "jcm-010",
       "rank": 10,
       "phase": "P3",
-      "status": "pending",
+      "status": "done",
+      "note": "Done in P3: residue had decayed to 1 block by P3 time (the 31 unfenced examples were retired by ordinary cleanup-on-touch PRs); single override frozen in data/overrides.jsonl.",
       "blockedBy": ["jcm-009"],
       "title": "Resolve residue into overrides.jsonl until apply is clean",
       "detail": "Starts with the 114 unfenced examples, which auto-quarantine by construction, plus whatever jcm-007 measured. Each override carries full replacement block text. NO HAND-EDITS ON THE BRANCH — residue fixes are data, or the branch stops being f(main, codemod, titles.jsonl, overrides.jsonl) and D3's regenerability is forfeited."
@@ -102,7 +104,8 @@
       "id": "jcm-011",
       "rank": 11,
       "phase": "P3",
-      "status": "pending",
+      "status": "done",
+      "note": "Done in P3: enforceTouchedFileCleanup replaced by enforceZeroLegacy with both scopes; hosted ci lane now passes --include-generated so the generated scope (and the acp allowlist) is CI-enforced.",
       "blockedBy": ["jcm-010"],
       "title": "Swap the gate to a repo-wide zero-legacy check",
       "detail": "Replace enforceTouchedFileCleanup with a check that fails on any @example or @remarks in packages/**/src. Once the corpus is zero, 'touched' is a meaningless qualifier: the repo-wide form needs no git diff work, is faster, and cannot be evaded. Ship TWO scopes: default non-generated (SPEC 7 row 4) and --include-generated (SPEC 7 row 6). The generated scope is not optional — without it, 'generated output stays compliant' would be proved by re-running a check that skips generated files, which passes vacuously. Same PR as the migration."
@@ -111,7 +114,8 @@
       "id": "jcm-012",
       "rank": 12,
       "phase": "P3",
-      "status": "pending",
+      "status": "done",
+      "note": "Done in P3: baseline rewritten via jsdoc-inventory + jsdoc-ratchet --write-baseline; transitional law section deleted from .patterns/jsdoc-documentation.md.",
       "blockedBy": ["jcm-010"],
       "title": "Rewrite the totals baseline and delete the transitional law section",
       "detail": "bun run beep quality jsdoc-inventory then jsdoc-ratchet --write-baseline for standards/jsdoc-totals.regression-baseline.jsonc. Delete the .patterns/jsdoc-documentation.md transitional carrier section — after migration it has no remaining subjects. Regenerate the docgen proof manifest, which goes stale on a change this size."
@@ -120,7 +124,8 @@
       "id": "jcm-013",
       "rank": 13,
       "phase": "P4",
-      "status": "pending",
+      "status": "done",
+      "note": "Done in P4 (same PR): reflection at history/reflections/2026-08-06-grok.md; lifecycle completed-retained. Residual: acp schema.gen.ts (342 @example) allowlisted in the generated scope until the acp-resync PR lands; receipted in research/OPPORTUNITIES.md.",
       "blockedBy": ["jcm-011", "jcm-012"],
       "title": "Close the packet",
       "detail": "Reflection under history/reflections/ via the reflect skill, manifest lifecycle flipped to completed-retained, progress.json finalised — all in the same PR as P3 per the same-PR packet-state-flip law. The completion gate clears only if the merged commit cites the packet slug."

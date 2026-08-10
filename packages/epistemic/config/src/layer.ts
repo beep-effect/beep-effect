@@ -23,7 +23,8 @@ const readEpistemicConfig = Effect.fn("Epistemic.Config.read")(function* () {
 /**
  * Live execution-authority configuration layer.
  *
- * @example
+ * **Example** (Verify Layer instance)
+ *
  * ```ts
  * import { EpistemicConfigLive } from "@beep/epistemic-config/layer"
  * import { Layer } from "effect"

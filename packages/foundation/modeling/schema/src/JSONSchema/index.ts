@@ -6,7 +6,8 @@
  * mirroring effect's `JsonSchema.Document<"draft-2020-12">`, and single-hop
  * local `$ref` resolvers.
  *
- * @example
+ * **Example** (Decode node with vendor keyword)
+ *
  * ```ts
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"

@@ -17,7 +17,8 @@ const $I = $DockId.create("Dock.outcomes");
 /**
  * Reason a valid dock intent produces no change.
  *
- * @example
+ * **Example** (Make unchanged reason value)
+ *
  * ```ts
  * import { DockUnchangedReason } from "@beep/dock"
  *
@@ -47,7 +48,8 @@ export const DockUnchangedReason = LiteralKit([
 /**
  * Decoded reason a valid dock intent produces no change.
  *
- * @example
+ * **Example** (Type annotated unchanged reason)
+ *
  * ```ts
  * import { DockUnchangedReason } from "@beep/dock"
  *
@@ -63,7 +65,8 @@ export type DockUnchangedReason = typeof DockUnchangedReason.Type;
 /**
  * Result for a state-changing dock intent with emitted events.
  *
- * @example
+ * **Example** (Make changed result with events)
+ *
  * ```ts
  * import { DockChanged, DockWorkspace, WorkspaceClearedEvent } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -90,7 +93,8 @@ export class DockChanged extends S.TaggedClass<DockChanged>($I`DockChanged`)(
 /**
  * Result for a valid idempotent dock intent.
  *
- * @example
+ * **Example** (Make unchanged mutation result)
+ *
  * ```ts
  * import { DockUnchanged } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -116,7 +120,8 @@ export class DockUnchanged extends S.TaggedClass<DockUnchanged>($I`DockUnchanged
 /**
  * Tagged result of a valid dock mutation.
  *
- * @example
+ * **Example** (Build unchanged mutation result)
+ *
  * ```ts
  * import { DockMutationResult, DockUnchanged } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -137,7 +142,8 @@ export const DockMutationResult = S.Union([DockChanged, DockUnchanged]).pipe(
 /**
  * Decoded tagged result of a valid dock mutation.
  *
- * @example
+ * **Example** (Type annotated mutation result)
+ *
  * ```ts
  * import { DockMutationResult, DockUnchanged } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"
@@ -154,7 +160,8 @@ export type DockMutationResult = typeof DockMutationResult.Type;
 /**
  * Causal envelope around a changed or unchanged mutation.
  *
- * @example
+ * **Example** (Make causal mutation outcome)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockMutationOutcome, DockUnchanged } from "@beep/dock"
  * import { NonNegativeInt } from "@beep/schema"

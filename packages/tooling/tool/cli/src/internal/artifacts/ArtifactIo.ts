@@ -2,7 +2,8 @@
  * Shared committed-artifact read/write, JSONC formatting, and truncated-list
  * rendering for repo-cli command adapters.
  *
- * @remarks
+ * **Details**
+ *
  * These consolidate the per-command copies used by the ratchet and generated
  * artifact families:
  *
@@ -35,15 +36,14 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * Format a JSON-compatible value as deterministic JSONC text with a trailing
  * newline.
  *
- * @remarks
+ * **Details**
+ *
  * Promotes `QualityArtifactSupport.formatJsonc` verbatim; the stringify failure
  * stays on the error channel so callers map it with their own tagged error
  * (for example `QualityScriptCommandError.mapError("...")`).
  *
- * @param value - JSON-compatible value to render.
- * @returns Effect yielding deterministically formatted JSONC text ending in a
- * single newline.
- * @example
+ * **Example** (Trailing newline on JSONC)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { formatJsonc } from "@beep/repo-cli/test/Artifacts"
@@ -51,6 +51,10 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * const text = Effect.runSync(formatJsonc({ schema_version: 1 }))
  * console.log(text.endsWith("\n")) // true
  * ```
+ *
+ * @param value - JSON-compatible value to render.
+ * @returns Effect yielding deterministically formatted JSONC text ending in a
+ * single newline.
  * @category formatting
  * @since 0.0.0
  */
@@ -62,15 +66,14 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
 /**
  * Read a committed JSONC artifact and decode it through a target schema.
  *
- * @remarks
+ * **Details**
+ *
  * Standardizes reads on {@link @beep/schema/Jsonc!decodeJsoncTextAs}. The read
  * and decode phases are mapped separately so callers keep their existing
  * `Failed to read ...` / `Failed to decode ...` message pair.
  *
- * @param input - Absolute artifact path, target schema, and read/decode error
- * factories.
- * @returns Effect yielding the decoded document.
- * @example
+ * **Example** (Read artifact with schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -86,6 +89,10 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - Absolute artifact path, target schema, and read/decode error
+ * factories.
+ * @returns Effect yielding the decoded document.
  * @category filesystem
  * @since 0.0.0
  */
@@ -103,16 +110,15 @@ export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Sche
 /**
  * Make the parent directory and write a committed artifact verbatim.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Writes exactly `header + body`; no trailing newline is added, so a
  * {@link formatJsonc} body (which already ends in a newline) and the divergent
  * end-of-file bytes of each current writer are reproduced exactly. The mkdir
  * and write failures are mapped with the caller-supplied factory.
  *
- * @param input - Absolute artifact path, optional header block, body, and an
- * error factory.
- * @returns Effect that writes the artifact.
- * @example
+ * **Example** (Write header and body)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { writeArtifact } from "@beep/repo-cli/test/Artifacts"
@@ -126,6 +132,10 @@ export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Sche
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param input - Absolute artifact path, optional header block, body, and an
+ * error factory.
+ * @returns Effect that writes the artifact.
  * @category filesystem
  * @since 0.0.0
  */
@@ -144,16 +154,15 @@ export const writeArtifact = Effect.fn("ArtifactIo.writeArtifact")(function* <E>
 /**
  * Render a bounded list, appending a `... N more` line when it overflows.
  *
- * @remarks
+ * **Details**
+ *
  * Reproduces the `renderDeltaLines` / `renderFindingLines` helpers copied
  * across the ratchet renderers: the first `limit` items are rendered with
  * `render`, and a single `  - ... N more` line is appended when items were
  * omitted.
  *
- * @param input - The items, a per-item renderer, and the inclusive display
- * limit.
- * @returns The rendered lines, with a trailing `... N more` line when truncated.
- * @example
+ * **Example** (Append overflow more line)
+ *
  * ```ts
  * import { renderTruncatedLines } from "@beep/repo-cli/test/Artifacts"
  *
@@ -164,6 +173,10 @@ export const writeArtifact = Effect.fn("ArtifactIo.writeArtifact")(function* <E>
  * })
  * console.log(lines) // ["  - a", "  - b", "  - ... 1 more"]
  * ```
+ *
+ * @param input - The items, a per-item renderer, and the inclusive display
+ * limit.
+ * @returns The rendered lines, with a trailing `... N more` line when truncated.
  * @category formatting
  * @since 0.0.0
  */

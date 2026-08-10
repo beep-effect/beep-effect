@@ -14,13 +14,15 @@ const $I = $GovinfoId.create("domain/values/SearchBody/SearchBody.model");
 /**
  * GovInfo search request body.
  *
- * @remarks
+ * **Details**
+ *
  * The `query` field accepts GovInfo search syntax, including field operators
  * such as `collection:(CREC)` and `congress:118`. Sort field support is
  * controlled by GovInfo; for example, `score` is relevance-only and should be
  * requested with `DESC`.
  *
- * @example
+ * **Example** (Decode search request body)
+ *
  * ```ts
  * import { SearchBody } from "@beep/govinfo/domain/values/SearchBody/SearchBody.model";
  * import * as S from "effect/Schema";
@@ -69,7 +71,8 @@ export class SearchBody extends S.Class<SearchBody>($I`SearchBody`)(
 /**
  * Companion namespace for {@link SearchBody} encoded helpers.
  *
- * @example
+ * **Example** (Decode typed search body)
+ *
  * ```ts
  * import { SearchBody } from "@beep/govinfo/domain/values/SearchBody/SearchBody.model";
  * import * as S from "effect/Schema";
@@ -93,7 +96,8 @@ export declare namespace SearchBody {
   /**
    * Encoded JSON shape accepted by {@link SearchBody}.
    *
-   * @example
+   * **Example** (Encode decoded search body)
+   *
    * ```ts
    * import { SearchBody } from "@beep/govinfo/domain/values/SearchBody/SearchBody.model";
    * import * as S from "effect/Schema";

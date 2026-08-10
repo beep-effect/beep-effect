@@ -20,6 +20,7 @@ export {
   layerFallowFeedbackAllowedRoot as layerFallowFeedbackAllowedRootForTesting,
   runYeetFallowFeedback as runYeetFallowFeedbackForTesting,
 } from "../commands/Yeet/internal/FallowFeedback.ts";
+export * from "../commands/Yeet/internal/GateStaleness.ts";
 export {
   currentCommitSha,
   currentYeetBranch,
@@ -34,6 +35,7 @@ export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";
 export * from "../commands/Yeet/internal/Merge.ts";
+export * from "../commands/Yeet/internal/MergedPreview.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/Planner.ts";

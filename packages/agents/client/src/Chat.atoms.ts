@@ -61,16 +61,20 @@ export { HttpChatProtocolLive } from "./Chat.layer.ts";
 /**
  * Writable transport selector consumed by {@link ChatClient}.
  *
+ * **Details**
+ *
  * Apps that own a non-HTTP transport set this atom before mounting chat atoms;
  * otherwise the client keeps the default HTTP protocol. Professional Desktop
  * uses this to swap in its Tauri IPC protocol only after the shell confirms the
  * sidecar was spawned in IPC mode.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Set this before mounting chat query atoms. Already-mounted queries keep the
  * runtime they were created with until their atom lifetime is refreshed.
  *
- * @example
+ * **Example** (Set HTTP protocol layer)
+ *
  * ```ts
  * import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client"
  * import { Layer } from "effect"
@@ -91,13 +95,15 @@ export const chatProtocolLayerAtom: Atom.Writable<Layer.Layer<RpcClient.Protocol
  * Flattened rpc client for {@link ChatRpcs}, integrated with atom reactivity.
  * Exposes `query`/`runtime`/the flat client used by the atoms below.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `ChatClient.query(...)` builds an atom. The RPC request is not sent until the
  * query atom is mounted by the atom runtime, so protocol replacement via
  * {@link chatProtocolLayerAtom} must happen before the visible chat surface
  * mounts.
  *
- * @example
+ * **Example** (Build serializable threads query)
+ *
  * ```ts
  * import { ChatClient } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -132,12 +138,14 @@ const workspaceThreadsKey = (workspaceId: WorkspaceId) => `${THREADS_KEY}:${work
 /**
  * The thread list for a workspace, refetched whenever a thread or turn mutates.
  *
- * @remarks
+ * **Details**
+ *
  * The atom keys both the workspace-specific list and the shared `threads`
  * invalidation key. A streamed turn only knows its thread id, but it can still
  * change the owning thread title or last activity in any visible workspace list.
  *
- * @example
+ * **Example** (Create workspace threads atom)
+ *
  * ```ts
  * import { threadsAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -166,7 +174,8 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
 /**
  * The user's explicit thread selection — none means "follow the list".
  *
- * @example
+ * **Example** (Set selected thread option)
+ *
  * ```ts
  * import { selectedThreadAtom } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -203,7 +212,8 @@ const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
  * The persisted timeline read-model per thread, refetched whenever a turn
  * completes.
  *
- * @example
+ * **Example** (Create thread timeline atom)
+ *
  * ```ts
  * import { threadTimelineAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -226,10 +236,13 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
 /**
  * Write payload for {@link createThreadAtom}.
  *
+ * **Details**
+ *
  * The shape mirrors the `CreateThread` RPC payload while keeping the atom write
  * contract structural for app callers.
  *
- * @example
+ * **Example** (Make create-thread payload)
+ *
  * ```ts
  * import { CreateThreadAtomInput } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -260,12 +273,14 @@ export class CreateThreadAtomInput extends S.Class<CreateThreadAtomInput>($I`Cre
 /**
  * Creates a thread in a workspace and focuses it.
  *
- * @remarks
+ * **Details**
+ *
  * This is a write-only runtime atom. Writing the payload calls `CreateThread`,
  * invalidates the affected thread-list keys, then stores the returned thread id
  * in {@link selectedThreadAtom}.
  *
- * @example
+ * **Example** (Type create-thread write value)
+ *
  * ```ts
  * import { createThreadAtom, CreateThreadAtomInput } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -283,7 +298,6 @@ export class CreateThreadAtomInput extends S.Class<CreateThreadAtomInput>($I`Cre
  * - Calls the `CreateThread` RPC through {@link ChatClient}.
  * - Invalidates the shared and workspace-scoped thread-list keys.
  * - Updates {@link selectedThreadAtom} with the created thread id.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -308,13 +322,15 @@ const draftsRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.l
 /**
  * Unsent composer content per thread, persisted in localStorage.
  *
- * @remarks
+ * **Details**
+ *
  * The atom stores `Option<Document>` with `null`/`Option` wire conversion, so a
  * missing `draft:{threadId}` key and an explicitly cleared draft both read as
  * `Option.none`. Reading or writing this atom requires the browser
  * `localStorage` runtime.
  *
- * @example
+ * **Example** (Write draft document option)
+ *
  * ```ts
  * import { draftAtoms } from "@beep/agents-client"
  * import { Document, P, Text } from "@beep/md/Md.model"
@@ -349,13 +365,16 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
 /**
  * Bumped whenever a thread's draft is replaced from outside the editor.
  *
+ * **Details**
+ *
  * The composer seeds its editor from the draft at mount and then owns the
  * content, so restoring a draft is invisible until the composer remounts. It
  * keys itself on this revision: submitting cleared the editor before the request
  * was accepted, so a rejected send simply destroyed what the user had written —
  * the draft is put back and the editor re-seeded from it.
  *
- * @example
+ * **Example** (Read initial draft revision)
+ *
  * ```ts
  * import { draftRevisionAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -381,10 +400,13 @@ export const draftRevisionAtoms = Atom.family((_threadId: ThreadId) => Atom.make
  * A locally rendered assistant turn: optimistic user content plus the assistant
  * blocks appended as each finishes streaming.
  *
+ * **Details**
+ *
  * Active turns live in {@link streamingTurnAtom}; completed turns whose durable
  * refresh fails move to the per-thread {@link unreconciledTurnAtoms} collection.
  *
- * @example
+ * **Example** (Build streaming turn model)
+ *
  * ```ts
  * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
  * import { StreamingTurn } from "@beep/agents-client"
@@ -449,12 +471,14 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
 /**
  * The actively streaming assistant turn rendered outside the durable timeline.
  *
- * @remarks
+ * **Details**
+ *
  * The atom is cleared when generation stops. If the post-completion timeline
  * refresh fails, the completed value moves to {@link unreconciledTurnAtoms}
  * before this active slot is cleared.
  *
- * @example
+ * **Example** (Set active streaming turn)
+ *
  * ```ts
  * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
  * import { streamingTurnAtom, StreamingTurn } from "@beep/agents-client"
@@ -487,7 +511,8 @@ export const streamingTurnAtom = Atom.make<O.Option<StreamingTurn>>(O.none());
  * Kept alive across thread/view unmounts so a transient read failure cannot
  * erase the only visible copy of a completed reply.
  *
- * @example
+ * **Example** (Read unreconciled turns length)
+ *
  * ```ts
  * import { unreconciledTurnAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -495,6 +520,7 @@ export const streamingTurnAtom = Atom.make<O.Option<StreamingTurn>>(O.none());
  * const registry = AtomRegistry.make()
  * console.log(registry.get(unreconciledTurnAtoms(Workspace.ThreadId.make(1))).length)
  * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -505,7 +531,8 @@ export const unreconciledTurnAtoms = Atom.family((_threadId: ThreadId) =>
 /**
  * The latest failed assistant turn, surfaced for app/UI-layer toast handling.
  *
- * @example
+ * **Example** (Set turn error message)
+ *
  * ```ts
  * import { turnErrorAtom } from "@beep/agents-client"
  * import { ChatActionError } from "@beep/agents-use-cases/public"
@@ -536,7 +563,8 @@ const toTurnError = (error: unknown): ChatActionError =>
 /**
  * When set, the composer is editing an existing turn's message.
  *
- * @example
+ * **Example** (Make edit target model)
+ *
  * ```ts
  * import { EditTarget } from "@beep/agents-client"
  * import { Document, P, Text } from "@beep/md/Md.model"
@@ -575,7 +603,8 @@ export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
 /**
  * The turn currently being edited, if any.
  *
- * @example
+ * **Example** (Set edit target option)
+ *
  * ```ts
  * import { editTargetAtom, EditTarget } from "@beep/agents-client"
  * import { Document, P, Text } from "@beep/md/Md.model"
@@ -621,12 +650,14 @@ const turnDuration = Metric.timer("ui_turn_duration", {
 /**
  * Composer content failing schema decode is a bug — count and log it.
  *
- * @remarks
+ * **Details**
+ *
  * UI code writes `void 0` to this atom when editor-state decoding fails. The
  * atom does not store the bad payload; it records telemetry so malformed editor
  * states are visible without leaking document content into logs.
  *
- * @example
+ * **Example** (Write decode failure undefined)
+ *
  * ```ts
  * import { reportDecodeFailureAtom } from "@beep/agents-client"
  * import { Atom } from "effect/unstable/reactivity"
@@ -641,7 +672,6 @@ const turnDuration = Metric.timer("ui_turn_duration", {
  * @effects
  * - Increments `ui_editor_decode_failures_total`.
  * - Emits an error log without including the failed editor payload.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -655,7 +685,8 @@ export const reportDecodeFailureAtom = ChatClient.runtime.fn<void>()(
 /**
  * A request to send a brand-new user message to a thread.
  *
- * @example
+ * **Example** (Make send turn request)
+ *
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
@@ -685,7 +716,8 @@ export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnReq
 /**
  * A request to edit an existing turn's message and regenerate from there.
  *
- * @example
+ * **Example** (Make edit turn request)
+ *
  * ```ts
  * import { EditTurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
@@ -719,7 +751,8 @@ export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnReq
 /**
  * A turn the user wants to run: a fresh send or an edit-regenerate.
  *
- * @example
+ * **Example** (Match send turn request)
+ *
  * ```ts
  * import { SendTurnRequest, TurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
@@ -749,7 +782,8 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
 /**
  * Runtime type for {@link TurnRequest}.
  *
- * @example
+ * **Example** (Annotate send as TurnRequest)
+ *
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
  * import type { TurnRequest } from "@beep/agents-client"
@@ -792,7 +826,8 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * and any derived title refetch. Records a perceived-latency timer (send → first
  * block) and a decode-failure counter as client-side quality signals.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Interrupt-cleanup lesson (hard-won, ported verbatim): user-cancel arrives as
  * an `Atom.Interrupt` write, which refreshes this fn node's Lifetime BEFORE the
  * fiber unwinds. By the time `Effect.onInterrupt` runs, the `ctx` passed to the
@@ -802,7 +837,8 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * and `reactivity.invalidateUnsafe(turnKeys)`. The error path
  * (`Effect.tapError`) still runs on the live fiber, so it may use `ctx.set`.
  *
- * @example
+ * **Example** (Type run-turn write value)
+ *
  * ```ts
  * import { runTurnAtom, SendTurnRequest, TurnRequest } from "@beep/agents-client"
  * import { Md } from "@beep/md"
@@ -830,7 +866,6 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * - Clears {@link turnErrorAtom} on start and writes it on failure.
  * - Invalidates timeline and thread-list keys after completion or interrupt.
  * - Records perceived-latency metrics for the first streamed block.
- *
  * @category atoms
  * @since 0.0.0
  */
@@ -1220,11 +1255,14 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
 /**
  * Whether the assistant turn driver is actively running.
  *
+ * **Details**
+ *
  * This is intentionally separate from {@link unreconciledTurnAtoms}: completed
  * display fallbacks must not block another send or leave a nonfunctional Stop
  * action.
  *
- * @example
+ * **Example** (Check turnActiveAtom is atom)
+ *
  * ```ts
  * import { turnActiveAtom } from "@beep/agents-client"
  * import { Atom } from "effect/unstable/reactivity"

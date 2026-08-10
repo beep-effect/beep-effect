@@ -88,7 +88,8 @@ const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, un
 /**
  * One source and upstream operation identifier submitted to name generation.
  *
- * @example
+ * **Example** (Construct candidate from source)
+ *
  * ```ts
  * import { ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
  *
@@ -117,7 +118,8 @@ export class ToolNameCandidate extends S.Class<ToolNameCandidate>($I`ToolNameCan
 /**
  * One deterministic candidate row in the checked-in collision report.
  *
- * @example
+ * **Example** (Construct collision report row)
+ *
  * ```ts
  * import { ToolNameCollisionRow } from "@beep/gov-legal-mcp/ToolNames"
  *
@@ -157,7 +159,8 @@ export class ToolNameCollisionRow extends S.Class<ToolNameCollisionRow>($I`ToolN
 /**
  * Versioned deterministic report for every candidate MCP tool name.
  *
- * @example
+ * **Example** (Read production report verdict)
+ *
  * ```ts
  * import { ProductionToolNameCollisionReport } from "@beep/gov-legal-mcp/ToolNames"
  *
@@ -182,7 +185,8 @@ export class ToolNameCollisionReport extends S.Class<ToolNameCollisionReport>($I
 /**
  * Typed rejection of an empty or unsafe normalized candidate.
  *
- * @example
+ * **Example** (Reject empty normalized name)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
@@ -214,7 +218,8 @@ export class ToolNameNormalizationError extends TaggedErrorClass<ToolNameNormali
 /**
  * Typed hard failure carrying the complete in-memory duplicate report.
  *
- * @example
+ * **Example** (Fail closed on duplicates)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
@@ -252,7 +257,8 @@ export class ToolNameCollisionError extends TaggedErrorClass<ToolNameCollisionEr
  * Typed rejection of a tool declaration absent from or drifted against the
  * validated production collision report.
  *
- * @example
+ * **Example** (Reject missing tool registration)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import {
@@ -353,7 +359,8 @@ const renderCanonicalValue = (value: unknown, indent: string): string => {
 /**
  * Normalize one full candidate string under the frozen NFKD and ASCII policy.
  *
- * @example
+ * **Example** (Normalize camelCase operation id)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import { normalizeToolName } from "@beep/gov-legal-mcp/ToolNames"
@@ -408,7 +415,8 @@ export const normalizeToolName = (candidate: string): Result.Result<string, Tool
 /**
  * Project one source/operation pair to its normalized, capped report row.
  *
- * @example
+ * **Example** (Project candidate to wire name)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import { projectToolNameCandidate, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
@@ -454,7 +462,8 @@ export const projectToolNameCandidate = (
 /**
  * Build a sorted collision report, failing closed on either duplicate stage.
  *
- * @example
+ * **Example** (Build clean multi-source report)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import { buildToolNameCollisionReport, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
@@ -527,7 +536,8 @@ export const buildToolNameCollisionReport = (
  * Render a report with sorted keys, two-space indentation, LF endings, and one
  * trailing newline.
  *
- * @example
+ * **Example** (Render report trailing newline)
+ *
  * ```ts
  * import {
  *   ProductionToolNameCollisionReport,
@@ -548,7 +558,8 @@ export const renderToolNameCollisionReport = (report: ToolNameCollisionReport): 
 /**
  * Frozen four-tool source/operation registry consumed by generation.
  *
- * @example
+ * **Example** (Count frozen production candidates)
+ *
  * ```ts
  * import { ProductionToolNameCandidates } from "@beep/gov-legal-mcp/ToolNames"
  *
@@ -569,7 +580,8 @@ export const ProductionToolNameCandidates: ReadonlyArray<ToolNameCandidate> = [
 /**
  * Validated clean production report evaluated before any toolkit declaration.
  *
- * @example
+ * **Example** (List production final wire names)
+ *
  * ```ts
  * import { ProductionToolNameCollisionReport } from "@beep/gov-legal-mcp/ToolNames"
  *
@@ -589,7 +601,8 @@ export const ProductionToolNameCollisionReport = Result.getOrThrowWith(
  * Resolve one registered tool name through the validated production report,
  * failing when the declaration is absent or its expected wire name drifted.
  *
- * @example
+ * **Example** (Resolve matching production wire name)
+ *
  * ```ts
  * import * as Result from "effect/Result"
  * import { resolveProductionToolName, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"

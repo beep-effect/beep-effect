@@ -12,7 +12,8 @@ const $I = $SchemaId.create("Record");
 /**
  * Schema for object records with string keys and unknown values.
  *
- * @example
+ * **Example** (Decoding an object record)
+ *
  * ```ts
  * import { UnknownRecord } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -35,7 +36,8 @@ export const UnknownRecord = S.Record(S.String, S.Unknown).pipe(
 /**
  * Runtime type extracted from the {@link UnknownRecord} schema.
  *
- * @example
+ * **Example** (Typing an object record)
+ *
  * ```ts
  * import type { UnknownRecord } from "@beep/schema"
  *

@@ -8,7 +8,8 @@
 /**
  * Edge authority repository layer exports.
  *
- * @example
+ * **Example** (Repository layer export check)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-server/EdgeAuthority"
@@ -23,7 +24,8 @@ export * from "./EdgeAuthority.layer.ts";
 /**
  * Edge authority repository adapter exports.
  *
- * @example
+ * **Example** (Adapter factory export check)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as EdgeAuthority from "@beep/epistemic-server/EdgeAuthority"

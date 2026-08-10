@@ -24,10 +24,13 @@ const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.
 /**
  * Server-only application facade consumed by contradiction RPC handlers.
  *
+ * **Details**
+ *
  * Port failures are translated to {@link ContradictionActionError} before they
  * leave this boundary.
  *
- * @example
+ * **Example** (Logging the service key)
+ *
  * ```ts
  * import { ContradictionTriage } from "@beep/epistemic-use-cases/server"
  *

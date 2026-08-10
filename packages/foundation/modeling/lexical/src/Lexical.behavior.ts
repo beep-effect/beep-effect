@@ -20,7 +20,8 @@ const childText = (children: ReadonlyArray<LexicalNode.Type>): string => A.join(
  * Plain-text projection over the full node union (prompt construction,
  * previews).
  *
- * @example
+ * **Example** (Linebreak node to newline)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"
@@ -56,7 +57,8 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
 /**
  * Plain-text projection of a full editor state.
  *
- * @example
+ * **Example** (Empty editor state text)
+ *
  * ```ts
  * import { Result } from "effect"
  * import * as S from "effect/Schema"

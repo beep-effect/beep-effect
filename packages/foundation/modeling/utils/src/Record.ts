@@ -9,7 +9,8 @@ import * as R from "effect/Record";
 /**
  * Re-export of all helpers from `effect/Record`.
  *
- * @example
+ * **Example** (Import Record helpers)
+ *
  * ```ts
  * import * as R from "@beep/utils/Record"
  *
@@ -27,7 +28,8 @@ export * from "effect/Record";
 /**
  * Creates a typed empty readonly record.
  *
- * @example
+ * **Example** (Create empty readonly record)
+ *
  * ```ts
  * import * as R from "@beep/utils/Record"
  *

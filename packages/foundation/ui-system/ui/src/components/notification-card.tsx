@@ -27,7 +27,8 @@ const NotificationStatus = LiteralKit(["unread", "read", "archived"]).pipe(
 /**
  * Notification status type.
  *
- * @example
+ * **Example** (Assign unread status)
+ *
  * ```ts
  * import type { NotificationStatus } from "@beep/ui/components/notification-card"
  *
@@ -44,7 +45,8 @@ export type NotificationStatus = typeof NotificationStatus.Type;
 /**
  * Action type component.
  *
- * @example
+ * **Example** (Log ActionType value)
+ *
  * ```tsx
  * import { ActionType } from "@beep/ui/components/notification-card"
  *
@@ -63,7 +65,8 @@ export const ActionType = LiteralKit(["redirect", "api_call", "workflow", "modal
 /**
  * Action type type.
  *
- * @example
+ * **Example** (Assign redirect action)
+ *
  * ```ts
  * import type { ActionType } from "@beep/ui/components/notification-card"
  *
@@ -80,7 +83,8 @@ export type ActionType = typeof ActionType.Type;
 /**
  * Action style theme value.
  *
- * @example
+ * **Example** (Log ActionStyle value)
+ *
  * ```tsx
  * import { ActionStyle } from "@beep/ui/components/notification-card"
  *
@@ -98,7 +102,8 @@ export const ActionStyle = LiteralKit(["primary", "danger", "default"]).pipe(
 /**
  * Action style type.
  *
- * @example
+ * **Example** (Assign primary style)
+ *
  * ```ts
  * import type { ActionStyle } from "@beep/ui/components/notification-card"
  *
@@ -149,7 +154,8 @@ const NotificationActionFields = {
 /**
  * Notification action component.
  *
- * @example
+ * **Example** (Log NotificationAction value)
+ *
  * ```tsx
  * import { NotificationAction } from "@beep/ui/components/notification-card"
  *
@@ -173,7 +179,8 @@ export const NotificationAction = ActionType.toTaggedUnion("type")({
 /**
  * Notification action type.
  *
- * @example
+ * **Example** (Extract action type field)
+ *
  * ```ts
  * import type { NotificationAction } from "@beep/ui/components/notification-card"
  *
@@ -227,7 +234,8 @@ const formatDate = (date: Date | string): string => {
 /**
  * Notification card component.
  *
- * @example
+ * **Example** (Log NotificationCard value)
+ *
  * ```tsx
  * import { NotificationCard } from "@beep/ui/components/notification-card"
  *

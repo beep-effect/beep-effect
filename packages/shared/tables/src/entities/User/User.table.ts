@@ -11,11 +11,13 @@ import { User } from "@beep/shared-domain/entities";
 /**
  * Postgres Drizzle table metadata for shared human user accounts.
  *
- * @remarks
+ * **Details**
+ *
  * The table is projected from `User.Model`, so the Drizzle table and
  * `Table.definition` stay aligned with the shared-domain account entity.
  *
- * @example
+ * **Example** (Inspect user table name)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { User } from "@beep/shared-tables/entities"

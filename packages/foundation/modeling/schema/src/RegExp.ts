@@ -43,7 +43,8 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
 /**
  * Branded schema for strings that can be converted directly to a JavaScript `RegExp`.
  *
- * @example
+ * **Example** (Decode valid pattern string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
@@ -52,8 +53,8 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
  * console.log(pattern) // "^[a-z]+$"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
   S.brand("RegExpStr"),
@@ -65,7 +66,8 @@ export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
 /**
  * Type for {@link RegExpStr}.
  *
- * @example
+ * **Example** (Type and test pattern)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
@@ -74,8 +76,8 @@ export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
  * console.log(new RegExp(pattern).test("123")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RegExpStr = typeof RegExpStr.Type;
 
@@ -89,7 +91,8 @@ const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue>
 /**
  * One-way schema that decodes a valid pattern string into a JavaScript `RegExp` object.
  *
- * @example
+ * **Example** (Decode string to RegExp)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -99,8 +102,8 @@ const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue>
  * console.log(pattern.test("abc")) // true
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RegExpFromStr = RegExpStr.pipe(
   S.decodeTo(
@@ -118,7 +121,8 @@ export const RegExpFromStr = RegExpStr.pipe(
 /**
  * Type for {@link RegExpFromStr}.
  *
- * @example
+ * **Example** (Type decoded RegExp value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -128,7 +132,7 @@ export const RegExpFromStr = RegExpStr.pipe(
  * console.log(re.test("hello world")) // true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RegExpFromStr = typeof RegExpFromStr.Type;

@@ -15,7 +15,8 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 /**
  * Validation failure for runtime SDK requests and candidate proposals.
  *
- * @example
+ * **Example** (Creating a validation error)
+ *
  * ```ts
  * import { ProfessionalRuntimeValidationError } from "@beep/agents-use-cases/public"
  *

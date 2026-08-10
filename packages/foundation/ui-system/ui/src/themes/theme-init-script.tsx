@@ -12,7 +12,8 @@ type AppThemeInitScriptProps = ComponentProps<typeof InitColorSchemeScript>;
 /**
  * App theme init script component.
  *
- * @example
+ * **Example** (Import and log component)
+ *
  * ```tsx
  * import { AppThemeInitScript } from "@beep/ui/themes/theme-init-script"
  *

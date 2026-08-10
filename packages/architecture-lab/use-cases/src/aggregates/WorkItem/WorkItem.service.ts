@@ -33,13 +33,15 @@ import type { WorkItemUseCasesShape } from "./WorkItem.use-cases.ts";
 /**
  * Translate repository and aggregate failures to public WorkItem action failures.
  *
- * @remarks
+ * **Details**
+ *
  * Repository availability details are intentionally redacted to
  * {@link WORK_ITEM_ACTION_UNAVAILABLE_REASON}. Domain-level transition
  * failures are exposed as {@link WorkItemActionRejected} with the domain error
  * tag preserved as the public reason.
  *
- * @example
+ * **Example** (Map repository not-found error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import {
@@ -103,12 +105,14 @@ const mutateStoredWorkItem = (
 /**
  * Build WorkItem use cases from the server repository port.
  *
- * @remarks
+ * **Details**
+ *
  * Lifecycle commands load the current aggregate before applying the domain
  * transition and saving the result. `list` loads the repository result first
  * and applies the optional status filter in the use-case layer.
  *
- * @example
+ * **Example** (List open work items)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import {
@@ -147,7 +151,6 @@ const mutateStoredWorkItem = (
  *   domain transition, then call `repository.save` in that order.
  * - `get` reads through `repository.get`; `list` reads `repository.list` and
  *   filters the loaded array in memory.
- *
  * @category use-cases
  * @since 0.0.0
  */

@@ -44,7 +44,8 @@ const $I = $RepoCliId.create("commands/Research/Research.service");
 /**
  * Runtime services captured by the live Research command service layer.
  *
- * @example
+ * **Example** (Effect with service requirements)
+ *
  * ```ts
  * import type { ResearchCommandServiceRequirements } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -52,6 +53,7 @@ const $I = $RepoCliId.create("commands/Research/Research.service");
  * const program: Effect.Effect<void, never, ResearchCommandServiceRequirements> = Effect.void
  * console.log(program.pipe !== undefined)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -64,13 +66,15 @@ export type ResearchCommandServiceRequirements =
 /**
  * Service contract for research knowledge-vault operations.
  *
- * @example
+ * **Example** (Shape type as undefined)
+ *
  * ```ts
  * import type { ResearchCommandServiceShape } from "@beep/repo-cli/commands/Research/Research.service"
  *
  * const example: ResearchCommandServiceShape | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -139,7 +143,8 @@ export interface ResearchCommandServiceShape {
 /**
  * Service tag for research knowledge-vault operations.
  *
- * @example
+ * **Example** (Service status via Effect)
+ *
  * ```ts
  * import { ResearchCommandService, ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -149,6 +154,7 @@ export interface ResearchCommandServiceShape {
  * )
  * console.log(program.pipe !== undefined) // true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -190,13 +196,15 @@ const makeResearchCommandService = Effect.fn("ResearchCommandService.make")(func
 /**
  * Live service layer for research knowledge-vault operations.
  *
- * @example
+ * **Example** (Live layer in object)
+ *
  * ```ts
  * import { ResearchCommandServiceLive } from "@beep/repo-cli/commands/Research"
  *
  * const layers = { research: ResearchCommandServiceLive }
  * console.log(Object.keys(layers)) // ["research"]
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -210,10 +218,8 @@ export const ResearchCommandServiceLive: Layer.Layer<
  * Resolve the vault root from an optional flag value, the environment, or the
  * default location.
  *
- * @param vaultFlag - Optional `--vault` flag value.
- * @returns The absolute vault root path.
- * @effects Reads the environment and checks vault existence on the filesystem.
- * @example
+ * **Example** (Resolve optional vault flag)
+ *
  * ```ts
  * import { resolveResearchVaultRoot } from "@beep/repo-cli/commands/Research"
  * import * as O from "effect/Option"
@@ -221,6 +227,10 @@ export const ResearchCommandServiceLive: Layer.Layer<
  * const resolved = resolveResearchVaultRoot(O.some("/home/user/knowledge"))
  * console.log(resolved.pipe !== undefined) // true
  * ```
+ *
+ * @param vaultFlag - Optional `--vault` flag value.
+ * @returns The absolute vault root path.
+ * @effects Reads the environment and checks vault existence on the filesystem.
  * @category use-cases
  * @since 0.0.0
  */
@@ -229,10 +239,8 @@ export const resolveResearchVaultRoot = resolveVaultRoot;
 /**
  * Scrape a URL to markdown and file it as a knowledge card in the vault.
  *
- * @param options - Capture options naming the vault root, URL, and tags.
- * @returns Summary describing the written (or skipped) card.
- * @effects Delegates to `ResearchCommandService`; the live service scrapes via Firecrawl, writes the markdown card, and records catalog rows.
- * @example
+ * **Example** (Capture URL to card path)
+ *
  * ```ts
  * import { captureResearchUrl, ResearchCaptureOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -245,6 +253,10 @@ export const resolveResearchVaultRoot = resolveVaultRoot;
  * const cardPath = captureResearchUrl(options).pipe(Effect.map((summary) => summary.cardPath))
  * console.log(cardPath.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Capture options naming the vault root, URL, and tags.
+ * @returns Summary describing the written (or skipped) card.
+ * @effects Delegates to `ResearchCommandService`; the live service scrapes via Firecrawl, writes the markdown card, and records catalog rows.
  * @category use-cases
  * @since 0.0.0
  */
@@ -258,10 +270,8 @@ export const captureResearchUrl = Effect.fn("Research.captureResearchUrl")(funct
 /**
  * Report vault catalog counts and pipeline state.
  *
- * @param options - Status options naming the vault root.
- * @returns Aggregate catalog counts.
- * @effects Delegates to `ResearchCommandService`; the live service reads the DuckDB catalog and logs a summary line.
- * @example
+ * **Example** (Map status total cards)
+ *
  * ```ts
  * import { researchStatus, ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -270,6 +280,10 @@ export const captureResearchUrl = Effect.fn("Research.captureResearchUrl")(funct
  * const total = researchStatus(options).pipe(Effect.map((summary) => summary.totalCards))
  * console.log(total.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Status options naming the vault root.
+ * @returns Aggregate catalog counts.
+ * @effects Delegates to `ResearchCommandService`; the live service reads the DuckDB catalog and logs a summary line.
  * @category use-cases
  * @since 0.0.0
  */
@@ -283,10 +297,8 @@ export const researchStatus = Effect.fn("Research.researchStatus")(function* (
 /**
  * Push pending knowledge cards into Cognee datasets and start cognify.
  *
- * @param options - Cognify options naming the vault root and dry-run mode.
- * @returns Counts for the push.
- * @effects Delegates to `ResearchCommandService`; the live service logs into the Cognee API, uploads card markdown per dataset, starts background cognify, and stamps the catalog.
- * @example
+ * **Example** (Cognify with dry-run)
+ *
  * ```ts
  * import { cognifyResearchCards, ResearchCognifyOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -295,6 +307,10 @@ export const researchStatus = Effect.fn("Research.researchStatus")(function* (
  * const pushed = cognifyResearchCards(options).pipe(Effect.map((summary) => summary.cardsPushed))
  * console.log(pushed.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Cognify options naming the vault root and dry-run mode.
+ * @returns Counts for the push.
+ * @effects Delegates to `ResearchCommandService`; the live service logs into the Cognee API, uploads card markdown per dataset, starts background cognify, and stamps the catalog.
  * @category use-cases
  * @since 0.0.0
  */
@@ -309,10 +325,8 @@ export const cognifyResearchCards = Effect.fn("Research.cognifyResearchCards")(f
  * Run the daily research pipeline: history-sift, notion-pull, cognify,
  * digest, and an optional vault commit.
  *
- * @param options - Daily options naming the vault root, lookback, and optional Notion page.
- * @returns Step outcomes for the run.
- * @effects Delegates to `ResearchCommandService`; steps that fail are logged and reported without aborting later steps.
- * @example
+ * **Example** (Daily pipeline with options)
+ *
  * ```ts
  * import { runResearchDaily, ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -327,6 +341,10 @@ export const cognifyResearchCards = Effect.fn("Research.cognifyResearchCards")(f
  * const ran = runResearchDaily(options).pipe(Effect.map((summary) => summary.ran))
  * console.log(ran.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Daily options naming the vault root, lookback, and optional Notion page.
+ * @returns Step outcomes for the run.
+ * @effects Delegates to `ResearchCommandService`; steps that fail are logged and reported without aborting later steps.
  * @category use-cases
  * @since 0.0.0
  */
@@ -340,10 +358,8 @@ export const runResearchDaily = Effect.fn("Research.runResearchDaily")(function*
 /**
  * Write the daily digest note from catalog data.
  *
- * @param options - Digest options naming the vault root and optional date.
- * @returns Counts for the digest note.
- * @effects Delegates to `ResearchCommandService`; the live service queries the catalog and writes `digest/<date>.md` in the vault.
- * @example
+ * **Example** (Write digest note path)
+ *
  * ```ts
  * import { writeResearchDigest, ResearchDigestOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -352,6 +368,10 @@ export const runResearchDaily = Effect.fn("Research.runResearchDaily")(function*
  * const digestPath = writeResearchDigest(options).pipe(Effect.map((summary) => summary.digestPath))
  * console.log(digestPath.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Digest options naming the vault root and optional date.
+ * @returns Counts for the digest note.
+ * @effects Delegates to `ResearchCommandService`; the live service queries the catalog and writes `digest/<date>.md` in the vault.
  * @category use-cases
  * @since 0.0.0
  */
@@ -365,10 +385,8 @@ export const writeResearchDigest = Effect.fn("Research.writeResearchDigest")(fun
 /**
  * Sift browser history into inbox link stubs.
  *
- * @param options - History-sift options naming the vault root, browser family, and lookback window.
- * @returns Counts for the sift run.
- * @effects Delegates to `ResearchCommandService`; the live service copies locked history databases, scans them via DuckDB, and writes inbox stubs plus catalog rows.
- * @example
+ * **Example** (Sift history to stubs)
+ *
  * ```ts
  * import { siftResearchHistory, ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
  * import { NonNegativeInt } from "@beep/schema"
@@ -382,6 +400,10 @@ export const writeResearchDigest = Effect.fn("Research.writeResearchDigest")(fun
  * const stubs = siftResearchHistory(options).pipe(Effect.map((summary) => summary.stubsWritten))
  * console.log(stubs.pipe !== undefined) // true
  * ```
+ *
+ * @param options - History-sift options naming the vault root, browser family, and lookback window.
+ * @returns Counts for the sift run.
+ * @effects Delegates to `ResearchCommandService`; the live service copies locked history databases, scans them via DuckDB, and writes inbox stubs plus catalog rows.
  * @category use-cases
  * @since 0.0.0
  */
@@ -395,10 +417,8 @@ export const siftResearchHistory = Effect.fn("Research.siftResearchHistory")(fun
 /**
  * Write one knowledge card per cloned or starred repository.
  *
- * @param options - Repo-card options naming the vault root and research clone library.
- * @returns Counts for the repo-card run.
- * @effects Delegates to `ResearchCommandService`; the live service inspects git clones (and optionally GitHub stars via `gh`) and writes repo cards plus catalog rows.
- * @example
+ * **Example** (Write repo cards counts)
+ *
  * ```ts
  * import { writeResearchRepoCards, ResearchRepoCardOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -412,6 +432,10 @@ export const siftResearchHistory = Effect.fn("Research.siftResearchHistory")(fun
  * const written = writeResearchRepoCards(options).pipe(Effect.map((summary) => summary.cardsWritten))
  * console.log(written.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Repo-card options naming the vault root and research clone library.
+ * @returns Counts for the repo-card run.
+ * @effects Delegates to `ResearchCommandService`; the live service inspects git clones (and optionally GitHub stars via `gh`) and writes repo cards plus catalog rows.
  * @category use-cases
  * @since 0.0.0
  */
@@ -425,10 +449,8 @@ export const writeResearchRepoCards = Effect.fn("Research.writeResearchRepoCards
 /**
  * Pull saved links from the Notion database into x-post cards.
  *
- * @param options - Notion-pull options naming the vault root and database title.
- * @returns Counts for the pull run.
- * @effects Delegates to `ResearchCommandService`; the live service queries the Notion REST API with `NOTION_API_KEY` and writes x-post cards plus catalog rows.
- * @example
+ * **Example** (Pull Notion links cards)
+ *
  * ```ts
  * import { pullResearchNotionLinks, ResearchNotionPullOptions } from "@beep/repo-cli/commands/Research"
  * import { Effect } from "effect"
@@ -437,6 +459,10 @@ export const writeResearchRepoCards = Effect.fn("Research.writeResearchRepoCards
  * const written = pullResearchNotionLinks(options).pipe(Effect.map((summary) => summary.cardsWritten))
  * console.log(written.pipe !== undefined) // true
  * ```
+ *
+ * @param options - Notion-pull options naming the vault root and database title.
+ * @returns Counts for the pull run.
+ * @effects Delegates to `ResearchCommandService`; the live service queries the Notion REST API with `NOTION_API_KEY` and writes x-post cards plus catalog rows.
  * @category use-cases
  * @since 0.0.0
  */

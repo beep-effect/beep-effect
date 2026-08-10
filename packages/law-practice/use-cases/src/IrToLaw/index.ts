@@ -8,7 +8,8 @@
 /**
  * IR-to-law extraction error exports.
  *
- * @example
+ * **Example** (Check error export key)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -22,7 +23,8 @@ export * from "./IrToLaw.errors.ts";
 /**
  * IR-to-law port exports.
  *
- * @example
+ * **Example** (Check service export key)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -36,7 +38,8 @@ export * from "./IrToLaw.ports.ts";
 /**
  * IR-to-law implementation exports.
  *
- * @example
+ * **Example** (Check makeIrToLaw export)
+ *
  * ```ts
  * import * as Module from "@beep/law-practice-use-cases/IrToLaw"
  *

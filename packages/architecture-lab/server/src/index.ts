@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab server role.
  *
- * @example
+ * **Example** (Importing and checking VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-server"
  *

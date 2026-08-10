@@ -84,6 +84,8 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
+  "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",
@@ -113,4 +115,7 @@ extend-exclude = [
   "packages/foundation/modeling/html/data/**",
   # Generated registered BCP 47 subtags are machine-owned identifiers, not prose.
   "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+  # Bun patch files truncate identifiers at line-wrap boundaries (`effect_Schem`),
+  # which is not prose and trips the dictionary on context hunk headers.
+  "patches/**",
 ]

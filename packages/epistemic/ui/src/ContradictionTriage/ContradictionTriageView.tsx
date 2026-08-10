@@ -59,7 +59,8 @@ const ContradictionTriageTabBase = LiteralKit(["queue", "comparison", "source"])
 /**
  * Narrow-layout panes available in the contradiction-triage workspace.
  *
- * @example
+ * **Example** (Log comparison enum member)
+ *
  * ```ts
  * import { ContradictionTriageTab } from "@beep/epistemic-ui"
  *
@@ -79,7 +80,8 @@ export const ContradictionTriageTab = ContradictionTriageTabBase.pipe(
 /**
  * Narrow-layout pane selected by the contradiction-triage host.
  *
- * @example
+ * **Example** (Assign comparison tab literal)
+ *
  * ```ts
  * import type { ContradictionTriageTab } from "@beep/epistemic-ui"
  *
@@ -97,11 +99,14 @@ type ContradictionTriageError = ContradictionTriage.ContradictionActionError | R
 /**
  * Props for the controlled contradiction-triage presentation.
  *
+ * **Details**
+ *
  * Every mutable value is supplied by the host so an Atom-connected wrapper can
  * own filters, selections, dialog draft state, RPC results, and mutations
  * without introducing component-local React state.
  *
- * @example
+ * **Example** (Render view with props)
+ *
  * ```tsx
  * import {
  *   ContradictionTriageView,
@@ -1361,13 +1366,16 @@ function TriagePanes({ activeTab, comparisonPane, queuePane, sourcePane }: Triag
 /**
  * Render a controlled three-pane contradiction-triage workspace.
  *
+ * **Details**
+ *
  * Layout follows the triage panel's container width, not the viewport: wide
  * panels show queue, symmetric belief comparison, and verified source side by
  * side, while narrow panels expose the same panes through controlled tabs.
  * All domain and mutation state remains host-owned and directly compatible
  * with the epistemic client atoms.
  *
- * @example
+ * **Example** (Wrap controlled triage view)
+ *
  * ```tsx
  * import {
  *   ContradictionTriageView,

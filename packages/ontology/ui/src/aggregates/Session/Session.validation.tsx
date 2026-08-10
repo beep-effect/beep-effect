@@ -148,7 +148,8 @@ const validationStatusBadge = (
 /**
  * Validation actions, results, verified repairs, and provenance export.
  *
- * @example
+ * **Example** (Import OntologyValidationRegion)
+ *
  * ```tsx
  * import { OntologyValidationRegion } from "@beep/ontology-ui"
  *

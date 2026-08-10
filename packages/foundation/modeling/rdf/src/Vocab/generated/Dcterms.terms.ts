@@ -10,7 +10,8 @@
 /**
  * DCMI Terms namespace IRI generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the DCMI Terms namespace IRI)
+ *
  * ```ts
  * import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/generated/Dcterms.terms"
  *
@@ -25,7 +26,8 @@ export const DCTERMS_NAMESPACE = "http://purl.org/dc/terms/" as const;
 /**
  * DCMI Terms local-name inventory generated from the identity `CoreVocab` registry.
  *
- * @example
+ * **Example** (Read the DCMI Terms term inventory)
+ *
  * ```ts
  * import { DCTERMS_TERMS } from "@beep/rdf/Vocab/generated/Dcterms.terms"
  *

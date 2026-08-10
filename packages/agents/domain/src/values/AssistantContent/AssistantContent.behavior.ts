@@ -16,11 +16,14 @@ import { AssistantBlock, AssistantHeadingTag, AssistantListType, InlineNode } fr
 /**
  * Lift a single {@link InlineNode} into a `@beep/md` inline node.
  *
+ * **Details**
+ *
  * Inline-code text becomes a `Code` span. Otherwise a `Text` run is wrapped in
  * `Em` (italic) then `Strong` (bold) as the flags are set, leaving bold as the
  * outermost wrapper. Links become an `A` node wrapping the visible text.
  *
- * @example
+ * **Example** (Bold text becomes Strong)
+ *
  * ```ts
  * import { inlineToMd } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -58,12 +61,15 @@ const inlinesToMd = (inlines: ReadonlyArray<InlineNode>): ReadonlyArray<Md.Inlin
 /**
  * Lift a single {@link AssistantBlock} into a `@beep/md` block node.
  *
+ * **Details**
+ *
  * Paragraphs map to `P`; headings map to a `Heading` block carrying their
  * numeric `level`; quotes wrap their inlines in a single paragraph inside a
  * `BlockQuote`; lists become `Ul` (bullet) or `Ol` (number) with one `Li` per
  * item; code blocks become `Pre` with an optional language hint.
  *
- * @example
+ * **Example** (Heading maps to Heading)
+ *
  * ```ts
  * import { blockToMd } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -121,7 +127,8 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
  * Lift an ordered list of assistant blocks into a complete `@beep/md`
  * `Document`.
  *
- * @example
+ * **Example** (Blocks become a Document)
+ *
  * ```ts
  * import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent"
  *

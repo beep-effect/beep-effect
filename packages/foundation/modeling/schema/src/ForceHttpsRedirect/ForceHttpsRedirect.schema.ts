@@ -24,7 +24,8 @@ const defaultMaxAge = 60 * 60 * 24 * 365 * 2;
 /**
  * Configuration for the `Strict-Transport-Security` header.
  *
- * @example
+ * **Example** (Making HSTS config)
+ *
  * ```ts
  * import { ForceHttpsRedirectConfig } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -49,7 +50,8 @@ export class ForceHttpsRedirectConfig extends S.Class<ForceHttpsRedirectConfig>(
 /**
  * Schema for tuple-based enabled `Strict-Transport-Security` configuration.
  *
- * @example
+ * **Example** (Decoding enabled HSTS tuple)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectConfig, ForceHttpsRedirectEnabled } from "@beep/schema/ForceHttpsRedirect"
@@ -73,7 +75,8 @@ export const ForceHttpsRedirectEnabled = S.Tuple([S.Literal(true), ForceHttpsRed
 /**
  * Type for tuple-based enabled `Strict-Transport-Security` configuration.
  *
- * @example
+ * **Example** (Typing enabled HSTS tuple)
+ *
  * ```ts
  * import { ForceHttpsRedirectConfig, type ForceHttpsRedirectEnabled } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -89,7 +92,8 @@ export type ForceHttpsRedirectEnabled = typeof ForceHttpsRedirectEnabled.Type;
 /**
  * Schema for enabled or disabled `Strict-Transport-Security` options.
  *
- * @example
+ * **Example** (Decoding HSTS option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectOption } from "@beep/schema/ForceHttpsRedirect"
@@ -109,7 +113,8 @@ export const ForceHttpsRedirectOption = S.Union([S.Boolean, ForceHttpsRedirectEn
 /**
  * Type for enabled or disabled `Strict-Transport-Security` options.
  *
- * @example
+ * **Example** (Typing HSTS option)
+ *
  * ```ts
  * import type { ForceHttpsRedirectOption } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -125,7 +130,8 @@ export type ForceHttpsRedirectOption = typeof ForceHttpsRedirectOption.Type;
 /**
  * Model for a rendered `Strict-Transport-Security` response header.
  *
- * @example
+ * **Example** (Making HSTS response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader } from "@beep/schema/ForceHttpsRedirect"
@@ -168,7 +174,8 @@ const formatForceHttpsRedirectValue = (config: ForceHttpsRedirectConfig): string
 /**
  * Schema that renders Strict-Transport-Security options into a response header.
  *
- * @example
+ * **Example** (Decoding HSTS header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect"
@@ -248,7 +255,8 @@ export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Und
 /**
  * Type for rendered `Strict-Transport-Security` response headers.
  *
- * @example
+ * **Example** (Typing HSTS response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader, type ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect"
@@ -276,7 +284,8 @@ export { ForceHttpsRedirectConfig as Config, ForceHttpsRedirectResponseHeader as
 /**
  * Concise alias for {@link ForceHttpsRedirectOption}.
  *
- * @example
+ * **Example** (Decoding Option alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/ForceHttpsRedirect"
@@ -292,7 +301,8 @@ export const Option = ForceHttpsRedirectOption;
 /**
  * Type-level representation of {@link Option}.
  *
- * @example
+ * **Example** (Typing Option alias)
+ *
  * ```ts
  * import type { Option } from "@beep/schema/ForceHttpsRedirect"
  *
@@ -308,7 +318,8 @@ export type Option = typeof Option.Type;
 /**
  * Concise alias for {@link ForceHttpsRedirectHeader}.
  *
- * @example
+ * **Example** (Decoding Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/ForceHttpsRedirect"
@@ -325,7 +336,8 @@ export const Header = ForceHttpsRedirectHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Typing Header alias)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ForceHttpsRedirectResponseHeader, type Header } from "@beep/schema/ForceHttpsRedirect"

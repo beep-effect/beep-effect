@@ -12,8 +12,9 @@
 /**
  * Stable source metadata for the official ISO 4217 List One feed.
  *
- * @example
- * ```typescript
+ * **Example** (Read the ISO 4217 feed metadata)
+ *
+ * ```ts
  * import { CurrencyCodeDataMetadata } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataMetadata.published === "2026-01-01")
@@ -31,8 +32,9 @@ export const CurrencyCodeDataMetadata = {
 /**
  * Published date reported by the official ISO 4217 List One feed.
  *
- * @example
- * ```typescript
+ * **Example** (Read the ISO 4217 published date)
+ *
+ * ```ts
  * import { CurrencyCodeDataPublished } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataPublished === "2026-01-01")
@@ -46,8 +48,9 @@ export const CurrencyCodeDataPublished = "2026-01-01" as const;
 /**
  * Official source URL for the ISO 4217 List One feed.
  *
- * @example
- * ```typescript
+ * **Example** (Read the ISO 4217 source URL)
+ *
+ * ```ts
  * import { CurrencyCodeDataSourceUrl } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataSourceUrl.includes("list-one.xml"))
@@ -61,8 +64,9 @@ export const CurrencyCodeDataSourceUrl = "https://www.six-group.com/dam/download
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
- * @example
- * ```typescript
+ * **Example** (Read the ISO 4217 source digest)
+ *
+ * ```ts
  * import { CurrencyCodeDataSourceSha256 } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataSourceSha256.length === 64)
@@ -76,8 +80,9 @@ export const CurrencyCodeDataSourceSha256 = "838dfb991648cf36df939edd5fe38117379
 /**
  * Normalized ISO 4217 currency entries emitted from the official feed.
  *
- * @example
- * ```typescript
+ * **Example** (Find a currency entry by code)
+ *
+ * ```ts
  * import { CurrencyCodeDataValues } from "@beep/data/generated/iso4217"
  *
  * const sample = CurrencyCodeDataValues.find((entry) => entry.code === "USD")
@@ -1794,8 +1799,9 @@ export const CurrencyCodeDataValues = [
 /**
  * ISO 4217 currency entries keyed by alphabetic code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a currency entry by code)
+ *
+ * ```ts
  * import { CurrencyCodeDataByCode } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataByCode.USD.digits === 2)
@@ -3511,8 +3517,9 @@ export const CurrencyCodeDataByCode = {
 /**
  * ISO 4217 alphabetic code literals.
  *
- * @example
- * ```typescript
+ * **Example** (Check an ISO 4217 code literal)
+ *
+ * ```ts
  * import { CurrencyCodeDataCodeValues } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataCodeValues.includes("USD"))
@@ -3705,8 +3712,9 @@ export const CurrencyCodeDataCodeValues = [
 /**
  * ISO 4217 currency names keyed by alphabetic code.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a currency name by code)
+ *
+ * ```ts
  * import { CurrencyCodeDataNameByCode } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataNameByCode.USD === "US Dollar")
@@ -3899,8 +3907,9 @@ export const CurrencyCodeDataNameByCode = {
 /**
  * ISO 4217 alphabetic code to currency-name literal pairs.
  *
- * @example
- * ```typescript
+ * **Example** (Find a code and name pair)
+ *
+ * ```ts
  * import { CurrencyCodeDataCodeNamePairs } from "@beep/data/generated/iso4217"
  *
  * const sample = CurrencyCodeDataCodeNamePairs.find(([code]) => code === "USD")

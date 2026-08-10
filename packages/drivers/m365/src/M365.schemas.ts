@@ -34,7 +34,8 @@ const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 /**
  * A Graph `identity` (user/application/device actor with optional id, name, email).
  *
- * @example
+ * **Example** (Empty identity make)
+ *
  * ```ts
  * import { GraphUserIdentity } from "@beep/m365"
  *
@@ -56,7 +57,8 @@ export class GraphUserIdentity extends S.Class<GraphUserIdentity>($I`GraphUserId
 /**
  * A Graph `identitySet` (the actor facets attached to created/modified events).
  *
- * @example
+ * **Example** (Empty identity set make)
+ *
  * ```ts
  * import { GraphIdentitySet } from "@beep/m365"
  *
@@ -78,7 +80,8 @@ export class GraphIdentitySet extends S.Class<GraphIdentitySet>($I`GraphIdentity
 /**
  * A Graph `itemReference` (parent locator for a driveItem/listItem).
  *
- * @example
+ * **Example** (Empty item reference make)
+ *
  * ```ts
  * import { GraphItemReference } from "@beep/m365"
  *
@@ -103,7 +106,8 @@ export class GraphItemReference extends S.Class<GraphItemReference>($I`GraphItem
 /**
  * Graph `file.hashes` content fingerprints.
  *
- * @example
+ * **Example** (Empty file hashes make)
+ *
  * ```ts
  * import { GraphFileHashes } from "@beep/m365"
  *
@@ -125,7 +129,8 @@ export class GraphFileHashes extends S.Class<GraphFileHashes>($I`GraphFileHashes
 /**
  * The Graph `file` facet of a driveItem.
  *
- * @example
+ * **Example** (Empty file facet make)
+ *
  * ```ts
  * import { GraphFile } from "@beep/m365"
  *
@@ -146,7 +151,8 @@ export class GraphFile extends S.Class<GraphFile>($I`GraphFile`)(
 /**
  * The Graph `folder` facet of a driveItem.
  *
- * @example
+ * **Example** (Empty folder facet make)
+ *
  * ```ts
  * import { GraphFolder } from "@beep/m365"
  *
@@ -166,7 +172,8 @@ export class GraphFolder extends S.Class<GraphFolder>($I`GraphFolder`)(
 /**
  * The Graph `deleted` facet, present on delta tombstones.
  *
- * @example
+ * **Example** (Empty deleted facet make)
+ *
  * ```ts
  * import { GraphDeleted } from "@beep/m365"
  *
@@ -186,7 +193,8 @@ export class GraphDeleted extends S.Class<GraphDeleted>($I`GraphDeleted`)(
 /**
  * A drive storage `quota` summary.
  *
- * @example
+ * **Example** (Empty quota make)
+ *
  * ```ts
  * import { GraphQuota } from "@beep/m365"
  *
@@ -210,7 +218,8 @@ export class GraphQuota extends S.Class<GraphQuota>($I`GraphQuota`)(
 /**
  * A Graph `siteCollection` descriptor.
  *
- * @example
+ * **Example** (Empty site collection make)
+ *
  * ```ts
  * import { GraphSiteCollection } from "@beep/m365"
  *
@@ -230,7 +239,8 @@ export class GraphSiteCollection extends S.Class<GraphSiteCollection>($I`GraphSi
 /**
  * A Graph `emailAddress` (name + address pair).
  *
- * @example
+ * **Example** (Empty email address make)
+ *
  * ```ts
  * import { GraphEmailAddress } from "@beep/m365"
  *
@@ -251,7 +261,8 @@ export class GraphEmailAddress extends S.Class<GraphEmailAddress>($I`GraphEmailA
 /**
  * A Graph mail `recipient` wrapper.
  *
- * @example
+ * **Example** (Empty recipient make)
+ *
  * ```ts
  * import { GraphRecipient } from "@beep/m365"
  *
@@ -271,7 +282,8 @@ export class GraphRecipient extends S.Class<GraphRecipient>($I`GraphRecipient`)(
 /**
  * A Graph `itemBody` (mail/event body content + type). Spans never log content.
  *
- * @example
+ * **Example** (Empty item body make)
+ *
  * ```ts
  * import { GraphItemBody } from "@beep/m365"
  *
@@ -292,7 +304,8 @@ export class GraphItemBody extends S.Class<GraphItemBody>($I`GraphItemBody`)(
 /**
  * A Graph `dateTimeTimeZone` pair.
  *
- * @example
+ * **Example** (Empty dateTimeTimeZone make)
+ *
  * ```ts
  * import { GraphDateTimeTimeZone } from "@beep/m365"
  *
@@ -313,7 +326,8 @@ export class GraphDateTimeTimeZone extends S.Class<GraphDateTimeTimeZone>($I`Gra
 /**
  * A Graph event `location` descriptor.
  *
- * @example
+ * **Example** (Empty location make)
+ *
  * ```ts
  * import { GraphLocation } from "@beep/m365"
  *
@@ -334,7 +348,8 @@ export class GraphLocation extends S.Class<GraphLocation>($I`GraphLocation`)(
 /**
  * A Graph `contentTypeInfo` reference on a listItem.
  *
- * @example
+ * **Example** (Empty content type info make)
+ *
  * ```ts
  * import { GraphContentTypeInfo } from "@beep/m365"
  *
@@ -355,10 +370,13 @@ export class GraphContentTypeInfo extends S.Class<GraphContentTypeInfo>($I`Graph
 /**
  * Generic Microsoft Graph OData collection envelope (`{ value, @odata.* }`).
  *
+ * **Details**
+ *
  * Covers both standard list responses (`@odata.nextLink`) and delta responses
  * (`@odata.deltaLink`); continuation links decode to `Option`.
  *
- * @example
+ * **Example** (Collection of drives)
+ *
  * ```ts
  * import { GraphCollection, GraphDrive } from "@beep/m365"
  *
@@ -381,7 +399,8 @@ export const GraphCollection = <Item extends S.Top>(item: Item) =>
 /**
  * A OneDrive/SharePoint drive (document library).
  *
- * @example
+ * **Example** (Make drive with id)
+ *
  * ```ts
  * import { GraphDrive } from "@beep/m365"
  *
@@ -409,7 +428,8 @@ export class GraphDrive extends S.Class<GraphDrive>($I`GraphDrive`)(
 /**
  * A SharePoint site.
  *
- * @example
+ * **Example** (Make site with id)
+ *
  * ```ts
  * import { GraphSite } from "@beep/m365"
  *
@@ -439,7 +459,8 @@ export class GraphSite extends S.Class<GraphSite>($I`GraphSite`)(
  * (`id`, `eTag`/`cTag`), the optional preauthenticated download URL, and the
  * delta `deleted` facet.
  *
- * @example
+ * **Example** (Make drive item with id)
+ *
  * ```ts
  * import { GraphDriveItem } from "@beep/m365"
  *
@@ -474,7 +495,8 @@ export class GraphDriveItem extends S.Class<GraphDriveItem>($I`GraphDriveItem`)(
 /**
  * A `driveItem` version (immutable provenance anchor across edits).
  *
- * @example
+ * **Example** (Make version with id)
+ *
  * ```ts
  * import { GraphDriveItemVersion } from "@beep/m365"
  *
@@ -500,7 +522,8 @@ export class GraphDriveItemVersion extends S.Class<GraphDriveItemVersion>($I`Gra
  * A SharePoint `listItem` with its open custom-column `fields` (matter/client/
  * application-number metadata rides here as `driveItem`'s superclass).
  *
- * @example
+ * **Example** (Make list item with id)
+ *
  * ```ts
  * import { GraphListItem } from "@beep/m365"
  *
@@ -529,7 +552,8 @@ export class GraphListItem extends S.Class<GraphListItem>($I`GraphListItem`)(
  * An Outlook mail message (read subset). Body/preview are decoded but spans
  * never record their content.
  *
- * @example
+ * **Example** (Make message with id)
+ *
  * ```ts
  * import { GraphMessage } from "@beep/m365"
  *
@@ -566,7 +590,8 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
 /**
  * An Outlook calendar event (read subset).
  *
- * @example
+ * **Example** (Make event with id)
+ *
  * ```ts
  * import { GraphEvent } from "@beep/m365"
  *

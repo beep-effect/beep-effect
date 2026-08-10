@@ -74,6 +74,7 @@ export const DocsESLintConfig: DocsESLintConfigShape = [
       "dist/**",
       "**/dist/**",
       "**/docs/**",
+      "infra/ci-runners/sdks/ghaRunners/**",
       "node_modules/**",
       "**/storybook-static/**",
       "**/.turbo/**",

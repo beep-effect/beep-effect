@@ -26,7 +26,8 @@ const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
 /**
  * Product-neutral process runner used by the 1Password CLI driver.
  *
- * @example
+ * **Example** (Mock runner implementation)
+ *
  * ```ts
  * import type { OnePasswordCliRunner } from "@beep/onepassword-cli/OnePasswordCli.service"
  * import { OnePasswordCliProcessResult } from "@beep/onepassword-cli/OnePasswordCli.models"
@@ -162,7 +163,8 @@ const makeService = (commandPath: string, runner: OnePasswordCliRunner): OnePass
 /**
  * Effect service for native `op` execution.
  *
- * @example
+ * **Example** (Importing the service)
+ *
  * ```ts
  * import { OnePasswordCli } from "@beep/onepassword-cli/OnePasswordCli.service"
  *

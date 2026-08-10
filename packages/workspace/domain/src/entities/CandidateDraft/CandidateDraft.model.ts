@@ -17,7 +17,8 @@ const $I = $WorkspaceDomainId.create("entities/CandidateDraft/CandidateDraft.mod
 /**
  * Candidate draft artifact proposed by an agent.
  *
- * @example
+ * **Example** (Log entity resource)
+ *
  * ```ts
  * import { CandidateDraft } from "@beep/workspace-domain"
  *

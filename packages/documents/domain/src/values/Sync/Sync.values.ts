@@ -14,11 +14,13 @@ const $I = $DocumentsDomainId.create("values/Sync/Sync.values");
 /**
  * Document management system provider receiving the one-way vault mirror.
  *
- * @remarks
+ * **Details**
+ *
  * The P3 Box-sync phase supports only `"box"`; the P6 phase extends this
  * family with `"m365"`.
  *
- * @example
+ * **Example** (Decode box provider value)
+ *
  * ```ts
  * import { DmsProvider } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -39,7 +41,8 @@ export const DmsProvider = LiteralKit(["box"]).pipe(
 /**
  * Type for {@link DmsProvider}.
  *
- * @example
+ * **Example** (Annotate box provider type)
+ *
  * ```ts
  * import { DmsProvider } from "@beep/documents-domain/values/Sync"
  *
@@ -55,7 +58,8 @@ export type DmsProvider = typeof DmsProvider.Type;
 /**
  * Vault-root-relative POSIX path; never absolute.
  *
- * @example
+ * **Example** (Decode relative vault path)
+ *
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -77,7 +81,8 @@ export const VaultRelPath = S.NonEmptyString.pipe(
 /**
  * Type for {@link VaultRelPath}.
  *
- * @example
+ * **Example** (Type vault relative path)
+ *
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -94,7 +99,8 @@ export type VaultRelPath = typeof VaultRelPath.Type;
 /**
  * Provider-neutral identifier for an item stored in the remote DMS.
  *
- * @example
+ * **Example** (Decode remote item id)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -116,7 +122,8 @@ export const RemoteItemId = S.NonEmptyString.pipe(
 /**
  * Type for {@link RemoteItemId}.
  *
- * @example
+ * **Example** (Type remote item id)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -133,7 +140,8 @@ export type RemoteItemId = typeof RemoteItemId.Type;
 /**
  * Kind of vault item mirrored to the DMS.
  *
- * @example
+ * **Example** (Decode file item kind)
+ *
  * ```ts
  * import { SyncItemKind } from "@beep/documents-domain/values/Sync"
  * import * as S from "effect/Schema"
@@ -154,7 +162,8 @@ export const SyncItemKind = LiteralKit(["file", "folder"]).pipe(
 /**
  * Type for {@link SyncItemKind}.
  *
- * @example
+ * **Example** (Annotate folder item kind)
+ *
  * ```ts
  * import { SyncItemKind } from "@beep/documents-domain/values/Sync"
  *

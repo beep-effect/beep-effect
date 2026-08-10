@@ -92,7 +92,8 @@ const browserColorSupport: () => ColorInfo = flow(
 /**
  * Color support detected for browser stdout and stderr compatibility channels.
  *
- * @example
+ * **Example** (Logging browser stdout support)
+ *
  * ```ts
  * import { detectedSupportsColorBrowser } from "./SupportsColor.browser.ts"
  *

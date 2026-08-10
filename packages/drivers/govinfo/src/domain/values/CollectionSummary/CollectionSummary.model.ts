@@ -13,7 +13,8 @@ const $I = $GovinfoId.create("domain/values/CollectionSummary/CollectionSummary.
 /**
  * List of GovInfo collections and their package/granule counts.
  *
- * @example
+ * **Example** (Decode collection summary array)
+ *
  * ```ts
  * import { CollectionSummary } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
  * import * as S from "effect/Schema";
@@ -42,7 +43,8 @@ export const CollectionSummary = S.Array(SummaryItem).pipe(
 /**
  * Decoded collection summary array type.
  *
- * @example
+ * **Example** (Decode with type annotation)
+ *
  * ```ts
  * import { CollectionSummary } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
  * import type { CollectionSummary as CollectionSummaryValue } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
@@ -68,7 +70,8 @@ export type CollectionSummary = typeof CollectionSummary.Type;
 /**
  * Companion namespace for {@link CollectionSummary} encoded helpers.
  *
- * @example
+ * **Example** (Companion namespace decode usage)
+ *
  * ```ts
  * import { CollectionSummary } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
  * import type { CollectionSummary as CollectionSummaryValue } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
@@ -93,7 +96,8 @@ export declare namespace CollectionSummary {
   /**
    * Encoded JSON shape accepted by {@link CollectionSummary}.
    *
-   * @example
+   * **Example** (Encode decoded collection summary)
+   *
    * ```ts
    * import { CollectionSummary } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
    * import * as S from "effect/Schema";

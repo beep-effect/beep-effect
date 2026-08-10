@@ -29,7 +29,8 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadStore");
 /**
  * Input accepted by {@link ThreadStoreShape.createThread}.
  *
- * @example
+ * **Example** (Make create-thread input)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -65,7 +66,8 @@ export class CreateThreadInput extends S.Class<CreateThreadInput>($I`CreateThrea
 /**
  * Input accepted by {@link ThreadStoreShape.appendTurn}.
  *
- * @example
+ * **Example** (Make append-turn input)
+ *
  * ```ts
  * import { Document } from "@beep/md/Md.model"
  * import { Effect } from "effect"
@@ -113,7 +115,8 @@ export class AppendTurnInput extends S.Class<AppendTurnInput>($I`AppendTurnInput
 /**
  * Result returned by {@link ThreadStoreShape.appendTurn}.
  *
- * @example
+ * **Example** (List result field keys)
+ *
  * ```ts
  * import type { AppendTurnResult } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -143,7 +146,8 @@ export class AppendTurnResult extends S.Class<AppendTurnResult>($I`AppendTurnRes
 /**
  * Input accepted by {@link ThreadStoreShape.setTitleIfEmpty}.
  *
- * @example
+ * **Example** (Make set-title input)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
@@ -185,7 +189,8 @@ export class SetThreadTitleIfEmptyInput extends S.Class<SetThreadTitleIfEmptyInp
 /**
  * Cross-concept ThreadStore contract.
  *
- * @example
+ * **Example** (List store write operations)
+ *
  * ```ts
  * import type { ThreadStoreShape } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -223,7 +228,8 @@ export interface ThreadStoreShape {
 /**
  * Cross-concept ThreadStore service.
  *
- * @example
+ * **Example** (Provide ThreadStore service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ThreadStore } from "@beep/workspace-use-cases/aggregates/Thread/server"

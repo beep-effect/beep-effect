@@ -14,7 +14,8 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 /**
  * Command for proposing candidate work through the SDK facade.
  *
- * @example
+ * **Example** (Propose from runtime fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { ProposeCandidateOutputSet, RuntimeScope } from "@beep/agents-use-cases/public"

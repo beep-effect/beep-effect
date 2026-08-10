@@ -19,7 +19,8 @@ const $I = $AgentsDomainId.create("entities/Agent/Agent.model");
  * Persisted agent record that binds a fixture key to one skill fixture and
  * execution mode.
  *
- * @example
+ * **Example** (Log entity type)
+ *
  * ```ts
  * import { Agent } from "@beep/agents-domain"
  *

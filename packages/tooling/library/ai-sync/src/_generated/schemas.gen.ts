@@ -16,13 +16,15 @@ const $I = $AiSyncId.create("_generated/schemas.gen");
 /**
  * Generated MCP server command configuration.
  *
- * @example
+ * **Example** (Construct a CodexMcpServer)
+ *
  * ```ts
  * import { CodexMcpServer } from "@beep/ai-sync"
  *
  * const server = CodexMcpServer.make({ command: "node", args: ["mcp.js"] })
  * console.log(server.command)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -43,12 +45,14 @@ export class CodexMcpServer extends S.Class<CodexMcpServer>($I`CodexMcpServer`)(
 /**
  * Generated Codex skill entry.
  *
- * @example
+ * **Example** (Construct a CodexSkillEntry)
+ *
  * ```ts
  * import { CodexSkillEntry } from "@beep/ai-sync"
  * const entry = CodexSkillEntry.make({ name: "effect-first-development", enabled: true })
  * console.log(entry.name)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -65,7 +69,8 @@ export class CodexSkillEntry extends S.Class<CodexSkillEntry>($I`CodexSkillEntry
 /**
  * Generated Codex skills block.
  *
- * @example
+ * **Example** (Construct a CodexSkills block)
+ *
  * ```ts
  * import { CodexSkills } from "@beep/ai-sync"
  *
@@ -75,6 +80,7 @@ export class CodexSkillEntry extends S.Class<CodexSkillEntry>($I`CodexSkillEntry
  * })
  * console.log(skills.config?.[0]?.name)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -91,7 +97,8 @@ export class CodexSkills extends S.Class<CodexSkills>($I`CodexSkills`)(
 /**
  * Generated Codex config schema.
  *
- * @example
+ * **Example** (Construct a CodexConfig)
+ *
  * ```ts
  * import { CodexConfig } from "@beep/ai-sync"
  *
@@ -101,6 +108,7 @@ export class CodexSkills extends S.Class<CodexSkills>($I`CodexSkills`)(
  * })
  * console.log(config.mcp_servers?.local?.command)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -129,13 +137,15 @@ export class CodexConfig extends S.Class<CodexConfig>($I`CodexConfig`)(
 /**
  * Generated Claude-style MCP server schema.
  *
- * @example
+ * **Example** (Construct an McpJsonServer)
+ *
  * ```ts
  * import { McpJsonServer } from "@beep/ai-sync"
  *
  * const server = McpJsonServer.make({ type: "stdio", command: "node" })
  * console.log(server.type)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -161,7 +171,8 @@ export class McpJsonServer extends S.Class<McpJsonServer>($I`McpJsonServer`)(
 /**
  * Generated Claude-style MCP JSON schema.
  *
- * @example
+ * **Example** (Construct a ClaudeMcpJson)
+ *
  * ```ts
  * import { ClaudeMcpJson } from "@beep/ai-sync"
  *
@@ -170,6 +181,7 @@ export class McpJsonServer extends S.Class<McpJsonServer>($I`McpJsonServer`)(
  * })
  * console.log(config.mcpServers.local?.command)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -185,7 +197,8 @@ export class ClaudeMcpJson extends S.Class<ClaudeMcpJson>($I`ClaudeMcpJson`)(
 /**
  * Generated Claude Code settings schema subset.
  *
- * @example
+ * **Example** (Construct ClaudeSettings)
+ *
  * ```ts
  * import { ClaudeSettings } from "@beep/ai-sync"
  *
@@ -195,6 +208,7 @@ export class ClaudeMcpJson extends S.Class<ClaudeMcpJson>($I`ClaudeMcpJson`)(
  * })
  * console.log(settings.enabledMcpjsonServers?.includes("local"))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

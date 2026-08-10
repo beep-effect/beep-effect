@@ -20,11 +20,14 @@ const $I = $PacerId.create("pacer/auth/CsoAuth.models");
 /**
  * `cso-auth` login request body.
  *
+ * **Details**
+ *
  * `clientCode` is optional billing/matter attribution; `otpCode` is required
  * only when the account is MFA-enrolled; `redactFlag` (`"1"`) is required only
  * for registered filers.
  *
- * @example
+ * **Example** (Construct login request body)
+ *
  * ```ts
  * import { CsoAuthRequest } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -52,11 +55,14 @@ export class CsoAuthRequest extends S.Class<CsoAuthRequest>($I`CsoAuthRequest`)(
 /**
  * `cso-auth` login response body.
  *
+ * **Details**
+ *
  * `loginResult` `"0"` means a token was issued; `nextGenCSO` is empty on
  * failure; `errorDescription` is `""` on clean success, otherwise a warning or
  * error message.
  *
- * @example
+ * **Example** (Construct login response body)
+ *
  * ```ts
  * import { CsoAuthResponse } from "@beep/pacer"
  * import * as O from "effect/Option"
@@ -82,7 +88,8 @@ export class CsoAuthResponse extends S.Class<CsoAuthResponse>($I`CsoAuthResponse
 /**
  * `cso-logout` request body — the token to invalidate.
  *
- * @example
+ * **Example** (Construct logout request body)
+ *
  * ```ts
  * import { CsoLogoutRequest } from "@beep/pacer"
  *
@@ -105,7 +112,8 @@ export class CsoLogoutRequest extends S.Class<CsoLogoutRequest>($I`CsoLogoutRequ
 /**
  * `cso-logout` response body.
  *
- * @example
+ * **Example** (Construct logout response body)
+ *
  * ```ts
  * import { CsoLogoutResponse } from "@beep/pacer"
  * import * as O from "effect/Option"

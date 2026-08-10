@@ -2,7 +2,8 @@
  * Shared `check | write | dry-run` run-mode literal domain and a
  * precedence-based flags-to-mode resolver for repo-cli command adapters.
  *
- * @remarks
+ * **Details**
+ *
  * This kit's literal set is designed to represent, without loss, the
  * `VersionSyncModeKit`, `SyncDataRunModeKit`, and raw `SkillsRunMode` union
  * that each command currently maintains in isolation, plus their duplicated
@@ -27,13 +28,15 @@ const RunModeKit = LiteralKit(["check", "write", "dry-run"]);
 /**
  * Command execution mode shared by check/write/dry-run style commands.
  *
- * @example
+ * **Example** (Decode dry-run mode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RunMode } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(S.decodeUnknownSync(RunMode)("dry-run"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -46,12 +49,14 @@ export const RunMode = RunModeKit.pipe(
 /**
  * Literal option tuple for {@link RunMode}.
  *
- * @example
+ * **Example** (Includes write option)
+ *
  * ```ts
  * import { RunModeOptions } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(RunModeOptions.includes("write")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,12 +65,14 @@ export const RunModeOptions = RunModeKit.Options;
 /**
  * Pattern-matching helper for {@link RunMode} literals.
  *
- * @example
+ * **Example** (Match write mode handlers)
+ *
  * ```ts
  * import { RunModeMatch } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(RunModeMatch("write", { check: () => 0, write: () => 1, "dry-run": () => 2 }))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -74,12 +81,14 @@ export const RunModeMatch = RunModeKit.$match;
 /**
  * Thunk helpers returning each {@link RunMode} literal.
  *
- * @example
+ * **Example** (Invoke write mode thunk)
+ *
  * ```ts
  * import { RunModeThunk } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(RunModeThunk.write())
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -88,12 +97,14 @@ export const RunModeThunk = RunModeKit.thunk;
 /**
  * Enum mapping for {@link RunMode} literals.
  *
- * @example
+ * **Example** (Lookup dry-run enum value)
+ *
  * ```ts
  * import { RunModeEnum } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(RunModeEnum["dry-run"])
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,12 +113,14 @@ export const RunModeEnum = RunModeKit.Enum;
 /**
  * Derived per-literal guards for {@link RunMode}.
  *
- * @example
+ * **Example** (Test write mode guard)
+ *
  * ```ts
  * import { RunModeIs } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(RunModeIs.write("write"))
  * ```
+ *
  * @category guards
  * @since 0.0.0
  */
@@ -125,15 +138,14 @@ export type RunMode = typeof RunMode.Type;
  * Resolve a run mode from ordered flag candidates, taking the first enabled
  * candidate and falling back when none are set.
  *
- * @remarks
+ * **Details**
+ *
  * Reproduces the `O.firstSomeOf` precedence shared by every existing
  * `resolveMode` helper. Order the candidates by priority; the first `true`
  * flag wins.
  *
- * @param candidates - Ordered `[enabled, mode]` pairs, highest priority first.
- * @param fallback - Mode returned when no candidate flag is set.
- * @returns The resolved run mode.
- * @example
+ * **Example** (Resolve first enabled mode)
+ *
  * ```ts
  * import { resolveRunMode } from "@beep/repo-cli/internal/cli/RunMode"
  *
@@ -141,6 +153,10 @@ export type RunMode = typeof RunMode.Type;
  * console.log(resolveRunMode([[false, "dry-run"], [true, "write"]], "check"))
  * console.log(resolveRunMode("check")([[false, "dry-run"], [true, "write"]]))
  * ```
+ *
+ * @param candidates - Ordered `[enabled, mode]` pairs, highest priority first.
+ * @param fallback - Mode returned when no candidate flag is set.
+ * @returns The resolved run mode.
  * @category resolution
  * @since 0.0.0
  */
@@ -160,21 +176,24 @@ export const resolveRunMode: {
 /**
  * True when two mutually-exclusive run-mode flags are both set.
  *
- * @remarks
+ * **Details**
+ *
  * Commands that forbid combining two mode flags (for example `--check` with
  * `--dry-run`) gate on this before {@link resolveRunMode} so they can raise
  * their own tagged conflict error.
  *
- * @param first - The first mode flag.
- * @param second - The second mode flag.
- * @returns `true` when both flags are set.
- * @example
+ * **Example** (Detect both flags set)
+ *
  * ```ts
  * import { runModeFlagsConflict } from "@beep/repo-cli/internal/cli/RunMode"
  *
  * console.log(runModeFlagsConflict(true, true))
  * console.log(runModeFlagsConflict(false)(true))
  * ```
+ *
+ * @param first - The first mode flag.
+ * @param second - The second mode flag.
+ * @returns `true` when both flags are set.
  * @category resolution
  * @since 0.0.0
  */

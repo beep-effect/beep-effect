@@ -22,7 +22,8 @@ const EcfrErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the eCFR REST API driver.
  *
- * @example
+ * **Example** (Log AST error reason)
+ *
  * ```ts
  * import { EcfrErrorReason } from "@beep/ecfr"
  *
@@ -46,7 +47,8 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
 /**
  * Type for {@link EcfrErrorReason}.
  *
- * @example
+ * **Example** (Assign transport reason type)
+ *
  * ```ts
  * import type { EcfrErrorReason } from "@beep/ecfr"
  *
@@ -62,7 +64,8 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 /**
  * Options used when constructing {@link EcfrError} instances.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { EcfrErrorOptions } from "@beep/ecfr"
  * import { NonNegativeInt } from "@beep/schema"
@@ -98,7 +101,8 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
 /**
  * Technical failure raised by the eCFR REST API driver boundary.
  *
- * @example
+ * **Example** (Create transport EcfrError)
+ *
  * ```ts
  * import { EcfrError } from "@beep/ecfr"
  *

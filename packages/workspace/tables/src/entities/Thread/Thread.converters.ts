@@ -13,7 +13,8 @@ import type { Table } from "./Thread.table.ts";
 /**
  * Selected workspace Thread row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { Table, ThreadRow } from "@beep/workspace-tables/entities/Thread"
  *
@@ -31,7 +32,8 @@ export type ThreadRow = typeof Table.$inferSelect;
 /**
  * Insertable workspace Thread row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { Table, ThreadInsert } from "@beep/workspace-tables/entities/Thread"
  *
@@ -52,12 +54,15 @@ const decodeThreadRow = S.decodeUnknownSync(Thread);
 /**
  * Convert a Thread entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link Table}, whose metadata carries the physical SQL
  * column names. The database-managed `id` (SERIAL) is dropped so the insert
  * defers to the sequence.
  *
- * @example
+ * **Example** (Convert entity to insert)
+ *
  * ```ts
  * import { Thread } from "@beep/workspace-domain/entities/Thread"
  * import { toThreadInsert } from "@beep/workspace-tables/entities/Thread"
@@ -109,7 +114,8 @@ export const toThreadInsert = (thread: Thread): ThreadInsert => {
 /**
  * Convert a selected persistence row into a Thread entity.
  *
- * @example
+ * **Example** (Convert row to entity)
+ *
  * ```ts
  * import { fromThreadRow, type ThreadRow } from "@beep/workspace-tables/entities/Thread"
  *

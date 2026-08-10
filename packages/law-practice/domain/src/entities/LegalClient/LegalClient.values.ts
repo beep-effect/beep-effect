@@ -15,7 +15,8 @@ const LegalClientStatusBase = LiteralKit(["active_client"]);
 /**
  * Legal client lifecycle status accepted by the law-practice proof fixtures.
  *
- * @example
+ * **Example** (Decode active client status)
+ *
  * ```ts
  * import { LegalClientStatus } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -41,7 +42,8 @@ export const LegalClientStatus = LegalClientStatusBase.pipe(
 /**
  * Type-level literal union produced by {@link LegalClientStatus}.
  *
- * @example
+ * **Example** (Satisfy LegalClientStatus type)
+ *
  * ```ts
  * import type { LegalClientStatus } from "@beep/law-practice-domain"
  *

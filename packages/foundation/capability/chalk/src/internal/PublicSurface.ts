@@ -36,10 +36,13 @@ const ColorSupportLevelInputChecks = S.makeFilterGroup(
 /**
  * Numeric Chalk color support level input accepted by constructor and setter boundaries.
  *
+ * **Details**
+ *
  * The schema keeps the public constructor input broad as `number` while
  * validating that runtime values are integer levels `0` through `3`.
  *
- * @example
+ * **Example** (Decode color support level)
+ *
  * ```ts
  * import { ColorSupportLevelInput } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
@@ -70,7 +73,8 @@ class ChalkConstructorOptionsModel extends S.Class<ChalkConstructorOptionsModel>
 /**
  * Method and property surface shared by Chalk instances.
  *
- * @example
+ * **Example** (Type chalk instance surface)
+ *
  * ```ts
  * import type { ChalkInstanceSurface } from "@beep/chalk/Chalk"
  *
@@ -140,7 +144,8 @@ export declare abstract class ChalkInstanceSurface {
 /**
  * Schema for options accepted by Chalk constructors.
  *
- * @example
+ * **Example** (Decode constructor options)
+ *
  * ```ts
  * import { ChalkConstructorOptions } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
@@ -157,10 +162,13 @@ export const ChalkConstructorOptions = ChalkConstructorOptionsModel;
 /**
  * Plain constructor options accepted by Chalk constructors.
  *
+ * **Details**
+ *
  * Derived from {@link ChalkConstructorOptions}' encoded schema side so callers
  * can continue to pass object literals like `{ level: 3 }`.
  *
- * @example
+ * **Example** (Assign constructor options object)
+ *
  * ```ts
  * import type { ChalkConstructorOptions } from "@beep/chalk/Chalk"
  *
@@ -176,7 +184,8 @@ export type ChalkConstructorOptions = typeof ChalkConstructorOptions.Encoded;
 /**
  * Base constructor shape wrapped by the Chalk constructor proxy.
  *
- * @example
+ * **Example** (Assign constructor base class)
+ *
  * ```ts
  * import type { ChalkConstructorBase } from "@beep/chalk/Chalk"
  *
@@ -196,7 +205,8 @@ type ChalkConstructorFor<Base extends ChalkConstructorBase> = new (
 /**
  * Function that creates a Chalk instance from constructor options.
  *
- * @example
+ * **Example** (Type chalk creator function)
+ *
  * ```ts
  * import type { ChalkCreator } from "@beep/chalk/Chalk"
  *
@@ -212,7 +222,8 @@ export type ChalkCreator = (options?: ChalkConstructorOptions) => object;
 /**
  * Wrap a constructor base so `new` delegates to a Chalk creator.
  *
- * @example
+ * **Example** (Wrap constructor with creator)
+ *
  * ```ts
  * import { makeChalkConstructor } from "@beep/chalk/Chalk"
  *

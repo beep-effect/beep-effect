@@ -16,7 +16,8 @@
 /**
  * Shared claim lifecycle vocabulary and transition value object.
  *
- * @example
+ * **Example** (Import and log lifecycle values)
+ *
  * ```ts
  * import { ClaimLifecycle, ClaimLifecycleTransition } from "@beep/epistemic-domain"
  *

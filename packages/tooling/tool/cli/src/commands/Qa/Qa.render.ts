@@ -22,14 +22,16 @@ const BYTES_PER_MIB = 1024 * 1024;
 /**
  * Render a byte count as fixed-precision mebibytes.
  *
- * @param bytes - Byte count to format.
- * @returns The count in mebibytes, to two decimal places.
- * @example
+ * **Example** (Format bytes as mebibytes)
+ *
  * ```ts
  * import { formatMib } from "@beep/repo-cli/commands/Qa/Qa.render"
  *
  * console.log(formatMib(2097152)) // "2.00 MiB"
  * ```
+ *
+ * @param bytes - Byte count to format.
+ * @returns The count in mebibytes, to two decimal places.
  * @category formatting
  * @since 0.0.0
  */
@@ -113,7 +115,8 @@ const droppedLine = (dropped: ExtractionPlan["dropped"][number]): string => {
 /**
  * Render a round's `report.md` from its decoded session manifest.
  *
- * @example
+ * **Example** (Report from session manifest)
+ *
  * ```ts
  * import { CaptureSession, SessionManifest, Viewport } from "@beep/qa-capture"
  * import { renderRoundReport } from "@beep/repo-cli/commands/Qa/Qa.render"
@@ -144,6 +147,7 @@ const droppedLine = (dropped: ExtractionPlan["dropped"][number]): string => {
  * const report = renderRoundReport(manifest, QaEventLog.make({ events: [], rejectedCount: 0 }), O.none())
  * console.log(report.startsWith("# QA round 1")) // true
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -208,7 +212,8 @@ export const renderRoundReport: {
 /**
  * Render the planner's window table for a `--dry-run` extraction.
  *
- * @example
+ * **Example** (Empty extraction plan table)
+ *
  * ```ts
  * import { ArtifactBudget, ExtractionPlan } from "@beep/qa-capture"
  * import { renderExtractionPlanTable } from "@beep/repo-cli/commands/Qa/Qa.render"
@@ -222,6 +227,7 @@ export const renderRoundReport: {
  * })
  * console.log(renderExtractionPlanTable(plan, 0).length > 0) // true
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -286,13 +292,14 @@ const findingSection = (finding: QaFinding): ReadonlyArray<string> => [
 /**
  * Render `inventory.md` from a decoded {@link QaInventory}.
  *
+ * **Details**
+ *
  * The final line is the machine-readable verdict the loop protocol reads; the
  * count comes from the decoded inventory, which the schema already proved
  * consistent with its findings.
  *
- * @param inventory - Decoded inventory to render.
- * @returns Markdown lines ending in the machine-readable verdict.
- * @example
+ * **Example** (Inventory ending in verdict)
+ *
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { renderInventoryMarkdown } from "@beep/repo-cli/commands/Qa/Qa.render"
@@ -307,6 +314,9 @@ const findingSection = (finding: QaFinding): ReadonlyArray<string> => [
  * })
  * console.log(renderInventoryMarkdown(inventory).endsWith("REQUIRED FINDINGS: 0\n")) // true
  * ```
+ *
+ * @param inventory - Decoded inventory to render.
+ * @returns Markdown lines ending in the machine-readable verdict.
  * @category formatting
  * @since 0.0.0
  */

@@ -45,7 +45,8 @@ const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.len
 /**
  * Failure raised when a backend does not support a requested operation.
  *
- * @example
+ * **Example** (Create unsupported backend error)
+ *
  * ```ts
  * import { BackendNotSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -88,7 +89,8 @@ export class BackendNotSupported extends TaggedErrorClass<BackendNotSupported>($
 /**
  * Failure raised when a backend fails to initialize.
  *
- * @example
+ * **Example** (Create backend init error)
+ *
  * ```ts
  * import { BackendInitError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -131,7 +133,8 @@ export class BackendInitError extends TaggedErrorClass<BackendInitError>($I`Back
 /**
  * Failure raised when a backend operation fails at runtime.
  *
- * @example
+ * **Example** (Create operation failure error)
+ *
  * ```ts
  * import { BackendOperationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -180,7 +183,8 @@ export class BackendOperationError extends TaggedErrorClass<BackendOperationErro
 /**
  * Tagged schema union for every recoverable backend failure.
  *
- * @example
+ * **Example** (Check union membership)
+ *
  * ```ts
  * import { notSupported, NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -202,7 +206,8 @@ export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, B
 /**
  * Runtime TypeScript type represented by the {@link NLPBackendError} schema.
  *
- * @example
+ * **Example** (Access error tag type)
+ *
  * ```ts
  * import type { NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -218,7 +223,8 @@ export type NLPBackendError = typeof NLPBackendError.Type;
 /**
  * Capability bitmap that describes which operations a backend can perform.
  *
- * @example
+ * **Example** (Declare capability bitmap)
+ *
  * ```ts
  * import type { BackendCapabilities } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -286,12 +292,15 @@ export class BackendCapabilities extends S.Class<BackendCapabilities>($I`Backend
 /**
  * Structural shape of the {@link NLPBackend} service.
  *
+ * **Details**
+ *
  * Operations a backend does not support should fail with
  * {@link BackendNotSupported}. The annotation operations are functors over text:
  * `posTag`/`lemmatize` preserve token structure, `extractEntities`/
  * `extractRelations` surface semantic spans.
  *
- * @example
+ * **Example** (Implement minimal backend shape)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -349,22 +358,24 @@ export interface NLPBackendShape {
 /**
  * Service tag for the pluggable {@link NLPBackendShape} backend.
  *
- * @example
+ * **Example** (Read service tag key)
+ *
  * ```ts
  * import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * console.log(NLPBackend.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class NLPBackend extends Context.Service<NLPBackend, NLPBackendShape>()($I`NLPBackend`) {}
 
 /**
  * Check whether a backend advertises support for a single capability.
  *
- * @example
+ * **Example** (Check single capability support)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { supportsCapability } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -408,7 +419,8 @@ export const supportsCapability: {
 /**
  * List supported capability keys in schema order.
  *
- * @example
+ * **Example** (List supported capability keys)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { getSupportedCapabilities } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -450,7 +462,8 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
 /**
  * Construct a {@link BackendNotSupported} failure with a default message.
  *
- * @example
+ * **Example** (Build not-supported failure)
+ *
  * ```ts
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -467,7 +480,8 @@ export const notSupported = (backend: string, operation: string, message?: strin
 /**
  * Construct a {@link BackendInitError} from an unknown initialization cause.
  *
- * @example
+ * **Example** (Build init error from cause)
+ *
  * ```ts
  * import { initError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -483,7 +497,8 @@ export const initError: typeof BackendInitError.fromCause = BackendInitError.fro
 /**
  * Construct a {@link BackendOperationError} for a failed backend operation.
  *
- * @example
+ * **Example** (Build operation error from cause)
+ *
  * ```ts
  * import { operationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *

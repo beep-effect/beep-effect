@@ -12,7 +12,8 @@ import { Effect } from "effect";
 /**
  * RPC handlers delegated to the contradiction-triage application service.
  *
- * @example
+ * **Example** (Verify Layer instance)
+ *
  * ```ts
  * import { ContradictionHandlersLive } from "@beep/epistemic-server/layer"
  * import { Layer } from "effect"

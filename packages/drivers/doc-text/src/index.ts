@@ -8,7 +8,8 @@
 /**
  * Typed document text driver errors.
  *
- * @example
+ * **Example** (Make extraction error)
+ *
  * ```ts
  * import { makeDocTextError } from "@beep/doc-text"
  *
@@ -22,7 +23,8 @@ export * from "./DocText.errors.ts";
 /**
  * JS-native document text file-processing engine.
  *
- * @example
+ * **Example** (Log engine descriptor name)
+ *
  * ```ts
  * import { DocTextFileProcessingEngine } from "@beep/doc-text"
  *
@@ -37,7 +39,8 @@ export * from "./DocText.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/doc-text"
  *

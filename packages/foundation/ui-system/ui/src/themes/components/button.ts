@@ -10,7 +10,8 @@ import type { ThemeComponents } from "../types.ts";
 /**
  * Button theme theme value.
  *
- * @example
+ * **Example** (Import button theme)
+ *
  * ```ts
  * import { buttonTheme } from "@beep/ui/themes/components/button"
  *

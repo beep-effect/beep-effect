@@ -137,7 +137,8 @@ const GraphPathSegment = S.String.check(
 /**
  * Decoded Graph drive collection.
  *
- * @example
+ * **Example** (Make empty drive collection)
+ *
  * ```ts
  * import { M365DriveCollection } from "@beep/m365"
  *
@@ -157,7 +158,8 @@ export const M365DriveCollection = GraphCollection(GraphDrive).pipe(
 /**
  * Type for {@link M365DriveCollection}.
  *
- * @example
+ * **Example** (Count collection value length)
+ *
  * ```ts
  * import type { M365DriveCollection } from "@beep/m365"
  *
@@ -173,7 +175,8 @@ export type M365DriveCollection = typeof M365DriveCollection.Type;
 /**
  * Decoded Graph site collection.
  *
- * @example
+ * **Example** (Make empty site collection)
+ *
  * ```ts
  * import { M365SiteCollection } from "@beep/m365"
  *
@@ -193,7 +196,8 @@ export const M365SiteCollection = GraphCollection(GraphSite).pipe(
 /**
  * Type for {@link M365SiteCollection}.
  *
- * @example
+ * **Example** (Count site collection length)
+ *
  * ```ts
  * import type { M365SiteCollection } from "@beep/m365"
  *
@@ -209,7 +213,8 @@ export type M365SiteCollection = typeof M365SiteCollection.Type;
 /**
  * Decoded Graph drive item collection, including delta envelopes.
  *
- * @example
+ * **Example** (Make empty item collection)
+ *
  * ```ts
  * import { M365DriveItemCollection } from "@beep/m365"
  *
@@ -229,7 +234,8 @@ export const M365DriveItemCollection = GraphCollection(GraphDriveItem).pipe(
 /**
  * Type for {@link M365DriveItemCollection}.
  *
- * @example
+ * **Example** (Count drive item length)
+ *
  * ```ts
  * import type { M365DriveItemCollection } from "@beep/m365"
  *
@@ -245,7 +251,8 @@ export type M365DriveItemCollection = typeof M365DriveItemCollection.Type;
 /**
  * Decoded Graph drive item version collection.
  *
- * @example
+ * **Example** (Make empty version collection)
+ *
  * ```ts
  * import { M365DriveItemVersionCollection } from "@beep/m365"
  *
@@ -265,7 +272,8 @@ export const M365DriveItemVersionCollection = GraphCollection(GraphDriveItemVers
 /**
  * Type for {@link M365DriveItemVersionCollection}.
  *
- * @example
+ * **Example** (Count version collection length)
+ *
  * ```ts
  * import type { M365DriveItemVersionCollection } from "@beep/m365"
  *
@@ -281,7 +289,8 @@ export type M365DriveItemVersionCollection = typeof M365DriveItemVersionCollecti
 /**
  * Decoded Graph message collection.
  *
- * @example
+ * **Example** (Make empty message collection)
+ *
  * ```ts
  * import { M365MessageCollection } from "@beep/m365"
  *
@@ -301,7 +310,8 @@ export const M365MessageCollection = GraphCollection(GraphMessage).pipe(
 /**
  * Type for {@link M365MessageCollection}.
  *
- * @example
+ * **Example** (Count message collection length)
+ *
  * ```ts
  * import type { M365MessageCollection } from "@beep/m365"
  *
@@ -317,7 +327,8 @@ export type M365MessageCollection = typeof M365MessageCollection.Type;
 /**
  * Decoded Graph calendar event collection.
  *
- * @example
+ * **Example** (Make empty event collection)
+ *
  * ```ts
  * import { M365EventCollection } from "@beep/m365"
  *
@@ -337,7 +348,8 @@ export const M365EventCollection = GraphCollection(GraphEvent).pipe(
 /**
  * Type for {@link M365EventCollection}.
  *
- * @example
+ * **Example** (Count event collection length)
+ *
  * ```ts
  * import type { M365EventCollection } from "@beep/m365"
  *
@@ -353,7 +365,8 @@ export type M365EventCollection = typeof M365EventCollection.Type;
 /**
  * Request for listing drives visible to the signed-in user or a specific site.
  *
- * @example
+ * **Example** (Request drives for site)
+ *
  * ```ts
  * import { M365ListDrivesRequest } from "@beep/m365"
  * import * as O from "effect/Option"
@@ -379,7 +392,8 @@ export class M365ListDrivesRequest extends S.Class<M365ListDrivesRequest>($I`M36
 /**
  * Request for searching SharePoint sites.
  *
- * @example
+ * **Example** (Search sites by keyword)
+ *
  * ```ts
  * import { M365ListSitesRequest } from "@beep/m365"
  *
@@ -404,7 +418,8 @@ export class M365ListSitesRequest extends S.Class<M365ListSitesRequest>($I`M365L
 /**
  * Request for reading one SharePoint site by id.
  *
- * @example
+ * **Example** (Get site by id)
+ *
  * ```ts
  * import { M365GetSiteRequest } from "@beep/m365"
  *
@@ -427,7 +442,8 @@ export class M365GetSiteRequest extends S.Class<M365GetSiteRequest>($I`M365GetSi
 /**
  * Request for drive item delta enumeration.
  *
- * @example
+ * **Example** (Delta request by drive id)
+ *
  * ```ts
  * import { M365DeltaDriveItemsRequest } from "@beep/m365"
  *
@@ -455,7 +471,8 @@ export class M365DeltaDriveItemsRequest extends S.Class<M365DeltaDriveItemsReque
 /**
  * Request for downloading a drive item's content.
  *
- * @example
+ * **Example** (Download content request)
+ *
  * ```ts
  * import { M365DownloadDriveItemContentRequest } from "@beep/m365"
  *
@@ -481,7 +498,8 @@ export class M365DownloadDriveItemContentRequest extends S.Class<M365DownloadDri
 /**
  * Request for reading a SharePoint list item with expanded fields.
  *
- * @example
+ * **Example** (Get expanded list item)
+ *
  * ```ts
  * import { M365GetListItemRequest } from "@beep/m365"
  *
@@ -506,7 +524,8 @@ export class M365GetListItemRequest extends S.Class<M365GetListItemRequest>($I`M
 /**
  * Request for listing a drive item's immutable versions.
  *
- * @example
+ * **Example** (List item versions request)
+ *
  * ```ts
  * import { M365ListDriveItemVersionsRequest } from "@beep/m365"
  *
@@ -532,7 +551,8 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
 /**
  * Request for listing Outlook mail messages.
  *
- * @example
+ * **Example** (List messages with top)
+ *
  * ```ts
  * import { PosInt } from "@beep/schema"
  * import { M365ListMessagesRequest } from "@beep/m365"
@@ -565,7 +585,8 @@ export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I
 /**
  * Request for reading one Outlook mail message.
  *
- * @example
+ * **Example** (Get message by id)
+ *
  * ```ts
  * import { M365GetMessageRequest } from "@beep/m365"
  *
@@ -591,7 +612,8 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
 /**
  * Request for listing Outlook calendar events.
  *
- * @example
+ * **Example** (List events with top)
+ *
  * ```ts
  * import { PosInt } from "@beep/schema"
  * import { M365ListEventsRequest } from "@beep/m365"
@@ -621,7 +643,8 @@ export class M365ListEventsRequest extends S.Class<M365ListEventsRequest>($I`M36
 /**
  * Request for reading one Outlook calendar event.
  *
- * @example
+ * **Example** (Get event by id)
+ *
  * ```ts
  * import { M365GetEventRequest } from "@beep/m365"
  *
@@ -647,7 +670,8 @@ export class M365GetEventRequest extends S.Class<M365GetEventRequest>($I`M365Get
 /**
  * Successfully downloaded drive item content.
  *
- * @example
+ * **Example** (Construct downloaded content)
+ *
  * ```ts
  * import { GraphDriveItem, M365DownloadedContent } from "@beep/m365"
  *
@@ -675,11 +699,14 @@ export class M365DownloadedContent extends S.TaggedClass<M365DownloadedContent>(
 /**
  * Drive item content skipped because it appears protected/encrypted.
  *
+ * **Details**
+ *
  * Graph `v1.0` does not expose a complete Purview/RMS decrypted-content signal.
  * v1 uses protected file extension heuristics (`.pfile`, `.ppdf`, `.pdocx`,
  * etc.) and intentionally avoids tenant-wide decrypt grants.
  *
- * @example
+ * **Example** (Skipped encrypted item result)
+ *
  * ```ts
  * import { GraphDriveItem, M365SkippedEncryptedItem } from "@beep/m365"
  *
@@ -707,7 +734,8 @@ export class M365SkippedEncryptedItem extends S.TaggedClass<M365SkippedEncrypted
 /**
  * Download result for a drive item.
  *
- * @example
+ * **Example** (Read download result tag)
+ *
  * ```ts
  * import { M365DriveItemDownload, M365DownloadedContent } from "@beep/m365"
  *
@@ -730,7 +758,8 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
 /**
  * Type for {@link M365DriveItemDownload}.
  *
- * @example
+ * **Example** (Type download result tag)
+ *
  * ```ts
  * import type { M365DriveItemDownload } from "@beep/m365"
  *
@@ -746,7 +775,8 @@ export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
 /**
  * Public Microsoft 365 driver service shape.
  *
- * @example
+ * **Example** (Keyof service method names)
+ *
  * ```ts
  * import type { M365Shape } from "@beep/m365"
  *
@@ -1133,7 +1163,8 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
 /**
  * Microsoft Graph `v1.0` read-only driver service.
  *
- * @example
+ * **Example** (Build layer from config)
+ *
  * ```ts
  * import { M365, M365ConfigInput } from "@beep/m365"
  *
@@ -1148,11 +1179,14 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
   /**
    * Build a testable Microsoft Graph service layer from explicit configuration.
    *
+   * **Details**
+   *
    * The returned layer requires an injected {@link M365Auth} and
    * `HttpClient.HttpClient`, so unit tests can supply fixed tokens and a fake
    * HTTP transport.
    *
-   * @example
+   * **Example** (Make testable Graph layer)
+   *
    * ```ts
    * import { M365, M365ConfigInput } from "@beep/m365"
    *
@@ -1178,7 +1212,8 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
   /**
    * Build a live Microsoft Graph service layer from explicit configuration.
    *
-   * @example
+   * **Example** (Make live Graph layer)
+   *
    * ```ts
    * import { M365, M365ConfigInput } from "@beep/m365"
    *
@@ -1201,11 +1236,14 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
   /**
    * Live Microsoft Graph layer backed by ambient Effect Config values.
    *
+   * **Details**
+   *
    * Required: `M365_TENANT_ID`, `M365_CLIENT_ID`. Optional:
    * `M365_AUTHORITY`, `M365_GRAPH_BASE_URL`, `M365_MAX_RETRIES`,
    * `M365_REDIRECT_URI`, `M365_SCOPES`, and `M365_TOKEN_CACHE_PATH`.
    *
-   * @example
+   * **Example** (Ambient config live layer)
+   *
    * ```ts
    * import { M365 } from "@beep/m365"
    *

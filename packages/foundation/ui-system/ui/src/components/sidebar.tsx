@@ -76,7 +76,8 @@ const sidebarStorageHydrationAtom = Atom.family((stateAtom: Atom.Writable<Sideba
 /**
  * Use sidebar hook.
  *
- * @example
+ * **Example** (Import useSidebar hook)
+ *
  * ```tsx
  * import { useSidebar } from "@beep/ui/components/sidebar"
  *
@@ -100,7 +101,8 @@ interface SidebarProviderProps extends React.ComponentPropsWithoutRef<"div"> {
 /**
  * Sidebar provider export.
  *
- * @example
+ * **Example** (Import SidebarProvider export)
+ *
  * ```tsx
  * import { SidebarProvider } from "@beep/ui/components/sidebar"
  *
@@ -231,7 +233,8 @@ interface SidebarProps extends React.ComponentPropsWithoutRef<"div"> {
 /**
  * Sidebar component.
  *
- * @example
+ * **Example** (Import Sidebar component)
+ *
  * ```tsx
  * import { Sidebar } from "@beep/ui/components/sidebar"
  *
@@ -386,7 +389,8 @@ function Sidebar({
 /**
  * Sidebar trigger component.
  *
- * @example
+ * **Example** (Import SidebarTrigger component)
+ *
  * ```tsx
  * import { SidebarTrigger } from "@beep/ui/components/sidebar"
  *
@@ -420,7 +424,8 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentPropsWi
 /**
  * Sidebar rail component.
  *
- * @example
+ * **Example** (Import SidebarRail component)
+ *
  * ```tsx
  * import { SidebarRail } from "@beep/ui/components/sidebar"
  *
@@ -457,7 +462,8 @@ function SidebarRail({ className, ...props }: React.ComponentPropsWithoutRef<"bu
 /**
  * Sidebar inset component.
  *
- * @example
+ * **Example** (Import SidebarInset component)
+ *
  * ```tsx
  * import { SidebarInset } from "@beep/ui/components/sidebar"
  *
@@ -484,7 +490,8 @@ function SidebarInset({ className, ...props }: React.ComponentPropsWithoutRef<"m
 /**
  * Sidebar input component.
  *
- * @example
+ * **Example** (Import SidebarInput component)
+ *
  * ```tsx
  * import { SidebarInput } from "@beep/ui/components/sidebar"
  *
@@ -507,7 +514,8 @@ function SidebarInput({ className, ...props }: React.ComponentPropsWithoutRef<ty
 /**
  * Sidebar header component.
  *
- * @example
+ * **Example** (Import SidebarHeader component)
+ *
  * ```tsx
  * import { SidebarHeader } from "@beep/ui/components/sidebar"
  *
@@ -526,7 +534,8 @@ function SidebarHeader({ className, ...props }: React.ComponentPropsWithoutRef<"
 /**
  * Sidebar footer component.
  *
- * @example
+ * **Example** (Import SidebarFooter component)
+ *
  * ```tsx
  * import { SidebarFooter } from "@beep/ui/components/sidebar"
  *
@@ -549,7 +558,8 @@ function SidebarFooter({ className, ...props }: React.ComponentPropsWithoutRef<"
 /**
  * Sidebar separator component.
  *
- * @example
+ * **Example** (Import SidebarSeparator component)
+ *
  * ```tsx
  * import { SidebarSeparator } from "@beep/ui/components/sidebar"
  *
@@ -568,7 +578,8 @@ function SidebarSeparator({ className, ...props }: React.ComponentPropsWithoutRe
 /**
  * Sidebar content component.
  *
- * @example
+ * **Example** (Import SidebarContent component)
+ *
  * ```tsx
  * import { SidebarContent } from "@beep/ui/components/sidebar"
  *
@@ -594,7 +605,8 @@ function SidebarContent({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * Sidebar group component.
  *
- * @example
+ * **Example** (Import SidebarGroup component)
+ *
  * ```tsx
  * import { SidebarGroup } from "@beep/ui/components/sidebar"
  *
@@ -613,7 +625,8 @@ function SidebarGroup({ className, ...props }: React.ComponentPropsWithoutRef<"d
 /**
  * Sidebar group label component.
  *
- * @example
+ * **Example** (Import SidebarGroupLabel component)
+ *
  * ```tsx
  * import { SidebarGroupLabel } from "@beep/ui/components/sidebar"
  *
@@ -640,7 +653,8 @@ function SidebarGroupLabel({ className, ...props }: React.ComponentPropsWithoutR
 /**
  * Sidebar group action component.
  *
- * @example
+ * **Example** (Import SidebarGroupAction component)
+ *
  * ```tsx
  * import { SidebarGroupAction } from "@beep/ui/components/sidebar"
  *
@@ -669,7 +683,8 @@ function SidebarGroupAction({ className, ...props }: React.ComponentPropsWithout
 /**
  * Sidebar group content component.
  *
- * @example
+ * **Example** (Import SidebarGroupContent component)
+ *
  * ```tsx
  * import { SidebarGroupContent } from "@beep/ui/components/sidebar"
  *
@@ -686,7 +701,8 @@ function SidebarGroupContent({ className, ...props }: React.ComponentPropsWithou
 /**
  * Sidebar menu component.
  *
- * @example
+ * **Example** (Import SidebarMenu component)
+ *
  * ```tsx
  * import { SidebarMenu } from "@beep/ui/components/sidebar"
  *
@@ -703,7 +719,8 @@ function SidebarMenu({ className, ...props }: React.ComponentPropsWithoutRef<"ul
 /**
  * Sidebar menu item component.
  *
- * @example
+ * **Example** (Import SidebarMenuItem component)
+ *
  * ```tsx
  * import { SidebarMenuItem } from "@beep/ui/components/sidebar"
  *
@@ -749,7 +766,8 @@ interface SidebarMenuButtonProps
 /**
  * Sidebar menu button component.
  *
- * @example
+ * **Example** (Import SidebarMenuButton component)
+ *
  * ```tsx
  * import { SidebarMenuButton } from "@beep/ui/components/sidebar"
  *
@@ -802,7 +820,8 @@ function SidebarMenuButton({
 /**
  * Sidebar menu action component.
  *
- * @example
+ * **Example** (Import SidebarMenuAction component)
+ *
  * ```tsx
  * import { SidebarMenuAction } from "@beep/ui/components/sidebar"
  *
@@ -842,7 +861,8 @@ function SidebarMenuAction({
 /**
  * Sidebar menu badge component.
  *
- * @example
+ * **Example** (Import SidebarMenuBadge component)
+ *
  * ```tsx
  * import { SidebarMenuBadge } from "@beep/ui/components/sidebar"
  *
@@ -873,7 +893,8 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentPropsWithoutRe
 /**
  * Sidebar menu skeleton component.
  *
- * @example
+ * **Example** (Import SidebarMenuSkeleton component)
+ *
  * ```tsx
  * import { SidebarMenuSkeleton } from "@beep/ui/components/sidebar"
  *
@@ -922,7 +943,8 @@ function SidebarMenuSkeletonInner({
 /**
  * Sidebar menu sub component.
  *
- * @example
+ * **Example** (Import SidebarMenuSub component)
+ *
  * ```tsx
  * import { SidebarMenuSub } from "@beep/ui/components/sidebar"
  *
@@ -949,7 +971,8 @@ function SidebarMenuSub({ className, ...props }: React.ComponentPropsWithoutRef<
 /**
  * Sidebar menu sub item component.
  *
- * @example
+ * **Example** (Import SidebarMenuSubItem component)
+ *
  * ```tsx
  * import { SidebarMenuSubItem } from "@beep/ui/components/sidebar"
  *
@@ -966,7 +989,8 @@ function SidebarMenuSubItem({ className, ...props }: React.ComponentPropsWithout
 /**
  * Sidebar menu sub button component.
  *
- * @example
+ * **Example** (Import SidebarMenuSubButton component)
+ *
  * ```tsx
  * import { SidebarMenuSubButton } from "@beep/ui/components/sidebar"
  *

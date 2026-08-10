@@ -15,13 +15,15 @@ const $I = $RepoCliId.create("commands/Files/internal/StripMetadata.schemas");
 /**
  * Image extension schema supported by metadata stripping.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SupportedMetadataImageExtension } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(SupportedMetadataImageExtension)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -42,7 +44,8 @@ export type SupportedMetadataImageExtension = typeof SupportedMetadataImageExten
 /**
  * Planned metadata strip for a selected image or video file.
  *
- * @example
+ * **Example** (Construct plan entry instance)
+ *
  * ```ts
  * import { StripMetadataPlanEntry } from "@beep/repo-cli/commands/Files/index"
  *
@@ -55,6 +58,7 @@ export type SupportedMetadataImageExtension = typeof SupportedMetadataImageExten
  * })
  * console.log(entry.mediaKind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -74,13 +78,15 @@ export class StripMetadataPlanEntry extends S.Class<StripMetadataPlanEntry>($I`S
 /**
  * Summary returned by `stripMetadataFiles`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { StripMetadataSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(StripMetadataSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,13 +108,15 @@ export class StripMetadataSummary extends S.Class<StripMetadataSummary>($I`Strip
 /**
  * Planned metadata stripping entries plus skipped file counts.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { StripMetadataPlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(StripMetadataPlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

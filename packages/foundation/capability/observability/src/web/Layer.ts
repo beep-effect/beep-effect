@@ -13,7 +13,8 @@ import type { WebObservabilityConfig } from "./Config.ts";
 /**
  * Thin browser-safe wrapper around `@effect/opentelemetry/WebSdk.layer`.
  *
- * @example
+ * **Example** (Create web SDK layer)
+ *
  * ```typescript
  * import { WebObservabilityConfig } from "@beep/observability/web"
  * import { layerWebSdk } from "@beep/observability/web"
@@ -30,8 +31,8 @@ import type { WebObservabilityConfig } from "./Config.ts";
  * console.log(layer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerWebSdk = (
   config: WebObservabilityConfig

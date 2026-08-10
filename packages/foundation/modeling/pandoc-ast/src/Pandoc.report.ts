@@ -16,7 +16,8 @@ const $I = $PandocAstId.create("Pandoc.report");
 /**
  * Direction of a Pandoc compatibility mapping.
  *
- * @example
+ * **Example** (Validate mapping direction)
+ *
  * ```ts
  * import { PandocMappingDirection } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -35,7 +36,8 @@ export const PandocMappingDirection = LiteralKit(["pandoc-to-md", "md-to-pandoc"
 /**
  * Runtime type for {@link PandocMappingDirection}.
  *
- * @example
+ * **Example** (Annotate direction variable)
+ *
  * ```ts
  * import type { PandocMappingDirection } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -51,7 +53,8 @@ export type PandocMappingDirection = typeof PandocMappingDirection.Type;
 /**
  * Severity for a mapping issue.
  *
- * @example
+ * **Example** (Validate severity value)
+ *
  * ```ts
  * import { PandocMappingSeverity } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -70,7 +73,8 @@ export const PandocMappingSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 /**
  * Runtime type for {@link PandocMappingSeverity}.
  *
- * @example
+ * **Example** (Annotate severity variable)
+ *
  * ```ts
  * import type { PandocMappingSeverity } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -86,7 +90,8 @@ export type PandocMappingSeverity = typeof PandocMappingSeverity.Type;
 /**
  * Summary profile for a compatibility report.
  *
- * @example
+ * **Example** (Validate profile value)
+ *
  * ```ts
  * import { PandocMappingProfile } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -105,7 +110,8 @@ export const PandocMappingProfile = LiteralKit(["supported", "gap"]).pipe(
 /**
  * Runtime type for {@link PandocMappingProfile}.
  *
- * @example
+ * **Example** (Annotate profile variable)
+ *
  * ```ts
  * import type { PandocMappingProfile } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -121,7 +127,8 @@ export type PandocMappingProfile = typeof PandocMappingProfile.Type;
 /**
  * A single segment in a Pandoc JSON path.
  *
- * @example
+ * **Example** (Build pointer from path)
+ *
  * ```ts
  * import { jsonPointerFromPath } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -140,7 +147,8 @@ export const JsonPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrE
 /**
  * Runtime type for {@link JsonPathSegment}.
  *
- * @example
+ * **Example** (Annotate path segment)
+ *
  * ```ts
  * import type { JsonPathSegment } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -162,7 +170,8 @@ const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
 /**
  * Ordered path to a construct inside Pandoc JSON.
  *
- * @example
+ * **Example** (Convert path via toPointer)
+ *
  * ```ts
  * import { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -184,7 +193,8 @@ export const JsonPath = S.Array(JsonPathSegment).pipe(
 /**
  * Runtime type for {@link JsonPath}.
  *
- * @example
+ * **Example** (Annotate JSON path)
+ *
  * ```ts
  * import type { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -200,7 +210,8 @@ export type JsonPath = typeof JsonPath.Type;
 /**
  * Converts a JSON path into a stable JSON Pointer string.
  *
- * @example
+ * **Example** (Convert path to pointer)
+ *
  * ```ts
  * import { jsonPointerFromPath } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -215,7 +226,8 @@ export const jsonPointerFromPath = (path: JsonPath): string => JsonPath.toPointe
 /**
  * A single compatibility issue found while mapping between Pandoc and Md.
  *
- * @example
+ * **Example** (Create issue from path)
+ *
  * ```ts
  * import { PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -274,7 +286,8 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
 /**
  * Companion namespace for {@link PandocMappingIssue}.
  *
- * @example
+ * **Example** (Type issue from path)
+ *
  * ```ts
  * import { PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -319,7 +332,8 @@ export declare namespace PandocMappingIssue {
 /**
  * Compatibility report shared by both mapping directions.
  *
- * @example
+ * **Example** (Create empty compatibility report)
+ *
  * ```ts
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -359,7 +373,8 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
 /**
  * Computes the summary profile from a list of mapping issues.
  *
- * @example
+ * **Example** (Profile empty issues list)
+ *
  * ```ts
  * import { profileFromIssues } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -374,7 +389,8 @@ export const profileFromIssues = PandocCompatibilityReport.profileFromIssues;
 /**
  * Companion namespace for {@link PandocCompatibilityReport}.
  *
- * @example
+ * **Example** (Type empty compatibility report)
+ *
  * ```ts
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
  *

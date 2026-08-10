@@ -12,12 +12,14 @@ import type { KgEdgePredicate } from "@beep/law-practice-domain/values";
 /**
  * Physical table name for practice knowledge-graph edges.
  *
- * @remarks
+ * **Details**
+ *
  * Exported separately from {@link kgEdgeTable} so that hand-written DDL and
  * projection SQL name the table through one constant rather than a string
  * literal repeated per call site.
  *
- * @example
+ * **Example** (Build truncate SQL statement)
+ *
  * ```ts
  * import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge"
  *
@@ -33,13 +35,15 @@ export const KG_EDGE_TABLE_NAME = "kg_edge" as const;
 /**
  * Drizzle declaration for the packet-owned edge projection.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The primary key is the `(subjectIri, predicate, objectIri)` triple, so the same
  * assertion inserted twice collides rather than duplicating — that is what makes
  * a rebuild of the graph idempotent. Both IRI columns reference
  * {@link kgNodeTable}, so their nodes must exist first.
  *
- * @example
+ * **Example** (Infer edge insert shape)
+ *
  * ```ts
  * import { kgEdgeTable } from "@beep/law-practice-tables/entities/KgEdge"
  * import { getTableName } from "drizzle-orm"

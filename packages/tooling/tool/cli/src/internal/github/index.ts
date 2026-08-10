@@ -7,3 +7,4 @@
 
 export * from "./GhCommand.ts";
 export * from "./GhSchema.ts";
+export * from "./JobShape.ts";

@@ -14,13 +14,15 @@ const $I = $RepoCliId.create("commands/Goals/Goals.errors");
 /**
  * Failure raised when a goal packet directory or manifest cannot be found.
  *
- * @example
+ * **Example** (Create not-found error)
+ *
  * ```ts
  * import { GoalPacketNotFoundError } from "@beep/repo-cli/commands/Goals/Goals.errors"
  *
  * const error = GoalPacketNotFoundError.new("nope", 'No packet directory "goals/nope".')
  * console.log(error.slug)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -51,13 +53,15 @@ export class GoalPacketNotFoundError extends TaggedErrorClass<GoalPacketNotFound
  * Failure raised when a goal manifest cannot be parsed or does not decode as
  * `GoalManifest`.
  *
- * @example
+ * **Example** (Create invalid-manifest error)
+ *
  * ```ts
  * import { GoalManifestInvalidError } from "@beep/repo-cli/commands/Goals/Goals.errors"
  *
  * const error = GoalManifestInvalidError.new("canvas", "manifest does not decode as GoalManifest")
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -88,13 +92,15 @@ export class GoalManifestInvalidError extends TaggedErrorClass<GoalManifestInval
  * Failure raised when a packet README has no recognizable `Lifecycle:` status
  * line, so `beep goals set-status` refuses to guess an edit site.
  *
- * @example
+ * **Example** (Create status-line error)
+ *
  * ```ts
  * import { GoalReadmeStatusLineError } from "@beep/repo-cli/commands/Goals/Goals.errors"
  *
  * const error = GoalReadmeStatusLineError.new("canvas", "README has no Lifecycle: line.")
  * console.log(error.slug)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -126,15 +132,19 @@ export class GoalReadmeStatusLineError extends TaggedErrorClass<GoalReadmeStatus
 /**
  * Failure raised when a git command backing a goals-doctor advisory fails.
  *
+ * **Details**
+ *
  * Always recovered into a skipped-with-note advisory; never blocks the doctor.
  *
- * @example
+ * **Example** (Create git failure error)
+ *
  * ```ts
  * import { GoalsGitError } from "@beep/repo-cli/commands/Goals/Goals.errors"
  *
  * const error = GoalsGitError.new("git log exited with 128")
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -154,13 +164,15 @@ export class GoalsGitError extends TaggedErrorClass<GoalsGitError>($I`GoalsGitEr
  * Failure raised when `beep goals set-status` receives arguments outside the
  * canonical status domain or an unusable slug/status combination.
  *
- * @example
+ * **Example** (Create status-input error)
+ *
  * ```ts
  * import { GoalStatusInputError } from "@beep/repo-cli/commands/Goals/Goals.errors"
  *
  * const error = GoalStatusInputError.new('Unknown status "DONE".')
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

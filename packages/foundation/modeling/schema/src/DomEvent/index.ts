@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for DOM event schemas.
  *
- * @example
+ * **Example** (Import DomEvent namespace)
+ *
  * ```ts
  * import * as DomEvent from "@beep/schema/DomEvent"
  *

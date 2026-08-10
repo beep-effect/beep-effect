@@ -20,7 +20,8 @@ import type { JSX } from "react";
 /**
  * Ontology explorer/editor workbench screen.
  *
- * @example
+ * **Example** (Import OntologyWorkbench component)
+ *
  * ```tsx
  * import { OntologyWorkbench } from "@beep/ontology-ui/aggregates/Session"
  *

@@ -15,12 +15,14 @@ const int64Maximum = BigInt("9223372036854775807");
 /**
  * Refinement that accepts signed 64-bit integer values.
  *
- * @remarks
+ * **Details**
+ *
  * The full signed int64 range is larger than JavaScript's safe integer range,
  * so this refinement is defined for `bigint` values instead of `number`
  * values.
  *
- * @example
+ * **Example** (Validate max signed int64)
+ *
  * ```ts
  * import { isInt64 } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
@@ -29,8 +31,8 @@ const int64Maximum = BigInt("9223372036854775807");
  * console.log(S.is(SignedInt64)(BigInt("9223372036854775807"))) // true
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function isInt64(annotations?: S.Annotations.Filter) {
   return S.isBetweenBigInt(
@@ -52,12 +54,14 @@ export function isInt64(annotations?: S.Annotations.Filter) {
 /**
  * Branded schema for signed 64-bit integers.
  *
- * @remarks
+ * **Details**
+ *
  * Use this schema for values that are already represented as `bigint`. For
  * JSON or OpenAPI boundaries where int64 values are transported as decimal
  * strings, use {@link Int64FromString}.
  *
- * @example
+ * **Example** (Validate minimum signed int64)
+ *
  * ```ts
  * import { Int64 } from "@beep/schema/Int"
  * import * as S from "effect/Schema"
@@ -66,8 +70,8 @@ export function isInt64(annotations?: S.Annotations.Filter) {
  * console.log(isSignedInt64(-BigInt("9223372036854775808"))) // true
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Int64 = S.BigInt.check(isInt64()).pipe(
   S.brand("Int64"),
@@ -79,7 +83,8 @@ export const Int64 = S.BigInt.check(isInt64()).pipe(
 /**
  * Type for {@link Int64}.
  *
- * @example
+ * **Example** (Narrow unknown to Int64)
+ *
  * ```ts
  * import { Int64 } from "@beep/schema/Int"
  * import type { Int64 as Int64Value } from "@beep/schema/Int"
@@ -92,8 +97,8 @@ export const Int64 = S.BigInt.check(isInt64()).pipe(
  * }
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Int64 = typeof Int64.Type;
 
@@ -101,7 +106,8 @@ export type Int64 = typeof Int64.Type;
  * Codec that decodes decimal string input into a branded signed 64-bit
  * integer and encodes it back to a decimal string.
  *
- * @example
+ * **Example** (Decode decimal string to int64)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Int64FromString } from "@beep/schema/Int"
@@ -112,8 +118,8 @@ export type Int64 = typeof Int64.Type;
  * console.log(value === BigInt("9223372036854775807"))
  * ```
  *
- * @since 0.0.0
  * @category codecs
+ * @since 0.0.0
  */
 export const Int64FromString = S.BigIntFromString.pipe(
   S.decodeTo(Int64),
@@ -125,7 +131,8 @@ export const Int64FromString = S.BigIntFromString.pipe(
 /**
  * Type for {@link Int64FromString}.
  *
- * @example
+ * **Example** (Type Int64FromString branded value)
+ *
  * ```ts
  * import { Int64, Int64FromString } from "@beep/schema/Int"
  * import type { Int64FromString as Int64FromStringValue } from "@beep/schema/Int"
@@ -138,7 +145,7 @@ export const Int64FromString = S.BigIntFromString.pipe(
  * }
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Int64FromString = typeof Int64FromString.Type;

@@ -78,7 +78,8 @@ const makeEndpointProbe = (spanName: string, defaultPath: string) =>
 /**
  * Probe the OpenClaw gateway liveness endpoint over loopback HTTP.
  *
- * @example
+ * **Example** (Probe liveness with port)
+ *
  * ```ts
  * import { probeOpenclawLiveness } from "@beep/openclaw/OpenclawProbe.service"
  *
@@ -95,10 +96,13 @@ export const probeOpenclawLiveness = makeEndpointProbe("Openclaw.probeLiveness",
 /**
  * Probe the OpenClaw gateway readiness endpoint over loopback HTTP.
  *
+ * **Details**
+ *
  * The default `/ready` path is the fallback readiness literal; upstream also
  * serves `/readyz` and `/healthz`, which callers can select via `path`.
  *
- * @example
+ * **Example** (Probe readiness with path)
+ *
  * ```ts
  * import { probeOpenclawReadiness } from "@beep/openclaw/OpenclawProbe.service"
  *
@@ -123,7 +127,8 @@ const acceptanceFailure = (step: OpenclawLiveAcceptanceStep, diagnostics: string
 /**
  * Probe a local OpenAI-compatible `/models` endpoint and require one exact model id.
  *
- * @example
+ * **Example** (Probe local models endpoint)
+ *
  * ```ts
  * import { probeOpenclawLocalModels } from "@beep/openclaw"
  *
@@ -200,7 +205,8 @@ const telegramChannelPassed = (input: OpenclawLiveAcceptanceInput): boolean =>
 /**
  * Coordinate already-decoded P3 acceptance results without performing mutation.
  *
- * @example
+ * **Example** (Coordinate live acceptance input)
+ *
  * ```ts
  * import { coordinateOpenclawLiveAcceptance, OpenclawLiveAcceptanceInput } from "@beep/openclaw"
  * import * as S from "effect/Schema"

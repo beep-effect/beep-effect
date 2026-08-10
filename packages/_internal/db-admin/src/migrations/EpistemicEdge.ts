@@ -13,13 +13,16 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
  * Epistemic bitemporal edge migration target used to prove candidate-claim,
  * evidence, edge-version, and claim-disposition persistence.
  *
+ * **Details**
+ *
  * The bitemporal invariants these tables rely on — the ordered-interval CHECK constraints,
  * the endpoint-kind CHECK constraints, the `logical_key` gist exclusion constraint, and the
  * open-head partial unique index — are owned by the raw-SQL migration rather
  * than by Drizzle metadata, so this target publishes the table set while the
  * migration publishes the invariants.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { EpistemicEdgeMigrationTarget } from "@beep/db-admin/migrations/EpistemicEdge"
  *

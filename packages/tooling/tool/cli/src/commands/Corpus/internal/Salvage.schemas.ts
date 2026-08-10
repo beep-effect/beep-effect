@@ -15,7 +15,8 @@ const $I = $RepoCliId.create("commands/Corpus/internal/Salvage.schemas");
 /**
  * Copy disposition recorded for a salvaged corpus file.
  *
- * @example
+ * **Example** (Validate copy mode values)
+ *
  * ```ts
  * import { CorpusCopyMode } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -23,6 +24,7 @@ const $I = $RepoCliId.create("commands/Corpus/internal/Salvage.schemas");
  * console.log(S.is(CorpusCopyMode)("copied")) // true
  * console.log(S.is(CorpusCopyMode)("provenance-only")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -37,13 +39,15 @@ export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
 /**
  * Copy disposition type recorded for a salvaged corpus file.
  *
- * @example
+ * **Example** (Assign typed copy mode)
+ *
  * ```ts
  * import type { CorpusCopyMode } from "@beep/repo-cli/commands/Corpus"
  *
  * const mode: CorpusCopyMode = "copied"
  * console.log(mode) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -52,7 +56,8 @@ export type CorpusCopyMode = typeof CorpusCopyMode.Type;
 /**
  * Digest-to-raw-path row loaded from the corpus catalog or provenance manifests.
  *
- * @example
+ * **Example** (Build catalog digest row)
+ *
  * ```ts
  * import { CorpusCatalogDigestRow } from "@beep/repo-cli/commands/Corpus"
  * import { Sha256Hex } from "@beep/schema"
@@ -63,6 +68,7 @@ export type CorpusCopyMode = typeof CorpusCopyMode.Type;
  * })
  * console.log(row.destPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,7 +86,8 @@ export class CorpusCatalogDigestRow extends S.Class<CorpusCatalogDigestRow>($I`C
 /**
  * One salvaged-file row of the corpus provenance manifest.
  *
- * @example
+ * **Example** (Decode provenance record)
+ *
  * ```ts
  * import { CorpusProvenanceRecord } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -98,6 +105,7 @@ export class CorpusCatalogDigestRow extends S.Class<CorpusCatalogDigestRow>($I`C
  * })
  * console.log(record.sourceLabel) // "source-a"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +132,8 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
 /**
  * JSONL decoder for {@link CorpusProvenanceRecord}.
  *
- * @example
+ * **Example** (Decode provenance JSONL line)
+ *
  * ```ts
  * import { decodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { Effect } from "effect"
@@ -143,6 +152,7 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
  *
  * Effect.runPromise(decodeCorpusProvenanceRecordJson(line)).then((record) => console.log(record.sourceLabel)) // "source-a"
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -151,7 +161,8 @@ export const decodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
 /**
  * JSONL encoder for {@link CorpusProvenanceRecord}.
  *
- * @example
+ * **Example** (Encode provenance record JSON)
+ *
  * ```ts
  * import { CorpusProvenanceRecord, encodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
@@ -172,6 +183,7 @@ export const decodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
  *
  * Effect.runPromise(encodeCorpusProvenanceRecordJson(record)).then((json) => console.log(json.includes("copied"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -180,13 +192,15 @@ export const encodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
 /**
  * One labeled source passed to a corpus salvage copy run.
  *
- * @example
+ * **Example** (Create salvage source spec)
+ *
  * ```ts
  * import { CorpusSalvageSourceSpec } from "@beep/repo-cli/commands/Corpus"
  *
  * const spec = CorpusSalvageSourceSpec.make({ sourceLabel: "source-a", sourcePath: "/tmp/source-a" })
  * console.log(spec.sourceLabel) // "source-a"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -205,7 +219,8 @@ export class CorpusSalvageSourceSpec extends S.Class<CorpusSalvageSourceSpec>($I
 /**
  * One source file selected for a corpus salvage copy run.
  *
- * @example
+ * **Example** (Build salvage origin file)
+ *
  * ```ts
  * import { CorpusSalvageOriginFile } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -220,6 +235,7 @@ export class CorpusSalvageSourceSpec extends S.Class<CorpusSalvageSourceSpec>($I
  * })
  * console.log(origin.relativePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -241,13 +257,15 @@ export class CorpusSalvageOriginFile extends S.Class<CorpusSalvageOriginFile>($I
 /**
  * Validated options used by `corpus salvage`.
  *
- * @example
+ * **Example** (Create salvage options)
+ *
  * ```ts
  * import { CorpusSalvageOptions } from "@beep/repo-cli/commands/Corpus"
  *
  * const options = CorpusSalvageOptions.make({ corpusRoot: "/data/corpus" })
  * console.log(options.corpusRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -268,7 +286,8 @@ export class CorpusSalvageOptions extends S.Class<CorpusSalvageOptions>($I`Corpu
 /**
  * Summary counts returned by `corpus salvage`.
  *
- * @example
+ * **Example** (Build salvage summary counts)
+ *
  * ```ts
  * import { CorpusSalvageSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -282,6 +301,7 @@ export class CorpusSalvageOptions extends S.Class<CorpusSalvageOptions>($I`Corpu
  * })
  * console.log(summary.matched) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -301,7 +321,8 @@ export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`Corpu
 /**
  * JSON encoder for {@link CorpusSalvageSummary}.
  *
- * @example
+ * **Example** (Encode salvage summary JSON)
+ *
  * ```ts
  * import { CorpusSalvageSummary, encodeCorpusSalvageSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -317,6 +338,7 @@ export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`Corpu
  *
  * Effect.runPromise(encodeCorpusSalvageSummaryJson(summary)).then((json) => console.log(json.includes("\"matched\":0"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

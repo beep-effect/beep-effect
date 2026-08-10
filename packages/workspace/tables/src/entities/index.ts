@@ -8,7 +8,8 @@
 /**
  * CandidateDraft table metadata namespace.
  *
- * @example
+ * **Example** (Log CandidateDraft table name)
+ *
  * ```ts
  * import { CandidateDraft } from "@beep/workspace-tables/entities"
  *
@@ -22,7 +23,8 @@ export * as CandidateDraft from "./CandidateDraft/index.ts";
 /**
  * CandidateProject table metadata namespace.
  *
- * @example
+ * **Example** (Log CandidateProject table name)
+ *
  * ```ts
  * import { CandidateProject } from "@beep/workspace-tables/entities"
  *
@@ -36,7 +38,8 @@ export * as CandidateProject from "./CandidateProject/index.ts";
 /**
  * Message table metadata namespace.
  *
- * @example
+ * **Example** (Log Message table name)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *
@@ -50,7 +53,8 @@ export * as Message from "./Message/index.ts";
 /**
  * Thread table metadata namespace.
  *
- * @example
+ * **Example** (Log Thread table name)
+ *
  * ```ts
  * import { Thread } from "@beep/workspace-tables/entities"
  *
@@ -64,7 +68,8 @@ export * as Thread from "./Thread/index.ts";
 /**
  * Turn table metadata namespace.
  *
- * @example
+ * **Example** (Log Turn table name)
+ *
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *

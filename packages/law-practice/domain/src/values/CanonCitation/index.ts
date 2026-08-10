@@ -9,9 +9,8 @@
 /**
  * CanonCitation model exports.
  *
- * **Example**
+ * **Example** (Import CanonCitation)
  *
- * @example
  * ```ts
  * import { CanonCitation } from "@beep/law-practice-domain/values";
  * ```

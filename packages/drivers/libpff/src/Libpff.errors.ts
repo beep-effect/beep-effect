@@ -16,7 +16,8 @@ const LibpffErrorReasonBase = LiteralKit(["config", "engine-unavailable", "outpu
 /**
  * Technical libpff failure reasons.
  *
- * @example
+ * **Example** (Log available error reasons)
+ *
  * ```ts
  * import { LibpffErrorReason } from "@beep/libpff"
  *
@@ -36,7 +37,8 @@ export const LibpffErrorReason = LibpffErrorReasonBase.pipe(
 /**
  * Type for {@link LibpffErrorReason}.
  *
- * @example
+ * **Example** (Assign a typed reason)
+ *
  * ```ts
  * import type { LibpffErrorReason } from "@beep/libpff"
  *
@@ -52,7 +54,8 @@ export type LibpffErrorReason = typeof LibpffErrorReason.Type;
 /**
  * Options used when constructing {@link LibpffError} instances.
  *
- * @example
+ * **Example** (Make options with exitCode)
+ *
  * ```ts
  * import { LibpffErrorOptions } from "@beep/libpff"
  * import { NonNegativeInt } from "@beep/schema"
@@ -81,7 +84,8 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
 /**
  * Technical failure raised inside the libpff driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { LibpffError } from "@beep/libpff"
  *
@@ -135,7 +139,8 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
 /**
  * Create a libpff technical error with a typed reason.
  *
- * @example
+ * **Example** (Create typed technical error)
+ *
  * ```ts
  * import { makeLibpffError } from "@beep/libpff"
  *

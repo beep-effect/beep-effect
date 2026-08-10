@@ -15,7 +15,8 @@ const $I = $DockId.create("Dock.placement");
 /**
  * Root placement that creates the first tab group.
  *
- * @example
+ * **Example** (Create first tab group)
+ *
  * ```ts
  * import { GroupId, RootPlacement } from "@beep/dock"
  *
@@ -39,7 +40,8 @@ export class RootPlacement extends S.Class<RootPlacement>($I`RootPlacement`)(
 /**
  * Placement that inserts a panel into an existing tab group.
  *
- * @example
+ * **Example** (Insert into tab group)
+ *
  * ```ts
  * import { GroupId, TabPlacement } from "@beep/dock"
  *
@@ -65,7 +67,8 @@ export class TabPlacement extends S.Class<TabPlacement>($I`TabPlacement`)(
 /**
  * Codec for the semantic side of an inserted group.
  *
- * @example
+ * **Example** (Make docking side)
+ *
  * ```ts
  * import { DockSide } from "@beep/dock"
  *
@@ -84,7 +87,8 @@ export const DockSide = LiteralKit(["left", "right", "top", "bottom"]).annotate(
 /**
  * Decoded semantic docking side.
  *
- * @example
+ * **Example** (Type docking side)
+ *
  * ```ts
  * import { DockSide } from "@beep/dock"
  *
@@ -100,7 +104,8 @@ export type DockSide = typeof DockSide.Type;
 /**
  * Placement that creates a sibling group and binary split.
  *
- * @example
+ * **Example** (Create sibling split group)
+ *
  * ```ts
  * import { GroupId, SplitId, SplitPlacement } from "@beep/dock"
  *
@@ -128,11 +133,13 @@ export class SplitPlacement extends S.Class<SplitPlacement>($I`SplitPlacement`)(
 /**
  * Placement that inserts a new group against an existing docked workspace root.
  *
- * @remarks
+ * **Details**
+ *
  * This placement requires an existing docked root. Use {@link RootPlacement}
  * to open the first docked panel in an empty-root workspace.
  *
- * @example
+ * **Example** (Split against docked root)
+ *
  * ```ts
  * import { GroupId, RootSplitPlacement, SplitId } from "@beep/dock"
  *
@@ -159,7 +166,8 @@ export class RootSplitPlacement extends S.Class<RootSplitPlacement>($I`RootSplit
 /**
  * Placement that relocates a group beside another group.
  *
- * @example
+ * **Example** (Relocate group beside group)
+ *
  * ```ts
  * import { GroupId, GroupSplitPlacement, SplitId } from "@beep/dock"
  *
@@ -186,7 +194,8 @@ export class GroupSplitPlacement extends S.Class<GroupSplitPlacement>($I`GroupSp
 /**
  * Placement that relocates a group against the workspace root.
  *
- * @example
+ * **Example** (Relocate group to root)
+ *
  * ```ts
  * import { GroupRootSplitPlacement, SplitId } from "@beep/dock"
  *
@@ -214,7 +223,8 @@ const DockPlacementKind = LiteralKit(["root", "tab", "split", "rootSplit"]);
 /**
  * Tagged codec for all panel-opening destinations.
  *
- * @example
+ * **Example** (Make panel destination)
+ *
  * ```ts
  * import { DockPlacement, GroupId } from "@beep/dock"
  *
@@ -237,7 +247,8 @@ export const DockPlacement = DockPlacementKind.mapMembers(
 /**
  * Decoded panel-opening destination.
  *
- * @example
+ * **Example** (Type panel destination)
+ *
  * ```ts
  * import { DockPlacement, GroupId, RootPlacement } from "@beep/dock"
  *
@@ -253,7 +264,8 @@ export type DockPlacement = typeof DockPlacement.Type;
 /**
  * Tagged codec for destinations of an existing panel.
  *
- * @example
+ * **Example** (Make panel move target)
+ *
  * ```ts
  * import { DockMoveTarget, GroupId, TabPlacement } from "@beep/dock"
  *
@@ -273,7 +285,8 @@ export const DockMoveTarget = S.Union([TabPlacement, SplitPlacement, RootSplitPl
 /**
  * Decoded destination for moving an existing panel.
  *
- * @example
+ * **Example** (Type panel move target)
+ *
  * ```ts
  * import { DockMoveTarget, GroupId, TabPlacement } from "@beep/dock"
  *
@@ -289,7 +302,8 @@ export type DockMoveTarget = typeof DockMoveTarget.Type;
 /**
  * Tagged codec for whole-group merge and relocation destinations.
  *
- * @example
+ * **Example** (Make group move target)
+ *
  * ```ts
  * import { DockGroupMoveTarget, GroupId, TabPlacement } from "@beep/dock"
  *
@@ -309,7 +323,8 @@ export const DockGroupMoveTarget = S.Union([TabPlacement, GroupSplitPlacement, G
 /**
  * Decoded destination for moving a whole group.
  *
- * @example
+ * **Example** (Type group move target)
+ *
  * ```ts
  * import { DockGroupMoveTarget, GroupId, TabPlacement } from "@beep/dock"
  *

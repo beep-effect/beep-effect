@@ -46,7 +46,8 @@ const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.
  * Authenticated reviewer principal supplied by server orchestration, never by
  * the public review payload.
  *
- * @example
+ * **Example** (Map reviewer kind Effect)
+ *
  * ```ts
  * import { ContradictionReviewer } from "@beep/epistemic-use-cases/server"
  * import { Effect } from "effect"
@@ -69,7 +70,8 @@ export class ContradictionReviewer extends Context.Service<ContradictionReviewer
  * Organization and source scope supplied by trusted server orchestration for
  * contradiction triage.
  *
- * @example
+ * **Example** (Map organization id Effect)
+ *
  * ```ts
  * import { ContradictionReviewScope } from "@beep/epistemic-use-cases/server"
  * import { Effect } from "effect"
@@ -95,7 +97,8 @@ export class ContradictionReviewScope extends Context.Service<
 /**
  * Result of submitting a contradiction proposal.
  *
- * @example
+ * **Example** (Access duplicate candidate field)
+ *
  * ```ts
  * import { ContradictionSubmission } from "@beep/epistemic-use-cases/server"
  *
@@ -125,7 +128,8 @@ export class ContradictionSubmission extends S.Class<ContradictionSubmission>($I
 /**
  * Bounded contradiction candidate fields required by one queue row.
  *
- * @example
+ * **Example** (Check summary field exists)
+ *
  * ```ts
  * import { ContradictionCandidateSummary } from "@beep/epistemic-use-cases/public"
  *
@@ -172,7 +176,8 @@ export class ContradictionCandidateSummary extends S.Class<ContradictionCandidat
 /**
  * Candidate plus its disposition as known at the requested transaction time.
  *
- * @example
+ * **Example** (Check candidate and disposition)
+ *
  * ```ts
  * import { ContradictionCandidateView } from "@beep/epistemic-use-cases/public"
  *
@@ -200,7 +205,8 @@ export class ContradictionCandidateView extends S.Class<ContradictionCandidateVi
 /**
  * Paginated contradiction-candidate read result.
  *
- * @example
+ * **Example** (Make empty candidate page)
+ *
  * ```ts
  * import { ContradictionCandidatePage } from "@beep/epistemic-use-cases/public"
  * import { NonNegativeInt } from "@beep/schema/Int"
@@ -234,7 +240,8 @@ export class ContradictionCandidatePage extends S.Class<ContradictionCandidatePa
 /**
  * Expanded persisted candidate used by detail reads and review orchestration.
  *
- * @example
+ * **Example** (Check candidate and receipts)
+ *
  * ```ts
  * import { ContradictionCandidateDetail } from "@beep/epistemic-use-cases/server"
  *
@@ -267,7 +274,8 @@ export class ContradictionCandidateDetail extends S.Class<ContradictionCandidate
 /**
  * One evidence row plus its candidate-time verified-source manifestation.
  *
- * @example
+ * **Example** (Check evidence and verification)
+ *
  * ```ts
  * import { ContradictionEvidenceDetail } from "@beep/epistemic-use-cases/server"
  *
@@ -295,7 +303,8 @@ export class ContradictionEvidenceDetail extends S.Class<ContradictionEvidenceDe
 /**
  * One exact belief-version side and the evidence grounding that side.
  *
- * @example
+ * **Example** (Check belief and evidence)
+ *
  * ```ts
  * import { ContradictionBeliefDetail } from "@beep/epistemic-use-cases/server"
  *
@@ -323,7 +332,8 @@ export class ContradictionBeliefDetail extends S.Class<ContradictionBeliefDetail
 /**
  * Organization-scoped expanded candidate detail for server orchestration.
  *
- * @example
+ * **Example** (Check candidate left and right)
+ *
  * ```ts
  * import { ContradictionCandidateExpandedDetail } from "@beep/epistemic-use-cases/server"
  *
@@ -360,7 +370,8 @@ export class ContradictionCandidateExpandedDetail extends S.Class<ContradictionC
 /**
  * Contradiction-triage repository service shape.
  *
- * @example
+ * **Example** (Pick review method key)
+ *
  * ```ts
  * import type { ContradictionTriageRepositoryShape } from "@beep/epistemic-use-cases/server"
  *
@@ -397,7 +408,8 @@ export interface ContradictionTriageRepositoryShape {
 /**
  * Contradiction-triage repository service.
  *
- * @example
+ * **Example** (Log repository service tag)
+ *
  * ```ts
  * import { ContradictionTriageRepository } from "@beep/epistemic-use-cases/server"
  *

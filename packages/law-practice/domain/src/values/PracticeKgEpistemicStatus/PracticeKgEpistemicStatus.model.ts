@@ -13,13 +13,15 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgEpistemicStatus");
 /**
  * Epistemic labels stored on practice knowledge-graph projections.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The distinction is load-bearing rather than descriptive: rows labelled
  * `derived-from-official-records` are reconcilable against the corpus catalog,
  * while `candidate-unreviewed` rows come from enrichment or extraction and must
  * not be presented as settled fact.
  *
- * @example
+ * **Example** (Decode epistemic status label)
+ *
  * ```ts
  * import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values"
  * import * as S from "effect/Schema"
@@ -31,7 +33,6 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgEpistemicStatus");
  * ```
  *
  * @see {@link PracticeKgProvenanceKind} for the source-reference kinds carried beside this label.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -44,7 +45,8 @@ export const PracticeKgEpistemicStatus = LiteralKit(["derived-from-official-reco
 /**
  * Runtime type for {@link PracticeKgEpistemicStatus}.
  *
- * @example
+ * **Example** (Check settled status)
+ *
  * ```ts
  * import type { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values"
  *

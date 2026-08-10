@@ -45,11 +45,13 @@ const Uint32Checks = S.makeFilterGroup(
 /**
  * Branded schema for protobuf `uint32` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes `uint32` as an unsigned 32-bit varint and exposes the
  * JavaScript value as a `number`.
  *
- * @example
+ * **Example** (Decode max uint32 value)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -77,7 +79,8 @@ export const Uint32 = S.Finite.annotate({
 /**
  * Type-level value inferred from {@link Uint32}.
  *
- * @example
+ * **Example** (Narrow unknown to Uint32)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Uint32 } from "@beep/schema/Uint32"

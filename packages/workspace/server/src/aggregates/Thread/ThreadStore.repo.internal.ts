@@ -20,7 +20,8 @@ const $I = $WorkspaceServerId.create("aggregates/Thread/ThreadStore.repo.interna
 /**
  * Local input for creating a Thread entity inside the repository.
  *
- * @example
+ * **Example** (Create Thread entity input)
+ *
  * ```ts
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
  * import { PosInt } from "@beep/schema/Int"
@@ -57,7 +58,8 @@ export class ThreadEntityInput extends S.Class<ThreadEntityInput>($I`ThreadEntit
 /**
  * Local input for creating a Turn entity inside the repository.
  *
- * @example
+ * **Example** (Create Turn entity input)
+ *
  * ```ts
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
  * import { NonNegativeInt, PosInt } from "@beep/schema/Int"
@@ -102,7 +104,8 @@ export class TurnEntityInput extends S.Class<TurnEntityInput>($I`TurnEntityInput
 /**
  * Local input for creating a Message entity inside the repository.
  *
- * @example
+ * **Example** (Create Message entity input)
+ *
  * ```ts
  * import { Document } from "@beep/md/Md.model"
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
@@ -148,7 +151,8 @@ export class MessageEntityInput extends S.Class<MessageEntityInput>($I`MessageEn
 /**
  * In-memory repository state with schema-owned empty defaults.
  *
- * @example
+ * **Example** (Create empty repository state)
+ *
  * ```ts
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
  *

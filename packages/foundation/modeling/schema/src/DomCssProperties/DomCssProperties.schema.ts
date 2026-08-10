@@ -14,15 +14,16 @@ const $I = $SchemaId.create("DomCssProperties");
 /**
  * Type guard for React.CSSProperties.
  *
- * @example
+ * **Example** (Check CSS properties object)
+ *
  * ```ts
  * import { isCSSProperties } from "@beep/schema/DomCssProperties"
  *
  * console.log(isCSSProperties({ color: "red" }))
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isCSSProperties = (u: unknown): u is React.CSSProperties => {
   if (P.not(P.isObject)(u) || P.isNull(u)) {
@@ -34,7 +35,8 @@ export const isCSSProperties = (u: unknown): u is React.CSSProperties => {
 /**
  * A React.CSSProperties object.
  *
- * @example
+ * **Example** (Decode CSS properties object)
+ *
  * ```ts
  * import { DOMCssProperties } from "@beep/schema/DomCssProperties"
  * import * as S from "effect/Schema"
@@ -43,8 +45,8 @@ export const isCSSProperties = (u: unknown): u is React.CSSProperties => {
  * console.log(styles)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const DOMCssProperties = S.declare(isCSSProperties).pipe(
   $I.annoteSchema("DOMCssProperties", {

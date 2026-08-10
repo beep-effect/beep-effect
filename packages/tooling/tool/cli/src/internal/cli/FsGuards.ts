@@ -2,7 +2,8 @@
  * Shared, error-parameterised filesystem guards and hashing helpers for
  * repo-cli command services.
  *
- * @remarks
+ * **Details**
+ *
  * The Files and Corpus command services carry near-identical directory
  * validation, overwrite preflight, rename, path-segment, byte-comparison,
  * deduplication, unique-name, and SHA-256 helpers, each raising its own tagged
@@ -88,16 +89,18 @@ export interface RenameOrFailOptions<E> {
 /**
  * Structural equality of two byte arrays.
  *
- * @param left - The first byte array.
- * @param right - The second byte array.
- * @returns `true` when both arrays have identical length and contents.
- * @example
+ * **Example** (Dual call signature equality)
+ *
  * ```ts
  * import { bytesEqual } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * console.log(bytesEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2])))
  * console.log(bytesEqual(new Uint8Array([2]))(new Uint8Array([1])))
  * ```
+ *
+ * @param left - The first byte array.
+ * @param right - The second byte array.
+ * @returns `true` when both arrays have identical length and contents.
  * @category comparison
  * @since 0.0.0
  */
@@ -121,15 +124,17 @@ export const bytesEqual: {
 /**
  * Drop records whose `sha256` digest has already been seen, preserving order.
  *
- * @param records - The records to deduplicate by digest.
- * @returns The first record per digest and the number skipped.
- * @example
+ * **Example** (Skip duplicate digests)
+ *
  * ```ts
  * import { dedupeBySha256 } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const result = dedupeBySha256([{ sha256: "a" }, { sha256: "a" }, { sha256: "b" }])
  * console.log(result.duplicatesSkipped)
  * ```
+ *
+ * @param records - The records to deduplicate by digest.
+ * @returns The first record per digest and the number skipped.
  * @category deduplication
  * @since 0.0.0
  */
@@ -151,11 +156,8 @@ export const dedupeBySha256 = <A extends { readonly sha256: string }>(
  * Allocate a filesystem name that does not collide case-insensitively with an
  * in-use set, suffixing `_NN` on collision.
  *
- * @param stem - The base file name without extension.
- * @param extension - The extension (including any leading dot) to append.
- * @param usedNames - The set of already-allocated names.
- * @returns The free name and the set updated to include it.
- * @example
+ * **Example** (Suffix on name collision)
+ *
  * ```ts
  * import { HashSet } from "effect"
  * import { allocateUniqueName } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -163,6 +165,11 @@ export const dedupeBySha256 = <A extends { readonly sha256: string }>(
  * const first = allocateUniqueName("photo", ".webp", HashSet.make("photo.webp"))
  * console.log(first.targetName)
  * ```
+ *
+ * @param stem - The base file name without extension.
+ * @param extension - The extension (including any leading dot) to append.
+ * @param usedNames - The set of already-allocated names.
+ * @returns The free name and the set updated to include it.
  * @category naming
  * @since 0.0.0
  */
@@ -188,15 +195,14 @@ export const allocateUniqueName: {
 /**
  * Hash a file's bytes into a canonical lowercase SHA-256 hex digest.
  *
- * @remarks
+ * **Details**
+ *
  * Reads the whole file and decodes through the `Sha256HexFromBytes` schema,
  * so it requires `Crypto.Crypto`. The returned digest is the bare hex string;
  * callers that persist a `sha256:` prefix add it themselves.
  *
- * @param filePath - The file to hash.
- * @param onError - Builds the caller's error from a read or hashing failure.
- * @returns The lowercase hex digest of the file's contents.
- * @example
+ * **Example** (Dual hashing call signatures)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { hashFileSha256 } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -205,6 +211,10 @@ export const allocateUniqueName: {
  * console.log(Effect.isEffect(hashFileSha256("/tmp/example.txt", onError)))
  * console.log(Effect.isEffect(hashFileSha256(onError)("/tmp/example.txt")))
  * ```
+ *
+ * @param filePath - The file to hash.
+ * @param onError - Builds the caller's error from a read or hashing failure.
+ * @returns The lowercase hex digest of the file's contents.
  * @category hashing
  * @since 0.0.0
  */
@@ -232,12 +242,8 @@ export const hashFileSha256: {
 /**
  * Validate a path segment is a single, non-traversal name.
  *
- * @param label - The caller-facing label for the segment.
- * @param value - The candidate segment.
- * @param options - Bundle carrying `onInvalid`, which builds the caller's error.
- * @returns A void effect, failing when `value` is `.`, `..`, or contains a
- *   path separator.
- * @example
+ * **Example** (Reject traversal segments)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { validatePathSegment } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -246,6 +252,12 @@ export const hashFileSha256: {
  * console.log(Effect.isEffect(validatePathSegment("source", "..", options)))
  * console.log(Effect.isEffect(validatePathSegment("..", options)("source")))
  * ```
+ *
+ * @param label - The caller-facing label for the segment.
+ * @param value - The candidate segment.
+ * @param options - Bundle carrying `onInvalid`, which builds the caller's error.
+ * @returns A void effect, failing when `value` is `.`, `..`, or contains a
+ *   path separator.
  * @category validation
  * @since 0.0.0
  */
@@ -261,11 +273,8 @@ export const validatePathSegment: {
 /**
  * Resolve, stat, and canonicalise a directory path.
  *
- * @param dir - The directory path to validate.
- * @param errors - Constructors for the stat, non-directory, and realpath
- *   failures.
- * @returns The resolved and canonical directory paths.
- * @example
+ * **Example** (Dual directory validation)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { validateDirectory } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -278,6 +287,11 @@ export const validatePathSegment: {
  * console.log(Effect.isEffect(validateDirectory("./assets", errors)))
  * console.log(Effect.isEffect(validateDirectory(errors)("./assets")))
  * ```
+ *
+ * @param dir - The directory path to validate.
+ * @param errors - Constructors for the stat, non-directory, and realpath
+ *   failures.
+ * @returns The resolved and canonical directory paths.
  * @category validation
  * @since 0.0.0
  */
@@ -327,11 +341,8 @@ export const validateDirectory: {
  * Refuse to overwrite an existing path unless the caller opted in and the
  * target is a regular file.
  *
- * @param filePath - The output path to preflight.
- * @param options - Overwrite flag, description, and the inspect/refuse/stat/
- *   non-file error constructors.
- * @returns A void effect that fails when the write would be refused.
- * @example
+ * **Example** (Refuse overwrite without flag)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { preflightOverwritableFile } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -347,6 +358,11 @@ export const validateDirectory: {
  * console.log(Effect.isEffect(preflightOverwritableFile("/tmp/out.json", options)))
  * console.log(Effect.isEffect(preflightOverwritableFile(options)("/tmp/out.json")))
  * ```
+ *
+ * @param filePath - The output path to preflight.
+ * @param options - Overwrite flag, description, and the inspect/refuse/stat/
+ *   non-file error constructors.
+ * @returns A void effect that fails when the write would be refused.
  * @category validation
  * @since 0.0.0
  */
@@ -385,11 +401,8 @@ export const preflightOverwritableFile: {
 /**
  * Rename a path, mapping a platform failure to the caller's error.
  *
- * @param sourcePath - The current path.
- * @param targetPath - The destination path.
- * @param options - Bundle carrying `onError`, which builds the caller's error.
- * @returns A void effect that fails when the rename cannot complete.
- * @example
+ * **Example** (Dual rename call signatures)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { renameOrFail } from "@beep/repo-cli/internal/cli/FsGuards"
@@ -398,6 +411,11 @@ export const preflightOverwritableFile: {
  * console.log(Effect.isEffect(renameOrFail("/tmp/a", "/tmp/b", options)))
  * console.log(Effect.isEffect(renameOrFail("/tmp/b", options)("/tmp/a")))
  * ```
+ *
+ * @param sourcePath - The current path.
+ * @param targetPath - The destination path.
+ * @param options - Bundle carrying `onError`, which builds the caller's error.
+ * @returns A void effect that fails when the rename cannot complete.
  * @category filesystem
  * @since 0.0.0
  */

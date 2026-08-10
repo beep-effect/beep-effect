@@ -38,12 +38,14 @@ const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
 /**
  * Schema for npm-compatible package names.
  *
- * @example
+ * **Example** (Validate scoped package name)
+ *
  * ```ts
  * import { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
  * const isValid = NpmPackageName.is("@beep/example")
  * console.log(isValid)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -61,12 +63,14 @@ export const NpmPackageName = S.String.check(S.isMinLength(1))
 /**
  * Schema for repository workspace package names.
  *
- * @example
+ * **Example** (Validate workspace package name)
+ *
  * ```ts
  * import { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
  * const isValid = RepoPackageName.is("@beep/repo-utils")
  * console.log(isValid)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -92,12 +96,14 @@ const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
 /**
  * Schema for package.json relative dot paths.
  *
- * @example
+ * **Example** (Validate relative dot path)
+ *
  * ```ts
  * import { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
  * const isPath = RelativeDotPath.is("./src/index.ts")
  * console.log(isPath)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -143,12 +149,14 @@ const StringArray = S.Array(S.String).pipe(
 /**
  * Schema for non-empty package metadata strings.
  *
- * @example
+ * **Example** (Validate non-empty string)
+ *
  * ```ts
  * import { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
  * const isNonEmpty = NonEmptyStringValue.is("catalog:")
  * console.log(isNonEmpty)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -360,12 +368,14 @@ class FundingEntry extends S.Class<FundingEntry>($I`FundingEntry`)(
 /**
  * A person involved with the package, represented as a string or structured object.
  *
- * @example
+ * **Example** (Inspect Person schema)
+ *
  * ```ts
  * import { Person } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Person
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -381,12 +391,14 @@ export const Person = S.Union([S.String, PersonObject]).pipe(
 /**
  * The package author field.
  *
- * @example
+ * **Example** (Inspect Author schema)
+ *
  * ```ts
  * import { Author } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Author
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -400,12 +412,14 @@ export const Author = Person.pipe(
 /**
  * The package contributors field.
  *
- * @example
+ * **Example** (Inspect Contributors schema)
+ *
  * ```ts
  * import { Contributors } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Contributors
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -419,12 +433,14 @@ export const Contributors = S.Array(Person).pipe(
 /**
  * The package maintainers field.
  *
- * @example
+ * **Example** (Inspect Maintainers schema)
+ *
  * ```ts
  * import { Maintainers } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Maintainers
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -438,12 +454,14 @@ export const Maintainers = S.Array(Person).pipe(
 /**
  * Schema for the `repository` field.
  *
- * @example
+ * **Example** (Inspect Repository schema)
+ *
  * ```ts
  * import { Repository } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Repository
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -459,12 +477,14 @@ export const Repository = S.Union([S.String, RepositoryObject]).pipe(
 /**
  * Schema for the `bugs` field.
  *
- * @example
+ * **Example** (Inspect Bugs schema)
+ *
  * ```ts
  * import { Bugs } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Bugs
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -480,12 +500,14 @@ export const Bugs = S.Union([S.String, BugsObject]).pipe(
 /**
  * Schema for the `funding` field.
  *
- * @example
+ * **Example** (Inspect Funding schema)
+ *
  * ```ts
  * import { Funding } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Funding
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -501,12 +523,14 @@ export const Funding = S.Union([S.String, FundingEntry, S.NonEmptyArray(S.Union(
 /**
  * Schema for the `bin` field.
  *
- * @example
+ * **Example** (Inspect Bin schema)
+ *
  * ```ts
  * import { Bin } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Bin
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -521,12 +545,14 @@ export const Bin = S.Union([S.String, StringRecord]).pipe(
 /**
  * Schema for the `browser` field.
  *
- * @example
+ * **Example** (Inspect Browser schema)
+ *
  * ```ts
  * import { Browser } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Browser
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -563,12 +589,14 @@ class DirectoriesShape extends S.Class<DirectoriesShape>($I`Directories`)(
 /**
  * Schema for the `directories` field.
  *
- * @example
+ * **Example** (Inspect Directories schema)
+ *
  * ```ts
  * import { Directories } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Directories
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -586,12 +614,14 @@ const PeerDependencyMetaEntry = S.Struct({
 /**
  * Schema for the `man` field.
  *
- * @example
+ * **Example** (Inspect Man schema)
+ *
  * ```ts
  * import { Man } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Man
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -606,12 +636,14 @@ export const Man = S.Union([S.String, StringArray]).pipe(
 /**
  * Schema for the `sideEffects` field.
  *
- * @example
+ * **Example** (Inspect SideEffects schema)
+ *
  * ```ts
  * import { SideEffects } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = SideEffects
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -626,12 +658,14 @@ export const SideEffects = S.Union([S.Boolean, StringArray]).pipe(
 /**
  * Schema for the `bundleDependencies` / `bundledDependencies` fields.
  *
- * @example
+ * **Example** (Inspect BundleDependencies schema)
+ *
  * ```ts
  * import { BundleDependencies } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = BundleDependencies
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -646,12 +680,14 @@ export const BundleDependencies = S.Union([S.Boolean, StringArray]).pipe(
 /**
  * Schema for the `peerDependenciesMeta` field.
  *
- * @example
+ * **Example** (Inspect PeerDependenciesMeta schema)
+ *
  * ```ts
  * import { PeerDependenciesMeta } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = PeerDependenciesMeta
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -669,12 +705,14 @@ export const PeerDependenciesMeta = S.Record(
 /**
  * Schema for the `typesVersions` field.
  *
- * @example
+ * **Example** (Inspect TypesVersions schema)
+ *
  * ```ts
  * import { TypesVersions } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = TypesVersions
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -708,12 +746,14 @@ class DevEngineDependencyShape extends S.Class<DevEngineDependencyShape>($I`DevE
 /**
  * Schema for a development environment requirement entry.
  *
- * @example
+ * **Example** (Inspect DevEngineDependency schema)
+ *
  * ```ts
  * import { DevEngineDependency } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = DevEngineDependency
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -752,12 +792,14 @@ class DevEnginesShape extends S.Class<DevEnginesShape>($I`DevEngines`)(
 /**
  * Schema for the `devEngines` field.
  *
- * @example
+ * **Example** (Inspect DevEngines schema)
+ *
  * ```ts
  * import { DevEngines } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = DevEngines
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -830,12 +872,14 @@ const PackageExportsSubpathMap = makeStrictStringKeyRecord(
 /**
  * Schema for the `exports` field.
  *
- * @example
+ * **Example** (Inspect PackageExports schema)
+ *
  * ```ts
  * import { PackageExports } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = PackageExports
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -909,12 +953,14 @@ const PackageImportsEntryOrFallback: S.Codec<PackageImportsEntryOrFallback, Pack
 /**
  * Schema for the `imports` field.
  *
- * @example
+ * **Example** (Inspect PackageImports schema)
+ *
  * ```ts
  * import { PackageImports } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = PackageImports
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -975,12 +1021,14 @@ const PublishConfigBase = S.Struct({
 /**
  * Schema for the `workspaces` field.
  *
- * @example
+ * **Example** (Inspect Workspaces schema)
+ *
  * ```ts
  * import { Workspaces } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = Workspaces
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -996,12 +1044,14 @@ export const Workspaces = S.Union([StringArray, WorkspacesObject]).pipe(
 /**
  * Schema for the `publishConfig` field.
  *
- * @example
+ * **Example** (Inspect PublishConfig schema)
+ *
  * ```ts
  * import { PublishConfig } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = PublishConfig
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -1064,6 +1114,7 @@ const npmPackageJsonFields = {
   typesVersions: S.OptionFromOptionalKey(TypesVersions),
   resolutions: S.OptionFromOptionalKey(StringRecord),
   patchedDependencies: S.OptionFromOptionalKey(NonEmptyStringRecord),
+  trustedDependencies: S.OptionFromOptionalKey(StringArray),
   readme: S.OptionFromOptionalKey(S.String),
 } as const;
 
@@ -1082,14 +1133,18 @@ const packageJsonFields = {
 /**
  * Type-safe schema for npm package.json files.
  *
+ * **Details**
+ *
  * Unexpected keys are rejected by the exported decode helpers.
  *
- * @example
+ * **Example** (Inspect NpmPackageJson schema)
+ *
  * ```ts
  * import { NpmPackageJson } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = NpmPackageJson
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -1104,14 +1159,18 @@ export class NpmPackageJson extends S.Class<NpmPackageJson>($I`NpmPackageJson`)(
 /**
  * Type-safe schema for this repo's package.json files.
  *
+ * **Details**
+ *
  * Extends the npm surface with repo-local metadata fields used by the monorepo.
  *
- * @example
+ * **Example** (Inspect PackageJson schema)
+ *
  * ```ts
  * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
  * const schema = PackageJson
  * console.log(schema)
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -1125,12 +1184,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   /**
    * Decode an unknown strict package.json value into a Result.
    *
-   * @example
+   * **Example** (Decode to Result)
+   *
    * ```ts
    * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
    * const result = PackageJson.decodeStrictResult({ name: "@beep/example" })
    * console.log(result)
    * ```
+   *
    * @category validation
    * @since 0.0.0
    */
@@ -1138,12 +1199,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   /**
    * Decode an unknown strict package.json value into an Exit.
    *
-   * @example
+   * **Example** (Decode to Exit)
+   *
    * ```ts
    * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
    * const exit = PackageJson.decodeStrictExit({ name: "@beep/example" })
    * console.log(exit)
    * ```
+   *
    * @category validation
    * @since 0.0.0
    */
@@ -1151,12 +1214,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   /**
    * Decode an unknown strict package.json value as an Effect.
    *
-   * @example
+   * **Example** (Decode to Effect)
+   *
    * ```ts
    * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
    * const effect = PackageJson.decodeStrictEffect({ name: "@beep/example" })
    * console.log(effect)
    * ```
+   *
    * @category validation
    * @since 0.0.0
    */
@@ -1164,12 +1229,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   /**
    * Encode a strict package.json value as an Effect.
    *
-   * @example
+   * **Example** (Encode as Effect)
+   *
    * ```ts
    * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
    * const effect = PackageJson.encodeStrictEffect(PackageJson.make({ name: "@beep/example" }))
    * console.log(effect)
    * ```
+   *
    * @category validation
    * @since 0.0.0
    */
@@ -1177,12 +1244,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   /**
    * Encode a strict package.json value to a JSON string as an Effect.
    *
-   * @example
+   * **Example** (Encode to JSON string)
+   *
    * ```ts
    * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
    * const effect = PackageJson.encodeJsonStringEffect(PackageJson.make({ name: "@beep/example" }))
    * console.log(effect)
    * ```
+   *
    * @category validation
    * @since 0.0.0
    */
@@ -1192,12 +1261,14 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
 /**
  * Namespace helpers for the strict npm package-json schema.
  *
- * @example
+ * **Example** (Read typed package name)
+ *
  * ```ts
  * import type { NpmPackageJson } from "@beep/repo-utils/schemas/PackageJson"
  * const readName = (value: NpmPackageJson.Type) => value.name
  * console.log(readName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1221,12 +1292,14 @@ export declare namespace NpmPackageJson {
 /**
  * Namespace helpers for the repo-aware package-json schema.
  *
- * @example
+ * **Example** (Read typed package name)
+ *
  * ```ts
  * import type { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
  * const readName = (value: PackageJson.Type) => value.name
  * console.log(readName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1250,12 +1323,14 @@ export declare namespace PackageJson {
 /**
  * Runtime type for {@link NpmPackageName}.
  *
- * @example
+ * **Example** (Accept NpmPackageName type)
+ *
  * ```ts
  * import type { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPackageName = (_value: NpmPackageName) => undefined
  * console.log(acceptPackageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1263,12 +1338,14 @@ export type NpmPackageName = (typeof NpmPackageName)["Type"];
 /**
  * Runtime type for {@link RepoPackageName}.
  *
- * @example
+ * **Example** (Accept RepoPackageName type)
+ *
  * ```ts
  * import type { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPackageName = (_value: RepoPackageName) => undefined
  * console.log(acceptPackageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1276,12 +1353,14 @@ export type RepoPackageName = (typeof RepoPackageName)["Type"];
 /**
  * Runtime type for {@link RelativeDotPath}.
  *
- * @example
+ * **Example** (Accept RelativeDotPath type)
+ *
  * ```ts
  * import type { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPath = (_value: RelativeDotPath) => undefined
  * console.log(acceptPath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1289,12 +1368,14 @@ export type RelativeDotPath = (typeof RelativeDotPath)["Type"];
 /**
  * Runtime type for {@link NonEmptyStringValue}.
  *
- * @example
+ * **Example** (Accept NonEmptyStringValue type)
+ *
  * ```ts
  * import type { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptText = (_value: NonEmptyStringValue) => undefined
  * console.log(acceptText)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1303,12 +1384,14 @@ export type NonEmptyStringValue = (typeof NonEmptyStringValue)["Type"];
 /**
  * Runtime type for {@link Person}.
  *
- * @example
+ * **Example** (Accept Person type)
+ *
  * ```ts
  * import type { Person } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPerson = (_value: Person) => undefined
  * console.log(acceptPerson)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1316,12 +1399,14 @@ export type Person = (typeof Person)["Type"];
 /**
  * Runtime type for {@link Author}.
  *
- * @example
+ * **Example** (Accept Author type)
+ *
  * ```ts
  * import type { Author } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptAuthor = (_value: Author) => undefined
  * console.log(acceptAuthor)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1329,12 +1414,14 @@ export type Author = (typeof Author)["Type"];
 /**
  * Runtime type for {@link Contributors}.
  *
- * @example
+ * **Example** (Accept Contributors type)
+ *
  * ```ts
  * import type { Contributors } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptContributors = (_value: Contributors) => undefined
  * console.log(acceptContributors)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1342,12 +1429,14 @@ export type Contributors = (typeof Contributors)["Type"];
 /**
  * Runtime type for {@link Maintainers}.
  *
- * @example
+ * **Example** (Accept Maintainers type)
+ *
  * ```ts
  * import type { Maintainers } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptMaintainers = (_value: Maintainers) => undefined
  * console.log(acceptMaintainers)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1355,12 +1444,14 @@ export type Maintainers = (typeof Maintainers)["Type"];
 /**
  * Runtime type for {@link Repository}.
  *
- * @example
+ * **Example** (Accept Repository type)
+ *
  * ```ts
  * import type { Repository } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptRepository = (_value: Repository) => undefined
  * console.log(acceptRepository)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1368,12 +1459,14 @@ export type Repository = (typeof Repository)["Type"];
 /**
  * Runtime type for {@link Bugs}.
  *
- * @example
+ * **Example** (Accept Bugs type)
+ *
  * ```ts
  * import type { Bugs } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptBugs = (_value: Bugs) => undefined
  * console.log(acceptBugs)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1381,12 +1474,14 @@ export type Bugs = (typeof Bugs)["Type"];
 /**
  * Runtime type for {@link Funding}.
  *
- * @example
+ * **Example** (Accept Funding type)
+ *
  * ```ts
  * import type { Funding } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptFunding = (_value: Funding) => undefined
  * console.log(acceptFunding)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1394,12 +1489,14 @@ export type Funding = (typeof Funding)["Type"];
 /**
  * Runtime type for {@link Bin}.
  *
- * @example
+ * **Example** (Accept Bin type)
+ *
  * ```ts
  * import type { Bin } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptBin = (_value: Bin) => undefined
  * console.log(acceptBin)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1407,12 +1504,14 @@ export type Bin = (typeof Bin)["Type"];
 /**
  * Runtime type for {@link Browser}.
  *
- * @example
+ * **Example** (Accept Browser type)
+ *
  * ```ts
  * import type { Browser } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptBrowser = (_value: Browser) => undefined
  * console.log(acceptBrowser)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1420,12 +1519,14 @@ export type Browser = (typeof Browser)["Type"];
 /**
  * Runtime type for {@link Directories}.
  *
- * @example
+ * **Example** (Accept Directories type)
+ *
  * ```ts
  * import type { Directories } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptDirectories = (_value: Directories) => undefined
  * console.log(acceptDirectories)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1433,12 +1534,14 @@ export type Directories = (typeof Directories)["Type"];
 /**
  * Runtime type for {@link Man}.
  *
- * @example
+ * **Example** (Accept Man type)
+ *
  * ```ts
  * import type { Man } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptMan = (_value: Man) => undefined
  * console.log(acceptMan)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1446,12 +1549,14 @@ export type Man = (typeof Man)["Type"];
 /**
  * Runtime type for {@link SideEffects}.
  *
- * @example
+ * **Example** (Accept SideEffects type)
+ *
  * ```ts
  * import type { SideEffects } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptSideEffects = (_value: SideEffects) => undefined
  * console.log(acceptSideEffects)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1459,12 +1564,14 @@ export type SideEffects = (typeof SideEffects)["Type"];
 /**
  * Runtime type for {@link BundleDependencies}.
  *
- * @example
+ * **Example** (Accept BundleDependencies type)
+ *
  * ```ts
  * import type { BundleDependencies } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptBundleDependencies = (_value: BundleDependencies) => undefined
  * console.log(acceptBundleDependencies)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1472,12 +1579,14 @@ export type BundleDependencies = (typeof BundleDependencies)["Type"];
 /**
  * Runtime type for {@link PeerDependenciesMeta}.
  *
- * @example
+ * **Example** (Accept PeerDependenciesMeta type)
+ *
  * ```ts
  * import type { PeerDependenciesMeta } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPeerDependenciesMeta = (_value: PeerDependenciesMeta) => undefined
  * console.log(acceptPeerDependenciesMeta)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1485,12 +1594,14 @@ export type PeerDependenciesMeta = (typeof PeerDependenciesMeta)["Type"];
 /**
  * Runtime type for {@link TypesVersions}.
  *
- * @example
+ * **Example** (Accept TypesVersions type)
+ *
  * ```ts
  * import type { TypesVersions } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptTypesVersions = (_value: TypesVersions) => undefined
  * console.log(acceptTypesVersions)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1498,12 +1609,14 @@ export type TypesVersions = (typeof TypesVersions)["Type"];
 /**
  * Runtime type for {@link DevEngineDependency}.
  *
- * @example
+ * **Example** (Accept DevEngineDependency type)
+ *
  * ```ts
  * import type { DevEngineDependency } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptDevEngineDependency = (_value: DevEngineDependency) => undefined
  * console.log(acceptDevEngineDependency)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1511,12 +1624,14 @@ export type DevEngineDependency = (typeof DevEngineDependency)["Type"];
 /**
  * Runtime type for {@link DevEngines}.
  *
- * @example
+ * **Example** (Accept DevEngines type)
+ *
  * ```ts
  * import type { DevEngines } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptDevEngines = (_value: DevEngines) => undefined
  * console.log(acceptDevEngines)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1524,12 +1639,14 @@ export type DevEngines = (typeof DevEngines)["Type"];
 /**
  * Runtime type for {@link PackageExports}.
  *
- * @example
+ * **Example** (Accept PackageExports type)
+ *
  * ```ts
  * import type { PackageExports } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPackageExports = (_value: PackageExports) => undefined
  * console.log(acceptPackageExports)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1537,12 +1654,14 @@ export type PackageExports = (typeof PackageExports)["Type"];
 /**
  * Runtime type for {@link PackageImports}.
  *
- * @example
+ * **Example** (Accept PackageImports type)
+ *
  * ```ts
  * import type { PackageImports } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPackageImports = (_value: PackageImports) => undefined
  * console.log(acceptPackageImports)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1550,12 +1669,14 @@ export type PackageImports = (typeof PackageImports)["Type"];
 /**
  * Runtime type for {@link Workspaces}.
  *
- * @example
+ * **Example** (Accept Workspaces type)
+ *
  * ```ts
  * import type { Workspaces } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptWorkspaces = (_value: Workspaces) => undefined
  * console.log(acceptWorkspaces)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1563,12 +1684,14 @@ export type Workspaces = (typeof Workspaces)["Type"];
 /**
  * Runtime type for {@link PublishConfig}.
  *
- * @example
+ * **Example** (Accept PublishConfig type)
+ *
  * ```ts
  * import type { PublishConfig } from "@beep/repo-utils/schemas/PackageJson"
  * const acceptPublishConfig = (_value: PublishConfig) => undefined
  * console.log(acceptPublishConfig)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1578,14 +1701,16 @@ export type PublishConfig = (typeof PublishConfig)["Type"];
  * Synchronously decode an unknown value into a strict `PackageJson`.
  * Throws a `SchemaError` if validation fails.
  *
- * @param input - Unknown package.json-shaped value to validate and decode.
- * @returns Decoded strict `PackageJson` value.
- * @example
+ * **Example** (Decode package.json value)
+ *
  * ```ts
  * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
  * const packageJson = decodePackageJson({ name: "@beep/example" })
  * console.log(packageJson)
  * ```
+ *
+ * @param input - Unknown package.json-shaped value to validate and decode.
+ * @returns Decoded strict `PackageJson` value.
  * @category validation
  * @since 0.0.0
  */
@@ -1596,14 +1721,16 @@ export const decodePackageJson = (input: unknown): PackageJson.Type =>
  * Synchronously decode an unknown value into a strict `PackageJson`,
  * returning an `Exit` instead of throwing.
  *
- * @param input - Unknown package.json-shaped value to validate and decode.
- * @returns Exit describing either the decoded package.json or the schema failure.
- * @example
+ * **Example** (Decode to Exit)
+ *
  * ```ts
  * import { decodePackageJsonExit } from "@beep/repo-utils/schemas/PackageJson"
  * const exit = decodePackageJsonExit({ name: "@beep/example" })
  * console.log(exit)
  * ```
+ *
+ * @param input - Unknown package.json-shaped value to validate and decode.
+ * @returns Exit describing either the decoded package.json or the schema failure.
  * @category validation
  * @since 0.0.0
  */
@@ -1613,16 +1740,14 @@ export const decodePackageJsonExit: (input: unknown) => Exit.Exit<PackageJson.Ty
 /**
  * Decode an unknown value into a strict `PackageJson` as an Effect.
  *
- * @param input - Unknown value decoded against the strict `PackageJson` schema.
- * @returns An Effect that succeeds with the decoded `PackageJson` or fails with `S.SchemaError`.
- * @remarks
+ * **Details**
+ *
  * Excess top-level and nested properties are rejected. Use this when repo tools
  * need package manifests that match the supported schema surface instead of
  * permissively carrying unknown keys forward.
- * @effects
- * Runs strict Effect Schema decoding with excess-property rejection and fails
- * with `S.SchemaError`; it performs no filesystem or process I/O.
- * @example
+ *
+ * **Example** (Decode with Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodePackageJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
@@ -1634,6 +1759,12 @@ export const decodePackageJsonExit: (input: unknown) => Exit.Exit<PackageJson.Ty
  * )
  * console.log(packageJson.name) // "@beep/example"
  * ```
+ *
+ * @param input - Unknown value decoded against the strict `PackageJson` schema.
+ * @returns An Effect that succeeds with the decoded `PackageJson` or fails with `S.SchemaError`.
+ * @effects
+ * Runs strict Effect Schema decoding with excess-property rejection and fails
+ * with `S.SchemaError`; it performs no filesystem or process I/O.
  * @category validation
  * @since 0.0.0
  */
@@ -1643,14 +1774,13 @@ export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
 /**
  * Encode a strict `PackageJson` value back to its encoded form as an Effect.
  *
+ * **Details**
+ *
  * The input is first decoded with strict excess-property rejection so callers
  * do not accidentally encode malformed package.json objects.
  *
- * @effects
- * Decodes the input with strict package.json validation before encoding it back
- * to the schema's external representation; failures are reported as
- * `S.SchemaError`.
- * @example
+ * **Example** (Encode package.json Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { encodePackageJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
@@ -1663,6 +1793,11 @@ export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
  * )
  * console.log(encoded.scripts?.check) // "tsgo -b tsconfig.json"
  * ```
+ *
+ * @effects
+ * Decodes the input with strict package.json validation before encoding it back
+ * to the schema's external representation; failures are reported as
+ * `S.SchemaError`.
  * @category validation
  * @since 0.0.0
  */
@@ -1676,10 +1811,8 @@ export const encodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
 /**
  * Encode a strict `PackageJson` value to a compact JSON string as an Effect.
  *
- * @effects
- * Validates the package manifest and serializes the encoded value through the
- * schema JSON-string encoder; failures are reported as `S.SchemaError`.
- * @example
+ * **Example** (Encode to JSON string)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { encodePackageJsonToJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
@@ -1691,6 +1824,10 @@ export const encodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
  * )
  * console.log(json.includes("\"type\":\"module\"")) // true
  * ```
+ *
+ * @effects
+ * Validates the package manifest and serializes the encoded value through the
+ * schema JSON-string encoder; failures are reported as `S.SchemaError`.
  * @category validation
  * @since 0.0.0
  */
@@ -1704,13 +1841,13 @@ export const encodePackageJsonToJsonEffect: (input: unknown) => Effect.Effect<st
 /**
  * Encode a strict `PackageJson` value to a pretty-printed JSON string.
  *
- * @remarks
+ * **Details**
+ *
  * Formatting happens after schema validation and encoding, so invalid manifest
  * fields fail as schema errors before JSON rendering is attempted.
- * @effects
- * Validates and encodes the manifest, then pretty-prints the JSON payload;
- * formatting failures surface as `DomainError`.
- * @example
+ *
+ * **Example** (Pretty-print package.json)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { encodePackageJsonPrettyEffect } from "@beep/repo-utils/schemas/PackageJson"
@@ -1722,6 +1859,10 @@ export const encodePackageJsonToJsonEffect: (input: unknown) => Effect.Effect<st
  * )
  * console.log(pretty.includes("\n")) // true
  * ```
+ *
+ * @effects
+ * Validates and encodes the manifest, then pretty-prints the JSON payload;
+ * formatting failures surface as `DomainError`.
  * @category validation
  * @since 0.0.0
  */
@@ -1736,14 +1877,17 @@ const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unk
 /**
  * Read a `package.json` file from disk and decode it into a strict `PackageJson`.
  *
- * @remarks
+ * **Details**
+ *
  * Composes `FileSystem.readFileString` with the existing strict
  * {@link decodePackageJsonEffect}, collapsing the read-then-parse-then-decode
  * pattern duplicated across repo tooling into one helper. A read failure (for
  * example a missing file) surfaces as {@link NoSuchFileError}; malformed JSON and
  * any schema violation — including excess top-level keys, which the strict decode
  * rejects — surface as `S.SchemaError`.
- * @example
+ *
+ * **Example** (Read package.json from disk)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson"
@@ -1752,6 +1896,7 @@ const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unk
  * const name = Effect.map(program, (manifest) => manifest.name)
  * console.log(name)
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */

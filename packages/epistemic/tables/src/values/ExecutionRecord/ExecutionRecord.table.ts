@@ -29,7 +29,8 @@ import type { DenialReason } from "@beep/epistemic-domain/values/ExecutionVerdic
 /**
  * Physical Postgres table name for write-ahead execution decisions.
  *
- * @example
+ * **Example** (Log decision table name)
+ *
  * ```ts
  * import { EXECUTION_DECISION_TABLE_NAME } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -44,7 +45,8 @@ export const EXECUTION_DECISION_TABLE_NAME = "epistemic_execution_decision" as c
 /**
  * Physical Postgres table name for post-settlement execution outcomes.
  *
- * @example
+ * **Example** (Log outcome table name)
+ *
  * ```ts
  * import { EXECUTION_OUTCOME_TABLE_NAME } from "@beep/epistemic-tables/values/ExecutionRecord"
  *
@@ -59,12 +61,15 @@ export const EXECUTION_OUTCOME_TABLE_NAME = "epistemic_execution_outcome" as con
 /**
  * Drizzle projection of the write-ahead execution decision chain.
  *
+ * **Details**
+ *
  * The natural key is `(run_key, seq)` — there is no surrogate id, because a
  * surrogate would add nothing the chain does not already pin. `prev_hash` is
  * null only at `seq` zero; the migration's `genesis_prev` CHECK makes that
  * shape unrepresentable otherwise.
  *
- * @example
+ * **Example** (Get decision table name)
+ *
  * ```ts
  * import { getTableName } from "drizzle-orm"
  * import { executionDecisionTable } from "@beep/epistemic-tables/values/ExecutionRecord"
@@ -94,6 +99,8 @@ export const executionDecisionTable = pgTable(EXECUTION_DECISION_TABLE_NAME, {
 /**
  * Drizzle projection of the post-settlement execution outcome records.
  *
+ * **Details**
+ *
  * `decision_hash` is the primary key, so one outcome per decision is a table
  * shape rather than a convention, and the composite foreign key to
  * `(run_key, hash)` makes an outcome without its write-ahead decision
@@ -107,7 +114,8 @@ export const executionDecisionTable = pgTable(EXECUTION_DECISION_TABLE_NAME, {
  * filled by the database default, so it stays out of the TypeScript surface on
  * purpose.
  *
- * @example
+ * **Example** (Get outcome table name)
+ *
  * ```ts
  * import { getTableName } from "drizzle-orm"
  * import { executionOutcomeTable } from "@beep/epistemic-tables/values/ExecutionRecord"

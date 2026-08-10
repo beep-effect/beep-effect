@@ -14,7 +14,8 @@ import type React from "react";
  * Props for {@link UploadField}: `Upload` props plus label/description; binding
  * props are owned by the field.
  *
- * @example
+ * **Example** (Satisfies UploadFieldProps shape)
+ *
  * ```ts
  * import type { UploadFieldProps } from "@beep/form/fields/UploadField"
  *
@@ -42,11 +43,14 @@ export interface UploadFieldProps
 /**
  * TanStack-bound upload field for document-style file arrays.
  *
+ * **Details**
+ *
  * Use through `useAppForm` as `field.Upload`; the field value remains the
  * canonical `ReadonlyArray<File>` that the underlying `@beep/ui` primitive
  * receives.
  *
- * @example
+ * **Example** (Documents file upload form)
+ *
  * ```tsx
  * import { Form, makeFormOptions, useAppForm } from "@beep/form"
  * import * as S from "effect/Schema"

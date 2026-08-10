@@ -12,10 +12,12 @@ const $I = $BoxId.create("experimental/domain/entities/TrashWebLink/TrashWebLink
 /**
  * Experimental schema anchor for Box web link metadata while the link is in trash.
  *
- * @remarks
+ * **Details**
+ *
  * This experimental domain class currently declares an empty schema shape; generated Box SDK payload schemas remain the field-level source for API data until fields are promoted here.
  *
- * @example
+ * **Example** (Decode and encode empty schema)
+ *
  * ```ts
  * import { TrashWebLink } from "@beep/box/experimental/domain/entities/TrashWebLink/TrashWebLink.model";
  * import * as S from "effect/Schema";
@@ -39,7 +41,8 @@ export class TrashWebLink extends S.Class<TrashWebLink>($I`TrashWebLink`)(
 /**
  * Type-level companion namespace for {@link TrashWebLink} encoded payloads.
  *
- * @example
+ * **Example** (Make and encode empty value)
+ *
  * ```ts
  * import { TrashWebLink } from "@beep/box/experimental/domain/entities/TrashWebLink/TrashWebLink.model";
  * import * as S from "effect/Schema";
@@ -57,7 +60,8 @@ export declare namespace TrashWebLink {
   /**
    * Encoded payload accepted by the {@link TrashWebLink} entity schema.
    *
-   * @example
+   * **Example** (Encode empty made payload)
+   *
    * ```ts
    * import { TrashWebLink } from "@beep/box/experimental/domain/entities/TrashWebLink/TrashWebLink.model";
    * import * as S from "effect/Schema";

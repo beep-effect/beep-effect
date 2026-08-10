@@ -86,9 +86,12 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
 /**
  * Build the in-memory SyncOperation repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * Queued listings are FIFO: ascending entity id equals enqueue order.
  *
- * @example
+ * **Example** (In-memory repository factory)
+ *
  * ```ts
  * import { makeInMemorySyncOperationRepository } from "@beep/documents-server/entities/SyncOperation"
  *
@@ -98,7 +101,6 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for enqueue, update, requeue, and list repository
  * calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -234,11 +236,14 @@ const translateEnqueueFailure =
 /**
  * Build a Drizzle-backed SyncOperation repository used by live persistence tests.
  *
+ * **Details**
+ *
  * Duplicate idempotency keys are rejected by the table's unique index; the
  * driver failure is detected and translated to
  * `SyncOperationRepositoryConflict`.
  *
- * @example
+ * **Example** (Drizzle repository factory)
+ *
  * ```ts
  * import { makeDrizzleSyncOperationRepository } from "@beep/documents-server/entities/SyncOperation"
  *
@@ -248,7 +253,6 @@ const translateEnqueueFailure =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncOperation table and redacts driver
  * failures to `SyncOperationRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

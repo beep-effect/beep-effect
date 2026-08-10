@@ -65,7 +65,8 @@ const OBS_PASSWORD_ENV = "OBS_WEBSOCKET_PASSWORD";
 /**
  * Everything the lane A harness needs on its environment.
  *
- * @example
+ * **Example** (Make harness environment options)
+ *
  * ```ts
  * import { HarnessEnvOptions } from "@beep/repo-cli/commands/Qa/Record"
  *
@@ -80,6 +81,7 @@ const OBS_PASSWORD_ENV = "OBS_WEBSOCKET_PASSWORD";
  * })
  * console.log(options.round) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -129,14 +131,15 @@ export class HarnessEnvOptions extends S.Class<HarnessEnvOptions>($I`HarnessEnvO
 /**
  * Environment the lane A harness is spawned with.
  *
+ * **Details**
+ *
  * These names are the contract with `.beep/qa-capture.mjs`; the template reads
  * exactly `QA_ROUND`, `QA_URL`, `QA_COLLECTOR_URL`, `QA_SESSION_ID`, and
  * `QA_VIDEO_DIR`. `QA_CURSOR` and `QA_BEACON` forward the witness feature
  * flags for templates that honour them.
  *
- * @param options - Collector URL, session identity, and the witness feature flags.
- * @returns The environment variables the harness template reads.
- * @example
+ * **Example** (Build harness environment variables)
+ *
  * ```ts
  * import { harnessEnv, HarnessEnvOptions } from "@beep/repo-cli/commands/Qa/Record"
  *
@@ -153,6 +156,9 @@ export class HarnessEnvOptions extends S.Class<HarnessEnvOptions>($I`HarnessEnvO
  * )
  * console.log(env.QA_ROUND) // "2"
  * ```
+ *
+ * @param options - Collector URL, session identity, and the witness feature flags.
+ * @returns The environment variables the harness template reads.
  * @category utilities
  * @since 0.0.0
  */
@@ -169,7 +175,8 @@ export const harnessEnv = (options: HarnessEnvOptions): Record<string, string> =
 /**
  * How a recording lane finished.
  *
- * @example
+ * **Example** (Make successful record outcome)
+ *
  * ```ts
  * import { RecordOutcome } from "@beep/repo-cli/commands/Qa/Record"
  * import * as O from "effect/Option"
@@ -177,6 +184,7 @@ export const harnessEnv = (options: HarnessEnvOptions): Record<string, string> =
  * const outcome = RecordOutcome.make({ exitCode: 0, recordStartEpochMs: O.none(), videoPath: O.none() })
  * console.log(outcome.exitCode) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -208,15 +216,16 @@ export class RecordOutcome extends S.Class<RecordOutcome>($I`RecordOutcome`)(
 /**
  * Fail a finished round that captured zero witness events.
  *
+ * **Details**
+ *
  * An event-less log means the witness was never injected or its posts were
  * silently dropped (wrong collector origin, rewritten content type), so the
  * round carries no gesture timeline for extraction to plan against. The
  * evidence already on disk stays for debugging; the round just must not
  * report as captured.
  *
- * @param eventLog - Decoded witness log of the finished round.
- * @returns An Effect failing with a reported nonzero exit when the log holds no events.
- * @example
+ * **Example** (Fail on empty event log)
+ *
  * ```ts
  * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { requireCapturedEvents } from "@beep/repo-cli/commands/Qa/Record"
@@ -225,6 +234,9 @@ export class RecordOutcome extends S.Class<RecordOutcome>($I`RecordOutcome`)(
  * const program = requireCapturedEvents(QaEventLog.make({ events: [], rejectedCount: 0 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param eventLog - Decoded witness log of the finished round.
+ * @returns An Effect failing with a reported nonzero exit when the log holds no events.
  * @category use-cases
  * @since 0.0.0
  */
@@ -428,7 +440,8 @@ const serveAndRun = Effect.fn("QaRecord.serveAndRun")(function* (
 /**
  * Record one QA round on the selected lane.
  *
- * @example
+ * **Example** (Record one QA round)
+ *
  * ```ts
  * import { runQaRecord } from "@beep/repo-cli/commands/Qa/Record"
  * import { QaRecordOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
@@ -449,6 +462,7 @@ const serveAndRun = Effect.fn("QaRecord.serveAndRun")(function* (
  * })
  * console.log(Effect.isEffect(runQaRecord("/repo", options))) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

@@ -29,13 +29,15 @@ const messageWithCause = (message: string, cause: unknown): string => `${message
 /**
  * Operational error during version sync (file read/write, parse failures).
  *
- * @example
+ * **Example** (Create VersionSyncError instance)
+ *
  * ```ts
  * import { VersionSyncError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = VersionSyncError.make({ file: "package.json", message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -80,13 +82,15 @@ export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`Vers
 /**
  * Network unavailable during upstream version resolution.
  *
- * @example
+ * **Example** (Create NetworkUnavailableError instance)
+ *
  * ```ts
  * import { NetworkUnavailableError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = NetworkUnavailableError.make({ message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -108,13 +112,15 @@ export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailable
 /**
  * Drift detected in check mode (non-zero exit).
  *
- * @example
+ * **Example** (Create VersionSyncDriftError instance)
+ *
  * ```ts
  * import { VersionSyncDriftError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = VersionSyncDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

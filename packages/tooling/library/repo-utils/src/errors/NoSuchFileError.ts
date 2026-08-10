@@ -17,7 +17,8 @@ const $I = $RepoUtilsId.create("errors/NoSuchFileError");
 /**
  * Raised when a required file or directory cannot be located.
  *
- * @example
+ * **Example** (Construct missing file error)
+ *
  * ```ts
  * import { NoSuchFileError } from "@beep/repo-utils/errors/NoSuchFileError"
  * const error = NoSuchFileError.make({
@@ -26,6 +27,7 @@ const $I = $RepoUtilsId.create("errors/NoSuchFileError");
  * })
  * console.log(error.path)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

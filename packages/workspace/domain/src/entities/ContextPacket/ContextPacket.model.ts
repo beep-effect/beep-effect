@@ -16,7 +16,8 @@ const $I = $WorkspaceDomainId.create("entities/ContextPacket/ContextPacket.model
 /**
  * Bounded context packet returned through the SDK facade.
  *
- * @example
+ * **Example** (Log table name)
+ *
  * ```ts
  * import { ContextPacket } from "@beep/workspace-domain"
  *

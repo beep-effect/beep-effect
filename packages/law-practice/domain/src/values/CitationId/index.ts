@@ -9,9 +9,8 @@
 /**
  * CitationId model exports.
  *
- * **Example**
+ * **Example** (Import CitationId)
  *
- * @example
  * ```ts
  * import { CitationId } from "@beep/law-practice-domain/values";
  * ```

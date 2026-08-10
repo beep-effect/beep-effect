@@ -9,9 +9,8 @@
 /**
  * Citation-warning model exports.
  *
- * **Example**
+ * **Example** (Import CitationWarning)
  *
- * @example
  * ```ts
  * import { CitationWarning } from "@beep/law-practice-domain/values";
  * ```

@@ -12,7 +12,8 @@ import type * as React from "react";
 /**
  * Pagination component.
  *
- * @example
+ * **Example** (Import Pagination component)
+ *
  * ```tsx
  * import { Pagination } from "@beep/ui/components/pagination"
  *
@@ -36,7 +37,8 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
 /**
  * Pagination content component.
  *
- * @example
+ * **Example** (Import PaginationContent component)
+ *
  * ```tsx
  * import { PaginationContent } from "@beep/ui/components/pagination"
  *
@@ -53,7 +55,8 @@ function PaginationContent({ className, ...props }: React.ComponentProps<"ul">) 
 /**
  * Pagination item component.
  *
- * @example
+ * **Example** (Import PaginationItem component)
+ *
  * ```tsx
  * import { PaginationItem } from "@beep/ui/components/pagination"
  *
@@ -75,7 +78,8 @@ type PaginationLinkProps = {
 /**
  * Pagination link component.
  *
- * @example
+ * **Example** (Import PaginationLink component)
+ *
  * ```tsx
  * import { PaginationLink } from "@beep/ui/components/pagination"
  *
@@ -104,7 +108,8 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
 /**
  * Pagination previous component.
  *
- * @example
+ * **Example** (Import PaginationPrevious component)
+ *
  * ```tsx
  * import { PaginationPrevious } from "@beep/ui/components/pagination"
  *
@@ -126,7 +131,8 @@ function PaginationPrevious({ className, ...props }: React.ComponentProps<typeof
 /**
  * Pagination next component.
  *
- * @example
+ * **Example** (Import PaginationNext component)
+ *
  * ```tsx
  * import { PaginationNext } from "@beep/ui/components/pagination"
  *
@@ -148,7 +154,8 @@ function PaginationNext({ className, ...props }: React.ComponentProps<typeof Pag
 /**
  * Pagination ellipsis component.
  *
- * @example
+ * **Example** (Import PaginationEllipsis component)
+ *
  * ```tsx
  * import { PaginationEllipsis } from "@beep/ui/components/pagination"
  *

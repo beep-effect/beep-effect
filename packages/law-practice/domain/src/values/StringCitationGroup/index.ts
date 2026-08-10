@@ -9,9 +9,8 @@
 /**
  * StringCitationGroup model exports.
  *
- * **Example**
+ * **Example** (Import StringCitationGroup export)
  *
- * @example
  * ```ts
  * import { StringCitationGroup } from "@beep/law-practice-domain/values";
  * ```

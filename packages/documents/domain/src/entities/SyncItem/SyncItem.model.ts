@@ -20,7 +20,8 @@ const $I = $DocumentsDomainId.create("entities/SyncItem/SyncItem.model");
 /**
  * Entity identifier for a persisted documents SyncItem.
  *
- * @example
+ * **Example** (Decode SyncItemId value)
+ *
  * ```ts
  * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/entities/SyncItem"
  * import * as S from "effect/Schema"
@@ -40,7 +41,8 @@ export const SyncItemId = Documents.SyncItemId;
 /**
  * Runtime type for {@link SyncItemId}.
  *
- * @example
+ * **Example** (Type SyncItemId array)
+ *
  * ```ts
  * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/entities/SyncItem"
  * import * as S from "effect/Schema"
@@ -61,7 +63,8 @@ export type SyncItemId = typeof SyncItemId.Type;
 /**
  * Reconciliation state for one mirrored vault item.
  *
- * @example
+ * **Example** (Check pending sync state)
+ *
  * ```ts
  * import { SyncItemState } from "@beep/documents-domain/entities/SyncItem"
  *
@@ -84,7 +87,8 @@ export const SyncItemState = LiteralKit(["pending", "current", "error", "conflic
 /**
  * Runtime type for {@link SyncItemState}.
  *
- * @example
+ * **Example** (Assign current state string)
+ *
  * ```ts
  * import type { SyncItemState } from "@beep/documents-domain/entities/SyncItem"
  *
@@ -100,7 +104,8 @@ export type SyncItemState = typeof SyncItemState.Type;
 /**
  * Durable sync-tracking row for one workspace-vault item mirrored one-way to a DMS provider.
  *
- * @example
+ * **Example** (Decode full SyncItem row)
+ *
  * ```ts
  * import { SyncItem, SyncItemId } from "@beep/documents-domain/entities/SyncItem"
  * import * as S from "effect/Schema"

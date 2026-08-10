@@ -31,7 +31,8 @@ const UsageProviderName = S.NonEmptyString.pipe(
 /**
  * Append-only usage attribution for model, tool, or agent work.
  *
- * @example
+ * **Example** (Decode UsageRecord schema)
+ *
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -134,7 +135,8 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
 /**
  * Boundary command for appending turn-finalization usage attribution.
  *
- * @example
+ * **Example** (Decode turn finalization append)
+ *
  * ```ts
  * import { TurnFinalizationUsageAppend } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -186,7 +188,8 @@ export class TurnFinalizationUsageAppend extends S.Class<TurnFinalizationUsageAp
 /**
  * Build the {@link UsageRecord} appended for a finalized turn.
  *
- * @example
+ * **Example** (Build usage from append)
+ *
  * ```ts
  * import { TurnFinalizationUsageAppend, appendTurnFinalizationUsageRecord } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

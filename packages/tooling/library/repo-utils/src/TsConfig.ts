@@ -20,8 +20,12 @@ import type { DomainError, NoSuchFileError } from "./errors/index.ts";
  */
 const ROOT_KEY = "@beep/root";
 
+const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
+
 /**
  * Collect all `tsconfig*.json` file paths for each workspace and the root.
+ *
+ * **Details**
  *
  * For every workspace package (plus the monorepo root), this function
  * globs for files matching `tsconfig*.json` and returns a HashMap
@@ -29,9 +33,8 @@ const ROOT_KEY = "@beep/root";
  *
  * The root directory is indexed under `"@beep/root"`.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @returns A HashMap mapping package names to arrays of tsconfig file paths.
- * @example
+ * **Example** (Collect workspace tsconfig paths)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig"
@@ -39,6 +42,9 @@ const ROOT_KEY = "@beep/root";
  * const program = collectTsConfigPaths(".")
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @returns A HashMap mapping package names to arrays of tsconfig file paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -55,6 +61,7 @@ export const collectTsConfigPaths: (
     const rootConfigs = yield* fsUtils.globFiles("tsconfig*.json", {
       cwd: rootDir,
       absolute: true,
+      ignore: IGNORED_TSCONFIG_DIRS,
     });
     if (rootConfigs.length > 0) {
       result = HashMap.set(result, ROOT_KEY, rootConfigs);
@@ -65,6 +72,7 @@ export const collectTsConfigPaths: (
       const configs = yield* fsUtils.globFiles("tsconfig*.json", {
         cwd: dir,
         absolute: true,
+        ignore: IGNORED_TSCONFIG_DIRS,
       });
       if (configs.length > 0) {
         result = HashMap.set(result, name, configs);

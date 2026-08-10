@@ -1,12 +1,13 @@
 /**
  * Browser fixed-point checks for opaque SVG and MathML nodes.
  *
+ * **Details**
+ *
  * The HTML tokenizer lowercases ASCII characters in foreign tag and attribute
  * names before the tree builder applies the generated WHATWG adjustment
  * tables. Canonical serialization therefore accepts exactly the names that
  * survive that round-trip unchanged.
  *
- * @remarks
  * This internal implementation detail is shared by the conformance and
  * serialization modules. It is intentionally not a package entrypoint.
  *
@@ -144,7 +145,9 @@ const hasMatchingNamespacePrefix = (namespace: ForeignNamespace, name: string): 
 /**
  * Tests whether an opaque foreign element name is unchanged by HTML parsing.
  *
- * @example Internal call site
+ * **Example** (SVG element name casing)
+ *
+ * Internal call site
  * ```ts
  * import { isForeignElementNameFixedPoint } from "./Html.foreign.ts"
  *
@@ -170,11 +173,15 @@ export const isForeignElementNameFixedPoint: {
 /**
  * Tests whether an opaque foreign attribute name is unchanged by HTML parsing.
  *
+ * **Details**
+ *
  * Qualified XML, XMLNS, and XLink names are restricted to the WHATWG
  * adjustment registry because the AST does not separately store namespace
  * metadata for arbitrary colon-prefixed attributes.
  *
- * @example Internal call site
+ * **Example** (SVG attribute name casing)
+ *
+ * Internal call site
  * ```ts
  * import { isForeignAttributeNameFixedPoint } from "./Html.foreign.ts"
  *
@@ -202,7 +209,9 @@ export const isForeignAttributeNameFixedPoint: {
  * Tests whether an HTML child remains in the HTML namespace beneath a foreign
  * parent under the WHATWG tree-construction dispatcher.
  *
- * @example Internal call site
+ * **Example** (HTML under foreignObject)
+ *
+ * Internal call site
  * ```ts
  * import { isHtmlChildAtForeignBoundary } from "./Html.foreign.ts"
  *
@@ -222,7 +231,9 @@ export const isHtmlChildAtForeignBoundary = (parent: ForeignBoundaryElement): bo
  * Tests whether a modeled foreign child keeps its namespace and parent after
  * the WHATWG tree-construction dispatcher processes its start tag.
  *
- * @example Internal call site
+ * **Example** (Foreign child under SVG)
+ *
+ * Internal call site
  * ```ts
  * import { isForeignChildAtForeignBoundary } from "./Html.foreign.ts"
  *

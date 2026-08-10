@@ -1,7 +1,8 @@
 /**
  * Control heights theme value.
  *
- * @example
+ * **Example** (Import and log heights)
+ *
  * ```ts
  * import { CONTROL_HEIGHTS } from "@beep/ui/themes/scales"
  *
@@ -20,7 +21,8 @@ export const CONTROL_HEIGHTS = {
 /**
  * Control touch heights theme value.
  *
- * @example
+ * **Example** (Import and log touch heights)
+ *
  * ```ts
  * import { CONTROL_TOUCH_HEIGHTS } from "@beep/ui/themes/scales"
  *
@@ -39,7 +41,8 @@ export const CONTROL_TOUCH_HEIGHTS = {
 /**
  * Touch media query theme value.
  *
- * @example
+ * **Example** (Import and log media query)
+ *
  * ```ts
  * import { TOUCH_MEDIA_QUERY } from "@beep/ui/themes/scales"
  *
@@ -54,7 +57,8 @@ export const TOUCH_MEDIA_QUERY = "@media (max-width: 768px)";
 /**
  * Switch sizes theme value.
  *
- * @example
+ * **Example** (Import and log switch sizes)
+ *
  * ```ts
  * import { SWITCH_SIZES } from "@beep/ui/themes/scales"
  *
@@ -73,7 +77,8 @@ export const SWITCH_SIZES = {
 /**
  * Switch touch sizes theme value.
  *
- * @example
+ * **Example** (Import and log touch sizes)
+ *
  * ```ts
  * import { SWITCH_TOUCH_SIZES } from "@beep/ui/themes/scales"
  *

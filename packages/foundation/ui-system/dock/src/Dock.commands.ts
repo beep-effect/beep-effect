@@ -18,7 +18,8 @@ const $I = $DockId.create("Dock.commands");
 /**
  * User gesture origin carried by a top-level command.
  *
- * @example
+ * **Example** (Make user gesture origin)
+ *
  * ```ts
  * import { UserCommandOrigin } from "@beep/dock"
  *
@@ -42,7 +43,8 @@ export class UserCommandOrigin extends S.Class<UserCommandOrigin>($I`UserCommand
 /**
  * Programmatic API origin carried by a top-level command.
  *
- * @example
+ * **Example** (Make API command origin)
+ *
  * ```ts
  * import { ApiCommandOrigin } from "@beep/dock"
  *
@@ -68,7 +70,8 @@ const CommandOriginKind = LiteralKit(["user", "api"]);
 /**
  * Tagged codec for explicit command origins.
  *
- * @example
+ * **Example** (Build tagged command origin)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock"
  *
@@ -91,7 +94,8 @@ export const CommandOrigin = CommandOriginKind.mapMembers(
 /**
  * Decoded tagged codec for explicit command origins.
  *
- * @example
+ * **Example** (Type decoded command origin)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock"
  *
@@ -107,7 +111,8 @@ export type CommandOrigin = typeof CommandOrigin.Type;
 /**
  * Command that opens a panel at a semantic placement.
  *
- * @example
+ * **Example** (Open panel at placement)
+ *
  * ```ts
  * import { GroupId, OpenPanelCommand, Panel, PanelId, RootPlacement, TextPanelView } from "@beep/dock"
  *
@@ -132,7 +137,8 @@ export class OpenPanelCommand extends S.Class<OpenPanelCommand>($I`OpenPanelComm
 /**
  * Command that activates a panel in its tab group.
  *
- * @example
+ * **Example** (Activate panel by id)
+ *
  * ```ts
  * import { ActivatePanelCommand, PanelId } from "@beep/dock"
  *
@@ -156,7 +162,8 @@ export class ActivatePanelCommand extends S.Class<ActivatePanelCommand>($I`Activ
 /**
  * Command that replaces selected panel facets.
  *
- * @example
+ * **Example** (Patch panel title facet)
+ *
  * ```ts
  * import { PanelId, PanelPatch, UpdatePanelCommand } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -176,7 +183,8 @@ export class UpdatePanelCommand extends S.Class<UpdatePanelCommand>($I`UpdatePan
 /**
  * Command that moves a panel to a semantic destination.
  *
- * @example
+ * **Example** (Move panel to tab)
+ *
  * ```ts
  * import { GroupId, MovePanelCommand, PanelId, TabPlacement } from "@beep/dock"
  *
@@ -201,7 +209,8 @@ export class MovePanelCommand extends S.Class<MovePanelCommand>($I`MovePanelComm
 /**
  * Command that merges or relocates a complete tab group.
  *
- * @example
+ * **Example** (Relocate complete tab group)
+ *
  * ```ts
  * import { GroupId, MoveGroupCommand, TabPlacement } from "@beep/dock"
  *
@@ -220,7 +229,8 @@ export class MoveGroupCommand extends S.Class<MoveGroupCommand>($I`MoveGroupComm
 /**
  * Command that replaces selected group metadata.
  *
- * @example
+ * **Example** (Patch group visibility)
+ *
  * ```ts
  * import { GroupId, GroupPatch, UpdateGroupCommand } from "@beep/dock"
  * import * as O from "effect/Option"
@@ -240,7 +250,8 @@ export class UpdateGroupCommand extends S.Class<UpdateGroupCommand>($I`UpdateGro
 /**
  * Command that closes one panel and collapses empty topology.
  *
- * @example
+ * **Example** (Close panel by id)
+ *
  * ```ts
  * import { ClosePanelCommand, PanelId } from "@beep/dock"
  *
@@ -264,7 +275,8 @@ export class ClosePanelCommand extends S.Class<ClosePanelCommand>($I`ClosePanelC
 /**
  * Command that changes a bounded split ratio.
  *
- * @example
+ * **Example** (Change bounded split ratio)
+ *
  * ```ts
  * import { ResizeSplitCommand, SplitId, SplitRatio } from "@beep/dock"
  *
@@ -289,7 +301,8 @@ export class ResizeSplitCommand extends S.Class<ResizeSplitCommand>($I`ResizeSpl
 /**
  * Command that clears the docked tree and all floating members.
  *
- * @example
+ * **Example** (Clear entire workspace)
+ *
  * ```ts
  * import { ClearWorkspaceCommand } from "@beep/dock"
  *
@@ -312,7 +325,8 @@ export class ClearWorkspaceCommand extends S.Class<ClearWorkspaceCommand>($I`Cle
 /**
  * Command that reveals and maximizes one group.
  *
- * @example
+ * **Example** (Maximize group by id)
+ *
  * ```ts
  * import { GroupId, MaximizeGroupCommand } from "@beep/dock"
  *
@@ -331,7 +345,8 @@ export class MaximizeGroupCommand extends S.Class<MaximizeGroupCommand>($I`Maxim
 /**
  * Command that leaves maximized mode.
  *
- * @example
+ * **Example** (Leave maximized mode)
+ *
  * ```ts
  * import { RestoreMaximizedCommand } from "@beep/dock"
  *
@@ -350,7 +365,8 @@ export class RestoreMaximizedCommand extends S.Class<RestoreMaximizedCommand>($I
 /**
  * Command that moves a docked group into a floating member.
  *
- * @example
+ * **Example** (Float group with box)
+ *
  * ```ts
  * import { FloatGroupCommand, GroupId, TopLeftAnchoredBox } from "@beep/dock"
  *
@@ -368,7 +384,8 @@ export class FloatGroupCommand extends S.Class<FloatGroupCommand>($I`FloatGroupC
 /**
  * Command that docks a floating group into the tree.
  *
- * @example
+ * **Example** (Dock floating group)
+ *
  * ```ts
  * import { DockFloatingGroupCommand, GroupId, TabPlacement } from "@beep/dock"
  *
@@ -386,7 +403,8 @@ export class DockFloatingGroupCommand extends S.Class<DockFloatingGroupCommand>(
 /**
  * Command that repositions a floating group and raises its z-order.
  *
- * @example
+ * **Example** (Reposition floating group)
+ *
  * ```ts
  * import { GroupId, MoveFloatingGroupCommand, TopLeftAnchoredBox } from "@beep/dock"
  *
@@ -422,7 +440,8 @@ const DockCommandKind = LiteralKit([
 /**
  * Tagged codec for every dock mutation command.
  *
- * @example
+ * **Example** (Use dock command codec)
+ *
  * ```ts
  * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock"
  *
@@ -460,7 +479,8 @@ export const DockCommand = DockCommandKind.mapMembers(
 /**
  * Decoded tagged codec for every dock mutation command.
  *
- * @example
+ * **Example** (Type decoded dock command)
+ *
  * ```ts
  * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock"
  *
@@ -476,7 +496,8 @@ export type DockCommand = typeof DockCommand.Type;
 /**
  * Causal envelope around one top-level dock command.
  *
- * @example
+ * **Example** (Wrap command in envelope)
+ *
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope } from "@beep/dock"
  *
@@ -501,7 +522,8 @@ export class DockCommandEnvelope extends S.Class<DockCommandEnvelope>($I`DockCom
 /**
  * Host renderer keys permitted when restoring component-backed panels.
  *
- * @example
+ * **Example** (List permitted renderer keys)
+ *
  * ```ts
  * import { AllowedRenderers, RendererKey } from "@beep/dock"
  *
@@ -523,7 +545,8 @@ export const AllowedRenderers = RendererKey.pipe(
 /**
  * Runtime type for {@link AllowedRenderers}.
  *
- * @example
+ * **Example** (Type allowed renderers list)
+ *
  * ```ts
  * import { AllowedRenderers, RendererKey } from "@beep/dock"
  *
@@ -539,7 +562,8 @@ export type AllowedRenderers = typeof AllowedRenderers.Type;
 /**
  * Causal metadata for a validated snapshot installation.
  *
- * @example
+ * **Example** (Make restore snapshot request)
+ *
  * ```ts
  * import { ApiCommandOrigin, CommandId, RestoreSnapshotRequest } from "@beep/dock"
  *

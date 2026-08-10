@@ -16,7 +16,8 @@ const $I = $ExiftoolId.create("Exiftool.models");
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Decode positive timeout)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveMilliseconds } from "@beep/exiftool"
@@ -62,7 +63,8 @@ export const PositiveMilliseconds = S.Finite.check(
 /**
  * Positive timeout value in milliseconds.
  *
- * @example
+ * **Example** (Typed positive timeout)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PositiveMilliseconds } from "@beep/exiftool"
@@ -79,7 +81,8 @@ export type PositiveMilliseconds = typeof PositiveMilliseconds.Type;
 /**
  * Non-negative epoch timestamp measured in milliseconds.
  *
- * @example
+ * **Example** (Make epoch milliseconds)
+ *
  * ```ts
  * import { EpochMilliseconds } from "@beep/exiftool"
  *
@@ -107,7 +110,8 @@ export const EpochMilliseconds = S.Finite.check(
 /**
  * Non-negative epoch timestamp measured in milliseconds.
  *
- * @example
+ * **Example** (Typed epoch milliseconds)
+ *
  * ```ts
  * import { EpochMilliseconds } from "@beep/exiftool"
  * import type { EpochMilliseconds as EpochMillisecondsValue } from "@beep/exiftool"
@@ -124,7 +128,8 @@ export type EpochMilliseconds = typeof EpochMilliseconds.Type;
 /**
  * Non-negative integer count of tag assignments.
  *
- * @example
+ * **Example** (Make tag count)
+ *
  * ```ts
  * import { TagCount } from "@beep/exiftool"
  *
@@ -152,7 +157,8 @@ export const TagCount = S.Int.check(
 /**
  * Non-negative integer count of tag assignments.
  *
- * @example
+ * **Example** (Typed tag count)
+ *
  * ```ts
  * import { TagCount } from "@beep/exiftool"
  * import type { TagCount as TagCountValue } from "@beep/exiftool"
@@ -169,10 +175,13 @@ export type TagCount = typeof TagCount.Type;
 /**
  * ExifTool tag name that cannot smuggle extra command-line arguments.
  *
+ * **Details**
+ *
  * Tag assignments are rendered as one `-TAG=VALUE` argv entry, so tag names
  * are restricted to group-qualified identifier characters.
  *
- * @example
+ * **Example** (Decode safe tag name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeTagName } from "@beep/exiftool"
@@ -216,7 +225,8 @@ export const SafeTagName = S.String.check(
 /**
  * ExifTool tag name that cannot smuggle extra command-line arguments.
  *
- * @example
+ * **Example** (Typed safe tag name)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SafeTagName } from "@beep/exiftool"
@@ -233,10 +243,13 @@ export type SafeTagName = typeof SafeTagName.Type;
 /**
  * File extensions the native ExifTool binary can write metadata into.
  *
+ * **Details**
+ *
  * WebM/Matroska containers are read-only for exiftool; their provenance goes
  * through `FFmpeg.writeContainerMetadata` in `@beep/ffmpeg` instead.
  *
- * @example
+ * **Example** (List writable extensions)
+ *
  * ```ts
  * import { ExiftoolWritableExtension } from "@beep/exiftool"
  *
@@ -255,7 +268,8 @@ export const ExiftoolWritableExtension = LiteralKit(["png", "jpg", "jpeg", "gif"
 /**
  * File extensions the native ExifTool binary can write metadata into.
  *
- * @example
+ * **Example** (Typed writable extension)
+ *
  * ```ts
  * import type { ExiftoolWritableExtension } from "@beep/exiftool"
  *
@@ -271,7 +285,8 @@ export type ExiftoolWritableExtension = typeof ExiftoolWritableExtension.Type;
 /**
  * Runtime path overrides for the native ExifTool binary.
  *
- * @example
+ * **Example** (Make config input)
+ *
  * ```ts
  * import { ExiftoolConfigInput } from "@beep/exiftool"
  *
@@ -305,7 +320,8 @@ export class ExiftoolConfigInput extends S.Class<ExiftoolConfigInput>($I`Exiftoo
 /**
  * Resolved runtime configuration for the native ExifTool driver.
  *
- * @example
+ * **Example** (Make resolved config)
+ *
  * ```ts
  * import { ExiftoolConfig } from "@beep/exiftool"
  *
@@ -337,10 +353,13 @@ export class ExiftoolConfig extends S.Class<ExiftoolConfig>($I`ExiftoolConfig`)(
 /**
  * Cleaned metadata extracted from one ExifTool JSON record.
  *
+ * **Details**
+ *
  * Common fields are Option-modeled projections over the group-prefixed
  * `-j -G1` output; the untouched record survives in `raw` so no tag is lost.
  *
- * @example
+ * **Example** (Make cleaned metadata)
+ *
  * ```ts
  * import { ExifMetadata } from "@beep/exiftool"
  * import * as O from "effect/Option"
@@ -464,7 +483,8 @@ export class ExifMetadata extends S.Class<ExifMetadata>($I`ExifMetadata`)(
 /**
  * Request to read tags from a file with exiftool.
  *
- * @example
+ * **Example** (Make read-tags request)
+ *
  * ```ts
  * import { ReadTagsRequest } from "@beep/exiftool"
  *
@@ -499,7 +519,8 @@ export class ReadTagsRequest extends S.Class<ReadTagsRequest>($I`ReadTagsRequest
 /**
  * Result of reading tags from a file with exiftool.
  *
- * @example
+ * **Example** (Make read-tags result)
+ *
  * ```ts
  * import { ExifMetadata, ReadTagsResult } from "@beep/exiftool"
  *
@@ -534,7 +555,8 @@ export class ReadTagsResult extends S.Class<ReadTagsResult>($I`ReadTagsResult`)(
 /**
  * A single `-TAG=VALUE` exiftool tag assignment.
  *
- * @example
+ * **Example** (Make tag assignment)
+ *
  * ```ts
  * import { TagAssignment } from "@beep/exiftool"
  *
@@ -566,7 +588,8 @@ export class TagAssignment extends S.Class<TagAssignment>($I`TagAssignment`)(
 /**
  * Request to write tag assignments into a file with exiftool.
  *
- * @example
+ * **Example** (Make write-tags request)
+ *
  * ```ts
  * import { TagAssignment, WriteTagsRequest } from "@beep/exiftool"
  *
@@ -603,7 +626,8 @@ export class WriteTagsRequest extends S.Class<WriteTagsRequest>($I`WriteTagsRequ
 /**
  * Result of committing tag assignments into a file.
  *
- * @example
+ * **Example** (Make write-tags result)
+ *
  * ```ts
  * import { WriteTagsResult } from "@beep/exiftool"
  *
@@ -635,7 +659,8 @@ export class WriteTagsResult extends S.Class<WriteTagsResult>($I`WriteTagsResult
 /**
  * Capture provenance embedded into QA artifacts under the `XMP-beepQA` namespace.
  *
- * @example
+ * **Example** (Make QA provenance)
+ *
  * ```ts
  * import { BeepQaProvenance } from "@beep/exiftool"
  *
@@ -706,7 +731,8 @@ export class BeepQaProvenance extends S.Class<BeepQaProvenance>($I`BeepQaProvena
 /**
  * Request to embed a `BeepQaProvenance` XMP packet into an image artifact.
  *
- * @example
+ * **Example** (Make XMP packet request)
+ *
  * ```ts
  * import { BeepQaProvenance, WriteXmpPacketRequest } from "@beep/exiftool"
  *
@@ -748,7 +774,8 @@ export class WriteXmpPacketRequest extends S.Class<WriteXmpPacketRequest>($I`Wri
 /**
  * Decode an unknown value into a read-tags request.
  *
- * @example
+ * **Example** (Decode read-tags request)
+ *
  * ```ts
  * import { decodeReadTagsRequest } from "@beep/exiftool"
  *
@@ -764,7 +791,8 @@ export const decodeReadTagsRequest = ReadTagsRequest.decodeEffect;
 /**
  * Decode an unknown value into a write-tags request.
  *
- * @example
+ * **Example** (Decode write-tags request)
+ *
  * ```ts
  * import { decodeWriteTagsRequest } from "@beep/exiftool"
  *
@@ -783,7 +811,8 @@ export const decodeWriteTagsRequest = WriteTagsRequest.decodeEffect;
 /**
  * Decode an unknown value into a write-XMP-packet request.
  *
- * @example
+ * **Example** (Decode XMP packet request)
+ *
  * ```ts
  * import { decodeWriteXmpPacketRequest } from "@beep/exiftool"
  *

@@ -124,7 +124,8 @@ const encodeOnce = (state: SerializedEditorState.Type): { readonly decorated: st
  * React props for {@link EditorViewer}. This is intentionally a plain component
  * boundary: `state` has already been decoded by {@link SerializedEditorState}.
  *
- * @example
+ * **Example** (Build props with className)
+ *
  * ```ts
  * import type { EditorViewerProps } from "@beep/editor/viewer"
  *
@@ -148,7 +149,8 @@ export interface EditorViewerProps {
 /**
  * React props for {@link EditorCompatibilityViewer}.
  *
- * @example
+ * **Example** (Minimal result-only props)
+ *
  * ```ts
  * import type { EditorCompatibilityViewerProps } from "@beep/editor/viewer"
  *
@@ -171,7 +173,8 @@ export interface EditorCompatibilityViewerProps {
 /**
  * React props for {@link EditorWireViewer}.
  *
- * @example
+ * **Example** (Props with wire input)
+ *
  * ```ts
  * import type { EditorWireViewerProps } from "@beep/editor/viewer"
  *
@@ -224,7 +227,8 @@ function EditorReadOnlyFallback({
  * Read-only Lexical viewer over the `@beep/lexical-schema` v1 node
  * vocabulary — the render side of the schema → viewer pipeline.
  *
- * @example
+ * **Example** (Read-only preview component)
+ *
  * ```tsx
  * import { EditorViewer } from "@beep/editor/viewer"
  * import type { SerializedEditorState } from "@beep/lexical-schema"
@@ -296,7 +300,8 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
  * preserved and visible without asking Lexical to execute unsupported node
  * behavior.
  *
- * @example
+ * **Example** (Forward-compatible preview)
+ *
  * ```tsx
  * import { EditorCompatibilityViewer } from "@beep/editor/viewer"
  * import type { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
@@ -329,7 +334,8 @@ export function EditorCompatibilityViewer({ result, className }: EditorCompatibi
  * empty-root and future/extension wire is preserved as escaped read-only JSON,
  * and malformed non-wire input is refused without mounting Lexical.
  *
- * @example
+ * **Example** (Render from wire input)
+ *
  * ```tsx
  * import { EditorWireViewer } from "@beep/editor/viewer"
  *

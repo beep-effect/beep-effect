@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/epistemic-ui`.
  *
- * @example
+ * **Example** (Compare package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/epistemic-ui"
  *

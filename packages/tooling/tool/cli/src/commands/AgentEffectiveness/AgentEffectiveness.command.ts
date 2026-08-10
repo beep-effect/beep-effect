@@ -653,7 +653,8 @@ const evalsCommand = Command.make("evals", {}, () =>
 /**
  * Agent-effectiveness root command.
  *
- * @example
+ * **Example** (Run agent effectiveness command)
+ *
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
  * import { Command } from "effect/unstable/cli"
@@ -662,6 +663,7 @@ const evalsCommand = Command.make("evals", {}, () =>
  * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

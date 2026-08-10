@@ -20,11 +20,13 @@ const correspondenceIri = iri(concepts.create("correspondence").iri);
 /**
  * Canonical IRI of the M1 legal-intake concept scheme.
  *
- * @example
+ * **Example** (Log the scheme IRI)
+ *
  * ```ts
  * import { SemanticFoundationSchemeIri } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSchemeIri)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -33,16 +35,19 @@ export const SemanticFoundationSchemeIri = iri(scheme.iri);
 /**
  * Repo-owned semantic seed loaded by the M1 registry.
  *
- * @remarks
+ * **Details**
+ *
  * FOLIO mappings remain empty until a report verifies a term-level semantic
  * match; the research verifies the namespace and source, but not a matching
  * concept identifier for these M1 terms.
  *
- * @example
+ * **Example** (Log the seed title)
+ *
  * ```ts
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * console.log(SemanticFoundationSeed.title) // "Legal intake taxonomy"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */

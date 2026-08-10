@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for X-XSS-Protection schemas.
  *
- * @example
+ * **Example** (Import XssProtection namespace)
+ *
  * ```ts
  * import * as XssProtection from "@beep/schema/XssProtection"
  *

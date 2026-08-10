@@ -12,7 +12,8 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 /**
  * Additive contradiction-triage and evidence-verification table target.
  *
- * @example
+ * **Example** (Log name and table count)
+ *
  * ```ts
  * import { EpistemicContradictionTriageMigrationTarget } from "@beep/db-admin/targets"
  *

@@ -34,7 +34,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * Canonicalization algorithm name.
  *
- * @example
+ * **Example** (Decode rdfc-1.0 algorithm)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -56,7 +57,8 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 /**
  * Type for {@link CanonicalizationAlgorithm}.
  *
- * @example
+ * **Example** (Check algorithm type guard)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CanonicalizationAlgorithm } from "@beep/semantic-web/services/canonicalization"
@@ -73,7 +75,8 @@ export type CanonicalizationAlgorithm = typeof CanonicalizationAlgorithm.Type;
 /**
  * Canonicalization error reason.
  *
- * @example
+ * **Example** (Decode unsupportedAlgorithm reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -101,7 +104,8 @@ export const CanonicalizationErrorReason = LiteralKit([
 /**
  * Type for {@link CanonicalizationErrorReason}.
  *
- * @example
+ * **Example** (Check reason type guard)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CanonicalizationErrorReason } from "@beep/semantic-web/services/canonicalization"
@@ -118,7 +122,8 @@ export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Typ
 /**
  * Typed canonicalization error.
  *
- * @example
+ * **Example** (Create unsupported algorithm error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CanonicalizationError } from "@beep/semantic-web/services/canonicalization"
@@ -148,7 +153,8 @@ export class CanonicalizationError extends TaggedErrorClass<CanonicalizationErro
 /**
  * Dataset canonicalization request.
  *
- * @example
+ * **Example** (Decode empty dataset request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -182,7 +188,8 @@ export class CanonicalizeDatasetRequest extends S.Class<CanonicalizeDatasetReque
 /**
  * Dataset fingerprint request.
  *
- * @example
+ * **Example** (Decode fingerprint request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -216,7 +223,8 @@ export class FingerprintDatasetRequest extends S.Class<FingerprintDatasetRequest
 /**
  * Canonical dataset output.
  *
- * @example
+ * **Example** (Decode empty canonical result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -246,7 +254,8 @@ export class CanonicalDatasetResult extends S.Class<CanonicalDatasetResult>($I`C
 /**
  * Dataset fingerprint output.
  *
- * @example
+ * **Example** (Decode fingerprint result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -277,7 +286,8 @@ export class DatasetFingerprint extends S.Class<DatasetFingerprint>($I`DatasetFi
 /**
  * Canonicalization service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { CanonicalizationServiceShape } from "@beep/semantic-web/services/canonicalization"
  *
@@ -285,8 +295,8 @@ export class DatasetFingerprint extends S.Class<DatasetFingerprint>($I`DatasetFi
  * console.log(acceptCanonicalizationServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface CanonicalizationServiceShape {
   readonly canonicalize: (
@@ -300,7 +310,8 @@ export interface CanonicalizationServiceShape {
 /**
  * Canonicalization service tag.
  *
- * @example
+ * **Example** (Provide mock canonicalize service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
