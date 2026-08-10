@@ -17,6 +17,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
+import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
 
@@ -325,9 +326,10 @@ export const ciCommand = Command.make("ci", {}, () =>
     "CI commands:",
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci lane <id> [flags] (or --list)",
+    "- bun run beep ci lane-timings [--runs n] [--tsv]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
   ])
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
-  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLocalCommand])
+  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLaneTimingsCommand, ciLocalCommand])
 );

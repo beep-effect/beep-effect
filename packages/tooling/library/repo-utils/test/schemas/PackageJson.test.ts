@@ -341,6 +341,15 @@ describe("PackageJson schema", () => {
       );
     });
 
+    it("decodes Bun trusted dependencies", () => {
+      const result = decodePackageJson({
+        name: "@beep/infra",
+        trustedDependencies: ["@pulumi/ghaRunners"],
+      });
+
+      expect(result.trustedDependencies).toEqual(O.some(["@pulumi/ghaRunners"]));
+    });
+
     it("decodes repo-local beep package metadata", () => {
       const driverResult = decodePackageJson({
         name: "@beep/drizzle",

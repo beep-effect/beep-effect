@@ -60,6 +60,7 @@ import {
   writeIssueArtifacts,
   writeTextFile,
 } from "./IssueArtifacts.ts";
+import { installYeetMergePreview, withYeetMergePreview, yeetMergedPreviewContext } from "./MergedPreview.ts";
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -1085,6 +1086,76 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   );
 });
 
+/**
+ * Prove the merge preview instead of the branch tree.
+ *
+ * Hosted lanes check out `refs/pull/N/merge`, so a branch-tree proof answers a
+ * question hosted CI never asks whenever the base has moved. This materializes
+ * the same merge in a throwaway worktree, installs the *merged* lockfile there,
+ * and runs the ordinary full proof against it — the plan is rebuilt from the
+ * preview's context so every step's `cwd` and every affected-lane diff range
+ * follow the merged tree rather than the operator's.
+ *
+ * Artifacts still land in the primary worktree's packet directory, because the
+ * preview is removed the moment the proof finishes and a failing merged proof's
+ * whole value is the issue artifacts it leaves behind.
+ *
+ * The preview merges the *committed* HEAD, which is the only thing hosted CI
+ * can ever see. Uncommitted work is therefore excluded, and excluded silently
+ * would be this tier's own false green — so a dirty worktree is named before
+ * the proof starts, with the paths the run is about to ignore.
+ */
+/**
+ * Name the uncommitted work a merged proof is about to leave out.
+ *
+ * `git merge-tree` merges the committed HEAD, which is the only thing hosted CI
+ * can ever check out. Excluding uncommitted edits is therefore correct — and
+ * excluding them silently would make this tier's own green mean less than it
+ * appears to, which is the failure class the tier exists to close.
+ */
+const warnMergedVerifyIgnoresUncommittedWork = Effect.fn("Yeet.warnMergedVerifyIgnoresUncommittedWork")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const staged = yield* collectStagedPublishPaths(context.repoRoot);
+  const unstaged = yield* collectUnstagedTrackedPaths(context.repoRoot);
+  const untracked = yield* collectUntrackedPaths(context.repoRoot);
+  const uncommitted = sortedUniquePaths([...staged, ...unstaged, ...untracked]);
+  if (A.isReadonlyArrayEmpty(uncommitted)) {
+    return;
+  }
+  yield* Console.error(
+    `[yeet] warning: --merged proves the merge of committed HEAD, so ${A.length(uncommitted)} uncommitted path(s) are NOT in this proof:\n${A.join(
+      A.map(uncommitted, (path) => `  - ${path}`),
+      "\n"
+    )}\n[yeet] commit them first if you want them covered; hosted CI will never see them otherwise.`
+  );
+});
+
+const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
+  context: RepoRunContext,
+  options: YeetRunOptions,
+  message: O.Option<string>,
+  modeOptions: YeetRunPlanModeOptions
+): Effect.fn.Return<
+  YeetRunResult,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const artifactDir = yield* artifactDirForContext(context);
+  yield* warnMergedVerifyIgnoresUncommittedWork(context);
+  return yield* withYeetMergePreview(
+    context,
+    Effect.fnUntraced(function* (preview) {
+      yield* Console.log(
+        `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
+      );
+      yield* installYeetMergePreview(context, preview.worktreePath);
+      const previewContext = yeetMergedPreviewContext(context, preview, artifactDir);
+      return yield* runPlanExecution(buildYeetRunPlanWithMode(previewContext, message, modeOptions), options, message);
+    })
+  );
+});
+
 const renderPlan = Effect.fn("Yeet.renderPlan")(function* (
   plan: RepoRunPlan,
   json: boolean
@@ -1140,27 +1211,27 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
       `[yeet] bun.lock changed since ${context.base}; forcing dependency-sensitive lanes (TURBO_FORCE=true)`
     );
   }
-  const plan = buildYeetRunPlanWithMode(
-    context,
-    message,
-    YeetRunPlanModeOptions.make({
-      amend: options.amend,
-      collectAll: options.collectAll,
-      fast: options.fast,
-      forceTurbo,
-      mode: options.mode,
-      monitor: options.monitor,
-      noEdit: options.noEdit,
-      pr: options.pr,
-      pushOnly: options.pushOnly,
-      remote: options.remote,
-      startPrEarly: options.startPrEarly,
-      tier: options.tier,
-    })
-  );
+  const modeOptions = YeetRunPlanModeOptions.make({
+    amend: options.amend,
+    collectAll: options.collectAll,
+    fast: options.fast,
+    forceTurbo,
+    mode: options.mode,
+    monitor: options.monitor,
+    noEdit: options.noEdit,
+    pr: options.pr,
+    pushOnly: options.pushOnly,
+    remote: options.remote,
+    startPrEarly: options.startPrEarly,
+    tier: options.tier,
+  });
+  const plan = buildYeetRunPlanWithMode(context, message, modeOptions);
   if (options.plan) {
     yield* renderPlan(plan, options.json);
     return yield* emptyPlanResult(context);
+  }
+  if (options.merged) {
+    return yield* runMergedVerify(context, options, message, modeOptions);
   }
 
   return yield* runPlanExecution(plan, options, message);

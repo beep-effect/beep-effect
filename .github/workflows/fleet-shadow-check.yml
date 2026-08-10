@@ -1,0 +1,20 @@
+name: Fleet Shadow Check
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  shadow-probe:
+    name: Shadow Probe
+    runs-on: beep-ec2-heavy-shadow
+    timeout-minutes: 10
+    steps:
+      - name: Prove the ephemeral worker
+        run: |
+          echo "runner: $(hostname)"
+          uname -a
+          nproc
+          free -g
+          echo "shadow probe OK"

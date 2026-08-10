@@ -85,6 +85,12 @@ const tierFlag = Flag.choiceWithValue("tier", [
   Flag.withDefault("full" as const)
 );
 
+const mergedFlag = Flag.boolean("merged").pipe(
+  Flag.withDescription(
+    "Prove the merge preview of HEAD with the base ref — the tree hosted CI runs — instead of the branch tree"
+  )
+);
+
 const collectAllFlag = Flag.boolean("collect-all").pipe(
   Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
 );
@@ -218,6 +224,11 @@ const sharedFlags = {
   tier: tierFlag,
 } as const;
 
+const verifyFlags = {
+  ...sharedFlags,
+  merged: mergedFlag,
+} as const;
+
 const publishFlags = {
   ...sharedFlags,
   allowStaleBase: allowStaleBaseFlag,
@@ -281,6 +292,7 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     head: S.String,
     json: S.Boolean,
+    merged: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     monitor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     noEdit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     packetDir: S.String,
@@ -318,6 +330,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       bots: sharedOptions.bots,
       collectAll: sharedOptions.collectAll,
       fast: sharedOptions.fast,
+      merged: sharedOptions.merged,
       message: options.message ?? "",
       mode,
       monitor: sharedOptions.monitor,
@@ -341,7 +354,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
   );
 };
 
-const yeetVerifyCommand = Command.make("verify", sharedFlags, (options) => runYeetMode("verify", options)).pipe(
+const yeetVerifyCommand = Command.make("verify", verifyFlags, (options) => runYeetMode("verify", options)).pipe(
   Command.withDescription("Run the canonical pre-push proof without duplicate affected feedback")
 );
 

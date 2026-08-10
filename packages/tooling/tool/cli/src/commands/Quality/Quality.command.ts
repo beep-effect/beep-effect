@@ -893,7 +893,8 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
     Str.split(trackedFilesOutput, "\n"),
     A.map(Str.trim),
     A.filter(Str.isNonEmpty),
-    A.filter(P.not(Str.startsWith(".repos/")))
+    A.filter(P.not(Str.startsWith(".repos/"))),
+    A.filter(P.not(Str.startsWith("infra/ci-runners/sdks/")))
   );
   const semgrepFiles = yield* Effect.forEach(
     candidateFiles,

@@ -1,0 +1,39 @@
+# CI Fleet Endgame Plan
+
+## Status
+
+Status: `active`
+
+## Execution order
+
+The module deploy is hours-scale, not a weeks-scale program. It comes first;
+the performance layer follows on its own track without becoming subordinate.
+
+| Phase | Status | Goal | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Ratify + docs | complete | Graduate the signed decision record and bind decisions 57–63. | Active packet exists with co-primary charter and adoption contract. |
+| P1 Bridge spike + deploy | pending | Mint the repo-scoped GitHub App, spike the Pulumi terraform-module bridge, and deploy a non-serving shadow label. | Module deploys through Pulumi, or the recorded fallback condition justifies a minimal Terraform root. |
+| P2 Cutover | pending | Serve `beep-ec2-heavy` with ephemeral one-job-one-VM workers and demote manual burst scripts to break-glass. | Live worker passes lifecycle, teardown, trust, and red-team acceptance. |
+| P3 Cache | pending | Ship trusted-write/PR-read-only asymmetric Turbo cache access. | Real PR jobs consume cache without obtaining write authority. |
+| P4 Baked AMI | pending | Ship lockfile-keyed worker images with the complete hosted toolbelt. | Setup floor and cross-runner tool-cache poisoning are removed. |
+| P5 Performance + ops | pending | Ratchet resource weight, shard where measured, and expose pickup/cost/RSS/wall-time telemetry. | No required job waits 20 minutes and evidence supports ongoing right-sizing. |
+| P6 Yeet + close | pending | Drive the final PR mergeable, reflect, and close the packet. | Required checks green, zero unresolved threads, reflection valid, lifecycle completed-retained. |
+
+## Immediate next action
+
+P1 deploy is DONE (2026-08-08): App minted/installed, secrets in KMS-backed
+SSM, module deployed via the Pulumi bridge, webhook activated as a repository
+hook, signed ping accepted. Remaining P1 work: dispatch the
+`fleet-shadow-check` probe from main after the bridge PR merges, prove
+one-job-one-VM birth/teardown, run the red-team acceptance gates, then flip
+P1 complete and start P2 cutover. Do not start cache or AMI work before
+cutover.
+
+## Verification commands
+
+```sh
+test "$(wc -m < goals/ci-fleet-endgame/GOAL.md)" -le 4000
+jq . goals/ci-fleet-endgame/ops/manifest.json
+bun run beep goals doctor
+git diff --check -- goals/ci-fleet-endgame
+```
