@@ -105,8 +105,10 @@ owner-directed scope widening — see the SPEC's "no unrelated refactors" criter
 
 This packet is closed, so nothing below is scheduled. The audit that produced this
 list checked every active goal and exploration: **no packet owns any of the five.**
-Decision 55's "revival by citation" makes this section the citation target — a
-future packet claims an item by naming it here, rather than rediscovering it.
+For these five local follow-ons, this section is the citation target: a future
+packet claims an item by naming it here rather than rediscovering it. This routing
+choice does not extend speed-loop closeout decision 55 beyond the earlier
+grilled-but-unshipped widgets retained in that packet.
 
 Two are already normative elsewhere and are listed for routing only:
 
@@ -129,10 +131,12 @@ lost with it:
    reflection assigns it to "the reference-reconciliation follow-on"; **that packet
    does not exist.** Whoever mints it inherits this.
 4. **The Drizzle repository filters by jsonb equality on the encoded citing
-   application, and `citing_application` carries no index** — only `org_id` and
-   `source` are indexed. Correct and index-free today; a filing with many events
-   will table-scan. A generated column or an expression index is the answer when
-   volume justifies it.
+   application, and `citing_application` carries no dedicated index.** Every read
+   also constrains `org_id`, whose index can narrow the scan to one tenant before
+   PostgreSQL applies the JSONB predicate; the tables also carry unique
+   `public_id` indexes. No representative-volume `EXPLAIN` proves a table scan.
+   Capture that evidence before deciding whether a generated column or expression
+   index is justified.
 5. **No shared `Crypto.Crypto` test layer in `@beep/test-utils`,** so every proof
    reaching `verifyTextAnchor` supplies its own via `BunCrypto.layer`,
    `NodeCrypto.layer`, or a hand-roll. Sharper than the reflection's version: the
@@ -140,8 +144,12 @@ lost with it:
    `packages/law-practice/use-cases/test/CandorPolicy.test.ts`, so promoting a real
    layer would deduplicate exactly one site — but the identity-stub shape
    (`digest: (_algorithm, data) => Effect.succeed(data)`,
-   `randomBytes: (size) => new Uint8Array(size).fill(1)`) already repeats verbatim
-   in three files. The stub is what has earned promotion, not the real layer.
+   `randomBytes: (size) => new Uint8Array(size).fill(1)`) repeats verbatim in only
+   two files: `EntityKernel.test.ts` and
+   `ContradictionTriage.observability.test.ts`. The nearby ThreadStore crypto
+   layers exercise different success and failure behavior. A shared identity stub
+   would therefore deduplicate two sites; this audit does not claim that it has
+   earned promotion.
 
 ## Notes
 

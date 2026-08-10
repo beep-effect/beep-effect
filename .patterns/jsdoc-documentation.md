@@ -277,9 +277,16 @@ refuses rather than narrows when a global input moved. Changing the root
 marks the plan `full-required`, and the bare script then prints
 `full docgen proof required` and exits non-zero. Only `--allow-full` (what the
 hosted `quality:docgen` lane passes) or `--full` executes the repo-wide proof.
-The practical consequence: on any branch that adds a workspace dependency, the
-bounded edit loop is unavailable and every Example iteration costs a full docgen.
-The trigger list is a hand-maintained exact-path constant in
+An explicit package selector remains a bounded edit loop even on such a branch:
+
+```bash
+bun run docgen:local -- --package <package>
+```
+
+Package selection bypasses changed-file planning and stays scoped unless `--full`
+is explicit. The bare automatic loop is unavailable after a global input moves;
+the package-scoped loop is still available when the operator can name the affected
+package. The trigger list is a hand-maintained exact-path constant in
 `packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`, not a Turbo
 `globalDependencies` declaration.
 

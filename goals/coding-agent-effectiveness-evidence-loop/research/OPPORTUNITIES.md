@@ -1,6 +1,10 @@
 # Coding Agent Effectiveness Evidence Loop — friction ledger
 
-Receipts recorded at the moment of friction (repo law: never saved for closeout).
+The seven closeout-era sections through the meta receipt below were reconstructed
+as a batch on 2026-08-10 after the friction occurred on 2026-08-05/06. They
+preserve evidence but do **not** satisfy the contemporaneous-receipt rule in
+`AGENTS.md`. The later Turbo/TypeScript receipt was recorded during the publish
+investigation that produced it.
 
 This packet owns the yeet-operator surfaces these receipts land on — `Verdict.ts`,
 `ProofState.ts`, `Handler.ts`, `Status.ts`, and `yeet doctor` (`SPEC.md` §
@@ -10,7 +14,9 @@ went `completed-retained` on 2026-08-08 and its own closeout says future inciden
 enter the *active* ledger, so new receipts arrive here and cite the retained ids
 rather than extending them.
 
-## 2026-08-10 — the 3-lane green verdict is an output-truncation bug, not a design property
+## Retrospective closeout friction receipts (reconstructed 2026-08-10)
+
+### The 3-lane green verdict is an output-truncation bug, not a design property
 
 Retained ledger #76 records the symptom correctly — `verdict.json` carries 3 lanes
 on a green `yeet verify` and ~24 on an early-stop failure — and attributes it to
@@ -49,7 +55,7 @@ the report to a file and have the verdict writer read that instead of scraping
 stdout. The third makes the payload independent of any capture policy and is the
 one worth doing.
 
-## 2026-08-10 — `--reuse-verified` already records per-lane keys that nothing reads
+### `--reuse-verified` already records per-lane keys that nothing reads
 
 Retained ledger #21/#25's amendment promoted tree/input-keyed proof reuse from a
 research question to a build item on the evidence that `--reuse-verified` fired
@@ -72,7 +78,7 @@ The pattern to copy is already in the repo and already trusted: `beep docgen che
 version (`ProofManifest.ts:385-400`). Note the two flags are unrelated despite the
 similar names — `--reuse-verified` is yeet's, `--reuse-proof-manifest` is docgen's.
 
-## 2026-08-10 — CORRECTION: neither ratchet fails on a tightening
+### CORRECTION: neither ratchet fails on a tightening
 
 Recorded because the wrong version of this reached the operator in a feedback round
 and could have become a build item. The claim was that the JSDoc and coverage
@@ -87,17 +93,21 @@ first half is false for both.
   predicate is a strict below-baseline comparison, so a rise is structurally
   unreachable as a failure.
 
-What survives is the ergonomic half, and it stands: refreshing either baseline is a
-separate explicit invocation — `beep quality jsdoc-ratchet --write-baseline` and
-`bun run coverage:baseline:write` — never an inline offer at the moment the nudge
-is printed. The cheap widget is to print the exact command in the nudge.
+The JSDoc ergonomic half is already implemented: its tightening nudge prints both
+`bun run beep quality jsdoc-inventory` and
+`bun run beep quality jsdoc-ratchet --write-baseline`. Coverage has no equivalent
+because it passes `tighten: O.none()`. The surviving widget is coverage-specific:
+detect a safe tightening and print `bun run coverage:baseline:write` there.
 
-Two live coverage-ratchet facts stay true and are already dispositioned under
-retained #85: the ratchet compares percentages, so deleting covered code from any
-package below 100% trips it arithmetically, and yeet never runs a package's
-`coverage` script at all (`YEET_FEEDBACK_TASKS` is `build`/`check`/`lint`/`test`).
+One live coverage-ratchet fact stays true and is already dispositioned under
+retained #85: yeet never runs a package's `coverage` script at all
+(`YEET_FEEDBACK_TASKS` is `build`/`check`/`lint`/`test`). The deletion claim does
+not survive current source: when both snapshots carry uncovered counts, a failure
+requires both a percentage drop and an uncovered-count increase. Deleting covered
+units alone therefore passes for baselines such as `@beep/openai-compat` that carry
+those counts.
 
-## 2026-08-10 — retained #78's "hosted-only" list is wrong, and the symptom it was built from is unexplained
+### Retained #78's "hosted-only" list is wrong, and the symptom it was built from is unexplained
 
 This is the most load-bearing correction here, because #78 is a build item and its
 premise is the list.
@@ -114,10 +124,9 @@ vs 26 hosted required checks". Counted from source:
   no 26.
 - **Lint Policy is not a gap.** Local `quality:lint` runs unscoped `bun run lint`,
   which invokes the turbo `lint` task *plus* `rootRepoLintPolicySteps(repoRoot)` —
-  the identical battery the hosted lane runs via `beep lint policy`
-  (`Quality/Tasks.ts:1634`, `Ci/CiLane.ts:856`). Local is in fact a **superset**:
-  hosted `beep lint policy` defaults to changed-file scope, local passes no files
-  and runs full scope.
+  the identical full-scope battery the hosted lane runs via `beep lint policy`
+  (`Quality/Tasks.ts:1634`, `Ci/CiLane.ts:856`). `runRootLintPolicyTaskInternal`
+  forces full scope under CI, so neither side's scope explains PR #575.
 - **Property Laws is `required: false`** (`Ci/CiLane.ts:516-517`). Genuinely absent
   locally, but not a required check.
 - #78 **omits two required gaps**: `Commitlint` (`Ci/CiLane.ts:460-461`, no
@@ -127,15 +136,17 @@ vs 26 hosted required checks". Counted from source:
 Corrected set difference — required hosted checks with no pre-push counterpart:
 **{Coverage Regression, Codegen Drift, Professional Desktop IPC Stdio, Commitlint}**
 plus `dependency-review`. Non-required and also absent: {Property Laws, PR Size
-Label, Build (push-only), Build And Test (Storybook)}.
+Label, Build And Test (Storybook)}. Hosted `Build` is push-only, but local pre-push
+does have its `quality:build` counterpart.
 
 **The unresolved part, and the reason this receipt matters more than the list fix.**
 PR #575 lived the symptom: a local 21/21 green followed by hosted `Lint Policy` red
 on ten pre-existing `effect-governance-terse-effect` findings in `repo-cli` files.
-If local lint is a superset of hosted, that cannot happen. Both observations are
-solid, so something in between is not what it looks like. Untested hypotheses, in
-order of prior: the local `quality:lint` lane returned a warm Turbo cache rather
-than executing (the repo already carries `TURBO_FORCE=1 lint` guidance for exactly
+If both sides run the same full policy battery, that cannot happen. Both
+observations are solid, so something in between is not what it looks like.
+Untested hypotheses, in order of prior: the local `quality:lint` lane returned a
+warm Turbo cache rather than executing (the repo already carries
+`TURBO_FORCE=1 lint` guidance for exactly
 this shape); or the policy steps ran but the composite's pass/fail aggregation lost
 their result. Resolving this is a prerequisite for #78 — a parity footer generated
 from a wrong list is worse than no footer, and if the real mechanism is cache
@@ -149,7 +160,7 @@ repo has no branch-protection config file — `required: true` in
 `CI_LANE_DESCRIPTORS` is the repo's own model of the server-side ruleset, not the
 ruleset itself. Confirming the two against each other is its own small task.
 
-## 2026-08-10 — two publish papercuts, with the parse-time fix named
+### Two publish papercuts, with the parse-time fix named
 
 Both are refinements of retained #8's ship-porcelain item, recorded because each has
 a one-line fix that is smaller than the item it sits under.
@@ -167,7 +178,7 @@ a one-line fix that is smaller than the item it sits under.
   commit is not required. The message should say "found but untracked — `git add`
   it".
 
-## 2026-08-10 — `beep lint policy` fails on any docs-only branch, from an empty `--include`
+### `beep lint policy` fails on any docs-only branch, from an empty `--include`
 
 Lived while running the cheap-lane preflight for this very PR: `bun run beep lint
 policy` exited 1 with five failed steps — `lint:effect-imports`,
@@ -212,7 +223,7 @@ Cost paid: the preflight-tier advice this packet's family already ships — run
 verify — is currently unusable for docs-only branches, which is the branch shape
 most likely to want a cheap preflight.
 
-## 2026-08-10 — meta: these receipts had nowhere to go at the moment of friction
+### Meta: these receipts had nowhere to go at the moment of friction
 
 The friction law points at "the active packet's ledger". Every surface above belongs
 to this packet, and this packet had no `research/OPPORTUNITIES.md` — so five
