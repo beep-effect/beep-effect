@@ -63,6 +63,25 @@ describe("@beep/infra CiFleetController", () => {
     ).toBe(true);
   });
 
+  it("accepts absolute AMI SSM parameter paths and rejects relative paths", () => {
+    expect(
+      Result.isSuccess(
+        decodeConfigValues({
+          ...validConfigValues,
+          amiSsmParameterName: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeConfigValues({
+          ...validConfigValues,
+          amiSsmParameterName: "aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+        })
+      )
+    ).toBe(true);
+  });
+
   it("decodes complete Pulumi config values", () => {
     const result = decodeConfigValues({ ...validConfigValues, runnerLabel: "beep-custom-shadow" });
 
@@ -83,6 +102,17 @@ describe("@beep/infra CiFleetController", () => {
     if (Result.isSuccess(withoutLabel) && Result.isSuccess(withLabel)) {
       expect(makeCiFleetControllerConfig(withoutLabel.success).runnerLabel).toBe("beep-ec2-heavy-shadow");
       expect(makeCiFleetControllerConfig(withLabel.success).runnerLabel).toBe("beep-custom-shadow");
+    }
+  });
+
+  it("defaults the controller AMI SSM parameter when absent", () => {
+    const result = decodeConfigValues(validConfigValues);
+
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(makeCiFleetControllerConfig(result.success).amiSsmParameterName).toBe(
+        "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+      );
     }
   });
 });

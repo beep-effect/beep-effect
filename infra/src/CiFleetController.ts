@@ -21,6 +21,7 @@ import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiFleetController");
 
+const defaultAmiSsmParameterName = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64";
 const defaultRunnerLabel = "beep-ec2-heavy-shadow";
 const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
@@ -33,6 +34,7 @@ const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
 const absoluteZipPathPattern = /^\/.+\.zip$/u;
 const runnerLabelPattern = /^[A-Za-z0-9_-]{1,64}$/u;
+const ssmParameterNamePattern = /^\/[A-Za-z0-9_./-]+$/u;
 
 const AwsArn = S.String.check(
   S.isPattern(awsArnPattern, {
@@ -70,7 +72,29 @@ const RunnerLabel = S.String.check(
   })
 ).pipe($I.annoteSchema("RunnerLabel", { description: "A GitHub Actions runner label." }));
 
+/**
+ * Absolute AWS Systems Manager parameter name.
+ *
+ * **Example** (Amazon Linux 2023 public AMI)
+ *
+ * `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64`
+ * is a valid parameter name.
+ *
+ * **Details**
+ *
+ * Parameter names must be absolute paths beginning with `/`.
+ */
+const SsmParameterName = S.String.check(
+  S.isPattern(ssmParameterNamePattern, {
+    identifier: $I`SsmParameterNameFormat`,
+    title: "SSM Parameter Name Format",
+    description: "An absolute SSM parameter path.",
+    message: "Expected an absolute SSM parameter path starting with /",
+  })
+).pipe($I.annoteSchema("SsmParameterName", { description: "An absolute SSM parameter path." }));
+
 type CiFleetControllerPulumiConfigValuesFields = {
+  readonly amiSsmParameterName?: string | undefined;
   readonly githubAppIdSsmParameterArn: string;
   readonly githubAppKeyBase64SsmParameterArn: string;
   readonly githubAppKmsKeyArn: string;
@@ -93,6 +117,7 @@ export const CiFleetControllerPulumiConfigValues = S.Class<CiFleetControllerPulu
   $I`CiFleetControllerPulumiConfigValues`
 )(
   {
+    amiSsmParameterName: S.optionalKey(SsmParameterName),
     githubAppIdSsmParameterArn: SsmParameterArn,
     githubAppKeyBase64SsmParameterArn: SsmParameterArn,
     githubAppKmsKeyArn: AwsArn,
@@ -125,6 +150,7 @@ export type CiFleetControllerPulumiConfigValues = typeof CiFleetControllerPulumi
  */
 export class CiFleetControllerConfig extends S.Class<CiFleetControllerConfig>($I`CiFleetControllerConfig`)(
   {
+    amiSsmParameterName: SsmParameterName.pipe(SchemaUtils.withKeyDefaults(defaultAmiSsmParameterName)),
     githubAppIdSsmParameterArn: SsmParameterArn,
     githubAppKeyBase64SsmParameterArn: SsmParameterArn,
     githubAppKmsKeyArn: AwsArn,
@@ -158,7 +184,10 @@ export const makeCiFleetControllerConfig = (values: CiFleetControllerPulumiConfi
     runnersLambdaZip: values.runnersLambdaZip,
     terminationWatcherLambdaZip: values.terminationWatcherLambdaZip,
     webhookLambdaZip: values.webhookLambdaZip,
-    ...O.getSomesStruct({ runnerLabel: O.fromUndefinedOr(values.runnerLabel) }),
+    ...O.getSomesStruct({
+      amiSsmParameterName: O.fromUndefinedOr(values.amiSsmParameterName),
+      runnerLabel: O.fromUndefinedOr(values.runnerLabel),
+    }),
   });
 
 /**
@@ -181,7 +210,10 @@ export const loadCiFleetControllerConfig = (): CiFleetControllerConfig => {
       runnersLambdaZip: config.require("runnersLambdaZip"),
       terminationWatcherLambdaZip: config.require("terminationWatcherLambdaZip"),
       webhookLambdaZip: config.require("webhookLambdaZip"),
-      ...O.getSomesStruct({ runnerLabel: O.fromUndefinedOr(config.get("runnerLabel")) }),
+      ...O.getSomesStruct({
+        amiSsmParameterName: O.fromUndefinedOr(config.get("amiSsmParameterName")),
+        runnerLabel: O.fromUndefinedOr(config.get("runnerLabel")),
+      }),
     })
   );
 };
@@ -189,7 +221,6 @@ export const loadCiFleetControllerConfig = (): CiFleetControllerConfig => {
 type CiFleetControllerArgs = {
   readonly config: CiFleetControllerConfig;
   readonly region: pulumi.Input<string>;
-  readonly resolvedAmiId: pulumi.Input<string>;
   readonly subnetIds: pulumi.Input<pulumi.Input<string>[]>;
   readonly vpcId: pulumi.Input<string>;
   readonly workerSecurityGroupId: pulumi.Input<string>;
@@ -222,6 +253,14 @@ export class CiFleetController extends pulumi.ComponentResource {
   public constructor(name: string, args: CiFleetControllerArgs, opts?: pulumi.ComponentResourceOptions) {
     super("beep:infra:CiFleetController", name, {}, opts);
 
+    const resolvedAmiId = aws.ssm.getParameterOutput(
+      {
+        name: args.config.amiSsmParameterName,
+        region: args.region,
+      },
+      { parent: this }
+    ).value;
+
     const runnerAmiParameter = new aws.ssm.Parameter(
       `${name}-runner-ami`,
       {
@@ -234,7 +273,7 @@ export class CiFleetController extends pulumi.ComponentResource {
           Project: "beep-ci",
         },
         type: "String",
-        value: args.resolvedAmiId,
+        value: resolvedAmiId,
       },
       { parent: this }
     );
@@ -327,7 +366,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
-        runner_run_as: "ubuntu",
+        runner_run_as: "ec2-user",
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         runners_maximum_count: 4,
