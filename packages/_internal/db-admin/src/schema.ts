@@ -349,3 +349,92 @@ export const lawPracticeCandorDispositionTable: typeof LawPracticeDbSchema.cando
  */
 export const lawPracticeIdsSubmissionFactTable: typeof LawPracticeDbSchema.idsSubmissionFact =
   LawPracticeDbSchema.idsSubmissionFact;
+
+/**
+ * Law-practice legal position relator table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the legal position relator table name)
+ *
+ * ```ts
+ * import { lawPracticeLegalPositionRelatorTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeLegalPositionRelatorTable.definition.tableName)
+ * // "law_practice_legal_position_relator"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeLegalPositionRelatorTable: typeof LawPracticeDbSchema.legalPositionRelator =
+  LawPracticeDbSchema.legalPositionRelator;
+
+/**
+ * Law-practice act frame table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the act frame table name)
+ *
+ * ```ts
+ * import { lawPracticeActFrameTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeActFrameTable.definition.tableName)
+ * // "law_practice_act_frame"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeActFrameTable: typeof LawPracticeDbSchema.actFrame = LawPracticeDbSchema.actFrame;
+
+/**
+ * Law-practice power exercise table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the power exercise table name)
+ *
+ * ```ts
+ * import { lawPracticePowerExerciseTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticePowerExerciseTable.definition.tableName)
+ * // "law_practice_power_exercise"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticePowerExerciseTable: typeof LawPracticeDbSchema.powerExercise =
+  LawPracticeDbSchema.powerExercise;
+
+/**
+ * Law-practice correction delta table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the correction delta table name)
+ *
+ * ```ts
+ * import { lawPracticeCorrectionDeltaTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeCorrectionDeltaTable.definition.tableName)
+ * // "law_practice_correction_delta"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeCorrectionDeltaTable: typeof LawPracticeDbSchema.correctionDelta =
+  LawPracticeDbSchema.correctionDelta;
+
+/**
+ * Law-practice legal opposition candidate table (drizzle-kit generate surface).
+ *
+ * **Example** (Read the legal opposition candidate table name)
+ *
+ * ```ts
+ * import { lawPracticeLegalOppositionCandidateTable } from "@beep/db-admin/schema"
+ *
+ * console.log(lawPracticeLegalOppositionCandidateTable.definition.tableName)
+ * // "law_practice_legal_opposition_candidate"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const lawPracticeLegalOppositionCandidateTable: typeof LawPracticeDbSchema.legalOppositionCandidate =
+  LawPracticeDbSchema.legalOppositionCandidate;
