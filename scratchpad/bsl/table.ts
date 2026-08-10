@@ -19,14 +19,24 @@ import { sql } from "drizzle-orm";
 import type {
   PgBigInt53Builder,
   PgBigInt64Builder,
+  PgBigSerial53Builder,
+  PgBigSerial64Builder,
   PgBooleanBuilder,
   PgBuildColumns,
   PgByteaBuilder,
+  PgCharBuilder,
+  PgDateBuilder,
+  PgDateStringBuilder,
   PgDoublePrecisionBuilder,
+  PgEnumColumnBuilder,
   PgIntegerBuilder,
+  PgJsonBuilder,
   PgJsonbBuilder,
+  PgNumericBuilder,
+  PgRealBuilder,
   PgSerialBuilder,
   PgSmallIntBuilder,
+  PgSmallSerialBuilder,
   PgTableExtraConfigValue,
   PgTableWithColumns,
   PgTextBuilder,
@@ -61,6 +71,18 @@ import * as TableExtras from "./TableExtras.ts";
 
 type BuilderBase<C extends PgColumn.Spec> = C extends PgColumn.Varchar<number>
   ? PgVarcharBuilder
+  : C extends PgColumn.Char<number>
+  ? PgCharBuilder
+  : C extends PgColumn.Numeric
+  ? PgNumericBuilder
+  : C extends PgColumn.DateColumn<infer Mode>
+  ? Mode extends "date"
+    ? PgDateBuilder
+    : PgDateStringBuilder
+  : C extends PgColumn.Enum<string, infer Value>
+  ? PgEnumColumnBuilder<[Value, ...Value[]]>
+  : C extends PgColumn.Custom
+  ? PgColumn.CustomBuilder
   : C extends PgColumn.Text
   ? PgTextBuilder
   : C extends PgColumn.Uuid
@@ -71,16 +93,26 @@ type BuilderBase<C extends PgColumn.Spec> = C extends PgColumn.Varchar<number>
   ? PgSmallIntBuilder
   : C extends PgColumn.Serial
   ? PgSerialBuilder
+  : C extends PgColumn.Smallserial
+  ? PgSmallSerialBuilder
+  : C extends PgColumn.Bigserial<infer SerialMode>
+  ? SerialMode extends "number"
+    ? PgBigSerial53Builder
+    : PgBigSerial64Builder
   : C extends PgColumn.Bigint<infer M>
   ? M extends "number"
     ? PgBigInt53Builder
     : PgBigInt64Builder
   : C extends PgColumn.DoublePrecision
   ? PgDoublePrecisionBuilder
+  : C extends PgColumn.Real
+  ? PgRealBuilder
   : C extends PgColumn.Bool
   ? PgBooleanBuilder
   : C extends PgColumn.Jsonb
   ? PgJsonbBuilder
+  : C extends PgColumn.Json
+  ? PgJsonBuilder
   : C extends PgColumn.Timestamp<infer M>
   ? M extends "date"
     ? PgTimestampBuilder
@@ -193,10 +225,19 @@ export type TableOf<M extends AnyModel> = PgTableWithColumns<{
 // Runtime projection
 // ---------------------------------------------------------------------------
 
+/**
+ * Assembly-owned Drizzle enum instances keyed by PostgreSQL enum name.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnumRegistry = Readonly<Record<string, PgColumn.EnumInstance>>;
+
 const buildColumn = (
   key: string,
   meta: Meta.Meta,
-  nullable: boolean
+  nullable: boolean,
+  enums: EnumRegistry | undefined
 ): PgColumn.DrizzleBuilder => {
   const spec = O.getOrElse(O.fromUndefinedOr(meta.column), () => {
     throw Derive.DeriveColumnError.make({
@@ -208,7 +249,15 @@ const buildColumn = (
   const name = O.getOrElse(O.fromUndefinedOr(meta.columnName), () =>
     Str.snakeCase(key)
   );
-  const base = pipe(spec, PgColumn.Spec.toDrizzleBuilder(name, meta.identity));
+  const base = PgColumn.Spec.guards.enum(spec)
+    ? PgColumn.Enum.toDrizzleBuilder(
+        spec,
+        name,
+        O.flatMap(O.fromUndefinedOr(enums), (registry) =>
+          R.get(registry, spec.name)
+        ).pipe(O.getOrUndefined)
+      )
+    : pipe(spec, PgColumn.Spec.toDrizzleBuilder(name, meta.identity));
   const withNullability = nullable ? base : base.notNull();
   const withPrimaryKey = meta.primaryKey
     ? withNullability.primaryKey()
@@ -298,11 +347,13 @@ const invokeDeclaredExtras = (
  */
 export function toPgTable<M extends AnyModel>(
   model: M,
-  additionalExtras?: AdditionalExtras<M>
+  additionalExtras?: AdditionalExtras<M>,
+  enums?: EnumRegistry
 ): TableOf<M>;
 export function toPgTable(
   model: AnyModel,
-  additionalExtras?: AdditionalExtras<AnyModel>
+  additionalExtras?: AdditionalExtras<AnyModel>,
+  enums?: EnumRegistry
 ): unknown {
   const builders = A.reduce(
     Struct.entries(model.bsl.fields),
@@ -318,7 +369,12 @@ export function toPgTable(
       return R.set(
         builders,
         key,
-        buildColumn(key, meta, Derive.isNullable(Field.from(input).schema))
+        buildColumn(
+          key,
+          meta,
+          Derive.isNullable(Field.from(input).schema),
+          enums
+        )
       );
     }
   );

@@ -1,14 +1,15 @@
-/** Runtime proofs for BSL round two. */
+/** Runtime proofs for BSL round three. */
 import { describe, expect, it } from "bun:test";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig, type PgColumn } from "drizzle-orm/pg-core";
-import { Order, pipe } from "effect";
+import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as AST from "effect/SchemaAST";
+import * as SchemaParser from "effect/SchemaParser";
 import { Model as EffectModel } from "effect/unstable/schema";
 import * as Derive from "./derive.ts";
 import * as Field from "./Field.ts";
@@ -17,17 +18,24 @@ import * as pg from "./pg.ts";
 import {
   _compatibleVarchar,
   _defaultThenGenerated,
+  _badEnumBroadString,
+  _charWithoutMaxLength,
   _entityFkMismatch,
+  _enumValueMismatch,
   _generatedThenDefault,
   _incompatibleVarchar,
   _missingTarget,
   _needsExplicitColumn,
   _nullablePrimaryKey,
+  _kitDefaultCollision,
   _twoPrimaryKeys,
   _unboundedVarchar,
   _uuidTextFkMismatch,
+  auditSchema,
+  AuditedRecord,
   bslSchema,
   ExplicitVariantModel,
+  mechanicalTable,
   Organization,
   User,
   userTable,
@@ -38,6 +46,12 @@ const userConfig = getTableConfig(userTable);
 const column = (name: string): PgColumn =>
   O.getOrThrowWith(
     A.findFirst(userConfig.columns, (candidate) => candidate.name === name),
+    () => new Error(`column '${name}' missing`)
+  );
+
+const columnFrom = (columns: ReadonlyArray<PgColumn>, name: string): PgColumn =>
+  O.getOrThrowWith(
+    A.findFirst(columns, (candidate) => candidate.name === name),
     () => new Error(`column '${name}' missing`)
   );
 
@@ -117,9 +131,9 @@ describe("toPgTable", () => {
 });
 
 describe("variant truth table", () => {
-  it("omits generated fields and makes defaults insert-optional", () => {
+  it("keeps identity row locators in update and omits generated expressions", () => {
     expect(R.keys(User.insert.fields)).not.toContain("id");
-    expect(R.keys(User.update.fields)).not.toContain("id");
+    expect(R.keys(User.update.fields)).toContain("id");
     expect(R.keys(User.insert.fields)).not.toContain("searchName");
     expect(R.keys(User.update.fields)).not.toContain("searchName");
     expect(
@@ -132,6 +146,9 @@ describe("variant truth table", () => {
         active: true,
       })
     ).toBe(true);
+    expect(S.is(User.update)({ id: 1 })).toBe(true);
+    expect(S.is(User.update)({})).toBe(false);
+    expect(R.keys(User.jsonCreate.fields)).not.toContain("searchName");
   });
 
   it("keeps identity-by-default present in update and optional in insert", () => {
@@ -160,6 +177,112 @@ describe("variant truth table", () => {
   it("preserves author-supplied VariantSchema.Field membership", () => {
     expect(R.keys(ExplicitVariantModel.insert.fields)).toContain("value");
     expect(R.keys(ExplicitVariantModel.update.fields)).toContain("value");
+  });
+});
+
+describe("kit write strategies", () => {
+  it("injects defaults while preserving Effect variant membership", () => {
+    expect(R.keys(AuditedRecord.fields)).toEqual(
+      expect.arrayContaining([
+        "createdAt",
+        "updatedAt",
+        "rowVersion",
+        "name",
+        "status",
+        "source",
+        "search",
+      ])
+    );
+    expect(R.keys(AuditedRecord.update.fields)).not.toContain("createdAt");
+    expect(R.keys(AuditedRecord.insert.fields)).toContain("updatedAt");
+    expect(R.keys(AuditedRecord.update.fields)).toContain("updatedAt");
+    expect(AuditedRecord.bsl.columns.createdAt.column.kind).toBe("timestamp");
+    expect(AuditedRecord.bsl.columns.updatedAt.column.kind).toBe("timestamp");
+  });
+
+  it("constructs insert payloads through Overrideable constructor defaults", () => {
+    const constructed = Effect.runSync(
+      SchemaParser.makeEffect(AuditedRecord.insert)({
+        name: "Round Three",
+        status: "draft",
+        source: "api",
+        search: "round three",
+      })
+    );
+    expect(constructed.createdAt).toBeDefined();
+    expect(constructed.updatedAt).toBeDefined();
+    expect(P.hasProperty(constructed, "rowVersion")).toBe(false);
+  });
+
+  it("rejects kit default collisions at compile time and runtime", () => {
+    expect(_kitDefaultCollision).toThrow("kit default column");
+  });
+
+  it("emits default extras before model extras", () => {
+    const config = getTableConfig(auditSchema.tables.audited_record);
+    expect(A.map(config.checks, (check) => check.name)).toEqual([
+      "kit_row_version_positive",
+      "audited_record_name_non_empty",
+    ]);
+  });
+});
+
+describe("enum and custom columns", () => {
+  it("shares enum instances across assembly tables", () => {
+    const recordConfig = getTableConfig(auditSchema.tables.audited_record);
+    const eventConfig = getTableConfig(auditSchema.tables.audited_event);
+    const recordStatus = columnFrom(recordConfig.columns, "status");
+    const eventStatus = columnFrom(eventConfig.columns, "status");
+    expect(recordStatus.getSQLType()).toBe("record_status");
+    expect(columnFrom(recordConfig.columns, "source").getSQLType()).toBe(
+      "source"
+    );
+    expect(
+      P.hasProperty(recordStatus, "enum") ? recordStatus.enum : undefined
+    ).toBe(auditSchema.enums.record_status);
+    expect(
+      P.hasProperty(eventStatus, "enum") ? eventStatus.enum : undefined
+    ).toBe(auditSchema.enums.record_status);
+  });
+
+  it("rejects non-literal schemas and conflicting enum declarations", () => {
+    expect(_badEnumBroadString).toThrow("finite non-empty union");
+    expect(_enumValueMismatch).toThrow("incompatible values");
+  });
+
+  it("compiles unsafe custom SQL types verbatim", () => {
+    const config = getTableConfig(auditSchema.tables.audited_record);
+    expect(columnFrom(config.columns, "search").getSQLType()).toBe("tsvector");
+  });
+});
+
+describe("mechanical column kinds", () => {
+  const config = getTableConfig(mechanicalTable);
+  const mechanicalColumn = (name: string): PgColumn =>
+    columnFrom(config.columns, name);
+
+  it("compiles numeric, date, char, json, and real descriptors", () => {
+    expect(mechanicalColumn("amount").getSQLType()).toBe("numeric(10, 2)");
+    expect(mechanicalColumn("calendar_date").getSQLType()).toBe("date");
+    expect(mechanicalColumn("object_date").getSQLType()).toBe("date");
+    expect(mechanicalColumn("code").getSQLType()).toBe("char(4)");
+    expect(mechanicalColumn("payload").getSQLType()).toBe("json");
+    expect(mechanicalColumn("score").getSQLType()).toBe("real");
+  });
+
+  it("compiles bigserial and smallserial defaults", () => {
+    expect(mechanicalColumn("large_sequence").getSQLType()).toBe("bigserial");
+    expect(mechanicalColumn("native_sequence").getSQLType()).toBe("bigserial");
+    expect(mechanicalColumn("short_sequence").getSQLType()).toBe("smallserial");
+    expect(mechanicalColumn("large_sequence").hasDefault).toBe(true);
+    expect(mechanicalColumn("short_sequence").hasDefault).toBe(true);
+  });
+
+  it("reuses varchar's char length derivation and refusal policy", () => {
+    expect(_charWithoutMaxLength).toThrow("isMaxLength");
+    expect(
+      Field.from(S.String.check(S.isMaxLength(3)).pipe(pg.char())).meta.column
+    ).toEqual({ kind: "char", ident: "char", length: 3 });
   });
 });
 

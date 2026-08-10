@@ -12,6 +12,8 @@ export * as PgColumn from "./PgColumn.ts";
 export * as Table from "./TableExtras.ts";
 export * as Derive from "./derive.ts";
 export * as pg from "./pg.ts";
+export { make } from "./kit.ts";
+export type { Dialect, EntityFactory, PgKit, PgKitConfig } from "./kit.ts";
 export {
   Model,
   VariantField,

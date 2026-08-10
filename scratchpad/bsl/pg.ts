@@ -26,6 +26,7 @@ import {
   DeriveColumnError,
   isEntityIdLike,
   maxLengths,
+  stringLiteralValues,
   type EntityIdLike,
 } from "./derive.ts";
 import { thunkTrue, thunkFalse } from "@beep/utils";
@@ -85,6 +86,52 @@ export const text =
   ): Field.Patched<I, { readonly column: PgColumn.Text }> =>
     Field.patch(input, { column: PgColumn.Text.make({}) });
 
+const boundedString = (
+  input: Field.Input,
+  length: number | undefined,
+  kind: "varchar" | "char",
+  spec: (length: number) => PgColumn.Varchar | PgColumn.Char
+): Field.Any => {
+  const f = Field.from(input);
+  const bounds = maxLengths(f.schema);
+  return O.match(O.fromUndefinedOr(length), {
+    onNone: () =>
+      A.match(bounds, {
+        onEmpty: () => {
+          throw DeriveColumnError.make({
+            message: `pg.${kind}() derive mode requires an isMaxLength check on the schema; add one or pass an explicit length.`,
+            fieldName: "(unknown — set at model definition)",
+            astTag: "(checks)",
+          });
+        },
+        onNonEmpty: (nonEmptyBounds) =>
+          Field.patch(f, {
+            column: spec(A.min(nonEmptyBounds, N.Order)),
+          }),
+      }),
+    onSome: (resolvedLength) => {
+      if (A.isReadonlyArrayEmpty(bounds) && !VariantSchema.isField(f.schema)) {
+        const encodedSchema = S.flip(f.schema);
+        if (!isStringTypeSchema(encodedSchema)) {
+          throw DeriveColumnError.make({
+            message: `pg.${kind}(length) can inject isMaxLength only when the encoded schema is string-valued.`,
+            fieldName: "(unknown — set at model definition)",
+            astTag: AST.toType(encodedSchema.ast)._tag,
+          });
+        }
+        const evolved = S.flip(
+          encodedSchema.check(S.isMaxLength(resolvedLength))
+        );
+        return Field.make(
+          evolved,
+          Meta.merge(f.meta, { column: spec(resolvedLength) })
+        );
+      }
+      return Field.patch(f, { column: spec(resolvedLength) });
+    },
+  });
+};
+
 /**
  * Varchar column with three authoring modes, so the length is written exactly
  * once:
@@ -130,52 +177,393 @@ export function varchar<const L extends number>(
     >
 ) => Field.Patched<I, { readonly column: PgColumn.Varchar<L> }>;
 export function varchar(length?: number): unknown {
+  return (input: Field.Input): Field.Any =>
+    boundedString(input, length, "varchar", (resolved) =>
+      PgColumn.Varchar.make({ length: resolved })
+    );
+}
+
+type ValidateEnum<I extends Field.Input> = [
+  Exclude<Field.EncodedOf<I>, null>
+] extends [string]
+  ? string extends Exclude<Field.EncodedOf<I>, null>
+    ? Field.BslTypeError<"pg.enum requires a finite union of encoded string literals">
+    : unknown
+  : Field.BslTypeError<"pg.enum requires a finite union of encoded string literals">;
+
+type EnumValue<I extends Field.Input> = Extract<
+  Exclude<Field.EncodedOf<I>, null>,
+  string
+>;
+
+/**
+ * Set a real PostgreSQL enum column whose values come from the encoded schema.
+ *
+ * **Details**
+ *
+ * Omitting the name derives it from the declaring model field key. A broad
+ * string schema is rejected because PostgreSQL enum values must be finite.
+ *
+ * **Example** (Set a named enum)
+ *
+ * ```ts
+ * import { LiteralKit } from "@beep/schema"
+ * import { enum as pgEnum } from "./pg.ts"
+ *
+ * console.log(LiteralKit(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function enum_(): <I extends Field.Input>(
+  input: I & ValidateEnum<I>
+) => Field.Patched<I, { readonly column: PgColumn.Enum<"", EnumValue<I>> }>;
+export function enum_<const Name extends string>(
+  name: Name
+): <I extends Field.Input>(
+  input: I & ValidateEnum<I>
+) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>> }>;
+export function enum_(name?: string): unknown {
   return (input: Field.Input): Field.Any => {
-    const f = Field.from(input);
-    const bounds = maxLengths(f.schema);
-    const spec = (resolved: number): PgColumn.Varchar =>
-      PgColumn.Varchar.make({ length: resolved });
-    return O.match(O.fromUndefinedOr(length), {
-      onNone: () =>
-        A.match(bounds, {
-          onEmpty: () => {
-            throw DeriveColumnError.make({
-              message:
-                "pg.varchar() derive mode requires an isMaxLength check on the schema; add one or pass an explicit length.",
-              fieldName: "(unknown — set at model definition)",
-              astTag: "(checks)",
-            });
-          },
-          onNonEmpty: (nonEmptyBounds) =>
-            Field.patch(f, { column: spec(A.min(nonEmptyBounds, N.Order)) }),
-        }),
-      onSome: (resolvedLength) => {
-        if (
-          A.isReadonlyArrayEmpty(bounds) &&
-          !VariantSchema.isField(f.schema)
-        ) {
-          const encodedSchema = S.flip(f.schema);
-          if (!isStringTypeSchema(encodedSchema)) {
-            throw DeriveColumnError.make({
-              message:
-                "pg.varchar(length) can inject isMaxLength only when the encoded schema is string-valued.",
-              fieldName: "(unknown — set at model definition)",
-              astTag: AST.toType(encodedSchema.ast)._tag,
-            });
-          }
-          const evolved = S.flip(
-            encodedSchema.check(S.isMaxLength(resolvedLength))
-          );
-          return Field.make(
-            evolved,
-            Meta.merge(f.meta, { column: spec(resolvedLength) })
-          );
-        }
-        return Field.patch(f, { column: spec(resolvedLength) });
-      },
+    const values = O.getOrElse(
+      stringLiteralValues(Field.from(input).schema),
+      () => {
+        throw DeriveColumnError.make({
+          message:
+            "pg.enum requires a finite non-empty union of encoded string literals.",
+          fieldName: "(unknown — set at model definition)",
+          astTag: "(encoded literals)",
+        });
+      }
+    );
+    const explicitName = O.fromUndefinedOr(name);
+    if (O.isSome(explicitName) && !S.is(S.NonEmptyString)(explicitName.value)) {
+      throw DeriveColumnError.make({
+        message: "pg.enum name must be non-empty when supplied explicitly.",
+        fieldName: "(unknown — set at model definition)",
+        astTag: "(enum name)",
+      });
+    }
+    const resolvedName = O.getOrElse(explicitName, () => "");
+    return Field.patch(input, {
+      column: PgColumn.Enum.make({
+        ident: `enum<${resolvedName}>`,
+        name: resolvedName,
+        values,
+      }),
     });
   };
 }
+
+export { enum_ as enum };
+
+/**
+ * Set an explicitly unsafe custom PostgreSQL type with no carrier validation.
+ *
+ * **Example** (Set a tsvector column)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { unsafeCustom } from "./pg.ts"
+ *
+ * console.log(S.String.pipe(unsafeCustom("tsvector")).meta.column?.ident)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const unsafeCustom =
+  <const SqlType extends string>(sqlType: SqlType) =>
+  <I extends Field.Input>(
+    input: I
+  ): Field.Patched<I, { readonly column: PgColumn.Custom<SqlType> }> =>
+    Field.patch(input, {
+      // Literal construction (not Custom.make): the schema constructor widens
+      // `ident` to `custom<${string}>`, losing the SqlType literal this
+      // combinator exists to preserve; the annotated return type still checks
+      // the record against Custom<SqlType> structurally.
+      column: {
+        kind: "custom",
+        ident: `custom<${sqlType}>`,
+        sqlType,
+      },
+    });
+
+/**
+ * Set a string-carried PostgreSQL numeric column.
+ *
+ * **Example** (Set numeric precision and scale)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { numeric } from "./pg.ts"
+ *
+ * console.log(S.String.pipe(numeric(10, 2)).meta.column?.kind) // "numeric"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function numeric(): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      string,
+      "pg.numeric requires a string-encoded schema"
+    >
+) => Field.Patched<
+  I,
+  { readonly column: PgColumn.Numeric<undefined, undefined> }
+>;
+export function numeric<const Precision extends number>(
+  precision: Precision
+): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      string,
+      "pg.numeric requires a string-encoded schema"
+    >
+) => Field.Patched<
+  I,
+  { readonly column: PgColumn.Numeric<Precision, undefined> }
+>;
+export function numeric<
+  const Precision extends number,
+  const Scale extends number
+>(
+  precision: Precision,
+  scale: Scale
+): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      string,
+      "pg.numeric requires a string-encoded schema"
+    >
+) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale> }>;
+export function numeric(precision?: number, scale?: number): unknown {
+  return (input: Field.Input): Field.Any =>
+    Field.patch(input, {
+      column: PgColumn.Numeric.make({ precision, scale }),
+    });
+}
+
+/**
+ * Set a PostgreSQL date column in string or JavaScript Date mode.
+ *
+ * **Example** (Set string date mode)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { date } from "./pg.ts"
+ *
+ * console.log(S.String.pipe(date()).meta.column?.kind) // "date"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function date(): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      string,
+      "pg.date (string mode) requires a string-encoded schema"
+    >
+) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"string"> }>;
+export function date(options: {
+  readonly mode: "date";
+}): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      Date,
+      "pg.date (date mode) requires a Date-encoded schema"
+    >
+) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"date"> }>;
+export function date(options?: { readonly mode: "date" }): unknown {
+  return (input: Field.Input): Field.Any =>
+    Field.patch(input, {
+      column: PgColumn.DateColumn.make({
+        mode: O.match(O.fromUndefinedOr(options), {
+          onNone: () => "string",
+          onSome: ({ mode }) => mode,
+        }),
+      }),
+    });
+}
+
+/**
+ * Set a fixed-width PostgreSQL char column with varchar-style length authoring.
+ *
+ * **Example** (Derive a char length)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { char } from "./pg.ts"
+ *
+ * console.log(S.String.check(S.isMaxLength(2)).pipe(char()).meta.column?.kind)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function char(): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">
+) => Field.Patched<I, { readonly column: PgColumn.Char }>;
+export function char<const Length extends number>(
+  length: Length
+): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">
+) => Field.Patched<I, { readonly column: PgColumn.Char<Length> }>;
+export function char(length?: number): unknown {
+  return (input: Field.Input): Field.Any =>
+    boundedString(input, length, "char", (resolved) =>
+      PgColumn.Char.make({ length: resolved })
+    );
+}
+
+/**
+ * Set a PostgreSQL JSON column distinct from JSONB.
+ *
+ * **Example** (Set JSON storage)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { json } from "./pg.ts"
+ *
+ * console.log(S.Struct({ ok: S.Boolean }).pipe(json()).meta.column?.ident)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const json =
+  () =>
+  <I extends Field.Input>(
+    input: I &
+      Field.ValidateEncoded<
+        I,
+        object,
+        "pg.json requires an object- or array-encoded schema"
+      >
+  ): Field.Patched<I, { readonly column: PgColumn.Json }> =>
+    Field.patch(input, { column: PgColumn.Json.make({}) });
+
+/**
+ * Set a PostgreSQL single-precision real column.
+ *
+ * **Example** (Set real storage)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { real } from "./pg.ts"
+ *
+ * console.log(S.Number.pipe(real()).meta.column?.ident) // "real"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const real =
+  () =>
+  <I extends Field.Input>(
+    input: I &
+      Field.ValidateEncoded<
+        I,
+        number,
+        "pg.real requires a number-encoded schema"
+      >
+  ): Field.Patched<I, { readonly column: PgColumn.Real }> =>
+    Field.patch(input, { column: PgColumn.Real.make({}) });
+
+/**
+ * Set a PostgreSQL bigserial column and mark it defaulted.
+ *
+ * **Example** (Set number-mode bigserial)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { bigserial } from "./pg.ts"
+ *
+ * console.log(S.Int.pipe(bigserial("number")).meta.hasDefault) // true
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export function bigserial(mode: "number"): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      number,
+      "pg.bigserial('number') requires a number-encoded schema"
+    >
+) => Field.Patched<
+  I,
+  {
+    readonly column: PgColumn.Bigserial<"number">;
+    readonly hasDefault: true;
+  }
+>;
+export function bigserial(mode: "bigint"): <I extends Field.Input>(
+  input: I &
+    Field.ValidateEncoded<
+      I,
+      bigint,
+      "pg.bigserial('bigint') requires a bigint-encoded schema"
+    >
+) => Field.Patched<
+  I,
+  {
+    readonly column: PgColumn.Bigserial<"bigint">;
+    readonly hasDefault: true;
+  }
+>;
+export function bigserial(mode: "number" | "bigint"): unknown {
+  return (input: Field.Input): Field.Any =>
+    Field.patch(input, {
+      column: PgColumn.Bigserial.make({ mode }),
+      hasDefault: true,
+    });
+}
+
+/**
+ * Set a PostgreSQL smallserial column and mark it defaulted.
+ *
+ * **Example** (Set smallserial storage)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { smallserial } from "./pg.ts"
+ *
+ * console.log(S.Int.pipe(smallserial()).meta.hasDefault) // true
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const smallserial =
+  () =>
+  <I extends Field.Input>(
+    input: I &
+      Field.ValidateEncoded<
+        I,
+        number,
+        "pg.smallserial requires a number-encoded schema"
+      >
+  ): Field.Patched<
+    I,
+    { readonly column: PgColumn.Smallserial; readonly hasDefault: true }
+  > =>
+    Field.patch(input, {
+      column: PgColumn.Smallserial.make({}),
+      hasDefault: true,
+    });
 
 /**
  * Set a PostgreSQL UUID column on a string-encoded schema.

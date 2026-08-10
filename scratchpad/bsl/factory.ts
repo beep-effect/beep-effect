@@ -241,9 +241,15 @@ type AutoRef<I extends Field.Input> =
  * @category models
  * @since 0.0.0
  */
-export type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
+export type ResolvedMetaOf<
+  I extends Field.Input,
+  Key extends string = string
+> = Meta.Merge<
   Field.MetaFrom<I>,
-  { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
+  {
+    readonly column: PgColumn.ResolveName<Derive.ResolvedColumn<I>, Key>;
+    readonly references: AutoRef<I>;
+  }
 >;
 
 /**
@@ -253,7 +259,7 @@ export type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
  * @since 0.0.0
  */
 export type ColumnsOf<F extends FieldsInput> = {
-  readonly [K in keyof F]: ResolvedMetaOf<F[K]>;
+  readonly [K in keyof F]: ResolvedMetaOf<F[K], K & string>;
 };
 
 type PlainVariants<
@@ -268,11 +274,15 @@ type PlainVariants<
       readonly jsonCreate: Sch;
       readonly jsonUpdate: Sch;
     }>
+  : M["generated"] extends Meta.GeneratedIdentityAlways
+  ? VariantSchema.Field<{
+      readonly select: Sch;
+      readonly update: Sch;
+      readonly json: Sch;
+    }>
   : VariantSchema.Field<{
       readonly select: Sch;
       readonly json: Sch;
-      readonly jsonCreate: Sch;
-      readonly jsonUpdate: Sch;
     }>;
 
 /**
@@ -282,7 +292,7 @@ type PlainVariants<
  * @since 0.0.0
  */
 export type EffectiveSchema<I extends Field.Input> =
-  Field.SchemaFrom<I> extends VariantSchema.Field<VariantSchema.Field.Config>
+  Field.SchemaFrom<I> extends VariantSchema.Field.Any
     ? Field.SchemaFrom<I>
     : Field.SchemaFrom<I> extends S.Top
     ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
@@ -488,12 +498,17 @@ const effectiveSchema = (
   meta: Meta.Meta
 ): Field.AnySchema => {
   if (VariantSchema.isField(schema)) return schema;
+  if (Meta.Generated.guards.identityAlways(meta.generated)) {
+    return V.Field({
+      select: schema,
+      update: schema,
+      json: schema,
+    });
+  }
   if (meta.generated !== false) {
     return V.Field({
       select: schema,
       json: schema,
-      jsonCreate: schema,
-      jsonUpdate: schema,
     });
   }
   return V.Field({
@@ -505,6 +520,117 @@ const effectiveSchema = (
     jsonUpdate: schema,
   });
 };
+
+/**
+ * Build one BSL model class after its public factory has validated the field set.
+ *
+ * **Details**
+ *
+ * This is the shared runtime seam used by bare {@link Model} and kit-provided
+ * entities. Runtime invariants remain authoritative when types are suppressed.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export function makeModelClass<Self, const F extends FieldsInput>(
+  identifier: string,
+  fields: F,
+  annotations: S.Annotations.Annotations | undefined,
+  extras: TableExtras.Callback<F> | undefined
+): ModelClass<Self, F>;
+export function makeModelClass(
+  identifier: string,
+  fields: FieldsInput,
+  annotations: S.Annotations.Annotations | undefined,
+  extras: TableExtras.Callback<FieldsInput> | undefined
+): object {
+  const tableName = deriveTableName(identifier);
+  const state = A.reduce(
+    R.toEntries(fields),
+    {
+      columns: R.empty<string, Meta.Meta>(),
+      primaryKeys: 0,
+      schemaFields: R.empty<string, Field.AnySchema>(),
+    },
+    (state, [key, input]) => {
+      const field = Field.from(input);
+      const select = Derive.selectSchemaOf(field.schema);
+      const classified = P.isNotUndefined(field.meta.column)
+        ? {
+            column: field.meta.column,
+            nullable: Derive.isNullable(field.schema),
+          }
+        : Derive.classify(field.schema, key);
+
+      if (field.meta.primaryKey && classified.nullable) {
+        throw ModelInvariantError.make({
+          message: `Primary key '${key}' derives a nullable encoded representation.`,
+          fieldName: key,
+        });
+      }
+      if (
+        field.meta.identity !== false &&
+        !S.is(PgColumn.IdentityKind)(classified.column.kind)
+      ) {
+        throw ModelInvariantError.make({
+          message: `Identity on '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
+          fieldName: key,
+        });
+      }
+      if (
+        field.meta.generated !== false &&
+        (field.meta.hasDefault || P.isNotUndefined(field.meta.default))
+      ) {
+        throw ModelInvariantError.make({
+          message: `Field '${key}' cannot be both defaulted and generated.`,
+          fieldName: key,
+        });
+      }
+      const bounded = PgColumn.Spec.guards.varchar(classified.column)
+        ? O.some({ kind: "varchar", length: classified.column.length })
+        : PgColumn.Spec.guards.char(classified.column)
+        ? O.some({ kind: "char", length: classified.column.length })
+        : O.none<{ readonly kind: string; readonly length: number }>();
+      if (O.isSome(bounded)) {
+        const incompatible = A.findFirst(
+          Derive.maxLengths(field.schema),
+          (maxLength) => maxLength > bounded.value.length
+        );
+        if (O.isSome(incompatible)) {
+          throw ModelInvariantError.make({
+            message: `${bounded.value.kind}(${bounded.value.length}) on '${key}' is narrower than schema maxLength ${incompatible.value}.`,
+            fieldName: key,
+          });
+        }
+      }
+      const resolvedMeta = Meta.merge(field.meta, {
+        column: PgColumn.resolveName(classified.column, key),
+        references: resolveReferences(field.meta, select),
+      });
+      return {
+        columns: R.set(state.columns, key, resolvedMeta),
+        primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
+        schemaFields: R.set(
+          state.schemaFields,
+          key,
+          effectiveSchema(field.schema, resolvedMeta)
+        ),
+      };
+    }
+  );
+
+  if (state.primaryKeys > 1) {
+    throw ModelInvariantError.make({
+      message: `Model '${identifier}' declares ${state.primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
+      fieldName: "(model)",
+    });
+  }
+
+  const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
+  return SchemaUtils.withStatics(Base, () => ({
+    bsl: { tableName, fields, columns: state.columns, extras },
+  }));
+}
 
 /**
  * Build a variant-aware model class whose fields own their resolved SQL metadata.
@@ -535,95 +661,12 @@ export function Model(identifier: string): unknown {
       | S.Annotations.Annotations
       | TableExtras.Callback<FieldsInput>
   ): object => {
-    const fieldRecord: FieldsInput = fields;
-    const tableName = deriveTableName(identifier);
     const extras = P.isFunction(annotationsOrExtras)
       ? annotationsOrExtras
       : undefined;
     const annotations = P.isFunction(annotationsOrExtras)
       ? undefined
       : annotationsOrExtras;
-
-    const state = A.reduce(
-      R.toEntries(fieldRecord),
-      {
-        columns: R.empty<string, Meta.Meta>(),
-        primaryKeys: 0,
-        schemaFields: R.empty<string, Field.AnySchema>(),
-      },
-      (state, [key, input]) => {
-        const field = Field.from(input);
-        const select = Derive.selectSchemaOf(field.schema);
-        const classified = P.isNotUndefined(field.meta.column)
-          ? {
-              column: field.meta.column,
-              nullable: Derive.isNullable(field.schema),
-            }
-          : Derive.classify(field.schema, key);
-
-        if (field.meta.primaryKey && classified.nullable) {
-          throw ModelInvariantError.make({
-            message: `Primary key '${key}' derives a nullable encoded representation.`,
-            fieldName: key,
-          });
-        }
-        if (
-          field.meta.identity !== false &&
-          !S.is(PgColumn.IdentityKind)(classified.column.kind)
-        ) {
-          throw ModelInvariantError.make({
-            message: `Identity on '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
-            fieldName: key,
-          });
-        }
-        if (
-          field.meta.generated !== false &&
-          (field.meta.hasDefault || P.isNotUndefined(field.meta.default))
-        ) {
-          throw ModelInvariantError.make({
-            message: `Field '${key}' cannot be both defaulted and generated.`,
-            fieldName: key,
-          });
-        }
-        if (PgColumn.Spec.guards.varchar(classified.column)) {
-          const varcharLength = classified.column.length;
-          const incompatible = A.findFirst(
-            Derive.maxLengths(field.schema),
-            (maxLength) => maxLength > varcharLength
-          );
-          if (O.isSome(incompatible)) {
-            throw ModelInvariantError.make({
-              message: `varchar(${varcharLength}) on '${key}' is narrower than schema maxLength ${incompatible.value}.`,
-              fieldName: key,
-            });
-          }
-        }
-        const resolvedMeta = Meta.merge(field.meta, {
-          column: classified.column,
-          references: resolveReferences(field.meta, select),
-        });
-        return {
-          columns: R.set(state.columns, key, resolvedMeta),
-          primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
-          schemaFields: R.set(
-            state.schemaFields,
-            key,
-            effectiveSchema(field.schema, resolvedMeta)
-          ),
-        };
-      }
-    );
-
-    if (state.primaryKeys > 1) {
-      throw ModelInvariantError.make({
-        message: `Model '${identifier}' declares ${state.primaryKeys} inline primary keys; use Table.compositePrimaryKey in the extras callback.`,
-        fieldName: "(model)",
-      });
-    }
-
-    const Base = V.Class<object>(identifier)(state.schemaFields, annotations);
-    return SchemaUtils.withStatics(Base, () => ({
-      bsl: { tableName, fields: fieldRecord, columns: state.columns, extras },
-    }));
+    return makeModelClass(identifier, fields, annotations, extras);
   };
 }

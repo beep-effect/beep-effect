@@ -18,18 +18,35 @@ import type {
   AnyPgColumnBuilder,
   PgBigInt53Builder,
   PgBigInt64Builder,
+  PgBigSerial53Builder,
+  PgBigSerial64Builder,
+  PgCharBuilder,
+  PgEnum,
   PgIntegerBuilder,
+  PgJsonBuilder,
+  PgNumericBuilder,
+  PgRealBuilder,
   PgSmallIntBuilder,
+  PgSmallSerialBuilder,
 } from "drizzle-orm/pg-core";
 import {
   bigint,
+  bigserial,
   boolean,
   bytea,
+  char,
+  customType,
+  date,
   doublePrecision,
   integer,
+  json,
   jsonb,
+  numeric,
+  pgEnum,
+  real,
   serial,
   smallint,
+  smallserial,
   text,
   timestamp,
   uuid,
@@ -125,18 +142,25 @@ export const DbIdent = S.Union([
   LiteralKit([
     "text",
     "varchar",
+    "char",
     "uuid",
     "integer",
     "smallint",
     "bigint",
+    "numeric",
     "doublePrecision",
+    "real",
     "boolean",
+    "json",
     "jsonb",
+    "date",
     "timestamp",
     "timestamptz",
     "bytea",
   ]),
   S.TemplateLiteral(['entityId<"', S.NonEmptyString, '">']),
+  S.TemplateLiteral(["enum<", S.String, ">"]),
+  S.TemplateLiteral(["custom<", S.String, ">"]),
 ]).pipe(
   $I.annoteSchema("DbIdent", {
     description:
@@ -268,6 +292,424 @@ export type Varchar<L extends number = number> = Omit<
   typeof Varchar.Type,
   "length"
 > & { readonly length: L };
+
+const EnumValues = S.TupleWithRest(S.Tuple([S.String]), [S.String]).pipe(
+  $I.annoteSchema("EnumValues", {
+    description:
+      "Ordered non-empty string-literal values of a PostgreSQL enum.",
+  })
+);
+
+/**
+ * PostgreSQL named enum descriptor.
+ *
+ * **Details**
+ *
+ * An empty `name` is a temporary field-derived marker resolved by the model
+ * factory before projection.
+ *
+ * **Example** (Construct an enum descriptor)
+ *
+ * ```ts
+ * import { Enum } from "./PgColumn.ts"
+ *
+ * console.log(Enum.make({ name: "status", ident: "enum<status>", values: ["draft", "active"] }).name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Enum = S.Struct({
+  kind: S.tag("enum"),
+  ident: S.TemplateLiteral(["enum<", S.String, ">"]),
+  name: S.String,
+  values: EnumValues,
+}).pipe(
+  $I.annoteSchema("Enum", {
+    description:
+      "PostgreSQL named enum descriptor with literal-preserving values.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      spec: typeof schema.Type,
+      name: string,
+      shared?: PgEnum<[string, ...string[]]>
+    ): DrizzleBuilder =>
+      O.getOrElse(O.fromUndefinedOr(shared), () =>
+        pgEnum(spec.name, spec.values)
+      )(name),
+    toDrizzleEnum: (spec: typeof schema.Type): PgEnum<[string, ...string[]]> =>
+      pgEnum(spec.name, spec.values),
+  }))
+);
+/**
+ * Decoded enum descriptor preserving its name and literal value union.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Enum<
+  Name extends string = string,
+  Value extends string = string
+> = Omit<typeof Enum.Type, "ident" | "name" | "values"> & {
+  readonly ident: `enum<${Name}>`;
+  readonly name: Name;
+  readonly values: readonly [Value, ...Value[]];
+};
+
+/**
+ * Drizzle enum instance shared by all columns with one enum name in an assembly.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnumInstance = PgEnum<[string, ...string[]]>;
+
+/**
+ * Explicit custom PostgreSQL type descriptor.
+ *
+ * **Example** (Construct a custom descriptor)
+ *
+ * ```ts
+ * import { Custom } from "./PgColumn.ts"
+ *
+ * console.log(Custom.make({ ident: "custom<tsvector>", sqlType: "tsvector" }).sqlType)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Custom = S.Struct({
+  kind: S.tag("custom"),
+  ident: S.TemplateLiteral(["custom<", S.String, ">"]),
+  sqlType: S.String,
+}).pipe(
+  $I.annoteSchema("Custom", {
+    description: "Explicitly unsafe custom PostgreSQL column descriptor.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      { sqlType }: typeof schema.Type,
+      name: string
+    ): DrizzleBuilder =>
+      customType<{ data: unknown; driverData: unknown }>({
+        dataType: () => sqlType,
+      })(name),
+  }))
+);
+/**
+ * Decoded custom-column descriptor preserving its SQL type literal.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Custom<SqlType extends string = string> = Omit<
+  typeof Custom.Type,
+  "ident" | "sqlType"
+> & {
+  readonly ident: `custom<${SqlType}>`;
+  readonly sqlType: SqlType;
+};
+
+/**
+ * Drizzle builder produced by the unsafe custom-type escape hatch.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CustomBuilder = ReturnType<
+  ReturnType<typeof customType<{ data: unknown; driverData: unknown }>>
+>;
+
+/**
+ * PostgreSQL arbitrary-precision numeric descriptor using the string carrier.
+ *
+ * **Example** (Construct a numeric descriptor)
+ *
+ * ```ts
+ * import { Numeric } from "./PgColumn.ts"
+ *
+ * console.log(Numeric.make({ precision: 10, scale: 2 }).ident) // "numeric"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Numeric = S.Struct({
+  kind: S.tag("numeric"),
+  ident: S.tag("numeric"),
+  precision: S.UndefinedOr(ColumnLength),
+  scale: S.UndefinedOr(S.Natural),
+}).pipe(
+  $I.annoteSchema("Numeric", {
+    description:
+      "PostgreSQL numeric descriptor with string carrier precision and scale.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      { precision, scale }: typeof schema.Type,
+      name: string
+    ): PgNumericBuilder =>
+      Match.value({ precision, scale }).pipe(
+        Match.when(
+          P.Struct({ precision: P.isNumber, scale: P.isNumber }),
+          ({ precision, scale }) =>
+            numeric(name, { precision, scale, mode: "string" })
+        ),
+        Match.when(P.Struct({ precision: P.isNumber }), ({ precision }) =>
+          numeric(name, { precision, mode: "string" })
+        ),
+        Match.when(P.Struct({ scale: P.isNumber }), ({ scale }) =>
+          numeric(name, { scale, mode: "string" })
+        ),
+        Match.orElse(() => numeric(name, { mode: "string" }))
+      ),
+  }))
+);
+/**
+ * Decoded numeric descriptor preserving precision and scale literals.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Numeric<
+  Precision extends number | undefined = number | undefined,
+  Scale extends number | undefined = number | undefined
+> = Omit<typeof Numeric.Type, "precision" | "scale"> & {
+  readonly precision: Precision;
+  readonly scale: Scale;
+};
+
+/**
+ * PostgreSQL date descriptor with string or JavaScript Date carrier mode.
+ *
+ * **Example** (Construct a string date descriptor)
+ *
+ * ```ts
+ * import { DateColumn } from "./PgColumn.ts"
+ *
+ * console.log(DateColumn.make({ mode: "string" }).ident) // "date"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DateColumn = S.Struct({
+  kind: S.tag("date"),
+  ident: S.tag("date"),
+  mode: LiteralKit(["string", "date"]),
+}).pipe(
+  $I.annoteSchema("DateColumn", {
+    description: "PostgreSQL date descriptor with string or Date carrier mode.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      { mode }: typeof schema.Type,
+      name: string
+    ): DrizzleBuilder =>
+      mode === "date"
+        ? date(name, { mode: "date" })
+        : date(name, { mode: "string" }),
+  }))
+);
+/**
+ * Decoded date descriptor preserving its carrier mode.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DateColumn<Mode extends "string" | "date" = "string" | "date"> =
+  Omit<typeof DateColumn.Type, "mode"> & { readonly mode: Mode };
+
+/**
+ * Fixed-width PostgreSQL char descriptor.
+ *
+ * **Example** (Construct a char descriptor)
+ *
+ * ```ts
+ * import { Char } from "./PgColumn.ts"
+ *
+ * console.log(Char.make({ length: 2 }).ident) // "char"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Char = S.Struct({
+  kind: S.tag("char"),
+  ident: S.tag("char"),
+  length: ColumnLength,
+}).pipe(
+  $I.annoteSchema("Char", {
+    description: "Fixed-width PostgreSQL char descriptor.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      { length }: typeof schema.Type,
+      name: string
+    ): PgCharBuilder => char(name, { length }),
+  }))
+);
+/**
+ * Decoded char descriptor preserving its length literal.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Char<Length extends number = number> = Omit<
+  typeof Char.Type,
+  "length"
+> & { readonly length: Length };
+
+/**
+ * PostgreSQL JSON descriptor distinct from JSONB.
+ *
+ * **Example** (Construct a JSON descriptor)
+ *
+ * ```ts
+ * import { Json } from "./PgColumn.ts"
+ *
+ * console.log(Json.make({}).ident) // "json"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Json = S.Struct({
+  kind: S.tag("json"),
+  ident: S.tag("json"),
+}).pipe(
+  $I.annoteSchema("Json", {
+    description: "PostgreSQL JSON column descriptor distinct from JSONB.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      _spec: typeof schema.Type,
+      name: string
+    ): PgJsonBuilder => json(name),
+  }))
+);
+/**
+ * Decoded JSON-column descriptor.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Json = typeof Json.Type;
+
+/**
+ * PostgreSQL single-precision real descriptor.
+ *
+ * **Example** (Construct a real descriptor)
+ *
+ * ```ts
+ * import { Real } from "./PgColumn.ts"
+ *
+ * console.log(Real.make({}).ident) // "real"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Real = S.Struct({
+  kind: S.tag("real"),
+  ident: S.tag("real"),
+}).pipe(
+  $I.annoteSchema("Real", {
+    description: "PostgreSQL single-precision real column descriptor.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      _spec: typeof schema.Type,
+      name: string
+    ): PgRealBuilder => real(name),
+  }))
+);
+/**
+ * Decoded real-column descriptor.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Real = typeof Real.Type;
+
+/**
+ * PostgreSQL bigserial descriptor with number or bigint carrier mode.
+ *
+ * **Example** (Construct a bigint-mode descriptor)
+ *
+ * ```ts
+ * import { Bigserial } from "./PgColumn.ts"
+ *
+ * console.log(Bigserial.make({ mode: "bigint" }).ident) // "bigint"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Bigserial = S.Struct({
+  kind: S.tag("bigserial"),
+  ident: S.tag("bigint"),
+  mode: LiteralKit(["number", "bigint"]),
+}).pipe(
+  $I.annoteSchema("Bigserial", {
+    description:
+      "PostgreSQL bigserial descriptor with number or bigint carrier mode.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      { mode }: typeof schema.Type,
+      name: string
+    ): PgBigSerial53Builder | PgBigSerial64Builder =>
+      mode === "number"
+        ? bigserial(name, { mode: "number" })
+        : bigserial(name, { mode: "bigint" }),
+  }))
+);
+/**
+ * Decoded bigserial descriptor preserving its carrier mode.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Bigserial<Mode extends "number" | "bigint" = "number" | "bigint"> =
+  Omit<typeof Bigserial.Type, "mode"> & { readonly mode: Mode };
+
+/**
+ * PostgreSQL smallserial descriptor.
+ *
+ * **Example** (Construct a smallserial descriptor)
+ *
+ * ```ts
+ * import { Smallserial } from "./PgColumn.ts"
+ *
+ * console.log(Smallserial.make({}).ident) // "smallint"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Smallserial = S.Struct({
+  kind: S.tag("smallserial"),
+  ident: S.tag("smallint"),
+}).pipe(
+  $I.annoteSchema("Smallserial", {
+    description: "PostgreSQL smallserial column descriptor.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    toDrizzleBuilder: (
+      _spec: typeof schema.Type,
+      name: string
+    ): PgSmallSerialBuilder => smallserial(name),
+  }))
+);
+/**
+ * Decoded smallserial-column descriptor.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Smallserial = typeof Smallserial.Type;
 
 /**
  * PostgreSQL UUID descriptor.
@@ -685,6 +1127,15 @@ export type Bytea = typeof Bytea.Type;
 const SpecMembers = T.make(
   Text,
   Varchar,
+  Enum,
+  Custom,
+  Numeric,
+  DateColumn,
+  Char,
+  Json,
+  Real,
+  Bigserial,
+  Smallserial,
   Uuid,
   Integer,
   Smallint,
@@ -781,6 +1232,15 @@ export const Spec = S.Union(SpecMembers).pipe(
         schema.match(spec, {
           text: (self) => Text.toDrizzleBuilder(self, name),
           varchar: (self) => Varchar.toDrizzleBuilder(self, name),
+          enum: (self) => Enum.toDrizzleBuilder(self, name),
+          custom: (self) => Custom.toDrizzleBuilder(self, name),
+          numeric: (self) => Numeric.toDrizzleBuilder(self, name),
+          date: (self) => DateColumn.toDrizzleBuilder(self, name),
+          char: (self) => Char.toDrizzleBuilder(self, name),
+          json: (self) => Json.toDrizzleBuilder(self, name),
+          real: (self) => Real.toDrizzleBuilder(self, name),
+          bigserial: (self) => Bigserial.toDrizzleBuilder(self, name),
+          smallserial: (self) => Smallserial.toDrizzleBuilder(self, name),
           uuid: (self) => Uuid.toDrizzleBuilder(self, name),
           integer: (self) => Integer.toDrizzleBuilder(self, name, identity),
           smallint: (self) => Smallint.toDrizzleBuilder(self, name, identity),
@@ -803,6 +1263,44 @@ export const Spec = S.Union(SpecMembers).pipe(
  * @since 0.0.0
  */
 export type Spec = typeof Spec.Type;
+
+/**
+ * Resolve a field-derived enum name while leaving every other descriptor intact.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResolveName<C extends Spec, Key extends string> = C extends Enum<
+  "",
+  infer Value
+>
+  ? Enum<Key, Value>
+  : C;
+
+/**
+ * Resolve the empty enum-name marker to the declaring model field key.
+ *
+ * **Example** (Resolve an implicit enum name)
+ *
+ * ```ts
+ * import { Enum, resolveName } from "./PgColumn.ts"
+ *
+ * const resolved = resolveName(Enum.make({ name: "", ident: "enum<>", values: ["a"] }), "status")
+ * console.log(resolved.name) // "status"
+ * ```
+ *
+ * @category conversions
+ * @since 0.0.0
+ */
+export function resolveName<C extends Spec, const Key extends string>(
+  spec: C,
+  key: Key
+): ResolveName<C, Key>;
+export function resolveName(spec: Spec, key: string): Spec {
+  return Spec.guards.enum(spec) && Eq.equals(spec.name, "")
+    ? Enum.make({ name: key, ident: `enum<${key}>`, values: spec.values })
+    : spec;
+}
 
 /**
  * Discriminator literal family of every supported column descriptor.
@@ -884,13 +1382,21 @@ export type IdentityKind = typeof IdentityKind.Type;
  * @category models
  * @since 0.0.0
  */
-export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid
+export type CarrierOf<C extends Spec> = C extends
+  | Text
+  | Varchar
+  | Uuid
+  | Enum
+  | Char
+  | Numeric
   ? string
   : C extends
       | Integer<"integer" | EntityIdIdent<string>>
       | Smallint
       | Serial
+      | Smallserial
       | DoublePrecision
+      | Real
   ? number
   : C extends Bigint<infer M>
   ? M extends "number"
@@ -904,8 +1410,20 @@ export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid
     : string
   : C extends Jsonb
   ? object
+  : C extends Json
+  ? object
+  : C extends DateColumn<infer M>
+  ? M extends "date"
+    ? Date
+    : string
+  : C extends Bigserial<infer M>
+  ? M extends "number"
+    ? number
+    : bigint
   : C extends Bytea
   ? Uint8Array
+  : C extends Custom
+  ? unknown
   : never;
 
 /**
@@ -930,6 +1448,7 @@ export const CarrierTag = LiteralKit([
   "object",
   "date",
   "bytes",
+  "unknown",
 ]).pipe(
   $I.annoteSchema("CarrierTag", {
     description:
@@ -969,6 +1488,15 @@ export type CarrierTag = typeof CarrierTag.Type;
 export const carrierTag = Spec.match({
   text: CarrierTag.thunk.string,
   varchar: CarrierTag.thunk.string,
+  enum: CarrierTag.thunk.string,
+  custom: CarrierTag.thunk.unknown,
+  numeric: CarrierTag.thunk.string,
+  date: ({ mode }) => mode,
+  char: CarrierTag.thunk.string,
+  json: CarrierTag.thunk.object,
+  real: CarrierTag.thunk.number,
+  bigserial: ({ mode }) => mode,
+  smallserial: CarrierTag.thunk.number,
   uuid: CarrierTag.thunk.string,
   integer: CarrierTag.thunk.number,
   smallint: CarrierTag.thunk.number,

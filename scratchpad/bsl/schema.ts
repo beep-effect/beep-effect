@@ -21,7 +21,7 @@ import * as Field from "./Field.ts";
 import type { AnyModel, FieldsInput } from "./factory.ts";
 import * as Meta from "./Meta.ts";
 import * as PgColumn from "./PgColumn.ts";
-import { type TableOf, toPgTable } from "./table.ts";
+import { type EnumRegistry, type TableOf, toPgTable } from "./table.ts";
 
 const $I = $ScratchpadId.create("bsl/schema");
 
@@ -205,6 +205,7 @@ export type RelationsConfig<Models extends ModelRecord> = (
  */
 export interface Assembly<Models extends ModelRecord> {
   readonly models: Models;
+  readonly enums: EnumRegistry;
   readonly tables: TablesOf<Models>;
   readonly relationsConfig: RelationsConfig<Models>;
   readonly relations: ReturnType<typeof defineRelations>;
@@ -259,6 +260,44 @@ const targetFieldKey = (
             Eq.equals(Str.snakeCase(key), columnName)
         )
       );
+
+const collectEnums = (models: ModelRecord): EnumRegistry =>
+  A.reduce(
+    R.toEntries(models),
+    R.empty<string, PgColumn.EnumInstance>(),
+    (enums, [modelKey, model]) =>
+      A.reduce(
+        R.toEntries(model.bsl.columns),
+        enums,
+        (current, [fieldName, meta]) => {
+          const column = meta.column;
+          if (!PgColumn.Spec.guards.enum(column)) return current;
+          if (Eq.equals(column.name, "")) {
+            return fail(
+              "Enum name was not resolved during model construction.",
+              modelKey,
+              fieldName,
+              "(enum)"
+            );
+          }
+          return O.match(R.get(current, column.name), {
+            onNone: () =>
+              R.set(current, column.name, PgColumn.Enum.toDrizzleEnum(column)),
+            onSome: (existing) => {
+              if (!Eq.equals(existing.enumValues, column.values)) {
+                return fail(
+                  `PostgreSQL enum '${column.name}' is declared with incompatible values.`,
+                  modelKey,
+                  fieldName,
+                  column.name
+                );
+              }
+              return current;
+            },
+          });
+        }
+      )
+  );
 
 const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
   const entries = R.toEntries(models);
@@ -380,6 +419,7 @@ export function schema<const Models extends ModelRecord>(
   models: Models & ValidateSchema<Models>
 ): Assembly<Models>;
 export function schema(models: ModelRecord): unknown {
+  const enums = collectEnums(models);
   const edges = collectEdges(models);
   // Drizzle evaluates extra-config callbacks lazily. Reassigning this registry
   // lets callbacks created for earlier tables see forward and self references
@@ -390,54 +430,57 @@ export function schema(models: ModelRecord): unknown {
     runtimeTables = R.set(
       runtimeTables,
       key,
-      toPgTable(model, (columns) =>
-        A.map(
-          A.filter(edges, (edge) => Eq.equals(edge.sourceKey, key)),
-          (edge) => {
-            const targetTable = O.getOrElse(
-              R.get(runtimeTables, edge.targetKey),
-              () =>
-                fail(
+      toPgTable(
+        model,
+        (columns) =>
+          A.map(
+            A.filter(edges, (edge) => Eq.equals(edge.sourceKey, key)),
+            (edge) => {
+              const targetTable = O.getOrElse(
+                R.get(runtimeTables, edge.targetKey),
+                () =>
+                  fail(
+                    "Resolved foreign-key table or column is unavailable.",
+                    key,
+                    edge.sourceField,
+                    edge.targetKey
+                  )
+              );
+              if (!P.hasProperty(targetTable, edge.targetField)) {
+                return fail(
                   "Resolved foreign-key table or column is unavailable.",
                   key,
                   edge.sourceField,
                   edge.targetKey
-                )
-            );
-            if (!P.hasProperty(targetTable, edge.targetField)) {
-              return fail(
-                "Resolved foreign-key table or column is unavailable.",
-                key,
-                edge.sourceField,
-                edge.targetKey
-              );
-            }
-            const targetColumn = targetTable[edge.targetField];
-            if (!isDrizzleEntity(targetColumn, DrizzlePgColumn)) {
-              return fail(
-                "Resolved foreign-key target is not a PostgreSQL column.",
-                key,
-                edge.sourceField,
-                edge.targetKey
-              );
-            }
-            const builder = foreignKey({
-              columns: [columns[edge.sourceField]],
-              foreignColumns: [targetColumn],
-            });
-            const withDelete = O.match(
-              O.fromUndefinedOr(edge.reference.onDelete),
-              {
-                onNone: () => builder,
-                onSome: (action) => builder.onDelete(action),
+                );
               }
-            );
-            return O.match(O.fromUndefinedOr(edge.reference.onUpdate), {
-              onNone: () => withDelete,
-              onSome: (action) => withDelete.onUpdate(action),
-            });
-          }
-        )
+              const targetColumn = targetTable[edge.targetField];
+              if (!isDrizzleEntity(targetColumn, DrizzlePgColumn)) {
+                return fail(
+                  "Resolved foreign-key target is not a PostgreSQL column.",
+                  key,
+                  edge.sourceField,
+                  edge.targetKey
+                );
+              }
+              const builder = foreignKey({
+                columns: [columns[edge.sourceField]],
+                foreignColumns: [targetColumn],
+              });
+              const withDelete = O.match(
+                O.fromUndefinedOr(edge.reference.onDelete),
+                {
+                  onNone: () => builder,
+                  onSome: (action) => builder.onDelete(action),
+                }
+              );
+              return O.match(O.fromUndefinedOr(edge.reference.onUpdate), {
+                onNone: () => withDelete,
+                onSome: (action) => withDelete.onUpdate(action),
+              });
+            }
+          ),
+        enums
       )
     );
   });
@@ -495,6 +538,7 @@ export function schema(models: ModelRecord): unknown {
 
   return {
     models,
+    enums,
     tables,
     relationsConfig,
     relations: defineRelations(tables, relationsConfig),

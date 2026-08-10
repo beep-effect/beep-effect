@@ -357,6 +357,77 @@ export const isNullable = flow(
   )
 );
 
+const stringLiteralsFromAST = (
+  node: AST.AST,
+  visited: ReadonlyArray<AST.Suspend> = A.empty()
+): O.Option<ReadonlyArray<string>> =>
+  Match.type<AST.AST>().pipe(
+    Match.withReturnType<O.Option<ReadonlyArray<string>>>(),
+    Match.tags({
+      Literal: ({ literal }) =>
+        P.isString(literal) ? O.some(A.of(literal)) : O.none(),
+      Null: () => O.some(A.empty()),
+      Enum: ({ enums }) =>
+        A.every(enums, ([, value]) => P.isString(value))
+          ? O.some(
+              A.getSomes(
+                A.map(enums, ([, value]) =>
+                  P.isString(value) ? O.some(value) : O.none()
+                )
+              )
+            )
+          : O.none(),
+      Union: ({ types }) =>
+        A.reduce(
+          types,
+          O.some<ReadonlyArray<string>>(A.empty()),
+          (values, member) =>
+            O.flatMap(values, (current) =>
+              O.map(stringLiteralsFromAST(member, visited), (next) =>
+                A.appendAll(current, next)
+              )
+            )
+        ),
+      Suspend: (suspend) =>
+        A.some(visited, Eq.equals(suspend))
+          ? O.none()
+          : stringLiteralsFromAST(suspend.thunk(), A.append(visited, suspend)),
+    }),
+    Match.orElse(() => O.none())
+  )(node);
+
+/**
+ * Collect a finite non-empty union of encoded string literals.
+ *
+ * **Details**
+ *
+ * Nullable literal schemas are accepted after stripping `null`; broad strings,
+ * templates, and mixed literal families return `None`.
+ *
+ * **Example** (Collect enum values)
+ *
+ * ```ts
+ * import { LiteralKit } from "@beep/schema"
+ * import { stringLiteralValues } from "./derive.ts"
+ *
+ * console.log(stringLiteralValues(LiteralKit(["draft", "active"])).pipe)
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const stringLiteralValues = (
+  schema: Field.AnySchema
+): O.Option<readonly [string, ...string[]]> =>
+  O.flatMap(
+    stringLiteralsFromAST(AST.toEncoded(selectSchemaOf(schema).ast)),
+    (values) =>
+      A.match(values, {
+        onEmpty: O.none,
+        onNonEmpty: O.some,
+      })
+  );
+
 const maxLengthFromCheck = (
   check: AST.Check<unknown>
 ): ReadonlyArray<number> => {
