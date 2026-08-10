@@ -665,10 +665,13 @@ describe("commands/Qa judge output parsing", () => {
     })
   );
 
-  it.effect("fails when the output carries no fenced block", () =>
+  it.effect("reports when the output carries no parseable JSON object", () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(parseJudgeOutput("no json here"));
-      expect(Exit.isFailure(exit)).toBe(true);
+      const missing = yield* Effect.flip(parseJudgeOutput("no json here"));
+      const malformed = yield* Effect.flip(parseJudgeOutput('noise { "message": "unterminated }'));
+
+      expect(missing.message).toContain("no parseable JSON inventory object (fenced or unfenced)");
+      expect(malformed.message).toContain("no parseable JSON inventory object (fenced or unfenced)");
     })
   );
 });

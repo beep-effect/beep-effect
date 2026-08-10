@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-10T19:30:19.003Z
+Generated: 2026-08-10T22:26:38.605Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 61 |
-| publicModules | 2499 |
-| publicExports | 16293 |
+| publicModules | 2500 |
+| publicExports | 16297 |
 | openModules | 407 |
 | openExports | 133 |
 | missingExportExamples | 5 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 176 | 1340 | 46 | 10 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 177 | 1344 | 46 | 10 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -358,8 +358,8 @@ Export findings:
 - `src/commands/CreatePackage/CreatePackage.command.ts:91` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:342` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeCheck.ts:393` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:343` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeCheck.ts:412` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
 - `src/commands/Quality/Quality.command.ts:595` `runBunAudit` (const) - 1 documentation section/link violation(s)

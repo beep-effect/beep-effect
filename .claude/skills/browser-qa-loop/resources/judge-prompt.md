@@ -29,6 +29,8 @@ Round directory: `{{ROUND_DIR}}`
 
 ## Lenses
 
+<!-- Maintenance: this list is bound to the QaLens schema; after editing it, run `bun run beep lint judge-rubric`. -->
+
 Static — use EXACTLY these `lens` slugs: `visual-hierarchy` (hierarchy),
 `contrast` (dark-mode contrast), `legibility` (tab strip legibility),
 `drop-preview` (drop-preview clarity), `affordance` (menu affordances),

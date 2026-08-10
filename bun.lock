@@ -2676,6 +2676,7 @@
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node-shared": "catalog:",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
         "lexical": "catalog:",
         "n3": "catalog:",
