@@ -59,6 +59,27 @@ describe("internal/cli/Json renderPrettyCommandJson", () => {
   });
 });
 
+describe("internal/cli/Json printCommandJson", () => {
+  it("emits payloads larger than 64 KiB intact across a process boundary", () => {
+    const payload = { value: "x".repeat(70_000) };
+    const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
+    const program = [
+      `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
+      'import { Effect } from "effect";',
+      'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
+    ].join("\n");
+    const result = Bun.spawnSync(["bun", "--eval", program], {
+      stderr: "pipe",
+      stdout: "pipe",
+    });
+    const output = result.stdout.toString();
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.byteLength).toBeGreaterThan(65_536);
+    expect(output).toBe(`${JSON.stringify(payload)}\n`);
+  });
+});
+
 describe("internal/cli/Printer formatDurationSeconds", () => {
   it("renders two-decimal seconds (data-first)", () => {
     expect(formatDurationSeconds(1234, 2)).toBe("1.23s");
