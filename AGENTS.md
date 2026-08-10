@@ -83,6 +83,11 @@ workflows in skills.
 - `docs/` is tracked authored documentation (`docs/README.md` has the layout);
   `docs/_internal/` is private and must never be committed — this repo is
   public.
+- Top-level `research/` is the nightly research routine's machine-generated
+  intel surface (laws in `research/README.md`): packets are immutable, truth
+  is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
+  machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
+  `explorations/INBOX.md` or `goals/` from research output.
 - same-PR packet-state flips: flip goal manifest/lifecycle status and land the
   closeout reflection in the same PR as the final work.
 - Friction is a first-class output: when work is slower, harder, or riskier

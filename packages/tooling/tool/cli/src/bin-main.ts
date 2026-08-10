@@ -8,19 +8,10 @@
  * @since 0.0.0
  */
 
+import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
+
+const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
 const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
-const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
-  "circular",
-  "deprecated-apis",
-  "package-test-imports",
-  "package-test-typecheck",
-  "reflection-artifacts",
-  "roadmap-refs",
-  "schema-catalog",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-];
 const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "--completions",
   "--help",
@@ -35,7 +26,6 @@ const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
 const { flow } = await import("effect");
-
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   text
     .split(/\r?\n/)
@@ -86,7 +76,7 @@ const isQualityTaskName = (value: string | undefined): boolean =>
   value !== undefined && QUALITY_TASK_NAMES.includes(value);
 
 const isLintPolicySubcommand = (value: string | undefined): boolean =>
-  value !== undefined && LINT_POLICY_SUBCOMMANDS.includes(value);
+  value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
 
 const isRootCliGlobalFlag = (value: string): boolean =>
   ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) || ROOT_CLI_GLOBAL_FLAG_NAMES.some((name) => value.startsWith(`${name}=`));

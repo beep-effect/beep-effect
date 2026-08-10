@@ -5,6 +5,13 @@
  * @since 0.0.0
  */
 /**
+ * Judge-rubric lens drift lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { diffJudgeRubricLenses, JudgeRubricDrift, lintJudgeRubricCommand } from "./JudgeRubric.ts";
+/**
  * Public lint command export.
  *
  * @category cli-commands
