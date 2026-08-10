@@ -20,6 +20,8 @@ import type { DomainError, NoSuchFileError } from "./errors/index.ts";
  */
 const ROOT_KEY = "@beep/root";
 
+const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
+
 /**
  * Collect all `tsconfig*.json` file paths for each workspace and the root.
  *
@@ -59,6 +61,7 @@ export const collectTsConfigPaths: (
     const rootConfigs = yield* fsUtils.globFiles("tsconfig*.json", {
       cwd: rootDir,
       absolute: true,
+      ignore: IGNORED_TSCONFIG_DIRS,
     });
     if (rootConfigs.length > 0) {
       result = HashMap.set(result, ROOT_KEY, rootConfigs);
@@ -69,6 +72,7 @@ export const collectTsConfigPaths: (
       const configs = yield* fsUtils.globFiles("tsconfig*.json", {
         cwd: dir,
         absolute: true,
+        ignore: IGNORED_TSCONFIG_DIRS,
       });
       if (configs.length > 0) {
         result = HashMap.set(result, name, configs);
