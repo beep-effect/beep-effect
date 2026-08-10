@@ -11,12 +11,13 @@
  */
 
 import { ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-processing/SourceText";
-import { CandorDispositionLifecycle } from "@beep/law-practice-domain";
+import { CandorDispositionLifecycle, PatentReference } from "@beep/law-practice-domain";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { Effect, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { CandorPolicy, CandorPolicyShape, CandorRecordReader } from "./CandorPolicy.ports.ts";
 import { CandorGateVerdict, UncoveredEvent } from "./CandorPolicy.values.ts";
 import type { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
@@ -27,6 +28,8 @@ import type { CandorFilingScope, UncoveredReason } from "./CandorPolicy.values.t
  * set. Examiner-observed occurrences are recorded and never gate.
  */
 const isAiDiscovered = (event: PatentCitationEvent): boolean => event.discovery.kind === "AiDiscovered";
+
+const samePatentReference = S.toEquivalence(PatentReference);
 
 /**
  * Every disposition id that some other recorded disposition retires.
@@ -61,9 +64,10 @@ const effectiveDispositions = (
  * Derive which events of one source group have been superseded.
  *
  * A supersession link is honoured only when the named event is present in the
- * group and its recorded observation carries exactly the named digest. A
- * dangling or mismatched link is neither repaired nor ignored — it simply does
- * not move the head, which is what leaves forked lineage ambiguous.
+ * group, its recorded observation carries exactly the named digest, and both
+ * events name the same parsed patent reference. A dangling or mismatched link
+ * is neither repaired nor ignored — it simply does not move the head, which is
+ * what leaves forked lineage ambiguous.
  */
 const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
   HashSet.fromIterable(
@@ -73,7 +77,10 @@ const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
           O.map(
             A.findFirst(
               group,
-              (candidate) => candidate.id === ref.eventId && candidate.grounding.source.textDigest === ref.textDigest
+              (candidate) =>
+                candidate.id === ref.eventId &&
+                candidate.grounding.source.textDigest === ref.textDigest &&
+                samePatentReference(event.reference, candidate.reference)
             ),
             (target) => target.id
           )

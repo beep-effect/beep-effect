@@ -862,7 +862,11 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
     return FleetEpochTarget.make({ ref: targetRef, sha: null, materialized: false });
   }
   const lsRemote = gitStdout(
-    yield* runGitProbe(scanner.scannerDir, ["ls-remote", "--quiet", originUrl, `refs/heads/${targetRef}`], scanner.env)
+    yield* runGitProbe(
+      scanner.scannerDir,
+      ["ls-remote", "--quiet", "--end-of-options", originUrl, `refs/heads/${targetRef}`],
+      scanner.env
+    )
   );
   const sha = O.flatMap(lsRemote, (output) => {
     const token = A.head(Str.split(Str.trim(output), /\s+/));
@@ -884,7 +888,14 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
   }
   yield* runGitProbe(
     scanner.scannerDir,
-    ["fetch", "--no-tags", "--quiet", originUrl, `+refs/heads/${targetRef}:refs/fleet-mirror/target`],
+    [
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "--end-of-options",
+      originUrl,
+      `+refs/heads/${targetRef}:refs/fleet-mirror/target`,
+    ],
     scanner.env
   );
   return FleetEpochTarget.make({ ref: targetRef, sha: sha.value, materialized: yield* hasObject() });

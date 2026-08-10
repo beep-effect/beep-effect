@@ -303,6 +303,20 @@ const supersession = (options: {
     return { dispositions, events, sources: [sourceEntry(older), sourceEntry(newer)] } satisfies Fixture;
   });
 
+/** A crafted head tries to retire a different patent citation from the same source. */
+const foreignReferenceSupersession = Effect.fnUntraced(function* () {
+  const older = yield* observation("a", TEXT_A);
+  const newer = yield* observation("a", TEXT_A2);
+  return {
+    dispositions: [yield* dispositionFixture(10, targets(2, newer))],
+    events: [
+      yield* eventFixture(1, older),
+      yield* eventFixture(2, newer, { reference: "9999999", supersedes: targets(1, older) }),
+    ],
+    sources: [sourceEntry(older), sourceEntry(newer)],
+  } satisfies Fixture;
+});
+
 /** Two observations of one source, neither declaring supersession. */
 const forkedLineage = Effect.fnUntraced(function* () {
   const first = yield* observation("a", TEXT_A);
@@ -494,6 +508,18 @@ describe("CandorPolicy — declared supersession moves currency", () => {
 
   layer(scenario(forkedLineage()))((it) => {
     it.effect("leaves two unsuperseded observations of one source uncovered even when both are disposed", () =>
+      Effect.gen(function* () {
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
+        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+      })
+    );
+  });
+});
+
+describe("CandorPolicy — supersession stays within one patent reference", () => {
+  layer(scenario(foreignReferenceSupersession()))((it) => {
+    it.effect("does not release an AI citation through a foreign reference's disposition", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
         expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);

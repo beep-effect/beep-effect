@@ -1122,6 +1122,24 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
     )
   );
 
+  it.effect("fails loudly when a dangling sentinel prevents disarm", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* makeSwitchStore();
+        yield* fs.makeDirectory(store.evidenceRoot, { recursive: true });
+        yield* fs.symlink(path.join(store.evidenceRoot, "missing-sentinel-target"), store.sentinelPath);
+
+        const run = yield* runSwitch(store, ["disarm", "privacy-stop"]);
+
+        expect(run.exitCode).not.toBe(0);
+        expect(run.stdout).toBe("");
+        expect(run.stderr).toContain("sentinel was not published");
+      })
+    )
+  );
+
   it.effect("closes the ledger window at the FIRST disarm, not the latest", () =>
     Effect.scoped(
       Effect.gen(function* () {
