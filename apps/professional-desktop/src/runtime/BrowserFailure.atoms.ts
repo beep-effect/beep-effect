@@ -30,7 +30,7 @@ const $I = $ProfessionalDesktopId.create("runtime/BrowserFailure.atoms");
  * @category models
  * @since 0.0.0
  */
-const BrowserFailureSource = LiteralKit([
+export const BrowserFailureSource = LiteralKit([
   "window_error",
   "unhandled_rejection",
   "app_registry",
@@ -58,7 +58,7 @@ const BrowserFailureSource = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-type BrowserFailureSource = typeof BrowserFailureSource.Type;
+export type BrowserFailureSource = typeof BrowserFailureSource.Type;
 
 /**
  * A browser-side failure that must be reported without exposing its cause to

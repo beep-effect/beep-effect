@@ -7,7 +7,7 @@
  */
 
 import { $AgentsClientId } from "@beep/identity";
-import { O, pipe, Str } from "@beep/utils";
+import { O, P, pipe, Str } from "@beep/utils";
 import { Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -52,7 +52,7 @@ export const resolveBrowserHttpUrl: ResolveBrowserHttpUrl = dual(
     pipe(
       O.fromUndefinedOr(runtime),
       O.map((current) => current.location.origin),
-      O.filter((origin) => Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")),
+      O.filter(P.or(Str.startsWith("http://"), Str.startsWith("https://"))),
       O.flatMap((origin) =>
         pipe(
           Result.try(() => new URL(path, origin).href),

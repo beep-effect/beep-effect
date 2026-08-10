@@ -35,7 +35,7 @@ export const workbenchThemeModeAtom = Atom.kvs({
   runtime: professionalStorageRuntime,
   key: THEME_STORAGE_KEY,
   schema: ThemeMode,
-  defaultValue: () => ThemeMode.Enum.system,
+  defaultValue: ThemeMode.thunk.system,
 });
 
 /**
