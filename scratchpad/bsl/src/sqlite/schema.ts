@@ -1,12 +1,12 @@
-/** Cross-model @beep/effect-drizzle schema assembly: typed FK validation, DDL, and RQBv2 relations. */
+/** Cross-model SQLite assembly: typed FK validation, DDL, and RQBv2 relations. */
 import {
   defineRelations,
   is as isDrizzleEntity,
   type RelationsBuilder,
   type RelationsBuilderConfig,
 } from "drizzle-orm";
-import { foreignKey, PgColumn as DrizzlePgColumn } from "drizzle-orm/pg-core";
-import { getTableConfig } from "drizzle-orm/pg-core";
+import { foreignKey, SQLiteColumn as DrizzleSqliteColumn } from "drizzle-orm/sqlite-core";
+import { getTableConfig } from "drizzle-orm/sqlite-core";
 import {
   contains,
   findFirst,
@@ -15,7 +15,6 @@ import {
   get as getArray,
   getSomes,
   head,
-  reduce,
 } from "effect/Array";
 import { equals } from "effect/Equal";
 import {
@@ -43,8 +42,8 @@ import * as Derive from "./derive.ts";
 import * as Field from "../core/Field.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 import * as Meta from "../core/Meta.ts";
-import * as PgColumn from "./Column.ts";
-import { type EnumRegistry, type TableOf, toPgTable } from "./table.ts";
+import * as SqliteColumn from "./Column.ts";
+import { type TableOf, toSqliteTable } from "./table.ts";
 
 /**
  * Error raised when a cross-model reference cannot be resolved or validated.
@@ -108,40 +107,40 @@ type FieldsOf<M> = M extends {
   : never;
 type ColumnsOf<M> = M extends { readonly sql: { readonly columns: infer C } } ? C : never;
 type SpecAt<M, K extends PropertyKey> = K extends keyof ColumnsOf<M>
-  ? ColumnsOf<M>[K] extends { readonly column: infer C extends PgColumn.Spec }
+  ? ColumnsOf<M>[K] extends { readonly column: infer C extends SqliteColumn.Spec }
     ? C
     : never
   : never;
 
 type DimensionsAt<M, K extends PropertyKey> = K extends keyof ColumnsOf<M>
   ? ColumnsOf<M>[K] extends {
-      readonly dimensions: infer D extends PgColumn.ArrayDimension;
+      readonly dimensions: infer D extends SqliteColumn.ArrayDimension;
     }
     ? D
     : never
   : never;
 
 type StorageIdentEquals<
-  A extends PgColumn.Spec,
-  ADimensions extends PgColumn.ArrayDimension,
-  B extends PgColumn.Spec,
-  BDimensions extends PgColumn.ArrayDimension,
-> = [PgColumn.StorageIdent<A, ADimensions>] extends [PgColumn.StorageIdent<B, BDimensions>]
-  ? [PgColumn.StorageIdent<B, BDimensions>] extends [PgColumn.StorageIdent<A, ADimensions>]
+  A extends SqliteColumn.Spec,
+  ADimensions extends SqliteColumn.ArrayDimension,
+  B extends SqliteColumn.Spec,
+  BDimensions extends SqliteColumn.ArrayDimension,
+> = [SqliteColumn.StorageIdent<A, ADimensions>] extends [SqliteColumn.StorageIdent<B, BDimensions>]
+  ? [SqliteColumn.StorageIdent<B, BDimensions>] extends [SqliteColumn.StorageIdent<A, ADimensions>]
     ? true
     : false
   : false;
 
 type StorageCarrierEquals<
-  A extends PgColumn.Spec,
-  ADimensions extends PgColumn.ArrayDimension,
-  B extends PgColumn.Spec,
-  BDimensions extends PgColumn.ArrayDimension,
-> = [PgColumn.ArrayCarrier<PgColumn.CarrierOf<A>, ADimensions>] extends [
-  PgColumn.ArrayCarrier<PgColumn.CarrierOf<B>, BDimensions>,
+  A extends SqliteColumn.Spec,
+  ADimensions extends SqliteColumn.ArrayDimension,
+  B extends SqliteColumn.Spec,
+  BDimensions extends SqliteColumn.ArrayDimension,
+> = [SqliteColumn.ArrayCarrier<SqliteColumn.CarrierOf<A>, ADimensions>] extends [
+  SqliteColumn.ArrayCarrier<SqliteColumn.CarrierOf<B>, BDimensions>,
 ]
-  ? [PgColumn.ArrayCarrier<PgColumn.CarrierOf<B>, BDimensions>] extends [
-      PgColumn.ArrayCarrier<PgColumn.CarrierOf<A>, ADimensions>,
+  ? [SqliteColumn.ArrayCarrier<SqliteColumn.CarrierOf<B>, BDimensions>] extends [
+      SqliteColumn.ArrayCarrier<SqliteColumn.CarrierOf<A>, ADimensions>,
     ]
     ? true
     : false
@@ -156,9 +155,9 @@ type ReferenceFailure<
     ? Ref extends Meta.References<infer TargetTable, infer TargetColumn>
       ? TargetTable extends keyof Models
         ? TargetColumn extends keyof FieldsOf<Models[TargetTable]>
-          ? SpecAt<M, K> extends infer SourceSpec extends PgColumn.Spec
+          ? SpecAt<M, K> extends infer SourceSpec extends SqliteColumn.Spec
             ? SpecAt<Models[TargetTable], TargetColumn> extends infer TargetSpec extends
-                PgColumn.Spec
+                SqliteColumn.Spec
               ? StorageIdentEquals<
                   SourceSpec,
                   DimensionsAt<M, K>,
@@ -255,7 +254,6 @@ export type RelationsConfig<Models extends ModelRecord> = (
  */
 export interface Assembly<Models extends ModelRecord> {
   readonly models: Models;
-  readonly enums: EnumRegistry;
   readonly tables: TablesOf<Models>;
   readonly relationsConfig: RelationsConfig<Models>;
   readonly relations: ReturnType<typeof defineRelations>;
@@ -284,39 +282,6 @@ const targetFieldKey = (model: AnyModel, columnName: string): Option<string> =>
           (meta) => meta.columnName === columnName || snakeCase(key) === columnName,
         ),
       );
-
-const collectEnums = (models: ModelRecord): EnumRegistry =>
-  reduce(
-    Object.entries(models),
-    empty<string, PgColumn.EnumInstance>(),
-    (enums, [modelKey, model]) =>
-      reduce(Object.entries(model.sql.columns), enums, (current, [fieldName, meta]) => {
-        const column = meta.column;
-        if (!PgColumn.Spec.guards.enum(column)) return current;
-        if (column.name === "") {
-          return fail(
-            "Enum name was not resolved during model construction.",
-            modelKey,
-            fieldName,
-            "(enum)",
-          );
-        }
-        return match(getRecord(current, column.name), {
-          onNone: () => set(current, column.name, PgColumn.Enum.toDrizzleEnum(column)),
-          onSome: (existing) => {
-            if (!equals(existing.enumValues, column.values)) {
-              return fail(
-                `PostgreSQL enum '${column.name}' is declared with incompatible values.`,
-                modelKey,
-                fieldName,
-                column.name,
-              );
-            }
-            return current;
-          },
-        });
-      }),
-  );
 
 const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
   const entries = Object.entries(models);
@@ -383,18 +348,18 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
               ),
             );
             if (
-              PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
-                PgColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
+              SqliteColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
+                SqliteColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
               !equals(
-                PgColumn.carrier(sourceSpec, sourceMeta.dimensions),
-                PgColumn.carrier(targetSpec, targetMeta.dimensions),
+                SqliteColumn.carrier(sourceSpec, sourceMeta.dimensions),
+                SqliteColumn.carrier(targetSpec, targetMeta.dimensions),
               )
             ) {
               fail(
-                `Foreign key '${sourceKey}.${sourceField}' (${PgColumn.storageIdent(
+                `Foreign key '${sourceKey}.${sourceField}' (${SqliteColumn.storageIdent(
                   sourceSpec,
                   sourceMeta.dimensions,
-                )}) cannot reference '${targetKey}.${targetField}' (${PgColumn.storageIdent(
+                )}) cannot reference '${targetKey}.${targetField}' (${SqliteColumn.storageIdent(
                   targetSpec,
                   targetMeta.dimensions,
                 )}).`,
@@ -442,7 +407,7 @@ const collectJunctions = (
       const primaryEdges = candidates.filter((edge) => {
         if (!hasProperty(table, edge.sourceField)) return false;
         const column = table[edge.sourceField];
-        return isDrizzleEntity(column, DrizzlePgColumn) && contains(columnNames, column.name);
+        return isDrizzleEntity(column, DrizzleSqliteColumn) && contains(columnNames, column.name);
       });
       if (
         primaryEdges.length !== 2 ||
@@ -450,7 +415,7 @@ const collectJunctions = (
           primaryEdges.some((edge) => {
             if (!hasProperty(table, edge.sourceField)) return false;
             const column = table[edge.sourceField];
-            return isDrizzleEntity(column, DrizzlePgColumn) ? column.name === name : false;
+            return isDrizzleEntity(column, DrizzleSqliteColumn) ? column.name === name : false;
           }),
         )
       ) {
@@ -497,7 +462,6 @@ export function schema<const Models extends ModelRecord>(
   models: Models & ValidateSchema<Models>,
 ): Assembly<Models>;
 export function schema(models: ModelRecord): unknown {
-  const enums = collectEnums(models);
   const edges = collectEdges(models);
   // Drizzle evaluates extra-config callbacks lazily. Reassigning this registry
   // lets callbacks created for earlier tables see forward and self references
@@ -508,7 +472,7 @@ export function schema(models: ModelRecord): unknown {
     runtimeTables = set(
       runtimeTables,
       key,
-      toPgTable(
+      toSqliteTable(
         model,
         (columns) =>
           edges
@@ -531,9 +495,9 @@ export function schema(models: ModelRecord): unknown {
                 );
               }
               const targetColumn = targetTable[edge.targetField];
-              if (!isDrizzleEntity(targetColumn, DrizzlePgColumn)) {
+              if (!isDrizzleEntity(targetColumn, DrizzleSqliteColumn)) {
                 return fail(
-                  "Resolved foreign-key target is not a PostgreSQL column.",
+                  "Resolved foreign-key target is not a SQLite column.",
                   key,
                   edge.sourceField,
                   edge.targetKey,
@@ -552,7 +516,6 @@ export function schema(models: ModelRecord): unknown {
                 onSome: (action) => withDelete.onUpdate(action),
               });
             }),
-        enums,
       ),
     );
   });
@@ -563,7 +526,6 @@ export function schema(models: ModelRecord): unknown {
 
   return {
     models,
-    enums,
     tables,
     relationsConfig,
     relations: defineRelations(tables, relationsConfig),

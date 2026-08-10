@@ -8,6 +8,7 @@ import { evolve } from "effect/Struct";
 
 /** Minimal column identity required by the dialect-neutral field wrapper. */
 export interface ColumnSpec {
+  readonly dialect: string;
   readonly kind: string;
   readonly ident: string;
 }

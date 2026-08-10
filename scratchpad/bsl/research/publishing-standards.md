@@ -50,6 +50,43 @@ All of these are graduation-grill agenda items; none block in-scratchpad rounds
 except the effect-lsp tuning, which lands with the 6.5 pass if diagnostics fight
 the published style.
 
+## JSDoc scoped-package escaping (operator, 2026-08-10)
+
+JSDoc block tags parse ONLY at line start — a prose line beginning with a bare
+`@` becomes an unknown block tag (`* @beep/effect-drizzle metadata statics…` at
+`src/pg/model.ts:297` rendered as a "Beep:" tag in WebStorm quick-doc).
+Mid-prose `@scope/name` is inert and safe. Law:
+
+- Never begin a JSDoc prose line with a bare `@` that is not a real tag —
+  reword or code-span it ("Metadata statics attached by `@beep/effect-drizzle`
+  to …"). This is the full extent of the hazard; mid-line references need no
+  escaping.
+- Fenced example code blocks are exempt (code renders correctly).
+- Enforcement: round 7.5 fixes the one existing occurrence and the docs pass
+  avoids line-leading bare `@`; grep check `^\s*\* @` against a whitelist of
+  real tags belongs in the eventual docs lint. Whether package names get
+  code-spanned mid-prose is typography — defer to whatever the effect
+  conventions report observes, not this rule.
+
+## Type-test harness at package creation (operator, 2026-08-10)
+
+tstyche was recently REMOVED repo-globally to speed CI/local checks — do not
+re-add it globally. When the real package is created, it gets **tstyche in its
+own test lane**:
+
+- Migrate/augment the homegrown type proofs (`Expect<Equal<…>>` aliases and the
+  `@ts-expect-error` negative matrix) into tstyche suites covering derived
+  drizzle tables (`$inferSelect`/`$inferInsert`), variant schemas, resolved
+  column metadata, FK validation, and kit typing.
+- Use `.toRaiseError(…)` to pin the EXACT `~effect-drizzle.error` message
+  literals — callsite diagnostics are product; today's negatives prove an error
+  fires, not which text the consumer reads.
+- Use multi-TS-version targets to validate the peer TypeScript range the
+  package claims.
+- The in-scratchpad fixtures remain the mechanism until then (no new deps in
+  scratchpad rounds); package-lane-only cost keeps the repo-global check fast —
+  consistent with the family-profile principle (members own their lanes).
+
 ## Previously locked (see round6-brief.md)
 
 - One package, dialect subpath exports (`.`, `./pg`, `./sqlite`).

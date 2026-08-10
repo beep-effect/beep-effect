@@ -1,0 +1,237 @@
+/** SQLite model projection onto real `sqliteTable` builders. */
+import { is as isDrizzleEntity, sql } from "drizzle-orm";
+import type { $Type, BuildColumns, HasDefault, HasGenerated, IsPrimaryKey, NotNull } from "drizzle-orm/column-builder";
+import {
+  check,
+  SQLiteColumn,
+  sqliteTable,
+} from "drizzle-orm/sqlite-core";
+import type {
+  SQLiteBigIntBuilder,
+  SQLiteBlobBufferBuilder,
+  SQLiteBlobJsonBuilder,
+  SQLiteBooleanBuilder,
+  SQLiteIntegerBuilder,
+  SQLiteNumericBigIntBuilder,
+  SQLiteNumericBuilder,
+  SQLiteNumericNumberBuilder,
+  SQLiteRealBuilder,
+  SQLiteTableExtraConfigValue,
+  SQLiteTableWithColumns,
+  SQLiteTextBuilder,
+  SQLiteTextJsonBuilder,
+  SQLiteTimestampBuilder,
+} from "drizzle-orm/sqlite-core";
+import { isArray, reduce } from "effect/Array";
+import {
+  exhaustive,
+  tags as matchTags,
+  type as matchType,
+  value as matchValue,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
+import { fromUndefinedOr, getOrElse, match } from "effect/Option";
+import { hasProperty, isFunction } from "effect/Predicate";
+import { empty, get, set } from "effect/Record";
+import * as Field from "../core/Field.ts";
+import * as Meta from "../core/Meta.ts";
+import { snakeCase } from "../internal/case.ts";
+import * as SqliteColumn from "./Column.ts";
+import * as Derive from "./derive.ts";
+import * as TableExtras from "./extras.ts";
+import type { AnyModel, FieldsInput } from "./model.ts";
+
+type BuilderBase<C extends SqliteColumn.Spec> =
+  C extends SqliteColumn.Text<infer Mode>
+    ? Mode extends "json" ? SQLiteTextJsonBuilder : SQLiteTextBuilder<[string, ...string[]]>
+    : C extends SqliteColumn.Enum<infer Value>
+      ? SQLiteTextBuilder<[Value, ...Value[]]>
+      : C extends SqliteColumn.Integer<infer Mode>
+        ? Mode extends "number" ? SQLiteIntegerBuilder
+          : Mode extends "boolean" ? SQLiteBooleanBuilder
+          : SQLiteTimestampBuilder
+        : C extends SqliteColumn.Real ? SQLiteRealBuilder
+          : C extends SqliteColumn.Blob<infer Mode>
+            ? Mode extends "buffer" ? SQLiteBlobBufferBuilder
+              : Mode extends "bigint" ? SQLiteBigIntBuilder
+              : SQLiteBlobJsonBuilder
+            : C extends SqliteColumn.Numeric<infer Mode>
+              ? Mode extends "number" ? SQLiteNumericNumberBuilder
+                : Mode extends "bigint" ? SQLiteNumericBigIntBuilder
+                : SQLiteNumericBuilder
+              : never;
+
+type NullableOf<I extends Field.Input> = null extends Field.EncodedOf<I> ? true : false;
+type ApplyNotNull<B, Nullable extends boolean> = Nullable extends true ? B : NotNull<B>;
+type ApplyDefault<B, M extends Meta.Meta> = M["hasDefault"] extends true ? HasDefault<B> : B;
+type ApplyGenerated<B, M extends Meta.Meta> = M["generated"] extends {
+  readonly _tag: "sqlExpr" | "unsafeSql";
+} ? HasGenerated<B> : B;
+type ApplyPrimaryKey<B, C extends SqliteColumn.Spec, M extends Meta.Meta> =
+  M["primaryKey"] extends true
+    ? C extends SqliteColumn.Integer
+      ? IsPrimaryKey<HasDefault<NotNull<B>>>
+      : IsPrimaryKey<B>
+    : B;
+
+/** Exact installed Drizzle builder type produced for one SQLite field. */
+export type BuilderFor<I extends Field.Input> = ApplyPrimaryKey<
+  ApplyGenerated<
+    ApplyDefault<
+      ApplyNotNull<
+        $Type<BuilderBase<Derive.ResolvedColumn<I>>, Exclude<Field.EncodedOf<I>, null>>,
+        NullableOf<I>
+      >,
+      Field.MetaFrom<I>
+    >,
+    Field.MetaFrom<I>
+  >,
+  Derive.ResolvedColumn<I>,
+  Field.MetaFrom<I>
+>;
+
+export type BuildersOf<F extends FieldsInput> = {
+  readonly [K in keyof F & string]: BuilderFor<F[K]>;
+};
+
+/** Fully typed Drizzle SQLite table projected from one model. */
+export type TableOf<M extends AnyModel> = SQLiteTableWithColumns<{
+  name: string;
+  schema: undefined;
+  columns: BuildColumns<string, BuildersOf<M["sql"]["fields"]>, "sqlite">;
+  dialect: "sqlite";
+}>;
+
+const buildColumn = (
+  key: string,
+  meta: Meta.Meta<SqliteColumn.Spec>,
+  nullable: boolean,
+): SqliteColumn.DrizzleBuilder => {
+  if (meta.dimensions !== 0) {
+    throw Derive.DeriveColumnError.make({
+      message: `SQLite projector rejects array dimensions on '${key}'.`,
+      fieldName: key,
+      astTag: "(dimensions)",
+    });
+  }
+  const spec = getOrElse(fromUndefinedOr(meta.column), () => {
+    throw Derive.DeriveColumnError.make({
+      message: `Column for '${key}' was not resolved before projection.`,
+      fieldName: key,
+      astTag: "(resolved)",
+    });
+  });
+  const name = getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key));
+  const base = SqliteColumn.Spec.toDrizzleBuilder(spec, name);
+  const withNullability = nullable ? base : base.notNull();
+  const withPrimaryKey = meta.primaryKey
+    ? meta.identity === "byDefault"
+      ? withNullability.primaryKey({ autoIncrement: true })
+      : withNullability.primaryKey()
+    : withNullability;
+  const withUnique = meta.unique ? withPrimaryKey.unique() : withPrimaryKey;
+  const withDefault = match(fromUndefinedOr(meta.default), {
+    onNone: () => withUnique,
+    onSome: matchType<Meta.Default>().pipe(
+      withReturnType<SqliteColumn.DrizzleBuilder>(),
+      matchTags({
+        value: ({ value }) => withUnique.default(value),
+        sqlExpr: ({ expression }) => withUnique.default(expression),
+        now: () => withUnique.default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+        unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
+      }),
+      exhaustive,
+    ),
+  });
+  return matchValue(meta.generated).pipe(
+    withReturnType<SqliteColumn.DrizzleBuilder>(),
+    matchWhen(false, () => withDefault),
+    matchTags({
+      identityAlways: () => withDefault,
+      sqlExpr: ({ expression }) => withDefault.generatedAlwaysAs(expression, { mode: "stored" }),
+      unsafeSql: ({ sql: statement }) =>
+        withDefault.generatedAlwaysAs(sql.raw(statement), { mode: "stored" }),
+    }),
+    exhaustive,
+  );
+};
+
+export type AdditionalExtras<M extends AnyModel> = (
+  columns: TableExtras.BoundColumns<M["sql"]["fields"]>,
+) => ReadonlyArray<SQLiteTableExtraConfigValue>;
+
+const isDeclaredExtras = (value: unknown): value is ReadonlyArray<TableExtras.Node> =>
+  isArray(value) && value.every(TableExtras.isNode);
+const invokeDeclaredExtras = (
+  callback: unknown,
+  columns: TableExtras.BoundColumns<FieldsInput>,
+): ReadonlyArray<TableExtras.Node> => {
+  if (!isFunction(callback)) {
+    throw Derive.DeriveColumnError.make({
+      message: "Model table extras must be callable.",
+      fieldName: "(extras)",
+      astTag: "(callback)",
+    });
+  }
+  const result = Reflect.apply(callback, undefined, [columns]);
+  if (isDeclaredExtras(result)) return result;
+  throw Derive.DeriveColumnError.make({
+    message: "Model table extras must return valid SQLite extra nodes.",
+    fieldName: "(extras)",
+    astTag: "(callback result)",
+  });
+};
+
+const enumChecks = (
+  model: AnyModel,
+  columns: TableExtras.BoundColumns<FieldsInput>,
+): ReadonlyArray<SQLiteTableExtraConfigValue> =>
+  Object.entries(model.sql.columns).flatMap(([key, meta]) => {
+    if (!SqliteColumn.Spec.guards.enum(meta.column) || !hasProperty(columns, key)) return [];
+    const column = columns[key];
+    if (!isDrizzleEntity(column, SQLiteColumn)) return [];
+    const values = sql.join(
+      meta.column.values.map((value) => sql.raw(`'${value.replaceAll("'", "''")}'`)),
+      sql`, `,
+    );
+    return [check(`${model.sql.tableName}_${snakeCase(key)}_enum_check`, sql`${column} in (${values})`)];
+  });
+
+/** Project a model to a real Drizzle SQLite table. */
+export function toSqliteTable<M extends AnyModel>(
+  model: M,
+  additionalExtras?: AdditionalExtras<M>,
+): TableOf<M>;
+export function toSqliteTable(
+  model: AnyModel,
+  additionalExtras?: AdditionalExtras<AnyModel>,
+): unknown {
+  const builders = reduce(
+    Object.entries(model.sql.fields),
+    empty<string, SqliteColumn.DrizzleBuilder>(),
+    (builders, [key, input]) => {
+      const meta = getOrElse(get(model.sql.columns, key), () => {
+        throw Derive.DeriveColumnError.make({
+          message: `Metadata for '${key}' was not resolved before projection.`,
+          fieldName: key,
+          astTag: "(resolved)",
+        });
+      });
+      return set(builders, key, buildColumn(key, meta, Derive.isNullable(Field.from(input).schema)));
+    },
+  );
+  return sqliteTable(model.sql.tableName, builders, (columns) => {
+    const bound: TableExtras.BoundColumns<FieldsInput> = columns;
+    const automatic = enumChecks(model, bound);
+    const declared = match(fromUndefinedOr(model.sql.extras), {
+      onNone: () => [],
+      onSome: (extras) => invokeDeclaredExtras(extras, bound).map(TableExtras.emit),
+    });
+    const additional = match(fromUndefinedOr(additionalExtras), {
+      onNone: () => [],
+      onSome: (extras) => extras(bound),
+    });
+    return [...automatic, ...declared, ...additional];
+  });
+}

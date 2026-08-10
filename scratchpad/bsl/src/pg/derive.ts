@@ -54,15 +54,8 @@ import {
   some as someOption,
 } from "effect/Option";
 import type { Option } from "effect/Option";
-import {
-  Struct as StructPredicate,
-  hasProperty,
-  isNumber,
-  isString,
-  isTagged,
-  not,
-} from "effect/Predicate";
-import { NonEmptyString, annotate, declare, is, isSchema } from "effect/Schema";
+import { Struct as StructPredicate, hasProperty, isNumber, isString, isTagged, not } from "effect/Predicate";
+import { isSchema } from "effect/Schema";
 import type { Top } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import type { AST, Check, Suspend } from "effect/SchemaAST";
@@ -70,6 +63,11 @@ import { get as getStruct } from "effect/Struct";
 import { VariantSchema } from "effect/unstable/schema";
 import type * as Field from "../core/Field.ts";
 import { classify as classifyCore, DeriveColumnError } from "../core/classification.ts";
+import {
+  EntityIdLike as EntityIdLikeSchema,
+  isEntityIdLike,
+  type EntityIdLike as EntityIdLikeType,
+} from "../core/entity-id.ts";
 import * as PgColumn from "./Column.ts";
 
 /**
@@ -89,22 +87,10 @@ import * as PgColumn from "./Column.ts";
  */
 export { DeriveColumnError };
 
-type EntityIdLikeShape = {
-  readonly tableName: string;
-  readonly entityType: string;
-};
-
-const isNonEmptyString = is(NonEmptyString);
-
 /**
- * Structural contract for the statics carried by EntityId schemas.
+ * PostgreSQL derivation view of the dialect-neutral EntityId static schema.
  *
- * **Details**
- *
- * Number-encoded EntityId fields derive integer columns and automatic
- * foreign-key references.
- *
- * **Example** (Recognize EntityId statics)
+ * **Example** (Recognize EntityId metadata)
  *
  * ```ts
  * import { EntityIdLike } from "./derive.ts"
@@ -115,29 +101,9 @@ const isNonEmptyString = is(NonEmptyString);
  * @category schemas
  * @since 0.0.0
  */
-export const EntityIdLike = declare<EntityIdLikeShape>(
-  (input): input is EntityIdLikeShape =>
-    hasProperty(input, "tableName") &&
-    isNonEmptyString(input.tableName) &&
-    hasProperty(input, "entityType") &&
-    isNonEmptyString(input.entityType),
-).pipe(
-  annotate({
-    identifier: "@beep/effect-drizzle/EntityIdLike",
-    description: "Static identity metadata carried by an EntityId schema.",
-  }),
-);
-
+export const EntityIdLike = EntityIdLikeSchema;
 /**
- * Decoded static identity metadata recognized by {@link EntityIdLike}.
- *
- * @category models
- * @since 0.0.0
- */
-export type EntityIdLike = typeof EntityIdLike.Type;
-
-/**
- * Tests unknown input for the EntityId static metadata contract.
+ * Test unknown input for EntityId schema statics.
  *
  * **Example** (Reject incomplete metadata)
  *
@@ -150,7 +116,14 @@ export type EntityIdLike = typeof EntityIdLike.Type;
  * @category guards
  * @since 0.0.0
  */
-export const isEntityIdLike = is(EntityIdLike);
+export { isEntityIdLike };
+/**
+ * Static EntityId metadata consumed by PostgreSQL derivation.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EntityIdLike = EntityIdLikeType;
 
 // ---------------------------------------------------------------------------
 // Type-level derivation
@@ -215,7 +188,15 @@ export type Derived<I extends Field.Input> =
  * @since 0.0.0
  */
 export type ResolvedColumn<I extends Field.Input> =
-  Field.MetaFrom<I>["column"] extends PgColumn.Spec ? Field.MetaFrom<I>["column"] : Derived<I>;
+  Field.MetaFrom<I>["column"] extends undefined
+    ? Derived<I>
+    : Field.MetaFrom<I>["column"] extends PgColumn.Spec
+      ? Field.MetaFrom<I>["column"]
+      : Exclude<Field.MetaFrom<I>["column"], undefined> extends {
+            readonly dialect: infer Dialect;
+          }
+        ? string extends Dialect ? Derived<I> : never
+        : never;
 
 // ---------------------------------------------------------------------------
 // Runtime derivation (mirrors the type-level policy exactly)

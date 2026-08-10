@@ -1,6 +1,14 @@
 /** Public root surface for the experimental `@beep/effect-drizzle` package. */
 export { make } from "./kit.ts";
-export type { Dialect, EntityFactory, PgKit, PgKitConfig } from "./kit.ts";
+export type {
+  Dialect,
+  EntityFactory,
+  PgKit,
+  PgKitConfig,
+  SqliteEntityFactory,
+  SqliteKit,
+  SqliteKitConfig,
+} from "./kit.ts";
 export {
   FieldExcept,
   FieldOnly,

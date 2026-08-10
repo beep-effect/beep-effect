@@ -150,75 +150,87 @@ export type DbIdent =
   | `array<${string},${1 | 2 | 3 | 4 | 5}>`;
 
 type SpecDefinition = {
-  text: { readonly kind: "text"; readonly ident: "text" };
+  text: { readonly dialect: "pg"; readonly kind: "text"; readonly ident: "text" };
   varchar: {
+    readonly dialect: "pg";
     readonly kind: "varchar";
     readonly ident: "varchar";
     readonly length: number;
   };
   enum: {
+    readonly dialect: "pg";
     readonly kind: "enum";
     readonly ident: `enum<${string}>`;
     readonly name: string;
     readonly values: readonly [string, ...string[]];
   };
   custom: {
+    readonly dialect: "pg";
     readonly kind: "custom";
     readonly ident: `custom<${string}>`;
     readonly sqlType: string;
   };
   numeric: {
+    readonly dialect: "pg";
     readonly kind: "numeric";
     readonly ident: "numeric";
     readonly precision: number | undefined;
     readonly scale: number | undefined;
   };
   date: {
+    readonly dialect: "pg";
     readonly kind: "date";
     readonly ident: "date";
     readonly mode: "string" | "date";
   };
   char: {
+    readonly dialect: "pg";
     readonly kind: "char";
     readonly ident: "char";
     readonly length: number;
   };
-  json: { readonly kind: "json"; readonly ident: "json" };
-  real: { readonly kind: "real"; readonly ident: "real" };
+  json: { readonly dialect: "pg"; readonly kind: "json"; readonly ident: "json" };
+  real: { readonly dialect: "pg"; readonly kind: "real"; readonly ident: "real" };
   bigserial: {
+    readonly dialect: "pg";
     readonly kind: "bigserial";
     readonly ident: "bigint";
     readonly mode: "number" | "bigint";
   };
   smallserial: {
+    readonly dialect: "pg";
     readonly kind: "smallserial";
     readonly ident: "smallint";
   };
-  uuid: { readonly kind: "uuid"; readonly ident: "uuid" };
+  uuid: { readonly dialect: "pg"; readonly kind: "uuid"; readonly ident: "uuid" };
   integer: {
+    readonly dialect: "pg";
     readonly kind: "integer";
     readonly ident: "integer" | EntityIdIdent<string>;
   };
-  smallint: { readonly kind: "smallint"; readonly ident: "smallint" };
+  smallint: { readonly dialect: "pg"; readonly kind: "smallint"; readonly ident: "smallint" };
   bigint: {
+    readonly dialect: "pg";
     readonly kind: "bigint";
     readonly ident: "bigint";
     readonly mode: "number" | "bigint";
   };
-  serial: { readonly kind: "serial"; readonly ident: "integer" };
+  serial: { readonly dialect: "pg"; readonly kind: "serial"; readonly ident: "integer" };
   doublePrecision: {
+    readonly dialect: "pg";
     readonly kind: "doublePrecision";
     readonly ident: "doublePrecision";
   };
-  boolean: { readonly kind: "boolean"; readonly ident: "boolean" };
-  jsonb: { readonly kind: "jsonb"; readonly ident: "jsonb" };
+  boolean: { readonly dialect: "pg"; readonly kind: "boolean"; readonly ident: "boolean" };
+  jsonb: { readonly dialect: "pg"; readonly kind: "jsonb"; readonly ident: "jsonb" };
   timestamp: {
+    readonly dialect: "pg";
     readonly kind: "timestamp";
     readonly ident: "timestamp" | "timestamptz";
     readonly mode: "date" | "string";
     readonly withTimezone: boolean;
   };
-  bytea: { readonly kind: "bytea"; readonly ident: "bytea" };
+  bytea: { readonly dialect: "pg"; readonly kind: "bytea"; readonly ident: "bytea" };
 };
 
 /** Complete internal PostgreSQL descriptor algebra. */
@@ -310,7 +322,7 @@ const invariant = (message: string): never => {
 const requireLength = (length: number): number =>
   isPositiveInteger(length) ? length : invariant("Column length must be a positive integer.");
 
-const makeText = (): Text => Constructors.text({ kind: "text", ident: "text" });
+const makeText = (): Text => Constructors.text({ dialect: "pg", kind: "text", ident: "text" });
 export const Text = assignStatics(
   { make: (_props: {}) => makeText() },
   { toDrizzleBuilder: (_spec: Text, name: string) => text(name) },
@@ -321,6 +333,7 @@ function makeVarchar<const Length extends number>(props: {
 }): Varchar<Length>;
 function makeVarchar(props: { readonly length: number }): Varchar {
   return Constructors.varchar({
+    dialect: "pg",
     kind: "varchar",
     ident: "varchar",
     length: requireLength(props.length),
@@ -346,7 +359,7 @@ function makeEnum(props: {
   if (props.ident !== `enum<${props.name}>`) {
     return invariant("Enum identity must agree with its name.");
   }
-  return Constructors.enum({ kind: "enum", ...props });
+  return Constructors.enum({ dialect: "pg", kind: "enum", ...props });
 }
 export type EnumInstance = PgEnum<[string, ...string[]]>;
 export const Enum = assignStatics(
@@ -369,7 +382,7 @@ function makeCustom(props: {
   if (props.ident !== `custom<${props.sqlType}>`) {
     return invariant("Custom-column identity must agree with its SQL type.");
   }
-  return Constructors.custom({ kind: "custom", ...props });
+  return Constructors.custom({ dialect: "pg", kind: "custom", ...props });
 }
 export type CustomBuilder = ReturnType<
   ReturnType<typeof customType<{ data: unknown; driverData: unknown }>>
@@ -398,7 +411,7 @@ function makeNumeric(props: {
   ) {
     return invariant("Numeric precision must be positive and scale natural.");
   }
-  return Constructors.numeric({ kind: "numeric", ident: "numeric", ...props });
+  return Constructors.numeric({ dialect: "pg", kind: "numeric", ident: "numeric", ...props });
 }
 export const Numeric = assignStatics(
   { make: makeNumeric },
@@ -424,7 +437,7 @@ function makeDate<const Mode extends "string" | "date">(props: {
   readonly mode: Mode;
 }): DateColumn<Mode>;
 function makeDate(props: { readonly mode: "string" | "date" }): DateColumn {
-  return Constructors.date({ kind: "date", ident: "date", ...props });
+  return Constructors.date({ dialect: "pg", kind: "date", ident: "date", ...props });
 }
 export const DateColumn = assignStatics(
   { make: makeDate },
@@ -437,6 +450,7 @@ export const DateColumn = assignStatics(
 function makeChar<const Length extends number>(props: { readonly length: Length }): Char<Length>;
 function makeChar(props: { readonly length: number }): Char {
   return Constructors.char({
+    dialect: "pg",
     kind: "char",
     ident: "char",
     length: requireLength(props.length),
@@ -450,22 +464,24 @@ export const Char = assignStatics(
 );
 
 const fixed = {
-  Json: Constructors.json({ kind: "json", ident: "json" }),
-  Real: Constructors.real({ kind: "real", ident: "real" }),
+  Json: Constructors.json({ dialect: "pg", kind: "json", ident: "json" }),
+  Real: Constructors.real({ dialect: "pg", kind: "real", ident: "real" }),
   Smallserial: Constructors.smallserial({
+    dialect: "pg",
     kind: "smallserial",
     ident: "smallint",
   }),
-  Uuid: Constructors.uuid({ kind: "uuid", ident: "uuid" }),
-  Smallint: Constructors.smallint({ kind: "smallint", ident: "smallint" }),
-  Serial: Constructors.serial({ kind: "serial", ident: "integer" }),
+  Uuid: Constructors.uuid({ dialect: "pg", kind: "uuid", ident: "uuid" }),
+  Smallint: Constructors.smallint({ dialect: "pg", kind: "smallint", ident: "smallint" }),
+  Serial: Constructors.serial({ dialect: "pg", kind: "serial", ident: "integer" }),
   DoublePrecision: Constructors.doublePrecision({
+    dialect: "pg",
     kind: "doublePrecision",
     ident: "doublePrecision",
   }),
-  Bool: Constructors.boolean({ kind: "boolean", ident: "boolean" }),
-  Jsonb: Constructors.jsonb({ kind: "jsonb", ident: "jsonb" }),
-  Bytea: Constructors.bytea({ kind: "bytea", ident: "bytea" }),
+  Bool: Constructors.boolean({ dialect: "pg", kind: "boolean", ident: "boolean" }),
+  Jsonb: Constructors.jsonb({ dialect: "pg", kind: "jsonb", ident: "jsonb" }),
+  Bytea: Constructors.bytea({ dialect: "pg", kind: "bytea", ident: "bytea" }),
 };
 
 export const Json = assignStatics(
@@ -482,6 +498,7 @@ function makeBigserial<const Mode extends "number" | "bigint">(props: {
 }): Bigserial<Mode>;
 function makeBigserial(props: { readonly mode: "number" | "bigint" }): Bigserial {
   return Constructors.bigserial({
+    dialect: "pg",
     kind: "bigserial",
     ident: "bigint",
     ...props,
@@ -512,7 +529,7 @@ function makeInteger<const Ident extends "integer" | EntityIdIdent<string>>(prop
   readonly ident: Ident;
 }): Integer<Ident>;
 function makeInteger(props: { readonly ident: "integer" | EntityIdIdent<string> }): Integer {
-  return Constructors.integer({ kind: "integer", ...props });
+  return Constructors.integer({ dialect: "pg", kind: "integer", ...props });
 }
 export const Integer = assignStatics(
   { make: makeInteger },
@@ -545,7 +562,7 @@ function makeBigint<const Mode extends "number" | "bigint">(props: {
   readonly mode: Mode;
 }): Bigint<Mode>;
 function makeBigint(props: { readonly mode: "number" | "bigint" }): Bigint {
-  return Constructors.bigint({ kind: "bigint", ident: "bigint", ...props });
+  return Constructors.bigint({ dialect: "pg", kind: "bigint", ident: "bigint", ...props });
 }
 export const Bigint = assignStatics(
   { make: makeBigint },
@@ -600,7 +617,7 @@ function makeTimestamp(props: {
   if (props.ident !== expected) {
     return invariant("Timestamp identity must agree with withTimezone.");
   }
-  return Constructors.timestamp({ kind: "timestamp", ...props });
+  return Constructors.timestamp({ dialect: "pg", kind: "timestamp", ...props });
 }
 export const Timestamp = assignStatics(
   { make: makeTimestamp },
@@ -646,6 +663,8 @@ export const isSpec = (value: unknown): value is Spec => {
     !hasProperty(value, "_tag") ||
     !isString(value._tag) ||
     !contains(knownTags, value._tag) ||
+    !hasProperty(value, "dialect") ||
+    value.dialect !== "pg" ||
     !hasProperty(value, "kind") ||
     value.kind !== value._tag ||
     !hasProperty(value, "ident") ||

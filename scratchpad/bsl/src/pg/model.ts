@@ -216,7 +216,9 @@ type VersionKeys<F extends FieldsInput> = {
   [K in keyof F]: Field.MetaFrom<F[K]>["version"] extends true ? K : never;
 }[keyof F];
 
-type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] extends true
+type ValidateVersionField<I extends Field.Input> = Field.Input extends I
+  ? unknown
+  : Field.MetaFrom<I>["version"] extends true
   ? Field.MetaFrom<I>["dimensions"] extends 0
     ? Field.MetaFrom<I>["column"] extends {
         readonly kind: PgColumn.IdentityKind;
@@ -230,7 +232,9 @@ type ValidateVersionField<I extends Field.Input> = Field.MetaFrom<I>["version"] 
     : Field.SqlTypeError<"array fields cannot be optimistic versions">
   : unknown;
 
-type ValidateArrayField<I extends Field.Input> = Field.MetaFrom<I>["dimensions"] extends 0
+type ValidateArrayField<I extends Field.Input> = Field.Input extends I
+  ? unknown
+  : Field.MetaFrom<I>["dimensions"] extends 0
   ? unknown
   : Field.MetaFrom<I>["primaryKey"] extends true
     ? Field.SqlTypeError<"array fields cannot be primary keys">
@@ -239,6 +243,23 @@ type ValidateArrayField<I extends Field.Input> = Field.MetaFrom<I>["dimensions"]
         ? unknown
         : Field.SqlTypeError<"array fields cannot be optimistic versions">
       : Field.SqlTypeError<"array fields cannot use identity generation">;
+
+type ValidateSpecFamily<I extends Field.Input> = Exclude<
+  Field.MetaFrom<I>["column"],
+  undefined
+> extends { readonly dialect: infer Dialect }
+  ? string extends Dialect
+    ? unknown
+    : Dialect extends "pg"
+      ? unknown
+      : Field.SqlTypeError<"field carries a non-PostgreSQL column descriptor">
+  : unknown;
+
+type ValidateResolvedColumn<I extends Field.Input> = Field.Input extends I
+  ? unknown
+  : [Derive.ResolvedColumn<I>] extends [never]
+    ? Field.SqlTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
+    : unknown;
 
 /**
  * Per-key and whole-model compile-time validation for a field record.
@@ -261,9 +282,10 @@ type ValidateArrayField<I extends Field.Input> = Field.MetaFrom<I>["dimensions"]
  * @since 0.0.0
  */
 export type ValidateFields<F extends FieldsInput> = {
-  readonly [K in keyof F]: [Derive.ResolvedColumn<F[K]>] extends [never]
-    ? Field.SqlTypeError<"this field's encoded type does not derive a column — add explicit metadata (pg.integer, pg.timestamp, pg.bytea, ...)">
-    : ValidateVersionField<F[K]> & ValidateArrayField<F[K]>;
+  readonly [K in keyof F]: ValidateSpecFamily<F[K]> &
+    ValidateResolvedColumn<F[K]> &
+    ValidateVersionField<F[K]> &
+    ValidateArrayField<F[K]>;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
   ? Field.SqlTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
   : unknown) &
@@ -476,7 +498,7 @@ export function makeModelClass(
         onSome: (column) => {
           if (!PgColumn.isSpec(column)) {
             throw ModelInvariantError.make({
-              message: `Field '${key}' has an invalid PostgreSQL column descriptor.`,
+              message: `Field '${key}' has an invalid or foreign PostgreSQL column descriptor.`,
               fieldName: key,
             });
           }

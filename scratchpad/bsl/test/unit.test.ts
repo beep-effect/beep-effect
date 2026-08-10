@@ -338,6 +338,7 @@ describe("mechanical column kinds", () => {
     expect(_charWithoutMaxLength).toThrow("isMaxLength");
     expect(Field.from(StringSchema.check(isMaxLength(3)).pipe(pg.char())).meta.column).toEqual({
       _tag: "char",
+      dialect: "pg",
       kind: "char",
       ident: "char",
       length: 3,
@@ -364,7 +365,7 @@ describe("PostgreSQL arrays", () => {
 
   it("keeps bare array and object schemas on the existing jsonb derivation", () => {
     expect(Derive.classify(ArraySchema(StringSchema), "bareArray")).toEqual({
-      column: { _tag: "jsonb", kind: "jsonb", ident: "jsonb" },
+      column: { _tag: "jsonb", dialect: "pg", kind: "jsonb", ident: "jsonb" },
       nullable: false,
     });
     expect(ArrayRecord.sql.columns.labels.column.ident).toBe("text");
@@ -476,19 +477,19 @@ describe("schema corroboration and invariants", () => {
 
   it("classifies bare carriers with SQL identities", () => {
     expect(Derive.classify(StringSchema, "s")).toEqual({
-      column: { _tag: "text", kind: "text", ident: "text" },
+      column: { _tag: "text", dialect: "pg", kind: "text", ident: "text" },
       nullable: false,
     });
     expect(Derive.classify(BooleanSchema, "b")).toEqual({
-      column: { _tag: "boolean", kind: "boolean", ident: "boolean" },
+      column: { _tag: "boolean", dialect: "pg", kind: "boolean", ident: "boolean" },
       nullable: false,
     });
     expect(Derive.classify(NullOr(StringSchema), "n")).toEqual({
-      column: { _tag: "text", kind: "text", ident: "text" },
+      column: { _tag: "text", dialect: "pg", kind: "text", ident: "text" },
       nullable: true,
     });
     expect(Derive.classify(StructSchema({ a: StringSchema }), "j")).toEqual({
-      column: { _tag: "jsonb", kind: "jsonb", ident: "jsonb" },
+      column: { _tag: "jsonb", dialect: "pg", kind: "jsonb", ident: "jsonb" },
       nullable: false,
     });
   });
@@ -511,7 +512,7 @@ describe("schema corroboration and invariants", () => {
 
   it("validates plain descriptors at their remaining author-input seams", () => {
     expect(_badTimestampCorrelation).toThrow("Timestamp identity must agree with withTimezone");
-    expect(_badHandBuiltColumn).toThrow("invalid PostgreSQL column descriptor");
+    expect(_badHandBuiltColumn).toThrow("invalid or foreign PostgreSQL column descriptor");
     expect(_badHandBuiltReference).toThrow("invalid reference descriptor");
     expect(() => getTableConfig(_badExtrasCallback())).toThrow(
       "must return valid PostgreSQL extra nodes",
@@ -549,6 +550,7 @@ describe("varchar authoring modes", () => {
     const derived = Field.from(StringSchema.check(isMaxLength(320)).pipe(pg.varchar()));
     expect(derived.meta.column).toEqual({
       _tag: "varchar",
+      dialect: "pg",
       kind: "varchar",
       ident: "varchar",
       length: 320,
@@ -561,6 +563,7 @@ describe("varchar authoring modes", () => {
     );
     expect(derived.meta.column).toEqual({
       _tag: "varchar",
+      dialect: "pg",
       kind: "varchar",
       ident: "varchar",
       length: 64,
@@ -597,6 +600,7 @@ describe("varchar authoring modes", () => {
     expect(verified.schema.pipe(Derive.maxLengths)).toEqual([50]);
     expect(verified.meta.column).toEqual({
       _tag: "varchar",
+      dialect: "pg",
       kind: "varchar",
       ident: "varchar",
       length: 80,
@@ -607,11 +611,11 @@ describe("varchar authoring modes", () => {
 describe("Option paved road", () => {
   it("derives nullable columns from OptionFromNullOr and effect FieldOption", () => {
     expect(Derive.classify(OptionFromNullOr(StringSchema), "opt")).toEqual({
-      column: { _tag: "text", kind: "text", ident: "text" },
+      column: { _tag: "text", dialect: "pg", kind: "text", ident: "text" },
       nullable: true,
     });
     expect(Derive.classify(EffectModel.FieldOption(StringSchema), "opt2")).toEqual({
-      column: { _tag: "text", kind: "text", ident: "text" },
+      column: { _tag: "text", dialect: "pg", kind: "text", ident: "text" },
       nullable: true,
     });
   });

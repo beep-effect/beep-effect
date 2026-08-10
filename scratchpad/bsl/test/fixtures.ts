@@ -643,6 +643,7 @@ export const _badHandBuiltColumn = () => {
     Meta.merge(Meta.empty, {
       column: {
         _tag: "text",
+        dialect: "pg",
         kind: "text",
         // @ts-expect-error invariant: hand-built column descriptors require string identities
         ident: 1,
