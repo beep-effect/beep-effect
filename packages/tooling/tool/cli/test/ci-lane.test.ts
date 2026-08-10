@@ -91,6 +91,12 @@ describe("CI lane descriptors", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
+  it("serializes the PR-shape check lane on fleet workers", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=1", "--affected", "--summarize"]);
+    expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
+  });
+
   it("builds the PR-shape lint lane with TURBO_SCM_BASE", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "lint", prShapeOptions);
     expect(A.length(steps)).toBe(1);

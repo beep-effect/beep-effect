@@ -774,7 +774,9 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
+      // Fresh Check graphs can overlap the largest tsgo processes and OOM even
+      // on 32GB fleet workers, so this lane stays serial.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
         QualityTaskStep.make({
           label: "ci:codegen:generate",

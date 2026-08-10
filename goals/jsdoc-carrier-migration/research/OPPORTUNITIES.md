@@ -202,3 +202,16 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
 - **Prevention:** review concurrency changes against the workflow lane-to-runner map rather
   than a shared CI default in isolation, and refresh current packet status prose when a
   follow-up closes a previously documented residual.
+
+### Fresh Check graphs still exhaust 32GB fleet workers at concurrency four
+
+- **What happened:** PR #627's hosted Check lane ran a cache-cold 127-task graph with the
+  restored fleet Turbo cap of four. `@beep/epistemic-server`'s `tsgo` process was killed
+  with exit 137, and the GitHub runner service went offline immediately afterward.
+- **Evidence:** Actions job `93473451163` completed 123 of 127 tasks before the kill. The
+  instance console recorded `Out of memory: Killed process 11096 (tsc)` at about 20.8GB
+  resident memory. EC2 still reported the runner as a healthy running `m7a.2xlarge` with an
+  active Spot request, ruling out Spot reclamation or instance shutdown as the initiating
+  event.
+- **Prevention:** keep the Check lane serial even on the 32GB fleet; its largest package
+  checks dominate peak memory when they overlap, while the smaller tasks dominate count.
