@@ -1,33 +1,30 @@
 {
-  "name": "@effect/platform-node",
+  "name": "@effect/platform-browser",
   "type": "module",
-  "version": "4.0.0-beta.106",
+  "version": "4.0.0-beta.107",
   "license": "MIT",
-  "description": "Platform specific implementations for the Node.js runtime",
+  "description": "Platform specific implementations for the browser",
   "homepage": "https://effect.website",
   "repository": {
     "type": "git",
     "url": "https://github.com/Effect-TS/effect.git",
-    "directory": "packages/platform-node"
+    "directory": "packages/platform/browser"
   },
   "bugs": {
     "url": "https://github.com/Effect-TS/effect/issues"
   },
   "tags": [
-    "node",
+    "browser",
     "typescript",
     "algebraic-data-types",
     "functional-programming"
   ],
   "keywords": [
-    "node",
+    "browser",
     "typescript",
     "algebraic-data-types",
     "functional-programming"
   ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "sideEffects": [],
   "exports": {
     "./package.json": "./package.json",
@@ -65,20 +62,12 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "check": "tsc -b tsconfig.json"
   },
-  "dependencies": {
-    "@effect/platform-node-shared": "workspace:^",
-    "mime": "^4.1.0",
-    "undici": "^8.7.0"
-  },
   "peerDependencies": {
-    "effect": "workspace:^",
-    "ioredis": ">=5.7.0 <6.0.0"
+    "effect": "workspace:^"
   },
   "devDependencies": {
-    "@testcontainers/mysql": "^12.0.4",
-    "@testcontainers/postgresql": "^12.0.4",
-    "@testcontainers/redis": "^12.0.4",
-    "@types/node": "^26.1.2",
-    "effect": "workspace:^"
+    "effect": "workspace:^",
+    "fake-indexeddb": "^6.2.5",
+    "mock-xmlhttprequest": "^8.4.1"
   }
 }
