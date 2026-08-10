@@ -286,6 +286,16 @@ re-arm must be idempotent.
 
 ### 4.4 Is there a non-hook external push? Honestly: no, with three partial exceptions.
 
+> ⚠ **DEAD as of 2026-08-09 — measured against 2.1.221, and the answer changed in
+> 2.1.224.** Cross-session messaging (`ListAgents` / `SendMessage`) is a fourth
+> vector, and it clears all three objections below at once: no hook to configure,
+> no arming tool call, reaches interactive TUI sessions, and same-machine
+> delivery travels over a per-session Unix socket *"never through Anthropic
+> servers"*. The surviving half of the law is narrower and still true — see
+> [`T6`](./T6-cross-session-messaging.md) §2 for the restatement and for the new
+> constraints (held/refused delivery, plain text only, receiver-decided outcome)
+> that replace the old ones. Do not re-derive the "no" from this section.
+
 I looked for one and did not find it. Everything that reaches a live interactive session goes
 through the hook dispatcher. The three near-misses:
 
@@ -306,6 +316,15 @@ MCP is pull-only: the model must call a tool. MCP server-initiated notifications
 into context.
 
 ### 4.5 Free fleet inventory — already on disk
+
+> ✅ **Confirmed and load-bearing, 2026-08-09 — and rung 1 did not use it.**
+> `goals/fleet-mirror` shipped `/proc` cwd attribution instead, and hit the wall
+> this section routes around: `cwd` resolves for 13.2% of processes, `stat` for
+> 99.7%, and the registry *supplies* the `cwd`.
+> [`T6`](./T6-cross-session-messaging.md) §3–4 specs the swap, adds the PID-reuse
+> guard this section does not mention (`procStart` == `/proc/<pid>/stat` field
+> 22), and records the caveat that kills the obvious shortcut: the registry is
+> **not** the same set as peer-reachable sessions.
 
 Unexpected find, directly useful: `claude agents --json` returns a live machine-readable roster with
 no TTY requirement.

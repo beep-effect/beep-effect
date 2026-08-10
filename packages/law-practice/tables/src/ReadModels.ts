@@ -5,18 +5,32 @@
  * @since 0.0.0
  */
 
-import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "./entities/index.ts";
+import {
+  ActFrame,
+  CandorDisposition,
+  CorrectionDelta,
+  IdsSubmissionFact,
+  LegalOppositionCandidate,
+  LegalPositionRelator,
+  PatentCitationEvent,
+  PowerExercise,
+} from "./entities/index.ts";
 import { kgBuildTable } from "./entities/KgBuild/KgBuild.read-model-table.ts";
 import { kgEdgeTable } from "./entities/KgEdge/KgEdge.read-model-table.ts";
 import { kgNodeTable } from "./entities/KgNode/KgNode.read-model-table.ts";
 
 type DbSchemaShape = {
+  readonly actFrame: typeof ActFrame.Table;
   readonly candorDisposition: typeof CandorDisposition.Table;
+  readonly correctionDelta: typeof CorrectionDelta.Table;
   readonly idsSubmissionFact: typeof IdsSubmissionFact.Table;
   readonly kgBuild: typeof kgBuildTable;
   readonly kgEdge: typeof kgEdgeTable;
   readonly kgNode: typeof kgNodeTable;
+  readonly legalOppositionCandidate: typeof LegalOppositionCandidate.Table;
+  readonly legalPositionRelator: typeof LegalPositionRelator.Table;
   readonly patentCitationEvent: typeof PatentCitationEvent.Table;
+  readonly powerExercise: typeof PowerExercise.Table;
 };
 
 /**
@@ -30,9 +44,11 @@ type DbSchemaShape = {
  *
  * Two populations live here and they have different lifetimes. The `kg*` entries
  * are packet-owned projections that a bundle's disposable PGlite store is
- * created with. The `candorDisposition`, `idsSubmissionFact`, and
- * `patentCitationEvent` entries are entity-derived tables owned by a db-admin
- * migration, so their rows outlive any single bundle.
+ * created with. Every other entry is an entity-derived table owned by a db-admin
+ * migration, so its rows outlive any single bundle: `candorDisposition`,
+ * `idsSubmissionFact`, and `patentCitationEvent` from the candor gate, and
+ * `actFrame`, `correctionDelta`, `legalOppositionCandidate`,
+ * `legalPositionRelator`, and `powerExercise` from the legal position runtime.
  *
  * **Example** (Read the composed physical table names)
  *
@@ -48,12 +64,17 @@ type DbSchemaShape = {
  * @since 0.0.0
  */
 export const DbSchema: DbSchemaShape = {
+  actFrame: ActFrame.Table,
   candorDisposition: CandorDisposition.Table,
+  correctionDelta: CorrectionDelta.Table,
   idsSubmissionFact: IdsSubmissionFact.Table,
   kgBuild: kgBuildTable,
   kgEdge: kgEdgeTable,
   kgNode: kgNodeTable,
+  legalOppositionCandidate: LegalOppositionCandidate.Table,
+  legalPositionRelator: LegalPositionRelator.Table,
   patentCitationEvent: PatentCitationEvent.Table,
+  powerExercise: PowerExercise.Table,
 };
 
 /**

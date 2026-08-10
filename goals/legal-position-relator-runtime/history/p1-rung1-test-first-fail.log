@@ -1,0 +1,20 @@
+$ bun run beep:test
+$ bunx --bun vitest run --passWithNoTests
+
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect18/packages/law-practice/use-cases
+
+ ❯ test/LegalPositionRelatorPolicy.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/LegalPositionRelatorPolicy.test.ts [ test/LegalPositionRelatorPolicy.test.ts ]
+Error: Cannot find module './LegalPositionRelatorPolicy.service.ts' imported from /home/elpresidank/YeeBois/projects/beep-effect18/packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  27 passed (27)
+   Start at  23:14:40
+   Duration  3.10s (transform 3.85s, setup 846ms, import 5.08s, tests 109ms, environment 0ms)
+
+error: script "beep:test" exited with code 1
+error: script "test" exited with code 1
