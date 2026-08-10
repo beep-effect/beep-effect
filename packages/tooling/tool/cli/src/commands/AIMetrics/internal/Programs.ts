@@ -11,6 +11,7 @@ import {
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
   AiMetricsConfigSnapshotInput,
+  AiMetricsDataRootInput,
   AiMetricsDeployTarget,
   AiMetricsForwarderInput,
   AiMetricsForwarderOtlpExported,
@@ -55,7 +56,6 @@ import {
   aiMetricsWeeklyReportToJson,
   buildAiMetricsMirrorBundle,
   configSnapshotToJson,
-  DEFAULT_AI_METRICS_DATA_ROOT,
   decryptEncryptedRawArchiveEnvelope,
   discoverAiMetricsSources,
   enforceAiMetricsRetentionPolicy,
@@ -78,6 +78,8 @@ import {
   recordAiMetricsBenchmarkRun,
   renderAiMetricsForwarderTimerPlan,
   renderAiMetricsLocalPhoenixCompose,
+  requireAbsoluteAiMetricsDataRoot,
+  resolveAiMetricsDataRoot,
   runAiMetricsForwarder,
   runAiMetricsOtlpExport,
   runAiMetricsRetentionCompact,
@@ -110,6 +112,7 @@ import {
   Redacted,
 } from "effect";
 import * as S from "effect/Schema";
+import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
@@ -125,7 +128,6 @@ const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
-const localCollectorDataRoot = DEFAULT_AI_METRICS_DATA_ROOT;
 const defaultP7MirrorRemoteRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 // cspell:words yubi
 const defaultP7MirrorSshHost = "dankserver-yubi";
@@ -189,12 +191,19 @@ const readOptionalRedactedConfigString: (
   )
 );
 
+const nonBlankOption = (value: O.Option<string>): O.Option<string> => O.filter(value, flow(Str.trim, Str.isNonEmpty));
+
 const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir: O.Option<string>) {
-  if (O.isSome(homeDir)) {
-    return homeDir.value;
+  const supplied = nonBlankOption(homeDir);
+  if (O.isSome(supplied)) {
+    return supplied.value;
   }
 
-  const envHome = yield* readOptionalConfigString("HOME");
+  // `Config.string` accepts an exported-but-empty variable, so a blank `HOME`
+  // has to be rejected here; letting it through resolves the canonical store to
+  // `/.local/state/beep/ai-metrics`, which is absolute and therefore invisible
+  // to every downstream absolute-path guard.
+  const envHome = nonBlankOption(yield* readOptionalConfigString("HOME"));
   if (O.isSome(envHome)) {
     return envHome.value;
   }
@@ -208,6 +217,90 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
 const resolveRepoRoot = Effect.fn("AIMetrics.resolveRepoRoot")(function* (repoRoot: O.Option<string>) {
   const path = yield* Path.Path;
   return path.resolve(O.isSome(repoRoot) ? repoRoot.value : process.cwd());
+});
+
+const requireAbsoluteDataRoot = (path: string) =>
+  requireAbsoluteAiMetricsDataRoot(path).pipe(
+    Effect.mapError((error) =>
+      AiMetricsCommandError.make({
+        cause: error.cause,
+        message: `${error.message} Pass an absolute --data-root or ${aiMetricsDataRootEnvVar}.`,
+      })
+    )
+  );
+
+/**
+ * Resolve the AI metrics data root every `ai-metrics` program reads and writes.
+ *
+ * **Details**
+ *
+ * Precedence is `--data-root`, then `BEEP_AI_METRICS_DATA_ROOT`, then the deploy
+ * target's default, where `local` means `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
+ * and `dankserver` means `/srv/data/ai-metrics`. The flag carries the
+ * environment rung through `Flag.withFallbackConfig`, and the environment is
+ * also read here into the schema's `envDataRoot` key, so callers that pass
+ * `O.none()` directly — `install preview` and `install compose` — still honor
+ * `BEEP_AI_METRICS_DATA_ROOT` instead of silently rendering the target default.
+ *
+ * **Gotchas**
+ *
+ * The home directory is resolved lazily: the first pass omits it, and only a
+ * `None` — which the resolver returns exactly when the XDG rung won and had no
+ * state home to hang beneath — costs a `HOME` read. Reading `HOME` eagerly
+ * would fail `--target dankserver` runs in environments that have none, and
+ * restating the precedence table here to decide would leave two copies of it to
+ * drift apart. Relative values are refused here, for every command: a relative
+ * root would rebind the store to each process working directory, splitting the
+ * canonical store back into clone-local trees and letting destructive retention
+ * target a tree the operator never meant.
+ *
+ * **Example** (Resolving an operator flag)
+ *
+ * ```ts
+ * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
+ * import { resolveDataRoot } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
+ * import * as O from "@beep/utils/Option"
+ * import { Effect } from "effect"
+ *
+ * const program = resolveDataRoot(O.some("/srv/store"), AiMetricsDeployTarget.Enum.local)
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param dataRoot - `--data-root`, already carrying the `BEEP_AI_METRICS_DATA_ROOT` fallback.
+ * @param target - Deploy target whose default applies when no root is supplied.
+ * @returns The resolved data root path.
+ * @category utilities
+ * @since 0.0.0
+ */
+const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
+  dataRoot: O.Option<string>,
+  target: AiMetricsDeployTarget
+) {
+  const flagDataRoot = nonBlankOption(dataRoot);
+  const envDataRoot = yield* readOptionalConfigString(aiMetricsDataRootEnvVar);
+  const stateHome = yield* readOptionalConfigString("XDG_STATE_HOME");
+  const makeInput = (homeDir: O.Option<string>) =>
+    AiMetricsDataRootInput.make({
+      ...O.getSomesStruct({ envDataRoot, flagDataRoot, homeDir, stateHome }),
+      target,
+    });
+  const missingHomeDir = O.none<string>();
+  const probe = pipe(missingHomeDir, makeInput, resolveAiMetricsDataRoot);
+  if (O.isSome(probe)) {
+    return yield* requireAbsoluteDataRoot(probe.value.path);
+  }
+
+  const homeDir = O.some(yield* resolveHomeDir(missingHomeDir));
+  const resolved = pipe(homeDir, makeInput, resolveAiMetricsDataRoot);
+  if (O.isNone(resolved)) {
+    return yield* AiMetricsCommandError.make({
+      cause: "HOME",
+      message: "Unable to resolve a home directory. Pass --home-dir explicitly.",
+    });
+  }
+
+  return yield* requireAbsoluteDataRoot(resolved.value.path);
 });
 
 const resolveHashSalt = Effect.fn("AIMetrics.resolveHashSalt")(function* (hashSalt: O.Option<string>) {
@@ -509,7 +602,9 @@ const parseRetentionSelector = Effect.fn("AIMetrics.parseRetentionSelector")(fun
   const untilEpochMillis = yield* parseOptionalEpochMillis("until", until);
 
   return AiMetricsRetentionSelector.make({
-    dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+    // Retention is a local-first operator surface with no `--target` flag, so the
+    // fallback rung is always the workstation's XDG store.
+    dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
     ...O.getSomesStruct({
       beforeEpochMillis,
       sinceEpochMillis,
@@ -538,9 +633,6 @@ const hasOrderedRetentionMutationWindow = (selector: AiMetricsRetentionSelector)
 const parseChecks = (checks: string): ReadonlyArray<string> =>
   pipe(Str.split(checks, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
-const p6aCollectorDataRoot = (dataRoot: O.Option<string>, target: AiMetricsDeployTarget): O.Option<string> =>
-  O.isSome(dataRoot) || target === AiMetricsDeployTarget.Enum.local ? dataRoot : O.some(localCollectorDataRoot);
-
 /**
  * Option schema for the MakeCommandInstallInput AI metrics helper.
  *
@@ -559,23 +651,28 @@ class MakeCommandInstallInputOptions extends S.Class<MakeCommandInstallInputOpti
   $I`MakeCommandInstallInputOptions`
 )(
   {
-    dataRoot: S.Option(S.String),
+    dataRoot: S.String,
+    defaultTool: S.optionalKey(AiMetricsTool),
     hashSaltSecretRef: S.Option(S.String),
+    privacyMode: S.optionalKey(AiMetricsPrivacyMode),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeCommandInstallInputOptions", {
-    description: "CLI install flags before environment-backed secret references are resolved.",
+    description: "CLI install flags, with the data root already resolved, before secret references are resolved.",
   })
 ) {}
 
+// `defaultTool` and `privacyMode` are the only divergences among the install-shaped
+// commands; omitting them keeps `AiMetricsInstallInput`'s own constructor defaults.
 const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(function* ({
   dataRoot,
+  defaultTool,
   hashSaltSecretRef,
+  privacyMode,
   rawArchiveKeySecretRef,
   target,
 }: MakeCommandInstallInputOptions) {
-  const resolvedDataRoot = O.getOrUndefined(dataRoot);
   const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
     hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
     target,
@@ -586,9 +683,13 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
   });
 
   return AiMetricsInstallInput.make({
-    ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
+    dataRoot,
+    ...O.getSomesStruct({
+      defaultTool: O.fromUndefinedOr(defaultTool),
+      hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef),
+      privacyMode: O.fromUndefinedOr(privacyMode),
+      rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef),
+    }),
     target,
   });
 });
@@ -609,30 +710,22 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
  */
 class MakeCommandInstallSpecOptions extends S.Class<MakeCommandInstallSpecOptions>($I`MakeCommandInstallSpecOptions`)(
   {
-    dataRoot: S.Option(S.String),
+    dataRoot: S.String,
+    defaultTool: S.optionalKey(AiMetricsTool),
     hashSaltSecretRef: S.Option(S.String),
+    privacyMode: S.optionalKey(AiMetricsPrivacyMode),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeCommandInstallSpecOptions", {
-    description: "CLI install flags used to build a concrete AI metrics install spec.",
+    description: "CLI install flags, with the data root already resolved, used to build a concrete install spec.",
   })
 ) {}
 
-const makeCommandInstallSpec = Effect.fn("AIMetrics.makeCommandInstallSpec")(function* ({
-  dataRoot,
-  hashSaltSecretRef,
-  rawArchiveKeySecretRef,
-  target,
-}: MakeCommandInstallSpecOptions) {
-  return yield* makeAiMetricsInstallSpec(
-    yield* makeCommandInstallInput({
-      dataRoot,
-      hashSaltSecretRef,
-      rawArchiveKeySecretRef,
-      target,
-    })
-  );
+const makeCommandInstallSpec = Effect.fn("AIMetrics.makeCommandInstallSpec")(function* (
+  options: MakeCommandInstallSpecOptions
+) {
+  return yield* makeAiMetricsInstallSpec(yield* makeCommandInstallInput(options));
 });
 
 const renderInstallSpec = Effect.fn("AIMetrics.renderInstallSpec")(function* (
@@ -721,23 +814,14 @@ const makeInstallPreviewProgram = Effect.fn("AIMetrics.makeInstallPreviewProgram
   target,
   tool,
 }: MakeInstallPreviewProgramOptions) {
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const spec = yield* makeCommandInstallSpec({
+    dataRoot: yield* resolveDataRoot(O.none(), target),
+    defaultTool: tool,
+    hashSaltSecretRef,
+    privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      defaultTool: tool,
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
-      target,
-    })
-  );
 
   yield* renderInstallSpec(spec, json);
 });
@@ -776,6 +860,7 @@ const makeInstallComposeProgram = Effect.fn("AIMetrics.makeInstallComposeProgram
 }: MakeInstallComposeProgramOptions) {
   const spec = yield* makeAiMetricsInstallSpec(
     AiMetricsInstallInput.make({
+      dataRoot: yield* resolveDataRoot(O.none(), target),
       defaultTool: tool,
       privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
       target,
@@ -849,7 +934,7 @@ const makeInstallPlanProgram = Effect.fn("AIMetrics.makeInstallPlanProgram")(fun
   target,
 }: MakeInstallPlanProgramOptions) {
   const input = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -927,7 +1012,7 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
   target,
 }: MakeInstallDoctorProgramOptions) {
   const install = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -1009,7 +1094,7 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
   }
 
   const input = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -1125,12 +1210,9 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
     }
 
     const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
-    for (const entry of entries) {
-      files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
-    }
+    const childPaths = A.map(entries, (entry) => path.join(currentPath, entry));
 
-    return files;
+    return A.flatten(yield* Effect.forEach(childPaths, walk));
   });
 
   return pipe(yield* walk(inputPath), A.sort(Order.String));
@@ -1570,30 +1652,24 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
     hashSalt: yield* resolveHashSalt(hashSalt),
     target,
   });
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const resolvedDataRoot = yield* resolveDataRoot(dataRoot, target);
+  // The install input carries the target-guarded secret references forward: both keys are
+  // `optionalKey` with no constructor default, so reading them back off the input yields
+  // exactly what the guards produced, `undefined` included.
+  const installInput = yield* makeCommandInstallInput({
+    dataRoot: resolvedDataRoot,
+    hashSaltSecretRef,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const resolvedDataRoot = O.getOrUndefined(p6aCollectorDataRoot(dataRoot, target));
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      target,
-    })
-  );
+  const spec = yield* makeAiMetricsInstallSpec(installInput);
   const resolvedRawArchiveKey = yield* resolveRawArchiveKey();
   const sinceEpochMillis = all ? undefined : yield* parseSinceEpochMillis(since);
   const forwarderInput = AiMetricsForwarderInput.make({
-    ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
+    dataRoot: resolvedDataRoot,
     ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
-    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
+    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(installInput.hashSaltSecretRef) }),
+    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(installInput.rawArchiveKeySecretRef) }),
     homeDir: yield* resolveHomeDir(homeDir),
     includeAll: all,
     ...(O.isSome(maxFileBytes) ? { maxFileBytes: maxFileBytes.value } : {}),
@@ -1748,13 +1824,19 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   retentionMaxSnapshotExports,
   target,
 }: MakeForwarderTimerProgramOptions) {
-  const resolvedDataRoot = p6aCollectorDataRoot(dataRoot, target);
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: resolvedDataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
   });
+  // `statusPath` and `--data-root` are both interpolated into the unit's
+  // `ExecStart`, where a relative path would bind to `WorkingDirectory` -- the
+  // exact mechanism that put the canonical store inside a clone. Refuse to render
+  // anything before the root is proven absolute.
+  yield* requireAbsoluteAiMetricsDataRoot(spec.storage.dataRoot).pipe(
+    AiMetricsCommandError.mapError("AI metrics forwarder timer units require an absolute --data-root.")
+  );
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
     hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
@@ -1856,23 +1938,12 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
   rawArchiveKeySecretRef,
   target,
 }: MakeOtlpExportProgramOptions) {
-  const resolvedDataRoot = O.getOrUndefined(p6aCollectorDataRoot(dataRoot, target));
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const spec = yield* makeCommandInstallSpec({
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
+    hashSaltSecretRef,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      target,
-    })
-  );
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const input = AiMetricsOtlpExportInput.make({
     duckDbPath: spec.storage.duckDbPath,
@@ -1954,7 +2025,7 @@ const makeBenchmarkRunProgram = Effect.fn("AIMetrics.makeBenchmarkRunProgram")(f
   target,
 }: MakeBenchmarkRunProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2042,7 +2113,7 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
   until,
 }: MakeLabelQueueProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2121,7 +2192,7 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
   taskId,
 }: MakeLabelAddProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2197,7 +2268,7 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
   title,
 }: MakeBenchmarkCaseAddProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2260,7 +2331,7 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
   target,
 }: MakeBenchmarkCaseListProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2320,7 +2391,7 @@ const makeWeeklyReportProgram = Effect.fn("AIMetrics.makeWeeklyReportProgram")(f
 }: MakeWeeklyReportProgramOptions) {
   const path = yield* Path.Path;
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2402,15 +2473,17 @@ const commandText = (command: string, args: ReadonlyArray<string>): string =>
 const resolveMirrorBundleDir = Effect.fn("AIMetrics.resolveMirrorBundleDir")(function* ({
   bundle,
   dataRoot,
+  target,
 }: {
   readonly bundle: string;
   readonly dataRoot: O.Option<string>;
+  readonly target: AiMetricsDeployTarget;
 }) {
   if (bundle !== "latest") {
     return bundle;
   }
 
-  return yield* locateLatestAiMetricsMirrorBundle(O.getOrElse(dataRoot, () => localCollectorDataRoot));
+  return yield* locateLatestAiMetricsMirrorBundle(yield* resolveDataRoot(dataRoot, target));
 });
 
 const readMirrorManifest = Effect.fn("AIMetrics.readMirrorManifest")(function* (manifestPath: string) {
@@ -2567,7 +2640,7 @@ const makeMirrorBuildProgram = Effect.fn("AIMetrics.makeMirrorBuildProgram")(fun
 }) {
   const result = yield* buildAiMetricsMirrorBundle(
     AiMetricsMirrorBundleInput.make({
-      dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+      dataRoot: yield* resolveDataRoot(dataRoot, target),
       remoteRoot,
       target,
     })
@@ -2612,6 +2685,7 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
   const bundleDir = yield* resolveMirrorBundleDir({
     bundle,
     dataRoot,
+    target,
   });
   yield* validateLocalMirrorBundle({
     bundleDir,
@@ -2871,7 +2945,9 @@ const makeRetentionEnforceProgram = Effect.fn("AIMetrics.makeRetentionEnforcePro
 
   const result = yield* enforceAiMetricsRetentionPolicy(
     AiMetricsRetentionEnforcementPolicy.make({
-      dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+      // Retention enforce has no `--target` flag; the fallback rung is the
+      // workstation's XDG store, matching `parseRetentionSelector`.
+      dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
       dryRun: O.isNone(confirm),
       maxSnapshotExports,
     })
@@ -2955,7 +3031,7 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
   readonly target: AiMetricsDeployTarget;
 }) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -3023,7 +3099,6 @@ export {
   hasBoundedRetentionMutationWindow,
   hasOrderedRetentionMutationWindow,
   hasRetentionWindow,
-  localCollectorDataRoot,
   MakeBenchmarkCaseAddProgramOptions,
   MakeBenchmarkCaseListProgramOptions,
   MakeBenchmarkRunProgramOptions,
@@ -3091,6 +3166,7 @@ export {
   requireHashSaltForTarget,
   requireHashSaltSecretRefForTarget,
   requireRawArchiveKeySecretRefForTarget,
+  resolveDataRoot,
   resolveHashSalt,
   resolveHashSaltSecretRef,
   resolveHomeDir,

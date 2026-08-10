@@ -6,98 +6,70 @@
  */
 
 /**
- * Agent-effectiveness doctor and annotation-plan helpers.
- *
- * **Example** (Import effectiveness doctor report)
- *
- * ```ts
- * import { makeAgentEffectivenessDoctorReport } from "@beep/repo-ai-metrics"
- * console.log(makeAgentEffectivenessDoctorReport)
- * ```
+ * Agent-effectiveness doctor reports and JSDoc annotation plans derived from
+ * goal-packet manifests. Examples live on the owning declarations in
+ * `./agent-effectiveness.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./agent-effectiveness.ts";
 /**
- * Encrypted raw archive helpers.
- *
- * **Example** (Import encrypted archive writer)
- *
- * ```ts
- * import { writeEncryptedRawArchiveObject } from "@beep/repo-ai-metrics"
- * console.log(writeEncryptedRawArchiveObject)
- * ```
+ * Age-encrypted raw transcript archive envelopes: writing, reading, and
+ * decrypting the objects that back the `raw/` tree. Examples live on the owning
+ * declarations in `./archive.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./archive.ts";
 /**
- * Local backend compose rendering helpers.
- *
- * **Example** (Import local compose renderer)
- *
- * ```ts
- * import { renderAiMetricsLocalPhoenixCompose } from "@beep/repo-ai-metrics"
- * console.log(renderAiMetricsLocalPhoenixCompose)
- * ```
+ * Docker Compose rendering for the local Phoenix observability backend that
+ * receives exported spans. Examples live on the owning declarations in
+ * `./compose.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./compose.ts";
 /**
- * Repo-local configuration snapshot helpers.
- *
- * **Example** (Import config snapshot maker)
- *
- * ```ts
- * import { makeAiMetricsConfigSnapshot } from "@beep/repo-ai-metrics"
- * console.log(makeAiMetricsConfigSnapshot)
- * ```
+ * Bounded agent-configuration snapshots: the per-root baseline and
+ * session-effective split, budgets, and the diff against the previous snapshot.
+ * Examples live on the owning declarations in `./config-snapshot.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./config-snapshot.ts";
 /**
- * DuckDB derived storage helpers.
+ * Canonical data-root precedence: `--data-root`, `BEEP_AI_METRICS_DATA_ROOT`,
+ * then the XDG state store. Examples live on the owning declarations in
+ * `./data-root.ts`.
  *
- * **Example** (Import derived storage writer)
- *
- * ```ts
- * import { writeAiMetricsDerivedStorage } from "@beep/repo-ai-metrics"
- * console.log(writeAiMetricsDerivedStorage)
- * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./data-root.ts";
+/**
+ * DuckDB derived-store schema, transcript row projection, and Parquet export.
+ * Examples live on the owning declarations in `./derived-storage.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./derived-storage.ts";
 /**
- * Derived-store path and scoped DuckDB provider helpers.
- *
- * **Example** (Resolve derived DuckDB path)
- *
- * ```ts
- * import { aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
- * console.log(aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
- * ```
+ * Derived-store path shape and the scoped DuckDB connection wrapper every
+ * reader shares. Examples live on the owning declarations in `./duckdb.ts`.
  *
  * @category utilities
  * @since 0.0.0
  */
 export * from "./duckdb.ts";
 /**
- * Durable forwarder workflow.
- *
- * **Example** (Import forwarder workflow runner)
- *
- * ```ts
- * import { runAiMetricsForwarder } from "@beep/repo-ai-metrics"
- * console.log(runAiMetricsForwarder)
- * ```
+ * The durable forwarder workflow that discovers sources, ingests transcripts,
+ * writes derived storage, and exports spans in one pass. Examples live on the
+ * owning declarations in `./forwarder.ts`.
  *
  * @category services
  * @since 0.0.0
@@ -113,28 +85,27 @@ export * from "./forwarder.ts";
  */
 export * from "./hook-pulse.ts";
 /**
- * Transcript ingest helpers.
+ * Clone, repository, worktree, revision, and source-instance identity, plus the
+ * canonical-root registry persisted inside the data root. Examples live on the
+ * owning declarations in `./identity-registry.ts`.
  *
- * **Example** (Import transcript text summarizer)
- *
- * ```ts
- * import { summarizeTranscriptText } from "@beep/repo-ai-metrics"
- * console.log(summarizeTranscriptText)
- * ```
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./identity-registry.ts";
+/**
+ * Transcript ingest: turning a discovered transcript file into the privacy-safe
+ * summary the derived store persists. Examples live on the owning declarations
+ * in `./ingest.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./ingest.ts";
 /**
- * Install and deployment target helpers.
- *
- * **Example** (Import install spec maker)
- *
- * ```ts
- * import { makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
- * console.log(makeAiMetricsInstallSpec)
- * ```
+ * Install specs and deploy targets: the storage layout, unit text, and operator
+ * command plans for a collector deployment. Examples live on the owning
+ * declarations in `./install.ts`.
  *
  * @category services
  * @since 0.0.0
@@ -156,112 +127,71 @@ export * from "./install.ts";
  */
 export { repoPathToClaudeProjectName } from "./internal/transcript-utils.ts";
 /**
- * P7 sanitized mirror bundle helpers.
- *
- * **Example** (Import mirror bundle builder)
- *
- * ```ts
- * import { buildAiMetricsMirrorBundle } from "@beep/repo-ai-metrics"
- * console.log(buildAiMetricsMirrorBundle)
- * ```
+ * Sanitized mirror bundles: the table exports, privacy proof, and manifest that
+ * make a store shareable off-machine. Examples live on the owning declarations
+ * in `./mirror.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./mirror.ts";
 /**
- * Canonical AI metrics models.
- *
- * **Example** (Access local deploy target)
- *
- * ```ts
- * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsDeployTarget.Enum.local)
- * ```
+ * Canonical AI metrics models shared by every stage of the pipeline, including
+ * deploy targets and transcript sources. Examples live on the owning
+ * declarations in `./models.ts`.
  *
  * @category models
  * @since 0.0.0
  */
 export * from "./models.ts";
 /**
- * OTLP span projection and export helpers.
- *
- * **Example** (Import OTLP export runner)
- *
- * ```ts
- * import { runAiMetricsOtlpExport } from "@beep/repo-ai-metrics"
- * console.log(runAiMetricsOtlpExport)
- * ```
+ * OTLP span projection and export: the allowlisted attribute surface and the
+ * exporter that ships it. Examples live on the owning declarations in
+ * `./otlp.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./otlp.ts";
 /**
- * Privacy and derived-payload proof helpers.
- *
- * **Example** (Import privacy check result)
- *
- * ```ts
- * import { makeAiMetricsPrivacyCheckResult } from "@beep/repo-ai-metrics"
- * console.log(makeAiMetricsPrivacyCheckResult)
- * ```
+ * Salted hashing, salt provenance, and the privacy proof that no raw identifier
+ * reaches a derived payload. Examples live on the owning declarations in
+ * `./privacy.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./privacy.ts";
 /**
- * P7 retention, restore, delete, and compaction helpers.
- *
- * **Example** (Import retention inventory lister)
- *
- * ```ts
- * import { listAiMetricsRetentionInventory } from "@beep/repo-ai-metrics"
- * console.log(listAiMetricsRetentionInventory)
- * ```
+ * Retention inventory, restore drills, deletion, and compaction over the raw
+ * and derived trees. Examples live on the owning declarations in
+ * `./retention.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./retention.ts";
 /**
- * Labels, benchmarks, and weekly scorecard reports.
- *
- * **Example** (Import weekly report generator)
- *
- * ```ts
- * import { generateAiMetricsWeeklyReport } from "@beep/repo-ai-metrics"
- * console.log(generateAiMetricsWeeklyReport)
- * ```
+ * Outcome labels, benchmark cases, and the weekly scorecard report built from
+ * derived storage. Examples live on the owning declarations in
+ * `./scorecard.ts`.
  *
  * @category services
  * @since 0.0.0
  */
 export * from "./scorecard.ts";
 /**
- * Shell rendering helpers for operator commands.
- *
- * **Example** (Quote shell secret path)
- *
- * ```ts
- * import { shellQuote } from "@beep/repo-ai-metrics"
- * console.log(shellQuote("op://vault/item/field"))
- * ```
+ * Shell rendering helpers used to build the operator command strings printed by
+ * install plans. Examples live on the owning declarations in `./shell.ts`.
  *
  * @category utilities
  * @since 0.0.0
  */
 export * from "./shell.ts";
 /**
- * Local AI-agent source discovery helpers.
- *
- * **Example** (Import source discovery helper)
- *
- * ```ts
- * import { discoverAiMetricsSources } from "@beep/repo-ai-metrics"
- * console.log(discoverAiMetricsSources)
- * ```
+ * Local AI-agent source discovery: locating Claude and Codex transcript trees
+ * and hashing their session lineage. Examples live on the owning declarations
+ * in `./source-discovery.ts`.
  *
  * @category services
  * @since 0.0.0

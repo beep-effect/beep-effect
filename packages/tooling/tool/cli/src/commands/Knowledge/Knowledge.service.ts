@@ -24,7 +24,11 @@ import {
   resolveGitMergeBase,
   writeGitArchive,
 } from "../../internal/repo-run/GitExec.ts";
-import { KNOWLEDGE_HISTORY_REMEDIATION, KnowledgeOperationalError } from "./Knowledge.errors.ts";
+import {
+  KNOWLEDGE_HISTORY_REMEDIATION,
+  KnowledgeOperationalError,
+  KnowledgeProbeBootError,
+} from "./Knowledge.errors.ts";
 import {
   decodeKnowledgeUtf8,
   isKnowledgeArchivalPath,
@@ -93,15 +97,22 @@ const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
  * the golden tests satisfy this shape, which is what keeps a golden fixture and a real archive
  * indistinguishable to the scanning logic.
  *
+ * **Gotchas**
+ *
+ * Only the two probe operations may fail with {@link KnowledgeProbeBootError}, and only that error is
+ * survivable: it is how an oracle reports that its archive's probe could not start at all, which the
+ * scanner treats as lost coverage on the base side and as an operational failure on the HEAD side.
+ * Every other failure of every operation fails the whole comparison closed.
+ *
  * @see {@link KnowledgePairedOracleInput} for the two-sided input that carries rename lineage.
  * @category services
  * @since 0.0.0
  */
 export interface KnowledgeArchiveOracle {
-  readonly indexBytes: Effect.Effect<KnowledgeIndexBytes, KnowledgeOperationalError>;
+  readonly indexBytes: Effect.Effect<KnowledgeIndexBytes, KnowledgeOperationalError | KnowledgeProbeBootError>;
   readonly probeCommands: (
     commands: ReadonlyArray<ReadonlyArray<string>>
-  ) => Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError>;
+  ) => Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError | KnowledgeProbeBootError>;
   readonly readBytes: (repoPath: string) => Effect.Effect<Uint8Array, KnowledgeOperationalError>;
   readonly trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>;
 }
@@ -118,7 +129,8 @@ export interface KnowledgeArchiveOracle {
  *
  * `probePolicy` is one value for the comparison rather than one per oracle on purpose. Probing only
  * the base would report every archive-local command and index finding as resolved, and probing only
- * HEAD would report every one of them as introduced.
+ * HEAD would report every one of them as introduced. This is a request, not a guarantee: a base
+ * archive whose probe cannot boot downgrades the whole comparison, both sides at once.
  *
  * @see {@link KnowledgeArchiveOracle} for the per-side read surface this input pairs.
  * @category services
@@ -473,11 +485,9 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
   );
 });
 
-const candidatesForSide = Effect.fn("Knowledge.candidatesForSide")(function* (
+const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide")(function* (
   oracle: KnowledgeArchiveOracle,
-  documentId: (entry: KnowledgeTrackedEntry) => string,
-  indexDocumentId: string,
-  probePolicy: KnowledgeProbePolicy
+  documentId: (entry: KnowledgeTrackedEntry) => string
 ) {
   const documents = pipe(
     oracle.trackedEntries,
@@ -491,14 +501,98 @@ const candidatesForSide = Effect.fn("Knowledge.candidatesForSide")(function* (
     candidates = A.appendAll(candidates, extracted.candidates);
     commands = A.appendAll(commands, extracted.commands);
   }
-  // Both remaining evaluators run Bun on the scanned revision's own code, so an untrusted
-  // comparison stops here with only the tracked-tree classes it derived without executing anything.
-  if (!KnowledgeProbePolicy.is.enabled(probePolicy)) {
-    return candidates;
+  return { candidates, commands };
+});
+
+/** The archive-local reads one side's probe substep needs once the tracked-tree pass has finished. */
+interface KnowledgeProbeSideInput {
+  readonly commands: ReadonlyArray<KnowledgeCommandOccurrence>;
+  readonly indexDocumentId: string;
+}
+
+/** Probe-derived candidates for both sides, plus the policy and evidence the report must carry. */
+interface KnowledgeProbeOutcome {
+  readonly base: ReadonlyArray<KnowledgeFindingCandidate>;
+  readonly detail: O.Option<string>;
+  readonly head: ReadonlyArray<KnowledgeFindingCandidate>;
+  readonly policy: KnowledgeProbePolicy;
+}
+
+const probeCandidatesForSide = Effect.fn("Knowledge.probeCandidatesForSide")(function* (
+  oracle: KnowledgeArchiveOracle,
+  side: KnowledgeProbeSideInput
+) {
+  const candidates = yield* commandCandidates(oracle, side.commands);
+  const index = yield* indexCandidate(oracle, side.indexDocumentId);
+  return O.match(index, {
+    onNone: () => candidates,
+    onSome: (candidate) => A.append(candidates, candidate),
+  });
+});
+
+/**
+ * Lines of a base boot failure carried into the report: the probe header plus the thrown error and
+ * its runtime banner, which is everything needed to name the missing module without pasting a stack.
+ */
+const PROBE_BOOT_EXCERPT_LINES = 5;
+
+const probeBootExcerpt = (error: KnowledgeProbeBootError): string =>
+  pipe(
+    Str.split(/\r?\n/u)(error.message),
+    A.map(Str.trimEnd),
+    A.filter(P.not(Str.isEmpty)),
+    A.take(PROBE_BOOT_EXCERPT_LINES),
+    A.join("\n")
+  );
+
+const skippedProbeOutcome = (policy: KnowledgeProbePolicy, detail: O.Option<string>): KnowledgeProbeOutcome => ({
+  policy,
+  detail,
+  base: A.empty<KnowledgeFindingCandidate>(),
+  head: A.empty<KnowledgeFindingCandidate>(),
+});
+
+const degradeToBaseBootFailure = (error: KnowledgeProbeBootError): Effect.Effect<KnowledgeProbeOutcome> =>
+  Effect.succeed(
+    skippedProbeOutcome(KnowledgeProbePolicy.Enum["skipped-base-boot-failure"], pipe(error, probeBootExcerpt, O.some))
+  );
+
+const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
+  input: KnowledgePairedOracleInput,
+  base: KnowledgeProbeSideInput,
+  head: KnowledgeProbeSideInput
+) {
+  // Base runs first so its boot failure escapes before HEAD is probed at all. HEAD's own boot
+  // failure is converted here, which leaves the base one as the only survivable failure left.
+  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
+  const headCandidates = yield* probeCandidatesForSide(input.head, head).pipe(
+    Effect.catchTag("KnowledgeProbeBootError", (error) =>
+      Effect.fail(KnowledgeOperationalError.make({ message: error.message }))
+    )
+  );
+  return {
+    policy: KnowledgeProbePolicy.Enum.enabled,
+    detail: O.none<string>(),
+    base: baseCandidates,
+    head: headCandidates,
+  } satisfies KnowledgeProbeOutcome;
+});
+
+const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(function* (
+  input: KnowledgePairedOracleInput,
+  base: KnowledgeProbeSideInput,
+  head: KnowledgeProbeSideInput
+) {
+  // Both probe evaluators run Bun on the scanned revision's own code, so an untrusted comparison
+  // stops here with only the tracked-tree classes it derived without executing anything.
+  if (!KnowledgeProbePolicy.is.enabled(input.probePolicy)) {
+    return skippedProbeOutcome(input.probePolicy, O.none());
   }
-  candidates = A.appendAll(candidates, yield* commandCandidates(oracle, commands));
-  const index = yield* indexCandidate(oracle, indexDocumentId);
-  return O.isSome(index) ? A.append(candidates, index.value) : candidates;
+  return yield* probeBothSides(input, base, head).pipe(
+    // Whatever base probe results were already collected are discarded with the policy: comparing a
+    // probed base against an unprobed HEAD would report every probe-class finding as resolved.
+    Effect.catchTag("KnowledgeProbeBootError", degradeToBaseBootFailure)
+  );
 });
 
 const candidateGroupKey = (candidate: KnowledgeFindingCandidate): string =>
@@ -554,8 +648,9 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  *
  * **Gotchas**
  *
- * `input.probePolicy` is applied to both sides at once and echoed onto the report. A
- * `skipped-untrusted-context` scan still produces a well-formed delta, but one whose empty buckets
+ * `input.probePolicy` is the requested policy, applied to both sides at once; the report carries the
+ * policy that was actually achieved, which is weaker when the merge-base archive's probe failed to
+ * boot. Either way a non-`enabled` report is still a well-formed delta, but one whose empty buckets
  * only cover the classes that need no archive-local execution.
  *
  * **Example** (Scan two empty archives)
@@ -590,25 +685,22 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * @since 0.0.0
  */
 export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (input: KnowledgePairedOracleInput) {
-  const baseCandidates = yield* candidatesForSide(
-    input.base,
-    (entry) => documentIdForBase(entry.path),
-    documentIdForBase(INDEX_PATH),
-    input.probePolicy
-  );
+  const baseDocuments = yield* documentCandidatesForSide(input.base, (entry) => documentIdForBase(entry.path));
   const headIndexEntry = A.findFirst(input.head.trackedEntries, (entry) => entry.path === INDEX_PATH);
   const headIndexDocumentId = O.match(headIndexEntry, {
     onNone: () => `head-new:${INDEX_PATH}`,
     onSome: (entry) => makeHeadDocumentId(input.base.trackedEntries, entry, input.renames),
   });
-  const headCandidates = yield* candidatesForSide(
-    input.head,
-    (entry) => makeHeadDocumentId(input.base.trackedEntries, entry, input.renames),
-    headIndexDocumentId,
-    input.probePolicy
+  const headDocuments = yield* documentCandidatesForSide(input.head, (entry) =>
+    makeHeadDocumentId(input.base.trackedEntries, entry, input.renames)
   );
-  const baseFindings = yield* findingsFromCandidates(baseCandidates);
-  const headFindings = yield* findingsFromCandidates(headCandidates);
+  const probe = yield* resolveProbeCandidates(
+    input,
+    { commands: baseDocuments.commands, indexDocumentId: documentIdForBase(INDEX_PATH) },
+    { commands: headDocuments.commands, indexDocumentId: headIndexDocumentId }
+  );
+  const baseFindings = yield* findingsFromCandidates(A.appendAll(baseDocuments.candidates, probe.base));
+  const headFindings = yield* findingsFromCandidates(A.appendAll(headDocuments.candidates, probe.head));
   const baseIds = HashSet.fromIterable(A.map(baseFindings, (finding) => finding.findingId));
   const headIds = HashSet.fromIterable(A.map(headFindings, (finding) => finding.findingId));
   return KnowledgeSemanticDeltaReport.make({
@@ -624,7 +716,8 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
       A.filter(headFindings, (finding) => HashSet.has(baseIds, finding.findingId)),
       findingOrder
     ),
-    probePolicy: input.probePolicy,
+    probePolicy: probe.policy,
+    probeSkipDetail: probe.detail,
   });
 });
 
@@ -772,8 +865,10 @@ const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
     extendEnv: false,
     source: "all",
   }).pipe(KnowledgeOperationalError.mapError(`Failed to spawn archive-local probe "${scriptPath}".`));
+  // The probe writes its structured output in one final call, so a non-zero exit means it never got
+  // there: the archive's own modules failed to load or the help action itself threw.
   if (result.exitCode !== 0) {
-    return yield* KnowledgeOperationalError.make({
+    return yield* KnowledgeProbeBootError.make({
       message: `Archive-local probe "${scriptPath}" failed with exit ${result.exitCode}.${Str.isEmpty(result.output) ? "" : `\n${result.output}`}`,
     });
   }

@@ -322,9 +322,9 @@ turbo work, so they are cheap to run mid-loop.
   branch; remote deletion needs the same tip match. Any unmet precondition is a
   skip-and-report, not a failure — unmerged local work is never force-deleted.
 - A sweep exits 0 whether every step ran or every step skipped: "merged, cleanup
-  skipped: `<reason>`" is a success. Steps only the operator can run (a denied
-  `git push origin --delete`) are batched into a handoff block instead of being
-  discovered one failed command at a time.
+  skipped: `<reason>`" is a success. Authentication or repository-policy
+  failures are reported with the exact skipped cleanup step; checked-in Claude
+  and Codex settings no longer block preconditioned local or remote deletion.
 - `merge` never passes `--delete-branch`: it merges, confirms `MERGED` by bounded
   poll, then hands the whole cleanup sequence to the worktree-aware sweep. The
   sweep may auto-run on monitor's merged detection; the merge never auto-runs.

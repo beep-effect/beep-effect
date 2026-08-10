@@ -183,6 +183,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@commitlint/is-ignored": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

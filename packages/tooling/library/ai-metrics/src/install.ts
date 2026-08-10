@@ -8,11 +8,12 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, flow, Match, pipe } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { AiMetricsDataRootInput, resolveAiMetricsDataRoot } from "./data-root.ts";
 import {
   AiMetricsDeployTarget,
   AiMetricsOtlpEndpointSpec,
@@ -34,7 +35,6 @@ const defaultCandidateTools = [
 ] as const;
 
 const defaultPhoenixImage = "arizephoenix/phoenix:latest";
-const localCollectorDataRoot = ".beep/ai-metrics";
 
 const servicePort = (tool: AiMetricsTool): number =>
   AiMetricsTool.$match(tool, {
@@ -44,9 +44,6 @@ const servicePort = (tool: AiMetricsTool): number =>
     posthog: () => 8000,
   });
 
-const defaultDataRoot = (target: AiMetricsDeployTarget): string =>
-  target === AiMetricsDeployTarget.Enum.dankserver ? "/srv/data/ai-metrics" : ".beep/ai-metrics";
-
 const defaultPublicBaseUrl = (target: AiMetricsDeployTarget): string =>
   target === AiMetricsDeployTarget.Enum.dankserver ? "https://dankserver.tailc7c348.ts.net:8447" : "http://127.0.0.1";
 
@@ -54,6 +51,29 @@ const childPath = (root: string, child: string): string => `${root}/${child}`;
 
 const nonEmptyString = (value: string | undefined): O.Option<string> =>
   value === undefined || Str.isEmpty(Str.trim(value)) ? O.none() : O.some(value);
+
+const requireInstallDataRoot = Effect.fn("AiMetrics.requireInstallDataRoot")(function* (input: AiMetricsInstallInput) {
+  const resolved = resolveAiMetricsDataRoot(
+    AiMetricsDataRootInput.make({
+      ...O.getSomesStruct({
+        flagDataRoot: nonEmptyString(input.dataRoot),
+        homeDir: nonEmptyString(input.homeDir),
+        stateHome: nonEmptyString(input.stateHome),
+      }),
+      target: input.target,
+    })
+  );
+
+  if (O.isNone(resolved)) {
+    return yield* AiMetricsInstallConfigurationError.make({
+      cause: { target: input.target },
+      message:
+        "AI metrics install specs require an explicit dataRoot, or homeDir/stateHome to resolve the XDG data root; there is no clone-relative fallback.",
+    });
+  }
+
+  return resolved.value.path;
+});
 
 const requireHashSaltSecretRef = Effect.fn("AiMetrics.requireHashSaltSecretRef")(function* (
   target: AiMetricsDeployTarget,
@@ -88,9 +108,16 @@ const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeyS
 });
 
 /**
- * Error raised when an AI metrics install spec would be unsafe for the requested target.
+ * Typed failure raised when an install spec would be unsafe for the requested target.
  *
- * **Example** (Create configuration error)
+ * **Details**
+ *
+ * Resolution refuses rather than substitutes. A non-local target without secret
+ * references, or a local target with no way to resolve a data root, fails here
+ * instead of falling back to a value the operator never chose — a silent
+ * fallback is what put the canonical store inside a clone in the first place.
+ *
+ * **Example** (Constructing the failure)
  *
  * ```ts
  * import { AiMetricsInstallConfigurationError } from "@beep/repo-ai-metrics"
@@ -99,7 +126,8 @@ const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeyS
  *   cause: "missing secret reference",
  *   message: "dankserver target requires a raw archive key secret reference."
  * })
- * console.log(error.message)
+ *
+ * console.log(error._tag) // "AiMetricsInstallConfigurationError"
  * ```
  *
  * @category errors
@@ -120,13 +148,31 @@ export class AiMetricsInstallConfigurationError extends TaggedErrorClass<AiMetri
 ) {}
 
 /**
- * Input for resolving an AI metrics install spec.
+ * Operator choices that resolve into a complete install spec.
  *
- * **Example** (Make empty install input)
+ * **Details**
+ *
+ * Every field except the data-root inputs has a safe default, so `make({})`
+ * describes a local Phoenix stack with encrypted raw storage and tailnet-only
+ * exposure. `dataRoot`, `homeDir`, and `stateHome` feed data-root precedence:
+ * supply `dataRoot` to name the store outright, or `homeDir`/`stateHome` to let
+ * it resolve under the XDG state home.
+ *
+ * **Gotchas**
+ *
+ * A `local` target with none of `dataRoot`, `homeDir`, or `stateHome` fails
+ * resolution rather than defaulting. Resolve the root at the process edge.
+ *
+ * **Example** (The default local stack)
  *
  * ```ts
  * import { AiMetricsInstallInput } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsInstallInput.make({}).target)
+ *
+ * const input = AiMetricsInstallInput.make({ homeDir: "/home/dev" })
+ *
+ * console.log(input.target) // "local"
+ * console.log(input.defaultTool) // "phoenix"
+ * console.log(input.tailnetOnly) // true
  * ```
  *
  * @category models
@@ -144,6 +190,7 @@ export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiM
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsTool.Enum.phoenix))
     ),
     hashSaltSecretRef: S.optionalKey(S.String),
+    homeDir: S.optionalKey(S.String),
     litellmGatewayEnabled: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))
@@ -158,6 +205,7 @@ export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiM
     ),
     publicBaseUrl: S.optionalKey(S.String),
     rawArchiveKeySecretRef: S.optionalKey(S.String),
+    stateHome: S.optionalKey(S.String),
     target: AiMetricsDeployTarget.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
@@ -173,21 +221,35 @@ export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiM
 ) {}
 
 /**
- * Storage layout resolved for an AI metrics target.
+ * Every path an AI metrics store owns, derived from one data root.
  *
- * **Example** (Build storage layout paths)
+ * **Details**
+ *
+ * The four sub-paths are pure functions of `dataRoot`, so the layout is fully
+ * determined once the root is resolved and no consumer has to re-derive a
+ * subdirectory name.
+ *
+ * **Gotchas**
+ *
+ * Nothing here brands or validates absoluteness. A relative `dataRoot` produces
+ * a relative layout that binds to whatever working directory the process
+ * inherits — validate with `requireAbsoluteAiMetricsDataRoot` before rendering
+ * any of these paths into a unit file or persisting them.
+ *
+ * **Example** (Deriving the store's paths)
  *
  * ```ts
  * import { AiMetricsStorageLayout } from "@beep/repo-ai-metrics"
  *
  * const storage = AiMetricsStorageLayout.make({
- *   dataRoot: ".beep/ai-metrics",
- *   derivedDir: ".beep/ai-metrics/derived",
- *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *   parquetDir: ".beep/ai-metrics/derived/parquet",
- *   rawArchiveDir: ".beep/ai-metrics/raw"
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *   derivedDir: "/home/dev/.local/state/beep/ai-metrics/derived",
+ *   duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
+ *   parquetDir: "/home/dev/.local/state/beep/ai-metrics/derived/parquet",
+ *   rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw"
  * })
- * console.log(storage.duckDbPath)
+ *
+ * console.log(storage.duckDbPath.startsWith(storage.derivedDir)) // true
  * ```
  *
  * @category models
@@ -207,9 +269,16 @@ export class AiMetricsStorageLayout extends S.Class<AiMetricsStorageLayout>($I`A
 ) {}
 
 /**
- * One candidate service in the local bakeoff or promoted install target.
+ * One observability backend the install can run, with every URL a caller needs.
  *
- * **Example** (Make Phoenix service spec)
+ * **Details**
+ *
+ * `internalUrl` is how sibling containers reach the service, `publicUrl` is how
+ * the operator reaches it, and `healthUrl` is what readiness polls. Keeping all
+ * three resolved here is what lets the same spec describe a local compose stack
+ * and a remote deployment without call sites rewriting hostnames.
+ *
+ * **Example** (Describing a local Phoenix backend)
  *
  * ```ts
  * import { AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics"
@@ -230,7 +299,9 @@ export class AiMetricsStorageLayout extends S.Class<AiMetricsStorageLayout>($I`A
  *   publicUrl: "http://127.0.0.1:6006",
  *   tool: "phoenix"
  * })
- * console.log(service.tool)
+ *
+ * console.log(service.tool) // "phoenix"
+ * console.log(service.otlp.signalScope) // "traces_only"
  * ```
  *
  * @category models
@@ -253,9 +324,16 @@ export class AiMetricsServiceSpec extends S.Class<AiMetricsServiceSpec>($I`AiMet
 ) {}
 
 /**
- * Resolved target-agnostic install spec for AI metrics.
+ * The fully resolved install contract shared by the CLI installer and orchestration.
  *
- * **Example** (Build full install spec)
+ * **Details**
+ *
+ * Nothing in the spec is still a choice: storage paths, service endpoints, the
+ * privacy mode, and the operator command list are all decided. That is what
+ * lets the same value drive a plan, a doctor run, and a dry-run apply without
+ * any of them re-deriving a default and disagreeing.
+ *
+ * **Example** (A resolved local spec)
  *
  * ```ts
  * import {
@@ -274,18 +352,21 @@ export class AiMetricsServiceSpec extends S.Class<AiMetricsServiceSpec>($I`AiMet
  *   services: [],
  *   stackName: "beep-ai-metrics-local",
  *   storage: AiMetricsStorageLayout.make({
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDir: ".beep/ai-metrics/derived",
- *     duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *     parquetDir: ".beep/ai-metrics/derived/parquet",
- *     rawArchiveDir: ".beep/ai-metrics/raw"
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDir: "/home/dev/.local/state/beep/ai-metrics/derived",
+ *     duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     parquetDir: "/home/dev/.local/state/beep/ai-metrics/derived/parquet",
+ *     rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw"
  *   }),
  *   tailnetOnly: true,
  *   target: "local"
  * })
- * console.log(spec.plannedCommands)
+ *
+ * console.log(spec.plannedCommands.length) // 1
+ * console.log(spec.storage.dataRoot) // /home/dev/.local/state/beep/ai-metrics
  * ```
  *
+ * @see {@link makeAiMetricsInstallSpec} for the resolver that produces this spec.
  * @category models
  * @since 0.0.0
  */
@@ -311,13 +392,23 @@ export class AiMetricsInstallSpec extends S.Class<AiMetricsInstallSpec>($I`AiMet
 ) {}
 
 /**
- * P5a install-plan step kinds.
+ * What kind of work an install-plan step performs.
  *
- * **Example** (Log storage step kind)
+ * **Details**
+ *
+ * The kind is what lets a caller filter a plan without parsing command strings
+ * — for example running only the read-only checks, or skipping every step that
+ * touches a remote host.
+ *
+ * **Example** (Selecting the storage steps of a plan)
  *
  * ```ts
  * import { AiMetricsInstallPlanStepKind } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsInstallPlanStepKind.Enum.storage)
+ *
+ * const isStorage = AiMetricsInstallPlanStepKind.is.storage
+ *
+ * console.log(AiMetricsInstallPlanStepKind.Enum.storage) // "storage"
+ * console.log(isStorage("forwarder")) // false
  * ```
  *
  * @category models
@@ -344,25 +435,25 @@ export const AiMetricsInstallPlanStepKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsInstallPlanStepKind}.
+ * Decoded step-kind literal carried by each install plan step.
  *
- * **Example** (Assign storage kind type)
- *
- * ```ts
- * import type { AiMetricsInstallPlanStepKind } from "@beep/repo-ai-metrics"
- * const kind: AiMetricsInstallPlanStepKind = "storage"
- * console.log(kind)
- * ```
- *
+ * @see {@link AiMetricsInstallPlanStepKind} for the runtime schema, its guards, and its enum keys.
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.Type;
 
 /**
- * One typed P5a install plan step.
+ * One ordered operation in an install plan, described before anything runs.
  *
- * **Example** (Make source discovery step)
+ * **Details**
+ *
+ * `mutatesHost` and `requiresRemote` are the two flags that make a plan
+ * reviewable: together they say whether a step changes the local machine,
+ * reaches out over the network, or merely reads. `order` is the intended
+ * sequence, so a filtered subset still runs in a coherent order.
+ *
+ * **Example** (A read-only discovery step)
  *
  * ```ts
  * import { AiMetricsInstallPlanStep } from "@beep/repo-ai-metrics"
@@ -378,7 +469,9 @@ export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.T
  *   stepId: "source-discovery",
  *   title: "Discover sources"
  * })
- * console.log(step.required)
+ *
+ * console.log(step.required) // true
+ * console.log(step.mutatesHost) // false
  * ```
  *
  * @category models
@@ -402,9 +495,16 @@ export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>(
 ) {}
 
 /**
- * Typed P5a install plan for local smoke or dankserver deployment.
+ * The ordered steps an install would perform, produced without performing any of them.
  *
- * **Example** (Build dry-run install plan)
+ * **Details**
+ *
+ * A plan is a description, never an execution. `dryRunOnly` records whether the
+ * plan was built for review or for a run an operator intends to carry out, and
+ * it travels with the plan so a doctor result cannot be mistaken for evidence
+ * that the install actually happened.
+ *
+ * **Example** (An empty local plan)
  *
  * ```ts
  * import {
@@ -419,18 +519,21 @@ export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>(
  *   stackName: "beep-ai-metrics-local",
  *   steps: [],
  *   storage: AiMetricsStorageLayout.make({
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDir: ".beep/ai-metrics/derived",
- *     duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *     parquetDir: ".beep/ai-metrics/derived/parquet",
- *     rawArchiveDir: ".beep/ai-metrics/raw"
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDir: "/home/dev/.local/state/beep/ai-metrics/derived",
+ *     duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     parquetDir: "/home/dev/.local/state/beep/ai-metrics/derived/parquet",
+ *     rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw"
  *   }),
  *   tailnetOnly: true,
  *   target: "local"
  * })
- * console.log(plan.dryRunOnly)
+ *
+ * console.log(plan.dryRunOnly) // true
+ * console.log(plan.steps.length) // 0
  * ```
  *
+ * @see {@link AiMetricsInstallPlanStep} for what each step records.
  * @category models
  * @since 0.0.0
  */
@@ -451,13 +554,23 @@ export class AiMetricsInstallPlan extends S.Class<AiMetricsInstallPlan>($I`AiMet
 ) {}
 
 /**
- * Doctor check status for P5a install contract validation.
+ * Outcome of a single install doctor check.
  *
- * **Example** (Log passed check status)
+ * **Details**
+ *
+ * `skipped` is distinct from `passed` on purpose: a check that could not run
+ * because its evidence was unavailable has proven nothing, and collapsing the
+ * two would let a doctor report green on a store it never inspected.
+ *
+ * **Example** (Telling a skipped check from a passing one)
  *
  * ```ts
  * import { AiMetricsInstallDoctorCheckStatus } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsInstallDoctorCheckStatus.Enum.passed)
+ *
+ * const isPassed = AiMetricsInstallDoctorCheckStatus.is.passed
+ *
+ * console.log(AiMetricsInstallDoctorCheckStatus.Enum.passed) // "passed"
+ * console.log(isPassed("skipped")) // false
  * ```
  *
  * @category models
@@ -470,29 +583,32 @@ export const AiMetricsInstallDoctorCheckStatus = LiteralKit(["passed", "warning"
 );
 
 /**
- * Runtime type for {@link AiMetricsInstallDoctorCheckStatus}.
+ * Decoded status literal carried by each install doctor check.
  *
- * **Example** (Assign passed status type)
- *
- * ```ts
- * import type { AiMetricsInstallDoctorCheckStatus } from "@beep/repo-ai-metrics"
- * const status: AiMetricsInstallDoctorCheckStatus = "passed"
- * console.log(status)
- * ```
- *
+ * @see {@link AiMetricsInstallDoctorCheckStatus} for the runtime schema, its guards, and its enum keys.
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsInstallDoctorCheckStatus = typeof AiMetricsInstallDoctorCheckStatus.Type;
 
 /**
- * Overall P5a install doctor result status.
+ * Aggregate verdict over every install doctor check.
  *
- * **Example** (Log warning doctor status)
+ * **Details**
+ *
+ * The aggregate is the worst individual outcome, and it has no `skipped`
+ * member: a run where every check skipped still has to resolve to one of these
+ * three so a caller cannot treat "nothing ran" as a pass.
+ *
+ * **Example** (Gating on the aggregate verdict)
  *
  * ```ts
  * import { AiMetricsInstallDoctorStatus } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsInstallDoctorStatus.Enum.warning)
+ *
+ * const isFailed = AiMetricsInstallDoctorStatus.is.failed
+ *
+ * console.log(AiMetricsInstallDoctorStatus.Enum.warning) // "warning"
+ * console.log(isFailed("warning")) // false
  * ```
  *
  * @category models
@@ -505,25 +621,25 @@ export const AiMetricsInstallDoctorStatus = LiteralKit(["passed", "warning", "fa
 );
 
 /**
- * Runtime type for {@link AiMetricsInstallDoctorStatus}.
+ * Decoded aggregate status carried by an install doctor result.
  *
- * **Example** (Assign warning status type)
- *
- * ```ts
- * import type { AiMetricsInstallDoctorStatus } from "@beep/repo-ai-metrics"
- * const status: AiMetricsInstallDoctorStatus = "warning"
- * console.log(status)
- * ```
- *
+ * @see {@link AiMetricsInstallDoctorStatus} for the runtime schema, its guards, and its enum keys.
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.Type;
 
 /**
- * One P5a install doctor check.
+ * One named contract check with its outcome and supporting detail.
  *
- * **Example** (Make storage layout check)
+ * **Details**
+ *
+ * `checkId` is a stable dotted identifier, so a caller can suppress or gate on
+ * a specific check without matching on prose. `metadata` defaults to empty and
+ * holds only string values, which keeps a doctor result printable and safe to
+ * attach to CI output.
+ *
+ * **Example** (A passing storage check)
  *
  * ```ts
  * import { AiMetricsInstallDoctorCheck } from "@beep/repo-ai-metrics"
@@ -533,7 +649,9 @@ export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.T
  *   message: "Storage layout resolved.",
  *   status: "passed"
  * })
- * console.log(check.metadata)
+ *
+ * console.log(check.checkId) // "storage.layout"
+ * console.log(check.status) // "passed"
  * ```
  *
  * @category models
@@ -555,13 +673,25 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
 ) {}
 
 /**
- * Input for P5a install doctor evaluation.
+ * The install choices and optional discovery evidence a doctor run evaluates.
  *
- * **Example** (Make empty doctor input)
+ * **Details**
+ *
+ * `sourceDiscovery` is optional because the doctor is useful without it: the
+ * contract checks still run, and the source-availability checks report
+ * `skipped` rather than inventing an answer.
+ *
+ * **Example** (Doctoring the default local install)
  *
  * ```ts
- * import { AiMetricsInstallDoctorInput } from "@beep/repo-ai-metrics"
- * console.log(AiMetricsInstallDoctorInput.make({}))
+ * import { AiMetricsInstallDoctorInput, AiMetricsInstallInput } from "@beep/repo-ai-metrics"
+ *
+ * const input = AiMetricsInstallDoctorInput.make({
+ *   install: AiMetricsInstallInput.make({ homeDir: "/home/dev" })
+ * })
+ *
+ * console.log(input.install.target) // "local"
+ * console.log(input.sourceDiscovery) // undefined
  * ```
  *
  * @category models
@@ -581,9 +711,16 @@ export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorI
 ) {}
 
 /**
- * P5a install doctor result.
+ * Every doctor check, the aggregate verdict, and the plan they were run against.
  *
- * **Example** (Build passed doctor result)
+ * **Details**
+ *
+ * Carrying the `plan` alongside the checks is what makes the result
+ * self-contained: a reader can see both the verdict and the exact configuration
+ * that produced it, instead of having to re-resolve the spec and hope it still
+ * matches.
+ *
+ * **Example** (A passing doctor result)
  *
  * ```ts
  * import {
@@ -599,15 +736,16 @@ export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorI
  *   stackName: "beep-ai-metrics-local",
  *   steps: [],
  *   storage: AiMetricsStorageLayout.make({
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDir: ".beep/ai-metrics/derived",
- *     duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *     parquetDir: ".beep/ai-metrics/derived/parquet",
- *     rawArchiveDir: ".beep/ai-metrics/raw"
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDir: "/home/dev/.local/state/beep/ai-metrics/derived",
+ *     duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     parquetDir: "/home/dev/.local/state/beep/ai-metrics/derived/parquet",
+ *     rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw"
  *   }),
  *   tailnetOnly: true,
  *   target: "local"
  * })
+ *
  * const result = AiMetricsInstallDoctorResult.make({
  *   availableSourceCount: 1,
  *   checks: [],
@@ -615,7 +753,9 @@ export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorI
  *   status: "passed",
  *   target: "local"
  * })
- * console.log(result.status)
+ *
+ * console.log(result.status) // "passed"
+ * console.log(result.plan.storage.dataRoot) // /home/dev/.local/state/beep/ai-metrics
  * ```
  *
  * @category models
@@ -637,9 +777,15 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
 ) {}
 
 /**
- * P5a dry-run apply result.
+ * Proof that an apply listed its steps and changed nothing.
  *
- * **Example** (Build dry-run apply result)
+ * **Details**
+ *
+ * `dryRun` is the literal `true`, not a boolean. The type itself is the
+ * guarantee: there is no value of this class that could describe a run which
+ * mutated the host, so a caller cannot mistake one for an executed install.
+ *
+ * **Example** (Recording a no-op apply)
  *
  * ```ts
  * import {
@@ -655,22 +801,25 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
  *   stackName: "beep-ai-metrics-local",
  *   steps: [],
  *   storage: AiMetricsStorageLayout.make({
- *     dataRoot: ".beep/ai-metrics",
- *     derivedDir: ".beep/ai-metrics/derived",
- *     duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *     parquetDir: ".beep/ai-metrics/derived/parquet",
- *     rawArchiveDir: ".beep/ai-metrics/raw"
+ *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",
+ *     derivedDir: "/home/dev/.local/state/beep/ai-metrics/derived",
+ *     duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
+ *     parquetDir: "/home/dev/.local/state/beep/ai-metrics/derived/parquet",
+ *     rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw"
  *   }),
  *   tailnetOnly: true,
  *   target: "local"
  * })
+ *
  * const result = AiMetricsInstallApplyDryRunResult.make({
  *   dryRun: true,
  *   message: "No host mutation performed.",
  *   plan,
  *   target: "local"
  * })
- * console.log(result.dryRun)
+ *
+ * console.log(result.dryRun) // true
+ * console.log(result.message) // "No host mutation performed."
  * ```
  *
  * @category models
@@ -856,7 +1005,7 @@ const makeInstallPlanSteps = (
     O.getOrElse(() => "")
   );
   const collectorDataRootFlag =
-    spec.target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : "";
+    spec.target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${spec.storage.dataRoot}` : "";
 
   return [
     planStep({
@@ -1043,11 +1192,11 @@ const plannedCommands = (
     O.match({
       onNone: () =>
         withHashSaltSecret(hashSaltSecretRef)(
-          `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot} --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
+          `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot} --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
         ),
       onSome: (rawRef) =>
         withHashSaltSecret(hashSaltSecretRef)(
-          `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
+          `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
         ),
     })
   ),
@@ -1055,25 +1204,25 @@ const plannedCommands = (
     hashSaltSecretRef,
     rawArchiveKeySecretRef
   )(
-    `beep-cli ai-metrics forwarder timer --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot} --otlp-base-url ${publicBaseUrl}` : ""}`
+    `beep-cli ai-metrics forwarder timer --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot} --otlp-base-url ${publicBaseUrl}` : ""}`
   ),
   withInstallSecretRefFlags(
     hashSaltSecretRef,
     rawArchiveKeySecretRef
   )(
-    `beep-cli ai-metrics otlp export --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""} --ingest-run latest${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp-base-url ${publicBaseUrl}` : ""}`
+    `beep-cli ai-metrics otlp export --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --ingest-run latest${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp-base-url ${publicBaseUrl}` : ""}`
   ),
   withInstallSecretRefFlags(
     hashSaltSecretRef,
     rawArchiveKeySecretRef
   )(
-    `beep-cli ai-metrics label queue --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""} --limit 20`
+    `beep-cli ai-metrics label queue --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --limit 20`
   ),
   withInstallSecretRefFlags(
     hashSaltSecretRef,
     rawArchiveKeySecretRef
   )(
-    `beep-cli ai-metrics report weekly --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""}`
+    `beep-cli ai-metrics report weekly --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
   ),
   pipe(
     rawArchiveKeySecretRef,
@@ -1084,7 +1233,7 @@ const plannedCommands = (
             hashSaltSecretRef,
             rawArchiveKeySecretRef
           )(
-            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""}`
+            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
           )}`
         ),
       onSome: (rawRef) =>
@@ -1093,7 +1242,7 @@ const plannedCommands = (
             hashSaltSecretRef,
             rawArchiveKeySecretRef
           )(
-            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${localCollectorDataRoot}` : ""}`
+            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
           )
         )}`,
     })
@@ -1173,16 +1322,37 @@ const check = ({
 /**
  * Resolve an install spec for the requested AI metrics target.
  *
- * **Example** (Resolve default install spec)
+ * **Details**
+ *
+ * The storage layout hangs off a data root resolved by
+ * {@link resolveAiMetricsDataRoot}: an explicit `dataRoot` first, then the
+ * deploy target's default, which for every non-dankserver target is the XDG
+ * store beneath `homeDir` or `stateHome`.
+ *
+ * **Gotchas**
+ *
+ * There is no clone-relative fallback. A local-target input that supplies
+ * neither `dataRoot` nor `homeDir`/`stateHome` fails with
+ * {@link AiMetricsInstallConfigurationError} rather than quietly writing the
+ * canonical store into whatever directory the process happens to be running in.
+ *
+ * **Example** (Resolving the layout for an explicit data root)
  *
  * ```ts
- * import { makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
+ * import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
- * const spec = Effect.runSync(makeAiMetricsInstallSpec())
+ *
+ * const spec = Effect.runSync(
+ *   makeAiMetricsInstallSpec(
+ *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *   )
+ * )
+ *
  * console.log(spec.storage.rawArchiveDir)
+ * // /home/dev/.local/state/beep/ai-metrics/raw
  * ```
  *
- * @param input - Optional operator install preferences; omitted fields use the local target defaults.
+ * @param input - Operator install preferences; the data root must be resolvable from them.
  * @returns An effect that resolves the normalized install spec consumed by IaC and CLI planning.
  * @category constructors
  * @since 0.0.0
@@ -1192,7 +1362,7 @@ export const makeAiMetricsInstallSpec: (
 ) => Effect.Effect<AiMetricsInstallSpec, AiMetricsInstallConfigurationError> = Effect.fn(
   "AiMetrics.makeAiMetricsInstallSpec"
 )(function* (input: AiMetricsInstallInput = AiMetricsInstallInput.make({})) {
-  const dataRoot = input.dataRoot ?? defaultDataRoot(input.target);
+  const dataRoot = yield* requireInstallDataRoot(input);
   const publicBaseUrl = input.publicBaseUrl ?? defaultPublicBaseUrl(input.target);
   const hashSaltSecretRef = yield* requireHashSaltSecretRef(input.target, input.hashSaltSecretRef);
   const rawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRef(input.target, input.rawArchiveKeySecretRef);
@@ -1220,23 +1390,34 @@ export const makeAiMetricsInstallSpec: (
 });
 
 /**
- * Resolve the typed P5a install plan for a target without mutating local or remote state.
+ * Describe every step an install would take, without touching local or remote state.
  *
- * **Example** (Yield default install plan)
+ * **Details**
+ *
+ * Planning resolves the spec first, so the same data-root law applies: a local
+ * input that supplies neither `dataRoot` nor `homeDir`/`stateHome` fails here
+ * rather than producing a plan against an accidental store. The returned plan
+ * always carries `dryRunOnly: true`.
+ *
+ * **Example** (Planning a local install)
  *
  * ```ts
- * import { makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
+ * import { AiMetricsInstallInput, makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = Effect.gen(function* () {
- *   const plan = yield* makeAiMetricsInstallPlan()
- *   console.log(plan.dryRunOnly)
- * })
- * console.log(program)
+ * const plan = Effect.runSync(
+ *   makeAiMetricsInstallPlan(
+ *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *   )
+ * )
+ *
+ * console.log(plan.dryRunOnly) // true
+ * console.log(plan.stackName) // "beep-ai-metrics-local"
  * ```
  *
  * @param input - Operator install preferences for the target plan.
  * @returns A typed, dry-runnable plan consumed by CLI plan, doctor, and apply workflows.
+ * @see {@link makeAiMetricsInstallSpec} for the spec resolution this planning builds on.
  * @category constructors
  * @since 0.0.0
  */
@@ -1263,19 +1444,40 @@ export const makeAiMetricsInstallPlan: (
 });
 
 /**
- * Evaluate the P5a install doctor contract checks.
+ * Check a proposed install against its contract and report a single verdict.
  *
- * **Example** (Yield default doctor result)
+ * **When to use**
+ *
+ * Use when preparing an apply, or after changing anything about the store's
+ * location or secrets. The doctor answers "would this install be coherent"
+ * without performing it.
+ *
+ * **Details**
+ *
+ * Checks that need source-discovery evidence report `skipped` when
+ * `sourceDiscovery` is absent, and the aggregate status is the worst individual
+ * outcome. Contract checks still run either way.
+ *
+ * **Example** (Doctoring a local install)
  *
  * ```ts
- * import { makeAiMetricsInstallDoctorResult } from "@beep/repo-ai-metrics"
+ * import {
+ *   AiMetricsInstallDoctorInput,
+ *   AiMetricsInstallInput,
+ *   makeAiMetricsInstallDoctorResult
+ * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = Effect.gen(function* () {
- *   const result = yield* makeAiMetricsInstallDoctorResult()
- *   console.log(result.status)
- * })
- * console.log(program)
+ * const result = Effect.runSync(
+ *   makeAiMetricsInstallDoctorResult(
+ *     AiMetricsInstallDoctorInput.make({
+ *       install: AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     })
+ *   )
+ * )
+ *
+ * console.log(result.target) // "local"
+ * console.log(result.availableSourceCount) // 0
  * ```
  *
  * @param input - Install preferences plus optional source discovery evidence.
@@ -1370,19 +1572,29 @@ export const makeAiMetricsInstallDoctorResult: (
 });
 
 /**
- * Resolve the P5a dry-run apply result.
+ * List what a CLI apply would do, and state plainly that it did none of it.
  *
- * **Example** (Yield dry-run apply result)
+ * **Details**
+ *
+ * The CLI apply surface is dry-run-only by construction — real remote mutation
+ * belongs to the infrastructure stack, not to this command. The returned
+ * message says so, so an operator reading terminal output is not left guessing
+ * whether the install already happened.
+ *
+ * **Example** (Listing the CLI-safe steps)
  *
  * ```ts
- * import { makeAiMetricsInstallApplyDryRunResult } from "@beep/repo-ai-metrics"
+ * import { AiMetricsInstallInput, makeAiMetricsInstallApplyDryRunResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const program = Effect.gen(function* () {
- *   const result = yield* makeAiMetricsInstallApplyDryRunResult()
- *   console.log(result.dryRun)
- * })
- * console.log(program)
+ * const result = Effect.runSync(
+ *   makeAiMetricsInstallApplyDryRunResult(
+ *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *   )
+ * )
+ *
+ * console.log(result.dryRun) // true
+ * console.log(result.plan.dryRunOnly) // true
  * ```
  *
  * @param input - Operator install preferences for the dry-run apply.
@@ -1406,20 +1618,31 @@ export const makeAiMetricsInstallApplyDryRunResult: (
 });
 
 /**
- * Render a P5a install plan as JSON.
+ * Encode an install plan as the JSON the CLI emits under `--json`.
  *
- * **Example** (Serialize plan to JSON)
+ * **Details**
+ *
+ * Encoding goes through the schema, so the emitted text round-trips back into
+ * {@link AiMetricsInstallPlan} and a downstream tool can consume the plan
+ * instead of scraping the human-readable rendering.
+ *
+ * **Example** (Emitting a plan as JSON)
  *
  * ```ts
- * import { aiMetricsInstallPlanToJson, makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
+ * import {
+ *   AiMetricsInstallInput,
+ *   aiMetricsInstallPlanToJson,
+ *   makeAiMetricsInstallPlan
+ * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const json = Effect.runPromise(
- *   makeAiMetricsInstallPlan().pipe(
- *     Effect.flatMap((plan) => aiMetricsInstallPlanToJson(plan))
- *   )
+ * const json = Effect.runSync(
+ *   makeAiMetricsInstallPlan(
+ *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *   ).pipe(Effect.flatMap(aiMetricsInstallPlanToJson))
  * )
- * console.log(json)
+ *
+ * console.log(json.includes("beep-ai-metrics-local")) // true
  * ```
  *
  * @category utilities
@@ -1432,20 +1655,34 @@ export const aiMetricsInstallPlanToJson: (
 );
 
 /**
- * Render a P5a install doctor result as JSON.
+ * Encode a doctor result as the JSON a CI job can gate on.
  *
- * **Example** (Serialize doctor to JSON)
+ * **Details**
+ *
+ * The encoded result carries every individual check as well as the aggregate
+ * status, so a gate can fail on one specific `checkId` rather than only on the
+ * overall verdict.
+ *
+ * **Example** (Emitting a doctor result as JSON)
  *
  * ```ts
- * import { aiMetricsInstallDoctorToJson, makeAiMetricsInstallDoctorResult } from "@beep/repo-ai-metrics"
+ * import {
+ *   AiMetricsInstallDoctorInput,
+ *   AiMetricsInstallInput,
+ *   aiMetricsInstallDoctorToJson,
+ *   makeAiMetricsInstallDoctorResult
+ * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const json = Effect.runPromise(
- *   makeAiMetricsInstallDoctorResult().pipe(
- *     Effect.flatMap((result) => aiMetricsInstallDoctorToJson(result))
- *   )
+ * const json = Effect.runSync(
+ *   makeAiMetricsInstallDoctorResult(
+ *     AiMetricsInstallDoctorInput.make({
+ *       install: AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     })
+ *   ).pipe(Effect.flatMap(aiMetricsInstallDoctorToJson))
  * )
- * console.log(json)
+ *
+ * console.log(json.includes("install.spec")) // true
  * ```
  *
  * @category utilities
@@ -1458,23 +1695,30 @@ export const aiMetricsInstallDoctorToJson: (
 );
 
 /**
- * Render a P5a dry-run apply result as JSON.
+ * Encode a dry-run apply result as the JSON the CLI emits under `--json`.
  *
- * **Example** (Serialize dry-run to JSON)
+ * **Details**
+ *
+ * `dryRun` survives encoding as `true`, so a machine reader of the output can
+ * assert that the command it invoked did not mutate the host.
+ *
+ * **Example** (Emitting a dry-run apply as JSON)
  *
  * ```ts
  * import {
+ *   AiMetricsInstallInput,
  *   aiMetricsInstallApplyDryRunToJson,
  *   makeAiMetricsInstallApplyDryRunResult
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const json = Effect.runPromise(
- *   makeAiMetricsInstallApplyDryRunResult().pipe(
- *     Effect.flatMap((result) => aiMetricsInstallApplyDryRunToJson(result))
- *   )
+ * const json = Effect.runSync(
+ *   makeAiMetricsInstallApplyDryRunResult(
+ *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *   ).pipe(Effect.flatMap(aiMetricsInstallApplyDryRunToJson))
  * )
- * console.log(json)
+ *
+ * console.log(json.includes("\"dryRun\":true")) // true
  * ```
  *
  * @category utilities
