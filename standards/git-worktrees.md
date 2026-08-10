@@ -132,8 +132,9 @@ bun run beep worktree doctor
   summary of what was copied, skipped, and the absolute path.
 - `worktree remove <name>` refuses when the target worktree has uncommitted
   changes unless you pass `--force`. It runs `git worktree remove` and prints
-  the `git branch -D <branch>` command you can run yourself; branch deletion is
-  intentionally left to the operator.
+  the separate `git branch -D <branch>` cleanup command. Branch deletion stays
+  explicit so the target can be checked first; an authorized agent can run it
+  directly under the checked-in settings.
 - `worktree doctor` is read-only. It lists every worktree under the worktrees
   root with its branch, clean/dirty status, missing bootstrap files (`.env`,
   `node_modules`), and any prunable metadata from
@@ -191,6 +192,9 @@ Still useful to know:
 
 - Tracked `.claude/settings.json` and `.mcp.json` come along automatically in
   any worktree.
+- The tracked Claude permissions allow `gh` (including GraphQL/API writes) and
+  local/remote branch deletion. Force pushes, admin merges, and repository
+  deletion remain denied; authorization and target checks still apply.
 - Gitignored files like `.claude/settings.local.json`, `CLAUDE.local.md`, and
   `.env` do not.
 - If you ever choose Claude-managed worktrees for throwaway tasks, `.worktreeinclude` can copy selected ignored files, but that is not part of the default `beep-effect` setup.
@@ -214,6 +218,12 @@ Also good:
 ```bash
 codex -C /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
 ```
+
+The trusted project `.codex/config.toml` uses `approval_policy = "never"` and
+`sandbox_mode = "danger-full-access"` so GitHub network calls and `.git` branch
+cleanup are not blocked by the local sandbox. This grants capability, not
+blanket authorization: agents still resolve exact targets and honor repository
+protections before destructive operations.
 
 Why:
 

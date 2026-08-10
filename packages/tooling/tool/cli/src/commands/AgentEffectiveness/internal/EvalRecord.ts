@@ -11,7 +11,6 @@ import {
   AiMetricsBenchmarkRunInput,
   AiMetricsQualityGateStatus,
   aiMetricsDerivedDuckDbPath,
-  DEFAULT_AI_METRICS_DATA_ROOT,
   hashPublicTextSha256,
   recordAiMetricsBenchmarkRun,
   upsertAiMetricsBenchmarkCase,
@@ -40,7 +39,7 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
   $I`RecordAgentEffectivenessEvalScoreOptions`
 )(
   {
-    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))),
+    dataRoot: S.String,
     elapsedMs: S.Finite,
     report: AgentEffectivenessEvalScoreReport,
     task: SkillOptTaskManifest,
@@ -62,7 +61,7 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
  * @since 0.0.0
  */
 export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEvalScorer.record")(function* ({
-  dataRoot = DEFAULT_AI_METRICS_DATA_ROOT,
+  dataRoot,
   elapsedMs,
   report,
   task,

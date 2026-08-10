@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-08-10T10:21:21.205Z",
-  "git_sha": "1c60c63b7bfb2edc95ab19fc3af86dc9ec9c387a",
+  "generated_at": "2026-08-10T17:26:59.282Z",
+  "git_sha": "349e0370888d8e3ba82eaa79dc27e73146a9b2f4",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -1323,28 +1323,28 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 86.75,
-      "statements": 86.8,
-      "branches": 73.99,
-      "functions": 71.39,
+      "lines": 88.08,
+      "statements": 88.18,
+      "branches": 75.51,
+      "functions": 73.79,
       "uncovered": {
-        "lines": 290,
-        "statements": 295,
-        "branches": 155,
-        "functions": 236
+        "lines": 292,
+        "statements": 297,
+        "branches": 156,
+        "functions": 239
       }
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 68.97,
-      "statements": 68.68,
-      "branches": 54.77,
-      "functions": 60.57,
+      "lines": 69.08,
+      "statements": 68.8,
+      "branches": 54.87,
+      "functions": 60.77,
       "uncovered": {
-        "lines": 8187,
-        "statements": 8599,
-        "branches": 4469,
-        "functions": 3011
+        "lines": 8233,
+        "statements": 8644,
+        "branches": 4475,
+        "functions": 3029
       }
     },
     "@beep/repo-configs": {
@@ -1414,10 +1414,10 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 92.98,
-      "statements": 92.13,
+      "lines": 93,
+      "statements": 92.16,
       "branches": 87.17,
-      "functions": 87.05,
+      "functions": 87.1,
       "uncovered": {
         "lines": 275,
         "statements": 324,
@@ -1480,14 +1480,14 @@
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
       "lines": 65.98,
-      "statements": 65.78,
+      "statements": 65.56,
       "branches": 54.38,
-      "functions": 46.66,
+      "functions": 46.32,
       "uncovered": {
         "lines": 100,
-        "statements": 103,
+        "statements": 104,
         "branches": 26,
-        "functions": 72
+        "functions": 73
       }
     },
     "@beep/tika": {

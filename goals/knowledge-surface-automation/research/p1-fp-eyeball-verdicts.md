@@ -37,6 +37,29 @@ materialize/check, clearing house, hunk ledger — P4; Renovate wiring — P5).
 `rootRepoLintPolicySteps` (after `lint:roadmap-refs`, before `goals:doctor`),
 introduced-only blocking semantics.
 
+## Workstream A — `p1-report-refs-tree.md` (recorded 2026-08-08)
+
+**Verdict: approved on all four asks; the A rewrite pass (P3) is unlocked.**
+
+1. `broken-target` disposition: the ratified fence-decoy rule remains the only
+   speculative-path mechanism. The two known lexical FP shapes (MCP method names
+   like `tools/call`, and upstream repo paths spelled as bare `tools/…` /
+   `scripts/…`) are accepted as documented false positives to burn down during
+   P3 with data in hand; no extension requirement is introduced.
+2. `audit-pattern-literal`: the v1 lexical signal set is accepted as-is,
+   including its known coarseness on archival research tables (harmless — the
+   archival surface never gates). Revisit only if a gate starts consuming the
+   class.
+3. Convention sets: `~/.openclaw` is admitted to `portable-home-convention` as
+   the one deliberate CLI-PR widening (same product-config class as `~/.claude`
+   and `~/.codex`); this PR carries that widening. The
+   `documented-temp-convention` set stays exactly `/tmp/portless`.
+4. `external-mirror-reference` remediation ("replace with canonical GitHub
+   URL") stands for mirror-shaped rows; provenance-shaped rows (`~/Downloads/…`)
+   ride along until P3 rewrites live surfaces. The 122-row live
+   `actionable-host-path` set is confirmed as the P3 mechanical-rewrite
+   worklist.
+
 ## Probe execution policy (binding, from the #563 review security finding)
 
 **Decision: same-repo only.** The hosted semantic-delta gate lane runs command
