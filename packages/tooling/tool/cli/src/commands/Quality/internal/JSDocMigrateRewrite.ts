@@ -584,6 +584,17 @@ const rewriteBlockUnchecked = (
   const { bodyLines, exampleSegments, remarksSegments, segments } = parseBlockModel(blockText);
   const reasons: Array<string> = [];
 
+  // TSDoc forbids summary content in an `{@inheritDoc}` block
+  // (eslint-plugin-tsdoc `tsdoc-inheritdoc-incompatible-summary`), and every
+  // body section this rewrite emits — Example, Details, Gotchas — IS summary
+  // content, while the legacy `@example`/`@remarks` block tags were legal
+  // beside `@inheritDoc`. Converting would trade a retired carrier for a
+  // TSDoc violation, so these blocks fail closed into the override channel;
+  // the usual resolution is deleting the optional type-level example.
+  if (Str.includes("{@inheritDoc")(blockText) && (exampleSegments.length > 0 || remarksSegments.length > 0)) {
+    return { _tag: "Quarantined", reasons: ["inheritdoc-summary-content"] };
+  }
+
   if (data.titles.length !== exampleSegments.length) {
     return {
       _tag: "DataMismatch",

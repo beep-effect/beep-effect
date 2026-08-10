@@ -21,7 +21,8 @@ interface FpsSource {
  * Per-renderer FPS samples, throttled so benchmark instrumentation does not
  * force a React render on every animation frame.
  *
- * @example
+ * **Example** (Building FPS sample atoms)
+ *
  * ```ts
  * import { fpsSampleAtoms } from "@/spikes/Fps.atoms"
  *

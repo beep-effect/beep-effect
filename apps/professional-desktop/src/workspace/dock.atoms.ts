@@ -61,7 +61,8 @@ import type { DockAtomGraph } from "@beep/dock-react";
  * home — reopening a closed panel targets a group where its cluster siblings
  * live, so SPARQL lands beside Inspector rather than in a random group.
  *
- * @example
+ * **Example** (Logging desktop panels length)
+ *
  * ```ts
  * import { DESKTOP_PANELS } from "@/workspace/dock.atoms"
  *
@@ -162,7 +163,8 @@ export const DESKTOP_PANELS = [
 /**
  * One of the thirteen desktop panel keys.
  *
- * @example
+ * **Example** (Assigning ontology graph key)
+ *
  * ```ts
  * import type { DesktopPanelKey } from "@/workspace/dock.atoms"
  *
@@ -178,7 +180,8 @@ export type DesktopPanelKey = (typeof DESKTOP_PANELS)[number]["key"];
 /**
  * The panels the nav rail's Ontology menu lists, in default-layout order.
  *
- * @example
+ * **Example** (Logging ontology panels length)
+ *
  * ```ts
  * import { ONTOLOGY_PANELS } from "@/workspace/dock.atoms"
  *
@@ -196,7 +199,8 @@ const panelSpec = (key: DesktopPanelKey): (typeof DESKTOP_PANELS)[number] =>
 /**
  * The resolved desktop dock atom graph (kernel session plus derived atoms).
  *
- * @example
+ * **Example** (Extracting workspace atom)
+ *
  * ```ts
  * import type { DesktopDockGraph } from "@/workspace/dock.atoms"
  *
@@ -212,7 +216,8 @@ export type DesktopDockGraph = DockAtomGraph;
 /**
  * Panel id for a desktop panel (`surface-<key>`).
  *
- * @example
+ * **Example** (Building surface panel id)
+ *
  * ```ts
  * import { desktopPanelId } from "@/workspace/dock.atoms"
  *
@@ -253,7 +258,8 @@ const GROUP_SHELL = GroupId.make("desktop-shell");
  * (Chat active). SPARQL, Validation, and Worker Metrics start closed and
  * open from the nav rail's Ontology menu.
  *
- * @example
+ * **Example** (Inspecting default workspace kind)
+ *
  * ```ts
  * import { defaultDesktopWorkspace } from "@/workspace/dock.atoms"
  *
@@ -311,7 +317,8 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
  * references the retired `ontology` renderer key, so it would restore a dead
  * panel — the key bump is the honest invalidation (boot deletes stale keys).
  *
- * @example
+ * **Example** (Storing under snapshot key)
+ *
  * ```ts
  * import { DOCK_SNAPSHOT_KEY } from "@/workspace/dock.atoms"
  *
@@ -327,7 +334,8 @@ export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v2";
 /**
  * Retired snapshot keys removed at boot.
  *
- * @example
+ * **Example** (Reading first legacy key)
+ *
  * ```ts
  * import { LEGACY_DOCK_SNAPSHOT_KEYS } from "@/workspace/dock.atoms"
  *
@@ -343,7 +351,8 @@ export const LEGACY_DOCK_SNAPSHOT_KEYS = ["desktop:dock-workspace:v1"] as const;
  * Builds the runtime action that clears the saved layout before executing an
  * injected reload effect.
  *
- * @example
+ * **Example** (Wiring reset button atom)
+ *
  * ```tsx
  * import { makeResetDockSnapshotAtom } from "@/workspace/dock.atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -376,7 +385,8 @@ export const makeResetDockSnapshotAtom = (
 /**
  * Runtime action that clears the saved dock layout before reloading the shell.
  *
- * @example
+ * **Example** (Resetting via button click)
+ *
  * ```tsx
  * import { resetDockSnapshotAtom } from "@/workspace/dock.atoms"
  * import { useAtomSet } from "@effect/atom-react"
@@ -432,7 +442,8 @@ const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make({});
  * that fails to load, parse, or validate falls back to the default workspace
  * and clears the poisoned key.
  *
- * @example
+ * **Example** (Creating runtime dock atom)
+ *
  * ```ts
  * import { makeDesktopDockGraph } from "@/workspace/dock.atoms"
  * import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime"
@@ -486,7 +497,8 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
  * and any persisted layout restores; Success carries the graph the shell (and
  * its registry provider) renders from.
  *
- * @example
+ * **Example** (Hook counting dock panels)
+ *
  * ```ts
  * import { desktopDockGraphAtom } from "@/workspace/dock.atoms"
  * import { useAtomValue } from "@effect/atom-react"
@@ -513,7 +525,8 @@ const DOCK_SAVE_DEBOUNCE_MS = 400;
  * Mounted binding that persists the workspace: every change schedules a
  * debounced `SaveDockSnapshot`, so drag storms collapse into one write.
  *
- * @example
+ * **Example** (Mounting and releasing binding)
+ *
  * ```ts
  * import { dockPersistenceBindingAtom, makeDesktopDockGraph } from "@/workspace/dock.atoms"
  * import { Effect } from "effect"
@@ -580,7 +593,8 @@ const clusterAnchorGroup = (workspace: DockWorkspace, key: DesktopPanelKey): O.O
  * default-layout cluster siblings (then the first docked group, then as the
  * new root when everything was closed).
  *
- * @example
+ * **Example** (Computing SPARQL panel operation)
+ *
  * ```ts
  * import { defaultDesktopWorkspace, panelOperation } from "@/workspace/dock.atoms"
  *
@@ -627,7 +641,8 @@ export const panelOperation: {
 /**
  * Whether a panel is the active tab of the group containing it.
  *
- * @example
+ * **Example** (Checking chat panel active)
+ *
  * ```ts
  * import { defaultDesktopWorkspace, isPanelActive } from "@/workspace/dock.atoms"
  *
@@ -650,7 +665,8 @@ export const isPanelActive: {
 /**
  * Whether a panel is open anywhere in the workspace (docked or floating).
  *
- * @example
+ * **Example** (Checking SPARQL panel open)
+ *
  * ```ts
  * import { defaultDesktopWorkspace, isPanelOpen } from "@/workspace/dock.atoms"
  *

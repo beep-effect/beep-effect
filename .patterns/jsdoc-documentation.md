@@ -19,7 +19,7 @@ dependency on `@effect/jsdocs`.
 - Examples compile through the docgen TypeScript gate. Never remove an Example to
   hide a compilation error.
 - New and touched documentation uses titled `**Example** (Title)` sections.
-- `@remarks`, `@module`, and `@template` are forbidden in new work.
+- `@remarks` is forbidden. `@module` and `@template` are forbidden in new work.
 - Example code uses Effect patterns and contains no `any`, type assertions,
   `declare` statements, empty generator bodies, or deprecated `@effect/schema`
   imports.
@@ -59,10 +59,11 @@ enforces it.
 
 Enforcement is repo-wide and is not advisory. The zero-legacy check in
 `bun run beep quality jsdoc-ratchet` fails when any non-generated
-`packages/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`. Pass
-`--include-generated` to scan generator outputs as well (needed when proving a
-codegen emitter; the default non-generated scope cannot prove generated
-compliance). The gate inspects whole files, not diff hunks.
+`{packages,apps}/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`.
+Pass `--include-generated` to scan generator outputs in the same workspace
+corpus as well (needed when proving a codegen emitter; the default non-generated
+scope cannot prove generated compliance). The gate inspects whole files, not
+diff hunks.
 
 For inventory presence the totals ratchet still counts either a valid Example
 section or a legacy tag. That is a scoring detail of the fail-on-growth comparison,
@@ -269,6 +270,27 @@ Run a bounded edit-loop check with:
 bun run docgen:local
 ```
 
+`docgen:local` plans from `origin/main...HEAD` plus dirty worktree files, but it
+refuses rather than narrows when a global input moved. Changing the root
+`bun.lock`, `package.json`, `turbo.json`, `.bun-version`, `tsconfig.json`,
+`tsconfig.base.json`, `tsconfig.packages.json`, or anything under
+`packages/tooling/tool/docgen/` or `packages/tooling/tool/cli/src/commands/Docgen/`
+marks the plan `full-required`, and the bare script then prints
+`full docgen proof required` and exits non-zero. Only `--allow-full` (what the
+hosted `quality:docgen` lane passes) or `--full` executes the repo-wide proof.
+An explicit package selector remains a bounded edit loop even on such a branch:
+
+```bash
+bun run docgen:local -- --package <package>
+```
+
+Package selection bypasses changed-file planning and stays scoped unless `--full`
+is explicit. The bare automatic loop is unavailable after a global input moves;
+the package-scoped loop is still available when the operator can name the affected
+package. The trigger list is a hand-maintained exact-path constant in
+`packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`, not a Turbo
+`globalDependencies` declaration.
+
 Use the full-repo `bun run docgen` only when full proof is required. The report-only
 quality subject remains available as:
 
@@ -306,6 +328,13 @@ Core combinators may use named imports from the root `effect` module, for exampl
   method call.
 - For `Effect<A, E, R>` results, do not restate the channels in tags. Use prose for
   non-obvious failure or environment semantics.
+- A `Fn` method takes its type from its `output` schema. When that output is
+  `EffectSchema<A, E, R>()` with a non-`never` `R`, the requirement channel
+  travels with the method, so `Effect.runPromise(shape.method(x))` fails to
+  typecheck even when the fixture implementation needs nothing. Either provide
+  the requirements first — `Effect.runPromise(Effect.provide(shape.method(x), deps))`
+  — or compose the effect without running it. A `Fn` whose output declares
+  `R = never` runs normally.
 - Document a `dual` operation once on the outer declaration unless its call forms
   have meaningfully different semantics.
 
@@ -355,7 +384,7 @@ use Details or Gotchas for general semantics.
 
 ## Forbidden patterns
 
-- `@remarks`, `@module`, or `@template` in new or touched documentation.
+- `@remarks`, or `@module` / `@template` in new or touched documentation.
 - An undescribed `@see`.
 - Duplicate, empty, out-of-order, or post-Example body sections.
 - An untitled Example, duplicate Example title, multiple fences in one Example,
@@ -376,8 +405,8 @@ use Details or Gotchas for general semantics.
       observable, and compilable.
 - [ ] Pure type-level exports have useful prose; Examples are included only when
       pedagogically valuable.
-- [ ] No loose `ts` fences or legacy carriers remain in files whose documentation
-      was touched.
+- [ ] No loose `ts` fences exist in touched documentation, and no legacy carriers
+      remain anywhere under `{packages,apps}/**/src`.
 - [ ] Every `@see` has a purpose phrase; every deprecation links a replacement.
 - [ ] Conditional tags add information beyond the signature and follow tag order.
 - [ ] Imports use canonical namespace aliases.

@@ -11,7 +11,8 @@ import type { MetadataRoute } from "next";
 /**
  * Returns the robots policy for OIP.
  *
- * @example
+ * **Example** (Logging robots rules array)
+ *
  * ```ts
  * import robots from "@beep/oip-web/app/robots"
  *

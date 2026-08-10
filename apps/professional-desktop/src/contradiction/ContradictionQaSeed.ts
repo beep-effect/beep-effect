@@ -81,7 +81,8 @@ const $I = $ProfessionalDesktopId.create("contradiction/ContradictionQaSeed");
 /**
  * Exact environment switch that enables contradiction browser-QA fixtures.
  *
- * @example
+ * **Example** (Enable QA seed environment)
+ *
  * ```ts
  * import { CONTRADICTION_QA_SEED_ENV } from "@/contradiction/ContradictionQaSeed"
  *
@@ -97,7 +98,8 @@ export const CONTRADICTION_QA_SEED_ENV = "BEEP_CONTRADICTION_QA_SEED";
 /**
  * Isolated workspace-vault root required by the enabled QA seed.
  *
- * @example
+ * **Example** (Set isolated vault root)
+ *
  * ```ts
  * import { CONTRADICTION_QA_VAULT_ROOT_ENV } from "@/contradiction/ContradictionQaSeed"
  *
@@ -113,7 +115,8 @@ export const CONTRADICTION_QA_VAULT_ROOT_ENV = "BEEP_CONTRADICTION_QA_VAULT_ROOT
 /**
  * Vault-relative UTF-8 source used by the verified QA evidence.
  *
- * @example
+ * **Example** (Verify source locator prefix)
+ *
  * ```ts
  * import { CONTRADICTION_QA_SOURCE_LOCATOR } from "@/contradiction/ContradictionQaSeed"
  * import * as Str from "effect/String"
@@ -130,11 +133,14 @@ export const CONTRADICTION_QA_SOURCE_LOCATOR = PosixPath.make("qa/contradiction-
 /**
  * UTF-16 offset where the verified QA quote begins.
  *
+ * **Details**
+ *
  * The quote's leading surrogate pair crosses the nominal page boundary, so the
  * authority-owned page selector must return page one even though nominal integer
  * division predicts page zero.
  *
- * @example
+ * **Example** (Check anchor before boundary)
+ *
  * ```ts
  * import { CONTRADICTION_QA_ANCHOR_START } from "@/contradiction/ContradictionQaSeed"
  * import { SOURCE_TEXT_PAGE_CODE_UNITS } from "@beep/file-processing/SourceText"
@@ -160,7 +166,8 @@ const CONTRADICTION_QA_ANCHOR_QUOTE = "🧭 The executed amendment sets the rene
 /**
  * Complete canonical UTF-8 source written into the isolated QA vault.
  *
- * @example
+ * **Example** (Confirm source includes emoji)
+ *
  * ```ts
  * import { CONTRADICTION_QA_SOURCE_TEXT } from "@/contradiction/ContradictionQaSeed"
  * import * as Str from "effect/String"
@@ -196,7 +203,8 @@ type ContradictionQaSeedErrorReason = typeof ContradictionQaSeedErrorReason.Type
 /**
  * Sanitized contradiction browser-QA seed failure.
  *
- * @example
+ * **Example** (Create and identify error)
+ *
  * ```ts
  * import { ContradictionQaSeedError } from "@/contradiction/ContradictionQaSeed"
  *
@@ -220,7 +228,8 @@ export class ContradictionQaSeedError extends TaggedErrorClass<ContradictionQaSe
   /**
    * Construct a sanitized seed error.
    *
-   * @example
+   * **Example** (Construct error with reason)
+   *
    * ```ts
    * import { ContradictionQaSeedError } from "@/contradiction/ContradictionQaSeed"
    *
@@ -237,7 +246,8 @@ export class ContradictionQaSeedError extends TaggedErrorClass<ContradictionQaSe
   /**
    * Test whether an unknown value is a contradiction QA seed error.
    *
-   * @example
+   * **Example** (Test for seed error)
+   *
    * ```ts
    * import { ContradictionQaSeedError } from "@/contradiction/ContradictionQaSeed"
    *
@@ -934,12 +944,15 @@ const prepareCanonicalSource = Effect.fn("ContradictionQaSeed.prepareCanonicalSo
 /**
  * Seed deterministic contradiction browser-QA fixtures when explicitly enabled.
  *
+ * **Details**
+ *
  * Disabled execution reads only the opt-in flag. Enabled execution refuses to
  * replace a configured vault root, source file, evidence row, verification, edge
  * history, candidate, or receipt whose deterministic identity already belongs to
  * different content.
  *
- * @example
+ * **Example** (Confirm seed returns Effect)
+ *
  * ```ts
  * import { seedContradictionQaFixtures } from "@/contradiction/ContradictionQaSeed"
  * import { Effect } from "effect"
@@ -1037,11 +1050,14 @@ export const seedContradictionQaFixtures = Effect.fn("ContradictionQaSeed.seed")
 /**
  * Boot-time contradiction browser-QA seed.
  *
+ * **Details**
+ *
  * Repository services come from the published slice Layers composed by the
  * desktop runtime. An enabled failure is promoted to a defect so browser QA
  * cannot continue against an empty or partially conflicting fixture database.
  *
- * @example
+ * **Example** (Confirm seed is Layer)
+ *
  * ```ts
  * import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed"
  * import { Layer } from "effect"

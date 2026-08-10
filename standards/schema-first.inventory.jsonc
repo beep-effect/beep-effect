@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-08",
+  "generatedOn": "2026-08-10",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -9,7 +9,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 94,
+      "line": 96,
       "owner": "@beep/oip-web",
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
@@ -92,26 +92,6 @@
       "line": 257,
       "owner": "@beep/db-admin",
       "reason": "Migration regression proof decodes fixed fixture rows through the table converters to prove the five-table DDL, the trigger catalog, and the append-only denials; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests."
-    },
-    {
-      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 121,
-      "owner": "@beep/law-practice-server",
-      "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
-    },
-    {
-      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 549,
-      "owner": "@beep/law-practice-server",
-      "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
     {
       "file": "packages/drivers/acp/src/AcpAgent.service.ts",
@@ -542,6 +522,26 @@
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
     {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 549,
+      "owner": "@beep/law-practice-server",
+      "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 121,
+      "owner": "@beep/law-practice-server",
+      "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
+    },
+    {
       "file": "packages/law-practice/server/test/fixture.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -707,11 +707,11 @@
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
       "symbol": "rewriteJSDocMigrateBlock",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 850,
+      "line": 861,
       "owner": "@beep/repo-cli",
-      "reason": "Inline input pairs raw block bytes with a projection of the schema-decoded title record; the tagged result union is transient control flow consumed immediately by apply, never decoded or persisted."
+      "reason": "Exported function \"rewriteJSDocMigrateBlock\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",

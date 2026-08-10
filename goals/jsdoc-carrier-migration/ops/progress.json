@@ -1,6 +1,6 @@
 {
   "schemaVersion": "jsdoc-carrier-migration/progress/v1",
-  "generatedOn": "2026-08-06",
+  "generatedOn": "2026-08-10",
   "legend": {
     "statuses": ["pending", "in_progress", "done", "wont_fix"],
     "wontFixRule": "Every wont_fix item requires a rationale string and a trigger that would reopen it."
@@ -27,7 +27,7 @@
     },
     "C5_generator_templates": {
       "status": "done",
-      "note": "P2 measured the real surface at 21 outputs / 10 emitters, not 18 / 9: the census's path-regex missed header-generated Html.model.ts + Html.meta.ts (350 examples) and the apps/professional-desktop sync-migration-bundle generator entirely. 20 of 21 outputs regenerate law-compliant. Residual: acp schema.gen.ts (342 @example) \u2014 regeneration materializes a pre-existing staleness bomb (16.6k-line rewrite, schemaNumber governance failures, S.Unknown->S.Json breaking Acp.errors.ts) that needs its own acp-resync PR before DoD item 2 can close; the acp emitter itself is converted, so that future regeneration emits titled sections. Also fixed en route: sync-data-to-ts iana-timezones regeneration had been broken since PR #456 (tar suffix collision asia/australasia)."
+      "note": "P2 measured the real surface at 21 outputs / 10 emitters, not 18 / 9: the census's path-regex missed header-generated Html.model.ts + Html.meta.ts (350 examples) and the apps/professional-desktop sync-migration-bundle generator entirely. P2 made 20 of 21 outputs law-compliant and deferred acp schema.gen.ts. The #627 follow-up regenerated that final output, rewrote upstream OpenAPI S.Number emissions to S.Finite, aligned AcpRequestError.data with S.Json wire data, and emptied the generated-residual allowlist. All 21 outputs now pass the generated-inclusive zero-legacy gate. Also fixed en route: sync-data-to-ts iana-timezones regeneration had been broken since PR #456 (tar suffix collision asia/australasia)."
     },
     "C6_residue_overrides": {
       "status": "done"

@@ -87,7 +87,8 @@ const atomThemeStorageManager =
  * Provides the green-workbench theme while reusing the shared `@beep/ui` theme
  * base. Defaults to the OS light/dark preference (`system`).
  *
- * @example
+ * **Example** (Create provider element)
+ *
  * ```tsx
  * import { WorkbenchThemeProvider } from "@/theme/WorkbenchThemeProvider"
  *

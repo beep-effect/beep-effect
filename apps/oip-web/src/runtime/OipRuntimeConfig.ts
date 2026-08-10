@@ -16,7 +16,8 @@ type RedactedConfigOptionReader<Error> = (key: string) => Effect.Effect<O.Option
 /**
  * Trim optional text configuration and discard blank values.
  *
- * @example
+ * **Example** (Trimming config option)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { trimTextConfigOption } from "@/runtime/OipRuntimeConfig"
@@ -36,7 +37,8 @@ const trimTextConfigOption: (value: O.Option<string>) => O.Option<string> = flow
 /**
  * Build an optional plain-text configuration reader for an OIP runtime.
  *
- * @example
+ * **Example** (Building text config reader)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeTextConfigOptionReader } from "@/runtime/OipRuntimeConfig"
@@ -67,7 +69,8 @@ export const makeTextConfigOptionReader: {
 /**
  * Build an optional redacted configuration reader for an OIP runtime.
  *
- * @example
+ * **Example** (Building redacted config reader)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeRedactedConfigOptionReader } from "@/runtime/OipRuntimeConfig"

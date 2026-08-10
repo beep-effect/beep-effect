@@ -32,6 +32,7 @@ import {
   Result,
 } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -45,16 +46,17 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Provenance");
 const recentClaudeSessionWindow = Duration.hours(6);
 const futureClaudeSessionSkew = Duration.minutes(1);
 const provenanceDetectionTimeout = Duration.seconds(2);
-const PrProvenanceAbsolutePath = S.String.check(
-  S.isPattern(/^\//u, {
-    identifier: "PrProvenanceAbsolutePath",
-    title: "PR provenance absolute path",
-    description: "An absolute filesystem path recorded in pull request provenance.",
-    message: "Expected an absolute path starting with '/'",
+/** Absolute or home-tokenized path safe to record in public PR provenance. */
+const PrProvenancePath = S.String.check(
+  S.isPattern(/^(?:\/|~(?:\/|$))/u, {
+    identifier: "PrProvenancePath",
+    title: "PR provenance path",
+    description: "An absolute or '~/'-prefixed filesystem path recorded in pull request provenance.",
+    message: "Expected an absolute path or a home-tokenized path starting with '~/'",
   })
 ).pipe(
-  $I.annoteSchema("PrProvenanceAbsolutePath", {
-    description: "Absolute clone or linked-worktree path recorded in pull request provenance.",
+  $I.annoteSchema("PrProvenancePath", {
+    description: "Absolute or home-tokenized clone or linked-worktree path recorded in pull request provenance.",
   })
 );
 
@@ -102,9 +104,9 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  *
  * const provenance = PrProvenance.make({
  *   branch: "feat/example",
- *   clonePath: "/home/user/beep-effect",
+ *   clonePath: "~/beep-effect",
  *   harness: "codex",
- *   resumeCommand: "cd '/home/user/beep-effect' &&\n  codex resume --last",
+ *   resumeCommand: "cd ~/'beep-effect' &&\n  codex resume --last",
  *   sessionId: O.none(),
  *   worktreePath: O.none(),
  * })
@@ -113,8 +115,8 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  *
  * **Details**
  *
- * `clonePath` is the absolute main clone path. `worktreePath` is present only
- * when publish runs from a linked worktree.
+ * `clonePath` is the absolute or home-tokenized main clone path. `worktreePath`
+ * is present only when publish runs from a linked worktree.
  *
  * @category models
  * @since 0.0.0
@@ -122,11 +124,11 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
 export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
   {
     branch: S.String,
-    clonePath: PrProvenanceAbsolutePath,
+    clonePath: PrProvenancePath,
     harness: PrProvenanceHarness,
     resumeCommand: S.String,
     sessionId: S.OptionFromNullOr(S.String),
-    worktreePath: S.OptionFromNullOr(PrProvenanceAbsolutePath),
+    worktreePath: S.OptionFromNullOr(PrProvenancePath),
   },
   $I.annote("PrProvenance", {
     description: "Origin and paste-ready resume command recorded in a Yeet pull request body.",
@@ -151,6 +153,45 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
  * @since 0.0.0
  */
 export const mungeClaudeProjectPath = repoPathToClaudeProjectName;
+
+/**
+ * Replace a path's leading home-directory segment with `~`.
+ *
+ * **Example** (Tokenize a checkout path)
+ *
+ * ```ts
+ * import { tokenizeHomePath } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(tokenizeHomePath("/home/user", "/home/user/src/repo"))
+ * // ~/src/repo
+ * ```
+ *
+ * @param home - Absolute home directory supplied by the runtime configuration.
+ * @param path - Filesystem path to make safe for public provenance.
+ * @returns The home-tokenized path, or the original path when it is outside home.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const tokenizeHomePath: {
+  (home: string, path: string): string;
+  (path: string): (home: string) => string;
+} = dual(2, (home: string, path: string): string => {
+  const normalizedHome = Str.replace(/\/+$/u, "")(home);
+  if (Str.isEmpty(normalizedHome)) {
+    return path;
+  }
+  if (path === normalizedHome) {
+    return "~";
+  }
+  return Str.startsWith(`${normalizedHome}/`)(path) ? `~/${Str.slice(Str.length(normalizedHome) + 1)(path)}` : path;
+});
+
+const tokenizeConfiguredHomePath = (home: O.Option<string>, path: string): string =>
+  pipe(
+    home,
+    O.map((homePath) => tokenizeHomePath(homePath, path)),
+    O.getOrElse(() => path)
+  );
 
 const sessionOrder = Order.mapInput(
   Order.Number,
@@ -231,6 +272,13 @@ export const findRecentClaudeSession = Effect.fn("PrProvenance.findRecentClaudeS
   );
 });
 
+const shellQuoteDirectory = (directory: string): string => {
+  if (directory === "~") {
+    return directory;
+  }
+  return Str.startsWith("~/")(directory) ? `~/${shellQuote(Str.slice(2)(directory))}` : shellQuote(directory);
+};
+
 /**
  * Build the paste-ready command for a detected harness.
  *
@@ -250,25 +298,25 @@ export const findRecentClaudeSession = Effect.fn("PrProvenance.findRecentClaudeS
  * @category formatting
  * @since 0.0.0
  */
-export const resumeCommandFor = (
-  harness: PrProvenanceHarness,
-  directory: string,
-  sessionId: O.Option<string>
-): string =>
+export const resumeCommandFor: {
+  (harness: PrProvenanceHarness, directory: string, sessionId: O.Option<string>): string;
+  (directory: string, sessionId: O.Option<string>): (harness: PrProvenanceHarness) => string;
+} = dual(3, (harness: PrProvenanceHarness, directory: string, sessionId: O.Option<string>): string =>
   PrProvenanceHarness.$match(harness, {
     "claude-code": () =>
       O.match(sessionId, {
-        onNone: () => `cd ${shellQuote(directory)} &&\n  claude --resume`,
-        onSome: (id) => `cd ${shellQuote(directory)} &&\n  claude --resume ${shellQuote(id)}`,
+        onNone: () => `cd ${shellQuoteDirectory(directory)} &&\n  claude --resume`,
+        onSome: (id) => `cd ${shellQuoteDirectory(directory)} &&\n  claude --resume ${shellQuote(id)}`,
       }),
     codex: () =>
-      `cd ${shellQuote(directory)} &&\n  ${pipe(
+      `cd ${shellQuoteDirectory(directory)} &&\n  ${pipe(
         sessionId,
         O.map((id) => `codex resume ${shellQuote(id)}`),
         O.getOrElse(() => "codex resume --last")
       )}`,
-    unknown: () => `cd ${shellQuote(directory)} &&\n  claude --resume`,
-  });
+    unknown: () => `cd ${shellQuoteDirectory(directory)} &&\n  claude --resume`,
+  })
+);
 
 const encodePrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PrProvenance));
 
@@ -357,6 +405,7 @@ export class PrProvenanceService extends Context.Service<PrProvenanceService, Pr
 type PrProvenanceRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
 const makeUnknownProvenance = (
+  home: O.Option<string>,
   clonePath: string,
   checkoutPath: string,
   worktreePath: O.Option<string>,
@@ -364,11 +413,11 @@ const makeUnknownProvenance = (
 ): PrProvenance =>
   PrProvenance.make({
     branch,
-    clonePath,
+    clonePath: tokenizeConfiguredHomePath(home, clonePath),
     harness: "unknown",
-    resumeCommand: resumeCommandFor("unknown", checkoutPath, O.none()),
+    resumeCommand: resumeCommandFor("unknown", tokenizeConfiguredHomePath(home, checkoutPath), O.none()),
     sessionId: O.none(),
-    worktreePath,
+    worktreePath: O.map(worktreePath, (value) => tokenizeConfiguredHomePath(home, value)),
   });
 
 /**
@@ -433,19 +482,22 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   branch: string
 ) {
   const path = yield* Path.Path;
+  const home = yield* Config.option(Config.string("HOME")).pipe(Effect.orElseSucceed(O.none<string>));
+  const publicPath = (value: string): string => tokenizeConfiguredHomePath(home, value);
+  const publicClonePath = publicPath(clonePath);
+  const publicWorktreePath = O.map(worktreePath, publicPath);
   const [isCodex, codexThreadId] = yield* detectCodexEnvironment();
   if (isCodex) {
     return PrProvenance.make({
       branch,
-      clonePath,
+      clonePath: publicClonePath,
       harness: "codex",
-      resumeCommand: resumeCommandFor("codex", checkoutPath, codexThreadId),
+      resumeCommand: resumeCommandFor("codex", publicPath(checkoutPath), codexThreadId),
       sessionId: codexThreadId,
-      worktreePath,
+      worktreePath: publicWorktreePath,
     });
   }
 
-  const home = yield* Config.option(Config.string("HOME"));
   const nowMillis = yield* Clock.currentTimeMillis;
   const claudeSession = yield* pipe(
     home,
@@ -459,37 +511,38 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
     const [launchPath, sessionId] = claudeSession.value;
     return PrProvenance.make({
       branch,
-      clonePath,
+      clonePath: publicClonePath,
       harness: "claude-code",
-      resumeCommand: resumeCommandFor("claude-code", launchPath, O.some(sessionId)),
+      resumeCommand: resumeCommandFor("claude-code", publicPath(launchPath), O.some(sessionId)),
       sessionId: O.some(sessionId),
-      worktreePath,
+      worktreePath: publicWorktreePath,
     });
   }
 
   return PrProvenance.make({
     branch,
-    clonePath,
+    clonePath: publicClonePath,
     harness: "unknown",
-    resumeCommand: resumeCommandFor("unknown", checkoutPath, O.none()),
+    resumeCommand: resumeCommandFor("unknown", publicPath(checkoutPath), O.none()),
     sessionId: O.none(),
-    worktreePath,
+    worktreePath: publicWorktreePath,
   });
 });
 
 const makePrProvenanceService = Effect.fn("PrProvenanceService.make")(function* () {
   const path = yield* Path.Path;
   const runtimeContext = yield* Effect.context<PrProvenanceRequirements>();
+  const home = yield* Config.option(Config.string("HOME")).pipe(Effect.orElseSucceed(O.none<string>));
   return PrProvenanceService.of({
     detect: Effect.fn("PrProvenanceService.detect")((cwd, branch) => {
       const checkoutFallback = path.resolve(cwd);
-      const gitFallback = makeUnknownProvenance(checkoutFallback, checkoutFallback, O.none(), branch);
+      const gitFallback = makeUnknownProvenance(home, checkoutFallback, checkoutFallback, O.none(), branch);
       return detectGitPaths(cwd).pipe(
         Effect.provide(runtimeContext),
         Effect.matchCauseEffect({
           onFailure: () => Effect.succeed(gitFallback),
           onSuccess: ([clonePath, checkoutPath, worktreePath]) => {
-            const fallback = makeUnknownProvenance(clonePath, checkoutPath, worktreePath, branch);
+            const fallback = makeUnknownProvenance(home, clonePath, checkoutPath, worktreePath, branch);
             return detectPrProvenanceFromPaths(clonePath, checkoutPath, worktreePath, branch).pipe(
               Effect.provide(runtimeContext),
               Effect.catchCause(() => Effect.succeed(fallback)),

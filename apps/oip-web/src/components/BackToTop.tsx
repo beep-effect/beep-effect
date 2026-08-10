@@ -46,6 +46,8 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * Fixed bottom-right button that fades in once the visitor has scrolled past the
  * hero, then smooth-scrolls back to the top of the page when clicked.
  *
+ * **Details**
+ *
  * Visibility is driven by an Atom-managed passive scroll listener that flips
  * once the page has scrolled past `REVEAL_OFFSET_PX`, so the control stays
  * hidden on the first viewport. The scroll itself honours
@@ -54,7 +56,8 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * a gold glyph that reads on both the light paper and dark soil sections it
  * floats over.
  *
- * @example
+ * **Example** (Rendering BackToTop button)
+ *
  * ```tsx
  * import { BackToTop } from "@beep/oip-web/components/BackToTop"
  *

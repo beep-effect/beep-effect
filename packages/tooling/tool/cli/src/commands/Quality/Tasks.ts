@@ -104,11 +104,10 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
-// goals/quality-speedup/research/instantiation-census.md §5. After the Blacksmith
-// exit (#600) halved lane CPUs, even 4 concurrent package checks (4 tsgo + 4 bun
-// wrappers) OOM-killed standard ubuntu-24.04 runners mid-lane on every branch,
-// including main — 2 is the widest cap the 16GB hosted VMs survive.
-const CI_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+// goals/quality-speedup/research/instantiation-census.md §5. The heavy lanes now
+// run on 32GB beep-ec2-heavy fleet workers, so the cap is back to the 8vCPU
+// tuning; the 16GB-survival value was 2.
+const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";

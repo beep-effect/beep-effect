@@ -392,7 +392,7 @@ export const jsdocMigrateExtractRecordsForFile: {
  *
  * **Details**
  *
- * Uses `git ls-files packages` so untracked scratch files never enter the
+ * Uses `git ls-files packages apps` so untracked scratch files never enter the
  * corpus, then applies the same path filters as the quality gate. The
  * generated-header probe still runs per file at read time.
  *
@@ -412,7 +412,7 @@ export const jsdocMigrateExtractRecordsForFile: {
 export const listJSDocMigrateCorpusFiles = Effect.fn("JSDocMigrateExtract.listCorpusFiles")(function* (
   repoRoot: string
 ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages"], jsdocGitErrorAdapter);
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   return A.filter(lines, isPackageSourceFile);
 });
 

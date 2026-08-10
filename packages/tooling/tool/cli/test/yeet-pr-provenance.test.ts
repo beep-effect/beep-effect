@@ -6,6 +6,7 @@ import {
   PrProvenance,
   renderPrProvenance,
   resumeCommandFor,
+  tokenizeHomePath,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -33,6 +34,14 @@ describe("Yeet PR provenance", () => {
     expect(mungeClaudeProjectPath("/home/operator/beep.effect\\.claude/worktrees/end.game")).toBe(
       "-home-operator-beep.effect-.claude-worktrees-end.game"
     );
+  });
+
+  it("tokenizes only paths at or below the configured home directory", () => {
+    expect(tokenizeHomePath("/home/operator", "/home/operator/YeeBois/beep-effect")).toBe("~/YeeBois/beep-effect");
+    expect(tokenizeHomePath("/home/operator", "/home/operator-other/beep-effect")).toBe(
+      "/home/operator-other/beep-effect"
+    );
+    expect(tokenizeHomePath("/home/operator", "/workspace/beep-effect")).toBe("/workspace/beep-effect");
   });
 
   it.effect("detects split Codex markers and reads CODEX_THREAD_ID by its exact environment key", () =>
@@ -71,6 +80,8 @@ describe("Yeet PR provenance", () => {
         );
 
         expect(provenance.harness).toBe("codex");
+        expect(provenance.clonePath).toBe(clonePath);
+        expect(provenance.worktreePath).toStrictEqual(O.some(checkoutPath));
         expect(provenance.sessionId).toStrictEqual(O.some("thread-123"));
         expect(provenance.resumeCommand).toBe(
           "cd '/workspace/beep-effect/.claude/worktrees/endgame' &&\n  codex resume 'thread-123'"
@@ -164,24 +175,93 @@ describe("Yeet PR provenance", () => {
     );
   });
 
+  it("leaves the tilde expandable while quoting the home-relative remainder", () => {
+    expect(resumeCommandFor("codex", "~/YeeBois/a && b", O.some("thread-123"))).toBe(
+      "cd ~/'YeeBois/a && b' &&\n  codex resume 'thread-123'"
+    );
+  });
+
+  it.effect("tokenizes detected paths in both human and machine provenance", () =>
+    Effect.gen(function* () {
+      const clonePath = "/home/operator/YeeBois/projects/beep-effect3";
+      const checkoutPath = `${clonePath}/.claude/worktrees/footer-redact`;
+      const provenance = yield* detectPrProvenanceFromPaths(
+        clonePath,
+        checkoutPath,
+        O.some(checkoutPath),
+        "fix/yeet-footer-redact-home"
+      );
+      const footer = renderPrProvenance(provenance);
+
+      expect(provenance.clonePath).toBe("~/YeeBois/projects/beep-effect3");
+      expect(provenance.worktreePath).toStrictEqual(
+        O.some("~/YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact")
+      );
+      expect(provenance.resumeCommand).toBe(
+        "cd ~/'YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact' &&\n  codex resume 'thread-123'"
+      );
+      expect(footer).not.toContain("/home/operator");
+      expect(footer).toContain("- Clone: `~/YeeBois/projects/beep-effect3`");
+      expect(footer).toContain("- Worktree: `~/YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact`");
+
+      const encoded = pipe(
+        footer,
+        Str.split("<!-- yeet-provenance\n"),
+        A.get(1),
+        O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
+        O.getOrThrow
+      );
+      expect(yield* S.decodeUnknownEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+    }).pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnv({ env: { CODEX_THREAD_ID: "thread-123", HOME: "/home/operator" } })
+      ),
+      provideScopedLayer(PlatformLayer)
+    )
+  );
+
+  it.effect("keeps absolute paths when HOME is unset", () =>
+    Effect.gen(function* () {
+      const clonePath = "/home/operator/YeeBois/projects/beep-effect3";
+      const checkoutPath = `${clonePath}/.claude/worktrees/footer-redact`;
+      const provenance = yield* detectPrProvenanceFromPaths(
+        clonePath,
+        checkoutPath,
+        O.some(checkoutPath),
+        "fix/yeet-footer-redact-home"
+      );
+
+      expect(provenance.clonePath).toBe(clonePath);
+      expect(provenance.worktreePath).toStrictEqual(O.some(checkoutPath));
+      expect(provenance.resumeCommand).toBe(`cd '${checkoutPath}' &&\n  codex resume 'thread-123'`);
+    }).pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnv({ env: { CODEX_THREAD_ID: "thread-123" } })
+      ),
+      provideScopedLayer(PlatformLayer)
+    )
+  );
+
   it.effect("renders human and schema-decodable machine provenance twins", () =>
     Effect.gen(function* () {
       const provenance = PrProvenance.make({
         branch: "feat/yeet-pr-provenance",
-        clonePath: "/workspace/beep-effect",
+        clonePath: "~/workspace/beep-effect",
         harness: "claude-code",
-        resumeCommand: resumeCommandFor("claude-code", "/workspace/beep-effect", O.some("session-123")),
+        resumeCommand: resumeCommandFor("claude-code", "~/workspace/beep-effect", O.some("session-123")),
         sessionId: O.some("session-123"),
-        worktreePath: O.some("/workspace/beep-effect/.claude/worktrees/endgame"),
+        worktreePath: O.some("~/workspace/beep-effect/.claude/worktrees/endgame"),
       });
       const footer = renderPrProvenance(provenance);
 
       expect(footer).toContain("---\n\n## Provenance");
-      expect(footer).toContain("- Clone: `/workspace/beep-effect`");
-      expect(footer).toContain("- Worktree: `/workspace/beep-effect/.claude/worktrees/endgame`");
+      expect(footer).toContain("- Clone: `~/workspace/beep-effect`");
+      expect(footer).toContain("- Worktree: `~/workspace/beep-effect/.claude/worktrees/endgame`");
       expect(footer).toContain("- Branch: `feat/yeet-pr-provenance`");
       expect(footer).toContain("- Harness: `claude-code`");
-      expect(footer).toContain("```sh\ncd '/workspace/beep-effect' &&\n  claude --resume 'session-123'\n```");
+      expect(footer).toContain("```sh\ncd ~/'workspace/beep-effect' &&\n  claude --resume 'session-123'\n```");
 
       const encoded = pipe(
         footer,

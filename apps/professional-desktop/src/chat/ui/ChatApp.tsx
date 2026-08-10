@@ -64,7 +64,8 @@ const autoNewThreadBinding = Atom.family((workspaceId: WorkspaceIdentity.Workspa
 /**
  * The composed desktop chat application.
  *
- * @example
+ * **Example** (Log ChatApp component name)
+ *
  * ```tsx
  * import { ChatApp } from "@/chat/ui/ChatApp"
  *

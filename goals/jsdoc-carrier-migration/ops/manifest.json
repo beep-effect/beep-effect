@@ -5,7 +5,7 @@
     "title": "JSDoc Legacy Carrier Migration",
     "status": "completed-retained",
     "created": "2026-08-06",
-    "updated": "2026-08-06",
+    "updated": "2026-08-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/jsdoc-carrier-migration",
@@ -67,19 +67,19 @@
       "id": "P2",
       "name": "Generator templates",
       "status": "complete",
-      "exit": "All 9 repo-owned emitters produce **Example** (Title) sections; the 18 generated files are regenerated and law-compliant."
+      "exit": "All 10 repo-owned emitters produce **Example** (Title) sections; all 21 generated files are regenerated and law-compliant."
     },
     {
       "id": "P3",
       "name": "Migration mega-PR",
       "status": "complete",
-      "exit": "Zero legacy carriers in non-generated packages/**/src; gate swapped to repo-wide zero-legacy; totals baseline rewritten; law transitional section deleted."
+      "exit": "Zero legacy carriers in packages/**/src and apps/**/src, including generated output; the residual allowlist is empty; totals baseline and carrier law match the repo-wide gate."
     },
     {
       "id": "P4",
       "name": "Close",
       "status": "complete",
-      "exit": "Reflection landed and manifest flipped to completed-retained in the same PR as the final work."
+      "exit": "Reflection and completed-retained lifecycle landed with P3; #627 closes the ACP resync, apps corpus, inheritDoc quarantine, runner-cap, and review follow-ups."
     }
   ],
   "provides": ["jsdoc/carrier-retirement"],

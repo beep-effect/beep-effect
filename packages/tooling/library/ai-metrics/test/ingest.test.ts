@@ -138,6 +138,16 @@ const writeText = Effect.fn("AiMetricsTest.writeText")(function* (filePath: stri
   yield* fs.writeFileString(filePath, content);
 });
 
+const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+  yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
+  yield* writeText(
+    path.join(repoRoot, ".git/config"),
+    '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
+  );
+});
+
 const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>): ReadonlyArray<string> =>
   pipe(
     files,
@@ -311,6 +321,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -497,6 +508,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -803,6 +815,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const reportDir = path.join(dataRoot, "reports");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -943,7 +956,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           A.some(
             P.every([
               Str.includes("ai-metrics otlp export --target dankserver"),
-              Str.includes("--data-root .beep/ai-metrics"),
+              Str.includes("--data-root /srv/data/ai-metrics"),
               Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
               Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
               Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
@@ -953,10 +966,19 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       ).toBe(true);
       expect(spec.plannedCommands).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("ai-metrics label queue --target dankserver --data-root .beep/ai-metrics"),
-          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics"),
+          expect.stringContaining("ai-metrics label queue --target dankserver --data-root /srv/data/ai-metrics"),
+          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root /srv/data/ai-metrics"),
         ])
       );
+      // Every planned command an operator copy-pastes must survive the CLI's
+      // absolute-path gate; `forwarder timer` rejects a relative root outright.
+      expect(
+        pipe(
+          spec.plannedCommands,
+          A.filter(Str.includes("--data-root")),
+          A.filter(P.not(Str.includes("--data-root /")))
+        )
+      ).toEqual([]);
     })
   );
 
@@ -1118,7 +1140,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
-      const spec = yield* makeAiMetricsInstallSpec();
+      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/srv/data/ai-metrics" }));
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
       if (O.isNone(phoenix)) {
@@ -1152,6 +1174,7 @@ volumes:
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
+          dataRoot: "/srv/data/ai-metrics",
           phoenixImage: "arizephoenix/phoenix:latest-p5b",
         })
       );
@@ -1325,7 +1348,7 @@ volumes:
       const error = yield* Effect.flip(
         runAiMetricsForwarder(
           AiMetricsForwarderInput.make({
-            dataRoot: ".beep/ai-metrics",
+            dataRoot: "/srv/data/ai-metrics",
             hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
             homeDir: "/tmp/home",
             rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
@@ -2592,6 +2615,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
 
@@ -2819,9 +2843,7 @@ volumes:
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const codexRoot = path.join(homeDir, ".codex/sessions");
-          const decoy = `{"payload":{"message":"not metadata session_meta ${"x".repeat(
-            70_000
-          )}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
+          const decoy = `{"payload":{"message":"not metadata session_meta ${pipe("x", Str.repeat(70_000))}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
           const actual =
             '{"payload":{"id":"child-session","source":{"subagent":{"agent_nickname":"worker-one","agent_role":"worker","parent_thread_id":"parent-thread","thread_spawn":true}}},"timestamp":"2026-05-05T10:01:00Z","type":"session_meta"}';
           yield* writeText(path.join(codexRoot, "codex-subagent.jsonl"), `${decoy}\n${actual}\n`);
@@ -2892,6 +2914,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -2981,6 +3004,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -3134,6 +3158,7 @@ volumes:
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -3222,6 +3247,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");

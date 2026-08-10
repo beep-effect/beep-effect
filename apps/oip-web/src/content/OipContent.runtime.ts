@@ -146,7 +146,8 @@ const loadOipSiteContent = Effect.gen(function* () {
 /**
  * Promise boundary for Next.js server components.
  *
- * @example
+ * **Example** (Logging site metadata)
+ *
  * ```ts
  * import { getOipSiteContent } from "@beep/oip-web/content"
  *

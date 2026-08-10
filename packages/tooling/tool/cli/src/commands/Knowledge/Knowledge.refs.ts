@@ -1726,7 +1726,7 @@ export const extractKnowledgeHostAnchors = (lineText: string): ReadonlyArray<Kno
   ]);
 };
 
-const PORTABLE_HOME_CONVENTIONS = HashSet.make("~/.claude", "~/.codex", "~/.config", "~/.bun");
+const PORTABLE_HOME_CONVENTIONS = HashSet.make("~/.claude", "~/.codex", "~/.config", "~/.bun", "~/.openclaw");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>

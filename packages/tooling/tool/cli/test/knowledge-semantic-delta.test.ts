@@ -1,9 +1,11 @@
 import {
+  encodeKnowledgeSemanticDeltaReportJson,
   KNOWLEDGE_PROBE_DEPENDENT_KINDS,
   KnowledgeCommandResolved,
   KnowledgeCommandUnknown,
   KnowledgeIndexBytes,
   KnowledgeOperationalError,
+  KnowledgeProbeBootError,
   KnowledgeRename,
   KnowledgeService,
   KnowledgeServiceLive,
@@ -22,6 +24,7 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import type {
   KnowledgeArchiveOracle,
+  KnowledgeFinding,
   KnowledgeFindingKind,
   KnowledgePairedOracleInput,
   KnowledgeProbePolicy,
@@ -137,6 +140,33 @@ const explodingProbeOracle = (
   };
 };
 
+/**
+ * A real archive boot failure, reproduced verbatim from the branch that deleted a barrel export the
+ * merge-base CLI still imported. The blank line is part of Bun's own output, so the excerpt carried
+ * into the report is exercised against the shape it actually has to survive.
+ */
+const BOOT_FAILURE = KnowledgeProbeBootError.make({
+  message: A.join(
+    [
+      'Archive-local probe "/tmp/beep-knowledge-semantic-delta-8YSRkf/base-scratch/command-probe.ts" failed with exit 1.',
+      "SyntaxError: Export named 'DEFAULT_AI_METRICS_DATA_ROOT' not found in module '/repo/packages/tooling/library/ai-metrics/src/index.ts'.",
+      "",
+      "Bun v1.3.14 (Linux x64)",
+    ],
+    "\n"
+  ),
+});
+
+/** An oracle whose archive cannot start either probe, the way an unbootable revision cannot. */
+const unbootableProbeOracle = (
+  sourceFiles: Readonly<Record<string, string>>,
+  options: OracleOptions = {}
+): KnowledgeArchiveOracle => ({
+  ...makeOracle(sourceFiles, options),
+  probeCommands: () => Effect.fail(BOOT_FAILURE),
+  indexBytes: Effect.fail(BOOT_FAILURE),
+});
+
 const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(text));
@@ -166,6 +196,12 @@ const introducedIds = (report: KnowledgeSemanticDeltaReport): ReadonlyArray<stri
 
 const unchangedIds = (report: KnowledgeSemanticDeltaReport): ReadonlyArray<string> =>
   A.map(report.unchanged, (finding) => finding.findingId);
+
+const sortedKinds = (findings: ReadonlyArray<KnowledgeFinding>): ReadonlyArray<KnowledgeFindingKind> =>
+  A.sort(
+    A.map(findings, (finding) => finding.kind),
+    Order.String
+  );
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
   it.effect("content edit introduces only the new broken tracked path", () =>
@@ -683,6 +719,106 @@ describe("knowledge semantic-delta probe policy", () => {
 
       expect(kinds(probed)).toEqual(A.sort(["broken-tracked-path", ...KNOWLEDGE_PROBE_DEPENDENT_KINDS], Order.String));
       expect(kinds(skipped)).toEqual(["broken-tracked-path"]);
+    })
+  );
+});
+
+describe("knowledge semantic-delta base probe boot failure", () => {
+  const CLEAN_BASE = { "docs/guide.md": "Nothing cited.\n" };
+  const DIRTY_HEAD = { "docs/guide.md": "Run `bun run beep goals doctro`, see `docs/missing.md`.\n" };
+  const HEAD_DRIFT: OracleOptions = { indexExpected: "# Regenerated Goals Index\n" };
+
+  const withUnbootableBase = (
+    baseFiles: Readonly<Record<string, string>>,
+    headFiles: Readonly<Record<string, string>>,
+    headOptions: OracleOptions = {}
+  ): KnowledgePairedOracleInput => ({
+    base: unbootableProbeOracle(baseFiles),
+    head: makeOracle(headFiles, headOptions),
+    probePolicy: "enabled",
+    renames: [],
+  });
+
+  it.effect("an unbootable base degrades probe coverage instead of failing the comparison", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(withUnbootableBase(CLEAN_BASE, DIRTY_HEAD, HEAD_DRIFT));
+      const detail = O.getOrElse(report.probeSkipDetail, () => "");
+
+      expect(report.probePolicy).toBe("skipped-base-boot-failure");
+      expect(detail).toContain("failed with exit 1");
+      expect(detail).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
+      // Blank output lines are dropped, so the excerpt is three lines of evidence rather than four.
+      expect(A.length(Str.split("\n")(detail))).toBe(3);
+      // The tracked-tree classes still work; only the probe-dependent ones went missing.
+      expect(sortedKinds(report.introduced)).toEqual(["broken-tracked-path"]);
+    })
+  );
+
+  it.effect("a degraded comparison with nothing else introduced does not gate the lane", () =>
+    Effect.gen(function* () {
+      const degraded = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE, HEAD_DRIFT));
+      // Counterfactual: the same HEAD drift under a bootable base does introduce a finding and does
+      // gate, so the pass above is degradation doing its job and not an empty fixture.
+      const probed = yield* scan(fixture(CLEAN_BASE, CLEAN_BASE, { head: HEAD_DRIFT }));
+
+      expect(degraded.probePolicy).toBe("skipped-base-boot-failure");
+      expect(degraded.introduced).toEqual([]);
+      expect(O.isNone(knowledgeSemanticDeltaFailure(degraded))).toBe(true);
+      expect(sortedKinds(probed.introduced)).toEqual(["index-drift"]);
+      expect(O.isSome(knowledgeSemanticDeltaFailure(probed))).toBe(true);
+    })
+  );
+
+  it.effect("a base boot failure discards the probe results collected before it", () =>
+    Effect.gen(function* () {
+      const baseFiles = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
+      // Only the index probe dies, after the command probe has already resolved an unknown command.
+      const degraded = yield* scan({
+        base: { ...makeOracle(baseFiles), indexBytes: Effect.fail(BOOT_FAILURE) },
+        head: makeOracle(CLEAN_BASE),
+        probePolicy: "enabled",
+        renames: [],
+      });
+      // Counterfactual: a bootable base does report that command finding as resolved, so keeping the
+      // half-probed base would have compared it against an unprobed HEAD.
+      const probed = yield* scan(fixture(baseFiles, CLEAN_BASE));
+
+      expect(degraded.probePolicy).toBe("skipped-base-boot-failure");
+      expect(degraded.introduced).toEqual([]);
+      expect(degraded.resolved).toEqual([]);
+      expect(degraded.unchanged).toEqual([]);
+      expect(sortedKinds(probed.resolved)).toEqual(["unknown-beep-command"]);
+    })
+  );
+
+  it.effect("an unbootable HEAD is still an operational failure, because HEAD is the branch's own tree", () =>
+    Effect.gen(function* () {
+      const service = yield* KnowledgeService;
+      const error = yield* Effect.flip(
+        service.scanPair({
+          base: makeOracle(CLEAN_BASE),
+          head: unbootableProbeOracle(DIRTY_HEAD),
+          probePolicy: "enabled",
+          renames: [],
+        })
+      );
+
+      expect(error._tag).toBe("KnowledgeOperationalError");
+      expect(error.message).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
+    }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("the JSON report carries the degraded policy and its evidence, and omits both when clean", () =>
+    Effect.gen(function* () {
+      const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(
+        yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE))
+      );
+      const clean = yield* encodeKnowledgeSemanticDeltaReportJson(yield* scan(fixture(CLEAN_BASE, CLEAN_BASE)));
+
+      expect(degraded).toContain(`"probePolicy":"skipped-base-boot-failure"`);
+      expect(degraded).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
+      expect(clean).toContain(`"probePolicy":"enabled"`);
+      expect(clean).not.toContain("probeSkipDetail");
     })
   );
 });

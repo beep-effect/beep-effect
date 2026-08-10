@@ -3,13 +3,9 @@
   "exploration": {
     "slug": "fleet-coordination",
     "title": "Fleet Coordination For Parallel Agent Checkouts",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "Rung 2 only: Claude Code 2.1.224 shipped cross-session messaging, so delivery no longer waits on speed-loop PR-I landing AgentBrief.fleet - but push reaches only sessions that bound a socket, and delivery outcome is set by the RECEIVER's permission mode. Does rung 2 become push-to-reachable plus pull-for-everyone, and does it open its own packet? Not blocking - rung 1 is graduated and shipped.",
-      "Rung 1.5: adopt the on-disk session registry as the liveness probe (T6 section 4). Bounded change to goals/fleet-mirror, pure unknown-to-live conversion. Needs an operator go before opening a packet.",
-      "Unexplained: beep-effect3-e3 runs 2.1.226 interactive and records messagingSocketPath null, so it is unreachable by peer messaging while fully alive. Cause not established (feature-flag evaluation, bare mode, provider). Measured in T6 section 3.1."
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/fleet-mirror"],

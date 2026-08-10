@@ -33,7 +33,8 @@ const failDisconnected = () => disconnected;
  * `DmsMirror` layer whose every verb fails with a typed non-retryable
  * `DmsMirrorUnavailable` explaining how to connect Box.
  *
- * @example
+ * **Example** (Verifying disconnected layer)
+ *
  * ```ts
  * import { DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
  * import { Layer } from "effect"
@@ -59,7 +60,8 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
 /**
  * `DmsMirrorAvailability` layer whose probe reports Box as disconnected.
  *
- * @example
+ * **Example** (Verifying availability layer)
+ *
  * ```ts
  * import { DmsMirrorAvailabilityDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
  * import { Layer } from "effect"

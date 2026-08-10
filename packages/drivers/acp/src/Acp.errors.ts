@@ -197,8 +197,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     code: AcpSchema.ErrorCode.annotateKey({
       description: "JSON-RPC error code returned by the ACP peer.",
     }),
-    data: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional JSON-RPC error data returned by the ACP peer.",
+    data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
     }),
     errorMessage: S.String.annotateKey({
       description: "JSON-RPC error message returned by the ACP peer.",
@@ -255,7 +255,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static parseError(message = "Parse error", data?: unknown) {
+  static parseError(message = "Parse error", data?: S.Json) {
     return AcpRequestError.make({
       code: -32700,
       errorMessage: message,
@@ -278,7 +278,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static invalidRequest(message = "Invalid request", data?: unknown) {
+  static invalidRequest(message = "Invalid request", data?: S.Json) {
     return AcpRequestError.make({
       code: -32600,
       errorMessage: message,
@@ -323,7 +323,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static invalidParams(message = "Invalid params", data?: unknown) {
+  static invalidParams(message = "Invalid params", data?: S.Json) {
     return AcpRequestError.make({
       code: -32602,
       errorMessage: message,
@@ -346,7 +346,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static internalError(message = "Internal error", data?: unknown) {
+  static internalError(message = "Internal error", data?: S.Json) {
     return AcpRequestError.make({
       code: -32603,
       errorMessage: message,
@@ -369,7 +369,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static authRequired(message = "Authentication required", data?: unknown) {
+  static authRequired(message = "Authentication required", data?: S.Json) {
     return AcpRequestError.make({
       code: -32000,
       errorMessage: message,
@@ -392,7 +392,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static resourceNotFound(message = "Resource not found", data?: unknown) {
+  static resourceNotFound(message = "Resource not found", data?: S.Json) {
     return AcpRequestError.make({
       code: -32002,
       errorMessage: message,

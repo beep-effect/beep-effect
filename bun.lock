@@ -2552,6 +2552,7 @@
         "yaml": "catalog:",
       },
       "devDependencies": {
+        "@commitlint/is-ignored": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -2749,6 +2750,7 @@
     "@clack/prompts": "^1.7.0",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@commitlint/is-ignored": "^21.2.0",
     "@cosmos.gl/graph": "3.4.0",
     "@csstools/css-color-parser": "^4.1.10",
     "@csstools/css-parser-algorithms": "^4.0.0",

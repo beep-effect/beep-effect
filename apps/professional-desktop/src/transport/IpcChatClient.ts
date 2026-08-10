@@ -18,7 +18,8 @@ import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
 /**
  * The client rpc `Protocol`, bound to the Tauri-IPC socket and ndjson framing.
  *
- * @example
+ * **Example** (Verify as Effect Layer)
+ *
  * ```ts
  * import { IpcChatProtocolLive } from "@/transport/IpcChatClient"
  * import { Layer } from "effect"

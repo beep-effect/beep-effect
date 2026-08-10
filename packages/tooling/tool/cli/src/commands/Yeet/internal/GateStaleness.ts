@@ -522,11 +522,15 @@ const isGoalsPacketInput = (repoRelativePath: string): boolean => Str.startsWith
  * @category detection
  * @since 0.0.0
  */
-export const isGateInputRelevant = (scope: GateInputScope, repoRelativePath: string): boolean =>
+export const isGateInputRelevant: {
+  (scope: GateInputScope, repoRelativePath: string): boolean;
+  (repoRelativePath: string): (scope: GateInputScope) => boolean;
+} = dual(2, (scope: GateInputScope, repoRelativePath: string): boolean =>
   GateInputScope.$match(scope, {
     "repo-code": () => isRepoCodeInput(repoRelativePath),
     "goals-packets": () => isGoalsPacketInput(repoRelativePath),
-  });
+  })
+);
 
 const witnessFile = Effect.fn("Yeet.witnessGateFile")(function* (
   repoRoot: string,
