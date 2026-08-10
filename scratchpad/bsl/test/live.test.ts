@@ -74,10 +74,7 @@ const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
   return Promise.reject(new Error("RQBv2 findMany is unavailable"));
 };
 
-const drizzleExports: Record<string, unknown> = {
-  ...effectDrizzleSchema.enums,
-  ...effectDrizzleSchema.tables,
-};
+const drizzleExports = effectDrizzleSchema.drizzleSchema;
 
 let live = none<LiveTestSupport>();
 let migrationStatements: ReadonlyArray<string> = [];
@@ -154,6 +151,12 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
       true,
     );
     expect(migrationStatements.some((statement) => statement.includes("record_status"))).toBe(true);
+    expect(migrationStatements.some((statement) => statement.includes("deduped_status"))).toBe(true);
+    expect(
+      migrationStatements.some((statement) =>
+        statement.includes('CREATE TABLE "enum_export_collision"'),
+      ),
+    ).toBe(true);
     expect(migrationStatements.some((statement) => statement.includes('"labels" text[]'))).toBe(
       true,
     );
@@ -162,6 +165,166 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
     );
     expect(noOpStatements).toEqual([]);
   });
+
+  it("keeps deeper PostgreSQL expression restrictions database-checked", () =>
+    support().run(
+      gen(function* () {
+        const client = yield* PgliteClient;
+        yield* flip(
+          tryPromise(() =>
+            client.pglite.query(`
+              create table wave_e_generated_volatile (
+                value double precision generated always as (random()) stored
+              )
+            `),
+          ),
+        );
+        yield* flip(
+          tryPromise(() =>
+            client.pglite.query(`
+              create table wave_e_generated_chain (
+                source integer,
+                first_value integer generated always as (source + 1) stored,
+                second_value integer generated always as (first_value + 1) stored
+              )
+            `),
+          ),
+        );
+        yield* flip(
+          tryPromise(() =>
+            client.pglite.query(`
+              create table wave_e_check_subquery (
+                value integer check (value > (select 0))
+              )
+            `),
+          ),
+        );
+        yield* tryPromise(() =>
+          client.pglite.query("create table wave_e_partial_index (value integer)"),
+        );
+        yield* flip(
+          tryPromise(() =>
+            client.pglite.query(`
+          create index wave_e_partial_index_volatile
+          on wave_e_partial_index (value)
+          where random() > 0.5
+            `),
+          ),
+        );
+        yield* tryPromise(() => client.pglite.query("drop table wave_e_partial_index"));
+      }),
+    ));
+
+  it("mirrors PostgreSQL value, default, action, and structural boundaries", () =>
+    support().run(
+      gen(function* () {
+        const client = yield* PgliteClient;
+        const rejected = (statement: string) => flip(tryPromise(() => client.pglite.query(statement)));
+
+        yield* rejected("create table wave_e_varchar_bound (value varchar(10485761))");
+        yield* rejected("create table wave_e_numeric_bound (value numeric(1001))");
+        yield* rejected("create table wave_e_invalid_default (value real default Infinity)");
+        yield* rejected(
+          `create table wave_e_duplicate_composite (
+            a integer,
+            b integer,
+            constraint wave_e_duplicate_composite_pk primary key (a, a)
+          )`,
+        );
+        yield* rejected(
+          `create table wave_e_two_primary_keys (
+            a integer primary key,
+            b integer primary key
+          )`,
+        );
+        yield* rejected(
+          `create table wave_e_too_many_index_columns (
+            ${Array.from({ length: 33 }, (_, index) => `c${index} integer`).join(", ")},
+            unique (${Array.from({ length: 33 }, (_, index) => `c${index}`).join(", ")})
+          )`,
+        );
+        yield* rejected(
+          `create table wave_e_too_many_table_columns (
+            ${Array.from({ length: 1_601 }, (_, index) => `c${index} integer`).join(", ")}
+          )`,
+        );
+
+        yield* tryPromise(() =>
+          client.pglite.query(`
+            create table wave_e_value_domains (
+              small_value smallint,
+              integer_value integer,
+              uuid_value uuid,
+              numeric_value numeric,
+              matrix text[][]
+            )
+          `),
+        );
+        yield* rejected(
+          "insert into wave_e_value_domains (small_value) values (32768)",
+        );
+        yield* rejected(
+          "insert into wave_e_value_domains (integer_value) values (2147483648)",
+        );
+        yield* rejected(
+          "insert into wave_e_value_domains (uuid_value) values ('not-a-uuid')",
+        );
+        yield* rejected(
+          "insert into wave_e_value_domains (numeric_value) values ('not-a-number')",
+        );
+        yield* rejected(
+          "insert into wave_e_value_domains (matrix) values (array[array['a'], array['b', 'c']])",
+        );
+
+        yield* tryPromise(() =>
+          client.pglite.query("create table wave_e_action_parent (id integer primary key)"),
+        );
+        yield* tryPromise(() =>
+          client.pglite.query(`
+            create table wave_e_action_child (
+              id integer primary key,
+              parent_id integer references wave_e_action_parent(id) on delete set null
+            )
+          `),
+        );
+        yield* tryPromise(() => client.pglite.query("insert into wave_e_action_parent values (1)"));
+        yield* tryPromise(() => client.pglite.query("insert into wave_e_action_child values (1, 1)"));
+        yield* tryPromise(() =>
+          client.pglite.query("delete from wave_e_action_parent where id = 1"),
+        );
+        const actionRows = yield* tryPromise(() =>
+          client.pglite.query<{ readonly parent_id: number | null }>(
+            "select parent_id from wave_e_action_child",
+          ),
+        );
+        expect(actionRows.rows[0]?.parent_id).toBeNull();
+      }),
+    ));
+
+  it("keeps char values faithful and enforces unique-column foreign keys", () =>
+    support().runRepository(
+      gen(function* () {
+        const sql = yield* SqlClient;
+        yield* sql`
+          insert into enum_export_collision (status, code)
+          values (${"draft"}, ${"ABCD"})
+        `;
+        const exact = yield* sql<{ readonly code: string }>`
+          select code from enum_export_collision
+        `;
+        const padded = yield* sql<{ readonly code: string }>`
+          select cast(${"x"} as char(4)) as code
+        `;
+        yield* sql`insert into unique_target (id) values (${41})`;
+        yield* sql`insert into unique_source (target_id) values (${41})`;
+        const rejected = yield* flip(
+          sql`insert into unique_source (target_id) values (${42})`,
+        );
+        expect(exact[0]?.code).toBe("ABCD");
+        expect(padded[0]?.code).toBe("x   ");
+        expect(rejected.pipe(isSqlError)).toBe(true);
+      }),
+    ));
 
   it("round-trips one- and two-dimensional arrays through the model repository", () =>
     support().runRepository(

@@ -240,6 +240,9 @@ samples, not thresholds.
    budget.
 8. Remove the deterministic-service-key fixture suppression after graduation gives the code its
    final package path.
+9. Decide whether any schema-expression semantic analyzer belongs in the graduated package. Until
+   then, preserve zero-parameter structural rejection, loud API Gotchas, and the PostgreSQL/SQLite
+   negative live probes; the databases remain authoritative for deeper expression legality.
 
 No round-7 deliverable is blocked. The SQLite API/CLI RC skew is handled only in the test harness
 and remains an explicit graduation blocker rather than a silent production shim.

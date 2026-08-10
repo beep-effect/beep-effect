@@ -1,8 +1,11 @@
 /** Compile-time and runtime consumer fixtures. */
-import { sql } from "drizzle-orm";
+import { getColumnTable, getTableName, sql } from "drizzle-orm";
+import { getTableConfig as getPgTableConfig } from "drizzle-orm/pg-core";
 import { Service } from "effect/Context";
+import { head } from "effect/Array";
 import { succeed } from "effect/Effect";
 import type { Effect, Success } from "effect/Effect";
+import { getOrThrow } from "effect/Option";
 import {
   Array,
   BigInt,
@@ -15,9 +18,12 @@ import {
   OptionFromNullOr,
   String,
   Struct,
+  Uint8Array as Uint8ArraySchema,
   brand,
   decodeTo,
+  instanceOf,
   isGreaterThan,
+  isLengthBetween,
   isMaxLength,
   isMinLength,
 } from "effect/Schema";
@@ -60,9 +66,10 @@ export const auditKit = make({
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
     rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
   }),
-  defaultExtras: (columns) => [
-    Table.check(sql<boolean>`${columns.rowVersion} > 0`, "kit_row_version_positive"),
-  ],
+  defaultExtras: (columns) => {
+    const name: string = `${getTableName(getColumnTable(columns.rowVersion))}_row_version_positive`;
+    return [Table.check(sql<boolean>`${columns.rowVersion} > 0`, name)];
+  },
 });
 
 export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord")(
@@ -92,7 +99,7 @@ export class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColum
   amount: String.pipe(pg.numeric(10, 2)),
   calendarDate: String.pipe(pg.date()),
   objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
-  code: String.check(isMaxLength(4)).pipe(pg.char()),
+  code: String.check(isLengthBetween(4, 4)).pipe(pg.char()),
   payload: Struct({ ok: Boolean }).pipe(pg.json()),
   score: Finite.pipe(pg.real()),
   largeSequence: Int.pipe(pg.bigserial("number")),
@@ -260,6 +267,22 @@ export class ExplicitVariantModel extends Model<ExplicitVariantModel>("ExplicitV
   }).pipe(pg.text(), pg.generated(sql<string>`lower(value)`)),
 }) {}
 
+export class DerivedJsonModel extends Model<DerivedJsonModel>("DerivedJsonModel")({
+  record: Struct({ value: String }),
+  values: Array(String),
+}) {}
+
+class UniqueTargetRef {
+  static readonly tableName = "unique_target";
+  static readonly entityType = "UniqueTarget";
+}
+export class UniqueTarget extends Model<UniqueTarget>("UniqueTarget")({
+  id: Int.pipe(pg.integer(), pg.unique()),
+}) {}
+export class UniqueSource extends Model<UniqueSource>("UniqueSource")({
+  targetId: Int.pipe(pg.integer(), pg.references(UniqueTargetRef)),
+}) {}
+
 export const userTable = toPgTable(User);
 export const effectDrizzleSchema = schema({
   user: User,
@@ -267,6 +290,17 @@ export const effectDrizzleSchema = schema({
   membership: Membership,
   array_record: ArrayRecord,
   enum_array_record: EnumArrayRecord,
+  record_status: class EnumExportCollision extends Model<EnumExportCollision>(
+    "EnumExportCollision",
+  )({
+    status: RecordStatus.pipe(pg.enum("record_status")),
+    code: String.check(isLengthBetween(4, 4)).pipe(pg.char()),
+  }) {},
+  deduped_enum: class DedupedEnum extends Model<DedupedEnum>("DedupedEnum")({
+    value: Literals(["draft", "draft", "active"]).pipe(pg.enum("deduped_status")),
+  }) {},
+  unique_target: UniqueTarget,
+  unique_source: UniqueSource,
 });
 
 export const dualOrgLinkSchema = schema({
@@ -431,6 +465,53 @@ export const _badBytea = String.pipe(pg.bytea());
 export const _badTimestampString = Finite.pipe(pg.timestamp());
 // @ts-expect-error invariant: timestamp date mode requires a Date-encoded schema
 export const _badTimestampDate = String.pipe(pg.timestamp({ mode: "date" }));
+
+export const _runtimeStringCarrierMismatch = () => {
+  class RuntimeStringCarrierMismatch extends Model<RuntimeStringCarrierMismatch>(
+    "RuntimeStringCarrierMismatch",
+  )({ value: _badText }) {}
+  return RuntimeStringCarrierMismatch;
+};
+export const _runtimeNumberCarrierMismatch = () => {
+  class RuntimeNumberCarrierMismatch extends Model<RuntimeNumberCarrierMismatch>(
+    "RuntimeNumberCarrierMismatch",
+  )({ value: _badInteger }) {}
+  return RuntimeNumberCarrierMismatch;
+};
+export const _runtimeDateCarrierMismatch = () => {
+  class RuntimeDateCarrierMismatch extends Model<RuntimeDateCarrierMismatch>(
+    "RuntimeDateCarrierMismatch",
+  )({ value: _badDateString() }) {}
+  return RuntimeDateCarrierMismatch;
+};
+export const _runtimeByteCarrierMismatch = () => {
+  class RuntimeByteCarrierMismatch extends Model<RuntimeByteCarrierMismatch>(
+    "RuntimeByteCarrierMismatch",
+  )({ value: _badBytea }) {}
+  return RuntimeByteCarrierMismatch;
+};
+export const _runtimeObjectCarrierMismatch = () => {
+  class RuntimeObjectCarrierMismatch extends Model<RuntimeObjectCarrierMismatch>(
+    "RuntimeObjectCarrierMismatch",
+  )({ value: _badJson() }) {}
+  return RuntimeObjectCarrierMismatch;
+};
+export const _runtimeModeCarrierMismatch = () => {
+  class RuntimeModeCarrierMismatch extends Model<RuntimeModeCarrierMismatch>(
+    "RuntimeModeCarrierMismatch",
+  )({ value: _badBigintNumber }) {}
+  return RuntimeModeCarrierMismatch;
+};
+export const _runtimeArrayCarrierMismatch = () => {
+  const field = Field.patch(Array(Finite), {
+    column: PgColumn.Text.make({}),
+    dimensions: 1,
+  });
+  class RuntimeArrayCarrierMismatch extends Model<RuntimeArrayCarrierMismatch>(
+    "RuntimeArrayCarrierMismatch",
+  )({ value: field }) {}
+  return RuntimeArrayCarrierMismatch;
+};
 // @ts-expect-error invariant: defaultNow requires an explicit timestamp column
 export const _badDefaultNow = String.pipe(pg.text(), pg.defaultNow());
 // @ts-expect-error invariant: a default value must match the encoded carrier
@@ -627,7 +708,34 @@ export const _badGeneratedThenVersion = () => {
   }) {}
   return BadGeneratedThenVersion;
 };
+
+export const _badBigintVersion = () =>
+  BigInt.pipe(
+    pg.bigint("bigint"),
+    // @ts-expect-error invariant: optimistic versions require number-encoded integer columns
+    pg.version(),
+  );
+
+export const _badVariantVersion = () =>
+  VariantField({ select: Int, update: Int }).pipe(
+    pg.integer(),
+    // @ts-expect-error invariant: optimistic versions cannot override explicit variant membership
+    pg.version(),
+  );
 export const _charWithoutMaxLength = () => String.pipe(pg.char());
+export const _charWithMaximumOnly = () => String.check(isMaxLength(4)).pipe(pg.char());
+export const _charWithWrongExactLength = () =>
+  String.check(isLengthBetween(3, 3)).pipe(pg.char(4));
+export const _charWithoutExactRuntimeMirror = () => {
+  const field = Field.make(
+    String,
+    Meta.merge(Meta.empty, { column: PgColumn.Char.make({ length: 4 }) }),
+  );
+  class CharWithoutExactRuntimeMirror extends Model<CharWithoutExactRuntimeMirror>(
+    "CharWithoutExactRuntimeMirror",
+  )({ value: field }) {}
+  return CharWithoutExactRuntimeMirror;
+};
 
 export const _badTimestampCorrelation = () =>
   PgColumn.Timestamp.make({
@@ -718,6 +826,46 @@ export const _needsExplicitColumn = () => {
   }) {}
   return NeedsExplicitColumn;
 };
+
+export const _declarationNeedsExplicitColumn = () => {
+  class DeclarationNeedsExplicitColumn extends Model<DeclarationNeedsExplicitColumn>(
+    "DeclarationNeedsExplicitColumn",
+  )({
+    // @ts-expect-error invariant: declaration-backed objects do not derive JSON storage
+    value: instanceOf(RegExp),
+  }) {}
+  return DeclarationNeedsExplicitColumn;
+};
+
+class NamedRepositoryModel extends Model<NamedRepositoryModel>("NamedRepositoryModel")({
+  id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+  displayName: String.pipe(pg.columnName("legacy_name")),
+  rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
+}) {}
+
+export const _repositoryVersionLocator = () => ({
+  repository: makeRepository(User, {
+    spanPrefix: "UserVersionLocator",
+    // @ts-expect-error invariant: optimistic version fields cannot locate repository rows
+    idColumn: "rowVersion",
+  }),
+});
+
+export const _repositoryNonUniqueLocator = () => ({
+  repository: makeRepository(User, {
+    spanPrefix: "UserNonUniqueLocator",
+    // @ts-expect-error invariant: repository locators must be primary-key or unique fields
+    idColumn: "name",
+  }),
+});
+
+export const _repositoryColumnNameOverride = () => ({
+  repository: makeRepository(
+    // @ts-expect-error invariant: repositories reject models with physical column-name overrides
+    NamedRepositoryModel,
+    { spanPrefix: "NamedRepositoryModel", idColumn: "id" },
+  ),
+});
 
 export const _twoPrimaryKeys = () => {
   // @ts-expect-error invariant: multiple inline primary keys require a composite table node instead
@@ -871,6 +1019,46 @@ export const _arrayDepthFkMismatch = () =>
     shallow_array_source: ShallowArraySource,
   });
 
+const NonUniqueTargetId = entityId(Finite, "non_unique_target", "NonUniqueTarget");
+class NonUniqueTarget extends Model<NonUniqueTarget>("NonUniqueTarget")({
+  id: Int.pipe(pg.integer()),
+}) {}
+class NonUniqueSource extends Model<NonUniqueSource>("NonUniqueSource")({
+  targetId: Int.pipe(pg.integer(), pg.references(NonUniqueTargetId)),
+}) {}
+
+export const _nonUniqueForeignKey = () =>
+  // @ts-expect-error invariant: foreign keys must target an inline primary-key or unique column
+  schema({ non_unique_target: NonUniqueTarget, non_unique_source: NonUniqueSource });
+
+class AlphaUser extends Model<AlphaUser>("alpha/User")({ value: String }) {}
+class BetaUser extends Model<BetaUser>("beta/User")({ value: String }) {}
+export const _duplicatePhysicalTableNames = () =>
+  schema({ alpha_user: AlphaUser, beta_user: BetaUser });
+
+const ResolutionTargetId = entityId(Finite, "resolution_target", "ResolutionTarget");
+class ResolutionTarget extends Model<ResolutionTarget>("ResolutionTarget")({
+  id: Int.pipe(pg.integer(), pg.primaryKey()),
+}) {}
+class ResolutionDecoy extends Model<ResolutionDecoy>("ResolutionDecoy")({
+  id: Int.pipe(pg.integer(), pg.primaryKey()),
+}) {}
+class ResolutionSource extends Model<ResolutionSource>("ResolutionSource")({
+  targetId: Int.pipe(pg.integer(), pg.references(ResolutionTargetId)),
+}) {}
+
+export const exactKeyResolutionSchema = schema({
+  resolution_target: ResolutionDecoy,
+  physical_target: ResolutionTarget,
+  resolution_source: ResolutionSource,
+});
+
+export const uniquePhysicalResolutionSchema =
+  // @ts-expect-error boundary: physical-name fallback is runtime-only until model statics preserve literals
+  schema({ physical_target: ResolutionTarget, resolution_source: ResolutionSource });
+
+export const _pgNulEnum = () => Literals(["safe", "nul\0value"]).pipe(pg.enum("nul_status"));
+
 const CollisionTargetId = entityId(
   Finite.pipe(brand("CollisionTargetId")),
   "collision_target",
@@ -889,3 +1077,290 @@ export const _reverseRelationCollision = () =>
     collision_target: CollisionTarget,
     collision_source: CollisionSource,
   });
+
+// Wave D compile-time name fixtures: every public PostgreSQL naming surface.
+export const _pgInvalidColumnNameType = () => String.pipe(
+  // @ts-expect-error invariant: explicit column names use the cheap SQL-name prefix
+  pg.columnName("Bad Name"),
+);
+export const _pgInvalidColumnNameUnionType = (name: "valid_name" | "BadName") => String.pipe(
+  // @ts-expect-error invariant: one invalid literal conservatively rejects the whole name union
+  pg.columnName(name),
+);
+export const _pgInvalidEnumNameType = () => Literals(["ok"]).pipe(
+  // @ts-expect-error invariant: explicit enum names use the cheap SQL-name prefix
+  pg.enum("Bad-Enum"),
+);
+export const _pgInvalidIndexNameType = (columns: Table.BoundColumns<{ value: typeof String }>) =>
+  // @ts-expect-error invariant: index names use the cheap SQL-name prefix
+  Table.index("Bad.Index", [columns.value]);
+export const _pgInvalidUniqueNameType = (columns: Table.BoundColumns<{ one: typeof String; two: typeof String }>) =>
+  // @ts-expect-error invariant: composite unique names use the cheap SQL-name prefix
+  Table.compositeUnique("Bad Unique", [columns.one, columns.two]);
+export const _pgInvalidPrimaryNameType = (columns: Table.BoundColumns<{ one: typeof String; two: typeof String }>) =>
+  // @ts-expect-error invariant: composite primary-key names use the cheap SQL-name prefix
+  Table.compositePrimaryKey("Bad-Pk", [columns.one, columns.two]);
+export const _pgInvalidCheckNameType = () =>
+  // @ts-expect-error invariant: check names use the cheap SQL-name prefix
+  Table.check("Bad Check")(sql<boolean>`true`);
+export const _pgInvalidModelNameType = () =>
+  // @ts-expect-error invariant: model identifiers cheaply corroborate their derived table name
+  Model("Bad Model");
+export const _pgInvalidKitNameType = () =>
+  // @ts-expect-error invariant: kit default field keys derive valid physical names
+  make({ dialect: "pg", defaultColumns: () => ({ "bad key": String }) });
+
+export const _pgEmptyColumnName = () => {
+  const name: string = "";
+  return String.pipe(pg.columnName(name));
+};
+export const _pgLongColumnName = () => {
+  const name: string = "a".repeat(64);
+  return String.pipe(pg.columnName(name));
+};
+export const _pgMultibyteColumnName = () => {
+  const name: string = `a${"é".repeat(32)}`;
+  return String.pipe(pg.columnName(name));
+};
+export const _pgLongEnumLabel = () =>
+  Literals(["😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀", ""]).pipe(pg.enum("long_label_status"));
+export const pgEmptyEnumLabel = Literals(["", "active"]).pipe(pg.enum("empty_label_status"));
+const NameFixtureString = String.annotate({ identifier: "WaveDNameFixtureString" });
+
+export const _pgPhysicalColumnCollision = () => {
+  class PhysicalColumnCollision extends Model<PhysicalColumnCollision>("PhysicalColumnCollision")({
+    userId: NameFixtureString,
+    user_id: NameFixtureString,
+  }) {}
+  return PhysicalColumnCollision;
+};
+export const _pgCaseFoldColumnCollision = () => {
+  const uppercase: string = "FOO";
+  class CaseFoldColumnCollision extends Model<CaseFoldColumnCollision>("CaseFoldColumnCollision")({
+    first: NameFixtureString.pipe(pg.columnName("foo")),
+    second: Field.patch(NameFixtureString, { columnName: uppercase }),
+  }) {}
+  return CaseFoldColumnCollision;
+};
+
+export const _pgTruncationPrefixCollision = () => {
+  const prefix = "a".repeat(63);
+  const fake = (tableName: string) => ({ sql: { tableName, fields: {}, columns: {}, extras: undefined } });
+  return schema({ first: fake(`${prefix}x`), second: fake(`${prefix}y`) });
+};
+
+export const _pgDuplicateIndexNamespace = () => {
+  class FirstIndexOwner extends Model<FirstIndexOwner>("FirstIndexOwner")(
+    { value: NameFixtureString },
+    (columns) => [Table.index("shared_namespace_idx", [columns.value])],
+  ) {}
+  class SecondIndexOwner extends Model<SecondIndexOwner>("SecondIndexOwner")(
+    { value: NameFixtureString },
+    (columns) => [Table.index("shared_namespace_idx", [columns.value])],
+  ) {}
+  return schema({ first_index_owner: FirstIndexOwner, second_index_owner: SecondIndexOwner });
+};
+
+export const _pgDuplicateConstraintNamespace = () => {
+  class FirstConstraintOwner extends Model<FirstConstraintOwner>("FirstConstraintOwner")(
+    { value: NameFixtureString },
+    (columns) => [Table.check("shared_namespace_check")(sql<boolean>`${columns.value} <> ''`)],
+  ) {}
+  class SecondConstraintOwner extends Model<SecondConstraintOwner>("SecondConstraintOwner")(
+    { value: NameFixtureString },
+    (columns) => [Table.check("shared_namespace_check")(sql<boolean>`${columns.value} <> ''`)],
+  ) {}
+  return schema({
+    first_constraint_owner: FirstConstraintOwner,
+    second_constraint_owner: SecondConstraintOwner,
+  });
+};
+
+export const _pgTableEnumNamespaceCollision = () => {
+  class Status extends Model<Status>("Status")({ value: NameFixtureString }) {}
+  class StatusOwner extends Model<StatusOwner>("StatusOwner")({
+    value: Literals(["active"]).pipe(pg.enum("status")),
+  }) {}
+  return schema({ status: Status, status_owner: StatusOwner });
+};
+
+const WaveEString = String.annotate({ identifier: "WaveEString" });
+
+export const pgBoundedInteger = Int.pipe(pg.integer());
+export const pgBoundedSmallint = Int.pipe(pg.smallint());
+export const pgCheckedUuid = String.pipe(pg.uuid());
+export const pgCheckedNumeric = String.pipe(pg.numeric());
+
+export const _pgVarcharTooWide = () => WaveEString.pipe(pg.varchar(10_485_761));
+export const _pgNumericPrecisionTooWide = () => WaveEString.pipe(pg.numeric(1_001));
+export const _pgNumericScaleTooWide = () => WaveEString.pipe(pg.numeric(10, 1_001));
+
+export const _pgInvalidFiniteDefault = () => {
+  class InvalidFiniteDefault extends Model<InvalidFiniteDefault>("InvalidFiniteDefault")({
+    value: Finite.pipe(pg.real(), pg.default(Number.POSITIVE_INFINITY)),
+  }) {}
+  return InvalidFiniteDefault;
+};
+export const _pgNulDefault = () => {
+  class NulDefault extends Model<NulDefault>("NulDefault")({
+    value: WaveEString.pipe(pg.text(), pg.default("bad\0value")),
+  }) {}
+  return NulDefault;
+};
+export const _pgByteaDefault = () => {
+  class ByteaDefault extends Model<ByteaDefault>("ByteaDefault")({
+    value: Uint8ArraySchema.pipe(pg.bytea(), pg.default(new Uint8Array([0, 39, 255]))),
+  }) {}
+  return ByteaDefault;
+};
+
+export const _pgParameterizedDefault = () => {
+  class ParameterizedDefault extends Model<ParameterizedDefault>("ParameterizedDefault")({
+    value: WaveEString.pipe(pg.defaultExpr(sql<string>`${"active"}`)),
+  }) {}
+  return toPgTable(ParameterizedDefault);
+};
+export const _pgParameterizedGenerated = () => {
+  class ParameterizedGenerated extends Model<ParameterizedGenerated>("ParameterizedGenerated")({
+    value: WaveEString.pipe(pg.generated(sql<string>`${"active"}`)),
+  }) {}
+  return toPgTable(ParameterizedGenerated);
+};
+export const _pgParameterizedCheck = () => {
+  class ParameterizedCheck extends Model<ParameterizedCheck>("ParameterizedCheck")(
+    { value: WaveEString },
+    () => [Table.check("parameterized_check")(sql<boolean>`${1} > 0`)],
+  ) {}
+  return getPgTableConfig(toPgTable(ParameterizedCheck));
+};
+export const _pgParameterizedPartialIndex = () => {
+  class ParameterizedPartialIndex extends Model<ParameterizedPartialIndex>(
+    "ParameterizedPartialIndex",
+  )(
+    { value: WaveEString },
+    (columns) => [
+      Table.index("parameterized_partial_idx", [columns.value], {
+        where: sql<boolean>`${1} > 0`,
+      }),
+    ],
+  ) {}
+  return getPgTableConfig(toPgTable(ParameterizedPartialIndex));
+};
+
+export const _pgDuplicateCompositeType = (
+  columns: Table.BoundColumns<{ one: typeof Int; two: typeof Int }>,
+) =>
+  // @ts-expect-error invariant: composite constraints cannot repeat a field
+  Table.compositeUnique("duplicate_composite", [columns.one, columns.one]);
+export const _pgNullableCompositePrimaryType = (
+  columns: Table.BoundColumns<{ one: ReturnType<typeof NullOr<typeof Int>>; two: typeof Int }>,
+) =>
+  // @ts-expect-error invariant: composite primary-key members cannot be nullable
+  Table.compositePrimaryKey("nullable_composite_pk", [columns.one, columns.two]);
+
+export const _pgDuplicateCompositeRuntime = () => {
+  class DuplicateComposite extends Model<DuplicateComposite>("DuplicateComposite")(
+    { one: Int, two: Int },
+    (columns) => [
+      // @ts-expect-error invariant: runtime mirror survives type suppression
+      Table.compositeUnique("duplicate_composite", [columns.one, columns.one]),
+    ],
+  ) {}
+  return getPgTableConfig(toPgTable(DuplicateComposite));
+};
+export const _pgNullableCompositePrimaryRuntime = () => {
+  class NullableCompositePrimary extends Model<NullableCompositePrimary>(
+    "NullableCompositePrimary",
+  )(
+    { one: NullOr(Int), two: Int },
+    (columns) => [
+      // @ts-expect-error invariant: runtime mirror survives type suppression
+      Table.compositePrimaryKey("nullable_composite_pk", [columns.one, columns.two]),
+    ],
+  ) {}
+  return getPgTableConfig(toPgTable(NullableCompositePrimary));
+};
+export const _pgMultiplePrimaryKeys = () => {
+  class MultiplePrimaryKeys extends Model<MultiplePrimaryKeys>("MultiplePrimaryKeys")(
+    { id: Int.pipe(pg.integer(), pg.primaryKey()), one: Int, two: Int },
+    (columns) => [Table.compositePrimaryKey("second_pk", [columns.one, columns.two])],
+  ) {}
+  return getPgTableConfig(toPgTable(MultiplePrimaryKeys));
+};
+export const _pgDuplicateExtrasNames = () => {
+  class DuplicateExtrasNames extends Model<DuplicateExtrasNames>("DuplicateExtrasNames")(
+    { one: Int, two: Int },
+    (columns) => [
+      Table.compositeUnique("same_extra", [columns.one, columns.two]),
+      Table.check("same_extra")(sql<boolean>`true`),
+    ],
+  ) {}
+  return getPgTableConfig(toPgTable(DuplicateExtrasNames));
+};
+export const _pgSetNullNonNullableType = () =>
+  OrganizationId.pipe(
+    pg.integer(),
+    // @ts-expect-error invariant: SET NULL requires nullable encoded source
+    pg.references(OrganizationId, { onDelete: "set null" }),
+  );
+export const _pgSetDefaultWithoutDefaultType = () =>
+  OrganizationId.pipe(
+    pg.integer(),
+    // @ts-expect-error invariant: SET DEFAULT requires a declared database default
+    pg.references(OrganizationId, { onDelete: "set default" }),
+  );
+export const _pgSetNullNonNullable = () => {
+  const targetId = Field.patch(OrganizationId.pipe(pg.integer()), {
+    references: {
+      tableName: OrganizationId.tableName,
+      columnName: "id",
+      onDelete: "set null",
+      onUpdate: undefined,
+    },
+  });
+  class SetNullSource extends Model<SetNullSource>("SetNullSource")({
+    targetId,
+  }) {}
+  return schema({ organization: Organization, set_null_source: SetNullSource });
+};
+export const _pgSetDefaultWithoutDefault = () => {
+  const targetId = Field.patch(OrganizationId.pipe(pg.integer()), {
+    references: {
+      tableName: OrganizationId.tableName,
+      columnName: "id",
+      onDelete: "set default",
+      onUpdate: undefined,
+    },
+  });
+  class SetDefaultSource extends Model<SetDefaultSource>("SetDefaultSource")({
+    targetId,
+  }) {}
+  return schema({ organization: Organization, set_default_source: SetDefaultSource });
+};
+
+export const _pgEmptyModel = () => {
+  class EmptyModel extends Model<EmptyModel>("EmptyModel")({}) {}
+  return EmptyModel;
+};
+export const _pgTooManyColumns = () => {
+  const fields: Record<string, typeof WaveEString> = Object.fromEntries(
+    globalThis.Array.from({ length: 1_601 }, (_, index) => [`field_${index}`, WaveEString]),
+  );
+  // @ts-expect-error invariant: dynamic widened keys defer to the runtime model validator
+  class TooManyColumns extends Model<TooManyColumns>("TooManyColumns")(fields) {}
+  return TooManyColumns;
+};
+export const _pgTooManyIndexColumns = () => {
+  const fields: Record<string, typeof WaveEString> = Object.fromEntries(
+    globalThis.Array.from({ length: 33 }, (_, index) => [`field_${index}`, WaveEString]),
+  );
+  class TooManyIndexColumns extends Model<TooManyIndexColumns>("TooManyIndexColumns")(
+    // @ts-expect-error invariant: dynamic widened keys defer to the runtime model validator
+    fields,
+    (columns) => {
+      const values = Object.values(columns);
+      return [Table.index("too_many_index_columns", [getOrThrow(head(values)), ...values.slice(1)])];
+    },
+  ) {}
+  return getPgTableConfig(toPgTable(TooManyIndexColumns));
+};

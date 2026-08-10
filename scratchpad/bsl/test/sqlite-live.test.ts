@@ -1,7 +1,9 @@
 /** Real-file SQLite execution proofs for the round-seven dialect. */
 import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { drizzle } from "drizzle-orm/bun-sqlite";
+import { numeric, sqliteTable } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
 import { formatIso } from "effect/DateTime";
 import {
@@ -11,11 +13,13 @@ import {
   gen,
   option,
   promise,
+  provide,
   runPromise,
   sync,
   tryPromise,
 } from "effect/Effect";
 import { isSuccess } from "effect/Exit";
+import { FileSystem } from "effect/FileSystem";
 import {
   getOrThrow,
   getOrThrowWith,
@@ -83,7 +87,8 @@ const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
 const repositoryRoot = new URL("../../../", import.meta.url).pathname;
 const schemaPath = "scratchpad/bsl/test/sqlite-drizzle-schema.ts";
 const preloadPath = new URL("./drizzle-kit-sqlite-rc-compat.cjs", import.meta.url).pathname;
-const databasePath = "/tmp/effect-drizzle-round7-live.sqlite";
+let databaseDirectory = "";
+let databasePath = "";
 
 const runPush = tryPromise({
   try: (): Promise<string> => {
@@ -137,13 +142,11 @@ const runPush = tryPromise({
   }),
 });
 
-const deleteDatabaseFiles = promise(() =>
-  Promise.all(
-    [databasePath, `${databasePath}-shm`, `${databasePath}-wal`].map((path) =>
-      Bun.file(path).delete().catch(() => 0),
-    ),
-  ),
-);
+const deleteDatabaseDirectory = gen(function* () {
+  if (databaseDirectory.length === 0) return;
+  const fileSystem = yield* FileSystem;
+  yield* fileSystem.remove(databaseDirectory, { recursive: true, force: true });
+});
 
 let live = none<SqliteLiveTestSupport>();
 let drizzleClient: Database | undefined;
@@ -169,13 +172,16 @@ const createOrganization = (name: string) =>
 beforeAll(() =>
   runPromise(
     gen(function* () {
-      yield* deleteDatabaseFiles;
+      const fileSystem = yield* FileSystem;
+      databaseDirectory = yield* fileSystem.makeTempDirectory({ prefix: "effect-drizzle-live-" });
+      databasePath = `${databaseDirectory}/live.sqlite`;
       migrationOutput = yield* runPush;
       noOpOutput = yield* runPush;
       drizzleClient = new Database(databasePath);
       drizzleClient.run("PRAGMA foreign_keys = ON");
       live = some(yield* makeSqliteLiveTestSupport(databasePath));
-    }),
+      // @effect-diagnostics-next-line strictEffectProvide:off
+    }).pipe(provide(BunFileSystem.layer)),
   ),
   90_000,
 );
@@ -190,8 +196,9 @@ afterAll(() =>
         }),
       );
       yield* sync(() => drizzleClient?.close());
-      yield* deleteDatabaseFiles;
-    }),
+      yield* deleteDatabaseDirectory;
+      // @effect-diagnostics-next-line strictEffectProvide:off
+    }).pipe(provide(BunFileSystem.layer)),
   ),
 );
 
@@ -202,6 +209,135 @@ describe.serial("@beep/effect-drizzle live SQLite gauntlet", () => {
     expect(migrationOutput).toContain("shared_user_status_enum_check");
     expect(migrationOutput).toContain("Changes applied");
     expect(noOpOutput).toContain("No changes detected");
+  });
+
+  it("restricts NUMERIC modes to live representation-preserving carriers", () => {
+    const client = new Database(":memory:");
+    try {
+      client.exec("create table numeric_affinity_probe (value numeric)");
+      const insertAffinity = client.query("insert into numeric_affinity_probe values (?)");
+      insertAffinity.run("3.0e+5");
+      insertAffinity.run("001.2300");
+      insertAffinity.run("0.12345678901234567890123456789");
+      expect(
+        client.query("select value, typeof(value) as storage from numeric_affinity_probe").all(),
+      ).toEqual([
+        { value: 300000, storage: "integer" },
+        { value: 1.23, storage: "real" },
+        { value: 0.12345678901234568, storage: "real" },
+      ]);
+
+      const numbers = sqliteTable("wave_e_numeric_number", {
+        value: numeric({ mode: "number" }).notNull(),
+      });
+      const bigints = sqliteTable("wave_e_numeric_bigint", {
+        value: numeric({ mode: "bigint" }).notNull(),
+      });
+      client.exec("create table wave_e_numeric_number (value numeric not null)");
+      client.exec("create table wave_e_numeric_bigint (value numeric not null)");
+      const db = drizzle({ client });
+      db.insert(numbers).values([{ value: -1.25 }, { value: 0 }, { value: 42.5 }]).run();
+      db.insert(bigints)
+        .values([{ value: -9_223_372_036_854_775_808n }, { value: 9_223_372_036_854_775_807n }])
+        .run();
+      expect(db.select().from(numbers).all()).toEqual([
+        { value: -1.25 },
+        { value: 0 },
+        { value: 42.5 },
+      ]);
+      expect(db.select().from(bigints).all()).toEqual([
+        { value: -9_223_372_036_854_775_808n },
+        { value: 9_223_372_036_854_775_807n },
+      ]);
+      db.insert(bigints).values({ value: 9_223_372_036_854_775_808n }).run();
+      expect(
+        client
+          .query("select typeof(value) as storage from wave_e_numeric_bigint where rowid = 3")
+          .get(),
+      ).toEqual({ storage: "real" });
+      expect(() => db.select().from(bigints).all()).toThrow();
+    } finally {
+      client.close();
+    }
+  });
+
+  it("keeps deeper SQLite expression restrictions database-checked", () => {
+    const client = new Database(":memory:");
+    try {
+      expect(() =>
+        client.exec(`
+          create table wave_e_generated_volatile (
+            value integer generated always as (random()) stored
+          )
+        `),
+      ).toThrow();
+      expect(() =>
+        client.exec(`
+          create table wave_e_default_column_reference (
+            source integer,
+            value integer default (source + 1)
+          )
+        `),
+      ).toThrow();
+      expect(() =>
+        client.exec(`
+          create table wave_e_check_subquery (
+            value integer check (value > (select 0))
+          )
+        `),
+      ).toThrow();
+      client.exec("create table wave_e_partial_index (value integer)");
+      expect(() =>
+        client.exec(`
+          create index wave_e_partial_index_volatile
+          on wave_e_partial_index (value)
+          where random() > 0.5
+        `),
+      ).toThrow();
+    } finally {
+      client.close();
+    }
+  });
+
+  it("mirrors SQLite default, action, and cardinality boundaries", () => {
+    const client = new Database(":memory:");
+    try {
+      expect(() => client.exec("create table wave_e_empty ()")).toThrow();
+      expect(() =>
+        client.exec(`
+          create table wave_e_generated_only (
+            value integer generated always as (1) stored
+          )
+        `),
+      ).toThrow();
+      expect(() =>
+        client.exec(`
+          create table wave_e_too_many_columns (
+            ${Array.from({ length: 2_001 }, (_, index) => `c${index} integer`).join(", ")}
+          )
+        `),
+      ).toThrow();
+      expect(() =>
+        client.exec("create table wave_e_invalid_default (value real default (-Infinity))"),
+      ).toThrow();
+
+      client.exec("pragma foreign_keys = on");
+      client.exec(`
+        create table wave_e_action_parent (id integer primary key);
+        create table wave_e_action_child (
+          id integer primary key,
+          parent_id integer references wave_e_action_parent(id) on delete set null
+        );
+        insert into wave_e_action_parent values (1);
+        insert into wave_e_action_child values (1, 1);
+        delete from wave_e_action_parent where id = 1;
+      `);
+      expect(client.query("select parent_id from wave_e_action_child").get()).toEqual({
+        parent_id: null,
+      });
+    } finally {
+      client.close();
+    }
   });
 
   it("runs native repository CRUD with db keys, timestamps, and Option NULL codecs", () =>

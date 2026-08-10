@@ -10,6 +10,7 @@ import { is as isDrizzleEntity, sql } from "drizzle-orm";
 import type { $Type, BuildColumns, HasDefault, HasGenerated, IsPrimaryKey, NotNull } from "drizzle-orm/column-builder";
 import {
   check,
+  SQLiteDialect,
   SQLiteColumn,
   sqliteTable,
 } from "drizzle-orm/sqlite-core";
@@ -20,7 +21,6 @@ import type {
   SQLiteBooleanBuilder,
   SQLiteIntegerBuilder,
   SQLiteNumericBigIntBuilder,
-  SQLiteNumericBuilder,
   SQLiteNumericNumberBuilder,
   SQLiteRealBuilder,
   SQLiteTableExtraConfigValue,
@@ -49,6 +49,10 @@ import * as Derive from "./derive.ts";
 import * as TableExtras from "./extras.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 
+const sqliteDialect = new SQLiteDialect();
+const assertSchemaExpression = (expression: import("drizzle-orm").SQL, context: string): void =>
+  Meta.assertNoSqlParameters(sqliteDialect.sqlToQuery(expression).params, context);
+
 type BuilderBase<C extends SqliteColumn.Spec> =
   C extends SqliteColumn.Text<infer Mode>
     ? Mode extends "json" ? SQLiteTextJsonBuilder : SQLiteTextBuilder<[string, ...string[]]>
@@ -65,8 +69,7 @@ type BuilderBase<C extends SqliteColumn.Spec> =
               : SQLiteBlobJsonBuilder
             : C extends SqliteColumn.Numeric<infer Mode>
               ? Mode extends "number" ? SQLiteNumericNumberBuilder
-                : Mode extends "bigint" ? SQLiteNumericBigIntBuilder
-                : SQLiteNumericBuilder
+                : SQLiteNumericBigIntBuilder
               : never;
 
 type NullableOf<I extends Field.Input> = null extends Field.EncodedOf<I> ? true : false;
@@ -199,7 +202,10 @@ const buildColumn = (
       withReturnType<SqliteColumn.DrizzleBuilder>(),
       matchTags({
         value: ({ value }) => withUnique.default(value),
-        sqlExpr: ({ expression }) => withUnique.default(expression),
+        sqlExpr: ({ expression }) => {
+          assertSchemaExpression(expression, `SQLite default expression for '${key}'`);
+          return withUnique.default(expression);
+        },
         now: () => withUnique.default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
         unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
       }),
@@ -211,7 +217,10 @@ const buildColumn = (
     matchWhen(false, () => withDefault),
     matchTags({
       identityAlways: () => withDefault,
-      sqlExpr: ({ expression }) => withDefault.generatedAlwaysAs(expression, { mode: "stored" }),
+      sqlExpr: ({ expression }) => {
+        assertSchemaExpression(expression, `SQLite generated expression for '${key}'`);
+        return withDefault.generatedAlwaysAs(expression, { mode: "stored" });
+      },
       unsafeSql: ({ sql: statement }) =>
         withDefault.generatedAlwaysAs(sql.raw(statement), { mode: "stored" }),
     }),
@@ -341,7 +350,14 @@ export function toSqliteTable(
     const automatic = enumChecks(model, bound);
     const declared = match(fromUndefinedOr(model.sql.extras), {
       onNone: () => [],
-      onSome: (extras) => invokeDeclaredExtras(extras, bound).map(TableExtras.emit),
+      onSome: (extras) => {
+        const nodes = invokeDeclaredExtras(extras, bound);
+        const inlinePrimaryKeys = Object.values(model.sql.columns).filter(
+          (meta) => meta.primaryKey,
+        ).length;
+        TableExtras.validateNodes(nodes, inlinePrimaryKeys);
+        return nodes.map(TableExtras.emit);
+      },
     });
     const additional = match(fromUndefinedOr(additionalExtras), {
       onNone: () => [],

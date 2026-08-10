@@ -144,6 +144,20 @@ The public combinators preserve literal metadata, so invalid combinations fail w
 
 Runtime checks mirror the same laws at author-input seams, including deliberately hand-built field metadata and extras callback results.
 
+## SQL-expression and database boundaries
+
+Typed `defaultExpr`, generated columns, checks, and partial-index predicates prove their encoded
+carrier and must render with zero parameters. They do not parse SQL or certify dialect semantics.
+PostgreSQL still decides immutability, generated-column chaining, and CHECK/index grammar; SQLite
+still decides constant-expression and determinism rules. The live suites retain negative DDL probes
+for these deferred boundaries.
+
+Literal defaults are stricter: model construction validates the complete encoded schema and the
+dialect's supported literal representation. Use `unsafeDefaultSql` only when a trusted SQL spelling
+is intentionally required. PostgreSQL multidimensional arrays are schema-checked for rectangular
+shape, and SQLite NUMERIC intentionally supports only finite-number and signed-64-bit bigint modes;
+use TEXT for representation-preserving decimal strings.
+
 ## Design principles
 
 - **Schema truth at boundaries.** User data, field variants, decoding, and errors remain schema-first. Internal compiler descriptors are lightweight tagged data and readonly records.
@@ -156,4 +170,4 @@ Runtime checks mirror the same laws at author-input seams, including deliberatel
 
 This design is experimental. PostgreSQL and SQLite are implemented against Effect v4 beta and Drizzle ORM 1.0 release-candidate versions. Both dialects project real Drizzle tables, assemble RQBv2 relations, and run through Effect SQL repositories in the live suites.
 
-Known open boundaries are PostgreSQL enum arrays, preservation of literal relation names through the complete relation API, and a symbol-name mismatch between the independently pinned Drizzle ORM and drizzle-kit SQLite RC hashes. The SQLite live suite carries a test-only compatibility preload for that tooling mismatch; it does not patch installed packages. Those boundaries are not presented as finished features.
+Known open boundaries are SQL-expression semantic analysis, PostgreSQL enum arrays, preservation of literal relation names through the complete relation API, and a symbol-name mismatch between the independently pinned Drizzle ORM and drizzle-kit SQLite RC hashes. The SQLite live suite carries a test-only compatibility preload for that tooling mismatch; it does not patch installed packages. Those boundaries are not presented as finished features.

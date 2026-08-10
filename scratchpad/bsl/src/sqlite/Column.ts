@@ -15,14 +15,20 @@ import type {
   SQLiteBooleanBuilder,
   SQLiteIntegerBuilder,
   SQLiteNumericBigIntBuilder,
-  SQLiteNumericBuilder,
   SQLiteNumericNumberBuilder,
   SQLiteRealBuilder,
   SQLiteTextBuilder,
   SQLiteTextJsonBuilder,
   SQLiteTimestampBuilder,
 } from "drizzle-orm/sqlite-core";
-import { append, contains, empty, some as someArray } from "effect/Array";
+import {
+  append,
+  contains,
+  empty,
+  isArray,
+  isReadonlyArrayNonEmpty,
+  some as someArray,
+} from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import type { TaggedEnum } from "effect/Data";
 import { equals } from "effect/Equal";
@@ -49,6 +55,7 @@ import type * as Meta from "../core/Meta.ts";
 import { assignStatics } from "../internal/statics.ts";
 
 /** Failure raised when a SQLite descriptor violates its closed shape. */
+/** @internal */
 export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/sqlite/ColumnInvariantError",
 )(
@@ -58,20 +65,26 @@ export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
 ) {}
 
 /** SQLite number-encoded EntityId storage identity. */
+/** @internal */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
+/** @internal */
 export type ArrayDimension = Meta.ArrayDimension;
 
 /** Modes supported by the installed SQLite text builder. */
+/** @internal */
 export type TextMode = "text" | "json";
 
 /** Modes supported by the installed SQLite integer builder. */
+/** @internal */
 export type IntegerMode = "number" | "boolean" | "timestamp" | "timestamp_ms";
 
 /** Modes supported by the installed SQLite blob builder. */
+/** @internal */
 export type BlobMode = "buffer" | "json" | "bigint";
 
 /** Modes supported by the installed SQLite numeric builder. */
-export type NumericMode = "string" | "number" | "bigint";
+/** @internal */
+export type NumericMode = "number" | "bigint";
 
 type SpecDefinition = {
   text: {
@@ -112,16 +125,20 @@ type SpecDefinition = {
 };
 
 /** Complete internal SQLite descriptor algebra. */
+/** @internal */
 export type Spec = TaggedEnum<SpecDefinition>;
 
+/** @internal */
 export type Text<Mode extends TextMode = TextMode> = Omit<
   Extract<Spec, { readonly _tag: "text" }>,
   "mode"
 > & { readonly mode: Mode };
+/** @internal */
 export type Enum<Value extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "enum" }>,
   "values"
 > & { readonly values: readonly [Value, ...Value[]] };
+/** @internal */
 export type Integer<
   Mode extends IntegerMode = IntegerMode,
   Ident extends "integer" | EntityIdIdent<string> = "integer" | EntityIdIdent<string>,
@@ -129,17 +146,21 @@ export type Integer<
   readonly ident: Ident;
   readonly mode: Mode;
 };
+/** @internal */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
+/** @internal */
 export type Blob<Mode extends BlobMode = BlobMode> = Omit<
   Extract<Spec, { readonly _tag: "blob" }>,
   "mode"
 > & { readonly mode: Mode };
+/** @internal */
 export type Numeric<Mode extends NumericMode = NumericMode> = Omit<
   Extract<Spec, { readonly _tag: "numeric" }>,
   "mode"
 > & { readonly mode: Mode };
 
 /** Broad runtime builder surface used by centralized modifier projection. */
+/** @internal */
 export interface DrizzleBuilder extends ColumnBuilderBase {
   notNull(): DrizzleBuilder;
   primaryKey(config?: { readonly autoIncrement?: boolean }): DrizzleBuilder;
@@ -148,7 +169,7 @@ export interface DrizzleBuilder extends ColumnBuilderBase {
   generatedAlwaysAs(value: SQL | (() => SQL), config?: { readonly mode?: "virtual" | "stored" }): DrizzleBuilder;
 }
 
-const Constructors = taggedEnum<Spec>();
+const Constructors = /* @__PURE__ */ taggedEnum<Spec>();
 const invariant = (message: string): never => {
   throw ColumnInvariantError.make({ message });
 };
@@ -157,7 +178,8 @@ function makeText<const Mode extends TextMode>(props: { readonly mode: Mode }): 
 function makeText(props: { readonly mode: TextMode }): Text {
   return Constructors.text({ dialect: "sqlite", kind: "text", ident: "text", ...props });
 }
-export const Text = assignStatics(
+/** @internal */
+export const Text = /* @__PURE__ */ assignStatics(
   { make: makeText },
   {
     toDrizzleBuilder: (spec: Text, name: string): SQLiteTextBuilder<[string, ...string[]]> | SQLiteTextJsonBuilder =>
@@ -176,7 +198,8 @@ function makeEnum(props: { readonly values: readonly [string, ...string[]] }): E
     values: props.values,
   });
 }
-export const Enum = assignStatics(
+/** @internal */
+export const Enum = /* @__PURE__ */ assignStatics(
   { make: makeEnum },
   {
     toDrizzleBuilder: (spec: Enum, name: string): SQLiteTextBuilder<[string, ...string[]]> =>
@@ -194,7 +217,8 @@ function makeInteger(props: {
 }): Integer {
   return Constructors.integer({ dialect: "sqlite", kind: "integer", ...props });
 }
-export const Integer = assignStatics(
+/** @internal */
+export const Integer = /* @__PURE__ */ assignStatics(
   { make: makeInteger },
   {
     toDrizzleBuilder: (
@@ -211,8 +235,9 @@ export const Integer = assignStatics(
   },
 );
 
-const fixedReal = Constructors.real({ dialect: "sqlite", kind: "real", ident: "real" });
-export const Real = assignStatics(
+const fixedReal = /* @__PURE__ */ Constructors.real({ dialect: "sqlite", kind: "real", ident: "real" });
+/** @internal */
+export const Real = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedReal },
   { toDrizzleBuilder: (_spec: Real, name: string): SQLiteRealBuilder => real(name) },
 );
@@ -221,7 +246,8 @@ function makeBlob<const Mode extends BlobMode>(props: { readonly mode: Mode }): 
 function makeBlob(props: { readonly mode: BlobMode }): Blob {
   return Constructors.blob({ dialect: "sqlite", kind: "blob", ident: "blob", ...props });
 }
-export const Blob = assignStatics(
+/** @internal */
+export const Blob = /* @__PURE__ */ assignStatics(
   { make: makeBlob },
   {
     toDrizzleBuilder: (
@@ -242,24 +268,26 @@ function makeNumeric<const Mode extends NumericMode>(props: {
 function makeNumeric(props: { readonly mode: NumericMode }): Numeric {
   return Constructors.numeric({ dialect: "sqlite", kind: "numeric", ident: "numeric", ...props });
 }
-export const Numeric = assignStatics(
+/** @internal */
+export const Numeric = /* @__PURE__ */ assignStatics(
   { make: makeNumeric },
   {
     toDrizzleBuilder: (
       spec: Numeric,
       name: string,
-    ): SQLiteNumericBuilder | SQLiteNumericNumberBuilder | SQLiteNumericBigIntBuilder =>
+    ): SQLiteNumericNumberBuilder | SQLiteNumericBigIntBuilder =>
       spec.mode === "number"
         ? numeric(name, { mode: "number" })
-        : spec.mode === "bigint"
-          ? numeric(name, { mode: "bigint" })
-          : numeric(name, { mode: "string" }),
+        : numeric(name, { mode: "bigint" }),
   },
 );
 
 const knownTags: ReadonlyArray<Spec["_tag"]> = ["text", "enum", "integer", "real", "blob", "numeric"];
+const isIntegerIdent = (value: string): boolean =>
+  value === "integer" || /^entityId<"[^"\n]+">$/.test(value);
 
 /** Cheap full-enough guard for descriptors crossing author-controlled seams. */
+/** @internal */
 export const isSpec = (value: unknown): value is Spec => {
   if (
     !hasProperty(value, "_tag") ||
@@ -268,22 +296,42 @@ export const isSpec = (value: unknown): value is Spec => {
     !hasProperty(value, "dialect") ||
     value.dialect !== "sqlite" ||
     !hasProperty(value, "kind") ||
-    !isString(value.kind) ||
+    value.kind !== value._tag ||
     !hasProperty(value, "ident") ||
     !isString(value.ident)
   ) return false;
-  if (Constructors.$is("text")(value)) return value.mode === "text" || value.mode === "json";
-  if (Constructors.$is("enum")(value)) return value.values.length > 0 && value.values.every(isString);
-  if (Constructors.$is("integer")(value)) {
-    return value.mode === "number" || value.mode === "boolean" || value.mode === "timestamp" || value.mode === "timestamp_ms";
+  if (value._tag === "text") {
+    return value.ident === "text" &&
+      hasProperty(value, "mode") &&
+      (value.mode === "text" || value.mode === "json");
   }
-  if (Constructors.$is("real")(value)) return true;
-  if (Constructors.$is("blob")(value)) return value.mode === "buffer" || value.mode === "json" || value.mode === "bigint";
-  return Constructors.$is("numeric")(value) &&
-    (value.mode === "string" || value.mode === "number" || value.mode === "bigint");
+  if (value._tag === "enum") {
+    return value.ident === "text" &&
+      hasProperty(value, "values") &&
+      isArray(value.values) &&
+      isReadonlyArrayNonEmpty(value.values) &&
+      value.values.every(isString);
+  }
+  if (value._tag === "integer") {
+    return isIntegerIdent(value.ident) &&
+      hasProperty(value, "mode") &&
+      (value.mode === "number" ||
+        value.mode === "boolean" ||
+        value.mode === "timestamp" ||
+        value.mode === "timestamp_ms");
+  }
+  if (value._tag === "real") return value.ident === "real";
+  if (value._tag === "blob") {
+    return value.ident === "blob" &&
+      hasProperty(value, "mode") &&
+      (value.mode === "buffer" || value.mode === "json" || value.mode === "bigint");
+  }
+  return value.ident === "numeric" &&
+    hasProperty(value, "mode") &&
+    (value.mode === "number" || value.mode === "bigint");
 };
 
-const fromLiteralAST = matchType<Literal>().pipe(
+const fromLiteralAST = /* @__PURE__ */ (() => matchType<Literal>().pipe(
   withReturnType<Option<Spec>>(),
   matchWhen(StructPredicate({ literal: isString }), () => some(Text.make({ mode: "text" }))),
   matchWhen(StructPredicate({ literal: isNumber }), () => some(Real.make({}))),
@@ -292,7 +340,7 @@ const fromLiteralAST = matchType<Literal>().pipe(
     () => some(Integer.make({ mode: "boolean", ident: "integer" })),
   ),
   matchOrElse(() => none()),
-);
+))();
 
 const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option<Spec> => {
   if (someArray(visited, equals(node))) return none();
@@ -315,7 +363,7 @@ const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option
   )(node);
 };
 
-const toDrizzleBuilder = dual<
+const toDrizzleBuilder = /* @__PURE__ */ dual<
   (name: string) => (spec: Spec) => DrizzleBuilder,
   (spec: Spec, name: string) => DrizzleBuilder
 >(
@@ -332,7 +380,8 @@ const toDrizzleBuilder = dual<
 );
 
 /** Guards, exhaustive matching, derivation, and compilation for SQLite specs. */
-export const Spec = {
+/** @internal */
+export const Spec = /* @__PURE__ */ (() => ({
   $is: Constructors.$is,
   $match: Constructors.$match,
   is: isSpec,
@@ -347,9 +396,10 @@ export const Spec = {
   match: Constructors.$match,
   fromSchemaAST,
   toDrizzleBuilder,
-};
+}))();
 
 /** Encoded carrier represented by a SQLite descriptor. */
+/** @internal */
 export type CarrierOf<C extends Spec> = C extends Text<infer Mode>
   ? Mode extends "json" ? object : string
   : C extends Enum ? string
@@ -363,8 +413,10 @@ export type CarrierOf<C extends Spec> = C extends Text<infer Mode>
             : never;
 
 /** Runtime carrier witness used by foreign-key compatibility checks. */
+/** @internal */
 export type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes";
 
+/** @internal */
 export const carrierTag = (spec: Spec): CarrierTag =>
   Spec.$match(spec, {
     text: ({ mode }): CarrierTag => mode === "json" ? "object" : "string",
@@ -376,26 +428,32 @@ export const carrierTag = (spec: Spec): CarrierTag =>
   });
 
 /** SQLite storage identity used by foreign-key compatibility checks. */
+/** @internal */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> =
   Dimensions extends 0 ? C["ident"] : never;
 
+/** @internal */
 export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> =
   Dimensions extends 0 ? Carrier : never;
 
+/** @internal */
 export function storageIdent<C extends Spec, Dimensions extends ArrayDimension>(
   spec: C,
   dimensions: Dimensions,
 ): StorageIdent<C, Dimensions>;
+/** @internal */
 export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
   if (dimensions !== 0) return invariant("SQLite storage identities cannot carry array dimensions.");
   return spec.ident;
 }
 
 /** Runtime carrier witness used by foreign-key compatibility checks. */
+/** @internal */
 export interface Carrier {
   readonly tag: CarrierTag;
   readonly dimensions: 0;
 }
+/** @internal */
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => {
   if (dimensions !== 0) return invariant("SQLite carriers cannot carry array dimensions.");
   return { tag: carrierTag(spec), dimensions };

@@ -9,11 +9,35 @@
 import type { SQL } from "drizzle-orm";
 import { taggedEnum } from "effect/Data";
 import type { TaggedEnum } from "effect/Data";
-import { fromUndefinedOr, getOrElse } from "effect/Option";
 import { hasProperty, isString, isUndefined } from "effect/Predicate";
-import { evolve } from "effect/Struct";
+import { String as StringSchema, TaggedError } from "effect/Schema";
+
+/** A typed schema expression rendered bound parameters that DDL cannot carry. */
+/** @internal */
+export class SqlExpressionError extends TaggedError<SqlExpressionError>(
+  "@beep/effect-drizzle/SqlExpressionError",
+)(
+  "SqlExpressionError",
+  { message: StringSchema, context: StringSchema },
+  { description: "A schema-level SQL expression contains bound parameters." },
+) {}
+
+/** Reject parameters in CHECK, partial-index, generated, and default expressions. */
+/** @internal */
+export const assertNoSqlParameters = (
+  params: ReadonlyArray<unknown>,
+  context: string,
+): void => {
+  if (params.length !== 0) {
+    throw SqlExpressionError.make({
+      message: `${context} cannot contain bound parameters; use a literal SQL fragment or an explicitly unsafe raw-SQL escape hatch.`,
+      context,
+    });
+  }
+};
 
 /** Minimal column identity required by the dialect-neutral field wrapper. */
+/** @internal */
 export interface ColumnSpec {
   readonly dialect: string;
   readonly kind: string;
@@ -21,15 +45,19 @@ export interface ColumnSpec {
 }
 
 /** Supported array depth carried by field metadata. */
+/** @internal */
 export type ArrayDimension = 0 | 1 | 2 | 3 | 4 | 5;
 
 /** Identity-generation intent shared by integer-capable dialects. */
+/** @internal */
 export type IdentityMode = "always" | "byDefault" | false;
 
 /** Foreign-key referential actions understood by Drizzle. */
+/** @internal */
 export type FkAction = "cascade" | "restrict" | "no action" | "set null" | "set default";
 
 /** Cheap guard for author-provided referential actions. */
+/** @internal */
 export const isFkAction = (value: unknown): value is FkAction =>
   value === "cascade" ||
   value === "restrict" ||
@@ -38,6 +66,7 @@ export const isFkAction = (value: unknown): value is FkAction =>
   value === "set default";
 
 /** Foreign-key target resolved from identity statics or supplied explicitly. */
+/** @internal */
 export interface References<TableName extends string = string, ColumnName extends string = string> {
   readonly tableName: TableName;
   readonly columnName: ColumnName;
@@ -46,6 +75,7 @@ export interface References<TableName extends string = string, ColumnName extend
 }
 
 /** Cheap shape guard used where references cross an author-input seam. */
+/** @internal */
 export const isReferences = (value: unknown): value is References =>
   hasProperty(value, "tableName") &&
   isString(value.tableName) &&
@@ -59,6 +89,7 @@ export const isReferences = (value: unknown): value is References =>
   (isUndefined(value.onUpdate) || isFkAction(value.onUpdate));
 
 /** Server-default descriptor union. */
+/** @internal */
 export type Default = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   value: { readonly value: unknown };
@@ -67,9 +98,11 @@ export type Default = TaggedEnum<{
 }>;
 
 /** Constructors, guards, and exhaustive matcher for defaults. */
-export const Default = taggedEnum<Default>();
+/** @internal */
+export const Default = /* @__PURE__ */ taggedEnum<Default>();
 
 /** Typed SQL-expression default descriptor. */
+/** @internal */
 export type DefaultSqlExpr<Carrier> = Omit<
   Extract<Default, { readonly _tag: "sqlExpr" }>,
   "expression"
@@ -78,17 +111,21 @@ export type DefaultSqlExpr<Carrier> = Omit<
 };
 
 /** Literal-value default descriptor. */
+/** @internal */
 export type DefaultValue<Encoded> = Omit<Extract<Default, { readonly _tag: "value" }>, "value"> & {
   readonly value: Encoded;
 };
 
 /** Current-time default descriptor. */
+/** @internal */
 export type DefaultNow = Extract<Default, { readonly _tag: "now" }>;
 
 /** Explicit raw-SQL default descriptor. */
+/** @internal */
 export type UnsafeDefaultSql = Extract<Default, { readonly _tag: "unsafeSql" }>;
 
 /** Generated-column descriptor union. */
+/** @internal */
 export type Generated = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   unsafeSql: { readonly sql: string };
@@ -96,9 +133,11 @@ export type Generated = TaggedEnum<{
 }>;
 
 /** Constructors, guards, and exhaustive matcher for generated columns. */
-export const Generated = taggedEnum<Generated>();
+/** @internal */
+export const Generated = /* @__PURE__ */ taggedEnum<Generated>();
 
 /** Typed generated SQL-expression descriptor. */
+/** @internal */
 export type GeneratedSqlExpr<Carrier> = Omit<
   Extract<Generated, { readonly _tag: "sqlExpr" }>,
   "expression"
@@ -107,12 +146,15 @@ export type GeneratedSqlExpr<Carrier> = Omit<
 };
 
 /** Explicit raw-SQL generated descriptor. */
+/** @internal */
 export type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql" }>;
 
 /** Identity-always generated descriptor. */
+/** @internal */
 export type GeneratedIdentityAlways = Extract<Generated, { readonly _tag: "identityAlways" }>;
 
 /** Literal-preserving SQL intent carried by every field. */
+/** @internal */
 export interface Meta<C extends ColumnSpec = ColumnSpec> {
   readonly column: C | undefined;
   readonly dimensions: ArrayDimension;
@@ -128,6 +170,7 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
 }
 
 /** Exact initial metadata type for a bare schema field. */
+/** @internal */
 export interface Empty extends Meta {
   readonly column: undefined;
   readonly dimensions: 0;
@@ -143,6 +186,7 @@ export interface Empty extends Meta {
 }
 
 /** Canonical metadata value for a bare schema field. */
+/** @internal */
 export const empty: Empty = {
   column: undefined,
   dimensions: 0,
@@ -158,9 +202,11 @@ export const empty: Empty = {
 };
 
 /** Partial metadata update produced by a field combinator. */
+/** @internal */
 export type Patch = { readonly [K in keyof Meta]?: Meta[K] };
 
 /** Literal-preserving metadata merge type. */
+/** @internal */
 export type Merge<M extends Meta, P extends Patch> = {
   readonly [K in keyof Meta]: K extends keyof P
     ? P[K] extends undefined
@@ -169,32 +215,25 @@ export type Merge<M extends Meta, P extends Patch> = {
     : M[K];
 };
 
-function mergeField<const M extends Meta, const P extends Patch, K extends keyof Meta>(
-  current: M[K],
-  patch: P,
-  key: K,
-): Merge<M, P>[K];
-function mergeField(current: Meta[keyof Meta], patch: Patch, key: keyof Meta): Meta[keyof Meta] {
-  return getOrElse(fromUndefinedOr(patch[key]), () => current);
-}
-
 /** Merge a literal-preserving patch into existing metadata. */
-export const merge = <const M extends Meta, const P extends Patch>(
+/** @internal */
+export function merge<const M extends Meta, const P extends Patch>(
   meta: M,
   patch: P,
-): Merge<M, P> => {
-  const evolver = {
-    column: (current: M["column"]) => mergeField(current, patch, "column"),
-    dimensions: (current: M["dimensions"]) => mergeField(current, patch, "dimensions"),
-    primaryKey: (current: M["primaryKey"]) => mergeField(current, patch, "primaryKey"),
-    unique: (current: M["unique"]) => mergeField(current, patch, "unique"),
-    identity: (current: M["identity"]) => mergeField(current, patch, "identity"),
-    hasDefault: (current: M["hasDefault"]) => mergeField(current, patch, "hasDefault"),
-    default: (current: M["default"]) => mergeField(current, patch, "default"),
-    generated: (current: M["generated"]) => mergeField(current, patch, "generated"),
-    version: (current: M["version"]) => mergeField(current, patch, "version"),
-    columnName: (current: M["columnName"]) => mergeField(current, patch, "columnName"),
-    references: (current: M["references"]) => mergeField(current, patch, "references"),
+): Merge<M, P>;
+/** @internal */
+export function merge(meta: Meta, patch: Patch): Meta {
+  return {
+    column: isUndefined(patch.column) ? meta.column : patch.column,
+    dimensions: isUndefined(patch.dimensions) ? meta.dimensions : patch.dimensions,
+    primaryKey: isUndefined(patch.primaryKey) ? meta.primaryKey : patch.primaryKey,
+    unique: isUndefined(patch.unique) ? meta.unique : patch.unique,
+    identity: isUndefined(patch.identity) ? meta.identity : patch.identity,
+    hasDefault: isUndefined(patch.hasDefault) ? meta.hasDefault : patch.hasDefault,
+    default: isUndefined(patch.default) ? meta.default : patch.default,
+    generated: isUndefined(patch.generated) ? meta.generated : patch.generated,
+    version: isUndefined(patch.version) ? meta.version : patch.version,
+    columnName: isUndefined(patch.columnName) ? meta.columnName : patch.columnName,
+    references: isUndefined(patch.references) ? meta.references : patch.references,
   };
-  return evolve<Meta, typeof evolver>(meta, evolver);
-};
+}

@@ -30,6 +30,7 @@ import {
   flatMap as flatMapOption,
   fromUndefinedOr,
   getOrElse,
+  isSome,
   map,
   match,
   none,
@@ -44,6 +45,9 @@ import {
   type Junction,
   makeRelationsConfig,
   relationName,
+  validatePhysicalTableNames,
+  validateSchemaNames,
+  type SchemaName,
 } from "../core/assembly.ts";
 import { snakeCase } from "../internal/case.ts";
 import * as Derive from "./derive.ts";
@@ -192,7 +196,11 @@ type ReferenceFailure<
                     TargetSpec,
                     DimensionsAt<Models[TargetTable], TargetColumn>
                   > extends true
-                  ? never
+                  ? ColumnsOf<Models[TargetTable]>[TargetColumn] extends
+                      | { readonly primaryKey: true }
+                      | { readonly unique: true }
+                    ? never
+                    : Field.SqlTypeError<"foreign-key target must be primary-key or unique">
                   : Field.SqlTypeError<"foreign-key encoded carriers are incompatible">
                 : Field.SqlTypeError<"foreign-key SQL identities do not match">
               : Field.SqlTypeError<"foreign-key target has no resolved column">
@@ -302,7 +310,8 @@ export type RelationsConfig<Models extends ModelRecord> = (
  * **Details**
  *
  * The assembly retains source models, shared enum instances, projected tables,
- * the reusable relation callback, and Drizzle's processed relation object.
+ * a collision-safe combined Drizzle export record, the reusable relation
+ * callback, and Drizzle's processed relation object.
  *
  * **Example** (Read assembled tables)
  *
@@ -320,6 +329,7 @@ export interface Assembly<Models extends ModelRecord> {
   readonly models: Models;
   readonly enums: EnumRegistry;
   readonly tables: TablesOf<Models>;
+  readonly drizzleSchema: Readonly<Record<string, unknown>>;
   readonly relationsConfig: RelationsConfig<Models>;
   readonly relations: ReturnType<typeof defineRelations>;
 }
@@ -347,6 +357,36 @@ const targetFieldKey = (model: AnyModel, columnName: string): Option<string> =>
           (meta) => meta.columnName === columnName || snakeCase(key) === columnName,
         ),
       );
+
+const resolveTarget = (
+  entries: ReadonlyArray<readonly [string, AnyModel]>,
+  reference: Meta.References,
+  sourceKey: string,
+  sourceField: string,
+): readonly [string, AnyModel] => {
+  const exact = findFirst(entries, ([key]) => key === reference.tableName);
+  if (isSome(exact)) return exact.value;
+  const physical = entries.filter(([, model]) => model.sql.tableName === reference.tableName);
+  if (physical.length === 1) {
+    return getOrElse(head(physical), () =>
+      fail("Resolved physical table target disappeared.", sourceKey, sourceField, reference.tableName),
+    );
+  }
+  if (physical.length > 1) {
+    return fail(
+      `Reference target table '${reference.tableName}' is ambiguous across registry keys.`,
+      sourceKey,
+      sourceField,
+      reference.tableName,
+    );
+  }
+  return fail(
+    `Reference target table '${reference.tableName}' is missing from EffectDrizzle.schema.`,
+    sourceKey,
+    sourceField,
+    reference.tableName,
+  );
+};
 
 const collectEnums = (models: ModelRecord): EnumRegistry =>
   reduce(
@@ -391,19 +431,11 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
             fromUndefinedOr(meta.references),
           ),
           (reference) => {
-            const [targetKey, targetModel] = getOrElse(
-              findFirst(
-                entries,
-                ([key, target]) =>
-                  key === reference.tableName || target.sql.tableName === reference.tableName,
-              ),
-              () =>
-                fail(
-                  `Reference target table '${reference.tableName}' is missing from EffectDrizzle.schema.`,
-                  sourceKey,
-                  sourceField,
-                  reference.tableName,
-                ),
+            const [targetKey, targetModel] = resolveTarget(
+              entries,
+              reference,
+              sourceKey,
+              sourceField,
             );
             const targetField = getOrElse(targetFieldKey(targetModel, reference.columnName), () =>
               fail(
@@ -445,6 +477,14 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
+            if (!targetMeta.primaryKey && !targetMeta.unique) {
+              fail(
+                `Foreign key '${sourceKey}.${sourceField}' must target a primary-key or unique column, got '${targetKey}.${targetField}'.`,
+                sourceKey,
+                sourceField,
+                reference.tableName,
+              );
+            }
             if (
               PgColumn.storageIdent(sourceSpec, sourceMeta.dimensions) !==
                 PgColumn.storageIdent(targetSpec, targetMeta.dimensions) ||
@@ -474,13 +514,36 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName,
               ),
             );
+            const optional = Derive.isNullable(Field.from(sourceSchema).schema);
+            if (
+              (reference.onDelete === "set null" || reference.onUpdate === "set null") &&
+              !optional
+            ) {
+              fail(
+                `Foreign key '${sourceKey}.${sourceField}' uses SET NULL but its source schema is not nullable.`,
+                sourceKey,
+                sourceField,
+                reference.tableName,
+              );
+            }
+            if (
+              (reference.onDelete === "set default" || reference.onUpdate === "set default") &&
+              !sourceMeta.hasDefault
+            ) {
+              fail(
+                `Foreign key '${sourceKey}.${sourceField}' uses SET DEFAULT without a declared database default.`,
+                sourceKey,
+                sourceField,
+                reference.tableName,
+              );
+            }
             return {
               sourceKey,
               sourceField,
               targetKey,
               targetField,
               relationName: relationName(sourceField),
-              optional: Derive.isNullable(Field.from(sourceSchema).schema),
+              optional,
               reference,
             };
           },
@@ -539,6 +602,27 @@ const collectJunctions = (
     }),
   );
 
+const named = (owner: string, kind: string, name: string | undefined): ReadonlyArray<SchemaName> =>
+  name === undefined ? [] : [{ owner, kind, name }];
+
+const collectSchemaNames = (
+  tables: Readonly<Record<string, TableOf<AnyModel>>>,
+  enums: EnumRegistry,
+): ReadonlyArray<SchemaName> => [
+  ...Object.entries(enums).map(([name]): SchemaName => ({ owner: `enum:${name}`, kind: "enum type", name })),
+  ...Object.entries(tables).flatMap(([key, table]) => {
+    const config = getTableConfig(table);
+    return [
+      { owner: `table:${key}`, kind: "table", name: config.name },
+      ...config.indexes.flatMap((value, index) => named(`index:${key}:${index}`, "index", value.config.name)),
+      ...config.primaryKeys.flatMap((value, index) => named(`primary-key:${key}:${index}`, "primary-key constraint", value.getName())),
+      ...config.uniqueConstraints.flatMap((value, index) => named(`unique:${key}:${index}`, "unique constraint", value.getName())),
+      ...config.checks.map((value, index): SchemaName => ({ owner: `check:${key}:${index}`, kind: "check constraint", name: value.name })),
+      ...config.foreignKeys.map((value, index): SchemaName => ({ owner: `foreign-key:${key}:${index}`, kind: "foreign-key constraint", name: value.getName() })),
+    ];
+  }),
+];
+
 /**
  * Assembles models into shared enums, wired tables, and RQBv2 relations.
  *
@@ -558,7 +642,12 @@ const collectJunctions = (
  *
  * Models using the same enum name must declare identical values. Foreign-key
  * equality includes SQL identity, encoded carrier, and array depth rather than
- * accepting merely assignable TypeScript values.
+ * accepting merely assignable TypeScript values. Self-referential junctions
+ * emit direct and reverse relations only; through-relation naming is deferred.
+ * References resolve an exact registry key first, otherwise one unique physical
+ * table name. Physical table names must be unique across the registry.
+ * Compile-time validation recognizes registry keys; physical-name fallback is
+ * runtime-only until model statics preserve literal table names.
  *
  * **Example** (Assemble one model)
  *
@@ -582,6 +671,7 @@ export function schema<const Models extends ModelRecord>(
   models: Models & ValidateSchema<Models>,
 ): Assembly<Models>;
 export function schema(models: ModelRecord): unknown {
+  validatePhysicalTableNames(models, "pg", fail);
   const enums = collectEnums(models);
   const edges = collectEdges(models);
   // Drizzle evaluates extra-config callbacks lazily. Reassigning this registry
@@ -643,13 +733,25 @@ export function schema(models: ModelRecord): unknown {
   });
 
   const tables = runtimeTables;
+  validateSchemaNames(collectSchemaNames(tables, enums), "pg", fail);
   const junctions = collectJunctions(tables, edges);
   const relationsConfig = makeRelationsConfig(models, tables, edges, junctions, fail);
+  const drizzleSchema = reduce(
+    Object.entries(enums),
+    empty<string, unknown>(),
+    (combined, [name, value]) => set(combined, `enum:${name}`, value),
+  );
+  const combined = reduce(
+    Object.entries(tables),
+    drizzleSchema,
+    (current, [key, value]) => set(current, `table:${key}`, value),
+  );
 
   return {
     models,
     enums,
     tables,
+    drizzleSchema: combined,
     relationsConfig,
     relations: defineRelations(tables, relationsConfig),
   };

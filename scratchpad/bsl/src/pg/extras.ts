@@ -12,6 +12,7 @@ import {
   index as drizzleIndex,
   primaryKey as drizzlePrimaryKey,
   unique as drizzleUnique,
+  PgDialect,
 } from "drizzle-orm/pg-core";
 import type {
   ExtraConfigColumn,
@@ -24,7 +25,28 @@ import type { TaggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString, isUndefined } from "effect/Predicate";
+import { String as StringSchema, TaggedError } from "effect/Schema";
 import type * as Field from "../core/Field.ts";
+import * as Meta from "../core/Meta.ts";
+import { assertSqlName, type ValidateSqlName } from "../core/names.ts";
+
+const validateName = (name: string): string => {
+  assertSqlName(name, "pg", "PostgreSQL table-extra name");
+  return name;
+};
+
+/** Failure raised when table-extra structure cannot be represented faithfully. */
+/** @internal */
+export class TableExtraError extends TaggedError<TableExtraError>(
+  "@beep/effect-drizzle/pg/TableExtraError",
+)("TableExtraError", { message: StringSchema }, {
+  description: "A PostgreSQL table-extra declaration violates a database invariant.",
+}) {}
+
+const pgDialect = new PgDialect();
+const fail = (message: string): never => {
+  throw TableExtraError.make({ message });
+};
 
 /**
  * Retains a field's schema type on the Drizzle column exposed to table extras.
@@ -42,8 +64,12 @@ import type * as Field from "../core/Field.ts";
  * @category tables
  * @since 0.0.0
  */
-export type BoundColumn<I extends Field.Input = Field.Input> = ExtraConfigColumn & {
+export type BoundColumn<
+  I extends Field.Input = Field.Input,
+  Name extends string = string,
+> = ExtraConfigColumn & {
   readonly "~effect-drizzle.field"?: I;
+  readonly "~effect-drizzle.field-name"?: Name;
 };
 
 /**
@@ -63,11 +89,26 @@ export type BoundColumn<I extends Field.Input = Field.Input> = ExtraConfigColumn
  * @since 0.0.0
  */
 export type BoundColumns<F extends { readonly [key: string]: Field.Input }> = {
-  readonly [K in keyof F & string]: BoundColumn<F[K]>;
+  readonly [K in keyof F & string]: BoundColumn<F[K], K>;
 };
 
 type NonEmptyColumns = readonly [BoundColumn, ...BoundColumn[]];
 type CompositeColumns = readonly [BoundColumn, BoundColumn, ...BoundColumn[]];
+
+type ColumnField<C> = C extends BoundColumn<infer I, infer _Name> ? I : never;
+type ColumnName<C> = C extends BoundColumn<Field.Input, infer Name> ? Name : never;
+type ValidateDistinctColumns<
+  Columns extends ReadonlyArray<BoundColumn>,
+  Seen extends string = never,
+> = Columns extends readonly [infer Head extends BoundColumn, ...infer Tail extends ReadonlyArray<BoundColumn>]
+  ? ColumnName<Head> extends Seen
+    ? Field.SqlTypeError<"table extras cannot repeat a column">
+    : ValidateDistinctColumns<Tail, Seen | ColumnName<Head>>
+  : unknown;
+type ValidatePrimaryKeyColumns<Columns extends ReadonlyArray<BoundColumn>> =
+  null extends Field.EncodedOf<ColumnField<Columns[number]>>
+    ? Field.SqlTypeError<"composite primary-key columns cannot be nullable">
+    : unknown;
 
 type NodeDefinition = {
   compositeUnique: {
@@ -248,7 +289,7 @@ export type Check = Extract<Node, { readonly _tag: "check" }>;
  */
 export type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>;
 
-const Nodes = taggedEnum<Node>();
+const Nodes = /* @__PURE__ */ taggedEnum<Node>();
 export const CompositeUnique = { make: Nodes.compositeUnique };
 export const CompositePrimaryKey = { make: Nodes.compositePrimaryKey };
 export const Index = { make: Nodes.index };
@@ -358,8 +399,10 @@ export type Callback<F extends { readonly [key: string]: Field.Input }> = (
  * @category constructors
  * @since 0.0.0
  */
-export const compositeUnique = (name: string, columns: CompositeColumns): CompositeUnique =>
-  Nodes.compositeUnique({ name, columns });
+export const compositeUnique = <const Name extends string, const Columns extends CompositeColumns>(
+  name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
+  columns: Columns & ValidateDistinctColumns<Columns>,
+): CompositeUnique => Nodes.compositeUnique({ name: validateName(name), columns });
 
 /**
  * Constructs a named primary key over at least two columns.
@@ -384,8 +427,10 @@ export const compositeUnique = (name: string, columns: CompositeColumns): Compos
  * @category constructors
  * @since 0.0.0
  */
-export const compositePrimaryKey = (name: string, columns: CompositeColumns): CompositePrimaryKey =>
-  Nodes.compositePrimaryKey({ name, columns });
+export const compositePrimaryKey = <const Name extends string, const Columns extends CompositeColumns>(
+  name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
+  columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>,
+): CompositePrimaryKey => Nodes.compositePrimaryKey({ name: validateName(name), columns });
 
 /**
  * Constructs a PostgreSQL index with an optional method and predicate.
@@ -394,6 +439,12 @@ export const compositePrimaryKey = (name: string, columns: CompositeColumns): Co
  *
  * At least one column is required. `where` creates a partial index and `using`
  * selects the PostgreSQL index method.
+ *
+ * **Gotchas**
+ *
+ * Partial predicates must render with zero parameters. BSL does not analyze SQL
+ * semantics such as function immutability; PostgreSQL validates them when DDL
+ * is applied.
  *
  * **Example** (Define a partial index)
  *
@@ -413,13 +464,13 @@ export const compositePrimaryKey = (name: string, columns: CompositeColumns): Co
  * @category constructors
  * @since 0.0.0
  */
-export const index = (
-  name: string,
-  columns: NonEmptyColumns,
+export const index = <const Name extends string, const Columns extends NonEmptyColumns>(
+  name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
+  columns: Columns & ValidateDistinctColumns<Columns>,
   options?: { readonly using?: PgIndexMethod; readonly where?: SQL<boolean> },
 ): Index =>
   Nodes.index({
-    name,
+    name: validateName(name),
     columns,
     using: options?.using,
     where: options?.where,
@@ -431,6 +482,11 @@ export const index = (
  * **When to use**
  *
  * Use when Drizzle's typed SQL builder can express the constraint.
+ *
+ * **Gotchas**
+ *
+ * CHECK expressions must render with zero parameters. BSL does not parse SQL or
+ * detect forbidden subqueries; PostgreSQL remains the semantic authority.
  *
  * **Example** (Define a typed check)
  *
@@ -446,9 +502,15 @@ export const index = (
  * @since 0.0.0
  */
 export const check: {
-  (name: string): (expression: SQL<boolean>) => Check;
-  (expression: SQL<boolean>, name: string): Check;
-} = dual(2, (expression: SQL<boolean>, name: string): Check => Nodes.check({ name, expression }));
+  <const Name extends string>(
+    name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">,
+  ): (expression: SQL<boolean>) => Check;
+  <const Name extends string>(
+    expression: SQL<boolean>,
+    name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">,
+  ): Check;
+} = dual(2, (expression: SQL<boolean>, name: string): Check =>
+  Nodes.check({ name: validateName(name), expression }));
 
 /**
  * Constructs an explicitly unsafe raw-SQL check descriptor.
@@ -474,8 +536,10 @@ export const check: {
  * @category constructors
  * @since 0.0.0
  */
-export const unsafeCheckSql = (name: string, value: string): UnsafeCheckSql =>
-  Nodes.unsafeCheckSql({ name, sql: value });
+export const unsafeCheckSql = <const Name extends string>(
+  name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
+  value: string,
+): UnsafeCheckSql => Nodes.unsafeCheckSql({ name: validateName(name), sql: value });
 
 const emitIndex = (node: Index): PgTableExtraConfigValue => {
   const on = drizzleIndex(node.name);
@@ -485,8 +549,42 @@ const emitIndex = (node: Index): PgTableExtraConfigValue => {
   });
   return match(fromUndefinedOr(node.where), {
     onNone: () => builder,
-    onSome: (where) => builder.where(where),
+    onSome: (where) => {
+      Meta.assertNoSqlParameters(
+        pgDialect.sqlToQuery(where).params,
+        `PostgreSQL partial-index predicate '${node.name}'`,
+      );
+      return builder.where(where);
+    },
   });
+};
+
+const validateColumns = (node: Node): void => {
+  if (!hasProperty(node, "columns") || !isArray(node.columns)) return;
+  const names = node.columns.map((column) => column.name);
+  if (new Set(names).size !== names.length) {
+    fail(`PostgreSQL table extra '${node.name}' repeats a physical column.`);
+  }
+  if (names.length > 32) {
+    fail(`PostgreSQL table extra '${node.name}' exceeds the 32-column index limit.`);
+  }
+  if (Nodes.$is("compositePrimaryKey")(node) && node.columns.some((column) => !column.notNull)) {
+    fail(`PostgreSQL composite primary key '${node.name}' contains a nullable column.`);
+  }
+};
+
+/** Validate a model's complete declared extra set before Drizzle emission. */
+/** @internal */
+export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
+  const names = nodes.map((node) => node.name);
+  if (new Set(names).size !== names.length) {
+    fail("PostgreSQL table-extra names must be unique within their owning table.");
+  }
+  const primaryKeys = inlinePrimaryKeys + nodes.filter(Nodes.$is("compositePrimaryKey")).length;
+  if (primaryKeys > 1) {
+    fail("A PostgreSQL table can declare at most one primary key across inline and composite forms.");
+  }
+  nodes.forEach(validateColumns);
 };
 
 /**
@@ -511,7 +609,13 @@ const emitIndex = (node: Index): PgTableExtraConfigValue => {
  */
 export const emit = (node: Node): PgTableExtraConfigValue =>
   Node.$match(node, {
-    check: (current) => drizzleCheck(current.name, current.expression),
+    check: (current) => {
+      Meta.assertNoSqlParameters(
+        pgDialect.sqlToQuery(current.expression).params,
+        `PostgreSQL CHECK '${current.name}'`,
+      );
+      return drizzleCheck(current.name, current.expression);
+    },
     compositePrimaryKey: (current) =>
       drizzlePrimaryKey({ name: current.name, columns: [...current.columns] }),
     compositeUnique: (current) => drizzleUnique(current.name).on(...current.columns),

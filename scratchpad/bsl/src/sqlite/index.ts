@@ -9,6 +9,8 @@
  */
 export * from "./combinators.ts";
 export { default_ as default } from "./combinators.ts";
+export { make } from "./kit.ts";
+export type { SqliteEntityFactory, SqliteKit, SqliteKitConfig } from "./kit.ts";
 export * as Table from "./extras.ts";
 export {
   extract,

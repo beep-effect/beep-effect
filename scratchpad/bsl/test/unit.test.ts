@@ -31,8 +31,10 @@ import {
   Unknown as UnknownSchema,
   decodeUnknownSync,
   is,
+  isLengthBetween,
   isMaxLength,
   isSchema,
+  suspend,
 } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { makeEffect } from "effect/SchemaParser";
@@ -41,7 +43,7 @@ import * as Derive from "../src/pg/derive.ts";
 import * as Field from "../src/core/Field.ts";
 import * as PgColumnSchema from "../src/pg/Column.ts";
 import * as pg from "../src/pg/index.ts";
-import { ModelInvariantError, VersionConflictError } from "../src/index.ts";
+import { Model, ModelInvariantError, VersionConflictError } from "../src/index.ts";
 import {
   _arrayDepthFkMismatch,
   _badArrayCarrier,
@@ -49,6 +51,11 @@ import {
   _badArrayThenIdentity,
   _badArrayThenPrimaryKey,
   _badArrayThenVersion,
+  _badBigintVersion,
+  _badVariantVersion,
+  _charWithMaximumOnly,
+  _charWithWrongExactLength,
+  _charWithoutExactRuntimeMirror,
   _compatibleVarchar,
   _defaultThenGenerated,
   _badEnumBroadString,
@@ -67,9 +74,45 @@ import {
   _generatedThenDefault,
   _incompatibleVarchar,
   _missingTarget,
+  _nonUniqueForeignKey,
+  _declarationNeedsExplicitColumn,
   _needsExplicitColumn,
   _nullablePrimaryKey,
   _reverseRelationCollision,
+  _duplicatePhysicalTableNames,
+  _pgCaseFoldColumnCollision,
+  _pgDuplicateIndexNamespace,
+  _pgDuplicateConstraintNamespace,
+  _pgEmptyColumnName,
+  _pgLongColumnName,
+  _pgLongEnumLabel,
+  _pgMultibyteColumnName,
+  _pgNulEnum,
+  _pgPhysicalColumnCollision,
+  _pgTableEnumNamespaceCollision,
+  _pgTruncationPrefixCollision,
+  _pgByteaDefault,
+  _pgDuplicateCompositeRuntime,
+  _pgDuplicateExtrasNames,
+  _pgEmptyModel,
+  _pgInvalidFiniteDefault,
+  _pgMultiplePrimaryKeys,
+  _pgNulDefault,
+  _pgNullableCompositePrimaryRuntime,
+  _pgNumericPrecisionTooWide,
+  _pgNumericScaleTooWide,
+  _pgParameterizedCheck,
+  _pgParameterizedDefault,
+  _pgParameterizedGenerated,
+  _pgParameterizedPartialIndex,
+  _pgSetDefaultWithoutDefault,
+  _pgSetNullNonNullable,
+  _pgTooManyColumns,
+  _pgTooManyIndexColumns,
+  _pgVarcharTooWide,
+  _repositoryColumnNameOverride,
+  _repositoryNonUniqueLocator,
+  _repositoryVersionLocator,
   _kitDefaultCollision,
   _badIdentityThenArray,
   _badPrimaryKeyThenArray,
@@ -79,19 +122,98 @@ import {
   _twoVersions,
   _unboundedVarchar,
   _uuidTextFkMismatch,
+  _runtimeArrayCarrierMismatch,
+  _runtimeByteCarrierMismatch,
+  _runtimeDateCarrierMismatch,
+  _runtimeModeCarrierMismatch,
+  _runtimeNumberCarrierMismatch,
+  _runtimeObjectCarrierMismatch,
+  _runtimeStringCarrierMismatch,
   auditSchema,
   ArrayRecord,
   AuditedRecord,
   effectDrizzleSchema,
+  exactKeyResolutionSchema,
   dualOrgLinkSchema,
   ExplicitVariantModel,
   mechanicalTable,
   Organization,
   OrganizationId,
+  pgEmptyEnumLabel,
+  pgBoundedInteger,
+  pgBoundedSmallint,
+  pgCheckedNumeric,
+  pgCheckedUuid,
   User,
   UserId,
   userTable,
+  uniquePhysicalResolutionSchema,
 } from "./fixtures.ts";
+
+describe("PostgreSQL name invariants", () => {
+  it("rejects empty, NUL, character-invalid, and over-63-byte names and labels", () => {
+    expect(_pgEmptyColumnName).toThrow("must not be empty");
+    expect(_pgLongColumnName).toThrow("63 UTF-8 bytes");
+    expect(_pgMultibyteColumnName).toThrow("lowercase letters, digits, and underscores");
+    expect(_pgNulEnum).toThrow("NUL (U+0000)");
+    expect(_pgLongEnumLabel).toThrow("63 UTF-8 bytes");
+    expect(pgEmptyEnumLabel.meta.column.values).toEqual(["", "active"]);
+  });
+
+  it("rejects snake-case, case-fold, truncation-prefix, and schema-global collisions", () => {
+    expect(_pgPhysicalColumnCollision).toThrow("dialect normalization");
+    expect(_pgCaseFoldColumnCollision).toThrow("dialect normalization");
+    expect(_pgTruncationPrefixCollision).toThrow("dialect normalization");
+    expect(_pgTruncationPrefixCollision).toThrow(pg.SchemaAssemblyError);
+    expect(_pgDuplicateIndexNamespace).toThrow("Schema-global name");
+    expect(_pgDuplicateIndexNamespace).toThrow(pg.SchemaAssemblyError);
+    expect(_pgDuplicateConstraintNamespace).toThrow("Schema-global name");
+    expect(_pgDuplicateConstraintNamespace).toThrow(pg.SchemaAssemblyError);
+    expect(_pgTableEnumNamespaceCollision).toThrow("Schema-global name");
+    expect(_pgTableEnumNamespaceCollision).toThrow(pg.SchemaAssemblyError);
+  });
+});
+
+describe("PostgreSQL Wave E value and structure invariants", () => {
+  it("injects closed scalar domains and multidimensional rectangularity", () => {
+    expect(is(Field.from(pgBoundedInteger).schema)(2_147_483_648)).toBe(false);
+    expect(is(Field.from(pgBoundedSmallint).schema)(32_768)).toBe(false);
+    expect(is(Field.from(pgCheckedUuid).schema)("not-a-uuid")).toBe(false);
+    expect(is(Field.from(pgCheckedNumeric).schema)("not-a-number")).toBe(false);
+    expect(is(ArrayRecord.insert)({ labels: ["ok"], matrix: [["a"], ["b", "c"]] })).toBe(false);
+  });
+
+  it("rejects PostgreSQL type bounds and unsafe literal defaults", () => {
+    expect(_pgVarcharTooWide).toThrow("10,485,760");
+    expect(_pgNumericPrecisionTooWide).toThrow("1,000");
+    expect(_pgNumericScaleTooWide).toThrow("1,000");
+    expect(_pgInvalidFiniteDefault).toThrow("encoded schema");
+    expect(_pgNulDefault).toThrow("NUL");
+    expect(_pgByteaDefault).toThrow("unsafeDefaultSql");
+  });
+
+  it("structurally rejects parameters on every schema-expression surface", () => {
+    expect(_pgParameterizedDefault).toThrow("bound parameters");
+    expect(_pgParameterizedGenerated).toThrow("bound parameters");
+    expect(_pgParameterizedCheck).toThrow("bound parameters");
+    expect(_pgParameterizedPartialIndex).toThrow("bound parameters");
+  });
+
+  it("rejects invalid composite, primary-key, extras-name, and FK-action assembly", () => {
+    expect(_pgDuplicateCompositeRuntime).toThrow("repeats a physical column");
+    expect(_pgNullableCompositePrimaryRuntime).toThrow("nullable column");
+    expect(_pgMultiplePrimaryKeys).toThrow("at most one primary key");
+    expect(_pgDuplicateExtrasNames).toThrow("names must be unique");
+    expect(_pgSetNullNonNullable).toThrow("SET NULL");
+    expect(_pgSetDefaultWithoutDefault).toThrow("SET DEFAULT");
+  });
+
+  it("rejects empty and over-ceiling PostgreSQL structures", () => {
+    expect(_pgEmptyModel).toThrow("1 through 1,600");
+    expect(_pgTooManyColumns).toThrow("1 through 1,600");
+    expect(_pgTooManyIndexColumns).toThrow("32-column index limit");
+  });
+});
 
 const userConfig = getTableConfig(userTable);
 
@@ -280,7 +402,7 @@ describe("kit write strategies", () => {
   it("emits default extras before model extras", () => {
     const config = getTableConfig(auditSchema.tables.audited_record);
     expect(config.checks.map((check) => check.name)).toEqual([
-      "kit_row_version_positive",
+      "audited_record_row_version_positive",
       "audited_record_name_non_empty",
     ]);
   });
@@ -305,6 +427,8 @@ describe("enum and custom columns", () => {
   it("rejects non-literal schemas and conflicting enum declarations", () => {
     expect(_badEnumBroadString).toThrow("finite non-empty union");
     expect(_enumValueMismatch).toThrow("incompatible values");
+    expect(_pgNulEnum).toThrow("NUL (U+0000)");
+    expect(effectDrizzleSchema.enums.deduped_status.enumValues).toEqual(["draft", "active"]);
   });
 
   it("compiles unsafe custom SQL types verbatim", () => {
@@ -334,15 +458,23 @@ describe("mechanical column kinds", () => {
     expect(mechanicalColumn("short_sequence").hasDefault).toBe(true);
   });
 
-  it("reuses varchar's char length derivation and refusal policy", () => {
-    expect(_charWithoutMaxLength).toThrow("isMaxLength");
-    expect(Field.from(StringSchema.check(isMaxLength(3)).pipe(pg.char())).meta.column).toEqual({
+  it("requires exact char lengths in derive, verify, inject, and model-mirror modes", () => {
+    expect(_charWithoutMaxLength).toThrow("isLengthBetween");
+    expect(_charWithMaximumOnly).toThrow("isLengthBetween");
+    expect(_charWithWrongExactLength).toThrow("exact schema length");
+    expect(_charWithoutExactRuntimeMirror).toThrow("exact matching schema length");
+    expect(
+      Field.from(StringSchema.check(isLengthBetween(3, 3)).pipe(pg.char())).meta.column,
+    ).toEqual({
       _tag: "char",
       dialect: "pg",
       kind: "char",
       ident: "char",
       length: 3,
     });
+    const injected = Field.from(StringSchema.pipe(pg.char(4)));
+    expect(is(injected.schema)("ABCD")).toBe(true);
+    expect(is(injected.schema)("A")).toBe(false);
   });
 });
 
@@ -442,6 +574,32 @@ describe("schema assembly", () => {
     expect(_uuidTextFkMismatch).toThrow("uuid");
     expect(_entityFkMismatch).toThrow('entityId<"organization">');
     expect(_reverseRelationCollision).toThrow("collides");
+    expect(_nonUniqueForeignKey).toThrow("primary-key or unique column");
+    expect(_nonUniqueForeignKey).toThrow(pg.SchemaAssemblyError);
+    expect(_duplicatePhysicalTableNames).toThrow("Physical table name 'user'");
+    expect(_duplicatePhysicalTableNames).toThrow(pg.SchemaAssemblyError);
+  });
+
+  it("resolves exact registry keys before unique physical-name fallbacks", () => {
+    const exact = first(
+      getTableConfig(exactKeyResolutionSchema.tables.resolution_source).foreignKeys,
+      "exact-key foreign key",
+    ).reference();
+    const physical = first(
+      getTableConfig(uniquePhysicalResolutionSchema.tables.resolution_source).foreignKeys,
+      "physical-name foreign key",
+    ).reference();
+    expect(getTableName(exact.foreignTable)).toBe("resolution_decoy");
+    expect(getTableName(physical.foreignTable)).toBe("resolution_target");
+  });
+
+  it("provides collision-proof Drizzle export keys", () => {
+    expect(effectDrizzleSchema.drizzleSchema["enum:record_status"]).toBe(
+      effectDrizzleSchema.enums.record_status,
+    );
+    expect(effectDrizzleSchema.drizzleSchema["table:record_status"]).toBe(
+      effectDrizzleSchema.tables.record_status,
+    );
   });
 });
 
@@ -492,6 +650,28 @@ describe("schema corroboration and invariants", () => {
       column: { _tag: "jsonb", dialect: "pg", kind: "jsonb", ident: "jsonb" },
       nullable: false,
     });
+    expect(Derive.classify(ArraySchema(StringSchema), "a")).toEqual({
+      column: { _tag: "jsonb", dialect: "pg", kind: "jsonb", ident: "jsonb" },
+      nullable: false,
+    });
+    expect(Derive.classify(suspend(() => NullOr(StringSchema)), "lazy")).toEqual({
+      column: { _tag: "text", dialect: "pg", kind: "text", ident: "text" },
+      nullable: true,
+    });
+    class SuspendedNullableModel extends Model<SuspendedNullableModel>(
+      "SuspendedNullableModel",
+    )({ value: suspend(() => NullOr(StringSchema)) }) {}
+    expect(SuspendedNullableModel.sql.columns.value.column.kind).toBe("text");
+  });
+
+  it("corroborates every safe explicit PostgreSQL carrier at model construction", () => {
+    expect(_runtimeStringCarrierMismatch).toThrow("encodes number");
+    expect(_runtimeNumberCarrierMismatch).toThrow("encodes string");
+    expect(_runtimeDateCarrierMismatch).toThrow("encodes date");
+    expect(_runtimeByteCarrierMismatch).toThrow("encodes string");
+    expect(_runtimeObjectCarrierMismatch).toThrow("encodes string");
+    expect(_runtimeModeCarrierMismatch).toThrow("encodes bigint");
+    expect(_runtimeArrayCarrierMismatch).toThrow("encodes number[1]");
   });
 
   it("refuses ambiguous encodings and mirrors model invariants at runtime", () => {
@@ -500,14 +680,23 @@ describe("schema corroboration and invariants", () => {
     expect(_needsExplicitColumn).toThrow();
     expect(_twoPrimaryKeys).toThrow();
     expect(_twoVersions).toThrow("optimistic-version fields");
-    expect(_badVersionColumn).toThrow("integer-family column");
+    expect(_badVersionColumn).toThrow("number-encoded integer-family");
     expect(_badVersionThenIdentity).toThrow("identity or generated");
     expect(_badIdentityThenVersion).toThrow("identity or generated");
     expect(_badVersionThenGenerated).toThrow("identity or generated");
     expect(_badGeneratedThenVersion).toThrow("identity or generated");
+    expect(_badBigintVersion).toThrow("number-encoded integer-family");
+    expect(_badVariantVersion).toThrow("explicit VariantSchema.Field");
     expect(_nullablePrimaryKey).toThrow();
     expect(_defaultThenGenerated).toThrow();
     expect(_generatedThenDefault).toThrow();
+    expect(_declarationNeedsExplicitColumn).toThrow("Declaration");
+  });
+
+  it("rejects unsafe optimistic repository construction synchronously", () => {
+    expect(_repositoryVersionLocator).toThrow("cannot be the optimistic-version field");
+    expect(_repositoryNonUniqueLocator).toThrow("primary-key or unique field");
+    expect(_repositoryColumnNameOverride).toThrow("columnName override on 'displayName'");
   });
 
   it("validates plain descriptors at their remaining author-input seams", () => {

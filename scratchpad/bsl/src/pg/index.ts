@@ -9,6 +9,8 @@
  */
 export * from "./combinators.ts";
 export { default_ as default } from "./combinators.ts";
+export { make } from "./kit.ts";
+export type { EntityFactory, PgKit, PgKitConfig } from "./kit.ts";
 export * as Table from "./extras.ts";
 export { SchemaAssemblyError, schema } from "./schema.ts";
 export type {

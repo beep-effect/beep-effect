@@ -22,6 +22,7 @@ const isNonEmptyString = is(NonEmptyString);
  * @category schemas
  * @since 0.0.0
  */
+/** @internal */
 export const EntityIdLike = declare<EntityIdLikeShape>(
   (input): input is EntityIdLikeShape =>
     hasProperty(input, "tableName") &&
@@ -41,6 +42,7 @@ export const EntityIdLike = declare<EntityIdLikeShape>(
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type EntityIdLike = typeof EntityIdLike.Type;
 
 /**
@@ -49,4 +51,5 @@ export type EntityIdLike = typeof EntityIdLike.Type;
  * @category guards
  * @since 0.0.0
  */
+/** @internal */
 export const isEntityIdLike = is(EntityIdLike);

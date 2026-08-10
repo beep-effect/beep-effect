@@ -9,6 +9,7 @@
 import {
   append,
   appendAll,
+  dedupe,
   empty,
   every,
   getSomes,
@@ -31,6 +32,7 @@ import { isTagged } from "effect/Predicate";
 import { toEncoded } from "effect/SchemaAST";
 import type { AST, Suspend } from "effect/SchemaAST";
 import type * as Field from "./Field.ts";
+import { DeriveColumnError } from "./classification.ts";
 
 const stringLiteralsFromAST = (
   node: AST,
@@ -65,10 +67,23 @@ const stringLiteralsFromAST = (
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const stringLiteralValues = (
   schema: Field.AnySchema,
   selectSchemaOf: (schema: Field.AnySchema) => { readonly ast: AST },
 ): Option<readonly [string, ...string[]]> =>
   flatMap(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast), selectSchemaOf), (values) =>
-    match(values, { onEmpty: none, onNonEmpty: someOption }),
+    match(dedupe(values), {
+      onEmpty: none,
+      onNonEmpty: (normalized) => {
+        if (some(normalized, (value) => value.includes("\0"))) {
+          throw DeriveColumnError.make({
+            message: "SQL enum literals cannot contain NUL (U+0000).",
+            fieldName: "(unknown — set at model definition)",
+            astTag: "(encoded literals)",
+          });
+        }
+        return someOption(normalized);
+      },
+    }),
   );

@@ -9,7 +9,7 @@
 import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
 import type { Effect, Success } from "effect/Effect";
 import { findFirst } from "effect/Array";
-import { getOrElse, map } from "effect/Option";
+import { getOrElse, isSome, map } from "effect/Option";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
 import { Int, NonEmptyString, TaggedError, Unknown, is } from "effect/Schema";
 import type { SchemaError } from "effect/Schema";
@@ -66,9 +66,22 @@ export class VersionConflictError extends TaggedError<VersionConflictError>(
 
 type RepositoryModel = EffectModel.Any & AnyModel;
 
-type IdKey<M extends EffectModel.Any> = keyof M["Type"] &
+type LocatorKey<M extends AnyModel> = {
+  readonly [K in keyof M["sql"]["columns"] & string]: M["sql"]["columns"][K] extends {
+    readonly version: true;
+  }
+    ? never
+    : M["sql"]["columns"][K] extends { readonly primaryKey: true }
+      ? K
+      : M["sql"]["columns"][K] extends { readonly unique: true }
+        ? K
+        : never;
+}[keyof M["sql"]["columns"] & string];
+
+type IdKey<M extends RepositoryModel> = keyof M["Type"] &
   keyof M["update"]["Type"] &
   keyof M["fields"] &
+  LocatorKey<M> &
   string;
 
 /**
@@ -110,7 +123,20 @@ type ValidateVersionModel<M extends AnyModel> = [VersionKey<M>] extends [never]
   ? Field.SqlTypeError<"optimistic repository requires one pg.version() field">
   : unknown;
 
-type NativeRepository<M extends EffectModel.Any, Id extends IdKey<M>> = Success<
+type ColumnNameKey<M extends AnyModel> = {
+  readonly [K in keyof M["sql"]["columns"] & string]: M["sql"]["columns"][K] extends {
+    readonly columnName: string;
+  }
+    ? K
+    : never;
+}[keyof M["sql"]["columns"] & string];
+
+type ValidateColumnNames<M extends AnyModel> = [ColumnNameKey<M>] extends [never]
+  ? unknown
+  : Field.SqlTypeError<"optimistic repositories do not yet support columnName overrides">
+;
+
+type NativeRepository<M extends RepositoryModel, Id extends IdKey<M>> = Success<
   ReturnType<typeof makeSqlRepository<M, Id>>
 >;
 
@@ -157,7 +183,7 @@ type NativeRepository<M extends EffectModel.Any, Id extends IdKey<M>> = Success<
  * @category repositories
  * @since 0.0.0
  */
-export type Repository<M extends EffectModel.Any, Id extends IdKey<M>> = Pick<
+export type Repository<M extends RepositoryModel, Id extends IdKey<M>> = Pick<
   NativeRepository<M, Id>,
   "insert" | "insertVoid" | "findById" | "delete"
 > & {
@@ -207,6 +233,37 @@ const requireVersion = (record: UnknownRecord, key: string, table: string): numb
     message: `Repository version '${key}' for '${table}' is not an integer.`,
     fieldName: key,
   });
+};
+
+const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
+  const override = findFirst(
+    Object.entries(model.sql.columns),
+    ([, metadata]) => metadata.columnName !== undefined,
+  );
+  if (isSome(override)) {
+    throw ModelInvariantError.make({
+      message: `Repository for '${model.sql.tableName}' does not support columnName override on '${override.value[0]}'.`,
+      fieldName: override.value[0],
+    });
+  }
+  const locator = getOrElse(get(model.sql.columns, idColumn), () => {
+    throw ModelInvariantError.make({
+      message: `Repository locator '${idColumn}' is not a model field.`,
+      fieldName: idColumn,
+    });
+  });
+  if (locator.version) {
+    throw ModelInvariantError.make({
+      message: `Repository locator '${idColumn}' cannot be the optimistic-version field.`,
+      fieldName: idColumn,
+    });
+  }
+  if (!locator.primaryKey && !locator.unique) {
+    throw ModelInvariantError.make({
+      message: `Repository locator '${idColumn}' must be a primary-key or unique field.`,
+      fieldName: idColumn,
+    });
+  }
 };
 
 /**
@@ -272,20 +329,21 @@ const requireVersion = (record: UnknownRecord, key: string, table: string): numb
  * @since 0.0.0
  */
 export const makeRepository = <const M extends RepositoryModel, const Id extends IdKey<M>>(
-  model: M & ValidateVersionModel<M>,
+  model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
   options: {
     readonly spanPrefix: string;
     readonly idColumn: Id;
   },
-): Effect<Repository<M, Id>, never, SqlClient> =>
-  gen(function* () {
+): Effect<Repository<M, Id>, never, SqlClient> => {
+  const idColumn: string = options.idColumn;
+  validateRepositoryModel(model, idColumn);
+  return gen(function* () {
     const sql = yield* SqlClient;
     const base = yield* makeSqlRepository<M, Id>(model, {
       tableName: model.sql.tableName,
       spanPrefix: options.spanPrefix,
       idColumn: options.idColumn,
     });
-    const idColumn: string = options.idColumn;
     const versionColumn = findVersionColumn(model);
     const updateSchema = findOne<M["update"], M, SqlError, never>({
       Request: model.update,
@@ -340,3 +398,4 @@ export const makeRepository = <const M extends RepositoryModel, const Id extends
       update,
     };
   });
+};

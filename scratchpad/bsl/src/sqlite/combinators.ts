@@ -8,10 +8,96 @@
  */
 import type { SQL } from "drizzle-orm";
 import { fromUndefinedOr, getOrElse } from "effect/Option";
+import {
+  BigInt as BigIntSchema,
+  Finite,
+  flip,
+  is,
+  isBetweenBigInt,
+  isFinite,
+  isInt,
+  makeFilter,
+} from "effect/Schema";
+import type { Check } from "effect/SchemaAST";
+import { VariantSchema } from "effect/unstable/schema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
+import { ModelInvariantError } from "../core/model.ts";
+import { factory as V } from "../core/variant.ts";
+import { assertSqlName, type ValidateSqlName } from "../core/names.ts";
+import { assignStatics } from "../internal/statics.ts";
 import * as SqliteColumn from "./Column.ts";
 import { DeriveColumnError, isEntityIdLike, stringLiteralValues, type EntityIdLike } from "./derive.ts";
+
+const evolveSchemas = (
+  schema: Field.AnySchema,
+  evolve: (current: import("effect/Schema").Top) => import("effect/Schema").Top,
+): Field.AnySchema =>
+  VariantSchema.isField(schema)
+    ? V.fieldEvolve(schema, {
+        select: evolve,
+        insert: evolve,
+        update: evolve,
+        json: evolve,
+        jsonCreate: evolve,
+        jsonUpdate: evolve,
+      })
+    : evolve(schema);
+
+function injectNumberChecks<I extends Field.Input>(
+  input: I,
+  checks: readonly [Check<number>, ...Array<Check<number>>],
+): Field.Field<Field.SchemaFrom<I>, Field.MetaFrom<I>>;
+function injectNumberChecks(
+  input: Field.Input,
+  checks: readonly [Check<number>, ...Array<Check<number>>],
+): Field.Any {
+  const field = Field.from(input);
+  const accepts = is(Finite.check(...checks));
+  const evolved = evolveSchemas(field.schema, (schema) =>
+    flip(
+      flip(schema).check(
+        makeFilter<unknown>((value) => value === null || accepts(value), {
+          identifier: "@beep/effect-drizzle/SqliteNumberDomain",
+          title: "SQLite number domain",
+          description: "Mirrors a faithful SQLite numeric or integer number domain.",
+          message: "The encoded number is outside the faithful SQLite value domain.",
+        }),
+      ),
+    ),
+  );
+  const preserved = isEntityIdLike(field.schema)
+    ? assignStatics(evolved, {
+        tableName: field.schema.tableName,
+        entityType: field.schema.entityType,
+      })
+    : evolved;
+  return Field.make(preserved, field.meta);
+}
+
+function injectBigIntCheck<I extends Field.Input>(
+  input: I,
+  check: Check<bigint>,
+): Field.Field<Field.SchemaFrom<I>, Field.MetaFrom<I>>;
+function injectBigIntCheck(input: Field.Input, check: Check<bigint>): Field.Any {
+  const field = Field.from(input);
+  const accepts = is(BigIntSchema.check(check));
+  return Field.make(
+    evolveSchemas(field.schema, (schema) =>
+      flip(
+        flip(schema).check(
+          makeFilter<unknown>((value) => value === null || accepts(value), {
+            identifier: "@beep/effect-drizzle/SqliteBigIntDomain",
+            title: "SQLite bigint domain",
+            description: "Restricts native bigint values to SQLite's signed 64-bit range.",
+            message: "The encoded bigint is outside SQLite's signed 64-bit range.",
+          }),
+        ),
+      ),
+    ),
+    field.meta,
+  );
+}
 
 /**
  * Sets SQLite TEXT storage in string or JSON mode.
@@ -93,11 +179,12 @@ export function integer(options: { readonly mode: "timestamp" | "timestamp_ms" }
 ) => Field.Patched<I, { readonly column: SqliteColumn.Integer<"timestamp" | "timestamp_ms", "integer"> }>;
 export function integer(options?: { readonly mode: SqliteColumn.IntegerMode }): unknown {
   return (input: Field.Input): Field.Any => {
-    const schema = Field.from(input).schema;
     const mode = getOrElse(fromUndefinedOr(options?.mode), (): "number" => "number");
+    const checked = mode === "number" ? injectNumberChecks(input, [isInt()]) : Field.from(input);
+    const schema = checked.schema;
     const ident: "integer" | SqliteColumn.EntityIdIdent<string> =
       mode === "number" && isEntityIdLike(schema) ? `entityId<"${schema.tableName}">` : "integer";
-    return Field.patch(input, { column: SqliteColumn.Integer.make({ mode, ident }) });
+    return Field.patch(checked, { column: SqliteColumn.Integer.make({ mode, ident }) });
   };
 }
 
@@ -156,44 +243,53 @@ export function blob(options: { readonly mode: SqliteColumn.BlobMode }): unknown
 }
 
 /**
- * Sets SQLite NUMERIC storage in string, number, or bigint mode.
+ * Sets SQLite NUMERIC storage in faithful number or signed-64-bit bigint mode.
  *
  * **When to use**
  *
- * Use with string mode to preserve decimal precision; choose number or bigint only
- * when the schema's encoded carrier already owns that tradeoff.
+ * Use number mode for finite JavaScript numbers and bigint mode for signed
+ * 64-bit integers.
+ *
+ * **Gotchas**
+ *
+ * SQLite NUMERIC affinity rewrites decimal strings (exponents, leading zeros,
+ * and high precision), so string mode is deliberately unavailable. Use
+ * `text()` for representation-preserving decimal strings.
  *
  * **Example** (Preserve a numeric string)
  *
  * ```ts
- * import { String } from "effect/Schema"
+ * import { Finite } from "effect/Schema"
  * import { numeric } from "@beep/effect-drizzle/sqlite"
  *
- * String.pipe(numeric()).meta.column?.kind // => "numeric"
+ * Finite.pipe(numeric({ mode: "number" })).meta.column?.kind // => "numeric"
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export function numeric(): <I extends Field.Input>(
-  input: I & Field.ValidateEncoded<I, string, "sqlite.numeric string mode requires a string-encoded schema">,
-) => Field.Patched<I, { readonly column: SqliteColumn.Numeric<"string"> }>;
-export function numeric(options: { readonly mode: "string" }): <I extends Field.Input>(
-  input: I & Field.ValidateEncoded<I, string, "sqlite.numeric string mode requires a string-encoded schema">,
-) => Field.Patched<I, { readonly column: SqliteColumn.Numeric<"string"> }>;
 export function numeric(options: { readonly mode: "number" }): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, number, "sqlite.numeric number mode requires a number-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Numeric<"number"> }>;
 export function numeric(options: { readonly mode: "bigint" }): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, bigint, "sqlite.numeric bigint mode requires a bigint-encoded schema">,
 ) => Field.Patched<I, { readonly column: SqliteColumn.Numeric<"bigint"> }>;
-export function numeric(options?: { readonly mode: SqliteColumn.NumericMode }): unknown {
-  return (input: Field.Input): Field.Any =>
-    Field.patch(input, {
-      column: SqliteColumn.Numeric.make({
-        mode: getOrElse(fromUndefinedOr(options?.mode), (): "string" => "string"),
-      }),
-    });
+export function numeric(options: { readonly mode: SqliteColumn.NumericMode }): unknown {
+  return (input: Field.Input): Field.Any => {
+    if (options.mode !== "number" && options.mode !== "bigint") {
+      throw ModelInvariantError.make({
+        message: "sqlite.numeric supports only faithful number and signed-64-bit bigint modes; use text() for decimal strings.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    const checked = options.mode === "number"
+      ? injectNumberChecks(input, [isFinite()])
+      : injectBigIntCheck(
+          input,
+          isBetweenBigInt({ minimum: -9_223_372_036_854_775_808n, maximum: 9_223_372_036_854_775_807n }),
+        );
+    return Field.patch(checked, { column: SqliteColumn.Numeric.make({ mode: options.mode }) });
+  };
 }
 
 type ValidateEnum<I extends Field.Input> = [Exclude<Field.EncodedOf<I>, null>] extends [string]
@@ -219,7 +315,10 @@ type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null
  * **Gotchas**
  *
  * Each table receives its own check. Reusing one logical enum across tables
- * duplicates the constraint, and broad string schemas are rejected.
+ * duplicates the constraint, and broad string schemas are rejected. Duplicate
+ * literals collapse in first-occurrence order; NUL-containing literals fail.
+ * The empty string is a legal label; represent absence with
+ * `OptionFromNullOr(...)` when the encoded database value should be `NULL`.
  *
  * **Example** (Declare a checked domain)
  *
@@ -360,7 +459,10 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [Exc
  * **Details**
  *
  * The insert variant becomes optional while selected and update values retain
- * the schema's encoded type.
+ * the schema's encoded type. Model construction validates the literal against
+ * the complete encoded schema and SQLite representation. Non-finite numbers,
+ * NUL text, and unproven BLOB literals are rejected; `unsafeDefaultSql` is the
+ * explicit escape for a trusted SQL spelling.
  *
  * **Example** (Default a status)
  *
@@ -387,6 +489,12 @@ export { default_ as default };
  *
  * Use when the database, rather than the application constructor, should
  * compute an insert default and a typed Drizzle expression is available.
+ *
+ * **Gotchas**
+ *
+ * Schema expressions must render with zero parameters. Carrier typing does not
+ * prove SQLite's constant-expression rules; column references and other deeper
+ * semantics remain database-checked.
  *
  * **Example** (Default from an expression)
  *
@@ -494,6 +602,9 @@ type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] 
 type ValidateVersionCompatibility<I extends Field.Input> = Field.MetaFrom<I>["identity"] extends false
   ? Field.MetaFrom<I>["generated"] extends false ? unknown : Field.SqlTypeError<"version fields cannot be generated">
   : Field.SqlTypeError<"version fields cannot use db-assigned key generation">;
+type ValidateVersionSchema<I extends Field.Input> = Field.SchemaFrom<I> extends VariantSchema.Field.Any
+  ? Field.SqlTypeError<"version() cannot own an explicit VariantSchema.Field">
+  : unknown;
 
 /**
  * Marks one number-mode integer as the optimistic concurrency token.
@@ -505,8 +616,8 @@ type ValidateVersionCompatibility<I extends Field.Input> = Field.MetaFrom<I>["id
  *
  * **Gotchas**
  *
- * Update payloads must include the current value. Version fields cannot also
- * be generated or database-assigned keys.
+ * Update payloads must include the current value. Explicit variant fields are
+ * rejected; version fields also cannot be generated or database-assigned keys.
  *
  * **Example** (Declare a row version)
  *
@@ -521,8 +632,28 @@ type ValidateVersionCompatibility<I extends Field.Input> = Field.MetaFrom<I>["id
  * @since 0.0.0
  */
 export const version = () => <I extends Field.Input>(
-  input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I>,
-): Field.Patched<I, { readonly version: true }> => Field.patch(input, { version: true });
+  input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateVersionSchema<I>,
+): Field.Patched<I, { readonly version: true }> => {
+  const field = Field.from(input);
+  if (VariantSchema.isField(field.schema)) {
+    throw ModelInvariantError.make({
+      message: "version() cannot own an explicit VariantSchema.Field.",
+      fieldName: "(unknown — set at model definition)",
+    });
+  }
+  if (
+    field.meta.column === undefined ||
+    !SqliteColumn.isSpec(field.meta.column) ||
+    !SqliteColumn.Spec.guards.integer(field.meta.column) ||
+    field.meta.column.mode !== "number"
+  ) {
+    throw ModelInvariantError.make({
+      message: "version() requires sqlite.integer number mode.",
+      fieldName: "(unknown — set at model definition)",
+    });
+  }
+  return Field.patch(input, { version: true });
+};
 
 /**
  * Sets a typed stored generated expression omitted from author writes.
@@ -531,6 +662,12 @@ export const version = () => <I extends Field.Input>(
  *
  * The expression carrier must equal the field's encoded carrier. The field
  * remains in selected and JSON rows but disappears from insert and update.
+ *
+ * **Gotchas**
+ *
+ * Schema expressions must render with zero parameters. BSL does not analyze
+ * determinism or SQLite's generated-expression grammar; DDL application is the
+ * semantic check.
  *
  * **Example** (Generate a normalized value)
  *
@@ -597,9 +734,13 @@ export const unsafeGeneratedSql = (sql: string) => <I extends Field.Input>(
  * @category combinators
  * @since 0.0.0
  */
-export const columnName = <const Name extends string>(name: Name) => <I extends Field.Input>(
-  input: I,
-): Field.Patched<I, { readonly columnName: Name }> => Field.patch(input, { columnName: name });
+export const columnName = <const Name extends string>(
+  name: Name & ValidateSqlName<Name, "sqlite.columnName requires a lowercase SQL identifier">,
+) => <I extends Field.Input>(input: I): Field.Patched<I, { readonly columnName: Name }> => {
+  assertSqlName(name, "sqlite", "SQLite column name");
+  const resolvedName: Name = name;
+  return Field.patch(input, { columnName: resolvedName });
+};
 
 /**
  * Attaches a foreign-key target derived from EntityId statics.
@@ -613,6 +754,9 @@ export const columnName = <const Name extends string>(name: Name) => <I extends 
  *
  * Assembly compares SQLite storage identity and encoded carrier, so two
  * number-like fields with different EntityId identities do not silently match.
+ * `SET NULL` requires a nullable encoded source; `SET DEFAULT` requires a
+ * declared database default. The chosen default must still reference a live
+ * target row when the action executes.
  *
  * **Example** (Inspect a reference target)
  *
@@ -630,11 +774,32 @@ export const columnName = <const Name extends string>(name: Name) => <I extends 
  * @category combinators
  * @since 0.0.0
  */
-export const references = <const Id extends EntityIdLike>(
+type ReferenceOptions = { readonly onDelete?: Meta.FkAction; readonly onUpdate?: Meta.FkAction };
+type HasReferenceAction<Options, Action extends Meta.FkAction> =
+  Options extends { readonly onDelete: Action } | { readonly onUpdate: Action } ? true : false;
+type ValidateReferenceActions<I extends Field.Input, Options> =
+  HasReferenceAction<Options, "set null"> extends false
+    ? HasReferenceAction<Options, "set default"> extends false
+      ? unknown
+      : Field.MetaFrom<I>["hasDefault"] extends true
+        ? unknown
+        : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
+    : null extends Field.EncodedOf<I>
+      ? HasReferenceAction<Options, "set default"> extends false
+        ? unknown
+        : Field.MetaFrom<I>["hasDefault"] extends true
+          ? unknown
+          : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
+      : Field.SqlTypeError<"SET NULL references require a nullable encoded schema">;
+
+export const references = <
+  const Id extends EntityIdLike,
+  const Options extends ReferenceOptions | undefined = undefined,
+>(
   id: Id,
-  options?: { readonly onDelete?: Meta.FkAction; readonly onUpdate?: Meta.FkAction },
+  options?: Options,
 ) => <I extends Field.Input>(
-  input: I,
+  input: I & ValidateReferenceActions<NoInfer<I>, Options>,
 ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> =>
   Field.patch(input, {
     references: {

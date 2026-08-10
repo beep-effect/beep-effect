@@ -23,6 +23,7 @@ import * as Meta from "./Meta.ts";
  * @category symbols
  * @since 0.0.0
  */
+/** @internal */
 export const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
  * Type of the runtime @beep/effect-drizzle field marker.
@@ -30,6 +31,7 @@ export const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
  * @category symbols
  * @since 0.0.0
  */
+/** @internal */
 export type TypeId = typeof TypeId;
 
 /**
@@ -44,6 +46,7 @@ export type TypeId = typeof TypeId;
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type AnySchema = Top | VariantSchema.Field<any>;
 
 /**
@@ -52,6 +55,7 @@ export type AnySchema = Top | VariantSchema.Field<any>;
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> extends Pipeable {
   readonly [TypeId]: TypeId;
   readonly schema: Sch;
@@ -64,6 +68,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type Any = Field<AnySchema, Meta.Meta>;
 
 /**
@@ -72,6 +77,7 @@ export type Any = Field<AnySchema, Meta.Meta>;
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type Input = AnySchema | Any;
 
 const Proto = {
@@ -87,6 +93,7 @@ const Proto = {
  * @category constructors
  * @since 0.0.0
  */
+/** @internal */
 export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
   schema: Sch,
   meta: M,
@@ -103,6 +110,7 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
  * @category guards
  * @since 0.0.0
  */
+/** @internal */
 export const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
 
 /**
@@ -111,6 +119,7 @@ export const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type SchemaFrom<I extends Input> =
   I extends Field<infer Sch, Meta.Meta> ? Sch : Extract<I, AnySchema>;
 
@@ -120,6 +129,7 @@ export type SchemaFrom<I extends Input> =
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M : Meta.Empty;
 
 /**
@@ -128,7 +138,9 @@ export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M 
  * @category constructors
  * @since 0.0.0
  */
+/** @internal */
 export function from<I extends Input>(input: I): Field<SchemaFrom<I>, MetaFrom<I>>;
+/** @internal */
 export function from(input: Input): Any {
   if (isField(input)) {
     return input;
@@ -142,6 +154,7 @@ export function from(input: Input): Any {
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
   SchemaFrom<I>,
   Meta.Merge<MetaFrom<I>, Patch>
@@ -155,6 +168,7 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
  * @category combinators
  * @since 0.0.0
  */
+/** @internal */
 export const patch = <I extends Input, const Patch extends Meta.Patch>(
   input: I,
   p: Patch,
@@ -173,6 +187,7 @@ export const patch = <I extends Input, const Patch extends Meta.Patch>(
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type EncodedOf<I extends Input> = SchemaEncoded<SchemaFrom<I>>;
 
 type SchemaEncoded<Sch> =
@@ -201,6 +216,7 @@ type SchemaEncoded<Sch> =
  * @category errors
  * @since 0.0.0
  */
+/** @internal */
 export interface SqlTypeError<Msg extends string> {
   readonly "~effect-drizzle.error": Msg;
 }
@@ -211,6 +227,7 @@ export interface SqlTypeError<Msg extends string> {
  * @category validation
  * @since 0.0.0
  */
+/** @internal */
 export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
   Exclude<EncodedOf<I>, null>,
 ] extends [Allowed]
@@ -227,6 +244,7 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [
  * @category validation
  * @since 0.0.0
  */
+/** @internal */
 export type ValidateNonNullable<I extends Input, Msg extends string> =
   null extends EncodedOf<I> ? SqlTypeError<Msg> : unknown;
 
@@ -246,6 +264,7 @@ type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> = Dimensions ex
  * @category validation
  * @since 0.0.0
  */
+/** @internal */
 export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extends undefined
   ? SqlTypeError<"pg.array requires an element schema with an explicit base column combinator">
   : MetaFrom<I>["dimensions"] extends 0
@@ -258,6 +277,7 @@ export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extend
  * @category validation
  * @since 0.0.0
  */
+/** @internal */
 export type ValidateArrayEncoded<
   I extends Input,
   Element extends Input,

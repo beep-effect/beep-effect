@@ -87,6 +87,18 @@ own test lane**:
   scratchpad rounds); package-lane-only cost keeps the repo-global check fast —
   consistent with the family-profile principle (members own their lanes).
 
+## `@internal` marking (operator, 2026-08-10)
+
+Every symbol that is module-`export`ed for cross-file wiring but NOT reachable
+from the public entrypoints (`src/index.ts`, `src/pg/index.ts`,
+`src/sqlite/index.ts`) carries an `@internal` tag; everything under
+`src/internal/` is internal by definition. At package creation the tag becomes
+load-bearing: `stripInternal` in the declaration build removes them from
+published `.d.ts`, and doc tooling excludes them. Interacts with the
+deep-import policy already on the graduation agenda. Enforcement enters via the
+quality loop's jsdoc lens; the eventual docs lint should verify
+entrypoint-unreachable exports are tagged.
+
 ## Previously locked (see round6-brief.md)
 
 - One package, dialect subpath exports (`.`, `./pg`, `./sqlite`).

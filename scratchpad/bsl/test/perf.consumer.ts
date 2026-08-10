@@ -26,7 +26,7 @@ const kit = make({
 const { Entity, Model, pg, schema, toPgTable } = kit;
 
 class PerfAccount extends Entity<PerfAccount>("PerfAccount")({
-  id: Int.pipe(pg.integer(), pg.identity()),
+  id: Int.pipe(pg.integer(), pg.identity(), pg.primaryKey()),
   email: StringSchema.pipe(pg.varchar(320), pg.unique()),
   displayName: StringSchema.pipe(pg.varchar(120)),
   status: Literals(["active", "disabled", "invited"]).pipe(pg.enum("perf_account_status")),

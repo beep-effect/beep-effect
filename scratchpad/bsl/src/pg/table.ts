@@ -53,7 +53,7 @@ import type {
   SetNotNull,
   SetDimensions,
 } from "drizzle-orm/pg-core";
-import { pgTable } from "drizzle-orm/pg-core";
+import { PgDialect, pgTable } from "drizzle-orm/pg-core";
 import { pipe } from "effect/Function";
 import {
   exhaustive,
@@ -74,6 +74,10 @@ import * as Meta from "../core/Meta.ts";
 import * as PgColumn from "./Column.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 import * as TableExtras from "./extras.ts";
+
+const pgDialect = new PgDialect();
+const assertSchemaExpression = (expression: import("drizzle-orm").SQL, context: string): void =>
+  Meta.assertNoSqlParameters(pgDialect.sqlToQuery(expression).params, context);
 
 // ---------------------------------------------------------------------------
 // Type-level projection
@@ -283,6 +287,7 @@ export type TableOf<M extends AnyModel> = PgTableWithColumns<{
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type EnumRegistry = Readonly<Record<string, PgColumn.EnumInstance>>;
 
 const buildColumn = (
@@ -326,7 +331,10 @@ const buildColumn = (
       withReturnType<PgColumn.DrizzleBuilder>(),
       matchTags({
         value: ({ value }) => withUnique.default(value),
-        sqlExpr: ({ expression }) => withUnique.default(expression),
+        sqlExpr: ({ expression }) => {
+          assertSchemaExpression(expression, `PostgreSQL default expression for '${key}'`);
+          return withUnique.default(expression);
+        },
         now: () => withUnique.default(sql`now()`),
         unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
       }),
@@ -338,7 +346,10 @@ const buildColumn = (
     matchWhen(false, () => withDefault),
     matchTags({
       identityAlways: () => withDefault,
-      sqlExpr: ({ expression }) => withDefault.generatedAlwaysAs(expression),
+      sqlExpr: ({ expression }) => {
+        assertSchemaExpression(expression, `PostgreSQL generated expression for '${key}'`);
+        return withDefault.generatedAlwaysAs(expression);
+      },
       unsafeSql: ({ sql: statement }) => withDefault.generatedAlwaysAs(sql.raw(statement)),
     }),
     exhaustive,
@@ -458,7 +469,14 @@ export function toPgTable(
     const bound: TableExtras.BoundColumns<FieldsInput> = columns;
     const declared = match(fromUndefinedOr(model.sql.extras), {
       onNone: () => [],
-      onSome: (extras) => invokeDeclaredExtras(extras, bound).map(TableExtras.emit),
+      onSome: (extras) => {
+        const nodes = invokeDeclaredExtras(extras, bound);
+        const inlinePrimaryKeys = Object.values(model.sql.columns).filter(
+          (meta) => meta.primaryKey,
+        ).length;
+        TableExtras.validateNodes(nodes, inlinePrimaryKeys);
+        return nodes.map(TableExtras.emit);
+      },
     });
     const additional = match(fromUndefinedOr(additionalExtras), {
       onNone: () => [],

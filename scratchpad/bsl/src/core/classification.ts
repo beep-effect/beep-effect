@@ -6,7 +6,21 @@
  *
  * @since 0.0.0
  */
-import { every, filter, findFirst, head, isArrayEmpty, join, map, of, some } from "effect/Array";
+import {
+  append,
+  empty,
+  every,
+  filter,
+  findFirst,
+  flatMap,
+  head,
+  isArrayEmpty,
+  join,
+  map,
+  of,
+  some,
+} from "effect/Array";
+import { equals } from "effect/Equal";
 import { getOrElse, isSome } from "effect/Option";
 import type { Option } from "effect/Option";
 import { isTagged, not, or } from "effect/Predicate";
@@ -18,6 +32,7 @@ import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
 
 /** Failure to derive one unambiguous SQL column from an encoded schema. */
+/** @internal */
 export class DeriveColumnError extends TaggedError<DeriveColumnError>(
   "@beep/effect-drizzle/DeriveColumnError",
 )(
@@ -29,6 +44,7 @@ export class DeriveColumnError extends TaggedError<DeriveColumnError>(
 ) {}
 
 /** Dialect hooks consumed by the shared classification algorithm. */
+/** @internal */
 export interface Classifier<Column extends Meta.ColumnSpec> {
   readonly selectSchemaOf: (schema: Field.AnySchema) => Top;
   readonly entityTableName: (schema: Top) => Option<string>;
@@ -37,6 +53,7 @@ export interface Classifier<Column extends Meta.ColumnSpec> {
 }
 
 /** Dialect-neutral result of encoded-AST classification. */
+/** @internal */
 export interface Classified<Column extends Meta.ColumnSpec> {
   readonly column: Column;
   readonly nullable: boolean;
@@ -46,7 +63,25 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
   throw DeriveColumnError.make({ message, fieldName, astTag });
 };
 
+/** Recursively unwrap encoded unions and suspensions for shared runtime checks. @internal */
+export const flattenEncoded = (
+  node: AST,
+  fieldName: string,
+  visited: ReadonlyArray<AST> = empty(),
+): ReadonlyArray<AST> => {
+  if (some(visited, equals(node))) {
+    return fail(fieldName, node._tag, "Encoded schema suspension is cyclic.");
+  }
+  const nextVisited = append(visited, node);
+  if (isTagged(node, "Suspend")) return flattenEncoded(node.thunk(), fieldName, nextVisited);
+  if (isTagged(node, "Union")) {
+    return flatMap(node.types, (member) => flattenEncoded(member, fieldName, nextVisited));
+  }
+  return of(node);
+};
+
 /** Derive one dialect column and nullability from a field's encoded AST. */
+/** @internal */
 export const classify = <Column extends Meta.ColumnSpec>(
   schema: Field.AnySchema,
   fieldName: string,
@@ -54,7 +89,7 @@ export const classify = <Column extends Meta.ColumnSpec>(
 ): Classified<Column> => {
   const select = classifier.selectSchemaOf(schema);
   const encoded = toEncoded(select.ast);
-  const members = isTagged(encoded, "Union") ? encoded.types : of(encoded);
+  const members = flattenEncoded(encoded, fieldName);
   const invalidAbsence = findFirst(members, or(isTagged("Undefined"), isTagged("Void")));
   if (isSome(invalidAbsence)) {
     fail(

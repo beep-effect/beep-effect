@@ -13,6 +13,7 @@ const variantTuple = <const Values extends readonly [string, ...string[]]>(
 ): Values => values;
 
 /** Ordered internal variant list used to configure the shared factory. */
+/** @internal */
 export const variants = variantTuple(
   "select",
   "insert",
@@ -56,7 +57,8 @@ export const Variant = {
 };
 
 /** Internal `VariantSchema` factory from which the public helpers are derived. */
-export const factory = VariantSchema.make({
+/** @internal */
+export const factory = /* @__PURE__ */ VariantSchema.make({
   variants,
   defaultVariant: "select",
 });

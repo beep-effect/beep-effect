@@ -15,7 +15,7 @@
  *
  * @since 0.0.0
  */
-import { findFirst, last as lastArray, reduce } from "effect/Array";
+import { findFirst, last as lastArray, reduce, some as someArray } from "effect/Array";
 import {
   fromUndefinedOr,
   getOrElse,
@@ -26,13 +26,20 @@ import {
   orElse,
   some,
 } from "effect/Option";
-import { isFunction, isNotUndefined } from "effect/Predicate";
+import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
-import { optionalKey } from "effect/Schema";
+import { flip, is, optionalKey } from "effect/Schema";
 import type { Annotations, Struct as StructSchema, Top } from "effect/Schema";
 import { split } from "effect/String";
 import { VariantSchema } from "effect/unstable/schema";
 import { snakeCase } from "../internal/case.ts";
+import {
+  assertSqlName,
+  assertPgEnumLabel,
+  assertUniqueSqlNames,
+  type ValidateDerivedSqlName,
+  type ValidateSqlName,
+} from "../core/names.ts";
 import { withStatics } from "../internal/statics.ts";
 import { factory as V, type Variant } from "../core/variant.ts";
 import * as Derive from "./derive.ts";
@@ -103,6 +110,7 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type ResolvedMetaOf<I extends Field.Input, Key extends string = string> = Meta.Merge<
   Field.MetaFrom<I>,
   {
@@ -207,6 +215,7 @@ export type EffectiveSchema<I extends Field.Input> =
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
@@ -230,9 +239,10 @@ type ValidateVersionField<I extends Field.Input> = Field.Input extends I
   ? unknown
   : Field.MetaFrom<I>["version"] extends true
   ? Field.MetaFrom<I>["dimensions"] extends 0
-    ? Field.MetaFrom<I>["column"] extends {
-        readonly kind: PgColumn.IdentityKind;
-      }
+    ? Field.MetaFrom<I>["column"] extends
+        | PgColumn.Integer
+        | PgColumn.Smallint
+        | PgColumn.Bigint<"number">
       ? Field.MetaFrom<I>["generated"] extends false
         ? Field.MetaFrom<I>["identity"] extends false
           ? unknown
@@ -300,7 +310,8 @@ export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: ValidateSpecFamily<F[K]> &
     ValidateResolvedColumn<F[K]> &
     ValidateVersionField<F[K]> &
-    ValidateArrayField<F[K]>;
+    ValidateArrayField<F[K]> &
+    ValidateSqlName<Lowercase<K & string>, "model field derives an invalid PostgreSQL column name">;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
   ? Field.SqlTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey in the extras callback">
   : unknown) &
@@ -318,6 +329,7 @@ export type ValidateFields<F extends FieldsInput> = {
  * @category errors
  * @since 0.0.0
  */
+/** @internal */
 export type MissingSelfGeneric =
   `Missing \`Self\` generic — use \`class Self extends EffectDrizzle.Model<Self>(identifier)({ ... }) {}\``;
 
@@ -423,6 +435,50 @@ const deriveTableName = (identifier: string): string => {
   return snakeCase(last);
 };
 
+const physicalColumnEntry = ([key, input]: [string, Field.Input]): readonly [string, string] => {
+  const meta = Field.from(input).meta;
+  return [key, getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key))];
+};
+
+const validateModelNames = (tableName: string, fields: FieldsInput): void => {
+  assertSqlName(tableName, "pg", "PostgreSQL table name");
+  assertUniqueSqlNames(Object.entries(fields).map(physicalColumnEntry), "pg", "PostgreSQL column name");
+};
+
+const validateLiteralDefault = (
+  field: Field.Any,
+  select: Top,
+  column: PgColumn.Spec,
+  fieldName: string,
+): void => {
+  if (!Meta.Default.$is("value")(field.meta.default)) return;
+  const value = field.meta.default.value;
+  if (!is(flip(select))(value)) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' is rejected by the field's encoded schema.`,
+      fieldName,
+    });
+  }
+  if (isNumber(value) && !Number.isFinite(value)) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' must be a finite number.`,
+      fieldName,
+    });
+  }
+  if (isString(value) && value.includes("\0")) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' cannot contain NUL.`,
+      fieldName,
+    });
+  }
+  if (PgColumn.Spec.guards.bytea(column) && isUint8Array(value)) {
+    throw ModelInvariantError.make({
+      message: `bytea literal defaults are not safely rendered; use unsafeDefaultSql for trusted SQL.`,
+      fieldName,
+    });
+  }
+};
+
 const resolveReferences = (
   meta: Meta.Meta,
   select: unknown,
@@ -498,12 +554,14 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
  * @category constructors
  * @since 0.0.0
  */
+/** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
   annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<F> | undefined,
 ): ModelClass<Self, F>;
+/** @internal */
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,
@@ -511,6 +569,14 @@ export function makeModelClass(
   extras: TableExtras.Callback<FieldsInput> | undefined,
 ): object {
   const tableName = deriveTableName(identifier);
+  validateModelNames(tableName, fields);
+  const fieldCount = Object.keys(fields).length;
+  if (fieldCount === 0 || fieldCount > 1_600) {
+    throw ModelInvariantError.make({
+      message: `PostgreSQL models require from 1 through 1,600 columns; '${identifier}' declares ${fieldCount}.`,
+      fieldName: "(model)",
+    });
+  }
   const state = reduce(
     Object.entries(fields),
     {
@@ -521,6 +587,12 @@ export function makeModelClass(
     },
     (state, [key, input]) => {
       const field = Field.from(input);
+      if (field.meta.version && VariantSchema.isField(field.schema)) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
+          fieldName: key,
+        });
+      }
       const select = Derive.selectSchemaOf(field.schema);
       const classified = match(fromUndefinedOr(field.meta.column), {
         onNone: () => Derive.classify(field.schema, key),
@@ -537,6 +609,17 @@ export function makeModelClass(
           };
         },
       });
+
+      if (!PgColumn.Spec.guards.custom(classified.column)) {
+        const expected = PgColumn.carrier(classified.column, field.meta.dimensions);
+        const actual = Derive.carrier(field.schema, field.meta.dimensions);
+        if (actual.tag !== expected.tag || actual.dimensions !== expected.dimensions) {
+          throw ModelInvariantError.make({
+            message: `Field '${key}' encodes ${actual.tag}[${actual.dimensions}] but its PostgreSQL column carries ${expected.tag}[${expected.dimensions}].`,
+            fieldName: key,
+          });
+        }
+      }
 
       if (field.meta.primaryKey && classified.nullable) {
         throw ModelInvariantError.make({
@@ -568,9 +651,9 @@ export function makeModelClass(
           fieldName: key,
         });
       }
-      if (field.meta.version && !PgColumn.isIdentityKind(classified.column.kind)) {
+      if (field.meta.version && !PgColumn.isNumberInteger(classified.column)) {
         throw ModelInvariantError.make({
-          message: `Version field '${key}' requires an integer-family column, got '${classified.column.kind}'.`,
+          message: `Version field '${key}' requires a number-encoded integer-family column.`,
           fieldName: key,
         });
       }
@@ -580,11 +663,18 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      if (PgColumn.Spec.guards.char(classified.column)) {
+        const char = classified.column;
+        if (!someArray(Derive.exactLengths(field.schema), (length) => length === char.length)) {
+          throw ModelInvariantError.make({
+            message: `char(${char.length}) on '${key}' requires an exact matching schema length.`,
+            fieldName: key,
+          });
+        }
+      }
       const bounded = PgColumn.Spec.guards.varchar(classified.column)
         ? some({ kind: "varchar", length: classified.column.length })
-        : PgColumn.Spec.guards.char(classified.column)
-          ? some({ kind: "char", length: classified.column.length })
-          : none<{ readonly kind: string; readonly length: number }>();
+        : none<{ readonly kind: string; readonly length: number }>();
       if (isSome(bounded)) {
         const incompatible = findFirst(
           Derive.maxLengths(field.schema),
@@ -597,8 +687,14 @@ export function makeModelClass(
           });
         }
       }
+      validateLiteralDefault(field, select, classified.column, key);
+      const resolvedColumn = PgColumn.resolveName(classified.column, key);
+      if (PgColumn.Spec.guards.enum(resolvedColumn)) {
+        assertSqlName(resolvedColumn.name, "pg", "PostgreSQL enum name");
+        resolvedColumn.values.forEach(assertPgEnumLabel);
+      }
       const resolvedMeta = Meta.merge(field.meta, {
-        column: PgColumn.resolveName(classified.column, key),
+        column: resolvedColumn,
         references: resolveReferences(field.meta, select, key),
       });
       return {
@@ -665,8 +761,8 @@ export function makeModelClass(
  * @category factories
  * @since 0.0.0
  */
-export function Model<Self = never>(
-  identifier: string,
+export function Model<Self = never, const Identifier extends string = string>(
+  identifier: Identifier & ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid PostgreSQL table name">,
 ): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
   annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>,

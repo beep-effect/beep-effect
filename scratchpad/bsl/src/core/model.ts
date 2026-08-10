@@ -47,6 +47,7 @@ export class ModelInvariantError extends TaggedError<ModelInvariantError>(
 ) {}
 
 /** Internal structural model bound shared by dialect projectors. */
+/** @internal */
 export interface AnyModel {
   readonly sql: {
     readonly tableName: string;

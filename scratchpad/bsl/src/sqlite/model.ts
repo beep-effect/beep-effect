@@ -16,9 +16,9 @@ import {
   orElse,
   some,
 } from "effect/Option";
-import { isFunction, isNotUndefined } from "effect/Predicate";
+import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
-import { optionalKey } from "effect/Schema";
+import { flip, is, optionalKey } from "effect/Schema";
 import type { Annotations, Struct as StructSchema, Top } from "effect/Schema";
 import { split } from "effect/String";
 import { last } from "effect/Array";
@@ -28,6 +28,12 @@ import * as Meta from "../core/Meta.ts";
 import { type AnyModel as CoreAnyModel, ModelInvariantError } from "../core/model.ts";
 import { factory as V, type Variant } from "../core/variant.ts";
 import { snakeCase } from "../internal/case.ts";
+import {
+  assertSqlName,
+  assertUniqueSqlNames,
+  type ValidateDerivedSqlName,
+  type ValidateSqlName,
+} from "../core/names.ts";
 import { withStatics } from "../internal/statics.ts";
 import * as SqliteColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
@@ -81,6 +87,7 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
       : undefined;
 
 /** Metadata after SQLite derivation and automatic EntityId references. */
+/** @internal */
 export type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
   Field.MetaFrom<I>,
   { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
@@ -123,7 +130,13 @@ type PlainVariants<Sch extends Top, M extends Meta.Meta> = M["version"] extends 
   : M["generated"] extends false
     ? VariantSchema.Field<{
         readonly select: Sch;
-        readonly insert: M["hasDefault"] extends true ? optionalKey<Sch> : Sch;
+        readonly insert: M["hasDefault"] extends true
+          ? optionalKey<Sch>
+          : M["primaryKey"] extends true
+            ? M["column"] extends SqliteColumn.Integer<"number">
+              ? optionalKey<Sch>
+              : Sch
+            : Sch;
         readonly update: optionalKey<Sch>;
         readonly json: Sch;
         readonly jsonCreate: Sch;
@@ -167,6 +180,7 @@ export type EffectiveSchema<I extends Field.Input> =
       ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
       : never;
 
+/** @internal */
 export type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
@@ -242,7 +256,8 @@ export type ValidateFields<F extends FieldsInput> = {
   readonly [K in keyof F]: ValidateSpecFamily<F[K]> &
     ValidateDimensions<F[K]> &
     ValidateResolvedColumn<F[K]> &
-    ValidateVersion<F[K]>;
+    ValidateVersion<F[K]> &
+    ValidateSqlName<Lowercase<K & string>, "model field derives an invalid SQLite column name">;
 } & (IsUnion<PrimaryKeyKeys<F>> extends true
   ? Field.SqlTypeError<"model declares multiple inline primary keys — use Table.compositePrimaryKey">
   : unknown) & (IsUnion<VersionKeys<F>> extends true
@@ -250,6 +265,7 @@ export type ValidateFields<F extends FieldsInput> = {
   : unknown);
 
 /** Diagnostic returned when Model omits its self type. */
+/** @internal */
 export type MissingSelfGeneric =
   "Missing `Self` generic — use `class Self extends sqlite.Model<Self>(identifier)({ ... }) {}`";
 
@@ -347,6 +363,50 @@ export interface AnyModel extends CoreAnyModel {
 const deriveTableName = (identifier: string): string =>
   snakeCase(getOrElse(last(split(identifier, "/")), () => identifier));
 
+const physicalColumnEntry = ([key, input]: [string, Field.Input]): readonly [string, string] => {
+  const meta = Field.from(input).meta;
+  return [key, getOrElse(fromUndefinedOr(meta.columnName), () => snakeCase(key))];
+};
+
+const validateModelNames = (tableName: string, fields: FieldsInput): void => {
+  assertSqlName(tableName, "sqlite", "SQLite table name");
+  assertUniqueSqlNames(Object.entries(fields).map(physicalColumnEntry), "sqlite", "SQLite column name");
+};
+
+const validateLiteralDefault = (
+  field: Field.Any,
+  select: Top,
+  column: SqliteColumn.Spec,
+  fieldName: string,
+): void => {
+  if (!Meta.Default.$is("value")(field.meta.default)) return;
+  const value = field.meta.default.value;
+  if (!is(flip(select))(value)) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' is rejected by the field's encoded schema.`,
+      fieldName,
+    });
+  }
+  if (isNumber(value) && !Number.isFinite(value)) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' must be a finite number.`,
+      fieldName,
+    });
+  }
+  if (isString(value) && value.includes("\0")) {
+    throw ModelInvariantError.make({
+      message: `Literal default for '${fieldName}' cannot contain NUL.`,
+      fieldName,
+    });
+  }
+  if (SqliteColumn.Spec.guards.blob(column) && column.mode === "buffer" && isUint8Array(value)) {
+    throw ModelInvariantError.make({
+      message: `BLOB literal defaults are not safely rendered; use unsafeDefaultSql for trusted SQL.`,
+      fieldName,
+    });
+  }
+};
+
 const resolveReferences = (
   meta: Meta.Meta,
   select: unknown,
@@ -387,9 +447,16 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
     return V.Field({ select: schema, update: schema, json: schema });
   }
   if (meta.generated !== false) return V.Field({ select: schema, json: schema });
+  const insertOptional =
+    meta.hasDefault ||
+    (meta.primaryKey &&
+      meta.column !== undefined &&
+      SqliteColumn.isSpec(meta.column) &&
+      SqliteColumn.Spec.guards.integer(meta.column) &&
+      meta.column.mode === "number");
   return V.Field({
     select: schema,
-    insert: meta.hasDefault ? optionalKey(schema) : schema,
+    insert: insertOptional ? optionalKey(schema) : schema,
     update: optionalKey(schema),
     json: schema,
     jsonCreate: schema,
@@ -398,12 +465,14 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
 };
 
 /** Shared runtime seam used by bare SQLite models and SQLite kit entities. */
+/** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
   annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<F> | undefined,
 ): ModelClass<Self, F>;
+/** @internal */
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,
@@ -411,16 +480,31 @@ export function makeModelClass(
   extras: TableExtras.Callback<FieldsInput> | undefined,
 ): object {
   const tableName = deriveTableName(identifier);
+  validateModelNames(tableName, fields);
+  const fieldCount = Object.keys(fields).length;
+  if (fieldCount === 0 || fieldCount > 2_000) {
+    throw ModelInvariantError.make({
+      message: `SQLite models require from 1 through 2,000 columns; '${identifier}' declares ${fieldCount}.`,
+      fieldName: "(model)",
+    });
+  }
   const state = reduce(
     Object.entries(fields),
     {
       columns: empty<string, Meta.Meta<SqliteColumn.Spec>>(),
       primaryKeys: 0,
       versionFields: 0,
+      ordinaryColumns: 0,
       schemaFields: empty<string, Field.AnySchema>(),
     },
     (state, [key, input]) => {
       const field = Field.from(input);
+      if (field.meta.version && VariantSchema.isField(field.schema)) {
+        throw ModelInvariantError.make({
+          message: `Version field '${key}' cannot use an explicit VariantSchema.Field.`,
+          fieldName: key,
+        });
+      }
       const select = Derive.selectSchemaOf(field.schema);
       const classified = match(fromUndefinedOr(field.meta.column), {
         onNone: () => Derive.classify(field.schema, key),
@@ -479,6 +563,7 @@ export function makeModelClass(
           fieldName: key,
         });
       }
+      validateLiteralDefault(field, select, classified.column, key);
       const resolved = Meta.merge(field.meta, {
         column: classified.column,
         references: resolveReferences(field.meta, select, key),
@@ -487,6 +572,7 @@ export function makeModelClass(
         columns: set(state.columns, key, resolved),
         primaryKeys: state.primaryKeys + (field.meta.primaryKey ? 1 : 0),
         versionFields: state.versionFields + (field.meta.version ? 1 : 0),
+        ordinaryColumns: state.ordinaryColumns + (field.meta.generated === false ? 1 : 0),
         schemaFields: set(state.schemaFields, key, effectiveSchema(field.schema, resolved)),
       };
     },
@@ -494,6 +580,12 @@ export function makeModelClass(
   if (state.primaryKeys > 1) {
     throw ModelInvariantError.make({
       message: `Model '${identifier}' declares multiple inline primary keys.`,
+      fieldName: "(model)",
+    });
+  }
+  if (state.ordinaryColumns === 0) {
+    throw ModelInvariantError.make({
+      message: `SQLite model '${identifier}' must declare at least one non-generated column.`,
       fieldName: "(model)",
     });
   }
@@ -542,7 +634,9 @@ export function makeModelClass(
  * @category factories
  * @since 0.0.0
  */
-export function Model<Self = never>(identifier: string): <const F extends FieldsInput>(
+export function Model<Self = never, const Identifier extends string = string>(
+  identifier: Identifier & ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid SQLite table name">,
+): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
   annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>,
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>;

@@ -75,6 +75,7 @@ import type * as Meta from "../core/Meta.ts";
 import { assignStatics } from "../internal/statics.ts";
 
 /** Descriptor-construction failure at an author-input seam. */
+/** @internal */
 export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/ColumnInvariantError",
 )(
@@ -86,15 +87,19 @@ export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
 ) {}
 
 /** PostgreSQL identity-generation mode. */
+/** @internal */
 export type IdentityMode = Meta.IdentityMode;
 
 /** PostgreSQL scalar or array depth. */
+/** @internal */
 export type ArrayDimension = Meta.ArrayDimension;
 
 /** Drizzle-supported PostgreSQL array suffix. */
+/** @internal */
 export type ArrayDimensionString = "[]" | "[][]" | "[][][]" | "[][][][]" | "[][][][][]";
 
 /** Numeric array depth represented by a suffix. */
+/** @internal */
 export type DimensionOf<Suffix extends ArrayDimensionString> = Suffix extends "[]"
   ? 1
   : Suffix extends "[][]"
@@ -106,6 +111,7 @@ export type DimensionOf<Suffix extends ArrayDimensionString> = Suffix extends "[
         : 5;
 
 /** Common builder surface used by centralized modifier projection. */
+/** @internal */
 export interface DrizzleBuilder extends AnyPgColumnBuilder {
   notNull(): DrizzleBuilder;
   primaryKey(): DrizzleBuilder;
@@ -123,9 +129,11 @@ const applyIdentity = (
   kind === "always" ? builder.generatedAlwaysAsIdentity() : builder.generatedByDefaultAsIdentity();
 
 /** Storage identity for a number-encoded entity id. */
+/** @internal */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
 
 /** Storage identities supported by the PostgreSQL implementation. */
+/** @internal */
 export type DbIdent =
   | "text"
   | "varchar"
@@ -234,15 +242,19 @@ type SpecDefinition = {
 };
 
 /** Complete internal PostgreSQL descriptor algebra. */
+/** @internal */
 export type Spec = TaggedEnum<SpecDefinition>;
 
+/** @internal */
 export type Text = Extract<Spec, { readonly _tag: "text" }>;
+/** @internal */
 export type Varchar<L extends number = number> = Omit<
   Extract<Spec, { readonly _tag: "varchar" }>,
   "length"
 > & {
   readonly length: L;
 };
+/** @internal */
 export type Enum<Name extends string = string, Value extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "enum" }>,
   "ident" | "name" | "values"
@@ -251,10 +263,12 @@ export type Enum<Name extends string = string, Value extends string = string> = 
   readonly name: Name;
   readonly values: readonly [Value, ...Value[]];
 };
+/** @internal */
 export type Custom<SqlType extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "custom" }>,
   "ident" | "sqlType"
 > & { readonly ident: `custom<${SqlType}>`; readonly sqlType: SqlType };
+/** @internal */
 export type Numeric<
   Precision extends number | undefined = number | undefined,
   Scale extends number | undefined = number | undefined,
@@ -262,44 +276,59 @@ export type Numeric<
   readonly precision: Precision;
   readonly scale: Scale;
 };
+/** @internal */
 export type DateColumn<Mode extends "string" | "date" = "string" | "date"> = Omit<
   Extract<Spec, { readonly _tag: "date" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
+/** @internal */
 export type Char<Length extends number = number> = Omit<
   Extract<Spec, { readonly _tag: "char" }>,
   "length"
 > & {
   readonly length: Length;
 };
+/** @internal */
 export type Json = Extract<Spec, { readonly _tag: "json" }>;
+/** @internal */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
+/** @internal */
 export type Bigserial<Mode extends "number" | "bigint" = "number" | "bigint"> = Omit<
   Extract<Spec, { readonly _tag: "bigserial" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
+/** @internal */
 export type Smallserial = Extract<Spec, { readonly _tag: "smallserial" }>;
+/** @internal */
 export type Uuid = Extract<Spec, { readonly _tag: "uuid" }>;
+/** @internal */
 export type Integer<
   Ident extends "integer" | EntityIdIdent<string> = "integer" | EntityIdIdent<string>,
 > = Omit<Extract<Spec, { readonly _tag: "integer" }>, "ident"> & {
   readonly ident: Ident;
 };
+/** @internal */
 export type Smallint = Extract<Spec, { readonly _tag: "smallint" }>;
+/** @internal */
 export type Bigint<Mode extends "number" | "bigint" = "number" | "bigint"> = Omit<
   Extract<Spec, { readonly _tag: "bigint" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
+/** @internal */
 export type Serial = Extract<Spec, { readonly _tag: "serial" }>;
+/** @internal */
 export type DoublePrecision = Extract<Spec, { readonly _tag: "doublePrecision" }>;
+/** @internal */
 export type Bool = Extract<Spec, { readonly _tag: "boolean" }>;
+/** @internal */
 export type Jsonb = Extract<Spec, { readonly _tag: "jsonb" }>;
+/** @internal */
 export type Timestamp<
   Mode extends "date" | "string" = "date" | "string",
   Timezone extends boolean = boolean,
@@ -308,22 +337,26 @@ export type Timestamp<
   readonly mode: Mode;
   readonly withTimezone: Timezone;
 };
+/** @internal */
 export type Bytea = Extract<Spec, { readonly _tag: "bytea" }>;
 
-const Constructors = taggedEnum<Spec>();
+const Constructors = /* @__PURE__ */ taggedEnum<Spec>();
 
 const isPositiveInteger = (value: unknown): value is number =>
   isNumber(value) && Number.isInteger(value) && value > 0;
-const isNatural = (value: unknown): value is number =>
-  isNumber(value) && Number.isInteger(value) && value >= 0;
+const isPgNumericScale = (value: unknown): value is number =>
+  isNumber(value) && Number.isInteger(value) && value >= -1_000 && value <= 1_000;
 const invariant = (message: string): never => {
   throw ColumnInvariantError.make({ message });
 };
 const requireLength = (length: number): number =>
-  isPositiveInteger(length) ? length : invariant("Column length must be a positive integer.");
+  isPositiveInteger(length) && length <= 10_485_760
+    ? length
+    : invariant("PostgreSQL character length must be an integer from 1 through 10,485,760.");
 
 const makeText = (): Text => Constructors.text({ dialect: "pg", kind: "text", ident: "text" });
-export const Text = assignStatics(
+/** @internal */
+export const Text = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => makeText() },
   { toDrizzleBuilder: (_spec: Text, name: string) => text(name) },
 );
@@ -339,7 +372,8 @@ function makeVarchar(props: { readonly length: number }): Varchar {
     length: requireLength(props.length),
   });
 }
-export const Varchar = assignStatics(
+/** @internal */
+export const Varchar = /* @__PURE__ */ assignStatics(
   { make: makeVarchar },
   {
     toDrizzleBuilder: ({ length }: Varchar, name: string) => varchar(name, { length }),
@@ -361,8 +395,10 @@ function makeEnum(props: {
   }
   return Constructors.enum({ dialect: "pg", kind: "enum", ...props });
 }
+/** @internal */
 export type EnumInstance = PgEnum<[string, ...string[]]>;
-export const Enum = assignStatics(
+/** @internal */
+export const Enum = /* @__PURE__ */ assignStatics(
   { make: makeEnum },
   {
     toDrizzleBuilder: (spec: Enum, name: string, shared?: EnumInstance): DrizzleBuilder =>
@@ -384,10 +420,12 @@ function makeCustom(props: {
   }
   return Constructors.custom({ dialect: "pg", kind: "custom", ...props });
 }
+/** @internal */
 export type CustomBuilder = ReturnType<
   ReturnType<typeof customType<{ data: unknown; driverData: unknown }>>
 >;
-export const Custom = assignStatics(
+/** @internal */
+export const Custom = /* @__PURE__ */ assignStatics(
   { make: makeCustom },
   {
     toDrizzleBuilder: ({ sqlType }: Custom, name: string): DrizzleBuilder =>
@@ -406,14 +444,17 @@ function makeNumeric(props: {
   readonly scale: number | undefined;
 }): Numeric {
   if (
-    (isNumber(props.precision) && !isPositiveInteger(props.precision)) ||
-    (isNumber(props.scale) && !isNatural(props.scale))
+    (isNumber(props.precision) && (!isPositiveInteger(props.precision) || props.precision > 1_000)) ||
+    (isNumber(props.scale) && !isPgNumericScale(props.scale))
   ) {
-    return invariant("Numeric precision must be positive and scale natural.");
+    return invariant(
+      "PostgreSQL numeric precision must be from 1 through 1,000 and scale from -1,000 through 1,000.",
+    );
   }
   return Constructors.numeric({ dialect: "pg", kind: "numeric", ident: "numeric", ...props });
 }
-export const Numeric = assignStatics(
+/** @internal */
+export const Numeric = /* @__PURE__ */ assignStatics(
   { make: makeNumeric },
   {
     toDrizzleBuilder: ({ precision, scale }: Numeric, name: string): PgNumericBuilder =>
@@ -439,7 +480,8 @@ function makeDate<const Mode extends "string" | "date">(props: {
 function makeDate(props: { readonly mode: "string" | "date" }): DateColumn {
   return Constructors.date({ dialect: "pg", kind: "date", ident: "date", ...props });
 }
-export const DateColumn = assignStatics(
+/** @internal */
+export const DateColumn = /* @__PURE__ */ assignStatics(
   { make: makeDate },
   {
     toDrizzleBuilder: ({ mode }: DateColumn, name: string): DrizzleBuilder =>
@@ -456,40 +498,61 @@ function makeChar(props: { readonly length: number }): Char {
     length: requireLength(props.length),
   });
 }
-export const Char = assignStatics(
+/** @internal */
+export const Char = /* @__PURE__ */ assignStatics(
   { make: makeChar },
   {
     toDrizzleBuilder: ({ length }: Char, name: string): PgCharBuilder => char(name, { length }),
   },
 );
 
-const fixed = {
-  Json: Constructors.json({ dialect: "pg", kind: "json", ident: "json" }),
-  Real: Constructors.real({ dialect: "pg", kind: "real", ident: "real" }),
-  Smallserial: Constructors.smallserial({
-    dialect: "pg",
-    kind: "smallserial",
-    ident: "smallint",
-  }),
-  Uuid: Constructors.uuid({ dialect: "pg", kind: "uuid", ident: "uuid" }),
-  Smallint: Constructors.smallint({ dialect: "pg", kind: "smallint", ident: "smallint" }),
-  Serial: Constructors.serial({ dialect: "pg", kind: "serial", ident: "integer" }),
-  DoublePrecision: Constructors.doublePrecision({
-    dialect: "pg",
-    kind: "doublePrecision",
-    ident: "doublePrecision",
-  }),
-  Bool: Constructors.boolean({ dialect: "pg", kind: "boolean", ident: "boolean" }),
-  Jsonb: Constructors.jsonb({ dialect: "pg", kind: "jsonb", ident: "jsonb" }),
-  Bytea: Constructors.bytea({ dialect: "pg", kind: "bytea", ident: "bytea" }),
-};
+const fixedJson = /* @__PURE__ */ Constructors.json({ dialect: "pg", kind: "json", ident: "json" });
+const fixedReal = /* @__PURE__ */ Constructors.real({ dialect: "pg", kind: "real", ident: "real" });
+const fixedSmallserial = /* @__PURE__ */ Constructors.smallserial({
+  dialect: "pg",
+  kind: "smallserial",
+  ident: "smallint",
+});
+const fixedUuid = /* @__PURE__ */ Constructors.uuid({ dialect: "pg", kind: "uuid", ident: "uuid" });
+const fixedSmallint = /* @__PURE__ */ Constructors.smallint({
+  dialect: "pg",
+  kind: "smallint",
+  ident: "smallint",
+});
+const fixedSerial = /* @__PURE__ */ Constructors.serial({
+  dialect: "pg",
+  kind: "serial",
+  ident: "integer",
+});
+const fixedDoublePrecision = /* @__PURE__ */ Constructors.doublePrecision({
+  dialect: "pg",
+  kind: "doublePrecision",
+  ident: "doublePrecision",
+});
+const fixedBool = /* @__PURE__ */ Constructors.boolean({
+  dialect: "pg",
+  kind: "boolean",
+  ident: "boolean",
+});
+const fixedJsonb = /* @__PURE__ */ Constructors.jsonb({
+  dialect: "pg",
+  kind: "jsonb",
+  ident: "jsonb",
+});
+const fixedBytea = /* @__PURE__ */ Constructors.bytea({
+  dialect: "pg",
+  kind: "bytea",
+  ident: "bytea",
+});
 
-export const Json = assignStatics(
-  { make: (_props: {}) => fixed.Json },
+/** @internal */
+export const Json = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedJson },
   { toDrizzleBuilder: (_spec: Json, name: string): PgJsonBuilder => json(name) },
 );
-export const Real = assignStatics(
-  { make: (_props: {}) => fixed.Real },
+/** @internal */
+export const Real = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedReal },
   { toDrizzleBuilder: (_spec: Real, name: string): PgRealBuilder => real(name) },
 );
 
@@ -504,7 +567,8 @@ function makeBigserial(props: { readonly mode: "number" | "bigint" }): Bigserial
     ...props,
   });
 }
-export const Bigserial = assignStatics(
+/** @internal */
+export const Bigserial = /* @__PURE__ */ assignStatics(
   { make: makeBigserial },
   {
     toDrizzleBuilder: (
@@ -514,14 +578,16 @@ export const Bigserial = assignStatics(
       mode === "number" ? bigserial(name, { mode: "number" }) : bigserial(name, { mode: "bigint" }),
   },
 );
-export const Smallserial = assignStatics(
-  { make: (_props: {}) => fixed.Smallserial },
+/** @internal */
+export const Smallserial = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedSmallserial },
   {
     toDrizzleBuilder: (_spec: Smallserial, name: string): PgSmallSerialBuilder => smallserial(name),
   },
 );
-export const Uuid = assignStatics(
-  { make: (_props: {}) => fixed.Uuid },
+/** @internal */
+export const Uuid = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedUuid },
   { toDrizzleBuilder: (_spec: Uuid, name: string) => uuid(name) },
 );
 
@@ -531,7 +597,8 @@ function makeInteger<const Ident extends "integer" | EntityIdIdent<string>>(prop
 function makeInteger(props: { readonly ident: "integer" | EntityIdIdent<string> }): Integer {
   return Constructors.integer({ dialect: "pg", kind: "integer", ...props });
 }
-export const Integer = assignStatics(
+/** @internal */
+export const Integer = /* @__PURE__ */ assignStatics(
   { make: makeInteger },
   {
     toDrizzleBuilder: (
@@ -544,8 +611,9 @@ export const Integer = assignStatics(
     },
   },
 );
-export const Smallint = assignStatics(
-  { make: (_props: {}) => fixed.Smallint },
+/** @internal */
+export const Smallint = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedSmallint },
   {
     toDrizzleBuilder: (
       _spec: Smallint,
@@ -564,7 +632,8 @@ function makeBigint<const Mode extends "number" | "bigint">(props: {
 function makeBigint(props: { readonly mode: "number" | "bigint" }): Bigint {
   return Constructors.bigint({ dialect: "pg", kind: "bigint", ident: "bigint", ...props });
 }
-export const Bigint = assignStatics(
+/** @internal */
+export const Bigint = /* @__PURE__ */ assignStatics(
   { make: makeBigint },
   {
     toDrizzleBuilder: (
@@ -581,22 +650,26 @@ export const Bigint = assignStatics(
           : applyIdentity(bigint(name, { mode: "bigint" }), identity),
   },
 );
-export const Serial = assignStatics(
-  { make: (_props: {}) => fixed.Serial },
+/** @internal */
+export const Serial = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedSerial },
   { toDrizzleBuilder: (_spec: Serial, name: string) => serial(name) },
 );
-export const DoublePrecision = assignStatics(
-  { make: (_props: {}) => fixed.DoublePrecision },
+/** @internal */
+export const DoublePrecision = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedDoublePrecision },
   {
     toDrizzleBuilder: (_spec: DoublePrecision, name: string) => doublePrecision(name),
   },
 );
-export const Bool = assignStatics(
-  { make: (_props: {}) => fixed.Bool },
+/** @internal */
+export const Bool = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedBool },
   { toDrizzleBuilder: (_spec: Bool, name: string) => boolean(name) },
 );
-export const Jsonb = assignStatics(
-  { make: (_props: {}) => fixed.Jsonb },
+/** @internal */
+export const Jsonb = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedJsonb },
   { toDrizzleBuilder: (_spec: Jsonb, name: string) => jsonb(name) },
 );
 
@@ -619,7 +692,8 @@ function makeTimestamp(props: {
   }
   return Constructors.timestamp({ dialect: "pg", kind: "timestamp", ...props });
 }
-export const Timestamp = assignStatics(
+/** @internal */
+export const Timestamp = /* @__PURE__ */ assignStatics(
   { make: makeTimestamp },
   {
     toDrizzleBuilder: ({ mode, withTimezone }: Timestamp, name: string): DrizzleBuilder =>
@@ -628,8 +702,9 @@ export const Timestamp = assignStatics(
         : timestamp(name, { mode: "string", withTimezone }),
   },
 );
-export const Bytea = assignStatics(
-  { make: (_props: {}) => fixed.Bytea },
+/** @internal */
+export const Bytea = /* @__PURE__ */ assignStatics(
+  { make: (_props: {}) => fixedBytea },
   { toDrizzleBuilder: (_spec: Bytea, name: string) => bytea(name) },
 );
 
@@ -658,6 +733,7 @@ const knownTags: ReadonlyArray<Spec["_tag"]> = [
 ];
 
 /** Cheap full-enough shape guard for hand-built author descriptors. */
+/** @internal */
 export const isSpec = (value: unknown): value is Spec => {
   if (
     !hasProperty(value, "_tag") ||
@@ -673,8 +749,14 @@ export const isSpec = (value: unknown): value is Spec => {
     return false;
   }
   return matchValue(value._tag).pipe(
-    matchWhen("varchar", () => hasProperty(value, "length") && isPositiveInteger(value.length)),
-    matchWhen("char", () => hasProperty(value, "length") && isPositiveInteger(value.length)),
+    matchWhen(
+      "varchar",
+      () => hasProperty(value, "length") && isPositiveInteger(value.length) && value.length <= 10_485_760,
+    ),
+    matchWhen(
+      "char",
+      () => hasProperty(value, "length") && isPositiveInteger(value.length) && value.length <= 10_485_760,
+    ),
     matchWhen(
       "enum",
       () =>
@@ -697,9 +779,10 @@ export const isSpec = (value: unknown): value is Spec => {
       "numeric",
       () =>
         hasProperty(value, "precision") &&
-        (isUndefined(value.precision) || isPositiveInteger(value.precision)) &&
+        (isUndefined(value.precision) ||
+          (isPositiveInteger(value.precision) && value.precision <= 1_000)) &&
         hasProperty(value, "scale") &&
-        (isUndefined(value.scale) || isNatural(value.scale)),
+        (isUndefined(value.scale) || isPgNumericScale(value.scale)),
     ),
     matchWhen(
       "date",
@@ -726,13 +809,13 @@ export const isSpec = (value: unknown): value is Spec => {
   );
 };
 
-const fromLiteralAST = matchType<Literal>().pipe(
+const fromLiteralAST = /* @__PURE__ */ (() => matchType<Literal>().pipe(
   withReturnType<Option<Spec>>(),
   matchWhen(StructPredicate({ literal: isString }), () => someOption(Text.make({}))),
   matchWhen(StructPredicate({ literal: isNumber }), () => someOption(DoublePrecision.make({}))),
   matchWhen(StructPredicate({ literal: isBoolean }), () => someOption(Bool.make({}))),
   matchOrElse(() => none()),
-);
+))();
 
 const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option<Spec> => {
   if (someArray(visited, equals(node))) return none();
@@ -753,7 +836,7 @@ const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option
   )(node);
 };
 
-const toDrizzleBuilder = dual<
+const toDrizzleBuilder = /* @__PURE__ */ dual<
   (name: string, identity?: IdentityMode) => (spec: Spec) => DrizzleBuilder,
   (spec: Spec, name: string, identity?: IdentityMode) => DrizzleBuilder
 >(
@@ -785,7 +868,8 @@ const toDrizzleBuilder = dual<
 );
 
 /** Matching, guards, and compilation statics for the union. */
-export const Spec = {
+/** @internal */
+export const Spec = /* @__PURE__ */ (() => ({
   $is: Constructors.$is,
   $match: Constructors.$match,
   is: isSpec,
@@ -815,36 +899,45 @@ export const Spec = {
   match: Constructors.$match,
   fromSchemaAST,
   toDrizzleBuilder,
-};
+}))();
 
 /** Resolve a field-derived enum name without widening its literals. */
+/** @internal */
 export type ResolveName<C extends Spec, Key extends string> =
   C extends Enum<"", infer Value> ? Enum<Key, Value> : C;
 
+/** @internal */
 export function resolveName<C extends Spec, const Key extends string>(
   spec: C,
   key: Key,
 ): ResolveName<C, Key>;
+/** @internal */
 export function resolveName(spec: Spec, key: string): Spec {
   return Spec.guards.enum(spec) && spec.name === ""
     ? Enum.make({ name: key, ident: `enum<${key}>`, values: spec.values })
     : spec;
 }
 
+/** @internal */
 export type Kind = Spec["kind"];
+/** @internal */
 export type IdentOf<C extends Spec> = C["ident"];
+/** @internal */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Dimensions extends 0
   ? IdentOf<C>
   : `array<${IdentOf<C>},${Dimensions}>`;
 
+/** @internal */
 export function storageIdent<C extends Spec, D extends ArrayDimension>(
   spec: C,
   dimensions: D,
 ): StorageIdent<C, D>;
+/** @internal */
 export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
   return dimensions === 0 ? spec.ident : `array<${spec.ident},${dimensions}>`;
 }
 
+/** @internal */
 export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimensions extends 0
   ? Carrier
   : Dimensions extends 1
@@ -857,16 +950,28 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimension
           ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
           : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>;
 
+/** @internal */
 export type IdentEquals<A extends Spec, B extends Spec> = [IdentOf<A>] extends [IdentOf<B>]
   ? [IdentOf<B>] extends [IdentOf<A>]
     ? true
     : false
   : false;
 
+/** @internal */
 export type IdentityKind = "integer" | "smallint" | "bigint";
+/** @internal */
 export const isIdentityKind = (value: unknown): value is IdentityKind =>
   value === "integer" || value === "smallint" || value === "bigint";
 
+/** Test whether a descriptor is an integer-family column encoded as `number`. @internal */
+export const isNumberInteger = (
+  spec: Spec,
+): spec is Integer | Smallint | Bigint<"number"> =>
+  Spec.guards.integer(spec) ||
+  Spec.guards.smallint(spec) ||
+  (Spec.guards.bigint(spec) && spec.mode === "number");
+
+/** @internal */
 export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid | Enum | Char | Numeric
   ? string
   : C extends
@@ -903,6 +1008,7 @@ export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid | Enum |
                     ? unknown
                     : never;
 
+/** @internal */
 export type CarrierTag =
   | "string"
   | "number"
@@ -913,11 +1019,13 @@ export type CarrierTag =
   | "bytes"
   | "unknown";
 
+/** @internal */
 export interface Carrier {
   readonly tag: CarrierTag;
   readonly dimensions: ArrayDimension;
 }
 
+/** @internal */
 export const carrierTag = (spec: Spec): CarrierTag => {
   const string = (): CarrierTag => "string";
   const number = (): CarrierTag => "number";
@@ -946,6 +1054,7 @@ export const carrierTag = (spec: Spec): CarrierTag => {
   });
 };
 
+/** @internal */
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => ({
   tag: carrierTag(spec),
   dimensions,

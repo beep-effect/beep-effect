@@ -25,6 +25,8 @@ import {
   append,
   empty,
   every,
+  findFirst,
+  isArray,
   isReadonlyArrayEmpty,
   match as matchArray,
   min,
@@ -35,20 +37,44 @@ import { constFalse, constTrue } from "effect/Function";
 import { Order as NumberOrder } from "effect/Number";
 import { fromUndefinedOr, getOrElse, isSome, match as matchOption } from "effect/Option";
 import { isString, isUndefined } from "effect/Predicate";
-import { NonEmptyString, flip, is, isMaxLength } from "effect/Schema";
+import {
+  flip,
+  Finite,
+  is,
+  isBetween,
+  isInt,
+  isInt32,
+  isLengthBetween,
+  isMaxLength,
+  isStringFinite,
+  isUUID,
+  makeFilter,
+  String as StringSchema,
+} from "effect/Schema";
 import type { Schema, Top } from "effect/Schema";
+import type { Check } from "effect/SchemaAST";
 import { toType } from "effect/SchemaAST";
 import type { AST, Suspend } from "effect/SchemaAST";
 import { VariantSchema } from "effect/unstable/schema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
+import { ModelInvariantError } from "../core/model.ts";
+import { factory as V } from "../core/variant.ts";
+import {
+  assertPgEnumLabel,
+  assertSqlName,
+  type ValidateSqlName,
+} from "../core/names.ts";
 import * as PgColumn from "./Column.ts";
+import { assignStatics } from "../internal/statics.ts";
 import {
   DeriveColumnError,
   arrayElementAST,
-  encodedAST,
+  carrier as schemaCarrier,
+  exactLengths,
   isEntityIdLike,
   maxLengths,
+  selectSchemaOf,
   stringLiteralValues,
   type EntityIdLike,
 } from "./derive.ts";
@@ -75,6 +101,76 @@ const isStringTypeAst = (node: AST, visited: ReadonlyArray<Suspend> = empty()): 
 
 const isStringTypeSchema = (schema: Top): schema is Schema<string> =>
   isStringTypeAst(toType(schema.ast));
+
+const evolveSchemas = (
+  schema: Field.AnySchema,
+  evolve: (current: Top) => Top,
+): Field.AnySchema =>
+  VariantSchema.isField(schema)
+    ? V.fieldEvolve(schema, {
+        select: evolve,
+        insert: evolve,
+        update: evolve,
+        json: evolve,
+        jsonCreate: evolve,
+        jsonUpdate: evolve,
+      })
+    : evolve(schema);
+
+function injectNumberChecks<I extends Field.Input>(
+  input: I,
+  checks: readonly [Check<number>, ...Array<Check<number>>],
+): Field.Field<Field.SchemaFrom<I>, Field.MetaFrom<I>>;
+function injectNumberChecks(
+  input: Field.Input,
+  checks: readonly [Check<number>, ...Array<Check<number>>],
+): Field.Any {
+  const field = Field.from(input);
+  const accepts = is(Finite.check(...checks));
+  const evolved = evolveSchemas(field.schema, (schema) => {
+    const encoded = flip(schema);
+    return flip(
+      encoded.check(
+        makeFilter<unknown>((value) => value === null || accepts(value), {
+          identifier: "@beep/effect-drizzle/PgIntegerDomain",
+          title: "PostgreSQL integer domain",
+          description: "Mirrors a PostgreSQL integer-family value range on the encoded schema.",
+          message: "The encoded value is outside the PostgreSQL integer-family domain.",
+        }),
+      ),
+    );
+  });
+  const preserved = isEntityIdLike(field.schema)
+    ? assignStatics(evolved, {
+        tableName: field.schema.tableName,
+        entityType: field.schema.entityType,
+      })
+    : evolved;
+  return Field.make(preserved, field.meta);
+}
+
+function injectStringCheck<I extends Field.Input>(
+  input: I,
+  check: Check<string>,
+): Field.Field<Field.SchemaFrom<I>, Field.MetaFrom<I>>;
+function injectStringCheck(input: Field.Input, check: Check<string>): Field.Any {
+  const field = Field.from(input);
+  const accepts = is(StringSchema.check(check));
+  const evolved = evolveSchemas(field.schema, (schema) => {
+    const encoded = flip(schema);
+    return flip(
+      encoded.check(
+        makeFilter<unknown>((value) => value === null || accepts(value), {
+          identifier: "@beep/effect-drizzle/PgStringDomain",
+          title: "PostgreSQL string domain",
+          description: "Mirrors an installed Effect string-format check on the encoded schema.",
+          message: "The encoded string is outside the PostgreSQL value domain.",
+        }),
+      ),
+    );
+  });
+  return Field.make(evolved, field.meta);
+}
 
 /**
  * Set an unbounded PostgreSQL text column on a string-encoded schema.
@@ -136,6 +232,59 @@ const boundedString = (
         return Field.make(evolved, Meta.merge(f.meta, { column: spec(resolvedLength) }));
       }
       return Field.patch(f, { column: spec(resolvedLength) });
+    },
+  });
+};
+
+const fixedString = (input: Field.Input, length: number | undefined): Field.Any => {
+  const field = Field.from(input);
+  const lengths = exactLengths(field.schema);
+  return matchOption(fromUndefinedOr(length), {
+    onNone: () =>
+      matchArray(lengths, {
+        onEmpty: () => {
+          throw DeriveColumnError.make({
+            message: "pg.char() derive mode requires an isLengthBetween(n, n) check on the schema; add one or pass an explicit length.",
+            fieldName: "(unknown — set at model definition)",
+            astTag: "(checks)",
+          });
+        },
+        onNonEmpty: (nonEmptyLengths) =>
+          Field.patch(field, {
+            column: PgColumn.Char.make({ length: min(nonEmptyLengths, NumberOrder) }),
+          }),
+      }),
+    onSome: (resolvedLength) => {
+      if (isSome(findFirst(lengths, (current) => current !== resolvedLength))) {
+        throw DeriveColumnError.make({
+          message: `pg.char(${resolvedLength}) requires an exact schema length of ${resolvedLength}.`,
+          fieldName: "(unknown — set at model definition)",
+          astTag: "(checks)",
+        });
+      }
+      if (isReadonlyArrayEmpty(lengths)) {
+        if (VariantSchema.isField(field.schema)) {
+          throw DeriveColumnError.make({
+            message: `pg.char(${resolvedLength}) cannot inject an exact-length check into an explicit VariantSchema.Field.`,
+            fieldName: "(unknown — set at model definition)",
+            astTag: "VariantField",
+          });
+        }
+        const encodedSchema = flip(field.schema);
+        if (!isStringTypeSchema(encodedSchema)) {
+          throw DeriveColumnError.make({
+            message: `pg.char(${resolvedLength}) can inject an exact-length check only when the encoded schema is string-valued.`,
+            fieldName: "(unknown — set at model definition)",
+            astTag: toType(encodedSchema.ast)._tag,
+          });
+        }
+        const evolved = flip(encodedSchema.check(isLengthBetween(resolvedLength, resolvedLength)));
+        return Field.make(
+          evolved,
+          Meta.merge(field.meta, { column: PgColumn.Char.make({ length: resolvedLength }) }),
+        );
+      }
+      return Field.patch(field, { column: PgColumn.Char.make({ length: resolvedLength }) });
     },
   });
 };
@@ -217,6 +366,10 @@ type EnumValue<I extends Field.Input> = Extract<Exclude<Field.EncodedOf<I>, null
  *
  * Omitting the name is safe only inside model construction, where the field key
  * resolves it. Assembly requires repeated enum names to use identical values.
+ * Duplicate literals collapse in first-occurrence order; literals containing
+ * NUL (U+0000) are rejected loudly. The empty string is a legal enum label; if
+ * it is intended to mean absence, model absence explicitly with
+ * `OptionFromNullOr(...)` so the encoded database value is `NULL`.
  *
  * **Example** (Set a named enum)
  *
@@ -235,7 +388,7 @@ export function enum_(): <I extends Field.Input>(
   input: I & ValidateEnum<I>,
 ) => Field.Patched<I, { readonly column: PgColumn.Enum<"", EnumValue<I>> }>;
 export function enum_<const Name extends string>(
-  name: Name,
+  name: Name & ValidateSqlName<Name, "pg.enum name must be a lowercase SQL identifier">,
 ): <I extends Field.Input>(
   input: I & ValidateEnum<I>,
 ) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>> }>;
@@ -248,14 +401,9 @@ export function enum_(name?: string): unknown {
         astTag: "(encoded literals)",
       });
     });
+    values.forEach(assertPgEnumLabel);
     const explicitName = fromUndefinedOr(name);
-    if (isSome(explicitName) && !is(NonEmptyString)(explicitName.value)) {
-      throw DeriveColumnError.make({
-        message: "pg.enum name must be non-empty when supplied explicitly.",
-        fieldName: "(unknown — set at model definition)",
-        astTag: "(enum name)",
-      });
-    }
+    if (isSome(explicitName)) assertSqlName(explicitName.value, "pg", "PostgreSQL enum name");
     const resolvedName = getOrElse(explicitName, () => "");
     return Field.patch(input, {
       column: PgColumn.Enum.make({
@@ -312,6 +460,8 @@ export const unsafeCustom =
  *
  * Precision and scale are optional Drizzle configuration; string encoding
  * avoids narrowing arbitrary-precision decimal values to JavaScript numbers.
+ * The encoded schema gains Effect v4's `isStringFinite` check
+ * (`node_modules/effect/src/Schema.ts`, `isStringFinite`, lines 6765-6768).
  *
  * **Example** (Set numeric precision and scale)
  *
@@ -341,7 +491,7 @@ export function numeric<const Precision extends number, const Scale extends numb
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale> }>;
 export function numeric(precision?: number, scale?: number): unknown {
   return (input: Field.Input): Field.Any =>
-    Field.patch(input, {
+    Field.patch(injectStringCheck(input, isStringFinite()), {
       column: PgColumn.Numeric.make({ precision, scale }),
     });
 }
@@ -353,6 +503,14 @@ export function numeric(precision?: number, scale?: number): unknown {
  *
  * Use with string mode for ISO date carriers and date mode only when the encoded
  * schema deliberately exposes JavaScript `Date` values to the driver.
+ *
+ * **Gotchas**
+ *
+ * String mode is carrier-only: installed Effect v4 exposes `DateFromString` as
+ * a transformation, not a reusable encoded-string format check
+ * (`node_modules/effect/src/Schema.ts`, `DateFromString`, lines 11851-11885).
+ * Supply a validating schema when PostgreSQL date syntax must be rejected
+ * before insertion.
  *
  * **Example** (Set string date mode)
  *
@@ -388,7 +546,7 @@ export function date(options?: { readonly mode: "date" }): unknown {
 }
 
 /**
- * Sets a fixed-width PostgreSQL char column with varchar-style length authoring.
+ * Sets a fixed-width PostgreSQL char column with exact-length authoring.
  *
  * **When to use**
  *
@@ -396,16 +554,21 @@ export function date(options?: { readonly mode: "date" }): unknown {
  *
  * **Details**
  *
- * Omitted length derives the tightest schema maximum, while an explicit length
- * verifies or injects the matching schema bound under the same rules as `varchar`.
+ * Omitted length derives an `isLengthBetween(n, n)` check. An explicit length
+ * verifies or injects that exact check.
+ *
+ * **Gotchas**
+ *
+ * PostgreSQL blank-pads shorter `char(n)` values. Exact-length validation keeps
+ * valid encoded values stable across a database round trip.
  *
  * **Example** (Derive a char length)
  *
  * ```ts
- * import { String, isMaxLength } from "effect/Schema"
+ * import { String, isLengthBetween } from "effect/Schema"
  * import { char } from "@beep/effect-drizzle/pg"
  *
- * String.check(isMaxLength(2)).pipe(char()).meta.column?.kind // => "char"
+ * String.check(isLengthBetween(2, 2)).pipe(char()).meta.column?.kind // => "char"
  * ```
  *
  * @category combinators
@@ -420,8 +583,7 @@ export function char<const Length extends number>(
   input: I & Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Char<Length> }>;
 export function char(length?: number): unknown {
-  return (input: Field.Input): Field.Any =>
-    boundedString(input, length, "char", (resolved) => PgColumn.Char.make({ length: resolved }));
+  return (input: Field.Input): Field.Any => fixedString(input, length);
 }
 
 /**
@@ -555,6 +717,11 @@ export const smallserial =
 /**
  * Set a PostgreSQL UUID column on a string-encoded schema.
  *
+ * **Details**
+ *
+ * Plain string schemas gain Effect v4's UUID format check
+ * (`node_modules/effect/src/Schema.ts`, `isUUID`, lines 6913-6925).
+ *
  * **Example** (Set a UUID column)
  *
  * ```ts
@@ -572,7 +739,7 @@ export const uuid =
   <I extends Field.Input>(
     input: I & Field.ValidateEncoded<I, string, "pg.uuid requires a string-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Uuid }> =>
-    Field.patch(input, { column: PgColumn.Uuid.make({}) });
+    Field.patch(injectStringCheck(input, isUUID()), { column: PgColumn.Uuid.make({}) });
 
 type IntegerColumn<I extends Field.Input> =
   Field.SchemaFrom<I> extends EntityIdLike & {
@@ -587,7 +754,8 @@ type IntegerColumn<I extends Field.Input> =
  * **Details**
  *
  * EntityId schemas retain an `entityId<...>` identity for foreign-key equality;
- * ordinary number schemas use the plain `integer` identity.
+ * ordinary number schemas use the plain `integer` identity. Both plain and
+ * variant fields gain PostgreSQL's signed 32-bit value-domain check.
  *
  * **Example** (Set an integer column)
  *
@@ -606,17 +774,22 @@ export const integer = () => {
     input: I & Field.ValidateEncoded<I, number, "pg.integer requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: IntegerColumn<I> }>;
   function apply(input: Field.Input): Field.Any {
-    const schema = Field.from(input).schema;
+    const bounded = injectNumberChecks(input, [isInt32()]);
+    const schema = bounded.schema;
     const ident: "integer" | PgColumn.EntityIdIdent<string> = isEntityIdLike(schema)
       ? `entityId<"${schema.tableName}">`
       : "integer";
-    return Field.patch(input, { column: PgColumn.Integer.make({ ident }) });
+    return Field.patch(bounded, { column: PgColumn.Integer.make({ ident }) });
   }
   return apply;
 };
 
 /**
  * Set a PostgreSQL smallint column on a number-encoded schema.
+ *
+ * **Details**
+ *
+ * Plain and variant fields gain the signed 16-bit range check.
  *
  * **Example** (Set a smallint column)
  *
@@ -635,7 +808,10 @@ export const smallint =
   <I extends Field.Input>(
     input: I & Field.ValidateEncoded<I, number, "pg.smallint requires a number-encoded schema">,
   ): Field.Patched<I, { readonly column: PgColumn.Smallint }> =>
-    Field.patch(input, { column: PgColumn.Smallint.make({}) });
+    Field.patch(
+      injectNumberChecks(input, [isInt(), isBetween({ minimum: -32_768, maximum: 32_767 })]),
+      { column: PgColumn.Smallint.make({}) },
+    );
 
 /**
  * Set a PostgreSQL double-precision column on a number-encoded schema.
@@ -880,6 +1056,27 @@ const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.Arra
     exhaustive,
   );
 
+const arrayShape = (value: unknown, depth: number): string =>
+  depth === 0 || !isArray(value)
+    ? "value"
+    : `${value.length}[${value.map((member) => arrayShape(member, depth - 1)).join(",")}]`;
+
+const isRectangular = (value: unknown, depth: number): boolean => {
+  if (depth < 2 || !isArray(value) || value.length === 0) return true;
+  const expected = arrayShape(value[0], depth - 1);
+  return value.every((member) => arrayShape(member, depth - 1) === expected);
+};
+
+const everyArrayElement = (
+  value: unknown,
+  depth: number,
+  accepts: (value: unknown) => boolean,
+): boolean =>
+  value === null ||
+  (depth === 0
+    ? accepts(value)
+    : isArray(value) && value.every((member) => everyArrayElement(member, depth - 1, accepts)));
+
 /**
  * Declares a PostgreSQL array over an explicitly compiled scalar element.
  *
@@ -892,7 +1089,8 @@ const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.Arra
  *
  * The element must have exactly one scalar column combinator. Arrays cannot be
  * primary keys, identity columns, or optimistic versions, and SQLite exposes no
- * corresponding operator.
+ * corresponding operator. Multidimensional inputs are checked for rectangular
+ * shape at the schema boundary; ragged arrays are rejected before insertion.
  *
  * **Example** (Declare a two-dimensional text array)
  *
@@ -945,15 +1143,32 @@ export function array(element: Field.Input, suffix: PgColumn.ArrayDimensionStrin
       });
     }
     const outerElement = arrayElementAST(outer.schema, dimensions);
-    const baseElement = encodedAST(base.schema);
-    if (!equals(outerElement, baseElement)) {
+    if (schemaCarrier(outer.schema, dimensions).tag !== schemaCarrier(base.schema, 0).tag) {
       throw DeriveColumnError.make({
         message: "pg.array outer schema does not match the element schema at the declared depth.",
         fieldName: "(unknown — set at model definition)",
         astTag: outerElement._tag,
       });
     }
-    return Field.patch(outer, {
+    const acceptsElement = is(flip(selectSchemaOf(base.schema)));
+    const checked = Field.make(
+          evolveSchemas(outer.schema, (schema) =>
+            flip(
+              flip(schema).check(
+                makeFilter<unknown>((value) =>
+                  isRectangular(value, dimensions) &&
+                  everyArrayElement(value, dimensions, acceptsElement), {
+                  identifier: "@beep/effect-drizzle/PgRectangularArray",
+                  title: "PostgreSQL rectangular array",
+                  description: "Requires scalar element domains and equal nested extents for PostgreSQL arrays.",
+                  message: "PostgreSQL arrays must satisfy the element domain and be rectangular.",
+                }),
+              ),
+            ),
+          ),
+          outer.meta,
+        );
+    return Field.patch(checked, {
       column: base.meta.column,
       dimensions,
     });
@@ -1126,7 +1341,11 @@ type ValidateExpression<I extends Field.Input, Carrier> = [Carrier] extends [
  * **Details**
  *
  * The field becomes insert-optional while the literal stays correlated with
- * the schema's encoded type.
+ * the schema's encoded type. Model construction also validates the value against
+ * the complete encoded schema and PostgreSQL literal representation. Non-finite
+ * numbers, NUL text, and unproven `bytea` literals are rejected; use
+ * `unsafeDefaultSql` only for a trusted SQL spelling that intentionally escapes
+ * these checks.
  *
  * **Example** (Set a literal default)
  *
@@ -1159,6 +1378,12 @@ export { default_ as default };
  *
  * Use when PostgreSQL should compute an insert default and typed Drizzle SQL
  * can represent it.
+ *
+ * **Gotchas**
+ *
+ * Schema expressions must render with zero parameters. Carrier typing does not
+ * prove PostgreSQL expression legality; volatility, column references, and
+ * other database rules remain migration-time checks.
  *
  * **Example** (Set an expression default)
  *
@@ -1283,11 +1508,16 @@ export const unsafeDefaultSql =
  */
 export const defaultSql = unsafeDefaultSql;
 
-type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends {
-  readonly kind: PgColumn.IdentityKind;
-}
+type ValidateVersionColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends
+  | PgColumn.Integer
+  | PgColumn.Smallint
+  | PgColumn.Bigint<"number">
   ? unknown
-  : Field.SqlTypeError<"version() requires an explicit integer-family column first (pg.integer/pg.smallint/pg.bigint)">;
+  : Field.SqlTypeError<"version() requires a number-encoded integer-family column first (pg.integer/pg.smallint/pg.bigint('number'))">;
+
+type ValidateVersionSchema<I extends Field.Input> = Field.SchemaFrom<I> extends VariantSchema.Field.Any
+  ? Field.SqlTypeError<"version() cannot own an explicit VariantSchema.Field">
+  : unknown;
 
 type ValidateVersionCompatibility<I extends Field.Input> =
   Field.MetaFrom<I>["identity"] extends false
@@ -1297,7 +1527,7 @@ type ValidateVersionCompatibility<I extends Field.Input> =
     : Field.SqlTypeError<"version fields cannot use identity generation">;
 
 /**
- * Marks one integer-family field as the optimistic-concurrency token.
+ * Marks one number-encoded integer-family field as the optimistic-concurrency token.
  *
  * **When to use**
  *
@@ -1311,8 +1541,9 @@ type ValidateVersionCompatibility<I extends Field.Input> =
  *
  * **Gotchas**
  *
- * Every update payload must include the current version. Version fields cannot
- * also use identity, generated-column, or array semantics.
+ * Every update payload must include the current version. Native-bigint and
+ * explicit variant fields are rejected; version fields also cannot use
+ * identity, generated-column, or array semantics.
  *
  * **Example** (Mark a row version)
  *
@@ -1329,9 +1560,31 @@ type ValidateVersionCompatibility<I extends Field.Input> =
 export const version =
   () =>
   <I extends Field.Input>(
-    input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateNotArray<I>,
-  ): Field.Patched<I, { readonly version: true }> =>
-    Field.patch(input, { version: true });
+    input: I &
+      ValidateVersionColumn<I> &
+      ValidateVersionCompatibility<I> &
+      ValidateVersionSchema<I> &
+      ValidateNotArray<I>,
+  ): Field.Patched<I, { readonly version: true }> => {
+    const field = Field.from(input);
+    if (VariantSchema.isField(field.schema)) {
+      throw ModelInvariantError.make({
+        message: "version() cannot own an explicit VariantSchema.Field.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    if (
+      field.meta.column === undefined ||
+      !PgColumn.isSpec(field.meta.column) ||
+      !PgColumn.isNumberInteger(field.meta.column)
+    ) {
+      throw ModelInvariantError.make({
+        message: "version() requires a number-encoded integer-family PostgreSQL column.",
+        fieldName: "(unknown — set at model definition)",
+      });
+    }
+    return Field.patch(input, { version: true });
+  };
 
 /**
  * Sets a typed stored generated expression omitted from author writes.
@@ -1340,6 +1593,12 @@ export const version =
  *
  * The expression carrier must equal the field's encoded carrier. The field
  * remains readable through select and JSON variants.
+ *
+ * **Gotchas**
+ *
+ * Schema expressions must render with zero parameters. Carrier typing does not
+ * prove immutability or forbid generated-column chaining; PostgreSQL validates
+ * those deeper semantics when DDL is applied.
  *
  * **Example** (Set a generated expression)
  *
@@ -1415,9 +1674,14 @@ export const unsafeGeneratedSql =
  * @since 0.0.0
  */
 export const columnName =
-  <const N extends string>(name: N) =>
-  <I extends Field.Input>(input: I): Field.Patched<I, { readonly columnName: N }> =>
-    Field.patch(input, { columnName: name });
+  <const N extends string>(
+    name: N & ValidateSqlName<N, "pg.columnName requires a lowercase SQL identifier">,
+  ) =>
+  <I extends Field.Input>(input: I): Field.Patched<I, { readonly columnName: N }> => {
+    assertSqlName(name, "pg", "PostgreSQL column name");
+    const resolvedName: N = name;
+    return Field.patch(input, { columnName: resolvedName });
+  };
 
 /**
  * Foreign key to another entity, read from its EntityId statics — the
@@ -1432,6 +1696,9 @@ export const columnName =
  *
  * Assembly compares SQL identity, encoded carrier, and array depth. Two
  * number-like fields with different EntityId identities do not silently match.
+ * `SET NULL` requires a nullable encoded source; `SET DEFAULT` requires a
+ * declared database default. The chosen default must still reference a live
+ * target row when the action executes.
  *
  * **Example** (Reference an EntityId schema)
  *
@@ -1449,16 +1716,34 @@ export const columnName =
  * @category combinators
  * @since 0.0.0
  */
+type ReferenceOptions = {
+  readonly onDelete?: Meta.FkAction;
+  readonly onUpdate?: Meta.FkAction;
+};
+type HasReferenceAction<Options, Action extends Meta.FkAction> =
+  Options extends { readonly onDelete: Action } | { readonly onUpdate: Action } ? true : false;
+type ValidateReferenceActions<I extends Field.Input, Options> =
+  HasReferenceAction<Options, "set null"> extends false
+    ? HasReferenceAction<Options, "set default"> extends false
+      ? unknown
+      : Field.MetaFrom<I>["hasDefault"] extends true
+        ? unknown
+        : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
+    : null extends Field.EncodedOf<I>
+      ? HasReferenceAction<Options, "set default"> extends false
+        ? unknown
+        : Field.MetaFrom<I>["hasDefault"] extends true
+          ? unknown
+          : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
+      : Field.SqlTypeError<"SET NULL references require a nullable encoded schema">;
+
 export const references =
-  <const Id extends EntityIdLike>(
+  <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
     id: Id,
-    options?: {
-      readonly onDelete?: Meta.FkAction;
-      readonly onUpdate?: Meta.FkAction;
-    },
+    options?: Options,
   ) =>
   <I extends Field.Input>(
-    input: I,
+    input: I & ValidateReferenceActions<NoInfer<I>, Options>,
   ): Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id"> }> => {
     const ref: Meta.References<Id["tableName"], "id"> = {
       tableName: id.tableName,

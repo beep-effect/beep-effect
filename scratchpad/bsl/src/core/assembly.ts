@@ -22,8 +22,14 @@ import { empty, get, set } from "effect/Record";
 import { capitalize, slice } from "effect/String";
 import { camelCase } from "../internal/case.ts";
 import type * as Meta from "./Meta.ts";
+import {
+  type Dialect,
+  findSqlNameCollision,
+  sqlNameIssue,
+} from "./names.ts";
 
 /** Resolved directed foreign-key edge used during assembly. */
+/** @internal */
 export interface Edge {
   readonly sourceKey: string;
   readonly sourceField: string;
@@ -35,6 +41,7 @@ export interface Edge {
 }
 
 /** Two foreign-key edges forming a narrow junction table. */
+/** @internal */
 export interface Junction {
   readonly key: string;
   readonly left: Edge;
@@ -42,17 +49,21 @@ export interface Junction {
 }
 
 /** Derive a forward relation name from an id field. */
+/** @internal */
 export const relationName = (fieldName: string): string =>
   fieldName.endsWith("Id") ? slice(0, -2)(fieldName) : `${fieldName}Relation`;
 
 /** Stable alias shared by forward and reverse relations. */
+/** @internal */
 export const relationAlias = (edge: Edge): string =>
   `${edge.sourceKey}_${edge.sourceField}_${edge.targetKey}`;
 
 /** Deliberately narrow pluralization used by deterministic relation names. */
+/** @internal */
 export const plural = (value: string): string => `${camelCase(value)}s`;
 
 /** Derive the reverse relation name for one edge. */
+/** @internal */
 export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
     edges.filter(
@@ -67,24 +78,81 @@ export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): str
 };
 
 /** Structural model surface needed by the shared relation assembler. */
+/** @internal */
 export interface RelationModel {
   readonly sql: {
+    readonly tableName: string;
     readonly fields: Readonly<Record<string, unknown>>;
   };
 }
 
 /** Model registry consumed by the shared relation assembler. */
+/** @internal */
 export interface RelationModels {
   readonly [key: string]: RelationModel;
 }
 
 /** Tagged dialect error callback used by the shared relation assembler. */
+/** @internal */
 export type AssemblyFailure = (
   message: string,
   sourceTable: string,
   fieldName: string,
   targetTable: string,
 ) => never;
+
+/** Reject duplicate physical table names before dialect projection. @internal */
+export const validatePhysicalTableNames = (
+  models: RelationModels,
+  dialect: Dialect,
+  fail: AssemblyFailure,
+): void => {
+  const entries = Object.entries(models).map(
+    ([key, model]): readonly [string, string] => [key, model.sql.tableName],
+  );
+  const collision = findSqlNameCollision(entries, dialect);
+  if (collision !== undefined) {
+    fail(
+      `Physical table name '${collision.name}' collides with '${collision.firstOwner}' after dialect normalization to '${collision.canonical}'.`,
+      collision.secondOwner,
+      "(tableName)",
+      collision.firstOwner,
+    );
+  }
+  entries.forEach(([key, name]) => {
+    const issue = sqlNameIssue(name, dialect);
+    if (issue !== undefined) fail(`Physical table name '${name}' ${issue}.`, key, "(tableName)", key);
+  });
+};
+
+/** Named schema-global SQL object used by dialect namespace validation. @internal */
+export interface SchemaName {
+  readonly owner: string;
+  readonly name: string;
+  readonly kind: string;
+}
+
+/** Validate one dialect's complete schema-global object namespace. @internal */
+export const validateSchemaNames = (
+  names: ReadonlyArray<SchemaName>,
+  dialect: Dialect,
+  fail: AssemblyFailure,
+): void => {
+  const entries = names.map(({ owner, name }): readonly [string, string] => [owner, name]);
+  const collision = findSqlNameCollision(entries, dialect);
+  if (collision !== undefined) {
+    fail(
+      `Schema-global name '${collision.name}' collides with '${collision.firstOwner}' after dialect normalization to '${collision.canonical}'.`,
+      collision.secondOwner,
+      "(schema namespace)",
+      collision.firstOwner,
+    );
+  }
+  names.forEach(({ owner, name, kind }) => {
+    const issue = sqlNameIssue(name, dialect);
+    if (issue !== undefined) fail(`${kind} name '${name}' ${issue}.`, owner, "(schema namespace)", owner);
+  });
+};
 
 const throughRelationName = (targetKey: string, junctionKey: string): string =>
   `${plural(targetKey)}Through${capitalize(camelCase(junctionKey))}`;
@@ -141,6 +209,7 @@ const invokeRelationFactory = (
  * @category constructors
  * @since 0.0.0
  */
+/** @internal */
 export const makeRelationsConfig = <Tables extends Schema>(
   models: RelationModels,
   _tables: Tables,

@@ -33,20 +33,16 @@ import {
   every,
   filter,
   flatMap,
-  getSomes,
   head,
   isReadonlyArrayNonEmpty,
-  map,
-  match,
   of,
   range,
   reduce,
   some,
 } from "effect/Array";
 import { equals } from "effect/Equal";
-import { constFalse, constTrue, dual } from "effect/Function";
+import { dual } from "effect/Function";
 import {
-  flatMap as flatMapOption,
   fromUndefinedOr,
   getOrElse,
   map as mapOption,
@@ -54,20 +50,25 @@ import {
   some as someOption,
 } from "effect/Option";
 import type { Option } from "effect/Option";
-import { Struct as StructPredicate, hasProperty, isNumber, isString, isTagged, not } from "effect/Predicate";
+import { hasProperty, isNumber, isString, isTagged, not } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
 import type { Top } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
-import type { AST, Check, Suspend } from "effect/SchemaAST";
+import type { AST, Check } from "effect/SchemaAST";
 import { get as getStruct } from "effect/Struct";
 import { VariantSchema } from "effect/unstable/schema";
 import type * as Field from "../core/Field.ts";
-import { classify as classifyCore, DeriveColumnError } from "../core/classification.ts";
+import {
+  classify as classifyCore,
+  DeriveColumnError,
+  flattenEncoded,
+} from "../core/classification.ts";
 import {
   EntityIdLike as EntityIdLikeSchema,
   isEntityIdLike,
   type EntityIdLike as EntityIdLikeType,
 } from "../core/entity-id.ts";
+import { stringLiteralValues as collectStringLiteralValues } from "../core/literals.ts";
 import * as PgColumn from "./Column.ts";
 
 /**
@@ -84,6 +85,7 @@ export { DeriveColumnError };
  * @category schemas
  * @since 0.0.0
  */
+/** @internal */
 export const EntityIdLike = EntityIdLikeSchema;
 /**
  * Test unknown input for EntityId schema statics.
@@ -98,6 +100,7 @@ export { isEntityIdLike };
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type EntityIdLike = EntityIdLikeType;
 
 // ---------------------------------------------------------------------------
@@ -112,6 +115,7 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type SelectSchemaOf<Sch> =
   Sch extends VariantSchema.Field<infer Config>
     ? Config extends { readonly select: infer Sel }
@@ -136,9 +140,11 @@ type DeriveFromEncoded<E> =
                 ? never // Declarations require explicit metadata (pg.timestamp)
                 : [E] extends [Uint8Array]
                   ? never // explicit pg.bytea
-                  : [E] extends [object]
+                  : E extends ReadonlyArray<unknown>
                     ? PgColumn.Jsonb
-                    : never;
+                    : E extends { readonly [key: string]: unknown }
+                      ? PgColumn.Jsonb
+                      : never;
 
 /**
  * The column spec a bare Input derives, or `never` when derivation is
@@ -147,6 +153,7 @@ type DeriveFromEncoded<E> =
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;
@@ -162,6 +169,7 @@ export type Derived<I extends Field.Input> =
  * @category models
  * @since 0.0.0
  */
+/** @internal */
 export type ResolvedColumn<I extends Field.Input> =
   Field.MetaFrom<I>["column"] extends undefined
     ? Derived<I>
@@ -183,6 +191,7 @@ export type ResolvedColumn<I extends Field.Input> =
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   if (VariantSchema.isField(schema)) {
     const select: unknown = schema.schemas["select"];
@@ -205,6 +214,7 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const classify = (
   schema: Field.AnySchema,
   fieldName: string,
@@ -226,20 +236,9 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
  * @category guards
  * @since 0.0.0
  */
-export const isNullable = flow(
-  selectSchemaOf,
-  flow(getStruct("ast"), toEncoded),
-  matchType<AST>().pipe(
-    withReturnType<boolean>(),
-    matchTags({
-      Union: StructPredicate({
-        types: some(isTagged("Null")),
-      }),
-      Null: constTrue,
-    }),
-    matchOrElse(constFalse),
-  ),
-);
+/** @internal */
+export const isNullable = (schema: Field.AnySchema): boolean =>
+  some(flattenEncoded(toEncoded(selectSchemaOf(schema).ast), "(unknown)"), isTagged("Null"));
 
 const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
   const encoded = toEncoded(selectSchemaOf(schema).ast);
@@ -261,6 +260,7 @@ const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const arrayElementAST = (
   schema: Field.AnySchema,
   dimensions: Exclude<PgColumn.ArrayDimension, 0>,
@@ -304,36 +304,99 @@ export const arrayElementAST = (
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 
-const stringLiteralsFromAST = (
-  node: AST,
-  visited: ReadonlyArray<Suspend> = empty(),
-): Option<ReadonlyArray<string>> =>
+const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
   matchType<AST>().pipe(
-    withReturnType<Option<ReadonlyArray<string>>>(),
+    withReturnType<PgColumn.CarrierTag>(),
     matchTags({
-      Literal: ({ literal }) => (isString(literal) ? someOption(of(literal)) : none()),
-      Null: () => someOption(empty()),
+      String: () => "string",
+      TemplateLiteral: () => "string",
+      Number: () => "number",
+      BigInt: () => "bigint",
+      Boolean: () => "boolean",
+      Objects: () => "object",
+      Arrays: () => "object",
       Enum: ({ enums }) =>
         every(enums, ([, value]) => isString(value))
-          ? someOption(
-              getSomes(map(enums, ([, value]) => (isString(value) ? someOption(value) : none()))),
-            )
-          : none(),
-      Union: ({ types }) =>
-        reduce(types, someOption<ReadonlyArray<string>>(empty()), (values, member) =>
-          flatMapOption(values, (current) =>
-            mapOption(stringLiteralsFromAST(member, visited), (next) => appendAll(current, next)),
-          ),
-        ),
-      Suspend: (suspend) =>
-        some(visited, equals(suspend))
-          ? none()
-          : stringLiteralsFromAST(suspend.thunk(), append(visited, suspend)),
+          ? "string"
+          : fail("(unknown)", node._tag, "Encoded enum is not string-valued."),
+      Literal: ({ literal }) =>
+        isString(literal)
+          ? "string"
+          : isNumber(literal)
+            ? "number"
+            : typeof literal === "bigint"
+              ? "bigint"
+              : typeof literal === "boolean"
+                ? "boolean"
+                : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier."),
+      Declaration: (declaration) =>
+        hasProperty(declaration.annotations?.representation, "id") &&
+        declaration.annotations.representation.id === "effect/schema/Date"
+          ? "date"
+          : hasProperty(declaration.annotations?.representation, "id") &&
+              declaration.annotations.representation.id === "effect/schema/Uint8Array"
+            ? "bytes"
+            : fail("(unknown)", node._tag, "Encoded declaration has no SQL carrier."),
     }),
-    matchOrElse(() => none()),
+    matchOrElse(() => fail("(unknown)", node._tag, "Encoded AST has no SQL carrier.")),
   )(node);
+
+const carrierTagFromAST = (node: AST): PgColumn.CarrierTag => {
+  const members = filter(flattenEncoded(node, "(unknown)"), not(isTagged("Null")));
+  const first = getOrElse(head(members), () =>
+    fail("(unknown)", node._tag, "No encoded carrier remains after null stripping."),
+  );
+  const tag = atomicCarrierTag(first);
+  if (!every(members, (member) => atomicCarrierTag(member) === tag)) {
+    return fail("(unknown)", "Union", "Encoded union members have different SQL carriers.");
+  }
+  return tag;
+};
+
+/** Runtime encoded-carrier witness for model-construction corroboration. @internal */
+export const carrier = (
+  schema: Field.AnySchema,
+  dimensions: PgColumn.ArrayDimension,
+): PgColumn.Carrier => {
+  const encoded = encodedAST(schema);
+  const peelArray = (node: AST): AST => {
+    const members = filter(flattenEncoded(node, "(unknown)"), not(isTagged("Null")));
+    const current = getOrElse(head(members), () =>
+      fail("(unknown)", node._tag, "PostgreSQL array has no encoded element."),
+    );
+    if (
+      members.length !== 1 ||
+      !isTagged(current, "Arrays") ||
+      isReadonlyArrayNonEmpty(current.elements) ||
+      current.rest.length !== 1
+    ) {
+      return fail(
+        "(unknown)",
+        current._tag,
+        `PostgreSQL array metadata does not match encoded depth ${dimensions}.`,
+      );
+    }
+    return getOrElse(head(current.rest), () =>
+      fail("(unknown)", current._tag, "PostgreSQL array has no homogeneous element."),
+    );
+  };
+  const scalar = dimensions === 0 ? encoded : reduce(range(1, dimensions), encoded, peelArray);
+  const tag = carrierTagFromAST(scalar);
+  if (dimensions !== 0 && tag === "object") {
+    const members = filter(flattenEncoded(scalar, "(unknown)"), not(isTagged("Null")));
+    if (some(members, isTagged("Arrays"))) {
+      return fail(
+        "(unknown)",
+        "Arrays",
+        `PostgreSQL array encoded depth exceeds declared depth ${dimensions}.`,
+      );
+    }
+  }
+  return { tag, dimensions };
+};
 
 /**
  * Collect a finite non-empty union of encoded string literals.
@@ -346,15 +409,10 @@ const stringLiteralsFromAST = (
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const stringLiteralValues = (
   schema: Field.AnySchema,
-): Option<readonly [string, ...string[]]> =>
-  flatMapOption(stringLiteralsFromAST(toEncoded(selectSchemaOf(schema).ast)), (values) =>
-    match(values, {
-      onEmpty: none,
-      onNonEmpty: someOption,
-    }),
-  );
+): Option<readonly [string, ...string[]]> => collectStringLiteralValues(schema, selectSchemaOf);
 
 const maxLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
   const representation = check.annotations?.representation;
@@ -402,8 +460,59 @@ const collectMaxLengths: {
  * @category getters
  * @since 0.0.0
  */
+/** @internal */
 export const maxLengths = flow(
   selectSchemaOf,
   flow(getStruct("ast"), toEncoded),
   collectMaxLengths(empty()),
+);
+
+const exactLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
+  const representation = check.annotations?.representation;
+  const current =
+    representation?.id === "effect/schema/isLengthBetween" &&
+    hasProperty(representation.payload, "minimum") &&
+    isNumber(representation.payload.minimum) &&
+    hasProperty(representation.payload, "maximum") &&
+    isNumber(representation.payload.maximum) &&
+    representation.payload.minimum === representation.payload.maximum
+      ? of(representation.payload.minimum)
+      : empty<number>();
+  return isTagged(check, "FilterGroup")
+    ? appendAll(current, flatMap(check.checks, exactLengthFromCheck))
+    : current;
+};
+
+const collectExactLengths: {
+  (visited: ReadonlyArray<AST>): (node: AST) => ReadonlyArray<number>;
+  (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number>;
+} = dual(2, (node: AST, visited: ReadonlyArray<AST>): ReadonlyArray<number> => {
+  if (some(visited, equals(node))) return empty();
+  const nextVisited = append(visited, node);
+  const collectNested = collectExactLengths(nextVisited);
+  const checks = fromUndefinedOr(node.checks).pipe(
+    mapOption(flatMap(exactLengthFromCheck)),
+    getOrElse(empty<number>),
+  );
+  const encodings = fromUndefinedOr(node.encoding).pipe(
+    mapOption(flatMap((link) => collectNested(link.to))),
+    getOrElse(empty<number>),
+  );
+  const nested = matchType<AST>().pipe(
+    withReturnType<ReadonlyArray<number>>(),
+    matchTags({
+      Union: ({ types }) => flatMap(types, collectNested),
+      Suspend: (suspend) => collectNested(suspend.thunk()),
+      Declaration: ({ typeParameters }) => flatMap(typeParameters, collectNested),
+    }),
+    matchOrElse(empty<number>),
+  )(node);
+  return appendAll(appendAll(checks, encodings), nested);
+});
+
+/** Collect exact encoded string lengths installed with `isLengthBetween(n, n)`. @internal */
+export const exactLengths = flow(
+  selectSchemaOf,
+  flow(getStruct("ast"), toEncoded),
+  collectExactLengths(empty()),
 );
