@@ -35,7 +35,6 @@ const isEscapedQuote = (output: string, index: number): boolean => {
  * @internal
  * @since 0.0.0
  */
-// fallow-ignore-next-line complexity -- single-pass brace and string scan prevents quadratic mixed-output rescans
 export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> => {
   let latest: O.Option<string> = O.none();
   let depth = 0;
@@ -45,7 +44,7 @@ export const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> 
 
   for (let cursor = 0; cursor < length; cursor += 1) {
     const char = characterAt(output, cursor);
-    if (char === '"' && !isEscapedQuote(output, cursor)) {
+    if (depth > 0 && char === '"' && !isEscapedQuote(output, cursor)) {
       inString = !inString;
       continue;
     }

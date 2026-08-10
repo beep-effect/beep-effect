@@ -1,19 +1,20 @@
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { LintPolicySubcommand } from "@beep/repo-cli/test/Quality";
-import { TSMorphServiceLive } from "@beep/repo-utils";
+import { TSMorphService, TSMorphServiceLive, TsMorphProjectInspectionRequest } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import { Node, SyntaxKind } from "ts-morph";
+import type { CallExpression, Project, SourceFile } from "ts-morph";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
@@ -22,6 +23,98 @@ const CommandTestLayer = Layer.mergeAll(
 );
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
+
+type LocatedModuleLoad = {
+  readonly load: string;
+  readonly start: number;
+};
+
+const moduleSpecifier = (callExpression: CallExpression): string => {
+  const argument = callExpression.getArguments()[0];
+  return argument !== undefined && Node.isStringLiteral(argument)
+    ? argument.getLiteralText()
+    : callExpression.getText();
+};
+
+const moduleLoadFromCall = (callExpression: CallExpression): ReadonlyArray<LocatedModuleLoad> => {
+  const expression = callExpression.getExpression();
+  if (expression.getKind() === SyntaxKind.ImportKeyword) {
+    return [{ load: `import():${moduleSpecifier(callExpression)}`, start: callExpression.getStart() }];
+  }
+  if (Node.isIdentifier(expression) && expression.getText() === "require") {
+    return [{ load: `require:${moduleSpecifier(callExpression)}`, start: callExpression.getStart() }];
+  }
+  return A.empty();
+};
+
+const moduleLoads = (sourceFile: SourceFile, before: number): ReadonlyArray<string> => {
+  const imports = pipe(
+    sourceFile.getImportDeclarations(),
+    A.filter((declaration) => !declaration.isTypeOnly()),
+    A.map(
+      (declaration): LocatedModuleLoad => ({
+        load: `import:${declaration.getModuleSpecifierValue()}`,
+        start: declaration.getStart(),
+      })
+    )
+  );
+  const importEquals = pipe(
+    sourceFile.getDescendantsOfKind(SyntaxKind.ImportEqualsDeclaration),
+    A.filter((declaration) => !declaration.isTypeOnly()),
+    A.map(
+      (declaration): LocatedModuleLoad => ({
+        load: `import-equals:${declaration.getModuleReference().getText()}`,
+        start: declaration.getStart(),
+      })
+    )
+  );
+  const exports = pipe(
+    sourceFile.getExportDeclarations(),
+    A.filter((declaration) => !declaration.isTypeOnly()),
+    A.flatMap((declaration) =>
+      pipe(
+        O.fromNullishOr(declaration.getModuleSpecifierValue()),
+        O.map(
+          (specifier): LocatedModuleLoad => ({
+            load: `export:${specifier}`,
+            start: declaration.getStart(),
+          })
+        ),
+        O.toArray
+      )
+    )
+  );
+  const calls = pipe(
+    sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression),
+    A.filter((callExpression) => callExpression.getStart() < before),
+    A.flatMap(moduleLoadFromCall)
+  );
+
+  return pipe(
+    imports,
+    A.appendAll(importEquals),
+    A.appendAll(exports),
+    A.appendAll(calls),
+    A.sort(Order.mapInput(Order.Number, (entry: LocatedModuleLoad) => entry.start)),
+    A.map((entry) => entry.load)
+  );
+};
+
+const inspectModuleLoads = (project: Project, source: string, stopBeforeFastPath: boolean): ReadonlyArray<string> => {
+  const sourceFile = project.createSourceFile("lint-routing-contract.fixture.ts", source, { overwrite: true });
+  const before = stopBeforeFastPath
+    ? pipe(
+        sourceFile.getStatements(),
+        A.findFirst(
+          (statement) => Node.isIfStatement(statement) && statement.getExpression().getText() === "fastLintFixNoop()"
+        ),
+        O.map((statement) => statement.getStart()),
+        O.getOrElse(() => -1)
+      )
+    : Number.POSITIVE_INFINITY;
+  return moduleLoads(sourceFile, before);
+};
 
 describe("commands/Lint fast-path allowlist binding", () => {
   // bin-main.ts routes `beep lint <sub>` to the full command tree only when
@@ -64,23 +157,63 @@ describe("internal/cli LintRouting dependency-free boundary", () => {
   // boundary at the source level — a timing assertion would be
   // environment-sensitive.
   it.effect(
-    "LintRouting stays import-free and is bin-main's only eager module import",
+    "LintRouting stays import-free and bin-main keeps an explicit pre-fast-path module-load allowlist",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      const tsMorph = yield* TSMorphService;
       const repoRoot = yield* findRepoRoot();
       const sourceDir = path.join(repoRoot, "packages/tooling/tool/cli/src");
       const routingSource = yield* fs.readFileString(path.join(sourceDir, "internal/cli/LintRouting.ts"));
       const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
-      const importLines = (source: string): ReadonlyArray<string> =>
-        pipe(source, Str.split("\n"), A.filter(Str.startsWith("import ")));
+      const request = yield* decodeProjectInspectionRequest({
+        entrypoint: {
+          _tag: "tsconfig",
+          tsConfigPath: "packages/tooling/tool/cli/tsconfig.json",
+        },
+        repoRootPath: repoRoot,
+        mode: "syntax",
+        referencePolicy: "workspaceOnly",
+        filePaths: [],
+        sourceFileGlobs: [],
+      });
 
-      expect(importLines(routingSource)).toEqual([]);
-      expect(routingSource).not.toContain("import(");
+      yield* tsMorph.inspectProject(request, ({ project }) => {
+        expect(inspectModuleLoads(project, routingSource, false)).toEqual([]);
 
-      const eagerImports = A.filter(importLines(binMainSource), (line) => !Str.startsWith("import type ")(line));
-      expect(eagerImports).toHaveLength(1);
-      expect(eagerImports[0]).toContain('"./internal/cli/LintRouting.ts"');
-    }, provideScopedLayer(PlatformLayer))
+        const routingMutations = [
+          'import { x } from "heavy";',
+          'import x = require("heavy");',
+          'export { x } from "heavy";',
+          'const dynamic = import ("heavy");',
+          'const required = require("heavy");',
+        ];
+        for (const mutation of routingMutations) {
+          expect(inspectModuleLoads(project, `${mutation}\n${routingSource}`, false), mutation).not.toEqual([]);
+        }
+
+        expect(inspectModuleLoads(project, binMainSource, true)).toEqual([
+          "import:./internal/cli/LintRouting.ts",
+          "import():@beep/utils",
+          "import():effect",
+        ]);
+
+        const beforeFastPath = (mutation: string): string =>
+          Str.replace(
+            "const LINT_POLICY_SUBCOMMAND_NAMES",
+            `${mutation}\nconst LINT_POLICY_SUBCOMMAND_NAMES`
+          )(binMainSource);
+        expect(
+          inspectModuleLoads(
+            project,
+            beforeFastPath('const { LintPolicySubcommand } = await import("./commands/Quality/Quality.schemas.ts");'),
+            true
+          )
+        ).not.toEqual(inspectModuleLoads(project, binMainSource, true));
+        expect(inspectModuleLoads(project, beforeFastPath('require("heavy");'), true)).not.toEqual(
+          inspectModuleLoads(project, binMainSource, true)
+        );
+      });
+    }, provideScopedLayer(CommandTestLayer))
   );
 });

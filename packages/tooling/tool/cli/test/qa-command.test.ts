@@ -129,6 +129,11 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "round": 3, "findings": [] }');
   });
 
+  it("ignores an unmatched quote in prose before an unfenced object", () => {
+    const stdout = 'analysis says "maybe then { "final": true }';
+    expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
+  });
+
   it("takes the last parseable unfenced object, skipping prose braces and brace-bearing strings", () => {
     const stdout = 'set {a, b} then { "draft": true } and finally { "final": { "nested": "}{" } }';
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": { "nested": "}{" } }');
