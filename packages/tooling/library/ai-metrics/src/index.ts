@@ -141,6 +141,21 @@ export * from "./ingest.ts";
  */
 export * from "./install.ts";
 /**
+ * Shared transcript path helpers.
+ *
+ * **Example** (Convert a repository path to Claude's project key)
+ *
+ * ```ts
+ * import { repoPathToClaudeProjectName } from "@beep/repo-ai-metrics"
+ *
+ * console.log(repoPathToClaudeProjectName("/workspace/beep-effect"))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export { repoPathToClaudeProjectName } from "./internal/transcript-utils.ts";
+/**
  * P7 sanitized mirror bundle helpers.
  *
  * **Example** (Import mirror bundle builder)
