@@ -3,14 +3,17 @@
   "initiative": {
     "id": "ai-metrics-stack",
     "title": "AI Metrics Stack",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-05-05",
-    "updated": "2026-07-14",
+    "updated": "2026-08-10",
     "packetAnchorDocument": "SPEC.md"
   },
+  "packetPath": "goals/ai-metrics-stack",
+  "lifecycle": "completed-retained",
+  "reflectionRequired": true,
   "currentSourceOfTruth": "SPEC.md",
-  "currentTargetPhase": "P6c",
-  "completionEvidence": "dankserver deployment plus P6a hardening gates plus one restarted seven-day real-data config-impact scorecard; sanitized derived mirror confirmation pending final post-proof closeout",
+  "currentTargetPhase": null,
+  "completionEvidence": "history/outputs/p7e-production-readiness-closeout.md records the completed exact-window scorecard, progressive OTLP backlog drain, sanitized mirror build, confirmed dankserver sync, and remote status verification",
   "targets": {
     "production": "dankserver",
     "smoke": "local",
@@ -25,24 +28,21 @@
     "scoreModel": "outcome-heavy"
   },
   "v1Completion": {
-    "status": "in_progress",
-    "activeGate": "P6c",
+    "status": "complete",
+    "activeGate": null,
     "notBefore": "2026-05-16T02:26:00-05:00",
     "closedGates": [
       "dankserver Phoenix deployment",
       "P6a hardening gates",
       "P6b pinned proof-runner isolation",
       "P6c human label for active isolated-runner config",
-      "P6c intermediate completion-ready scorecard"
+      "P6c intermediate completion-ready scorecard",
+      "P6 final exact-window completion-ready scorecard",
+      "P7f progressive OTLP delivery checkpoint",
+      "P7e sanitized mirror confirmed on dankserver",
+      "P7e production-readiness evidence and reflection"
     ],
-    "remainingGates": [
-      "keep pinned proof runner unchanged through the credited proof window",
-      "generate the final seven-day scorecard after 2026-05-16T02:26:00-05:00",
-      "complete P7f forwarder durability - at minimum the parquet-export regression fix - before building the sanitized derived mirror (the mirror bundles parquet exports)",
-      "build and confirmed-sync the sanitized derived mirror to dankserver after the final report",
-      "verify remote mirror status",
-      "record P7e production-readiness closeout evidence"
-    ],
+    "remainingGates": [],
     "nonBlockingFollowUps": [
       "P7c provider/model/tool/token/cost enrichment",
       "P7d dashboard/backend expansion",
@@ -111,7 +111,7 @@
     {
       "id": "P6",
       "name": "Seven-Day Proof And Hardening",
-      "status": "in-progress",
+      "status": "complete",
       "output": "history/outputs/p6-seven-day-proof-and-hardening.md",
       "subphases": [
         {
@@ -129,7 +129,7 @@
         {
           "id": "P6c",
           "name": "Pre-May-16 Readiness Ledger",
-          "status": "in_progress",
+          "status": "completed",
           "output": "history/outputs/p6-pre-may16-readiness-ledger.md"
         }
       ]
@@ -137,7 +137,7 @@
     {
       "id": "P7",
       "name": "Topology-First Productionization",
-      "status": "in-progress",
+      "status": "complete",
       "output": "history/outputs/p7-topology-first-production-plan.md",
       "subphases": [
         {
@@ -155,31 +155,31 @@
         {
           "id": "P7c",
           "name": "Provider And Gateway Metrics",
-          "status": "pending",
+          "status": "deferred",
           "v1Blocking": false,
           "output": "history/outputs/p7-topology-first-production-plan.md"
         },
         {
           "id": "P7d",
           "name": "Dashboard And Backend Expansion",
-          "status": "pending",
+          "status": "deferred",
           "v1Blocking": false,
           "output": "history/outputs/p7-topology-first-production-plan.md"
         },
         {
           "id": "P7f",
           "name": "Forwarder Durability",
-          "status": "pending",
+          "status": "completed",
           "v1Blocking": true,
           "output": "history/outputs/p7-topology-first-production-plan.md",
-          "note": "Added 2026-07-14 from explorations/agent-effectiveness-pulse pipeline-revival evidence. Scope: (1) parquet-export regression fix - forwarder run fails at derived-storage write unless --parquet-mode none; gates P7e because the sanitized mirror is built from parquet exports; suspects: @beep/duckdb effect-sql rework or the 2026-07-13 catalog dep bump; (2) surface underlying error causes in CLI output (currently swallowed even at --log-level debug); (3) ingest-time dedup / skip-already-ingested (5.43M turn rows ~= 516K distinct raw_event_hash from 1,222 trickle runs); (4) chunked derived writes - single-transaction ceiling observed above ~160MB per run during the 2026-07-14 backfill (16 byte-capped batches succeeded; 878MB and 2.5GB single runs failed). Evidence: explorations/agent-effectiveness-pulse/research/pulse-report.md (revival section). Pre-backfill DuckDB snapshot preserved at .beep/ai-metrics/derived/ai-metrics.duckdb.pre-pulse-backfill-20260714.bak for the P7e final credited scorecard."
+          "note": "Content-addressed ingest and confirmed at-least-once delivery were already merged. P7e adds per-512-span durable checkpoints so a Phoenix 503 resumes after the acknowledged prefix. The live timer remains on parquet-mode none; mirror build independently exports allowlisted Parquet from DuckDB, so per-run Parquet is not a V1 gate. The 50-file/32-MiB production budgets are the adopted transaction bound; oversized backfills remain explicitly chunked. Sanitized error-cause reporting and Phoenix capacity telemetry remain non-blocking follow-ups."
         },
         {
           "id": "P7e",
           "name": "Production Readiness Closeout",
-          "status": "pending",
+          "status": "completed",
           "v1Blocking": true,
-          "output": "history/outputs/p7-topology-first-production-plan.md"
+          "output": "history/outputs/p7e-production-readiness-closeout.md"
         }
       ]
     }
@@ -207,19 +207,15 @@
     },
     {
       "id": "ai-metrics-forwarder-timer-smoke",
-      "command": "bun run beep ai-metrics forwarder timer --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
-    },
-    {
-      "id": "ai-metrics-proof-runner-timer-smoke",
-      "command": "cd /home/elpresidank/YeeBois/projects/beep-effect-worktrees/ai-metrics-p6-proof && bun run beep ai-metrics forwarder timer --target dankserver --repo-root /home/elpresidank/YeeBois/projects/beep-effect-worktrees/ai-metrics-p6-proof --data-root /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --otlp-base-url 'https://dankserver.tailc7c348.ts.net:8447' --interval-minutes 15 --max-file-bytes 8388608 --max-files 5 --json"
+      "command": "bun run beep ai-metrics forwarder timer --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --otlp-base-url 'https://dankserver.tailc7c348.ts.net:8447' --interval-minutes 360 --max-file-bytes 33554432 --max-files 50 --parquet-mode none --json"
     },
     {
       "id": "ai-metrics-archive-drill",
-      "command": "BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics archive drill --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
+      "command": "BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics archive drill --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
     },
     {
       "id": "ai-metrics-p7-disposable-proof-copy",
-      "command": "umask 077; proof_root=\"$(mktemp -d -t ai-metrics-p7-proof-data.XXXXXXXXXX)\"; rsync -a --delete /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics/ \"$proof_root/\"; printf 'AI_METRICS_P7_PROOF_DATA_ROOT=%s\\n' \"$proof_root\""
+      "command": "umask 077; proof_root=\"$(mktemp -d -t ai-metrics-p7-proof-data.XXXXXXXXXX)\"; rsync -a --delete /home/elpresidank/.local/state/beep/ai-metrics/ \"$proof_root/\"; printf 'AI_METRICS_P7_PROOF_DATA_ROOT=%s\\n' \"$proof_root\""
     },
     {
       "id": "ai-metrics-p7-mirror-build",
@@ -231,27 +227,27 @@
     },
     {
       "id": "ai-metrics-p7-remote-mirror-presence-check",
-      "command": "ssh -o BatchMode=yes -o ConnectTimeout=10 dankserver-yubi \"sh -lc 'if test -f /srv/data/ai-metrics/p7-derived-mirror/manifest.json; then echo present; else echo missing; fi'\""
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=10 dankserver \"sh -lc 'if test -f /srv/data/ai-metrics/p7-derived-mirror/manifest.json; then echo present; else echo missing; fi'\""
     },
     {
       "id": "ai-metrics-p7-final-mirror-build",
-      "command": "bun run beep ai-metrics mirror build --target dankserver --data-root /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
+      "command": "bun run beep ai-metrics mirror build --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
     },
     {
       "id": "ai-metrics-p7-final-mirror-sync",
-      "command": "bun run beep ai-metrics mirror sync --target dankserver --data-root /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics --bundle latest --host dankserver-yubi --remote-root /srv/data/ai-metrics/p7-derived-mirror --confirm p7-derived-mirror --json"
+      "command": "bun run beep ai-metrics mirror sync --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --bundle latest --host dankserver --remote-root /srv/data/ai-metrics/p7-derived-mirror --confirm p7-derived-mirror --json"
     },
     {
       "id": "ai-metrics-p7-final-mirror-status",
-      "command": "bun run beep ai-metrics mirror status --target dankserver --host dankserver-yubi --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
+      "command": "bun run beep ai-metrics mirror status --target dankserver --host dankserver --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
     },
     {
       "id": "ai-metrics-p7-retention-list",
-      "command": "bun run beep ai-metrics retention list --data-root /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics --json"
+      "command": "bun run beep ai-metrics retention list --data-root /home/elpresidank/.local/state/beep/ai-metrics --json"
     },
     {
       "id": "ai-metrics-p7-retention-restore-drill",
-      "command": "umask 077; restore_root=\"$(mktemp -d -t ai-metrics-p7-restore.XXXXXXXXXX)\"; BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics retention restore-drill --data-root /home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics --restore-root \"$restore_root\" --before <REPLACE_WITH_ISO_8601_TIMESTAMP> --json"
+      "command": "umask 077; restore_root=\"$(mktemp -d -t ai-metrics-p7-restore.XXXXXXXXXX)\"; BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics retention restore-drill --data-root /home/elpresidank/.local/state/beep/ai-metrics --restore-root \"$restore_root\" --before <REPLACE_WITH_ISO_8601_TIMESTAMP> --json"
     },
     {
       "id": "infra-package",
@@ -267,20 +263,20 @@
     },
     {
       "id": "ai-metrics-proof-scorecard",
-      "command": "bun run beep ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
+      "command": "bun run beep ai-metrics report weekly --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --since '2026-05-09T02:26:00-05:00' --until '2026-05-16T02:26:00-05:00' --json"
     }
   ],
   "knownGaps": [
-    "The credited seven-day proof window is in progress until at least May 16, 2026 02:26 America/Chicago",
-    "The workstation timer now runs from a locked pinned proof worktree while proof data remains under the main checkout .beep/ai-metrics root",
-    "The isolated-runner config has a human-approved outcome label and intermediate completion-ready scorecard, but still requires elapsed proof time and the final seven-day report",
-    "P7a/b hybrid mirror and local retention workflows are implemented, but final confirmed mirror sync/status is deferred until after the credited proof report",
+    "The workstation timer executes code from the clean beep-effect checkout; durable state is independent under /home/elpresidank/.local/state/beep/ai-metrics, but code deployment still requires deliberately updating that checkout after merges",
+    "Phoenix shares its bounded ingest queue with the monitoring OTLP collector; capacity telemetry and per-ingress rejection visibility remain follow-up operations work",
+    "CLI OTLP failures still need clearer sanitized status and retryability details without exposing headers or payloads",
     "Optional LiteLLM deployment remains deferred beyond the Phoenix-only P5b slice",
     "xAI, Venice, LiteLLM, and gateway enrichment remain deferred to non-blocking P7c follow-up",
     "Dashboard and backend expansion remains deferred to non-blocking P7d follow-up",
-    "Server-owned collection remains a future topology target requiring transcript access/sync and privacy design"
+    "Remote mirror lifecycle automation beyond confirmed sync/status remains a follow-up",
+    "Server-owned collection remains a future topology option requiring transcript access/sync and privacy design"
   ],
-  "nextAction": "Keep the isolated proof-runner timer running through May 16, 2026 02:26 America/Chicago, generate the final credited seven-day report after the proof window elapses, then run the P7e sanitized mirror build/sync/status closeout; keep P7c/P7d as non-blocking follow-up work.",
+  "nextAction": "Operator merges the merge-ready P7e closeout PR. After merge, deliberately update the timer's beep-effect execution checkout before relying on the new progressive OTLP checkpoint; schedule P7c/P7d and Phoenix capacity telemetry only as separate follow-up work.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

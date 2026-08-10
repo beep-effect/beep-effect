@@ -14,12 +14,12 @@ failure self-healed, because the duplication was acting as an accidental retry.
 Projections now carry deterministic ids. `traceId` and the session `spanId` are seeded
 from the transcript the session belongs to — `sourceKind`, `sourceRole`, and
 `sourcePathHash` — and turn spans are parented to their session span, so one transcript
-keeps one trace across every ingest run. The seed deliberately avoids `agent_session_id`,
-which still embeds the ingest run and would hand each run its own trace id. Identical
-content always produces identical ids, so a redelivered span collapses into the row the
-collector already holds; Phoenix enforces `uq_spans_span_id`. Correctness no longer
-depends on the watermark being accurate, which demotes it to an optimisation whose worst
-failure is a redundant send.
+keeps one trace across every ingest run. The seed deliberately uses those privacy-safe
+source fields directly instead of coupling wire identity to a derived-storage row id.
+Identical content always produces identical ids, so a redelivered span collapses into the
+row the collector already holds; Phoenix enforces `uq_spans_span_id`. Correctness no
+longer depends on the watermark being accurate, which demotes it to an optimisation whose
+worst failure is a redundant send.
 
 Delivery runs through `@opentelemetry/exporter-trace-otlp-proto` behind a new
 `AiMetricsOtlpSpanSender` service, whose export callback is real delivery confirmation.
@@ -28,9 +28,11 @@ closes only on `ExportResultCode.SUCCESS`.
 
 Sends are chunked at 512 and sequential. A drain can carry tens of thousands of turns,
 and one request that large is the backpressure collapse this work exists to prevent —
-the `BatchSpanProcessor` this replaces had been doing that chunking. A mid-drain failure
-re-sends already-delivered chunks on the next run, which is safe only because the ids are
-stable.
+the `BatchSpanProcessor` this replaces had been doing that chunking. Each acknowledged
+chunk now closes its own durable watermark before the next chunk starts. A collector
+whose bounded queue fills partway through a backlog therefore resumes at the first
+unacknowledged chunk instead of repeatedly refilling the queue with the same prefix.
+Stable ids still make the narrow acknowledgement-before-checkpoint failure window safe.
 
 `runAiMetricsOtlpExport` is now the single export entry point for both the forwarder and
 the standalone `ai-metrics otlp export` command, so no caller can deliver spans and then
