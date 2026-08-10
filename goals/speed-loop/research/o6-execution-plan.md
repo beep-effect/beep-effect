@@ -166,3 +166,35 @@ top project risk:
 Full workflow output (agent-level detail, all citations):
 session scratchpad `owned-runners-plan-distilled.md` and task output
 `w8ae2bsop.output`; journal at `wf_049a195e-c05/journal.jsonl`.
+
+## Status amendment (2026-08-08, post-deployment)
+
+Events overtook the plan's careful sequencing, in a good way. Recorded so the
+phases above read as history, not as pending work:
+
+- **Phase 1 (hardening): DONE** — workflow permissions + SHA pins (PR #600),
+  repo settings flipped (selected actions + SHA-pin enforcement +
+  all-outside-collaborator approval), account IAM cleaned (worker
+  role/profile deleted, launcher PassRole stripped, RunInstances Deny
+  guardrails attached). The allowlist's first live catch was a transitive
+  action — see ledger receipt (g).
+- **Phase 2 (measurement): PARTIALLY DONE** — the Blacksmith invoice was
+  obtained (magnitude: ~7x the ledger's unsourced estimate; exact figures
+  stay off the public packet) and forced the operator decision that
+  supersedes the hybrid endgame: FULL Blacksmith exit. Light lanes run on
+  free ubuntu-24.04; the lane-collector columns (run_attempt, attempt-1
+  pickup, per-lane RSS) remain queued work.
+- **Phases 3-5 (stack, shadow, cutover): SUPERSEDED BY DEPLOYMENT** — the
+  groundwork stack shipped (PR #603/#611/#618, stack `production`, 29
+  resources, red-team gates verified against live account state) and the
+  operator cut the five heavy lanes over to `beep-ec2-heavy` directly
+  (PR #620), validated by a supervised burst that landed an eight-PR merge
+  wave. The shadow-job ceremony was designed for a world with Blacksmith to
+  fall back on; the exit decision removed that world.
+- **Phase 6 (sequencing conflict): RESOLVED EC2-FIRST** — grill decision 21
+  amended in place; workstation deferred indefinitely.
+- **NEXT: the controller decision gate (ledger #91)** — adopt-vs-build
+  research → grill → implementation, with the performance layer (ledger #92
+  baked AMI, #94 asymmetric turbo cache) integrated on the same timeline.
+  The burst receipts (ledger, 2026-08-08) are the controller's integration
+  test suite, pre-paid.

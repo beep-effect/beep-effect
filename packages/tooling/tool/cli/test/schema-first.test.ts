@@ -104,6 +104,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     expect(
       isExcludedTypeScriptSourcePath("packages/foundation/modeling/schema/docs/examples/src-Yaml.ts-example.ts")
     ).toBe(true);
+    expect(isExcludedTypeScriptSourcePath("infra/ci-runners/sdks/ghaRunners/module.ts")).toBe(true);
     expect(isExcludedTypeScriptSourcePath("packages/foundation/modeling/schema/src/Yaml.ts")).toBe(false);
   });
 

@@ -1028,7 +1028,8 @@ durability fixes discovery, not trust.
     four lines above `review threads: 0 unresolved`. Monitor (#586),
     publish (#592), closeout (#592) — three subcommands in one day, so
     this is the verdict writer's default behavior, not an edge case.
-84. **Tree parity: local proof and hosted CI run on DIFFERENT TREES,
+84. **[SHIPPED — `feat/speed-loop-wrapup-widgets`] Tree parity: local proof
+    and hosted CI run on DIFFERENT TREES,
     and the stale-base guard is structurally blind to the gap.**
     (Reported by beep-effect5, 2026-08-06 — a plan/manifest phase-id
     mismatch and a goals INDEX drift, both green locally, both
@@ -1129,7 +1130,8 @@ durability fixes discovery, not trust.
     predicts a verdict worth predicting. Corrects this item's original
     read of #587 as an ordinary regression — the drops were real
     arithmetic, but the FAILURE was not.
-86. **The ledger is not queryable, and that now costs more than it saves.**
+86. **[SUPERSEDED — basic-memory, decision 53] The ledger is not queryable,
+    and that now costs more than it saves.**
     (Convergent finding, 2026-08-06 ranking run `wf_b1f680b0-2df`: three
     lenses given DIFFERENT briefs — cycle-time, unblocking, cost-to-ship
     — each reported this blocker unprompted, and each proposed the same
@@ -1158,7 +1160,8 @@ durability fixes discovery, not trust.
     PR-G with no ratification. The sidecar must name which authority
     wins. Vehicle: PR-G, and it is a prerequisite for #57's claims
     manifest and any dependency graph.
-87. **`#NN` is an overloaded sigil across at least five referent kinds.**
+87. **[SUPERSEDED — basic-memory, decision 53] `#NN` is an overloaded sigil
+    across at least five referent kinds.**
     (Same run; flagged independently by the unblocking lens and the
     disposition mapper, who measured roughly a third of low-numbered
     citation hits as false positives.) One bare token means: a ledger
@@ -1177,7 +1180,8 @@ durability fixes discovery, not trust.
     collision sitting inside the only join path. Vehicle: PR-G, ahead
     of #86.
 
-88. **A gate run BEFORE the change it gates is a vacuous proof, and
+88. **[SHIPPED — `feat/speed-loop-wrapup-widgets`] A gate run BEFORE the
+    change it gates is a vacuous proof, and
     reads identically to one run after.** (Lived on PR #592, 2026-08-06.)
     I ran `bun run beep quality test-tsgo` → exit 0, THEN wrote the new
     tests, then never re-ran it. `bunx vitest run` reported 61/61 green
@@ -1196,8 +1200,10 @@ durability fixes discovery, not trust.
     contract, applied to gate results instead of verdicts. Cheap
     version available immediately: the battery re-runs a gate whose
     recorded hash != current instead of reporting its cached verdict.
-    Vehicle: PR-G with #75.
-89. **The flake quarantine recognizes exactly one signature, so every
+    Vehicle: PR-G with #75. Follow-up retained: proof-hash staleness needs
+    `ProofState.laneProofs` exported before it can consume lane proof hashes.
+89. **[SHIPPED — `feat/speed-loop-wrapup-widgets`] The flake quarantine
+    recognizes exactly one signature, so every
     other environment-only failure is hardened by hand.** (Same run.)
     `@beep/xai#check` failed exit 2 inside the full proof on a branch
     that does not touch `packages/drivers/xai`; a standalone
@@ -1232,7 +1238,12 @@ durability fixes discovery, not trust.
     the operator found this failure before I did. A pending snapshot
     is not monitoring — a check set is unobserved until it reaches a
     terminal state (`monitor --until-merged` exists for exactly this).
-90. **`run_started_at` is rewritten on re-dispatch, so run-level
+    THIRD signature (PR #626): an install-step prebuilt-binary download
+    timeout fell back to a source build and then failed on a missing system
+    header. The jobs API can identify the install-step infra failure; the
+    shipped quarantine applies rerun-once semantics.
+90. **[SHIPPED — `feat/speed-loop-wrapup-widgets`] `run_started_at` is
+    rewritten on re-dispatch, so run-level
     "queue latency" is an artifact unless filtered to attempt 1.**
     (2026-08-06, caught by the owned-runners plan workflow's value
     challenge and verified live the same hour.) During the Actions
@@ -1253,6 +1264,8 @@ durability fixes discovery, not trust.
     filter in the collector, never the reader. Kin to the
     absence-proof positive-control law: a damning-looking metric needs
     its provenance checked before it justifies a project.
+    Follow-up retained: peak-RSS needs a runner-side emitter before the
+    collector can populate that column.
 
 Empty-frontmatter changeset receipt (2026-08-06, this PR's own first
 publish): 56 no-release changesets on main used bare `---\n---`
@@ -1438,3 +1451,148 @@ no-op outside UserPromptSubmit/UserPromptExpansion/SessionStart (decision
 43); merge_group vacuous gates → #62 and
 `strict_required_status_checks_policy` re-opened at its true ~8 runs/day
 cost (decision 44).
+
+91. **[GRADUATED — `goals/ci-fleet-endgame`, decision 54] Controller
+    build-vs-adopt is a decision gate: no controller code before
+    the research verdict.** (Operator-ordered, 2026-08-08, after the burst
+    landed the merge wave.) The endgame is verbatim: "our own blacksmith
+    minus the UI & ridiculous spend" — zero manual aws/gh commands per PR.
+    Candidate references the research audits against:
+    philips-labs/terraform-aws-github-runner (webhook→Lambda→spot,
+    scale-to-zero, JIT — closest architectural match),
+    actions-runner-controller (k8s), machulav/ec2-github-runner, RunsOn
+    (commercial controller in our own account). Deliverable: a decision
+    record + gap list; the burst's integration discoveries (see the
+    runner-burst receipts below) are its evidence base. Grill session on the
+    record before implementation.
+
+92. **[GRADUATED — `goals/ci-fleet-endgame`, decision 54] Repo-optimized
+    worker images (lockfile-keyed baked AMI).** Promoted by
+    operator interest from o6 modifier #2: toolbelt + docker + runner agent +
+    bun store + warm dependency/turbo seed baked per bun.lock hash. Deletes
+    the ~36s/job install floor AND the cross-runner tool-cache poisoning
+    class outright. Docker-image variant applies only if the controller
+    research picks the ARC route.
+
+93. **[GRADUATED — `goals/ci-fleet-endgame`, decision 54] CI
+    resource-weight: the requirements are NOT size-normal, and the
+    excess is attributable.** (Operator question 2026-08-08: "are our
+    hardware requirements normal for repo size?") Evidence: a single
+    full-scope tsgo compile exceeds 16 GB; ~1.65M type-instantiation floor on
+    import; heavy suites spend ~556s in module import before running a test.
+    The premium splits into a deliberate schema-first type-density cost and a
+    recoverable packaging/execution cost. Levers in leverage order: re-run
+    the instantiation census post-beta.104 and make budgets a RATCHET; kill
+    remaining census-ranked union/template bombs (box + MimeType precedent);
+    explicit types at exported boundaries to stop consumer re-inference;
+    break god-barrels (sub-barrels / type-only entries); shard full-scope
+    Check into per-slice processes. If sharded Check fits 16 GB again, the
+    fleet demotes from necessity to speed. Absorbs/widens the parked
+    box-typecheck-cost campaign.
+
+94. **[GRADUATED — `goals/ci-fleet-endgame`, decision 54] Duplicated
+    build/install across lanes: fix is cache architecture, not
+    orchestration.** (Operator question 2026-08-08.) Fleet logs showed
+    `Cached: 0 cached, 97 total` per lane — every job cold-rebuilds the
+    graph — because PR jobs are deliberately denied shared-cache WRITE (the
+    poisoning boundary #600 closed in storybook.yml). Build-once-as-a-job
+    serializes the critical path and ships GB artifacts; a mega-job sums
+    lane wall-clocks, breaks the 17-context model, and OOMs co-resident
+    heavy lanes. Correct design: asymmetric cache access — trusted push runs
+    WRITE the shared turbo cache, PR runs READ ONLY (content hashing lets
+    main's seed serve any PR's unchanged packages; no untrusted write path =
+    no poisoning). The provisioned-but-unused beep-turbo-cache-832907639880
+    bucket plus o6's pre-signed-read design is the implementation; the
+    node_modules/toolbelt layer moves into #92's baked AMI. Baseline for the
+    research: 0 cache hits, ~36s installs, ~556s type-graph imports,
+    18-20min heavy lanes.
+
+Runner-burst receipts (2026-08-08, the interim burst that landed the merge
+wave; each is a controller-design input): (a) launches must use the dedicated
+launcher identity — the admin user carries a legacy t2.micro-only
+RunInstances deny (FreedomFramework-CI); (b) the launch template deliberately
+leaves subnet placement to launch time, and a request-level subnet must
+restate the FULL network-interface spec because the request block replaces
+the template's per device-index; (c) first spot use needs the EC2 Spot
+service-linked role minted once by an admin; (d) the minimal Ubuntu AMI
+lacks the hosted toolbelt — setup-bun died at exit 127 on missing unzip, and
+Test Integration needs docker for its pglite-testcontainers harness; (e)
+setup-bun's cross-job cache poisons heterogeneous fleets ("Cache restored
+successfully" then bun absent — archives carry the SAVING runner's absolute
+paths); fixed with no-cache pending the baked AMI; (f) non-ephemeral agents
+on long-lived spot guests zombie silently (three occurrences in one night:
+VM running, agent gone, no forensics by design) — the strongest empirical
+argument for one-job-one-VM ephemeral; (g) the actions allowlist's first
+catch was a TRANSITIVE action (swatinem/rust-cache inside
+setup-rust-toolchain) invisible to uses:-grep inventories; (h) the committed
+permission deny-list passes vetted scripts/porcelain while denying ad-hoc
+`gh api` writes — runner operations therefore belong in repo porcelain
+(`beep runners launch|teardown|mint`), a controller-era work item; (i)
+merge-treadmill mechanics under an active fleet: goals/INDEX.md must be
+REGENERATED on every conflict (three-for-three wrong when auto-merged), and
+16GB-survival tunings (hosted-swap, serial caps) amputated in textual
+conflict resolution left semantically mixed trees — the branch's own tests
+failed on features whose call sites were resolved away, caught only by the
+lanes; wholesale file-to-main plus keeping cherry-picked hardware-independent
+fixes was the deterministic repair.
+
+## Closeout dispositions (2026-08-08)
+
+- **PARKED — decision 55:** all earlier grilled-but-unshipped widgets remain
+  in this retained ledger as citation-ready precedent. This includes the
+  ranked cheap bundle (#82 publish status line, #76, #73, #83 verdict
+  staleness) and the PR-G family (#75 repo-level battery, #60 regenerate
+  map, #77 `publish --reconcile`, and their recorded companions). None block
+  closeout; a future packet may revive one only by citing its evidence and
+  grill outcome.
+
+## Retrospective closeout friction receipts (2026-08-08)
+
+These incidents were reconstructed as a batch during closeout, not recorded at
+the moment each friction event occurred. They therefore preserve historical
+evidence but do not satisfy the contemporaneous-receipt rule in `AGENTS.md`.
+Future incidents must enter the active ledger when they happen so they can
+shape the work in flight.
+
+Generated-file auto-merge is wrong in both directions — third confirmed
+instance. `goals/INDEX.md` regenerated to 122 packets / 33 active; HEAD said
+31, main said 34, so taking either side would have committed a wrong index.
+Prevention: a git merge driver marking `goals/INDEX.md`,
+`standards/jsdoc-*.inventory.*`, and
+`standards/*.regression-baseline.jsonc` as `merge=regenerate` so conflicts
+fail loudly instead of auto-merging plausibly wrong content.
+
+A docs-only codemod branch carried a latent compile break. The P3 branch
+pinned `S.TaggedErrorClass`; main's Effect beta.104 bump renamed the export
+to `S.TaggedError` (zero occurrences of the old name in the installed
+package). No gate on the branch itself could catch it before merge because
+the API no longer existed. Prevention: merge main into long-running codemod
+branches early and often; #84's merged-tree verify tier is the local gate
+that would have caught it.
+
+The jsdoc ratchet compares counts only, so it cannot detect a stale
+inventory. A concurrent writer shipped an inventory with line anchors from
+a pre-merge tree (`Id.ts` `make` at 2043 versus actual 2065); totals matched
+and the gate stayed green. Anchors and `generatedAt` are load-bearing for
+docs tooling but unguarded. Prevention: ratchet check-mode verifies a sample
+of anchors against the working tree, or hashes the anchored spans.
+
+`jsdoc-inventory` costs about five minutes per run (303s/319s observed), and
+merge-resolution loops run it repeatedly — three times across two merges in
+this receipt. Prevention: add a `--since`-style bounded mode like
+`docgen:local`, scoped to `origin/main...HEAD` plus dirty files.
+
+Prebuilt-binary download timeout converts to a red lane through a latent
+environment gap (PR #626, Codegen Drift, 2026-08-08): keytar, transitive via
+`@azure/msal-node-extensions`, timed out in `prebuild-install`, fell back to
+node-gyp, and died because the free ubuntu-24.04 runner lacked
+`libsecret-1-dev`. Immediate disposition: rerun once, now covered by #89's
+third jobs-API fingerprint. Durable disposition: the ci-fleet-endgame baked
+AMI toolbelt includes `libsecret-1-dev`; the free-lane setup composite may
+add it if the class recurs.
+
+The lane janitor's allowlist lived in a session-scoped scratchpad path under
+`/tmp`, forcing the successor session to rediscover it with `find(1)`.
+Prevention: operations state that outlives a session belongs in a durable
+repo-adjacent location; `beep runners` porcelain should own lane-closure
+state.
