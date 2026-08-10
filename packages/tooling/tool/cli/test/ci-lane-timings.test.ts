@@ -153,6 +153,30 @@ describe("ci lane timings attempt filter", () => {
     expect(cells[header.indexOf("pickupSeconds")]).toBe("");
     expect(cells[header.indexOf("durationSeconds")]).not.toBe("");
   });
+
+  it("neutralizes formula-leading job names for spreadsheet import", () => {
+    const cells = Str.split("\t")(
+      Str.split("\n")(renderCiLaneTimingsTsv([ciLaneTimingRow(job({ name: "=1+1" }))]))[1] ?? ""
+    );
+
+    expect(cells[3]).toBe("'=1+1");
+  });
+
+  it("replaces embedded tabs in string cells", () => {
+    const cells = Str.split("\t")(
+      Str.split("\n")(renderCiLaneTimingsTsv([ciLaneTimingRow(job({ name: "Test\tUnit" }))]))[1] ?? ""
+    );
+
+    expect(cells).toHaveLength(12);
+    expect(cells[3]).toBe("Test Unit");
+  });
+
+  it("replaces embedded newlines in string cells", () => {
+    const lines = Str.split("\n")(renderCiLaneTimingsTsv([ciLaneTimingRow(job({ name: "Test\nUnit" }))]));
+
+    expect(lines).toHaveLength(2);
+    expect(Str.split("\t")(lines[1] ?? "")[3]).toBe("Test Unit");
+  });
 });
 
 describe("ci lane timings derivations", () => {

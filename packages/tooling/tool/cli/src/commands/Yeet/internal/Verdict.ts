@@ -184,7 +184,7 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  *
  * **Details**
  *
- * Only the two hard criteria appear here. The Greptile score is a displayed
+ * Only the three hard criteria appear here. The Greptile score is a displayed
  * target rather than a gate, so it is carried on
  * {@link YeetMergeReadyCriteria} for the operator to read and can never be the
  * value of {@link YeetMergeReady.failing}.
@@ -200,7 +200,7 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export const YeetMergeReadyCriterion = LiteralKit(["checks-green", "threads-resolved"]).pipe(
+export const YeetMergeReadyCriterion = LiteralKit(["closeout-run", "checks-green", "threads-resolved"]).pipe(
   $I.annoteSchema("YeetMergeReadyCriterion", {
     title: "Yeet Merge Ready Criterion",
     description: "One hard criterion of the merge protocol.",
@@ -225,6 +225,7 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  * import * as O from "effect/Option"
  *
  * const criteria = YeetMergeReadyCriteria.make({
+ *   closeoutRun: true,
  *   checksGreen: true,
  *   threadsResolved: false,
  *   greptileScore: O.some("5/5"),
@@ -237,6 +238,7 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  */
 export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`YeetMergeReadyCriteria`)(
   {
+    closeoutRun: S.Boolean,
     checksGreen: S.Boolean,
     threadsResolved: S.Boolean,
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -248,6 +250,7 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
 
 const mergeReadyCriterionHolds = (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean =>
   YeetMergeReadyCriterion.$match(criterion, {
+    "closeout-run": () => criteria.closeoutRun,
     "checks-green": () => criteria.checksGreen,
     "threads-resolved": () => criteria.threadsResolved,
   });
@@ -271,7 +274,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
   }) =>
     O.match(value.failing, {
       onNone: () =>
-        value.ready && value.criteria.checksGreen && value.criteria.threadsResolved
+        value.ready && value.criteria.closeoutRun && value.criteria.checksGreen && value.criteria.threadsResolved
           ? undefined
           : {
               path: ["failing"],
@@ -307,7 +310,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
  *
  * The three fields are mutually derivable, so a cross-field check makes an
  * incoherent record undecodable rather than merely wrong: `ready` is true
- * exactly when `failing` is `None` and both hard criteria hold, and a named
+ * exactly when `failing` is `None` and all three hard criteria hold, and a named
  * `failing` criterion must be the one recorded as unsatisfied. The Greptile
  * score is display-only and is not part of the check.
  *
@@ -320,7 +323,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
  * const mergeReady = YeetMergeReady.make({
  *   ready: false,
  *   failing: O.some("threads-resolved"),
- *   criteria: YeetMergeReadyCriteria.make({ checksGreen: true, threadsResolved: false }),
+ *   criteria: YeetMergeReadyCriteria.make({ closeoutRun: true, checksGreen: true, threadsResolved: false }),
  * })
  * console.log(mergeReady.ready)
  * ```

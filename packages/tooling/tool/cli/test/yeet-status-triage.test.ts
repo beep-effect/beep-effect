@@ -10,6 +10,7 @@ import {
   YeetStatusSnapshotJson,
   YeetStatusWorktree,
   yeetReviewThreadExcerpt,
+  yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -183,7 +184,7 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
   });
 
-  it("treats a missing closeout artifact as unknown, not as an open-thread blocker", () => {
+  it("blocks on closeout-run when the closeout artifact is missing without mislabeling threads", () => {
     const mergeReady = deriveYeetMergeReady(
       YeetStatusArtifact.make({
         detail: "no closeout artifact found for this branch",
@@ -193,11 +194,35 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+    expect(O.map(mergeReady, (value) => value.criteria.threadsResolved)).toStrictEqual(O.some(true));
   });
 
-  it("is ready with no failing criterion when both hard criteria hold, carrying Greptile as display only", () => {
+  it("recommends closeout before any remote rerun handoff when its artifact is missing", () => {
+    const closeout = YeetStatusArtifact.make({ detail: "missing", path: "pr-closeout.json", state: "missing" });
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 }),
+      rerunFailedCommand: "gh run view 42",
+      rerunFailedDecision: "same-SHA failed workflow",
+    });
+
+    expect(
+      yeetStatusNextCommandForTesting(
+        YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+        YeetStatusArtifact.make({
+          detail: "publish success",
+          outcome: "success",
+          path: "verdict.json",
+          state: "present",
+        }),
+        closeout,
+        remote
+      )
+    ).toContain("beep yeet closeout");
+  });
+
+  it("is ready with no failing criterion when all hard criteria hold, carrying Greptile as display only", () => {
     const mergeReady = deriveYeetMergeReady(
       closeoutArtifact(0, O.some("4/5")),
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })

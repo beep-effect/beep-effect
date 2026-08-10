@@ -114,14 +114,14 @@ describe("buildSweepPlan shape", () => {
 describe("local branch deletion contract", () => {
   it("uses -d and records ancestry when the tip is an ancestor of origin/main", () => {
     const step = stepFor(stateWith({ branchMergedIntoBase: true }), "delete-local-branch");
-    expect(step.action).toBe("git branch -d feat/merge-loop");
+    expect(step.action).toBe("git branch -d 'feat/merge-loop'");
     expect(A.map(step.preconditions, (observed) => observed.description)).toContain(
       "feat/merge-loop is an ancestor of origin/main"
     );
   });
 
   it("uses -D for a squash merge, whose tip is not an ancestor of origin/main", () => {
-    expect(stepFor(mergedState, "delete-local-branch").action).toBe("git branch -D feat/merge-loop");
+    expect(stepFor(mergedState, "delete-local-branch").action).toBe("git branch -D 'feat/merge-loop'");
   });
 
   it("blocks -D when the pull request is not MERGED", () => {
@@ -239,7 +239,7 @@ describe("remote branch deletion contract", () => {
   it("flags the authorized deletion as an operator handoff with the exact command", () => {
     const step = stepFor(mergedState, "delete-remote-branch");
     expect(step.action).toBe(
-      "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+      "git push origin '--force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222' ':refs/heads/feat/merge-loop'"
     );
     expect(step.requiresOperator).toBe(true);
   });
@@ -271,14 +271,14 @@ describe("fast-forward refusal", () => {
 
   it("fetches the ref directly when no worktree holds main", () => {
     const step = stepFor(stateWith(onFeatureBranch), "ff-main");
-    expect(step.action).toBe("git fetch origin main:main");
+    expect(step.action).toBe("git fetch origin 'main:main'");
     expect(sweepStepBlockers(step)).toEqual([]);
   });
 
   it("skips with a reason when another worktree holds main", () => {
     const state = stateWith({ ...onFeatureBranch, mainCheckedOutElsewhere: true });
     expect(blockerText(state, "ff-main")).toEqual(["main is not checked out in another worktree"]);
-    expect(stepFor(state, "ff-main").action).toBe("git fetch origin main:main");
+    expect(stepFor(state, "ff-main").action).toBe("git fetch origin 'main:main'");
   });
 
   it("never turns a fast-forward refusal into an operator handoff", () => {
@@ -288,7 +288,7 @@ describe("fast-forward refusal", () => {
 
   it("merges in place when the sweeping worktree is the one on main", () => {
     const step = stepFor(mergedState, "ff-main");
-    expect(step.action).toBe("git merge --ff-only refs/remotes/origin/main");
+    expect(step.action).toBe("git merge --ff-only 'refs/remotes/origin/main'");
     expect(sweepStepBlockers(step)).toEqual([]);
   });
 
@@ -330,7 +330,7 @@ describe("end state", () => {
   it("asks for nothing when the clone is already on main", () => {
     const step = stepFor(mergedState, "end-state");
     expect(step.preconditions).toEqual([]);
-    expect(step.action).toBe("git switch main");
+    expect(step.action).toBe("git switch 'main'");
   });
 
   it("requires a clean worktree and a free main to switch back", () => {
@@ -354,7 +354,7 @@ describe("renderSweepReport", () => {
       outcome: SweepStepNeedsOperator.make({
         reason: "deleting origin/feat/merge-loop was denied by permission: 403",
         operatorCommand:
-          "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop",
+          "git push origin '--force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222' ':refs/heads/feat/merge-loop'",
       }),
     }),
   ]);
@@ -370,7 +370,7 @@ describe("renderSweepReport", () => {
     const rendered = renderSweepReport(handoffReport);
     expect(rendered).toContain("operator handoff (1 command(s) only you can run):");
     expect(rendered).toContain(
-      "    git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+      "    git push origin '--force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222' ':refs/heads/feat/merge-loop'"
     );
   });
 
@@ -750,6 +750,18 @@ describe("sweep branch override", () => {
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );
+});
+
+describe("rendered sweep command quoting", () => {
+  it("keeps shell metacharacters inside quotes in every branch deletion command", () => {
+    const branch = "feat/safe;$(touch-pwn)";
+    const state = stateWith({ branch, pullRequestHeadBranch: O.some(branch) });
+
+    expect(stepFor(state, "delete-local-branch").action).toBe("git branch -D 'feat/safe;$(touch-pwn)'");
+    expect(stepFor(state, "delete-remote-branch").action).toBe(
+      "git push origin '--force-with-lease=refs/heads/feat/safe;$(touch-pwn):aaaa1111bbbb2222' ':refs/heads/feat/safe;$(touch-pwn)'"
+    );
+  });
 });
 
 describe("refresh handoff addressing", () => {

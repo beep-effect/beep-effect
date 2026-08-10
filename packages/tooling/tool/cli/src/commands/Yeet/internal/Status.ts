@@ -917,11 +917,11 @@ const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemo
  * **Details**
  *
  * Status already fetches everything the protocol asks a human to read, so the
- * only thing missing was a name for the answer. `checks-green` and
- * `threads-resolved` are the hard criteria and are reported in that order —
- * a red pipeline is the blocker worth acting on first even when threads are
- * also open. The Greptile score rides along as display-only: it is a target the
- * operator judges, not a gate this verdict enforces.
+ * only thing missing was a name for the answer. `closeout-run`, `checks-green`,
+ * and `threads-resolved` are the hard criteria. A missing closeout artifact is
+ * its own blocker while the live thread criterion continues to report only the
+ * state it knows. The Greptile score rides along as display-only: it is a target
+ * the operator judges, not a gate this verdict enforces.
  *
  * **Gotchas**
  *
@@ -964,18 +964,22 @@ export const deriveYeetMergeReady = (
   if (!remote.checked || !remote.available) {
     return O.none();
   }
+  const closeoutRun = closeout.state === "present";
   const checksGreen = checksAreGreen(remote);
   const threadsResolved = threadsAreResolved(closeout, remote);
-  const failing = !checksGreen
-    ? O.some(YeetMergeReadyCriterion.Enum["checks-green"])
-    : threadsResolved
-      ? O.none<YeetMergeReadyCriterion>()
-      : O.some(YeetMergeReadyCriterion.Enum["threads-resolved"]);
+  const failing = !closeoutRun
+    ? O.some(YeetMergeReadyCriterion.Enum["closeout-run"])
+    : !checksGreen
+      ? O.some(YeetMergeReadyCriterion.Enum["checks-green"])
+      : threadsResolved
+        ? O.none<YeetMergeReadyCriterion>()
+        : O.some(YeetMergeReadyCriterion.Enum["threads-resolved"]);
   return O.some(
     YeetMergeReady.make({
       ready: O.isNone(failing),
       failing,
       criteria: YeetMergeReadyCriteria.make({
+        closeoutRun,
         checksGreen,
         threadsResolved,
         greptileScore: closeout.greptileScore,
@@ -989,6 +993,9 @@ const nextCommandForRemote = (
   closeout: YeetStatusArtifact,
   remote: YeetStatusRemote
 ): string => {
+  if (closeout.state !== "present") {
+    return CLOSEOUT_COMMAND;
+  }
   if (O.exists(deriveYeetMergeReady(closeout, remote), (mergeReady) => mergeReady.ready)) {
     return MERGE_READY_COMMAND;
   }

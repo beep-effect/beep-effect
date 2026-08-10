@@ -89,7 +89,9 @@ workflows in skills.
   than it should be, record a receipt — what you were doing, the evidence
   (command, error text, PR/file), what would have prevented it — in the
   active packet's ledger (`research/OPPORTUNITIES.md`) at the moment it
-  happens, never saved for closeout.
+  happens, never saved for closeout. This repo is public: before recording,
+  redact secrets/tokens/credentials, replace absolute home paths with `~`,
+  drop session/machine ids, and quote only the minimal identifying error text.
 
 ## Agent Memory
 
