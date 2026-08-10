@@ -92,7 +92,7 @@ describe("FileInfo", () => {
   });
 
   it("round-trips schema-derived arbitrary values", () => {
-    const arbitrary = S.toArbitrary(FileInfo);
+    const arbitrary = S.toArbitrary(FileInfo)(fc);
     const isFileInfo = S.is(FileInfo);
 
     fc.assert(
