@@ -36,6 +36,7 @@ import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit } from "@beep/schema";
+import { A, Eq, flow, O, Str, thunkEffectVoid, thunkFalse } from "@beep/utils";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
 import {
@@ -56,15 +57,12 @@ import {
   Stream,
   Tuple,
 } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { approximateCostUsdMicros } from "./UsagePricing.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import type { IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import type { IndexedBlock, TurnHistoryItem, TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
@@ -128,8 +126,8 @@ const isFirstUserMessageTurn = (timeline: Thread.ThreadTimeline, turnId: Workspa
   pipe(
     firstUserMessageTurnId(timeline),
     O.match({
-      onNone: () => false,
-      onSome: (firstUserTurnId) => firstUserTurnId === turnId,
+      onNone: thunkFalse,
+      onSome: Eq.equals(turnId),
     })
   );
 
@@ -181,11 +179,10 @@ const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArra
     A.flatMap((turn) =>
       A.flatMap(
         turn.items,
-        (item): ReadonlyArray<TurnHistoryItem> =>
-          Thread.TimelineItem.match({
-            message: messageItemToHistory,
-            tool_call: () => [],
-          })(item)
+        Thread.TimelineItem.match({
+          message: messageItemToHistory,
+          tool_call: A.emptyReadonly<TurnHistoryItem>,
+        })
       )
     )
   );
@@ -314,6 +311,20 @@ const chatTimeToFirstBlock = Metric.timer("agents_chat_time_to_first_block", {
   boundaries: [25, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
 });
 
+const ChatTurnKind = LiteralKit(["send", "edit"]).pipe(
+  $I.annoteSchema("ChatTurnKind", {
+    description: "Chat turn origins attributed on desktop turn metrics.",
+  })
+);
+type ChatTurnKind = typeof ChatTurnKind.Type;
+
+const ChatTurnFailurePhase = LiteralKit(["kernel", "persist", "prepare"]).pipe(
+  $I.annoteSchema("ChatTurnFailurePhase", {
+    description: "Turn phases attributed on desktop chat turn failure metrics.",
+  })
+);
+type ChatTurnFailurePhase = typeof ChatTurnFailurePhase.Type;
+
 /**
  * Build the assistant-turn stream for a thread: stream the kernel turn,
  * collecting indexed blocks as they pass. Successful completion persists the
@@ -327,14 +338,14 @@ const streamAndPersist = (
   usage: UsageRecordSink["Service"],
   coordinator: ChatCoordinator["Service"],
   threadId: WorkspaceIdentity.ThreadId,
-  kind: "send" | "edit",
+  kind: ChatTurnKind,
   requestId: string,
   requestGeneration: number
 ): Stream.Stream<AssistantBlock, ChatActionError> =>
   Stream.unwrap(
     Effect.gen(function* () {
       const startedAt = yield* Clock.currentTimeMillis;
-      const trackTurnFailure = (phase: "kernel" | "persist" | "prepare") =>
+      const trackTurnFailure = (phase: ChatTurnFailurePhase) =>
         Metric.update(
           Metric.withAttributes(chatTurnFailuresTotal, {
             kind,
@@ -433,18 +444,20 @@ const streamAndPersist = (
               threadId
             ).pipe(
               Effect.flatMap(usage.append),
-              Effect.tapError((error) =>
-                logRedactedCause(
-                  Cause.fail(error),
-                  LogRedactedCauseOptions.make({
-                    message: "assistant turn persisted but its usage record was not recorded",
-                    level: "Warn",
-                    attributes: {
-                      context: "SendMessage.usage",
-                      kind,
-                      subsystem: "chat",
-                    },
-                  })
+              Effect.tapError(
+                flow(
+                  Cause.fail,
+                  logRedactedCause(
+                    LogRedactedCauseOptions.make({
+                      message: "assistant turn persisted but its usage record was not recorded",
+                      level: "Warn",
+                      attributes: {
+                        context: "SendMessage.usage",
+                        kind,
+                        subsystem: "chat",
+                      },
+                    })
+                  )
                 )
               ),
               Effect.ignore
@@ -545,17 +558,19 @@ const streamAndPersist = (
             Exit.isSuccess(exit)
               ? Effect.void
               : persist(O.some(Cause.hasInterrupts(exit.cause) ? STOPPED_NOTE : FAILED_NOTE)).pipe(
-                  Effect.tapError((error) =>
-                    logRedactedCause(
-                      Cause.fail(error),
-                      LogRedactedCauseOptions.make({
-                        message: "chat turn could not record its interruption",
-                        level: "Warn",
-                        attributes: {
-                          context: "SendMessage.persistInterrupted",
-                          subsystem: "chat",
-                        },
-                      })
+                  Effect.tapError(
+                    flow(
+                      Cause.fail,
+                      logRedactedCause(
+                        LogRedactedCauseOptions.make({
+                          message: "chat turn could not record its interruption",
+                          level: "Warn",
+                          attributes: {
+                            context: "SendMessage.persistInterrupted",
+                            subsystem: "chat",
+                          },
+                        })
+                      )
                     )
                   ),
                   Effect.ignore
@@ -590,22 +605,24 @@ const setTitleFromFirstUserMessage = (
     deriveThreadTitle(content),
     O.map((title) =>
       store.setTitleIfEmpty({ threadId, emptyTitle, title }).pipe(
-        Effect.catch((error) =>
-          logRedactedCause(
-            Cause.fail(error),
-            LogRedactedCauseOptions.make({
-              message: "chat title derivation skipped",
-              level: "Warn",
-              attributes: {
-                context: "SendMessage.setTitleIfEmpty",
-                subsystem: "chat",
-              },
-            })
+        Effect.catch(
+          flow(
+            Cause.fail,
+            logRedactedCause(
+              LogRedactedCauseOptions.make({
+                message: "chat title derivation skipped",
+                level: "Warn",
+                attributes: {
+                  context: "SendMessage.setTitleIfEmpty",
+                  subsystem: "chat",
+                },
+              })
+            )
           )
         )
       )
     ),
-    O.getOrElse(() => Effect.void)
+    O.getOrElse(thunkEffectVoid)
   );
 
 const titleGuardForEditedTurn = (
@@ -617,18 +634,21 @@ const titleGuardForEditedTurn = (
     Effect.map((timeline) =>
       isFirstUserMessageTurn(timeline, turnId) ? titleGuardForEditedFirstUserTurn(timeline, turnId) : O.none()
     ),
-    Effect.catch((error) =>
-      logRedactedCause(
-        Cause.fail(error),
-        LogRedactedCauseOptions.make({
-          message: "chat title derivation skipped",
-          level: "Warn",
-          attributes: {
-            context: "EditMessage.firstUserTitleGate",
-            subsystem: "chat",
-          },
-        })
-      ).pipe(Effect.as(O.none<string>()))
+    Effect.catch(
+      flow(
+        Cause.fail,
+        logRedactedCause(
+          LogRedactedCauseOptions.make({
+            message: "chat title derivation skipped",
+            level: "Warn",
+            attributes: {
+              context: "EditMessage.firstUserTitleGate",
+              subsystem: "chat",
+            },
+          })
+        ),
+        Effect.as(O.none<string>())
+      )
     )
   );
 
@@ -693,6 +713,11 @@ class NotPersistedTurnRequestReceipt extends S.Class<NotPersistedTurnRequestRece
   })
 ) {}
 
+// The receipt lifecycle is the shared rpc family minus "unknown". A literal
+// tuple is required (deriving via omitOptions loses tuple-ness and collapses
+// the receipt mapping below to one member); membership in the rpc family is
+// enforced where receipt statuses flow into getTurnRequestStatus's
+// TurnRequestStatus-typed return.
 const TurnRequestReceiptStatus = LiteralKit([
   "pending",
   "accepted",
@@ -714,14 +739,14 @@ const TurnRequestReceipts = TurnRequestReceiptStatus.mapMembers(
     () => NotPersistedTurnRequestReceipt,
   ])
 ).pipe(
+  S.toTaggedUnion("status"),
   $I.annoteSchema("TurnRequestReceipts", {
     description: "Generation-scoped persistence receipts for chat turn requests.",
-  }),
-  S.toTaggedUnion("status")
+  })
 );
 
 type TurnRequestReceipt = typeof TurnRequestReceipts.Type;
-type TurnRequestQueryStatus = typeof TurnRequestReceiptStatus.Type | "unknown";
+type TurnRequestQueryStatus = TurnRequestStatus;
 const TURN_REQUEST_STATUS_TTL_MILLIS = Duration.toMillis(Duration.minutes(5));
 
 class TrackedTurnRequestReceipt extends S.Class<TrackedTurnRequestReceipt>($I`TrackedTurnRequestReceipt`)(
@@ -852,7 +877,7 @@ const trackTurnRequest = <A, E>(
       Effect.flatMap((now) =>
         Ref.update(coordinator.turnRequestStatuses, (statuses) =>
           HashMap.set(
-            HashMap.filter(statuses, (tracked) => !O.exists(tracked.expiresAt, (expiresAt) => expiresAt <= now)),
+            HashMap.filter(statuses, (tracked) => !O.exists(tracked.expiresAt, N.isLessThanOrEqualTo(now))),
             requestId,
             TrackedTurnRequestReceipt.make({
               receipt: pendingReceipt,

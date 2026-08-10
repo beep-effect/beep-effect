@@ -30,12 +30,10 @@
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { O, P, Str, thunkEffectVoid } from "@beep/utils";
 import { invoke } from "@tauri-apps/api/core";
-import { Effect, Layer, Metric, Queue, Ref, Stream } from "effect";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import { Effect, flow, Layer, Metric, Queue, Ref, Stream } from "effect";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { Socket } from "effect/unstable/socket";
 import { SidecarTransport } from "./SidecarTransport.ts";
 import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -273,7 +271,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
           })
         ),
         Effect.matchEffect({
-          onFailure: (error) => Effect.fail(toSocketError(error)),
+          onFailure: flow(toSocketError, Effect.fail),
           onSuccess: (decoded) =>
             Metric.update(Metric.withAttributes(ipcClosedEvents, { kind: decoded.kind }), 1).pipe(
               Effect.andThen(
@@ -361,7 +359,7 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
       },
     }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
 
-    const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
+    const rpcSessionToken = yield* O.match(transport.rpcSessionToken, {
       onNone: () =>
         Effect.fail(
           SidecarSendError.make({
@@ -403,7 +401,7 @@ const flushBufferedFrames = (buffer: Ref.Ref<string>): Effect.Effect<void, Sidec
   Ref.get(buffer).pipe(
     Effect.flatMap((pending) =>
       O.match(Str.indexOf(FRAME_SEPARATOR)(pending), {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (newlineIndex) => {
           const frame = Str.slice(0, newlineIndex + 1)(pending);
           return Ref.set(buffer, Str.slice(newlineIndex + 1)(pending)).pipe(
