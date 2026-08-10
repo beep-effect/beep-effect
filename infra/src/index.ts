@@ -42,6 +42,13 @@ export const infraProjectName = "beep-effect";
  */
 export * from "./AIMetrics.ts";
 /**
+ * CI runner fleet controller bridge exports.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./CiFleetController.ts";
+/**
  * CI runner fleet groundwork Pulumi orchestration exports.
  *
  * **Example** (Reference the CI runners stack)
