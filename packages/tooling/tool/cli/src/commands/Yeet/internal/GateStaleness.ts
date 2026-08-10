@@ -13,20 +13,22 @@
  * The generalizable fix is to make a gate result carry provenance, and the
  * cheapest honest provenance a cached artifact already has is its modification
  * time. This module compares each cached gate artifact against the newest file
- * this branch changed: an artifact older than the branch's newest edit cannot
- * have observed that edit, whatever its contents claim.
+ * this branch changed that the gate actually reads: an artifact older than a
+ * relevant edit cannot have observed that edit, whatever its contents claim.
  *
  * **Gotchas**
  *
  * Freshness here is necessary, not sufficient. An artifact newer than every
- * changed file *may* still have been produced by a run that skipped the gate;
- * this catches the ordering failure, not every vacuous proof. It is a warning
- * surface for that reason, and a stale verdict names the command that
- * regenerates it rather than guessing at intent.
+ * relevant changed file *may* still have been produced by a run that skipped
+ * the gate; this catches the ordering failure, not every vacuous proof. It is
+ * a warning surface for that reason, and a stale verdict names the command
+ * that regenerates it rather than guessing at intent.
  *
- * The comparison set is the branch's changed files rather than the whole source
- * tree, which keeps the check bounded by the size of the diff and targets the
- * actual failure: a gate that ran before *this branch's* edits landed.
+ * The comparison set is the branch's relevant changed files rather than the
+ * whole source tree. Relevance is scoped per artifact because an input can only
+ * invalidate a gate that reads it: changesets do not feed code gates, while
+ * goal packets feed goals-doctor but not code gates. This keeps the check
+ * bounded by the diff without turning unrelated edits into false warnings.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -39,6 +41,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { GOALS_DOCTOR_BASELINE_PATH } from "../../Goals/Doctor.ts";
 import {
@@ -98,6 +101,27 @@ export const GateArtifactKind = LiteralKit(["baseline", "inventory", "manifest",
 export type GateArtifactKind = typeof GateArtifactKind.Type;
 
 /**
+ * The changed-input family that can invalidate a cached gate artifact.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GateInputScope = LiteralKit(["repo-code", "goals-packets"]).pipe(
+  $I.annoteSchema("GateInputScope", {
+    title: "Gate Input Scope",
+    description: "The changed-input family that can invalidate one cached gate artifact.",
+  })
+);
+
+/**
+ * The changed-input family that can invalidate a cached gate artifact.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GateInputScope = typeof GateInputScope.Type;
+
+/**
  * One file observed on disk with the modification time it carried.
  *
  * **Example** (Witness one artifact)
@@ -135,6 +159,7 @@ export class GateFileWitness extends S.Class<GateFileWitness>($I`GateFileWitness
  *   gateId: "coverage-regression",
  *   kind: "baseline",
  *   regenerateCommand: "bun run beep quality coverage --write-baseline",
+ *   scope: "repo-code",
  * })
  * console.log(descriptor.gateId)
  * ```
@@ -148,6 +173,7 @@ export class GateArtifactDescriptor extends S.Class<GateArtifactDescriptor>($I`G
     gateId: S.NonEmptyString,
     kind: GateArtifactKind,
     regenerateCommand: S.NonEmptyString,
+    scope: GateInputScope,
   },
   $I.annote("GateArtifactDescriptor", {
     description: "One cached verification-gate artifact paired with the command that regenerates it.",
@@ -155,7 +181,8 @@ export class GateArtifactDescriptor extends S.Class<GateArtifactDescriptor>($I`G
 ) {}
 
 /**
- * A gate artifact newer than every file this branch changed.
+ * A gate artifact newer than every relevant file this branch changed, or one
+ * whose gate has no relevant changed input.
  *
  * @category models
  * @since 0.0.0
@@ -166,12 +193,12 @@ export class GateFresh extends S.Class<GateFresh>($I`GateFresh`)(
     gateId: S.NonEmptyString,
   },
   $I.annote("GateFresh", {
-    description: "A gate artifact at least as new as every file this branch changed.",
+    description: "A gate artifact at least as new as every relevant file this branch changed.",
   })
 ) {}
 
 /**
- * A gate artifact that predates a file this branch changed.
+ * A gate artifact that predates a relevant file this branch changed.
  *
  * @category models
  * @since 0.0.0
@@ -187,18 +214,20 @@ export class GateStale extends S.Class<GateStale>($I`GateStale`)(
     skewMs: S.Finite,
   },
   $I.annote("GateStale", {
-    description: "A gate artifact older than the newest file this branch changed, so it cannot have observed it.",
+    description:
+      "A gate artifact older than the newest relevant file this branch changed, so it cannot have observed it.",
   })
 ) {}
 
 /**
- * A gate whose freshness could not be established either way.
+ * A gate whose proof artifact does not exist.
  *
  * **Details**
  *
- * Two different absences land here and both are honest non-answers: the
- * artifact does not exist yet (nothing has been proven, so nothing is stale),
- * and the branch changed nothing observable (no input to be older than).
+ * Only a missing artifact lands here: without an artifact, the gate has no
+ * cached proof to preserve or compare. No relevant changed input instead means
+ * an existing artifact remains fresh because this branch cannot have
+ * invalidated it.
  *
  * @category models
  * @since 0.0.0
@@ -210,7 +239,7 @@ export class GateUnproven extends S.Class<GateUnproven>($I`GateUnproven`)(
     detail: S.String,
   },
   $I.annote("GateUnproven", {
-    description: "A gate whose freshness could not be established because the artifact or the inputs are absent.",
+    description: "A gate whose freshness could not be established because its proof artifact is absent.",
   })
 ) {}
 
@@ -279,41 +308,47 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     gateId: "coverage-regression",
     kind: "baseline",
     regenerateCommand: coverageRegressionRegenerationCommand,
+    scope: "repo-code",
   }),
   GateArtifactDescriptor.make({
     artifactPath: defaultJSDocTotalsBaselinePath,
     gateId: "jsdoc-totals-ratchet",
     kind: "baseline",
     regenerateCommand: `${jsdocInventoryRegenerationCommand} && ${jsdocTotalsSnapshotCommand}`,
+    scope: "repo-code",
   }),
   GateArtifactDescriptor.make({
     artifactPath: "standards/knip.regression-baseline.jsonc",
     gateId: "knip-ratchet",
     kind: "baseline",
     regenerateCommand: "bun run beep quality knip --write-baseline",
+    scope: "repo-code",
   }),
   GateArtifactDescriptor.make({
     artifactPath: "standards/test-typecheck.blindspot-baseline.jsonc",
     gateId: "test-typecheck-blindspot",
     kind: "baseline",
     regenerateCommand: "bun run beep lint package-test-typecheck --write-baseline",
+    scope: "repo-code",
   }),
   GateArtifactDescriptor.make({
     artifactPath: GOALS_DOCTOR_BASELINE_PATH,
     gateId: "goals-doctor",
     kind: "baseline",
     regenerateCommand: "bun run beep goals doctor --write-baseline",
+    scope: "goals-packets",
   }),
   GateArtifactDescriptor.make({
     artifactPath: ".beep/ci/jsdoc-documentation.inventory.jsonc",
     gateId: "jsdoc-documentation-inventory",
     kind: "inventory",
     regenerateCommand: "bun run beep ci lane jsdoc-inventory",
+    scope: "repo-code",
   }),
 ];
 
 /**
- * Judge one gate artifact against the newest file this branch changed.
+ * Judge one gate artifact against the newest relevant file this branch changed.
  *
  * **Details**
  *
@@ -334,6 +369,7 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
  *   gateId: "coverage-regression",
  *   kind: "baseline",
  *   regenerateCommand: "bun run beep quality coverage",
+ *   scope: "repo-code",
  * })
  * const verdict = assessGateStaleness(
  *   descriptor,
@@ -345,7 +381,7 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
  *
  * @param descriptor - The gate artifact being judged.
  * @param artifact - The artifact as observed on disk, when it exists.
- * @param newestInput - The newest file this branch changed, when there is one.
+ * @param newestInput - The newest relevant file this branch changed, when there is one.
  * @returns Whether the artifact predates the change it gates.
  * @category detection
  * @since 0.0.0
@@ -371,7 +407,7 @@ export const assessGateStaleness: {
       return GateUnproven.make({ detail: `${descriptor.artifactPath} does not exist`, gateId: descriptor.gateId });
     }
     if (O.isNone(newestInput)) {
-      return GateUnproven.make({ detail: "no changed files to compare against", gateId: descriptor.gateId });
+      return GateFresh.make({ gateId: descriptor.gateId });
     }
     const skewMs = newestInput.value.modifiedAtMs - artifact.value.modifiedAtMs;
     return skewMs > 0
@@ -407,7 +443,7 @@ export const staleGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdict>)
   A.filter(verdicts, isGateStale);
 
 /**
- * Keep only verdicts whose proof artifact or comparison input is absent.
+ * Keep only verdicts whose proof artifact is absent.
  *
  * **Example** (Filter an unproven verdict)
  *
@@ -443,7 +479,7 @@ export const unprovenGateVerdicts = (verdicts: ReadonlyArray<GateStalenessVerdic
  * ```
  *
  * @param stale - Stale verdicts from one staleness pass.
- * @param unproven - Verdicts whose proof artifact or comparison input is absent.
+ * @param unproven - Verdicts whose proof artifact is absent.
  * @returns The `gate staleness:` line plus one indented line per stale gate.
  * @category formatting
  * @since 0.0.0
@@ -469,6 +505,28 @@ export const renderYeetGateStalenessBlock: {
 );
 
 const witnessOrder = Order.mapInput(Order.Number, (witness: GateFileWitness) => witness.modifiedAtMs);
+
+const REPO_CODE_IRRELEVANT_PREFIXES = [".changeset/", "goals/", "explorations/", "docs/", "scratchpad/"];
+
+const isRepoCodeInput = (repoRelativePath: string): boolean =>
+  !A.some(REPO_CODE_IRRELEVANT_PREFIXES, (prefix) => Str.startsWith(prefix)(repoRelativePath));
+
+const isGoalsPacketInput = (repoRelativePath: string): boolean => Str.startsWith("goals/")(repoRelativePath);
+
+/**
+ * Test whether a repo-relative changed path can invalidate one gate scope.
+ *
+ * @param scope - The input family consumed by the gate.
+ * @param repoRelativePath - One changed path relative to the repository root.
+ * @returns Whether the gate reads that path family.
+ * @category detection
+ * @since 0.0.0
+ */
+export const isGateInputRelevant = (scope: GateInputScope, repoRelativePath: string): boolean =>
+  GateInputScope.$match(scope, {
+    "repo-code": () => isRepoCodeInput(repoRelativePath),
+    "goals-packets": () => isGoalsPacketInput(repoRelativePath),
+  });
 
 const witnessFile = Effect.fn("Yeet.witnessGateFile")(function* (
   repoRoot: string,
@@ -516,7 +574,7 @@ export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPat
 });
 
 /**
- * Judge every known gate artifact against this branch's newest change.
+ * Judge every known gate artifact against this branch's newest relevant change.
  *
  * **When to use**
  *
@@ -529,6 +587,9 @@ export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPat
  * Artifacts this branch itself changed are excluded from the input set before
  * the comparison, because a regenerated baseline is both an artifact and a
  * changed file and would otherwise be reported as stale against itself.
+ * Each descriptor then keeps only the changed paths in its input scope. An
+ * existing artifact with no relevant changed input remains fresh because an
+ * input can only invalidate a gate that reads it.
  *
  * **Example** (Collect staleness through the test seam)
  *
@@ -569,11 +630,17 @@ export const collectYeetGateStaleness = Effect.fn("Yeet.collectYeetGateStaleness
   const inputWitnesses = yield* Effect.forEach(inputPaths, (candidate) => witnessFile(context.repoRoot, candidate), {
     concurrency: 8,
   });
-  const newestInput = pipe(A.getSomes(inputWitnesses), A.sort(witnessOrder), A.last);
+  const witnessedInputs = A.getSomes(inputWitnesses);
   return yield* Effect.forEach(
     YEET_GATE_ARTIFACT_DESCRIPTORS,
     Effect.fnUntraced(function* (descriptor: GateArtifactDescriptor) {
       const artifact = yield* witnessFile(context.repoRoot, descriptor.artifactPath);
+      const newestInput = pipe(
+        witnessedInputs,
+        A.filter((witness) => isGateInputRelevant(descriptor.scope, witness.path)),
+        A.sort(witnessOrder),
+        A.last
+      );
       return assessGateStaleness(descriptor, artifact, newestInput);
     }),
     { concurrency: 4 }
