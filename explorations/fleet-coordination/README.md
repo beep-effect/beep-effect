@@ -40,7 +40,24 @@ packet? See [`T6`](./research/T6-cross-session-messaging.md).
 This exploration stays `active` because rung 2 remains unbuilt, and now carries
 a bounded **rung 1.5**: adopt the on-disk session registry as the liveness probe
 (T6 §4), which converts `unknown → live` on a 99.7%-readable measurement where
-rung 1's `/proc` probe reaches 13.2%.
+rung 1's `/proc` probe reaches 13.2%. Rung 1.5 is not a classifier tweak — the
+`evidence` field is a closed literal domain, so it needs a schema change first;
+T6 §4 carries the schema-first order. Needs an operator go before it opens.
+
+**Third question, open and unexplained.** `beep-effect3-e3` runs 2.1.226,
+`kind: interactive`, `status: busy`, and records `messagingSocketPath: null`, so
+it is unreachable by peer messaging while fully alive (T6 §3.1). The documented
+candidates are feature-flag evaluation being disabled for that session, bare
+mode, or provider. Recorded as **measured and unexplained** rather than guessed,
+per this packet's binding law. It matters because it bounds how much of the
+fleet rung 2's push half can ever cover.
+
+These three questions are mirrored in
+[`ops/manifest.json`](./ops/manifest.json) `openQuestions`; the manifest is the
+machine-readable copy and this section is the prose one. They are open
+questions, not decisions — [`DECISIONS.md`](./DECISIONS.md) is the align-stage
+log of questions already *answered* (question → answer → rationale), so nothing
+lands there until one of these resolves.
 
 ## Read This First
 
@@ -74,6 +91,23 @@ the capability is not the same as the capability covering the fleet.
 
 ## Trail
 
+- 2026-08-10: friction ledger opened
+  ([`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)) with three
+  receipts, two of them found by **dogfooding rung 1 on a real question** —
+  "would filing this receipt into `goals/ci-fleet-endgame` collide with the
+  sessions working it?" The mirror answered correctly and immediately (three
+  live checkouts contend there, so the receipt was filed here instead), and the
+  same snapshot exposed a defect in its own output: the contested index is an
+  unweighted union, so one checkout with 5133 dirty files occupies 895 of 1185
+  contested rows. Presentation defect, not correctness — no field is falsely
+  `clean` — and it folds into rung 1.5. The third receipt is the sharpest: the
+  first receipt was **filed wrong** and corrected the same day after PR #635
+  review, having indicted `flake-quarantine` from a single log line without
+  reading the module that implements it. The gate already did the serial rerun
+  the receipt demanded. The corrected finding is real and narrower: arbitration
+  is per-package while the flake is per-lane-execution, so clearing `@beep/ui`
+  standalone and rerunning the lane just handed the same environment condition a
+  fresh roll, which landed on `@beep/box`.
 - 2026-08-09: **the delivery gate moved** — Claude Code 2.1.224 shipped
   cross-session messaging (`ListAgents` / `SendMessage`, same-machine over a
   per-session Unix socket, *"never through Anthropic servers"*), which **kills

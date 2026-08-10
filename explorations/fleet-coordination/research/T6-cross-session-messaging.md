@@ -174,7 +174,7 @@ different facts, and only one of them is what the mirror needs.**
 ## 4. Rung 1.5 — the liveness upgrade
 
 Bounded change to `classifyFleetLiveness` in
-[`goals/fleet-mirror`](../../goals/fleet-mirror/README.md). Not a new rung of
+[`goals/fleet-mirror`](../../../goals/fleet-mirror/README.md). Not a new rung of
 capability; a better probe for a field rung 1 already ships.
 
 **Add a probe** — for each registry file under `~/.claude/sessions/`:
@@ -184,8 +184,23 @@ capability; a better probe for a field rung 1 already ships.
    ⇒ contributes nothing (not a negative).
 3. Join to a checkout when the registry `cwd` is **at or under** that checkout's
    path — a session started in a subdirectory still belongs to the checkout.
-4. On a confirmed join, the checkout is **`live`**, evidence
-   `claude-session:<pid>`.
+4. On a confirmed join, the checkout is **`live`**, carrying a new
+   `claude-session` evidence member.
+
+**This is not evidence-free.** `FleetLivenessVerdict.evidence` is
+`S.Array(FleetLivenessProbe)`, and `FleetLivenessProbe` is a **closed**
+`LiteralKit(["process-cwd", "transcript-mtime", "worktree-mtime"])`
+(`Worktree.schemas.ts`), so a free-form `claude-session:<pid>` string cannot be
+stored — it would fail at the schema boundary. Rung 1.5 must therefore carry, in
+schema-first order: (1) a fourth `FleetLivenessProbe` member `claude-session`;
+(2) a decision on whether the PID is carried at all — the terse option keeps
+`evidence` a closed literal domain and drops the PID, the faithful option
+promotes `evidence` to a tagged union so the probe can carry its `pid` and
+`procStart`, at the cost of touching every existing evidence reader; (3) the
+renderer's `livenessLabel` join in `Fleet.command.ts`; and (4) the liveness
+tests. The terse option is the recommended default — the PID is a debugging
+convenience, not a fact the mirror's consumers act on — but it is a real
+schema change either way, not a classifier tweak.
 
 **Do not** derive a negative from it. Absence of a registry entry is not absence
 of activity: the registry covers Claude Code sessions only, never `codex`
