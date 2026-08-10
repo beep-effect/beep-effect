@@ -2,6 +2,12 @@ name: Fleet Shadow Check
 
 on:
   workflow_dispatch:
+    inputs:
+      redteam:
+        description: Run the live security-boundary gates
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -18,3 +24,204 @@ jobs:
           nproc
           free -g
           echo "shadow probe OK"
+
+      - name: Report worker identity
+        if: ${{ inputs.redteam }}
+        shell: bash
+        run: |
+          set -u
+          echo "RUNNER_NAME: ${RUNNER_NAME:-unset}"
+          echo "hostname: $(hostname)"
+
+          instance_id=unavailable
+          role_name=unavailable
+          if token="$(curl --noproxy '*' --silent --show-error --fail \
+            --connect-timeout 3 --max-time 3 \
+            --request PUT \
+            --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+            http://169.254.169.254/latest/api/token)"; then
+            instance_id="$(curl --noproxy '*' --silent --show-error --fail \
+              --connect-timeout 3 --max-time 3 \
+              --header "X-aws-ec2-metadata-token: ${token}" \
+              http://169.254.169.254/latest/meta-data/instance-id)" || instance_id=unavailable
+            role_name="$(curl --noproxy '*' --silent --show-error --fail \
+              --connect-timeout 3 --max-time 3 \
+              --header "X-aws-ec2-metadata-token: ${token}" \
+              http://169.254.169.254/latest/meta-data/iam/security-credentials/)" || role_name=unavailable
+          else
+            echo "IMDSv2 token request failed"
+          fi
+          echo "IMDS instance-id: ${instance_id}"
+          echo "IMDS IAM role: ${role_name}"
+
+      - name: Ensure AWS CLI is available
+        if: ${{ inputs.redteam }}
+        id: aws_cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v aws >/dev/null 2>&1; then
+            aws --version
+            exit 0
+          fi
+
+          case "$(uname -m)" in
+            x86_64) aws_arch=x86_64 ;;
+            aarch64|arm64) aws_arch=aarch64 ;;
+            *) echo "Unsupported AWS CLI architecture: $(uname -m)"; exit 1 ;;
+          esac
+          command -v curl >/dev/null
+          command -v python3 >/dev/null
+          install_dir="${RUNNER_TEMP}/aws-cli"
+          bin_dir="${RUNNER_TEMP}/bin"
+          mkdir -p "${bin_dir}"
+          curl --silent --show-error --fail --location \
+            "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" \
+            --output "${RUNNER_TEMP}/awscliv2.zip"
+          python3 -m zipfile -e "${RUNNER_TEMP}/awscliv2.zip" "${RUNNER_TEMP}/awscliv2"
+          "${RUNNER_TEMP}/awscliv2/aws/install" \
+            --install-dir "${install_dir}" --bin-dir "${bin_dir}"
+          echo "${bin_dir}" >> "${GITHUB_PATH}"
+          "${bin_dir}/aws" --version
+
+      - name: Gate A - deny GitHub App secrets
+        if: ${{ always() && inputs.redteam }}
+        id: gate_a
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! command -v aws >/dev/null 2>&1; then
+            echo "AWS CLI unavailable; denial cannot be proven"
+            exit 1
+          fi
+
+          failed=0
+          for parameter in github_app_key_base64 github_app_webhook_secret; do
+            error_file="${RUNNER_TEMP}/ssm-${parameter}.error"
+            if aws ssm get-parameter \
+              --name "/github-action-runners/app/${parameter}" \
+              --with-decryption --region us-east-1 \
+              >/dev/null 2>"${error_file}"; then
+              echo "FORBIDDEN SUCCESS: read ${parameter}"
+              failed=1
+            elif grep -Eqi 'AccessDenied|not authorized' "${error_file}"; then
+              echo "DENIED AS EXPECTED: ${parameter}"
+            else
+              echo "UNEXPECTED ERROR: ${parameter}"
+              sed -n '1,8p' "${error_file}"
+              failed=1
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate B - deny S3 access
+        if: ${{ always() && inputs.redteam }}
+        id: gate_b
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! command -v aws >/dev/null 2>&1; then
+            echo "AWS CLI unavailable; denial cannot be proven"
+            exit 1
+          fi
+
+          failed=0
+          if aws s3api list-buckets >/dev/null 2>"${RUNNER_TEMP}/s3-list.error"; then
+            echo "FORBIDDEN SUCCESS: listed S3 buckets"
+            failed=1
+          elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-list.error"; then
+            echo "DENIED AS EXPECTED: list-buckets"
+          else
+            echo "UNEXPECTED ERROR: list-buckets"
+            sed -n '1,8p' "${RUNNER_TEMP}/s3-list.error"
+            failed=1
+          fi
+          if aws s3api put-object \
+            --bucket beep-ci-dist-8xycw0prvbhmjow8r6vp4uqv \
+            --key redteam-probe.txt \
+            --body /etc/hostname \
+            >/dev/null 2>"${RUNNER_TEMP}/s3-put.error"; then
+            echo "FORBIDDEN SUCCESS: wrote redteam-probe.txt"
+            failed=1
+          elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-put.error"; then
+            echo "DENIED AS EXPECTED: put-object"
+          else
+            echo "UNEXPECTED ERROR: put-object"
+            sed -n '1,8p' "${RUNNER_TEMP}/s3-put.error"
+            failed=1
+          fi
+          exit "${failed}"
+
+      - name: Gate C - deny tailnet and LAN reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_c_tailnet_lan
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for target in 100.100.100.100 192.168.1.1 10.0.0.1; do
+            if curl --noproxy '*' --silent --show-error \
+              --connect-timeout 3 --max-time 3 \
+              --output /dev/null "http://${target}/"; then
+              echo "FORBIDDEN SUCCESS: HTTP response from ${target}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: ${target}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate D - deny container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_d_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint sh curlimages/curl:8.16.0 -c '
+            set -eu
+            command -v curl >/dev/null
+            if curl --noproxy "*" --silent --show-error --fail \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+              http://169.254.169.254/latest/api/token; then
+              echo "FORBIDDEN SUCCESS: container reached IMDSv2"
+              exit 1
+            fi
+            echo "DENIED AS EXPECTED: container could not reach IMDSv2"
+          '
+
+      - name: Summarize red-team gates
+        if: ${{ always() && inputs.redteam }}
+        shell: bash
+        run: |
+          failed=0
+          if [[ "${{ steps.gate_a.outcome }}" == success ]]; then
+            echo "GATE A_APP_SECRET_SSM: PASS"
+          else
+            echo "GATE A_APP_SECRET_SSM: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_b.outcome }}" == success ]]; then
+            echo "GATE B_S3: PASS"
+          else
+            echo "GATE B_S3: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_c_tailnet_lan.outcome }}" == success ]]; then
+            echo "GATE C_TAILNET_LAN: PASS"
+          else
+            echo "GATE C_TAILNET_LAN: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_d_container_imds.outcome }}" == success ]]; then
+            echo "GATE D_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE D_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          exit "${failed}"
