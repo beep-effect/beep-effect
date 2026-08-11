@@ -241,33 +241,36 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
     description: "A one-way schema that decodes `Expect-CT` options into the response header.",
   }),
   SchemaUtils.withStatics(() => {
-    const createValue: (option?: undefined | ExpectCTOption) => Effect.Effect<O.Option<string>, SecureHeaderError> =
-      Effect.fnUntraced(function* (option?: undefined | ExpectCTOption) {
-        if (P.isUndefined(option) || option === false) {
-          return O.none<string>();
-        }
+    const createValue: (
+      option?: undefined | typeof ExpectCTOption.Encoded
+    ) => Effect.Effect<O.Option<string>, SecureHeaderError> = Effect.fnUntraced(function* (
+      option?: undefined | typeof ExpectCTOption.Encoded
+    ) {
+      if (P.isUndefined(option) || option === false) {
+        return O.none<string>();
+      }
 
-        if (option === true) {
-          return O.some(`max-age=${defaultMaxAge}`);
-        }
+      if (option === true) {
+        return O.some(`max-age=${defaultMaxAge}`);
+      }
 
-        const enabled = yield* S.decodeUnknownEffect(ExpectCTEnabled)(option).pipe(
-          Effect.mapError((cause) =>
-            ExpectCtError.make({
-              message: cause.message,
-              cause: O.none(),
-            })
-          )
-        );
+      const enabled = yield* S.decodeEffect(ExpectCTEnabled)(option).pipe(
+        Effect.mapError((cause) =>
+          ExpectCtError.make({
+            message: cause.message,
+            cause: O.none(),
+          })
+        )
+      );
 
-        return O.some(yield* formatExpectCTValue(enabled[1]));
-      });
+      return O.some(yield* formatExpectCTValue(enabled[1]));
+    });
 
     const create: (
-      option?: undefined | ExpectCTOption,
+      option?: undefined | typeof ExpectCTOption.Encoded,
       headerValueCreator?: undefined | typeof createValue
     ) => Effect.Effect<O.Option<internal.ResponseHeader>, SecureHeaderError> = Effect.fnUntraced(function* (
-      option?: undefined | ExpectCTOption,
+      option?: undefined | typeof ExpectCTOption.Encoded,
       headerValueCreator: typeof createValue = createValue
     ) {
       const value = yield* headerValueCreator(option);

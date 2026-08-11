@@ -113,8 +113,8 @@ describe("ThreadTimeline", () => {
 
   it("union-derived guards discriminate timeline items by kind", () => {
     const content = S.encodeSync(Document)(Document.make({ children: [] }));
-    const message = S.decodeUnknownSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
-    const toolCall = S.decodeUnknownSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
+    const message = S.decodeSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
+    const toolCall = S.decodeSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
 
     expect(Thread.TimelineItem.guards.message(message)).toBe(true);
     expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
