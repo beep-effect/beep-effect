@@ -55,28 +55,24 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
 /**
  * SQLite number-encoded EntityId storage identity.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
 /**
- * Internal type-level shape `ArrayDimension`.
+ * SQLite scalar depth retained by public storage inference.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type ArrayDimension = Meta.ArrayDimension;
 
-/** Modes supported by the installed SQLite text builder. */
-/** @internal */
+/** SQLite text storage modes retained by public field inference. */
 type TextMode = "text" | "json";
 
 /**
  * Modes supported by the installed SQLite integer builder.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -85,7 +81,6 @@ export type IntegerMode = "number" | "boolean" | "timestamp" | "timestamp_ms";
 /**
  * Modes supported by the installed SQLite blob builder.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -94,7 +89,6 @@ export type BlobMode = "buffer" | "json" | "bigint";
 /**
  * Modes supported by the installed SQLite numeric builder.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -139,18 +133,16 @@ type SpecDefinition = {
 };
 
 /**
- * Complete internal SQLite descriptor algebra.
+ * Complete SQLite descriptor algebra exposed through public field inference.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type Spec = TaggedEnum<SpecDefinition>;
 
 /**
- * Internal type-level shape `Text`.
+ * SQLite text descriptor carried by `text()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -158,9 +150,8 @@ export type Text<Mode extends TextMode = TextMode> = Omit<Extract<Spec, { readon
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Enum`.
+ * SQLite enum descriptor carried by `enum()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -168,9 +159,8 @@ export type Enum<Value extends string = string> = Omit<Extract<Spec, { readonly 
   readonly values: readonly [Value, ...Value[]];
 };
 /**
- * Internal type-level shape `Integer`.
+ * SQLite integer descriptor carried by `integer()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -182,17 +172,15 @@ export type Integer<
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Real`.
+ * SQLite real-number descriptor carried by `real()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
 /**
- * Internal type-level shape `Blob`.
+ * SQLite blob descriptor carried by `blob()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -200,9 +188,8 @@ export type Blob<Mode extends BlobMode = BlobMode> = Omit<Extract<Spec, { readon
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Numeric`.
+ * SQLite numeric descriptor carried by `numeric()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -497,7 +484,6 @@ export const Spec = /* @__PURE__ */ (() => ({
 /**
  * Encoded carrier represented by a SQLite descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -548,16 +534,14 @@ const carrierTag = (spec: Spec): CarrierTag =>
 /**
  * SQLite storage identity used by foreign-key compatibility checks.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Dimensions extends 0 ? C["ident"] : never;
 
 /**
- * Internal type-level shape `ArrayCarrier`.
+ * Encoded carrier accepted by SQLite's scalar-only storage model.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */

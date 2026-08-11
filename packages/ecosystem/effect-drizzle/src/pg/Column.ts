@@ -82,7 +82,6 @@ type IdentityMode = Meta.IdentityMode;
 /**
  * PostgreSQL scalar or array depth.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -91,7 +90,6 @@ export type ArrayDimension = Meta.ArrayDimension;
 /**
  * Drizzle-supported PostgreSQL array suffix.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -100,7 +98,6 @@ export type ArrayDimensionString = "[]" | "[][]" | "[][][]" | "[][][][]" | "[][]
 /**
  * Numeric array depth represented by a suffix.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -139,7 +136,6 @@ const applyIdentity = (
 /**
  * Storage identity for a number-encoded entity id.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -230,26 +226,23 @@ type SpecDefinition = {
 };
 
 /**
- * Complete internal PostgreSQL descriptor algebra.
+ * Complete PostgreSQL descriptor algebra exposed through public field inference.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type Spec = TaggedEnum<SpecDefinition>;
 
 /**
- * Internal type-level shape `Text`.
+ * PostgreSQL text descriptor carried by `text()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Text = Extract<Spec, { readonly _tag: "text" }>;
 /**
- * Internal type-level shape `Varchar`.
+ * PostgreSQL variable-length string descriptor carried by `varchar()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -257,9 +250,8 @@ export type Varchar<L extends number = number> = Omit<Extract<Spec, { readonly _
   readonly length: L;
 };
 /**
- * Internal type-level shape `Enum`.
+ * PostgreSQL named-enum descriptor carried by `enum()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -272,9 +264,8 @@ export type Enum<Name extends string = string, Value extends string = string> = 
   readonly values: readonly [Value, ...Value[]];
 };
 /**
- * Internal type-level shape `Custom`.
+ * PostgreSQL custom-column descriptor carried by `custom()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -283,9 +274,8 @@ export type Custom<SqlType extends string = string> = Omit<
   "ident" | "sqlType"
 > & { readonly ident: `custom<${SqlType}>`; readonly sqlType: SqlType };
 /**
- * Internal type-level shape `Numeric`.
+ * PostgreSQL numeric descriptor carried by `numeric()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -297,9 +287,8 @@ export type Numeric<
   readonly scale: Scale;
 };
 /**
- * Internal type-level shape `DateColumn`.
+ * PostgreSQL date descriptor carried by `date()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -310,9 +299,8 @@ export type DateColumn<Mode extends "string" | "date" = "string" | "date"> = Omi
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Char`.
+ * PostgreSQL fixed-length string descriptor carried by `char()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -320,25 +308,22 @@ export type Char<Length extends number = number> = Omit<Extract<Spec, { readonly
   readonly length: Length;
 };
 /**
- * Internal type-level shape `Json`.
+ * PostgreSQL JSON descriptor carried by `json()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Json = Extract<Spec, { readonly _tag: "json" }>;
 /**
- * Internal type-level shape `Real`.
+ * PostgreSQL real-number descriptor carried by `real()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
 /**
- * Internal type-level shape `Bigserial`.
+ * PostgreSQL bigserial descriptor carried by `bigserial()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -349,25 +334,22 @@ export type Bigserial<Mode extends "number" | "bigint" = "number" | "bigint"> = 
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Smallserial`.
+ * PostgreSQL smallserial descriptor carried by `smallserial()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Smallserial = Extract<Spec, { readonly _tag: "smallserial" }>;
 /**
- * Internal type-level shape `Uuid`.
+ * PostgreSQL UUID descriptor carried by `uuid()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Uuid = Extract<Spec, { readonly _tag: "uuid" }>;
 /**
- * Internal type-level shape `Integer`.
+ * PostgreSQL integer descriptor carried by `integer()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -378,17 +360,15 @@ export type Integer<Ident extends "integer" | EntityIdIdent<string> = "integer" 
   readonly ident: Ident;
 };
 /**
- * Internal type-level shape `Smallint`.
+ * PostgreSQL smallint descriptor carried by `smallint()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Smallint = Extract<Spec, { readonly _tag: "smallint" }>;
 /**
- * Internal type-level shape `Bigint`.
+ * PostgreSQL bigint descriptor carried by `bigint()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -399,41 +379,36 @@ export type Bigint<Mode extends "number" | "bigint" = "number" | "bigint"> = Omi
   readonly mode: Mode;
 };
 /**
- * Internal type-level shape `Serial`.
+ * PostgreSQL serial descriptor carried by `serial()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Serial = Extract<Spec, { readonly _tag: "serial" }>;
 /**
- * Internal type-level shape `DoublePrecision`.
+ * PostgreSQL double-precision descriptor carried by `doublePrecision()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type DoublePrecision = Extract<Spec, { readonly _tag: "doublePrecision" }>;
 /**
- * Internal type-level shape `Bool`.
+ * PostgreSQL boolean descriptor carried by `boolean()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Bool = Extract<Spec, { readonly _tag: "boolean" }>;
 /**
- * Internal type-level shape `Jsonb`.
+ * PostgreSQL JSONB descriptor carried by `jsonb()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
 export type Jsonb = Extract<Spec, { readonly _tag: "jsonb" }>;
 /**
- * Internal type-level shape `Timestamp`.
+ * PostgreSQL timestamp descriptor carried by `timestamp()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -446,9 +421,8 @@ export type Timestamp<Mode extends "date" | "string" = "date" | "string", Timezo
   readonly withTimezone: Timezone;
 };
 /**
- * Internal type-level shape `Bytea`.
+ * PostgreSQL byte-array descriptor carried by `bytea()` fields.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -519,9 +493,8 @@ function makeEnum(props: {
   return Constructors.enum({ dialect: "pg", kind: "enum", ...props });
 }
 /**
- * Internal type-level shape `EnumInstance`.
+ * Drizzle enum instance retained by PostgreSQL schema assembly.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -553,9 +526,8 @@ function makeCustom(props: { readonly ident: `custom<${string}>`; readonly sqlTy
   return Constructors.custom({ dialect: "pg", kind: "custom", ...props });
 }
 /**
- * Internal type-level shape `CustomBuilder`.
+ * Drizzle builder type produced for a custom PostgreSQL descriptor.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -1114,7 +1086,6 @@ export const Spec = /* @__PURE__ */ (() => ({
 /**
  * Resolve a field-derived enum name without widening its literals.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -1141,12 +1112,11 @@ export function resolveName(spec: Spec, key: string): Spec {
     : spec;
 }
 
-/** @internal */
+/** Storage identity selected from a public PostgreSQL descriptor. */
 type IdentOf<C extends Spec> = C["ident"];
 /**
- * Internal type-level shape `StorageIdent`.
+ * Storage identity inferred for a PostgreSQL descriptor and array depth.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -1174,9 +1144,8 @@ export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
 }
 
 /**
- * Internal type-level shape `ArrayCarrier`.
+ * Encoded carrier nested to a PostgreSQL array depth.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -1193,9 +1162,8 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimension
           : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>;
 
 /**
- * Internal type-level shape `IdentityKind`.
+ * PostgreSQL integer families that support generated identities.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */
@@ -1220,9 +1188,8 @@ export const isNumberInteger = (spec: Spec): spec is Integer | Smallint | Bigint
   Spec.guards.integer(spec) || Spec.guards.smallint(spec) || (Spec.guards.bigint(spec) && spec.mode === "number");
 
 /**
- * Internal type-level shape `CarrierOf`.
+ * Encoded carrier represented by a PostgreSQL descriptor.
  *
- * @internal
  * @category type-level
  * @since 0.0.0
  */

@@ -284,7 +284,6 @@ export type TableOf<M extends AnyModel> = PgTableWithColumns<{
 /**
  * Assembly-owned Drizzle enum instances keyed by PostgreSQL enum name.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */

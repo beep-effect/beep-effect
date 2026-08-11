@@ -6,8 +6,7 @@
 import { String as StringSchema, TaggedError } from "effect/Schema";
 
 /**
- * Compile-time diagnostic carrier used by SQL naming surfaces.
- * @internal
+ * Compile-time diagnostic carrier exposed by SQL naming validation.
  * @category type-level
  * @since 0.0.0
  */
@@ -51,8 +50,7 @@ type NameViolation =
   | `${string}_`;
 
 /**
- * Cached, message-free cheap prefix for SQL-name validation.
- * @internal
+ * Cached, message-free predicate used by public SQL-name validation types.
  * @category type-level
  * @since 0.0.0
  */
@@ -69,8 +67,7 @@ type IsValidSqlName<Name extends string> = string extends Name
     : false;
 
 /**
- * Adds a surface-specific diagnostic without putting it in the predicate cache key.
- * @internal
+ * Adds a surface-specific diagnostic without changing the validation cache key.
  * @category type-level
  * @since 0.0.0
  */
@@ -83,8 +80,7 @@ export type ValidateSqlName<Name extends string, Message extends string> = strin
 type IdentifierTail<Identifier extends string> = Identifier extends `${string}/${infer Tail}` ? Tail : Identifier;
 
 /**
- * Validates the cheap lowercase approximation of a model's derived table name.
- * @internal
+ * Validates the lowercase approximation of a model's derived table name.
  * @category type-level
  * @since 0.0.0
  */
