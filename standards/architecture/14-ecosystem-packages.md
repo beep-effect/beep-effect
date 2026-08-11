@@ -26,9 +26,11 @@ published identity.
 Everywhere else in the repo, `@beep/*` imports are the normal fabric.
 Ecosystem members invert the polarity:
 
-- **`src/` and runtime manifest edges (`dependencies`,
-  `peerDependencies`) are 100% `@beep/*`-free.** The published artifact
-  carries no thread back into the monorepo.
+- **`src/` and runtime manifest edges (`dependencies`, `peerDependencies`,
+  and `optionalDependencies`) are 100% `@beep/*`-free**, and bundled-
+  dependency fields (`bundledDependencies`/`bundleDependencies`) are
+  prohibited outright. The published artifact carries no thread back into the
+  monorepo through any install-time edge.
 - **Tests and `devDependencies` are unrestricted.** Repo test harnesses
   (`@beep/pglite`, test kits, fixtures) are legitimate development machinery
   and never reach the artifact.
@@ -63,7 +65,11 @@ this repo's conventions:
   names as tags.
 
 Repo law scripts, lint lanes, and review tooling must scope themselves so
-members are not flagged for following these standards. Outside
+members are not flagged for following these standards. The exception also
+needs an agent-guide carrier: a scoped `AGENTS.md` at the family root
+(under `packages/ecosystem/**`) ships with the first member (P1) so coding
+agents inside the family read these standards instead of the root guide's
+effect-first defaults. Outside
 `packages/ecosystem/*`, the repo's laws are untouched by this doc.
 
 ## Ecosystem Is Not Drivers
@@ -102,6 +108,10 @@ Members publish a deliberately strict artifact:
 - `sideEffects: false`, with pure annotations where a bundler needs help.
 - Declarations built with `stripInternal`: `@internal` symbols do not exist
   in the published `.d.ts`.
+- An explicit `files` allowlist naming only the published artifacts — an
+  exports map limits resolution, not tarball contents, and research corpora,
+  tests, and workspace files must never ship. The allowlist is verified with
+  an npm-pack probe before any `private` flip.
 - Runtime dependencies are peers only (the host library plus effect), so the
   consumer — not this repo — owns version resolution. While an upstream peer
   is prerelease, peers pin the exact proven version.
@@ -111,7 +121,11 @@ Members publish a deliberately strict artifact:
 Members are wired into changesets and the release lane at creation but stay
 dormant: `private: true` until every upstream peer is stable enough that the
 published artifact needs no compatibility shims (for the first member: effect
-v4 stable AND drizzle 1.0 final). Pre-npm feedback flows through the public
+v4 stable AND drizzle 1.0 final). The member manifest declares
+`publishConfig.access: "public"` (and the repo's provenance setting) at
+creation — the repo-level changesets config is `restricted`, and a scoped
+package inherits that unless overridden, which would break the family's
+public-consumption promise on the day of release. Pre-npm feedback flows through the public
 repository meanwhile. Flipping `private` is an operator decision, never a side
 effect of other work.
 

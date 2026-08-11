@@ -47,7 +47,9 @@ Higher sources outrank lower sources when they conflict.
   `packages/shared/tables/README.md` (projection contract line),
   `goals/effect-drizzle-graduation/**`, `goals/INDEX.md`.
 - P1: `packages/ecosystem/effect-drizzle/**` (git-mv from
-  `scratchpad/bsl`), its manifest/tsconfig/turbo wiring, `@effect/vitest`
+  `scratchpad/bsl`), its manifest/tsconfig/turbo wiring, the scoped
+  family-root `AGENTS.md` style-exception guide (under
+  `packages/ecosystem/**`), `@effect/vitest`
   harness migration, the member tstyche lane (created with the package),
   inverted-import gate in repo lint, governance registrations, suppression
   removals, `scratchpad/bsl` retirement. Known family-encoding surfaces P1
@@ -70,7 +72,8 @@ operator:
    `@beep/<name>` (workspace name = npm name; operator owns the npm `beep`
    org). First member: `effect-drizzle`.
 2. **Polarity law (inverted gate)**: member `src/` and runtime manifest edges
-   (`dependencies`/`peerDependencies`) are 100% `@beep/*`-free; tests and
+   (`dependencies`/`peerDependencies`/`optionalDependencies`) are 100%
+   `@beep/*`-free, and bundled-dependency fields are prohibited; tests and
    `devDependencies` are unrestricted (`@beep/pglite` harness stays). The
    contract is "publishable from the monorepo," not "extractable repo-free."
 3. **Style-law scoping**: published-package standards supersede repo
@@ -88,12 +91,16 @@ operator:
    `@effect/vitest` `layer()` in P1.
 6. **Artifact**: ESM-only, exports map exposing exactly `"."`, `"./pg"`,
    `"./sqlite"`, `"./package.json"`; `sideEffects: false`; declarations built with
-   `stripInternal` so `@internal` symbols vanish from published `.d.ts`; the
-   root `make` convenience stays, with its bundle cost documented.
+   `stripInternal` so `@internal` symbols vanish from published `.d.ts`; an
+   explicit `files` allowlist verified by an npm-pack probe (the tarball must
+   never carry research corpora, tests, or workspace files); the root `make`
+   convenience stays, with its bundle cost documented.
 7. **Publish gate**: `private: true` until effect v4 stable AND drizzle 1.0
    final (the drizzle-kit rc-skew preload must be dead first). Changesets +
-   release lane wired but dormant; peers pinned exact meanwhile. Pre-npm
-   feedback flows through the public repository.
+   release lane wired but dormant; `publishConfig.access: "public"` (+ repo
+   provenance setting) declared at creation since the repo changesets config
+   is `restricted`; peers pinned exact meanwhile. Pre-npm feedback flows
+   through the public repository.
 8. **Gates**: standard workspace lanes + family additions — inverted-import
    gate promoted from the package boundary test into repo lint; a tstyche lane
    scoped to ecosystem members, created at package creation (P1; a deliberate,

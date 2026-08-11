@@ -27,8 +27,12 @@ Before marking the packet closed (and `status` → `completed-retained`):
 2. Run `bun run beep lint reflection-artifacts` (this packet has
    `reflectionRequired: true`, so a missing/invalid reflection blocks
    closeout).
-3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses + `initiative.status` — in the same PR as the final P2 work.
+3. Flip packet state through the single writer — `bun run beep goals
+   set-status` — which updates the manifest lifecycle, `initiative.status`,
+   README status line, timestamp, and generated index together (hand-editing
+   only `initiative.status`/phases leaves `lifecycle: active` and
+   `goals doctor` blocks on the mismatch). Update phase statuses and the
+   README "Latest Evidence" alongside — in the same PR as the final P2 work.
 
 ## Execution Notes
 
