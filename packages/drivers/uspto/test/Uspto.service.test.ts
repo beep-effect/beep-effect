@@ -255,6 +255,7 @@ describe("Uspto schema parity", () => {
       apiKey: "test-key",
       apiUrl: "https://api.uspto.gov",
     });
+    expect(Result.isFailure(S.decodeResult(UsptoConfigInput)({ apiUrl: "//" }))).toBe(true);
     expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
       applicationNumberText: "16138242",
       firstApplicantName: "Precision Widgets LLC",
@@ -301,11 +302,9 @@ describe("Uspto schema parity", () => {
         ErrorReasonArbitrary,
         ErrorArbitrary,
         (applicationNumber, patentNumber, config, metadata, continuity, document, errorReason, error) => {
-          const normalizedConfig = decode(UsptoConfigInput, encode(UsptoConfigInput, config));
-
           expectEncodedRoundTrip(UsptoApplicationNumber, applicationNumber);
           expectEncodedRoundTrip(UsptoPatentNumber, patentNumber);
-          expectEncodedRoundTrip(UsptoConfigInput, normalizedConfig);
+          expectEncodedRoundTrip(UsptoConfigInput, config);
           expectEncodedRoundTrip(UsptoApplicationMetadata, metadata);
           expectEncodedRoundTrip(UsptoContinuity, continuity);
           expectEncodedRoundTrip(UsptoDocumentReference, document);
