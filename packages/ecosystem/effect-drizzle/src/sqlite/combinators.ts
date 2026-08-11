@@ -7,6 +7,8 @@
  * @since 0.0.0
  */
 
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
+
 import { fromUndefinedOr, getOrElse } from "effect/Option";
 import { BigInt as BigIntSchema, Finite, flip, is, isBetweenBigInt, isFinite, isInt, makeFilter } from "effect/Schema";
 import { VariantSchema } from "effect/unstable/schema";
@@ -21,7 +23,7 @@ import { DeriveColumnError, isEntityIdLike, isNullable, isStructuralJson, string
 import type { SQL } from "drizzle-orm";
 import type { Check } from "effect/SchemaAST";
 import type { ValidateSqlName } from "../core/names.ts";
-import type { EntityIdLike } from "./derive.ts";
+import type { EntityIdLike, StructuralJson } from "./derive.ts";
 
 const evolveSchemas = (
   schema: Field.AnySchema,
@@ -123,7 +125,7 @@ export function text(options: {
   input: I &
     Field.ValidateEncoded<
       I,
-      import("./derive.ts").StructuralJson,
+      StructuralJson,
       "sqlite.text({ mode: 'json' }) requires an array- or record-encoded schema"
     >
 ) => Field.Patched<I, { readonly column: SqliteColumn.Text<"json"> }>;
@@ -251,11 +253,7 @@ export function blob(options: {
   readonly mode: "json";
 }): <I extends Field.Input>(
   input: I &
-    Field.ValidateEncoded<
-      I,
-      import("./derive.ts").StructuralJson,
-      "sqlite.blob json mode requires an array- or record-encoded schema"
-    >
+    Field.ValidateEncoded<I, StructuralJson, "sqlite.blob json mode requires an array- or record-encoded schema">
 ) => Field.Patched<I, { readonly column: SqliteColumn.Blob<"json"> }>;
 export function blob(options: {
   readonly mode: "bigint";

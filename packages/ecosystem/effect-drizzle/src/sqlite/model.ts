@@ -6,6 +6,7 @@
  *
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { last, reduce } from "effect/Array";
 import { fromUndefinedOr, getOrElse, getOrUndefined, match, none, orElse, some } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
@@ -40,7 +41,6 @@ export {
   fieldEvolve,
   Variant,
   VariantField,
-  variants,
 } from "../core/variant.ts";
 /** Internal dialect re-export of the shared model invariant error.
  * @internal
@@ -87,7 +87,7 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
 
 /** Metadata after SQLite derivation and automatic EntityId references. */
 /** @internal */
-export type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
+type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
   Field.MetaFrom<I>,
   { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
 >;
@@ -180,7 +180,7 @@ export type EffectiveSchema<I extends Field.Input> =
       : never;
 
 /** @internal */
-export type UnwrappedFields<F extends FieldsInput> = {
+type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
 
@@ -516,7 +516,7 @@ export function makeModelClass(
       ordinaryColumns: 0,
       schemaFields: empty<string, Field.AnySchema>(),
     },
-    (state, [key, input]) => {
+    function collectSqliteModelState(state, [key, input]) {
       const field = Field.from(input);
       if (field.meta.version && VariantSchema.isField(field.schema)) {
         throw ModelInvariantError.make({

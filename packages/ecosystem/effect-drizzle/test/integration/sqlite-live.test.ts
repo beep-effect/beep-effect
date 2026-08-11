@@ -85,16 +85,13 @@ const resolveNodeBinary = (): string => {
   if (override !== undefined && override.length > 0) {
     return override;
   }
-  for (const directory of (Bun.env.PATH ?? "").split(":")) {
-    if (directory.length === 0) {
-      continue;
-    }
-    const candidate = Bun.which("node", { PATH: directory });
-    if (candidate !== null && isRealNode(candidate)) {
-      return candidate;
-    }
-  }
-  return "/usr/bin/node";
+  return (
+    (Bun.env.PATH ?? "")
+      .split(":")
+      .filter((directory) => directory.length > 0)
+      .map((directory) => Bun.which("node", { PATH: directory }))
+      .find((candidate) => candidate !== null && isRealNode(candidate)) ?? "/usr/bin/node"
+  );
 };
 
 const nodeBinary = resolveNodeBinary();

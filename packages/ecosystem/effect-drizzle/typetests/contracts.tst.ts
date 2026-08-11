@@ -1,14 +1,39 @@
-import { Model, make, VariantField } from "@beep/effect-drizzle";
+import { Model, make, makeRepository, VariantField } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import * as sqlite from "@beep/effect-drizzle/sqlite";
 import { sql } from "drizzle-orm";
-import { Array, BigInt, Boolean, Finite, Int, Literals, NullOr, String } from "effect/Schema";
+import { Service } from "effect/Context";
+import { succeed } from "effect/Effect";
+import {
+  Array,
+  BigInt,
+  Boolean,
+  Date as DateSchema,
+  decodeTo,
+  Finite,
+  Int,
+  Literals,
+  NullOr,
+  String,
+  Struct,
+} from "effect/Schema";
+import { transformOrFail } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { expect, it } from "tstyche";
+import type { Effect, Success } from "effect/Effect";
+
+type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+type MutualExtends<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type ExpectAll<T extends { readonly [K in keyof T]: true }> = T;
 
 const OrganizationId = Object.assign(Int, {
   tableName: "organization" as const,
   entityType: "Organization" as const,
+});
+const UserId = Object.assign(Int, {
+  tableName: "user" as const,
+  entityType: "User" as const,
 });
 
 class Organization extends Model<Organization>("Organization")({
@@ -96,6 +121,188 @@ it("infers dialect kits and their invariant fields", () => {
   expect<typeof kit.pg.integer>().type.toBe<typeof pg.integer>();
   expect<(typeof Account.select)["Type"]>().type.toHaveProperty("createdAt");
   expect<(typeof Account.update)["Type"]>().type.toHaveProperty("rowVersion");
+});
+
+it("preserves migrated PostgreSQL fixture compile contracts", () => {
+  class MigratedOrganization extends Model<MigratedOrganization>("MigratedOrganization")({
+    id: OrganizationId.pipe(pg.integer(), pg.identity("byDefault"), pg.primaryKey()),
+    name: String,
+  }) {}
+  class MigratedUser extends Model<MigratedUser>("MigratedUser")({
+    id: UserId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+    orgId: OrganizationId,
+    email: String.pipe(pg.varchar(320)),
+    bio: NullOr(String),
+    settings: Struct({ theme: String }),
+    active: Boolean,
+    status: Literals(["draft", "active"]).pipe(pg.enum("record_status"), pg.default("active")),
+    source: Literals(["web", "api"]).pipe(pg.enum()),
+    createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
+    searchName: String.pipe(pg.text(), pg.generated(sql<string>`lower(name)`)),
+  }) {}
+  const migratedUserTable = pg.toPgTable(MigratedUser);
+  const kit = make({
+    dialect: "pg",
+    defaultColumns: (columns) => ({
+      rowVersion: Int.pipe(columns.integer(), columns.default(1), columns.version()),
+      updatedAt: EffectModel.DateTimeUpdate.pipe(columns.timestamp()),
+      createdAt: EffectModel.DateTimeInsert.pipe(columns.timestamp()),
+    }),
+  });
+  class Account extends kit.Entity<Account>("Account")({
+    id: UserId.pipe(kit.pg.integer(), kit.pg.identity("always"), kit.pg.primaryKey()),
+    name: String,
+  }) {}
+  class Bare extends kit.Model<Bare>("Bare")({ value: String }) {}
+  class Mechanical extends Model<Mechanical>("Mechanical")({
+    amount: String.pipe(pg.numeric(10, 2)),
+    objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
+    largeSequence: Int.pipe(pg.bigserial("number")),
+    nativeSequence: BigInt.pipe(pg.bigserial("bigint")),
+  }) {}
+  const mechanicalTable = pg.toPgTable(Mechanical);
+  class ArrayContract extends Model<ArrayContract>("ArrayContract")({
+    labels: Array(String).pipe(pg.array(String.pipe(pg.text()))),
+    matrix: String.pipe(Array, Array, pg.array(String.pipe(pg.text()), "[][]"), pg.default([["seed"]])),
+  }) {}
+  const arrayTable = pg.toPgTable(ArrayContract);
+
+  class CodecService extends Service<CodecService, { readonly normalize: (value: string) => string }>()(
+    "@beep/effect-drizzle/typetests/CodecService"
+  ) {}
+  const ServiceString = String.pipe(
+    decodeTo(String, {
+      decode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
+      encode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
+    })
+  );
+  class ServiceRecord extends Model<ServiceRecord>("ServiceRecord")({
+    id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
+    value: ServiceString.pipe(pg.text()),
+    rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
+  }) {}
+  const repository = makeRepository(ServiceRecord, { spanPrefix: "ServiceRecord", idColumn: "id" });
+
+  type Select = typeof migratedUserTable.$inferSelect;
+  type Insert = typeof migratedUserTable.$inferInsert;
+  type UserInsert = (typeof MigratedUser.insert)["Type"];
+  type UserUpdate = (typeof MigratedUser.update)["Type"];
+  type UserJsonCreate = (typeof MigratedUser.jsonCreate)["Type"];
+  type OrganizationInsert = (typeof MigratedOrganization.insert)["Type"];
+  type OrganizationUpdate = (typeof MigratedOrganization.update)["Type"];
+  type AccountSelect = (typeof Account)["Type"];
+  type AccountInsert = (typeof Account.insert)["Type"];
+  type AccountUpdate = (typeof Account.update)["Type"];
+  type AccountJson = (typeof Account.json)["Type"];
+  type MechanicalSelect = typeof mechanicalTable.$inferSelect;
+  type MechanicalInsert = typeof mechanicalTable.$inferInsert;
+  type ArraySelect = typeof arrayTable.$inferSelect;
+  type ArrayInsert = typeof arrayTable.$inferInsert;
+  type Repository = Success<typeof repository>;
+  type RepositoryInsert = ReturnType<Repository["insert"]>;
+  type RepositoryRequirements =
+    RepositoryInsert extends Effect<unknown, unknown, infer Requirements> ? Requirements : never;
+
+  type MigratedPgContracts = ExpectAll<{
+    readonly selectId: Equal<Select["id"], number>;
+    readonly selectEmail: Equal<Select["email"], string>;
+    readonly selectBio: Equal<Select["bio"], string | null>;
+    readonly selectSettings: MutualExtends<Select["settings"], { readonly theme: string }>;
+    readonly selectActive: Equal<Select["active"], boolean>;
+    readonly insertIdAbsent: Equal<"id" extends keyof Insert ? true : false, false>;
+    readonly insertCreatedAtRequired: Equal<undefined extends Insert["createdAt"] ? true : false, false>;
+    readonly insertEmailRequired: Equal<Insert["email"], string>;
+    readonly variantInsertIdAbsent: Equal<"id" extends keyof UserInsert ? true : false, false>;
+    readonly variantUpdateIdPresent: Equal<"id" extends keyof UserUpdate ? true : false, true>;
+    readonly variantUpdateIdRequired: Equal<IsOptional<UserUpdate, "id">, false>;
+    readonly variantDefaultOptional: IsOptional<UserInsert, "status">;
+    readonly variantCreatedAtRequired: Equal<IsOptional<UserInsert, "createdAt">, false>;
+    readonly variantUpdateEmailOptional: IsOptional<UserUpdate, "email">;
+    readonly identityByDefaultInsertPresent: Equal<"id" extends keyof OrganizationInsert ? true : false, true>;
+    readonly identityByDefaultInsertOptional: IsOptional<OrganizationInsert, "id">;
+    readonly identityByDefaultUpdatePresent: Equal<"id" extends keyof OrganizationUpdate ? true : false, true>;
+    readonly identityByDefaultUpdateOptional: IsOptional<OrganizationUpdate, "id">;
+    readonly emailIsVarchar: Equal<(typeof MigratedUser)["sql"]["columns"]["email"]["column"]["ident"], "varchar">;
+    readonly orgIdIdentity: Equal<
+      (typeof MigratedUser)["sql"]["columns"]["orgId"]["column"]["ident"],
+      'entityId<"organization">'
+    >;
+    readonly userIdIdentity: Equal<
+      (typeof MigratedUser)["sql"]["columns"]["id"]["column"]["ident"],
+      'entityId<"user">'
+    >;
+    readonly generatedJsonCreateAbsent: Equal<"searchName" extends keyof UserJsonCreate ? true : false, false>;
+    readonly kitSelectCreatedAt: MutualExtends<
+      AccountSelect["createdAt"],
+      (typeof EffectModel.DateTimeInsert.schemas.select)["Type"]
+    >;
+    readonly kitSelectUpdatedAt: MutualExtends<
+      AccountSelect["updatedAt"],
+      (typeof EffectModel.DateTimeUpdate.schemas.select)["Type"]
+    >;
+    readonly kitSelectRowVersion: Equal<AccountSelect["rowVersion"], number>;
+    readonly kitInsertUpdatedAtPresent: Equal<"updatedAt" extends keyof AccountInsert ? true : false, true>;
+    readonly kitUpdateUpdatedAtPresent: Equal<"updatedAt" extends keyof AccountUpdate ? true : false, true>;
+    readonly kitUpdateCreatedAtAbsent: Equal<"createdAt" extends keyof AccountUpdate ? true : false, false>;
+    readonly kitInsertRowVersionOptional: IsOptional<AccountInsert, "rowVersion">;
+    readonly kitUpdateRowVersionRequired: Equal<IsOptional<AccountUpdate, "rowVersion">, false>;
+    readonly kitJsonRowVersionPresent: Equal<"rowVersion" extends keyof AccountJson ? true : false, true>;
+    readonly bareModelOptsOutOfDefaults: Equal<"createdAt" extends keyof (typeof Bare)["Type"] ? true : false, false>;
+    readonly literalEnumIdentity: Equal<
+      (typeof MigratedUser)["sql"]["columns"]["status"]["column"]["ident"],
+      "enum<record_status>"
+    >;
+    readonly derivedEnumIdentity: Equal<
+      (typeof MigratedUser)["sql"]["columns"]["source"]["column"]["ident"],
+      "enum<source>"
+    >;
+    readonly numericSelectCarrier: Equal<MechanicalSelect["amount"], string>;
+    readonly dateSelectCarrier: Equal<MechanicalSelect["objectDate"], Date>;
+    readonly bigserialSelectCarrier: Equal<MechanicalSelect["nativeSequence"], bigint>;
+    readonly bigserialInsertOptional: IsOptional<MechanicalInsert, "largeSequence">;
+    readonly arraySelectLabels: ArraySelect["labels"] extends ReadonlyArray<string> ? true : false;
+    readonly arraySelectMatrix: ArraySelect["matrix"] extends ReadonlyArray<ReadonlyArray<string>> ? true : false;
+    readonly arrayInsertMatrixOptional: IsOptional<ArrayInsert, "matrix">;
+    readonly repositoryCarriesCodecServices: CodecService extends RepositoryRequirements ? true : false;
+  }>;
+
+  expect<MigratedPgContracts>().type.toBe<{ readonly [K in keyof MigratedPgContracts]: true }>();
+});
+
+it("preserves migrated SQLite fixture compile contracts", () => {
+  const sqliteKit = make({
+    dialect: "sqlite",
+    defaultColumns: (columns) => ({
+      createdAt: EffectModel.DateTimeInsert.pipe(columns.text()),
+    }),
+  });
+  class SqliteUser extends sqliteKit.Entity<SqliteUser>("SqliteUser")({
+    id: Int.pipe(sqliteKit.sqlite.integer(), sqliteKit.sqlite.autoIncrement()),
+    name: String,
+  }) {}
+  class SqlitePlainPrimary extends sqliteKit.Model<SqlitePlainPrimary>("SqlitePlainPrimary")({
+    id: Int.pipe(sqliteKit.sqlite.integer(), sqliteKit.sqlite.primaryKey()),
+    name: String,
+  }) {}
+  const sqliteUserTable = sqliteKit.toSqliteTable(SqliteUser);
+  const sqlitePlainPrimaryTable = sqliteKit.toSqliteTable(SqlitePlainPrimary);
+  const pgKit = make({
+    dialect: "pg",
+    defaultColumns: (columns) => ({
+      createdAt: EffectModel.DateTimeInsert.pipe(columns.timestamp()),
+    }),
+  });
+  class PgUser extends pgKit.Entity<PgUser>("PgUser")({ id: Int.pipe(pgKit.pg.integer()), name: String }) {}
+
+  type MigratedSqliteContracts = ExpectAll<{
+    readonly sqliteDrizzleIdOptional: IsOptional<typeof sqliteUserTable.$inferInsert, "id">;
+    readonly sqliteVariantUpdateIdOptional: IsOptional<(typeof SqliteUser.update)["Type"], "id">;
+    readonly sqlitePlainPrimaryVariantIdOptional: IsOptional<(typeof SqlitePlainPrimary.insert)["Type"], "id">;
+    readonly sqlitePlainPrimaryDrizzleIdOptional: IsOptional<typeof sqlitePlainPrimaryTable.$inferInsert, "id">;
+    readonly sqliteCreatedAtShared: MutualExtends<SqliteUser["createdAt"], PgUser["createdAt"]>;
+  }>;
+
+  expect<MigratedSqliteContracts>().type.toBe<{ readonly [K in keyof MigratedSqliteContracts]: true }>();
 });
 
 it("pins public PostgreSQL diagnostic literals", () => {
@@ -193,6 +400,20 @@ it("pins public SQL-name and table-extra diagnostics", () => {
   expect(
     pg.Table.compositePrimaryKey("nullable_composite_pk", [nullablePgColumns.one, nullablePgColumns.two])
   ).type.toRaiseError("composite primary-key columns cannot be nullable");
+  expect(
+    Model("CallbackGood")({ one: String, two: String }, (columns) => [
+      pg.Table.index("callback_good_idx", [columns.one]),
+    ])
+  ).type.not.toRaiseError();
+  expect(
+    Model("CallbackMissingField")({ one: String, two: String }, (columns) => [
+      pg.Table.index("callback_bad_idx", [columns.missing]),
+    ])
+  ).type.toRaiseError();
+  expect(pg.Table.compositeUnique("callback_bad_unique", [pgColumns.one])).type.toRaiseError();
+  expect(pg.Table.compositePrimaryKey("callback_bad_pk", [pgColumns.one])).type.toRaiseError();
+  expect(pg.Table.check("callback_bad_check")("one <> ''")).type.toRaiseError();
+  expect(pg.Table.index("callback_bad_where", [pgColumns.one], { where: "one <> ''" })).type.toRaiseError();
 
   expect(String.pipe(sqlite.columnName("Bad Name"))).type.toRaiseError(
     "sqlite.columnName requires a lowercase SQL identifier"

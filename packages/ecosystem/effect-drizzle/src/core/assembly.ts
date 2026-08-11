@@ -46,15 +46,15 @@ export const relationName = (fieldName: string): string =>
 
 /** Stable alias shared by forward and reverse relations. */
 /** @internal */
-export const relationAlias = (edge: Edge): string => `${edge.sourceKey}_${edge.sourceField}_${edge.targetKey}`;
+const relationAlias = (edge: Edge): string => `${edge.sourceKey}_${edge.sourceField}_${edge.targetKey}`;
 
 /** Deliberately narrow pluralization used by deterministic relation names. */
 /** @internal */
-export const plural = (value: string): string => `${camelCase(value)}s`;
+const plural = (value: string): string => `${camelCase(value)}s`;
 
 /** Derive the reverse relation name for one edge. */
 /** @internal */
-export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
+const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
     edges.filter((candidate) => candidate.sourceKey === edge.sourceKey && candidate.targetKey === edge.targetKey)
       .length > 1;
@@ -67,7 +67,7 @@ export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): str
 
 /** Structural model surface needed by the shared relation assembler. */
 /** @internal */
-export interface RelationModel {
+interface RelationModel {
   readonly sql: {
     readonly tableName: string;
     readonly fields: Readonly<Record<string, unknown>>;

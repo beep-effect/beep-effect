@@ -50,7 +50,6 @@ export {
   fieldEvolve,
   Variant,
   VariantField,
-  variants,
 } from "../core/variant.ts";
 // Re-export the owning root error for internal dialect modules.
 /** Internal dialect re-export of the shared model invariant error.
@@ -108,7 +107,7 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
  * @since 0.0.0
  */
 /** @internal */
-export type ResolvedMetaOf<I extends Field.Input, Key extends string = string> = Meta.Merge<
+type ResolvedMetaOf<I extends Field.Input, Key extends string = string> = Meta.Merge<
   Field.MetaFrom<I>,
   {
     readonly column: PgColumn.ResolveName<Derive.ResolvedColumn<I>, Key>;
@@ -213,7 +212,7 @@ export type EffectiveSchema<I extends Field.Input> =
  * @since 0.0.0
  */
 /** @internal */
-export type UnwrappedFields<F extends FieldsInput> = {
+type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
 
@@ -570,7 +569,7 @@ export function makeModelClass(
       versionFields: 0,
       schemaFields: empty<string, Field.AnySchema>(),
     },
-    (state, [key, input]) => {
+    function collectPgModelState(state, [key, input]) {
       const field = Field.from(input);
       if (field.meta.version && VariantSchema.isField(field.schema)) {
         throw ModelInvariantError.make({

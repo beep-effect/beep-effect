@@ -242,6 +242,47 @@ const collectSourceViolations = (
   return violations;
 };
 
+const runtimeDependencyViolations = (
+  relativeManifestPath: string,
+  field: string,
+  dependencies: O.Option<Readonly<Record<string, string>>>
+): ReadonlyArray<EcosystemPolarityViolation> =>
+  pipe(
+    dependencies,
+    O.map((entries) =>
+      pipe(
+        R.keys(entries),
+        A.filter(Str.startsWith("@beep/")),
+        A.map((dependency) =>
+          EcosystemPolarityViolation.make({
+            file: relativeManifestPath,
+            line: 1,
+            kind: "runtime-dependency",
+            detail: `${field}.${dependency}`,
+          })
+        )
+      )
+    ),
+    O.getOrElse(A.empty<EcosystemPolarityViolation>)
+  );
+
+const bundledFieldViolations = (
+  relativeManifestPath: string,
+  fields: ReadonlyArray<readonly [field: string, value: O.Option<unknown>]>
+): ReadonlyArray<EcosystemPolarityViolation> =>
+  pipe(
+    fields,
+    A.filter(([, value]) => O.isSome(value)),
+    A.map(([field]) =>
+      EcosystemPolarityViolation.make({
+        file: relativeManifestPath,
+        line: 1,
+        kind: "bundled-dependencies",
+        detail: field,
+      })
+    )
+  );
+
 const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(function* (
   member: EcosystemMember,
   repoRoot: string
@@ -250,49 +291,21 @@ const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(fun
     Effect.mapError(() => EcosystemPolarityError.new(`Failed to read or decode ${normalizePath(member.manifestPath)}.`))
   );
   const relativeManifestPath = normalizePath((yield* Path.Path).relative(repoRoot, member.manifestPath));
-  let violations = A.empty<EcosystemPolarityViolation>();
   const dependencyFields = [
     ["dependencies", manifest.dependencies],
     ["peerDependencies", manifest.peerDependencies],
     ["optionalDependencies", manifest.optionalDependencies],
   ] as const;
-
-  for (const [field, dependencies] of dependencyFields) {
-    if (O.isSome(dependencies)) {
-      for (const dependency of R.keys(dependencies.value)) {
-        if (Str.startsWith("@beep/")(dependency)) {
-          violations = A.append(
-            violations,
-            EcosystemPolarityViolation.make({
-              file: relativeManifestPath,
-              line: 1,
-              kind: "runtime-dependency",
-              detail: `${field}.${dependency}`,
-            })
-          );
-        }
-      }
-    }
-  }
-
-  for (const [field, value] of [
-    ["bundledDependencies", manifest.bundledDependencies],
-    ["bundleDependencies", manifest.bundleDependencies],
-  ] as const) {
-    if (O.isSome(value)) {
-      violations = A.append(
-        violations,
-        EcosystemPolarityViolation.make({
-          file: relativeManifestPath,
-          line: 1,
-          kind: "bundled-dependencies",
-          detail: field,
-        })
-      );
-    }
-  }
-
-  return violations;
+  const manifestEdges = A.flatMap(dependencyFields, ([field, dependencies]) =>
+    runtimeDependencyViolations(relativeManifestPath, field, dependencies)
+  );
+  return A.appendAll(
+    manifestEdges,
+    bundledFieldViolations(relativeManifestPath, [
+      ["bundledDependencies", manifest.bundledDependencies],
+      ["bundleDependencies", manifest.bundleDependencies],
+    ])
+  );
 });
 
 /**

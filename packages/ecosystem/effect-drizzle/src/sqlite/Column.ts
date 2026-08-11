@@ -1,5 +1,7 @@
 /** SQLite storage-class descriptors and their colocated Drizzle compilers. */
 
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
+
 import { blob, integer, numeric, real, text } from "drizzle-orm/sqlite-core";
 import { append, contains, empty, isArray, isReadonlyArrayNonEmpty, some as someArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
@@ -38,7 +40,7 @@ import type * as Meta from "../core/Meta.ts";
 
 /** Failure raised when a SQLite descriptor violates its closed shape. */
 /** @internal */
-export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
+class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   "@beep/effect-drizzle/sqlite/ColumnInvariantError"
 )(
   "ColumnInvariantError",
@@ -54,7 +56,7 @@ export type ArrayDimension = Meta.ArrayDimension;
 
 /** Modes supported by the installed SQLite text builder. */
 /** @internal */
-export type TextMode = "text" | "json";
+type TextMode = "text" | "json";
 
 /** Modes supported by the installed SQLite integer builder. */
 /** @internal */
@@ -403,10 +405,10 @@ export type CarrierOf<C extends Spec> =
 
 /** Runtime carrier witness used by foreign-key compatibility checks. */
 /** @internal */
-export type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes";
+type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes";
 
 /** @internal */
-export const carrierTag = (spec: Spec): CarrierTag =>
+const carrierTag = (spec: Spec): CarrierTag =>
   Spec.$match(spec, {
     text: ({ mode }): CarrierTag => (mode === "json" ? "object" : "string"),
     enum: (): CarrierTag => "string",

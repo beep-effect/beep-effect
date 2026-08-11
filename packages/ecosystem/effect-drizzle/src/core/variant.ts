@@ -12,7 +12,7 @@ const variantTuple = <const Values extends readonly [string, ...string[]]>(...va
 
 /** Ordered internal variant list used to configure the shared factory. */
 /** @internal */
-export const variants = variantTuple("select", "insert", "update", "json", "jsonCreate", "jsonUpdate");
+const variants = variantTuple("select", "insert", "update", "json", "jsonCreate", "jsonUpdate");
 
 /**
  * Names the six model projections shared by both SQL dialects.

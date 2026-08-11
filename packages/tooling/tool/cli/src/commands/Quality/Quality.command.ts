@@ -1456,70 +1456,78 @@ const isDirectEcosystemMemberTsconfig = (filePath: string): boolean => {
   );
 };
 
+const findDiagnosticSeverityMap = (
+  plugin: Readonly<Record<string, unknown>>
+): O.Option<Readonly<Record<string, unknown>>> =>
+  pipe(unknownRecordProperty(plugin, "diagnosticSeverity"), O.flatMap(decodeUnknownRecordOption));
+
+const collectEcosystemSeverityDiffDiagnostics = (
+  file: string,
+  baseSeverity: Readonly<Record<string, unknown>>,
+  severity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const baseRuleNames = pipe(R.keys(baseSeverity), A.sort(Order.String));
+  const configuredRuleNames = pipe(R.keys(severity), A.sort(Order.String));
+  const missing = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => !A.contains(configuredRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity is missing rule ${ruleName}`)
+  );
+  const unexpected = pipe(
+    configuredRuleNames,
+    A.filter((ruleName) => !A.contains(baseRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity has unexpected rule ${ruleName}`)
+  );
+  const mismatched = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
+    }),
+    A.map((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return `${file}: ecosystem diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+    })
+  );
+  return A.appendAll(A.appendAll(missing, unexpected), mismatched);
+};
+
+const collectEcosystemMemberProfileDiagnostics = (
+  file: string,
+  config: unknown,
+  baseSeverity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const plugin = findEffectLanguageServicePlugin(config);
+  if (O.isNone(plugin)) {
+    return A.empty();
+  }
+  if (!isDirectEcosystemMemberTsconfig(file)) {
+    return A.of(
+      `${file}: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json`
+    );
+  }
+  const severity = findDiagnosticSeverityMap(plugin.value);
+  return O.match(severity, {
+    onNone: () => A.of(`${file}: ecosystem @effect/language-service profile is missing diagnosticSeverity`),
+    onSome: (configured) => collectEcosystemSeverityDiffDiagnostics(file, baseSeverity, configured),
+  });
+};
+
 const collectEcosystemPluginProfileDiagnostics = (
   basePlugin: Readonly<Record<string, unknown>>,
   configs: ReadonlyArray<readonly [file: string, config: unknown]>
-): ReadonlyArray<string> => {
-  const baseSeverity = pipe(
-    unknownRecordProperty(basePlugin, "diagnosticSeverity"),
-    O.flatMap(decodeUnknownRecordOption)
-  );
-  if (O.isNone(baseSeverity)) {
-    return A.of("tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map");
-  }
-
-  const baseRuleNames = pipe(R.keys(baseSeverity.value), A.sort(Order.String));
-  let diagnostics = A.empty<string>();
-
-  for (const [file, config] of configs) {
-    const plugin = findEffectLanguageServicePlugin(config);
-    if (O.isNone(plugin)) {
-      continue;
-    }
-
-    if (!isDirectEcosystemMemberTsconfig(file)) {
-      diagnostics = A.append(
-        diagnostics,
-        `${file}: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json`
-      );
-      continue;
-    }
-
-    const severity = pipe(
-      unknownRecordProperty(plugin.value, "diagnosticSeverity"),
-      O.flatMap(decodeUnknownRecordOption)
-    );
-    if (O.isNone(severity)) {
-      diagnostics = A.append(
-        diagnostics,
-        `${file}: ecosystem @effect/language-service profile is missing diagnosticSeverity`
-      );
-      continue;
-    }
-
-    const configuredRuleNames = pipe(R.keys(severity.value), A.sort(Order.String));
-    for (const ruleName of A.filter(baseRuleNames, (ruleName) => !A.contains(configuredRuleNames, ruleName))) {
-      diagnostics = A.append(diagnostics, `${file}: ecosystem diagnosticSeverity is missing rule ${ruleName}`);
-    }
-    for (const ruleName of A.filter(configuredRuleNames, (ruleName) => !A.contains(baseRuleNames, ruleName))) {
-      diagnostics = A.append(diagnostics, `${file}: ecosystem diagnosticSeverity has unexpected rule ${ruleName}`);
-    }
-    for (const ruleName of baseRuleNames) {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity.value, ruleName), O.getOrUndefined);
-      const actualSeverity = pipe(R.get(severity.value, ruleName), O.getOrUndefined);
-      if (actualSeverity !== undefined && actualSeverity !== expectedSeverity) {
-        diagnostics = A.append(
-          diagnostics,
-          `${file}: ecosystem diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`
-        );
-      }
-    }
-  }
-
-  return diagnostics;
-};
+): ReadonlyArray<string> =>
+  O.match(findDiagnosticSeverityMap(basePlugin), {
+    onNone: () => A.of("tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map"),
+    onSome: (baseSeverity) =>
+      A.flatMap(configs, ([file, config]) => collectEcosystemMemberProfileDiagnostics(file, config, baseSeverity)),
+  });
 
 /**
  * Validate package-local Effect language-service profiles against the ecosystem family delta.

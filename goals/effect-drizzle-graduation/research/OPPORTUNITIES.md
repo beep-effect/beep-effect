@@ -85,3 +85,41 @@ done, the evidence, what would have prevented it.
 - **Prevented by:** a family-onboarding checklist naming every law/scan that
   keys off `packages/**` or the family LiteralKit, so scoping decisions are
   made at enrollment rather than discovered as gate failures.
+
+## 2026-08-11 — dead-code tooling entry inventories are not shared
+
+- **Doing:** clearing knip and fallow for the new member's tool-loaded roots
+  (tstyche typetests, the drizzle-kit `--schema` module, the perf consumer,
+  the `Bun.build` bundle entrypoint).
+- **Evidence:** the knip workspace `entry` block made knip green while fallow
+  kept reporting the same files and their downstream exports dead until the
+  equivalent roots were added to `.fallowrc.jsonc` `entry` — two tools, two
+  hand-maintained inventories of the same facts.
+- **Prevented by:** one canonical tool-loaded-roots inventory consumed by both
+  detectors, or a parity check that diffs the two entry lists.
+
+## 2026-08-11 — whole-package moves read as introduced debt to new-only gates
+
+- **Doing:** running `beep quality fallow audit` after the move; the code was
+  already on `main` (merged PR #651 at `scratchpad/bsl`) and reviewed through
+  two quality loops.
+- **Evidence:** the new-only gate attributed 19 complexity findings and 56
+  duplication clone groups as *introduced* because every file path changed;
+  none of the flagged function bodies changed in this PR. The sanctioned
+  repairs were `thresholdOverrides` attribution-artifact entries (existing
+  precedent wording) and mirrored-dialect duplication markers — plus honest
+  refactors for the handful of genuinely new over-ceiling functions.
+- **Prevented by:** rename/move-aware attribution in the audit lane, or a
+  documented move-playbook step that pre-declares the override/marker set
+  when a proven tree changes governance scope.
+
+## 2026-08-11 — Bun/Vitest fork workers dead in sandboxed agent sessions
+
+- **Doing:** job-scoped member test runs from a sandboxed agent.
+- **Evidence:** every Vitest fork worker timed out pre-import ("no tests",
+  `transform 0ms`, 60s duration); the threads-pool diagnostic failed with a
+  null worker stdout before tests. The same commands pass in an unsandboxed
+  shell (89/89). Node-backed diagnostic runs confirmed the suites themselves
+  were healthy.
+- **Prevented by:** a preflight that detects unsupported Bun worker
+  environments and says so, instead of reporting an empty-but-failing run.

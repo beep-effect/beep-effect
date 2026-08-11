@@ -1240,6 +1240,48 @@ export const createPackageCommand = Command.make(
 
 // ── Template generators ────────────────────────────────────────────────────
 
+const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemPackageJson")(function* <
+  const BaseManifest extends object,
+  const Scripts extends object,
+>(baseManifest: BaseManifest, scripts: Scripts, metadata: BeepPackageMetadata, effectPeerVersion: O.Option<string>) {
+  if (O.isNone(effectPeerVersion)) {
+    return yield* DomainError.make({
+      message: `Root package.json catalog must define an exact effect version before creating an ecosystem package.`,
+    });
+  }
+
+  const pkg = {
+    ...baseManifest,
+    beep: metadata,
+    sideEffects: false,
+    exports: {
+      "./package.json": "./package.json",
+      ".": "./src/index.ts",
+    },
+    files: ["dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],
+    publishConfig: {
+      access: "public",
+      provenance: true,
+      exports: {
+        "./package.json": "./package.json",
+        ".": "./dist/index.js",
+      },
+    },
+    scripts,
+    peerDependencies: {
+      effect: effectPeerVersion.value,
+    },
+    devDependencies: {
+      "@types/node": "catalog:",
+      "@effect/vitest": "catalog:",
+      effect: "catalog:",
+    },
+  };
+
+  const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
+  return `${json}\n`;
+});
+
 /**
  * Build a pretty-printed `package.json` string for a new package.
  *
@@ -1427,42 +1469,12 @@ const generatePackageJson: (
       O.filter((metadata) => packageFamilyEquivalence(metadata.family, "ecosystem"))
     );
     if (O.isSome(ecosystemMetadata)) {
-      if (O.isNone(ecosystemEffectPeerVersion)) {
-        return yield* DomainError.make({
-          message: `Root package.json catalog must define an exact effect version before creating an ecosystem package.`,
-        });
-      }
-
-      const pkg = {
-        ...baseManifest,
-        beep: ecosystemMetadata.value,
-        sideEffects: false,
-        exports: {
-          "./package.json": "./package.json",
-          ".": "./src/index.ts",
-        },
-        files: ["dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],
-        publishConfig: {
-          access: "public",
-          provenance: true,
-          exports: {
-            "./package.json": "./package.json",
-            ".": "./dist/index.js",
-          },
-        },
+      return yield* generateEcosystemPackageJson(
+        baseManifest,
         scripts,
-        peerDependencies: {
-          effect: ecosystemEffectPeerVersion.value,
-        },
-        devDependencies: {
-          "@types/node": "catalog:",
-          "@effect/vitest": "catalog:",
-          effect: "catalog:",
-        },
-      };
-
-      const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-      return `${json}\n`;
+        ecosystemMetadata.value,
+        ecosystemEffectPeerVersion
+      );
     }
 
     const pkg = {

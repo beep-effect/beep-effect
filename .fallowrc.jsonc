@@ -35,6 +35,14 @@
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
     "packages/drivers/graph-3d/stories/**/*.stories.tsx",
+    // Ecosystem-member tool-loaded roots: tstyche discovers the typetests file,
+    // drizzle-kit receives the sqlite schema module via --schema, the perf
+    // consumer compiles out of band, and the bundle consumer is a Bun.build
+    // entrypoint passed by string path from import-boundary.test.ts.
+    "packages/ecosystem/*/typetests/*.tst.ts",
+    "packages/ecosystem/effect-drizzle/test/integration/sqlite-drizzle-schema.ts",
+    "packages/ecosystem/effect-drizzle/test/perf.consumer.ts",
+    "packages/ecosystem/effect-drizzle/test/bundle-pg-integer.consumer.ts",
     // Tool-loaded roots: syncpack auto-loads its config, eslint.config.mjs is
     // profile-selected by the Lint command, Changesets loads its changelog
     // module from config, and global-cleanup.ts is the vitest globalSetup for
@@ -286,6 +294,92 @@
         "functions": ["normalizeJSDocCategoryKey"],
         "maxCognitive": 12,
         "reason": "Pre-existing slug normalizer body unchanged by the jsdoc-carrier migration; Fallow audit attributes its cognitive finding as introduced when only the JSDoc carrier grammar changes. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/Column.ts"],
+        "functions": ["isSpec"],
+        "maxCyclomatic": 35,
+        "maxCognitive": 17,
+        "maxCrap": 38,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/model.ts"],
+        "functions": ["collectPgModelState"],
+        "maxCyclomatic": 34,
+        "maxCognitive": 35,
+        "maxCrap": 269,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["collectSqliteModelState"],
+        "maxCyclomatic": 32,
+        "maxCognitive": 29,
+        "maxCrap": 239,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/extras.ts"],
+        "functions": ["isNode"],
+        "maxCognitive": 16,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/extras.ts"],
+        "functions": ["isNode"],
+        "maxCognitive": 15,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/core/Meta.ts"],
+        "functions": ["merge"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/schema.ts"],
+        "functions": ["collectPgEdge"],
+        "maxCognitive": 11,
+        "maxCrap": 38,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/schema.ts"],
+        "functions": ["collectSqliteEdge"],
+        "maxCognitive": 11,
+        "maxCrap": 38,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["effectiveSchema"],
+        "maxCrap": 38,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/derive.ts"],
+        "functions": ["exactLengthFromCheck"],
+        "maxCrap": 32,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["validateLiteralDefault"],
+        "maxCrap": 32,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/core/literals.ts"],
+        "functions": ["stringLiteralsFromAST"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/derive.ts"],
+        "functions": ["Literal"],
+        "maxCognitive": 11,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       },
       {
         "files": [

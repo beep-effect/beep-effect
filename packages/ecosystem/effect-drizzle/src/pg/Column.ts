@@ -63,9 +63,7 @@ import type * as Meta from "../core/Meta.ts";
 
 /** Descriptor-construction failure at an author-input seam. */
 /** @internal */
-export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
-  "@beep/effect-drizzle/ColumnInvariantError"
-)(
+class ColumnInvariantError extends TaggedError<ColumnInvariantError>("@beep/effect-drizzle/ColumnInvariantError")(
   "ColumnInvariantError",
   { message: StringSchema },
   {
@@ -75,7 +73,7 @@ export class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
 
 /** PostgreSQL identity-generation mode. */
 /** @internal */
-export type IdentityMode = Meta.IdentityMode;
+type IdentityMode = Meta.IdentityMode;
 
 /** PostgreSQL scalar or array depth. */
 /** @internal */
@@ -117,31 +115,6 @@ const applyIdentity = (
 /** Storage identity for a number-encoded entity id. */
 /** @internal */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
-
-/** Storage identities supported by the PostgreSQL implementation. */
-/** @internal */
-export type DbIdent =
-  | "text"
-  | "varchar"
-  | "char"
-  | "uuid"
-  | "integer"
-  | "smallint"
-  | "bigint"
-  | "numeric"
-  | "doublePrecision"
-  | "real"
-  | "boolean"
-  | "json"
-  | "jsonb"
-  | "date"
-  | "timestamp"
-  | "timestamptz"
-  | "bytea"
-  | EntityIdIdent<string>
-  | `enum<${string}>`
-  | `custom<${string}>`
-  | `array<${string},${1 | 2 | 3 | 4 | 5}>`;
 
 type SpecDefinition = {
   text: { readonly dialect: "pg"; readonly kind: "text"; readonly ident: "text" };
@@ -844,9 +817,7 @@ export function resolveName(spec: Spec, key: string): Spec {
 }
 
 /** @internal */
-export type Kind = Spec["kind"];
-/** @internal */
-export type IdentOf<C extends Spec> = C["ident"];
+type IdentOf<C extends Spec> = C["ident"];
 /** @internal */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Dimensions extends 0
   ? IdentOf<C>
@@ -871,13 +842,6 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimension
         : Dimensions extends 4
           ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
           : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>;
-
-/** @internal */
-export type IdentEquals<A extends Spec, B extends Spec> = [IdentOf<A>] extends [IdentOf<B>]
-  ? [IdentOf<B>] extends [IdentOf<A>]
-    ? true
-    : false
-  : false;
 
 /** @internal */
 export type IdentityKind = "integer" | "smallint" | "bigint";
@@ -935,7 +899,7 @@ export interface Carrier {
 }
 
 /** @internal */
-export const carrierTag = (spec: Spec): CarrierTag => {
+const carrierTag = (spec: Spec): CarrierTag => {
   const string = (): CarrierTag => "string";
   const number = (): CarrierTag => "number";
   return Spec.$match(spec, {

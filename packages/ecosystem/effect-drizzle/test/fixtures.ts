@@ -6,8 +6,6 @@ import { schema, Table, toPgTable } from "@beep/effect-drizzle/pg";
 import { getColumnTable, getTableName, sql } from "drizzle-orm";
 import { getTableConfig as getPgTableConfig } from "drizzle-orm/pg-core";
 import { head } from "effect/Array";
-import { Service } from "effect/Context";
-import { succeed } from "effect/Effect";
 import { getOrThrow } from "effect/Option";
 import {
   Array,
@@ -15,7 +13,6 @@ import {
   Boolean,
   brand,
   Date as DateSchema,
-  decodeTo,
   Finite,
   Int,
   instanceOf,
@@ -31,10 +28,8 @@ import {
   Uint8Array as Uint8ArraySchema,
   Union,
 } from "effect/Schema";
-import { transformOrFail } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { SqlModel } from "effect/unstable/sql";
-import type { Effect, Success } from "effect/Effect";
 import type { Top } from "effect/Schema";
 
 const PosInt = Int.check(
@@ -49,16 +44,16 @@ const PosInt = Int.check(
   description: "Positive integer used by kit row-version defaults.",
 });
 
-export const RecordStatus = Literals(["draft", "active"]).annotate({
+const RecordStatus = Literals(["draft", "active"]).annotate({
   identifier: "@beep/effect-drizzle/test/RecordStatus",
   description: "Lifecycle status stored in the shared record_status enum.",
 });
-export const RecordSource = Literals(["web", "api"]).annotate({
+const RecordSource = Literals(["web", "api"]).annotate({
   identifier: "@beep/effect-drizzle/test/RecordSource",
   description: "Creation source stored in a field-derived PostgreSQL enum.",
 });
 
-export const auditKit = make({
+const auditKit = make({
   dialect: "pg",
   defaultColumns: (pg) => ({
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
@@ -81,12 +76,12 @@ export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord
   (columns) => [Table.check(sql<boolean>`${columns.name} <> ''`, "audited_record_name_non_empty")]
 ) {}
 
-export class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
+class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
   label: String,
   status: RecordStatus.pipe(pg.enum("record_status")),
 }) {}
 
-export class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
+class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
   {
     leftId: Int.pipe(pg.integer()),
     rightId: Int.pipe(pg.integer()),
@@ -94,7 +89,7 @@ export class BareJunction extends auditKit.Model<BareJunction>("BareJunction")(
   (columns) => [Table.compositePrimaryKey("bare_junction_pk", [columns.leftId, columns.rightId])]
 ) {}
 
-export class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
+class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
   amount: String.pipe(pg.numeric(10, 2)),
   calendarDate: String.pipe(pg.date()),
   objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
@@ -128,11 +123,7 @@ function attachStatics(self: object, statics: object): object {
 
 export const UserId = entityId(Finite.pipe(brand("UserId")), "user", "User");
 export const OrganizationId = entityId(Finite.pipe(brand("OrganizationId")), "organization", "Organization");
-export const NullableOrganizationId = entityId(
-  NullOr(Finite.pipe(brand("OrganizationId"))),
-  "organization",
-  "Organization"
-);
+const NullableOrganizationId = entityId(NullOr(Finite.pipe(brand("OrganizationId"))), "organization", "Organization");
 
 export class Organization extends Model<Organization>("Organization")(
   {
@@ -186,29 +177,7 @@ export const userOptimisticRepository = auditKit.Repository(User, {
   idColumn: "id",
 });
 
-class CodecService extends Service<CodecService, { readonly normalize: (value: string) => string }>()(
-  "@beep/effect-drizzle/test/fixtures/CodecService"
-) {}
-
-const ServiceString = String.pipe(
-  decodeTo(String, {
-    decode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
-    encode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
-  })
-);
-
-class ServiceCodecRecord extends Model<ServiceCodecRecord>("ServiceCodecRecord")({
-  id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
-  value: ServiceString.pipe(pg.text()),
-  rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
-}) {}
-
-const serviceCodecRepository = makeRepository(ServiceCodecRecord, {
-  spanPrefix: "ServiceCodecRecord",
-  idColumn: "id",
-});
-
-export class Membership extends Model<Membership>("Membership")(
+class Membership extends Model<Membership>("Membership")(
   {
     organizationId: OrganizationId,
     userId: UserId,
@@ -228,7 +197,7 @@ export class ArrayRecord extends Model<ArrayRecord>("ArrayRecord")({
   matrix: String.pipe(Array, Array, pg.array(String.pipe(pg.text()), "[][]"), pg.default([["seed"]])),
 }) {}
 
-export class EnumArrayRecord extends Model<EnumArrayRecord>("EnumArrayRecord")({
+class EnumArrayRecord extends Model<EnumArrayRecord>("EnumArrayRecord")({
   statuses: Array(RecordStatus).pipe(pg.array(RecordStatus.pipe(pg.enum("record_status")))),
 }) {}
 
@@ -240,19 +209,14 @@ export class ExplicitVariantModel extends Model<ExplicitVariantModel>("ExplicitV
   }).pipe(pg.text(), pg.generated(sql<string>`lower(value)`)),
 }) {}
 
-export class DerivedJsonModel extends Model<DerivedJsonModel>("DerivedJsonModel")({
-  record: Struct({ value: String }),
-  values: Array(String),
-}) {}
-
 class UniqueTargetRef {
   static readonly tableName = "unique_target";
   static readonly entityType = "UniqueTarget";
 }
-export class UniqueTarget extends Model<UniqueTarget>("UniqueTarget")({
+class UniqueTarget extends Model<UniqueTarget>("UniqueTarget")({
   id: Int.pipe(pg.integer(), pg.unique()),
 }) {}
-export class UniqueSource extends Model<UniqueSource>("UniqueSource")({
+class UniqueSource extends Model<UniqueSource>("UniqueSource")({
   targetId: Int.pipe(pg.integer(), pg.references(UniqueTargetRef)),
 }) {}
 
@@ -279,115 +243,16 @@ export const dualOrgLinkSchema = schema({
   dual_org_link: DualOrgLink,
 });
 
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
-type MutualExtends<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-type Expect<_T extends true> = never;
-type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
-
-type SelectRow = typeof userTable.$inferSelect;
-type InsertRow = typeof userTable.$inferInsert;
-type UserInsertVariant = (typeof User.insert)["Type"];
-type UserUpdateVariant = (typeof User.update)["Type"];
-type UserJsonCreateVariant = (typeof User.jsonCreate)["Type"];
-type OrganizationInsertVariant = (typeof Organization.insert)["Type"];
-type OrganizationUpdateVariant = (typeof Organization.update)["Type"];
-type AuditedSelectVariant = (typeof AuditedRecord)["Type"];
-type AuditedInsertVariant = (typeof AuditedRecord.insert)["Type"];
-type AuditedUpdateVariant = (typeof AuditedRecord.update)["Type"];
-type AuditedJsonVariant = (typeof AuditedRecord.json)["Type"];
-type BareJunctionSelectVariant = (typeof BareJunction)["Type"];
-type MechanicalSelectRow = typeof mechanicalTable.$inferSelect;
-type MechanicalInsertRow = typeof mechanicalTable.$inferInsert;
-type ArraySelectRow = (typeof effectDrizzleSchema.tables.array_record)["$inferSelect"];
-type ArrayInsertRow = (typeof effectDrizzleSchema.tables.array_record)["$inferInsert"];
-type ServiceRepository = Success<typeof serviceCodecRepository>;
-type ServiceInsert = ReturnType<ServiceRepository["insert"]>;
-type ServiceInsertRequirements =
-  ServiceInsert extends Effect<unknown, unknown, infer Requirements> ? Requirements : never;
-
-export type _selectId = Expect<Equal<SelectRow["id"], number>>;
-export type _selectEmail = Expect<Equal<SelectRow["email"], string>>;
-export type _selectBio = Expect<Equal<SelectRow["bio"], string | null>>;
-export type _selectSettings = Expect<MutualExtends<SelectRow["settings"], { readonly theme: string }>>;
-export type _selectActive = Expect<Equal<SelectRow["active"], boolean>>;
-export type _insertIdAbsent = Expect<Equal<"id" extends keyof InsertRow ? true : false, false>>;
-export type _insertCreatedAtRequired = Expect<Equal<undefined extends InsertRow["createdAt"] ? true : false, false>>;
-export type _insertEmailRequired = Expect<Equal<InsertRow["email"], string>>;
-export type _variantInsertIdAbsent = Expect<Equal<"id" extends keyof UserInsertVariant ? true : false, false>>;
-export type _variantUpdateIdPresent = Expect<Equal<"id" extends keyof UserUpdateVariant ? true : false, true>>;
-export type _variantUpdateIdRequired = Expect<Equal<IsOptional<UserUpdateVariant, "id">, false>>;
-export type _variantDefaultOptional = Expect<IsOptional<UserInsertVariant, "status">>;
-export type _variantCreatedAtRequired = Expect<Equal<IsOptional<UserInsertVariant, "createdAt">, false>>;
-export type _variantUpdateEmailOptional = Expect<IsOptional<UserUpdateVariant, "email">>;
-export type _identityByDefaultInsertPresent = Expect<
-  Equal<"id" extends keyof OrganizationInsertVariant ? true : false, true>
->;
-export type _identityByDefaultInsertOptional = Expect<IsOptional<OrganizationInsertVariant, "id">>;
-export type _identityByDefaultUpdatePresent = Expect<
-  Equal<"id" extends keyof OrganizationUpdateVariant ? true : false, true>
->;
-export type _identityByDefaultUpdateOptional = Expect<IsOptional<OrganizationUpdateVariant, "id">>;
-export type _emailIsVarchar = Expect<Equal<(typeof User)["sql"]["columns"]["email"]["column"]["ident"], "varchar">>;
-export type _orgIdIdentity = Expect<
-  Equal<(typeof User)["sql"]["columns"]["orgId"]["column"]["ident"], 'entityId<"organization">'>
->;
-export type _userIdIdentity = Expect<
-  Equal<(typeof User)["sql"]["columns"]["id"]["column"]["ident"], 'entityId<"user">'>
->;
-export type _generatedJsonCreateAbsent = Expect<
-  Equal<"searchName" extends keyof UserJsonCreateVariant ? true : false, false>
->;
-export type _kitSelectCreatedAt = Expect<
-  MutualExtends<AuditedSelectVariant["createdAt"], (typeof EffectModel.DateTimeInsert.schemas.select)["Type"]>
->;
-export type _kitSelectUpdatedAt = Expect<
-  MutualExtends<AuditedSelectVariant["updatedAt"], (typeof EffectModel.DateTimeUpdate.schemas.select)["Type"]>
->;
-export type _kitSelectRowVersion = Expect<Equal<AuditedSelectVariant["rowVersion"], number>>;
-export type _kitInsertUpdatedAtPresent = Expect<
-  Equal<"updatedAt" extends keyof AuditedInsertVariant ? true : false, true>
->;
-export type _kitUpdateUpdatedAtPresent = Expect<
-  Equal<"updatedAt" extends keyof AuditedUpdateVariant ? true : false, true>
->;
-export type _kitUpdateCreatedAtAbsent = Expect<
-  Equal<"createdAt" extends keyof AuditedUpdateVariant ? true : false, false>
->;
-export type _kitInsertRowVersionOptional = Expect<IsOptional<AuditedInsertVariant, "rowVersion">>;
-export type _kitUpdateRowVersionRequired = Expect<Equal<IsOptional<AuditedUpdateVariant, "rowVersion">, false>>;
-export type _kitJsonRowVersionPresent = Expect<
-  Equal<"rowVersion" extends keyof AuditedJsonVariant ? true : false, true>
->;
-export type _bareModelOptsOutOfDefaults = Expect<
-  Equal<"createdAt" extends keyof BareJunctionSelectVariant ? true : false, false>
->;
-export type _literalEnumIdentity = Expect<
-  Equal<(typeof AuditedRecord)["sql"]["columns"]["status"]["column"]["ident"], "enum<record_status>">
->;
-export type _derivedEnumIdentity = Expect<
-  Equal<(typeof AuditedRecord)["sql"]["columns"]["source"]["column"]["ident"], "enum<source>">
->;
-export type _numericSelectCarrier = Expect<Equal<MechanicalSelectRow["amount"], string>>;
-export type _dateSelectCarrier = Expect<Equal<MechanicalSelectRow["objectDate"], Date>>;
-export type _bigserialSelectCarrier = Expect<Equal<MechanicalSelectRow["nativeSequence"], bigint>>;
-export type _bigserialInsertOptional = Expect<IsOptional<MechanicalInsertRow, "largeSequence">>;
-export type _arraySelectLabels = Expect<ArraySelectRow["labels"] extends ReadonlyArray<string> ? true : false>;
-export type _arraySelectMatrix = Expect<
-  ArraySelectRow["matrix"] extends ReadonlyArray<ReadonlyArray<string>> ? true : false
->;
-export type _arrayInsertMatrixOptional = Expect<IsOptional<ArrayInsertRow, "matrix">>;
-export type _repositoryCarriesCodecServices = Expect<CodecService extends ServiceInsertRequirements ? true : false>;
-
 // Negative matrix: each assertion names the rejected invariant.
 
 // @ts-expect-error invariant: text requires a string-encoded schema
-export const _badText = Finite.pipe(pg.text());
+const _badText = Finite.pipe(pg.text());
 // @ts-expect-error invariant: integer requires a number-encoded schema
-export const _badInteger = String.pipe(pg.integer());
+const _badInteger = String.pipe(pg.integer());
 // @ts-expect-error invariant: bigint number-mode requires a number-encoded schema
-export const _badBigintNumber = BigInt.pipe(pg.bigint("number"));
+const _badBigintNumber = BigInt.pipe(pg.bigint("number"));
 // @ts-expect-error invariant: bytea requires a Uint8Array-encoded schema
-export const _badBytea = String.pipe(pg.bytea());
+const _badBytea = String.pipe(pg.bytea());
 
 export const _runtimeStringCarrierMismatch = () => {
   class RuntimeStringCarrierMismatch extends Model<RuntimeStringCarrierMismatch>("RuntimeStringCarrierMismatch")({
@@ -437,10 +302,10 @@ export const _runtimeArrayCarrierMismatch = () => {
 export const _badEnumBroadString = () =>
   // @ts-expect-error invariant: pg.enum rejects broad string schemas
   String.pipe(pg.enum("bad_status"));
-export const _badDateString = () =>
+const _badDateString = () =>
   // @ts-expect-error invariant: string date mode requires a string-encoded schema
   DateSchema.pipe(pg.date());
-export const _badJson = () =>
+const _badJson = () =>
   // @ts-expect-error invariant: json requires an object- or array-encoded schema
   String.pipe(pg.json());
 export const _badArrayCarrier = () =>
@@ -603,20 +468,6 @@ export const _kitDefaultCollision = () => {
   }) {}
   return KitDefaultCollision;
 };
-
-export class CallbackTyping extends Model<CallbackTyping>("CallbackTyping")({ one: String, two: String }, (t) => [
-  Table.index("callback_good_idx", [t.one]),
-  // @ts-expect-error invariant: extras callbacks expose only declared fields
-  Table.index("callback_bad_idx", [t.missing]),
-  // @ts-expect-error invariant: composite unique requires at least two columns
-  Table.compositeUnique("callback_bad_unique", [t.one]),
-  // @ts-expect-error invariant: composite primary key requires at least two columns
-  Table.compositePrimaryKey("callback_bad_pk", [t.one]),
-  // @ts-expect-error invariant: checks require typed SQL, never a bare string
-  Table.check("callback_bad_check")("one <> ''"),
-  // @ts-expect-error invariant: partial index predicates require typed SQL
-  Table.index("callback_bad_where", [t.one], { where: "one <> ''" }),
-]) {}
 
 export const _needsExplicitColumn = () => {
   class NeedsExplicitColumn extends Model<NeedsExplicitColumn>("NeedsExplicitColumn")({

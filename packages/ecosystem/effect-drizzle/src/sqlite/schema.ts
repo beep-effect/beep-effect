@@ -7,6 +7,8 @@
  * @since 0.0.0
  */
 
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
+
 import { defineRelations, is as isDrizzleEntity } from "drizzle-orm";
 import {
   SQLiteColumn as DrizzleSqliteColumn,
@@ -365,7 +367,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
       Object.keys(model.sql.fields).map((sourceField) =>
         map(
           flatMapOption(getRecord(model.sql.columns, sourceField), (meta) => fromUndefinedOr(meta.references)),
-          (reference) => {
+          function collectSqliteEdge(reference) {
             const [targetKey, targetModel] = resolveTarget(entries, reference, sourceKey, sourceField);
             const targetField = getOrElse(targetFieldKey(targetModel, reference.columnName), () =>
               fail(

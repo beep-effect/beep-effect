@@ -35,13 +35,13 @@ const entityId = <const TableName extends string, const EntityType extends strin
   attachStatics(schema, { tableName, entityType });
 
 /** Dialect-free id and status schemas bound independently by both kits. */
-export const SharedUserId = entityId(Finite.pipe(brand("SharedUserId")), "shared_user", "SharedUser");
-export const SharedOrganizationId = entityId(
+const SharedUserId = entityId(Finite.pipe(brand("SharedUserId")), "shared_user", "SharedUser");
+const SharedOrganizationId = entityId(
   Finite.pipe(brand("SharedOrganizationId")),
   "shared_organization",
   "SharedOrganization"
 );
-export const SharedStatus = Literals(["draft", "active"]).annotate({
+const SharedStatus = Literals(["draft", "active"]).annotate({
   identifier: "@beep/effect-drizzle/test/SharedStatus",
   description: "Dialect-free status used by the cross-dialect symmetry fixture.",
 });
@@ -82,7 +82,7 @@ export class SqlitePlainPrimary extends SqliteModel<SqlitePlainPrimary>("SqliteP
   name: PlainString,
 }) {}
 
-export class SqliteMembership extends SqliteModel<SqliteMembership>("SharedMembership")(
+class SqliteMembership extends SqliteModel<SqliteMembership>("SharedMembership")(
   {
     organizationId: SharedOrganizationId,
     userId: SharedUserId,
@@ -103,7 +103,6 @@ export const sqliteAssembly = sqliteKit.schema({
 });
 export const { shared_membership, shared_organization, shared_user } = sqliteAssembly.tables;
 export const sqliteUserTable = sqliteKit.toSqliteTable(SqliteUser);
-export const sqlitePlainPrimaryTable = sqliteKit.toSqliteTable(SqlitePlainPrimary);
 export const sqliteUserRepository = sqliteKit.Repository(SqliteUser, {
   spanPrefix: "SqliteUser",
   idColumn: "id",
@@ -114,7 +113,7 @@ export const sqliteNativeUserRepository = makeSqlRepository(SqliteUser, {
   idColumn: "id",
 });
 
-export const pgSymmetryKit = make({
+const pgSymmetryKit = make({
   dialect: "pg",
   defaultColumns: (pg) => ({
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
@@ -122,29 +121,7 @@ export const pgSymmetryKit = make({
     rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
   }),
 });
-const { Entity: PgEntity, pg } = pgSymmetryKit;
-
-export class PgSharedUser extends PgEntity<PgSharedUser>("SharedUserPg")({
-  id: SharedUserId.pipe(pg.integer(), pg.identity(), pg.primaryKey()),
-  organizationId: SharedOrganizationId,
-  name: PlainString,
-  nickname: OptionFromNullOr(PlainString),
-  status: SharedStatus.pipe(pg.enum("shared_status"), pg.default("active")),
-}) {}
-
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
-type Expect<_T extends true> = never;
-type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
-type SqliteInsert = typeof sqliteUserTable.$inferInsert;
-type SqliteUpdate = typeof SqliteUser.update.Type;
-type SqlitePlainPrimaryInsert = typeof SqlitePlainPrimary.insert.Type;
-type SqlitePlainPrimaryDrizzleInsert = typeof sqlitePlainPrimaryTable.$inferInsert;
-
-export type _sqliteDrizzleIdOptional = Expect<IsOptional<SqliteInsert, "id">>;
-export type _sqliteVariantUpdateIdOptional = Expect<IsOptional<SqliteUpdate, "id">>;
-export type _sqlitePlainPrimaryVariantIdOptional = Expect<IsOptional<SqlitePlainPrimaryInsert, "id">>;
-export type _sqlitePlainPrimaryDrizzleIdOptional = Expect<IsOptional<SqlitePlainPrimaryDrizzleInsert, "id">>;
-export type _sqliteCreatedAtShared = Expect<Equal<SqliteUser["createdAt"], PgSharedUser["createdAt"]>>;
+const { pg } = pgSymmetryKit;
 
 export const _pgSpecInSqlite = () => {
   class PgSpecInSqlite extends SqliteModel<PgSpecInSqlite>("PgSpecInSqlite")({
@@ -303,7 +280,7 @@ const SqliteWaveEString = String.annotate({ identifier: "SqliteWaveEString" });
 export const sqliteBoundedInteger = Int.pipe(sqlite.integer());
 export const sqliteFiniteNumeric = Finite.pipe(sqlite.numeric({ mode: "number" }));
 export const sqliteFiniteReal = Finite.pipe(sqlite.real());
-export class SqliteBareReal extends SqliteModel<SqliteBareReal>("SqliteBareReal")({
+class SqliteBareReal extends SqliteModel<SqliteBareReal>("SqliteBareReal")({
   value: Finite,
 }) {}
 export const sqliteBareRealRejectsNaN = !is(SqliteBareReal.insert)({ value: Number.NaN });

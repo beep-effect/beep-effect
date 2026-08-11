@@ -7,7 +7,7 @@ import { String as StringSchema, TaggedError } from "effect/Schema";
  * @category type-level
  * @since 0.0.0
  */
-export interface BslTypeError<Message extends string> {
+interface BslTypeError<Message extends string> {
   readonly "~effect-drizzle.error": Message;
 }
 
@@ -52,7 +52,7 @@ type NameViolation =
  * @category type-level
  * @since 0.0.0
  */
-export type IsValidSqlName<Name extends string> = string extends Name
+type IsValidSqlName<Name extends string> = string extends Name
   ? true
   : Name extends unknown
     ? Lowercase<Name> extends Name
@@ -94,7 +94,7 @@ export type ValidateDerivedSqlName<Identifier extends string, Message extends st
  * @category errors
  * @since 0.0.0
  */
-export class SqlNameError extends TaggedError<SqlNameError>("@beep/effect-drizzle/SqlNameError")(
+class SqlNameError extends TaggedError<SqlNameError>("@beep/effect-drizzle/SqlNameError")(
   "SqlNameError",
   {
     message: StringSchema,
@@ -120,7 +120,7 @@ const encoder = new TextEncoder();
  * @category utilities
  * @since 0.0.0
  */
-export const utf8ByteLength = (value: string): number => encoder.encode(value).byteLength;
+const utf8ByteLength = (value: string): number => encoder.encode(value).byteLength;
 
 /**
  * Return the complete runtime identifier violation, if any.
@@ -144,7 +144,7 @@ export const sqlNameIssue = (name: string, dialect: Dialect): string | undefined
  * @category validation
  * @since 0.0.0
  */
-export const pgEnumLabelIssue = (label: string): string | undefined => {
+const pgEnumLabelIssue = (label: string): string | undefined => {
   if (label.includes("\0")) return "must not contain NUL (U+0000)";
   return utf8ByteLength(label) > 63 ? "must be at most 63 UTF-8 bytes" : undefined;
 };
@@ -165,7 +165,7 @@ const pgTruncationPrefix = (name: string): string => {
  * @category normalization
  * @since 0.0.0
  */
-export const canonicalSqlName = (name: string, dialect: Dialect): string => {
+const canonicalSqlName = (name: string, dialect: Dialect): string => {
   const folded = name.toLowerCase();
   return dialect === "pg" ? pgTruncationPrefix(folded) : folded;
 };

@@ -24,7 +24,7 @@ import type { VariantSchema } from "effect/unstable/schema";
  * @since 0.0.0
  */
 /** @internal */
-export const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
+const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
  * Type of the runtime @beep/effect-drizzle field marker.
  *
@@ -32,7 +32,7 @@ export const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
  * @since 0.0.0
  */
 /** @internal */
-export type TypeId = typeof TypeId;
+type TypeId = typeof TypeId;
 
 /**
  * Schema forms a @beep/effect-drizzle field can wrap.
@@ -108,7 +108,7 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(sch
  * @since 0.0.0
  */
 /** @internal */
-export const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
+const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
 
 /**
  * Schema type obtained by normalizing an {@link Input}.

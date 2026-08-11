@@ -399,7 +399,7 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
       Object.keys(model.sql.fields).map((sourceField) =>
         map(
           flatMapOption(getRecord(model.sql.columns, sourceField), (meta) => fromUndefinedOr(meta.references)),
-          (reference) => {
+          function collectPgEdge(reference) {
             const [targetKey, targetModel] = resolveTarget(entries, reference, sourceKey, sourceField);
             const targetField = getOrElse(targetFieldKey(targetModel, reference.columnName), () =>
               fail(

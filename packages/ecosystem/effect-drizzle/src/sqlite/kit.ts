@@ -3,6 +3,7 @@
  *
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { contains, findFirst } from "effect/Array";
 import { fromUndefinedOr, isSome, match } from "effect/Option";
 import { isFunction } from "effect/Predicate";

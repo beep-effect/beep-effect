@@ -1,4 +1,5 @@
 /** SQLite column derivation from encoded Effect schema carriers. */
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { every, filter, some } from "effect/Array";
 import { none, some as someOption } from "effect/Option";
 import { isTagged } from "effect/Predicate";
@@ -83,7 +84,7 @@ export type StructuralJson = JsonCarrier;
 
 /** SQLite descriptor derived from an encoded carrier, or `never` when ambiguous. */
 /** @internal */
-export type Derived<I extends Field.Input> =
+type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;
   }

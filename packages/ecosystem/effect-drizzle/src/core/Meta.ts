@@ -15,7 +15,7 @@ import type { TaggedEnum } from "effect/Data";
 
 /** A typed schema expression rendered bound parameters that DDL cannot carry. */
 /** @internal */
-export class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-drizzle/SqlExpressionError")(
+class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-drizzle/SqlExpressionError")(
   "SqlExpressionError",
   { message: StringSchema, context: StringSchema },
   { description: "A schema-level SQL expression contains bound parameters." }
@@ -54,7 +54,7 @@ export type FkAction = "cascade" | "restrict" | "no action" | "set null" | "set 
 
 /** Cheap guard for author-provided referential actions. */
 /** @internal */
-export const isFkAction = (value: unknown): value is FkAction =>
+const isFkAction = (value: unknown): value is FkAction =>
   value === "cascade" ||
   value === "restrict" ||
   value === "no action" ||

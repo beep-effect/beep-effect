@@ -6,6 +6,7 @@
  *
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { is as isDrizzleEntity, SQL, sql } from "drizzle-orm";
 import {
   check as drizzleCheck,

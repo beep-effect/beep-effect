@@ -65,7 +65,6 @@
   "devDependencies": {
     "@beep/pglite": "workspace:^",
     "@effect/platform-bun": "catalog:",
-    "@effect/sql-pg": "catalog:",
     "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/vitest": "catalog:",

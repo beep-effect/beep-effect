@@ -26,31 +26,45 @@ interface ModuleEdge {
 const SourceRecord = RecordSchema(String, Unknown);
 const decodeRecord = decodeUnknownEffect(SourceRecord);
 
+const importOrExportSpecifier = (node: Node): string | undefined => {
+  if (
+    (isImportDeclaration(node) || isExportDeclaration(node)) &&
+    node.moduleSpecifier !== undefined &&
+    isStringLiteralLike(node.moduleSpecifier)
+  ) {
+    return node.moduleSpecifier.text;
+  }
+  return undefined;
+};
+
+const importEqualsSpecifier = (node: Node): string | undefined => {
+  if (
+    isImportEqualsDeclaration(node) &&
+    isExternalModuleReference(node.moduleReference) &&
+    node.moduleReference.expression !== undefined &&
+    isStringLiteralLike(node.moduleReference.expression)
+  ) {
+    return node.moduleReference.expression.text;
+  }
+  return undefined;
+};
+
+const callSpecifier = (node: Node): string | undefined => {
+  if (!isCallExpression(node)) return undefined;
+  const isDynamicImport = node.expression.kind === SyntaxKind.ImportKeyword;
+  const isRequire = isIdentifier(node.expression) && node.expression.text === "require";
+  const argument = node.arguments[0];
+  return (isDynamicImport || isRequire) && argument !== undefined && isStringLiteralLike(argument)
+    ? argument.text
+    : undefined;
+};
+
 const moduleSpecifiers = (file: string, source: string): ReadonlyArray<ModuleEdge> => {
   const edges: Array<ModuleEdge> = [];
   const sourceFile = createSourceFile(file, source, ScriptTarget.Latest, true, ScriptKind.TS);
   const visit = (node: Node): void => {
-    if (
-      (isImportDeclaration(node) || isExportDeclaration(node)) &&
-      node.moduleSpecifier !== undefined &&
-      isStringLiteralLike(node.moduleSpecifier)
-    ) {
-      edges.push({ file, specifier: node.moduleSpecifier.text });
-    } else if (
-      isImportEqualsDeclaration(node) &&
-      isExternalModuleReference(node.moduleReference) &&
-      node.moduleReference.expression !== undefined &&
-      isStringLiteralLike(node.moduleReference.expression)
-    ) {
-      edges.push({ file, specifier: node.moduleReference.expression.text });
-    } else if (isCallExpression(node)) {
-      const isDynamicImport = node.expression.kind === SyntaxKind.ImportKeyword;
-      const isRequire = isIdentifier(node.expression) && node.expression.text === "require";
-      const argument = node.arguments[0];
-      if ((isDynamicImport || isRequire) && argument !== undefined && isStringLiteralLike(argument)) {
-        edges.push({ file, specifier: argument.text });
-      }
-    }
+    const specifier = importOrExportSpecifier(node) ?? importEqualsSpecifier(node) ?? callSpecifier(node);
+    if (specifier !== undefined) edges.push({ file, specifier });
     forEachChild(node, visit);
   };
   visit(sourceFile);
@@ -70,6 +84,11 @@ const sourceEdges = (directoryUrl: URL) =>
     ).pipe(map((edges) => edges.flat()));
   });
 
+const localModuleUrls = (current: URL, source: string): ReadonlyArray<URL> =>
+  moduleSpecifiers(current.pathname, source)
+    .filter(({ specifier }) => specifier.startsWith("."))
+    .map(({ specifier }) => new URL(specifier, current));
+
 const localImportClosure = (entrypoint: URL) =>
   gen(function* () {
     const pending = [entrypoint];
@@ -79,9 +98,7 @@ const localImportClosure = (entrypoint: URL) =>
       if (current === undefined || visited.has(current.pathname)) continue;
       visited.add(current.pathname);
       const source = yield* tryPromise(() => Bun.file(current).text());
-      for (const { specifier } of moduleSpecifiers(current.pathname, source)) {
-        if (specifier.startsWith(".")) pending.push(new URL(specifier, current));
-      }
+      pending.push(...localModuleUrls(current, source));
     }
     return [...visited];
   });

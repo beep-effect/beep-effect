@@ -132,7 +132,7 @@ type DeriveFromEncoded<E> =
  * @since 0.0.0
  */
 /** @internal */
-export type Derived<I extends Field.Input> =
+type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;
   }
@@ -260,7 +260,7 @@ export const arrayElementAST = (schema: Field.AnySchema, dimensions: Exclude<PgC
  * @since 0.0.0
  */
 /** @internal */
-export const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
+const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 
 const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
   matchType<AST>().pipe(
