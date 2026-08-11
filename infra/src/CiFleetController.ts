@@ -296,9 +296,10 @@ type CiFleetControllerArgs = {
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot
  * failure) — without it such a job waits on GitHub's six-hour queue timeout,
- * because nothing else re-delivers it. A spot reclaim mid-job still fails
- * that job and only a workflow re-run recovers it; spot is kept anyway as a
- * deliberate ~3x cost trade against on-demand. `runners_maximum_count` bounds
+ * because nothing else re-delivers it. A capacity reclaim mid-job still fails
+ * that job and only a workflow re-run recovers it; the fleet runs on-demand
+ * for the bring-up window after cutover-night reclaim sweeps, with spot (a
+ * ~3x cost saving) as the intended steady state. `runners_maximum_count` bounds
  * concurrent instances only — jobs beyond the cap retry from SQS as capacity
  * frees rather than being dropped. `enable_job_queued_check` stays false: its
  * not-queued branch consumes the scale-up message with no retry, so GitHub
@@ -462,7 +463,11 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
         },
         instance_allocation_strategy: "price-capacity-optimized",
-        instance_target_capacity_type: "spot",
+        // Bring-up posture: cutover night saw three correlated spot-reclaim
+        // events kill six jobs in two hours (one swept three VMs in the same
+        // second), so waves could not complete. Return to "spot" with a
+        // one-line revert once steady-state wave stability is proven.
+        instance_target_capacity_type: "on-demand",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,

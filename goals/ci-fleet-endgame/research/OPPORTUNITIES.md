@@ -350,3 +350,20 @@
   cross-layout restores are structurally impossible. Law: any actions/cache
   path anchored under HOME or the runner workdir must partition its key by
   runner layout class.
+
+## Cutover-night spot reclaims: three events, six jobs, one same-second sweep
+
+- **Work:** landing the cutover PR's final wave.
+- **What happened:** three separate spot events killed six fleet jobs in two
+  hours; the last swept three m7a.4xlarge VMs at the same second (all
+  `Service initiated` terminations at 19:49:32), failing Check, Docgen, and
+  JSDoc simultaneously. Every reclaim hit m7a.4xlarge — the pool
+  price-capacity-optimized kept selecting. Mid-job reclaims have no automatic
+  recovery (job_retry is pre-pickup only), so each event demanded a manual
+  re-run and the wave could not complete.
+- **Prevention:** capacity type flipped to on-demand for the bring-up window
+  (decision-record option "on-demand now, spot later"); revert to spot is one
+  line once steady-state wave stability is measured. Law: a spot decision made
+  on "reclaims are rare at short durations" needs a same-night falsifier
+  check — concentration in a single instance pool converts independent risk
+  into correlated wave failure.
