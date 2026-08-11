@@ -69,6 +69,7 @@ const blockedMergeReady = YeetMergeReady.make({
   ready: false,
   failing: O.some("threads-resolved"),
   criteria: YeetMergeReadyCriteria.make({
+    closeoutRun: true,
     checksGreen: true,
     threadsResolved: false,
     greptileScore: O.some("5/5"),

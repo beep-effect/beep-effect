@@ -217,7 +217,7 @@ const unsatisfied = (preconditions: ReadonlyArray<SweepPrecondition>): ReadonlyA
  * const blockers = sweepStepBlockers(
  *   SweepPlanStep.make({
  *     id: "delete-local-branch",
- *     action: "git branch -D feat/merge-loop",
+ *     action: "git branch -D 'feat/merge-loop'",
  *     preconditions: [SweepPrecondition.make({ description: "worktree is clean", satisfied: false })],
  *     requiresOperator: false,
  *   })
@@ -300,13 +300,13 @@ const ffMainPlanStep = (state: SweepGitState): SweepPlanStep =>
   state.headBranch === state.mainBranch
     ? SweepPlanStep.make({
         id: "ff-main",
-        action: `git merge --ff-only refs/remotes/origin/${state.mainBranch}`,
+        action: `git merge --ff-only ${shellQuote(`refs/remotes/origin/${state.mainBranch}`)}`,
         preconditions: [cleanWorktreePrecondition(state)],
         requiresOperator: false,
       })
     : SweepPlanStep.make({
         id: "ff-main",
-        action: `git fetch origin ${state.mainBranch}:${state.mainBranch}`,
+        action: `git fetch origin ${shellQuote(`${state.mainBranch}:${state.mainBranch}`)}`,
         preconditions: [mainFreePrecondition(state)],
         requiresOperator: false,
       });
@@ -321,7 +321,7 @@ const deleteLocalBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
   return state.branchMergedIntoBase
     ? SweepPlanStep.make({
         id: "delete-local-branch",
-        action: `git branch -d ${state.branch}`,
+        action: `git branch -d ${shellQuote(state.branch)}`,
         preconditions: A.append(
           shared,
           precondition(`${state.branch} is an ancestor of origin/${state.mainBranch}`, true)
@@ -330,7 +330,7 @@ const deleteLocalBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
       })
     : SweepPlanStep.make({
         id: "delete-local-branch",
-        action: `git branch -D ${state.branch}`,
+        action: `git branch -D ${shellQuote(state.branch)}`,
         preconditions: A.append(
           shared,
           precondition(
@@ -371,7 +371,9 @@ const leasedRemoteDeletionArgs = (state: SweepGitState): ReadonlyArray<string> =
 ];
 
 const leasedRemoteDeletionCommand = (state: SweepGitState): string =>
-  A.join(["git", ...leasedRemoteDeletionArgs(state)], " ");
+  `git push origin ${shellQuote(
+    `--force-with-lease=refs/heads/${state.branch}:${O.getOrElse(state.remoteTip, () => "<unknown>")}`
+  )} ${shellQuote(`:refs/heads/${state.branch}`)}`;
 
 const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
   SweepPlanStep.make({
@@ -396,7 +398,7 @@ const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
 const endStatePlanStep = (state: SweepGitState): SweepPlanStep =>
   SweepPlanStep.make({
     id: "end-state",
-    action: `git switch ${state.mainBranch}`,
+    action: `git switch ${shellQuote(state.mainBranch)}`,
     preconditions:
       state.headBranch === state.mainBranch ? [] : [cleanWorktreePrecondition(state), mainFreePrecondition(state)],
     requiresOperator: false,
@@ -588,7 +590,7 @@ const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
   const output = yield* ghOutput({
     args: ["pr", "view", branch, "--json", "number,headRefName,state,headRefOid"],
     cwd: context.repoRoot,
-    label: `gh pr view ${branch}`,
+    label: `gh pr view ${shellQuote(branch)}`,
     onFailure: (failure) => failure,
   }).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
   return O.flatMap(output, decodePullRequestView);

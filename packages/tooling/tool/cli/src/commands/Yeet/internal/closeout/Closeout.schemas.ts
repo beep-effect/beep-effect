@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -143,6 +143,12 @@ export class PrCloseoutWriteAction extends S.Class<PrCloseoutWriteAction>($I`PrC
 /**
  * Structured PR closeout result emitted by Yeet.
  *
+ * **Details**
+ *
+ * `reviewedHeadSha` binds the inspection to the pull request head that was
+ * reviewed. It is optional only so legacy reports still decode; an absent head
+ * is stale and cannot satisfy merge readiness.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -155,6 +161,7 @@ export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutRep
     issues: S.Array(QualityIssue),
     prNumber: S.Finite,
     prUrl: S.String,
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     retriggeredGreptile: S.Boolean,
     schemaVersion: S.Literal("yeet-pr-closeout/v1"),
     states: S.Array(PrCloseoutGateState).pipe(
@@ -167,6 +174,6 @@ export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutRep
     ),
   },
   $I.annote("PrCloseoutReport", {
-    description: "Structured PR closeout result emitted by Yeet.",
+    description: "Structured PR closeout result bound to the reviewed pull request head.",
   })
 ) {}

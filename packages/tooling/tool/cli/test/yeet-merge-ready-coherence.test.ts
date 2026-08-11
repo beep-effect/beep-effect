@@ -1,10 +1,15 @@
-import { YeetMergeReady, YeetMergeReadyCriteria, YeetVerdictJson } from "@beep/repo-cli/test/Yeet";
+import {
+  YeetMergeReady,
+  YeetMergeReadyCriteria,
+  YeetMergeReadyFromEncoded,
+  YeetVerdictJson,
+} from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReady);
+const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReadyFromEncoded);
 
 // A verdict document whose only variable part is the merge-readiness record, so
 // a decode failure can only come from the cross-field check.
@@ -22,7 +27,7 @@ describe("YeetMergeReady coherence", () => {
       const decoded = yield* decodeMergeReady({
         ready: false,
         failing: "checks-green",
-        criteria: { checksGreen: false, threadsResolved: true },
+        criteria: { closeoutRun: true, checksGreen: false, threadsResolved: true },
       });
 
       expect(decoded.ready).toBe(false);
@@ -30,11 +35,11 @@ describe("YeetMergeReady coherence", () => {
     })
   );
 
-  it.effect("decodes a ready record naming no criterion with both criteria satisfied", () =>
+  it.effect("decodes a ready record naming no criterion with all criteria satisfied", () =>
     Effect.gen(function* () {
       const decoded = yield* decodeMergeReady({
         ready: true,
-        criteria: { checksGreen: true, threadsResolved: true, greptileScore: "5/5" },
+        criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true, greptileScore: "5/5" },
       });
 
       expect(decoded.ready).toBe(true);
@@ -51,7 +56,7 @@ describe("YeetMergeReady coherence", () => {
         decodeMergeReady({
           ready: true,
           failing: "checks-green",
-          criteria: { checksGreen: false, threadsResolved: true },
+          criteria: { closeoutRun: true, checksGreen: false, threadsResolved: true },
         })
       );
 
@@ -65,7 +70,7 @@ describe("YeetMergeReady coherence", () => {
         decodeMergeReady({
           ready: false,
           failing: "threads-resolved",
-          criteria: { checksGreen: true, threadsResolved: true },
+          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true },
         })
       );
 
@@ -78,7 +83,7 @@ describe("YeetMergeReady coherence", () => {
       const exit = yield* Effect.exit(
         decodeMergeReady({
           ready: false,
-          criteria: { checksGreen: true, threadsResolved: true },
+          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true },
         })
       );
 
@@ -91,7 +96,7 @@ describe("YeetMergeReady coherence", () => {
       const exit = yield* Effect.exit(
         decodeMergeReady({
           ready: true,
-          criteria: { checksGreen: true, threadsResolved: false },
+          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: false },
         })
       );
 
@@ -103,7 +108,7 @@ describe("YeetMergeReady coherence", () => {
     const mergeReady = YeetMergeReady.make({
       ready: false,
       failing: O.some("threads-resolved"),
-      criteria: YeetMergeReadyCriteria.make({ checksGreen: true, threadsResolved: false }),
+      criteria: YeetMergeReadyCriteria.make({ closeoutRun: true, checksGreen: true, threadsResolved: false }),
     });
 
     expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
@@ -111,15 +116,54 @@ describe("YeetMergeReady coherence", () => {
 });
 
 describe("YeetVerdictJson merge-readiness coherence", () => {
-  it.effect("decodes a verdict carrying a coherent merge-ready record", () =>
+  it.effect("downgrades a legacy ready verdict whose criteria omit closeoutRun", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady('{"ready":true,"criteria":{"checksGreen":true,"threadsResolved":true}}')
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.ready).toBe(false);
+      expect(mergeReady.failing).toStrictEqual(O.some("closeout-run"));
+      expect(mergeReady.criteria.closeoutRun).toBe(false);
+    })
+  );
+
+  it.effect("preserves a coherent legacy blocked verdict while defaulting closeoutRun to false", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
         verdictJsonWithMergeReady(
           '{"ready":false,"failing":"checks-green","criteria":{"checksGreen":false,"threadsResolved":true}}'
         )
       );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.ready).toBe(false);
+      expect(mergeReady.failing).toStrictEqual(O.some("checks-green"));
+      expect(mergeReady.criteria.closeoutRun).toBe(false);
+    })
+  );
+
+  it.effect("decodes a verdict carrying a coherent merge-ready record", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady(
+          '{"ready":false,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+        )
+      );
 
       expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    })
+  );
+
+  it.effect("round-trips a current verdict byte-identically", () =>
+    Effect.gen(function* () {
+      const json = verdictJsonWithMergeReady(
+        '{"ready":false,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+      );
+      const decoded = yield* YeetVerdictJson.decode(json);
+
+      expect(yield* YeetVerdictJson.encode(decoded)).toBe(json);
     })
   );
 
@@ -128,7 +172,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const exit = yield* Effect.exit(
         YeetVerdictJson.decode(
           verdictJsonWithMergeReady(
-            '{"ready":true,"failing":"checks-green","criteria":{"checksGreen":false,"threadsResolved":true}}'
+            '{"ready":true,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
           )
         )
       );

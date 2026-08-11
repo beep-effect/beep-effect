@@ -578,6 +578,13 @@ const TSV_COLUMNS = [
 
 const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: () => "", onSome: String });
 
+const TSV_FORMULA_PREFIXES = ["=", "+", "-", "@"] as const;
+
+const tsvStringCell = (value: string): string => {
+  const sanitized = Str.replaceAll(/[\t\r\n]/gu, " ")(value);
+  return A.some(TSV_FORMULA_PREFIXES, (prefix) => Str.startsWith(prefix)(sanitized)) ? `'${sanitized}` : sanitized;
+};
+
 /**
  * Render collected rows as the TSV this repo's timing analyses consume.
  *
@@ -586,7 +593,8 @@ const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: ()
  * An absent measurement renders as an empty cell rather than `0`, so a
  * spreadsheet average over `pickupSeconds` skips re-dispatched attempts instead
  * of pulling the mean toward zero — the filter surviving all the way to the
- * last consumer.
+ * last consumer. String cells are single-line and formula-leading values are
+ * prefixed with a single quote so spreadsheet import treats them as text.
  *
  * **Example** (Render the header row)
  *
@@ -604,16 +612,16 @@ const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: ()
 export const renderCiLaneTimingsTsv = (rows: ReadonlyArray<CiLaneTimingRow>): string =>
   A.join(
     [
-      A.join(TSV_COLUMNS, "\t"),
+      A.join(A.map(TSV_COLUMNS, tsvStringCell), "\t"),
       ...A.map(rows, (row) =>
         A.join(
           [
             String(row.runId),
             String(row.runAttempt),
             String(row.jobId),
-            row.jobName,
-            row.conclusion,
-            row.runnerClass,
+            tsvStringCell(row.jobName),
+            tsvStringCell(row.conclusion),
+            tsvStringCell(row.runnerClass),
             String(row.infraFailure),
             tsvCell(row.pickupSeconds),
             tsvCell(row.setupSeconds),

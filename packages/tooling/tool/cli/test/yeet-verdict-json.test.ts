@@ -94,6 +94,7 @@ describe("YeetVerdictJson", () => {
             ready: false,
             failing: O.some("threads-resolved"),
             criteria: YeetMergeReadyCriteria.make({
+              closeoutRun: true,
               checksGreen: true,
               threadsResolved: false,
               greptileScore: O.some("5/5"),
@@ -119,6 +120,6 @@ describe("YeetVerdictJson", () => {
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual(["checks-green", "threads-resolved"]);
+    expect(YeetMergeReadyCriterion.Options).toEqual(["closeout-run", "checks-green", "threads-resolved"]);
   });
 });
