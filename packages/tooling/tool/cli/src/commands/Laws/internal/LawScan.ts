@@ -11,7 +11,7 @@
 
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { Effect, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -25,6 +25,24 @@ import type { SourceFile } from "ts-morph";
  * @since 0.0.0
  */
 export const LAW_SCAN_INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+
+const ECOSYSTEM_MEMBER_SOURCE_PREFIX = "packages/ecosystem/";
+
+/**
+ * Reports whether a normalized repo-relative path is inside an ecosystem member.
+ *
+ * @param filePath - Repo-relative source path under consideration.
+ * @returns `true` for paths shaped as `packages/ecosystem/<member>/...`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isEcosystemMemberSourcePath = (filePath: string): boolean => {
+  const normalized = toPosixPath(filePath);
+  return (
+    Str.startsWith(ECOSYSTEM_MEMBER_SOURCE_PREFIX)(normalized) &&
+    Str.includes("/")(Str.slice(ECOSYSTEM_MEMBER_SOURCE_PREFIX.length)(normalized))
+  );
+};
 
 type ScannedSourceFile = readonly [file: string, sourceFile: SourceFile];
 

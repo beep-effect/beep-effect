@@ -8,8 +8,8 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Doctrine: ecosystem family docs PR | active | Charter the `ecosystem` family in the standards (doc 14, grammar row in 07, ARCHITECTURE.md summary + routing row, GLOSSARY term, DECISIONS entry, packet index row, shared-tables projection line) and register this packet. Docs-only. | PR merged via yeet: checks green, zero unresolved threads. |
-| P1 Package creation: move, harness, gates PR | pending | git-mv `scratchpad/bsl` → the new member root `packages/ecosystem/effect-drizzle/**`; manifest per SPEC constraint 6-7; `@effect/vitest` harness migration; member tstyche lane created with the package (SPEC constraint 8: matrix + `.toRaiseError` literal pinning + multi-TS peer targets); inverted-import gate in repo lint; extend the family-encoding surfaces inventoried in SPEC Target Surfaces (PackageJson schema, create-package, workspaces globs, syncpack, law-scan scoping, lint shards); governance registrations; suppression removals; retire `scratchpad/bsl`. | Package green through standard lanes; member tstyche lane passes; gate provably fails on a planted `@beep/*` src import; PR merged via yeet. |
+| P0 Doctrine: ecosystem family docs PR | complete (PR #658, `4857be45cb`) | Charter the `ecosystem` family in the standards (doc 14, grammar row in 07, ARCHITECTURE.md summary + routing row, GLOSSARY term, DECISIONS entry, packet index row, shared-tables projection line) and register this packet. Docs-only. | PR merged via yeet: checks green, zero unresolved threads. |
+| P1 Package creation: move, harness, gates PR | in-progress | git-mv `scratchpad/bsl` → the new member root `packages/ecosystem/effect-drizzle/**`; manifest per SPEC constraint 6-7; `@effect/vitest` harness migration; member tstyche lane created with the package (SPEC constraint 8: matrix + `.toRaiseError` literal pinning + multi-TS peer targets); inverted-import gate in repo lint; extend the family-encoding surfaces inventoried in SPEC Target Surfaces (PackageJson schema, create-package, workspaces globs, syncpack, law-scan scoping, lint shards); governance registrations; suppression removals; retire `scratchpad/bsl`. | Package green through standard lanes; member tstyche lane passes; gate provably fails on a planted `@beep/*` src import; PR merged via yeet. |
 | P2 Quality integration + closeout PR | pending | Wire family CI integration (bundle probe; CI wiring for the member lanes); docgen surface; then closeout — reflection + status flips land in this same PR (repo law). | Lanes run in CI; `bun run beep lint reflection-artifacts` passes; manifest/README/INDEX flipped; PR merged via yeet. |
 
 Phase ids match `ops/manifest.json` `phases[]` exactly. Each phase is its own
@@ -37,11 +37,13 @@ Before marking the packet closed (and `status` → `completed-retained`):
 ## Execution Notes
 
 - The locked grill decisions
-  (`scratchpad/bsl/research/graduation-decisions.md`) are constraints, not
-  suggestions; SPEC.md Constraints reproduces them normatively.
-- P1 moves `scratchpad/bsl/research/` with the package or into this packet's
-  `research/` — decide at P1 grounding; `research/SOURCES.md` records the
-  outcome so provenance links never dangle.
+  (`goals/effect-drizzle-graduation/research/bsl/graduation-decisions.md`) are
+  constraints, not suggestions; SPEC.md Constraints reproduces them
+  normatively.
+- P1 grounding selected research disposition option (a): the corpus moved from
+  `scratchpad/bsl/research/` to this packet's `research/bsl/` in P1;
+  `research/SOURCES.md` records the outcome so provenance links resolve
+  in-packet.
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Archive old run outputs under `history/`.

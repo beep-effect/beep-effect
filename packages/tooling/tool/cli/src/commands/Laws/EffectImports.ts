@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
+import { isEcosystemMemberSourcePath } from "./internal/LawScan.ts";
 import { EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
@@ -123,6 +124,8 @@ export const runEffectImportRules = Effect.fn(function* (options: EffectImportRu
 
   const isExcludedFile = (filePath: string): boolean => {
     const normalized = toPosixPath(filePath);
+    const relative = toPosixPath(path.relative(process.cwd(), filePath));
+    if (isEcosystemMemberSourcePath(relative)) return true;
     if (MutableHashSet.has(excludePaths, normalized)) return true;
     return isExcludedTypeScriptSourcePath(normalized);
   };

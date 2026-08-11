@@ -5,7 +5,7 @@
     "title": "Effect-Drizzle Graduation",
     "status": "active",
     "created": "2026-08-10",
-    "updated": "2026-08-10",
+    "updated": "2026-08-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-drizzle-graduation",
@@ -35,8 +35,8 @@
     "goals/effect-drizzle-graduation/PLAN.md",
     "goals/effect-drizzle-graduation/GOAL.md",
     "goals/effect-drizzle-graduation/research/SOURCES.md",
-    "scratchpad/bsl/research/graduation-decisions.md",
-    "scratchpad/bsl/research/publishing-standards.md"
+    "goals/effect-drizzle-graduation/research/bsl/graduation-decisions.md",
+    "goals/effect-drizzle-graduation/research/bsl/publishing-standards.md"
   ],
   "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
@@ -52,12 +52,12 @@
     {
       "id": "P0",
       "name": "Doctrine: ecosystem family docs PR",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Package creation: move, harness, gates PR",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

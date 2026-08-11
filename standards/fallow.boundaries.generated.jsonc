@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/effect-drizzle",
+        "patterns": [
+          "packages/ecosystem/effect-drizzle/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-client",
         "patterns": [
           "packages/epistemic/client/src/**"
@@ -1493,6 +1499,17 @@
           "@beep/schema",
           "@beep/ui",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/effect-drizzle",
+        "allow": [
+          "@beep/effect-drizzle",
+          "@beep/pglite"
+        ],
+        "allowTypeOnly": [
+          "@beep/effect-drizzle",
+          "@beep/pglite"
         ]
       },
       {

@@ -14,7 +14,7 @@ permissions: {}
 jobs:
   shadow-probe:
     name: Shadow Probe
-    runs-on: beep-ec2-heavy-shadow
+    runs-on: beep-ec2-heavy
     timeout-minutes: 10
     steps:
       - name: Prove the ephemeral worker

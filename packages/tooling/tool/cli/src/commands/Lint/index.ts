@@ -5,6 +5,13 @@
  * @since 0.0.0
  */
 /**
+ * Ecosystem dependency-polarity lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EcosystemPolarity.ts";
+/**
  * Judge-rubric lens drift lint utilities.
  *
  * @category cli-commands

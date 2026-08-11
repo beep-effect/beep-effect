@@ -1078,6 +1078,7 @@ describe("quality task adapter", () => {
       "lint:native-runtime",
       "lint:allowlist",
       "lint:tsgo-rules",
+      "lint:ecosystem-polarity",
       "lint:identity-registry",
       "lint:judge-rubric",
       "lint:package-test-imports",
@@ -1110,6 +1111,7 @@ describe("quality task adapter", () => {
       "lint:native-runtime",
       "lint:allowlist",
       "lint:tsgo-rules",
+      "lint:ecosystem-polarity",
       "lint:identity-registry",
       "lint:judge-rubric",
       "lint:package-test-imports",
@@ -1155,6 +1157,14 @@ describe("quality task adapter", () => {
     expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
       "packages/demo/src/index.ts,README.md"
     );
+    expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual([
+      "run",
+      "beep",
+      "lint",
+      "ecosystem-polarity",
+      "--include",
+      "packages/demo/src/index.ts,README.md",
+    ]);
   });
 
   it("runs repo-wide root lint policy with hosted-stable concurrency", () =>

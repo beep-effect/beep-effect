@@ -14,7 +14,7 @@ and repo tooling. Complete at P2; npm publication itself stays gated
 
 - Beep adoption of the package (BaseEntity parity, `EntityTable` replacement,
   slice-table migration, backlog features). That is a FUTURE packet chartered
-  by `scratchpad/bsl/research/baseentity-migration-plan.md`.
+  by `goals/effect-drizzle-graduation/research/bsl/baseentity-migration-plan.md`.
 - Actually publishing to npm, or the unscoped `effect-drizzle` npm-name ask
   (operator's own action, independent of this packet).
 - New DSL features. The module graduates as proven at PR #651's merge
@@ -25,7 +25,7 @@ and repo tooling. Complete at P2; npm publication itself stays gated
 ## Source Hierarchy
 
 1. The graduation grill's locked decisions:
-   `scratchpad/bsl/research/graduation-decisions.md`.
+   `goals/effect-drizzle-graduation/research/bsl/graduation-decisions.md`.
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. `standards/ARCHITECTURE.md` + the numbered architecture docs (14 is created
    by this packet's P0 and becomes binding for P1/P2).
@@ -46,8 +46,8 @@ Higher sources outrank lower sources when they conflict.
   `standards/architecture/README.md` (packet index row),
   `packages/shared/tables/README.md` (projection contract line),
   `goals/effect-drizzle-graduation/**`, `goals/INDEX.md`.
-- P1: `packages/ecosystem/effect-drizzle/**` (git-mv from
-  `scratchpad/bsl`), its manifest/tsconfig/turbo wiring, the scoped
+- P1: `packages/ecosystem/effect-drizzle/**` (moved from `scratchpad/bsl`),
+  its manifest/tsconfig/turbo wiring, the scoped
   family-root `AGENTS.md` style-exception guide (under
   `packages/ecosystem/**`), `@effect/vitest`
   harness migration, the member tstyche lane (created with the package),
@@ -78,7 +78,7 @@ operator:
    contract is "publishable from the monorepo," not "extractable repo-free."
 3. **Style-law scoping**: published-package standards supersede repo
    effect-first laws inside members, per
-   `scratchpad/bsl/research/publishing-standards.md` (named imports from
+   `goals/effect-drizzle-graduation/research/bsl/publishing-standards.md` (named imports from
    effect module paths, natives-where-equivalent, line-leading `@` escaping,
    `@internal` marking). Repo law scripts must not flag members for following
    them.

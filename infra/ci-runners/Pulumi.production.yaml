@@ -12,4 +12,4 @@ config:
   ciFleetController:runnersLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/runners.zip
   ciFleetController:terminationWatcherLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/termination-watcher.zip
   ciFleetController:webhookLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/webhook.zip
-  ciFleetController:runnerLabel: beep-ec2-heavy-shadow
+  ciFleetController:runnerLabel: beep-ec2-heavy
