@@ -20,7 +20,7 @@
  */
 
 import { layerLocalLgtmServer, ServerObservabilityConfig } from "@beep/observability/server";
-import { O } from "@beep/utils";
+import { O, thunkFalse } from "@beep/utils";
 import { Config, Effect, HashSet, identity, Layer, References, Result } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 
@@ -37,12 +37,9 @@ import { FetchHttpClient } from "effect/unstable/http";
 const localDevToolsHostnames = HashSet.make("localhost", "127.0.0.1", "::1", "[::1]");
 
 const isLocalDevToolsUrl = (url: string): boolean =>
-  Result.try({
-    try: () => HashSet.has(localDevToolsHostnames, new URL(url).hostname),
-    catch: (error) => Result.fail(error),
-  }).pipe(
+  Result.try(() => HashSet.has(localDevToolsHostnames, new URL(url).hostname)).pipe(
     Result.match({
-      onFailure: () => false,
+      onFailure: thunkFalse,
       onSuccess: identity,
     })
   );

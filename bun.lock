@@ -180,6 +180,7 @@
         "@beep/postgres": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/ui": "workspace:^",
         "@beep/utils": "workspace:^",

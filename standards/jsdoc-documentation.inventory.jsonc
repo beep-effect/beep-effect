@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-10T19:15:54.045Z",
+  "generatedAt": "2026-08-10T22:26:38.605Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 70,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 61,
-    "publicModules": 2498,
-    "publicExports": 16292,
+    "publicModules": 2500,
+    "publicExports": 16297,
     "openModules": 407,
     "openExports": 133,
     "missingExportExamples": 5,
@@ -181419,8 +181419,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 50,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-50-ai-metrics-otlp-attribute-allowlist",
+          "line": 51,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-51-ai-metrics-otlp-attribute-allowlist",
           "currentTags": [
             "@category",
             "@since"
@@ -181441,8 +181441,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 90,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-90-aimetricsotlpattributevalue",
+          "line": 91,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-91-aimetricsotlpattributevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -181463,8 +181463,8 @@
           "exportKind": "type",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 111,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-111-aimetricsotlpattributevalue",
+          "line": 112,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-112-aimetricsotlpattributevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -181485,8 +181485,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 131,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-131-aimetricsotlpexporterror",
+          "line": 132,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-132-aimetricsotlpexporterror",
           "currentTags": [
             "@category",
             "@since"
@@ -181507,8 +181507,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 167,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-167-aimetricsotlpexportinput",
+          "line": 168,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-168-aimetricsotlpexportinput",
           "currentTags": [
             "@category",
             "@since"
@@ -181529,8 +181529,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 209,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-209-aimetricsotlpspanprojection",
+          "line": 210,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-210-aimetricsotlpspanprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -181551,8 +181551,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 257,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-257-aimetricsotlpspanprojectionbatch",
+          "line": 258,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-258-aimetricsotlpspanprojectionbatch",
           "currentTags": [
             "@category",
             "@since"
@@ -181573,8 +181573,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 297,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-297-aimetricsotlpexportresult",
+          "line": 298,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-298-aimetricsotlpexportresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181595,8 +181595,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 589,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-589-readaimetricsotlpspanprojections",
+          "line": 593,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-593-readaimetricsotlpspanprojections",
           "currentTags": [
             "@effects",
             "@category",
@@ -181618,8 +181618,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 640,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-640-markaimetricsotlpturnsexported",
+          "line": 644,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-644-markaimetricsotlpturnsexported",
           "currentTags": [
             "@effects",
             "@category",
@@ -181641,8 +181641,8 @@
           "exportKind": "interface",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 808,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-808-aimetricsotlpspansendershape",
+          "line": 797,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-797-aimetricsotlpspansendershape",
           "currentTags": [
             "@category",
             "@since"
@@ -181663,8 +181663,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 843,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-843-aimetricsotlpspansender",
+          "line": 832,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-832-aimetricsotlpspansender",
           "currentTags": [
             "@category",
             "@since"
@@ -181685,8 +181685,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 944,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-944-runaimetricsotlpprojectionbatchexport",
+          "line": 946,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-946-runaimetricsotlpprojectionbatchexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -181708,8 +181708,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1008,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1008-runaimetricsotlpexport",
+          "line": 1015,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1015-runaimetricsotlpexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -181731,8 +181731,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1057,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1057-otlpexportresulttojson",
+          "line": 1061,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1061-otlpexportresulttojson",
           "currentTags": [
             "@category",
             "@since"
@@ -228331,9 +228331,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 56,
-        "publicModuleCount": 54,
-        "publicExportCount": 176
+        "sourceFileCount": 58,
+        "publicModuleCount": 56,
+        "publicExportCount": 181
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -228586,7 +228586,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 15,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -228613,8 +228613,30 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 2,
+          "exportCount": 1,
           "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 1,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -228743,7 +228765,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -228846,7 +228868,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "open"
         },
         {
@@ -228938,7 +228960,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 18,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -229078,7 +229100,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -229249,6 +229271,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/runtime/RendererObservabilityConfig.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/RendererObservabilityConfig.ts",
+          "line": 1,
+          "anchor": "apps-professional-desktop-src-runtime-rendererobservabilityconfig-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         },
         {
@@ -229652,7 +229696,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -229679,7 +229723,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 16,
+          "exportCount": 15,
           "remediationStatus": "open"
         }
       ],
@@ -229689,8 +229733,8 @@
           "exportKind": "function",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 885,
-          "anchor": "apps-professional-desktop-src-app-tsx-885-app",
+          "line": 922,
+          "anchor": "apps-professional-desktop-src-app-tsx-922-app",
           "currentTags": [
             "@category",
             "@since"
@@ -229711,8 +229755,8 @@
           "exportKind": "const",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 500,
-          "anchor": "apps-professional-desktop-src-app-tsx-500-surfaceboundary",
+          "line": 515,
+          "anchor": "apps-professional-desktop-src-app-tsx-515-surfaceboundary",
           "currentTags": [
             "@category",
             "@since"
@@ -229799,8 +229843,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ChatOrchestrator.ts",
           "repoPath": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
-          "line": 93,
-          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-93-documenttoplaintext",
+          "line": 91,
+          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-91-documenttoplaintext",
           "currentTags": [
             "@category",
             "@since"
@@ -229821,8 +229865,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ChatOrchestrator.ts",
           "repoPath": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
-          "line": 1115,
-          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-1115-makechatoperations",
+          "line": 1140,
+          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-1140-makechatoperations",
           "currentTags": [
             "@category",
             "@since"
@@ -229843,8 +229887,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ChatOrchestrator.ts",
           "repoPath": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
-          "line": 1167,
-          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-1167-chathandlerslive",
+          "line": 1192,
+          "anchor": "apps-professional-desktop-src-chat-chatorchestrator-ts-1192-chathandlerslive",
           "currentTags": [
             "@category",
             "@since"
@@ -229887,8 +229931,8 @@
           "exportKind": "const",
           "filePath": "src/chat/UsagePricing.ts",
           "repoPath": "apps/professional-desktop/src/chat/UsagePricing.ts",
-          "line": 99,
-          "anchor": "apps-professional-desktop-src-chat-usagepricing-ts-99-approximatecostusdmicros",
+          "line": 112,
+          "anchor": "apps-professional-desktop-src-chat-usagepricing-ts-112-approximatecostusdmicros",
           "currentTags": [
             "@category",
             "@since"
@@ -230020,8 +230064,8 @@
           "exportKind": "function",
           "filePath": "src/chat/ui/ChatApp.tsx",
           "repoPath": "apps/professional-desktop/src/chat/ui/ChatApp.tsx",
-          "line": 78,
-          "anchor": "apps-professional-desktop-src-chat-ui-chatapp-tsx-78-chatapp",
+          "line": 79,
+          "anchor": "apps-professional-desktop-src-chat-ui-chatapp-tsx-79-chatapp",
           "currentTags": [
             "@category",
             "@since"
@@ -230060,78 +230104,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "normalizeLegacyRawDocument",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 187,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-187-normalizelegacyrawdocument",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ComposerDocumentSafetyGate",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 252,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-252-composerdocumentsafetygate",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ComposerDocumentSafetyGate",
-          "exportKind": "type",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 278,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-278-composerdocumentsafetygate",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "prepareComposerDocumentSafetyGate",
           "exportKind": "const",
           "filePath": "src/chat/ui/Composer.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 388,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-388-preparecomposerdocumentsafetygate",
+          "line": 60,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-60-preparecomposerdocumentsafetygate",
           "currentTags": [
             "@category",
             "@since"
@@ -230152,74 +230130,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Composer.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 427,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-427-composerdocumentsafetygateatoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerConfirmedNormalizationAtoms",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 456,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-456-composerconfirmednormalizationatoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerSafetyRefusalAtoms",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 475,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-475-composersafetyrefusalatoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerDraftSeedAtoms",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 507,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-507-composerdraftseedatoms",
+          "line": 95,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-95-composerdocumentsafetygateatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230240,8 +230152,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Composer.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 597,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-597-composerserializedchangehandleratoms",
+          "line": 200,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-200-composerserializedchangehandleratoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230258,12 +230170,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "composerDocumentFromEditorState",
+          "symbolName": "composerShellAtoms",
           "exportKind": "const",
           "filePath": "src/chat/ui/Composer.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 630,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-630-composerdocumentfromeditorstate",
+          "line": 293,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-293-composershellatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230280,122 +230192,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "composerDocumentForSend",
+          "symbolName": "composerSurfaceAtoms",
           "exportKind": "const",
           "filePath": "src/chat/ui/Composer.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 665,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-665-composerdocumentforsend",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerSendHandlerAtoms",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 690,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-690-composersendhandleratoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerConfirmNormalizationHandlerAtoms",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 790,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-790-composerconfirmnormalizationhandleratoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerStopHandlerAtom",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 858,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-858-composerstophandleratom",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "composerCancelEditHandlerAtom",
-          "exportKind": "const",
-          "filePath": "src/chat/ui/Composer.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
-          "line": 877,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-877-composercanceledithandleratom",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ComposerSafetyWarning",
-          "exportKind": "function",
-          "filePath": "src/chat/ui/Composer.tsx",
-          "repoPath": "apps/professional-desktop/src/chat/ui/Composer.tsx",
-          "line": 113,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-tsx-113-composersafetywarning",
+          "line": 338,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-atoms-ts-338-composersurfaceatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230416,8 +230218,228 @@
           "exportKind": "function",
           "filePath": "src/chat/ui/Composer.tsx",
           "repoPath": "apps/professional-desktop/src/chat/ui/Composer.tsx",
-          "line": 179,
-          "anchor": "apps-professional-desktop-src-chat-ui-composer-tsx-179-composer",
+          "line": 99,
+          "anchor": "apps-professional-desktop-src-chat-ui-composer-tsx-99-composer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MAX_MESSAGE_CHARACTERS",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 44,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-44-max-message-characters",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerNotice",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 97,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-97-composernotice",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerNotice",
+          "exportKind": "type",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 113,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-113-composernotice",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerSafetyRefusal",
+          "exportKind": "class",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 131,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-131-composersafetyrefusal",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "unsafeDocumentMessage",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 235,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-235-unsafedocumentmessage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "composerDocumentFromEditorState",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 264,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-264-composerdocumentfromeditorstate",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerSendDecision",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 292,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-292-composersenddecision",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerSendDecision",
+          "exportKind": "type",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 311,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-311-composersenddecision",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ComposerPolicyShape",
+          "exportKind": "type",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 332,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-332-composerpolicyshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "composerPolicy",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/ComposerPolicy.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+          "line": 384,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-384-composerpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -230592,8 +230614,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 41,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-41-editthreadturnatom",
+          "line": 47,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-47-editthreadturnatom",
           "currentTags": [
             "@category",
             "@since"
@@ -230614,8 +230636,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 61,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-61-setthreadviewportatoms",
+          "line": 67,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-67-setthreadviewportatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230636,8 +230658,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 83,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-83-setthreadbottomatoms",
+          "line": 89,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-89-setthreadbottomatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230658,8 +230680,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 106,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-106-scrollthreadatoms",
+          "line": 112,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-112-scrollthreadatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230680,8 +230702,30 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/Thread.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
-          "line": 146,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-146-reconcilethreadtimelineatoms",
+          "line": 152,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-152-reconcilethreadtimelineatoms",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "visibleThreadTurnsAtoms",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/Thread.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
+          "line": 254,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-atoms-ts-254-visiblethreadturnsatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -230702,8 +230746,8 @@
           "exportKind": "function",
           "filePath": "src/chat/ui/Thread.tsx",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.tsx",
-          "line": 240,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-tsx-240-thread",
+          "line": 234,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-tsx-234-thread",
           "currentTags": [
             "@category",
             "@since"
@@ -230786,12 +230830,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "SIDEBAR_PANE_ID",
+          "exportKind": "const",
+          "filePath": "src/chat/ui/layout.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
+          "line": 54,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-54-sidebar-pane-id",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "SIDEBAR_MAX_PERCENT",
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 53,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-53-sidebar-max-percent",
+          "line": 70,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-70-sidebar-max-percent",
           "currentTags": [
             "@category",
             "@since"
@@ -230812,8 +230878,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 69,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-69-sidebar-default-percent",
+          "line": 86,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-86-sidebar-default-percent",
           "currentTags": [
             "@category",
             "@since"
@@ -230834,8 +230900,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 86,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-86-sidebarpercent",
+          "line": 103,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-103-sidebarpercent",
           "currentTags": [
             "@category",
             "@since"
@@ -230856,8 +230922,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 131,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-131-sidebarpercentatom",
+          "line": 148,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-148-sidebarpercentatom",
           "currentTags": [
             "@category",
             "@since"
@@ -230878,8 +230944,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 163,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-163-persistsidebarlayoutatom",
+          "line": 180,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-180-persistsidebarlayoutatom",
           "currentTags": [
             "@category",
             "@since"
@@ -230900,8 +230966,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 191,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-191-clampsidebarpercent",
+          "line": 209,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-209-clampsidebarpercent",
           "currentTags": [
             "@category",
             "@since"
@@ -230922,8 +230988,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/layout.atoms.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/layout.atoms.ts",
-          "line": 216,
-          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-216-sidebarsize",
+          "line": 234,
+          "anchor": "apps-professional-desktop-src-chat-ui-layout-atoms-ts-234-sidebarsize",
           "currentTags": [
             "@category",
             "@since"
@@ -231076,8 +231142,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 969,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-969-seedcontradictionqafixtures",
+          "line": 1022,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1022-seedcontradictionqafixtures",
           "currentTags": [
             "@effects",
             "@category",
@@ -231099,8 +231165,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 1071,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1071-contradictionqaseedlive",
+          "line": 1126,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1126-contradictionqaseedlive",
           "currentTags": [
             "@category",
             "@since"
@@ -231165,8 +231231,8 @@
           "exportKind": "function",
           "filePath": "src/intake/DocumentIntakeTarget.tsx",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx",
-          "line": 261,
-          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-261-documentintaketarget",
+          "line": 217,
+          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-217-documentintaketarget",
           "currentTags": [
             "@category",
             "@since"
@@ -231231,8 +231297,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 184,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-184-intakeresultentry",
+          "line": 183,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-183-intakeresultentry",
           "currentTags": [
             "@category",
             "@since"
@@ -231253,8 +231319,8 @@
           "exportKind": "type",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 212,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-212-intakeresultentry",
+          "line": 211,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-211-intakeresultentry",
           "currentTags": [
             "@category",
             "@since"
@@ -231275,8 +231341,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 266,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-266-vaultselectionstate",
+          "line": 265,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-265-vaultselectionstate",
           "currentTags": [
             "@category",
             "@since"
@@ -231297,8 +231363,8 @@
           "exportKind": "type",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 296,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-296-vaultselectionstate",
+          "line": 295,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-295-vaultselectionstate",
           "currentTags": [
             "@category",
             "@since"
@@ -231319,8 +231385,8 @@
           "exportKind": "class",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 319,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-319-documentintakestate",
+          "line": 318,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-318-documentintakestate",
           "currentTags": [
             "@category",
             "@since"
@@ -231341,8 +231407,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 376,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-376-documentintakestateatoms",
+          "line": 402,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-402-documentintakestateatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231363,8 +231429,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 394,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-394-intakefileinputatoms",
+          "line": 420,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-420-intakefileinputatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231385,8 +231451,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 414,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-414-workspacevaultconfigatom",
+          "line": 440,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-440-workspacevaultconfigatom",
           "currentTags": [
             "@category",
             "@since"
@@ -231407,8 +231473,8 @@
           "exportKind": "class",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 440,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-440-droppeddocumentinput",
+          "line": 466,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-466-droppeddocumentinput",
           "currentTags": [
             "@category",
             "@since"
@@ -231429,8 +231495,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 476,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-476-intakedroppedfilepayload",
+          "line": 502,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-502-intakedroppedfilepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -231451,8 +231517,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 565,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-565-chooseworkspacevaultatoms",
+          "line": 591,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-591-chooseworkspacevaultatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231473,8 +231539,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 788,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-788-intakefilesatoms",
+          "line": 812,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-812-intakefilesatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231495,30 +231561,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 811,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-811-intakedomeventatoms",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "clearIntakeResultsAtoms",
-          "exportKind": "const",
-          "filePath": "src/intake/Intake.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 866,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-866-clearintakeresultsatoms",
+          "line": 835,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-835-intakedomeventatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231539,8 +231583,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 889,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-889-setintakefileinputatoms",
+          "line": 907,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-907-setintakefileinputatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231561,8 +231605,52 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 911,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-911-openintakefilepickeratoms",
+          "line": 929,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-929-openintakefilepickeratoms",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocumentIntakeSurface",
+          "exportKind": "interface",
+          "filePath": "src/intake/Intake.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+          "line": 959,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-959-documentintakesurface",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "documentIntakeSurfaceAtoms",
+          "exportKind": "const",
+          "filePath": "src/intake/Intake.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+          "line": 1036,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-1036-documentintakesurfaceatoms",
           "currentTags": [
             "@category",
             "@since"
@@ -231605,8 +231693,8 @@
           "exportKind": "const",
           "filePath": "src/intake/VaultDirectoryPicker.rpc.ts",
           "repoPath": "apps/professional-desktop/src/intake/VaultDirectoryPicker.rpc.ts",
-          "line": 87,
-          "anchor": "apps-professional-desktop-src-intake-vaultdirectorypicker-rpc-ts-87-vaultdirectorypickerrpcs",
+          "line": 89,
+          "anchor": "apps-professional-desktop-src-intake-vaultdirectorypicker-rpc-ts-89-vaultdirectorypickerrpcs",
           "currentTags": [
             "@category",
             "@since"
@@ -231672,8 +231760,8 @@
           "exportKind": "const",
           "filePath": "src/lib/failureMessage.ts",
           "repoPath": "apps/professional-desktop/src/lib/failureMessage.ts",
-          "line": 30,
-          "anchor": "apps-professional-desktop-src-lib-failuremessage-ts-30-failuremessageor",
+          "line": 52,
+          "anchor": "apps-professional-desktop-src-lib-failuremessage-ts-52-failuremessageor",
           "currentTags": [
             "@category",
             "@since"
@@ -231741,6 +231829,50 @@
           "repoPath": "apps/professional-desktop/src/ontology/OntologyWorkspaceSeed.ts",
           "line": 130,
           "anchor": "apps-professional-desktop-src-ontology-ontologyworkspaceseed-ts-130-ontologyworkspaceseedlive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BrowserFailureSource",
+          "exportKind": "const",
+          "filePath": "src/runtime/BrowserFailure.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/BrowserFailure.atoms.ts",
+          "line": 33,
+          "anchor": "apps-professional-desktop-src-runtime-browserfailure-atoms-ts-33-browserfailuresource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BrowserFailureSource",
+          "exportKind": "type",
+          "filePath": "src/runtime/BrowserFailure.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/BrowserFailure.atoms.ts",
+          "line": 61,
+          "anchor": "apps-professional-desktop-src-runtime-browserfailure-atoms-ts-61-browserfailuresource",
           "currentTags": [
             "@category",
             "@since"
@@ -232049,8 +232181,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Observability.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Observability.ts",
-          "line": 119,
-          "anchor": "apps-professional-desktop-src-runtime-observability-ts-119-observabilitylive",
+          "line": 116,
+          "anchor": "apps-professional-desktop-src-runtime-observability-ts-116-observabilitylive",
           "currentTags": [
             "@category",
             "@since"
@@ -232273,6 +232405,28 @@
           "repoPath": "apps/professional-desktop/src/runtime/ProfessionalAtomRuntime.ts",
           "line": 90,
           "anchor": "apps-professional-desktop-src-runtime-professionalatomruntime-ts-90-professionalatomregistryatom",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RendererObservabilityConfig",
+          "exportKind": "class",
+          "filePath": "src/runtime/RendererObservabilityConfig.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/RendererObservabilityConfig.ts",
+          "line": 45,
+          "anchor": "apps-professional-desktop-src-runtime-rendererobservabilityconfig-ts-45-rendererobservabilityconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -232557,8 +232711,8 @@
           "exportKind": "function",
           "filePath": "src/spikes/Graph3DSpike.tsx",
           "repoPath": "apps/professional-desktop/src/spikes/Graph3DSpike.tsx",
-          "line": 297,
-          "anchor": "apps-professional-desktop-src-spikes-graph3dspike-tsx-297-graph3dspike",
+          "line": 299,
+          "anchor": "apps-professional-desktop-src-spikes-graph3dspike-tsx-299-graph3dspike",
           "currentTags": [
             "@category",
             "@since"
@@ -232579,8 +232733,8 @@
           "exportKind": "const",
           "filePath": "src/spikes/Graph3DSpike.tsx",
           "repoPath": "apps/professional-desktop/src/spikes/Graph3DSpike.tsx",
-          "line": 126,
-          "anchor": "apps-professional-desktop-src-spikes-graph3dspike-tsx-126-graph3dspikestatus",
+          "line": 153,
+          "anchor": "apps-professional-desktop-src-spikes-graph3dspike-tsx-153-graph3dspikestatus",
           "currentTags": [
             "@category",
             "@since"
@@ -233042,8 +233196,8 @@
           "exportKind": "class",
           "filePath": "src/transport/SidecarTransport.ts",
           "repoPath": "apps/professional-desktop/src/transport/SidecarTransport.ts",
-          "line": 29,
-          "anchor": "apps-professional-desktop-src-transport-sidecartransport-ts-29-sidecartransport",
+          "line": 30,
+          "anchor": "apps-professional-desktop-src-transport-sidecartransport-ts-30-sidecartransport",
           "currentTags": [
             "@category",
             "@since"
@@ -233064,8 +233218,8 @@
           "exportKind": "const",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 87,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-87-inboundframe",
+          "line": 85,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-85-inboundframe",
           "currentTags": [
             "@category",
             "@since"
@@ -233086,8 +233240,8 @@
           "exportKind": "class",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 122,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-122-sidecarclosedpayload",
+          "line": 120,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-120-sidecarclosedpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -233108,8 +233262,8 @@
           "exportKind": "const",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 213,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-213-inboundevent",
+          "line": 211,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-211-inboundevent",
           "currentTags": [
             "@category",
             "@since"
@@ -233130,8 +233284,8 @@
           "exportKind": "const",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 483,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-483-tauriipcsocketlive",
+          "line": 481,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-481-tauriipcsocketlive",
           "currentTags": [
             "@category",
             "@since"
@@ -233192,12 +233346,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "focusedDockGroupAtom",
+          "symbolName": "dockApiAtom",
           "exportKind": "const",
           "filePath": "src/workspace/dock-react.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock-react.atoms.ts",
           "line": 66,
-          "anchor": "apps-professional-desktop-src-workspace-dock-react-atoms-ts-66-focuseddockgroupatom",
+          "anchor": "apps-professional-desktop-src-workspace-dock-react-atoms-ts-66-dockapiatom",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "focusedDockGroupAtom",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock-react.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock-react.atoms.ts",
+          "line": 82,
+          "anchor": "apps-professional-desktop-src-workspace-dock-react-atoms-ts-82-focuseddockgroupatom",
           "currentTags": [
             "@category",
             "@since"
@@ -233368,34 +233544,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "LEGACY_DOCK_SNAPSHOT_KEYS",
-          "exportKind": "const",
-          "filePath": "src/workspace/dock.atoms.ts",
-          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 348,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-348-legacy-dock-snapshot-keys",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "makeResetDockSnapshotAtom",
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 374,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-374-makeresetdocksnapshotatom",
+          "line": 358,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-358-makeresetdocksnapshotatom",
           "currentTags": [
             "@effects",
             "@category",
@@ -233417,8 +233571,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 405,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-405-resetdocksnapshotatom",
+          "line": 389,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-389-resetdocksnapshotatom",
           "currentTags": [
             "@effects",
             "@category",
@@ -233440,8 +233594,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 460,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-460-makedesktopdockgraph",
+          "line": 444,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-444-makedesktopdockgraph",
           "currentTags": [
             "@effects",
             "@category",
@@ -233463,8 +233617,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 519,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-519-desktopdockgraphatom",
+          "line": 496,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-496-desktopdockgraphatom",
           "currentTags": [
             "@category",
             "@since"
@@ -233485,8 +233639,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 546,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-546-dockpersistencebindingatom",
+          "line": 523,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-523-dockpersistencebindingatom",
           "currentTags": [
             "@category",
             "@since"
@@ -233507,8 +233661,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 608,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-608-paneloperation",
+          "line": 585,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-585-paneloperation",
           "currentTags": [
             "@category",
             "@since"
@@ -233529,8 +233683,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 655,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-655-ispanelactive",
+          "line": 632,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-632-ispanelactive",
           "currentTags": [
             "@category",
             "@since"
@@ -233551,8 +233705,8 @@
           "exportKind": "const",
           "filePath": "src/workspace/dock.atoms.ts",
           "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
-          "line": 679,
-          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-679-ispanelopen",
+          "line": 656,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-656-ispanelopen",
           "currentTags": [
             "@category",
             "@since"
@@ -370023,8 +370177,8 @@
           "exportKind": "const",
           "filePath": "src/CauseRedaction.ts",
           "repoPath": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-          "line": 624,
-          "anchor": "packages-foundation-capability-observability-src-causeredaction-ts-624-logredactedcause",
+          "line": 626,
+          "anchor": "packages-foundation-capability-observability-src-causeredaction-ts-626-logredactedcause",
           "currentTags": [
             "@category",
             "@since"
@@ -370045,8 +370199,8 @@
           "exportKind": "const",
           "filePath": "src/CauseRedaction.ts",
           "repoPath": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-          "line": 663,
-          "anchor": "packages-foundation-capability-observability-src-causeredaction-ts-663-tapredactedcause",
+          "line": 668,
+          "anchor": "packages-foundation-capability-observability-src-causeredaction-ts-668-tapredactedcause",
           "currentTags": [
             "@category",
             "@since"

@@ -45,7 +45,9 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
 
 /**
  * RPC that opens a native folder dialog on the sidecar host and resolves with
- * the picked absolute directory path, or `null` when the user cancels.
+ * `Option.some(path)` carrying the picked absolute directory, or `Option.none()`
+ * when the user cancels. The wire form stays `string | null`; the decoded
+ * success value is the `Option`.
  *
  * **Details**
  *
@@ -66,7 +68,7 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
  * @since 0.0.0
  */
 const PickVaultDirectoryRpc = Rpc.make("PickVaultDirectory", {
-  success: S.NullOr(S.String),
+  success: S.OptionFromNullOr(S.String),
   error: VaultDirectoryPickError,
 });
 

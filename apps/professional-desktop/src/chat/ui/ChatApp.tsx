@@ -29,6 +29,7 @@ import {
   persistSidebarLayoutAtom,
   SIDEBAR_MAX_PERCENT,
   SIDEBAR_MIN_PERCENT,
+  SIDEBAR_PANE_ID,
   sidebarPercentAtom,
   sidebarSize,
 } from "./layout.atoms.ts";
@@ -123,7 +124,7 @@ export function ChatApp(): JSX.Element {
             after the user releases the separator, so atom updates cannot interrupt an
             active pointer drag. */}
         <ResizablePanel
-          id="sidebar-pane"
+          id={SIDEBAR_PANE_ID}
           defaultSize={sidebarSize(storedPercent)}
           minSize={sidebarSize(SIDEBAR_MIN_PERCENT)}
           maxSize={sidebarSize(SIDEBAR_MAX_PERCENT)}

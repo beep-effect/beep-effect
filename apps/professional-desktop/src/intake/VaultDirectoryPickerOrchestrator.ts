@@ -118,7 +118,7 @@ export const VaultDirectoryPickerHandlersLive = VaultDirectoryPickerRpcs.toLayer
   Effect.gen(function* () {
     const startDirectory = yield* Config.string("HOME").pipe(Config.withDefault("/"));
     return VaultDirectoryPickerRpcs.of({
-      PickVaultDirectory: () => pickVaultDirectoryOnHost(startDirectory).pipe(Effect.map(O.getOrNull)),
+      PickVaultDirectory: () => pickVaultDirectoryOnHost(startDirectory),
     });
   })
 );

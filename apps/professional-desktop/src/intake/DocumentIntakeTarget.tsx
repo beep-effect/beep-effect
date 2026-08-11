@@ -10,23 +10,12 @@
 import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { Button } from "@beep/ui/components/button";
 import { A, O } from "@beep/utils";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { AsyncResult } from "effect/unstable/reactivity";
+import { useAtomValue } from "@effect/atom-react";
 import { Fragment } from "react";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
-import {
-  chooseWorkspaceVaultAtoms,
-  clearIntakeResultsAtoms,
-  documentIntakeStateAtoms,
-  IntakeResultEntry,
-  intakeDomEventAtoms,
-  openIntakeFilePickerAtoms,
-  setIntakeFileInputAtoms,
-  VaultSelectionState,
-  workspaceVaultConfigAtom,
-} from "./Intake.atoms.ts";
+import { documentIntakeSurfaceAtoms, IntakeResultEntry, VaultSelectionState } from "./Intake.atoms.ts";
 import type { JSX, ReactNode } from "react";
-import type { VaultSelectionState as VaultSelectionStateType } from "./Intake.atoms.ts";
+import type { DocumentIntakeSurface, VaultSelectionState as VaultSelectionStateType } from "./Intake.atoms.ts";
 
 const intakeResultKey = (entry: IntakeResultEntry, index: number): string =>
   IntakeResultEntry.match(entry, {
@@ -138,8 +127,6 @@ const IntakeResultsPanel = ({
     </div>
   );
 
-type VoidIntakeAction = (input: void) => void;
-
 const IntakeDraggingOverlay = ({ visible }: { readonly visible: boolean }): JSX.Element | null =>
   visible ? (
     <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-foreground backdrop-blur">
@@ -148,25 +135,21 @@ const IntakeDraggingOverlay = ({ visible }: { readonly visible: boolean }): JSX.
   ) : null;
 
 const IntakeFileControls = ({
+  actions,
   configured,
-  onFileSelection,
-  openFilePicker,
-  setFileInput,
 }: {
+  readonly actions: DocumentIntakeSurface["actions"];
   readonly configured: boolean;
-  readonly onFileSelection: (files: ReadonlyArray<File>) => void;
-  readonly openFilePicker: VoidIntakeAction;
-  readonly setFileInput: (element: HTMLInputElement | null) => void;
 }): JSX.Element | null =>
   configured ? (
     <>
       <input
-        ref={setFileInput}
+        ref={actions.setFileInput}
         type="file"
         multiple
         className="hidden"
         data-testid="intake-file-input"
-        onChange={(event) => onFileSelection(A.fromIterable(event.target.files ?? []))}
+        onChange={(event) => actions.fileSelection(A.fromIterable(event.target.files ?? []))}
       />
       <Button
         type="button"
@@ -174,7 +157,7 @@ const IntakeFileControls = ({
         size="sm"
         className="absolute bottom-4 left-4 z-40"
         data-testid="intake-choose-files"
-        onClick={() => openFilePicker(void 0)}
+        onClick={() => actions.openFilePicker()}
       >
         File documents…
       </Button>
@@ -182,46 +165,24 @@ const IntakeFileControls = ({
   ) : null;
 
 const IntakeWorkspaceSurface = ({
-  activeBatches,
   children,
-  clearResults,
-  configured,
-  isDragging,
-  onDragEnter,
-  onDragLeave,
-  onDragOver,
-  onDrop,
-  onFileSelection,
-  openFilePicker,
-  results,
-  setFileInput,
+  surface,
 }: {
-  readonly activeBatches: number;
   readonly children: ReactNode;
-  readonly clearResults: VoidIntakeAction;
-  readonly configured: boolean;
-  readonly isDragging: boolean;
-  readonly onDragEnter: (input: { readonly preventDefault: () => void }) => void;
-  readonly onDragLeave: (input: { readonly currentTarget: Node; readonly relatedTarget: EventTarget | null }) => void;
-  readonly onDragOver: (input: { readonly preventDefault: () => void }) => void;
-  readonly onDrop: (input: { readonly files: ReadonlyArray<File>; readonly preventDefault: () => void }) => void;
-  readonly onFileSelection: (files: ReadonlyArray<File>) => void;
-  readonly openFilePicker: VoidIntakeAction;
-  readonly results: ReadonlyArray<IntakeResultEntry>;
-  readonly setFileInput: (element: HTMLInputElement | null) => void;
+  readonly surface: DocumentIntakeSurface;
 }): JSX.Element => (
   <div
     className="relative h-screen w-full"
-    onDragEnter={(event) => onDragEnter({ preventDefault: () => event.preventDefault() })}
-    onDragOver={(event) => onDragOver({ preventDefault: () => event.preventDefault() })}
+    onDragEnter={(event) => surface.actions.dragEnter({ preventDefault: () => event.preventDefault() })}
+    onDragOver={(event) => surface.actions.dragOver({ preventDefault: () => event.preventDefault() })}
     onDragLeave={(event) =>
-      onDragLeave({
+      surface.actions.dragLeave({
         currentTarget: event.currentTarget,
         relatedTarget: event.relatedTarget,
       })
     }
     onDrop={(event) =>
-      onDrop({
+      surface.actions.drop({
         files: A.fromIterable(event.dataTransfer.files),
         preventDefault: () => event.preventDefault(),
       })
@@ -229,15 +190,10 @@ const IntakeWorkspaceSurface = ({
     data-testid="document-intake-target"
   >
     {children}
-    <IntakeDraggingOverlay visible={isDragging} />
-    <IntakeFileControls
-      configured={configured}
-      onFileSelection={onFileSelection}
-      openFilePicker={openFilePicker}
-      setFileInput={setFileInput}
-    />
-    <IntakeBusyBadge activeBatches={activeBatches} />
-    <IntakeResultsPanel results={results} onClear={() => clearResults(void 0)} />
+    <IntakeDraggingOverlay visible={surface.state.isDragging} />
+    <IntakeFileControls actions={surface.actions} configured={surface.configured} />
+    <IntakeBusyBadge activeBatches={surface.state.activeBatches} />
+    <IntakeResultsPanel results={surface.state.results} onClear={surface.actions.clearResults} />
   </div>
 );
 
@@ -259,42 +215,11 @@ const IntakeWorkspaceSurface = ({
  * @since 0.0.0
  */
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
-  const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const state = useAtomValue(documentIntakeStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const chooseVault = useAtomSet(chooseWorkspaceVaultAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const clearResults = useAtomSet(clearIntakeResultsAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const intakeDomEvents = intakeDomEventAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID);
-  const onDragEnter = useAtomSet(intakeDomEvents.dragEnter);
-  const onDragLeave = useAtomSet(intakeDomEvents.dragLeave);
-  const onDragOver = useAtomSet(intakeDomEvents.dragOver);
-  const onDrop = useAtomSet(intakeDomEvents.drop);
-  const onFileSelection = useAtomSet(intakeDomEvents.fileSelection);
-  const openFilePicker = useAtomSet(openIntakeFilePickerAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const setFileInput = useAtomSet(setIntakeFileInputAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const surface = useAtomValue(documentIntakeSurfaceAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
-  const configured = AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath);
-  const needsOnboarding = AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath);
-
-  if (needsOnboarding) {
-    return <VaultOnboarding onChoose={() => chooseVault(void 0)} selection={state.vaultSelection} />;
+  if (surface.needsOnboarding) {
+    return <VaultOnboarding onChoose={surface.actions.chooseVault} selection={surface.state.vaultSelection} />;
   }
 
-  return (
-    <IntakeWorkspaceSurface
-      activeBatches={state.activeBatches}
-      clearResults={clearResults}
-      configured={configured}
-      isDragging={state.isDragging}
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onFileSelection={onFileSelection}
-      openFilePicker={openFilePicker}
-      results={state.results}
-      setFileInput={setFileInput}
-    >
-      {children}
-    </IntakeWorkspaceSurface>
-  );
+  return <IntakeWorkspaceSurface surface={surface}>{children}</IntakeWorkspaceSurface>;
 }

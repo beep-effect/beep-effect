@@ -208,6 +208,9 @@
       "path": "../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
+      "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"
     },
     {
