@@ -9,19 +9,35 @@
  * @module Service/Ontology
  */
 
-import { createHash } from "node:crypto";
-import { $ScratchpadId } from "@beep/identity";
-import { Chunk, Context, Duration, Effect, HashMap, Layer, Option, Ref } from "effect";
+import {createHash} from "node:crypto";
+import {$ScratchpadId} from "@beep/identity";
+import {
+  Chunk,
+  Context,
+  Duration,
+  Effect,
+  HashMap,
+  Layer,
+  Option,
+  Ref
+} from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
-import type { RdfError } from "../Domain/Error/Rdf.ts";
-import type { OntologyVersion } from "../Domain/Identity.ts";
-import { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
+import {
+  OntologyFileNotFound,
+  OntologyParsingFailed
+} from "../Domain/Error/Ontology.ts";
+import type {RdfError} from "../Domain/Error/Rdf.ts";
+import type {OntologyVersion} from "../Domain/Identity.ts";
+import {
+  ClassDefinition,
+  OntologyContext,
+  PropertyDefinition
+} from "../Domain/Model/Ontology.ts";
+import type {OntologyEmbeddings} from "../Domain/Model/OntologyEmbeddings.ts";
 import {
   OWL,
   OWL_CLASS,
@@ -50,16 +66,16 @@ import {
   SKOS_RELATED,
   SKOS_SCOPENOTE,
 } from "../Domain/Rdf/Constants.ts";
-import type { Quad } from "../Domain/Rdf/Types.ts";
-import { IRI, Literal } from "../Domain/Rdf/Types.ts";
-import type { OntologyEntry } from "../Domain/Schema/OntologyRegistry.ts";
-import { rrfFusion } from "../Utils/Retrieval.ts";
-import { ConfigService } from "./Config.ts";
-import { NlpService } from "./Nlp.ts";
-import { OntologyRegistryService } from "./OntologyRegistry.ts";
-import type { RdfBuilderShape, RdfStore } from "./Rdf.ts";
-import { RdfBuilder } from "./Rdf.ts";
-import { StorageService, type StorageServiceMethods } from "./Storage.ts";
+import type {Quad} from "../Domain/Rdf/Types.ts";
+import {IRI, Literal} from "../Domain/Rdf/Types.ts";
+import type {OntologyEntry} from "../Domain/Schema/OntologyRegistry.ts";
+import {rrfFusion} from "../Utils/Retrieval.ts";
+import {ConfigService} from "./Config.ts";
+import {NlpService} from "./Nlp.ts";
+import {OntologyRegistryService} from "./OntologyRegistry.ts";
+import type {RdfBuilderShape, RdfStore} from "./Rdf.ts";
+import {RdfBuilder} from "./Rdf.ts";
+import {StorageService, type StorageServiceMethods} from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ontology");
 
@@ -92,8 +108,8 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
     Effect.catch((error) =>
       Effect.gen(function* () {
         const logContext = P.isNotUndefined(contextId)
-          ? { [contextLabel]: contextId, path: externalPath }
-          : { path: externalPath };
+          ? {[contextLabel]: contextId, path: externalPath}
+          : {path: externalPath};
         yield* Effect.logWarning("Failed to load external vocabularies, continuing with main ontology only", {
           ...logContext,
           error: String(error),
@@ -107,8 +123,8 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
       Effect.catch((error) =>
         Effect.gen(function* () {
           const logContext = P.isNotUndefined(contextId)
-            ? { [contextLabel]: contextId, path: externalPath }
-            : { path: externalPath };
+            ? {[contextLabel]: contextId, path: externalPath}
+            : {path: externalPath};
           yield* Effect.logWarning("Failed to parse external vocabularies, continuing with main ontology only", {
             ...logContext,
             error: String(error),
@@ -118,7 +134,10 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
       )
     );
     const mergedCount = yield* rdfBuilder.mergeStores(mainStore, externalStore);
-    const logContext = P.isNotUndefined(contextId) ? { [contextLabel]: contextId, externalPath } : { externalPath };
+    const logContext = P.isNotUndefined(contextId) ? {
+      [contextLabel]: contextId,
+      externalPath
+    } : {externalPath};
     yield* Effect.logInfo("Merged external vocabularies into ontology", {
       ...logContext,
       newQuadsAdded: mergedCount,
@@ -159,7 +178,7 @@ export const parseOntologyFromStore = (
   Effect.gen(function* () {
     // Helper to fetch all values for a predicate into a Map
     const fetchPredicateMap = Effect.fn("fetchPredicateMap")(function* (predicate: IRI) {
-      const quads = yield* rdf.queryStore(store, { predicate });
+      const quads = yield* rdf.queryStore(store, {predicate});
       const map = new Map<string, Array<string>>();
       for (const quad of Chunk.toReadonlyArray(quads)) {
         if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
@@ -247,7 +266,7 @@ export const parseOntologyFromStore = (
 
     // Fetch domain/range with blank node union resolution
     const fetchDomainRangeMap = Effect.fn("fetchDomainRangeMap")(function* (predicate: IRI) {
-      const quads = yield* rdf.queryStore(store, { predicate });
+      const quads = yield* rdf.queryStore(store, {predicate});
       const map = new Map<string, Array<string>>();
       for (const quad of Chunk.toReadonlyArray(quads)) {
         if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
@@ -325,7 +344,7 @@ export const parseOntologyFromStore = (
         fetchPredicateMapSafe(OWL_INVERSEOF),
         fetchPredicateMapSafe(OWL_EQUIVALENT_CLASS),
       ],
-      { concurrency: 5 }
+      {concurrency: 5}
     );
 
     // Find all classes (subjects where ?s rdf:type owl:Class)
@@ -366,15 +385,18 @@ export const parseOntologyFromStore = (
         .map((q) => q.subject as string)
     );
 
-    const propInfos = new Map<string, { id: string; rangeType: "object" | "datatype" }>();
+    const propInfos = new Map<string, {
+      id: string;
+      rangeType: "object" | "datatype"
+    }>();
     for (const quad of Chunk.toReadonlyArray(objectPropQuads)) {
       if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-        propInfos.set(quad.subject, { id: quad.subject, rangeType: "object" });
+        propInfos.set(quad.subject, {id: quad.subject, rangeType: "object"});
       }
     }
     for (const quad of Chunk.toReadonlyArray(datatypePropQuads)) {
       if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-        propInfos.set(quad.subject, { id: quad.subject, rangeType: "datatype" });
+        propInfos.set(quad.subject, {id: quad.subject, rangeType: "datatype"});
       }
     }
 
@@ -536,7 +558,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     // Cache BM25 index with same TTL as ontology to stay in sync
     const getBm25Index = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -550,7 +577,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     // Cache Semantic index with same TTL as ontology to stay in sync
     const getSemanticIndex = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -586,10 +618,13 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       const cached = HashMap.get(cache, uri);
       const now = yield* Clock.currentTimeMillis;
       if (Option.isSome(cached) && now - cached.value.loadedAt < cacheTtlMs) {
-        yield* Effect.logDebug("Using cached ontology", { uri, age: now - cached.value.loadedAt });
+        yield* Effect.logDebug("Using cached ontology", {
+          uri,
+          age: now - cached.value.loadedAt
+        });
         return cached.value.data;
       }
-      yield* Effect.logInfo("Loading ontology from URI", { uri, storagePath });
+      yield* Effect.logInfo("Loading ontology from URI", {uri, storagePath});
       const contentOpt = yield* storage.get(storagePath).pipe(
         Effect.mapError((error) =>
           OntologyFileNotFound.fromUnknown({
@@ -610,7 +645,10 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       const externalPath = config.ontology.externalVocabsPath;
       yield* loadAndMergeExternalVocabularies(mainStore, externalPath, "uri", uri, storage, rdf);
       const parsed = yield* parseOntologyFromStore(rdf, mainStore, uri);
-      yield* Ref.update(ontologyCacheRef, (cache) => HashMap.set(cache, uri, { data: parsed, loadedAt: now }));
+      yield* Ref.update(ontologyCacheRef, (cache) => HashMap.set(cache, uri, {
+        data: parsed,
+        loadedAt: now
+      }));
       yield* Effect.logInfo("Ontology loaded and cached", {
         uri,
         classCount: Chunk.size(parsed.classes),
@@ -668,7 +706,10 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         );
       }
       const parsed = yield* parseOntologyFromStore(rdf, mainStore, entry.storagePath);
-      yield* Ref.update(ontologyCacheRef, (cache) => HashMap.set(cache, cacheKey, { data: parsed, loadedAt: now }));
+      yield* Ref.update(ontologyCacheRef, (cache) => HashMap.set(cache, cacheKey, {
+        data: parsed,
+        loadedAt: now
+      }));
       yield* Effect.logInfo("Ontology loaded from registry and cached", {
         id: entry.id,
         iri: entry.iri,
@@ -681,7 +722,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     return {
       loadFromUri: Effect.fn("OntologyService.loadFromUri")((uri: string) =>
         loadOntologyFromUri(uri).pipe(
-          Effect.map(({ classes, hierarchy, properties, propertyHierarchy }) =>
+          Effect.map(({classes, hierarchy, properties, propertyHierarchy}) =>
             OntologyContext.make({
               classes: Chunk.toReadonlyArray(classes),
               hierarchy,
@@ -693,7 +734,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       ),
       loadFromRegistryEntry: Effect.fn("OntologyService.loadFromRegistryEntry")((entry: OntologyEntry) =>
         loadOntologyFromEntry(entry).pipe(
-          Effect.map(({ classes, hierarchy, properties, propertyHierarchy }) =>
+          Effect.map(({classes, hierarchy, properties, propertyHierarchy}) =>
             OntologyContext.make({
               classes: Chunk.toReadonlyArray(classes),
               hierarchy,
@@ -718,7 +759,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             )
           );
           if (Option.isSome(entryOpt)) {
-            const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromEntry(entryOpt.value);
+            const {
+              classes,
+              hierarchy,
+              properties,
+              propertyHierarchy
+            } = yield* loadOntologyFromEntry(entryOpt.value);
             return OntologyContext.make({
               classes: Chunk.toReadonlyArray(classes),
               hierarchy,
@@ -727,7 +773,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             });
           }
         }
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromUri(identifier);
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* loadOntologyFromUri(identifier);
         return OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -754,7 +805,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         query: string,
         limit: number = 100
       ) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromUri(uri);
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* loadOntologyFromUri(uri);
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -766,30 +822,30 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             nlp.createOntologyIndex(ontology),
             nlp.createOntologySemanticIndex(ontology),
           ],
-          { concurrency: 2 }
+          {concurrency: 2}
         );
         const searchLimit = Math.ceil(limit * 0.7);
         const [semanticResults, bm25Results] = yield* Effect.all(
           [
             P.isNotNull(semanticIndex)
               ? Effect.gen(function* () {
-                  const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
-                  const classesMap = new Map<string, ClassDefinition>();
-                  for (const result of results) {
-                    if (P.isNotUndefined(result.class)) {
-                      classesMap.set(result.class.id, result.class);
-                    }
-                    if (P.isNotUndefined(result.property)) {
-                      for (const domainIri of result.property.domain) {
-                        const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                        if (P.isNotUndefined(domainClass)) {
-                          classesMap.set(domainClass.id, domainClass);
-                        }
+                const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+                const classesMap = new Map<string, ClassDefinition>();
+                for (const result of results) {
+                  if (P.isNotUndefined(result.class)) {
+                    classesMap.set(result.class.id, result.class);
+                  }
+                  if (P.isNotUndefined(result.property)) {
+                    for (const domainIri of result.property.domain) {
+                      const domainClass = ontology.classes.find((c) => c.id === domainIri);
+                      if (P.isNotUndefined(domainClass)) {
+                        classesMap.set(domainClass.id, domainClass);
                       }
                     }
                   }
-                  return Chunk.fromIterable(classesMap.values());
-                }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
+                }
+                return Chunk.fromIterable(classesMap.values());
+              }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
               : Effect.succeed(Chunk.empty<ClassDefinition>()),
             Effect.gen(function* () {
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
@@ -810,7 +866,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               return Chunk.fromIterable(classesMap.values());
             }),
           ],
-          { concurrency: 2 }
+          {concurrency: 2}
         );
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
@@ -832,7 +888,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const results = [
           ...fused.map((r) => {
-            const { rrfScore: _, ...cls } = r;
+            const {rrfScore: _, ...cls} = r;
             return cls as ClassDefinition;
           }),
           ...remaining,
@@ -843,7 +899,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         uri: string,
         classIris: ReadonlyArray<string>
       ) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromUri(uri);
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* loadOntologyFromUri(uri);
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -865,7 +926,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       }),
       searchClassesHybridFromUriWithEmbeddings: Effect.fn("OntologyService.searchClassesHybridFromUriWithEmbeddings")(
         function* (uri: string, query: string, embeddings: OntologyEmbeddings, limit: number = 100) {
-          const { classes, hierarchy, properties, propertyHierarchy } = yield* loadOntologyFromUri(uri);
+          const {
+            classes,
+            hierarchy,
+            properties,
+            propertyHierarchy
+          } = yield* loadOntologyFromUri(uri);
           const ontology = OntologyContext.make({
             classes: Chunk.toReadonlyArray(classes),
             hierarchy,
@@ -879,23 +945,23 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             [
               P.isNotNull(semanticIndex)
                 ? Effect.gen(function* () {
-                    const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
-                    const classesMap = new Map<string, ClassDefinition>();
-                    for (const result of results) {
-                      if (P.isNotUndefined(result.class)) {
-                        classesMap.set(result.class.id, result.class);
-                      }
-                      if (P.isNotUndefined(result.property)) {
-                        for (const domainIri of result.property.domain) {
-                          const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                          if (P.isNotUndefined(domainClass)) {
-                            classesMap.set(domainClass.id, domainClass);
-                          }
+                  const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+                  const classesMap = new Map<string, ClassDefinition>();
+                  for (const result of results) {
+                    if (P.isNotUndefined(result.class)) {
+                      classesMap.set(result.class.id, result.class);
+                    }
+                    if (P.isNotUndefined(result.property)) {
+                      for (const domainIri of result.property.domain) {
+                        const domainClass = ontology.classes.find((c) => c.id === domainIri);
+                        if (P.isNotUndefined(domainClass)) {
+                          classesMap.set(domainClass.id, domainClass);
                         }
                       }
                     }
-                    return Chunk.fromIterable(classesMap.values());
-                  }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
+                  }
+                  return Chunk.fromIterable(classesMap.values());
+                }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
                 : Effect.succeed(Chunk.empty<ClassDefinition>()),
               Effect.gen(function* () {
                 const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
@@ -916,7 +982,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                 return Chunk.fromIterable(classesMap.values());
               }),
             ],
-            { concurrency: 2 }
+            {concurrency: 2}
           );
           const semanticArray = Chunk.toReadonlyArray(semanticResults);
           const bm25Array = Chunk.toReadonlyArray(bm25Results);
@@ -938,7 +1004,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           });
           const results = [
             ...fused.map((r) => {
-              const { rrfScore: _, ...cls } = r;
+              const {rrfScore: _, ...cls} = r;
               return cls as ClassDefinition;
             }),
             ...remaining,
@@ -947,7 +1013,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         }
       ),
       ontology: Effect.gen(function* () {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         return OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -956,7 +1027,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
       }),
       searchClasses: Effect.fn("OntologyService.searchClasses")(function* (query: string, limit: number = 10) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -987,7 +1063,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property!));
       }),
       getPropertiesFor: Effect.fn("OntologyService.getPropertiesFor")(function* (classIris: ReadonlyArray<string>) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -1011,7 +1092,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         query: string,
         limit: number = 10
       ) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -1048,7 +1134,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         query: string,
         limit: number = 100
       ) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -1077,8 +1168,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               }
               return Chunk.fromIterable(classesMap.values());
             }).pipe(
-              Effect.catch((error) =>
-                Effect.gen(function* () {
+              Effect.catch(
+                Effect.fn(function* (error) {
                   yield* Effect.logWarning("Semantic search failed, using BM25 fallback", {
                     error: String(error),
                     query,
@@ -1107,7 +1198,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               return Chunk.fromIterable(classesMap.values());
             }),
           ],
-          { concurrency: 2 }
+          {concurrency: 2}
         );
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
@@ -1128,8 +1219,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           limit,
         });
         const results = [
-          ...fused.map((r) => {
-            const { rrfScore: _, ...cls } = r;
+          ...A.map(fused, (r) => {
+            const {rrfScore: _, ...cls} = r;
             return cls as ClassDefinition;
           }),
           ...remaining,
@@ -1141,7 +1232,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         embeddings: OntologyEmbeddings,
         limit: number = 100
       ) {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
@@ -1170,8 +1266,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               }
               return Chunk.fromIterable(classesMap.values());
             }).pipe(
-              Effect.catch((error) =>
-                Effect.gen(function* () {
+              Effect.catch(
+                Effect.fn(function* (error)  {
                   yield* Effect.logWarning("Semantic search with embeddings failed, using BM25 fallback", {
                     error: String(error),
                     query,
@@ -1200,7 +1296,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               return Chunk.fromIterable(classesMap.values());
             }),
           ],
-          { concurrency: 2 }
+          {concurrency: 2}
         );
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
@@ -1222,7 +1318,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const results = [
           ...fused.map((r) => {
-            const { rrfScore: _, ...cls } = r;
+            const {rrfScore: _, ...cls} = r;
             return cls as ClassDefinition;
           }),
           ...remaining,
@@ -1230,7 +1326,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         return Chunk.fromIterable(results.slice(0, limit));
       }),
       getClassHierarchyChecker: Effect.fn("OntologyService.getClassHierarchyChecker")(function* () {
-        const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
+        const {
+          classes,
+          hierarchy,
+          properties,
+          propertyHierarchy
+        } = yield* getOntology;
         const ontology = OntologyContext.make({
           classes: Chunk.toReadonlyArray(classes),
           hierarchy,
