@@ -15,6 +15,9 @@ import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts"
 import type { ShaclViolation } from "./Shacl.ts"
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -177,24 +180,25 @@ const ExplanationResponseSchema = Schema.Struct({
  * @category Services
  */
 export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I`ViolationExplainer`, {
-  make: Effect.gen(function*() {
+  make: Effect.fn("ViolationExplainer.make")(function*() {
     const config = yield* ConfigService
     const llm = yield* LanguageModel.LanguageModel
 
     // Retry schedule for LLM calls
     const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) => Effect.succeed(Duration.min(d, Duration.millis(config.runtime.retryMaxDelayMs)))),
+      Schedule.modifyDelay(({ duration }) =>
+        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
+      ),
       Schedule.jittered
     )
 
     /**
      * Generate explanation for a single violation
      */
-    const explain = (
+    const explain = Effect.fn("ViolationExplainer.explain")(function* (
       violation: ShaclViolation,
       context: ExplanationContext
-    ): Effect.Effect<LlmViolationExplanation, ExplanationError> =>
-      Effect.gen(function*() {
+    ): Effect.fn.Return<LlmViolationExplanation, ExplanationError> {
         yield* Effect.logInfo("ViolationExplainer.explain starting", {
           focusNode: violation.focusNode,
           path: violation.path,
@@ -243,12 +247,11 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
     /**
      * Explain multiple violations in batch
      */
-    const explainBatch = (
+    const explainBatch = Effect.fn("ViolationExplainer.explainBatch")(function* (
       violations: ReadonlyArray<ShaclViolation>,
       context: ExplanationContext,
       options?: { concurrency?: number }
-    ): Effect.Effect<BatchExplanationResult, ExplanationError> =>
-      Effect.gen(function*() {
+    ): Effect.fn.Return<BatchExplanationResult, ExplanationError> {
         const startTime = Date.now()
         const concurrency = options?.concurrency ?? config.runtime.concurrency
 
@@ -259,7 +262,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
         // Process violations with concurrency limit
         const explanations = yield* Effect.all(
-          violations.map((v) => explain(v, context)),
+          A.map(violations, (violation) => explain(violation, context)),
           { concurrency }
         )
 
@@ -352,7 +355,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
           )
         )
     }
-  }),
+  })(),
 }) {
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
             ConfigServiceDefault
@@ -371,36 +374,36 @@ const buildExplanationPrompt = (
   violation: ShaclViolation,
   context: ExplanationContext
 ): string => {
-  const parts: Array<string> = [
+  let parts: Array<string> = [
     "You are an expert at explaining SHACL validation errors in plain language.",
     "",
     "## Violation Details",
     `- **Focus Node**: ${violation.focusNode}`,
-    violation.path ? `- **Property Path**: ${violation.path}` : "",
+    O.match(violation.path, { onNone: () => "", onSome: (path) => `- **Property Path**: ${path}` }),
     `- **Message**: ${violation.message}`,
     `- **Severity**: ${violation.severity}`,
     ""
   ]
 
   if (context.neighborhoodTurtle) {
-    parts.push(
+    parts = A.appendAll(parts, [
       "## Related Triples (Focus Node Neighborhood)",
       "```turtle",
       context.neighborhoodTurtle,
       "```",
       ""
-    )
+    ])
   }
 
   if (context.domainDescription) {
-    parts.push(
+    parts = A.appendAll(parts, [
       "## Domain Context",
       context.domainDescription,
       ""
-    )
+    ])
   }
 
-  parts.push(
+  parts = A.appendAll(parts, [
     "## Task",
     "1. Explain what went wrong in clear, non-technical language",
     "2. Suggest a specific fix that would resolve the violation",
@@ -412,9 +415,9 @@ const buildExplanationPrompt = (
     "- suggestion: Specific fix action",
     "- affectedEntities: Array of affected entity IRIs",
     "- confidence: Your confidence in this explanation (0-1)"
-  )
+  ])
 
-  return parts.filter((p) => p !== "").join("\n")
+  return A.join(A.filter(parts, Str.isNonEmpty), "\n")
 }
 
 /**
@@ -423,31 +426,32 @@ const buildExplanationPrompt = (
 const generateRuleBasedExplanation = (
   violation: ShaclViolation
 ): { explanation: string; suggestion: string } => {
-  const message = violation.message.toLowerCase()
+  const message = Str.toLowerCase(violation.message)
+  const path = O.getOrElse(violation.path, () => "unknown")
 
   // Cardinality constraints
-  if (message.includes("mincount") || message.includes("min count")) {
+  if (Str.includes("mincount")(message) || Str.includes("min count")(message)) {
     return {
       explanation: `The entity "${
         extractLocalName(violation.focusNode)
-      }" is missing a required value for the property "${extractLocalName(violation.path ?? "unknown")}".`,
-      suggestion: `Add a value for the "${extractLocalName(violation.path ?? "unknown")}" property.`
+      }" is missing a required value for the property "${extractLocalName(path)}".`,
+      suggestion: `Add a value for the "${extractLocalName(path)}" property.`
     }
   }
 
-  if (message.includes("maxcount") || message.includes("max count")) {
+  if (Str.includes("maxcount")(message) || Str.includes("max count")(message)) {
     return {
       explanation: `The entity "${extractLocalName(violation.focusNode)}" has too many values for the property "${
-        extractLocalName(violation.path ?? "unknown")
+        extractLocalName(path)
       }".`,
-      suggestion: `Remove excess values from the "${extractLocalName(violation.path ?? "unknown")}" property.`
+      suggestion: `Remove excess values from the "${extractLocalName(path)}" property.`
     }
   }
 
   // Datatype constraints (check before type to avoid false matches)
-  if (message.includes("datatype")) {
+  if (Str.includes("datatype")(message)) {
     return {
-      explanation: `The value for "${extractLocalName(violation.path ?? "unknown")}" on "${
+      explanation: `The value for "${extractLocalName(path)}" on "${
         extractLocalName(violation.focusNode)
       }" has the wrong data type.`,
       suggestion: "Check the data type of the value and correct it to match the expected type."
@@ -455,7 +459,7 @@ const generateRuleBasedExplanation = (
   }
 
   // Type constraints (class, rdf:type)
-  if (message.includes("class") || (message.includes("type") && !message.includes("datatype"))) {
+  if (Str.includes("class")(message) || (Str.includes("type")(message) && !Str.includes("datatype")(message))) {
     return {
       explanation: `The entity "${extractLocalName(violation.focusNode)}" has an incorrect type.`,
       suggestion: "Ensure the entity has the correct rdf:type declaration."
@@ -463,9 +467,9 @@ const generateRuleBasedExplanation = (
   }
 
   // Pattern constraints
-  if (message.includes("pattern")) {
+  if (Str.includes("pattern")(message)) {
     return {
-      explanation: `The value for "${extractLocalName(violation.path ?? "unknown")}" on "${
+      explanation: `The value for "${extractLocalName(path)}" on "${
         extractLocalName(violation.focusNode)
       }" doesn't match the required format.`,
       suggestion: "Update the value to match the required pattern/format."
@@ -483,9 +487,10 @@ const generateRuleBasedExplanation = (
  * Extract local name from IRI
  */
 const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#")
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1)
-  const slashIndex = iri.lastIndexOf("/")
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1)
-  return iri
+  const hashIndex = Str.lastIndexOf("#")(iri)
+  if (O.isSome(hashIndex)) return Str.slice(hashIndex.value + 1)(iri)
+  return O.match(Str.lastIndexOf("/")(iri), {
+    onNone: () => iri,
+    onSome: (slashIndex) => Str.slice(slashIndex + 1)(iri)
+  })
 }

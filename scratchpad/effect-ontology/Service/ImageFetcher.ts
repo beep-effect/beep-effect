@@ -9,7 +9,8 @@
  */
 
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http"
-import { Context, Duration, Effect, Layer, Schedule } from "effect"
+import { Context, Duration, Effect, Layer, Schedule, Schema } from "effect"
+import * as A from "effect/Array"
 import {
   type ImageError,
   ImageFetchError,
@@ -17,7 +18,7 @@ import {
   ImageTimeoutError,
   ImageTooLargeError
 } from "../Domain/Error/Image.ts"
-import type { ImageCandidate, ImageFetchResult } from "../Domain/Model/Image.ts"
+import { type ImageCandidate, ImageFetchResult } from "../Domain/Model/Image.ts"
 import { sha256Bytes } from "../Utils/Hash.ts"
 import { $ScratchpadId } from "@beep/identity";
 import * as O from "effect/Option";
@@ -42,7 +43,7 @@ const DEFAULT_MAX_SIZE_BYTES = 10 * 1024 * 1024
 /**
  * Allowed image content types
  */
-const ALLOWED_CONTENT_TYPES = [
+const ALLOWED_CONTENT_TYPES: A.NonEmptyReadonlyArray<string> = [
   "image/jpeg",
   "image/jpg",
   "image/png",
@@ -221,27 +222,25 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           )
 
           // Add referrer if available
-          const requestWithReferrer = candidate.referrerUrl
-            ? HttpClientRequest.setHeaders({
-              Referer: candidate.referrerUrl,
-              Accept: "image/*",
-              "User-Agent": "EffectOntology/2.0 ImageFetcher"
-            })(request)
-            : request
+          const requestWithReferrer = HttpClientRequest.setHeaders({
+            Referer: candidate.referrerUrl,
+            Accept: "image/*",
+            "User-Agent": "EffectOntology/2.0 ImageFetcher"
+          })(request)
 
           // Execute with timeout
           const response = yield* httpClient.execute(requestWithReferrer).pipe(
             Effect.timeout(Duration.millis(timeoutMs)),
             Effect.catchTag("TimeoutError", () =>
               Effect.fail(
-                ImageTimeoutError.make({
+                Schema.decodeUnknownSync(ImageTimeoutError)({
                   url: candidate.sourceUrl,
                   timeoutMs
                 })
               )),
             Effect.mapError((error) => {
               if (error instanceof ImageTimeoutError) return error
-              return ImageFetchError.make({
+              return ImageFetchError.fromUnknown({
                 message: `Failed to fetch image: ${error}`,
                 url: candidate.sourceUrl,
                 cause: O.some(error)
@@ -252,7 +251,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           // Check HTTP status
           if (response.status >= 400) {
             return yield* Effect.fail(
-              ImageFetchError.make({
+              ImageFetchError.fromUnknown({
                 message: `HTTP ${response.status} error`,
                 url: candidate.sourceUrl,
                 statusCode: O.some(response.status)
@@ -274,10 +273,13 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
           if (!allowedTypes.includes(contentType)) {
             return yield* Effect.fail(
-              ImageInvalidTypeError.make({
+              ImageInvalidTypeError.fromUnknown({
                 url: candidate.sourceUrl,
                 contentType,
-                allowedTypes: [...allowedTypes]
+                allowedTypes: O.match(A.head(allowedTypes), {
+                  onNone: () => ALLOWED_CONTENT_TYPES,
+                  onSome: (head) => [head, ...A.drop(allowedTypes, 1)]
+                })
               })
             )
           }
@@ -288,7 +290,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
             const size = parseInt(contentLength, 10)
             if (!isNaN(size) && size > maxSizeBytes) {
               return yield* Effect.fail(
-                ImageTooLargeError.make({
+                ImageTooLargeError.fromUnknown({
                   url: candidate.sourceUrl,
                   sizeBytes: NonNegativeInt.make(size),
                   maxBytes: NonNegativeInt.make(maxSizeBytes)
@@ -300,7 +302,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           // Read response body
           const arrayBuffer = yield* response.arrayBuffer.pipe(
             Effect.mapError((error) =>
-              ImageFetchError.make({
+              ImageFetchError.fromUnknown({
                 message: `Failed to read image body: ${error}`,
                 url: candidate.sourceUrl,
                 cause: O.some(error)
@@ -313,7 +315,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           // Validate actual size
           if (bytes.length > maxSizeBytes) {
             return yield* Effect.fail(
-              ImageTooLargeError.make({
+              ImageTooLargeError.fromUnknown({
                 url: candidate.sourceUrl,
                 sizeBytes: NonNegativeInt.make(bytes.length),
                 maxBytes: NonNegativeInt.make(maxSizeBytes)
@@ -324,12 +326,13 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           // Compute hash
           const hash = yield* sha256Bytes(bytes)
 
-          return {
-            bytes,
-            hash,
-            contentType,
-            candidate
-          } satisfies ImageFetchResult
+          return yield* Schema.decodeUnknownEffect(ImageFetchResult)({ bytes, hash, contentType, candidate }).pipe(
+            Effect.mapError((cause) => ImageFetchError.fromUnknown({
+              message: "Fetched image metadata failed validation",
+              url: candidate.sourceUrl,
+              cause: O.some(cause)
+            }))
+          )
         }).pipe(
           // Apply retry schedule if enabled
           options?.retry !== false

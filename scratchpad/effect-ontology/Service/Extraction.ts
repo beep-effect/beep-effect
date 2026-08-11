@@ -9,16 +9,17 @@
  */
 
 import { LanguageModel } from "effect/unstable/ai"
-import { Chunk, Duration, Effect, JsonSchema, Layer, Option, Schedule, Sink, Stream, Context } from "effect"
+import { Chunk, Context, Duration, Effect, Layer, Option, Schedule, Schema } from "effect"
+import * as A from "effect/Array"
+import * as MutableHashMap from "effect/MutableHashMap"
 import {
   EntityExtractionFailed,
   MentionExtractionFailed,
   RelationExtractionFailed
 } from "../Domain/Error/Extraction.ts"
-import { Entity, Relation } from "../Domain/Model/Entity.ts"
+import { Entity, EvidenceSpan, Relation, RelationObject } from "../Domain/Model/Entity.ts"
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts"
-import { EntityId } from "../Domain/Model/shared.ts"
-import type { IRI } from "../Domain/Rdf/Types.ts"
+import { EntityId, IRI } from "../Domain/Model/shared.ts"
 import {
   generateStructuredEntityPrompt,
   generateStructuredMentionPrompt,
@@ -72,7 +73,8 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
 
     // Create retry schedule from config
     const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) => Effect.succeed(Duration.min(d, Duration.millis(config.runtime.retryMaxDelayMs)))),
+      Schedule.modifyDelay(({ duration }) =>
+        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))),
       Schedule.jittered
     )
 
@@ -131,12 +133,11 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           })
 
           // Log schema summary (hash only to prevent PII leakage)
-          const jsonSchema = JsonSchema.make(schema)
+          const jsonSchema = Schema.toJsonSchemaDocument(schema)
           const schemaHash = sha256Sync(JSON.stringify(jsonSchema))
           yield* Effect.logDebug("Entity extraction schema", {
             stage: "entity-extraction",
-            schemaIdentifier: jsonSchema.$defs?.EntityGraph?.title || "EntityGraph",
-            schemaDescription: jsonSchema.$defs?.EntityGraph?.description?.slice(0, 200),
+            schemaIdentifier: "EntityGraph",
             allowedClassCount: candidates.length
           })
 
@@ -167,15 +168,15 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
                 Effect.logInfo("Entity extraction LLM response", {
                   stage: "entity-extraction",
                   entityCount: response.value.entities.length,
-                  inputTokens: response.usage.inputTokens,
-                  outputTokens: response.usage.outputTokens
+                  inputTokens: response.usage.inputTokens.total ?? 0,
+                  outputTokens: response.usage.outputTokens.total ?? 0
                 }),
                 annotateLlmCall({
                   model: config.llm.model,
                   provider: config.llm.provider,
                   promptLength,
-                  inputTokens: response.usage.inputTokens,
-                  outputTokens: response.usage.outputTokens,
+                  inputTokens: response.usage.inputTokens.total ?? 0,
+                  outputTokens: response.usage.outputTokens.total ?? 0,
                   schemaHash
                 }),
                 annotateExtraction({
@@ -210,7 +211,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           // Warn about property local name collisions (e.g., org:member vs foaf:member)
           if (propertyMapResult.hasCollisions) {
             yield* Effect.logWarning("Property local name collisions detected - LLM output may map to wrong IRI", {
-              collisionCount: propertyMapResult.collisions.size,
+              collisionCount: MutableHashMap.size(propertyMapResult.collisions),
               collisions: Object.fromEntries(propertyMapResult.collisions)
             })
           }
@@ -225,7 +226,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           // Warn about class local name collisions (e.g., foaf:Person vs schema:Person)
           if (classMapResult.hasCollisions) {
             yield* Effect.logWarning("Class local name collisions detected - LLM output may map to wrong IRI", {
-              collisionCount: classMapResult.collisions.size,
+              collisionCount: MutableHashMap.size(classMapResult.collisions),
               collisions: Object.fromEntries(classMapResult.collisions)
             })
           }
@@ -237,9 +238,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           let filteredAttributeCount = 0
           let skippedEntityCount = 0
           let droppedKeysCount = 0
-          const entities = yield* Stream.fromIterable(response.value.entities)
-            .pipe(
-              Stream.filterMap((entityData): Option.Option<Entity> => {
+          const toEntity = (entityData: typeof response.value.entities[number]): Option.Option<Entity> => {
                 // Generate deterministic ID if not provided or invalid (business logic, not validation)
                 let entityId = entityData.id
                 if (!entityId || !/^[a-z][a-z0-9_]*$/.test(entityId)) {
@@ -251,7 +250,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
                 const expandedTypes = expandTypesToIris(entityData.types, localNameToIriMap)
 
                 // Skip entities with no valid types after expansion
-                if (expandedTypes.length === 0) {
+                if (!A.isReadonlyArrayNonEmpty(expandedTypes)) {
                   skippedEntityCount++
                   return Option.none()
                 }
@@ -259,15 +258,15 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
                 // Convert attributes to proper format and expand keys to full IRIs
                 // LLM outputs local name keys (e.g., "age") which we expand to full IRIs (e.g., "http://schema.org/age")
                 const attributes: Record<string, string | number | boolean> = {}
-                if (entityData.attributes) {
-                  for (const [key, value] of Object.entries(entityData.attributes)) {
+                if (O.isSome(entityData.attributes)) {
+                  for (const [key, value] of Object.entries(entityData.attributes.value)) {
                     // Expand local name key to full IRI (case-insensitive match)
                     const expandedKey = expandLocalNameToIri(key, propertyLocalNameToIriMap)
-                    if (expandedKey) {
+                    if (O.isSome(expandedKey)) {
                       if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-                        attributes[expandedKey] = value
+                        attributes[expandedKey.value] = value
                       }
-                    } else if (propertyLocalNameToIriMap.size === 0) {
+                    } else if (MutableHashMap.size(propertyLocalNameToIriMap) === 0) {
                       // No property constraints - keep key as-is (likely already a full IRI or no ontology)
                       if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
                         attributes[key] = value
@@ -286,14 +285,18 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
                   Entity.make({
                     id: EntityId.make(entityId),
                     mention: entityData.mention,
-                    types: expandedTypes as ReadonlyArray<IRI>, // Expanded to full IRIs
+                    types: expandedTypes,
                     attributes,
-                    mentions: entityData.mentions
+                    mentions: A.map(
+                      O.getOrElse(entityData.mentions, () => []),
+                      (mention) => EvidenceSpan.fromUnknown(mention)
+                    )
                   })
                 )
-              }),
-              Stream.run(Sink.collectAllN(1000)) // Max 1000 entities per extraction
-            )
+              }
+          const entities = Chunk.fromIterable(
+            A.flatMap(A.take(response.value.entities, 1_000), (entityData) => O.toArray(toEntity(entityData)))
+          )
 
           // Log if any entities were skipped due to invalid types
           if (skippedEntityCount > 0) {
@@ -332,7 +335,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
    *
    * @since 2.0.0
    */
-  static Test = Layer.succeed(EntityExtractor, {
+  static Test = Layer.succeed(EntityExtractor, EntityExtractor.of({
     extract: (
       _text: string,
       candidates: ReadonlyArray<ClassDefinition>,
@@ -343,12 +346,15 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           Entity.make({
             id: EntityId.make("test_entity"),
             mention: "Test Entity",
-            types: candidates.length > 0 ? [candidates[0].id] : [],
+            types: [O.match(A.head(candidates), {
+              onNone: () => IRI.fromUnknown("http://example.org/TestEntity"),
+              onSome: (candidate) => candidate.id
+            })],
             attributes: {}
           })
         ])
       )
-  } as EntityExtractor)
+  }))
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
             ConfigServiceDefault,
             StageTimeoutServiceLive
@@ -443,7 +449,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
               ? m.id
               : generateEntityId(m.mention),
             mention: m.mention,
-            context: m.context ?? ""
+            context: O.getOrElse(m.context, () => "")
           }))
 
           yield* Effect.logInfo("Mention extraction complete", {
@@ -462,16 +468,16 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
    *
    * @since 2.0.0
    */
-  static Test = Layer.succeed(MentionExtractor, {
+  static Test = Layer.succeed(MentionExtractor, MentionExtractor.of({
     extract: (
       _text: string
-    ): Effect.Effect<Chunk.Chunk<Mention>, MentionExtractionFailed, LanguageModel.LanguageModel> =>
+    ) =>
       Effect.succeed(
         Chunk.fromIterable([
           { id: "test_entity", mention: "Test Entity", context: "A test entity" }
         ])
       )
-  } as unknown as MentionExtractor)
+  }))
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
             ConfigServiceDefault,
             StageTimeoutServiceLive
@@ -525,9 +531,9 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           const validEntityIds = entityArray.map((e) => e.id)
 
           // Build entity ID → types map for domain/range validation
-          const entityTypesMap = new Map<string, ReadonlyArray<string>>()
+          const entityTypesMap = MutableHashMap.empty<string, ReadonlyArray<string>>()
           for (const entity of entityArray) {
-            entityTypesMap.set(entity.id, entity.types)
+            MutableHashMap.set(entityTypesMap, entity.id, entity.types)
           }
 
           // Build property IRI → domain/range map for validation
@@ -536,9 +542,9 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             range: ReadonlyArray<string>
             rangeType: string
           }
-          const propertyConstraintsMap = new Map<string, PropertyConstraints>()
+          const propertyConstraintsMap = MutableHashMap.empty<string, PropertyConstraints>()
           for (const prop of properties) {
-            propertyConstraintsMap.set(prop.id, {
+            MutableHashMap.set(propertyConstraintsMap, prop.id, {
               domain: prop.domain,
               range: prop.range,
               rangeType: prop.rangeType
@@ -573,12 +579,11 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           })
 
           // Log schema summary (hash for tracing without PII)
-          const jsonSchema = JsonSchema.make(schema)
+          const jsonSchema = Schema.toJsonSchemaDocument(schema)
           const schemaHash = sha256Sync(JSON.stringify(jsonSchema))
           yield* Effect.logDebug("Relation extraction schema", {
             stage: "relation-extraction",
-            schemaIdentifier: jsonSchema.$defs?.RelationGraph?.title || "RelationGraph",
-            schemaDescription: jsonSchema.$defs?.RelationGraph?.description?.slice(0, 200),
+            schemaIdentifier: "RelationGraph",
             schemaHash,
             validEntityIdCount: validEntityIds.length,
             allowedPropertyCount: properties.length
@@ -644,7 +649,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           // Warn about relation property local name collisions
           if (relationPropertyMapResult.hasCollisions) {
             yield* Effect.logWarning("Relation property local name collisions detected", {
-              collisionCount: relationPropertyMapResult.collisions.size,
+              collisionCount: MutableHashMap.size(relationPropertyMapResult.collisions),
               collisions: Object.fromEntries(relationPropertyMapResult.collisions)
             })
           }
@@ -696,40 +701,38 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             )
           }
 
-          const relations = yield* Stream.fromIterable(response.value.relations as ReadonlyArray<RelationData>)
-            .pipe(
-              Stream.filterMap((relationData: RelationData): Option.Option<Relation> => {
+          const toRelation = (relationData: RelationData): Option.Option<Relation> => {
                 // Expand predicate local name to full IRI
                 const expandedPredicate = expandLocalNameToIri(relationData.predicate, localNameToIriMap)
-                if (!expandedPredicate) {
+                if (O.isNone(expandedPredicate)) {
                   // Skip relations with invalid predicates (should not happen if schema validated)
                   skippedRelationCount++
                   return Option.none()
                 }
 
                 // Domain/range validation
-                const constraints = propertyConstraintsMap.get(expandedPredicate)
-                if (constraints) {
+                const constraints = MutableHashMap.get(propertyConstraintsMap, expandedPredicate.value)
+                if (O.isSome(constraints)) {
                   // Check domain constraint (subject types must match property domain)
-                  const subjectTypes = entityTypesMap.get(relationData.subjectId) ?? []
-                  if (!typesMatchConstraint(subjectTypes, constraints.domain)) {
+                  const subjectTypes = O.getOrElse(MutableHashMap.get(entityTypesMap, relationData.subjectId), () => [])
+                  if (!typesMatchConstraint(subjectTypes, constraints.value.domain)) {
                     domainViolations.push({
                       subjectId: relationData.subjectId,
-                      predicate: expandedPredicate,
+                      predicate: expandedPredicate.value,
                       subjectTypes,
-                      expectedDomain: constraints.domain
+                      expectedDomain: constraints.value.domain
                     })
                   }
 
                   // Check range constraint for object properties (object entity types must match property range)
-                  if (constraints.rangeType === "object") {
-                    const objectTypes = entityTypesMap.get(relationData.object) ?? []
-                    if (objectTypes.length > 0 && !typesMatchConstraint(objectTypes, constraints.range)) {
+                  if (constraints.value.rangeType === "object") {
+                    const objectTypes = O.getOrElse(MutableHashMap.get(entityTypesMap, relationData.object), () => [])
+                    if (objectTypes.length > 0 && !typesMatchConstraint(objectTypes, constraints.value.range)) {
                       rangeViolations.push({
                         objectId: relationData.object,
-                        predicate: expandedPredicate,
+                        predicate: expandedPredicate.value,
                         objectTypes,
-                        expectedRange: constraints.range
+                        expectedRange: constraints.value.range
                       })
                     }
                   }
@@ -737,15 +740,21 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
 
                 return Option.some(
                   Relation.make({
-                    subjectId: relationData.subjectId,
-                    predicate: expandedPredicate as IRI,
-                    object: relationData.object,
-                    evidence: relationData.evidence
+                    subjectId: EntityId.make(relationData.subjectId),
+                    predicate: expandedPredicate.value,
+                    object: RelationObject.cases.EntityReference.make({
+                      value: EntityId.make(relationData.object)
+                    }),
+                    evidence: O.map(O.fromNullishOr(relationData.evidence), EvidenceSpan.fromUnknown)
                   })
                 )
-              }),
-              Stream.run(Sink.collectAllN(5000)) // Max 5000 relations per extraction
+              }
+          const relations = Chunk.fromIterable(
+            A.flatMap(
+              A.take(response.value.relations as ReadonlyArray<RelationData>, 5_000),
+              (relationData) => O.toArray(toRelation(relationData))
             )
+          )
 
           // Log if any relations were skipped due to invalid predicates
           if (skippedRelationCount > 0) {
@@ -812,7 +821,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
    *
    * @since 2.0.0
    */
-  static Test = Layer.succeed(RelationExtractor, {
+  static Test = Layer.succeed(RelationExtractor, RelationExtractor.of({
     extract: (
       _text: string,
       entities: Chunk.Chunk<Entity>,
@@ -827,13 +836,15 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         Chunk.fromIterable([
           Relation.make({
             subjectId: entityArray[0].id,
-            predicate: _properties.length > 0 ? _properties[0].id : "http://example.org/relatedTo",
-            object: entityArray[1].id
+            predicate: IRI.fromUnknown(
+              _properties.length > 0 ? _properties[0].id : "http://example.org/relatedTo"
+            ),
+            object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id })
           })
         ])
       )
     }
-  } as RelationExtractor)
+  }))
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
             ConfigServiceDefault,
             StageTimeoutServiceLive

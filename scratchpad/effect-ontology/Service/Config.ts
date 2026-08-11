@@ -8,7 +8,7 @@
  * @module Service/Config
  */
 
-import { Config, Context, Effect, Layer, Option, Redacted } from "effect"
+import { Config, ConfigProvider, Context, Effect, Layer, Option, Redacted } from "effect"
 import { $ScratchpadId } from "@beep/identity";
 const $I = $ScratchpadId.create("effect-ontology/Service/Config");
 
@@ -408,7 +408,7 @@ export const ConfigServiceDefault = Layer.effect(ConfigService, makeConfigServic
  */
 export const makeConfigServiceLayer = (
   configProvider: import("effect").ConfigProvider.ConfigProvider
-): Layer.Layer<ConfigService, import("effect").ConfigError.ConfigError> =>
+): Layer.Layer<ConfigService, Config.ConfigError> =>
   Layer.effect(ConfigService, makeConfigService).pipe(
     Layer.provide(ConfigProvider.layer(configProvider))
   )

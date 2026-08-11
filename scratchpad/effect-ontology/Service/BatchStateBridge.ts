@@ -21,7 +21,7 @@
  * @module Service/BatchStateBridge
  */
 
-import { Context, Effect, Fiber, Layer, Stream } from "effect"
+import { Context, Effect, Fiber, Layer, PubSub, Stream } from "effect"
 import type { BatchState } from "../Domain/Model/BatchWorkflow.ts"
 import { broadcastDomainEvent } from "../Runtime/EventBroadcastRouter.ts"
 import { BatchStateHub } from "./BatchState.ts"
@@ -146,19 +146,19 @@ const getStageDetails = (state: BatchState): Record<string, unknown> => {
  * The bridge runs as a background fiber and is automatically cleaned up when
  * the service scope closes.
  */
-const makeBatchStateBridge = Effect.gen(function*() {
+const makeBatchStateBridge = Effect.fn("makeBatchStateBridge")(function*() {
   const batchStateHub = yield* BatchStateHub
 
   // Subscribe to batch state changes
-  const subscription = yield* batchStateHub.subscribe
+  const subscription = yield* PubSub.subscribe(batchStateHub)
 
   // Track running status
   let running = true
 
   // Start background fiber to bridge states to events
-  const fiber = yield* Stream.fromQueue(subscription).pipe(
+  const fiber = yield* Stream.fromSubscription(subscription).pipe(
     Stream.tap(
-      Effect.fn(function*(state)  {
+      Effect.fn("BatchStateBridge.broadcastState")(function*(state)  {
         yield* Effect.logDebug("Bridging batch state to WebSocket", {
           batchId: state.batchId,
           ontologyId: state.ontologyId,
@@ -179,7 +179,7 @@ const makeBatchStateBridge = Effect.gen(function*() {
 
   // Cleanup on scope close
   yield* Effect.addFinalizer(
-    Effect.fn(function*() {
+    Effect.fn("BatchStateBridge.finalize")(function*() {
       running = false
       yield* Fiber.interrupt(fiber)
       yield* Effect.logInfo("BatchStateBridge stopped")
@@ -191,7 +191,7 @@ const makeBatchStateBridge = Effect.gen(function*() {
   return BatchStateBridge.of({
     isRunning: Effect.succeed(running)
   })
-})
+})()
 
 // =============================================================================
 // Layer

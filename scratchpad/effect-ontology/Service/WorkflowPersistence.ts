@@ -9,7 +9,7 @@
 
 import { Persistence } from "effect/unstable/persistence"
 import { KeyValueStore } from "effect/unstable/persistence"
-import { Effect, Layer, Option } from "effect"
+import { Effect, Layer } from "effect"
 import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts"
 
 // -----------------------------------------------------------------------------
@@ -33,12 +33,12 @@ const StorageKeyValueStoreLive = Layer.effect(
     return KeyValueStore.make({
       get: (key) =>
         storage.get(prefixKey(key)).pipe(
-          Effect.catch(() => Effect.succeed(Option.none()))
+          Effect.catch(() => Effect.succeed(undefined))
         ),
 
       getUint8Array: (key) =>
         storage.getUint8Array(prefixKey(key)).pipe(
-          Effect.catch(() => Effect.succeed(Option.none()))
+          Effect.catch(() => Effect.succeed(undefined))
         ),
 
       set: (key, value) =>
@@ -79,7 +79,7 @@ const StorageKeyValueStoreLive = Layer.effect(
  *   )
  *   ```
  */
-export const WorkflowPersistenceLive = Persistence.layerKeyValueStore.pipe(
+export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
   Layer.provide(StorageServiceLive)
 )
@@ -90,7 +90,7 @@ export const WorkflowPersistenceLive = Persistence.layerKeyValueStore.pipe(
  * Uses memory-backed storage - no GCS credentials required.
  * Fast and deterministic for unit tests.
  */
-export const WorkflowPersistenceTest = Persistence.layerKeyValueStore.pipe(
+export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
   Layer.provide(StorageServiceTest)
 )

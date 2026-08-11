@@ -8,7 +8,9 @@
  */
 
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { Effect, Option, Redacted, Schema } from "effect"
+import { Effect, HashSet, Option, Redacted, Schema } from "effect"
+import * as A from "effect/Array"
+import * as Str from "effect/String"
 import { AuthenticationError } from "../Domain/Error/Auth.ts"
 import { TicketRequest, TicketResponse } from "../Domain/Schema/Auth.ts"
 import { ConfigService } from "../Service/Config.ts"
@@ -21,9 +23,11 @@ import { TicketService } from "../Service/Ticket.ts"
 /**
  * Parse API keys from comma-separated redacted string
  */
-const parseApiKeys = (redacted: Redacted.Redacted<string>): Set<string> => {
+const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<string> => {
   const raw = Redacted.value(redacted)
-  return new Set(raw.split(",").map((k) => k.trim()).filter((k) => k.length > 0))
+  return HashSet.fromIterable(
+    A.filter(A.map(Str.split(",")(raw), Str.trim), Str.isNonEmpty)
+  )
 }
 
 /**
@@ -51,13 +55,13 @@ const createTicketHandler = Effect.gen(function*() {
 
   // Parse API keys from config
   const apiKeys = Option.match(config.api.keys, {
-    onNone: () => new Set<string>(),
+    onNone: () => HashSet.empty<string>(),
     onSome: parseApiKeys
   })
 
   // Get API key from header
   const apiKeyHeader = request.headers["x-api-key"]
-  const apiKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader
+  const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader
 
   // Validate API key
   const validatedKey = yield* ticketService.validateApiKey(apiKey, apiKeys).pipe(
@@ -91,7 +95,7 @@ const createTicketHandler = Effect.gen(function*() {
     expiresAt: new Date(result.expiresAt).toISOString()
   })
 
-  const response = TicketResponse.make(result)
+  const response = TicketResponse.fromUnknown(result)
   return yield* HttpServerResponse.json(response, { status: 200 })
 })
 

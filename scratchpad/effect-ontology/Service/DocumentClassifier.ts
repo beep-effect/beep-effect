@@ -10,6 +10,8 @@
 
 import {LanguageModel} from "effect/unstable/ai";
 import {Effect, Layer, Schema, Context} from "effect";
+import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 import {
   type DocumentType,
   type EntityDensity
@@ -275,7 +277,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
           Effect.gen(function* () {
             const result = yield* generateObjectWithRetry({
               llm,
-              prompt: buildSinglePrompt(input.preview, input.contentType),
+              prompt: buildSinglePrompt(input.preview, O.getOrUndefined(input.contentType)),
               schema: DocumentClassification,
               objectName: "document_classification",
               serviceName: "DocumentClassifier",
@@ -289,7 +291,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
               },
               spanAttributes: {
                 "classifier.mode": "single",
-                "classifier.content_type": input.contentType ?? "unknown"
+                "classifier.content_type": O.getOrElse(input.contentType, () => "unknown")
               }
             });
 
@@ -314,15 +316,19 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
          * @param input - Batch of document previews
          * @returns Map of index to classification result
          */
-        classifyBatch:
-          Effect.fn(function* (input: ClassifyBatchInput) {
+        classifyBatch: Effect.fn("DocumentClassifier.classifyBatch")(function* (input: ClassifyBatchInput) {
+          return yield* Effect.gen(function*() {
             if (input.documents.length === 0) {
-              return new Map<number, DocumentClassification>();
+              return MutableHashMap.empty<number, DocumentClassification>();
             }
 
             const result = yield* generateObjectWithRetry({
               llm,
-              prompt: buildBatchPrompt(input.documents),
+              prompt: buildBatchPrompt(A.map(input.documents, (document) => ({
+                index: document.index,
+                preview: document.preview,
+                ...(O.isSome(document.contentType) ? { contentType: document.contentType.value } : {})
+              }))),
               schema: BatchClassificationResponse,
               objectName: "batch_classification",
               serviceName: "DocumentClassifier",
@@ -341,33 +347,32 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
             });
 
             // Build result map
-            const classifications = new Map<number, DocumentClassification>();
+            const classifications = MutableHashMap.empty<number, DocumentClassification>();
             for (const item of result.value.classifications) {
-              classifications.set(item.index, item.classification);
+              MutableHashMap.set(classifications, item.index, item.classification);
             }
 
             // Fill in defaults for any missing indices
             for (const doc of input.documents) {
-              if (!classifications.has(doc.index)) {
-                classifications.set(doc.index, defaultClassification);
+              if (!MutableHashMap.has(classifications, doc.index)) {
+                MutableHashMap.set(classifications, doc.index, defaultClassification);
               }
             }
 
             return classifications;
-          }, Effect.catch(
-            Effect.fn(function* (error) {
+          }).pipe(Effect.catch((error) => Effect.gen(function*() {
               yield* Effect.logWarning("Batch classification failed, using defaults for all", {
                 batchSize: input.documents.length,
                 error: String(error)
               });
               // Return defaults for all documents
-              const classifications = new Map<number, DocumentClassification>();
+              const classifications = MutableHashMap.empty<number, DocumentClassification>();
               for (const doc of input.documents) {
-                classifications.set(doc.index, defaultClassification);
+                MutableHashMap.set(classifications, doc.index, defaultClassification);
               }
               return classifications;
-            })
-          )),
+            })))
+          }),
 
         /**
          * Classify documents with automatic batching
@@ -380,8 +385,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
          * @param concurrency - Parallel batches (default: 2)
          * @returns Map of index to classification result
          */
-        classifyWithAutoBatching:
-          Effect.fn(function* (
+        classifyWithAutoBatching: Effect.fn("DocumentClassifier.classifyWithAutoBatching")(function* (
           documents: ReadonlyArray<{
             index: number;
             preview: string;
@@ -391,7 +395,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
           concurrency = 2
         ) {
             if (documents.length === 0) {
-              return new Map<number, DocumentClassification>();
+              return MutableHashMap.empty<number, DocumentClassification>();
             }
 
             // Split into batches
@@ -454,23 +458,23 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
             );
 
             // Merge all results
-            const classifications = new Map<number, DocumentClassification>();
+            const classifications = MutableHashMap.empty<number, DocumentClassification>();
             for (const batchResult of results) {
               for (const item of batchResult) {
-                classifications.set(item.index, item.classification);
+                MutableHashMap.set(classifications, item.index, item.classification);
               }
             }
 
             // Fill in defaults for any missing
             for (const doc of documents) {
-              if (!classifications.has(doc.index)) {
-                classifications.set(doc.index, defaultClassification);
+              if (!MutableHashMap.has(classifications, doc.index)) {
+                MutableHashMap.set(classifications, doc.index, defaultClassification);
               }
             }
 
             yield* Effect.logInfo("Auto-batched classification complete", {
               totalDocuments: documents.length,
-              classifiedCount: classifications.size
+              classifiedCount: MutableHashMap.size(classifications)
             });
 
             return classifications;
@@ -479,6 +483,11 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
     }),
   }
 ) {
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
+    ConfigServiceDefault
+    // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
+  ]));
+
   /**
    * Default layer with ConfigService provided
    *
@@ -491,21 +500,17 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()(
   /**
    * Test layer with mock classification that returns defaults
    */
-  static readonly Test = Layer.succeed(DocumentClassifier, {
+  static readonly Test = Layer.succeed(DocumentClassifier, DocumentClassifier.of({
     classify: (_input: ClassifyInput) => Effect.succeed(defaultClassification),
 
     classifyBatch: (input: ClassifyBatchInput) =>
       Effect.succeed(
-        new Map(input.documents.map((doc) => [doc.index, defaultClassification]))
+        MutableHashMap.fromIterable(A.map(input.documents, (doc) => [doc.index, defaultClassification] as const))
       ),
 
     classifyWithAutoBatching: (documents) =>
       Effect.succeed(
-        new Map(documents.map((doc) => [doc.index, defaultClassification]))
+        MutableHashMap.fromIterable(A.map(documents, (doc) => [doc.index, defaultClassification] as const))
       )
-  });
-  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
-    ConfigServiceDefault
-    // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
-  ]));
+  }));
 }

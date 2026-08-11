@@ -23,7 +23,7 @@
  */
 
 import { LanguageModel } from "effect/unstable/ai"
-import { Data, Effect, JsonSchema, Schema, Context, Layer } from "effect"
+import { Data, DateTime, Effect, Schema, Context, Layer } from "effect"
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts"
 import { EnrichedContent } from "../Domain/Model/EnrichedContent.ts"
 import { ConfigService } from "./Config.ts"
@@ -154,13 +154,13 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
             EnrichedContent.make({
               ...enriched,
               // Prefer Jina's title if we didn't extract a good headline
-              headline: enriched.headline || jinaContent.title,
+              headline: enriched.headline,
               // Use Jina's description as fallback
-              description: enriched.description || jinaContent.description || "",
+              description: enriched.description,
               // Use Jina's published date if we didn't find one
-              publishedAt: enriched.publishedAt || parseDate(jinaContent.publishedDate),
+              publishedAt: O.orElse(enriched.publishedAt, () => O.flatMap(jinaContent.publishedDate, parseDate)),
               // Use Jina's site name as organization fallback
-              organization: enriched.organization || jinaContent.siteName || null
+              organization: O.orElse(enriched.organization, () => jinaContent.siteName)
             })
           )
         )
@@ -198,7 +198,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
             Effect.mapError((error) =>
               new ContentEnrichmentError({
                 message: `Failed to enrich content: ${error}`,
-                url,
+                ...(url === undefined ? {} : { url }),
                 cause: error
               })
             )
@@ -211,7 +211,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
             headline: output.headline,
             description: output.description,
             sourceType: output.sourceType,
-            publishedAt: O.fromNullishOr(parseDate(output.publishedAt)),
+            publishedAt: parseDate(output.publishedAt),
             author: O.fromNullishOr(output.author),
             organization: O.fromNullishOr(output.organization),
             keyEntities: output.keyEntities,
@@ -224,7 +224,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
       /**
        * Get the JSON schema for enrichment output (useful for structured extraction)
        */
-      const getSchema = (): object => JsonSchema.make(EnrichmentOutputSchema)
+      const getSchema = (): object => Schema.toJsonSchemaDocument(EnrichmentOutputSchema).schema
 
       return {
         enrich,
@@ -244,13 +244,5 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
 /**
  * Parse date string to Date or null
  */
-const parseDate = (dateStr: string | undefined | null): Date | null => {
-  if (!dateStr) return null
-  try {
-    const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return null
-    return date
-  } catch {
-    return null
-  }
-}
+const parseDate = (dateStr: string | undefined | null): O.Option<DateTime.Utc> =>
+  O.flatMap(O.fromNullishOr(dateStr), DateTime.make)

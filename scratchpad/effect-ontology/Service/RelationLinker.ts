@@ -8,8 +8,9 @@
  * @module Service/RelationLinker
  */
 
-import { Chunk, Effect, Option, Context, Layer } from "effect"
-import { Relation } from "../Domain/Model/Entity.ts"
+import { Chunk, Effect, HashSet, Option, Context, Layer } from "effect"
+import { Relation, RelationObject } from "../Domain/Model/Entity.ts"
+import { EntityId, type IRI } from "../Domain/Model/shared.ts"
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts"
 import { getCanonicalId } from "./EntityLinker.ts"
 import { $ScratchpadId } from "@beep/identity";
@@ -25,13 +26,13 @@ export interface LinkedRelation {
   /** Original relation */
   readonly original: Relation
   /** Canonical subject ID (resolved via ERG) */
-  readonly canonicalSubjectId: string
+  readonly canonicalSubjectId: EntityId
   /** Canonical predicate (unchanged) */
-  readonly canonicalPredicate: string
+  readonly canonicalPredicate: IRI
   /**
    * Canonical object (resolved via ERG if entity reference, unchanged if literal)
    */
-  readonly canonicalObject: string | number | boolean
+  readonly canonicalObject: RelationObject
   /** Whether subject was remapped */
   readonly subjectRemapped: boolean
   /** Whether object was remapped (false for literals) */
@@ -79,10 +80,10 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
-          const canonicalSubjectId = Option.getOrElse(
+          const canonicalSubjectId = EntityId.fromUnknown(Option.getOrElse(
             getCanonicalId(erg, relation.subjectId),
             () => relation.subjectId
-          )
+          ))
           const subjectRemapped = canonicalSubjectId !== relation.subjectId
 
           if (subjectRemapped) {
@@ -90,17 +91,17 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
           }
 
           // Canonicalize object (only if it's an entity reference string)
-          let canonicalObject: string | number | boolean
+          let canonicalObject: RelationObject
           let objectRemapped = false
 
-          if (typeof relation.object === "string") {
+          if (RelationObject.guards.EntityReference(relation.object)) {
             // Entity reference - canonicalize
             const resolved = Option.getOrElse(
-              getCanonicalId(erg, relation.object),
-              () => relation.object
+              getCanonicalId(erg, relation.object.value),
+              () => relation.object.value
             )
-            canonicalObject = resolved
-            objectRemapped = resolved !== relation.object
+            canonicalObject = RelationObject.cases.EntityReference.make({ value: EntityId.fromUnknown(resolved) })
+            objectRemapped = resolved !== relation.object.value
             if (objectRemapped) {
               remappedCount++
             }
@@ -137,16 +138,16 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
       linkingResult: LinkingResult
     ): Effect.Effect<Chunk.Chunk<Relation>, never> =>
       Effect.sync(() => {
-        const seen = new Set<string>()
+        let seen = HashSet.empty<string>()
         const deduplicated: Array<Relation> = []
 
         for (const linked of linkingResult.linkedRelations) {
           // Create canonical key
-          const objectStr = String(linked.canonicalObject)
+          const objectStr = String(linked.canonicalObject.value)
           const key = `${linked.canonicalSubjectId}|${linked.canonicalPredicate}|${objectStr}`
 
-          if (!seen.has(key)) {
-            seen.add(key)
+          if (!HashSet.has(seen, key)) {
+            seen = HashSet.add(seen, key)
             // Create new relation with canonical IDs
             deduplicated.push(
               Relation.make({

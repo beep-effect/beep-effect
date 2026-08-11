@@ -8,9 +8,10 @@
  * @module Service/Ticket
  */
 
-import { Clock, Duration, Effect, HashMap, Option, Ref, Schedule, Context, Layer } from "effect"
+import { Clock, Duration, Effect, HashMap, HashSet, Option, Ref, Schedule, Context, Layer } from "effect"
+import { Buffer } from "node:buffer"
 import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "../Domain/Error/Auth.ts"
-import type { TicketRecord } from "../Domain/Schema/Auth.ts"
+import { TicketRecord } from "../Domain/Schema/Auth.ts"
 import { $ScratchpadId } from "@beep/identity";
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
@@ -32,10 +33,7 @@ const generateSecureToken = Effect.sync(() => {
   // Generate 32 random bytes and encode as base64url
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "")
+  return Buffer.from(bytes).toString("base64url")
 })
 
 const makeTicketService = Effect.gen(function*() {
@@ -44,7 +42,9 @@ const makeTicketService = Effect.gen(function*() {
   // Background cleanup fiber for expired tickets
   const cleanup = Effect.gen(function*() {
     const now = yield* Clock.currentTimeMillis
-    yield* Ref.update(ticketsRef, (tickets) => HashMap.filter(tickets, (record) => record.expiresAt > now))
+    yield* Ref.update(ticketsRef, (tickets) =>
+      HashMap.filter(tickets, (record) => record.expiresAt.epochMilliseconds > now)
+    )
     yield* Effect.logDebug("Cleaned up expired tickets")
   })
 
@@ -69,13 +69,13 @@ const makeTicketService = Effect.gen(function*() {
         const now = yield* Clock.currentTimeMillis
         const expiresAt = now + ttlMs
 
-        const record: TicketRecord = {
+        const record = TicketRecord.fromUnknown({
           ticket,
           ontologyId,
           apiKey,
           createdAt: now,
           expiresAt
-        }
+        })
 
         yield* Ref.update(ticketsRef, (tickets) => HashMap.set(tickets, ticket, record))
         yield* Effect.logDebug(`Created ticket for ontology=${ontologyId} expires=${new Date(expiresAt).toISOString()}`)
@@ -117,12 +117,12 @@ const makeTicketService = Effect.gen(function*() {
         }
 
         const now = yield* Clock.currentTimeMillis
-        if (record.value.expiresAt < now) {
+        if (record.value.expiresAt.epochMilliseconds < now) {
           return yield* Effect.fail(
-            TicketExpiredError.make({
+            TicketExpiredError.fromUnknown({
               message: "Ticket has expired",
               ticket,
-              expiredAt: record.value.expiresAt
+              expiredAt: record.value.expiresAt.epochMilliseconds
             })
           )
         }
@@ -145,7 +145,7 @@ const makeTicketService = Effect.gen(function*() {
         if (Option.isNone(record)) return false
 
         const now = yield* Clock.currentTimeMillis
-        return record.value.expiresAt > now
+        return record.value.expiresAt.epochMilliseconds > now
       }),
 
     /**
@@ -155,7 +155,11 @@ const makeTicketService = Effect.gen(function*() {
       Effect.gen(function*() {
         const tickets = yield* Ref.get(ticketsRef)
         const now = yield* Clock.currentTimeMillis
-        return HashMap.reduce(tickets, 0, (count, record) => record.expiresAt > now ? count + 1 : count)
+        return HashMap.reduce(
+          tickets,
+          0,
+          (count, record) => record.expiresAt.epochMilliseconds > now ? count + 1 : count
+        )
       }),
 
     /**
@@ -165,7 +169,7 @@ const makeTicketService = Effect.gen(function*() {
      * @param apiKey - The API key to validate
      * @param validKeys - Set of valid API keys
      */
-    validateApiKey: (apiKey: string | undefined, validKeys: Set<string>) =>
+    validateApiKey: (apiKey: string | undefined, validKeys: HashSet.HashSet<string>) =>
       Effect.gen(function*() {
         if (!apiKey) {
           return yield* Effect.fail(
@@ -176,7 +180,7 @@ const makeTicketService = Effect.gen(function*() {
           )
         }
 
-        if (!validKeys.has(apiKey)) {
+        if (!HashSet.has(validKeys, apiKey)) {
           return yield* Effect.fail(
             AuthenticationError.make({
               message: "Invalid API key",

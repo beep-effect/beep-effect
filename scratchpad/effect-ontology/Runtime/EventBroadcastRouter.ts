@@ -23,7 +23,6 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstab
 import type * as Socket from "effect/unstable/socket/Socket"
 import { $ScratchpadId } from "@beep/identity"
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub"
-import type { Queue } from "effect"
 import { Config, Context, Effect, FiberMap, Layer, MutableHashMap, Option, PubSub, Schema, Stream } from "effect"
 import type * as Scope from "effect/Scope"
 import { OntologyService } from "../Service/Ontology.ts"
@@ -67,7 +66,7 @@ export const ConnectedMessage = Schema.Struct({
 /**
  * Union of all server-to-client messages
  */
-export const ServerMessage = Schema.Union(BroadcastEvent, PingMessage, ConnectedMessage)
+export const ServerMessage = Schema.Union([BroadcastEvent, PingMessage, ConnectedMessage])
 export type ServerMessage = typeof ServerMessage.Type
 
 // =============================================================================
@@ -88,7 +87,7 @@ export interface EventBroadcastHub {
    * Subscribe to events for an ontology (used by WebSocket handler)
    */
   readonly subscribe: (ontologyId: string) => Effect.Effect<
-    Queue.Dequeue<BroadcastEvent>,
+    PubSub.Subscription<BroadcastEvent>,
     never,
     Scope.Scope
   >
@@ -345,7 +344,7 @@ HttpRouter.route("GET",
         Effect.annotateLogs({ ontologyId, service: "EventBroadcastRouter" })
       )
 
-      return yield* HttpServerResponse.empty()
+      return HttpServerResponse.empty()
     }).pipe(
       Effect.catch((error) =>
         Effect.gen(function*() {

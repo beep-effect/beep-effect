@@ -8,9 +8,13 @@
  * @module Workflow/Merge
  */
 
-import { Chunk, HashMap, HashSet, Option, Order } from "effect"
+import { Chunk, HashMap, HashSet, Option, Order, Schema } from "effect"
+import { UnitInterval } from "@beep/schema/UnitInterval"
 import type { Relation } from "../Domain/Model/Entity.ts"
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts"
+import { IRI } from "../Domain/Model/shared.ts"
+
+const decodeEntityTypes = Schema.decodeUnknownSync(Schema.NonEmptyArray(IRI))
 
 /**
  * Merge conflict information
@@ -80,7 +84,7 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
 const selectBestTypes = (
   existingTypes: ReadonlyArray<string>,
   newTypes: ReadonlyArray<string>
-): ReadonlyArray<string> => {
+): Schema.Schema.Type<Schema.NonEmptyArray<typeof IRI>> => {
   // Count type frequencies
   const typeFrequency = new Map<string, number>()
 
@@ -96,7 +100,7 @@ const selectBestTypes = (
 
   // If only one type, return it
   if (typeFrequency.size === 1) {
-    return Array.from(typeFrequency.keys())
+    return decodeEntityTypes(Array.from(typeFrequency.keys()))
   }
 
   // Sort by frequency (descending)
@@ -118,11 +122,11 @@ const selectBestTypes = (
       }
     }
     // Limit to top 3 even if multiple have same frequency
-    return selectedTypes.slice(0, 3)
+    return decodeEntityTypes(selectedTypes.slice(0, 3))
   } else {
     // No clear majority: take top 2-3 most frequent
     // Prefer keeping 1-2 types for clarity
-    return sortedTypes.slice(0, 2).map(([type]) => type)
+    return decodeEntityTypes(sortedTypes.slice(0, 2).map(([type]) => type))
   }
 }
 
@@ -196,8 +200,8 @@ export const mergeGraphs = (a: KnowledgeGraph, b: KnowledgeGraph): KnowledgeGrap
 
       // Select higher groundingConfidence (system verification score)
       const mergedGroundingConfidence = Math.max(
-        existing.value.groundingConfidence ?? 0,
-        entity.groundingConfidence ?? 0
+        Option.getOrElse(existing.value.groundingConfidence, () => 0),
+        Option.getOrElse(entity.groundingConfidence, () => 0)
       )
 
       entityMap = HashMap.set(
@@ -216,9 +220,11 @@ export const mergeGraphs = (a: KnowledgeGraph, b: KnowledgeGraph): KnowledgeGrap
           extractedAt: existing.value.extractedAt ?? entity.extractedAt,
           eventTime: existing.value.eventTime ?? entity.eventTime,
           // Merge evidence spans
-          mentions: mergedMentions.length > 0 ? mergedMentions : undefined,
+          mentions: mergedMentions,
           // Use highest confidence
-          groundingConfidence: mergedGroundingConfidence > 0 ? mergedGroundingConfidence : undefined
+          groundingConfidence: mergedGroundingConfidence > 0
+            ? Option.some(UnitInterval.make(mergedGroundingConfidence))
+            : Option.none()
         })
       )
     } else {
@@ -236,7 +242,7 @@ export const mergeGraphs = (a: KnowledgeGraph, b: KnowledgeGraph): KnowledgeGrap
     Chunk.sort(EntityOrder)
   )
 
-  const mergedRelations = Chunk.fromIterable(HashSet.toValues(relationSet)).pipe(
+  const mergedRelations = Chunk.fromIterable(relationSet).pipe(
     Chunk.sort(RelationOrder)
   )
 
@@ -315,8 +321,8 @@ export const mergeGraphsWithConflicts = (
 
       // Select higher groundingConfidence (system verification score)
       const mergedGroundingConfidence = Math.max(
-        existing.value.groundingConfidence ?? 0,
-        entity.groundingConfidence ?? 0
+        Option.getOrElse(existing.value.groundingConfidence, () => 0),
+        Option.getOrElse(entity.groundingConfidence, () => 0)
       )
 
       entityMap = HashMap.set(
@@ -335,9 +341,11 @@ export const mergeGraphsWithConflicts = (
           extractedAt: existing.value.extractedAt ?? entity.extractedAt,
           eventTime: existing.value.eventTime ?? entity.eventTime,
           // Merge evidence spans
-          mentions: mergedMentions.length > 0 ? mergedMentions : undefined,
+          mentions: mergedMentions,
           // Use highest confidence
-          groundingConfidence: mergedGroundingConfidence > 0 ? mergedGroundingConfidence : undefined
+          groundingConfidence: mergedGroundingConfidence > 0
+            ? Option.some(UnitInterval.make(mergedGroundingConfidence))
+            : Option.none()
         })
       )
     } else {
@@ -355,7 +363,7 @@ export const mergeGraphsWithConflicts = (
     Chunk.sort(EntityOrder)
   )
 
-  const mergedRelations = Chunk.fromIterable(HashSet.toValues(relationSet)).pipe(
+  const mergedRelations = Chunk.fromIterable(relationSet).pipe(
     Chunk.sort(RelationOrder)
   )
 

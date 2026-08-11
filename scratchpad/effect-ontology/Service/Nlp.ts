@@ -8,7 +8,10 @@
  * @module Service/Nlp
  */
 
-import { Duration, Effect, Layer, Schedule, Context } from "effect"
+import { Context, Duration, Effect, Layer, Order, Schedule } from "effect"
+import * as A from "effect/Array"
+import * as MutableHashMap from "effect/MutableHashMap"
+import * as O from "effect/Option"
 import model from "wink-eng-lite-web-model"
 import winkNLP from "wink-nlp"
 
@@ -16,7 +19,7 @@ import winkBM25 from "wink-bm25-text-search"
 import type { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts"
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts"
 import { type ChunkingStrategy, defaultChunkingParams } from "../Domain/Schema/DocumentMetadata.ts"
-import { MetricsService } from "../Telemetry/Metrics.ts"
+import { IRI } from "../Domain/Model/shared.ts"
 import { enhanceTextForSearch, generateNGrams } from "../Utils/Text.ts"
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts"
 import { $ScratchpadId } from "@beep/identity";
@@ -103,7 +106,7 @@ export interface OntologyBM25Index {
   readonly _tag: "OntologyBM25Index"
   readonly documentCount: number
   readonly _engine: ReturnType<typeof winkBM25>
-  readonly _domainModelMap: Map<string, ClassDefinition | PropertyDefinition>
+  readonly _domainModelMap: MutableHashMap.MutableHashMap<string, ClassDefinition | PropertyDefinition>
   readonly _ontology: OntologyContext
 }
 
@@ -113,8 +116,8 @@ export interface OntologyBM25Index {
 export interface OntologySemanticIndex {
   readonly _tag: "OntologySemanticIndex"
   readonly documentCount: number
-  readonly _embeddingMap: Map<string, ReadonlyArray<number>>
-  readonly _domainModelMap: Map<string, ClassDefinition | PropertyDefinition>
+  readonly _embeddingMap: MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>
+  readonly _domainModelMap: MutableHashMap.MutableHashMap<string, ClassDefinition | PropertyDefinition>
   readonly _ontology: OntologyContext
 }
 
@@ -512,7 +515,6 @@ export class NlpService extends Context.Service<NlpService>()(
       // sbd = sentence boundary detection, pos = part-of-speech (required for lemmas/contextual vectors)
       const nlp = winkNLP(model, ["sbd", "pos"])
       const its = nlp.its
-      const _as = nlp.as
 
       return {
         /**
@@ -864,7 +866,7 @@ export class NlpService extends Context.Service<NlpService>()(
             const documents = ontology.toDocuments()
 
             // Create mapping from IRI to domain model
-            const domainModelMap = new Map<string, ClassDefinition | PropertyDefinition>()
+            const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>()
 
             // Add documents to index
             for (const [iri, document] of documents) {
@@ -879,10 +881,10 @@ export class NlpService extends Context.Service<NlpService>()(
               // Map IRI to domain model for later retrieval
               const classDef = ontology.getClass(iri)
               const propertyDef = ontology.getProperty(iri)
-              if (classDef) {
-                domainModelMap.set(iri, classDef)
-              } else if (propertyDef) {
-                domainModelMap.set(iri, propertyDef)
+              if (O.isSome(classDef)) {
+                MutableHashMap.set(domainModelMap, iri, classDef.value)
+              } else if (O.isSome(propertyDef)) {
+                MutableHashMap.set(domainModelMap, iri, propertyDef.value)
               }
             }
 
@@ -940,18 +942,19 @@ export class NlpService extends Context.Service<NlpService>()(
             const results: Array<OntologySearchResult> = []
             for (const result of rawResults) {
               const [iri, score] = result as [string, number]
-              const domainModel = domainModelMap.get(iri)
+              const domainModel = MutableHashMap.get(domainModelMap, iri)
 
-              if (domainModel) {
+              if (O.isSome(domainModel)) {
                 // Determine if it's a class or property
-                const classDef = ontology.getClass(iri)
-                const propertyDef = ontology.getProperty(iri)
+                const iriValue = IRI.fromUnknown(iri)
+                const classDef = ontology.getClass(iriValue)
+                const propertyDef = ontology.getProperty(iriValue)
 
                 results.push({
                   iri,
                   score,
-                  class: classDef,
-                  property: propertyDef
+                  ...(O.isSome(classDef) ? { class: classDef.value } : {}),
+                  ...(O.isSome(propertyDef) ? { property: propertyDef.value } : {})
                 })
               }
             }
@@ -981,8 +984,8 @@ export class NlpService extends Context.Service<NlpService>()(
             const documents = ontology.toDocuments()
 
             // Create mapping from IRI to embedding and domain model
-            const embeddingMap = new Map<string, ReadonlyArray<number>>()
-            const domainModelMap = new Map<string, ClassDefinition | PropertyDefinition>()
+            const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>()
+            const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>()
 
             // Extract document texts for batch embedding
             const iris = documents.map(([iri]) => iri)
@@ -1002,22 +1005,22 @@ export class NlpService extends Context.Service<NlpService>()(
               const iri = iris[i]
               const emb = embeddings[i]
 
-              embeddingMap.set(iri, emb)
+              MutableHashMap.set(embeddingMap, iri, emb)
 
               // Map IRI to domain model for later retrieval
               const classDef = ontology.getClass(iri)
               const propertyDef = ontology.getProperty(iri)
-              if (classDef) {
-                domainModelMap.set(iri, classDef)
-              } else if (propertyDef) {
-                domainModelMap.set(iri, propertyDef)
+              if (O.isSome(classDef)) {
+                MutableHashMap.set(domainModelMap, iri, classDef.value)
+              } else if (O.isSome(propertyDef)) {
+                MutableHashMap.set(domainModelMap, iri, propertyDef.value)
               }
             }
 
             // Create opaque index reference
             const index: OntologySemanticIndex = {
               _tag: "OntologySemanticIndex",
-              documentCount: embeddingMap.size,
+              documentCount: MutableHashMap.size(embeddingMap),
               _embeddingMap: embeddingMap,
               _domainModelMap: domainModelMap,
               _ontology: ontology
@@ -1048,36 +1051,36 @@ export class NlpService extends Context.Service<NlpService>()(
           embeddings: OntologyEmbeddings
         ): Effect.Effect<OntologySemanticIndex, Error> =>
           Effect.gen(function*() {
-            const embeddingMap = new Map<string, ReadonlyArray<number>>()
-            const domainModelMap = new Map<string, ClassDefinition | PropertyDefinition>()
+            const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>()
+            const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>()
 
             // Load class embeddings
             for (const classEmb of embeddings.classes) {
-              embeddingMap.set(classEmb.iri, classEmb.embedding)
+              MutableHashMap.set(embeddingMap, classEmb.iri, classEmb.embedding)
               const classDef = ontology.getClass(classEmb.iri)
-              if (classDef) {
-                domainModelMap.set(classEmb.iri, classDef)
+              if (O.isSome(classDef)) {
+                MutableHashMap.set(domainModelMap, classEmb.iri, classDef.value)
               }
             }
 
             // Load property embeddings
             for (const propEmb of embeddings.properties) {
-              embeddingMap.set(propEmb.iri, propEmb.embedding)
+              MutableHashMap.set(embeddingMap, propEmb.iri, propEmb.embedding)
               const propDef = ontology.getProperty(propEmb.iri)
-              if (propDef) {
-                domainModelMap.set(propEmb.iri, propDef)
+              if (O.isSome(propDef)) {
+                MutableHashMap.set(domainModelMap, propEmb.iri, propDef.value)
               }
             }
 
             yield* Effect.logInfo("Created semantic index from pre-computed embeddings", {
               classCount: embeddings.classes.length,
               propertyCount: embeddings.properties.length,
-              indexedCount: embeddingMap.size
+              indexedCount: MutableHashMap.size(embeddingMap)
             })
 
             const index: OntologySemanticIndex = {
               _tag: "OntologySemanticIndex",
-              documentCount: embeddingMap.size,
+              documentCount: MutableHashMap.size(embeddingMap),
               _embeddingMap: embeddingMap,
               _domainModelMap: domainModelMap,
               _ontology: ontology
@@ -1126,30 +1129,29 @@ export class NlpService extends Context.Service<NlpService>()(
 
             // Compute cosine similarity for each document
             const results: Array<OntologySearchResult & { score: number }> = []
-            for (const [iri, docEmbedding] of embeddingMap.entries()) {
+            for (const [iri, docEmbedding] of embeddingMap) {
               const score = embedding.cosineSimilarity(queryEmbedding, docEmbedding)
 
               if (score > 0) {
-                const domainModel = domainModelMap.get(iri)
-                if (domainModel) {
+                const domainModel = MutableHashMap.get(domainModelMap, iri)
+                if (O.isSome(domainModel)) {
                   // Determine if it's a class or property
-                  const classDef = ontology.getClass(iri)
-                  const propertyDef = ontology.getProperty(iri)
+                  const iriValue = IRI.fromUnknown(iri)
+                  const classDef = ontology.getClass(iriValue)
+                  const propertyDef = ontology.getProperty(iriValue)
 
                   results.push({
                     iri,
                     score,
-                    class: classDef,
-                    property: propertyDef
+                    ...(O.isSome(classDef) ? { class: classDef.value } : {}),
+                    ...(O.isSome(propertyDef) ? { property: propertyDef.value } : {})
                   })
                 }
               }
             }
 
             // Sort by score descending and take top-k
-            return results
-              .sort((a, b) => b.score - a.score)
-              .slice(0, limit)
+            return A.take(A.sortWith(results, (result) => -result.score, Order.Number), limit)
           })
       }
     }),

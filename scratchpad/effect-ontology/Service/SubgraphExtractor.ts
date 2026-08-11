@@ -8,9 +8,11 @@
  * @module Service/SubgraphExtractor
  */
 
-import { Effect, HashSet, Context, Layer } from "effect"
+import { Effect, HashSet, Option, Context, Layer } from "effect"
+import * as A from "effect/Array"
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
-import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts"
+import { type Entity, type KnowledgeGraph, type Relation, RelationObject } from "../Domain/Model/Entity.ts"
+import type { EntityId } from "../Domain/Model/shared.ts"
 import { EntityIndex, type FindSimilarOptions } from "./EntityIndex.ts"
 import { $ScratchpadId } from "@beep/identity";
 const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
@@ -27,7 +29,7 @@ export interface Subgraph {
   /** Relations in the subgraph */
   readonly edges: ReadonlyArray<Relation>
   /** Original seed entity IDs */
-  readonly centerNodes: ReadonlyArray<string>
+  readonly centerNodes: ReadonlyArray<EntityId>
   /** Actual traversal depth used */
   readonly depth: number
 }
@@ -81,7 +83,7 @@ export interface SubgraphExtractorService {
    */
   readonly extract: (
     graph: KnowledgeGraph,
-    seeds: ReadonlyArray<string>,
+    seeds: ReadonlyArray<EntityId>,
     hops: number,
     options?: ExtractOptions
   ) => Effect.Effect<Subgraph>
@@ -108,7 +110,7 @@ export interface SubgraphExtractorService {
  * Empty subgraph constant
  */
 const emptySubgraph = (
-  centerNodes: ReadonlyArray<string>,
+  centerNodes: ReadonlyArray<EntityId>,
   depth: number
 ): Subgraph => ({
   nodes: [],
@@ -134,10 +136,10 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
        */
       const traverseHops = (
         graph: KnowledgeGraph,
-        seeds: ReadonlyArray<string>,
+        seeds: ReadonlyArray<EntityId>,
         hops: number,
         options: ExtractOptions
-      ): { nodes: HashSet.HashSet<string>; edges: HashSet.HashSet<Relation> } => {
+      ): { nodes: HashSet.HashSet<EntityId>; edges: HashSet.HashSet<Relation> } => {
         const followOutgoing = options.followOutgoing ?? true
         const followIncoming = options.followIncoming ?? true
         const maxNodes = options.maxNodes ?? Infinity
@@ -151,7 +153,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
 
         // Perform N hops
         for (let hop = 0; hop < hops && HashSet.size(visitedNodes) < maxNodes; hop++) {
-          let nextFrontier = HashSet.empty<string>()
+          let nextFrontier = HashSet.empty<EntityId>()
 
           for (const entityId of frontier) {
             // Check node limit
@@ -164,9 +166,9 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
                 collectedEdges = HashSet.add(collectedEdges, rel)
 
                 // If object is an entity reference, add to next frontier
-                if (rel.isEntityReference && typeof rel.object === "string") {
-                  if (!HashSet.has(visitedNodes, rel.object)) {
-                    nextFrontier = HashSet.add(nextFrontier, rel.object)
+                if (RelationObject.guards.EntityReference(rel.object)) {
+                  if (!HashSet.has(visitedNodes, rel.object.value)) {
+                    nextFrontier = HashSet.add(nextFrontier, rel.object.value)
                   }
                 }
               }
@@ -203,17 +205,17 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
        */
       const buildSubgraph = (
         graph: KnowledgeGraph,
-        nodeIds: HashSet.HashSet<string>,
+        nodeIds: HashSet.HashSet<EntityId>,
         edges: HashSet.HashSet<Relation>,
-        centerNodes: ReadonlyArray<string>,
+        centerNodes: ReadonlyArray<EntityId>,
         depth: number
       ): Subgraph => {
         // Collect entities
         const nodes: Array<Entity> = []
         for (const nodeId of nodeIds) {
           const entity = graph.getEntity(nodeId)
-          if (entity) {
-            nodes.push(entity)
+          if (Option.isSome(entity)) {
+            nodes.push(entity.value)
           }
         }
 
@@ -221,8 +223,8 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
         const filteredEdges: Array<Relation> = []
         for (const edge of edges) {
           const hasSubject = HashSet.has(nodeIds, edge.subjectId)
-          const hasObject = !edge.isEntityReference ||
-            (typeof edge.object === "string" && HashSet.has(nodeIds, edge.object))
+          const hasObject = !RelationObject.guards.EntityReference(edge.object) ||
+            HashSet.has(nodeIds, edge.object.value)
 
           if (hasSubject && hasObject) {
             filteredEdges.push(edge)
@@ -241,7 +243,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
         extract: (graph, seeds, hops, options = {}) =>
           Effect.sync(() => {
             // Validate seeds exist in graph
-            const validSeeds = seeds.filter((id) => graph.getEntity(id) !== undefined)
+            const validSeeds = A.filter(seeds, (id) => Option.isSome(graph.getEntity(id)))
 
             if (validSeeds.length === 0) {
               return emptySubgraph(seeds, 0)
@@ -266,7 +268,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
             // Find similar entities
             const findOptions: FindSimilarOptions = {
               minScore: minSimilarity,
-              filterTypes: options.filterTypes
+              ...(options.filterTypes === undefined ? {} : { filterTypes: options.filterTypes })
             }
 
             const similar = yield* entityIndex.findSimilar(query, topK, findOptions)
@@ -276,7 +278,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
             }
 
             // Extract seeds from similar entities
-            const seeds = similar.map((s) => s.entity.id)
+            const seeds = A.map(similar, (result) => result.entity.id)
 
             // Perform N-hop extraction with node limit
             const { edges, nodes } = traverseHops(graph, seeds, hops, { maxNodes })

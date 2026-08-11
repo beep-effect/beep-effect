@@ -15,7 +15,11 @@ import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
 import { EmbeddingError } from "../Domain/Error/Embedding.ts"
 import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts"
 import { ConfigService } from "./Config.ts"
-import { EmbeddingCircuitBreaker, type EmbeddingProviderId } from "./EmbeddingCircuitBreaker.ts"
+import {
+  EmbeddingCircuitBreaker,
+  type EmbeddingCircuitBreakerService,
+  type EmbeddingProviderId
+} from "./EmbeddingCircuitBreaker.ts"
 import {
   cosineSimilarity,
   type Embedding,
@@ -84,7 +88,7 @@ export const DEFAULT_FALLBACK_CHAIN: FallbackChainConfig = {
 const makeProtectedProvider = (
   providerId: EmbeddingProviderId,
   provider: EmbeddingProviderMethods,
-  circuitBreaker: EmbeddingCircuitBreaker
+  circuitBreaker: EmbeddingCircuitBreakerService
 ): EmbeddingProviderMethods => ({
   metadata: provider.metadata,
   embedBatch: (requests) =>
@@ -98,7 +102,7 @@ const makeProtectedProvider = (
           EmbeddingError.make({
             message: `Circuit breaker open for ${providerId}: retry after ${circuitError.retryAfterMs}ms`,
             provider: providerId,
-            cause: circuitError
+            cause: O.some(circuitError)
           })
         ))
     ),

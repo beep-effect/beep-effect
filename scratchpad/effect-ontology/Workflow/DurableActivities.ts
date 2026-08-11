@@ -627,7 +627,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       return {
         validatedUri: GcsUri.fromUnknown(`gs://${bucket}/${validationGraphPath}`),
         conforms: report.conforms,
-        violations: report.violations.length,
+        violations: NonNegativeInt.make(report.violations.length),
         violationSummary: report.violations.length ? summarizeViolations(report.violations) : [],
         reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end))

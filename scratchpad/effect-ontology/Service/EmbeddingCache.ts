@@ -20,6 +20,9 @@ import {
 import type {ConfigService} from "./Config.ts";
 import {StorageService} from "./Storage.ts";
 import {$ScratchpadId} from "@beep/identity";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
@@ -319,17 +322,17 @@ export const makePersistentEmbeddingCache =
     // Load embedding from GCS
     const loadFromStorage =
       Effect.fn(function* (hash: string): Effect.fn.Return<Option.Option<Embedding>> {
-        const blobPath = `${cachePath}/${hash.slice(0, 2)}/${hash}.json`;
+        const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
         const content = yield* storage.get(blobPath).pipe(
-          Effect.catch(() => Effect.succeed(Option.none<string>()))
+          Effect.catch(() => Effect.succeed(undefined))
         );
 
-        if (Option.isNone(content)) {
+        if (content === undefined) {
           return Option.none();
         }
 
         try {
-          const blob: EmbeddingBlob = JSON.parse(content.value);
+          const blob: EmbeddingBlob = JSON.parse(content);
           const entry = blob.embeddings[hash];
           if (!entry) return Option.none();
 
@@ -348,7 +351,7 @@ export const makePersistentEmbeddingCache =
     // Save embedding to GCS
     const saveToStorage =
       Effect.fn(function* (hash: string, embedding: Embedding): Effect.fn.Return<void> {
-        const blobPath = `${cachePath}/${hash.slice(0, 2)}/${hash}.json`;
+        const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
         const now = Date.now();
 
         const blob: EmbeddingBlob = {
@@ -485,18 +488,18 @@ export const makePersistentEmbeddingCache =
 
           // Load each blob (limit concurrency to avoid overwhelming storage)
           yield* Effect.forEach(
-            files.filter((f) => f.endsWith(".json")),
+            A.filter(files, Str.endsWith(".json")),
             (file) =>
               Effect.gen(function* () {
                 const content = yield* storage.get(file).pipe(
-                  Effect.catch(() => Effect.succeed(Option.none<string>()))
+                  Effect.catch(() => Effect.succeed(undefined))
                 );
 
-                if (Option.isNone(content)) return;
+                if (content === undefined) return;
 
                 try {
-                  const blob: EmbeddingBlob = JSON.parse(content.value);
-                  for (const [hash, entry] of Object.entries(blob.embeddings)) {
+                  const blob: EmbeddingBlob = JSON.parse(content);
+                  for (const [hash, entry] of R.toEntries(blob.embeddings)) {
                     // Skip expired entries
                     if (now - entry.createdAt > config.ttlMs) continue;
 
@@ -563,11 +566,7 @@ export const makePersistentEmbeddingCache =
  * @since 2.0.0
  * @category Layers
  */
-export const EmbeddingCacheWithPersistence: Layer.Layer<
-  EmbeddingCache | PersistentEmbeddingCache,
-  never,
-  ConfigService | StorageService
-> = Layer.effect(
+const PersistentEmbeddingCacheLayer = Layer.effect(
   PersistentEmbeddingCache,
   Effect.gen(function* () {
     // Import dynamically to avoid circular dependency
@@ -671,12 +670,15 @@ export const EmbeddingCacheWithPersistence: Layer.Layer<
 
     return yield* makePersistentEmbeddingCache(storage, cachePath, cacheConfig);
   })
-).pipe(
-  // Also provide the base EmbeddingCache interface by mapping PersistentEmbeddingCache
-  Layer.map((ctx) => {
-    const persistent = Context.get(ctx, PersistentEmbeddingCache);
-    return Context.make(EmbeddingCache, persistent).pipe(
-      Context.merge(ctx)
-    );
-  })
 );
+
+const EmbeddingCacheAliasLayer = Layer.effect(
+  EmbeddingCache,
+  PersistentEmbeddingCache.use(Effect.succeed)
+).pipe(Layer.provide(PersistentEmbeddingCacheLayer));
+
+export const EmbeddingCacheWithPersistence: Layer.Layer<
+  EmbeddingCache | PersistentEmbeddingCache,
+  never,
+  ConfigService | StorageService
+> = Layer.merge(PersistentEmbeddingCacheLayer, EmbeddingCacheAliasLayer);

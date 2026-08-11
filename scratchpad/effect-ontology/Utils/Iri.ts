@@ -73,8 +73,8 @@ export const normalizeIri: {
     iriMap: MutableHashMap.MutableHashMap<string, IRI>
   ): (input: string) => IRI
 } = dual(2, (
-  iriMap: MutableHashMap.MutableHashMap<string, IRI>,
   input: string,
+  iriMap: MutableHashMap.MutableHashMap<string, IRI>,
 ): IRI => MutableHashMap.get(iriMap, Str.toLowerCase(input)).pipe(
   O.getOrElse(() => S.decodeSync(IRI)(input))
 ));
@@ -303,7 +303,7 @@ export const expandTypesToIris: {
   localNames: ReadonlyArray<string>,
   localNameMap: MutableHashMap.MutableHashMap<string, IRI>
 ): ReadonlyArray<IRI> =>
-  pipe(localNames, A.map(expandLocalNameToIri(localNameMap)), A.filter(S.is(IRI))));
+  pipe(localNames, A.flatMap(flow(expandLocalNameToIri(localNameMap), O.toArray))));
 
 /**
  * Get all valid local names from a set of IRIs.

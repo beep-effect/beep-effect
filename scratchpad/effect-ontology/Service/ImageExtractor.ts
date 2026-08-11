@@ -10,7 +10,8 @@
 
 import { Context, Layer } from "effect"
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts"
-import type { ImageCandidate } from "../Domain/Model/Image.ts"
+import { ImageCandidate } from "../Domain/Model/Image.ts"
+import { URLStr } from "../Domain/Model/shared.ts"
 import { $ScratchpadId } from "@beep/identity";
 import * as O from "effect/Option";
 import { NonNegativeInt } from "@beep/schema/Int";
@@ -95,7 +96,7 @@ const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g
 /**
  * Normalize image URL (resolve relative URLs, clean up)
  */
-const normalizeImageUrl = (imageUrl: string, sourceUrl: string): string | null => {
+const normalizeImageUrl = (imageUrl: string, sourceUrl: string): URLStr | null => {
   try {
     // Handle data URIs - skip them
     if (imageUrl.startsWith("data:")) {
@@ -104,18 +105,18 @@ const normalizeImageUrl = (imageUrl: string, sourceUrl: string): string | null =
 
     // Handle protocol-relative URLs
     if (imageUrl.startsWith("//")) {
-      return `https:${imageUrl}`
+      return URLStr.fromUnknown(`https:${imageUrl}`)
     }
 
     // Handle absolute URLs
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-      return imageUrl
+      return URLStr.fromUnknown(imageUrl)
     }
 
     // Handle relative URLs - resolve against source
     const base = new URL(sourceUrl)
     const resolved = new URL(imageUrl, base)
-    return resolved.toString()
+    return URLStr.fromUnknown(resolved.toString())
   } catch {
     // Invalid URL
     return null
@@ -142,14 +143,14 @@ const parseMarkdownImages = (
     const normalizedUrl = normalizeImageUrl(rawUrl, sourceUrl)
 
     if (normalizedUrl) {
-      candidates.push({
+      candidates.push(ImageCandidate.make({
         sourceUrl: normalizedUrl,
         alt: O.fromNullishOr(alt || undefined),
         caption: O.fromNullishOr(title || undefined),
         role: "inline",
         order: NonNegativeInt.make(order++),
-        referrerUrl: sourceUrl
-      })
+        referrerUrl: URLStr.fromUnknown(sourceUrl)
+      }))
     }
   }
 
@@ -180,15 +181,15 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
         const candidates: Array<ImageCandidate> = []
 
         // 1. Add featured image as hero (if present)
-        if (content.image) {
-          const normalizedUrl = normalizeImageUrl(content.image, content.url)
+        if (O.isSome(content.image)) {
+          const normalizedUrl = normalizeImageUrl(content.image.value, content.url)
           if (normalizedUrl) {
-            candidates.push({
+            candidates.push(ImageCandidate.make({
               sourceUrl: normalizedUrl,
               role: "hero",
               order: NonNegativeInt.make(0),
               referrerUrl: content.url
-            })
+            }))
           }
         }
 
@@ -208,12 +209,12 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
                     if (input.featuredImage) {
                       const normalizedUrl = normalizeImageUrl(input.featuredImage, input.sourceUrl)
                       if (normalizedUrl) {
-                        candidates.push({
+                        candidates.push(ImageCandidate.make({
                           sourceUrl: normalizedUrl,
                           role: "hero",
                           order: NonNegativeInt.make(0),
-                          referrerUrl: input.sourceUrl
-                        })
+                          referrerUrl: URLStr.fromUnknown(input.sourceUrl)
+                        }))
                       }
                     }
 

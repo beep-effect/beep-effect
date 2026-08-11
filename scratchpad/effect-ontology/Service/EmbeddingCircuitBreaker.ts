@@ -13,6 +13,7 @@ import {Duration, Effect, HashMap, Layer, Option, Ref, Context} from "effect";
 import {
   type CircuitBreaker,
   type CircuitBreakerConfig,
+  type CircuitOpenError,
   makeCircuitBreaker
 } from "../Runtime/CircuitBreaker.ts";
 import {$ScratchpadId} from "@beep/identity";
@@ -98,7 +99,22 @@ export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, Provi
  * @since 2.0.0
  * @category Service
  */
-export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBreaker>()(
+export interface EmbeddingCircuitBreakerService {
+  readonly protect: <A, E, R>(
+    providerId: EmbeddingProviderId,
+    effect: Effect.Effect<A, E, R>
+  ) => Effect.Effect<A, E | CircuitOpenError, R>
+  readonly getStatus: (providerId: EmbeddingProviderId) => Effect.Effect<CircuitStatus>
+  readonly getAllStatuses: () => Effect.Effect<ReadonlyArray<CircuitStatus>>
+  readonly isAvailable: (providerId: EmbeddingProviderId) => Effect.Effect<boolean>
+  readonly findAvailableProvider: (
+    providers: ReadonlyArray<EmbeddingProviderId>
+  ) => Effect.Effect<EmbeddingProviderId | null>
+  readonly reset: (providerId: EmbeddingProviderId) => Effect.Effect<void>
+  readonly resetAll: () => Effect.Effect<void>
+}
+
+export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBreaker, EmbeddingCircuitBreakerService>()(
   $I`EmbeddingCircuitBreaker`,
   {
     make: Effect.gen(function* () {

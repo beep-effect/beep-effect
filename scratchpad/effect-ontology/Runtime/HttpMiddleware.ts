@@ -9,7 +9,9 @@
  */
 
 import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { Clock, Effect, Option, Redacted } from "effect"
+import { Clock, Effect, HashSet, Option, Redacted } from "effect"
+import * as A from "effect/Array"
+import * as Str from "effect/String"
 import { ConfigService } from "../Service/Config.ts"
 import { ShutdownService } from "./Shutdown.ts"
 
@@ -21,14 +23,14 @@ const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/
 /**
  * Check if a path is public (exempt from auth)
  */
-const isPublicPath = (path: string): boolean => PUBLIC_PATHS.includes(path) || path.startsWith("/health/")
+const isPublicPath = (path: string): boolean => A.contains(PUBLIC_PATHS, path) || Str.startsWith("/health/")(path)
 
 /**
  * Parse API keys from comma-separated string
  */
-const parseApiKeys = (redacted: Redacted.Redacted<string>): Set<string> => {
+const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<string> => {
   const raw = Redacted.value(redacted)
-  return new Set(raw.split(",").map((k) => k.trim()).filter((k) => k.length > 0))
+  return HashSet.fromIterable(A.filter(A.map(Str.split(raw, ","), Str.trim), Str.isNonEmpty))
 }
 
 /**
@@ -52,12 +54,12 @@ export const makeAuthMiddleware = Effect.gen(function*() {
 
   // Parse API keys
   const apiKeys = Option.match(config.api.keys, {
-    onNone: () => new Set<string>(),
+    onNone: () => HashSet.empty<string>(),
     onSome: parseApiKeys
   })
 
   // If auth is required but no keys configured, log warning
-  if (apiKeys.size === 0) {
+  if (HashSet.size(apiKeys) === 0) {
     yield* Effect.logWarning("API.REQUIRE_AUTH is true but no API.KEYS configured - all requests will be rejected")
   }
 
@@ -73,10 +75,10 @@ export const makeAuthMiddleware = Effect.gen(function*() {
 
       // Get API key from header
       const apiKeyHeader = request.headers["x-api-key"]
-      const apiKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader
+      const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader
 
       // Validate API key
-      if (!apiKey || !apiKeys.has(apiKey)) {
+      if (!apiKey || !HashSet.has(apiKeys, apiKey)) {
         yield* Effect.logWarning("Unauthorized request", {
           path,
           hasKey: !!apiKey,
@@ -136,7 +138,7 @@ export const makeLoggingMiddleware = Effect.sync(() =>
       const method = request.method
 
       // Use debug level for health checks to reduce noise
-      const isHealthCheck = path.startsWith("/health")
+      const isHealthCheck = Str.startsWith("/health")(path)
       const logLevel = isHealthCheck ? Effect.logDebug : Effect.logInfo
 
       yield* logLevel("HTTP request started", {
@@ -147,8 +149,7 @@ export const makeLoggingMiddleware = Effect.sync(() =>
 
       // Execute the handler and capture the response
       const response = yield* app.pipe(
-        Effect.tapBoth({
-          onSuccess: (res) =>
+        Effect.tap((res) =>
             Effect.gen(function*() {
               const elapsed = (yield* Clock.currentTimeMillis) - start
 
@@ -159,8 +160,9 @@ export const makeLoggingMiddleware = Effect.sync(() =>
                 status: res.status,
                 durationMs: elapsed
               })
-            }),
-          onFailure: (error) =>
+            })
+        ),
+        Effect.tapError((error) =>
             Effect.gen(function*() {
               const elapsed = (yield* Clock.currentTimeMillis) - start
 
@@ -172,7 +174,7 @@ export const makeLoggingMiddleware = Effect.sync(() =>
                 durationMs: elapsed
               })
             })
-        })
+        )
       )
 
       return response

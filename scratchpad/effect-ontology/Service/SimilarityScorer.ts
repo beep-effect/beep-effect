@@ -59,7 +59,7 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
      */
     const getOrComputeEmbedding = (
       mention: string
-    ): Effect.Effect<ReadonlyArray<number>, Error> => embeddingCache.get(mention)
+    ): Effect.Effect<ReadonlyArray<number>, Error> => Cache.get(embeddingCache, mention)
 
     /**
      * Compute similarity between two entities
@@ -118,12 +118,12 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
     /**
      * Clear the embedding cache
      */
-    const clearCache = (): Effect.Effect<void, never> => embeddingCache.invalidateAll
+    const clearCache = (): Effect.Effect<void, never> => Cache.invalidateAll(embeddingCache)
 
     /**
      * Get current cache size
      */
-    const getCacheSize = (): Effect.Effect<number> => embeddingCache.size
+    const getCacheSize = (): Effect.Effect<number> => Cache.size(embeddingCache)
 
     return {
       compute,

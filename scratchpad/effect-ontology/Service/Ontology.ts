@@ -51,7 +51,7 @@ import { rrfFusion } from "../Utils/Retrieval.ts"
 import { ConfigService } from "./Config.ts"
 import { NlpService } from "./Nlp.ts"
 import { OntologyRegistryService } from "./OntologyRegistry.ts"
-import { RdfBuilder, type RdfStore } from "./Rdf.ts"
+import { RdfBuilder, type RdfBuilderShape, type RdfStore } from "./Rdf.ts"
 import { StorageService } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
 import * as O from "effect/Option";
@@ -76,13 +76,13 @@ const loadAndMergeExternalVocabularies = (
   mainStore: RdfStore,
   externalPath: string,
   contextLabel: string,
-  contextId?: string,
-  storage?: StorageService["Service"],
-  rdf?: RdfBuilder["Service"]
+  contextId: string | undefined,
+  storage: StorageService,
+  rdf: RdfBuilderShape
 ) =>
   Effect.gen(function*() {
-    const storageService = storage ?? (yield* StorageService)
-    const rdfBuilder = rdf ?? (yield* RdfBuilder)
+    const storageService = storage
+    const rdfBuilder = rdf
 
     const externalContentOpt = yield* storageService.get(externalPath).pipe(
       Effect.catch((error) =>
@@ -92,13 +92,13 @@ const loadAndMergeExternalVocabularies = (
             ...logContext,
             error: String(error)
           })
-          return Option.none<string>()
+          return undefined
         })
       )
     )
 
-    if (Option.isSome(externalContentOpt)) {
-      const externalStore = yield* rdfBuilder.parseTurtle(externalContentOpt.value).pipe(
+    if (externalContentOpt !== undefined) {
+      const externalStore = yield* rdfBuilder.parseTurtle(externalContentOpt).pipe(
         Effect.catch((error) =>
           Effect.gen(function*() {
             const logContext = contextId ? { [contextLabel]: contextId, path: externalPath } : { path: externalPath }
@@ -402,7 +402,7 @@ export const parseOntologyFromStore = (
 
         if ((labels.get(id)?.[0] || prefLabels.get(id)?.[0])) {
           finalClasses.push(
-            ClassDefinition.make({
+            ClassDefinition.fromUnknown({
               id: IRI.make(id),
               label: labels.get(id)?.[0] || prefLabels.get(id)?.[0] || "",
               comment: O.some(comments.get(id)?.[0] || ""),
@@ -432,7 +432,7 @@ export const parseOntologyFromStore = (
     for (const [id, info] of propInfos) {
       if ((labels.get(id)?.[0] || prefLabels.get(id)?.[0])) {
         finalProperties.push(
-          PropertyDefinition.make({
+          PropertyDefinition.fromUnknown({
             id: IRI.make(id),
             label: labels.get(id)?.[0] || prefLabels.get(id)?.[0] || "",
             comment: O.some(comments.get(id)?.[0] || ""),
@@ -468,10 +468,10 @@ export const parseOntologyFromStore = (
   }).pipe(
     Effect.mapError(
       (error) =>
-        OntologyParsingFailed.make({
+        OntologyParsingFailed.fromUnknown({
           message: `Failed to parse ontology at ${ontologyPath}`,
           path: ontologyPath,
-          cause: O.some(error)
+          cause: error
         })
     )
   )
@@ -506,17 +506,17 @@ export class OntologyService extends Context.Service<OntologyService>()(
           const contentOpt = yield* storage.get(ontologyPath).pipe(
             Effect.mapError(
               (error) =>
-                OntologyFileNotFound.make({
+                OntologyFileNotFound.fromUnknown({
                   message: `Failed to read ontology from storage at ${ontologyPath}`,
                   path: ontologyPath,
-                  cause: O.some(error)
+                  cause: error
                 })
             )
           )
 
           if ((contentOpt === undefined)) {
             return yield* Effect.fail(
-              OntologyFileNotFound.make({
+              OntologyFileNotFound.fromUnknown({
                 message: `Ontology file not found at ${ontologyPath}`,
                 path: ontologyPath
               })
@@ -607,17 +607,17 @@ export class OntologyService extends Context.Service<OntologyService>()(
           const contentOpt = yield* storage.get(storagePath).pipe(
             Effect.mapError(
               (error) =>
-                OntologyFileNotFound.make({
+                OntologyFileNotFound.fromUnknown({
                   message: `Failed to read ontology from storage at ${uri}`,
                   path: uri,
-                  cause: O.some(error)
+                  cause: error
                 })
             )
           )
 
           if ((contentOpt === undefined)) {
             return yield* Effect.fail(
-              OntologyFileNotFound.make({
+              OntologyFileNotFound.fromUnknown({
                 message: `Ontology file not found at ${uri}`,
                 path: uri
               })
@@ -675,17 +675,17 @@ export class OntologyService extends Context.Service<OntologyService>()(
           const contentOpt = yield* storage.get(entry.storagePath).pipe(
             Effect.mapError(
               (error) =>
-                OntologyFileNotFound.make({
+                OntologyFileNotFound.fromUnknown({
                   message: `Failed to read ontology from storage at ${entry.storagePath}`,
                   path: entry.storagePath,
-                  cause: O.some(error)
+                  cause: error
                 })
             )
           )
 
           if ((contentOpt === undefined)) {
             return yield* Effect.fail(
-              OntologyFileNotFound.make({
+              OntologyFileNotFound.fromUnknown({
                 message: `Ontology file not found at ${entry.storagePath}`,
                 path: entry.storagePath
               })
@@ -696,10 +696,10 @@ export class OntologyService extends Context.Service<OntologyService>()(
           const mainStore = yield* rdf.parseTurtle(turtleContent)
 
           // Merge external vocabularies if specified in entry
-          if (entry.externalVocabsPath) {
+          if (O.isSome(entry.externalVocabsPath)) {
             yield* loadAndMergeExternalVocabularies(
               mainStore,
-              entry.externalVocabsPath,
+              entry.externalVocabsPath.value,
               "entryId",
               entry.id,
               storage,
@@ -1696,7 +1696,7 @@ export class OntologyService extends Context.Service<OntologyService>()(
               properties: Chunk.toReadonlyArray(properties)
             })
             return (childIri: string, parentIri: string): boolean =>
-              ontology.isSubClassOf(childIri, parentIri)
+              ontology.isSubClassOf(IRI.make(childIri), IRI.make(parentIri))
           })
       }
     }),

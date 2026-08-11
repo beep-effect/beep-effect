@@ -8,7 +8,9 @@
  * @module Service/Shacl
  */
 
-import { Context, DateTime, Duration, Effect, Layer, Option, Ref } from "effect"
+import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Option, Order, Ref, Schema } from "effect"
+import * as A from "effect/Array"
+import * as Str from "effect/String"
 import * as N3 from "n3"
 import { Validator as ShaclValidator } from "shacl-engine"
 // @ts-expect-error - shacl-engine/sparql.js has no type declarations
@@ -34,8 +36,8 @@ export { ShaclValidationReport, ShaclViolation, ValidationPolicy }
 
 const mapSeverity = (severity: { value?: string } | undefined): "Violation" | "Warning" | "Info" => {
   if (!severity?.value) return "Info"
-  if (severity.value.endsWith("Violation")) return "Violation"
-  if (severity.value.endsWith("Warning")) return "Warning"
+  if (Str.endsWith("Violation")(severity.value)) return "Violation"
+  if (Str.endsWith("Warning")(severity.value)) return "Warning"
   return "Info"
 }
 
@@ -54,7 +56,7 @@ const extractMessage = (message: unknown): string => {
   if (typeof message === "string") return message
 
   // Handle array
-  if (Array.isArray(message)) {
+  if (A.isArray(message)) {
     const firstMsg = message[0]
     if (!firstMsg) return "Constraint violation"
     // Array element could be string or object with .value
@@ -74,7 +76,8 @@ const extractMessage = (message: unknown): string => {
   return String(message)
 }
 
-const stripGsPrefix = (uri: string): string => uri.startsWith("gs://") ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri
+const stripGsPrefix = (uri: string): string =>
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri
 
 /**
  * Compute a hash key for an N3 store by serializing to N-Quads
@@ -90,9 +93,11 @@ const hashStore = (store: N3.Store): string => {
     nquads = result
   })
   // Sort lines for canonical ordering (N-Quads lines are independent)
-  const sortedNquads = nquads.split("\n").sort().join("\n")
+  const sortedNquads = A.join(A.sort(Str.split("\n")(nquads), Order.String), "\n")
   return sha256Sync(sortedNquads)
 }
+
+const decodeShaclViolation = Schema.decodeUnknownSync(ShaclViolation)
 
 export interface ShaclServiceMethods {
   readonly validate: (
@@ -204,18 +209,18 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
         const violations = config.violations ?? []
 
         // Track shapes cache for getShapesCacheStats
-        const shapesCache = yield* Ref.make<Map<string, N3.Store>>(new Map())
+        const shapesCache = yield* Ref.make(HashMap.empty<string, N3.Store>())
 
         const makeReport = (dataStore: N3.Store, shapesStore: N3.Store): Effect.Effect<ShaclValidationReport> =>
           Effect.gen(function*() {
             const now = yield* DateTime.now
             return ShaclValidationReport.make({
               conforms,
-              violations: violations.map((v) => ShaclViolation.make(v)),
+              violations,
               validatedAt: now,
               dataGraphTripleCount: NonNegativeInt.make(dataStore.size),
               shapesGraphTripleCount: NonNegativeInt.make(shapesStore.size),
-              durationMs: 0
+              durationMs: Duration.zero
             })
           })
 
@@ -232,20 +237,18 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               const cacheKey = `test-${ontologyStore.size}`
               const store = new N3.Store()
               yield* Ref.update(shapesCache, (map) => {
-                const newMap = new Map(map)
-                newMap.set(cacheKey, store)
-                return newMap
+                return HashMap.set(map, cacheKey, store)
               })
               return store
             }),
 
-          clearShapesCache: () => Ref.set(shapesCache, new Map()),
+          clearShapesCache: () => Ref.set(shapesCache, HashMap.empty()),
 
           getShapesCacheStats: () =>
             Ref.get(shapesCache).pipe(
               Effect.map((cache) => ({
-                size: cache.size,
-                keys: Array.from(cache.keys())
+                size: HashMap.size(cache),
+                keys: A.fromIterable(HashMap.keys(cache))
               }))
             ),
 
@@ -253,8 +256,8 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
             Effect.gen(function*() {
               const report = yield* makeReport(dataStore, shapesStore)
 
-              const violationCount = report.violations.filter((v) => v.severity === "Violation").length
-              const warningCount = report.violations.filter((v) => v.severity === "Warning").length
+              const violationCount = A.filter(report.violations, (violation) => violation.severity === "Violation").length
+              const warningCount = A.filter(report.violations, (violation) => violation.severity === "Warning").length
 
               const failOnViolation = policy.failOnViolation ?? true
               const failOnWarning = policy.failOnWarning ?? false
@@ -294,7 +297,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
       const storage = yield* StorageService
 
       // Cache for generated SHACL shapes, keyed by ontology content hash
-      const shapesCache = yield* Ref.make<Map<string, N3.Store>>(new Map())
+      const shapesCache = yield* Ref.make(HashMap.empty<string, N3.Store>())
 
       const loadShapes = (shapesTurtle: string) =>
         rdfBuilder.parseTurtle(shapesTurtle).pipe(
@@ -339,9 +342,9 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
 
             const end = yield* DateTime.now
 
-            return {
+            return ShaclValidationReport.fromUnknown({
               conforms: report.conforms,
-              violations: report.results?.map((result: any) => ({
+              violations: A.map(report.results ?? [], (result: any) => ({
                 focusNode: result.focusNode?.value ?? "unknown",
                 path: result.path?.value,
                 value: result.value?.value,
@@ -353,7 +356,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               dataGraphTripleCount: dataStore.size,
               shapesGraphTripleCount: shapesStore.size,
               durationMs: Duration.toMillis(DateTime.distance(start, end))
-            }
+            })
           }),
 
         loadShapes,
@@ -364,9 +367,9 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               Option.match(O.fromNullishOr(maybeContent), {
                 onNone: () =>
                   Effect.fail(
-                    ShapesLoadError.make({
+                    ShapesLoadError.fromUnknown({
                       message: `Shapes not found at ${shapesUri}`,
-                      shapesUri: O.some(shapesUri)
+                      shapesUri
                     })
                   ),
                 onSome: loadShapes
@@ -375,10 +378,10 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
             Effect.mapError((cause) =>
               cause instanceof ShapesLoadError
                 ? cause
-                : ShapesLoadError.make({
+                : ShapesLoadError.fromUnknown({
                   message: `Failed to load SHACL shapes from ${shapesUri}: ${cause}`,
-                  shapesUri: O.some(shapesUri),
-                  cause: O.some(cause)
+                  shapesUri,
+                  cause
                 })
             )
           ),
@@ -389,11 +392,11 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
             const cacheKey = hashStore(ontologyStore)
             const cache = yield* Ref.get(shapesCache)
 
-            const cached = cache.get(cacheKey)
-            if (cached) {
+            const cached = HashMap.get(cache, cacheKey)
+            if (Option.isSome(cached)) {
               // Return a clone of the cached store to prevent mutation
               const clonedStore = new N3.Store()
-              for (const quad of cached) {
+              for (const quad of cached.value) {
                 clonedStore.addQuad(quad)
               }
               return clonedStore
@@ -437,7 +440,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                 const XSD_STRING = namedNode("http://www.w3.org/2001/XMLSchema#string")
 
                 // Track property shapes by class+property key for cardinality constraints
-                const propertyShapeMap = new Map<string, N3.BlankNode>()
+                const propertyShapeMap = MutableHashMap.empty<string, N3.BlankNode>()
                 const makeKey = (classIri: string, propIri: string) => `${classIri}|${propIri}`
 
                 // Find all owl:Class instances
@@ -468,7 +471,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
 
                     if (isObjectProp) {
                       const propertyShape = N3.DataFactory.blankNode()
-                      propertyShapeMap.set(makeKey(classIri.value, propIri.value), propertyShape)
+                      MutableHashMap.set(propertyShapeMap, makeKey(classIri.value, propIri.value), propertyShape)
                       store.addQuad(shapeIri, SH.property, propertyShape)
                       store.addQuad(propertyShape, SH.path, propIri)
 
@@ -490,7 +493,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     } else if (isDatatypeProp) {
                       // Handle DatatypeProperty - use sh:datatype constraint
                       const propertyShape = N3.DataFactory.blankNode()
-                      propertyShapeMap.set(makeKey(classIri.value, propIri.value), propertyShape)
+                      MutableHashMap.set(propertyShapeMap, makeKey(classIri.value, propIri.value), propertyShape)
                       store.addQuad(shapeIri, SH.property, propertyShape)
                       store.addQuad(propertyShape, SH.path, propIri)
 
@@ -534,21 +537,23 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     const key = makeKey(classIri.value, restrictedPropIri.value)
 
                     // Get or create property shape for this restriction
-                    let propertyShape = propertyShapeMap.get(key)
-                    if (!propertyShape) {
+                    let propertyShape = MutableHashMap.get(propertyShapeMap, key)
+                    if (Option.isNone(propertyShape)) {
                       // Create a new property shape if one doesn't exist
-                      propertyShape = N3.DataFactory.blankNode()
-                      propertyShapeMap.set(key, propertyShape)
-                      store.addQuad(shapeIri, SH.property, propertyShape)
-                      store.addQuad(propertyShape, SH.path, restrictedPropIri)
+                      const created = N3.DataFactory.blankNode()
+                      MutableHashMap.set(propertyShapeMap, key, created)
+                      propertyShape = Option.some(created)
+                      store.addQuad(shapeIri, SH.property, created)
+                      store.addQuad(created, SH.path, restrictedPropIri)
                     }
+                    const propertyShapeNode = Option.getOrThrow(propertyShape)
 
                     // Check for owl:minCardinality
                     const minCardQuads = ontologyStore.getQuads(restrictionNode, OWL_MIN_CARDINALITY, null, null)
                     if (minCardQuads.length > 0) {
                       const minValue = minCardQuads[0].object.value
                       store.addQuad(
-                        propertyShape,
+                        propertyShapeNode,
                         SH.minCount,
                         N3.DataFactory.literal(minValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
                       )
@@ -559,7 +564,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     if (maxCardQuads.length > 0) {
                       const maxValue = maxCardQuads[0].object.value
                       store.addQuad(
-                        propertyShape,
+                        propertyShapeNode,
                         SH.maxCount,
                         N3.DataFactory.literal(maxValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
                       )
@@ -570,12 +575,12 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     if (exactCardQuads.length > 0) {
                       const exactValue = exactCardQuads[0].object.value
                       store.addQuad(
-                        propertyShape,
+                        propertyShapeNode,
                         SH.minCount,
                         N3.DataFactory.literal(exactValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
                       )
                       store.addQuad(
-                        propertyShape,
+                        propertyShapeNode,
                         SH.maxCount,
                         N3.DataFactory.literal(exactValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
                       )
@@ -597,22 +602,18 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
             for (const quad of generatedStore) {
               cacheClone.addQuad(quad)
             }
-            yield* Ref.update(shapesCache, (map) => {
-              const newMap = new Map(map)
-              newMap.set(cacheKey, cacheClone)
-              return newMap
-            })
+            yield* Ref.update(shapesCache, (map) => HashMap.set(map, cacheKey, cacheClone))
 
             return generatedStore
           }),
 
-        clearShapesCache: () => Ref.set(shapesCache, new Map()),
+        clearShapesCache: () => Ref.set(shapesCache, HashMap.empty()),
 
         getShapesCacheStats: () =>
           Ref.get(shapesCache).pipe(
             Effect.map((cache) => ({
-              size: cache.size,
-              keys: Array.from(cache.keys())
+              size: HashMap.size(cache),
+              keys: A.fromIterable(HashMap.keys(cache))
             }))
           ),
 
@@ -649,18 +650,18 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     const end = yield* DateTime.now
 
                     // Map results
-                    const violations = report.results?.map((result: any) => ({
+                    const violations = A.map(report.results ?? [], (result: any) => decodeShaclViolation({
                       focusNode: result.focusNode?.value ?? "unknown",
                       path: result.path?.value,
                       value: result.value?.value,
                       message: extractMessage(result.message),
                       severity: mapSeverity(result.severity),
                       sourceShape: result.sourceShape?.value
-                    })) ?? []
+                    }))
 
-                    const validationReport = ShaclValidationReport.make({
+                    const validationReport = ShaclValidationReport.fromUnknown({
                       conforms: report.conforms,
-                      violations: violations.map((v: any) => ShaclViolation.make(v)),
+                      violations,
                       validatedAt: start,
                       dataGraphTripleCount: NonNegativeInt.make(dataStore.size),
                       shapesGraphTripleCount: NonNegativeInt.make(shapesStore.size),
@@ -668,8 +669,8 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     })
 
                     // Count by severity
-                    const violationCount = violations.filter((v: ShaclViolation) => v.severity === "Violation").length
-                    const warningCount = violations.filter((v: ShaclViolation) => v.severity === "Warning").length
+                    const violationCount = A.filter(violations, (violation) => violation.severity === "Violation").length
+                    const warningCount = A.filter(violations, (violation) => violation.severity === "Warning").length
 
                     // Apply policy (default: failOnViolation=true, failOnWarning=false)
                     const failOnViolation = policy.failOnViolation ?? true
@@ -683,11 +684,11 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                           `SHACL validation: ${violationCount} violation(s), ${warningCount} warning(s) - continuing per logOnly policy`,
                           {
                             conforms: report.conforms,
-                            violations: violations.slice(0, 5).map((v: ShaclViolation) => ({
-                                                                                      focusNode: v.focusNode,
-                                                                                      path: v.path,
-                                                                                      message: v.message,
-                                                                                      severity: v.severity
+                            violations: A.map(A.take(violations, 5), (violation) => ({
+                                                                                      focusNode: violation.focusNode,
+                                                                                      path: violation.path,
+                                                                                      message: violation.message,
+                                                                                      severity: violation.severity
                                                                                     }))
                           }
                         )

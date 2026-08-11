@@ -9,15 +9,18 @@
  * @module Workflow/StreamingExtraction
  */
 
-import { Cause, Chunk, Duration, Effect, Exit, Layer, Option, Stream } from "effect"
+import { Cause, Chunk, Duration, Effect, Exit, Layer, Result, Stream } from "effect"
+import { NonNegativeInt } from "@beep/schema/Int"
+import { UnitInterval } from "@beep/schema/UnitInterval"
 import { ExtractionError } from "../Domain/Error/Extraction.ts"
 import { LlmRateLimit, LlmTimeout } from "../Domain/Error/Llm.ts"
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts"
+import { ChunkId } from "../Domain/Identity.ts"
 import { type RunConfig } from "../Domain/Model/ExtractionRun.ts"
 import { EntityExtractor, type Mention, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts"
 import { ExtractionRunService, ExtractionRunServiceDefault } from "../Service/ExtractionRun.ts"
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts"
-import { Grounder } from "../Service/Grounder.ts"
+import { Grounder, type RelationVerificationInput } from "../Service/Grounder.ts"
 import { NlpService } from "../Service/Nlp.ts"
 import { OntologyService } from "../Service/Ontology.ts"
 import { StorageServiceLive } from "../Service/Storage.ts"
@@ -327,9 +330,9 @@ export const makeExtractionWorkflow = Effect.gen(function*() {
                       mention: entity.mention,
                       types: [...entity.types],
                       attributes: { ...entity.attributes },
-                      chunkIndex: O.some(chunk.index),
-                      chunkId: O.some(chunkId),
-                      groundingConfidence
+                      chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
+                      chunkId: O.some(ChunkId.make(chunkId)),
+                      groundingConfidence: O.some(UnitInterval.make(groundingConfidence))
                     })
                   })
 
@@ -421,30 +424,32 @@ export const makeExtractionWorkflow = Effect.gen(function*() {
 
                   // Phase 5b: Grounding verification - filter relations by context alignment
                   // Uses batched verification to reduce LLM API calls
-                  const verificationInputs = relationArray.map((relation) => {
+                  const verificationInputs: ReadonlyArray<RelationVerificationInput> = relationArray.map((relation) => {
                     const subject = entityArray.find((entity) => entity.id === relation.subjectId)
-                    const objectEntity = typeof relation.object === "string"
-                      ? entityArray.find((entity) => entity.id === relation.object)
+                    const objectEntity = relation.object._tag === "EntityReference"
+                      ? entityArray.find((entity) => entity.id === relation.object.value)
                       : undefined
                     const predicate = propertyArray.find((property) => property.id === relation.predicate)
 
                     return {
                       context: chunk.text,
                       relation,
-                      subject: subject && {
+                      ...(subject ? { subject: {
                         entityId: subject.id,
                         mention: subject.mention,
                         types: subject.types
-                      },
-                      predicate,
-                      object: typeof relation.object === "string"
+                      } } : {}),
+                      ...(predicate ? { predicate } : {}),
+                      object: relation.object._tag === "EntityReference"
                         ? {
-                          entityId: relation.object,
-                          mention: objectEntity?.mention,
-                          types: objectEntity?.types
+                          entityId: relation.object.value,
+                          ...(objectEntity ? {
+                            mention: objectEntity.mention,
+                            types: objectEntity.types
+                          } : {})
                         }
                         : {
-                          literal: relation.object
+                          literal: relation.object.value
                         }
                     }
                   })
@@ -535,27 +540,33 @@ export const makeExtractionWorkflow = Effect.gen(function*() {
                 ).pipe(Effect.exit),
               { concurrency: effectiveConcurrency, unordered: true }
             ),
-            Stream.mapEffect((exit) =>
+            Stream.mapEffect((exit): Effect.Effect<Chunk.Chunk<KnowledgeGraph>, ExtractionError> =>
               Effect.gen(function*() {
-                if (Exit.isSuccess(exit)) return Option.some(exit.value)
+                if (Exit.isSuccess(exit)) return Chunk.of(exit.value)
 
                 const cause = exit.cause
-                if (Cause.isDie(cause)) {
+                if (Result.isSuccess(Cause.findDefect(cause))) {
                   yield* Effect.logWarning("Defect in chunk processing", {
                     defect: Cause.pretty(cause)
                   })
-                  return Option.none()
+                  return Chunk.empty<KnowledgeGraph>()
                 }
                 // Propagate systemic errors or interruptions
-                return yield* Effect.failCause(cause)
+                return yield* Effect.failCause(Cause.map(cause, (error) =>
+                  error instanceof ExtractionError
+                    ? error
+                    : ExtractionError.make({
+                      message: "Unexpected chunk processing failure",
+                      cause: O.some(error)
+                    })))
               })
             ),
-            Stream.filterMap((x) => x),
+            Stream.flatMap((graphs) => Stream.fromIterable(graphs)),
             // Add buffer for backpressure - limits memory accumulation for in-flight chunks
             Stream.buffer({ capacity: effectiveConcurrency * 2 }),
             // Phase 6: Merge all fragments using monoid operation
             Stream.runFold(
-              KnowledgeGraph.make({ entities: [], relations: [] }), // Identity element
+              () => KnowledgeGraph.make({ entities: [], relations: [] }), // Identity element
               mergeGraphs
             )
           ).pipe(

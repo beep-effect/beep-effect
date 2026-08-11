@@ -11,12 +11,10 @@
  * @module Service/LlmControl/RateLimiter
  */
 
-import { Clock, Context, Effect, Layer, Ref } from "effect"
+import { Clock, Context, Effect, Layer, Ref, Schema } from "effect"
 import { CircuitOpenError, RateLimitError } from "../../Domain/Error/Circuit.ts"
 import { $ScratchpadId } from "@beep/identity";
-import * as O from "effect/Option";
 import * as Semaphore from "effect/Semaphore";
-import { NonNegativeInt } from "@beep/schema/Int";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter");
 
@@ -193,9 +191,9 @@ const make = (config: RateLimiterConfig = DEFAULT_CONFIG) =>
             const elapsed = now - current.lastReset
             if (elapsed < config.recoveryTimeoutMs) {
               return yield* Effect.fail(
-                CircuitOpenError.make({
-                  resetTimeoutMs: NonNegativeInt.make(config.recoveryTimeoutMs),
-                  retryAfterMs: O.some(config.recoveryTimeoutMs - elapsed)
+                Schema.decodeUnknownSync(CircuitOpenError)({
+                  resetTimeoutMs: config.recoveryTimeoutMs,
+                  retryAfterMs: config.recoveryTimeoutMs - elapsed
                 })
               )
             }
@@ -216,9 +214,9 @@ const make = (config: RateLimiterConfig = DEFAULT_CONFIG) =>
           if (updated.requestsThisMinute >= config.requestsPerMinute) {
             const msUntilReset = 60_000 - (now - updated.lastReset)
             return yield* Effect.fail(
-              RateLimitError.make({
+              Schema.decodeUnknownSync(RateLimitError)({
                 reason: "requests",
-                retryAfterMs: O.some(msUntilReset)
+                retryAfterMs: msUntilReset
               })
             )
           }
@@ -230,9 +228,9 @@ const make = (config: RateLimiterConfig = DEFAULT_CONFIG) =>
           ) {
             const msUntilReset = 60_000 - (now - updated.lastReset)
             return yield* Effect.fail(
-              RateLimitError.make({
+              Schema.decodeUnknownSync(RateLimitError)({
                 reason: "tokens",
-                retryAfterMs: O.some(msUntilReset)
+                retryAfterMs: msUntilReset
               })
             )
           }
@@ -250,7 +248,7 @@ const make = (config: RateLimiterConfig = DEFAULT_CONFIG) =>
         }),
 
       release:
-        Effect.fn(function*(actualTokens: number, success: boolean)  {
+        Effect.fn(function*(_actualTokens: number, success: boolean)  {
           // CRITICAL: Release the semaphore permit acquired in acquire()
           yield* semaphore.release(1)
 

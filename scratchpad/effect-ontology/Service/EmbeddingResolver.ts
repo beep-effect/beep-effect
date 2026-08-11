@@ -8,7 +8,8 @@
  * @module Service/EmbeddingResolver
  */
 
-import { Array, Effect, Exit, Request, RequestResolver } from "effect"
+import { Effect, Exit, Request, RequestResolver } from "effect"
+import * as A from "effect/Array"
 import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts"
 import type { EmbedTextRequest } from "./EmbeddingRequest.ts"
 
@@ -41,25 +42,12 @@ export const DEFAULT_MAX_BATCH_SIZE = 128
 export const makeEmbeddingResolver = (
   provider: EmbeddingProviderMethods,
   maxBatchSize: number = DEFAULT_MAX_BATCH_SIZE
-): RequestResolver.RequestResolver<EmbedTextRequest, never> =>
-  RequestResolver.makeBatched((requests: ReadonlyArray<EmbedTextRequest>) =>
-    Effect.gen(function*() {
-      if (requests.length === 0) return
-
-      // Group by taskType for optimal batching (Voyage requires same input_type per batch)
-      const grouped = Array.groupBy(requests as Array<EmbedTextRequest>, (r) => r.taskType)
-
-      for (const [_taskType, batch] of Object.entries(grouped)) {
-        // Chunk into maxBatchSize (Voyage limit: 128 texts)
-        const chunks = Array.chunksOf(batch, maxBatchSize)
-
-        for (const chunk of chunks) {
-          if (chunk.length === 0) continue
-          yield* processChunk(provider, chunk)
-        }
-      }
-    })
-  ).pipe(RequestResolver.batchN(maxBatchSize))
+): RequestResolver.RequestResolver<EmbedTextRequest> =>
+  RequestResolver.makeGrouped<EmbedTextRequest, EmbeddingTaskType>({
+    key: (entry) => entry.request.taskType,
+    resolver: (entries) =>
+      Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true })
+  }).pipe(RequestResolver.batchN(maxBatchSize))
 
 /**
  * Process a single chunk of embedding requests
@@ -68,13 +56,13 @@ export const makeEmbeddingResolver = (
  */
 const processChunk = (
   provider: EmbeddingProviderMethods,
-  chunk: ReadonlyArray<EmbedTextRequest>
+  chunk: ReadonlyArray<Request.Entry<EmbedTextRequest>>
 ): Effect.Effect<void, never, never> =>
   provider
     .embedBatch(
-      chunk.map((r) => ({
-        text: r.text,
-        taskType: r.taskType as EmbeddingTaskType
+      A.map(chunk, (entry) => ({
+        text: entry.request.text,
+        taskType: entry.request.taskType
       }))
     )
     .pipe(
@@ -82,13 +70,13 @@ const processChunk = (
         onSuccess: (embeddings) =>
           Effect.forEach(
             chunk,
-            (req, i) => Request.complete(req, Exit.succeed(embeddings[i])),
+            (entry, i) => Request.complete(entry, Exit.succeed(embeddings[i])),
             { discard: true }
           ),
         onFailure: (error) =>
           Effect.forEach(
             chunk,
-            (req) => Request.complete(req, Exit.fail(error)),
+            (entry) => Request.complete(entry, Exit.fail(error)),
             { discard: true }
           )
       })

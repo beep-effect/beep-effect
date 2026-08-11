@@ -11,6 +11,10 @@
 
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { Data, Duration, Effect, Schema, Context, Layer } from "effect"
+import * as A from "effect/Array"
+import * as O from "effect/Option"
+import * as Order from "effect/Order"
+import * as Str from "effect/String"
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 
@@ -49,7 +53,7 @@ export interface WikidataCandidate {
   /** Human-readable label */
   readonly label: string
   /** Entity description */
-  readonly description?: string
+  readonly description: O.Option<string>
   /** How the search matched (label or alias) */
   readonly matchType: "label" | "alias"
   /** Language of the match */
@@ -120,9 +124,9 @@ const calculateScore = (
   position: number,
   _totalResults: number
 ): number => {
-  const queryLower = query.toLowerCase().trim()
-  const labelLower = (result.label ?? result.title).toLowerCase().trim()
-  const matchText = result.match.text.toLowerCase().trim()
+  const queryLower = Str.trim(Str.toLowerCase(query))
+  const labelLower = Str.trim(Str.toLowerCase(O.getOrElse(result.label, () => result.title)))
+  const matchText = Str.trim(Str.toLowerCase(result.match.text))
 
   // Base score from match type
   let baseScore: number
@@ -260,9 +264,9 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         )
 
         // Convert to candidates with scores
-        const candidates: Array<WikidataCandidate> = parsed.search.map((result, index) => ({
+        const candidates = A.map(parsed.search, (result, index): WikidataCandidate => ({
           qid: result.id,
-          label: result.label ?? result.title,
+          label: O.getOrElse(result.label, () => result.title),
           description: result.description,
           matchType: result.match.type === "label" ? "label" as const : "alias" as const,
           matchLanguage: result.match.language,
@@ -271,9 +275,10 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         }))
 
         // Sort by score descending
-        candidates.sort((a, b) => b.score - a.score)
-
-        return candidates
+        return A.sort(
+          candidates,
+          Order.mapInput(Order.flip(Order.Number), (candidate: WikidataCandidate) => candidate.score)
+        )
       })
 
     /**
@@ -331,7 +336,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         return {
           qid: entity.id,
           label,
-          description,
+          description: O.fromUndefinedOr(description),
           matchType: "label" as const,
           matchLanguage: language,
           score: 100, // Direct lookup

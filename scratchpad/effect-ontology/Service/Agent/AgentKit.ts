@@ -61,7 +61,7 @@ const isKnowledgeGraph = (value: unknown): value is KnowledgeGraph =>
 // =============================================================================
 
 export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
-  make: Effect.gen(function*() {
+  make: Effect.fn("AgentKit.make")(function*() {
     const config = yield* ConfigService
     const ontologyAgent = yield* OntologyAgent
     const ontologyService = yield* OntologyService
@@ -101,24 +101,24 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
 
     const resolveStore = (task: AgentTask) =>
       Effect.gen(function*() {
-        if (task.rdfStore && isRdfStore(task.rdfStore)) {
-          return task.rdfStore
+        if (O.isSome(task.rdfStore) && isRdfStore(task.rdfStore.value)) {
+          return task.rdfStore.value
         }
 
-        if (typeof task.turtle === "string") {
-          return yield* rdfBuilder.parseTurtle(task.turtle)
+        if (O.isSome(task.turtle)) {
+          return yield* rdfBuilder.parseTurtle(task.turtle.value)
         }
 
-        if (task.knowledgeGraph) {
-          return yield* buildStoreFromGraph(task.knowledgeGraph)
+        if (O.isSome(task.knowledgeGraph)) {
+          return yield* buildStoreFromGraph(task.knowledgeGraph.value)
         }
 
-        if (task.graph && isRdfStore(task.graph)) {
-          return task.graph
+        if (O.isSome(task.graph) && isRdfStore(task.graph.value)) {
+          return task.graph.value
         }
 
-        if (task.graph && isKnowledgeGraph(task.graph)) {
-          return yield* buildStoreFromGraph(task.graph)
+        if (O.isSome(task.graph) && isKnowledgeGraph(task.graph.value)) {
+          return yield* buildStoreFromGraph(task.graph.value)
         }
 
         return yield* Effect.fail(
@@ -139,10 +139,10 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
           type: "ingestor",
           version: O.some("1.0.0")
         }),
-        validate: () =>
+        validate: O.some(() =>
           Effect.succeed(
             ValidationResult.fail(["LinkIngestionService is not available"])
-          ),
+          )),
         execute: (task) =>
           Effect.fail(
             new AgentInputError({
@@ -159,15 +159,15 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
           type: "ingestor",
           version: O.some("1.0.0")
         }),
-        validate: (task) =>
+        validate: O.some((task: AgentTask) =>
           Effect.succeed(
-            task.sourceUrl
+            O.isSome(task.sourceUrl)
               ? ValidationResult.pass()
               : ValidationResult.fail(["sourceUrl is required"])
-          ),
+          )),
         execute: (task) =>
           Effect.gen(function*() {
-            if (!task.sourceUrl) {
+            if (O.isNone(task.sourceUrl)) {
               return yield* Effect.fail(
                 new AgentInputError({
                   taskId: task.taskId,
@@ -177,7 +177,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
               )
             }
 
-            if (!task.ontologyId) {
+            if (O.isNone(task.ontologyId)) {
               return yield* Effect.fail(
                 new AgentInputError({
                   taskId: task.taskId,
@@ -187,9 +187,13 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
               )
             }
 
-            const extraOptions = (task.ingestionOptions ?? {}) as Record<string, unknown>
-            const ingestResult = yield* ingestion.ingestUrl(task.sourceUrl, {
-              ontologyId: task.ontologyId,
+            const extraOptions = O.match(task.ingestionOptions, {
+              onNone: () => ({}),
+              onSome: (value): Record<string, unknown> =>
+                typeof value === "object" && value !== null ? value as Record<string, unknown> : {}
+            })
+            const ingestResult = yield* ingestion.ingestUrl(task.sourceUrl.value, {
+              ontologyId: task.ontologyId.value,
               ...extraOptions
             })
             const contentOpt = yield* storage.get(ingestResult.storageUri)
@@ -204,9 +208,9 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
             }
 
             return mergeTask(task, {
-              text: contentOpt,
+              text: O.some(contentOpt),
               ingestionResult: O.some(ingestResult),
-              documentId: task.documentId ?? ingestResult.id
+              documentId: O.orElse(task.documentId, () => O.some(ingestResult.id))
             })
           })
       })
@@ -222,13 +226,13 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       }),
       validate: O.some((task) =>
         Effect.succeed(
-          task.text
+          O.isSome(task.text)
             ? ValidationResult.pass()
             : ValidationResult.fail(["text is required"])
         )),
       execute: (task): Effect.Effect<AgentTask, AgentInputError | unknown, never> =>
         Effect.gen(function*() {
-          if (!task.text) {
+          if (O.isNone(task.text)) {
             return yield* Effect.fail(
               new AgentInputError({
                 taskId: task.taskId,
@@ -238,17 +242,19 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
             )
           }
 
-          const agentConfig = task.agentConfig as OntologyAgentConfig | undefined
-          const result = yield* ontologyAgent.extract(task.text, agentConfig)
+          const agentConfig: OntologyAgentConfig | undefined = O.getOrUndefined(task.agentConfig)
+          const result = yield* ontologyAgent.extract(task.text.value, agentConfig)
           const rdfStore = yield* buildStoreFromGraph(result.graph)
-          const ontologyContext = task.ontologyContext ?? (yield* ontologyService.ontology)
+          const ontologyContext = O.isSome(task.ontologyContext)
+            ? task.ontologyContext.value
+            : yield* ontologyService.ontology
 
           return mergeTask(task, {
             knowledgeGraph: O.some(result.graph),
             graph: O.some(result.graph),
             rdfStore: O.some(rdfStore),
             turtle: result.turtle,
-            ontologyContext
+            ontologyContext: O.some(ontologyContext)
           })
         })
     }
@@ -263,7 +269,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       }),
       validate: O.some((task) =>
         Effect.succeed(
-          task.rdfStore || task.turtle || task.knowledgeGraph || task.graph
+          O.isSome(task.rdfStore) || O.isSome(task.turtle) || O.isSome(task.knowledgeGraph) || O.isSome(task.graph)
             ? ValidationResult.pass()
             : ValidationResult.fail(["rdfStore, turtle, or knowledgeGraph is required"])
         )),
@@ -292,13 +298,13 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       }),
       validate: O.some((task) =>
         Effect.succeed(
-          task.validationReport
+          O.isSome(task.validationReport)
             ? ValidationResult.pass()
             : ValidationResult.fail(["validationReport is required"])
         )),
       execute: (task): Effect.Effect<AgentTask, AgentInputError | unknown, never> =>
         Effect.gen(function*() {
-          if (!task.validationReport) {
+          if (O.isNone(task.validationReport)) {
             return yield* Effect.fail(
               new AgentInputError({
                 taskId: task.taskId,
@@ -309,8 +315,10 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
           }
 
           const rdfStore = yield* resolveStore(task)
-          const ontologyContext = task.ontologyContext ?? (yield* ontologyService.ontology)
-          const result = yield* corrector.correctAll(task.validationReport, rdfStore, ontologyContext)
+          const ontologyContext = O.isSome(task.ontologyContext)
+            ? task.ontologyContext.value
+            : yield* ontologyService.ontology
+          const result = yield* corrector.correctAll(task.validationReport.value, rdfStore, ontologyContext)
           const turtle = yield* rdfBuilder.toTurtle(rdfStore)
 
           return mergeTask(task, {
@@ -339,7 +347,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       corrector: correctorAgent,
       registerDefaults
     }
-  }),
+  })(),
 }) {
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
             ConfigServiceDefault,

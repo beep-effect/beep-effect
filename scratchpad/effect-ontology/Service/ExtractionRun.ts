@@ -15,9 +15,10 @@
  * @module Service/ExtractionRun
  */
 
-import { Context, Effect, Layer, Option, Schema } from "effect"
+import { Context, DateTime, Effect, Layer, Schema } from "effect"
+import * as A from "effect/Array"
 import { createHash } from "node:crypto"
-import type { ChunkId, ExtractionRunId, IdempotencyKey } from "../Domain/Identity.ts"
+import { ChunkId, type ExtractionRunId, type IdempotencyKey, OntologyVersion } from "../Domain/Identity.ts"
 import type {
   AuditError,
   AuditErrorType,
@@ -26,14 +27,14 @@ import type {
   RunConfig,
   RunStats
 } from "../Domain/Model/ExtractionRun.ts"
-import { AuditEvent, ExtractionRun } from "../Domain/Model/ExtractionRun.ts"
+import { AuditEvent, ExtractionRun, RunStatus } from "../Domain/Model/ExtractionRun.ts"
 import type { OutputType } from "../Domain/Model/OutputType.ts"
 import { getOutputFilename } from "../Domain/Model/OutputType.ts"
-import { ConfigService } from "./Config.ts"
 import { StorageService } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
 import * as O from "effect/Option";
 import { NonNegativeInt } from "@beep/schema/Int";
+import { Sha256Hex } from "@beep/schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionRun");
 
@@ -223,9 +224,6 @@ export const ExtractionRunService = Context.Service<ExtractionRunService>($I`Ext
 
 const makeExtractionRunService = Effect.gen(function*() {
   const storage = yield* StorageService
-  const config = yield* ConfigService
-  // Use a prefix for runs storage (could be made configurable)
-  const _basePrefix = config.extraction.runsDir.replace(/^\/+|\/+$/g, "") || "extraction-runs"
 
   // Helper: Read and update metadata atomically
   const updateMetadata = (
@@ -296,19 +294,19 @@ const makeExtractionRunService = Effect.gen(function*() {
         // Store document
         yield* storage.set(documentKey(runId), text)
 
-        const now = new Date().toISOString()
+        const now = DateTime.nowUnsafe()
         const run = ExtractionRun.make({
           id: documentId,
           createdAt: now,
-          updatedAt: now,
-          status: "pending",
+          updatedAt: O.some(now),
+          status: RunStatus.cases.Pending.make({}),
           config: runConfig,
           outputDir: runKey(runId), // Use storage key prefix as "outputDir"
           outputs: [],
           events: [AuditEvent.make({ timestamp: now, type: "started" })],
           errors: [],
-          idempotencyKey: options?.idempotencyKey,
-          ontologyVersion: options?.ontologyVersion
+          idempotencyKey: O.fromNullishOr(options?.idempotencyKey),
+          ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), OntologyVersion.fromUnknown)
         })
 
         yield* storage.set(metadataKey(runId), JSON.stringify(run, null, 2))
@@ -323,7 +321,7 @@ const makeExtractionRunService = Effect.gen(function*() {
 
     saveChunk: (runId: ExtractionRunId, chunkIndex: number, chunkText: string) =>
       Effect.gen(function*() {
-        const chunkIdValue = ExtractionRun.chunkId(runId, chunkIndex) as ChunkId
+        const chunkIdValue = ChunkId.make(ExtractionRun.chunkId(runId, NonNegativeInt.make(chunkIndex)))
         yield* storage.set(chunkKey(runId, chunkIndex), chunkText)
         return chunkIdValue
       }),
@@ -335,12 +333,12 @@ const makeExtractionRunService = Effect.gen(function*() {
 
                 const hash = hashContent(content)
                 const size = Buffer.byteLength(content, "utf8")
-                const savedAt = new Date().toISOString()
+                const savedAt = DateTime.nowUnsafe()
 
                 const metadata: OutputMetadata = {
                   type: outputType,
                   path: `outputs/${filename}`,
-                  hash,
+                  hash: Sha256Hex.make(hash),
                   size: NonNegativeInt.make(size),
                   savedAt
                 }
@@ -359,11 +357,10 @@ const makeExtractionRunService = Effect.gen(function*() {
 
     completeRun: (runId: ExtractionRunId) =>
       updateMetadata(runId, (run) => {
-        const now = new Date().toISOString()
+        const now = DateTime.nowUnsafe()
         return ExtractionRun.make({
           ...run,
-          status: "complete",
-          completedAt: now,
+          status: RunStatus.cases.Complete.make({ completedAt: now }),
           events: [...run.events, AuditEvent.make({ timestamp: now, type: "completed" })]
         })
       }),
@@ -402,7 +399,7 @@ const makeExtractionRunService = Effect.gen(function*() {
           }
         }
 
-        return runs.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        return A.reverse(A.sortWith(runs, (run) => run.createdAt, DateTime.Order))
       }),
 
     // =========================================================================
@@ -436,11 +433,11 @@ const makeExtractionRunService = Effect.gen(function*() {
       data?: Record<string, unknown>
     ) =>
       updateMetadata(runId, (run) => {
-        const event: AuditEvent = {
-          timestamp: new Date().toISOString(),
+        const event = AuditEvent.make({
+          timestamp: DateTime.nowUnsafe(),
           type,
-          data
-        }
+          data: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(data ?? {})
+        })
         return ExtractionRun.make({
           ...run,
           events: [...run.events, event]
@@ -455,10 +452,10 @@ const makeExtractionRunService = Effect.gen(function*() {
     ) =>
       updateMetadata(runId, (run) => {
         const error: AuditError = {
-          timestamp: new Date().toISOString(),
+          timestamp: DateTime.nowUnsafe(),
           type,
           message,
-          context
+          context: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(context ?? {})
         }
         return ExtractionRun.make({
           ...run,
@@ -476,17 +473,16 @@ const makeExtractionRunService = Effect.gen(function*() {
       context?: Record<string, unknown>
     ) =>
       updateMetadata(runId, (run) => {
-        const now = new Date().toISOString()
+        const now = DateTime.nowUnsafe()
         const error: AuditError = {
           timestamp: now,
           type: errorType,
           message,
-          context
+          context: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(context ?? {})
         }
         return ExtractionRun.make({
           ...run,
-          status: "failed",
-          completedAt: now,
+          status: RunStatus.cases.Failed.make({ failedAt: now, error }),
           events: [...run.events, AuditEvent.make({ timestamp: now, type: "failed" })],
           errors: [...run.errors, error]
         })

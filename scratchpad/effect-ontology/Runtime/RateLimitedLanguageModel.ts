@@ -17,7 +17,8 @@
 
 import { AiError, LanguageModel } from "effect/unstable/ai"
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
-import { Clock, Duration, Effect, Layer, Scope, Stream } from "effect"
+import { Clock, Duration, Effect, Layer, Stream } from "effect"
+import * as O from "effect/Option"
 import { ConfigService } from "../Service/Config.ts"
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts"
 import type { CircuitOpenError } from "./CircuitBreaker.ts"
@@ -70,28 +71,32 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
   Effect.gen(function*() {
     const config = yield* ConfigService
     const baseLlm = yield* LanguageModel.LanguageModel
-    const scope = yield* Scope.Scope
-
     // Get rate limit config for the current provider
-    const rateLimitConfig = RATE_LIMITS[config.llm.provider] ?? RATE_LIMITS.anthropic
+    const rateLimitConfig = RATE_LIMITS[config.llm.provider] ?? { perSecond: 2, perMinute: 20 }
 
-    // Create dual rate limiters:
-    // 1. Per-second burst limiter - prevents too many concurrent starts
-    const perSecondLimiter = yield* RateLimiter.make({
-      limit: rateLimitConfig.perSecond,
-      interval: "1 seconds",
-      algorithm: "fixed-window"
-    }).pipe(Scope.extend(scope))
-
-    // 2. Per-minute sustained limiter - respects API quota
-    const perMinuteLimiter = yield* RateLimiter.make({
-      limit: rateLimitConfig.perMinute,
-      interval: "1 minutes",
-      algorithm: "fixed-window"
-    }).pipe(Scope.extend(scope))
+    const limiter = yield* RateLimiter.make.pipe(Effect.provide(RateLimiter.layerStoreMemory))
 
     // Compose both rate limiters - request must pass both
-    const rateLimiter = <A, E, R>(effect: Effect.Effect<A, E, R>) => perSecondLimiter(perMinuteLimiter(effect))
+    const rateLimiter = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | RateLimiter.RateLimiterError, R> =>
+      Effect.gen(function*() {
+        const perSecond = yield* limiter.consume({
+          key: `${config.llm.provider}:per-second`,
+          limit: rateLimitConfig.perSecond,
+          window: "1 second",
+          algorithm: "fixed-window",
+          onExceeded: "delay"
+        })
+        const perMinute = yield* limiter.consume({
+          key: `${config.llm.provider}:per-minute`,
+          limit: rateLimitConfig.perMinute,
+          window: "1 minute",
+          algorithm: "fixed-window",
+          onExceeded: "delay"
+        })
+        const delay = Duration.max(perSecond.delay, perMinute.delay)
+        if (!Duration.isZero(delay)) yield* Effect.sleep(delay)
+        return yield* effect
+      })
 
     yield* Effect.logInfo("Dual rate limiter initialized", {
       provider: config.llm.provider,
@@ -105,7 +110,7 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
       maxFailures: 5, // Open after 5 consecutive failures
       resetTimeout: Duration.minutes(2), // Wait 2 minutes before testing recovery
       successThreshold: 2 // Require 2 successful calls to close circuit
-    }).pipe(Scope.extend(scope))
+    })
 
     // Helper to wrap LLM calls with rate limiting and observability
     const withRateLimit = <A, E, R>(
@@ -127,7 +132,14 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
           // 1. Circuit Breaker (fail fast if API is down)
           // 2. Rate Limiter (wait for token)
           circuitBreaker.protect(
-            rateLimiter(effect)
+            rateLimiter(effect).pipe(
+              Effect.catchTag("RateLimiterError", (error) =>
+                Effect.fail(AiError.UnknownError.make({
+                  description: `Rate limiter failed for ${method}`,
+                  metadata: { method, cause: error }
+                }) as E)
+              )
+            )
           ).pipe(
             // Convert CircuitOpenError to AiError.UnknownError
             // This maintains compatibility with LanguageModel error channel (E must extend AiError)
@@ -135,16 +147,19 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
             Effect.catchTag("CircuitOpenError", (err) => {
               // Type assertion is safe here - we know err is CircuitOpenError based on the tag
               const circuitErr = err as CircuitOpenError
-              const lastFailureStr = circuitErr.lastFailureTime
-                ? new Date(circuitErr.lastFailureTime).toISOString()
-                : "unknown"
+              const lastFailureStr = O.match(circuitErr.lastFailureTime, {
+                onNone: () => "unknown",
+                onSome: (lastFailureTime) => new Date(lastFailureTime).toISOString()
+              })
               return Effect.fail(
                 AiError.UnknownError.make({
-                  module: "RateLimitedLanguageModel",
-                  method: `${method} (circuit breaker)`,
                   description:
                     `Circuit breaker is open. Last failure: ${lastFailureStr}. Reset timeout: ${circuitErr.resetTimeoutMs}ms`,
-                  cause: circuitErr
+                  metadata: {
+                    module: "RateLimitedLanguageModel",
+                    method: `${method} (circuit breaker)`,
+                    cause: circuitErr
+                  }
                 }) as E // Safe cast since E extends AiError.AiError
               )
             }),
@@ -178,14 +193,18 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
     }
 
     // Return wrapped LanguageModel with all methods rate-limited
+    const generateObject = ((opts: Parameters<LanguageModel.Service["generateObject"]>[0]) =>
+      withRateLimit("generateObject", baseLlm.generateObject(opts))) as LanguageModel.Service["generateObject"]
+    const generateText = ((opts: Parameters<LanguageModel.Service["generateText"]>[0]) =>
+      withRateLimit("generateText", baseLlm.generateText(opts))) as LanguageModel.Service["generateText"]
+    const streamText = ((opts: Parameters<LanguageModel.Service["streamText"]>[0]) =>
+      Stream.unwrap(withRateLimit("streamText", Effect.sync(() => baseLlm.streamText(opts))))) as LanguageModel.Service["streamText"]
+
     return LanguageModel.LanguageModel.of({
-      generateObject: (opts) => withRateLimit("generateObject", baseLlm.generateObject(opts)),
-      generateText: (opts) => withRateLimit("generateText", baseLlm.generateText(opts)),
+      generateObject,
+      generateText,
       // streamText returns a Stream, so we rate-limit the stream creation
-      streamText: (opts) =>
-        Stream.unwrap(
-          withRateLimit("streamText", Effect.sync(() => baseLlm.streamText(opts)))
-        )
+      streamText
     })
   })
 )

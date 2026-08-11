@@ -1,6 +1,6 @@
 import { FileSystem, Path } from "effect"
 import { KeyValueStore } from "effect/unstable/persistence"
-import { SystemError } from "effect/PlatformError"
+import { PlatformError, SystemError } from "effect/PlatformError"
 import { Storage } from "@google-cloud/storage"
 import { Context, Effect, Layer, Option } from "effect"
 import { ConfigService } from "./Config.ts"
@@ -41,13 +41,13 @@ export class GenerationMismatchError extends Error {
  * Adds `list` capability and optimistic locking for concurrent writes
  */
 export interface StorageService extends KeyValueStore.KeyValueStore {
-  readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError>
+  readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>
 
   /**
    * Get an object along with its generation for optimistic locking
    * @returns None if object doesn't exist, Some with content and generation if it does
    */
-  readonly getWithGeneration: (key: string) => Effect.Effect<Option.Option<ObjectWithGeneration>, SystemError>
+  readonly getWithGeneration: (key: string) => Effect.Effect<Option.Option<ObjectWithGeneration>, SystemError | PlatformError>
 
   /**
    * Set an object only if its generation matches the expected value
@@ -58,7 +58,7 @@ export interface StorageService extends KeyValueStore.KeyValueStore {
     key: string,
     value: string,
     generation: string
-  ) => Effect.Effect<void, SystemError | GenerationMismatchError>
+  ) => Effect.Effect<void, SystemError | PlatformError | GenerationMismatchError>
 
   /**
    * Get a signed URL for direct access to the object (GCS only)
@@ -69,7 +69,7 @@ export interface StorageService extends KeyValueStore.KeyValueStore {
   readonly getSignedUrl: (
     key: string,
     expiresInSeconds?: number
-  ) => Effect.Effect<Option.Option<string>, SystemError>
+  ) => Effect.Effect<Option.Option<string>, SystemError | PlatformError>
 
   /**
    * Whether this storage backend supports signed URLs
@@ -106,7 +106,7 @@ const makeGcsStore = (config: StorageConfig) =>
     const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "")
 
     const handleError = (method: string, key: string, cause: unknown) => {
-      let reason: SystemError["reason"] = "Unknown"
+      let reason: SystemError["_tag"] = "Unknown"
       let message: string
 
       // Handle different error types
@@ -160,13 +160,21 @@ const makeGcsStore = (config: StorageConfig) =>
       }
 
       return new SystemError({
+        _tag: reason,
         module: "KeyValueStore",
         method,
-        reason,
         pathOrDescriptor: key,
         description: message
       })
     }
+
+    const handleKvError = (method: string, key: string, cause: unknown) =>
+      new KeyValueStore.KeyValueStoreError({
+        method,
+        key,
+        message: handleError(method, key, cause).message,
+        cause
+      })
 
     const impl = KeyValueStore.make({
       get: (key) =>
@@ -174,22 +182,22 @@ const makeGcsStore = (config: StorageConfig) =>
           try: async () => {
             const file = bucket.file(toPath(key))
             const [exists] = await file.exists()
-            if (!exists) return Option.none()
+            if (!exists) return undefined
             const [content] = await file.download()
-            return Option.some(content.toString("utf-8"))
+            return content.toString("utf-8")
           },
-          catch: (e) => handleError("get", key, e)
+          catch: (e) => handleKvError("get", key, e)
         }),
       getUint8Array: (key) =>
         Effect.tryPromise({
           try: async () => {
             const file = bucket.file(toPath(key))
             const [exists] = await file.exists()
-            if (!exists) return Option.none()
+            if (!exists) return undefined
             const [content] = await file.download()
-            return Option.some(new Uint8Array(content))
+            return new Uint8Array(content)
           },
-          catch: (e) => handleError("getUint8Array", key, e)
+          catch: (e) => handleKvError("getUint8Array", key, e)
         }),
       set: (key, value) =>
         Effect.tryPromise({
@@ -197,7 +205,7 @@ const makeGcsStore = (config: StorageConfig) =>
             const content = typeof value === "string" ? value : Buffer.from(value)
             await bucket.file(toPath(key)).save(content)
           },
-          catch: (e) => handleError("set", key, e)
+          catch: (e) => handleKvError("set", key, e)
         }),
       remove: (key) =>
         Effect.tryPromise({
@@ -206,18 +214,20 @@ const makeGcsStore = (config: StorageConfig) =>
             const [exists] = await file.exists()
             if (exists) await file.delete()
           },
-          catch: (e) => handleError("remove", key, e)
+          catch: (e) => handleKvError("remove", key, e)
         }),
       clear: Effect.tryPromise({
-        try: async () => await bucket.deleteFiles({ prefix: prefix || undefined }),
-        catch: (e) => handleError("clear", prefix, e)
+        try: async () => {
+          await bucket.deleteFiles(prefix ? { prefix } : {})
+        },
+        catch: (e) => handleKvError("clear", prefix, e)
       }),
       size: Effect.tryPromise({
         try: async () => {
-          const [files] = await bucket.getFiles({ prefix: prefix || undefined })
+          const [files] = await bucket.getFiles(prefix ? { prefix } : {})
           return files.length
         },
-        catch: (e) => handleError("size", prefix, e)
+        catch: (e) => handleKvError("size", prefix, e)
       })
     })
 
@@ -306,22 +316,29 @@ const makeLocalStore = (config: StorageConfig) =>
     const resolvePath = (key: string) => key.startsWith("/") ? key : path.join(basePath, globalPrefix, key)
 
     const ensureDir = (filePath: string) => fs.makeDirectory(path.dirname(filePath), { recursive: true })
+    const toKvError = (method: string, key?: string) => (cause: unknown) =>
+      new KeyValueStore.KeyValueStoreError({
+        method,
+        ...(key === undefined ? {} : { key }),
+        message: cause instanceof Error ? cause.message : String(cause),
+        cause
+      })
 
     const impl = KeyValueStore.make({
       get: (key) =>
         Effect.gen(function*() {
           const p = resolvePath(key)
           const exists = yield* fs.exists(p)
-          if (!exists) return Option.none()
-          return Option.some(yield* fs.readFileString(p))
-        }),
+          if (!exists) return undefined
+          return yield* fs.readFileString(p)
+        }).pipe(Effect.mapError(toKvError("get", key))),
       getUint8Array: (key) =>
         Effect.gen(function*() {
           const p = resolvePath(key)
           const exists = yield* fs.exists(p)
-          if (!exists) return Option.none()
-          return Option.some(yield* fs.readFile(p))
-        }),
+          if (!exists) return undefined
+          return yield* fs.readFile(p)
+        }).pipe(Effect.mapError(toKvError("getUint8Array", key))),
       set: (key, value) =>
         Effect.gen(function*() {
           const p = resolvePath(key)
@@ -331,21 +348,21 @@ const makeLocalStore = (config: StorageConfig) =>
           } else {
             yield* fs.writeFile(p, value)
           }
-        }),
+        }).pipe(Effect.mapError(toKvError("set", key))),
       remove: (key) =>
         Effect.gen(function*() {
           const p = resolvePath(key)
           if (yield* fs.exists(p)) {
             yield* fs.remove(p)
           }
-        }),
+        }).pipe(Effect.mapError(toKvError("remove", key))),
       clear: Effect.gen(function*() {
         const p = path.join(basePath, globalPrefix)
         if (yield* fs.exists(p)) {
           yield* fs.remove(p, { recursive: true })
           yield* fs.makeDirectory(p, { recursive: true })
         }
-      }),
+      }).pipe(Effect.mapError(toKvError("clear"))),
       size: Effect.gen(function*() {
         const p = path.join(basePath, globalPrefix)
         if (!(yield* fs.exists(p))) return 0
@@ -370,7 +387,7 @@ const makeLocalStore = (config: StorageConfig) =>
             return totalSize
           })
         return yield* walkAndSum(p)
-      })
+      }).pipe(Effect.mapError(toKvError("size")))
     })
 
     // Recursive walk helper for list() - defined outside to avoid closure issues
@@ -466,14 +483,14 @@ const makeMemoryStore = Effect.sync(() => {
     get: (key) =>
       Effect.sync(() => {
         const val = store.get(key)
-        if (!val) return Option.none()
-        return typeof val === "string" ? Option.some(val) : Option.some(new TextDecoder().decode(val))
+        if (!val) return undefined
+        return typeof val === "string" ? val : new TextDecoder().decode(val)
       }),
     getUint8Array: (key) =>
       Effect.sync(() => {
         const val = store.get(key)
-        if (!val) return Option.none()
-        return typeof val === "string" ? Option.some(new TextEncoder().encode(val)) : Option.some(val)
+        if (!val) return undefined
+        return typeof val === "string" ? new TextEncoder().encode(val) : val
       }),
     set: (key, value) =>
       Effect.sync(() => {
@@ -529,8 +546,8 @@ export const StorageServiceLive = Layer.effect(
     // Adapter for internal storage config
     const storageConfig: StorageConfig = {
       type,
-      bucketName: Option.getOrUndefined(bucket),
-      localPath: Option.getOrUndefined(localPath),
+      ...(Option.isSome(bucket) ? { bucketName: bucket.value } : {}),
+      ...(Option.isSome(localPath) ? { localPath: localPath.value } : {}),
       pathPrefix: prefix
     }
 

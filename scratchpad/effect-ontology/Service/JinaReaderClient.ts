@@ -16,8 +16,10 @@ import { JinaContent } from "../Domain/Model/EnrichedContent.ts"
 import { ConfigService } from "./Config.ts"
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { NonNegativeInt } from "@beep/schema/Int";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
 
@@ -67,9 +69,12 @@ const JinaApiResponse = Schema.Struct({
     publishedTime: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     siteName: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     image: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    links: Schema.Record({ key: Schema.String, value: Schema.String }).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+    links: Schema.Record(Schema.String, Schema.String).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
   })
 })
+
+const decodeJinaRateLimitError = Schema.decodeUnknownSync(JinaRateLimitError)
+const decodeJinaContent = Schema.decodeUnknownSync(JinaContent)
 
 // =============================================================================
 // Rate Limiting
@@ -95,7 +100,7 @@ class RateLimiter {
     const now = Date.now()
 
     // Remove timestamps outside the window
-    this.timestamps = this.timestamps.filter((t) => now - t < this.windowMs)
+    this.timestamps = A.filter(this.timestamps, (timestamp) => now - timestamp < this.windowMs)
 
     if (this.timestamps.length >= this.maxRequests) {
       // Need to wait until oldest timestamp expires
@@ -108,7 +113,7 @@ class RateLimiter {
     }
 
     // Record this request
-    this.timestamps.push(now)
+    this.timestamps = A.append(this.timestamps, now)
   }
 }
 
@@ -117,7 +122,7 @@ class RateLimiter {
 // =============================================================================
 
 export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`JinaReaderClient`, {
-  make: Effect.gen(function*() {
+  make: Effect.fn("JinaReaderClient.make")(function*() {
             const httpClient = yield* HttpClient.HttpClient
             const config = yield* ConfigService
 
@@ -142,11 +147,10 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
             /**
              * Fetch URL content as clean markdown
              */
-            const fetchUrl = (
+            const fetchUrl = Effect.fn("JinaReaderClient.fetchUrl")(function* (
               url: string,
               options: FetchOptions = {}
-            ): Effect.Effect<JinaResponse, JinaApiError | JinaRateLimitError | JinaParseError | JinaTimeoutError> =>
-              Effect.gen(function*() {
+            ): Effect.fn.Return<JinaResponse, JinaApiError | JinaRateLimitError | JinaParseError | JinaTimeoutError> {
                 // Wait for rate limit
                 yield* Effect.promise(() => rateLimiter.acquire())
 
@@ -182,13 +186,13 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                 // Execute with timeout
                 const response = yield* httpClient.execute(request).pipe(
                   Effect.timeout(Duration.millis(timeout)),
-                  Effect.catchTag("TimeoutError", () => Effect.fail(JinaTimeoutError.make({ url, timeoutMs: NonNegativeInt.make(timeout) }))),
+                  Effect.catchTag("TimeoutError", () => Effect.fail(JinaTimeoutError.fromUnknown({ url, timeoutMs: timeout }))),
                   Effect.mapError((error) => {
                     if (error instanceof JinaTimeoutError) return error
-                    return JinaApiError.make({
+                    return JinaApiError.fromUnknown({
                       message: `Failed to fetch URL: ${error}`,
-                      url: O.some(url),
-                      cause: O.some(error)
+                      url,
+                      cause: error
                     })
                   })
                 )
@@ -198,7 +202,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                   const retryAfter = response.headers["retry-after"]
                   const seconds = retryAfter ? parseInt(retryAfter, 10) : 60
                   return yield* Effect.fail(
-                    JinaRateLimitError.make({
+                    decodeJinaRateLimitError({
                       retryAfterMs: seconds * 1000
                     })
                   )
@@ -207,10 +211,10 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                 // Check for server errors
                 if (response.status >= 500) {
                   return yield* Effect.fail(
-                    JinaApiError.make({
+                    JinaApiError.fromUnknown({
                       message: `Jina server error: ${response.status}`,
-                      statusCode: O.some(response.status),
-                      url: O.some(url)
+                      statusCode: response.status,
+                      url
                     })
                   )
                 }
@@ -221,10 +225,10 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                     Effect.catch(() => Effect.succeed(""))
                   )
                   return yield* Effect.fail(
-                    JinaApiError.make({
-                      message: `Jina API error: ${response.status} - ${body.slice(0, 200)}`,
-                      statusCode: O.some(response.status),
-                      url: O.some(url)
+                    JinaApiError.fromUnknown({
+                      message: `Jina API error: ${response.status} - ${Str.takeLeft(200)(body)}`,
+                      statusCode: response.status,
+                      url
                     })
                   )
                 }
@@ -232,10 +236,10 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                 // Parse JSON response
                 const json = yield* response.json.pipe(
                   Effect.mapError((error) =>
-                    JinaParseError.make({
+                    JinaParseError.fromUnknown({
                       message: `Failed to parse Jina response: ${error}`,
-                      url: O.some(url),
-                      cause: O.some(error)
+                      url,
+                      cause: error
                     })
                   )
                 )
@@ -244,33 +248,31 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
                 const parsed = yield* Schema.decodeUnknownEffect(JinaApiResponse)(json).pipe(
                   Effect.catch((error) =>
                     Effect.fail(
-                      JinaParseError.make({
+                      JinaParseError.fromUnknown({
                         message: `Invalid Jina response format: ${error}`,
-                        url: O.some(url),
-                        cause: O.some(error)
+                        url,
+                        cause: error
                       })
                     )
                   )
                 )
 
                 // Build JinaContent
-                const content = JinaContent.make({
+                const content = decodeJinaContent({
                   url: parsed.data.url,
                   title: parsed.data.title,
                   content: parsed.data.content,
-                  length: O.some(parsed.data.content.length),
-                  description: parsed.data.description,
-                  publishedDate: parsed.data.publishedTime,
-                  siteName: parsed.data.siteName,
-                  image: parsed.data.image
+                  length: Str.length(parsed.data.content),
+                  ...(O.isSome(parsed.data.description) ? { description: parsed.data.description.value } : {}),
+                  ...(O.isSome(parsed.data.publishedTime) ? { publishedDate: parsed.data.publishedTime.value } : {}),
+                  ...(O.isSome(parsed.data.siteName) ? { siteName: parsed.data.siteName.value } : {}),
+                  ...(O.isSome(parsed.data.image) ? { image: parsed.data.image.value } : {})
                 })
 
                 // Extract links if present
-                const links = parsed.data.links
-                  ? Object.keys(parsed.data.links)
-                  : undefined
+                const links = O.map(parsed.data.links, R.keys)
 
-                return { content, links }
+                return O.isSome(links) ? { content, links: links.value } : { content }
               })
 
             /**
@@ -300,7 +302,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
               hasApiKey,
               getRateLimit
             }
-          }),
+          })(),
 }) {
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([FetchHttpClient.layer]));
 }

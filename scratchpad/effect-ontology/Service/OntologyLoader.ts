@@ -1,11 +1,12 @@
-import { Chunk, Effect, Option, Schema, Context, Layer } from "effect"
+import { Chunk, Context, Effect, Layer, Schema } from "effect"
+import * as Result from "effect/Result"
 import {
   EmbeddingsNotFound,
   EmbeddingsVersionMismatch,
   OntologyFileNotFound,
   OntologyParsingFailed
 } from "../Domain/Error/Ontology.ts"
-import type { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts"
+import { GcsUri } from "../Domain/Identity.ts"
 import {
   type ClassDefinition,
   OntologyContext,
@@ -15,7 +16,6 @@ import {
 import { OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts"
 import { PathLayout } from "../Domain/PathLayout.ts"
 import { type EmbeddingEntityType, EmbeddingRepository } from "../Repository/Embedding.ts"
-import { extractLocalNameFromIri } from "../Utils/Iri.ts"
 import { rrfFusion } from "../Utils/Retrieval.ts"
 import { ConfigService, ConfigServiceDefault } from "./Config.ts"
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts"
@@ -25,6 +25,7 @@ import { parseOntologyFromStore } from "./Ontology.ts"
 import { RdfBuilder } from "./Rdf.ts"
 import { StorageService } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { FilePath } from "@beep/schema";
 import * as O from "effect/Option";
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyLoader");
 
@@ -55,7 +56,7 @@ const resolveClassesFromSearchResults = (
     if (result.property) {
       for (const domainLocalName of result.property.domain) {
         const domainClass = classes.find(
-          (c) => extractLocalNameFromIri(c.id) === domainLocalName
+          (c) => c.id === domainLocalName
         )
         if (domainClass) {
           classesMap.set(domainClass.id, domainClass)
@@ -81,7 +82,7 @@ const makeOntologyLoader = Effect.gen(function*() {
 
       const contentOpt = yield* storage.get(ontologyPath).pipe(
         Effect.mapError((error) =>
-          OntologyFileNotFound.make({
+          OntologyFileNotFound.fromUnknown({
             message: `Failed to read ontology from GCS: ${error.message}`,
             path: ontologyPath,
             cause: O.some(error)
@@ -91,7 +92,7 @@ const makeOntologyLoader = Effect.gen(function*() {
 
       if ((contentOpt === undefined)) {
         return yield* Effect.fail(
-          OntologyFileNotFound.make({
+          OntologyFileNotFound.fromUnknown({
             message: `Ontology file not found at ${ontologyPath} in GCS`,
             path: ontologyPath
           })
@@ -101,7 +102,7 @@ const makeOntologyLoader = Effect.gen(function*() {
       const turtleContent = contentOpt
       const store = yield* rdf.parseTurtle(turtleContent).pipe(
         Effect.mapError((error) =>
-          OntologyParsingFailed.make({
+          OntologyParsingFailed.fromUnknown({
             message: `Failed to parse ontology turtle content: ${error.message}`,
             path: ontologyPath,
             cause: O.some(error)
@@ -112,19 +113,17 @@ const makeOntologyLoader = Effect.gen(function*() {
       const { classes, hierarchy, properties, propertyHierarchy } = yield* parseOntologyFromStore(
         rdf,
         store,
-        ontologyPath
+        Schema.decodeUnknownSync(FilePath)(ontologyPath)
       )
 
-      const ref = yield* Effect.try(() => PathLayout.ontology.decode(ontologyPath)).pipe(
-        Effect.map(([ns, name, hash]) => OntologyRef.make({ namespace: ns, name, contentHash: hash })),
-        Effect.orElseSucceed(() =>
-          OntologyRef.make({
-            namespace: "unknown" as Namespace,
-            name: "current" as OntologyName,
-            contentHash: "00000000" as ContentHash
-          })
-        )
-      )
+      const ref = Result.match(PathLayout.ontology.decode(ontologyPath), {
+        onSuccess: ([namespace, name, contentHash]) => OntologyRef.make({ namespace, name, contentHash }),
+        onFailure: () => OntologyRef.fromUnknown({
+          namespace: "unknown",
+          name: "current",
+          contentHash: "0".repeat(64)
+        })
+      })
 
       return {
         context: OntologyContext.make({
@@ -243,13 +242,14 @@ const makeOntologyLoader = Effect.gen(function*() {
     loadOntologyWithEmbeddings: (ontologyUri: string) =>
       Effect.gen(function*() {
         // Derive embeddings path from ontology URI
-        const embeddingsPath = OntologyEmbeddings.storagePathFor(ontologyUri)
+        const ontologyGcsUri = GcsUri.fromUnknown(ontologyUri)
+        const embeddingsPath = OntologyEmbeddings.storagePathFor(ontologyGcsUri)
 
         // Load ontology and embeddings in parallel
         const [ontologyContentOpt, embeddingsJsonOpt] = yield* Effect.all([
           storage.get(ontologyUri).pipe(
             Effect.mapError((error) =>
-              OntologyFileNotFound.make({
+              OntologyFileNotFound.fromUnknown({
                 message: `Failed to read ontology from storage: ${error.message}`,
                 path: ontologyUri,
                 cause: O.some(error)
@@ -257,14 +257,14 @@ const makeOntologyLoader = Effect.gen(function*() {
             )
           ),
           storage.get(embeddingsPath).pipe(
-            Effect.catch(() => Effect.succeed(Option.none<string>()))
+            Effect.catch(() => Effect.succeed(undefined))
           )
         ], { concurrency: 2 })
 
         // Check ontology exists
         if ((ontologyContentOpt === undefined)) {
           return yield* Effect.fail(
-            OntologyFileNotFound.make({
+            OntologyFileNotFound.fromUnknown({
               message: `Ontology file not found at ${ontologyUri}`,
               path: ontologyUri
             })
@@ -276,7 +276,7 @@ const makeOntologyLoader = Effect.gen(function*() {
         // Parse ontology
         const store = yield* rdf.parseTurtle(ontologyContent).pipe(
           Effect.mapError((error) =>
-            OntologyParsingFailed.make({
+            OntologyParsingFailed.fromUnknown({
               message: `Failed to parse ontology: ${error.message}`,
               path: ontologyUri,
               cause: O.some(error)
@@ -287,7 +287,7 @@ const makeOntologyLoader = Effect.gen(function*() {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* parseOntologyFromStore(
           rdf,
           store,
-          ontologyUri
+          Schema.decodeUnknownSync(FilePath)(ontologyUri)
         )
 
         const context = OntologyContext.make({
@@ -301,13 +301,13 @@ const makeOntologyLoader = Effect.gen(function*() {
         const expectedVersion = yield* OntologyEmbeddings.computeVersion(ontologyContent)
 
         // Check if embeddings exist
-        if (Option.isNone(embeddingsJsonOpt)) {
+        if (embeddingsJsonOpt === undefined) {
           yield* Effect.logWarning("Pre-computed embeddings not found, will need to compute on-the-fly", {
             ontologyUri,
             embeddingsPath
           })
           return yield* Effect.fail(
-            EmbeddingsNotFound.make({
+            EmbeddingsNotFound.fromUnknown({
               message: `Pre-computed embeddings not found for ontology`,
               ontologyUri,
               embeddingsPath
@@ -316,10 +316,9 @@ const makeOntologyLoader = Effect.gen(function*() {
         }
 
         // Parse embeddings JSON
-        const embeddingsJson = embeddingsJsonOpt.value
-        const embeddings = yield* Schema.decode(OntologyEmbeddingsJson)(embeddingsJson).pipe(
+        const embeddings = yield* Schema.decodeEffect(OntologyEmbeddingsJson)(embeddingsJsonOpt).pipe(
           Effect.mapError((error) =>
-            OntologyParsingFailed.make({
+            OntologyParsingFailed.fromUnknown({
               message: `Failed to parse embeddings JSON: ${String(error)}`,
               path: embeddingsPath,
               cause: O.some(error)
@@ -335,7 +334,7 @@ const makeOntologyLoader = Effect.gen(function*() {
             actualVersion: embeddings.version
           })
           return yield* Effect.fail(
-            EmbeddingsVersionMismatch.make({
+            EmbeddingsVersionMismatch.fromUnknown({
               message: `Embeddings version mismatch: expected ${expectedVersion}, got ${embeddings.version}`,
               ontologyUri,
               expectedVersion,
@@ -444,7 +443,7 @@ const makeOntologyLoader = Effect.gen(function*() {
           if (result.property) {
             for (const domainLocalName of result.property.domain) {
               const domainClass = ontologyContext.classes.find(
-                (c) => extractLocalNameFromIri(c.id) === domainLocalName
+                (c) => c.id === domainLocalName
               )
               if (domainClass && !seenIds.has(domainClass.id)) {
                 bm25Ranked.push({ id: domainClass.id })

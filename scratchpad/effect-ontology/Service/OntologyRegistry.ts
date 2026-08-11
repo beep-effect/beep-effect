@@ -19,6 +19,8 @@ import { OntologyRegistryJson } from "../Domain/Schema/OntologyRegistry.ts"
 import { ConfigService, ConfigServiceDefault } from "./Config.ts"
 import { StorageService } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
 
 /**
@@ -76,7 +78,7 @@ const DEFAULT_REGISTRY_PATH = "registry.json"
 export class OntologyRegistryService extends Context.Service<OntologyRegistryService>()(
   $I`OntologyRegistryService`,
   {
-    make: Effect.gen(function*() {
+    make: Effect.fn("OntologyRegistryService.make")(function*() {
       const storage = yield* StorageService
       const config = yield* ConfigService
 
@@ -107,14 +109,14 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
           return yield* Effect.fail(new RegistryNotFoundError(registryPath))
         }
 
-        const registry = yield* Schema.decode(OntologyRegistryJson)(contentOpt).pipe(
+        const registry = yield* Schema.decodeEffect(OntologyRegistryJson)(contentOpt).pipe(
           Effect.mapError((cause) => new RegistryParseError(registryPath, cause))
         )
 
         yield* Effect.logInfo("Ontology registry loaded", {
           version: registry.version,
           ontologyCount: registry.ontologies.length,
-          ontologies: registry.ontologies.map((o) => o.id)
+          ontologies: A.map(registry.ontologies, (ontology) => ontology.id)
         })
 
         cachedRegistry = registry
@@ -127,8 +129,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
       const getById = (id: string) =>
         Effect.gen(function*() {
           const registry = yield* loadRegistry
-          const entry = registry.ontologies.find((o) => o.id === id)
-          return Option.fromNullishOr(entry)
+          return A.findFirst(registry.ontologies, (ontology) => ontology.id === id)
         })
 
       /**
@@ -137,8 +138,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
       const getByIri = (iri: string) =>
         Effect.gen(function*() {
           const registry = yield* loadRegistry
-          const entry = registry.ontologies.find((o) => o.iri === iri)
-          return Option.fromNullishOr(entry)
+          return A.findFirst(registry.ontologies, (ontology) => ontology.iri === iri)
         })
 
       /**
@@ -153,17 +153,17 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
       const resolveToPath = (uri: string) =>
         Effect.gen(function*() {
           // Direct GCS path - strip prefix
-          if (uri.startsWith("gs://")) {
-            return uri.replace(/^gs:\/\/[^/]+\//, "")
+          if (Str.startsWith("gs://")(uri)) {
+            return Str.replace(/^gs:\/\/[^/]+\//, "")(uri)
           }
 
           // Direct storage path (contains slash or ends in .ttl/.owl)
-          if (uri.includes("/") || uri.endsWith(".ttl") || uri.endsWith(".owl")) {
+          if (Str.includes("/")(uri) || Str.endsWith(".ttl")(uri) || Str.endsWith(".owl")(uri)) {
             return uri
           }
 
           // Try as IRI first
-          if (uri.startsWith("http")) {
+          if (Str.startsWith("http")(uri)) {
             const entry = yield* getByIri(uri)
             if (Option.isSome(entry)) {
               return entry.value.storagePath
@@ -186,19 +186,18 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
       const resolveToEntry = (uri: string) =>
         Effect.gen(function*() {
           // Try as IRI first
-          if (uri.startsWith("http")) {
+          if (Str.startsWith("http")(uri)) {
             return yield* getByIri(uri)
           }
 
           // Try as short ID (if no slashes)
-          if (!uri.includes("/")) {
+          if (!Str.includes("/")(uri)) {
             return yield* getById(uri)
           }
 
           // Direct path - look up by storagePath
           const registry = yield* loadRegistry
-          const entry = registry.ontologies.find((o) => o.storagePath === uri)
-          return Option.fromNullishOr(entry)
+          return A.findFirst(registry.ontologies, (ontology) => ontology.storagePath === uri)
         })
 
       /**
@@ -225,7 +224,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
         list,
         clearCache
       }
-    }),
+    })(),
   }
 ) {
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([

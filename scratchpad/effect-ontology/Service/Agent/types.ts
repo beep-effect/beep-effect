@@ -9,7 +9,8 @@
  * @module Service/Agent/types
  */
 
-import { Data, Schema } from "effect"
+import { Data, Duration, Schema } from "effect"
+import * as A from "effect/Array"
 import {
   type Agent,
   type AgentId as AgentIdType,
@@ -129,10 +130,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
    * Additional context for agents
    */
-  context: Schema.Record({
-      key: Schema.String,
-      value: Schema.Unknown
-    }).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  context: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Priority (lower = higher priority)
@@ -148,7 +146,13 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
     documentId?: string,
     agentConfig?: OntologyAgentConfig
   ): AgentTask {
-    return AgentTask.make({ taskId, text, documentId, agentConfig, priority: O.some(1) })
+    return AgentTask.make({
+      taskId,
+      text: O.some(text),
+      documentId: O.fromUndefinedOr(documentId),
+      agentConfig: O.fromUndefinedOr(agentConfig),
+      priority: O.some(1)
+    })
   }
 
   /**
@@ -400,7 +404,7 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
     return TerminationCondition.make({
       maxIterations: this.maxIterations,
       stopOnConformance: this.stopOnConformance,
-      timeoutMs: this.timeoutMs
+      timeout: O.map(this.timeoutMs, Duration.millis)
     })
   }
 }
@@ -476,9 +480,9 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
    * Average violations fixed per iteration
    */
   get avgViolationsFixed(): number {
-    if (!this.violationsFixed || this.violationsFixed.length === 0) return 0
-    const sum = this.violationsFixed.reduce((a, b) => a + b, 0)
-    return sum / this.violationsFixed.length
+    if (O.isNone(this.violationsFixed) || this.violationsFixed.value.length === 0) return 0
+    const sum = A.reduce(this.violationsFixed.value, 0, (total, value) => total + value)
+    return sum / this.violationsFixed.value.length
   }
 }
 

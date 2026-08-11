@@ -16,7 +16,9 @@
  */
 
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
-import { Duration, Effect, Layer, Redacted, Schedule, Schema } from "effect"
+import { Duration, Effect, Layer, Order, Redacted, Schedule, Schema } from "effect"
+import * as A from "effect/Array"
+import * as Str from "effect/String"
 import {
   type AnyEmbeddingError,
   EmbeddingError,
@@ -35,7 +37,6 @@ import {
 import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts"
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
-import { NonNegativeInt } from "@beep/schema/Int";
 
 // =============================================================================
 // Constants
@@ -141,9 +142,6 @@ const parseRetryAfterMs = (response: HttpClientResponse.HttpClientResponse): num
  *
  * @internal
  */
-const isTransientStatus = (status: number): boolean =>
-  status === 429 || status >= 500
-
 /**
  * Map HTTP/parsing errors to embedding errors using Effect.catchTag pattern
  *
@@ -155,7 +153,7 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
     const tagged = error as { _tag: string; status?: number; message?: string }
 
     if (tagged._tag === "TimeoutError") {
-      return EmbeddingTimeoutError.make({
+      return EmbeddingTimeoutError.fromUnknown({
         message: "Voyage API timeout",
         provider: "voyage",
         timeoutMs
@@ -164,10 +162,10 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
 
     if (tagged._tag === "ResponseError" && typeof tagged.status === "number") {
       if (tagged.status === 429) {
-        return EmbeddingRateLimitError.make({
+        return EmbeddingRateLimitError.fromUnknown({
           message: "Voyage API rate limit exceeded",
           provider: "voyage",
-          retryAfterMs: O.some(DEFAULT_RETRY_AFTER_SECONDS * 1000)
+          retryAfterMs: DEFAULT_RETRY_AFTER_SECONDS * 1000
         })
       }
       return EmbeddingError.make({
@@ -217,10 +215,9 @@ export interface VoyageProviderConfig {
  * @since 2.0.0
  * @category Constructors
  */
-export const makeVoyageProvider = (
+export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   config: VoyageProviderConfig
-): Effect.Effect<EmbeddingProviderMethods, never, HttpClient.HttpClient | EmbeddingRateLimiter> =>
-  Effect.gen(function*() {
+): Effect.fn.Return<EmbeddingProviderMethods, never, HttpClient.HttpClient | EmbeddingRateLimiter> {
     const httpClient = yield* HttpClient.HttpClient
     const rateLimiter = yield* EmbeddingRateLimiter
 
@@ -269,8 +266,8 @@ export const makeVoyageProvider = (
           HttpClientResponse.schemaBodyJson(VoyageResponseSchema)(res).pipe(
             Effect.map((parsed) => {
               // Sort by index to maintain order (API may return out of order)
-              const sorted = [...parsed.data].sort((a, b) => a.index - b.index)
-              return sorted.map((d) => d.embedding)
+              const sorted = A.sortWith(parsed.data, (datum) => datum.index, Order.Number)
+              return A.map(sorted, (datum) => datum.embedding)
             }),
             Effect.mapError((e) =>
               EmbeddingInvalidResponseError.make({
@@ -283,13 +280,13 @@ export const makeVoyageProvider = (
         // Rate limit: parse error body and include retry-after
         429: (res) =>
           HttpClientResponse.schemaBodyJson(VoyageErrorSchema)(res).pipe(
-            Effect.catch(() => Effect.succeed({ detail: undefined })),
+            Effect.catch(() => Effect.succeed({ detail: O.none<string>() })),
             Effect.flatMap((errorBody) =>
               Effect.fail(
-                EmbeddingRateLimitError.make({
-                  message: `Voyage API rate limit: ${errorBody.detail ?? "rate limit exceeded"}`,
+                EmbeddingRateLimitError.fromUnknown({
+                  message: `Voyage API rate limit: ${O.getOrElse(errorBody.detail, () => "rate limit exceeded")}`,
                   provider: "voyage",
-                  retryAfterMs: O.some(parseRetryAfterMs(res))
+                  retryAfterMs: parseRetryAfterMs(res)
                 })
               )
             )
@@ -298,11 +295,11 @@ export const makeVoyageProvider = (
         // Server errors (5xx): transient, include status in message
         "5xx": (res) =>
           HttpClientResponse.schemaBodyJson(VoyageErrorSchema)(res).pipe(
-            Effect.catch(() => Effect.succeed({ detail: undefined })),
+            Effect.catch(() => Effect.succeed({ detail: O.none<string>() })),
             Effect.flatMap((errorBody) =>
               Effect.fail(
                 EmbeddingError.make({
-                  message: `Voyage API server error (${res.status}): ${errorBody.detail ?? "internal error"}`,
+                  message: `Voyage API server error (${res.status}): ${O.getOrElse(errorBody.detail, () => "internal error")}`,
                   provider: "voyage"
                 })
               )
@@ -312,11 +309,11 @@ export const makeVoyageProvider = (
         // Client errors (4xx except 429): non-retryable
         "4xx": (res) =>
           HttpClientResponse.schemaBodyJson(VoyageErrorSchema)(res).pipe(
-            Effect.catch(() => Effect.succeed({ detail: undefined })),
+            Effect.catch(() => Effect.succeed({ detail: O.none<string>() })),
             Effect.flatMap((errorBody) =>
               Effect.fail(
                 EmbeddingError.make({
-                  message: `Voyage API error (${res.status}): ${errorBody.detail ?? "client error"}`,
+                  message: `Voyage API error (${res.status}): ${O.getOrElse(errorBody.detail, () => "client error")}`,
                   provider: "voyage"
                 })
               )
@@ -339,14 +336,13 @@ export const makeVoyageProvider = (
       embedBatch: (requests: ReadonlyArray<EmbeddingRequest>) =>
               Effect.acquireUseRelease(
                 rateLimiter.acquire(),
-                () =>
-                  Effect.gen(function*() {
+                Effect.fn("VoyageEmbeddingProvider.embedBatch")(function*() {
                     if (requests.length === 0) {
                       return []
                     }
 
                     const inputType = mapInputType(requests[0].taskType)
-                    const texts = requests.map((r) => r.text)
+                    const texts = A.map(requests, (request) => request.text)
 
                     // Build request (pure value, not Effect)
                     // Note: bodyUnsafeJson is synchronous and returns HttpClientRequest directly,
@@ -356,7 +352,7 @@ export const makeVoyageProvider = (
                         Authorization: `Bearer ${config.apiKey}`,
                         "Content-Type": "application/json"
                       }),
-                      HttpClientRequest.bodyUnsafeJson({
+                      HttpClientRequest.bodyJsonUnsafe({
                         input: texts,
                         model,
                         input_type: inputType
@@ -370,7 +366,7 @@ export const makeVoyageProvider = (
                       Effect.timeout(Duration.millis(timeoutMs)),
                       Effect.catchTag("TimeoutError", () =>
                         Effect.fail(
-                          EmbeddingTimeoutError.make({
+                          EmbeddingTimeoutError.fromUnknown({
                             message: "Voyage API timeout",
                             provider: "voyage",
                             timeoutMs
@@ -383,7 +379,7 @@ export const makeVoyageProvider = (
                         schedule: retrySchedule,
                         while: (error) =>
                           error._tag === "EmbeddingRateLimitError" ||
-                          (error._tag === "EmbeddingError" && error.message.includes("server error"))
+                          (error._tag === "EmbeddingError" && Str.includes("server error")(error.message))
                       })
                     )
 

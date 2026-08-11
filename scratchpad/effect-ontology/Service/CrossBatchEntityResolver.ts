@@ -9,8 +9,11 @@
  * @module Service/CrossBatchEntityResolver
  */
 
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
+import { Effect, HashMap, HashSet, MutableHashMap, Option, Schema, Context, Layer } from "effect"
 import type { SqlError } from "effect/unstable/sql"
-import { Effect, HashMap, Option, Schema, Context, Layer } from "effect"
+import * as A from "effect/Array"
+import * as Str from "effect/String"
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
 import type { Entity } from "../Domain/Model/Entity.ts"
 import { type BlockingCandidate, EntityRegistryRepository } from "../Repository/EntityRegistry.ts"
@@ -26,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolve
 /**
  * Combined error type for cross-batch resolution operations
  */
-export type CrossBatchResolutionError = AnyEmbeddingError | SqlError.SqlError
+export type CrossBatchResolutionError = AnyEmbeddingError | EffectDrizzleQueryError | SqlError.SqlError
 
 // =============================================================================
 // Types
@@ -99,7 +102,7 @@ const DEFAULT_CONFIG = CrossBatchResolverConfig.make({})
 export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityResolver>()(
   $I`CrossBatchEntityResolver`,
   {
-    make: Effect.gen(function*() {
+    make: Effect.fn("CrossBatchEntityResolver.make")(function*() {
       const registry = yield* EntityRegistryRepository
       const embeddingService = yield* EmbeddingService
 
@@ -126,7 +129,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
           // Generate embeddings for all entities
           const embeddings = yield* embeddingService.embedBatch(
-            entities.map((e) => e.mention),
+            A.map(entities, (entity) => entity.mention),
             "clustering"
           )
 
@@ -153,25 +156,25 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
                   ontologyId,
                   entityEmbedding,
                   {
-                    types: entity.types.length > 0 ? entity.types : undefined,
+                    ...(entity.types.length > 0 ? { types: entity.types } : {}),
                     k: config.maxCandidatesPerEntity,
                     minSimilarity: config.candidateThreshold
                   }
                 )
 
                 // Merge and deduplicate candidates (prefer higher similarity)
-                const merged = new Map<string, BlockingCandidate>()
-                for (const c of [...tokenCandidates, ...embeddingCandidates]) {
-                  const existing = merged.get(c.canonicalEntityId)
-                  if (!existing || c.similarity > existing.similarity) {
-                    merged.set(c.canonicalEntityId, c)
+                const merged = MutableHashMap.empty<string, BlockingCandidate>()
+                for (const candidate of A.appendAll(tokenCandidates, embeddingCandidates)) {
+                  const existing = MutableHashMap.get(merged, candidate.canonicalEntityId)
+                  if (Option.isNone(existing) || candidate.similarity > existing.value.similarity) {
+                    MutableHashMap.set(merged, candidate.canonicalEntityId, candidate)
                   }
                 }
 
                 candidateMap = HashMap.set(
                   candidateMap,
                   entity.id,
-                  Array.from(merged.values())
+                  A.map(A.fromIterable(merged), ([, candidate]) => candidate)
                 )
               }),
             { concurrency: 10 }
@@ -252,14 +255,13 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           mergedEntities: Array<MergedEntity>
           unresolvedEntities: Array<{ entity: Entity; embedding: ReadonlyArray<number> }>
         },
-        batchId: string,
         config: CrossBatchResolverConfig = DEFAULT_CONFIG
       ): Effect.fn.Return<{
         canonicalMap: Record<string, string>
         newCanonicals: Array<string>
-      }, SqlError.SqlError> {
+      }, EffectDrizzleQueryError | SqlError.SqlError> {
           const { canonicalMap, mergedEntities, unresolvedEntities } = resolutionResult
-          const newCanonicalIris: Array<string> = []
+          let newCanonicalIris: Array<string> = []
 
           // Update existing canonicals with merge info
           for (const merged of mergedEntities) {
@@ -290,8 +292,8 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
               ontologyId,
               iri,
               canonicalMention: entity.mention,
-              types: entity.types as Array<string>,
-              embedding: embedding as Array<number>,
+              types: A.fromIterable(entity.types),
+              embedding: A.fromIterable(embedding),
               mergeCount: 1,
               confidenceAvg: "1.0"
             })
@@ -305,7 +307,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
             }
 
             canonicalMap[entity.id] = iri
-            newCanonicalIris.push(iri)
+            newCanonicalIris = A.append(newCanonicalIris, iri)
           }
 
           return {
@@ -348,7 +350,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
           // Generate embeddings for all entities
           const embeddings = yield* embeddingService.embedBatch(
-            entities.map((e) => e.mention),
+            A.map(entities, (entity) => entity.mention),
             "clustering"
           )
 
@@ -365,7 +367,6 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
               ...resolutionResult,
               unresolvedEntities: resolutionResult.unresolvedEntities
             },
-            batchId,
             config
           )
 
@@ -411,7 +412,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         isEmpty,
         getStats
       }
-    }),
+    })(),
   }
 ) {
     static readonly Default = Layer.effect(this, this.make);
@@ -434,7 +435,7 @@ export const CrossBatchEntityResolverLive = CrossBatchEntityResolver.Default
  * Tokenize a mention for blocking index
  */
 function tokenize(mention: string): Array<string> {
-  const stopWords = new Set([
+  const stopWords = HashSet.make(
     "the",
     "a",
     "an",
@@ -489,10 +490,10 @@ function tokenize(mention: string): Array<string> {
     "ltd",
     "co",
     "company"
-  ])
+  )
 
-  return mention
-    .toLowerCase()
-    .split(/[\s\-_.,;:!?'"()[]{}]+/)
-    .filter((token) => token.length > 2 && !stopWords.has(token))
+  return A.filter(
+    Str.split(/[\s\-_.,;:!?'"()[\]{}]+/)(Str.toLowerCase(mention)),
+    (token) => token.length > 2 && !HashSet.has(stopWords, token)
+  )
 }

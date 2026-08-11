@@ -486,13 +486,13 @@ export const EventBusServiceSql = Layer.effect(
 
     const subscribeEvents: EventBusService["subscribeEvents"] = () =>
       Effect.sync(() =>
-        Stream.fromQueue(eventChanges).pipe(
+        Stream.fromSubscription(eventChanges).pipe(
           Stream.map((entry) => ({
             id: entry.idString,
             event: entry.event,
             primaryKey: entry.primaryKey,
             payload: entry.payload,
-            createdAt: DateTime.unsafeMake(entry.createdAtMillis)
+            createdAt: entry.createdAt
           })),
           Stream.mapError((cause) =>
             EventBusError.make({
@@ -549,10 +549,10 @@ export const EventBusServiceSql = Layer.effect(
  */
 export const EventBusServiceSqlLayers = Layer.mergeAll(
   SqlEventJournal.layer({
-    eventLogTable: "effect_event_journal",
+    entryTable: "effect_event_journal",
     remotesTable: "effect_event_remotes"
   }),
-  PersistedQueue.layerStore({
+  PersistedQueue.layerStoreSql({
     tableName: "effect_queue"
   })
 )

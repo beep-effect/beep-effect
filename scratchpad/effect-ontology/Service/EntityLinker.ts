@@ -13,6 +13,7 @@
 import { Graph, Option } from "effect"
 import type { ERNode, MentionRecord } from "../Domain/Model/EntityResolution.ts"
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts"
+import { EntityId } from "../Domain/Model/shared.ts"
 
 /**
  * Get canonical ID for an entity
@@ -38,8 +39,8 @@ import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGrap
  */
 export const getCanonicalId = (
   erg: EntityResolutionGraph,
-  entityId: string
-): Option.Option<string> => {
+  entityId: EntityId
+): Option.Option<EntityId> => {
   const canonical = erg.canonicalMap[entityId]
   return canonical !== undefined ? Option.some(canonical) : Option.none()
 }
@@ -68,12 +69,12 @@ export const getCanonicalId = (
  */
 export const getMentionsForEntity = (
   erg: EntityResolutionGraph,
-  canonicalId: string
+  canonicalId: EntityId
 ): ReadonlyArray<MentionRecord> => {
   // Find all entity IDs that map to this canonical ID
   const matchingIds = Object.entries(erg.canonicalMap)
     .filter(([_, canonical]) => canonical === canonicalId)
-    .map(([entityId]) => entityId)
+    .map(([entityId]) => EntityId.fromUnknown(entityId))
 
   // Look up MentionRecord nodes in the graph
   const mentions: Array<MentionRecord> = []
@@ -134,7 +135,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   const mentionNodes: Array<{ idx: Graph.NodeIndex; node: MentionRecord }> = []
   const resolvedNodes: Array<{ idx: Graph.NodeIndex; canonicalId: string; mention: string }> = []
 
-  for (const [idx, node] of erg.graph.nodes) {
+  for (const [idx, node] of Graph.entries(Graph.nodes(erg.graph))) {
     if (node._tag === "MentionRecord") {
       mentionNodes.push({ idx, node })
     } else if (node._tag === "ResolvedEntity") {
@@ -159,7 +160,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   }
 
   // Add edges
-  for (const [_edgeIdx, edgeInfo] of erg.graph.edges) {
+  for (const [_edgeIdx, edgeInfo] of Graph.entries(Graph.edges(erg.graph))) {
     const { data, source, target } = edgeInfo
 
     if (data._tag === "ResolutionEdge") {

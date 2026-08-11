@@ -8,7 +8,7 @@
  * @module Service/EntityIndex
  */
 
-import { Context, Effect, HashMap, HashSet, Layer, Option, Order, Ref } from "effect"
+import { Context, Effect, HashMap, HashSet, Layer, Option, Ref } from "effect"
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
 import type { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts"
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts"
@@ -656,12 +656,17 @@ export const makePersistentEntityIndex = (
           const { Entity: EntityClass } = yield* Effect.promise(() => import("../Domain/Model/Entity.ts"))
 
           for (const entry of data.entities) {
-            const entity = EntityClass.make({
+            const entityOption = EntityClass.decodeOption({
               id: entry.id as Entity["id"],
               mention: entry.mention,
               types: entry.types,
               attributes: entry.attributes
             })
+            if (Option.isNone(entityOption)) {
+              yield* Effect.logWarning("Skipping invalid persisted entity", { entityId: entry.id })
+              continue
+            }
+            const entity = entityOption.value
             entities = HashMap.set(entities, entity.id, entity)
             embeddings = HashMap.set(embeddings, entity.id, entry.embedding)
             typeIndex = addToTypeIndex(typeIndex, entity)
@@ -692,17 +697,15 @@ export const makePersistentEntityIndex = (
         Effect.gen(function*() {
           const blobPath = `${indexPath}/current.json`
 
-          const content = yield* storage.get(blobPath).pipe(
-            Effect.catch(() => Effect.succeed(Option.none<string>()))
-          )
+          const content = yield* storage.get(blobPath).pipe(Effect.catch(() => Effect.succeed(undefined)))
 
-          if (Option.isNone(content)) {
+          if (content === undefined) {
             yield* Effect.logDebug("No persisted EntityIndex found", { path: blobPath })
             return 0
           }
 
           try {
-            const data: SerializedEntityIndex = JSON.parse(content.value)
+            const data: SerializedEntityIndex = JSON.parse(content)
             const loaded = yield* service.deserialize(data)
             yield* Effect.logInfo("EntityIndex loaded from GCS", {
               path: blobPath,

@@ -15,6 +15,8 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/Persistence/MigrationRu
 
 import {SqlClient} from "effect/unstable/sql";
 import {Effect, Option} from "effect";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -36,7 +38,15 @@ export interface MigrationResult {
 // Service
 // -----------------------------------------------------------------------------
 
-export class MigrationRunner extends Context.Service<MigrationRunner>()($I`MigrationRunner`, {
+export interface MigrationRunnerService {
+  readonly getCurrentVersion: Effect.Effect<number>
+  readonly applyMigration: (
+    migration: Migration
+  ) => Effect.Effect<void, { readonly version: number; readonly error: string }>
+  readonly runMigrations: (migrations: ReadonlyArray<Migration>) => Effect.Effect<MigrationResult>
+}
+
+export class MigrationRunner extends Context.Service<MigrationRunner, MigrationRunnerService>()($I`MigrationRunner`, {
   make: Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
 
@@ -59,48 +69,43 @@ export class MigrationRunner extends Context.Service<MigrationRunner>()($I`Migra
     /**
      * Apply a single migration within a transaction
      */
-    const applyMigration =
-      Effect.fn(function* (migration: Migration) {
+    const applyMigration = Effect.fn("MigrationRunner.applyMigration")(function* (
+      migration: Migration
+    ): Effect.fn.Return<void, { readonly version: number; readonly error: string }> {
+      return yield* Effect.gen(function* () {
         yield* Effect.logInfo(`Applying migration ${migration.version}: ${migration.name}`);
-
-        // Execute the migration SQL
         yield* sql.unsafe(migration.sql);
-
-        // Record the migration (table should be created by migration 1)
         yield* sql`
           INSERT INTO schema_migrations (version, name)
           VALUES (${migration.version},
                   ${migration.name}) ON CONFLICT (version) DO NOTHING
         `;
-
         yield* Effect.logInfo(`Migration ${migration.version} applied successfully`);
-      }, (effect) => Effect.catch(
-        effect,
-        Effect.fn(function* (error) {
-          yield* Effect.logError(`Migration ${migration.version} failed`, {error});
-          return yield* Effect.fail({
-            version: migration.version,
-            error: error instanceof Error ? error.message : String(error)
-          });
-        })
-      ));
+      }).pipe(
+        Effect.mapError((error) => ({
+          version: migration.version,
+          error: error instanceof Error ? error.message : String(error)
+        }))
+      )
+    });
 
     /**
      * Run all pending migrations
      */
-    const runMigrations = (migrations: ReadonlyArray<Migration>) =>
-      Effect.gen(function* () {
+    const runMigrations = Effect.fn("MigrationRunner.runMigrations")(function* (
+      migrations: ReadonlyArray<Migration>
+    ): Effect.fn.Return<MigrationResult> {
         const currentVersion = yield* getCurrentVersion;
         yield* Effect.logInfo(`Current schema version: ${currentVersion}`);
 
-        const sorted = [...migrations].sort((a, b) => a.version - b.version);
-        const pending = sorted.filter((m) => m.version > currentVersion);
+        const sorted = A.sort(migrations, Order.mapInput(Order.Number, (migration: Migration) => migration.version));
+        const pending = A.filter(sorted, (migration) => migration.version > currentVersion);
 
         if (pending.length === 0) {
           yield* Effect.logInfo("No pending migrations");
           return {
             applied: [] as Array<Migration>,
-            skipped: sorted.filter((m) => m.version <= currentVersion).map((m) => m.version),
+            skipped: A.map(A.filter(sorted, (migration) => migration.version <= currentVersion), (migration) => migration.version),
             errors: []
           } satisfies MigrationResult;
         }
@@ -129,7 +134,7 @@ export class MigrationRunner extends Context.Service<MigrationRunner>()($I`Migra
 
         return {
           applied,
-          skipped: sorted.filter((m) => m.version <= currentVersion).map((m) => m.version),
+          skipped: A.map(A.filter(sorted, (migration) => migration.version <= currentVersion), (migration) => migration.version),
           errors
         } satisfies MigrationResult;
       });

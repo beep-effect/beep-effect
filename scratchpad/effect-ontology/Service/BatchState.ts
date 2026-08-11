@@ -30,36 +30,8 @@ export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStat
 
 export const BatchStateHubLayer = BatchStateHub.Default
 
-const storageAsKeyValueStore = Effect.gen(function*() {
-  const storage = yield* StorageService
-
-  return KeyValueStore.make({
-    get: (key) => storage.get(key),
-    getUint8Array: (key) => storage.getUint8Array(key),
-    set: (key, value) => storage.set(key, value),
-    remove: (key) => storage.remove(key),
-    clear: storage.clear,
-    size: storage.size,
-    has: (key) => storage.get(key).pipe(Effect.map(Option.isSome)),
-    isEmpty: Effect.succeed(false),
-    modify: (key, f) =>
-      storage.get(key).pipe(
-        Effect.flatMap((current) =>
-          Option.match(O.fromNullishOr(current), {
-            onNone: () => Effect.succeed(Option.none<string>()),
-            onSome: (value) =>
-              Effect.flatMap(
-                storage.set(key, f(value)),
-                () => Effect.succeed(Option.some(value))
-              )
-          })
-        )
-      )
-  })
-})
-
-export const BatchStatePersistenceLayer = Persistence.layerKeyValueStore.pipe(
-  Layer.provide(Layer.effect(KeyValueStore.KeyValueStore, storageAsKeyValueStore))
+export const BatchStatePersistenceLayer = Persistence.layerKvs.pipe(
+  Layer.provide(Layer.effect(KeyValueStore.KeyValueStore, StorageService))
 )
 
 export const persistState =
@@ -74,7 +46,7 @@ export const getBatchStateFromStore =
     const storage = yield* StorageService
     const stored = yield* storage.get(stateKey(batchId))
 
-    return yield* Option.match(O.fromNullishOr(stored), {
+    return yield* Option.match(Option.fromUndefinedOr(stored), {
       onNone: () => Effect.succeed(Option.none<BatchState>()),
       // decodeState uses Schema.fromJsonString, which handles JSON parsing directly
       // No need for explicit JSON.parse - avoids double parse overhead

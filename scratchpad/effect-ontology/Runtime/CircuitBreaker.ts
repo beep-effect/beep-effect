@@ -13,10 +13,9 @@
  * @module Runtime/CircuitBreaker
  */
 
-import { Clock, Duration, Effect, Ref } from "effect"
+import { Clock, Duration, Effect, Ref, Schema } from "effect"
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts"
 import * as O from "effect/Option";
-import { NonNegativeInt } from "@beep/schema/Int";
 
 /**
  * Circuit breaker state
@@ -180,10 +179,8 @@ export const makeCircuitBreaker = (
                           Effect.flatMap((allowed): Effect.Effect<A, E | CircuitOpenError, R> =>
                             allowed
                               ? effect.pipe(
-                                Effect.tapBoth({
-                                  onSuccess: () => recordSuccess,
-                                  onFailure: () => recordFailure
-                                })
+                                Effect.tap(() => recordSuccess),
+                                Effect.tapError(() => recordFailure)
                               )
                               : Effect.gen(function*() {
                                 const current = yield* getState
@@ -191,7 +188,7 @@ export const makeCircuitBreaker = (
                                 const resetTimeoutMs = Duration.toMillis(config.resetTimeout)
                                 const retryAfterMs = resetTimeoutMs - (Number(now) - current.lastFailureTime)
                                 return yield* Effect.fail(
-                                  CircuitOpenError.make({
+                                  Schema.decodeUnknownSync(CircuitOpenError)({
                                     resetTimeoutMs,
                                     lastFailureTime: O.some(current.lastFailureTime),
                                     retryAfterMs: O.some(Math.max(0, retryAfterMs))

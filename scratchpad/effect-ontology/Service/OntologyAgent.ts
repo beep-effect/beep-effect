@@ -10,7 +10,8 @@
  */
 
 import { LanguageModel } from "effect/unstable/ai"
-import { Chunk, DateTime, Duration, Effect, Match, Option, Context, Layer } from "effect"
+import { Chunk, DateTime, Duration, Effect, Match, MutableHashMap, Context, Layer } from "effect"
+import * as A from "effect/Array"
 import type { ShaclValidationError, ValidationPolicyError } from "../Domain/Error/Shacl.ts"
 import type { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts"
 import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts"
@@ -39,7 +40,7 @@ import {
   type ReasoningResult,
   type RuleParseError
 } from "./Reasoner.ts"
-import { ShaclService, type ShaclValidationReport, type ShaclViolation, type ValidationPolicy } from "./Shacl.ts"
+import { ShaclService, type ShaclValidationReport, type ShaclViolation, ValidationPolicy } from "./Shacl.ts"
 import { FallbackResult, type SparqlBindings, type SparqlQuad, SparqlService } from "./Sparql.ts"
 import { type SparqlGenerationError, SparqlGenerator } from "./SparqlGenerator.ts"
 import { StorageService } from "./Storage.ts"
@@ -47,6 +48,7 @@ import { $ScratchpadId } from "@beep/identity";
 import * as O from "effect/Option";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyAgent");
 
@@ -181,30 +183,29 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const turtle = yield* rdfBuilder.toTurtle(store)
 
           const endTime = yield* DateTime.now
-          const durationMs = DateTime.distance(startTime, endTime)
+          const duration = DateTime.distance(startTime, endTime)
 
           // Build metrics from graph
-          const metrics = ExtractionMetrics.make({
+          const metrics = ExtractionMetrics.fromUnknown({
             entityCount: NonNegativeInt.make(graph.entities.length),
             relationCount: NonNegativeInt.make(graph.relations.length),
             chunkCount: NonNegativeInt.make(1), // TODO: Get actual chunk count from workflow
             inputTokens: NonNegativeInt.make(0), // TODO: Track from workflow when available
             outputTokens: NonNegativeInt.make(0),
-            durationMs
+            duration: Duration.toMillis(duration)
           })
 
           yield* Effect.logInfo("OntologyAgent.extract complete", {
             entityCount: metrics.entityCount,
             relationCount: metrics.relationCount,
             turtleLength: turtle.length,
-            durationMs: metrics.durationMs
+            durationMs: Duration.toMillis(metrics.duration)
           })
 
-          return ExtractionResult.make({
+          return ExtractionResult.fromUnknown({
             graph,
             metrics,
-            turtle: O.some(turtle),
-            validationReport: O.none()
+            turtle
           })
         }),
 
@@ -245,13 +246,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       const startTime = yield* DateTime.now
 
                       // Build RunConfig from OntologyAgentConfig and defaults
-                      const runConfig = yield* buildRunConfig(config, options.agentConfig)
+                      const runConfig = yield* buildRunConfig(config, O.getOrUndefined(options.agentConfig))
 
                       yield* Effect.logInfo("OntologyAgent.extractWithClaims starting", {
                         textLength: text.length,
                         articleId: options.articleId,
                         defaultConfidence: options.defaultConfidence,
-                        targetNamespace: options.targetNamespace ?? config.rdf.baseNamespace
+                        targetNamespace: O.getOrElse(options.targetNamespace, () => config.rdf.baseNamespace)
                       })
 
                       // Execute extraction workflow
@@ -271,7 +272,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       const turtle = yield* rdfBuilder.toTurtle(store)
 
                       // Create claims from each relation
-                      const defaultConfidence = options.defaultConfidence ?? 0.8
+                      const defaultConfidence = options.defaultConfidence
                       let claimCount = 0
 
                       // Build entity ID -> IRI map for resolving subject/object references
@@ -279,32 +280,41 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       // This ensures entities are minted in the local ontology namespace,
                       // NOT borrowed from class namespaces (e.g., foaf:, org:)
                       // Convert Namespace identifier to full IRI if targetNamespace is provided
-                      const baseNamespace = options.targetNamespace
+                      const baseNamespace = O.isSome(options.targetNamespace)
                         ? (() => {
                           // Extract protocol://domain/ from config.rdf.baseNamespace
                           const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//)
                           const baseDomain = match ? match[0] : "http://example.org/"
-                          return `${baseDomain}${options.targetNamespace}/`
+                          return `${baseDomain}${options.targetNamespace.value}/`
                         })()
                         : config.rdf.baseNamespace
-                      const entityIriMap = new Map<string, string>()
+                      const entityIriMap = MutableHashMap.empty<string, string>()
                       for (const entity of graph.entities) {
-                        entityIriMap.set(entity.id, `${baseNamespace}${entity.id}`)
+                        MutableHashMap.set(entityIriMap, entity.id, `${baseNamespace}${entity.id}`)
                       }
 
                       for (const relation of graph.relations) {
                         // Resolve subject IRI from entity ID (use baseNamespace for fallback too)
-                        const subjectIri = entityIriMap.get(relation.subjectId) ?? `${baseNamespace}${relation.subjectId}`
+                        const subjectIri = O.getOrElse(
+                          MutableHashMap.get(entityIriMap, relation.subjectId),
+                          () => `${baseNamespace}${relation.subjectId}`
+                        )
 
                         // Determine if object is entity reference or literal
                         const isEntityRef = typeof relation.object === "string" && relation.isEntityReference
                         const objectValue = isEntityRef
-                          ? (entityIriMap.get(relation.object as string) ?? `${baseNamespace}${relation.object}`)
+                          ? O.getOrElse(
+                            MutableHashMap.get(entityIriMap, relation.object as string),
+                            () => `${baseNamespace}${relation.object}`
+                          )
                           : String(relation.object)
                         const objectType = isEntityRef ? "iri" as const : "literal" as const
 
                         // Get confidence from evidence span if available
-                        const confidence = relation.evidence?.confidence ?? defaultConfidence
+                        const confidence = O.match(relation.evidence, {
+                          onNone: () => defaultConfidence,
+                          onSome: (evidence) => O.getOrElse(evidence.confidence, () => defaultConfidence)
+                        })
 
                         // Build claim input from relation
                         const claimInput: CreateClaimInput = {
@@ -315,13 +325,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                           objectType,
                           articleId: options.articleId,
                           confidence,
-                          evidence: relation.evidence ?
-                            {
-                              text: relation.evidence.text,
-                              startOffset: NonNegativeInt.make(relation.evidence.startChar),
-                              endOffset: relation.evidence.endChar
-                            } :
-                            undefined
+                          ...(O.isSome(relation.evidence) ? {
+                            evidence: {
+                              text: relation.evidence.value.text,
+                              startOffset: relation.evidence.value.startChar,
+                              endOffset: relation.evidence.value.endChar
+                            }
+                          } : {})
                         }
 
                         yield* claimService.createClaim(claimInput)
@@ -329,30 +339,29 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       }
 
                       const endTime = yield* DateTime.now
-                      const durationMs = DateTime.distance(startTime, endTime)
+                      const duration = DateTime.distance(startTime, endTime)
 
                       // Build metrics from graph
-                      const metrics = ExtractionMetrics.make({
+                      const metrics = ExtractionMetrics.fromUnknown({
                         entityCount: NonNegativeInt.make(graph.entities.length),
                         relationCount: NonNegativeInt.make(graph.relations.length),
                         chunkCount: NonNegativeInt.make(1),
                         inputTokens: NonNegativeInt.make(0),
                         outputTokens: NonNegativeInt.make(0),
-                        durationMs
+                        duration: Duration.toMillis(duration)
                       })
 
                       yield* Effect.logInfo("OntologyAgent.extractWithClaims complete", {
                         entityCount: metrics.entityCount,
                         relationCount: metrics.relationCount,
                         claimCount: NonNegativeInt.make(claimCount),
-                        durationMs: metrics.durationMs
+                        durationMs: Duration.toMillis(metrics.duration)
                       })
 
-                      return ExtractWithClaimsResult.make({
+                      return ExtractWithClaimsResult.fromUnknown({
                         graph,
                         metrics,
-                        turtle: O.some(turtle),
-                        validationReport: O.none(),
+                        turtle,
                         claimCount,
                         articleId: options.articleId
                       })
@@ -443,16 +452,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       const turtle = yield* rdfBuilder.toTurtle(store)
 
                       const endTime = yield* DateTime.now
-                      const durationMs = DateTime.distance(startTime, endTime)
+                      const duration = DateTime.distance(startTime, endTime)
 
                       // Build metrics from graph
-                      const metrics = ExtractionMetrics.make({
+                      const metrics = ExtractionMetrics.fromUnknown({
                         entityCount: NonNegativeInt.make(graph.entities.length),
                         relationCount: NonNegativeInt.make(graph.relations.length),
                         chunkCount: NonNegativeInt.make(1),
                         inputTokens: NonNegativeInt.make(0),
                         outputTokens: NonNegativeInt.make(0),
-                        durationMs
+                        duration: Duration.toMillis(duration)
                       })
 
                       yield* Effect.logInfo("OntologyAgent.extractWithReasoning complete", {
@@ -460,14 +469,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                         relationCount: metrics.relationCount,
                         inferredTripleCount: reasoningResult.inferredTripleCount,
                         turtleLength: turtle.length,
-                        durationMs: metrics.durationMs
+                        durationMs: Duration.toMillis(metrics.duration)
                       })
 
-                      return ExtractionResult.make({
+                      return ExtractionResult.fromUnknown({
                         graph,
                         metrics,
-                        turtle: O.some(turtle),
-                        validationReport: O.none()
+                        turtle
                       })
                     }),
 
@@ -538,16 +546,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       const report = yield* shaclService.validate(rdfStore._store, shapesStore)
 
                       const endTime = yield* DateTime.now
-                      const durationMs = DateTime.distance(startTime, endTime)
+                      const duration = DateTime.distance(startTime, endTime)
 
                       // Build metrics
-                      const metrics = ExtractionMetrics.make({
+                      const metrics = ExtractionMetrics.fromUnknown({
                         entityCount: NonNegativeInt.make(graph.entities.length),
                         relationCount: NonNegativeInt.make(graph.relations.length),
                         chunkCount: NonNegativeInt.make(1),
                         inputTokens: NonNegativeInt.make(0),
                         outputTokens: NonNegativeInt.make(0),
-                        durationMs
+                        duration: Duration.toMillis(duration)
                       })
 
                       yield* Effect.logInfo("OntologyAgent.extractAndValidate complete", {
@@ -558,11 +566,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                         violationCount: report.violations.length
                       })
 
-                      return ExtractionResult.make({
+                      return ExtractionResult.fromUnknown({
                         graph,
                         metrics,
-                        turtle: O.some(turtle),
-                        validationReport: O.some(report)
+                        turtle,
+                        validationReport: report
                       })
                     }),
 
@@ -684,7 +692,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       })
 
                       // Validate with policy if provided, otherwise just validate
-                      const effectivePolicy = policy ?? { failOnViolation: true, failOnWarning: false }
+                      const effectivePolicy = policy ?? ValidationPolicy.fromUnknown({})
                       const report = yield* shaclService.validateWithPolicy(
                         dataStore._store,
                         shapesStore,
@@ -706,24 +714,24 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                       )
 
                       const endTime = yield* DateTime.now
-                      const durationMs = DateTime.distance(startTime, endTime)
+                      const duration = DateTime.distance(startTime, endTime)
 
                       yield* Effect.logInfo("OntologyAgent.validateGraph complete", {
                         conforms: report.conforms,
                         violationCount: report.violations.length,
                         criticalCount: byLevel.violations.length,
                         warningCount: byLevel.warnings.length,
-                        durationMs
+                        durationMs: Duration.toMillis(duration)
                       })
 
-                      return EnhancedValidationReport.make({
+                      return EnhancedValidationReport.fromUnknown({
                         conforms: report.conforms,
                         violationCount: report.violations.length,
                         explanations,
                         byLevel,
-                        durationMs,
+                        duration: Duration.toMillis(duration),
                         dataGraphTripleCount: NonNegativeInt.make(report.dataGraphTripleCount),
-                        shapesCount
+                        shapesCount: NonNegativeInt.make(shapesCount)
                       })
                     }),
 
@@ -792,13 +800,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                             })
                             // Fallback to all triples if SPARQL execution fails
                             const allQuads = yield* rdfBuilder.queryStore(dataStore, {})
-                            const quads: ReadonlyArray<SparqlQuad> = Chunk.toReadonlyArray(allQuads).map((q) => ({
+                            const quads: ReadonlyArray<SparqlQuad> = A.map(Chunk.toReadonlyArray(allQuads), (q) => ({
                               subject: q.subject,
                               predicate: q.predicate,
                               object: typeof q.object === "object" && "value" in q.object
                                 ? { type: "literal" as const, value: q.object.value }
                                 : { type: "uri" as const, value: q.object as string },
-                              graph: q.graph
+                              ...(O.isSome(q.graph) ? { graph: q.graph.value } : {})
                             }))
                             return new FallbackResult({
                               quads,
@@ -916,11 +924,11 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                         durationMs
                       })
 
-                      return QueryResult.make({
+                      return QueryResult.fromUnknown({
                         answer: answerResult,
                         sparql: sparqlResult.sparql,
                         bindings,
-                        confidence
+                        confidence: UnitInterval.make(confidence)
                       })
                     }),
 
@@ -1053,16 +1061,22 @@ const buildRunConfig = (
   Effect.sync(() => {
     // Build ontology ref from path or use provided
     // Use branded type constructors for identity types
-    const ontologyRef = agentConfig?.ontology ?? OntologyRef.make({
-      namespace: "default" as Namespace,
-      name: "ontology" as OntologyName,
-      contentHash: "0000000000000000" as ContentHash // 16 hex chars placeholder
-    })
+    const ontologyRef = agentConfig === undefined
+      ? OntologyRef.make({
+        namespace: "default" as Namespace,
+        name: "ontology" as OntologyName,
+        contentHash: Str.repeat(64)("0") as ContentHash
+      })
+      : O.getOrElse(agentConfig.ontology, () => OntologyRef.make({
+        namespace: "default" as Namespace,
+        name: "ontology" as OntologyName,
+        contentHash: Str.repeat(64)("0") as ContentHash
+      }))
 
     // Build chunking config
     const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: agentConfig?.chunking?.maxChunkSize ?? 2000,
-      preserveSentences: agentConfig?.chunking?.preserveSentences ?? true,
+      maxChunkSize: agentConfig?.chunking.maxChunkSize ?? 2000,
+      preserveSentences: agentConfig?.chunking.preserveSentences ?? true,
       overlapTokens: 50
     })
 
@@ -1071,7 +1085,7 @@ const buildRunConfig = (
       model: configService.llm.model,
       temperature: configService.llm.temperature,
       maxTokens: configService.llm.maxTokens,
-      timeoutMs: configService.llm.timeoutMs
+      timeout: Duration.millis(configService.llm.timeoutMs)
     })
 
     return RunConfig.make({
@@ -1087,7 +1101,10 @@ const buildRunConfig = (
  * Format SHACL violation into human-readable explanation
  */
 const formatViolationExplanation = (violation: ShaclViolation): string => {
-  const path = violation.path ? ` for property "${extractLocalName(violation.path)}"` : ""
+  const path = O.match(violation.path, {
+    onNone: () => "",
+    onSome: (value) => ` for property "${extractLocalName(value)}"`
+  })
   const value = violation.value ? ` (value: "${violation.value}")` : ""
   return `${violation.severity}: ${violation.message}${path}${value}`
 }
@@ -1096,7 +1113,7 @@ const formatViolationExplanation = (violation: ShaclViolation): string => {
  * Generate correction suggestion from SHACL violation
  */
 const generateCorrectionSuggestion = (violation: ShaclViolation): string | undefined => {
-  const message = violation.message.toLowerCase()
+  const message = Str.toLowerCase(violation.message)
 
   if (message.includes("mincount") || message.includes("required")) {
     return `Add a value for the missing property`
@@ -1141,7 +1158,7 @@ const groupViolationsBySeverity = (violations: ReadonlyArray<ShaclViolation>): V
     }
   }
 
-  return ViolationsByLevel.make(grouped)
+  return ViolationsByLevel.fromUnknown(grouped)
 }
 
 /**

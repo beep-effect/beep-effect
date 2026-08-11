@@ -117,8 +117,8 @@ const oxTermToSparqlValue = (term: oxigraph.Term): SparqlValue => {
     return {
       type: "literal",
       value: lit.value,
-      datatype: lit.datatype?.value,
-      language: lit.language || undefined
+      ...(lit.datatype?.value === undefined ? {} : { datatype: lit.datatype.value }),
+      ...(lit.language === "" ? {} : { language: lit.language })
     }
   }
   // Fallback
@@ -132,7 +132,7 @@ const oxQuadToResult = (quad: oxigraph.Quad): SparqlQuad => ({
   subject: quad.subject.value,
   predicate: quad.predicate.value,
   object: oxTermToSparqlValue(quad.object),
-  graph: quad.graph.termType === "NamedNode" ? quad.graph.value : undefined
+  ...(quad.graph.termType === "NamedNode" ? { graph: quad.graph.value } : {})
 })
 
 // -----------------------------------------------------------------------------
@@ -166,7 +166,23 @@ const oxQuadToResult = (quad: oxigraph.Quad): SparqlQuad => ({
  * @since 2.0.0
  * @category Services
  */
-export class SparqlService extends Context.Service<SparqlService>()(
+export interface SparqlServiceMethods {
+  readonly execute: (
+    store: RdfStore,
+    query: string
+  ) => Effect.Effect<SparqlResult, SparqlExecutionError | SparqlLoadError>
+  readonly executeSelect: (
+    store: RdfStore,
+    query: string,
+    variables: ReadonlyArray<string>
+  ) => Effect.Effect<ReadonlyArray<ReadonlyMap<string, string>>, SparqlExecutionError | SparqlLoadError>
+  readonly executeAsk: (
+    store: RdfStore,
+    query: string
+  ) => Effect.Effect<boolean, SparqlExecutionError | SparqlLoadError>
+}
+
+export class SparqlService extends Context.Service<SparqlService, SparqlServiceMethods>()(
   $I`SparqlService`,
   {
     make: Effect.gen(function*() {
@@ -371,6 +387,6 @@ export class SparqlService extends Context.Service<SparqlService>()(
     execute: () => Effect.succeed(new AskResult({ value: true })),
     executeSelect: () => Effect.succeed([]),
     executeAsk: () => Effect.succeed(true)
-  } as unknown as SparqlService)
+  })
     static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([RdfBuilder.Default]));
 }
