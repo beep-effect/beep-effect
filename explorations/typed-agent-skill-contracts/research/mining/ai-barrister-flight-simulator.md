@@ -5,8 +5,9 @@
 - **Venue:** ICLR 2026 workshop paper
 - **Source URL:** https://openreview.net/pdf/42ef464c05efa3c750f623b7df2fe74aefe677c3.pdf
   (content-addressed attachment; behind OpenReview's browser-verification wall — local copy is canonical)
-- **Local copy:** `sources/ai-barrister-flight-simulator-iclr2026.pdf` (388 KB, 
-  pdfTeX, created 2026-04-30)
+- **Local copy (outside this public repo):**
+  `~/YeeBois/research/daily/08-10-2026/mining/sources/ai-barrister-flight-simulator-iclr2026.pdf`
+  (388 KB, pdfTeX, created 2026-04-30)
 - **Added:** 2026-08-10, operator request, alongside the OpenLink ai-agent-skills mining pass
 
 ## What it is

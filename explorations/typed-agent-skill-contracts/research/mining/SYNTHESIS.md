@@ -58,7 +58,7 @@ projections rendered as `S.encode`, gates as re-extraction + comparison.
    `rdfs:subClassOf` strings, drifted authority IRIs, self-reported PASS. This is exactly the
    gap the citation-verified-span substrate fills; the AI Barrister paper supplies the
    evaluation layer (gold reasoning paths, path-alignment/node-coverage metrics).
-   (kg-pipeline.md, sources/ai-barrister-flight-simulator.md)
+   (kg-pipeline.md, ai-barrister-flight-simulator.md)
 
 ## Top ten ports (ranked across lanes)
 
