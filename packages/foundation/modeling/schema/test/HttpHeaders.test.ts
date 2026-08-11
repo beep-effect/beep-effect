@@ -18,7 +18,7 @@ import {
   NavigationDirective,
   ReportingDirective,
 } from "@beep/schema/Csp";
-import { ExpectCTConfig, ExpectCTHeader } from "@beep/schema/ExpectCt";
+import { ExpectCTHeader } from "@beep/schema/ExpectCt";
 import { ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect";
 import { FrameGuardHeader } from "@beep/schema/FrameGuard";
 import { NoOpenHeader } from "@beep/schema/NoOpen";
@@ -167,10 +167,6 @@ describe("Secure header schemas", () => {
 
   it.effect("formats Expect-CT tuple options including enforce and report-uri", () =>
     Effect.gen(function* () {
-      // The two entry points take opposite sides of the codec, and this test
-      // used to pass one value to both: `decodeUnknownEffect` wants the encoded
-      // form, where `reportURI` is an optional string-or-URL key, while
-      // `createValue` is typed for the decoded config, where it is an `Option`.
       const encoded = [
         true,
         {
@@ -179,27 +175,10 @@ describe("Secure header schemas", () => {
           reportURI: "https://example.com/report",
         },
       ] as const;
-      const decoded = [
-        true,
-        ExpectCTConfig.make({
-          maxAge: 123,
-          enforce: true,
-          reportURI: O.some(new URL("https://example.com/report")),
-        }),
-      ] as const;
       const expected = "max-age=123, enforce, report-uri=https://example.com/report";
 
       expectHeader(yield* S.decodeEffect(ExpectCTHeader)(encoded), "Expect-CT", expected);
-
-      // `createValue` is typed for the decoded option but decodes its argument
-      // as if it were encoded, so with `reportURI` present no value satisfies
-      // both sides. Both halves are pinned, because either one alone reads as a
-      // quirk rather than a contradiction: the decoded form type-checks and
-      // fails at run time, the encoded form produces the right header but needs
-      // a cast to get past the signature. Fixing it is a behaviour change
-      // tracked in #599.
-      expect(Exit.isFailure(runExit(ExpectCTHeader.createValue(decoded)))).toBe(true);
-      expect(runExit(ExpectCTHeader.createValue(encoded as never))).toStrictEqual(Exit.succeed(O.some(expected)));
+      expect(runExit(ExpectCTHeader.createValue(encoded))).toStrictEqual(Exit.succeed(O.some(expected)));
     })
   );
 
@@ -226,9 +205,9 @@ describe("Secure header schemas", () => {
           runExit(
             ExpectCTHeader.createValue([
               true,
-              ExpectCTConfig.make({
-                reportURI: O.some("not-a-url"),
-              }),
+              {
+                reportURI: "not-a-url",
+              },
             ] as const)
           )
         )
@@ -400,7 +379,7 @@ describe("Secure header schemas", () => {
     })
   );
 
-  it.effect("formats permissions policy directives and silently drops invalid directive names", () =>
+  it.effect("formats permissions policy directives and rejects invalid directive names", () =>
     Effect.gen(function* () {
       const option = {
         directives: {
@@ -422,12 +401,6 @@ describe("Secure header schemas", () => {
           )
         )
       );
-      // This assertion asked for rejection and never ran, so it never revealed
-      // that rejection is not what happens: `S.Record` drops keys its key schema
-      // does not match, so an unrecognised directive is silently discarded and
-      // the header collapses to `None` — a typo removes the security control
-      // rather than failing. Pinned to the real behaviour here; making it fail
-      // closed is tracked in #599.
       const invalid = runExit(
         PermissionsPolicyHeader.createValue({
           directives: {
@@ -435,8 +408,19 @@ describe("Secure header schemas", () => {
           } as never,
         })
       );
-      expect(Exit.isSuccess(invalid)).toBe(true);
-      expect(invalid).toStrictEqual(Exit.succeed(O.none()));
+      expect(Exit.isFailure(invalid)).toBe(true);
+      expect(
+        Exit.isFailure(
+          runExit(
+            S.decodeEffect(PermissionsPolicyHeader)({
+              directives: {
+                camera: "none",
+                "invalid-directive": "none",
+              },
+            })
+          )
+        )
+      ).toBe(true);
     })
   );
 
@@ -669,12 +653,7 @@ describe("Secure header aggregates", () => {
                   scriptSrc: "'self'",
                 },
               },
-              // The tuple form cannot be expressed here: it is typed as the
-              // decoded `ExpectCTConfig` but decoded as if encoded, so neither
-              // shape satisfies both sides (see the dedicated Expect-CT test,
-              // which pins that contradiction). The boolean form short-circuits
-              // before the decode, so it exercises the aggregate honestly.
-              expectCT: true,
+              expectCT: [true, { maxAge: 123, reportURI: "https://example.com/report" }],
             })
           )
         )
@@ -683,7 +662,7 @@ describe("Secure header aggregates", () => {
       expect(result["X-Frame-Options"]).toBe("sameorigin");
       expect(result["Referrer-Policy"]).toBe("same-origin");
       expect(result["Content-Security-Policy"]).toBe("script-src 'self'");
-      expect(result["Expect-CT"]).toBe("max-age=86400");
+      expect(result["Expect-CT"]).toBe("max-age=123, report-uri=https://example.com/report");
       expect("X-Download-Options" in result).toBe(false);
       expect("X-Content-Type-Options" in result).toBe(false);
     })
