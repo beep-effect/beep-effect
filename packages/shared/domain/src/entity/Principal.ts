@@ -229,6 +229,33 @@ export class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal
   })
 ) {}
 
+const PrincipalBase = S.Union([
+  UserPrincipal,
+  ServiceAccountPrincipal,
+  AgentPrincipal,
+  ConnectorAccountPrincipal,
+  SystemPrincipal,
+]).pipe(
+  $I.annoteSchema("Principal", {
+    description: "Principal actor reference used by shared-kernel persisted entity fields.",
+  }),
+  S.toTaggedUnion("kind"),
+  SchemaUtils.withCodecStatics
+);
+
+type PrincipalSchemaBase = typeof PrincipalBase;
+
+/**
+ * Named schema surface for {@link Principal}.
+ *
+ * Declaration emit references this interface by name instead of serializing
+ * the derived tagged-union schema structurally at every consumer position.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export interface PrincipalSchema extends PrincipalSchemaBase {}
+
 /**
  * Tagged union used by every BaseEntity field that names an actor.
  *
@@ -249,19 +276,7 @@ export class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal
  * @category schemas
  * @since 0.0.0
  */
-export const Principal = S.Union([
-  UserPrincipal,
-  ServiceAccountPrincipal,
-  AgentPrincipal,
-  ConnectorAccountPrincipal,
-  SystemPrincipal,
-]).pipe(
-  $I.annoteSchema("Principal", {
-    description: "Principal actor reference used by shared-kernel persisted entity fields.",
-  }),
-  S.toTaggedUnion("kind"),
-  SchemaUtils.withCodecStatics
-);
+export const Principal: PrincipalSchema = PrincipalBase;
 
 /**
  * Runtime type for {@link Principal}.
