@@ -16,6 +16,7 @@
  *
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- unique-constraint naming intentionally mirrors pg/schema.ts so table-local and assembly-level extras render identical SQL names (doc 14 family; review at next dialect addition)
 import { sql } from "drizzle-orm";
 import { getTableConfig, PgDialect, pgTable, uniqueKeyName } from "drizzle-orm/pg-core";
 import { isArray, reduce } from "effect/Array";

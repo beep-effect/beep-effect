@@ -19,6 +19,7 @@
  * feed `.notNull()` instead), and an encoded `Undefined` is rejected — SQL
  * absence must be represented as `null` in selected rows.
  */
+// fallow-ignore-file code-duplication -- collectMaxLengths/collectExactLengths are deliberately parallel dual-signature AST walkers over distinct check kinds; sharing their spine would obscure the per-check policy (doc 14 family; review at next dialect addition)
 
 import {
   append,

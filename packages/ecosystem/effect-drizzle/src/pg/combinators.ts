@@ -11,6 +11,7 @@
  *
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- the varchar/char tri-mode combinators are deliberately parallel walkers over the same evolveSchemas seam; collapsing them would couple independent column vocabularies (doc 14 family; review at next dialect addition)
 
 import {
   append,
