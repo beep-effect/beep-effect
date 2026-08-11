@@ -8,10 +8,10 @@
  * @module Service/EmbeddingResolver
  */
 
-import { Effect, Exit, Request, RequestResolver } from "effect"
-import * as A from "effect/Array"
-import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts"
-import type { EmbedTextRequest } from "./EmbeddingRequest.ts"
+import { Effect, Exit, Request, RequestResolver } from "effect";
+import * as A from "effect/Array";
+import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts";
+import type { EmbedTextRequest } from "./EmbeddingRequest.ts";
 
 /**
  * Default maximum batch size for embedding requests
@@ -21,7 +21,7 @@ import type { EmbedTextRequest } from "./EmbeddingRequest.ts"
  * @since 2.0.0
  * @category Constants
  */
-export const DEFAULT_MAX_BATCH_SIZE = 128
+export const DEFAULT_MAX_BATCH_SIZE = 128;
 
 /**
  * Create a batched resolver for embedding requests
@@ -39,6 +39,7 @@ export const DEFAULT_MAX_BATCH_SIZE = 128
  * @since 2.0.0
  * @category Constructors
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const makeEmbeddingResolver = (
   provider: EmbeddingProviderMethods,
   maxBatchSize: number = DEFAULT_MAX_BATCH_SIZE
@@ -46,8 +47,8 @@ export const makeEmbeddingResolver = (
   RequestResolver.makeGrouped<EmbedTextRequest, EmbeddingTaskType>({
     key: (entry) => entry.request.taskType,
     resolver: (entries) =>
-      Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true })
-  }).pipe(RequestResolver.batchN(maxBatchSize))
+      Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true }),
+  }).pipe(RequestResolver.batchN(maxBatchSize));
 
 /**
  * Process a single chunk of embedding requests
@@ -62,22 +63,14 @@ const processChunk = (
     .embedBatch(
       A.map(chunk, (entry) => ({
         text: entry.request.text,
-        taskType: entry.request.taskType
+        taskType: entry.request.taskType,
       }))
     )
     .pipe(
       Effect.matchEffect({
         onSuccess: (embeddings) =>
-          Effect.forEach(
-            chunk,
-            (entry, i) => Request.complete(entry, Exit.succeed(embeddings[i])),
-            { discard: true }
-          ),
+          Effect.forEach(chunk, (entry, i) => Request.complete(entry, Exit.succeed(embeddings[i])), { discard: true }),
         onFailure: (error) =>
-          Effect.forEach(
-            chunk,
-            (entry) => Request.complete(entry, Exit.fail(error)),
-            { discard: true }
-          )
+          Effect.forEach(chunk, (entry) => Request.complete(entry, Exit.fail(error)), { discard: true }),
       })
-    )
+    );

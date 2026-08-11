@@ -8,23 +8,23 @@
  * @module Runtime/EmbeddingLayers
  */
 
-import type { HttpClient } from "effect/unstable/http"
-import { FetchHttpClient } from "effect/unstable/http"
-import { Effect, Layer } from "effect"
-import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts"
-import { EmbeddingCache } from "../Service/EmbeddingCache.ts"
-import type { EmbeddingProvider } from "../Service/EmbeddingProvider.ts"
-import type { EmbeddingRateLimiter } from "../Service/EmbeddingRateLimiter.ts"
+import { Effect, Layer } from "effect";
+import type { HttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/unstable/http";
+import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
+import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
+import type { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
+import type { EmbeddingRateLimiter } from "../Service/EmbeddingRateLimiter.ts";
 import {
   EmbeddingRateLimiterLocal,
   EmbeddingRateLimiterVoyage,
-  makeEmbeddingRateLimiter
-} from "../Service/EmbeddingRateLimiter.ts"
-import { NomicEmbeddingProviderDefault, NomicEmbeddingProviderLive } from "../Service/NomicEmbeddingProvider.ts"
-import type { NomicNlpService } from "../Service/NomicNlp.ts"
-import { NomicNlpServiceLive } from "../Service/NomicNlp.ts"
-import { VoyageEmbeddingProviderDefault, VoyageEmbeddingProviderLive } from "../Service/VoyageEmbeddingProvider.ts"
-import { MetricsService } from "../Telemetry/Metrics.ts"
+  makeEmbeddingRateLimiter,
+} from "../Service/EmbeddingRateLimiter.ts";
+import { NomicEmbeddingProviderDefault, NomicEmbeddingProviderLive } from "../Service/NomicEmbeddingProvider.ts";
+import type { NomicNlpService } from "../Service/NomicNlp.ts";
+import { NomicNlpServiceLive } from "../Service/NomicNlp.ts";
+import { VoyageEmbeddingProviderDefault, VoyageEmbeddingProviderLive } from "../Service/VoyageEmbeddingProvider.ts";
+import { MetricsService } from "../Telemetry/Metrics.ts";
 
 // =============================================================================
 // Provider Selection
@@ -47,9 +47,9 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
   never,
   ConfigService | NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
 > = Layer.unwrap(
-  Effect.gen(function*() {
-    const config = yield* ConfigService
-    const configLayer = Layer.succeed(ConfigService, config)
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const configLayer = Layer.succeed(ConfigService, config);
 
     // Select the provider based on config, then provide ConfigService to it
     // CRITICAL: The returned layer needs ConfigService, so we provide it here
@@ -59,24 +59,20 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
     // - Voyage: EmbeddingRateLimiter | HttpClient.HttpClient
     // Union: NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
     if (config.embedding.provider === "voyage") {
-      return VoyageEmbeddingProviderLive.pipe(
-        Layer.provide(configLayer)
-      ) as Layer.Layer<
+      return VoyageEmbeddingProviderLive.pipe(Layer.provide(configLayer)) as Layer.Layer<
         EmbeddingProvider,
         never,
         NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-      >
+      >;
     } else {
-      return NomicEmbeddingProviderLive.pipe(
-        Layer.provide(configLayer)
-      ) as Layer.Layer<
+      return NomicEmbeddingProviderLive.pipe(Layer.provide(configLayer)) as Layer.Layer<
         EmbeddingProvider,
         never,
         NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-      >
+      >;
     }
   })
-)
+);
 
 /**
  * Dynamic rate limiter based on config values
@@ -87,20 +83,19 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
  * @since 2.0.0
  * @category Layers
  */
-export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, never, ConfigService> = Layer
-  .unwrap(
-    Effect.gen(function*() {
-      const config = yield* ConfigService
-      const { maxConcurrent, provider, rateLimitRpm } = config.embedding
+export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, never, ConfigService> = Layer.unwrap(
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const { maxConcurrent, provider, rateLimitRpm } = config.embedding;
 
-      // Use config values to create rate limiter
-      return makeEmbeddingRateLimiter({
-        provider,
-        requestsPerMinute: rateLimitRpm,
-        maxConcurrent
-      })
-    })
-  )
+    // Use config values to create rate limiter
+    return makeEmbeddingRateLimiter({
+      provider,
+      requestsPerMinute: rateLimitRpm,
+      maxConcurrent,
+    });
+  })
+);
 
 // =============================================================================
 // Composed Layers
@@ -118,11 +113,7 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
   never,
   ConfigService
-> = Layer.mergeAll(
-  NomicEmbeddingProviderDefault,
-  EmbeddingRateLimiterLocal,
-  EmbeddingCache.Default
-)
+> = Layer.mergeAll(NomicEmbeddingProviderDefault, EmbeddingRateLimiterLocal, EmbeddingCache.Default);
 
 /**
  * Voyage embedding infrastructure
@@ -140,7 +131,7 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
   VoyageEmbeddingProviderDefault.pipe(Layer.provide(EmbeddingRateLimiterVoyage)),
   EmbeddingRateLimiterVoyage,
   EmbeddingCache.Default
-)
+);
 
 /**
  * Config-driven embedding infrastructure
@@ -166,7 +157,7 @@ export const EmbeddingInfrastructure: Layer.Layer<
   Layer.provideMerge(EmbeddingCache.Default),
   Layer.provideMerge(FetchHttpClient.layer),
   Layer.provideMerge(NomicNlpServiceLive)
-) as Layer.Layer<EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache, never, ConfigService>
+) as Layer.Layer<EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache, never, ConfigService>;
 
 /**
  * Complete embedding infrastructure with all dependencies
@@ -180,4 +171,4 @@ export const EmbeddingInfrastructure: Layer.Layer<
 export const EmbeddingInfrastructureDefault = EmbeddingInfrastructure.pipe(
   Layer.provideMerge(MetricsService.Default),
   Layer.provide(ConfigServiceDefault)
-)
+);

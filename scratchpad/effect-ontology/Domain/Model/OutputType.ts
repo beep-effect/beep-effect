@@ -35,7 +35,7 @@ const OutputTypeDefinition = LiteralKit({
     ["metadata", "metadata"],
     ["entities", "entities"],
     ["relations", "relations"],
-  ]
+  ],
 })
   .annotate({
     toArbitrary: () => (fc: typeof FastCheck) =>
@@ -93,7 +93,7 @@ export const OutputFilename = LiteralKit({
     ["metadata.json", "metadata"],
     ["entities.json", "entities"],
     ["relations.json", "relations"],
-  ]
+  ],
 })
   .annotate({
     toArbitrary: () => (fc: typeof FastCheck) =>

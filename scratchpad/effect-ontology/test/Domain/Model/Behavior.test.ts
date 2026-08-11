@@ -76,7 +76,12 @@ describe("effect-ontology model behavior", () => {
       updatedAt: now,
     });
     const pending = BatchState.cases.Pending.make({
-      batch,
+      batchId: batch.batchId,
+      ontologyId: batch.ontologyId,
+      manifestUri: batch.manifestUri,
+      ontologyVersion: batch.ontologyVersion,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt,
       documentCount: NonNegativeInt.make(0),
     });
 

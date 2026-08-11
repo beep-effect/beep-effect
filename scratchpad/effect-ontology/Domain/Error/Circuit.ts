@@ -88,6 +88,8 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
     const retryMs = O.getOrElse(this.retryAfterMs, () => this.resetTimeoutMs);
     return `Circuit breaker is open. Will retry in ${retryMs}ms`;
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 }
 
 /**
@@ -193,6 +195,8 @@ export class RateLimitError extends RateLimitErrorBase {
       onSome: (retryAfterMs) => `${base}, retry after ${retryAfterMs}ms`,
     });
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 }
 
 const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(S.toTaggedUnion("_tag"));

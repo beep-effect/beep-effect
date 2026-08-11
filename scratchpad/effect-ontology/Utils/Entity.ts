@@ -7,8 +7,7 @@
  * @module Utils/Entity
  */
 
-import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts"
-
+import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";
 
 /**
  * Check if a string value is an entity reference (vs a literal)
@@ -31,4 +30,4 @@ import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts"
  * @since 0.0.0
  * @category Entity
  */
-export const isEntityReference = (value: string): boolean => ENTITY_ID_PATTERN.test(value)
+export const isEntityReference = (value: string): boolean => ENTITY_ID_PATTERN.test(value);

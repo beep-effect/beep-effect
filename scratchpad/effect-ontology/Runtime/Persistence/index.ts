@@ -7,5 +7,5 @@
  * @module Runtime/Persistence
  */
 
-export * from "./MigrationRunner.ts"
-export * from "./PostgresLayer.ts"
+export * from "./MigrationRunner.ts";
+export * from "./PostgresLayer.ts";

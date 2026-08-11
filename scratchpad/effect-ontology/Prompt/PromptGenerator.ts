@@ -4,12 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -396,14 +398,8 @@ const buildTaskSection = (stage: "mention" | "entity" | "relation"): PromptDoc =
 /**
  * Build input text section (placed at end of prompt for LLM recency bias)
  */
-const buildInputTextSection = (text: string): PromptDoc => {
-  return Doc.vsep([
-    Doc.text("=== INPUT TEXT ==="),
-    Doc.text("Extract from the following text:"),
-    Doc.empty,
-    Doc.text(text),
-  ]);
-};
+const buildInputTextSection = (text: string): PromptDoc =>
+  Doc.vsep([Doc.text("=== INPUT TEXT ==="), Doc.text("Extract from the following text:"), Doc.empty, Doc.text(text)]);
 
 /**
  * Build class snippet for ontology documentation
@@ -568,8 +564,8 @@ const buildPropertiesSection = (ctx: OntologyPromptContext): PromptDoc => {
 /**
  * Build entities list section for relation extraction
  */
-const buildEntitiesSection = (ctx: OntologyPromptContext): PromptDoc => {
-  return pipe(
+const buildEntitiesSection = (ctx: OntologyPromptContext): PromptDoc =>
+  pipe(
     ctx.entities,
     O.filter(A.isReadonlyArrayNonEmpty),
     O.map((entities) =>
@@ -580,7 +576,6 @@ const buildEntitiesSection = (ctx: OntologyPromptContext): PromptDoc => {
     ),
     O.getOrElse(() => Doc.empty)
   );
-};
 
 /**
  * Build DUL hierarchy section explaining Object vs Event distinction
@@ -861,6 +856,7 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateStructuredPrompt = (
   text: string,
   ruleSet: RuleSet,
@@ -936,6 +932,7 @@ export const generateStructuredPrompt = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateStructuredPromptWithExamples = (
   text: string,
   ruleSet: RuleSet,
@@ -1023,6 +1020,7 @@ export const generateStructuredPromptWithExamples = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generatePrompt = (text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): string => {
   const structured = generateStructuredPrompt(text, ruleSet, ctx);
   return `${structured.systemMessage}\n\n${structured.userMessage}`;
@@ -1047,6 +1045,7 @@ export const generatePrompt = (text: string, ruleSet: RuleSet, ctx: OntologyProm
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateStructuredEntityPrompt = (
   text: string,
   classes: ReadonlyArray<ClassDefinition>,
@@ -1086,6 +1085,7 @@ export const generateStructuredEntityPrompt = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateEntityPrompt = (
   text: string,
   classes: ReadonlyArray<ClassDefinition>,
@@ -1114,6 +1114,7 @@ export const generateEntityPrompt = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateStructuredRelationPrompt = (
   text: string,
   entities: ReadonlyArray<Entity>,
@@ -1159,6 +1160,7 @@ export const generateStructuredRelationPrompt = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateRelationPrompt = (
   text: string,
   entities: ReadonlyArray<Entity>,
@@ -1296,6 +1298,7 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
  * @since 0.0.0
  * @category constructors
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const buildMultimodalUserContent = (
   text: string,
   images?: ReadonlyArray<ImageForPrompt>,
@@ -1303,9 +1306,9 @@ export const buildMultimodalUserContent = (
 ): ReadonlyArray<Prompt.UserMessagePart> => {
   const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-  if (images && images.length > 0) {
+  if (P.isNotUndefined(images) && images.length > 0) {
     // Add intro text for images if provided
-    if (imageIntro) {
+    if (P.isNotUndefined(imageIntro)) {
       parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }));
     }
 
@@ -1360,6 +1363,7 @@ export const buildMultimodalUserContent = (
  * @since 0.0.0
  * @category constructors
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const buildMultimodalPrompt = (
   systemMessage: string,
   userText: string,
@@ -1401,6 +1405,7 @@ export const buildMultimodalPrompt = (
  * @since 0.0.0
  * @category constructors
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const buildPromptFromStructured = (structured: StructuredPrompt, ctx?: OntologyPromptContext): Prompt.Prompt => {
   const images = pipe(
     O.fromNullishOr(ctx),

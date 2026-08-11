@@ -8,8 +8,8 @@
  * @since 2.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity"
-import { Context, Layer } from "effect"
+import { $ScratchpadId } from "@beep/identity";
+import { Context, Layer } from "effect";
 
 /**
  * Tracing context interface
@@ -18,13 +18,11 @@ import { Context, Layer } from "effect"
  * @category models
  */
 export interface TracingContextShape {
-  readonly model: string
-  readonly provider: string
+  readonly model: string;
+  readonly provider: string;
 }
 
-const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext")
-const TracingContextTag = Context.Service<TracingContextShape>($I`TracingContext`)
-
+const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext");
 /**
  * TracingContext tag and utilities
  *
@@ -33,17 +31,17 @@ const TracingContextTag = Context.Service<TracingContextShape>($I`TracingContext
  * @since 2.0.0
  * @category services
  */
-export const TracingContext = Object.assign(TracingContextTag, {
+export class TracingContext extends Context.Service<TracingContext, TracingContextShape>()($I`TracingContext`) {
   /**
    * Default layer with unknown model/provider
    *
    * @since 2.0.0
    * @category layers
    */
-  Default: Layer.succeed(TracingContextTag, {
+  static readonly Default = Layer.succeed(TracingContext, {
     model: "unknown",
-    provider: "unknown"
-  }),
+    provider: "unknown",
+  });
 
   /**
    * Create a TracingContext layer with specific model/provider
@@ -55,9 +53,9 @@ export const TracingContext = Object.assign(TracingContextTag, {
    * @since 2.0.0
    * @category constructors
    */
-  make: (model: string, provider: string) =>
-    Layer.succeed(TracingContextTag, {
+  static readonly make = (model: string, provider: string) =>
+    Layer.succeed(TracingContext, {
       model,
-      provider
-    })
-})
+      provider,
+    });
+}

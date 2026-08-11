@@ -10,14 +10,14 @@
  * @module Cluster/ExtractionEntity
  */
 
-import { Entity } from "effect/unstable/cluster"
-import * as Rpc from "effect/unstable/rpc/Rpc"
-import * as S from "effect/Schema";
-import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts"
 import { SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
+import { Entity } from "effect/unstable/cluster";
+import * as Rpc from "effect/unstable/rpc/Rpc";
+import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
 
 // IdempotencyKey utilities used by entity handlers
-export { computeIdempotencyKey, type ExtractionParams } from "../Utils/IdempotencyKey.ts"
+export { computeIdempotencyKey, type ExtractionParams } from "../Utils/IdempotencyKey.ts";
 
 // =============================================================================
 // RPC Schemas
@@ -35,14 +35,14 @@ export const ExtractFromTextPayload = S.Struct({
   ontologyVersion: S.String,
   /** Optional extraction parameters */
   params: S.Struct({
-        maxTokens: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-        temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-        includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-        groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-      }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-})
+    maxTokens: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+});
 
-export type ExtractFromTextPayload = typeof ExtractFromTextPayload.Type
+export type ExtractFromTextPayload = typeof ExtractFromTextPayload.Type;
 
 /**
  * Extraction summary returned on completion
@@ -51,19 +51,19 @@ export const ExtractionSummary = S.Struct({
   entityCount: S.Finite,
   relationCount: S.Finite,
   durationMs: S.Finite,
-  idempotencyKey: S.String
-})
+  idempotencyKey: S.String,
+});
 
-export type ExtractionSummary = typeof ExtractionSummary.Type
+export type ExtractionSummary = typeof ExtractionSummary.Type;
 
 /**
  * Cached result lookup payload
  */
 export const GetCachedResultPayload = S.Struct({
-  idempotencyKey: S.String
-})
+  idempotencyKey: S.String,
+});
 
-export type GetCachedResultPayload = typeof GetCachedResultPayload.Type
+export type GetCachedResultPayload = typeof GetCachedResultPayload.Type;
 
 /**
  * Knowledge graph result
@@ -76,11 +76,11 @@ export const KnowledgeGraphResult = S.Struct({
     ontologyId: S.String,
     ontologyVersion: S.String,
     extractedAt: S.String,
-    durationMs: S.Finite
-  })
-})
+    durationMs: S.Finite,
+  }),
+});
 
-export type KnowledgeGraphResult = typeof KnowledgeGraphResult.Type
+export type KnowledgeGraphResult = typeof KnowledgeGraphResult.Type;
 
 // =============================================================================
 // RPC Definitions
@@ -99,8 +99,8 @@ export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
   payload: ExtractFromTextPayload,
   success: ProgressEventSchema,
   error: S.String,
-  stream: true
-})
+  stream: true,
+});
 
 /**
  * Get cached extraction result by idempotency key
@@ -110,8 +110,8 @@ export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
 export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
   payload: GetCachedResultPayload,
   success: S.Option(KnowledgeGraphResult),
-  error: S.String
-})
+  error: S.String,
+});
 
 /**
  * Cancel an in-progress extraction
@@ -119,28 +119,28 @@ export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
 export const CancelExtractionRpc = Rpc.make("CancelExtraction", {
   payload: S.Struct({
     idempotencyKey: S.String,
-    reason: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+    reason: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
   success: S.Boolean,
-  error: S.String
-})
+  error: S.String,
+});
 
 /**
  * Get extraction status
  */
 export const GetExtractionStatusRpc = Rpc.make("GetExtractionStatus", {
   payload: S.Struct({
-    idempotencyKey: S.String
+    idempotencyKey: S.String,
   }),
   success: S.Struct({
     status: S.Literals(["pending", "running", "complete", "failed"]),
     progress: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    error: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+    error: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
-  error: S.String
-})
+  error: S.String,
+});
 
 // =============================================================================
 // Entity Definition
@@ -159,7 +159,7 @@ export const KnowledgeGraphExtractor = Entity.make("KGExtractor", [
   ExtractFromTextRpc,
   GetCachedResultRpc,
   CancelExtractionRpc,
-  GetExtractionStatusRpc
-])
+  GetExtractionStatusRpc,
+]);
 
-export type KnowledgeGraphExtractor = typeof KnowledgeGraphExtractor
+export type KnowledgeGraphExtractor = typeof KnowledgeGraphExtractor;

@@ -8,11 +8,12 @@
  * @module Runtime/ImageRouter
  */
 
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { Effect, Option } from "effect"
-import { ImageBlobStore } from "../Service/ImageBlobStore.ts"
-import { ImageStore } from "../Service/ImageStore.ts"
-import { LinkIngestionService } from "../Service/LinkIngestionService.ts"
+import { Effect, Option } from "effect";
+import * as P from "effect/Predicate";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { ImageBlobStore } from "../Service/ImageBlobStore.ts";
+import { ImageStore } from "../Service/ImageStore.ts";
+import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
 
 // =============================================================================
 // Helpers
@@ -21,266 +22,315 @@ import { LinkIngestionService } from "../Service/LinkIngestionService.ts"
 /**
  * Get content type header value for an image
  */
-const getContentTypeHeader = (contentType: string): string => {
-  // Ensure charset is not added for binary types
-  return contentType
-}
+const getContentTypeHeader = (contentType: string): string => contentType;
 
 /**
  * Build cache control header for immutable content-addressed assets
  */
-const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable"
+const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 /**
  * Build ETag from hash
  */
-const buildETag = (hash: string): string => `"${hash}"`
+const buildETag = (hash: string): string => `"${hash}"`;
 
 // =============================================================================
 // Image Router
 // =============================================================================
 
 export const ImageRouter = HttpRouter.addAll([
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/images/:hash",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const request = yield* HttpServerRequest.HttpServerRequest
-      const { hash } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const { hash } = params;
 
-      if (!hash) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "Image hash is required"
-        }, { status: 400 })
+      if (P.isUndefined(hash)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "Image hash is required",
+          },
+          { status: 400 }
+        );
       }
 
-      const blobStore = yield* ImageBlobStore
+      const blobStore = yield* ImageBlobStore;
 
       // Check If-None-Match for conditional request
-      const ifNoneMatch = request.headers["if-none-match"]
-      const expectedETag = buildETag(hash)
+      const ifNoneMatch = request.headers["if-none-match"];
+      const expectedETag = buildETag(hash);
 
       if (ifNoneMatch === expectedETag) {
-        return yield* HttpServerResponse.empty({ status: 304 })
+        return HttpServerResponse.empty({ status: 304 });
       }
 
       // Get metadata for content type (also validates existence)
-      const metadataOpt = yield* blobStore.getMetadata(hash)
+      const metadataOpt = yield* blobStore.getMetadata(hash);
       if (Option.isNone(metadataOpt)) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `Image ${hash} not found`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `Image ${hash} not found`,
+          },
+          { status: 404 }
+        );
       }
 
-      const metadata = metadataOpt.value
+      const metadata = metadataOpt.value;
 
       // Try to get signed URL for direct GCS access (1 hour expiry)
       if (blobStore.supportsSignedUrls) {
-        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, 3600)
+        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, 3600);
         if (Option.isSome(signedUrlOpt)) {
           // Redirect to signed URL - client downloads directly from GCS
-          return yield* HttpServerResponse.empty({
+          return HttpServerResponse.empty({
             status: 302,
             headers: {
-              "Location": signedUrlOpt.value,
-              "Cache-Control": "private, max-age=3500" // Slightly less than signed URL expiry
-            }
-          })
+              Location: signedUrlOpt.value,
+              "Cache-Control": "private, max-age=3500", // Slightly less than signed URL expiry
+            },
+          });
         }
       }
 
       // Fallback: proxy bytes through server (for local/memory storage)
-      const bytesOpt = yield* blobStore.getBytes(hash)
+      const bytesOpt = yield* blobStore.getBytes(hash);
       if (Option.isNone(bytesOpt)) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `Image ${hash} bytes not found`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `Image ${hash} bytes not found`,
+          },
+          { status: 404 }
+        );
       }
 
       // Return binary response with caching headers
-      return yield* HttpServerResponse.uint8Array(bytesOpt.value, {
+      return HttpServerResponse.uint8Array(bytesOpt.value, {
         status: 200,
         headers: {
           "Content-Type": getContentTypeHeader(metadata.contentType),
           "Content-Length": String(metadata.sizeBytes),
           "Cache-Control": IMMUTABLE_CACHE_CONTROL,
-          "ETag": expectedETag
-        }
-      })
+          ETag: expectedETag,
+        },
+      });
     })
   ),
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/images/:hash/metadata",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const { hash } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const { hash } = params;
 
-      if (!hash) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "Image hash is required"
-        }, { status: 400 })
+      if (P.isUndefined(hash)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "Image hash is required",
+          },
+          { status: 400 }
+        );
       }
 
-      const blobStore = yield* ImageBlobStore
+      const blobStore = yield* ImageBlobStore;
 
-      const metadataOpt = yield* blobStore.getMetadata(hash)
+      const metadataOpt = yield* blobStore.getMetadata(hash);
       if (Option.isNone(metadataOpt)) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `Image ${hash} not found`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `Image ${hash} not found`,
+          },
+          { status: 404 }
+        );
       }
 
       return yield* HttpServerResponse.json(metadataOpt.value, {
         headers: {
           "Cache-Control": IMMUTABLE_CACHE_CONTROL,
-          "ETag": buildETag(hash)
-        }
-      })
+          ETag: buildETag(hash),
+        },
+      });
     })
   ),
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/ontologies/:ontologyId/links/:linkId/images",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const { linkId, ontologyId } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const { linkId, ontologyId } = params;
 
-      if (!ontologyId || !linkId) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "ontologyId and linkId are required"
-        }, { status: 400 })
+      if (P.isUndefined(ontologyId) || P.isUndefined(linkId)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "ontologyId and linkId are required",
+          },
+          { status: 400 }
+        );
       }
 
-      const imageStore = yield* ImageStore
-      const linkService = yield* LinkIngestionService
+      const imageStore = yield* ImageStore;
+      const linkService = yield* LinkIngestionService;
 
       // Look up link by ID to get contentHash (images are stored by contentHash)
-      const link = yield* linkService.getById(linkId).pipe(
-        Effect.map((optLink) => Option.getOrNull(optLink))
-      )
+      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => Option.getOrNull(optLink)));
 
       if (link === null) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `Link ${linkId} not found`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `Link ${linkId} not found`,
+          },
+          { status: 404 }
+        );
       }
 
       // Verify ontology matches
       if (link.ontologyId !== ontologyId) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `Link ${linkId} not found in ontology ${ontologyId}`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `Link ${linkId} not found in ontology ${ontologyId}`,
+          },
+          { status: 404 }
+        );
       }
 
-      const images = yield* imageStore.listByOwner("link", link.contentHash)
+      const images = yield* imageStore.listByOwner("link", link.contentHash);
 
-      return yield* HttpServerResponse.json({
-        images,
-        total: images.length
-      }, {
-        headers: {
-          "Cache-Control": "public, max-age=60" // Short cache for list
+      return yield* HttpServerResponse.json(
+        {
+          images,
+          total: images.length,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, max-age=60", // Short cache for list
+          },
         }
-      })
+      );
     })
   ),
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/links/by-hash/:contentHash/images",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const { contentHash } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const { contentHash } = params;
 
-      if (!contentHash) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "contentHash is required"
-        }, { status: 400 })
+      if (P.isUndefined(contentHash)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "contentHash is required",
+          },
+          { status: 400 }
+        );
       }
 
-      const imageStore = yield* ImageStore
+      const imageStore = yield* ImageStore;
 
-      const images = yield* imageStore.listByOwner("link", contentHash)
+      const images = yield* imageStore.listByOwner("link", contentHash);
 
-      return yield* HttpServerResponse.json({
-        images,
-        total: images.length
-      }, {
-        headers: {
-          "Cache-Control": "public, max-age=300" // 5 min cache
+      return yield* HttpServerResponse.json(
+        {
+          images,
+          total: images.length,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, max-age=300", // 5 min cache
+          },
         }
-      })
+      );
     })
   ),
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/ontologies/:ontologyId/documents/:docId/images",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const { docId, ontologyId } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const { docId, ontologyId } = params;
 
-      if (!ontologyId || !docId) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "ontologyId and docId are required"
-        }, { status: 400 })
+      if (P.isUndefined(ontologyId) || P.isUndefined(docId)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "ontologyId and docId are required",
+          },
+          { status: 400 }
+        );
       }
 
-      const imageStore = yield* ImageStore
+      const imageStore = yield* ImageStore;
 
-      const images = yield* imageStore.listByOwner("document", docId)
+      const images = yield* imageStore.listByOwner("document", docId);
 
-      return yield* HttpServerResponse.json({
-        images,
-        total: images.length
-      }, {
-        headers: {
-          "Cache-Control": "public, max-age=60" // Short cache for list
+      return yield* HttpServerResponse.json(
+        {
+          images,
+          total: images.length,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, max-age=60", // Short cache for list
+          },
         }
-      })
+      );
     })
   ),
-HttpRouter.route("GET", 
+  HttpRouter.route(
+    "GET",
     "/v1/images/manifests/:ownerType/:ownerId",
-    Effect.gen(function*() {
-      const params = yield* HttpRouter.params
-      const { ownerId, ownerType } = params
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const { ownerId, ownerType } = params;
 
-      if (!ownerType || !ownerId) {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "ownerType and ownerId are required"
-        }, { status: 400 })
+      if (P.isUndefined(ownerType) || P.isUndefined(ownerId)) {
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "ownerType and ownerId are required",
+          },
+          { status: 400 }
+        );
       }
 
       if (ownerType !== "link" && ownerType !== "document") {
-        return yield* HttpServerResponse.json({
-          error: "VALIDATION_ERROR",
-          message: "ownerType must be 'link' or 'document'"
-        }, { status: 400 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "ownerType must be 'link' or 'document'",
+          },
+          { status: 400 }
+        );
       }
 
-      const imageStore = yield* ImageStore
+      const imageStore = yield* ImageStore;
 
-      const manifestOpt = yield* imageStore.getManifest(ownerType, ownerId)
+      const manifestOpt = yield* imageStore.getManifest(ownerType, ownerId);
 
       if (Option.isNone(manifestOpt)) {
-        return yield* HttpServerResponse.json({
-          error: "NOT_FOUND",
-          message: `No images found for ${ownerType} ${ownerId}`
-        }, { status: 404 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "NOT_FOUND",
+            message: `No images found for ${ownerType} ${ownerId}`,
+          },
+          { status: 404 }
+        );
       }
 
       return yield* HttpServerResponse.json(manifestOpt.value, {
         headers: {
-          "Cache-Control": "public, max-age=60"
-        }
-      })
+          "Cache-Control": "public, max-age=60",
+        },
+      });
     })
-  )
-])
+  ),
+]);

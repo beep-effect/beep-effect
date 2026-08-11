@@ -379,6 +379,15 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   get totalCount(): number {
     return A.length(this.images);
   }
+
+  static readonly fromUnknownEffect = (i: unknown) => {
+    const schema = S.fromJsonString(ImageManifest);
+    return S.decodeUnknownEffect(schema)(i);
+  };
+  static readonly encodeEffect = (i: ImageManifest) => {
+    const schema = S.fromJsonString(ImageManifest);
+    return S.encodeEffect(schema)(i);
+  };
 }
 
 const ImageForPromptFields = {

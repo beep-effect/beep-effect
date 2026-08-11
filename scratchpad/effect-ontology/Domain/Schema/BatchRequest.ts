@@ -192,6 +192,8 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
 
   /** Derived runtime guard for validated batch requests. */
   static readonly is = S.is(BatchRequest);
+
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest)
 }
 
 export {

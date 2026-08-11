@@ -10,15 +10,14 @@
  * @module Utils/IdempotencyKey
  */
 
-import * as Effect from "effect/Effect";
-import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import {sha256Sync, sha256SyncFull} from "./Hash.ts";
-import * as Str from "effect/String";
-import * as O from "effect/Option";
-import {$ScratchpadId} from "@beep/identity";
-import {flow, pipe} from "effect/Function";
 import * as Struct from "@beep/utils/Struct";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { sha256Sync, sha256SyncFull } from "./Hash.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
 
@@ -35,11 +34,11 @@ export const IdempotencyKey = S.String.pipe(
   S.check(S.isPattern(/^[a-f0-9]{64}$/)),
   S.brand("IdempotencyKey"),
   $I.annoteSchema("IdempotencyKey", {
-    description: "SHA-256 hash used for deduplication across all layers"
+    description: "SHA-256 hash used for deduplication across all layers",
   })
 );
 
-export type IdempotencyKey = typeof IdempotencyKey.Type
+export type IdempotencyKey = typeof IdempotencyKey.Type;
 
 /**
  * Extraction parameters that affect output
@@ -50,12 +49,16 @@ export const ExtractionParams = S.Struct({
   maxTokens: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   includeConfidence: S.optionalKey(S.Boolean),
-  groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-}).pipe($I.annoteSchema("ExtractionParams", {
-  description: "Parameters that affect extraction output"
-}));
+  groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+}).pipe(
+  $I.annoteSchema("ExtractionParams", {
+    description: "Parameters that affect extraction output",
+  })
+);
 
-export type ExtractionParams = typeof ExtractionParams.Type
+export type ExtractionParams = typeof ExtractionParams.Type;
+
+const encodeUnknownJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 // =============================================================================
 // Core Functions
@@ -70,14 +73,12 @@ export type ExtractionParams = typeof ExtractionParams.Type
  * @param text - Raw input text
  * @returns Normalized text suitable for hashing
  */
-export const normalizeText =
-  flow(
-    Str.trim,
-    Str.toLowerCase,
-    Str.replace(/\s+/g, " "), // Collapse whitespace
-    Str.replace(/[\r\n]+/g, " ") // Normalize line endings
-  );
-
+export const normalizeText = flow(
+  Str.trim,
+  Str.toLowerCase,
+  Str.replace(/\s+/g, " "), // Collapse whitespace
+  Str.replace(/[\r\n]+/g, " ") // Normalize line endings
+);
 
 /**
  * Create stable hash of extraction parameters
@@ -98,7 +99,7 @@ export const hashParams = (params: ExtractionParams): string => {
     return "0".repeat(16);
   }
 
-  const sorted = defined.map(([k, v]) => `${k}:${JSON.stringify(v)}`).join("|");
+  const sorted = defined.map(([k, v]) => `${k}:${encodeUnknownJson(v)}`).join("|");
 
   return sha256Sync(sorted);
 };
@@ -140,6 +141,7 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * // Returns: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const computeIdempotencyKey = (
   text: string,
   ontologyId: string,
@@ -166,6 +168,7 @@ export const computeIdempotencyKey = (
  * @param params - Extraction parameters
  * @returns Effect yielding IdempotencyKey
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const computeIdempotencyKeyEffect = (
   text: string,
   ontologyId: string,
@@ -191,15 +194,8 @@ export const isValidIdempotencyKey = (value: string): value is IdempotencyKey =>
  * @param value - String to parse
  * @returns Effect yielding IdempotencyKey or failing with ParseError
  */
-export const parseIdempotencyKey: (value: string) => Effect.Effect<IdempotencyKey, Error> =
-  flow((value) => pipe(
-    value,
-    O.liftPredicate(isValidIdempotencyKey),
-    O.match({
-      onNone: () => Effect.fail(new Error(`Invalid idempotency key format: ${value}`)),
-      onSome: Effect.succeed,
-    })
-  ));
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const parseIdempotencyKey = S.decodeEffect(IdempotencyKey);
 
 // =============================================================================
 // Short Key (for display/logging)

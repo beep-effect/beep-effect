@@ -10,10 +10,9 @@
  * @packageDocumentation
  */
 import * as Str from "@beep/utils/Str";
-import {flow, dual, pipe} from "effect/Function";
 import * as A from "effect/Array";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-
 
 /**
  * Normalize a string for comparison
@@ -34,7 +33,6 @@ import * as HashSet from "effect/HashSet";
  */
 export const normalizeString = flow(Str.toLowerCase, Str.trim, Str.replace(/\s+/g, " "));
 
-
 /**
  * Calculate Levenshtein edit distance between two strings
  *
@@ -53,8 +51,8 @@ export const normalizeString = flow(Str.toLowerCase, Str.trim, Str.replace(/\s+/
  * @returns Number of edits (insertions, deletions, substitutions)
  */
 export const levenshteinDistance: {
-  (a: string, b: string): number,
-  (b: string): (a: string) => number
+  (a: string, b: string): number;
+  (b: string): (a: string) => number;
 } = dual(2, (a: string, b: string): number => {
   if (a === b) return 0;
   if (a.length === 0) return b.length;
@@ -62,11 +60,11 @@ export const levenshteinDistance: {
 
   // Ensure a is the shorter string for space optimization
   if (a.length > b.length) {
-    ;[a, b] = [b, a];
+    [a, b] = [b, a];
   }
 
   // Use two rows instead of full matrix
-  let prevRow = Array.from({length: a.length + 1}, (_, i) => i);
+  let prevRow = Array.from({ length: a.length + 1 }, (_, i) => i);
   let currRow = new Array<number>(a.length + 1);
 
   for (let j = 1; j <= b.length; j++) {
@@ -79,12 +77,11 @@ export const levenshteinDistance: {
         prevRow[i - 1] + cost // substitution
       );
     }
-    ;[prevRow, currRow] = [currRow, prevRow];
+    [prevRow, currRow] = [currRow, prevRow];
   }
 
   return prevRow[a.length];
 });
-
 
 /**
  * Calculate normalized Levenshtein similarity (0.0 to 1.0)
@@ -105,8 +102,8 @@ export const levenshteinDistance: {
  * @returns Similarity score between 0.0 and 1.0
  */
 export const levenshteinSimilarity: {
-  (a: string, b: string): number,
-  (b: string): (a: string) => number
+  (a: string, b: string): number;
+  (b: string): (a: string) => number;
 } = dual(2, (a: string, b: string): number => {
   if (a === b) return 1.0;
   if (a.length === 0 || b.length === 0) return 0.0;
@@ -132,10 +129,11 @@ export const levenshteinSimilarity: {
  * @returns True if text contains substring
  */
 export const containsIgnoreCase: {
-  (text: string, substring: string): boolean,
-  (substring: string): (text: string) => boolean
+  (text: string, substring: string): boolean;
+  (substring: string): (text: string) => boolean;
 } = dual(2, (text: string, substring: string): boolean =>
-  pipe(text, Str.toLowerCase, Str.includes(Str.toLowerCase(substring))));
+  pipe(text, Str.toLowerCase, Str.includes(Str.toLowerCase(substring)))
+);
 
 /**
  * Check bidirectional containment between two strings
@@ -156,10 +154,9 @@ export const containsIgnoreCase: {
  * @returns True if either contains the other
  */
 export const hasBidirectionalContainment: {
-  (a: string, b: string): boolean,
-  (b: string): (a: string) => boolean
-} = dual(2, (a: string, b: string): boolean =>
-  containsIgnoreCase(a, b) || containsIgnoreCase(b, a));
+  (a: string, b: string): boolean;
+  (b: string): (a: string) => boolean;
+} = dual(2, (a: string, b: string): boolean => containsIgnoreCase(a, b) || containsIgnoreCase(b, a));
 
 /**
  * Calculate Jaccard similarity between two token sets
@@ -180,17 +177,9 @@ export const hasBidirectionalContainment: {
  * @returns Similarity score between 0.0 and 1.0
  */
 export const jaccardSimilarity: {
-  (
-    tokensA: ReadonlyArray<string>,
-    tokensB: ReadonlyArray<string>
-  ): number,
-  (
-    tokensB: ReadonlyArray<string>
-  ): (tokensA: ReadonlyArray<string>) => number
-} = dual(2, (
-  tokensA: ReadonlyArray<string>,
-  tokensB: ReadonlyArray<string>
-): number => {
+  (tokensA: ReadonlyArray<string>, tokensB: ReadonlyArray<string>): number;
+  (tokensB: ReadonlyArray<string>): (tokensA: ReadonlyArray<string>) => number;
+} = dual(2, (tokensA: ReadonlyArray<string>, tokensB: ReadonlyArray<string>): number => {
   if (tokensA.length === 0 && tokensB.length === 0) return 1.0;
   if (tokensA.length === 0 || tokensB.length === 0) return 0.0;
 
@@ -215,7 +204,7 @@ export const jaccardSimilarity: {
  * For more advanced tokenization, use NlpService.
  *
  * **Example**
- * 
+ *
  * ```ts
  * simpleTokenize("Hello, World!")
  * // => ["Hello,", "World!"]
@@ -226,7 +215,7 @@ export const jaccardSimilarity: {
  * @param text - Input text
  * @returns Array of tokens
  */
-export const simpleTokenize = flow(Str.split(/\s+/), A.filter(Str.isNonEmpty))
+export const simpleTokenize = flow(Str.split(/\s+/), A.filter(Str.isNonEmpty));
 
 /**
  * Calculate token-based similarity using Jaccard
@@ -247,9 +236,9 @@ export const simpleTokenize = flow(Str.split(/\s+/), A.filter(Str.isNonEmpty))
  * @returns Similarity score between 0.0 and 1.0
  */
 export const tokenSimilarity: {
-  (a: string, b: string): number,
-  (b: string): (a: string) => number
-} = dual(2, (a: string, b: string): number => jaccardSimilarity(simpleTokenize(a), simpleTokenize(b)))
+  (a: string, b: string): number;
+  (b: string): (a: string) => number;
+} = dual(2, (a: string, b: string): number => jaccardSimilarity(simpleTokenize(a), simpleTokenize(b)));
 
 /**
  * Calculate combined similarity score
@@ -274,19 +263,18 @@ export const tokenSimilarity: {
  * @returns Similarity score between 0.0 and 1.0
  */
 export const combinedSimilarity: {
-  (a: string, b: string): number,
-  (b: string): (a: string) => number
+  (a: string, b: string): number;
+  (b: string): (a: string) => number;
 } = dual(2, (a: string, b: string): number => {
   // Perfect match
-  if (Str.toLowerCase(a) === Str.toLowerCase(b)) return 1.0
+  if (Str.toLowerCase(a) === Str.toLowerCase(b)) return 1.0;
 
   // Containment check (one is substring of other)
-  if (hasBidirectionalContainment(a, b)) return 1.0
+  if (hasBidirectionalContainment(a, b)) return 1.0;
 
   // Fall back to Levenshtein similarity
-  return levenshteinSimilarity(a, b)
-})
-
+  return levenshteinSimilarity(a, b);
+});
 
 /**
  * Calculate overlap ratio between two arrays
@@ -307,22 +295,14 @@ export const combinedSimilarity: {
  * @returns Overlap ratio between 0.0 and 1.0
  */
 export const overlapRatio: {
-  <T>(
-  arrA: ReadonlyArray<T>,
-  arrB: ReadonlyArray<T>
-): number,
-  <T>(
-  arrB: ReadonlyArray<T>
-): (arrA: ReadonlyArray<T>) => number
-} = dual(2, <T>(
-  arrA: ReadonlyArray<T>,
-  arrB: ReadonlyArray<T>
-): number => {
-  if (A.isReadonlyArrayEmpty(arrA) || A.isReadonlyArrayEmpty(arrB)) return 0.0
+  <T>(arrA: ReadonlyArray<T>, arrB: ReadonlyArray<T>): number;
+  <T>(arrB: ReadonlyArray<T>): (arrA: ReadonlyArray<T>) => number;
+} = dual(2, <T>(arrA: ReadonlyArray<T>, arrB: ReadonlyArray<T>): number => {
+  if (A.isReadonlyArrayEmpty(arrA) || A.isReadonlyArrayEmpty(arrB)) return 0.0;
 
-  const setB = HashSet.fromIterable(arrB)
-  const intersection = A.filter(arrA, (item) => HashSet.has(setB, item))
+  const setB = HashSet.fromIterable(arrB);
+  const intersection = A.filter(arrA, (item) => HashSet.has(setB, item));
 
-  const smallerSize = Math.min(arrA.length, arrB.length)
-  return intersection.length / smallerSize
-})
+  const smallerSize = Math.min(arrA.length, arrB.length);
+  return intersection.length / smallerSize;
+});

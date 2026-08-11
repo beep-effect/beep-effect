@@ -41,15 +41,17 @@ const HookToolPayload = LiteralKit(["tool_name", "tool_input", "tool_response"])
  *
  * Exit-code mapping: 1 (non-blocking).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a stdin failure)
  *
- * @example
  * ```ts
  * import { HookStdinReadError } from "effect-claudecode"
  *
- * console.log(HookStdinReadError)
+ * const error = HookStdinReadError.make({ cause: "stdin closed" })
+ * console.log(error._tag) // "HookStdinReadError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookStdinReadError extends TaggedErrorClass<HookStdinReadError>($I`HookStdinReadError`)(
   "HookStdinReadError",
@@ -67,15 +69,17 @@ export class HookStdinReadError extends TaggedErrorClass<HookStdinReadError>($I`
  * blocks/denies some gate events and is feedback-only or ignored for
  * several observability events.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a schema decode failure)
  *
- * @example
  * ```ts
  * import { HookInputDecodeError } from "effect-claudecode"
  *
- * console.log(HookInputDecodeError)
+ * const error = HookInputDecodeError.make({ cause: "invalid payload", phase: "schema" })
+ * console.log(error.phase) // "schema"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookInputDecodeError extends TaggedErrorClass<HookInputDecodeError>($I`HookInputDecodeError`)(
   "HookInputDecodeError",
@@ -93,15 +97,17 @@ export class HookInputDecodeError extends TaggedErrorClass<HookInputDecodeError>
  *
  * Exit-code mapping: 1 (non-blocking).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a handler failure)
  *
- * @example
  * ```ts
  * import { HookHandlerError } from "effect-claudecode"
  *
- * console.log(HookHandlerError)
+ * const error = HookHandlerError.make({ cause: "handler failed" })
+ * console.log(error._tag) // "HookHandlerError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookHandlerError extends TaggedErrorClass<HookHandlerError>($I`HookHandlerError`)(
   "HookHandlerError",
@@ -116,15 +122,17 @@ export class HookHandlerError extends TaggedErrorClass<HookHandlerError>($I`Hook
  *
  * Exit-code mapping: 1 (non-blocking).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect an output encode failure)
  *
- * @example
  * ```ts
  * import { HookOutputEncodeError } from "effect-claudecode"
  *
- * console.log(HookOutputEncodeError)
+ * const error = HookOutputEncodeError.make({ cause: "output was invalid" })
+ * console.log(error._tag) // "HookOutputEncodeError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookOutputEncodeError extends TaggedErrorClass<HookOutputEncodeError>($I`HookOutputEncodeError`)(
   "HookOutputEncodeError",
@@ -139,15 +147,17 @@ export class HookOutputEncodeError extends TaggedErrorClass<HookOutputEncodeErro
  *
  * Exit-code mapping: 1 (non-blocking).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a stdout failure)
  *
- * @example
  * ```ts
  * import { HookStdoutWriteError } from "effect-claudecode"
  *
- * console.log(HookStdoutWriteError)
+ * const error = HookStdoutWriteError.make({ cause: "stdout closed" })
+ * console.log(error._tag) // "HookStdoutWriteError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookStdoutWriteError extends TaggedErrorClass<HookStdoutWriteError>($I`HookStdoutWriteError`)(
   "HookStdoutWriteError",
@@ -161,15 +171,17 @@ export class HookStdoutWriteError extends TaggedErrorClass<HookStdoutWriteError>
  * Raised internally when a handler intentionally controls the command
  * process exit status (for example, an exit-2 hook response).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a controlled exit)
  *
- * @example
  * ```ts
  * import { HookControlledExit } from "effect-claudecode"
  *
- * console.log(HookControlledExit)
+ * const error = HookControlledExit.make({ code: 2 })
+ * console.log(error.code) // 2
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookControlledExit extends TaggedErrorClass<HookControlledExit>($I`HookControlledExit`)(
   "HookControlledExit",
@@ -183,15 +195,22 @@ export class HookControlledExit extends TaggedErrorClass<HookControlledExit>($I`
  * Raised when decoding a known tool payload from `tool_input` or
  * `tool_response` fails.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a tool payload failure)
  *
- * @example
  * ```ts
  * import { HookToolDecodeError } from "effect-claudecode"
  *
- * console.log(HookToolDecodeError)
+ * const error = HookToolDecodeError.make({
+ *   event: "PreToolUse",
+ *   toolName: "Bash",
+ *   payload: "tool_input",
+ *   cause: "invalid command"
+ * })
+ * console.log(error.toolName) // "Bash"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class HookToolDecodeError extends TaggedErrorClass<HookToolDecodeError>($I`HookToolDecodeError`)(
   "HookToolDecodeError",
@@ -213,15 +232,17 @@ export class HookToolDecodeError extends TaggedErrorClass<HookToolDecodeError>($
 /**
  * Raised when reading or parsing a transcript file fails.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a transcript failure)
  *
- * @example
  * ```ts
  * import { TranscriptReadError } from "effect-claudecode"
  *
- * console.log(TranscriptReadError)
+ * const error = TranscriptReadError.make({ path: "/tmp/session.jsonl", cause: "not found" })
+ * console.log(error.path) // "/tmp/session.jsonl"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class TranscriptReadError extends TaggedErrorClass<TranscriptReadError>($I`TranscriptReadError`)(
   "TranscriptReadError",
@@ -238,15 +259,17 @@ export class TranscriptReadError extends TaggedErrorClass<TranscriptReadError>($
 /**
  * Raised when reading a settings.json file fails (I/O error, etc.).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a settings read failure)
  *
- * @example
  * ```ts
  * import { SettingsReadError } from "effect-claudecode"
  *
- * console.log(SettingsReadError)
+ * const error = SettingsReadError.make({ path: "/repo/.claude/settings.json", cause: "not found" })
+ * console.log(error.path)
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class SettingsReadError extends TaggedErrorClass<SettingsReadError>($I`SettingsReadError`)(
   "SettingsReadError",
@@ -259,15 +282,17 @@ export class SettingsReadError extends TaggedErrorClass<SettingsReadError>($I`Se
 /**
  * Raised when a settings.json file contains invalid JSON.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a settings parse failure)
  *
- * @example
  * ```ts
  * import { SettingsParseError } from "effect-claudecode"
  *
- * console.log(SettingsParseError)
+ * const error = SettingsParseError.make({ path: "/repo/.claude/settings.json", cause: "invalid JSON" })
+ * console.log(error._tag) // "SettingsParseError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class SettingsParseError extends TaggedErrorClass<SettingsParseError>($I`SettingsParseError`)(
   "SettingsParseError",
@@ -281,15 +306,17 @@ export class SettingsParseError extends TaggedErrorClass<SettingsParseError>($I`
  * Raised when a settings.json file parses as JSON but fails schema
  * validation.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a settings decode failure)
  *
- * @example
  * ```ts
  * import { SettingsDecodeError } from "effect-claudecode"
  *
- * console.log(SettingsDecodeError)
+ * const error = SettingsDecodeError.make({ path: "/repo/.claude/settings.json", cause: "invalid settings" })
+ * console.log(error._tag) // "SettingsDecodeError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class SettingsDecodeError extends TaggedErrorClass<SettingsDecodeError>($I`SettingsDecodeError`)(
   "SettingsDecodeError",
@@ -307,15 +334,17 @@ export class SettingsDecodeError extends TaggedErrorClass<SettingsDecodeError>($
  * Raised when materializing a plugin directory fails (I/O error during
  * `mkdir`, `writeFile`, or JSON encoding of the manifest).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a plugin write failure)
  *
- * @example
  * ```ts
  * import { PluginWriteError } from "effect-claudecode"
  *
- * console.log(PluginWriteError)
+ * const error = PluginWriteError.make({ path: "/plugin", cause: "permission denied" })
+ * console.log(error.path) // "/plugin"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class PluginWriteError extends TaggedErrorClass<PluginWriteError>($I`PluginWriteError`)(
   "PluginWriteError",
@@ -328,15 +357,21 @@ export class PluginWriteError extends TaggedErrorClass<PluginWriteError>($I`Plug
 /**
  * Raised when a plugin definition is internally inconsistent.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect an inconsistent plugin entry)
  *
- * @example
  * ```ts
  * import { PluginDefinitionError } from "effect-claudecode"
  *
- * console.log(PluginDefinitionError)
+ * const error = PluginDefinitionError.make({
+ *   kind: "skill",
+ *   entryName: "review",
+ *   frontmatterName: "audit"
+ * })
+ * console.log(error.entryName) // "review"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class PluginDefinitionError extends TaggedErrorClass<PluginDefinitionError>($I`PluginDefinitionError`)(
   "PluginDefinitionError",
@@ -354,15 +389,17 @@ export class PluginDefinitionError extends TaggedErrorClass<PluginDefinitionErro
  * Raised when reading, parsing, or decoding an existing plugin directory
  * fails.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a plugin load failure)
  *
- * @example
  * ```ts
  * import { PluginLoadError } from "effect-claudecode"
  *
- * console.log(PluginLoadError)
+ * const error = PluginLoadError.make({ path: "/plugin", cause: "manifest missing" })
+ * console.log(error.path) // "/plugin"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class PluginLoadError extends TaggedErrorClass<PluginLoadError>($I`PluginLoadError`)(
   "PluginLoadError",
@@ -380,15 +417,17 @@ export class PluginLoadError extends TaggedErrorClass<PluginLoadError>($I`Plugin
  * Raised when reading a markdown file with YAML frontmatter fails
  * (I/O error, etc.).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a frontmatter read failure)
  *
- * @example
  * ```ts
  * import { FrontmatterReadError } from "effect-claudecode"
  *
- * console.log(FrontmatterReadError)
+ * const error = FrontmatterReadError.make({ path: "/plugin/SKILL.md", cause: "not found" })
+ * console.log(error.path) // "/plugin/SKILL.md"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterReadError extends TaggedErrorClass<FrontmatterReadError>($I`FrontmatterReadError`)(
   "FrontmatterReadError",
@@ -403,15 +442,17 @@ export class FrontmatterReadError extends TaggedErrorClass<FrontmatterReadError>
  * valid YAML, or when the frontmatter delimiters (`---`) are
  * malformed.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a frontmatter parse failure)
  *
- * @example
  * ```ts
  * import { FrontmatterParseError } from "effect-claudecode"
  *
- * console.log(FrontmatterParseError)
+ * const error = FrontmatterParseError.make({ path: "/plugin/SKILL.md", cause: "invalid YAML" })
+ * console.log(error._tag) // "FrontmatterParseError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterParseError extends TaggedErrorClass<FrontmatterParseError>($I`FrontmatterParseError`)(
   "FrontmatterParseError",
@@ -426,15 +467,17 @@ export class FrontmatterParseError extends TaggedErrorClass<FrontmatterParseErro
  * schema validation against the expected shape (Skill, Subagent,
  * Command, or OutputStyle).
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect a frontmatter decode failure)
  *
- * @example
  * ```ts
  * import { FrontmatterDecodeError } from "effect-claudecode"
  *
- * console.log(FrontmatterDecodeError)
+ * const error = FrontmatterDecodeError.make({ path: "/plugin/SKILL.md", cause: "name missing" })
+ * console.log(error._tag) // "FrontmatterDecodeError"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterDecodeError extends TaggedErrorClass<FrontmatterDecodeError>($I`FrontmatterDecodeError`)(
   "FrontmatterDecodeError",
@@ -451,15 +494,17 @@ export class FrontmatterDecodeError extends TaggedErrorClass<FrontmatterDecodeEr
 /**
  * Raised when a `.mcp.json` file fails to read, parse, or decode.
  *
- * @category errors
- * @since 0.0.0
+ * **Example** (Inspect an MCP configuration failure)
  *
- * @example
  * ```ts
  * import { McpConfigError } from "effect-claudecode"
  *
- * console.log(McpConfigError)
+ * const error = McpConfigError.make({ path: "/repo/.mcp.json", cause: "invalid JSON" })
+ * console.log(error.path) // "/repo/.mcp.json"
  * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class McpConfigError extends TaggedErrorClass<McpConfigError>($I`McpConfigError`)(
   "McpConfigError",
@@ -472,15 +517,18 @@ export class McpConfigError extends TaggedErrorClass<McpConfigError>($I`McpConfi
 /**
  * Decoded and wire-encoded companion types for {@link HookStdinReadError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookStdinReadError } from "effect-claudecode"
  *
  * type Wire = HookStdinReadError.Encoded
+ * const error = HookStdinReadError.make({ cause: "stdin closed" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookStdinReadError {
   /**
@@ -502,15 +550,18 @@ export declare namespace HookStdinReadError {
 /**
  * Decoded and wire-encoded companion types for {@link HookInputDecodeError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookInputDecodeError } from "effect-claudecode"
  *
  * type Wire = HookInputDecodeError.Encoded
+ * const error = HookInputDecodeError.make({ cause: "invalid payload", phase: "json" })
+ * console.log(error.phase)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookInputDecodeError {
   /**
@@ -532,15 +583,18 @@ export declare namespace HookInputDecodeError {
 /**
  * Decoded and wire-encoded companion types for {@link HookHandlerError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookHandlerError } from "effect-claudecode"
  *
  * type Wire = HookHandlerError.Encoded
+ * const error = HookHandlerError.make({ cause: "handler failed" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookHandlerError {
   /**
@@ -562,15 +616,18 @@ export declare namespace HookHandlerError {
 /**
  * Decoded and wire-encoded companion types for {@link HookOutputEncodeError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookOutputEncodeError } from "effect-claudecode"
  *
  * type Wire = HookOutputEncodeError.Encoded
+ * const error = HookOutputEncodeError.make({ cause: "invalid output" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookOutputEncodeError {
   /**
@@ -592,15 +649,18 @@ export declare namespace HookOutputEncodeError {
 /**
  * Decoded and wire-encoded companion types for {@link HookStdoutWriteError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookStdoutWriteError } from "effect-claudecode"
  *
  * type Wire = HookStdoutWriteError.Encoded
+ * const error = HookStdoutWriteError.make({ cause: "stdout closed" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookStdoutWriteError {
   /**
@@ -622,15 +682,18 @@ export declare namespace HookStdoutWriteError {
 /**
  * Decoded and wire-encoded companion types for {@link HookControlledExit}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookControlledExit } from "effect-claudecode"
  *
- * type Example = HookControlledExit.Encoded
+ * type Wire = HookControlledExit.Encoded
+ * const error = HookControlledExit.make({ code: 2 })
+ * console.log(error.code)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookControlledExit {
   /**
@@ -652,15 +715,23 @@ export declare namespace HookControlledExit {
 /**
  * Decoded and wire-encoded companion types for {@link HookToolDecodeError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { HookToolDecodeError } from "effect-claudecode"
  *
  * type Wire = HookToolDecodeError.Encoded
+ * const error = HookToolDecodeError.make({
+ *   event: "PostToolUse",
+ *   toolName: "Bash",
+ *   payload: "tool_response",
+ *   cause: "invalid response"
+ * })
+ * console.log(error.payload)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookToolDecodeError {
   /**
@@ -682,15 +753,18 @@ export declare namespace HookToolDecodeError {
 /**
  * Decoded and wire-encoded companion types for {@link TranscriptReadError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { TranscriptReadError } from "effect-claudecode"
  *
  * type Wire = TranscriptReadError.Encoded
+ * const error = TranscriptReadError.make({ path: "/tmp/session.jsonl", cause: "not found" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace TranscriptReadError {
   /**
@@ -712,15 +786,18 @@ export declare namespace TranscriptReadError {
 /**
  * Decoded and wire-encoded companion types for {@link SettingsReadError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { SettingsReadError } from "effect-claudecode"
  *
  * type Wire = SettingsReadError.Encoded
+ * const error = SettingsReadError.make({ path: "/repo/.claude/settings.json", cause: "not found" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace SettingsReadError {
   /**
@@ -742,15 +819,18 @@ export declare namespace SettingsReadError {
 /**
  * Decoded and wire-encoded companion types for {@link SettingsParseError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { SettingsParseError } from "effect-claudecode"
  *
  * type Wire = SettingsParseError.Encoded
+ * const error = SettingsParseError.make({ path: "/repo/.claude/settings.json", cause: "invalid JSON" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace SettingsParseError {
   /**
@@ -772,15 +852,18 @@ export declare namespace SettingsParseError {
 /**
  * Decoded and wire-encoded companion types for {@link SettingsDecodeError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { SettingsDecodeError } from "effect-claudecode"
  *
  * type Wire = SettingsDecodeError.Encoded
+ * const error = SettingsDecodeError.make({ path: "/repo/.claude/settings.json", cause: "invalid settings" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace SettingsDecodeError {
   /**
@@ -802,15 +885,18 @@ export declare namespace SettingsDecodeError {
 /**
  * Decoded and wire-encoded companion types for {@link PluginWriteError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { PluginWriteError } from "effect-claudecode"
  *
  * type Wire = PluginWriteError.Encoded
+ * const error = PluginWriteError.make({ path: "/plugin", cause: "permission denied" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace PluginWriteError {
   /**
@@ -832,15 +918,22 @@ export declare namespace PluginWriteError {
 /**
  * Decoded and wire-encoded companion types for {@link PluginDefinitionError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { PluginDefinitionError } from "effect-claudecode"
  *
  * type Wire = PluginDefinitionError.Encoded
+ * const error = PluginDefinitionError.make({
+ *   kind: "skill",
+ *   entryName: "review",
+ *   frontmatterName: "audit"
+ * })
+ * console.log(error.entryName)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace PluginDefinitionError {
   /**
@@ -862,15 +955,18 @@ export declare namespace PluginDefinitionError {
 /**
  * Decoded and wire-encoded companion types for {@link PluginLoadError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { PluginLoadError } from "effect-claudecode"
  *
  * type Wire = PluginLoadError.Encoded
+ * const error = PluginLoadError.make({ path: "/plugin", cause: "manifest missing" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace PluginLoadError {
   /**
@@ -892,15 +988,18 @@ export declare namespace PluginLoadError {
 /**
  * Decoded and wire-encoded companion types for {@link FrontmatterReadError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { FrontmatterReadError } from "effect-claudecode"
  *
  * type Wire = FrontmatterReadError.Encoded
+ * const error = FrontmatterReadError.make({ path: "/plugin/SKILL.md", cause: "not found" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace FrontmatterReadError {
   /**
@@ -922,15 +1021,18 @@ export declare namespace FrontmatterReadError {
 /**
  * Decoded and wire-encoded companion types for {@link FrontmatterParseError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { FrontmatterParseError } from "effect-claudecode"
  *
  * type Wire = FrontmatterParseError.Encoded
+ * const error = FrontmatterParseError.make({ path: "/plugin/SKILL.md", cause: "invalid YAML" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace FrontmatterParseError {
   /**
@@ -952,15 +1054,18 @@ export declare namespace FrontmatterParseError {
 /**
  * Decoded and wire-encoded companion types for {@link FrontmatterDecodeError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { FrontmatterDecodeError } from "effect-claudecode"
  *
  * type Wire = FrontmatterDecodeError.Encoded
+ * const error = FrontmatterDecodeError.make({ path: "/plugin/SKILL.md", cause: "name missing" })
+ * console.log(error._tag)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace FrontmatterDecodeError {
   /**
@@ -982,15 +1087,18 @@ export declare namespace FrontmatterDecodeError {
 /**
  * Decoded and wire-encoded companion types for {@link McpConfigError}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to a runtime error)
  *
- * @example
  * ```ts
  * import { McpConfigError } from "effect-claudecode"
  *
  * type Wire = McpConfigError.Encoded
+ * const error = McpConfigError.make({ path: "/repo/.mcp.json", cause: "invalid JSON" })
+ * console.log(error.path)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace McpConfigError {
   /**

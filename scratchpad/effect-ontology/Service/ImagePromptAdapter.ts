@@ -9,14 +9,22 @@
  * @module Service/ImagePromptAdapter
  */
 
-import { Prompt } from "effect/unstable/ai"
-import type { PlatformError } from "effect/PlatformError"
-import { Context, Effect, Layer, Option } from "effect"
-import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts"
-import { ImageBlobStore } from "./ImageBlobStore.ts"
-import { StorageServiceLive } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import type { PlatformError } from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import type * as S from "effect/Schema";
+import { Prompt } from "effect/unstable/ai";
+import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
+import { ImageBlobStore } from "./ImageBlobStore.ts";
+import { StorageServiceLive } from "./Storage.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/ImagePromptAdapter");
 
 // =============================================================================
@@ -29,15 +37,15 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImagePromptAdapter");
 const toBase64 = (bytes: Uint8Array): string => {
   // Use Buffer in Node.js/Bun environment
   if (typeof Buffer !== "undefined") {
-    return Buffer.from(bytes).toString("base64")
+    return Buffer.from(bytes).toString("base64");
   }
   // Fallback for browser (though we're primarily server-side)
-  let binary = ""
+  let binary = "";
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary)
-}
+  return btoa(binary);
+};
 
 /**
  * Get file extension from media type
@@ -49,10 +57,10 @@ const getExtension = (mediaType: string): string => {
     "image/png": "png",
     "image/gif": "gif",
     "image/webp": "webp",
-    "image/svg+xml": "svg"
-  }
-  return map[mediaType] ?? "bin"
-}
+    "image/svg+xml": "svg",
+  };
+  return map[mediaType] ?? "bin";
+};
 
 // =============================================================================
 // Service Interface
@@ -78,7 +86,7 @@ export interface ImagePromptAdapterService {
    */
   readonly toImageForPrompt: (
     refs: ReadonlyArray<ImageRef>
-  ) => Effect.Effect<ReadonlyArray<ImageForPrompt>, PlatformError>
+  ) => Effect.Effect<ReadonlyArray<ImageForPrompt>, PlatformError | KeyValueStoreError | S.SchemaError>;
 
   /**
    * Convert ImageForPrompt[] to @effect/ai Prompt.FilePart[]
@@ -88,9 +96,7 @@ export interface ImagePromptAdapterService {
    * @param images - Images to convert
    * @returns Array of Prompt.FilePart objects
    */
-  readonly toPromptParts: (
-    images: ReadonlyArray<ImageForPrompt>
-  ) => ReadonlyArray<Prompt.FilePart>
+  readonly toPromptParts: (images: ReadonlyArray<ImageForPrompt>) => ReadonlyArray<Prompt.FilePart>;
 
   /**
    * Build a complete user message with text and images
@@ -106,7 +112,7 @@ export interface ImagePromptAdapterService {
     text: string,
     images: ReadonlyArray<ImageForPrompt>,
     imageIntro?: string
-  ) => ReadonlyArray<Prompt.UserMessagePart>
+  ) => ReadonlyArray<Prompt.UserMessagePart>;
 }
 
 // =============================================================================
@@ -119,7 +125,9 @@ export interface ImagePromptAdapterService {
  * @since 2.0.0
  * @category Service
  */
-export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, ImagePromptAdapterService>()($I`ImagePromptAdapter`) {
+export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, ImagePromptAdapterService>()(
+  $I`ImagePromptAdapter`
+) {
   /**
    * Live implementation
    *
@@ -128,98 +136,98 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
    */
   static readonly Live = Layer.effect(
     ImagePromptAdapter,
-    Effect.gen(function*() {
-      const blobStore = yield* ImageBlobStore
+    Effect.gen(function* () {
+      const blobStore = yield* ImageBlobStore;
 
       const toImageForPrompt: ImagePromptAdapterService["toImageForPrompt"] = (refs) =>
         Effect.forEach(
           refs,
-          (ref) =>
-            Effect.gen(function*() {
-              // Load asset metadata
-              const assetOpt = yield* blobStore.getMetadata(ref.assetHash)
-              if (Option.isNone(assetOpt)) {
-                yield* Effect.logWarning(`Image asset not found: ${ref.assetHash}`)
-                return Option.none<ImageForPrompt>()
-              }
-              const asset = assetOpt.value
+          Effect.fn(function* (ref) {
+            // Load asset metadata
+            const assetOpt = yield* blobStore.getMetadata(ref.assetHash);
+            if (O.isNone(assetOpt)) {
+              yield* Effect.logWarning(`Image asset not found: ${ref.assetHash}`);
+              return O.none<ImageForPrompt>();
+            }
+            const asset = assetOpt.value;
 
-              // Load bytes
-              const bytesOpt = yield* blobStore.getBytes(ref.assetHash)
-              if (Option.isNone(bytesOpt)) {
-                yield* Effect.logWarning(`Image bytes not found: ${ref.assetHash}`)
-                return Option.none<ImageForPrompt>()
-              }
+            // Load bytes
+            const bytesOpt = yield* blobStore.getBytes(ref.assetHash);
+            if (O.isNone(bytesOpt)) {
+              yield* Effect.logWarning(`Image bytes not found: ${ref.assetHash}`);
+              return O.none<ImageForPrompt>();
+            }
 
-              // Convert to ImageForPrompt
-              return Option.some<ImageForPrompt>({
-                base64: toBase64(bytesOpt.value),
-                mediaType: asset.contentType,
-                alt: ref.alt,
-                caption: ref.caption,
-                context: ref.context,
-                position: O.some(ref.position),
-                assetHash: O.some(ref.assetHash)
-              })
-            }),
+            // Convert to ImageForPrompt
+            return O.some<ImageForPrompt>({
+              base64: toBase64(bytesOpt.value),
+              mediaType: asset.contentType,
+              alt: ref.alt,
+              caption: ref.caption,
+              context: ref.context,
+              position: O.some(ref.position),
+              assetHash: O.some(ref.assetHash),
+            });
+          }),
           { concurrency: 5 }
         ).pipe(
-          Effect.map((results) => results.filter(Option.isSome).map((opt) => opt.value))
-        )
+          Effect.map(
+            flow(
+              A.filter(O.isSome),
+              A.map((opt) => opt.value)
+            )
+          )
+        );
 
       const toPromptParts: ImagePromptAdapterService["toPromptParts"] = (images) =>
         images.map((img, index) =>
           Prompt.makePart("file", {
             mediaType: img.mediaType,
             data: img.base64,
-            fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`
+            fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`,
           })
-        )
+        );
 
       const buildUserMessageParts: ImagePromptAdapterService["buildUserMessageParts"] = (
         text,
         images,
         imageIntro = "Relevant images from the document:"
       ) => {
-        const parts: Array<Prompt.UserMessagePart> = [
-          Prompt.makePart("text", { text })
-        ]
+        const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
         if (images.length > 0) {
           // Add intro text for images
-          parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }))
+          parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }));
 
           // Add image parts with context
           for (const img of images) {
             // Add context/caption as text before image if available
-            const imageContext = [img.alt, img.caption, img.context]
-              .filter(Boolean)
-              .join(" - ")
+            const imageContext = [img.alt, img.caption, img.context].filter(Boolean).join(" - ");
 
-            if (imageContext) {
-              parts.push(Prompt.makePart("text", { text: `\n[Image ${img.position ?? 0}: ${imageContext}]` }))
+            if (P.isNotUndefined(imageContext)) {
+              parts.push(Prompt.makePart("text", { text: `\n[Image ${img.position ?? 0}: ${imageContext}]` }));
             }
 
             parts.push(
               Prompt.makePart("file", {
                 mediaType: img.mediaType,
                 data: img.base64,
-                fileName: `image-${img.position ?? 0}.${getExtension(img.mediaType)}`
+                fileName: `image-${img.position ?? 0}.${getExtension(img.mediaType)}`,
               })
-            )
+            );
           }
         }
 
-        return parts
-      }
+        return parts;
+      };
 
       return {
         toImageForPrompt,
         toPromptParts,
-        buildUserMessageParts
-      }
+        buildUserMessageParts,
+      };
     })
-  )
+  );
 
   /**
    * Default layer with all dependencies
@@ -230,7 +238,7 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
   static readonly Default = ImagePromptAdapter.Live.pipe(
     Layer.provide(ImageBlobStore.Live),
     Layer.provide(StorageServiceLive)
-  )
+  );
 }
 
 // =============================================================================
@@ -248,16 +256,14 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
  * @since 2.0.0
  * @category Utilities
  */
-export const imagesToPromptParts = (
-  images: ReadonlyArray<ImageForPrompt>
-): ReadonlyArray<Prompt.FilePart> =>
-  images.map((img, index) =>
+export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): ReadonlyArray<Prompt.FilePart> =>
+  A.map(images, (img, index) =>
     Prompt.makePart("file", {
       mediaType: img.mediaType,
       data: img.base64,
-      fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`
+      fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`,
     })
-  )
+  );
 
 /**
  * Build multimodal user message content with text and images
@@ -271,19 +277,18 @@ export const imagesToPromptParts = (
  * @since 2.0.0
  * @category Utilities
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const buildMultimodalContent = (
   text: string,
   images?: ReadonlyArray<ImageForPrompt>
 ): ReadonlyArray<Prompt.UserMessagePart> => {
-  const parts: Array<Prompt.UserMessagePart> = [
-    Prompt.makePart("text", { text })
-  ]
+  const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-  if (images && images.length > 0) {
+  if (P.isNotUndefined(images) && images.length > 0) {
     for (const part of imagesToPromptParts(images)) {
-      parts.push(part)
+      parts.push(part);
     }
   }
 
-  return parts
-}
+  return parts;
+};

@@ -7,12 +7,14 @@
  * @module Service/EntityResolution
  */
 
-import { Effect, Option, Context, Layer } from "effect"
-import { KnowledgeGraph } from "../Domain/Model/Entity.ts"
-import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts"
-import { buildEntityResolutionGraph } from "../Workflow/EntityResolutionGraph.ts"
-import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import { KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
+import { buildEntityResolutionGraph } from "../Workflow/EntityResolutionGraph.ts";
+import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/EntityResolution");
 
 /**
@@ -21,33 +23,35 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EntityResolution");
  * @since 2.0.0
  * @category Services
  */
-const makeEntityResolutionService = Effect.gen(function*() {
-  const _embedding = yield* EmbeddingService
-  return {
-    resolve: (graphs: ReadonlyArray<KnowledgeGraph>, config: EntityResolutionConfig) =>
-      Effect.gen(function*() {
-        // Merge all graphs
-        const mergedEntities = graphs.flatMap((g) => g.entities)
-        const mergedRelations = graphs.flatMap((g) => g.relations)
+const makeEntityResolutionService = Effect.gen(function* () {
+  const embedding = yield* EmbeddingService;
 
-        const mergedGraph = KnowledgeGraph.make({
-          entities: mergedEntities,
-          relations: mergedRelations
-        })
+  const resolve = Effect.fn("EntityResolutionService.resolve")(function* (
+    graphs: ReadonlyArray<KnowledgeGraph>,
+    config: EntityResolutionConfig
+  ) {
+    const mergedEntities = A.flatMap(graphs, (graph) => graph.entities);
+    const mergedRelations = A.flatMap(graphs, (graph) => graph.relations);
+    const mergedGraph = KnowledgeGraph.make({
+      entities: mergedEntities,
+      relations: mergedRelations,
+    });
 
-        return yield* buildEntityResolutionGraph(mergedGraph, config)
-      })
-  }
-})
+    return yield* buildEntityResolutionGraph(mergedGraph, config).pipe(
+      Effect.provideService(EmbeddingService, embedding)
+    );
+  });
 
-export class EntityResolutionService
-  extends Context.Service<EntityResolutionService>()($I`EntityResolutionService`, {
-        make: makeEntityResolutionService,
-      })
-{
+  return { resolve };
+});
+
+export class EntityResolutionService extends Context.Service<EntityResolutionService>()($I`EntityResolutionService`, {
+  make: makeEntityResolutionService,
+}) {
+  static readonly Default = Layer.effect(this, this.make);
+
   /**
    * Live layer for EntityResolutionService
    */
-  static readonly Live = EntityResolutionService.Default
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([EmbeddingServiceDefault]));
+  static readonly Live = this.Default.pipe(Layer.provide(EmbeddingServiceDefault));
 }

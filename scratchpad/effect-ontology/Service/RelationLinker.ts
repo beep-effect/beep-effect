@@ -8,12 +8,14 @@
  * @module Service/RelationLinker
  */
 
-import { Chunk, Effect, HashSet, Option, Context, Layer } from "effect"
-import { Relation, RelationObject } from "../Domain/Model/Entity.ts"
-import { EntityId, type IRI } from "../Domain/Model/shared.ts"
-import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts"
-import { getCanonicalId } from "./EntityLinker.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Chunk, Context, Effect, HashSet, Layer, Option } from "effect";
+import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
+import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
+import type { IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
+import { getCanonicalId } from "./EntityLinker.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
 
 /**
@@ -24,19 +26,19 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
  */
 export interface LinkedRelation {
   /** Original relation */
-  readonly original: Relation
+  readonly original: Relation;
   /** Canonical subject ID (resolved via ERG) */
-  readonly canonicalSubjectId: EntityId
+  readonly canonicalSubjectId: EntityId;
   /** Canonical predicate (unchanged) */
-  readonly canonicalPredicate: IRI
+  readonly canonicalPredicate: IRI;
   /**
    * Canonical object (resolved via ERG if entity reference, unchanged if literal)
    */
-  readonly canonicalObject: RelationObject
+  readonly canonicalObject: RelationObject;
   /** Whether subject was remapped */
-  readonly subjectRemapped: boolean
+  readonly subjectRemapped: boolean;
   /** Whether object was remapped (false for literals) */
-  readonly objectRemapped: boolean
+  readonly objectRemapped: boolean;
 }
 
 /**
@@ -46,9 +48,9 @@ export interface LinkedRelation {
  * @category Types
  */
 export interface LinkingResult {
-  readonly linkedRelations: Chunk.Chunk<LinkedRelation>
-  readonly remappedCount: number
-  readonly literalObjectCount: number
+  readonly linkedRelations: Chunk.Chunk<LinkedRelation>;
+  readonly remappedCount: number;
+  readonly literalObjectCount: number;
 }
 
 /**
@@ -73,42 +75,38 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
       erg: EntityResolutionGraph
     ): Effect.Effect<LinkingResult, never> =>
       Effect.sync(() => {
-        let remappedCount = 0
-        let literalObjectCount = 0
+        let remappedCount = 0;
+        let literalObjectCount = 0;
 
-        const linkedRelations: Array<LinkedRelation> = []
+        const linkedRelations: Array<LinkedRelation> = [];
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
-          const canonicalSubjectId = EntityId.fromUnknown(Option.getOrElse(
-            getCanonicalId(erg, relation.subjectId),
-            () => relation.subjectId
-          ))
-          const subjectRemapped = canonicalSubjectId !== relation.subjectId
+          const canonicalSubjectId = EntityId.fromUnknown(
+            Option.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)
+          );
+          const subjectRemapped = canonicalSubjectId !== relation.subjectId;
 
           if (subjectRemapped) {
-            remappedCount++
+            remappedCount++;
           }
 
           // Canonicalize object (only if it's an entity reference string)
-          let canonicalObject: RelationObject
-          let objectRemapped = false
+          let canonicalObject: RelationObject;
+          let objectRemapped = false;
 
           if (RelationObject.guards.EntityReference(relation.object)) {
             // Entity reference - canonicalize
-            const resolved = Option.getOrElse(
-              getCanonicalId(erg, relation.object.value),
-              () => relation.object.value
-            )
-            canonicalObject = RelationObject.cases.EntityReference.make({ value: EntityId.fromUnknown(resolved) })
-            objectRemapped = resolved !== relation.object.value
+            const resolved = Option.getOrElse(getCanonicalId(erg, relation.object.value), () => relation.object.value);
+            canonicalObject = RelationObject.cases.EntityReference.make({ value: EntityId.fromUnknown(resolved) });
+            objectRemapped = resolved !== relation.object.value;
             if (objectRemapped) {
-              remappedCount++
+              remappedCount++;
             }
           } else {
             // Literal value (number or boolean) - keep as-is
-            canonicalObject = relation.object
-            literalObjectCount++
+            canonicalObject = relation.object;
+            literalObjectCount++;
           }
 
           linkedRelations.push({
@@ -117,15 +115,15 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
             canonicalPredicate: relation.predicate,
             canonicalObject,
             subjectRemapped,
-            objectRemapped
-          })
+            objectRemapped,
+          });
         }
 
         return {
           linkedRelations: Chunk.fromIterable(linkedRelations),
           remappedCount,
-          literalObjectCount
-        }
+          literalObjectCount,
+        };
       }),
 
     /**
@@ -134,34 +132,32 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
      * @param linkingResult - Result from linkRelations
      * @returns Deduplicated relations
      */
-    deduplicateLinked: (
-      linkingResult: LinkingResult
-    ): Effect.Effect<Chunk.Chunk<Relation>, never> =>
+    deduplicateLinked: (linkingResult: LinkingResult): Effect.Effect<Chunk.Chunk<Relation>, never> =>
       Effect.sync(() => {
-        let seen = HashSet.empty<string>()
-        const deduplicated: Array<Relation> = []
+        let seen = HashSet.empty<string>();
+        const deduplicated: Array<Relation> = [];
 
         for (const linked of linkingResult.linkedRelations) {
           // Create canonical key
-          const objectStr = String(linked.canonicalObject.value)
-          const key = `${linked.canonicalSubjectId}|${linked.canonicalPredicate}|${objectStr}`
+          const objectStr = String(linked.canonicalObject.value);
+          const key = `${linked.canonicalSubjectId}|${linked.canonicalPredicate}|${objectStr}`;
 
           if (!HashSet.has(seen, key)) {
-            seen = HashSet.add(seen, key)
+            seen = HashSet.add(seen, key);
             // Create new relation with canonical IDs
             deduplicated.push(
               Relation.make({
                 subjectId: linked.canonicalSubjectId,
                 predicate: linked.canonicalPredicate,
-                object: linked.canonicalObject
+                object: linked.canonicalObject,
               })
-            )
+            );
           }
         }
 
-        return Chunk.fromIterable(deduplicated)
-      })
+        return Chunk.fromIterable(deduplicated);
+      }),
   }),
 }) {
-    static readonly Default = Layer.effect(this, this.make);
+  static readonly Default = Layer.effect(this, this.make);
 }

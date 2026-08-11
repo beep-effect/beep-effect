@@ -8,15 +8,15 @@
  * @module Runtime/Persistence/MigrationRunner
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import {Context, Layer} from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { Context, Layer } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/Persistence/MigrationRunner");
 
-import {SqlClient} from "effect/unstable/sql";
-import {Effect, Option} from "effect";
+import { Effect, Option } from "effect";
 import * as A from "effect/Array";
 import * as Order from "effect/Order";
+import { SqlClient } from "effect/unstable/sql";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -39,11 +39,11 @@ export interface MigrationResult {
 // -----------------------------------------------------------------------------
 
 export interface MigrationRunnerService {
-  readonly getCurrentVersion: Effect.Effect<number>
+  readonly getCurrentVersion: Effect.Effect<number>;
   readonly applyMigration: (
     migration: Migration
-  ) => Effect.Effect<void, { readonly version: number; readonly error: string }>
-  readonly runMigrations: (migrations: ReadonlyArray<Migration>) => Effect.Effect<MigrationResult>
+  ) => Effect.Effect<void, { readonly version: number; readonly error: string }>;
+  readonly runMigrations: (migrations: ReadonlyArray<Migration>) => Effect.Effect<MigrationResult>;
 }
 
 export class MigrationRunner extends Context.Service<MigrationRunner, MigrationRunnerService>()($I`MigrationRunner`, {
@@ -58,9 +58,9 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
         SELECT COALESCE(MAX(version), 0) as version
         FROM schema_migrations
       `.pipe(
-        Effect.catch(() =>
+        Effect.orElseSucceed(() =>
           // Table doesn't exist yet
-          Effect.succeed([{version: 0}])
+          [{ version: 0 }]
         )
       );
       return (result[0]?.version as number) ?? 0;
@@ -84,9 +84,9 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
       }).pipe(
         Effect.mapError((error) => ({
           version: migration.version,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         }))
-      )
+      );
     });
 
     /**
@@ -95,54 +95,63 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
     const runMigrations = Effect.fn("MigrationRunner.runMigrations")(function* (
       migrations: ReadonlyArray<Migration>
     ): Effect.fn.Return<MigrationResult> {
-        const currentVersion = yield* getCurrentVersion;
-        yield* Effect.logInfo(`Current schema version: ${currentVersion}`);
+      const currentVersion = yield* getCurrentVersion;
+      yield* Effect.logInfo(`Current schema version: ${currentVersion}`);
 
-        const sorted = A.sort(migrations, Order.mapInput(Order.Number, (migration: Migration) => migration.version));
-        const pending = A.filter(sorted, (migration) => migration.version > currentVersion);
+      const sorted = A.sort(
+        migrations,
+        Order.mapInput(Order.Number, (migration: Migration) => migration.version)
+      );
+      const pending = A.filter(sorted, (migration) => migration.version > currentVersion);
 
-        if (pending.length === 0) {
-          yield* Effect.logInfo("No pending migrations");
-          return {
-            applied: [] as Array<Migration>,
-            skipped: A.map(A.filter(sorted, (migration) => migration.version <= currentVersion), (migration) => migration.version),
-            errors: []
-          } satisfies MigrationResult;
-        }
-
-        yield* Effect.logInfo(`Found ${pending.length} pending migrations`);
-
-        const applied: Array<Migration> = [];
-        const errors: Array<{ version: number; error: string }> = [];
-
-        for (const migration of pending) {
-          const result = yield* applyMigration(migration).pipe(
-            Effect.map(() => Option.some(migration)),
-            Effect.catch((err) => {
-              errors.push(err);
-              return Effect.succeed(Option.none<Migration>());
-            })
-          );
-
-          if (Option.isSome(result)) {
-            applied.push(result.value);
-          } else {
-            // Stop on first error
-            break;
-          }
-        }
-
+      if (pending.length === 0) {
+        yield* Effect.logInfo("No pending migrations");
         return {
-          applied,
-          skipped: A.map(A.filter(sorted, (migration) => migration.version <= currentVersion), (migration) => migration.version),
-          errors
+          applied: [] as Array<Migration>,
+          skipped: A.map(
+            A.filter(sorted, (migration) => migration.version <= currentVersion),
+            (migration) => migration.version
+          ),
+          errors: [],
         } satisfies MigrationResult;
-      });
+      }
+
+      yield* Effect.logInfo(`Found ${pending.length} pending migrations`);
+
+      const applied: Array<Migration> = [];
+      const errors: Array<{ version: number; error: string }> = [];
+
+      for (const migration of pending) {
+        const result = yield* applyMigration(migration).pipe(
+          Effect.map(() => Option.some(migration)),
+          Effect.catch((err) => {
+            errors.push(err);
+            return Effect.succeed(Option.none<Migration>());
+          })
+        );
+
+        if (Option.isSome(result)) {
+          applied.push(result.value);
+        } else {
+          // Stop on first error
+          break;
+        }
+      }
+
+      return {
+        applied,
+        skipped: A.map(
+          A.filter(sorted, (migration) => migration.version <= currentVersion),
+          (migration) => migration.version
+        ),
+        errors,
+      } satisfies MigrationResult;
+    });
 
     return {
       getCurrentVersion,
       applyMigration,
-      runMigrations
+      runMigrations,
     };
   }),
 }) {
@@ -281,7 +290,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     applied_at TIMESTAMPTZ DEFAULT NOW()
-);`
+);`,
   },
   {
     version: 2,
@@ -295,13 +304,13 @@ DO $$ BEGIN
     END IF;
 END $$;
 ALTER TABLE claims ADD COLUMN IF NOT EXISTS derived_at TIMESTAMPTZ;
-CREATE INDEX IF NOT EXISTS idx_claims_derived_at ON claims(derived_at) WHERE derived_at IS NOT NULL;`
+CREATE INDEX IF NOT EXISTS idx_claims_derived_at ON claims(derived_at) WHERE derived_at IS NOT NULL;`,
   },
   {
     version: 3,
     name: "003_claim_idempotency",
     sql: `-- Add unique constraint for claim idempotency
-CREATE UNIQUE INDEX IF NOT EXISTS idx_claims_natural_key ON claims (article_id, subject_iri, predicate_iri, object_value);`
+CREATE UNIQUE INDEX IF NOT EXISTS idx_claims_natural_key ON claims (article_id, subject_iri, predicate_iri, object_value);`,
   },
   {
     version: 4,
@@ -413,7 +422,7 @@ ON entity_blocking_tokens(canonical_entity_id);
 
 -- Composite for efficient blocking queries
 CREATE INDEX IF NOT EXISTS idx_blocking_tokens_composite
-ON entity_blocking_tokens(token, canonical_entity_id);`
+ON entity_blocking_tokens(token, canonical_entity_id);`,
   },
   {
     version: 5,
@@ -432,7 +441,7 @@ ALTER TABLE claims ALTER COLUMN ontology_id SET NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_claims_ontology_id ON claims(ontology_id);
 CREATE INDEX IF NOT EXISTS idx_claims_ontology_subject ON claims(ontology_id, subject_iri);
 CREATE INDEX IF NOT EXISTS idx_claims_ontology_predicate ON claims(ontology_id, predicate_iri);
-CREATE INDEX IF NOT EXISTS idx_claims_ontology_subject_predicate ON claims(ontology_id, subject_iri, predicate_iri);`
+CREATE INDEX IF NOT EXISTS idx_claims_ontology_subject_predicate ON claims(ontology_id, subject_iri, predicate_iri);`,
   },
   {
     version: 6,
@@ -472,7 +481,7 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_blocking_tokens_ontology_token ON entity_blocking_tokens(ontology_id, token);`
+CREATE INDEX IF NOT EXISTS idx_blocking_tokens_ontology_token ON entity_blocking_tokens(ontology_id, token);`,
   },
   {
     version: 7,
@@ -520,7 +529,7 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_llm_examples_input_text_trgm') THEN
         CREATE INDEX idx_llm_examples_input_text_trgm ON llm_examples USING gin (input_text gin_trgm_ops);
     END IF;
-END $$;`
+END $$;`,
   },
   {
     version: 8,
@@ -538,7 +547,7 @@ ALTER TABLE ingested_links ADD CONSTRAINT ingested_links_ontology_content_unique
 
 -- Index for looking up by content hash within an ontology
 CREATE INDEX IF NOT EXISTS idx_ingested_links_ontology_content_hash
-    ON ingested_links(ontology_id, content_hash);`
+    ON ingested_links(ontology_id, content_hash);`,
   },
   {
     version: 9,
@@ -552,6 +561,6 @@ ALTER TABLE ingested_links DROP CONSTRAINT IF EXISTS ingested_links_status_check
 
 -- Add the updated constraint with 'processing' status
 ALTER TABLE ingested_links ADD CONSTRAINT ingested_links_status_check
-  CHECK (status IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped'));`
-  }
+  CHECK (status IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped'));`,
+  },
 ];

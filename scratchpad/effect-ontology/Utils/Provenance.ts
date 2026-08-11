@@ -8,8 +8,9 @@
  * @module Utils/Provenance
  */
 
-import { Schema } from "effect"
-import type { BatchId, DocumentId } from "../Domain/Identity.ts"
+import { Schema } from "effect";
+import * as P from "effect/Predicate";
+import type { BatchId, DocumentId } from "../Domain/Identity.ts";
 
 // =============================================================================
 // Provenance URI Schema
@@ -27,10 +28,10 @@ export const ProvenanceUri = Schema.String.pipe(
   Schema.brand("ProvenanceUri"),
   Schema.annotate({
     title: "Provenance URI",
-    description: "URN identifying the provenance of RDF triples"
+    description: "URN identifying the provenance of RDF triples",
   })
-)
-export type ProvenanceUri = typeof ProvenanceUri.Type
+);
+export type ProvenanceUri = typeof ProvenanceUri.Type;
 
 // =============================================================================
 // URI Generation
@@ -60,15 +61,12 @@ export type ProvenanceUri = typeof ProvenanceUri.Type
  *
  * @since 2.0.0
  */
-export const makeProvenanceUri = (
-  batchId: BatchId,
-  documentId: DocumentId,
-  chunkIndex?: number
-): ProvenanceUri => {
-  const base = `urn:provenance:batch/${batchId}/doc/${documentId}`
-  const uri = chunkIndex !== undefined ? `${base}/chunk/${chunkIndex}` : base
-  return uri as ProvenanceUri
-}
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const makeProvenanceUri = (batchId: BatchId, documentId: DocumentId, chunkIndex?: number): ProvenanceUri => {
+  const base = `urn:provenance:batch/${batchId}/doc/${documentId}`;
+  const uri = chunkIndex !== undefined ? `${base}/chunk/${chunkIndex}` : base;
+  return uri as ProvenanceUri;
+};
 
 /**
  * Parse a provenance URI to extract its components
@@ -84,22 +82,22 @@ export const makeProvenanceUri = (
  *
  * @since 2.0.0
  */
-export const parseProvenanceUri = (uri: string): {
-  batchId: string
-  documentId: string
-  chunkIndex?: number
+export const parseProvenanceUri = (
+  uri: string
+): {
+  batchId: string;
+  documentId: string;
+  chunkIndex?: number;
 } | null => {
-  const match = uri.match(
-    /^urn:provenance:batch\/(batch-[a-f0-9]{12})\/doc\/(doc-[a-f0-9]{12})(?:\/chunk\/(\d+))?$/
-  )
-  if (!match) return null
+  const match = uri.match(/^urn:provenance:batch\/(batch-[a-f0-9]{12})\/doc\/(doc-[a-f0-9]{12})(?:\/chunk\/(\d+))?$/);
+  if (P.isNull(match)) return null;
 
   return {
     batchId: match[1],
     documentId: match[2],
-    chunkIndex: match[3] !== undefined ? parseInt(match[3], 10) : undefined
-  }
-}
+    ...(P.isUndefined(match[3]) ? {} : { chunkIndex: Number.parseInt(match[3], 10) }),
+  };
+};
 
 /**
  * Check if a string is a valid provenance URI
@@ -110,4 +108,4 @@ export const parseProvenanceUri = (uri: string): {
  * @since 2.0.0
  */
 export const isProvenanceUri = (uri: string): uri is ProvenanceUri =>
-  /^urn:provenance:batch\/batch-[a-f0-9]{12}\/doc\/doc-[a-f0-9]{12}(\/chunk\/\d+)?$/.test(uri)
+  /^urn:provenance:batch\/batch-[a-f0-9]{12}\/doc\/doc-[a-f0-9]{12}(\/chunk\/\d+)?$/.test(uri);

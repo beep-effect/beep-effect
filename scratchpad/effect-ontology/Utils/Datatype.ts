@@ -8,8 +8,9 @@
  * @module Utils/Datatype
  */
 
-import { XSD } from "../Domain/Rdf/Constants.ts"
-import type { IRI } from "../Domain/Rdf/Types.ts"
+import * as P from "effect/Predicate";
+import { XSD } from "../Domain/Rdf/Constants.ts";
+import type { IRI } from "../Domain/Rdf/Types.ts";
 
 /**
  * Result of datatype normalization
@@ -19,9 +20,9 @@ import type { IRI } from "../Domain/Rdf/Types.ts"
  */
 export interface NormalizedValue {
   /** Normalized string representation of the value */
-  readonly value: string
+  readonly value: string;
   /** XSD datatype IRI */
-  readonly datatype: IRI
+  readonly datatype: IRI;
 }
 
 // -----------------------------------------------------------------------------
@@ -32,35 +33,35 @@ export interface NormalizedValue {
  * ISO 8601 date pattern: YYYY-MM-DD
  * Validates: year (1000-9999), month (01-12), day (01-31)
  */
-const ISO_DATE_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/
+const ISO_DATE_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
 
 /**
  * ISO 8601 dateTime pattern: YYYY-MM-DDTHH:mm:ss with optional timezone
  * Supports: time zone offset (Z, +00:00), fractional seconds
  */
 const ISO_DATETIME_PATTERN =
-  /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?$/
+  /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?$/;
 
 /**
  * Integer pattern: optional sign, digits only
  */
-const INTEGER_PATTERN = /^-?\d+$/
+const INTEGER_PATTERN = /^-?\d+$/;
 
 /**
  * Decimal pattern: optional sign, digits with decimal point
  * Note: must contain decimal point to distinguish from integer
  */
-const DECIMAL_PATTERN = /^-?\d+\.\d+$/
+const DECIMAL_PATTERN = /^-?\d+\.\d+$/;
 
 /**
  * Boolean pattern: case-insensitive true/false
  */
-const BOOLEAN_PATTERN = /^(?:true|false)$/i
+const BOOLEAN_PATTERN = /^(?:true|false)$/i;
 
 /**
  * Scientific notation pattern: e.g., 1.5e10, -3.2E-5
  */
-const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/
+const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
 
 // -----------------------------------------------------------------------------
 // Core normalization function
@@ -95,55 +96,53 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/
  * @since 2.0.0
  * @category Normalization
  */
-export const normalizeDatatype = (
-  value: string,
-  expectedType?: IRI
-): NormalizedValue => {
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const normalizeDatatype = (value: string, expectedType?: IRI): NormalizedValue => {
   // If expected type provided, use it with minimal validation
-  if (expectedType) {
-    return { value, datatype: expectedType }
+  if (P.isNotUndefined(expectedType)) {
+    return { value, datatype: expectedType };
   }
 
-  const trimmed = value.trim()
+  const trimmed = value.trim();
 
   // Empty string → xsd:string
   if (trimmed === "") {
-    return { value: trimmed, datatype: XSD.string }
+    return { value: trimmed, datatype: XSD.string };
   }
 
   // DateTime check (must come before date check)
   if (ISO_DATETIME_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.dateTime }
+    return { value: trimmed, datatype: XSD.dateTime };
   }
 
   // Date check
   if (ISO_DATE_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.date }
+    return { value: trimmed, datatype: XSD.date };
   }
 
   // Boolean check (case-insensitive, normalize to lowercase)
   if (BOOLEAN_PATTERN.test(trimmed)) {
-    return { value: trimmed.toLowerCase(), datatype: XSD.boolean }
+    return { value: trimmed.toLowerCase(), datatype: XSD.boolean };
   }
 
   // Scientific notation → xsd:double
   if (SCIENTIFIC_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.double }
+    return { value: trimmed, datatype: XSD.double };
   }
 
   // Decimal check (must come before integer check)
   if (DECIMAL_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.decimal }
+    return { value: trimmed, datatype: XSD.decimal };
   }
 
   // Integer check
   if (INTEGER_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.integer }
+    return { value: trimmed, datatype: XSD.integer };
   }
 
   // Default to string
-  return { value: trimmed, datatype: XSD.string }
-}
+  return { value: trimmed, datatype: XSD.string };
+};
 
 /**
  * Check if a value is likely a date
@@ -154,7 +153,7 @@ export const normalizeDatatype = (
  * @since 2.0.0
  * @category Predicates
  */
-export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.trim())
+export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.trim());
 
 /**
  * Check if a value is likely a dateTime
@@ -165,7 +164,7 @@ export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.tr
  * @since 2.0.0
  * @category Predicates
  */
-export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(value.trim())
+export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(value.trim());
 
 /**
  * Check if a value is likely a numeric type
@@ -177,9 +176,9 @@ export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(
  * @category Predicates
  */
 export const isNumeric = (value: string): boolean => {
-  const trimmed = value.trim()
-  return INTEGER_PATTERN.test(trimmed) || DECIMAL_PATTERN.test(trimmed) || SCIENTIFIC_PATTERN.test(trimmed)
-}
+  const trimmed = value.trim();
+  return INTEGER_PATTERN.test(trimmed) || DECIMAL_PATTERN.test(trimmed) || SCIENTIFIC_PATTERN.test(trimmed);
+};
 
 /**
  * Check if a value is likely a boolean
@@ -190,4 +189,4 @@ export const isNumeric = (value: string): boolean => {
  * @since 2.0.0
  * @category Predicates
  */
-export const isBoolean = (value: string): boolean => BOOLEAN_PATTERN.test(value.trim())
+export const isBoolean = (value: string): boolean => BOOLEAN_PATTERN.test(value.trim());

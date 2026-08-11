@@ -14,31 +14,31 @@
  * @since 2.0.0
  */
 
-import { BunServices } from "@effect/platform-bun"
-import { ConfigProvider, Effect, Layer } from "effect"
-import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts"
-import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts"
-import { CrossBatchEntityResolver } from "../Service/CrossBatchEntityResolver.ts"
-import { EmbeddingServiceLive } from "../Service/Embedding.ts"
-import { EmbeddingCacheWithPersistence } from "../Service/EmbeddingCache.ts"
-import { EntityResolutionService } from "../Service/EntityResolution.ts"
-import { EventBusServiceMemory } from "../Service/EventBus.ts"
-import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts"
-import { GraphRAG } from "../Service/GraphRAG.ts"
-import { StageTimeoutServiceLive } from "../Service/LlmControl/StageTimeout.ts"
-import { TokenBudgetServiceLive } from "../Service/LlmControl/TokenBudget.ts"
-import { NlpService } from "../Service/Nlp.ts"
-import { OntologyService } from "../Service/Ontology.ts"
-import { OntologyRegistryService } from "../Service/OntologyRegistry.ts"
-import { RdfBuilder } from "../Service/Rdf.ts"
-import { Reasoner } from "../Service/Reasoner.ts"
-import { ShaclService } from "../Service/Shacl.ts"
-import { StorageServiceLive } from "../Service/Storage.ts"
-import { BatchExtractionWorkflowLayer, WorkflowOrchestratorLive } from "../Service/WorkflowOrchestrator.ts"
-import { MetricsService } from "../Telemetry/Metrics.ts"
-import { ExtractionWorkflowLive } from "../Workflow/StreamingExtraction.ts"
-import { EmbeddingInfrastructure } from "./EmbeddingLayers.ts"
-import { makeLanguageModelLayer } from "./ProductionRuntime.ts"
+import { BunServices } from "@effect/platform-bun";
+import { ConfigProvider, Layer } from "effect";
+import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
+import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
+import { CrossBatchEntityResolver } from "../Service/CrossBatchEntityResolver.ts";
+import { EmbeddingServiceLive } from "../Service/Embedding.ts";
+import { EmbeddingCacheWithPersistence } from "../Service/EmbeddingCache.ts";
+import { EntityResolutionService } from "../Service/EntityResolution.ts";
+import { EventBusServiceMemory } from "../Service/EventBus.ts";
+import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
+import { GraphRAG } from "../Service/GraphRAG.ts";
+import { StageTimeoutServiceLive } from "../Service/LlmControl/StageTimeout.ts";
+import { TokenBudgetServiceLive } from "../Service/LlmControl/TokenBudget.ts";
+import { NlpService } from "../Service/Nlp.ts";
+import { OntologyService } from "../Service/Ontology.ts";
+import { OntologyRegistryService } from "../Service/OntologyRegistry.ts";
+import { RdfBuilder } from "../Service/Rdf.ts";
+import { Reasoner } from "../Service/Reasoner.ts";
+import { ShaclService } from "../Service/Shacl.ts";
+import { StorageServiceLive } from "../Service/Storage.ts";
+import { BatchExtractionWorkflowLayer, WorkflowOrchestratorLive } from "../Service/WorkflowOrchestrator.ts";
+import { MetricsService } from "../Telemetry/Metrics.ts";
+import { ExtractionWorkflowLive } from "../Workflow/StreamingExtraction.ts";
+import { EmbeddingInfrastructure } from "./EmbeddingLayers.ts";
+import { makeLanguageModelLayer } from "./ProductionRuntime.ts";
 
 // =============================================================================
 // Core Dependencies (foundation layer)
@@ -48,7 +48,7 @@ import { makeLanguageModelLayer } from "./ProductionRuntime.ts"
  * Core dependencies that all other bundles need.
  * ConfigService is the foundation - must be available first.
  */
-const CoreDependenciesLayer = ConfigServiceDefault
+const CoreDependenciesLayer = ConfigServiceDefault;
 
 // =============================================================================
 // Service Bundles (each with dependencies pre-provided)
@@ -61,10 +61,7 @@ const CoreDependenciesLayer = ConfigServiceDefault
  * - TokenBudgetService: Per-stage token budgets
  * - StageTimeoutService: Soft/hard timeouts per stage
  */
-const LlmControlBundle = Layer.mergeAll(
-  TokenBudgetServiceLive,
-  StageTimeoutServiceLive
-)
+const LlmControlBundle = Layer.mergeAll(TokenBudgetServiceLive, StageTimeoutServiceLive);
 
 /**
  * LLM Extraction services: EntityExtractor + RelationExtractor
@@ -77,14 +74,11 @@ const LlmControlBundle = Layer.mergeAll(
  *
  * Uses Layer.provideMerge for order-independent composition.
  */
-const LlmExtractionBundle = Layer.mergeAll(
-  EntityExtractor.Default,
-  RelationExtractor.Default
-).pipe(
+const LlmExtractionBundle = Layer.mergeAll(EntityExtractor.Default, RelationExtractor.Default).pipe(
   Layer.provideMerge(LlmControlBundle),
   Layer.provideMerge(makeLanguageModelLayer),
   Layer.provideMerge(CoreDependenciesLayer)
-)
+);
 
 /**
  * Embedding infrastructure with ConfigService pre-provided
@@ -92,9 +86,7 @@ const LlmExtractionBundle = Layer.mergeAll(
  * EmbeddingInfrastructure requires ConfigService, so we satisfy that first.
  * This layer provides: EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache
  */
-const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(
-  Layer.provide(CoreDependenciesLayer)
-)
+const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(Layer.provide(CoreDependenciesLayer));
 
 /**
  * NLP services with all dependencies satisfied
@@ -111,23 +103,21 @@ const NlpBundle = NlpService.Default.pipe(
   Layer.provide(EmbeddingInfraWithConfig),
   Layer.provide(MetricsService.Default),
   Layer.provide(CoreDependenciesLayer)
-)
+);
 
 /**
  * RdfBuilder with ConfigService dependency satisfied
  *
  * RdfBuilder.Default requires ConfigService, so we provide it first.
  */
-const RdfBuilderBundle = RdfBuilder.Default.pipe(
-  Layer.provideMerge(CoreDependenciesLayer)
-)
+const RdfBuilderBundle = RdfBuilder.Default.pipe(Layer.provideMerge(CoreDependenciesLayer));
 
 /**
  * Platform layer: FileSystem, Path from BunServices
  *
  * Required by StorageServiceLive when using local storage.
  */
-const PlatformBundle = BunServices.layer
+const PlatformBundle = BunServices.layer;
 
 /**
  * Storage bundle: StorageService for document and graph persistence
@@ -139,7 +129,7 @@ const PlatformBundle = BunServices.layer
 const StorageBundle = StorageServiceLive.pipe(
   Layer.provideMerge(CoreDependenciesLayer),
   Layer.provideMerge(PlatformBundle)
-)
+);
 
 /**
  * OntologyRegistry service bundle
@@ -154,7 +144,7 @@ const StorageBundle = StorageServiceLive.pipe(
 const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
   Layer.provideMerge(StorageBundle),
   Layer.provideMerge(CoreDependenciesLayer)
-)
+);
 
 /**
  * Ontology services: OntologyService + OntologyRegistryService + RdfBuilder
@@ -173,16 +163,13 @@ const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
  */
 const OntologyServiceWithRegistry = OntologyService.Default.pipe(
   Layer.provideMerge(OntologyRegistryBundle) // Registry must be available BEFORE OntologyService constructs
-)
+);
 
-const OntologyBundle = Layer.mergeAll(
-  OntologyServiceWithRegistry,
-  RdfBuilderBundle
-).pipe(
+const OntologyBundle = Layer.mergeAll(OntologyServiceWithRegistry, RdfBuilderBundle).pipe(
   Layer.provideMerge(StorageBundle),
   Layer.provideMerge(NlpBundle),
   Layer.provideMerge(CoreDependenciesLayer)
-)
+);
 
 /**
  * SHACL validation services
@@ -192,10 +179,7 @@ const OntologyBundle = Layer.mergeAll(
  * - StorageService (shape loading)
  * - ConfigService (provided via CoreDependenciesLayer)
  */
-const ShaclBundle = ShaclService.Default.pipe(
-  Layer.provideMerge(RdfBuilderBundle),
-  Layer.provideMerge(StorageBundle)
-)
+const ShaclBundle = ShaclService.Default.pipe(Layer.provideMerge(RdfBuilderBundle), Layer.provideMerge(StorageBundle));
 
 /**
  * Embedding services for vector similarity operations
@@ -218,7 +202,7 @@ const EmbeddingBundle = EmbeddingServiceLive.pipe(
   Layer.provideMerge(MetricsService.Default),
   Layer.provideMerge(StorageBundle),
   Layer.provideMerge(CoreDependenciesLayer)
-)
+);
 
 /**
  * Entity Resolution services with cached embeddings
@@ -232,9 +216,7 @@ const EmbeddingBundle = EmbeddingServiceLive.pipe(
  * dependencies, which requires EmbeddingProvider | EmbeddingCache | MetricsService.
  * We provide EmbeddingBundle to satisfy these requirements.
  */
-const EntityResolutionBundle = EntityResolutionService.Live.pipe(
-  Layer.provideMerge(EmbeddingBundle)
-)
+const EntityResolutionBundle = EntityResolutionService.Live.pipe(Layer.provideMerge(EmbeddingBundle));
 
 /**
  * GraphRAG services for intelligent query retrieval
@@ -248,9 +230,7 @@ const EntityResolutionBundle = EntityResolutionService.Live.pipe(
  * requires EmbeddingProvider | EmbeddingCache | MetricsService.
  * We provide EmbeddingBundle to satisfy these requirements.
  */
-const GraphRAGBundle = GraphRAG.Default.pipe(
-  Layer.provideMerge(EmbeddingBundle)
-)
+const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle));
 
 /**
  * Cross-Batch Entity Resolution bundle (OPTIONAL)
@@ -279,7 +259,7 @@ const GraphRAGBundle = GraphRAG.Default.pipe(
 export const CrossBatchEntityResolverBundle = CrossBatchEntityResolver.Default.pipe(
   Layer.provideMerge(EntityRegistryRepository.Default),
   Layer.provideMerge(EmbeddingBundle)
-)
+);
 
 /**
  * ExtractionWorkflow service bundle
@@ -298,7 +278,7 @@ const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
   Layer.provideMerge(NlpBundle),
   Layer.provideMerge(StorageBundle),
   Layer.provideMerge(CoreDependenciesLayer)
-)
+);
 
 // =============================================================================
 // Activity Dependencies (complete bundle for workflow activities)
@@ -328,7 +308,7 @@ const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
  *
  * Reasoner.Default has no external dependencies - it uses N3.js internally.
  */
-const ReasonerBundle = Reasoner.Default
+const ReasonerBundle = Reasoner.Default;
 
 /**
  * EventBusService for publishing domain events
@@ -336,21 +316,29 @@ const ReasonerBundle = Reasoner.Default
  * Using in-memory implementation by default.
  * For production with PostgreSQL, use EventBusServiceSqlLive instead.
  */
-const EventBusBundle = EventBusServiceMemory
+const EventBusBundle = EventBusServiceMemory;
 
-export const ActivityDependenciesLayer = Layer.mergeAll(
+const ActivityCoreLayer = Layer.mergeAll(
   StorageBundle,
   CoreDependenciesLayer,
   LlmExtractionBundle,
   OntologyBundle,
-  ShaclBundle,
-  EmbeddingBundle,
-  EntityResolutionBundle,
-  GraphRAGBundle,
   ReasonerBundle,
-  ExtractionWorkflowBundle,
   EventBusBundle
-)
+);
+
+const ActivityEmbeddingLayer = EmbeddingBundle.pipe(Layer.provideMerge(ActivityCoreLayer));
+const ActivityShaclLayer = ShaclBundle.pipe(Layer.provideMerge(ActivityEmbeddingLayer));
+const ActivityEntityResolutionLayer = EntityResolutionBundle.pipe(Layer.provideMerge(ActivityShaclLayer));
+const ActivityGraphRagLayer = GraphRAGBundle.pipe(Layer.provideMerge(ActivityEntityResolutionLayer));
+const ActivityEmbeddingRequirements = Layer.mergeAll(EmbeddingInfrastructure, MetricsService.Default).pipe(
+  Layer.provideMerge(CoreDependenciesLayer)
+);
+
+export const ActivityDependenciesLayer = ExtractionWorkflowBundle.pipe(
+  Layer.provideMerge(ActivityGraphRagLayer),
+  Layer.provideMerge(ActivityEmbeddingRequirements)
+);
 
 // =============================================================================
 // Workflow Layers (with dependencies pre-provided)
@@ -364,7 +352,7 @@ export const ActivityDependenciesLayer = Layer.mergeAll(
  */
 export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer.pipe(
   Layer.provideMerge(ActivityDependenciesLayer)
-)
+);
 
 /**
  * Complete WorkflowOrchestrator layer with workflow and all dependencies.
@@ -378,10 +366,9 @@ export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer
  * - WorkflowEngine (from WorkflowEngine.layerMemory or ClusterWorkflowEngine)
  * - FileSystem, Path (from BunServices)
  */
-export const WorkflowOrchestratorFullLayer = Layer.mergeAll(
-  WorkflowOrchestratorLive,
-  BatchExtractionWorkflowWithDepsLayer
-)
+export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLayer.pipe(
+  Layer.provideMerge(WorkflowOrchestratorLive)
+);
 
 // =============================================================================
 // CLI Extraction Layer
@@ -402,14 +389,11 @@ export const WorkflowOrchestratorFullLayer = Layer.mergeAll(
  *
  * @since 2.0.0
  */
-export const CliExtractionLayer = Layer.mergeAll(
-  ExtractionWorkflowBundle,
-  RdfBuilderBundle
-).pipe(
+export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
   // Provide embedding infrastructure to satisfy EmbeddingServiceDefault requirements
   // that bubble up through NlpService.Default and other services
   Layer.provideMerge(EmbeddingBundle)
-)
+);
 
 /**
  * Create a CLI extraction layer with a custom ConfigProvider.
@@ -432,96 +416,67 @@ export const CliExtractionLayer = Layer.mergeAll(
  *
  * @since 2.0.0
  */
-export const makeCliExtractionLayer = (
-  configProvider: ConfigProvider.ConfigProvider
-) => {
-  // Use Layer.unwrap to build layers AFTER config provider is set
-  // This ensures all Effect.config calls see the custom provider
-  return Layer.unwrap(
-    Effect.gen(function*() {
-      // All layers built within this Effect.gen will use the custom config provider
-      // because we'll wrap the final layer with Layer.setConfigProvider
+export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) => {
+  // All layers read through the custom provider installed on the final layer.
 
-      // Build all bundles - they read config at layer construction time
-      const LlmControlBundle = Layer.mergeAll(
-        TokenBudgetServiceLive,
-        StageTimeoutServiceLive
-      )
+  const LlmControlBundle = Layer.mergeAll(TokenBudgetServiceLive, StageTimeoutServiceLive);
 
-      const LlmExtractionBundle = Layer.mergeAll(
-        EntityExtractor.Default,
-        RelationExtractor.Default
-      ).pipe(
-        Layer.provideMerge(LlmControlBundle),
-        Layer.provideMerge(makeLanguageModelLayer),
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const LlmExtractionBundle = Layer.mergeAll(EntityExtractor.Default, RelationExtractor.Default).pipe(
+    Layer.provideMerge(LlmControlBundle),
+    Layer.provideMerge(makeLanguageModelLayer),
+    Layer.provideMerge(CoreDependenciesLayer)
+  );
 
-      const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(
-        Layer.provide(CoreDependenciesLayer)
-      )
+  const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(Layer.provide(CoreDependenciesLayer));
 
-      const NlpBundle = NlpService.Default.pipe(
-        Layer.provide(EmbeddingInfraWithConfig),
-        Layer.provide(MetricsService.Default),
-        Layer.provide(CoreDependenciesLayer)
-      )
+  const NlpBundle = NlpService.Default.pipe(
+    Layer.provide(EmbeddingInfraWithConfig),
+    Layer.provide(MetricsService.Default),
+    Layer.provide(CoreDependenciesLayer)
+  );
 
-      const RdfBuilderBundle = RdfBuilder.Default.pipe(
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const RdfBuilderBundle = RdfBuilder.Default.pipe(Layer.provideMerge(CoreDependenciesLayer));
 
-      const StorageBundle = StorageServiceLive.pipe(
-        Layer.provideMerge(CoreDependenciesLayer),
-        Layer.provideMerge(BunServices.layer)
-      )
+  const StorageBundle = StorageServiceLive.pipe(
+    Layer.provideMerge(CoreDependenciesLayer),
+    Layer.provideMerge(BunServices.layer)
+  );
 
-      const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
-        Layer.provideMerge(StorageBundle),
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
+    Layer.provideMerge(StorageBundle),
+    Layer.provideMerge(CoreDependenciesLayer)
+  );
 
-      const OntologyServiceWithRegistry = OntologyService.Default.pipe(
-        Layer.provideMerge(OntologyRegistryBundle)
-      )
+  const OntologyServiceWithRegistry = OntologyService.Default.pipe(Layer.provideMerge(OntologyRegistryBundle));
 
-      const OntologyBundle = Layer.mergeAll(
-        OntologyServiceWithRegistry,
-        RdfBuilderBundle
-      ).pipe(
-        Layer.provideMerge(StorageBundle),
-        Layer.provideMerge(NlpBundle),
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const OntologyBundle = Layer.mergeAll(OntologyServiceWithRegistry, RdfBuilderBundle).pipe(
+    Layer.provideMerge(StorageBundle),
+    Layer.provideMerge(NlpBundle),
+    Layer.provideMerge(CoreDependenciesLayer)
+  );
 
-      const EmbeddingBundle = EmbeddingServiceLive.pipe(
-        Layer.provideMerge(EmbeddingInfrastructure),
-        Layer.provideMerge(EmbeddingCacheWithPersistence),
-        Layer.provideMerge(MetricsService.Default),
-        Layer.provideMerge(StorageBundle),
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const EmbeddingBundle = EmbeddingServiceLive.pipe(
+    Layer.provideMerge(EmbeddingInfrastructure),
+    Layer.provideMerge(EmbeddingCacheWithPersistence),
+    Layer.provideMerge(MetricsService.Default),
+    Layer.provideMerge(StorageBundle),
+    Layer.provideMerge(CoreDependenciesLayer)
+  );
 
-      const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
-        Layer.provideMerge(OntologyBundle),
-        Layer.provideMerge(LlmExtractionBundle),
-        Layer.provideMerge(NlpBundle),
-        Layer.provideMerge(StorageBundle),
-        Layer.provideMerge(CoreDependenciesLayer)
-      )
+  const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
+    Layer.provideMerge(OntologyBundle),
+    Layer.provideMerge(LlmExtractionBundle),
+    Layer.provideMerge(NlpBundle),
+    Layer.provideMerge(StorageBundle),
+    Layer.provideMerge(CoreDependenciesLayer)
+  );
 
-      return Layer.mergeAll(
-        ExtractionWorkflowBundle,
-        RdfBuilderBundle
-      ).pipe(
-        Layer.provideMerge(EmbeddingBundle)
-      )
-    })
-  ).pipe(
+  return Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
+    Layer.provideMerge(EmbeddingBundle),
     // Set the custom config provider for the entire layer tree
     Layer.provide(ConfigProvider.layer(configProvider))
-  )
-}
+  );
+};
 
 // =============================================================================
 // Open Bundles (ConfigService as requirement - for testing)
@@ -551,7 +506,7 @@ export const makeCliExtractionLayer = (
 export const NlpBundleOpen = NlpService.Default.pipe(
   Layer.provide(EmbeddingInfrastructure),
   Layer.provide(MetricsService.Default)
-)
+);
 
 /**
  * Embedding services without config baked in
@@ -564,26 +519,24 @@ export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
   Layer.provideMerge(MetricsService.Default),
   Layer.provideMerge(StorageServiceLive),
   Layer.provideMerge(BunServices.layer)
-)
+);
 
 /**
  * RDF builder without config baked in
  *
  * Requires: ConfigService
  */
-export const RdfBuilderBundleOpen = RdfBuilder.Default
+export const RdfBuilderBundleOpen = RdfBuilder.Default;
 
 /**
  * Storage service without config baked in
  *
  * Requires: ConfigService
  */
-export const StorageBundleOpen = StorageServiceLive.pipe(
-  Layer.provideMerge(BunServices.layer)
-)
+export const StorageBundleOpen = StorageServiceLive.pipe(Layer.provideMerge(BunServices.layer));
 
 // =============================================================================
 // Re-exports for convenience
 // =============================================================================
 
-export { ConfigService, ConfigServiceDefault }
+export { ConfigService, ConfigServiceDefault };

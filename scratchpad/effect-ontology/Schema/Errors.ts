@@ -7,7 +7,7 @@
  * @since 2.0.0
  */
 
-import { Schema } from "effect"
+import * as S from "effect/Schema";
 
 /**
  * Error thrown when attempting to create a schema with empty vocabularies
@@ -15,17 +15,14 @@ import { Schema } from "effect"
  * @category errors
  * @since 2.0.0
  */
-export class EmptyVocabularyError extends Schema.TaggedError<EmptyVocabularyError>()(
-  "EmptyVocabularyError",
-  {
-    message: Schema.String.annotate({
-      title: "Error Message",
-      description: "Human-readable error description"
-    }),
+export class EmptyVocabularyError extends S.TaggedError<EmptyVocabularyError>()("EmptyVocabularyError", {
+  message: S.String.annotate({
+    title: "Error Message",
+    description: "Human-readable error description",
+  }),
 
-    type: Schema.Literals(["classes", "properties"]).annotate({
-      title: "Vocabulary Type",
-      description: "Type of vocabulary that was empty"
-    })
-  }
-) {}
+  type: S.Literals(["classes", "properties"]).annotate({
+    title: "Vocabulary Type",
+    description: "Type of vocabulary that was empty",
+  }),
+}) {}

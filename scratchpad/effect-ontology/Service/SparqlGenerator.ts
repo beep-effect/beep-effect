@@ -14,13 +14,15 @@
  * @module Service/SparqlGenerator
  */
 
-import { LanguageModel } from "effect/unstable/ai"
-import { Data, Duration, Effect, Schedule, Schema, Context, Layer } from "effect"
-import type { OntologyContext } from "../Domain/Model/Ontology.ts"
-import { ConfigService } from "./Config.ts"
-import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts"
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import { LanguageModel } from "effect/unstable/ai";
+import type { OntologyContext } from "../Domain/Model/Ontology.ts";
+import { ConfigService } from "./Config.ts";
+import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
 
@@ -35,9 +37,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
  * @category Errors
  */
 export class SparqlGenerationError extends Data.TaggedError("SparqlGenerationError")<{
-  readonly message: string
-  readonly question: string
-  readonly cause?: unknown
+  readonly message: string;
+  readonly question: string;
+  readonly cause?: unknown;
 }> {}
 
 /**
@@ -47,9 +49,9 @@ export class SparqlGenerationError extends Data.TaggedError("SparqlGenerationErr
  * @category Errors
  */
 export class SparqlSyntaxError extends Data.TaggedError("SparqlSyntaxError")<{
-  readonly message: string
-  readonly sparql: string
-  readonly position?: number
+  readonly message: string;
+  readonly sparql: string;
+  readonly position?: number;
 }> {}
 
 /**
@@ -59,9 +61,9 @@ export class SparqlSyntaxError extends Data.TaggedError("SparqlSyntaxError")<{
  * @category Errors
  */
 export class SparqlCorrectionError extends Data.TaggedError("SparqlCorrectionError")<{
-  readonly message: string
-  readonly sparql: string
-  readonly originalError: string
+  readonly message: string;
+  readonly sparql: string;
+  readonly originalError: string;
 }> {}
 
 // =============================================================================
@@ -76,19 +78,19 @@ export class SparqlCorrectionError extends Data.TaggedError("SparqlCorrectionErr
 const SparqlResponseSchema = Schema.Struct({
   sparql: Schema.String.annotate({
     title: "SPARQL Query",
-    description: "Valid SPARQL SELECT query"
+    description: "Valid SPARQL SELECT query",
   }),
   explanation: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
     title: "Explanation",
-    description: "Brief explanation of the query logic"
+    description: "Brief explanation of the query logic",
   }),
   confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
     title: "Confidence",
-    description: "Confidence score between 0 and 1"
-  })
-})
+    description: "Confidence score between 0 and 1",
+  }),
+});
 
-type SparqlResponse = Schema.Schema.Type<typeof SparqlResponseSchema>
+type SparqlResponse = typeof SparqlResponseSchema.Type;
 
 // =============================================================================
 // Service Definition
@@ -120,15 +122,17 @@ type SparqlResponse = Schema.Schema.Type<typeof SparqlResponseSchema>
  * @category Services
  */
 export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`SparqlGenerator`, {
-  make: Effect.gen(function*() {
-    const config = yield* ConfigService
-    const llm = yield* LanguageModel.LanguageModel
+  make: Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const llm = yield* LanguageModel.LanguageModel;
 
     // Retry schedule for LLM calls
     const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) => Effect.succeed(Duration.min(d, Duration.millis(config.runtime.retryMaxDelayMs)))),
+      Schedule.modifyDelay(({ duration }) =>
+        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
+      ),
       Schedule.jittered
-    )
+    );
 
     return {
       /**
@@ -147,33 +151,33 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
         ontology: OntologyContext,
         prefixes?: Record<string, string>
       ): Effect.Effect<SparqlResponse, SparqlGenerationError> =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           yield* Effect.logInfo("SparqlGenerator.generate starting", {
             questionLength: question.length,
             classCount: ontology.classes.length,
-            propertyCount: ontology.properties.length
-          })
+            propertyCount: ontology.properties.length,
+          });
 
           // Format schema context for LLM
-          const schemaContext = formatSchemaContext(ontology)
+          const schemaContext = formatSchemaContext(ontology);
 
           // Build prefix declarations
           const prefixDeclarations = formatPrefixes(
             prefixes ?? {
               "": config.rdf.baseNamespace,
-              "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-              "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-              "xsd": "http://www.w3.org/2001/XMLSchema#"
+              rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+              rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+              xsd: "http://www.w3.org/2001/XMLSchema#",
             }
-          )
+          );
 
           // Build the prompt
-          const prompt = buildGenerationPrompt(question, schemaContext, prefixDeclarations)
+          const prompt = buildGenerationPrompt(question, schemaContext, prefixDeclarations);
 
           yield* Effect.logDebug("SPARQL generation prompt", {
             promptLength: prompt.length,
-            promptPreview: prompt.slice(0, 500)
-          })
+            promptPreview: prompt.slice(0, 500),
+          });
 
           // Call LLM for structured output
           const response = yield* generateObjectWithFeedback(llm, {
@@ -183,25 +187,26 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
             maxAttempts: config.runtime.retryMaxAttempts,
             serviceName: "SparqlGenerator",
             timeoutMs: config.llm.timeoutMs,
-            retrySchedule
+            retrySchedule,
           }).pipe(
-            Effect.mapError((error) =>
-              new SparqlGenerationError({
-                message: `Failed to generate SPARQL: ${error._tag}`,
-                question,
-                cause: error
-              })
+            Effect.mapError(
+              (error) =>
+                new SparqlGenerationError({
+                  message: `Failed to generate SPARQL: ${error._tag}`,
+                  question,
+                  cause: error,
+                })
             )
-          )
+          );
 
-          const result = response.value
+          const result = response.value;
 
           // Validate SPARQL syntax (basic validation)
-          const syntaxError = validateSparqlSyntax(result.sparql)
-          if (syntaxError) {
+          const syntaxError = validateSparqlSyntax(result.sparql);
+          if (P.isNotUndefined(syntaxError)) {
             yield* Effect.logWarning("Generated SPARQL has syntax issues, attempting correction", {
-              error: syntaxError.message
-            })
+              error: syntaxError.message,
+            });
 
             // Attempt correction
             const corrected = yield* correctQuery(
@@ -213,29 +218,30 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
               config.llm.timeoutMs,
               retrySchedule
             ).pipe(
-              Effect.mapError((error) =>
-                new SparqlGenerationError({
-                  message: `SPARQL correction failed: ${error.message}`,
-                  question,
-                  cause: error
-                })
+              Effect.mapError(
+                (error) =>
+                  new SparqlGenerationError({
+                    message: `SPARQL correction failed: ${error.message}`,
+                    question,
+                    cause: error,
+                  })
               )
-            )
+            );
 
-            yield* Effect.logInfo("SPARQL correction successful")
+            yield* Effect.logInfo("SPARQL correction successful");
 
             return {
               ...result,
-              sparql: corrected
-            }
+              sparql: corrected,
+            };
           }
 
           yield* Effect.logInfo("SparqlGenerator.generate complete", {
             sparqlLength: result.sparql.length,
-            confidence: result.confidence
-          })
+            confidence: result.confidence,
+          });
 
-          return result
+          return result;
         }),
 
       /**
@@ -253,13 +259,13 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
         error: string,
         ontology: OntologyContext
       ): Effect.Effect<string, SparqlCorrectionError> =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           yield* Effect.logInfo("SparqlGenerator.correct starting", {
             sparqlLength: sparql.length,
-            error
-          })
+            error,
+          });
 
-          const schemaContext = formatSchemaContext(ontology)
+          const schemaContext = formatSchemaContext(ontology);
 
           const corrected = yield* correctQuery(
             llm,
@@ -269,14 +275,14 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
             config.runtime.retryMaxAttempts,
             config.llm.timeoutMs,
             retrySchedule
-          )
+          );
 
           yield* Effect.logInfo("SparqlGenerator.correct complete", {
             originalLength: sparql.length,
-            correctedLength: corrected.length
-          })
+            correctedLength: corrected.length,
+          });
 
-          return corrected
+          return corrected;
         }),
 
       /**
@@ -288,9 +294,7 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
        * @param sparql - SPARQL query to validate
        * @returns undefined if valid, SparqlSyntaxError if invalid
        */
-      validate: (sparql: string): SparqlSyntaxError | undefined => {
-        return validateSparqlSyntax(sparql)
-      },
+      validate: (sparql: string): SparqlSyntaxError | undefined => validateSparqlSyntax(sparql),
 
       /**
        * Format ontology schema for LLM context
@@ -301,13 +305,11 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
        * @param ontology - Ontology context
        * @returns Formatted schema string
        */
-      formatSchema: (ontology: OntologyContext): string => {
-        return formatSchemaContext(ontology)
-      }
-    }
+      formatSchema: (ontology: OntologyContext): string => formatSchemaContext(ontology),
+    };
   }),
 }) {
-    static readonly Default = Layer.effect(this, this.make);
+  static readonly Default = Layer.effect(this, this.make);
 }
 
 // =============================================================================
@@ -321,53 +323,54 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
  * suitable for the LLM to understand the knowledge graph structure.
  */
 const formatSchemaContext = (ontology: OntologyContext): string => {
-  const parts: Array<string> = []
+  const parts: Array<string> = [];
 
   // Format classes
   if (ontology.classes.length > 0) {
-    parts.push("## Classes")
+    parts.push("## Classes");
     for (const cls of ontology.classes) {
-      const localName = extractLocalName(cls.id)
-      const properties = cls.properties.map(extractLocalName).join(", ")
-      parts.push(`- ${localName}: ${cls.comment || cls.label}${properties ? ` [properties: ${properties}]` : ""}`)
+      const localName = extractLocalName(cls.id);
+      const properties = cls.properties.map(extractLocalName).join(", ");
+      parts.push(
+        `- ${localName}: ${cls.comment || cls.label}${P.isTruthy(properties) ? ` [properties: ${properties}]` : ""}`
+      );
     }
   }
 
   // Format properties grouped by type
-  const objectProps = ontology.properties.filter((p) => p.rangeType === "object")
-  const datatypeProps = ontology.properties.filter((p) => p.rangeType === "datatype")
+  const objectProps = ontology.properties.filter((p) => p.rangeType === "object");
+  const datatypeProps = ontology.properties.filter((p) => p.rangeType === "datatype");
 
   if (objectProps.length > 0) {
-    parts.push("\n## Object Properties (link entities)")
+    parts.push("\n## Object Properties (link entities)");
     for (const prop of objectProps) {
-      const localName = extractLocalName(prop.id)
-      const domain = prop.domain.map(extractLocalName).join(", ") || "any"
-      const range = prop.range.map(extractLocalName).join(", ") || "any"
-      parts.push(`- ${localName}: ${domain} → ${range}${prop.comment ? ` (${prop.comment})` : ""}`)
+      const localName = extractLocalName(prop.id);
+      const domain = prop.domain.map(extractLocalName).join(", ") || "any";
+      const range = prop.range.map(extractLocalName).join(", ") || "any";
+      parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
 
   if (datatypeProps.length > 0) {
-    parts.push("\n## Datatype Properties (literal values)")
+    parts.push("\n## Datatype Properties (literal values)");
     for (const prop of datatypeProps) {
-      const localName = extractLocalName(prop.id)
-      const domain = prop.domain.map(extractLocalName).join(", ") || "any"
-      const range = prop.range.map(extractLocalName).join(", ") || "string"
-      parts.push(`- ${localName}: ${domain} → ${range}${prop.comment ? ` (${prop.comment})` : ""}`)
+      const localName = extractLocalName(prop.id);
+      const domain = prop.domain.map(extractLocalName).join(", ") || "any";
+      const range = prop.range.map(extractLocalName).join(", ") || "string";
+      parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
 
-  return parts.join("\n")
-}
+  return parts.join("\n");
+};
 
 /**
  * Format namespace prefixes as SPARQL PREFIX declarations
  */
-const formatPrefixes = (prefixes: Record<string, string>): string => {
-  return Object.entries(prefixes)
+const formatPrefixes = (prefixes: Record<string, string>): string =>
+  Object.entries(prefixes)
     .map(([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`)
-    .join("\n")
-}
+    .join("\n");
 
 /**
  * Build the SPARQL generation prompt
@@ -376,8 +379,7 @@ const buildGenerationPrompt = (
   question: string,
   schemaContext: string,
   prefixDeclarations: string
-): string => {
-  return `You are a SPARQL query generator. Generate a valid SPARQL SELECT query to answer the given question based on the ontology schema.
+): string => `You are a SPARQL query generator. Generate a valid SPARQL SELECT query to answer the given question based on the ontology schema.
 
 ## Ontology Schema
 ${schemaContext}
@@ -402,8 +404,7 @@ Return a JSON object with:
 - explanation: Brief explanation of the query logic (optional)
 - confidence: Confidence score between 0 and 1
 
-Generate the query now.`
-}
+Generate the query now.`;
 
 /**
  * Validate SPARQL syntax (basic validation)
@@ -412,71 +413,71 @@ Generate the query now.`
  * Checks for common structural issues.
  */
 const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => {
-  const trimmed = sparql.trim()
+  const trimmed = sparql.trim();
 
   // Check for empty query
-  if (!trimmed) {
+  if (P.not(P.isTruthy)(trimmed)) {
     return new SparqlSyntaxError({
       message: "Empty query",
-      sparql
-    })
+      sparql,
+    });
   }
 
   // Check for SELECT keyword
-  const upperQuery = trimmed.toUpperCase()
+  const upperQuery = trimmed.toUpperCase();
   if (!upperQuery.includes("SELECT") && !upperQuery.includes("ASK") && !upperQuery.includes("CONSTRUCT")) {
     return new SparqlSyntaxError({
       message: "Query must contain SELECT, ASK, or CONSTRUCT",
-      sparql
-    })
+      sparql,
+    });
   }
 
   // Check for WHERE clause (required for SELECT)
   if (upperQuery.includes("SELECT") && !upperQuery.includes("WHERE")) {
     return new SparqlSyntaxError({
       message: "SELECT query must contain WHERE clause",
-      sparql
-    })
+      sparql,
+    });
   }
 
   // Check for balanced braces
-  const openBraces = (trimmed.match(/{/g) || []).length
-  const closeBraces = (trimmed.match(/}/g) || []).length
+  const openBraces = (trimmed.match(/{/g) || []).length;
+  const closeBraces = (trimmed.match(/}/g) || []).length;
   if (openBraces !== closeBraces) {
     return new SparqlSyntaxError({
       message: `Unbalanced braces: ${openBraces} open, ${closeBraces} close`,
-      sparql
-    })
+      sparql,
+    });
   }
 
   // Check for balanced parentheses
-  const openParens = (trimmed.match(/\(/g) || []).length
-  const closeParens = (trimmed.match(/\)/g) || []).length
+  const openParens = (trimmed.match(/\(/g) || []).length;
+  const closeParens = (trimmed.match(/\)/g) || []).length;
   if (openParens !== closeParens) {
     return new SparqlSyntaxError({
       message: `Unbalanced parentheses: ${openParens} open, ${closeParens} close`,
-      sparql
-    })
+      sparql,
+    });
   }
 
   // Check for unclosed strings
-  const singleQuotes = (trimmed.match(/'/g) || []).length
-  const doubleQuotes = (trimmed.match(/"/g) || []).length
+  const singleQuotes = (trimmed.match(/'/g) || []).length;
+  const doubleQuotes = (trimmed.match(/"/g) || []).length;
   if (singleQuotes % 2 !== 0) {
     return new SparqlSyntaxError({
       message: "Unclosed single-quoted string",
-      sparql
-    })
+      sparql,
+    });
   }
   if (doubleQuotes % 2 !== 0) {
     return new SparqlSyntaxError({
       message: "Unclosed double-quoted string",
-      sparql
-    })
+      sparql,
+    });
   }
 
-  return undefined
-}
+  return undefined;
+};
 
 /**
  * Correct a SPARQL query using LLM
@@ -490,8 +491,8 @@ const correctQuery = (
   timeoutMs: number,
   retrySchedule: Schedule.Schedule<unknown, unknown, never>
 ): Effect.Effect<string, SparqlCorrectionError> =>
-  Effect.gen(function*() {
-    const prompt = buildCorrectionPrompt(sparql, error, schemaContext)
+  Effect.gen(function* () {
+    const prompt = buildCorrectionPrompt(sparql, error, schemaContext);
 
     const response = yield* generateObjectWithFeedback(llm, {
       prompt,
@@ -500,33 +501,32 @@ const correctQuery = (
       maxAttempts,
       serviceName: "SparqlGenerator.correct",
       timeoutMs,
-      retrySchedule
+      retrySchedule,
     }).pipe(
-      Effect.mapError(() =>
-        new SparqlCorrectionError({
-          message: "Failed to correct SPARQL query",
-          sparql,
-          originalError: error
-        })
+      Effect.mapError(
+        () =>
+          new SparqlCorrectionError({
+            message: "Failed to correct SPARQL query",
+            sparql,
+            originalError: error,
+          })
       )
-    )
+    );
 
-    const corrected = response.value.sparql
+    const corrected = response.value.sparql;
 
     // Validate the corrected query
-    const syntaxError = validateSparqlSyntax(corrected)
-    if (syntaxError) {
-      return yield* Effect.fail(
-        new SparqlCorrectionError({
-          message: `Corrected query still has syntax errors: ${syntaxError.message}`,
-          sparql: corrected,
-          originalError: error
-        })
-      )
+    const syntaxError = validateSparqlSyntax(corrected);
+    if (P.isNotUndefined(syntaxError)) {
+      return yield* new SparqlCorrectionError({
+        message: `Corrected query still has syntax errors: ${syntaxError.message}`,
+        sparql: corrected,
+        originalError: error,
+      });
     }
 
-    return corrected
-  })
+    return corrected;
+  });
 
 /**
  * Build the SPARQL correction prompt
@@ -535,8 +535,7 @@ const buildCorrectionPrompt = (
   sparql: string,
   error: string,
   schemaContext: string
-): string => {
-  return `You are a SPARQL query corrector. Fix the given SPARQL query based on the error message.
+): string => `You are a SPARQL query corrector. Fix the given SPARQL query based on the error message.
 
 ## Ontology Schema
 ${schemaContext}
@@ -561,16 +560,15 @@ Return a JSON object with:
 - explanation: What was wrong and how you fixed it
 - confidence: Confidence score between 0 and 1
 
-Generate the corrected query now.`
-}
+Generate the corrected query now.`;
 
 /**
  * Extract local name from IRI
  */
 const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#")
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1)
-  const slashIndex = iri.lastIndexOf("/")
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1)
-  return iri
-}
+  const hashIndex = iri.lastIndexOf("#");
+  if (hashIndex >= 0) return iri.slice(hashIndex + 1);
+  const slashIndex = iri.lastIndexOf("/");
+  if (slashIndex >= 0) return iri.slice(slashIndex + 1);
+  return iri;
+};

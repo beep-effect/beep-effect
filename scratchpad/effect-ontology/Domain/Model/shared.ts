@@ -122,7 +122,8 @@ export type URLStr = typeof URLStr.Type;
  */
 export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
   .annotate({
-    toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(S.String)(fc), S.toArbitrary(S.Finite)(fc), S.toArbitrary(S.Boolean)(fc)),
+    toArbitrary: () => (fc) =>
+      fc.oneof(S.toArbitrary(S.String)(fc), S.toArbitrary(S.Finite)(fc), S.toArbitrary(S.Boolean)(fc)),
   })
   .pipe(
     $I.annoteSchema("AttributeValue", {

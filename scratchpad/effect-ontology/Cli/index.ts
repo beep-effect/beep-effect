@@ -8,32 +8,32 @@
  * @module Cli
  */
 
-import { Command } from "effect/unstable/cli"
-import { FetchHttpClient } from "effect/unstable/http"
-import { BunServices, BunRuntime } from "@effect/platform-bun"
-import { makeDrizzleLayer } from "@beep/postgres"
-import { PgClient } from "@effect/sql-pg"
-import { Config, Effect, Layer, Option } from "effect"
-import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts"
-import { ConfigServiceDefault } from "../Service/Config.ts"
-import { ContentEnrichmentAgent } from "../Service/ContentEnrichmentAgent.ts"
-import { ImageExtractor } from "../Service/ImageExtractor.ts"
-import { ImageFetcher } from "../Service/ImageFetcher.ts"
-import { ImageStore } from "../Service/ImageStore.ts"
-import { JinaReaderClient } from "../Service/JinaReaderClient.ts"
-import { LinkIngestionService } from "../Service/LinkIngestionService.ts"
-import { RdfBuilder } from "../Service/Rdf.ts"
-import { Reasoner } from "../Service/Reasoner.ts"
-import { StorageServiceLive } from "../Service/Storage.ts"
-import { WikidataClient } from "../Service/WikidataClient.ts"
-import { extractCommand } from "./Commands/Extract.ts"
-import { documentsCommand, fetchCommand, ingestBatchCommand, ingestLinkCommand } from "./Commands/Fetch.ts"
-import { inferenceCommand } from "./Commands/Inference.ts"
-import { ingestCommand } from "./Commands/Ingest.ts"
-import { linkCommand } from "./Commands/Link.ts"
-import { reconcileCommand } from "./Commands/Reconcile.ts"
-import { storageCommand } from "./Commands/Storage.ts"
-import { workflowCommand } from "./Commands/Workflow.ts"
+import { makeDrizzleLayer } from "@beep/postgres";
+import { BunRuntime, BunServices } from "@effect/platform-bun";
+import { PgClient } from "@effect/sql-pg";
+import { Config, Effect, Layer, Option } from "effect";
+import { Command } from "effect/unstable/cli";
+import { FetchHttpClient } from "effect/unstable/http";
+import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
+import { ConfigServiceDefault } from "../Service/Config.ts";
+import { ContentEnrichmentAgent } from "../Service/ContentEnrichmentAgent.ts";
+import { ImageExtractor } from "../Service/ImageExtractor.ts";
+import { ImageFetcher } from "../Service/ImageFetcher.ts";
+import { ImageStore } from "../Service/ImageStore.ts";
+import { JinaReaderClient } from "../Service/JinaReaderClient.ts";
+import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
+import { RdfBuilder } from "../Service/Rdf.ts";
+import { Reasoner } from "../Service/Reasoner.ts";
+import { StorageServiceLive } from "../Service/Storage.ts";
+import { WikidataClient } from "../Service/WikidataClient.ts";
+import { extractCommand } from "./Commands/Extract.ts";
+import { documentsCommand, fetchCommand, ingestBatchCommand, ingestLinkCommand } from "./Commands/Fetch.ts";
+import { inferenceCommand } from "./Commands/Inference.ts";
+import { ingestCommand } from "./Commands/Ingest.ts";
+import { linkCommand } from "./Commands/Link.ts";
+import { reconcileCommand } from "./Commands/Reconcile.ts";
+import { storageCommand } from "./Commands/Storage.ts";
+import { workflowCommand } from "./Commands/Workflow.ts";
 
 // =============================================================================
 // Root Command
@@ -51,10 +51,10 @@ const rootCommand = Command.make("effect-onto").pipe(
     ingestLinkCommand,
     ingestBatchCommand,
     documentsCommand,
-    workflowCommand
+    workflowCommand,
   ]),
   Command.withDescription("Effect Ontology CLI - Knowledge extraction and reasoning tools")
-)
+);
 
 // =============================================================================
 // Layer Composition
@@ -68,13 +68,13 @@ const PgClientLayer = PgClient.layerConfig({
   port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD")
-})
+  password: Config.redacted("POSTGRES_PASSWORD"),
+});
 
 /**
  * PgDrizzle layer with PgClient dependency
  */
-const PgDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLayer))
+const PgDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLayer));
 
 /**
  * Full LinkIngestion stack when PostgreSQL is configured
@@ -90,24 +90,24 @@ const LinkIngestionLive = LinkIngestionService.Default.pipe(
   Layer.provideMerge(FetchHttpClient.layer),
   Layer.provideMerge(StorageServiceLive),
   Layer.provideMerge(ConfigServiceDefault)
-)
+);
 
 /**
  * Dynamic LinkIngestion layer selection based on POSTGRES_HOST config.
  * Uses Layer.unwrap for config-driven layer selection.
  */
 const LinkIngestionLayer = Layer.unwrap(
-  Effect.gen(function*() {
-    const postgresHost = yield* Config.string("POSTGRES_HOST").pipe(Config.option)
+  Effect.gen(function* () {
+    const postgresHost = yield* Config.string("POSTGRES_HOST").pipe(Config.option);
 
     if (Option.isSome(postgresHost)) {
-      return LinkIngestionLive
+      return LinkIngestionLive;
     } else {
       // Use the service's built-in Disabled layer
-      return LinkIngestionService.Disabled
+      return LinkIngestionService.Disabled;
     }
   })
-)
+);
 
 /**
  * CLI runtime layer with all required services
@@ -129,10 +129,7 @@ const CliLive = Layer.mergeAll(
   WikidataClient.Default,
   JinaReaderClient.Default,
   LinkIngestionLayer
-).pipe(
-  Layer.provide(ConfigServiceDefault),
-  Layer.provideMerge(BunServices.layer)
-)
+).pipe(Layer.provide(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
 
 // =============================================================================
 // Entry Point
@@ -145,8 +142,15 @@ const CliLive = Layer.mergeAll(
  */
 export const runCli = (args: ReadonlyArray<string>) => {
   const effect = Command.runWith(rootCommand, {
-    version: "0.1.0"
-  })(args)
+    version: "0.1.0",
+  })(args);
 
-  return effect.pipe(Effect.provide(CliLive), BunRuntime.runMain)
-}
+  const main = Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(CliLive);
+      return yield* effect.pipe(Effect.provide(context));
+    })
+  );
+
+  return BunRuntime.runMain(main);
+};

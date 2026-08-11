@@ -1,7 +1,7 @@
 {
   "catalog": {
     "@1password/connect": "^1.4.2",
-    "@arizeai/phoenix-client": "7.3.0",
+    "@arizeai/phoenix-client": "7.3.1",
     "@azure/msal-node": "^5.5.0",
     "@azure/msal-node-extensions": "^5.3.5",
     "@babel/cli": "^8.0.4",
@@ -155,8 +155,8 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.185.4",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "@vitejs/plugin-react": "^6.0.5",
@@ -164,7 +164,7 @@
     "@vitest/browser-playwright": "^4.1.10",
     "@vitest/coverage-istanbul": "^4.1.10",
     "@vitest/coverage-v8": "^4.1.10",
-    "ai": "^7.0.58",
+    "ai": "^7.0.59",
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "babel-plugin-transform-next-use-client": "^1.1.1",

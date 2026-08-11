@@ -8,121 +8,99 @@
  * @module Service/Inheritance
  */
 
-import { Chunk, Effect, Context, Layer } from "effect"
-import type { PropertyDefinition } from "../Domain/Model/Ontology.ts"
-import { OntologyService } from "./Ontology.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Chunk, Context, Effect, Layer } from "effect";
+import * as P from "effect/Predicate";
+import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { OntologyService } from "./Ontology.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/Inheritance");
 
 /**
  * Service for computing inherited attributes
  */
-export class InheritanceService extends Context.Service<InheritanceService>()(
-  $I`InheritanceService`,
-  {
-    make: Effect.gen(function*() {
-      const ontologyService = yield* OntologyService
+export class InheritanceService extends Context.Service<InheritanceService>()($I`InheritanceService`, {
+  make: Effect.gen(function* () {
+    const ontologyService = yield* OntologyService;
 
-      // Cache the ontology context to avoid repeated lookups
-      // usage of cached 'ontology' from OntologyService ensures we share the same instance
-      const getContext = ontologyService.ontology
+    // Cache the ontology context to avoid repeated lookups
+    // usage of cached 'ontology' from OntologyService ensures we share the same instance
+    const getContext = ontologyService.ontology;
 
-      /**
-       * Get all ancestor IRIs for a given class
-       *
-       * @param classIri - The IRI of the class
-       * @returns Array of ancestor IRIs (transitive closure)
-       */
-      const getAncestors = (classIri: string) =>
-        Effect.gen(function*() {
-          const context = yield* getContext
-          const hierarchy = context.hierarchy
-
-          const visited = new Set<string>()
-          const ancestors: Array<string> = []
-
-          const visit = (iri: string) => {
-            if (visited.has(iri)) return
-            visited.add(iri)
-
-            const parents = hierarchy[iri] || []
-            for (const parent of parents) {
-              visit(parent)
-              if (!ancestors.includes(parent)) {
-                ancestors.push(parent)
-              }
-            }
+    /**
+     * Get all ancestor IRIs for a given class
+     *
+     * @param classIri - The IRI of the class
+     * @returns Array of ancestor IRIs (transitive closure)
+     */
+    const getAncestors = Effect.fn("getAncestors")(function* (classIri: string) {
+      const context = yield* getContext;
+      const hierarchy = context.hierarchy;
+      const visited = new Set<string>();
+      const ancestors: Array<string> = [];
+      const visit = (iri: string) => {
+        if (visited.has(iri)) return;
+        visited.add(iri);
+        const parents = hierarchy[iri] || [];
+        for (const parent of parents) {
+          visit(parent);
+          if (!ancestors.includes(parent)) {
+            ancestors.push(parent);
           }
+        }
+      };
+      visit(classIri);
+      return Chunk.fromIterable(ancestors);
+    });
 
-          visit(classIri)
-          return Chunk.fromIterable(ancestors)
-        })
-
-      /**
-       * Get effective properties for a class (own + inherited)
-       *
-       * @param classIri - The IRI of the class
-       * @returns Array of PropertyDefinitions
-       */
-      const getEffectiveProperties = (classIri: string) =>
-        Effect.gen(function*() {
-          const context = yield* getContext
-          const ancestors = yield* getAncestors(classIri)
-
-          // Helper to easy lookup properties by ID
-          const propertyMap = new Map<string, PropertyDefinition>()
-          for (const p of context.properties) {
-            propertyMap.set(p.id, p)
-          }
-
-          const effectivePropertyIds = new Set<string>()
-
-          // 1. Add own properties
-          const ownClass = context.classes.find((c) => c.id === classIri)
-          if (ownClass) {
-            for (const p of ownClass.properties) {
-              effectivePropertyIds.add(p)
-            }
-          }
-
-          // 2. Add inherited properties
-          for (const ancestorIri of ancestors) {
-            const ancestorClass = context.classes.find((c) => c.id === ancestorIri)
-            if (ancestorClass) {
-              for (const p of ancestorClass.properties) {
-                effectivePropertyIds.add(p)
-              }
-            }
-          }
-
-          // 3. Resolve to definitions
-          const effectiveProperties: Array<PropertyDefinition> = []
-          for (const pid of effectivePropertyIds) {
-            const def = propertyMap.get(pid)
-            if (def) {
-              effectiveProperties.push(def)
-            }
-          }
-
-          return Chunk.fromIterable(effectiveProperties)
-        })
-
-      return {
-        getAncestors,
-        getEffectiveProperties,
-
-        /**
-         * Check if child is a subclass of parent (transitive)
-         */
-        isSubclass: (childIri: string, parentIri: string) =>
-          Effect.gen(function*() {
-            if (childIri === parentIri) return true
-            const ancestors = yield* getAncestors(childIri)
-            return Chunk.toReadonlyArray(ancestors).includes(parentIri)
-          })
+    /**
+     * Get effective properties for a class (own + inherited)
+     *
+     * @param classIri - The IRI of the class
+     * @returns Array of PropertyDefinitions
+     */
+    const getEffectiveProperties = Effect.fn("getEffectiveProperties")(function* (classIri: string) {
+      const context = yield* getContext;
+      const ancestors = yield* getAncestors(classIri);
+      const propertyMap = new Map<string, PropertyDefinition>();
+      for (const p of context.properties) {
+        propertyMap.set(p.id, p);
       }
-    }),
-  }
-) {
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([OntologyService.Default]));
+      const effectivePropertyIds = new Set<string>();
+      const ownClass = context.classes.find((c) => c.id === classIri);
+      if (P.isNotUndefined(ownClass)) {
+        for (const p of ownClass.properties) {
+          effectivePropertyIds.add(p);
+        }
+      }
+      for (const ancestorIri of ancestors) {
+        const ancestorClass = context.classes.find((c) => c.id === ancestorIri);
+        if (P.isNotUndefined(ancestorClass)) {
+          for (const p of ancestorClass.properties) {
+            effectivePropertyIds.add(p);
+          }
+        }
+      }
+      const effectiveProperties: Array<PropertyDefinition> = [];
+      for (const pid of effectivePropertyIds) {
+        const def = propertyMap.get(pid);
+        if (P.isNotUndefined(def)) {
+          effectiveProperties.push(def);
+        }
+      }
+      return Chunk.fromIterable(effectiveProperties);
+    });
+
+    return {
+      getAncestors,
+      getEffectiveProperties,
+      isSubclass: Effect.fn("InheritanceService.isSubclass")(function* (childIri: string, parentIri: string) {
+        if (childIri === parentIri) return true;
+        const ancestors = yield* getAncestors(childIri);
+        return Chunk.toReadonlyArray(ancestors).includes(parentIri);
+      }),
+    };
+  }),
+}) {
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([OntologyService.Default]));
 }

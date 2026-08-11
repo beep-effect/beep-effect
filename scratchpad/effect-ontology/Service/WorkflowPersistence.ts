@@ -7,10 +7,9 @@
  * @since 2.0.0
  */
 
-import { Persistence } from "effect/unstable/persistence"
-import { KeyValueStore } from "effect/unstable/persistence"
-import { Effect, Layer } from "effect"
-import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts"
+import { Effect, Layer } from "effect";
+import { KeyValueStore, Persistence } from "effect/unstable/persistence";
+import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts";
 
 // -----------------------------------------------------------------------------
 // KeyValueStore adapter for StorageService
@@ -24,39 +23,28 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  */
 const StorageKeyValueStoreLive = Layer.effect(
   KeyValueStore.KeyValueStore,
-  Effect.gen(function*() {
-    const storage = yield* StorageService
-    const prefix = "workflow-state/"
+  Effect.gen(function* () {
+    const storage = yield* StorageService;
+    const prefix = "workflow-state/";
 
-    const prefixKey = (key: string) => `${prefix}${key}`
+    const prefixKey = (key: string) => `${prefix}${key}`;
 
     return KeyValueStore.make({
-      get: (key) =>
-        storage.get(prefixKey(key)).pipe(
-          Effect.catch(() => Effect.succeed(undefined))
-        ),
+      get: (key) => storage.get(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
 
       getUint8Array: (key) =>
-        storage.getUint8Array(prefixKey(key)).pipe(
-          Effect.catch(() => Effect.succeed(undefined))
-        ),
+        storage.getUint8Array(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
 
-      set: (key, value) =>
-        storage.set(prefixKey(key), value).pipe(
-          Effect.asVoid
-        ),
+      set: (key, value) => storage.set(prefixKey(key), value).pipe(Effect.asVoid),
 
-      remove: (key) =>
-        storage.remove(prefixKey(key)).pipe(
-          Effect.asVoid
-        ),
+      remove: (key) => storage.remove(prefixKey(key)).pipe(Effect.asVoid),
 
       clear: storage.clear,
 
-      size: storage.size
-    })
+      size: storage.size,
+    });
   })
-)
+);
 
 // -----------------------------------------------------------------------------
 // Workflow Persistence Layers
@@ -82,7 +70,7 @@ const StorageKeyValueStoreLive = Layer.effect(
 export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
   Layer.provide(StorageServiceLive)
-)
+);
 
 /**
  * Test persistence layer (in-memory).
@@ -93,17 +81,17 @@ export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
 export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
   Layer.provide(StorageKeyValueStoreLive),
   Layer.provide(StorageServiceTest)
-)
+);
 
 /**
  * Pure in-memory persistence (no StorageService dependency).
  *
  * The simplest option for isolated unit tests.
  */
-export const WorkflowPersistenceMemory = Persistence.layerMemory
+export const WorkflowPersistenceMemory = Persistence.layerMemory;
 
 // -----------------------------------------------------------------------------
 // Re-exports for convenience
 // -----------------------------------------------------------------------------
 
-export { Persistence } from "effect/unstable/persistence"
+export { Persistence } from "effect/unstable/persistence";

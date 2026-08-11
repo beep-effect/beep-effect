@@ -7,6 +7,8 @@
  * @since 2.0.0
  */
 
+import * as P from "effect/Predicate";
+
 /** Pricing per 1M tokens (as of Dec 2025) */
 const PRICING: Record<string, { input: number; output: number }> = {
   // Anthropic - Current models (Claude 4.5)
@@ -27,8 +29,8 @@ const PRICING: Record<string, { input: number; output: number }> = {
   // Google
   "gemini-2.0-flash": { input: 0.1, output: 0.4 },
   "gemini-1.5-pro": { input: 1.25, output: 5.0 },
-  "gemini-1.5-flash": { input: 0.075, output: 0.3 }
-}
+  "gemini-1.5-flash": { input: 0.075, output: 0.3 },
+};
 
 /**
  * Get pricing for a model
@@ -39,9 +41,7 @@ const PRICING: Record<string, { input: number; output: number }> = {
  * @since 2.0.0
  * @category pricing
  */
-export const getPricing = (
-  model: string
-): { input: number; output: number } | undefined => PRICING[model]
+export const getPricing = (model: string): { input: number; output: number } | undefined => PRICING[model];
 
 /**
  * Calculate estimated cost for an LLM call
@@ -54,15 +54,12 @@ export const getPricing = (
  * @since 2.0.0
  * @category pricing
  */
-export const calculateCost = (
-  model: string,
-  inputTokens: number,
-  outputTokens: number
-): number => {
-  const pricing = PRICING[model]
-  if (!pricing) return 0
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
+  const pricing = PRICING[model];
+  if (P.not(P.isTruthy)(pricing)) return 0;
 
-  const inputCost = (inputTokens / 1_000_000) * pricing.input
-  const outputCost = (outputTokens / 1_000_000) * pricing.output
-  return inputCost + outputCost
-}
+  const inputCost = (inputTokens / 1_000_000) * pricing.input;
+  const outputCost = (outputTokens / 1_000_000) * pricing.output;
+  return inputCost + outputCost;
+};

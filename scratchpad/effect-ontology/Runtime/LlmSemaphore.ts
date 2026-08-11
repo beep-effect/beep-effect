@@ -8,13 +8,14 @@
  * @module Runtime/LlmSemaphore
  */
 
-import { $ScratchpadId } from "@beep/identity"
-import { Context, Layer } from "effect"
-const $I = $ScratchpadId.create("effect-ontology/Runtime/LlmSemaphore")
+import { $ScratchpadId } from "@beep/identity";
+import { Context, Layer } from "effect";
 
-import { Data, Duration, Effect } from "effect"
-import { ConfigService } from "../Service/Config.ts"
+const $I = $ScratchpadId.create("effect-ontology/Runtime/LlmSemaphore");
+
+import { Data, Duration, Effect } from "effect";
 import * as Semaphore from "effect/Semaphore";
+import { ConfigService } from "../Service/Config.ts";
 
 /**
  * Error thrown when semaphore permit acquisition times out
@@ -23,8 +24,8 @@ import * as Semaphore from "effect/Semaphore";
  * @category Errors
  */
 export class SemaphoreTimeoutError extends Data.TaggedError("SemaphoreTimeoutError")<{
-  readonly message: string
-  readonly waitDuration: Duration.Duration
+  readonly message: string;
+  readonly waitDuration: Duration.Duration;
 }> {}
 
 /**
@@ -40,18 +41,18 @@ export class SemaphoreTimeoutError extends Data.TaggedError("SemaphoreTimeoutErr
  * @category Services
  */
 export class LlmSemaphoreService extends Context.Service<LlmSemaphoreService>()($I`LlmSemaphoreService`, {
-  make: Effect.gen(function*() {
-    const config = yield* ConfigService
-    const limit = config.runtime.llmConcurrencyLimit
+  make: Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const limit = config.runtime.llmConcurrencyLimit;
 
-    const semaphore = yield* Semaphore.make(limit)
+    const semaphore = yield* Semaphore.make(limit);
 
     yield* Effect.logInfo("LLM semaphore initialized", {
-      concurrencyLimit: limit
-    })
+      concurrencyLimit: limit,
+    });
 
     // Timeout for permit acquisition - prevents deadlock if permits never released
-    const permitTimeout = Duration.minutes(5)
+    const permitTimeout = Duration.minutes(5);
 
     return {
       /**
@@ -62,27 +63,33 @@ export class LlmSemaphoreService extends Context.Service<LlmSemaphoreService>()(
        *
        * @throws SemaphoreTimeoutError if permit acquisition times out
        */
-      withPermit: <A, E, R>(
-        effect: Effect.Effect<A, E, R>
-      ): Effect.Effect<A, E | SemaphoreTimeoutError, R> =>
-        semaphore.withPermits(1)(effect).pipe(
-          Effect.timeoutOrElse({ duration: permitTimeout, orElse: () => Effect.fail(new SemaphoreTimeoutError({
-                message: `LLM semaphore permit acquisition timed out after ${Duration.toMillis(permitTimeout)}ms`,
-                waitDuration: permitTimeout
-              })) })
-        ),
+      withPermit: <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | SemaphoreTimeoutError, R> =>
+        semaphore
+          .withPermits(1)(effect)
+          .pipe(
+            Effect.timeoutOrElse({
+              duration: permitTimeout,
+              orElse: () =>
+                Effect.fail(
+                  new SemaphoreTimeoutError({
+                    message: `LLM semaphore permit acquisition timed out after ${Duration.toMillis(permitTimeout)}ms`,
+                    waitDuration: permitTimeout,
+                  })
+                ),
+            })
+          ),
 
       /**
        * Get number of available permits
        */
-      availablePermits: (): Effect.Effect<number> => Effect.sync(() => limit), // Semaphore doesn't expose available, return max
+      availablePermits: Effect.succeed(limit), // Semaphore doesn't expose available, return max
 
       /**
        * Get the concurrency limit
        */
-      limit: (): number => limit
-    }
+      limit: (): number => limit,
+    };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make)
+  static readonly Default = Layer.effect(this, this.make);
 }

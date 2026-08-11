@@ -8,12 +8,14 @@
  * @module Service/SimilarityScorer
  */
 
-import { Cache, Duration, Effect, Context, Layer } from "effect"
-import type { Entity, Relation } from "../Domain/Model/Entity.ts"
-import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts"
-import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts"
-import { NomicNlpService, NomicNlpServiceDefault } from "./NomicNlp.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Cache, Context, Duration, Effect, Layer } from "effect";
+import * as P from "effect/Predicate";
+import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
+import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts";
+import { NomicNlpService, NomicNlpServiceDefault } from "./NomicNlp.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
 
 /**
@@ -23,9 +25,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
  * @category Types
  */
 export interface SimilarityResult {
-  readonly score: number
-  readonly method: "exact" | "similarity" | "containment" | "neighbor"
-  readonly shouldMerge: boolean
+  readonly score: number;
+  readonly method: "exact" | "similarity" | "containment" | "neighbor";
+  readonly shouldMerge: boolean;
 }
 
 /**
@@ -40,8 +42,8 @@ export interface SimilarityResult {
  * @category Services
  */
 export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`SimilarityScorer`, {
-  make: Effect.gen(function*() {
-    const nomic = yield* NomicNlpService
+  make: Effect.gen(function* () {
+    const nomic = yield* NomicNlpService;
 
     // Create a bounded cache for embeddings
     // Key: Mention text
@@ -49,17 +51,16 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
     const embeddingCache = yield* Cache.make({
       capacity: 10_000,
       timeToLive: Duration.infinity,
-      lookup: (mention: string) => nomic.embed(mention, "search_document")
-    })
+      lookup: (mention: string) => nomic.embed(mention, "search_document"),
+    });
 
     /**
      * Get or compute embedding for an entity request
      * Note: We leverage the mention text as the cache key to deduplicate
      * processing for identical mentions across different entities.
      */
-    const getOrComputeEmbedding = (
-      mention: string
-    ): Effect.Effect<ReadonlyArray<number>, Error> => Cache.get(embeddingCache, mention)
+    const getOrComputeEmbedding = (mention: string): Effect.Effect<ReadonlyArray<number>, Error> =>
+      Cache.get(embeddingCache, mention);
 
     /**
      * Compute similarity between two entities
@@ -70,40 +71,28 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
       relations: ReadonlyArray<Relation>,
       config: EntityResolutionConfig
     ): Effect.Effect<SimilarityResult, Error> =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // Compute embeddings if embedding weight is configured
-        let embeddingSimilarity: number | undefined
+        let embeddingSimilarity: number | undefined;
 
-        if (config.embeddingWeight && config.embeddingWeight > 0) {
-          const embA = yield* getOrComputeEmbedding(a.mention)
-          const embB = yield* getOrComputeEmbedding(b.mention)
-          embeddingSimilarity = nomic.cosineSimilarity(embA, embB)
+        if (P.isTruthy(config.embeddingWeight) && config.embeddingWeight > 0) {
+          const embA = yield* getOrComputeEmbedding(a.mention);
+          const embB = yield* getOrComputeEmbedding(b.mention);
+          embeddingSimilarity = nomic.cosineSimilarity(embA, embB);
         }
 
-        const score = computeEntitySimilarity(
-          a,
-          b,
-          relations,
-          config,
-          embeddingSimilarity
-        )
+        const score = computeEntitySimilarity(a, b, relations, config, embeddingSimilarity);
 
-        const method = detectResolutionMethod(a, b, relations)
+        const method = detectResolutionMethod(a, b, relations);
 
-        const shouldMergeResult = shouldConsiderMerge(
-          a,
-          b,
-          relations,
-          config,
-          embeddingSimilarity
-        )
+        const shouldMergeResult = shouldConsiderMerge(a, b, relations, config, embeddingSimilarity);
 
         return {
           score,
           method,
-          shouldMerge: shouldMergeResult
-        }
-      })
+          shouldMerge: shouldMergeResult,
+        };
+      });
 
     /**
      * Check if two entities should be merged (convenience method)
@@ -113,25 +102,25 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
       b: Entity,
       relations: ReadonlyArray<Relation>,
       config: EntityResolutionConfig
-    ): Effect.Effect<boolean, Error> => compute(a, b, relations, config).pipe(Effect.map((r) => r.shouldMerge))
+    ): Effect.Effect<boolean, Error> => compute(a, b, relations, config).pipe(Effect.map((r) => r.shouldMerge));
 
     /**
      * Clear the embedding cache
      */
-    const clearCache = (): Effect.Effect<void, never> => Cache.invalidateAll(embeddingCache)
+    const clearCache: Effect.Effect<void> = Cache.invalidateAll(embeddingCache);
 
     /**
      * Get current cache size
      */
-    const getCacheSize = (): Effect.Effect<number> => Cache.size(embeddingCache)
+    const getCacheSize: Effect.Effect<number> = Cache.size(embeddingCache);
 
     return {
       compute,
       shouldMerge,
       clearCache,
-      getCacheSize
-    }
+      getCacheSize,
+    };
   }),
 }) {
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([NomicNlpServiceDefault]));
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([NomicNlpServiceDefault]));
 }

@@ -31,7 +31,8 @@ const WatchPaths = S.String.pipe(
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -57,7 +58,8 @@ export class Input extends S.Class<Input>($I`CwdChangedInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -85,7 +87,8 @@ export class Output extends S.Class<Output>($I`CwdChangedOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -101,7 +104,8 @@ export const passthrough = (): Output => Output.make();
 /**
  * Constructor for `watchPaths`.
  *
- * @example
+ * **Example** (Use watchPaths)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -117,7 +121,8 @@ export const watchPaths = (paths: ReadonlyArray<string>): Output => Output.make(
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -143,12 +148,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.CwdChanged.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -173,12 +172,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.CwdChanged.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

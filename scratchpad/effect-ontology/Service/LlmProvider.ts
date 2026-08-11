@@ -8,12 +8,12 @@
  * @module Service/LlmProvider
  */
 
-import type { Duration, Schedule } from "effect"
+import type { Duration, Schedule } from "effect";
 
 /**
  * Supported LLM Providers
  */
-export type LlmProvider = "anthropic" | "openai" | "google"
+export type LlmProvider = "anthropic" | "openai" | "google";
 
 /**
  * Configuration parameters for an LLM provider
@@ -22,38 +22,38 @@ export interface LlmProviderParams {
   /**
    * Provider identifier
    */
-  readonly provider: LlmProvider
+  readonly provider: LlmProvider;
 
   /**
    * Model identifier (e.g. "claude-3-haiku", "gpt-4o")
    */
-  readonly model: string
+  readonly model: string;
 
   /**
    * Context window size in tokens
    */
-  readonly contextWindow: number
+  readonly contextWindow: number;
 
   /**
    * Maximum tokens for output generation
    */
-  readonly maxOutputTokens: number
+  readonly maxOutputTokens: number;
 
   /**
    * Default timeout for API calls
    */
-  readonly timeout: Duration.Duration
+  readonly timeout: Duration.Duration;
 
   /**
    * Retry schedule for transient errors
    */
-  readonly retrySchedule?: Schedule.Schedule<unknown, unknown, never>
+  readonly retrySchedule?: Schedule.Schedule<unknown, unknown, never>;
 
   /**
    * Circuit breaker configuration
    */
   readonly circuitBreaker?: {
-    readonly failureThreshold: number
-    readonly resetTimeout: Duration.Duration
-  }
+    readonly failureThreshold: number;
+    readonly resetTimeout: Duration.Duration;
+  };
 }

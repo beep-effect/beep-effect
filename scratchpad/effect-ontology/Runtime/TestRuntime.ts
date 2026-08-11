@@ -16,27 +16,30 @@
  * @module Runtime/TestRuntime
  */
 
-import type { Response } from "effect/unstable/ai"
-import { LanguageModel } from "effect/unstable/ai"
-import { BunServices } from "@effect/platform-bun"
-import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect"
-import * as N3 from "n3"
-import { ConfigServiceDefault } from "../Service/Config.ts"
-import { EmbeddingCache } from "../Service/EmbeddingCache.ts"
-import { EmbeddingProvider, type EmbeddingProviderMethods } from "../Service/EmbeddingProvider.ts"
-import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts"
-import { Grounder } from "../Service/Grounder.ts"
+import { BunServices } from "@effect/platform-bun";
+import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import type { Response } from "effect/unstable/ai";
+import { LanguageModel } from "effect/unstable/ai";
+import * as N3 from "n3";
+import { ConfigServiceDefault } from "../Service/Config.ts";
+import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
+import type { EmbeddingProviderMethods } from "../Service/EmbeddingProvider.ts";
+import { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
+import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
+import { Grounder } from "../Service/Grounder.ts";
 import {
   CentralRateLimiterServiceTest,
   StageTimeoutServiceTest,
-  TokenBudgetServiceTest
-} from "../Service/LlmControl/index.ts"
-import { NlpService } from "../Service/Nlp.ts"
-import { OntologyService } from "../Service/Ontology.ts"
-import { RdfBuilder } from "../Service/Rdf.ts"
-import { ShaclService } from "../Service/Shacl.ts"
-import { StorageServiceTest } from "../Service/Storage.ts"
-import { MetricsService } from "../Telemetry/Metrics.ts"
+  TokenBudgetServiceTest,
+} from "../Service/LlmControl/index.ts";
+import { NlpService } from "../Service/Nlp.ts";
+import { OntologyService } from "../Service/Ontology.ts";
+import { RdfBuilder } from "../Service/Rdf.ts";
+import { ShaclService, ShaclValidationReport, type ValidationPolicy } from "../Service/Shacl.ts";
+import { StorageServiceTest } from "../Service/Storage.ts";
+import { MetricsService } from "../Telemetry/Metrics.ts";
 
 /**
  * Mock LanguageModel for testing
@@ -49,17 +52,20 @@ import { MetricsService } from "../Telemetry/Metrics.ts"
 const MockLanguageModel = Layer.succeed(
   LanguageModel.LanguageModel,
   LanguageModel.LanguageModel.of({
-    generateText: () => Effect.succeed(new LanguageModel.GenerateTextResponse<{}>([])),
+    generateText: Effect.fn("LanguageModel.LanguageModel.generateText")(() =>
+      Effect.succeed(new LanguageModel.GenerateTextResponse<{}>([]))
+    ),
     streamText: () => Stream.fromIterable<Response.StreamPart<{}>>([]),
-    generateObject: () =>
+    generateObject: Effect.fn("LanguageModel.LanguageModel.generateObject")(() =>
       Effect.succeed(
         new LanguageModel.GenerateObjectResponse<{}, any>(
           { entities: [], relations: [] },
           []
         ) as LanguageModel.GenerateObjectResponse<any, any>
       )
+    ),
   })
-)
+);
 
 /**
  * LLM Control Test Layers
@@ -77,9 +83,9 @@ const LlmControlTestLayers = Layer.mergeAll(
   CentralRateLimiterServiceTest({
     requestsPerMinute: 1000,
     tokensPerMinute: 1_000_000,
-    maxConcurrent: 100
+    maxConcurrent: 100,
   })
-)
+);
 
 /**
  * Test ConfigProvider with required values
@@ -95,8 +101,8 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
   STORAGE_TYPE: "memory",
   RUNTIME_CONCURRENCY: "4",
   RUNTIME_LLM_CONCURRENCY: "2",
-  RUNTIME_ENABLE_TRACING: "false"
-})
+  RUNTIME_ENABLE_TRACING: "false",
+});
 
 /**
  * Mock SHACL Service for testing
@@ -104,64 +110,61 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
  * Provides deterministic SHACL validation behaviour for unit/integration tests.
  */
 export const MockShaclService = (options?: {
-  readonly conforms?: boolean
+  readonly conforms?: boolean;
   readonly violations?: ReadonlyArray<{
-    readonly severity: "Violation" | "Warning" | "Info"
-    readonly message: string
-    readonly focusNode?: string
-    readonly path?: string
-    readonly value?: string
-    readonly sourceShape?: string
-  }>
-}) =>
-  Layer.succeed(
-    ShaclService,
-    {
-      validate: (dataStore: N3.Store, shapesStore: N3.Store) =>
-        Effect.succeed({
-          conforms: options?.conforms ?? true,
-          violations: (options?.violations ?? []).map((v) => ({
-            focusNode: v.focusNode ?? "test:node",
-            path: v.path,
-            value: v.value,
-            message: v.message,
-            severity: v.severity,
-            sourceShape: v.sourceShape
-          })),
-          validatedAt: DateTime.nowUnsafe(),
-          dataGraphTripleCount: dataStore.size,
-          shapesGraphTripleCount: shapesStore.size,
-          durationMs: 0
-        }),
-      loadShapes: (turtle: string) =>
-        Effect.sync(() => {
-          const parser = new N3.Parser()
-          const store = new N3.Store()
-          parser.parse(turtle).forEach((quad) => store.addQuad(quad))
-          return store
-        }),
-      loadShapesFromUri: () => Effect.succeed(new N3.Store()),
-      generateShapesFromOntology: () => Effect.succeed(new N3.Store()),
-      clearShapesCache: () => Effect.void,
-      getShapesCacheStats: () => Effect.succeed({ size: 0, keys: [] as ReadonlyArray<string> }),
-      validateWithPolicy: (dataStore: N3.Store, shapesStore: N3.Store, _policy) =>
-        Effect.succeed({
-          conforms: options?.conforms ?? true,
-          violations: (options?.violations ?? []).map((v) => ({
-            focusNode: v.focusNode ?? "test:node",
-            path: v.path,
-            value: v.value,
-            message: v.message,
-            severity: v.severity,
-            sourceShape: v.sourceShape
-          })),
-          validatedAt: DateTime.nowUnsafe(),
-          dataGraphTripleCount: dataStore.size,
-          shapesGraphTripleCount: shapesStore.size,
-          durationMs: 0
-        })
-    }
-  )
+    readonly severity: "Violation" | "Warning" | "Info";
+    readonly message: string;
+    readonly focusNode?: string;
+    readonly path?: string;
+    readonly value?: string;
+    readonly sourceShape?: string;
+  }>;
+}) => {
+  const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: N3.Store, shapesStore: N3.Store) {
+    const violations = (options?.violations ?? []).map((violation) => ({
+      focusNode: violation.focusNode ?? "test:node",
+      message: violation.message,
+      severity: violation.severity,
+      sourceConstraintComponent: "test:constraint",
+      ...(P.isNotUndefined(violation.path) ? { path: violation.path } : {}),
+      ...(P.isNotUndefined(violation.value) ? { value: violation.value } : {}),
+      ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: violation.sourceShape } : {}),
+    }));
+    return yield* S.decodeEffect(ShaclValidationReport)({
+      conforms: violations.length === 0,
+      violations,
+      validatedAt: DateTime.formatIso(yield* DateTime.now),
+      dataGraphTripleCount: dataStore.size,
+      shapesGraphTripleCount: shapesStore.size,
+      durationMs: 0,
+    }).pipe(Effect.orDie);
+  });
+
+  return Layer.succeed(ShaclService, {
+    validate: makeReport,
+    loadShapes: Effect.fn("ShaclService.loadShapes")((turtle: string) =>
+      Effect.sync(() => {
+        const parser = new N3.Parser();
+        const store = new N3.Store();
+        parser.parse(turtle).forEach((quad) => store.addQuad(quad));
+        return store;
+      })
+    ),
+    loadShapesFromUri: Effect.fn("ShaclService.loadShapesFromUri")(() => Effect.succeed(new N3.Store())),
+    generateShapesFromOntology: Effect.fn("ShaclService.generateShapesFromOntology")(() =>
+      Effect.succeed(new N3.Store())
+    ),
+    clearShapesCache: Effect.void,
+    getShapesCacheStats: Effect.succeed({ size: 0, keys: [] as ReadonlyArray<string> }),
+    validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (
+      dataStore: N3.Store,
+      shapesStore: N3.Store,
+      _policy: ValidationPolicy
+    ) {
+      return yield* makeReport(dataStore, shapesStore);
+    }),
+  });
+};
 
 /**
  * Mock EmbeddingProvider for testing
@@ -170,18 +173,15 @@ export const MockShaclService = (options?: {
  *
  * @since 2.0.0
  */
-const MockEmbeddingProvider = Layer.succeed(
-  EmbeddingProvider,
-  {
-    metadata: {
-      providerId: "nomic",
-      modelId: "test-model",
-      dimension: 768
-    },
-    embedBatch: (_requests) => Effect.succeed(_requests.map(() => new Array(768).fill(0))),
-    cosineSimilarity: (_a, _b) => 0
-  } as EmbeddingProviderMethods
-)
+const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
+  metadata: {
+    providerId: "nomic",
+    modelId: "test-model",
+    dimension: 768,
+  },
+  embedBatch: (_requests) => Effect.succeed(_requests.map(() => new Array(768).fill(0))),
+  cosineSimilarity: (_a, _b) => 0,
+} as EmbeddingProviderMethods);
 
 /**
  * Test Layers
@@ -198,23 +198,17 @@ const MockEmbeddingProvider = Layer.succeed(
  * @since 2.0.0
  */
 // Embedding infrastructure for NlpService.Default
-const EmbeddingInfraLayer = Layer.mergeAll(
-  MockEmbeddingProvider,
-  EmbeddingCache.Default,
-  MetricsService.Default
-)
+const EmbeddingInfraLayer = Layer.mergeAll(MockEmbeddingProvider, EmbeddingCache.Default, MetricsService.Default);
 
 // OntologyService.Default includes NlpService.Default which needs embedding infrastructure
 const ontologyLayer = OntologyService.Default.pipe(
   Layer.provide(EmbeddingInfraLayer),
   Layer.provide(StorageServiceTest),
   Layer.provideMerge(BunServices.layer)
-)
+);
 
 // NlpService bundle with embedding infrastructure provided
-const NlpBundle = NlpService.Default.pipe(
-  Layer.provide(EmbeddingInfraLayer)
-)
+const NlpBundle = NlpService.Default.pipe(Layer.provide(EmbeddingInfraLayer));
 
 export const TestLayers = Layer.mergeAll(
   NlpBundle,
@@ -228,10 +222,7 @@ export const TestLayers = Layer.mergeAll(
   Grounder.Test,
   LlmControlTestLayers,
   BunServices.layer
-).pipe(
-  Layer.provideMerge(ConfigServiceDefault),
-  Layer.provideMerge(ConfigProvider.layer(TestConfigProvider))
-)
+).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(ConfigProvider.layer(TestConfigProvider)));
 
 /**
  * Test Runtime
@@ -240,4 +231,4 @@ export const TestLayers = Layer.mergeAll(
  *
  * @since 2.0.0
  */
-export const TestRuntime = ManagedRuntime.make(TestLayers)
+export const TestRuntime = ManagedRuntime.make(TestLayers);

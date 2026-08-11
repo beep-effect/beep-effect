@@ -147,6 +147,8 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
   get timeout(): Duration.Duration {
     return Duration.millis(this.timeoutMs);
   }
+
+  static readonly is = S.is(this)
 }
 
 /**

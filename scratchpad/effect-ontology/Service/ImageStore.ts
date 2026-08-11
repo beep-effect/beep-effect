@@ -8,14 +8,19 @@
  * @module Service/ImageStore
  */
 
-import type { PlatformError } from "effect/PlatformError"
-import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
-import type { ImageAsset, ImageOwnerType, ImageRef } from "../Domain/Model/Image.ts"
-import { ImageManifest } from "../Domain/Model/Image.ts"
-import { PathLayout } from "../Domain/PathLayout.ts"
-import { ImageBlobStore } from "./ImageBlobStore.ts"
-import { type GenerationMismatchError, StorageService, StorageServiceLive } from "./Storage.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, DateTime, Effect, Layer } from "effect";
+import * as O from "effect/Option";
+import type { PlatformError, SystemError } from "effect/PlatformError";
+import * as S from "effect/Schema";
+import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { ImageAsset, ImageOwnerType, ImageRef } from "../Domain/Model/Image.ts";
+import { ImageManifest } from "../Domain/Model/Image.ts";
+import { PathLayout, StoragePathSegment } from "../Domain/PathLayout.ts";
+import { ImageBlobStore } from "./ImageBlobStore.ts";
+import type { GenerationMismatchError } from "./Storage.ts";
+import { StorageService, StorageServiceLive } from "./Storage.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageStore");
 
 // =============================================================================
@@ -46,17 +51,30 @@ export interface ImageStoreService {
     bytes: Uint8Array,
     contentType: string,
     sourceUrl?: string
-  ) => Effect.Effect<ImageAsset, PlatformError>
+  ) => Effect.Effect<
+    ImageAsset,
+    PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError
+  >;
 
   /**
    * Get image asset metadata by hash
    */
-  readonly getAsset: (hash: string) => Effect.Effect<Option.Option<ImageAsset>, PlatformError>
+  readonly getAsset: (
+    hash: string
+  ) => Effect.Effect<
+    O.Option<ImageAsset>,
+    PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError
+  >;
 
   /**
    * Get raw image bytes by hash
    */
-  readonly getBytes: (hash: string) => Effect.Effect<Option.Option<Uint8Array>, PlatformError>
+  readonly getBytes: (
+    hash: string
+  ) => Effect.Effect<
+    O.Option<Uint8Array>,
+    PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError
+  >;
 
   /**
    * Add an image reference to an owner's manifest
@@ -64,7 +82,9 @@ export interface ImageStoreService {
    *
    * @param ref - The image reference to add
    */
-  readonly addImageRef: (ref: ImageRef) => Effect.Effect<void, PlatformError | GenerationMismatchError>
+  readonly addImageRef: (
+    ref: ImageRef
+  ) => Effect.Effect<void, PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError>;
 
   /**
    * Get all image references for an owner
@@ -72,7 +92,7 @@ export interface ImageStoreService {
   readonly listByOwner: (
     ownerType: ImageOwnerType,
     ownerId: string
-  ) => Effect.Effect<ReadonlyArray<ImageRef>, PlatformError>
+  ) => Effect.Effect<ReadonlyArray<ImageRef>, PlatformError | SystemError | S.SchemaError | KeyValueStoreError>;
 
   /**
    * Get the full manifest for an owner
@@ -80,7 +100,10 @@ export interface ImageStoreService {
   readonly getManifest: (
     ownerType: ImageOwnerType,
     ownerId: string
-  ) => Effect.Effect<Option.Option<ImageManifest>, PlatformError>
+  ) => Effect.Effect<
+    O.Option<ImageManifest>,
+    PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError
+  >;
 
   /**
    * Remove an image reference from an owner's manifest
@@ -93,13 +116,15 @@ export interface ImageStoreService {
     ownerType: ImageOwnerType,
     ownerId: string,
     assetHash: string
-  ) => Effect.Effect<void, PlatformError | GenerationMismatchError>
+  ) => Effect.Effect<void, PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError>;
 
   /**
    * Delete an image asset (bytes and metadata)
    * Note: Does not remove references from owner manifests
    */
-  readonly deleteAsset: (hash: string) => Effect.Effect<void, PlatformError>
+  readonly deleteAsset: (
+    hash: string
+  ) => Effect.Effect<void, PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError>;
 
   /**
    * Get image count for an owner without loading full manifest
@@ -107,13 +132,15 @@ export interface ImageStoreService {
   readonly countByOwner: (
     ownerType: ImageOwnerType,
     ownerId: string
-  ) => Effect.Effect<number, PlatformError>
+  ) => Effect.Effect<
+    number,
+    PlatformError | S.SchemaError | SystemError | GenerationMismatchError | KeyValueStoreError
+  >;
 }
 
 // =============================================================================
 // Service Tag
 // =============================================================================
-
 /**
  * ImageStore service tag
  *
@@ -129,138 +156,110 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
    */
   static readonly Live = Layer.effect(
     ImageStore,
-    Effect.gen(function*() {
-      const blobStore = yield* ImageBlobStore
-      const storage = yield* StorageService
+    Effect.gen(function* () {
+      const blobStore = yield* ImageBlobStore;
+      const storage = yield* StorageService;
 
       /**
        * Load manifest with generation for optimistic locking
        */
-      const loadManifestWithGeneration = (ownerType: ImageOwnerType, ownerId: string) =>
-        Effect.gen(function*() {
-          const path = PathLayout.image.manifest(ownerType, ownerId)
-          const result = yield* storage.getWithGeneration(path)
+      const loadManifestWithGeneration = Effect.fn(function* (ownerType: ImageOwnerType, ownerId: string) {
+        const path = PathLayout.image.manifest(ownerType, StoragePathSegment.make(ownerId));
+        const result = yield* storage.getWithGeneration(path);
 
-          if (Option.isNone(result)) {
-            return Option.none<{ manifest: ImageManifest; generation: string }>()
-          }
+        if (O.isNone(result)) {
+          return O.none<{
+            manifest: ImageManifest;
+            generation: string;
+          }>();
+        }
 
-          const parsed = JSON.parse(result.value.content)
-          const manifest = Schema.decodeUnknownSync(ImageManifest)(parsed)
-          return Option.some({ manifest, generation: result.value.generation })
-        })
+        const manifest = yield* ImageManifest.fromUnknownEffect(result.value.content);
+        return O.some({ manifest, generation: result.value.generation });
+      });
 
       /**
        * Save manifest with optimistic locking
        */
-      const saveManifest = (manifest: ImageManifest, generation: string) =>
-        Effect.gen(function*() {
-          const path = PathLayout.image.manifest(manifest.ownerType, manifest.ownerId)
-          const json = JSON.stringify(Schema.encodeSync(ImageManifest)(manifest), null, 2)
-          yield* storage.setIfGenerationMatch(path, json, generation)
-        })
+      const saveManifest = Effect.fn(function* (manifest: ImageManifest, generation: string) {
+        const path = PathLayout.image.manifest(manifest.ownerType, StoragePathSegment.make(manifest.ownerId));
+        const json = yield* ImageManifest.encodeEffect(manifest);
+        yield* storage.setIfGenerationMatch(path, json, generation);
+      });
 
       return {
-        storeImage: (hash, bytes, contentType, sourceUrl) =>
-          Effect.gen(function*() {
-            // Check if asset already exists (deduplication)
-            const existing = yield* blobStore.getMetadata(hash)
-            if (Option.isSome(existing)) {
-              return existing.value
-            }
-
-            // Store new asset
-            return yield* blobStore.putBytesWithMetadata(hash, bytes, contentType, sourceUrl)
-          }),
-
-        getAsset: (hash) => blobStore.getMetadata(hash),
-
-        getBytes: (hash) => blobStore.getBytes(hash),
-
-        addImageRef: (ref) =>
-          Effect.gen(function*() {
-            const manifestPath = PathLayout.image.manifest(ref.ownerType, ref.ownerId)
-
-            // Try to load existing manifest
-            const existing = yield* loadManifestWithGeneration(ref.ownerType, ref.ownerId)
-
-            if (Option.isSome(existing)) {
-              // Update existing manifest
-              const { generation, manifest } = existing.value
-
-              // Check if this ref already exists (by assetHash and position)
-              const alreadyExists = manifest.images.some(
-                (img) => img.assetHash === ref.assetHash && img.position === ref.position
-              )
-
-              if (!alreadyExists) {
-                const updatedManifest: ImageManifest = {
-                  ...manifest,
-                  images: [...manifest.images, ref].sort((a, b) => a.position - b.position),
-                  totalCount: manifest.totalCount + 1,
-                  updatedAt: DateTime.nowUnsafe()
-                }
-                yield* saveManifest(updatedManifest, generation)
-              }
-            } else {
-              // Create new manifest
-              const newManifest: ImageManifest = {
-                ownerType: ref.ownerType,
-                ownerId: ref.ownerId,
-                images: [ref],
-                totalCount: 1,
-                updatedAt: DateTime.nowUnsafe()
-              }
-              const json = JSON.stringify(Schema.encodeSync(ImageManifest)(newManifest), null, 2)
-              // Use generation "0" for new files
-              yield* storage.setIfGenerationMatch(manifestPath, json, "0")
-            }
-          }),
-
-        listByOwner: (ownerType, ownerId) =>
-          Effect.gen(function*() {
-            const result = yield* loadManifestWithGeneration(ownerType, ownerId)
-            if (Option.isNone(result)) return []
-            return result.value.manifest.images
-          }),
-
-        getManifest: (ownerType, ownerId) =>
-          Effect.gen(function*() {
-            const result = yield* loadManifestWithGeneration(ownerType, ownerId)
-            if (Option.isNone(result)) return Option.none()
-            return Option.some(result.value.manifest)
-          }),
-
-        removeImageRef: (ownerType, ownerId, assetHash) =>
-          Effect.gen(function*() {
-            const existing = yield* loadManifestWithGeneration(ownerType, ownerId)
-            if (Option.isNone(existing)) return
-
-            const { generation, manifest } = existing.value
-            const filtered = manifest.images.filter((img) => img.assetHash !== assetHash)
-
-            if (filtered.length !== manifest.images.length) {
+        storeImage: Effect.fn(function* (hash, bytes, contentType, sourceUrl) {
+          const existing = yield* blobStore.getMetadata(hash);
+          if (O.isSome(existing)) {
+            return existing.value;
+          }
+          return yield* blobStore.putBytesWithMetadata(hash, bytes, contentType, sourceUrl);
+        }),
+        getAsset: Effect.fn("ImageStore.getAsset")((hash) => blobStore.getMetadata(hash)),
+        getBytes: Effect.fn("ImageStore.getBytes")((hash) => blobStore.getBytes(hash)),
+        addImageRef: Effect.fn(function* (ref) {
+          const manifestPath = PathLayout.image.manifest(ref.ownerType, StoragePathSegment.make(ref.ownerId));
+          const existing = yield* loadManifestWithGeneration(ref.ownerType, ref.ownerId);
+          if (O.isSome(existing)) {
+            const { generation, manifest } = existing.value;
+            const alreadyExists = manifest.images.some(
+              (img) => img.assetHash === ref.assetHash && img.position === ref.position
+            );
+            if (!alreadyExists) {
               const updatedManifest: ImageManifest = {
                 ...manifest,
-                images: filtered,
-                totalCount: filtered.length,
-                updatedAt: DateTime.nowUnsafe()
-              }
-              yield* saveManifest(updatedManifest, generation)
+                images: [...manifest.images, ref].sort((a, b) => a.position - b.position),
+                totalCount: manifest.totalCount + 1,
+                updatedAt: DateTime.nowUnsafe(),
+              };
+              yield* saveManifest(updatedManifest, generation);
             }
-          }),
-
-        deleteAsset: (hash) => blobStore.delete(hash),
-
-        countByOwner: (ownerType, ownerId) =>
-          Effect.gen(function*() {
-            const result = yield* loadManifestWithGeneration(ownerType, ownerId)
-            if (Option.isNone(result)) return 0
-            return result.value.manifest.totalCount
-          })
-      }
+          } else {
+            const newManifest: ImageManifest = {
+              ownerType: ref.ownerType,
+              ownerId: ref.ownerId,
+              images: [ref],
+              totalCount: 1,
+              updatedAt: DateTime.nowUnsafe(),
+            };
+            const json = yield* S.encodeEffect(S.fromJsonString(ImageManifest, { space: 2 }))(newManifest);
+            yield* storage.setIfGenerationMatch(manifestPath, json, "0");
+          }
+        }),
+        listByOwner: Effect.fn(function* (ownerType, ownerId) {
+          const result = yield* loadManifestWithGeneration(ownerType, ownerId);
+          if (O.isNone(result)) return [];
+          return result.value.manifest.images;
+        }),
+        getManifest: Effect.fn(function* (ownerType, ownerId) {
+          const result = yield* loadManifestWithGeneration(ownerType, ownerId);
+          if (O.isNone(result)) return O.none();
+          return O.some(result.value.manifest);
+        }),
+        removeImageRef: Effect.fn(function* (ownerType, ownerId, assetHash) {
+          const existing = yield* loadManifestWithGeneration(ownerType, ownerId);
+          if (O.isNone(existing)) return;
+          const { generation, manifest } = existing.value;
+          const filtered = manifest.images.filter((img) => img.assetHash !== assetHash);
+          if (filtered.length !== manifest.images.length) {
+            const updatedManifest: ImageManifest = {
+              ...manifest,
+              images: filtered,
+              totalCount: filtered.length,
+              updatedAt: DateTime.nowUnsafe(),
+            };
+            yield* saveManifest(updatedManifest, generation);
+          }
+        }),
+        deleteAsset: Effect.fn("ImageStore.deleteAsset")((hash) => blobStore.delete(hash)),
+        countByOwner: Effect.fn(function* (ownerType, ownerId) {
+          const result = yield* loadManifestWithGeneration(ownerType, ownerId);
+          if (O.isNone(result)) return 0;
+          return result.value.manifest.totalCount;
+        }),
+      };
     })
-  )
+  );
 
   /**
    * Default layer with all dependencies
@@ -268,8 +267,5 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
    * @since 2.0.0
    * @category Layers
    */
-  static readonly Default = ImageStore.Live.pipe(
-    Layer.provide(ImageBlobStore.Live),
-    Layer.provide(StorageServiceLive)
-  )
+  static readonly Default = ImageStore.Live.pipe(Layer.provide(ImageBlobStore.Live), Layer.provide(StorageServiceLive));
 }

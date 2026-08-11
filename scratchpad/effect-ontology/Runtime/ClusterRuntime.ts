@@ -28,9 +28,10 @@
  * @module Runtime/ClusterRuntime
  */
 
-import { ShardingConfig, SingleRunner } from "effect/unstable/cluster"
-import { SqliteClient } from "@effect/sql-sqlite-bun"
-import { Config, Effect, Layer, Option } from "effect"
+import { SqliteClient } from "@effect/sql-sqlite-bun";
+import { Config, Effect, Layer, Option } from "effect";
+import * as P from "effect/Predicate";
+import { ShardingConfig, SingleRunner } from "effect/unstable/cluster";
 
 /**
  * Build a durable single-runner cluster layer using sqlite (dev-friendly).
@@ -39,24 +40,21 @@ import { Config, Effect, Layer, Option } from "effect"
  * @param options.prefix   Table prefix for cluster tables (default: corev2)
  * @param options.runnerStorage Use in-memory runner storage (for tests) if "memory"
  */
-export const ClusterSqliteLive = (options?: {
-  readonly filename?: string
-  readonly runnerStorage?: "memory"
-}) => {
-  const filename = options?.filename ?? "output/cluster.db"
+export const ClusterSqliteLive = (options?: { readonly filename?: string; readonly runnerStorage?: "memory" }) => {
+  const filename = options?.filename ?? "output/cluster.db";
 
   const sqliteLayer = SqliteClient.layer({
     filename,
     create: true,
-    readonly: false
-  })
+    readonly: false,
+  });
 
   const runnerLayer = SingleRunner.layer({
-    runnerStorage: options?.runnerStorage
-  })
+    ...(P.isNotUndefined(options?.runnerStorage) ? { runnerStorage: options.runnerStorage } : {}),
+  });
 
-  return Layer.provide(runnerLayer, sqliteLayer)
-}
+  return Layer.provide(runnerLayer, sqliteLayer);
+};
 
 /**
  * Helper to build a SingleRunner layer when a SqlClient is already provided
@@ -66,19 +64,17 @@ export const ClusterSqliteLive = (options?: {
  * @param options.prefix Table prefix for cluster tables (default: corev2)
  * @param options.runnerStorage Optional "memory" for tests
  */
-export const ClusterWithSqlClient = (options?: {
-  readonly runnerStorage?: "memory"
-}) =>
+export const ClusterWithSqlClient = (options?: { readonly runnerStorage?: "memory" }) =>
   SingleRunner.layer({
-    runnerStorage: options?.runnerStorage
-  })
+    ...(P.isNotUndefined(options?.runnerStorage) ? { runnerStorage: options.runnerStorage } : {}),
+  });
 
 /**
  * ShardingConfig layer sourced from environment, exposed for convenience.
  * Can be provided to override defaults (e.g., shardsPerGroup, lock TTL).
  */
 export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof ShardingConfig.layerFromEnv>[0]) =>
-  ShardingConfig.layerFromEnv(options)
+  ShardingConfig.layerFromEnv(options);
 
 /**
  * Build the sqlite-backed SingleRunner using environment overrides:
@@ -86,17 +82,13 @@ export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof Shardin
  * - CLUSTER_RUNNER_STORAGE (default: durable; set to "memory" for tests)
  */
 export const ClusterSqliteLiveFromEnv = Layer.unwrap(
-  Effect.gen(function*() {
-    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(
-      Config.withDefault("output/cluster.db")
-    )
-    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(
-      Config.withDefault("durable")
-    )
-    const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined
-    return ClusterSqliteLive({ filename, runnerStorage })
+  Effect.gen(function* () {
+    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
+    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
+    const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined;
+    return ClusterSqliteLive({ filename, ...(P.isNotUndefined(runnerStorage) ? { runnerStorage } : {}) });
   })
-)
+);
 
 /**
  * Auto-select cluster storage based on env:
@@ -107,28 +99,22 @@ export const ClusterSqliteLiveFromEnv = Layer.unwrap(
  * and fall back to sqlite.
  */
 export const ClusterAutoLiveFromEnv = Layer.unwrap(
-  Effect.gen(function*() {
-    const dbUrlOpt = yield* Config.string("CLUSTER_DB_URL").pipe(Config.option)
-    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(
-      Config.withDefault("durable")
-    )
-    const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined
-    const dbUrl = Option.getOrUndefined(dbUrlOpt)
+  Effect.gen(function* () {
+    const dbUrlOpt = yield* Config.string("CLUSTER_DB_URL").pipe(Config.option);
+    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
+    const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined;
+    const dbUrl = Option.getOrUndefined(dbUrlOpt);
 
-    if (dbUrl) {
+    if (P.isNotUndefined(dbUrl)) {
       if (dbUrl.startsWith("sqlite:")) {
-        const filename = dbUrl.replace("sqlite:", "")
-        return ClusterSqliteLive({ filename, runnerStorage })
+        const filename = dbUrl.replace("sqlite:", "");
+        return ClusterSqliteLive({ filename, ...(P.isNotUndefined(runnerStorage) ? { runnerStorage } : {}) });
       } else {
-        yield* Effect.logWarning(
-          `CLUSTER_DB_URL=${dbUrl} is set but no driver is wired; falling back to sqlite`
-        )
+        yield* Effect.logWarning(`CLUSTER_DB_URL=${dbUrl} is set but no driver is wired; falling back to sqlite`);
       }
     }
 
-    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(
-      Config.withDefault("output/cluster.db")
-    )
-    return ClusterSqliteLive({ filename, runnerStorage })
+    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
+    return ClusterSqliteLive({ filename, ...(P.isNotUndefined(runnerStorage) ? { runnerStorage } : {}) });
   })
-)
+);

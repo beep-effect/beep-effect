@@ -10,15 +10,20 @@
  * @module Service/Grounder
  */
 
-import { LanguageModel } from "effect/unstable/ai"
-import { Chunk, Effect, Layer, Schema, Stream, Context } from "effect"
-import type { Entity, Relation } from "../Domain/Model/Entity.ts"
-import type { PropertyDefinition } from "../Domain/Model/Ontology.ts"
-import { LlmAttributes } from "../Telemetry/LlmAttributes.ts"
-import { ConfigService, ConfigServiceDefault } from "./Config.ts"
-import { StageTimeoutService, StageTimeoutServiceLive } from "./LlmControl/StageTimeout.ts"
-import { generateObjectWithRetry } from "./LlmWithRetry.ts"
-import { $ScratchpadId } from "@beep/identity";
+import {$ScratchpadId} from "@beep/identity";
+import {Context, Effect, Layer, Schema, Stream} from "effect";
+import * as P from "effect/Predicate";
+import {LanguageModel} from "effect/unstable/ai";
+import type {Entity, Relation} from "../Domain/Model/Entity.ts";
+import type {PropertyDefinition} from "../Domain/Model/Ontology.ts";
+import {LlmAttributes} from "../Telemetry/LlmAttributes.ts";
+import {ConfigService, ConfigServiceDefault} from "./Config.ts";
+import {
+  StageTimeoutService,
+  StageTimeoutServiceLive
+} from "./LlmControl/StageTimeout.ts";
+import {generateObjectWithRetry} from "./LlmWithRetry.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
 
 /**
@@ -26,11 +31,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
  */
 const VerificationSchema = Schema.Struct({
   grounded: Schema.Boolean,
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
+  confidence: Schema.Finite.check(Schema.isBetween({minimum: 0, maximum: 1})),
 }).annotate({
   identifier: "GroundingDecision",
-  description: "Indicates whether a triple is grounded in the provided context"
-})
+  description: "Indicates whether a triple is grounded in the provided context",
+});
 
 /**
  * Batch verification result schema
@@ -38,39 +43,45 @@ const VerificationSchema = Schema.Struct({
 const BatchVerificationSchema = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      index: Schema.Number.annotate({
-        description: "Index of the triple in the input list (0-based)"
+      index: Schema.Finite.annotate({
+        description: "Index of the triple in the input list (0-based)",
       }),
       grounded: Schema.Boolean.annotate({
-        description: "Whether this triple is supported by the context"
+        description: "Whether this triple is supported by the context",
       }),
-      confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
-        description: "Confidence score from 0 to 1"
-      })
+      confidence: Schema.Finite.check(Schema.isBetween({
+        minimum: 0,
+        maximum: 1
+      })).annotate({
+        description: "Confidence score from 0 to 1",
+      }),
     })
-  )
+  ),
 }).annotate({
   identifier: "BatchGroundingDecision",
-  description: "Verification results for multiple triples"
-})
+  description: "Verification results for multiple triples",
+});
 
 /**
  * Entity verification result schema returned by LLM
  */
 const EntityVerificationSchema = Schema.Struct({
   grounded: Schema.Boolean.annotate({
-    description: "Whether the entity mention is found in the context"
+    description: "Whether the entity mention is found in the context",
   }),
   typeMatch: Schema.Boolean.annotate({
-    description: "Whether the assigned types match the context"
+    description: "Whether the assigned types match the context",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
-    description: "Overall grounding confidence score"
-  })
+  confidence: Schema.Finite.check(Schema.isBetween({
+    minimum: 0,
+    maximum: 1
+  })).annotate({
+    description: "Overall grounding confidence score",
+  }),
 }).annotate({
   identifier: "EntityGroundingDecision",
-  description: "Verification result for an extracted entity"
-})
+  description: "Verification result for an extracted entity",
+});
 
 /**
  * Batch entity verification result schema
@@ -78,61 +89,64 @@ const EntityVerificationSchema = Schema.Struct({
 const BatchEntityVerificationSchema = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      index: Schema.Number.annotate({
-        description: "Index of the entity in the input list (0-based)"
+      index: Schema.Finite.annotate({
+        description: "Index of the entity in the input list (0-based)",
       }),
       grounded: Schema.Boolean.annotate({
-        description: "Whether the entity mention is found in the context"
+        description: "Whether the entity mention is found in the context",
       }),
       typeMatch: Schema.Boolean.annotate({
-        description: "Whether the assigned types match the context"
+        description: "Whether the assigned types match the context",
       }),
-      confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
-        description: "Overall grounding confidence score"
-      })
+      confidence: Schema.Finite.check(Schema.isBetween({
+        minimum: 0,
+        maximum: 1
+      })).annotate({
+        description: "Overall grounding confidence score",
+      }),
     })
-  )
+  ),
 }).annotate({
   identifier: "BatchEntityGroundingDecision",
-  description: "Verification results for multiple entities"
-})
+  description: "Verification results for multiple entities",
+});
 
 /**
  * Input required to verify an entity
  */
 export interface EntityVerificationInput {
-  readonly context: string
-  readonly entity: Entity
+  readonly context: string;
+  readonly entity: Entity;
 }
 
 /**
  * Entity grounding result
  */
 export interface EntityGrounderResult {
-  readonly grounded: boolean
-  readonly typeMatch: boolean
-  readonly confidence: number
-  readonly entity: Entity
+  readonly grounded: boolean;
+  readonly typeMatch: boolean;
+  readonly confidence: number;
+  readonly entity: Entity;
 }
 
 /**
  * Input required to verify a relation triple
  */
 export interface RelationVerificationInput {
-  readonly context: string
+  readonly context: string;
   readonly object?: {
-    readonly entityId?: string
-    readonly literal?: string | number | boolean
-    readonly mention?: string
-    readonly types?: ReadonlyArray<string>
-  }
-  readonly predicate?: PropertyDefinition
-  readonly relation: Relation
+    readonly entityId?: string;
+    readonly literal?: string | number | boolean;
+    readonly mention?: string;
+    readonly types?: ReadonlyArray<string>;
+  };
+  readonly predicate?: PropertyDefinition;
+  readonly relation: Relation;
   readonly subject?: {
-    readonly entityId: string
-    readonly mention: string
-    readonly types: ReadonlyArray<string>
-  }
+    readonly entityId: string;
+    readonly mention: string;
+    readonly types: ReadonlyArray<string>;
+  };
 }
 
 /**
@@ -141,26 +155,26 @@ export interface RelationVerificationInput {
  * @internal
  */
 const buildGrounderPrompt = ({
-  context,
-  object,
-  predicate,
-  relation,
-  subject
-}: RelationVerificationInput): string => {
-  const predicateLabel = predicate?.label ?? relation.predicate
-  const subjectLabel = subject
-    ? `${subject.mention} (${subject.entityId})`
-    : relation.subjectId
+                               context,
+                               object,
+                               predicate,
+                               relation,
+                               subject
+                             }: RelationVerificationInput): string => {
+  const predicateLabel = predicate?.label ?? relation.predicate;
+  const subjectLabel = P.isNotUndefined(subject) ? `${subject.mention} (${subject.entityId})` : relation.subjectId;
 
-  const objectLabel = typeof relation.object === "string"
-    ? object?.mention
-      ? `${object.mention} (${relation.object})`
-      : relation.object
-    : String(relation.object)
+  const objectLabel =
+    typeof relation.object === "string"
+      ? P.isNotUndefined(object?.mention)
+        ? `${object.mention} (${relation.object})`
+        : relation.object
+      : String(relation.object);
 
-  const objectDetail = typeof relation.object === "string" && object?.types
-    ? `\nObject types: ${object.types.join(", ")}`
-    : ""
+  const objectDetail =
+    typeof relation.object === "string" && P.isNotUndefined(object?.types)
+      ? `\nObject types: ${object.types.join(", ")}`
+      : "";
 
   return `You are a verifier that determines whether a triple is grounded in the provided context.
 
@@ -174,45 +188,36 @@ Instructions:
 - Answer using JSON matching the schema { "grounded": boolean, "confidence": number between 0 and 1 }
 - "grounded" is true if and only if the triple is explicitly supported by the context.
 - Confidence should reflect how certain you are about the grounding decision.
-- Do not use external knowledge beyond the provided context.`
-}
+- Do not use external knowledge beyond the provided context.`;
+};
 
 /**
  * Format a single relation for batch verification prompt
  *
  * @internal
  */
-const formatRelationForBatch = (
-  input: RelationVerificationInput,
-  index: number
-): string => {
-  const { object, predicate, relation, subject } = input
-  const predicateLabel = predicate?.label ?? relation.predicate
-  const subjectLabel = subject
-    ? `${subject.mention} (${subject.entityId})`
-    : relation.subjectId
+const formatRelationForBatch = (input: RelationVerificationInput, index: number): string => {
+  const {object, predicate, relation, subject} = input;
+  const predicateLabel = predicate?.label ?? relation.predicate;
+  const subjectLabel = P.isNotUndefined(subject) ? `${subject.mention} (${subject.entityId})` : relation.subjectId;
 
-  const objectLabel = typeof relation.object === "string"
-    ? object?.mention
-      ? `${object.mention} (${relation.object})`
-      : relation.object
-    : String(relation.object)
+  const objectLabel =
+    typeof relation.object === "string"
+      ? P.isNotUndefined(object?.mention)
+        ? `${object.mention} (${relation.object})`
+        : relation.object
+      : String(relation.object);
 
-  return `${index}. <${subjectLabel}, ${predicateLabel}, ${objectLabel}>`
-}
+  return `${index}. <${subjectLabel}, ${predicateLabel}, ${objectLabel}>`;
+};
 
 /**
  * Build prompt for batch relation verification
  *
  * @internal
  */
-const buildBatchGrounderPrompt = (
-  context: string,
-  inputs: ReadonlyArray<RelationVerificationInput>
-): string => {
-  const triplesFormatted = inputs
-    .map((input, index) => formatRelationForBatch(input, index))
-    .join("\n")
+const buildBatchGrounderPrompt = (context: string, inputs: ReadonlyArray<RelationVerificationInput>): string => {
+  const triplesFormatted = inputs.map((input, index) => formatRelationForBatch(input, index)).join("\n");
 
   return `You are a verifier that determines whether triples are grounded in the provided context.
 
@@ -228,8 +233,8 @@ Instructions:
 - Each result should have: { "index": <triple number>, "grounded": boolean, "confidence": number between 0 and 1 }
 - "grounded" is true if and only if the triple is explicitly stated or clearly implied by the context.
 - Do not use external knowledge beyond the provided context.
-- Return results for ALL triples in the same order as provided.`
-}
+- Return results for ALL triples in the same order as provided.`;
+};
 
 /**
  * Build prompt for single entity verification
@@ -237,10 +242,10 @@ Instructions:
  * @internal
  */
 const buildEntityGrounderPrompt = ({
-  context,
-  entity
-}: EntityVerificationInput): string => {
-  const typesStr = entity.types.join(", ")
+                                     context,
+                                     entity
+                                   }: EntityVerificationInput): string => {
+  const typesStr = entity.types.join(", ");
 
   return `You are a verifier that determines whether an extracted entity is grounded in the provided context.
 
@@ -258,8 +263,8 @@ Instructions:
 - "grounded" is true if the entity mention is found or clearly referenced in the context.
 - "typeMatch" is true if the assigned types match what the context implies about the entity.
 - "confidence" is your overall confidence in the grounding (0-1).
-- Do not use external knowledge beyond the provided context.`
-}
+- Do not use external knowledge beyond the provided context.`;
+};
 
 /**
  * Format entity for batch verification
@@ -267,22 +272,17 @@ Instructions:
  * @internal
  */
 const formatEntityForBatch = (entity: Entity, index: number): string => {
-  const typesStr = entity.types.join(", ")
-  return `${index}. "${entity.mention}" [${typesStr}]`
-}
+  const typesStr = entity.types.join(", ");
+  return `${index}. "${entity.mention}" [${typesStr}]`;
+};
 
 /**
  * Build prompt for batch entity verification
  *
  * @internal
  */
-const buildBatchEntityGrounderPrompt = (
-  context: string,
-  entities: ReadonlyArray<Entity>
-): string => {
-  const entitiesFormatted = entities
-    .map((entity, index) => formatEntityForBatch(entity, index))
-    .join("\n")
+const buildBatchEntityGrounderPrompt = (context: string, entities: ReadonlyArray<Entity>): string => {
+  const entitiesFormatted = entities.map((entity, index) => formatEntityForBatch(entity, index)).join("\n");
 
   return `You are a verifier that determines whether extracted entities are grounded in the provided context.
 
@@ -300,22 +300,22 @@ Instructions:
 - "typeMatch" is true if the assigned types match the context.
 - "confidence" is your overall grounding confidence (0-1).
 - Do not use external knowledge beyond the provided context.
-- Return results for ALL entities in the same order.`
-}
+- Return results for ALL entities in the same order.`;
+};
 
 /**
  * Grounder verification result
  */
 export interface GrounderResult {
-  readonly grounded: boolean
-  readonly confidence: number
-  readonly relation: Relation
+  readonly grounded: boolean;
+  readonly confidence: number;
+  readonly relation: Relation;
 }
 
 /**
  * Default batch size for grouped verification
  */
-const DEFAULT_BATCH_SIZE = 5
+const DEFAULT_BATCH_SIZE = 5;
 
 /**
  * Grounder Service
@@ -326,23 +326,16 @@ const DEFAULT_BATCH_SIZE = 5
  * @since 2.0.0
  */
 export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
-  make: Effect.gen(function*() {
-    const config = yield* ConfigService
-    const timeout = yield* StageTimeoutService
-    const llm = yield* LanguageModel.LanguageModel
+  make: Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const timeout = yield* StageTimeoutService;
+    const llm = yield* LanguageModel.LanguageModel;
 
     return {
-      /**
-       * Verify whether a single relation triple is grounded in the context
-       *
-       * @param input - Verification input
-       * @returns Verification decision with confidence score
-       */
-      verifyRelation: (input: RelationVerificationInput) =>
-        Effect.gen(function*() {
-          const prompt = buildGrounderPrompt(input)
-          // Wrapped with stage timeout for soft/hard timeout protection
-          const result = yield* timeout.withTimeout(
+      verifyRelation: Effect.fn("Grounder.verifyRelation")(function* (input: RelationVerificationInput) {
+        const prompt = buildGrounderPrompt(input);
+        const result = yield* timeout
+          .withTimeout(
             "grounding",
             generateObjectWithRetry({
               llm,
@@ -356,61 +349,46 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 initialDelayMs: config.runtime.retryInitialDelayMs,
                 maxDelayMs: config.runtime.retryMaxDelayMs,
                 maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 2
+                timeoutMs: config.llm.timeoutMs * 2,
               },
               spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length
+                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
               },
               annotateSuccess: (response) => ({
                 grounded: response.value.grounded,
-                confidence: response.value.confidence
-              })
+                confidence: response.value.confidence,
+              }),
             }),
             () =>
               Effect.logWarning("Grounder verification approaching timeout", {
                 stage: "grounding",
                 subjectId: input.relation.subjectId,
-                predicate: input.relation.predicate
+                predicate: input.relation.predicate,
               })
-          ).pipe(
+          )
+          .pipe(
             Effect.tap((response) =>
               Effect.logDebug("Grounder verification result", {
                 stage: "grounder",
                 grounded: response.value.grounded,
-                confidence: response.value.confidence
+                confidence: response.value.confidence,
               })
             ),
             Effect.withSpan("grounder-single-verification")
-          )
-
-          return {
-            grounded: result.value.grounded,
-            confidence: result.value.confidence,
-            relation: input.relation
-          }
-        }),
-
-      /**
-       * Verify a batch of relations in a single LLM call
-       *
-       * More efficient than verifying one at a time.
-       *
-       * @param context - Shared context for all relations
-       * @param inputs - Array of verification inputs (all should share same context)
-       * @returns Array of verification results
-       */
-      verifyRelationBatch: (
-        context: string,
-        inputs: ReadonlyArray<RelationVerificationInput>
-      ) =>
-        Effect.gen(function*() {
+          );
+        return {
+          grounded: result.value.grounded,
+          confidence: result.value.confidence,
+          relation: input.relation,
+        };
+      }),
+      verifyRelationBatch:
+        Effect.fn(function* (context: string, inputs: ReadonlyArray<RelationVerificationInput>) {
           if (inputs.length === 0) {
-            return []
+            return [];
           }
-
-          // If only one input, use single verification for efficiency
           if (inputs.length === 1) {
-            const prompt = buildGrounderPrompt(inputs[0])
+            const prompt = buildGrounderPrompt(inputs[0]);
             const result = yield* timeout.withTimeout(
               "grounding",
               generateObjectWithRetry({
@@ -425,33 +403,31 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                   initialDelayMs: config.runtime.retryInitialDelayMs,
                   maxDelayMs: config.runtime.retryMaxDelayMs,
                   maxAttempts: config.runtime.retryMaxAttempts,
-                  timeoutMs: config.llm.timeoutMs * 2
+                  timeoutMs: config.llm.timeoutMs * 2,
                 },
                 spanAttributes: {
-                  [LlmAttributes.PROMPT_LENGTH]: prompt.length
+                  [LlmAttributes.PROMPT_LENGTH]: prompt.length,
                 },
                 annotateSuccess: (response) => ({
                   grounded: response.value.grounded,
-                  confidence: response.value.confidence
-                })
+                  confidence: response.value.confidence,
+                }),
               }),
               () =>
                 Effect.logWarning("Grounder single verification approaching timeout", {
                   stage: "grounding",
-                  subjectId: inputs[0].relation.subjectId
+                  subjectId: inputs[0].relation.subjectId,
                 })
-            )
-            return [{
-              grounded: result.value.grounded,
-              confidence: result.value.confidence,
-              relation: inputs[0].relation
-            }]
+            );
+            return [
+              {
+                grounded: result.value.grounded,
+                confidence: result.value.confidence,
+                relation: inputs[0].relation,
+              },
+            ];
           }
-
-          // Batch verification
-          const prompt = buildBatchGrounderPrompt(context, inputs)
-
-          // Wrapped with stage timeout for soft/hard timeout protection
+          const prompt = buildBatchGrounderPrompt(context, inputs);
           const response = yield* timeout.withTimeout(
             "grounding",
             generateObjectWithRetry({
@@ -466,136 +442,118 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 initialDelayMs: config.runtime.retryInitialDelayMs,
                 maxDelayMs: config.runtime.retryMaxDelayMs,
                 maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 3
+                timeoutMs: config.llm.timeoutMs * 3,
               },
               spanAttributes: {
                 [LlmAttributes.RELATION_COUNT]: inputs.length,
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length
-              }
+                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              },
             }),
             () =>
               Effect.logWarning("Grounder batch verification approaching timeout", {
                 stage: "grounding",
-                batchSize: inputs.length
+                batchSize: inputs.length,
               })
-          )
-
-          // Map results back to inputs
-          type GrounderResult = { index: number; grounded: boolean; confidence: number }
+          );
+          type GrounderResult = {
+            index: number;
+            grounded: boolean;
+            confidence: number;
+          };
           const resultsMap = new Map(
             (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
-          )
-
+          );
           return inputs.map((input, index) => {
-            const result = resultsMap.get(index)
+            const result = resultsMap.get(index);
             return {
               grounded: result?.grounded ?? false,
               confidence: result?.confidence ?? 0,
-              relation: input.relation
-            }
-          })
-        }).pipe(
+              relation: input.relation,
+            };
+          });
+        }, (effect, inputs) => effect.pipe(
           Effect.tap((results) =>
             Effect.all([
               Effect.logDebug("Grounder batch verification complete", {
                 stage: "grounder",
                 batchSize: inputs.length,
-                groundedCount: results.filter((r) => r.grounded).length
+                groundedCount: results.filter((r) => r.grounded).length,
               }),
               Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, inputs.length),
-              Effect.annotateCurrentSpan("grounder.grounded_count", results.filter((r) => r.grounded).length)
+              Effect.annotateCurrentSpan("grounder.grounded_count", results.filter((r) => r.grounded).length),
             ])
           ),
           Effect.withSpan("grounder-batch-verification", {
             attributes: {
-              [LlmAttributes.RELATION_COUNT]: inputs.length
-            }
+              [LlmAttributes.RELATION_COUNT]: inputs.length,
+            },
           })
-        ),
-
-      /**
-       * Verify relations using batched streaming
-       *
-       * Groups relations into batches and processes each batch in one LLM call.
-       * More efficient for large numbers of relations.
-       *
-       * @param context - Shared context
-       * @param relations - Stream of verification inputs
-       * @param batchSize - Number of relations per batch (default: 5)
-       * @returns Stream of verification results
-       */
+        )),
       verifyRelationStream: (
         context: string,
         relations: Stream.Stream<RelationVerificationInput>,
         batchSize: number = DEFAULT_BATCH_SIZE
       ) =>
         relations.pipe(
-          // Group into batches
           Stream.grouped(batchSize),
-          // Process each batch with single LLM call, wrapped with timeout
           Stream.mapEffect((batch) => {
-            const batchArray = Chunk.toReadonlyArray(batch)
-            const prompt = buildBatchGrounderPrompt(context, batchArray)
-            return timeout.withTimeout(
-              "grounding",
-              generateObjectWithRetry({
-                llm,
-                prompt,
-                schema: BatchVerificationSchema,
-                objectName: "BatchGroundingDecision",
-                serviceName: "Grounder",
-                model: config.llm.model,
-                provider: config.llm.provider,
-                retryConfig: {
-                  initialDelayMs: config.runtime.retryInitialDelayMs,
-                  maxDelayMs: config.runtime.retryMaxDelayMs,
-                  maxAttempts: config.runtime.retryMaxAttempts,
-                  timeoutMs: config.llm.timeoutMs * 3
-                },
-                spanAttributes: {
-                  [LlmAttributes.RELATION_COUNT]: batchArray.length,
-                  [LlmAttributes.PROMPT_LENGTH]: prompt.length
-                }
-              }),
-              () =>
-                Effect.logWarning("Grounder stream batch approaching timeout", {
-                  stage: "grounding",
-                  batchSize: batchArray.length
+            const batchArray = batch;
+            const prompt = buildBatchGrounderPrompt(context, batchArray);
+            return timeout
+              .withTimeout(
+                "grounding",
+                generateObjectWithRetry({
+                  llm,
+                  prompt,
+                  schema: BatchVerificationSchema,
+                  objectName: "BatchGroundingDecision",
+                  serviceName: "Grounder",
+                  model: config.llm.model,
+                  provider: config.llm.provider,
+                  retryConfig: {
+                    initialDelayMs: config.runtime.retryInitialDelayMs,
+                    maxDelayMs: config.runtime.retryMaxDelayMs,
+                    maxAttempts: config.runtime.retryMaxAttempts,
+                    timeoutMs: config.llm.timeoutMs * 3,
+                  },
+                  spanAttributes: {
+                    [LlmAttributes.RELATION_COUNT]: batchArray.length,
+                    [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+                  },
+                }),
+                () =>
+                  Effect.logWarning("Grounder stream batch approaching timeout", {
+                    stage: "grounding",
+                    batchSize: batchArray.length,
+                  })
+              )
+              .pipe(
+                Effect.map((response) => {
+                  type GrounderResult = {
+                    index: number;
+                    grounded: boolean;
+                    confidence: number;
+                  };
+                  const resultsMap = new Map(
+                    (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
+                  );
+                  return batchArray.map((input, index) => {
+                    const result = resultsMap.get(index);
+                    return {
+                      grounded: result?.grounded ?? false,
+                      confidence: result?.confidence ?? 0,
+                      relation: input.relation,
+                    };
+                  });
                 })
-            ).pipe(
-              Effect.map((response) => {
-                type GrounderResult = { index: number; grounded: boolean; confidence: number }
-                const resultsMap = new Map(
-                  (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
-                )
-                return batchArray.map((input, index) => {
-                  const result = resultsMap.get(index)
-                  return {
-                    grounded: result?.grounded ?? false,
-                    confidence: result?.confidence ?? 0,
-                    relation: input.relation
-                  }
-                })
-              })
-            )
+              );
           }),
-          // Flatten batch results
-          Stream.mapConcat((results) => results)
+          Stream.flattenIterable
         ),
-
-      /**
-       * Verify whether a single entity is grounded in the context
-       *
-       * Checks if the entity mention appears in the context and if the
-       * assigned types match what the context says about the entity.
-       *
-       * @param input - Entity verification input with context and entity
-       * @returns Verification result with grounding confidence
-       */
-      verifyEntity: (input: EntityVerificationInput) =>
-        Effect.gen(function*() {
-          const prompt = buildEntityGrounderPrompt(input)
-          const result = yield* timeout.withTimeout(
+      verifyEntity: Effect.fn("Grounder.verifyEntity")(function* (input: EntityVerificationInput) {
+        const prompt = buildEntityGrounderPrompt(input);
+        const result = yield* timeout
+          .withTimeout(
             "grounding",
             generateObjectWithRetry({
               llm,
@@ -609,65 +567,50 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 initialDelayMs: config.runtime.retryInitialDelayMs,
                 maxDelayMs: config.runtime.retryMaxDelayMs,
                 maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 2
+                timeoutMs: config.llm.timeoutMs * 2,
               },
               spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length
+                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
               },
               annotateSuccess: (response) => ({
                 grounded: response.value.grounded,
                 typeMatch: response.value.typeMatch,
-                confidence: response.value.confidence
-              })
+                confidence: response.value.confidence,
+              }),
             }),
             () =>
               Effect.logWarning("Grounder entity verification approaching timeout", {
                 stage: "grounding",
-                entityId: input.entity.id
+                entityId: input.entity.id,
               })
-          ).pipe(
+          )
+          .pipe(
             Effect.tap((response) =>
               Effect.logDebug("Grounder entity verification result", {
                 stage: "grounder",
                 entityId: input.entity.id,
                 grounded: response.value.grounded,
                 typeMatch: response.value.typeMatch,
-                confidence: response.value.confidence
+                confidence: response.value.confidence,
               })
             ),
             Effect.withSpan("grounder-entity-verification")
-          )
-
-          return {
-            grounded: result.value.grounded,
-            typeMatch: result.value.typeMatch,
-            confidence: result.value.confidence,
-            entity: input.entity
-          }
-        }),
-
-      /**
-       * Verify a batch of entities in a single LLM call
-       *
-       * More efficient than verifying entities one at a time.
-       *
-       * @param context - Shared context for all entities
-       * @param entities - Array of entities to verify
-       * @returns Array of entity verification results
-       */
-      verifyEntityBatch: (
-        context: string,
-        entities: ReadonlyArray<Entity>
-      ) =>
-        Effect.gen(function*() {
+          );
+        return {
+          grounded: result.value.grounded,
+          typeMatch: result.value.typeMatch,
+          confidence: result.value.confidence,
+          entity: input.entity,
+        };
+      }),
+      verifyEntityBatch:
+        Effect.fn(function* (context: string, entities: ReadonlyArray<Entity>) {
           if (entities.length === 0) {
-            return []
+            return [];
           }
-
-          // If only one entity, use single verification
           if (entities.length === 1) {
-            const input = { context, entity: entities[0] }
-            const prompt = buildEntityGrounderPrompt(input)
+            const input = {context, entity: entities[0]};
+            const prompt = buildEntityGrounderPrompt(input);
             const result = yield* timeout.withTimeout(
               "grounding",
               generateObjectWithRetry({
@@ -682,29 +625,28 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                   initialDelayMs: config.runtime.retryInitialDelayMs,
                   maxDelayMs: config.runtime.retryMaxDelayMs,
                   maxAttempts: config.runtime.retryMaxAttempts,
-                  timeoutMs: config.llm.timeoutMs * 2
+                  timeoutMs: config.llm.timeoutMs * 2,
                 },
                 spanAttributes: {
-                  [LlmAttributes.PROMPT_LENGTH]: prompt.length
-                }
+                  [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+                },
               }),
               () =>
                 Effect.logWarning("Grounder single entity verification approaching timeout", {
                   stage: "grounding",
-                  entityId: entities[0].id
+                  entityId: entities[0].id,
                 })
-            )
-            return [{
-              grounded: result.value.grounded,
-              typeMatch: result.value.typeMatch,
-              confidence: result.value.confidence,
-              entity: entities[0]
-            }]
+            );
+            return [
+              {
+                grounded: result.value.grounded,
+                typeMatch: result.value.typeMatch,
+                confidence: result.value.confidence,
+                entity: entities[0],
+              },
+            ];
           }
-
-          // Batch verification
-          const prompt = buildBatchEntityGrounderPrompt(context, entities)
-
+          const prompt = buildBatchEntityGrounderPrompt(context, entities);
           const response = yield* timeout.withTimeout(
             "grounding",
             generateObjectWithRetry({
@@ -719,54 +661,56 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 initialDelayMs: config.runtime.retryInitialDelayMs,
                 maxDelayMs: config.runtime.retryMaxDelayMs,
                 maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 3
+                timeoutMs: config.llm.timeoutMs * 3,
               },
               spanAttributes: {
                 [LlmAttributes.ENTITY_COUNT]: entities.length,
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length
-              }
+                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              },
             }),
             () =>
               Effect.logWarning("Grounder batch entity verification approaching timeout", {
                 stage: "grounding",
-                batchSize: entities.length
+                batchSize: entities.length,
               })
-          )
-
-          // Map results back to entities
-          type EntityResult = { index: number; grounded: boolean; typeMatch: boolean; confidence: number }
+          );
+          type EntityResult = {
+            index: number;
+            grounded: boolean;
+            typeMatch: boolean;
+            confidence: number;
+          };
           const resultsMap = new Map(
             (response.value.results as ReadonlyArray<EntityResult>).map((r: EntityResult) => [r.index, r])
-          )
-
+          );
           return entities.map((entity, index) => {
-            const result = resultsMap.get(index)
+            const result = resultsMap.get(index);
             return {
               grounded: result?.grounded ?? false,
               typeMatch: result?.typeMatch ?? false,
               confidence: result?.confidence ?? 0,
-              entity
-            }
-          })
-        }).pipe(
+              entity,
+            };
+          });
+        }, (effect, _context, entities) => effect.pipe(
           Effect.tap((results) =>
             Effect.all([
               Effect.logDebug("Grounder batch entity verification complete", {
                 stage: "grounder",
                 batchSize: entities.length,
-                groundedCount: results.filter((r) => r.grounded).length
+                groundedCount: results.filter((r) => r.grounded).length,
               }),
               Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, entities.length),
-              Effect.annotateCurrentSpan("grounder.entity_grounded_count", results.filter((r) => r.grounded).length)
+              Effect.annotateCurrentSpan("grounder.entity_grounded_count", results.filter((r) => r.grounded).length),
             ])
           ),
           Effect.withSpan("grounder-batch-entity-verification", {
             attributes: {
-              [LlmAttributes.ENTITY_COUNT]: entities.length
-            }
+              [LlmAttributes.ENTITY_COUNT]: entities.length,
+            },
           })
-        )
-    }
+        )),
+    };
   }),
 }) {
   /**
@@ -774,52 +718,56 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
    *
    * @since 2.0.0
    */
-  static Test = Layer.succeed(
-    Grounder,
-    {
-      verifyRelation: (input: RelationVerificationInput) =>
-        Effect.succeed({
-          grounded: true,
-          confidence: 1,
-          relation: input.relation
-        }),
-      verifyRelationBatch: (_context: string, inputs: ReadonlyArray<RelationVerificationInput>) =>
+  static Test = Layer.succeed(Grounder, {
+    verifyRelation: Effect.fn("Grounder.verifyRelation")((input: RelationVerificationInput) =>
+      Effect.succeed({
+        grounded: true,
+        confidence: 1,
+        relation: input.relation,
+      })
+    ),
+    verifyRelationBatch: Effect.fn("Grounder.verifyRelationBatch")(
+      (_context: string, inputs: ReadonlyArray<RelationVerificationInput>) =>
         Effect.succeed(
           inputs.map((input) => ({
             grounded: true,
             confidence: 1,
-            relation: input.relation
+            relation: input.relation,
           }))
-        ),
-      verifyRelationStream: (_context: string, relations: Stream.Stream<RelationVerificationInput>) =>
-        relations.pipe(
-          Stream.map((input) => ({
-            grounded: true,
-            confidence: 1,
-            relation: input.relation
-          }))
-        ),
-      verifyEntity: (input: EntityVerificationInput) =>
-        Effect.succeed({
+        )
+    ),
+    verifyRelationStream: (_context: string, relations: Stream.Stream<RelationVerificationInput>) =>
+      relations.pipe(
+        Stream.map((input) => ({
+          grounded: true,
+          confidence: 1,
+          relation: input.relation,
+        }))
+      ),
+    verifyEntity: Effect.fn("Grounder.verifyEntity")((input: EntityVerificationInput) =>
+      Effect.succeed({
+        grounded: true,
+        typeMatch: true,
+        confidence: 1,
+        entity: input.entity,
+      })
+    ),
+    verifyEntityBatch: Effect.fn("Grounder.verifyEntityBatch")((_context: string, entities: ReadonlyArray<Entity>) =>
+      Effect.succeed(
+        entities.map((entity) => ({
           grounded: true,
           typeMatch: true,
           confidence: 1,
-          entity: input.entity
-        }),
-      verifyEntityBatch: (_context: string, entities: ReadonlyArray<Entity>) =>
-        Effect.succeed(
-          entities.map((entity) => ({
-            grounded: true,
-            typeMatch: true,
-            confidence: 1,
-            entity
-          }))
-        )
-    } as unknown as Grounder
-  )
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([
-            ConfigServiceDefault,
-            StageTimeoutServiceLive
-            // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
-          ]));
+          entity,
+        }))
+      )
+    ),
+  });
+  static readonly Default = Layer.effect(this, this.make).pipe(
+    Layer.provide([
+      ConfigServiceDefault,
+      StageTimeoutServiceLive,
+      // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)
+    ])
+  );
 }

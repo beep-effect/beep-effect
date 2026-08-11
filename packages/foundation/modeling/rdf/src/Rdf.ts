@@ -939,9 +939,10 @@ export const makeBlankNode = (value: string): BlankNode =>
  * **Example** (Literal language options)
  *
  * ```ts
- * import type { MakeLiteralOptions } from "@beep/rdf/Rdf"
+ * import { MakeLiteralOptions } from "@beep/rdf/Rdf"
+ * import * as O from "effect/Option"
  *
- * const options: MakeLiteralOptions = { language: "en" }
+ * const options = MakeLiteralOptions.make({ language: O.some("en") })
  * console.log(options)
  * ```
  *
@@ -957,9 +958,26 @@ export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiter
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link makeLiteral}.
+ *
+ * **Example** (Type literal options input)
+ *
+ * ```ts
+ * import type { MakeLiteralOptionsInput } from "@beep/rdf/Rdf"
+ *
+ * const options: MakeLiteralOptionsInput = { language: "en" }
+ * console.log(options.language)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export type MakeLiteralOptionsInput = typeof MakeLiteralOptions.Encoded;
+
 const isMakeLiteralDataFirst = (args: IArguments): boolean => args.length >= 2 && P.isString(args[1]);
 
-const makeLiteralInternal = (value: string, datatype: string, options = MakeLiteralOptions.make({})): Literal =>
+const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptionsInput = {}): Literal =>
   pipe(
     Literal.decodeUnknownResult({
       termType: "Literal",
@@ -993,9 +1011,9 @@ const makeLiteralInternal = (value: string, datatype: string, options = MakeLite
  */
 export const makeLiteral: {
   (value: string, datatype: string): Literal;
-  (value: string, datatype: string, options: MakeLiteralOptions): Literal;
+  (value: string, datatype: string, options: MakeLiteralOptionsInput): Literal;
   (datatype: string): (value: string) => Literal;
-  (datatype: string, options: MakeLiteralOptions): (value: string) => Literal;
+  (datatype: string, options: MakeLiteralOptionsInput): (value: string) => Literal;
 } = dual(isMakeLiteralDataFirst, makeLiteralInternal);
 
 /**
@@ -1023,7 +1041,42 @@ export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions
   })
 ) {}
 
-const isMakeQuadOptions = (input: ObjectTerm | MakeQuadOptions): input is MakeQuadOptions =>
+/**
+ * Constructor input accepted by {@link makeQuad}.
+ *
+ * **Example** (Type quad options input)
+ *
+ * ```ts
+ * import type { MakeQuadOptionsInput } from "@beep/rdf/Rdf"
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ *
+ * const options: MakeQuadOptionsInput = {
+ *   object: makeNamedNode("https://example.org/object")
+ * }
+ * console.log(options.object)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const MakeQuadOptionsInput = S.Struct({
+  object: ObjectTerm,
+  graph: GraphTerm.pipe(S.optionalKey),
+}).pipe(
+  $I.annoteSchema("MakeQuadOptionsInput", {
+    description: "In-memory object and optional graph input accepted by makeQuad.",
+  })
+);
+
+/**
+ * Type for {@link MakeQuadOptionsInput}.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export type MakeQuadOptionsInput = typeof MakeQuadOptionsInput.Type;
+
+const isMakeQuadOptions = (input: ObjectTerm | MakeQuadOptionsInput): input is MakeQuadOptionsInput =>
   P.hasProperty(input, "object");
 
 const makeDefaultGraph = (): DefaultGraph =>
@@ -1056,17 +1109,19 @@ const makeDefaultGraph = (): DefaultGraph =>
  */
 export const makeQuad: {
   (subject: Subject, predicate: NamedNode, object: ObjectTerm): Quad;
-  (subject: Subject, predicate: NamedNode, options: MakeQuadOptions): Quad;
+  (subject: Subject, predicate: NamedNode, options: MakeQuadOptionsInput): Quad;
   (predicate: NamedNode, object: ObjectTerm): (subject: Subject) => Quad;
-  (predicate: NamedNode, options: MakeQuadOptions): (subject: Subject) => Quad;
+  (predicate: NamedNode, options: MakeQuadOptionsInput): (subject: Subject) => Quad;
 } = dual(
   3,
-  (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptions): Quad =>
+  (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptionsInput): Quad =>
     Quad.make({
       subject,
       predicate,
       object: isMakeQuadOptions(input) ? input.object : input,
-      graph: isMakeQuadOptions(input) ? O.getOrElse(input.graph, makeDefaultGraph) : makeDefaultGraph(),
+      graph: isMakeQuadOptions(input)
+        ? pipe(input.graph, O.fromUndefinedOr, O.getOrElse(makeDefaultGraph))
+        : makeDefaultGraph(),
     })
 );
 

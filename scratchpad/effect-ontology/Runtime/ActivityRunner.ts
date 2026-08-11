@@ -12,33 +12,31 @@
  * @module Runtime/ActivityRunner
  */
 
-import { BunServices, BunRuntime } from "@effect/platform-bun"
-import { Config, Console, Effect, Layer, Match, Schema } from "effect"
+import { BunRuntime, BunServices } from "@effect/platform-bun";
+import { Config, Console, Effect, Layer, Match } from "effect";
+import * as S from "effect/Schema";
+import { Workflow, WorkflowEngine } from "effect/unstable/workflow";
+import { WorkflowInstance } from "effect/unstable/workflow/WorkflowEngine";
 import {
   ExtractionActivityInput,
   IngestionActivityInput,
   ResolutionActivityInput,
-  ValidationActivityInput
-} from "../Domain/Schema/Batch.ts"
-import { ConfigServiceDefault } from "../Service/Config.ts"
-import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts"
-import { StageTimeoutServiceLive } from "../Service/LlmControl/StageTimeout.ts"
-import { NlpService } from "../Service/Nlp.ts"
-import { OntologyService } from "../Service/Ontology.ts"
-import { RdfBuilder } from "../Service/Rdf.ts"
-import { ShaclService } from "../Service/Shacl.ts"
-import { StorageServiceLive } from "../Service/Storage.ts"
-import { makeIngestionActivity, makeResolutionActivity, makeValidationActivity } from "../Workflow/DurableActivities.ts"
-import { ExtractionWorkflowLive } from "../Workflow/StreamingExtraction.ts"
-import { makeStreamingExtractionActivity } from "../Workflow/StreamingExtractionActivity.ts"
-import { makeLanguageModelLayer } from "./ProductionRuntime.ts"
+  ValidationActivityInput,
+} from "../Domain/Schema/Batch.ts";
+import {
+  makeIngestionActivity,
+  makeResolutionActivity,
+  makeValidationActivity,
+} from "../Workflow/DurableActivities.ts";
+import { makeStreamingExtractionActivity } from "../Workflow/StreamingExtractionActivity.ts";
+import { ActivityDependenciesLayer, ConfigServiceDefault, EmbeddingBundleOpen } from "./WorkflowLayers.ts";
 
 // -----------------------------------------------------------------------------
 // Activity Name Schema
 // -----------------------------------------------------------------------------
 
-const ActivityName = Schema.Literals(["extraction", "resolution", "validation", "ingestion"])
-type ActivityName = typeof ActivityName.Type
+const ActivityName = S.Literals(["extraction", "resolution", "validation", "ingestion"]);
+type ActivityName = typeof ActivityName.Type;
 
 // -----------------------------------------------------------------------------
 // Activity Dispatcher
@@ -47,16 +45,12 @@ type ActivityName = typeof ActivityName.Type
 /**
  * Parse activity name from environment
  */
-const getActivityName = Config.string("ACTIVITY_NAME").pipe(
-  Config.withDefault("extraction")
-)
+const getActivityName = Config.string("ACTIVITY_NAME").pipe(Config.withDefault("extraction"));
 
 /**
  * Parse activity payload from environment
  */
-const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(
-  Config.withDefault("{}")
-)
+const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(Config.withDefault("{}"));
 
 /**
  * Dispatch to correct activity based on ACTIVITY_NAME
@@ -65,74 +59,79 @@ const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(
  */
 const dispatchActivity = (name: ActivityName, payloadJson: string) =>
   Match.value(name).pipe(
-    Match.when("extraction",
-      Effect.fn(function*() {
-        const payload = yield* Schema.decodeUnknownEffect(ExtractionActivityInput)(JSON.parse(payloadJson))
+    Match.when(
+      "extraction",
+      Effect.fn(function* () {
+        const payload = yield* S.decodeEffect(S.fromJsonString(ExtractionActivityInput))(payloadJson);
         // ExtractionActivityInput has: batchId, documentId, sourceUri, ontologyUri, targetNamespace
         // Use unified 6-phase streaming extraction activity
-        const activity = makeStreamingExtractionActivity(payload)
-        return yield* activity.execute
-      })),
-    Match.when("resolution",
-      Effect.fn(function*() {
-        const payload = yield* Schema.decodeUnknownEffect(ResolutionActivityInput)(JSON.parse(payloadJson))
+        const activity = makeStreamingExtractionActivity(payload);
+        return yield* activity.execute;
+      })
+    ),
+    Match.when(
+      "resolution",
+      Effect.fn(function* () {
+        const payload = yield* S.decodeEffect(S.fromJsonString(ResolutionActivityInput))(payloadJson);
         // ResolutionActivityInput has: batchId, documentGraphUris
-        const activity = makeResolutionActivity(payload)
-        return yield* activity.execute
-      })),
-    Match.when("validation",
-      Effect.fn(function*() {
-        const payload = yield* Schema.decodeUnknownEffect(ValidationActivityInput)(JSON.parse(payloadJson))
+        const activity = makeResolutionActivity(payload);
+        return yield* activity.execute;
+      })
+    ),
+    Match.when(
+      "validation",
+      Effect.fn(function* () {
+        const payload = yield* S.decodeEffect(S.fromJsonString(ValidationActivityInput))(payloadJson);
         // ValidationActivityInput has: batchId, resolvedGraphUri, shaclUri (optional)
-        const activity = makeValidationActivity(payload)
-        return yield* activity.execute
-      })),
-    Match.when("ingestion",
-      Effect.fn(function*() {
-        const payload = yield* Schema.decodeUnknownEffect(IngestionActivityInput)(JSON.parse(payloadJson))
+        const activity = makeValidationActivity(payload);
+        return yield* activity.execute;
+      })
+    ),
+    Match.when(
+      "ingestion",
+      Effect.fn(function* () {
+        const payload = yield* S.decodeEffect(S.fromJsonString(IngestionActivityInput))(payloadJson);
         // IngestionActivityInput has: batchId, validatedGraphUri, targetNamespace
-        const activity = makeIngestionActivity(payload)
-        return yield* activity.execute
-      })),
+        const activity = makeIngestionActivity(payload);
+        return yield* activity.execute;
+      })
+    ),
     Match.exhaustive
-  )
+  );
 
 // -----------------------------------------------------------------------------
 // Main Entry Point
 // -----------------------------------------------------------------------------
 
-const program = Effect.gen(function*() {
-  const activityNameRaw = yield* getActivityName
-  const payloadJson = yield* getActivityPayload
+const program = Effect.gen(function* () {
+  const activityNameRaw = yield* getActivityName;
+  const payloadJson = yield* getActivityPayload;
 
-  yield* Console.log(`ActivityRunner starting`)
-  yield* Console.log(`  ACTIVITY_NAME: ${activityNameRaw}`)
-  yield* Console.log(`  ACTIVITY_PAYLOAD length: ${payloadJson.length} chars`)
+  yield* Console.log(`ActivityRunner starting`);
+  yield* Console.log(`  ACTIVITY_NAME: ${activityNameRaw}`);
+  yield* Console.log(`  ACTIVITY_PAYLOAD length: ${payloadJson.length} chars`);
 
   // Parse and validate activity name
-  const activityName = yield* Schema.decodeUnknownEffect(ActivityName)(activityNameRaw).pipe(
-    Effect.mapError((_e) =>
-      new Error(`Invalid ACTIVITY_NAME: ${activityNameRaw}. Expected: extraction, resolution, validation, or ingestion`)
-    )
-  )
+  const activityName = yield* S.decodeUnknownEffect(ActivityName)(activityNameRaw);
 
   // Dispatch to activity
   const result = yield* dispatchActivity(activityName, payloadJson).pipe(
     Effect.tapError((error) => Console.error(`Activity ${activityName} failed: ${error}`))
-  )
+  );
 
-  yield* Console.log(`Activity ${activityName} completed successfully`)
-  yield* Console.log(`Result: ${JSON.stringify(result, null, 2)}`)
+  yield* Console.log(`Activity ${activityName} completed successfully`);
+  const resultJson = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }))(result);
+  yield* Console.log(`Result: ${resultJson}`);
 
-  return result
+  return result;
 }).pipe(
   Effect.catchDefect((defect) =>
-    Effect.gen(function*() {
-      yield* Console.error(`Activity runner crashed with defect: ${defect}`)
-      return yield* Effect.die(defect)
+    Effect.gen(function* () {
+      yield* Console.error(`Activity runner crashed with defect: ${defect}`);
+      return yield* Effect.die(defect);
     })
   )
-)
+);
 
 // -----------------------------------------------------------------------------
 // Layer Composition
@@ -159,43 +158,32 @@ const program = Effect.gen(function*() {
  * TypeScript's inference has difficulty with deep Effect layer compositions,
  * but the runtime composition is correct. The assertion documents this explicitly.
  */
-const ActivityRunnerLive = Layer.mergeAll(
-  StorageServiceLive,
-  RdfBuilder.Default,
-  EntityExtractor.Default,
-  RelationExtractor.Default,
-  OntologyService.Default,
-  NlpService.Default,
-  StageTimeoutServiceLive,
-  ExtractionWorkflowLive // For unified streaming extraction activity
-).pipe(
-  Layer.provideMerge(makeLanguageModelLayer),
-  Layer.provideMerge(ConfigServiceDefault),
-  Layer.provideMerge(BunServices.layer),
-  Layer.provideMerge(ShaclService.Default)
-) as Layer.Layer<
-  // All provided services (ROut)
-  | import("../Service/Storage.ts").StorageService
-  | import("../Service/Rdf.ts").RdfBuilder
-  | import("../Service/Extraction.ts").EntityExtractor
-  | import("../Service/Extraction.ts").RelationExtractor
-  | import("../Service/Ontology.ts").OntologyService
-  | import("../Service/Nlp.ts").NlpService
-  | import("../Service/LlmControl/StageTimeout.ts").StageTimeoutService
-  | import("effect/unstable/ai").LanguageModel.LanguageModel
-  | import("../Service/Config.ts").ConfigService
-  | import("../Service/Shacl.ts").ShaclService
-  | import("../Service/ExtractionWorkflow.ts").ExtractionWorkflow,
-  // Error type (E)
-  never,
-  // Requirements (RIn) - none, all satisfied
-  never
->
+const ActivityRunnerWorkflow = Workflow.make("activity-runner", {
+  payload: { activityName: ActivityName },
+  idempotencyKey: ({ activityName }) => activityName,
+});
 
-// Run the program with all dependencies provided
-BunRuntime.runMain(program.pipe(
-  Effect.provide(ActivityRunnerLive)
-) as Effect.Effect<unknown, unknown, never>)
+const ActivityServices = ActivityDependenciesLayer.pipe(
+  Layer.provideMerge(EmbeddingBundleOpen.pipe(Layer.provide(ConfigServiceDefault)))
+);
+
+const ActivityRunnerLive = Layer.mergeAll(
+  ActivityServices,
+  WorkflowEngine.layerMemory,
+  Layer.succeed(WorkflowInstance, WorkflowInstance.initial(ActivityRunnerWorkflow, "activity-runner")),
+  BunServices.layer
+);
+
+// Build the layer inside a scope so every acquired service is released after
+// the one-shot activity program completes.
+const main = Effect.scoped(
+  Effect.gen(function* () {
+    const context = yield* Layer.build(ActivityRunnerLive);
+    return yield* program.pipe(Effect.provide(context));
+  })
+);
+
+BunRuntime.runMain(main);
 
 // -----------------------------------------------------------------------------
 // Run

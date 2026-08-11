@@ -24,7 +24,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PermissionDenied");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -52,7 +53,8 @@ export class Input extends S.Class<Input>($I`PermissionDeniedInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -76,7 +78,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Permissio
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -104,15 +107,16 @@ export class Output extends S.Class<Output>($I`PermissionDeniedOutput`)(
 /**
  * Acknowledge the denial without allowing a retry.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionDenied.accept)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const accept = (): Output =>
   Output.make({
@@ -127,15 +131,16 @@ export const accept = (): Output =>
 /**
  * No-op output — the denial stands and the model is not instructed to retry.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionDenied.passthrough)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
@@ -143,15 +148,16 @@ export const passthrough = (): Output => Output.make();
  * Tell the model it may retry the denied call, typically with adjusted
  * input.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionDenied.retry)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const retry = (): Output =>
   Output.make({
@@ -166,7 +172,8 @@ export const retry = (): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -189,15 +196,16 @@ export const define = <E, R>(config: {
 /**
  * Build a PermissionDenied hook that only handles matching `tool_name` values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PermissionDenied hook that only handles matching `tool_name` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionDenied.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -219,12 +227,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionDenied.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -249,12 +251,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionDenied.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -279,12 +275,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionDenied.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

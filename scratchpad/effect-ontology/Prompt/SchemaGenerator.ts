@@ -147,6 +147,7 @@ const ruleForField = (ruleSet: RuleSet, fieldPath: string): O.Option<ExtractionR
  * @category getters
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const getFieldDescription = (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
   pipe(
     ruleForField(ruleSet, fieldPath),
@@ -172,6 +173,7 @@ export const getFieldDescription = (ruleSet: RuleSet, fieldPath: string): O.Opti
  * @category getters
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const getFieldValidationTemplate = (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
   pipe(
     ruleForField(ruleSet, fieldPath),
@@ -265,6 +267,7 @@ export const generateSchemaAnnotations = (ruleSet: RuleSet): GeneratedSchemaAnno
  * @category filtering
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const findRulesByCategory = (ruleSet: RuleSet, category: RuleCategory): ReadonlyArray<ExtractionRule> =>
   ruleSet.getRulesByCategory(category);
 
@@ -287,5 +290,6 @@ export const findRulesByCategory = (ruleSet: RuleSet, category: RuleCategory): R
  * @category getters
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const findRuleById = (ruleSet: RuleSet, ruleId: string): O.Option<ExtractionRule> =>
   A.findFirst(ruleSet.allRules, (rule) => rule.id === ruleId);

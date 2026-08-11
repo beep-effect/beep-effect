@@ -15,8 +15,9 @@
  * @module Service/LlmControl/TokenBudget
  */
 
-import { Context, Effect, Layer, Ref } from "effect"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Effect, Layer, Ref } from "effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget");
 
 // =============================================================================
@@ -26,23 +27,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget"
 /**
  * Stage names that have dedicated token budgets
  */
-export type BudgetedStage =
-  | "entity_extraction"
-  | "relation_extraction"
-  | "grounding"
-  | "property_scoping"
-  | "other"
+export type BudgetedStage = "entity_extraction" | "relation_extraction" | "grounding" | "property_scoping" | "other";
 
 /**
  * Token budget state tracking usage across stages
  */
 export interface TokenBudgetState {
   /** Total token budget for the request */
-  readonly total: number
+  readonly total: number;
   /** Total tokens used across all stages */
-  readonly used: number
+  readonly used: number;
   /** Tokens used per stage */
-  readonly byStage: Record<string, number>
+  readonly byStage: Record<string, number>;
 }
 
 /**
@@ -53,8 +49,8 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
   relation_extraction: 0.35,
   grounding: 0.15,
   property_scoping: 0.08,
-  other: 0.07
-}
+  other: 0.07,
+};
 
 // =============================================================================
 // Service
@@ -90,7 +86,9 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
  * })
  * ```
  */
-export class TokenBudgetService extends Context.Service<TokenBudgetService, {
+export class TokenBudgetService extends Context.Service<
+  TokenBudgetService,
+  {
     /**
      * Check if a stage can afford the specified tokens
      *
@@ -98,10 +96,7 @@ export class TokenBudgetService extends Context.Service<TokenBudgetService, {
      * @param tokens - Number of tokens to check
      * @returns true if stage has sufficient budget
      */
-    readonly canAfford: (
-      stage: string,
-      tokens: number
-    ) => Effect.Effect<boolean>
+    readonly canAfford: (stage: string, tokens: number) => Effect.Effect<boolean>;
 
     /**
      * Record token usage for a stage
@@ -109,17 +104,14 @@ export class TokenBudgetService extends Context.Service<TokenBudgetService, {
      * @param stage - Extraction stage name
      * @param tokens - Number of tokens used
      */
-    readonly recordUsage: (
-      stage: string,
-      tokens: number
-    ) => Effect.Effect<void>
+    readonly recordUsage: (stage: string, tokens: number) => Effect.Effect<void>;
 
     /**
      * Get remaining total budget
      *
      * @returns Number of tokens remaining
      */
-    readonly getRemaining: () => Effect.Effect<number>
+    readonly getRemaining: Effect.Effect<number>;
 
     /**
      * Get remaining budget for a specific stage
@@ -127,22 +119,23 @@ export class TokenBudgetService extends Context.Service<TokenBudgetService, {
      * @param stage - Extraction stage name
      * @returns Number of tokens remaining for stage
      */
-    readonly getStageRemaining: (stage: string) => Effect.Effect<number>
+    readonly getStageRemaining: (stage: string) => Effect.Effect<number>;
 
     /**
      * Get current state snapshot
      *
      * @returns Current budget state
      */
-    readonly getState: () => Effect.Effect<TokenBudgetState>
+    readonly getState: Effect.Effect<TokenBudgetState>;
 
     /**
      * Reset budget for a new request
      *
      * @param total - Total token budget (default: 4096)
      */
-    readonly reset: (total?: number) => Effect.Effect<void>
-  }>()($I`TokenBudgetService`) {}
+    readonly reset: (total?: number) => Effect.Effect<void>;
+  }
+>()($I`TokenBudgetService`) {}
 
 // =============================================================================
 // Implementation
@@ -152,27 +145,27 @@ export class TokenBudgetService extends Context.Service<TokenBudgetService, {
  * Get budget limit for a stage based on allocation percentage
  */
 const getStageBudget = (stage: string, total: number): number => {
-  const allocation = STAGE_ALLOCATIONS[stage as BudgetedStage] ?? STAGE_ALLOCATIONS.other
-  return Math.floor(total * allocation)
-}
+  const allocation = STAGE_ALLOCATIONS[stage as BudgetedStage] ?? STAGE_ALLOCATIONS.other;
+  return Math.floor(total * allocation);
+};
 
 /**
  * Default implementation using Effect Ref for state
  */
-const make = Effect.gen(function*() {
+const make = Effect.gen(function* () {
   const state = yield* Ref.make<TokenBudgetState>({
     total: 4096,
     used: 0,
-    byStage: {}
-  })
+    byStage: {},
+  });
 
   return {
     canAfford: (stage: string, tokens: number) =>
       Ref.get(state).pipe(
         Effect.map((s) => {
-          const stageLimit = getStageBudget(stage, s.total)
-          const stageUsed = s.byStage[stage] ?? 0
-          return stageUsed + tokens <= stageLimit
+          const stageLimit = getStageBudget(stage, s.total);
+          const stageUsed = s.byStage[stage] ?? 0;
+          return stageUsed + tokens <= stageLimit;
         })
       ),
 
@@ -182,81 +175,79 @@ const make = Effect.gen(function*() {
         used: s.used + tokens,
         byStage: {
           ...s.byStage,
-          [stage]: (s.byStage[stage] ?? 0) + tokens
-        }
+          [stage]: (s.byStage[stage] ?? 0) + tokens,
+        },
       })),
 
-    getRemaining: () => Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
+    getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
 
     getStageRemaining: (stage: string) =>
       Ref.get(state).pipe(
         Effect.map((s) => {
-          const stageLimit = getStageBudget(stage, s.total)
-          const stageUsed = s.byStage[stage] ?? 0
-          return stageLimit - stageUsed
+          const stageLimit = getStageBudget(stage, s.total);
+          const stageUsed = s.byStage[stage] ?? 0;
+          return stageLimit - stageUsed;
         })
       ),
 
-    getState: () => Ref.get(state),
+    getState: Ref.get(state),
 
-    reset: (total: number = 4096) => Ref.set(state, { total, used: 0, byStage: {} })
-  }
-})
+    reset: (total: number = 4096) => Ref.set(state, { total, used: 0, byStage: {} }),
+  };
+});
 
 /**
  * Default layer providing TokenBudgetService
  */
-export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make)
+export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
 
 /**
  * Test layer with configurable initial state
  */
-export const TokenBudgetServiceTest = (
-  initialTotal: number = 4096
-): Layer.Layer<TokenBudgetService> =>
+export const TokenBudgetServiceTest = (initialTotal: number = 4096): Layer.Layer<TokenBudgetService> =>
   Layer.effect(
     TokenBudgetService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const state = yield* Ref.make<TokenBudgetState>({
         total: initialTotal,
         used: 0,
-        byStage: {}
-      })
+        byStage: {},
+      });
 
       return {
-        canAfford: (stage: string, tokens: number) =>
+        canAfford: Effect.fn("TokenBudgetService.canAfford")((stage: string, tokens: number) =>
           Ref.get(state).pipe(
             Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total)
-              const stageUsed = s.byStage[stage] ?? 0
-              return stageUsed + tokens <= stageLimit
+              const stageLimit = getStageBudget(stage, s.total);
+              const stageUsed = s.byStage[stage] ?? 0;
+              return stageUsed + tokens <= stageLimit;
             })
-          ),
-
-        recordUsage: (stage: string, tokens: number) =>
+          )
+        ),
+        recordUsage: Effect.fn("TokenBudgetService.recordUsage")((stage: string, tokens: number) =>
           Ref.update(state, (s) => ({
             ...s,
             used: s.used + tokens,
             byStage: {
               ...s.byStage,
-              [stage]: (s.byStage[stage] ?? 0) + tokens
-            }
-          })),
-
-        getRemaining: () => Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
-
-        getStageRemaining: (stage: string) =>
+              [stage]: (s.byStage[stage] ?? 0) + tokens,
+            },
+          }))
+        ),
+        getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
+        getStageRemaining: Effect.fn("TokenBudgetService.getStageRemaining")((stage: string) =>
           Ref.get(state).pipe(
             Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total)
-              const stageUsed = s.byStage[stage] ?? 0
-              return stageLimit - stageUsed
+              const stageLimit = getStageBudget(stage, s.total);
+              const stageUsed = s.byStage[stage] ?? 0;
+              return stageLimit - stageUsed;
             })
-          ),
-
-        getState: () => Ref.get(state),
-
-        reset: (total: number = 4096) => Ref.set(state, { total, used: 0, byStage: {} })
-      }
+          )
+        ),
+        getState: Ref.get(state),
+        reset: Effect.fn("TokenBudgetService.reset")((total: number = 4096) =>
+          Ref.set(state, { total, used: 0, byStage: {} })
+        ),
+      };
     })
-  )
+  );

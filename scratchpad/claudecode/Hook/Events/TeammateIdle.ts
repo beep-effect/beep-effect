@@ -22,7 +22,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/TeammateIdle");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -48,7 +49,8 @@ export class Input extends S.Class<Input>($I`TeammateIdleInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -75,7 +77,8 @@ export class Output extends S.Class<Output>($I`TeammateIdleOutput`)(
 /**
  * Constructor for `allowIdle`.
  *
- * @example
+ * **Example** (Use allowIdle)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -91,30 +94,32 @@ export const allowIdle = (): Output => Output.make();
 /**
  * Prevent the teammate from going idle by exiting 2 with stderr feedback.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.TeammateIdle.keepWorking)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const keepWorking = (reason: string): HookProcessOutput => stderrExit(reason);
 
 /**
  * Stop the teammate entirely after this hook runs.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.TeammateIdle.stopTeammate)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const stopTeammate = (reason: string): Output =>
   Output.make({ continue: O.some(false), stopReason: O.some(reason) });
@@ -122,7 +127,8 @@ export const stopTeammate = (reason: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -148,12 +154,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.TeammateIdle.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -178,12 +178,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.TeammateIdle.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

@@ -707,6 +707,7 @@ type OntologyErrorCodecStatics<Self> = {
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const makeOntologyErrorClass = <const Tag extends string, const Fields extends S.Struct.Fields>(
   identifier: string,
   tag: Tag,

@@ -8,7 +8,7 @@
  */
 
 // Domain (pure types, no service dependencies)
-export * as Domain from "./Domain/index.ts"
+export * as Domain from "./Domain/index.ts";
 
 // Entity Resolution Domain Types
 export {
@@ -18,34 +18,8 @@ export {
   MentionRecord,
   RelationEdge,
   ResolutionEdge,
-  ResolvedEntity
-} from "./Domain/Model/EntityResolution.ts"
-
-// Services (Effect.Service classes with .Default layers)
-export { ConfigService, ConfigServiceDefault } from "./Service/Config.ts"
-export { EntityExtractor, RelationExtractor } from "./Service/Extraction.ts"
-export { NlpService } from "./Service/Nlp.ts"
-export { OntologyService } from "./Service/Ontology.ts"
-export { RdfBuilder } from "./Service/Rdf.ts"
-
-// Entity Linker Service (query helpers)
-export { getCanonicalId, getMentionsForEntity, toMermaid } from "./Service/EntityLinker.ts"
-
-// New Phase 3 Services
-export { type LinkedRelation, type LinkingResult, RelationLinker } from "./Service/RelationLinker.ts"
-export { type SimilarityResult, SimilarityScorer } from "./Service/SimilarityScorer.ts"
-
-// Workflows (composable business logic)
-export { ExtractionWorkflow } from "./Service/ExtractionWorkflow.ts"
-export {
-  ExtractionWorkflowDefault,
-  ExtractionWorkflowLive,
-  makeExtractionWorkflow
-} from "./Workflow/StreamingExtraction.ts"
-
-// Entity Resolution Workflow
-export { buildEntityResolutionGraph, clusterEntities } from "./Workflow/EntityResolutionGraph.ts"
-
+  ResolvedEntity,
+} from "./Domain/Model/EntityResolution.ts";
 // Entity Resolution Types (from Domain)
 export type {
   ClusteringResult,
@@ -53,17 +27,35 @@ export type {
   EntityResolutionGraph,
   EntityResolutionInfo,
   EntityResolutionStats,
-  SimilarityEdge
-} from "./Domain/Model/EntityResolutionGraph.ts"
-
+  SimilarityEdge,
+} from "./Domain/Model/EntityResolutionGraph.ts";
 // Runtime (pre-composed layers)
 export {
   ExtractionLayersLive,
   makeLanguageModelLayer,
   ProductionLayersWithTracing,
   RateLimitedLlmLayer,
-  TracingLive
-} from "./Runtime/ProductionRuntime.ts"
-
+  TracingLive,
+} from "./Runtime/ProductionRuntime.ts";
+// Services (Effect.Service classes with .Default layers)
+export { ConfigService, ConfigServiceDefault } from "./Service/Config.ts";
+// Entity Linker Service (query helpers)
+export { getCanonicalId, getMentionsForEntity, toMermaid } from "./Service/EntityLinker.ts";
+export { EntityExtractor, RelationExtractor } from "./Service/Extraction.ts";
+// Workflows (composable business logic)
+export { ExtractionWorkflow } from "./Service/ExtractionWorkflow.ts";
+export { NlpService } from "./Service/Nlp.ts";
+export { OntologyService } from "./Service/Ontology.ts";
+export { RdfBuilder } from "./Service/Rdf.ts";
+// New Phase 3 Services
+export { type LinkedRelation, type LinkingResult, RelationLinker } from "./Service/RelationLinker.ts";
+export { type SimilarityResult, SimilarityScorer } from "./Service/SimilarityScorer.ts";
 // Telemetry (OpenTelemetry integration)
-export * as Telemetry from "./Telemetry/index.ts"
+export * as Telemetry from "./Telemetry/index.ts";
+// Entity Resolution Workflow
+export { buildEntityResolutionGraph, clusterEntities } from "./Workflow/EntityResolutionGraph.ts";
+export {
+  ExtractionWorkflowDefault,
+  ExtractionWorkflowLive,
+  makeExtractionWorkflow,
+} from "./Workflow/StreamingExtraction.ts";

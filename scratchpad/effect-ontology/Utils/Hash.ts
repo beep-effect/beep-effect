@@ -8,7 +8,7 @@
  * @module Utils/Hash
  */
 
-import {Effect} from "effect";
+import { Effect } from "effect";
 
 /**
  * Convert Uint8Array to hex string
@@ -32,11 +32,7 @@ const toHex = (buffer: ArrayBuffer): string => {
  * @category Hash
  */
 export const sha256 = (input: string): Effect.Effect<string> =>
-  Effect.promise(() =>
-    globalThis.crypto.subtle
-      .digest("SHA-256", new TextEncoder().encode(input))
-      .then(toHex)
-  );
+  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)).then(toHex));
 
 /**
  * Generate a cache key for embedding lookups
@@ -51,6 +47,7 @@ export const sha256 = (input: string): Effect.Effect<string> =>
  * @since 2.0.0
  * @category Hash
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const hashEmbeddingKey = (text: string, taskType: string): Effect.Effect<string> =>
   sha256(`${text}::${taskType}`);
 
@@ -71,7 +68,7 @@ export const sha256SyncFull = (input: string): string => {
   // Use dynamic import to avoid bundling in browser
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const {createHash} = require("crypto");
+    const { createHash } = require("node:crypto");
     return createHash("sha256").update(input).digest("hex");
   } catch {
     // Fallback: return a padded simple hash for browser (should not be called in browser)
@@ -109,6 +106,7 @@ export const sha256Sync = (input: string): string => sha256SyncFull(input).slice
  * @since 2.0.0
  * @category Hash
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const hashEmbeddingKeySync = (text: string, taskType: string): string => sha256SyncFull(`${text}::${taskType}`);
 
 /**
@@ -141,6 +139,7 @@ export interface EmbeddingKeyMetadata {
  * @since 2.0.0
  * @category Hash
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const hashVersionedEmbeddingKey = (
   text: string,
   taskType: string,
@@ -159,11 +158,9 @@ export const hashVersionedEmbeddingKey = (
  * @since 2.0.0
  * @category Hash
  */
-export const hashVersionedEmbeddingKeySync = (
-  text: string,
-  taskType: string,
-  metadata: EmbeddingKeyMetadata
-): string => sha256SyncFull(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`);
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const hashVersionedEmbeddingKeySync = (text: string, taskType: string, metadata: EmbeddingKeyMetadata): string =>
+  sha256SyncFull(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`);
 
 /**
  * Compute SHA-256 hash of bytes using WebCrypto API
@@ -177,11 +174,7 @@ export const hashVersionedEmbeddingKeySync = (
  * @category Hash
  */
 export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string> =>
-  Effect.promise(() =>
-    globalThis.crypto.subtle
-      .digest("SHA-256", bytes)
-      .then(toHex)
-  );
+  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", bytes).then(toHex));
 
 /**
  * Synchronous SHA-256 hash of bytes
@@ -197,7 +190,7 @@ export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string> =>
 export const sha256BytesSync = (bytes: Uint8Array): string => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const {createHash} = require("crypto");
+    const { createHash } = require("node:crypto");
     return createHash("sha256").update(bytes).digest("hex");
   } catch {
     // Fallback: use WebCrypto async (this path shouldn't happen in practice)

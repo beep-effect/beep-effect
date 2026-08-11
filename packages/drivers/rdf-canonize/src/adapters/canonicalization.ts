@@ -142,7 +142,10 @@ const fromCanonizeObject = (object: CanonizeObject): ObjectTerm =>
     Match.discriminatorsExhaustive("termType")({
       NamedNode: (value) => makeNamedNode(value.value),
       BlankNode: (value) => makeBlankNode(value.value),
-      Literal: (value) => makeLiteral(value.value, value.datatype.value, { language: value.language }),
+      Literal: (value) =>
+        makeLiteral(value.value, value.datatype.value, {
+          ...O.getSomesStruct({ language: O.fromUndefinedOr(value.language) }),
+        }),
     })
   );
 

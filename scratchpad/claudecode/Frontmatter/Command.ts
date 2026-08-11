@@ -20,7 +20,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
  * still accept the same optional metadata and tool-policy keys. Every optional
  * wire key decodes to `Option`.
  *
- * @example
+ * **Example** (Run CommandFrontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -65,17 +66,6 @@ export class CommandFrontmatter extends S.Class<CommandFrontmatter>($I`CommandFr
 
 /**
  * Encoded input accepted at the Claude Code command-frontmatter boundary.
- *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const input: Frontmatter.CommandFrontmatter.Encoded = {
- *   description: "Review staged changes",
- *   "allowed-tools": ["Read", "Bash"]
- * }
- * console.log(input.description)
- * ```
  *
  * @category dtos
  * @since 0.0.0

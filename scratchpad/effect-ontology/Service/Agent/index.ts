@@ -7,7 +7,7 @@
  * @module Service/Agent
  */
 
-export * from "./AgentCoordinator.ts"
-export * from "./AgentKit.ts"
-export * from "./CorrectorAgent.ts"
-export * from "./types.ts"
+export * from "./AgentCoordinator.ts";
+export * from "./AgentKit.ts";
+export * from "./CorrectorAgent.ts";
+export * from "./types.ts";

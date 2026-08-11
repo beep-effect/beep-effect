@@ -157,6 +157,12 @@ const TimelineRange = TimelineRangeDefinition.pipe(
   })
 );
 
+const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
+  $I.annoteSchema("TimelineRangeQuery", {
+    description: "JSON-encoded ordered UTC range accepted in a URL-query value.",
+  })
+);
+
 /**
  * Compact source-article projection used for timeline attribution.
  *
@@ -325,7 +331,7 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
 export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`TimelineEntityQuery`)(
   {
     asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    range: S.OptionFromOptionalKey(TimelineRange).pipe(SchemaUtils.withNoneDefault),
+    range: S.OptionFromOptionalKey(TimelineRangeQuery).pipe(SchemaUtils.withNoneDefault),
     includeDeprecated: BooleanQueryValue.pipe(SchemaUtils.withKeyDefaults(false)),
   },
   $I.annote("TimelineEntityQuery", {

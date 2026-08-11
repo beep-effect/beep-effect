@@ -8,20 +8,21 @@
  * @module Service/ExtractionWorkflow
  */
 
-import type { Effect } from "effect"
-import { Context } from "effect"
-import type { KnowledgeGraph } from "../Domain/Model/Entity.ts"
-import type { RunConfig } from "../Domain/Model/ExtractionRun.ts"
 import { $ScratchpadId } from "@beep/identity";
+import type { Effect } from "effect";
+import { Context } from "effect";
+import type { ExtractionError } from "../Domain/Error/Extraction.ts";
+import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
 
 // Define the interface
-export interface ExtractionWorkflow {
-  readonly extract: (
-    text: string,
-    config: RunConfig
-  ) => Effect.Effect<KnowledgeGraph, unknown, never> // Error type is unknown for now, usually causes are logged
+export interface ExtractionWorkflowMethods {
+  readonly extract: (text: string, config: RunConfig) => Effect.Effect<KnowledgeGraph, ExtractionError>;
 }
 
 // Define the Tag
-export const ExtractionWorkflow = Context.Service<ExtractionWorkflow>($I`ExtractionWorkflow`)
+export class ExtractionWorkflow extends Context.Service<ExtractionWorkflow, ExtractionWorkflowMethods>()(
+  $I`ExtractionWorkflow`
+) {}

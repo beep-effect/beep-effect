@@ -17,8 +17,9 @@
  * @module Service/LlmControl/StageTimeout
  */
 
-import { Context, Data, Duration, Effect, Fiber, Layer } from "effect"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Data, Duration, Effect, Fiber, Layer } from "effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/StageTimeout");
 
 // =============================================================================
@@ -34,16 +35,16 @@ export type TimedStage =
   | "relation_extraction"
   | "grounding"
   | "entity_verification"
-  | "serialization"
+  | "serialization";
 
 /**
  * Timeout configuration for a stage
  */
 export interface StageTimeoutConfig {
   /** Soft timeout in milliseconds - warning emitted but continues */
-  readonly softMs: number
+  readonly softMs: number;
   /** Hard timeout in milliseconds - fails with TimeoutError */
-  readonly hardMs: number
+  readonly hardMs: number;
 }
 
 /**
@@ -55,13 +56,13 @@ const STAGE_TIMEOUTS: Record<TimedStage, StageTimeoutConfig> = {
   relation_extraction: { softMs: 45000, hardMs: 60000 },
   grounding: { softMs: 20000, hardMs: 30000 },
   entity_verification: { softMs: 30000, hardMs: 45000 },
-  serialization: { softMs: 7000, hardMs: 10000 }
-}
+  serialization: { softMs: 7000, hardMs: 10000 },
+};
 
 /**
  * Default timeout for unknown stages
  */
-const DEFAULT_TIMEOUT: StageTimeoutConfig = { softMs: 10000, hardMs: 15000 }
+const DEFAULT_TIMEOUT: StageTimeoutConfig = { softMs: 10000, hardMs: 15000 };
 
 // =============================================================================
 // Errors
@@ -71,11 +72,11 @@ const DEFAULT_TIMEOUT: StageTimeoutConfig = { softMs: 10000, hardMs: 15000 }
  * Error thrown when a stage exceeds its hard timeout
  */
 export class TimeoutError extends Data.TaggedError("TimeoutError")<{
-  readonly stage: string
-  readonly timeoutMs: number
+  readonly stage: string;
+  readonly timeoutMs: number;
 }> {
-  get message() {
-    return `Stage "${this.stage}" timed out after ${this.timeoutMs}ms`
+  override get message() {
+    return `Stage "${this.stage}" timed out after ${this.timeoutMs}ms`;
   }
 }
 
@@ -103,7 +104,9 @@ export class TimeoutError extends Data.TaggedError("TimeoutError")<{
  * })
  * ```
  */
-export class StageTimeoutService extends Context.Service<StageTimeoutService, {
+export class StageTimeoutService extends Context.Service<
+  StageTimeoutService,
+  {
     /**
      * Wrap an effect with soft and hard timeouts
      *
@@ -116,7 +119,7 @@ export class StageTimeoutService extends Context.Service<StageTimeoutService, {
       stage: string,
       effect: Effect.Effect<A, E, R>,
       onSoftTimeout?: () => Effect.Effect<void>
-    ) => Effect.Effect<A, E | TimeoutError, R>
+    ) => Effect.Effect<A, E | TimeoutError, R>;
 
     /**
      * Get timeout configuration for a stage
@@ -124,7 +127,7 @@ export class StageTimeoutService extends Context.Service<StageTimeoutService, {
      * @param stage - Stage name
      * @returns Timeout configuration
      */
-    readonly getConfig: (stage: string) => Effect.Effect<StageTimeoutConfig>
+    readonly getConfig: (stage: string) => Effect.Effect<StageTimeoutConfig>;
 
     /**
      * Check if an effect would timeout
@@ -133,11 +136,9 @@ export class StageTimeoutService extends Context.Service<StageTimeoutService, {
      * @param durationMs - Estimated duration in milliseconds
      * @returns true if duration exceeds hard timeout
      */
-    readonly wouldTimeout: (
-      stage: string,
-      durationMs: number
-    ) => Effect.Effect<boolean>
-  }>()($I`StageTimeoutService`) {}
+    readonly wouldTimeout: (stage: string, durationMs: number) => Effect.Effect<boolean>;
+  }
+>()($I`StageTimeoutService`) {}
 
 // =============================================================================
 // Implementation
@@ -152,39 +153,42 @@ const make = Effect.succeed({
     effect: Effect.Effect<A, E, R>,
     onSoftTimeout?: () => Effect.Effect<void>
   ): Effect.Effect<A, E | TimeoutError, R> => {
-    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT
+    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT;
 
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       // Start soft timeout watcher in background
       const softTimeoutFiber = yield* Effect.sleep(Duration.millis(config.softMs)).pipe(
         Effect.flatMap(() => onSoftTimeout?.() ?? Effect.void),
         Effect.forkChild
-      )
+      );
 
       // Run the effect with hard timeout
       const result = yield* effect.pipe(
-        Effect.timeoutOrElse({ duration: Duration.millis(config.hardMs), orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })) })
-      )
+        Effect.timeoutOrElse({
+          duration: Duration.millis(config.hardMs),
+          orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })),
+        })
+      );
 
       // Cancel soft timeout watcher if we completed in time
-      yield* Fiber.interrupt(softTimeoutFiber)
+      yield* Fiber.interrupt(softTimeoutFiber);
 
-      return result
-    })
+      return result;
+    });
   },
 
   getConfig: (stage: string) => Effect.succeed(STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT),
 
   wouldTimeout: (stage: string, durationMs: number) => {
-    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT
-    return Effect.succeed(durationMs > config.hardMs)
-  }
-})
+    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+    return Effect.succeed(durationMs > config.hardMs);
+  },
+});
 
 /**
  * Default layer providing StageTimeoutService
  */
-export const StageTimeoutServiceLive = Layer.effect(StageTimeoutService, make)
+export const StageTimeoutServiceLive = Layer.effect(StageTimeoutService, make);
 
 /**
  * Test layer with configurable timeouts (useful for faster tests)
@@ -192,7 +196,7 @@ export const StageTimeoutServiceLive = Layer.effect(StageTimeoutService, make)
 export const StageTimeoutServiceTest = (
   overrides: Partial<Record<TimedStage, StageTimeoutConfig>> = {}
 ): Layer.Layer<StageTimeoutService> => {
-  const testTimeouts = { ...STAGE_TIMEOUTS, ...overrides }
+  const testTimeouts = { ...STAGE_TIMEOUTS, ...overrides };
 
   return Layer.succeed(StageTimeoutService, {
     withTimeout: <A, E, R>(
@@ -200,28 +204,33 @@ export const StageTimeoutServiceTest = (
       effect: Effect.Effect<A, E, R>,
       onSoftTimeout?: () => Effect.Effect<void>
     ): Effect.Effect<A, E | TimeoutError, R> => {
-      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT
+      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT;
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const softTimeoutFiber = yield* Effect.sleep(Duration.millis(config.softMs)).pipe(
           Effect.flatMap(() => onSoftTimeout?.() ?? Effect.void),
           Effect.forkChild
-        )
+        );
 
         const result = yield* effect.pipe(
-          Effect.timeoutOrElse({ duration: Duration.millis(config.hardMs), orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })) })
-        )
+          Effect.timeoutOrElse({
+            duration: Duration.millis(config.hardMs),
+            orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })),
+          })
+        );
 
-        yield* Fiber.interrupt(softTimeoutFiber)
-        return result
-      })
+        yield* Fiber.interrupt(softTimeoutFiber);
+        return result;
+      });
     },
 
-    getConfig: (stage: string) => Effect.succeed(testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT),
+    getConfig: Effect.fn("StageTimeoutService.getConfig")((stage: string) =>
+      Effect.succeed(testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT)
+    ),
 
-    wouldTimeout: (stage: string, durationMs: number) => {
-      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT
-      return Effect.succeed(durationMs > config.hardMs)
-    }
-  })
-}
+    wouldTimeout: Effect.fn("StageTimeoutService.wouldTimeout")((stage: string, durationMs: number) => {
+      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+      return Effect.succeed(durationMs > config.hardMs);
+    }),
+  });
+};

@@ -12,11 +12,14 @@
  * @module Service/Reasoner
  */
 
-import { Data, Effect, Schema, Context, Layer } from "effect"
-import * as N3 from "n3"
-import type { RdfStore } from "./Rdf.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Context, Data, Effect, Layer, Schema } from "effect";
+import * as Clock from "effect/Clock";
+import * as N3 from "n3";
+import type { RdfStore } from "./Rdf.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 
 // =============================================================================
@@ -30,8 +33,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
  * @category Errors
  */
 export class ReasoningError extends Data.TaggedError("ReasoningError")<{
-  readonly message: string
-  readonly cause?: unknown
+  readonly message: string;
+  readonly cause?: unknown;
 }> {}
 
 /**
@@ -41,9 +44,9 @@ export class ReasoningError extends Data.TaggedError("ReasoningError")<{
  * @category Errors
  */
 export class RuleParseError extends Data.TaggedError("RuleParseError")<{
-  readonly message: string
-  readonly rule: string
-  readonly cause?: unknown
+  readonly message: string;
+  readonly rule: string;
+  readonly cause?: unknown;
 }> {}
 
 // =============================================================================
@@ -56,8 +59,8 @@ export class RuleParseError extends Data.TaggedError("RuleParseError")<{
  * @since 2.0.0
  * @category Models
  */
-export const ReasoningProfile = Schema.Literals(["rdfs", "rdfs-subclass", "owl-sameas", "custom"])
-export type ReasoningProfile = Schema.Schema.Type<typeof ReasoningProfile>
+export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]);
+export type ReasoningProfile = typeof ReasoningProfile.Type;
 
 /**
  * Configuration for reasoning operations
@@ -68,27 +71,27 @@ export type ReasoningProfile = Schema.Schema.Type<typeof ReasoningProfile>
 export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningConfig")({
   profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs" as const)),
   customRules: Schema.Array(Schema.String).pipe(SchemaUtils.withKeyDefaults([])),
-  maxIterations: Schema.Number.pipe(SchemaUtils.withKeyDefaults(100))
+  maxIterations: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(100)),
 }) {
   /**
    * Create default RDFS reasoning config
    */
   static rdfs(): ReasoningConfig {
-    return ReasoningConfig.make({ profile: "rdfs" })
+    return ReasoningConfig.make({ profile: "rdfs" });
   }
 
   /**
    * Create subclass-only reasoning config
    */
   static subclassOnly(): ReasoningConfig {
-    return ReasoningConfig.make({ profile: "rdfs-subclass" })
+    return ReasoningConfig.make({ profile: "rdfs-subclass" });
   }
 
   /**
    * Create custom rules config
    */
   static custom(rules: ReadonlyArray<string>): ReasoningConfig {
-    return ReasoningConfig.make({ profile: "custom", customRules: [...rules] })
+    return ReasoningConfig.make({ profile: "custom", customRules: [...rules] });
   }
 }
 
@@ -99,16 +102,16 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
  * @category Models
  */
 export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningResult")({
-  inferredTripleCount: Schema.Number,
-  totalTripleCount: Schema.Number,
-  rulesApplied: Schema.Number,
-  durationMs: Schema.Number
+  inferredTripleCount: Schema.Finite,
+  totalTripleCount: Schema.Finite,
+  rulesApplied: Schema.Finite,
+  durationMs: Schema.Finite,
 }) {
   /**
    * True if any new triples were inferred
    */
   get hasInferences(): boolean {
-    return this.inferredTripleCount > 0
+    return this.inferredTripleCount > 0;
   }
 }
 
@@ -131,7 +134,7 @@ const RDFS_SUBCLASS_RULE = `
 } => {
   ?s rdf:type ?c2 .
 } .
-`
+`;
 
 /**
  * RDFS subClassOf chain rule
@@ -147,7 +150,7 @@ const RDFS_SUBCLASS_CHAIN_RULE = `
 } => {
   ?c1 rdfs:subClassOf ?c3 .
 } .
-`
+`;
 
 /**
  * RDFS subPropertyOf transitivity rule
@@ -161,7 +164,7 @@ const RDFS_SUBPROPERTY_RULE = `
 } => {
   ?s ?p2 ?o .
 } .
-`
+`;
 
 /**
  * RDFS domain inference rule
@@ -178,7 +181,7 @@ const RDFS_DOMAIN_RULE = `
 } => {
   ?s rdf:type ?c .
 } .
-`
+`;
 
 /**
  * RDFS range inference rule
@@ -196,7 +199,7 @@ const RDFS_RANGE_RULE = `
 } => {
   ?o rdf:type ?c .
 } .
-`
+`;
 
 /**
  * OWL sameAs transitivity rule
@@ -210,7 +213,7 @@ const OWL_SAMEAS_RULE = `
 } => {
   ?a owl:sameAs ?c .
 } .
-`
+`;
 
 /**
  * OWL sameAs symmetry rule
@@ -223,7 +226,7 @@ const OWL_SAMEAS_SYMMETRY_RULE = `
 } => {
   ?b owl:sameAs ?a .
 } .
-`
+`;
 
 /**
  * Get rules for a reasoning profile
@@ -231,21 +234,15 @@ const OWL_SAMEAS_SYMMETRY_RULE = `
 const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> => {
   switch (profile) {
     case "rdfs":
-      return [
-        RDFS_SUBCLASS_RULE,
-        RDFS_SUBCLASS_CHAIN_RULE,
-        RDFS_SUBPROPERTY_RULE,
-        RDFS_DOMAIN_RULE,
-        RDFS_RANGE_RULE
-      ]
+      return [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE, RDFS_SUBPROPERTY_RULE, RDFS_DOMAIN_RULE, RDFS_RANGE_RULE];
     case "rdfs-subclass":
-      return [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE]
+      return [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE];
     case "owl-sameas":
-      return [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE]
+      return [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE];
     case "custom":
-      return []
+      return [];
   }
-}
+};
 
 // =============================================================================
 // Service Definition
@@ -278,7 +275,7 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
  */
 export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
   make: Effect.sync(() => {
-    const n3Parser = new N3.Parser({ format: "text/n3" })
+    const n3Parser = new N3.Parser({ format: "text/n3" });
 
     /**
      * Parse N3 rules into a store
@@ -286,107 +283,111 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
     const parseRules = (rules: ReadonlyArray<string>): Effect.Effect<N3.Store, RuleParseError> =>
       Effect.try({
         try: () => {
-          const rulesStore = new N3.Store()
+          const rulesStore = new N3.Store();
           for (const rule of rules) {
-            const quads = n3Parser.parse(rule)
-            rulesStore.addQuads(quads)
+            const quads = n3Parser.parse(rule);
+            rulesStore.addQuads(quads);
           }
-          return rulesStore
+          return rulesStore;
         },
         catch: (error) =>
           new RuleParseError({
             message: `Failed to parse N3 rules: ${error}`,
             rule: rules.join("\n"),
-            cause: error
-          })
-      })
+            cause: error,
+          }),
+      });
 
     /**
      * Core reasoning function - mutates the store
      */
-    const reason = (
+    const reason = Effect.fn(function* (
       store: RdfStore,
       config: ReasoningConfig
-    ): Effect.Effect<ReasoningResult, ReasoningError | RuleParseError> =>
-      Effect.gen(function*() {
-        const startTime = Date.now()
-        const initialSize = store._store.size
+    ): Effect.fn.Return<ReasoningResult, ReasoningError | RuleParseError> {
+      const startTime = yield* Clock.currentTimeMillis;
+      const initialSize = store._store.size;
 
-        yield* Effect.logInfo("Reasoner.reason starting", {
-          profile: config.profile,
-          initialTriples: initialSize,
-          customRuleCount: config.customRules.length
-        })
+      yield* Effect.logInfo("Reasoner.reason starting", {
+        profile: config.profile,
+        initialTriples: initialSize,
+        customRuleCount: config.customRules.length,
+      });
 
-        // Collect all rules
-        const profileRules = getRulesForProfile(config.profile)
-        const allRules = [...profileRules, ...config.customRules]
+      // Collect all rules
+      const profileRules = getRulesForProfile(config.profile);
+      const allRules = [...profileRules, ...config.customRules];
 
-        if (allRules.length === 0) {
-          yield* Effect.logDebug("No rules to apply")
-          return ReasoningResult.make({
-            inferredTripleCount: 0,
-            totalTripleCount: initialSize,
-            rulesApplied: 0,
-            durationMs: Date.now() - startTime
-          })
-        }
-
-        // Parse rules
-        const rulesStore = yield* parseRules(allRules)
-
-        // Apply reasoning
-        yield* Effect.try({
-          try: () => {
-            const reasoner = new N3.Reasoner(store._store)
-            reasoner.reason(rulesStore)
-          },
-          catch: (error) =>
-            new ReasoningError({
-              message: `Reasoning failed: ${error}`,
-              cause: error
-            })
-        })
-
-        const finalSize = store._store.size
-        const inferredCount = finalSize - initialSize
-        const durationMs = Date.now() - startTime
-
-        yield* Effect.logInfo("Reasoner.reason complete", {
-          inferredTriples: inferredCount,
-          totalTriples: finalSize,
-          rulesApplied: allRules.length,
-          durationMs
-        })
-
+      if (allRules.length === 0) {
+        yield* Effect.logDebug("No rules to apply");
         return ReasoningResult.make({
-          inferredTripleCount: inferredCount,
-          totalTripleCount: finalSize,
-          rulesApplied: allRules.length,
-          durationMs
-        })
-      })
+          inferredTripleCount: 0,
+          totalTripleCount: initialSize,
+          rulesApplied: 0,
+          durationMs: (yield* Clock.currentTimeMillis) - startTime,
+        });
+      }
+
+      // Parse rules
+      const rulesStore = yield* parseRules(allRules);
+
+      // Apply reasoning
+      yield* Effect.try({
+        try: () => {
+          const reasoner = new N3.Reasoner(store._store);
+          reasoner.reason(rulesStore);
+        },
+        catch: (error) =>
+          new ReasoningError({
+            message: `Reasoning failed: ${error}`,
+            cause: error,
+          }),
+      });
+
+      const finalSize = store._store.size;
+      const inferredCount = finalSize - initialSize;
+      const durationMs = (yield* Clock.currentTimeMillis) - startTime;
+
+      yield* Effect.logInfo("Reasoner.reason complete", {
+        inferredTriples: inferredCount,
+        totalTriples: finalSize,
+        rulesApplied: allRules.length,
+        durationMs,
+      });
+
+      return ReasoningResult.make({
+        inferredTripleCount: inferredCount,
+        totalTripleCount: finalSize,
+        rulesApplied: allRules.length,
+        durationMs,
+      });
+    });
 
     /**
      * Copy-based reasoning function
      */
-    const reasonCopy = (
+    const reasonCopy = Effect.fn(function* (
       store: RdfStore,
       config: ReasoningConfig
-    ): Effect.Effect<{ store: RdfStore; result: ReasoningResult }, ReasoningError | RuleParseError> =>
-      Effect.gen(function*() {
-        // Create a copy of the store
-        const copyStore = new N3.Store()
-        const quads = store._store.getQuads(null, null, null, null)
-        copyStore.addQuads(quads)
+    ): Effect.fn.Return<
+      {
+        store: RdfStore;
+        result: ReasoningResult;
+      },
+      ReasoningError | RuleParseError
+    > {
+      // Create a copy of the store
+      const copyStore = new N3.Store();
+      const quads = store._store.getQuads(null, null, null, null);
+      copyStore.addQuads(quads);
 
-        const wrappedStore: RdfStore = { _tag: "RdfStore", _store: copyStore }
+      const wrappedStore: RdfStore = { _tag: "RdfStore", _store: copyStore };
 
-        // Apply reasoning to the copy
-        const result = yield* reason(wrappedStore, config)
+      // Apply reasoning to the copy
+      const result = yield* reason(wrappedStore, config);
 
-        return { store: wrappedStore, result }
-      })
+      return { store: wrappedStore, result };
+    });
 
     return {
       /**
@@ -426,17 +427,16 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        * @param store - The RDF store to reason over (will be mutated)
        * @returns Reasoning result
        */
-      reasonForValidation: (
+      reasonForValidation: Effect.fn(function* (
         store: RdfStore
-      ): Effect.Effect<ReasoningResult, ReasoningError | RuleParseError> =>
-        Effect.gen(function*() {
-          yield* Effect.logDebug("Reasoner.reasonForValidation - applying subclass inference")
+      ): Effect.fn.Return<ReasoningResult, ReasoningError | RuleParseError> {
+        yield* Effect.logDebug("Reasoner.reasonForValidation - applying subclass inference");
 
-          // For validation, we primarily need type inference via subClassOf
-          // This handles the case where an entity is typed as :FootballPlayer
-          // but needs to be validated against shapes for :Person (superclass)
-          return yield* reason(store, ReasoningConfig.subclassOnly())
-        }),
+        // For validation, we primarily need type inference via subClassOf
+        // This handles the case where an entity is typed as :FootballPlayer
+        // but needs to be validated against shapes for :Person (superclass)
+        return yield* reason(store, ReasoningConfig.subclassOnly());
+      }),
 
       /**
        * Check if reasoning would add any inferences
@@ -447,13 +447,10 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        * @param config - Reasoning configuration
        * @returns True if reasoning would add new triples
        */
-      wouldInfer: (
-        store: RdfStore,
-        config: ReasoningConfig
-      ): Effect.Effect<boolean, ReasoningError | RuleParseError> =>
-        Effect.gen(function*() {
-          const { result } = yield* reasonCopy(store, config)
-          return result.hasInferences
+      wouldInfer: (store: RdfStore, config: ReasoningConfig): Effect.Effect<boolean, ReasoningError | RuleParseError> =>
+        Effect.gen(function* () {
+          const { result } = yield* reasonCopy(store, config);
+          return result.hasInferences;
         }),
 
       /**
@@ -461,11 +458,9 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        *
        * Useful for debugging or displaying what rules will be applied.
        */
-      getRules: (profile: ReasoningProfile): ReadonlyArray<string> => {
-        return getRulesForProfile(profile)
-      }
-    }
+      getRules: (profile: ReasoningProfile): ReadonlyArray<string> => getRulesForProfile(profile),
+    };
   }),
 }) {
-    static readonly Default = Layer.effect(this, this.make);
+  static readonly Default = Layer.effect(this, this.make);
 }

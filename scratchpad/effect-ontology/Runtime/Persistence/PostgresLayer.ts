@@ -13,10 +13,10 @@
  * @module Runtime/Persistence/PostgresLayer
  */
 
-import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster"
-import { PgClient } from "@effect/sql-pg"
-import { Config, Layer, Redacted, Schema } from "effect"
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { PgClient } from "@effect/sql-pg";
+import { Config, Layer, Redacted, Schema } from "effect";
+import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster";
 
 // -----------------------------------------------------------------------------
 // PostgreSQL Configuration Schema
@@ -28,9 +28,9 @@ export const PostgresConfig = Schema.Struct({
   database: Schema.String,
   username: Schema.String,
   password: Schema.String,
-  ssl: Schema.Boolean.pipe(SchemaUtils.withKeyDefaults(false))
-})
-export type PostgresConfig = typeof PostgresConfig.Type
+  ssl: Schema.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+});
+export type PostgresConfig = typeof PostgresConfig.Type;
 
 // -----------------------------------------------------------------------------
 // Configuration from Environment
@@ -53,8 +53,8 @@ export const PostgresConfigFromEnv = Config.all({
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false))
-})
+  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
+});
 
 // -----------------------------------------------------------------------------
 // SQL Client Layer
@@ -69,8 +69,8 @@ export const PgClientLive = PgClient.layerConfig({
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false))
-})
+  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
+});
 
 /**
  * PgClient layer with explicit config
@@ -82,8 +82,8 @@ export const PgClientLayerFromConfig = (config: PostgresConfig) =>
     database: config.database,
     username: config.username,
     password: Redacted.make(config.password),
-    ssl: config.ssl
-  })
+    ssl: config.ssl,
+  });
 
 // -----------------------------------------------------------------------------
 // Message Storage Layer
@@ -98,7 +98,7 @@ export const PgClientLayerFromConfig = (config: PostgresConfig) =>
  *
  * Requires: SqlClient + ShardingConfig
  */
-export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflow_" })
+export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflow_" });
 
 // -----------------------------------------------------------------------------
 // Runner Storage Layer
@@ -112,7 +112,7 @@ export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflo
  *
  * Requires: SqlClient + ShardingConfig
  */
-export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_" })
+export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_" });
 
 // -----------------------------------------------------------------------------
 // Sharding Config Layer (single-node deployment)
@@ -123,7 +123,7 @@ export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_
  *
  * Uses default configuration appropriate for a single instance.
  */
-export const ShardingConfigLive = ShardingConfig.layerDefaults
+export const ShardingConfigLive = ShardingConfig.layerDefaults;
 
 // -----------------------------------------------------------------------------
 // Full Persistence Stack
@@ -149,25 +149,19 @@ export const ShardingConfigLive = ShardingConfig.layerDefaults
  * )
  * ```
  */
-export const PostgresPersistenceLive = Layer.mergeAll(
-  MessageStorageLive,
-  RunnerStorageLive
-).pipe(
+export const PostgresPersistenceLive = Layer.mergeAll(MessageStorageLive, RunnerStorageLive).pipe(
   Layer.provide(ShardingConfigLive),
   Layer.provide(PgClientLive)
-)
+);
 
 /**
  * Persistence layer with explicit PostgreSQL config
  */
 export const PostgresPersistenceFromConfig = (config: PostgresConfig) =>
-  Layer.mergeAll(
-    MessageStorageLive,
-    RunnerStorageLive
-  ).pipe(
+  Layer.mergeAll(MessageStorageLive, RunnerStorageLive).pipe(
     Layer.provide(ShardingConfigLive),
     Layer.provide(PgClientLayerFromConfig(config))
-  )
+  );
 
 // -----------------------------------------------------------------------------
 // Schema Migrations (auto-applied by @effect/cluster)

@@ -34,6 +34,7 @@ const byRrfScoreDescending = Order.mapInput(
  * @since 0.0.0
  * @category Retrieval
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const rrfScore = (ranks: ReadonlyArray<number>, k: number = 60): number =>
   A.reduce(ranks, 0, (sum, rank) => sum + 1 / (k + rank));
 
@@ -50,6 +51,7 @@ export const rrfScore = (ranks: ReadonlyArray<number>, k: number = 60): number =
  * @since 0.0.0
  * @category Retrieval
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const rrfFusion = <T extends { id: string }>(
   rankedLists: ReadonlyArray<ReadonlyArray<T>>,
   k: number = 60
@@ -168,6 +170,7 @@ interface OntologyContext {
  * @since 0.0.0
  * @category Retrieval
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const expandQueryWithOntology = (
   query: string,
   ontology: OntologyContext,
@@ -291,6 +294,7 @@ export const expandQueryWithOntology = (
  * @since 0.0.0
  * @category Retrieval
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const buildExpandedQuery = (terms: ReadonlyArray<ExpandedTerm>, useBoosting: boolean = false): string => {
   if (useBoosting) {
     return pipe(

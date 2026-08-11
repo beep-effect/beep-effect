@@ -7,11 +7,12 @@
  * @module Cli/Commands/Storage
  */
 
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli"
-import { Console, Effect, Option, Schema } from "effect"
-import { BatchManifest } from "../../Domain/Schema/Batch.ts"
-import { StorageService } from "../../Service/Storage.ts"
-import { withErrorHandler } from "../ErrorHandler.ts"
+import { Console, Effect, Option, Schema } from "effect";
+import * as P from "effect/Predicate";
+import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
+import { BatchManifest } from "../../Domain/Schema/Batch.ts";
+import { StorageService } from "../../Service/Storage.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Subcommands
@@ -22,201 +23,148 @@ import { withErrorHandler } from "../ErrorHandler.ts"
 const listPrefix = Args.string("prefix").pipe(
   Args.optional,
   Args.withDescription("Path prefix to list (default: root)")
-)
+);
 
-const listHandler = (prefix: Option.Option<string>) =>
-  Effect.gen(function*() {
-    const storage = yield* StorageService
-    const effectivePrefix = Option.getOrElse(prefix, () => "")
-
-    yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`)
-    yield* Console.log("")
-
-    const items = yield* storage.list(effectivePrefix)
-
-    if (items.length === 0) {
-      yield* Console.log("(empty)")
-      return
+const listHandler = Effect.fn("listHandler")(function* (prefix: Option.Option<string>) {
+  const storage = yield* StorageService;
+  const effectivePrefix = Option.getOrElse(prefix, () => "");
+  yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
+  yield* Console.log("");
+  const items = yield* storage.list(effectivePrefix);
+  if (items.length === 0) {
+    yield* Console.log("(empty)");
+    return;
+  }
+  const dirs = new Set<string>();
+  const files: Array<string> = [];
+  for (const item of items) {
+    const relativePath = P.isTruthy(effectivePrefix) ? item.replace(effectivePrefix, "").replace(/^\//, "") : item;
+    const parts = relativePath.split("/");
+    if (parts.length > 1) {
+      dirs.add(`${parts[0]}/`);
+    } else {
+      files.push(item);
     }
+  }
+  for (const dir of Array.from(dirs).sort()) {
+    yield* Console.log(`  📁 ${dir}`);
+  }
+  for (const file of files.sort()) {
+    const name = file.split("/").pop() ?? file;
+    yield* Console.log(`  📄 ${name}`);
+  }
+  yield* Console.log("");
+  yield* Console.log(`Total: ${dirs.size} directories, ${files.length} files`);
+});
 
-    // Group by directory
-    const dirs = new Set<string>()
-    const files: Array<string> = []
-
-    for (const item of items) {
-      const relativePath = effectivePrefix
-        ? item.replace(effectivePrefix, "").replace(/^\//, "")
-        : item
-
-      const parts = relativePath.split("/")
-      if (parts.length > 1) {
-        dirs.add(parts[0] + "/")
-      } else {
-        files.push(item)
-      }
-    }
-
-    // Print directories first
-    for (const dir of Array.from(dirs).sort()) {
-      yield* Console.log(`  📁 ${dir}`)
-    }
-
-    // Then files
-    for (const file of files.sort()) {
-      const name = file.split("/").pop() ?? file
-      yield* Console.log(`  📄 ${name}`)
-    }
-
-    yield* Console.log("")
-    yield* Console.log(`Total: ${dirs.size} directories, ${files.length} files`)
-  })
-
-const listCommand = Command.make(
-  "ls",
-  { prefix: listPrefix },
-  ({ prefix }) => withErrorHandler(listHandler(prefix))
-).pipe(Command.withDescription("List objects in storage"))
+const listCommand = Command.make("ls", { prefix: listPrefix }, ({ prefix }) =>
+  prefix.pipe(listHandler, withErrorHandler)
+).pipe(Command.withDescription("List objects in storage"));
 
 // --- Cat Command ---
 
-const catPath = Args.string("path").pipe(
-  Args.withDescription("Path to the object to read")
-)
+const catPath = Args.string("path").pipe(Args.withDescription("Path to the object to read"));
 
 const catLinesOption = Options.integer("lines").pipe(
   Options.withAlias("n"),
   Options.withDefault(0),
   Options.withDescription("Limit output to N lines (0 = all)")
-)
+);
 
-const catHandler = (path: string, lines: number) =>
-  Effect.gen(function*() {
-    const storage = yield* StorageService
+const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number) {
+  const storage = yield* StorageService;
+  const contentOpt = yield* storage.get(path);
+  if (contentOpt === undefined) {
+    yield* Console.error(`Not found: ${path}`);
+    return;
+  }
+  let content = contentOpt;
+  if (lines > 0) {
+    content = content.split("\n").slice(0, lines).join("\n");
+  }
+  yield* Console.log(content);
+});
 
-    const contentOpt = yield* storage.get(path)
-
-    if ((contentOpt === undefined)) {
-      yield* Console.error(`Not found: ${path}`)
-      return
-    }
-
-    let content = contentOpt
-
-    if (lines > 0) {
-      content = content.split("\n").slice(0, lines).join("\n")
-    }
-
-    yield* Console.log(content)
-  })
-
-const catCommand = Command.make(
-  "cat",
-  { path: catPath, lines: catLinesOption },
-  ({ lines, path }) => withErrorHandler(catHandler(path, lines))
-).pipe(Command.withDescription("Display contents of an object"))
+const catCommand = Command.make("cat", { path: catPath, lines: catLinesOption }, ({ lines, path }) =>
+  withErrorHandler(catHandler(path, lines))
+).pipe(Command.withDescription("Display contents of an object"));
 
 // --- Batches Command ---
 
-const batchesHandler = () =>
-  Effect.gen(function*() {
-    const storage = yield* StorageService
-
-    yield* Console.log("Batch Manifests:")
-    yield* Console.log("")
-
-    const items = yield* storage.list("batches/")
-
-    // Find manifest files
-    const manifestPaths = items.filter((item) => item.endsWith("manifest.json"))
-
-    if (manifestPaths.length === 0) {
-      yield* Console.log("No batches found.")
-      yield* Console.log("")
-      yield* Console.log("Use 'effect-onto ingest' to create a batch.")
-      return
+const batchesHandler = Effect.fn("batchesHandler")(function* () {
+  const storage = yield* StorageService;
+  yield* Console.log("Batch Manifests:");
+  yield* Console.log("");
+  const items = yield* storage.list("batches/");
+  const manifestPaths = items.filter((item) => item.endsWith("manifest.json"));
+  if (manifestPaths.length === 0) {
+    yield* Console.log("No batches found.");
+    yield* Console.log("");
+    yield* Console.log("Use 'effect-onto ingest' to create a batch.");
+    return;
+  }
+  for (const manifestPath of manifestPaths) {
+    const contentOpt = yield* storage.get(manifestPath);
+    if (contentOpt !== undefined) {
+      const manifest = Schema.decodeOption(Schema.fromJsonString(BatchManifest))(contentOpt);
+      yield* Option.match(manifest, {
+        onNone: () => Console.log(`📦 ${manifestPath} (invalid manifest)`).pipe(Effect.andThen(Console.log(""))),
+        onSome: (value) =>
+          Console.log(`📦 ${value.batchId}`).pipe(
+            Effect.andThen(Console.log(`   Documents: ${value.documents.length}`)),
+            Effect.andThen(Console.log(`   Namespace: ${value.targetNamespace}`)),
+            Effect.andThen(Console.log(`   Created: ${value.createdAt}`)),
+            Effect.andThen(Console.log(""))
+          ),
+      });
     }
+  }
+  yield* Console.log(`Total: ${manifestPaths.length} batches`);
+});
 
-    for (const manifestPath of manifestPaths) {
-      const contentOpt = yield* storage.get(manifestPath)
-
-      if ((contentOpt !== undefined)) {
-        try {
-          const manifest = Schema.decodeSync(BatchManifest)(JSON.parse(contentOpt))
-
-          yield* Console.log(`📦 ${manifest.batchId}`)
-          yield* Console.log(`   Documents: ${manifest.documents.length}`)
-          yield* Console.log(`   Namespace: ${manifest.targetNamespace}`)
-          yield* Console.log(`   Created: ${manifest.createdAt}`)
-          yield* Console.log("")
-        } catch {
-          yield* Console.log(`📦 ${manifestPath} (invalid manifest)`)
-          yield* Console.log("")
-        }
-      }
-    }
-
-    yield* Console.log(`Total: ${manifestPaths.length} batches`)
-  })
-
-const batchesCommand = Command.make(
-  "batches",
-  {},
-  () => withErrorHandler(batchesHandler())
-).pipe(Command.withDescription("List all batch manifests"))
+const batchesCommand = Command.make("batches", {}, () => withErrorHandler(batchesHandler())).pipe(
+  Command.withDescription("List all batch manifests")
+);
 
 // --- Info Command ---
 
-const infoHandler = () =>
-  Effect.gen(function*() {
-    const storage = yield* StorageService
-
-    yield* Console.log("Storage Configuration:")
-    yield* Console.log("")
-
-    // Get storage size
-    const size = yield* storage.size
-
-    yield* Console.log(`  Total size: ${formatBytes(size)}`)
-
-    // Try to detect storage type by checking for known paths
-    const hasGcsMarker = yield* storage.get(".gcs-marker").pipe(
-      Effect.map(Option.isSome),
-      Effect.catch(() => Effect.succeed(false))
-    )
-
-    yield* Console.log(`  Type: ${hasGcsMarker ? "GCS" : "Local/Memory"}`)
-    yield* Console.log("")
-
-    // Show top-level directories
-    yield* Console.log("Top-level directories:")
-    const items = yield* storage.list("")
-    const dirs = new Set<string>()
-
-    for (const item of items) {
-      const parts = item.split("/")
-      if (parts.length > 1) {
-        dirs.add(parts[0])
-      }
+const infoHandler = Effect.fn("infoHandler")(function* () {
+  const storage = yield* StorageService;
+  yield* Console.log("Storage Configuration:");
+  yield* Console.log("");
+  const size = yield* storage.size;
+  yield* Console.log(`  Total size: ${formatBytes(size)}`);
+  const hasGcsMarker = yield* storage.get(".gcs-marker").pipe(
+    Effect.map(P.isNotUndefined),
+    Effect.orElseSucceed(() => false)
+  );
+  yield* Console.log(`  Type: ${P.isTruthy(hasGcsMarker) ? "GCS" : "Local/Memory"}`);
+  yield* Console.log("");
+  yield* Console.log("Top-level directories:");
+  const items = yield* storage.list("");
+  const dirs = new Set<string>();
+  for (const item of items) {
+    const parts = item.split("/");
+    if (parts.length > 1) {
+      dirs.add(parts[0]);
     }
-
-    for (const dir of Array.from(dirs).sort()) {
-      yield* Console.log(`  📁 ${dir}/`)
-    }
-  })
+  }
+  for (const dir of Array.from(dirs).sort()) {
+    yield* Console.log(`  📁 ${dir}/`);
+  }
+});
 
 const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0 B"
-  const k = 1024
-  const sizes = ["B", "KB", "MB", "GB", "TB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-}
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
+};
 
-const infoCommand = Command.make(
-  "info",
-  {},
-  () => withErrorHandler(infoHandler())
-).pipe(Command.withDescription("Show storage information"))
+const infoCommand = Command.make("info", {}, () => withErrorHandler(infoHandler())).pipe(
+  Command.withDescription("Show storage information")
+);
 
 // =============================================================================
 // Main Storage Command
@@ -225,4 +173,4 @@ const infoCommand = Command.make(
 export const storageCommand = Command.make("storage").pipe(
   Command.withSubcommands([listCommand, catCommand, batchesCommand, infoCommand]),
   Command.withDescription("Browse and manage cloud storage")
-)
+);

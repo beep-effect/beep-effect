@@ -8,27 +8,27 @@
  * @module Repository
  */
 
-import { makeDrizzleLayer } from "@beep/postgres"
-import { PgClient } from "@effect/sql-pg"
-import { Config, Layer, Redacted } from "effect"
-import { ArticleRepository } from "./Article.ts"
-import { ClaimRepository } from "./Claim.ts"
-import { EmbeddingRepository } from "./Embedding.ts"
-import { EntityRegistryRepository } from "./EntityRegistry.ts"
+import { makeDrizzleLayer } from "@beep/postgres";
+import { PgClient } from "@effect/sql-pg";
+import { Config, Layer, Redacted } from "effect";
+import { ArticleRepository } from "./Article.ts";
+import { ClaimRepository } from "./Claim.ts";
+import { EmbeddingRepository } from "./Embedding.ts";
+import { EntityRegistryRepository } from "./EntityRegistry.ts";
 
-export { type ArticleFilter, ArticleRepository } from "./Article.ts"
-export { type ClaimFilter, ClaimRepository, type ConflictCandidate } from "./Claim.ts"
+export { type ArticleFilter, ArticleRepository } from "./Article.ts";
+export { type ClaimFilter, ClaimRepository, type ConflictCandidate } from "./Claim.ts";
 export {
   type EmbeddingEntityType,
   EmbeddingRepository,
   type HybridSearchOptions,
   type HybridSearchResult,
   type SimilarityResult,
-  type SimilaritySearchOptions
-} from "./Embedding.ts"
-export { type BlockingCandidate, EntityRegistryRepository } from "./EntityRegistry.ts"
-export * from "./schema.ts"
-export * from "./types.ts"
+  type SimilaritySearchOptions,
+} from "./Embedding.ts";
+export { type BlockingCandidate, EntityRegistryRepository } from "./EntityRegistry.ts";
+export * from "./schema.ts";
+export * from "./types.ts";
 
 // =============================================================================
 // Layer Composition
@@ -39,7 +39,7 @@ export * from "./types.ts"
  *
  * Requires SqlClient from @effect/sql-pg
  */
-export const DrizzleLive = makeDrizzleLayer()
+export const DrizzleLive = makeDrizzleLayer();
 
 /**
  * PgClient layer from environment variables
@@ -58,38 +58,30 @@ export const PgClientLive = PgClient.layerConfig({
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false))
-})
+  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
+});
 
 /**
  * Full Drizzle layer with Postgres connection
  */
-export const DrizzleWithPgLive = DrizzleLive.pipe(
-  Layer.provide(PgClientLive)
-)
+export const DrizzleWithPgLive = DrizzleLive.pipe(Layer.provide(PgClientLive));
 
 /**
  * ClaimRepository with Drizzle
  */
-export const ClaimRepositoryLive = ClaimRepository.Default.pipe(
-  Layer.provide(DrizzleLive)
-)
+export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(DrizzleLive));
 
 /**
  * ArticleRepository with Drizzle
  */
-export const ArticleRepositoryLive = ArticleRepository.Default.pipe(
-  Layer.provide(DrizzleLive)
-)
+export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provide(DrizzleLive));
 
 /**
  * EntityRegistryRepository with Drizzle
  *
  * Requires pgvector extension to be enabled in PostgreSQL.
  */
-export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pipe(
-  Layer.provide(DrizzleLive)
-)
+export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pipe(Layer.provide(DrizzleLive));
 
 /**
  * EmbeddingRepository with Drizzle
@@ -97,9 +89,7 @@ export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pip
  * Provides persistent vector storage with hybrid search.
  * Requires pgvector extension to be enabled in PostgreSQL.
  */
-export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(
-  Layer.provide(DrizzleLive)
-)
+export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.provide(DrizzleLive));
 
 /**
  * All repositories with Drizzle and Postgres
@@ -109,19 +99,17 @@ export const RepositoriesLive = Layer.mergeAll(
   ArticleRepositoryLive,
   EntityRegistryRepositoryLive,
   EmbeddingRepositoryLive
-).pipe(
-  Layer.provide(PgClientLive)
-)
+).pipe(Layer.provide(PgClientLive));
 
 /**
  * Test layer with explicit config
  */
 export const makeTestRepositoriesLayer = (config: {
-  host: string
-  port: number
-  database: string
-  username: string
-  password: string
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
 }) =>
   Layer.mergeAll(
     ClaimRepository.Default,
@@ -137,7 +125,7 @@ export const makeTestRepositoriesLayer = (config: {
         database: config.database,
         username: config.username,
         password: Redacted.make(config.password),
-        ssl: false
+        ssl: false,
       })
     )
-  )
+  );

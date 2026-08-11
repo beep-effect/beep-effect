@@ -413,7 +413,9 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
  */
 export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
   toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsOptionsFields))(fc).map((fields) => ExtractWithClaimsOptionsModel.make(fields)),
+    S.toArbitrary(S.Struct(ExtractWithClaimsOptionsFields))(fc).map((fields) =>
+      ExtractWithClaimsOptionsModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
@@ -535,7 +537,9 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
  */
 export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
   toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsResultFields))(fc).map((fields) => ExtractWithClaimsResultModel.make(fields)),
+    S.toArbitrary(S.Struct(ExtractWithClaimsResultFields))(fc).map((fields) =>
+      ExtractWithClaimsResultModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsResult", {
     description: "Extraction result extended with claim count and source-article provenance.",
@@ -588,7 +592,8 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
  * @since 0.0.0
  */
 export const QueryBinding = QueryBindingModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(S.Struct(QueryBindingFields))(fc).map((fields) => QueryBindingModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(QueryBindingFields))(fc).map((fields) => QueryBindingModel.make(fields)),
 }).pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
@@ -676,7 +681,8 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  * @since 0.0.0
  */
 export const QueryResult = QueryResultModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(S.Struct(QueryResultFields))(fc).map((fields) => QueryResultModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(QueryResultFields))(fc).map((fields) => QueryResultModel.make(fields)),
 }).pipe(
   $I.annoteSchema("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
@@ -1045,7 +1051,9 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
  */
 export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
   toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(EnhancedValidationReportFields))(fc).map((fields) => EnhancedValidationReportModel.make(fields)),
+    S.toArbitrary(S.Struct(EnhancedValidationReportFields))(fc).map((fields) =>
+      EnhancedValidationReportModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",

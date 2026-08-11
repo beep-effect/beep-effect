@@ -14,11 +14,14 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Marketplace");
 /**
  * A GitHub repository plugin source.
  *
- * @example
+ * **Example** (Reference a GitHub plugin)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const source = Plugin.GithubPluginSource.make({ repo: "owner/repository" })
+ *
+ * console.log(source.repo) // "owner/repository"
  * ```
  *
  * @category schemas
@@ -39,7 +42,8 @@ export class GithubPluginSource extends S.Class<GithubPluginSource>($I`GithubPlu
 /**
  * Companion types for {@link GithubPluginSource}.
  *
- * @example
+ * **Example** (Inspect encoded GitHub source input)
+ *
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
@@ -74,13 +78,16 @@ export declare namespace GithubPluginSource {
 /**
  * A plugin archive or repository URL source.
  *
- * @example
+ * **Example** (Reference a plugin URL)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const source = Plugin.UrlPluginSource.make({
  *   url: "https://example.test/plugin.git"
  * })
+ *
+ * console.log(source.url) // "https://example.test/plugin.git"
  * ```
  *
  * @category schemas
@@ -101,7 +108,8 @@ export class UrlPluginSource extends S.Class<UrlPluginSource>($I`UrlPluginSource
 /**
  * Companion types for {@link UrlPluginSource}.
  *
- * @example
+ * **Example** (Inspect encoded URL source input)
+ *
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
@@ -136,7 +144,8 @@ export declare namespace UrlPluginSource {
 /**
  * A plugin located in a git repository subdirectory.
  *
- * @example
+ * **Example** (Reference a plugin subdirectory)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -144,6 +153,8 @@ export declare namespace UrlPluginSource {
  *   url: "https://example.test/plugins.git",
  *   path: "plugins/example"
  * })
+ *
+ * console.log(source.path) // "plugins/example"
  * ```
  *
  * @category schemas
@@ -164,18 +175,6 @@ export class GitSubdirPluginSource extends S.Class<GitSubdirPluginSource>($I`Git
 
 /**
  * Companion types for {@link GitSubdirPluginSource}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   source: "git-subdir",
- *   url: "https://example.test/plugins.git",
- *   path: "plugins/example"
- * } satisfies Plugin.GitSubdirPluginSource.Encoded
- * console.log(input.path)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -201,11 +200,14 @@ export declare namespace GitSubdirPluginSource {
 /**
  * An npm package plugin source.
  *
- * @example
+ * **Example** (Reference an npm plugin)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const source = Plugin.NpmPluginSource.make({ package: "@example/plugin" })
+ *
+ * console.log(source.package) // "@example/plugin"
  * ```
  *
  * @category schemas
@@ -226,7 +228,8 @@ export class NpmPluginSource extends S.Class<NpmPluginSource>($I`NpmPluginSource
 /**
  * Companion types for {@link NpmPluginSource}.
  *
- * @example
+ * **Example** (Inspect encoded npm source input)
+ *
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
@@ -273,7 +276,8 @@ const StructuredPluginSource = S.Union([
 /**
  * A relative path or structured marketplace plugin source.
  *
- * @example
+ * **Example** (Inspect marketplace plugin source spec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -295,14 +299,6 @@ export const MarketplacePluginSourceSpec = S.Union([S.String, StructuredPluginSo
 /**
  * Runtime type decoded by {@link MarketplacePluginSourceSpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const source: Plugin.MarketplacePluginSourceSpec = "./plugins/example"
- * console.log(source)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -311,7 +307,8 @@ export type MarketplacePluginSourceSpec = typeof MarketplacePluginSourceSpec.Typ
 /**
  * One plugin entry in a marketplace catalog.
  *
- * @example
+ * **Example** (Create a marketplace entry)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -319,6 +316,8 @@ export type MarketplacePluginSourceSpec = typeof MarketplacePluginSourceSpec.Typ
  *   name: "example",
  *   source: "./plugins/example"
  * })
+ *
+ * console.log(entry.name) // "example"
  * ```
  *
  * @category schemas
@@ -356,7 +355,8 @@ export class MarketplacePluginEntry extends S.Class<MarketplacePluginEntry>($I`M
 /**
  * Companion types for {@link MarketplacePluginEntry}.
  *
- * @example
+ * **Example** (Inspect encoded marketplace entry input)
+ *
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
@@ -391,7 +391,8 @@ export declare namespace MarketplacePluginEntry {
 /**
  * Marketplace-wide metadata.
  *
- * @example
+ * **Example** (Create marketplace metadata)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Plugin } from "effect-claudecode"
@@ -417,14 +418,6 @@ export class MarketplaceMetadata extends S.Class<MarketplaceMetadata>($I`Marketp
 /**
  * Companion types for {@link MarketplaceMetadata}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = { pluginRoot: "./plugins" } satisfies Plugin.MarketplaceMetadata.Encoded
- * console.log(input.pluginRoot)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -449,7 +442,8 @@ export declare namespace MarketplaceMetadata {
 /**
  * A complete `.claude-plugin/marketplace.json` file.
  *
- * @example
+ * **Example** (Create a marketplace catalog)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -458,6 +452,8 @@ export declare namespace MarketplaceMetadata {
  *   owner: Plugin.AuthorInfo.make({ name: "Beep" }),
  *   plugins: []
  * })
+ *
+ * console.log(marketplace.name) // "example"
  * ```
  *
  * @category schemas
@@ -483,18 +479,6 @@ export class MarketplaceFile extends S.Class<MarketplaceFile>($I`MarketplaceFile
 
 /**
  * Companion types for {@link MarketplaceFile}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   name: "example",
- *   owner: { name: "Beep" },
- *   plugins: []
- * } satisfies Plugin.MarketplaceFile.Encoded
- * console.log(input.name)
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -1,53 +1,47 @@
-import { FileSystem, Path } from "effect"
-import { KeyValueStore } from "effect/unstable/persistence"
-import { PlatformError, SystemError } from "effect/PlatformError"
-import { Storage } from "@google-cloud/storage"
-import { Context, Effect, Layer, Option } from "effect"
-import { ConfigService } from "./Config.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Storage } from "@google-cloud/storage";
+import { Context, Data, Effect, FileSystem, Layer, Path } from "effect";
+import * as Clock from "effect/Clock";
+import * as O from "effect/Option";
+import type { PlatformError } from "effect/PlatformError";
+import { SystemError } from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import { KeyValueStore } from "effect/unstable/persistence";
+import { ConfigService } from "./Config.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/Storage");
 
 /**
  * Result of getWithGeneration - includes content and version for optimistic locking
  */
 export interface ObjectWithGeneration {
-  readonly content: string
-  readonly generation: string
+  readonly content: string;
+  readonly generation: string;
 }
 
 /**
  * Error thrown when setIfGenerationMatch fails due to concurrent modification
  */
-export class GenerationMismatchError extends Error {
-  readonly _tag = "GenerationMismatchError" as const
-  readonly key: string
-  readonly expectedGeneration: string
-  readonly actualGeneration: string | undefined
-  constructor(key: string, expectedGeneration: string, actualGeneration?: string) {
-    super(
-      `Generation mismatch for ${key}: expected ${expectedGeneration}${
-        actualGeneration ? `, got ${actualGeneration}` : ""
-      }`
-    )
-    this.key = key
-    this.expectedGeneration = expectedGeneration
-    this.actualGeneration = actualGeneration
-    this.name = "GenerationMismatchError"
-  }
-}
+export class GenerationMismatchError extends Data.TaggedError("GenerationMismatchError")<{
+  readonly key: string;
+  readonly expectedGeneration: string;
+  readonly actualGeneration?: string;
+}> {}
 
 /**
  * StorageService interface extending KeyValueStore
  * Adds `list` capability and optimistic locking for concurrent writes
  */
-export interface StorageService extends KeyValueStore.KeyValueStore {
-  readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>
+export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
+  readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>;
 
   /**
    * Get an object along with its generation for optimistic locking
    * @returns None if object doesn't exist, Some with content and generation if it does
    */
-  readonly getWithGeneration: (key: string) => Effect.Effect<Option.Option<ObjectWithGeneration>, SystemError | PlatformError>
+  readonly getWithGeneration: (
+    key: string
+  ) => Effect.Effect<O.Option<ObjectWithGeneration>, SystemError | PlatformError>;
 
   /**
    * Set an object only if its generation matches the expected value
@@ -58,7 +52,7 @@ export interface StorageService extends KeyValueStore.KeyValueStore {
     key: string,
     value: string,
     generation: string
-  ) => Effect.Effect<void, SystemError | PlatformError | GenerationMismatchError>
+  ) => Effect.Effect<void, SystemError | PlatformError | GenerationMismatchError>;
 
   /**
    * Get a signed URL for direct access to the object (GCS only)
@@ -69,500 +63,442 @@ export interface StorageService extends KeyValueStore.KeyValueStore {
   readonly getSignedUrl: (
     key: string,
     expiresInSeconds?: number
-  ) => Effect.Effect<Option.Option<string>, SystemError | PlatformError>
+  ) => Effect.Effect<O.Option<string>, SystemError | PlatformError>;
 
   /**
    * Whether this storage backend supports signed URLs
    */
-  readonly supportsSignedUrls: boolean
+  readonly supportsSignedUrls: boolean;
 }
 
-export const StorageService = Context.Service<StorageService>($I`StorageService`)
+export class StorageService extends Context.Service<StorageService, StorageServiceMethods>()($I`StorageService`) {}
 
-export interface StorageConfig {
-  readonly type: "local" | "gcs" | "memory"
-  readonly bucketName?: string // Required for GCS
-  readonly localPath?: string // Required for Local
-  readonly pathPrefix?: string
+export interface StorageConfigValue {
+  readonly type: "local" | "gcs" | "memory";
+  readonly bucketName?: string; // Required for GCS
+  readonly localPath?: string; // Required for Local
+  readonly pathPrefix?: string;
 }
 
-export const StorageConfig = Context.Service<StorageConfig>($I`StorageConfig`)
+export class StorageConfig extends Context.Service<StorageConfig, StorageConfigValue>()($I`StorageConfig`) {}
 
 // --- GCS Implementation ---
 
-const makeGcsStore = (config: StorageConfig) =>
-  Effect.gen(function*() {
-    if (!config.bucketName) {
-      return yield* Effect.fail(new Error("bucketName is required for GCS storage"))
-    }
-
-    // Log GCS client creation (it doesn't have explicit close)
-    yield* Effect.logDebug("Creating GCS Storage client", { bucket: config.bucketName })
-
-    const storage = new Storage()
-    const bucket = storage.bucket(config.bucketName)
-    const prefix = config.pathPrefix ?? ""
-
-    const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "")
-
-    const handleError = (method: string, key: string, cause: unknown) => {
-      let reason: SystemError["_tag"] = "Unknown"
-      let message: string
-
-      // Handle different error types
-      if (cause instanceof Error) {
-        message = cause.message
-      } else if (typeof cause === "object" && cause !== null) {
-        // GCS errors may be plain objects with message/errors properties
-        const obj = cause as Record<string, unknown>
-        if (typeof obj.message === "string") {
-          message = obj.message
-        } else if (Array.isArray(obj.errors)) {
-          // GCS batch errors have an errors array
-          message = obj.errors.map((e: unknown) =>
+const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigValue) {
+  if (P.isUndefined(config.bucketName)) {
+    return yield* new SystemError({
+      _tag: "InvalidData",
+      module: "KeyValueStore",
+      method: "makeGcsStore",
+      pathOrDescriptor: "bucketName",
+      description: "bucketName is required for GCS storage",
+    });
+  }
+  yield* Effect.logDebug("Creating GCS Storage client", { bucket: config.bucketName });
+  const storage = new Storage();
+  const bucket = storage.bucket(config.bucketName);
+  const prefix = config.pathPrefix ?? "";
+  const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "");
+  const handleError = (method: string, key: string, cause: unknown) => {
+    let reason: SystemError["_tag"] = "Unknown";
+    let message: string;
+    if (cause instanceof Error) {
+      message = cause.message;
+    } else if (typeof cause === "object" && cause !== null) {
+      const obj = cause as Record<string, unknown>;
+      if (typeof obj.message === "string") {
+        message = obj.message;
+      } else if (Array.isArray(obj.errors)) {
+        message = obj.errors
+          .map((e: unknown) =>
             typeof e === "object" && e !== null && "message" in e
-              ? String((e as { message: unknown }).message)
+              ? String(
+                  (
+                    e as {
+                      message: unknown;
+                    }
+                  ).message
+                )
               : String(e)
-          ).join("; ")
-        } else {
-          message = JSON.stringify(cause)
-        }
+          )
+          .join("; ");
       } else {
-        message = String(cause)
+        message = String(cause);
       }
-
-      if (cause instanceof Error) {
-        // Use type guard to safely access .code property (GCS errors have numeric HTTP status codes)
-        const code = "code" in cause && typeof (cause as { code?: unknown }).code === "number"
-          ? (cause as { code: number }).code
-          : undefined
-        if (code !== undefined) {
-          switch (code) {
-            case 404:
-              reason = "NotFound"
-              break
-            case 403:
-              reason = "PermissionDenied"
-              break
-            case 409:
-              reason = "AlreadyExists"
-              break
-            case 400:
-              reason = "InvalidData"
-              break
-            case 408:
-            case 503:
-            case 504:
-              reason = "Busy"
-              break
+    } else {
+      message = String(cause);
+    }
+    if (cause instanceof Error) {
+      const code =
+        "code" in cause &&
+        typeof (
+          cause as {
+            code?: unknown;
           }
+        ).code === "number"
+          ? (
+              cause as {
+                code: number;
+              }
+            ).code
+          : undefined;
+      if (code !== undefined) {
+        switch (code) {
+          case 404:
+            reason = "NotFound";
+            break;
+          case 403:
+            reason = "PermissionDenied";
+            break;
+          case 409:
+            reason = "AlreadyExists";
+            break;
+          case 400:
+            reason = "InvalidData";
+            break;
+          case 408:
+          case 503:
+          case 504:
+            reason = "Busy";
+            break;
         }
       }
-
-      return new SystemError({
-        _tag: reason,
-        module: "KeyValueStore",
-        method,
-        pathOrDescriptor: key,
-        description: message
-      })
     }
-
-    const handleKvError = (method: string, key: string, cause: unknown) =>
-      new KeyValueStore.KeyValueStoreError({
-        method,
-        key,
-        message: handleError(method, key, cause).message,
-        cause
-      })
-
-    const impl = KeyValueStore.make({
-      get: (key) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            const [exists] = await file.exists()
-            if (!exists) return undefined
-            const [content] = await file.download()
-            return content.toString("utf-8")
-          },
-          catch: (e) => handleKvError("get", key, e)
-        }),
-      getUint8Array: (key) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            const [exists] = await file.exists()
-            if (!exists) return undefined
-            const [content] = await file.download()
-            return new Uint8Array(content)
-          },
-          catch: (e) => handleKvError("getUint8Array", key, e)
-        }),
-      set: (key, value) =>
-        Effect.tryPromise({
-          try: async () => {
-            const content = typeof value === "string" ? value : Buffer.from(value)
-            await bucket.file(toPath(key)).save(content)
-          },
-          catch: (e) => handleKvError("set", key, e)
-        }),
-      remove: (key) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            const [exists] = await file.exists()
-            if (exists) await file.delete()
-          },
-          catch: (e) => handleKvError("remove", key, e)
-        }),
-      clear: Effect.tryPromise({
-        try: async () => {
-          await bucket.deleteFiles(prefix ? { prefix } : {})
-        },
-        catch: (e) => handleKvError("clear", prefix, e)
-      }),
-      size: Effect.tryPromise({
-        try: async () => {
-          const [files] = await bucket.getFiles(prefix ? { prefix } : {})
-          return files.length
-        },
-        catch: (e) => handleKvError("size", prefix, e)
-      })
-    })
-
-    return {
-      ...impl,
-      list: (listPrefix) =>
-        Effect.tryPromise({
-          try: async () => {
-            const fullPrefix = toPath(listPrefix)
-            const [files] = await bucket.getFiles({ prefix: fullPrefix })
-            return files.map((f) => f.name.replace(prefix ? prefix + "/" : "", ""))
-          },
-          catch: (e) => handleError("list", listPrefix, e)
-        }),
-      getWithGeneration: (key) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            const [exists] = await file.exists()
-            if (!exists) return Option.none()
-
-            // Get file content and metadata in parallel
-            const [[content], [metadata]] = await Promise.all([
-              file.download(),
-              file.getMetadata()
-            ])
-
-            // GCS generation is a numeric string that increments on each write
-            const generation = String(metadata.generation)
-            return Option.some({
-              content: content.toString("utf-8"),
-              generation
-            })
-          },
-          catch: (e) => handleError("getWithGeneration", key, e)
-        }),
-      setIfGenerationMatch: (key, value, expectedGeneration) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            await file.save(value, {
-              preconditionOpts: {
-                ifGenerationMatch: Number(expectedGeneration)
+    return new SystemError({
+      _tag: reason,
+      module: "KeyValueStore",
+      method,
+      pathOrDescriptor: key,
+      description: message,
+    });
+  };
+  const handleKvError = (method: string, key: string, cause: unknown) =>
+    new KeyValueStore.KeyValueStoreError({
+      method,
+      key,
+      message: handleError(method, key, cause).message,
+      cause,
+    });
+  const tryKvPromise = <A>(method: string, key: string, evaluate: () => PromiseLike<A>) =>
+    Effect.tryPromise({
+      try: evaluate,
+      catch: (cause) => handleKvError(method, key, cause),
+    });
+  const tryStoragePromise = <A>(method: string, key: string, evaluate: () => PromiseLike<A>) =>
+    Effect.tryPromise({
+      try: evaluate,
+      catch: (cause) => handleError(method, key, cause),
+    });
+  const impl = KeyValueStore.make({
+    get: Effect.fn("Storage.gcs.get")(function* (key) {
+      const file = bucket.file(toPath(key));
+      const [exists] = yield* tryKvPromise("get", key, () => file.exists());
+      if (!exists) return undefined;
+      const [content] = yield* tryKvPromise("get", key, () => file.download());
+      return content.toString("utf-8");
+    }),
+    getUint8Array: Effect.fn("Storage.gcs.getUint8Array")(function* (key) {
+      const file = bucket.file(toPath(key));
+      const [exists] = yield* tryKvPromise("getUint8Array", key, () => file.exists());
+      if (!exists) return undefined;
+      const [content] = yield* tryKvPromise("getUint8Array", key, () => file.download());
+      return new Uint8Array(content);
+    }),
+    set: Effect.fn("Storage.gcs.set")(function* (key, value) {
+      const content = P.isString(value) ? value : Buffer.from(value);
+      yield* tryKvPromise("set", key, () => bucket.file(toPath(key)).save(content));
+    }),
+    remove: Effect.fn("Storage.gcs.remove")(function* (key) {
+      const file = bucket.file(toPath(key));
+      const [exists] = yield* tryKvPromise("remove", key, () => file.exists());
+      if (exists) {
+        yield* tryKvPromise("remove", key, () => file.delete());
+      }
+    }),
+    clear: tryKvPromise("clear", prefix, () => bucket.deleteFiles(P.isTruthy(prefix) ? { prefix } : {})).pipe(
+      Effect.asVoid
+    ),
+    size: tryKvPromise("size", prefix, () => bucket.getFiles(P.isTruthy(prefix) ? { prefix } : {})).pipe(
+      Effect.map(([files]) => files.length)
+    ),
+  });
+  return {
+    ...impl,
+    list: (listPrefix) =>
+      tryStoragePromise("list", listPrefix, () => bucket.getFiles({ prefix: toPath(listPrefix) })).pipe(
+        Effect.map(([files]) => files.map((file) => file.name.replace(P.isTruthy(prefix) ? `${prefix}/` : "", "")))
+      ),
+    getWithGeneration: Effect.fn("Storage.gcs.getWithGeneration")(function* (key) {
+      const file = bucket.file(toPath(key));
+      const [exists] = yield* tryStoragePromise("getWithGeneration", key, () => file.exists());
+      if (!exists) return O.none();
+      const [[content], [metadata]] = yield* tryStoragePromise("getWithGeneration", key, () =>
+        Promise.all([file.download(), file.getMetadata()])
+      );
+      return O.some({
+        content: content.toString("utf-8"),
+        generation: String(metadata.generation),
+      });
+    }),
+    setIfGenerationMatch: (key, value, expectedGeneration) =>
+      Effect.tryPromise({
+        try: () =>
+          bucket.file(toPath(key)).save(value, {
+            preconditionOpts: {
+              ifGenerationMatch: Number(expectedGeneration),
+            },
+          }),
+        catch: (e) => {
+          if (
+            e instanceof Error &&
+            "code" in e &&
+            (
+              e as {
+                code?: number;
               }
-            })
-          },
-          catch: (e) => {
-            // Check if this is a precondition failed error (HTTP 412)
-            if (e instanceof Error && "code" in e && (e as { code?: number }).code === 412) {
-              return new GenerationMismatchError(key, expectedGeneration)
-            }
-            return handleError("setIfGenerationMatch", key, e)
+            ).code === 412
+          ) {
+            return new GenerationMismatchError({ key, expectedGeneration });
           }
-        }),
-      getSignedUrl: (key, expiresInSeconds = 3600) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = bucket.file(toPath(key))
-            const [exists] = await file.exists()
-            if (!exists) return Option.none()
-
-            const [signedUrl] = await file.getSignedUrl({
-              version: "v4",
-              action: "read",
-              expires: Date.now() + expiresInSeconds * 1000
-            })
-            return Option.some(signedUrl)
-          },
-          catch: (e) => handleError("getSignedUrl", key, e)
-        }),
-      supportsSignedUrls: true
-    } as StorageService
-  })
+          return handleError("setIfGenerationMatch", key, e);
+        },
+      }),
+    getSignedUrl: Effect.fn("getSignedUrl")(function* (key: string, expiresInSeconds: number = 3600) {
+      const expires = (yield* Clock.currentTimeMillis) + expiresInSeconds * 1000;
+      const file = bucket.file(toPath(key));
+      const [exists] = yield* tryStoragePromise("getSignedUrl", key, () => file.exists());
+      if (!exists) return O.none();
+      const [signedUrl] = yield* tryStoragePromise("getSignedUrl", key, () =>
+        file.getSignedUrl({
+          version: "v4",
+          action: "read",
+          expires,
+        })
+      );
+      return O.some(signedUrl);
+    }),
+    supportsSignedUrls: true,
+  } as StorageServiceMethods;
+});
 
 // --- Local Filesystem Implementation ---
 
-const makeLocalStore = (config: StorageConfig) =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const path = yield* Path.Path
+const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const basePath = config.localPath ?? "./output";
+  const globalPrefix = config.pathPrefix ?? "";
+  const resolvePath = (key: string) => (key.startsWith("/") ? key : path.join(basePath, globalPrefix, key));
+  const ensureDir = (filePath: string) => fs.makeDirectory(path.dirname(filePath), { recursive: true });
+  const localKvError = (method: string, key: string) => (cause: unknown) =>
+    new KeyValueStore.KeyValueStoreError({ method, key, message: String(cause), cause });
 
-    const basePath = config.localPath ?? "./output"
-    const globalPrefix = config.pathPrefix ?? ""
+  const walkDirRecursive = Effect.fn("Storage.walkDirRecursive")(function* (
+    currentDir: string,
+    relativePath: string
+  ): Effect.fn.Return<Array<string>, PlatformError> {
+    const entries = yield* fs.readDirectory(currentDir).pipe(Effect.orElseSucceed(() => []));
+    const results: Array<string> = [];
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry);
+      const entryRelativePath = P.isTruthy(relativePath) ? `${relativePath}/${entry}` : entry;
+      const stat = yield* fs.stat(fullPath).pipe(Effect.option);
+      if (O.isNone(stat)) continue;
+      if (stat.value.type === "Directory") {
+        results.push(...(yield* walkDirRecursive(fullPath, entryRelativePath)));
+      } else {
+        results.push(entryRelativePath);
+      }
+    }
+    return results;
+  });
 
-    // If key is absolute path, use it directly; otherwise join with basePath
-    const resolvePath = (key: string) => key.startsWith("/") ? key : path.join(basePath, globalPrefix, key)
-
-    const ensureDir = (filePath: string) => fs.makeDirectory(path.dirname(filePath), { recursive: true })
-    const toKvError = (method: string, key?: string) => (cause: unknown) =>
-      new KeyValueStore.KeyValueStoreError({
-        method,
-        ...(key === undefined ? {} : { key }),
-        message: cause instanceof Error ? cause.message : String(cause),
-        cause
-      })
-
-    const impl = KeyValueStore.make({
-      get: (key) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          const exists = yield* fs.exists(p)
-          if (!exists) return undefined
-          return yield* fs.readFileString(p)
-        }).pipe(Effect.mapError(toKvError("get", key))),
-      getUint8Array: (key) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          const exists = yield* fs.exists(p)
-          if (!exists) return undefined
-          return yield* fs.readFile(p)
-        }).pipe(Effect.mapError(toKvError("getUint8Array", key))),
-      set: (key, value) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          yield* ensureDir(p)
-          if (typeof value === "string") {
-            yield* fs.writeFileString(p, value)
-          } else {
-            yield* fs.writeFile(p, value)
-          }
-        }).pipe(Effect.mapError(toKvError("set", key))),
-      remove: (key) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          if (yield* fs.exists(p)) {
-            yield* fs.remove(p)
-          }
-        }).pipe(Effect.mapError(toKvError("remove", key))),
-      clear: Effect.gen(function*() {
-        const p = path.join(basePath, globalPrefix)
-        if (yield* fs.exists(p)) {
-          yield* fs.remove(p, { recursive: true })
-          yield* fs.makeDirectory(p, { recursive: true })
+  const impl = KeyValueStore.make({
+    get: (key) =>
+      Effect.gen(function* () {
+        const resolved = resolvePath(key);
+        if (!(yield* fs.exists(resolved))) return undefined;
+        return yield* fs.readFileString(resolved);
+      }).pipe(Effect.mapError(localKvError("get", key))),
+    getUint8Array: (key) =>
+      Effect.gen(function* () {
+        const resolved = resolvePath(key);
+        if (!(yield* fs.exists(resolved))) return undefined;
+        return yield* fs.readFile(resolved);
+      }).pipe(Effect.mapError(localKvError("getUint8Array", key))),
+    set: (key, value) =>
+      Effect.gen(function* () {
+        const resolved = resolvePath(key);
+        yield* ensureDir(resolved);
+        if (typeof value === "string") {
+          yield* fs.writeFileString(resolved, value);
+        } else {
+          yield* fs.writeFile(resolved, value);
         }
-      }).pipe(Effect.mapError(toKvError("clear"))),
-      size: Effect.gen(function*() {
-        const p = path.join(basePath, globalPrefix)
-        if (!(yield* fs.exists(p))) return 0
-        // Calculate total size by walking directory tree
-        const walkAndSum = (dir: string): Effect.Effect<number, never, never> =>
-          Effect.gen(function*() {
-            const entries = yield* fs.readDirectory(dir).pipe(
-              Effect.catch(() => Effect.succeed([] as ReadonlyArray<string>))
-            )
-            let totalSize = 0
-            for (const entry of entries) {
-              const entryPath = path.join(dir, entry)
-              const stat = yield* fs.stat(entryPath).pipe(Effect.catch(() => Effect.succeed(null)))
-              if (stat === null) continue
-              if (stat.type === "Directory") {
-                totalSize += yield* walkAndSum(entryPath)
-              } else {
-                // stat.size is a Size type (number), use Number() to ensure plain number
-                totalSize += Number(stat.size)
-              }
-            }
-            return totalSize
-          })
-        return yield* walkAndSum(p)
-      }).pipe(Effect.mapError(toKvError("size")))
-    })
+      }).pipe(Effect.mapError(localKvError("set", key))),
+    remove: (key) =>
+      Effect.gen(function* () {
+        const resolved = resolvePath(key);
+        if (yield* fs.exists(resolved)) yield* fs.remove(resolved);
+      }).pipe(Effect.mapError(localKvError("remove", key))),
+    clear: Effect.gen(function* () {
+      const root = path.join(basePath, globalPrefix);
+      if (yield* fs.exists(root)) yield* fs.remove(root, { recursive: true });
+      yield* fs.makeDirectory(root, { recursive: true });
+    }).pipe(Effect.mapError(localKvError("clear", globalPrefix))),
+    size: Effect.gen(function* () {
+      const root = path.join(basePath, globalPrefix);
+      if (!(yield* fs.exists(root))) return 0;
+      const files = yield* walkDirRecursive(root, "");
+      let totalSize = 0;
+      for (const file of files) {
+        const stat = yield* fs.stat(path.join(root, file));
+        totalSize += Number(stat.size);
+      }
+      return totalSize;
+    }).pipe(Effect.mapError(localKvError("size", globalPrefix))),
+  });
 
-    // Recursive walk helper for list() - defined outside to avoid closure issues
-    const walkDirRecursive = (
-      currentDir: string,
-      relativePath: string
-    ): Effect.Effect<Array<string>> =>
-      Effect.gen(function*() {
-        const entries = yield* fs.readDirectory(currentDir).pipe(
-          Effect.catch(() => Effect.succeed([] as ReadonlyArray<string>))
-        )
-        const results: Array<string> = []
-
-        for (const entry of entries) {
-          const fullPath = path.join(currentDir, entry)
-          const entryRelativePath = relativePath ? `${relativePath}/${entry}` : entry
-          const stat = yield* fs.stat(fullPath).pipe(Effect.orElseSucceed(() => null))
-
-          if (stat === null) continue
-
-          if (stat.type === "Directory") {
-            const subResults = yield* walkDirRecursive(fullPath, entryRelativePath)
-            for (const r of subResults) results.push(r)
-          } else {
-            results.push(entryRelativePath)
-          }
+  return {
+    ...impl,
+    list: Effect.fn("Storage.local.list")(function* (prefix: string) {
+      const dir = path.join(basePath, globalPrefix, prefix);
+      if (!(yield* fs.exists(dir))) return [];
+      return yield* walkDirRecursive(dir, "");
+    }),
+    getWithGeneration: Effect.fn("Storage.local.getWithGeneration")(function* (key: string) {
+      const resolved = resolvePath(key);
+      if (!(yield* fs.exists(resolved))) return O.none();
+      const content = yield* fs.readFileString(resolved);
+      const stat = yield* fs.stat(resolved);
+      const generation = O.match(stat.mtime, {
+        onNone: () => String(stat.size),
+        onSome: (mtime) => String(mtime.getTime()),
+      });
+      return O.some({ content, generation });
+    }),
+    setIfGenerationMatch: Effect.fn("Storage.local.setIfGenerationMatch")(function* (
+      key: string,
+      value: string,
+      expectedGeneration: string
+    ) {
+      const resolved = resolvePath(key);
+      if (yield* fs.exists(resolved)) {
+        const stat = yield* fs.stat(resolved);
+        const currentGeneration = O.match(stat.mtime, {
+          onNone: () => String(stat.size),
+          onSome: (mtime) => String(mtime.getTime()),
+        });
+        if (currentGeneration !== expectedGeneration) {
+          return yield* new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration });
         }
-        return results
-      })
-
-    return {
-      ...impl,
-      // Recursive list to match GCS behavior - returns full relative paths
-      list: (prefix) =>
-        Effect.gen(function*() {
-          const dir = path.join(basePath, globalPrefix, prefix)
-          if (!(yield* fs.exists(dir))) return []
-          return yield* walkDirRecursive(dir, "")
-        }),
-      getWithGeneration: (key) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          const exists = yield* fs.exists(p)
-          if (!exists) return Option.none()
-
-          const content = yield* fs.readFileString(p)
-          const stat = yield* fs.stat(p)
-          // Use mtime as generation for local filesystem
-          // stat.mtime is Option<Date>, fallback to current time if None
-          const mtime = Option.getOrElse(stat.mtime, () => new Date())
-          const generation = String(mtime.getTime())
-          return Option.some({ content, generation })
-        }),
-      setIfGenerationMatch: (key, value, expectedGeneration) =>
-        Effect.gen(function*() {
-          const p = resolvePath(key)
-          const exists = yield* fs.exists(p)
-
-          if (exists) {
-            const stat = yield* fs.stat(p)
-            // stat.mtime is Option<Date>, fallback to current time if None
-            const mtime = Option.getOrElse(stat.mtime, () => new Date())
-            const currentGeneration = String(mtime.getTime())
-            if (currentGeneration !== expectedGeneration) {
-              return yield* Effect.fail(
-                new GenerationMismatchError(key, expectedGeneration, currentGeneration)
-              )
-            }
-          }
-
-          yield* ensureDir(p)
-          yield* fs.writeFileString(p, value)
-        }),
-      // Local filesystem doesn't support signed URLs
-      getSignedUrl: () => Effect.succeed(Option.none()),
-      supportsSignedUrls: false
-    } as StorageService
-  })
+      }
+      yield* ensureDir(resolved);
+      yield* fs.writeFileString(resolved, value);
+    }),
+    getSignedUrl: (_key: string) => Effect.succeed(O.none()),
+    supportsSignedUrls: false,
+  } satisfies StorageServiceMethods;
+});
 
 // --- In-Memory Implementation ---
 
 const makeMemoryStore = Effect.sync(() => {
-  const store = new Map<string, string | Uint8Array>()
-  const generations = new Map<string, number>()
+  const store = new Map<string, string | Uint8Array>();
+  const generations = new Map<string, number>();
 
-  const getGeneration = (key: string): string => String(generations.get(key) ?? 0)
+  const getGeneration = (key: string): string => String(generations.get(key) ?? 0);
   const incrementGeneration = (key: string): void => {
-    const current = generations.get(key) ?? 0
-    generations.set(key, current + 1)
-  }
+    const current = generations.get(key) ?? 0;
+    generations.set(key, current + 1);
+  };
 
   const kv = KeyValueStore.make({
     get: (key) =>
       Effect.sync(() => {
-        const val = store.get(key)
-        if (!val) return undefined
-        return typeof val === "string" ? val : new TextDecoder().decode(val)
+        const val = store.get(key);
+        if (P.isUndefined(val)) return undefined;
+        return typeof val === "string" ? val : new TextDecoder().decode(val);
       }),
     getUint8Array: (key) =>
       Effect.sync(() => {
-        const val = store.get(key)
-        if (!val) return undefined
-        return typeof val === "string" ? new TextEncoder().encode(val) : val
+        const val = store.get(key);
+        if (P.isUndefined(val)) return undefined;
+        return typeof val === "string" ? new TextEncoder().encode(val) : val;
       }),
     set: (key, value) =>
       Effect.sync(() => {
-        store.set(key, value)
-        incrementGeneration(key)
+        store.set(key, value);
+        incrementGeneration(key);
       }),
     remove: (key) =>
       Effect.sync(() => {
-        store.delete(key)
-        generations.delete(key)
+        store.delete(key);
+        generations.delete(key);
       }),
     clear: Effect.sync(() => {
-      store.clear()
-      generations.clear()
+      store.clear();
+      generations.clear();
     }),
-    size: Effect.sync(() => store.size)
-  })
+    size: Effect.sync(() => store.size),
+  });
 
   return {
     ...kv,
     list: (prefix) => Effect.sync(() => Array.from(store.keys()).filter((k) => k.startsWith(prefix))),
     getWithGeneration: (key) =>
       Effect.sync(() => {
-        const val = store.get(key)
-        if (!val) return Option.none()
-        const content = typeof val === "string" ? val : new TextDecoder().decode(val)
-        return Option.some({ content, generation: getGeneration(key) })
+        const val = store.get(key);
+        if (P.isUndefined(val)) return O.none();
+        const content = typeof val === "string" ? val : new TextDecoder().decode(val);
+        return O.some({ content, generation: getGeneration(key) });
       }),
     setIfGenerationMatch: (key, value, expectedGeneration) =>
       Effect.suspend(() => {
-        const currentGeneration = getGeneration(key)
+        const currentGeneration = getGeneration(key);
         if (store.has(key) && currentGeneration !== expectedGeneration) {
-          return Effect.fail(new GenerationMismatchError(key, expectedGeneration, currentGeneration))
+          return Effect.fail(
+            new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration })
+          );
         }
-        store.set(key, value)
-        incrementGeneration(key)
-        return Effect.void
+        store.set(key, value);
+        incrementGeneration(key);
+        return Effect.void;
       }),
     // Memory store doesn't support signed URLs
-    getSignedUrl: () => Effect.succeed(Option.none()),
-    supportsSignedUrls: false
-  } as StorageService
-})
+    getSignedUrl: () => Effect.succeed(O.none()),
+    supportsSignedUrls: false,
+  } as StorageServiceMethods;
+});
 
 // --- Layer Definition ---
 
 export const StorageServiceLive = Layer.effect(
   StorageService,
-  Effect.gen(function*() {
-    const config = yield* ConfigService
-    const { bucket, localPath, prefix, type } = config.storage
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const { bucket, localPath, prefix, type } = config.storage;
 
     // Adapter for internal storage config
-    const storageConfig: StorageConfig = {
+    const storageConfig: StorageConfigValue = {
       type,
-      ...(Option.isSome(bucket) ? { bucketName: bucket.value } : {}),
-      ...(Option.isSome(localPath) ? { localPath: localPath.value } : {}),
-      pathPrefix: prefix
-    }
+      ...(O.isSome(bucket) ? { bucketName: bucket.value } : {}),
+      ...(O.isSome(localPath) ? { localPath: localPath.value } : {}),
+      pathPrefix: prefix,
+    };
 
     if (type === "gcs") {
-      return yield* makeGcsStore(storageConfig)
+      return yield* makeGcsStore(storageConfig);
     } else if (type === "local") {
-      return yield* makeLocalStore(storageConfig)
+      return yield* makeLocalStore(storageConfig);
     } else {
-      return yield* makeMemoryStore
+      return yield* makeMemoryStore;
     }
   })
-)
+);
 
 /**
  * In-memory storage layer for testing
  * Does not require ConfigService
  */
-export const StorageServiceTest = Layer.effect(StorageService, makeMemoryStore)
+export const StorageServiceTest = Layer.effect(StorageService, makeMemoryStore);

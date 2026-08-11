@@ -100,6 +100,8 @@ export const ExtractionError = makeOntologyErrorClass(
   $I.annote("ExtractionError", {
     description: "General extraction-process failure.",
   })
+).pipe(
+  SchemaUtils.withStatics((schema) =>({is: S.is(schema)}) )
 );
 
 /** Runtime value decoded by {@link ExtractionError}.

@@ -106,9 +106,9 @@ describe("effect-ontology storage path layout", () => {
 
   it("rejects traversal, non-canonical indices, and unregistered outputs", () => {
     expect(StoragePathSegment.is("../escape")).toBe(false);
-    expect(
-      Result.isFailure(S.decodeResult(RunChunkPath)("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))
-    ).toBe(true);
+    expect(Result.isFailure(S.decodeResult(RunChunkPath)("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))).toBe(
+      true
+    );
     expect(
       Result.isFailure(S.decodeUnknownResult(RunOutputPath)("runs/doc-deadbeefcafe/outputs/custom-output.json"))
     ).toBe(true);

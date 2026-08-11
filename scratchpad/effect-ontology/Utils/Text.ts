@@ -32,12 +32,11 @@
  * @since 2.0.0
  * @category Text
  */
-export const splitCamelCase = (text: string): string => {
-  return text
+export const splitCamelCase = (text: string): string =>
+  text
     .replace(/([a-z])([A-Z])/g, "$1 $2") // Insert space before capital letters
     .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // Handle consecutive capitals
-    .trim()
-}
+    .trim();
 
 // =============================================================================
 // N-Gram Generation
@@ -65,17 +64,18 @@ export const splitCamelCase = (text: string): string => {
  * @since 2.0.0
  * @category Text
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateNGrams = (tokens: ReadonlyArray<string>, n: number = 2): ReadonlyArray<string> => {
   if (tokens.length < n) {
-    return []
+    return [];
   }
 
-  const ngrams: Array<string> = []
+  const ngrams: Array<string> = [];
   for (let i = 0; i <= tokens.length - n; i++) {
-    ngrams.push(tokens.slice(i, i + n).join(" "))
+    ngrams.push(tokens.slice(i, i + n).join(" "));
   }
-  return ngrams
-}
+  return ngrams;
+};
 
 // =============================================================================
 // Search Enhancement
@@ -100,26 +100,27 @@ export const generateNGrams = (tokens: ReadonlyArray<string>, n: number = 2): Re
  * @since 2.0.0
  * @category Text
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const enhanceTextForSearch = (text: string, ngramSize: number = 2): string => {
   // Split camelCase in the original text
-  const camelCaseSplit = splitCamelCase(text)
+  const camelCaseSplit = splitCamelCase(text);
 
   // Tokenize (split on whitespace and normalize)
   const tokens = camelCaseSplit
     .toLowerCase()
     .split(/\s+/)
-    .filter((t) => t.length > 0)
+    .filter((t) => t.length > 0);
 
   // Generate n-grams
-  const ngrams = generateNGrams(tokens, ngramSize)
+  const ngrams = generateNGrams(tokens, ngramSize);
 
   // Combine original text, camelCase split, and n-grams
-  const parts: Array<string> = [text, camelCaseSplit]
+  const parts: Array<string> = [text, camelCaseSplit];
   if (ngrams.length > 0) {
     for (const ngram of ngrams) {
-      parts.push(ngram)
+      parts.push(ngram);
     }
   }
 
-  return parts.join(" ")
-}
+  return parts.join(" ");
+};

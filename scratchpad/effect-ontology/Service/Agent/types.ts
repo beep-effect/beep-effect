@@ -9,22 +9,16 @@
  * @module Service/Agent/types
  */
 
-import { Data, Duration, Schema } from "effect"
-import * as A from "effect/Array"
-import {
-  type Agent,
-  type AgentId as AgentIdType,
-  type AgentType,
-  CheckpointConfig,
-  PipelineState,
-  TerminationCondition
-} from "../../Domain/Model/Agent.ts"
-import { KnowledgeGraph } from "../../Domain/Model/Entity.ts"
-import { OntologyContext, OntologyRef } from "../../Domain/Model/Ontology.ts"
-import { OntologyAgentConfig, ViolationExplanation } from "../../Domain/Model/OntologyAgent.ts"
-import { ShaclValidationReport } from "../Shacl.ts"
 import { SchemaUtils } from "@beep/schema";
+import { Data, Duration, Schema } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import type { Agent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
+import { CheckpointConfig, PipelineState, TerminationCondition } from "../../Domain/Model/Agent.ts";
+import { KnowledgeGraph } from "../../Domain/Model/Entity.ts";
+import { OntologyContext, OntologyRef } from "../../Domain/Model/Ontology.ts";
+import { OntologyAgentConfig, ViolationExplanation } from "../../Domain/Model/OntologyAgent.ts";
+import { ShaclValidationReport } from "../Shacl.ts";
 
 // =============================================================================
 // Agent Task Definition
@@ -44,7 +38,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
    */
   taskId: Schema.String.annotate({
     title: "Task ID",
-    description: "Unique identifier for this task"
+    description: "Unique identifier for this task",
   }),
 
   /**
@@ -115,7 +109,10 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
    * Human-readable validation explanations
    */
-  validationExplanations: Schema.Array(ViolationExplanation).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  validationExplanations: Schema.Array(ViolationExplanation).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 
   /**
    * Correction result metadata (implementation-specific)
@@ -135,7 +132,10 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
    * Priority (lower = higher priority)
    */
-  priority: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+  priority: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 }) {
   /**
    * Create a text extraction task
@@ -151,29 +151,39 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
       text: O.some(text),
       documentId: O.fromUndefinedOr(documentId),
       agentConfig: O.fromUndefinedOr(agentConfig),
-      priority: O.some(1)
-    })
+      priority: O.some(1),
+    });
   }
 
   /**
    * Create a validation task
    */
   static forValidation(taskId: string, graph: unknown): AgentTask {
-    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(2) })
+    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(2) });
   }
 
   /**
    * Create an ingestion task
    */
   static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown): AgentTask {
-    return AgentTask.make({ taskId, sourceUrl: O.some(sourceUrl), ingestionOptions: O.some(ingestionOptions), priority: O.some(0) })
+    return AgentTask.make({
+      taskId,
+      sourceUrl: O.some(sourceUrl),
+      ingestionOptions: O.some(ingestionOptions),
+      priority: O.some(0),
+    });
   }
 
   /**
    * Create a correction task
    */
   static forCorrection(taskId: string, graph: unknown, validationReport: ShaclValidationReport): AgentTask {
-    return AgentTask.make({ taskId, graph: O.some(graph), validationReport: O.some(validationReport), priority: O.some(3) })
+    return AgentTask.make({
+      taskId,
+      graph: O.some(graph),
+      validationReport: O.some(validationReport),
+      priority: O.some(3),
+    });
   }
 }
 
@@ -216,12 +226,15 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
   /**
    * Maximum concurrency (for parallel mode)
    */
-  concurrency: Schema.Int.check(Schema.isGreaterThan(0)).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  concurrency: Schema.Int.check(Schema.isGreaterThan(0)).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 
   /**
    * Enable detailed tracing
    */
-  tracing: Schema.Boolean.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+  tracing: Schema.Boolean.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a simple sequential pipeline
@@ -230,26 +243,25 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
     return PipelineConfig.make({
       pipelineId,
       mode: "sequential",
-      agentSequence: O.some([...agents])
-    })
+      agentSequence: O.some([...agents]),
+    });
   }
 
   /**
    * Create an extraction-validation-correction loop
    */
-  static refinementLoop(
-    pipelineId: string,
-    maxIterations: number = 5
-  ): PipelineConfig {
+  static refinementLoop(pipelineId: string, maxIterations: number = 5): PipelineConfig {
     return PipelineConfig.make({
       pipelineId,
       mode: "loop",
       agentSequence: O.some(["extractor", "validator", "corrector"]),
-      termination: O.some(TerminationCondition.make({
-        maxIterations,
-        stopOnConformance: true
-      }))
-    })
+      termination: O.some(
+        TerminationCondition.make({
+          maxIterations,
+          stopOnConformance: true,
+        })
+      ),
+    });
   }
 }
 
@@ -263,11 +275,7 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
  * @since 2.0.0
  * @category Events
  */
-export type HumanFeedback =
-  | HumanApprove
-  | HumanReject
-  | HumanModify
-  | HumanSkip
+export type HumanFeedback = HumanApprove | HumanReject | HumanModify | HumanSkip;
 
 /**
  * HumanApprove - Human approves the current state
@@ -276,8 +284,8 @@ export type HumanFeedback =
  * @category Events
  */
 export class HumanApprove extends Data.TaggedClass("HumanApprove")<{
-  readonly reviewerId?: string
-  readonly comment?: string
+  readonly reviewerId?: string;
+  readonly comment?: string;
 }> {}
 
 /**
@@ -287,8 +295,8 @@ export class HumanApprove extends Data.TaggedClass("HumanApprove")<{
  * @category Events
  */
 export class HumanReject extends Data.TaggedClass("HumanReject")<{
-  readonly reason: string
-  readonly reviewerId?: string
+  readonly reason: string;
+  readonly reviewerId?: string;
 }> {}
 
 /**
@@ -301,9 +309,9 @@ export class HumanModify extends Data.TaggedClass("HumanModify")<{
   /**
    * Changes to apply (agent-specific)
    */
-  readonly changes: unknown
-  readonly reviewerId?: string
-  readonly comment?: string
+  readonly changes: unknown;
+  readonly reviewerId?: string;
+  readonly comment?: string;
 }> {}
 
 /**
@@ -313,9 +321,9 @@ export class HumanModify extends Data.TaggedClass("HumanModify")<{
  * @category Events
  */
 export class HumanSkip extends Data.TaggedClass("HumanSkip")<{
-  readonly agentId: AgentIdType
-  readonly reason?: string
-  readonly reviewerId?: string
+  readonly agentId: AgentIdType;
+  readonly reason?: string;
+  readonly reviewerId?: string;
 }> {}
 
 // =============================================================================
@@ -335,30 +343,39 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
    * Maximum number of correction iterations
    */
   maxIterations: Schema.Int.check(Schema.isGreaterThan(0)).annotate({
-    default: 5
+    default: 5,
   }),
 
   /**
    * Stop when validation report conforms
    */
   stopOnConformance: Schema.Boolean.annotate({
-    default: true
+    default: true,
   }),
 
   /**
    * Minimum confidence threshold - stop if correction confidence drops below this
    */
-  minConfidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  minConfidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 
   /**
    * Emit checkpoint every N iterations
    */
-  checkpointInterval: Schema.Int.check(Schema.isGreaterThan(0)).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  checkpointInterval: Schema.Int.check(Schema.isGreaterThan(0)).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 
   /**
    * Timeout for the entire refinement loop in milliseconds
    */
-  timeoutMs: Schema.Finite.check(Schema.isGreaterThan(0)).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  timeoutMs: Schema.Finite.check(Schema.isGreaterThan(0)).pipe(
+    Schema.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault
+  ),
 
   /**
    * Whether to save intermediate states for resume
@@ -373,7 +390,7 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   /**
    * Agent ID for the corrector
    */
-  correctorId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+  correctorId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a default refinement config
@@ -381,8 +398,8 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   static default(maxIterations: number = 5): RefinementConfig {
     return RefinementConfig.make({
       maxIterations,
-      stopOnConformance: true
-    })
+      stopOnConformance: true,
+    });
   }
 
   /**
@@ -393,8 +410,8 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
       maxIterations,
       stopOnConformance: true,
       minConfidence: O.some(minConfidence),
-      checkpointInterval: O.some(2)
-    })
+      checkpointInterval: O.some(2),
+    });
   }
 
   /**
@@ -404,8 +421,8 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
     return TerminationCondition.make({
       maxIterations: this.maxIterations,
       stopOnConformance: this.stopOnConformance,
-      timeout: O.map(this.timeoutMs, Duration.millis)
-    })
+      timeout: O.map(this.timeoutMs, Duration.millis),
+    });
   }
 }
 
@@ -425,7 +442,7 @@ export type RefinementStatus =
   | "timeout" // Hit time limit
   | "confidence-threshold" // Confidence dropped too low
   | "human-rejected" // Human rejected at checkpoint
-  | "error" // Pipeline error
+  | "error"; // Pipeline error
 
 /**
  * RefinementResult - Result of a validation-correction loop
@@ -447,7 +464,14 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * How the loop terminated
    */
-  status: Schema.Literals(["conformant", "max-iterations", "timeout", "confidence-threshold", "human-rejected", "error"]),
+  status: Schema.Literals([
+    "conformant",
+    "max-iterations",
+    "timeout",
+    "confidence-threshold",
+    "human-rejected",
+    "error",
+  ]),
 
   /**
    * Final validation report
@@ -467,22 +491,22 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * Violations fixed per iteration
    */
-  violationsFixed: Schema.Array(Schema.Number).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+  violationsFixed: Schema.Array(Schema.Finite).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Whether refinement produced a conformant graph
    */
   get isConformant(): boolean {
-    return this.status === "conformant"
+    return this.status === "conformant";
   }
 
   /**
    * Average violations fixed per iteration
    */
   get avgViolationsFixed(): number {
-    if (O.isNone(this.violationsFixed) || this.violationsFixed.value.length === 0) return 0
-    const sum = A.reduce(this.violationsFixed.value, 0, (total, value) => total + value)
-    return sum / this.violationsFixed.value.length
+    if (O.isNone(this.violationsFixed) || this.violationsFixed.value.length === 0) return 0;
+    const sum = A.reduce(this.violationsFixed.value, 0, (total, value) => total + value);
+    return sum / this.violationsFixed.value.length;
   }
 }
 
@@ -502,22 +526,22 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = neve
   /**
    * The agent implementation
    */
-  readonly agent: Agent<I, O, E, R>
+  readonly agent: Agent<I, O, E, R>;
 
   /**
    * Registration timestamp
    */
-  readonly registeredAt: number
+  readonly registeredAt: number;
 
   /**
    * Agent type for routing
    */
-  readonly agentType: AgentType
+  readonly agentType: AgentType;
 
   /**
    * Whether this agent is currently enabled
    */
-  readonly enabled: boolean
+  readonly enabled: boolean;
 }
 
 /**
@@ -526,7 +550,7 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = neve
  * @since 2.0.0
  * @category Types
  */
-export type AgentRegistry = ReadonlyMap<AgentIdType, RegisteredAgent>
+export type AgentRegistry = ReadonlyMap<AgentIdType, RegisteredAgent>;
 
 // =============================================================================
 // Execution Context
@@ -564,7 +588,7 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
   /**
    * Correlation ID for request tracking
    */
-  correlationId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+  correlationId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {}
 
 // =============================================================================
@@ -578,10 +602,10 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
  * @category Errors
  */
 export class AgentExecutionError extends Data.TaggedError("AgentExecutionError")<{
-  readonly agentId: AgentIdType
-  readonly message: string
-  readonly cause?: unknown
-  readonly retryable: boolean
+  readonly agentId: AgentIdType;
+  readonly message: string;
+  readonly cause?: unknown;
+  readonly retryable: boolean;
 }> {}
 
 /**
@@ -591,11 +615,11 @@ export class AgentExecutionError extends Data.TaggedError("AgentExecutionError")
  * @category Errors
  */
 export class PipelineExecutionError extends Data.TaggedError("PipelineExecutionError")<{
-  readonly pipelineId: string
-  readonly message: string
-  readonly failedAgentId?: AgentIdType
-  readonly state: PipelineState
-  readonly cause?: unknown
+  readonly pipelineId: string;
+  readonly message: string;
+  readonly failedAgentId?: AgentIdType;
+  readonly state: PipelineState;
+  readonly cause?: unknown;
 }> {}
 
 /**
@@ -605,8 +629,8 @@ export class PipelineExecutionError extends Data.TaggedError("PipelineExecutionE
  * @category Errors
  */
 export class AgentNotFoundError extends Data.TaggedError("AgentNotFoundError")<{
-  readonly agentId: AgentIdType
-  readonly registeredAgents: ReadonlyArray<AgentIdType>
+  readonly agentId: AgentIdType;
+  readonly registeredAgents: ReadonlyArray<AgentIdType>;
 }> {}
 
 /**
@@ -616,7 +640,7 @@ export class AgentNotFoundError extends Data.TaggedError("AgentNotFoundError")<{
  * @category Errors
  */
 export class CheckpointTimeoutError extends Data.TaggedError("CheckpointTimeoutError")<{
-  readonly pipelineId: string
-  readonly checkpointId: string
-  readonly timeoutMs: number
+  readonly pipelineId: string;
+  readonly checkpointId: string;
+  readonly timeoutMs: number;
 }> {}

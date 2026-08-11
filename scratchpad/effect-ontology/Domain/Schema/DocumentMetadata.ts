@@ -759,7 +759,9 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
   $I.annote("EnrichedManifest", {
     description: "Versioned batch manifest containing normalized document metadata and preprocessing statistics.",
   })
-) {}
+) {
+  static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this))
+}
 
 /**
  * Input to the document-preprocessing activity.

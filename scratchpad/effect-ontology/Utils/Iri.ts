@@ -8,16 +8,17 @@
  * @since 0.0.0
  * @module Utils/Iri
  */
-import * as S from "effect/Schema";
-import * as O from "effect/Option";
-import * as MutableHashSet from "effect/MutableHashSet";
-import {IRI, LocalName} from "../Domain/Rdf/Types.ts";
-import * as MutableHashMap from "effect/MutableHashMap";
+
 import * as A from "effect/Array";
-import * as Str from "effect/String";
-import {pipe, flow, dual} from "effect/Function";
-import * as P from "effect/Predicate";
+import {dual, flow, pipe} from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import {IRI, LocalName} from "../Domain/Rdf/Types.ts";
 
 /**
  * Build a case-insensitive lookup map from IRIs.
@@ -40,9 +41,8 @@ import * as N from "effect/Number";
  *
  * @since 0.0.0
  */
-export const buildCaseInsensitiveIriMap = (
-  iris: ReadonlyArray<IRI>
-): MutableHashMap.MutableHashMap<string, IRI> => MutableHashMap.fromIterable(A.map(iris, (iri) => [Str.toLowerCase(iri), iri]));
+export const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): MutableHashMap.MutableHashMap<string, IRI> =>
+  MutableHashMap.fromIterable(A.map(iris, (iri) => [Str.toLowerCase(iri), iri]));
 
 /**
  * Normalize an IRI to its canonical form using case-insensitive matching.
@@ -65,19 +65,13 @@ export const buildCaseInsensitiveIriMap = (
  * @since 0.0.0
  */
 export const normalizeIri: {
-  (
-    input: string,
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-  ): IRI,
-  (
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): (input: string) => IRI
-} = dual(2, (
-  input: string,
-  iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-): IRI => MutableHashMap.get(iriMap, Str.toLowerCase(input)).pipe(
-  O.getOrElse(() => S.decodeSync(IRI)(input))
-));
+  (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI;
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (input: string) => IRI;
+} = dual(
+  2,
+  (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): IRI =>
+    MutableHashMap.get(iriMap, Str.toLowerCase(input)).pipe(O.getOrElse(() => S.decodeSync(IRI)(input)))
+);
 
 /**
  * Normalize an array of IRIs to their canonical forms.
@@ -89,17 +83,13 @@ export const normalizeIri: {
  * @since 0.0.0
  */
 export const normalizeIris: {
-  (
-    inputs: ReadonlyArray<string>,
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-  ): ReadonlyArray<IRI>,
-  (
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): (inputs: ReadonlyArray<string>) => ReadonlyArray<IRI>
-} = dual(2, (
-  iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-  inputs: ReadonlyArray<string>,
-): ReadonlyArray<IRI> => A.map(inputs, normalizeIri(iriMap)));
+  (inputs: ReadonlyArray<string>, iriMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI>;
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (inputs: ReadonlyArray<string>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>, inputs: ReadonlyArray<string>): ReadonlyArray<IRI> =>
+    A.map(inputs, normalizeIri(iriMap))
+);
 
 /**
  * Check if an IRI exists in the canonical set (case-insensitively).
@@ -111,17 +101,11 @@ export const normalizeIris: {
  * @since 0.0.0
  */
 export const iriExistsCaseInsensitive: {
-  (
-    input: string,
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-  ): boolean,
-  (
-    iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-  ): (input: string) => boolean
-} = dual(2, (
-  input: string,
-  iriMap: MutableHashMap.MutableHashMap<string, IRI>,
-): boolean => MutableHashMap.has(iriMap, Str.toLowerCase(input)));
+  (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): boolean;
+  (iriMap: MutableHashMap.MutableHashMap<string, IRI>): (input: string) => boolean;
+} = dual(2, (input: string, iriMap: MutableHashMap.MutableHashMap<string, IRI>): boolean =>
+  MutableHashMap.has(iriMap, Str.toLowerCase(input))
+);
 
 // =============================================================================
 // Local Name Expansion Utilities
@@ -148,18 +132,18 @@ export const extractLocalNameFromIri = (iri: string): LocalName => {
   return pipe(
     [lastSlashOpt, lastHashOpt] as const,
     O.liftPredicate(
-      P.Tuple(
-        [
-          (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
-          (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
-        ]
-      )
+      P.Tuple([
+        (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
+        (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
+      ])
     ),
     O.map(([{value: lastSlash}, {value: lastHash}]) => {
       const splitIndex = Math.max(lastSlash, lastHash);
-      return N.isGreaterThanOrEqualTo(splitIndex, 0) ? S.decodeSync(LocalName)(Str.slice(splitIndex + 1)(iri)) : S.decodeSync(LocalName)(iri);
+      return N.isGreaterThanOrEqualTo(splitIndex, 0)
+        ? LocalName.decodeSync(Str.slice(splitIndex + 1)(iri))
+        : LocalName.decodeSync(iri);
     }),
-    O.getOrElse(() => S.decodeSync(LocalName)(iri))
+    O.getOrElse(() => LocalName.decodeSync(iri))
   );
 };
 
@@ -205,9 +189,7 @@ export interface LocalNameMapResult {
  * @returns LocalNameMapResult with map, collisions, and hasCollisions flag
  * @since 0.0.0
  */
-export const buildLocalNameToIriMapSafe = (
-  iris: ReadonlyArray<IRI>
-): LocalNameMapResult => {
+export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameMapResult => {
   const map = MutableHashMap.empty<string, IRI>();
   const allByLocalName = MutableHashMap.empty<string, Array<IRI>>();
 
@@ -234,7 +216,7 @@ export const buildLocalNameToIriMapSafe = (
   return {
     map,
     collisions,
-    hasCollisions: MutableHashMap.size(collisions) > 0
+    hasCollisions: MutableHashMap.size(collisions) > 0,
   };
 };
 
@@ -257,17 +239,13 @@ export const buildLocalNameToIriMapSafe = (
  * @since 0.0.0
  */
 export const expandLocalNameToIri: {
-  (
-    localName: string,
-    localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): O.Option<IRI>,
-  (
-    localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): (localName: string) => O.Option<IRI>
-} = dual(2, (
-  localName: string,
-  localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-): O.Option<IRI> => MutableHashMap.get(localNameMap, Str.toLowerCase(localName)));
+  (localName: string, localNameMap: MutableHashMap.MutableHashMap<string, IRI>): O.Option<IRI>;
+  (localNameMap: MutableHashMap.MutableHashMap<string, IRI>): (localName: string) => O.Option<IRI>;
+} = dual(
+  2,
+  (localName: string, localNameMap: MutableHashMap.MutableHashMap<string, IRI>): O.Option<IRI> =>
+    MutableHashMap.get(localNameMap, Str.toLowerCase(localName))
+);
 
 /**
  * Expand an array of local names to full IRIs.
@@ -292,18 +270,13 @@ export const expandLocalNameToIri: {
  * @since 0.0.0
  */
 export const expandTypesToIris: {
-  (
-    localNames: ReadonlyArray<string>,
-    localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): ReadonlyArray<IRI>,
-  (
-    localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-  ): (localNames: ReadonlyArray<string>) => ReadonlyArray<IRI>
-} = dual(2, (
-  localNames: ReadonlyArray<string>,
-  localNameMap: MutableHashMap.MutableHashMap<string, IRI>
-): ReadonlyArray<IRI> =>
-  pipe(localNames, A.flatMap(flow(expandLocalNameToIri(localNameMap), O.toArray))));
+  (localNames: ReadonlyArray<string>, localNameMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI>;
+  (localNameMap: MutableHashMap.MutableHashMap<string, IRI>): (localNames: ReadonlyArray<string>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (localNames: ReadonlyArray<string>, localNameMap: MutableHashMap.MutableHashMap<string, IRI>): ReadonlyArray<IRI> =>
+    pipe(localNames, A.flatMap(flow(expandLocalNameToIri(localNameMap), O.toArray)))
+);
 
 /**
  * Get all valid local names from a set of IRIs.
@@ -313,6 +286,5 @@ export const expandTypesToIris: {
  *
  * @since 0.0.0
  */
-export const getLocalNameSet = (
-  iris: ReadonlyArray<IRI>
-): MutableHashSet.MutableHashSet<string> => MutableHashSet.fromIterable(A.map(iris, flow(extractLocalNameFromIri, Str.toLowerCase)));
+export const getLocalNameSet = (iris: ReadonlyArray<IRI>): MutableHashSet.MutableHashSet<string> =>
+  MutableHashSet.fromIterable(A.map(iris, flow(extractLocalNameFromIri, Str.toLowerCase)));

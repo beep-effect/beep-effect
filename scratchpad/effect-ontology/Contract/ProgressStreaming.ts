@@ -86,7 +86,7 @@ export const ProgressEventTag = LiteralKit([
  * @category type-level
  * @since 0.0.0
  */
-export type ProgressEventTag = S.Schema.Type<typeof ProgressEventTag>;
+export type ProgressEventTag = typeof ProgressEventTag.Type;
 
 // =============================================================================
 // Common Field Schemas
@@ -818,7 +818,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
     ),
 
     /** Entity identifier or scalar literal used as the relation object. */
-    object: S.Union([S.String, S.Number, S.Boolean]).pipe(
+    object: S.Union([S.String, S.Finite, S.Boolean]).pipe(
       $I.annoteSchema("RelationFoundObject", {
         description: "Entity identifier or scalar literal used as an extracted relation object.",
       }),
@@ -1190,37 +1190,31 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
-      /** Number of entities retained before extraction failed. */
       entityCount: NonNegativeInt.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.entityCount", {
           description: "Number of entities retained before extraction failed.",
         })
       ),
-      /** Number of relations retained before extraction failed. */
       relationCount: NonNegativeInt.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.relationCount", {
           description: "Number of relations retained before extraction failed.",
         })
       ),
-      /** Number of chunks completed before extraction failed. */
       processedChunks: NonNegativeInt.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before extraction failed.",
         })
       ),
-    })
-      .pipe(
-        $I.annoteSchema("ExtractionFailedPartialResults", {
-          description: "Usable extraction counts accumulated before a terminal failure.",
-        })
-      )
-      .pipe(
-        S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
-        $I.annoteKey("ExtractionFailedEvent.partialResults", {
-          description: "Optional usable counts accumulated before the terminal failure.",
-        })
-      ),
+    }).pipe(
+      $I.annoteSchema("ExtractionFailedPartialResults", {
+        description: "Usable extraction counts accumulated before a terminal failure.",
+      }),
+      S.OptionFromOptionalKey,
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("ExtractionFailedEvent.partialResults", {
+        description: "Optional usable counts accumulated before the terminal failure.",
+      })
+    ),
 
     /** Optional zero-based checkpoint from which a resumable extraction may continue. */
     lastSuccessfulChunkIndex: NonNegativeInt.pipe(
@@ -1352,17 +1346,14 @@ export class BackpressureWarningEvent extends S.TaggedClass<BackpressureWarningE
     ),
 
     /** Whether queue pressure is advisory or immediately threatens event loss. */
-    severity: LiteralKit(["warning", "critical"])
-      .pipe(
-        $I.annoteSchema("BackpressureSeverity", {
-          description: "Closed vocabulary of server queue-pressure severity levels.",
-        })
-      )
-      .pipe(
-        $I.annoteKey("BackpressureWarningEvent.severity", {
-          description: "Whether queue pressure is advisory or immediately threatens event loss.",
-        })
-      ),
+    severity: LiteralKit(["warning", "critical"]).pipe(
+      $I.annoteSchema("BackpressureSeverity", {
+        description: "Closed vocabulary of server queue-pressure severity levels.",
+      }),
+      $I.annoteKey("BackpressureWarningEvent.severity", {
+        description: "Whether queue pressure is advisory or immediately threatens event loss.",
+      })
+    ),
 
     /** Concrete client action recommended to restore safe queue headroom. */
     recommendedAction: S.String.pipe(
@@ -1736,17 +1727,14 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
     ),
 
     /** Resource dimension responsible for the rate-limit delay. */
-    reason: LiteralKit(["tokens", "requests", "concurrent"])
-      .pipe(
-        $I.annoteSchema("RateLimitReason", {
-          description: "Closed vocabulary of resource dimensions that may delay extraction work.",
-        })
-      )
-      .pipe(
-        $I.annoteKey("RateLimitedEvent.reason", {
-          description: "Resource dimension responsible for the rate-limit delay.",
-        })
-      ),
+    reason: LiteralKit(["tokens", "requests", "concurrent"]).pipe(
+      $I.annoteSchema("RateLimitReason", {
+        description: "Closed vocabulary of resource dimensions that may delay extraction work.",
+      }),
+      $I.annoteKey("RateLimitedEvent.reason", {
+        description: "Resource dimension responsible for the rate-limit delay.",
+      })
+    ),
   },
   $I.annote("RateLimitedEvent", {
     description: "Flow-control event describing a temporary rate-limit delay.",
@@ -1832,7 +1820,7 @@ export const ProgressEventSchema = S.Union([
  * @category type-level
  * @since 0.0.0
  */
-export type ProgressEvent = S.Schema.Type<typeof ProgressEventSchema>;
+export type ProgressEvent = typeof ProgressEventSchema.Type;
 
 // =============================================================================
 // Backpressure Strategy

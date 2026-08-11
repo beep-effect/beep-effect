@@ -14,15 +14,18 @@
  * @module Service/GraphRAG
  */
 
-import type { AiError, LanguageModel } from "effect/unstable/ai"
-import { Data, Effect, Schema, Context, Layer } from "effect"
-import type { TimeoutError } from "effect/Cause"
-import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
-import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts"
-import { EntityIndex } from "./EntityIndex.ts"
-import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts"
-import { type Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Data, Effect, Layer, Schema } from "effect";
+import type { TimeoutError } from "effect/Cause";
+import * as P from "effect/Predicate";
+import type { AiError, LanguageModel } from "effect/unstable/ai";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts";
+import { EntityIndex } from "./EntityIndex.ts";
+import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import type { Subgraph } from "./SubgraphExtractor.ts";
+import { SubgraphExtractor } from "./SubgraphExtractor.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
 /**
@@ -32,13 +35,13 @@ const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
  * @category Types
  */
 export interface ScoredNode {
-  readonly entity: Entity
+  readonly entity: Entity;
   /** Combined relevance score (0-1) */
-  readonly score: number
+  readonly score: number;
   /** Distance from seed entities (0 = seed) */
-  readonly hopDistance: number
+  readonly hopDistance: number;
   /** Whether this was a seed entity from initial retrieval */
-  readonly isSeed: boolean
+  readonly isSeed: boolean;
 }
 
 /**
@@ -49,15 +52,15 @@ export interface ScoredNode {
  */
 export interface RetrievalResult {
   /** Extracted subgraph around relevant entities */
-  readonly subgraph: Subgraph
+  readonly subgraph: Subgraph;
   /** All nodes with relevance scores, sorted by score descending */
-  readonly scoredNodes: ReadonlyArray<ScoredNode>
+  readonly scoredNodes: ReadonlyArray<ScoredNode>;
   /** Formatted context string for LLM prompts */
-  readonly context: string
+  readonly context: string;
   /** Original query */
-  readonly query: string
+  readonly query: string;
   /** Retrieval statistics */
-  readonly stats: RetrievalStats
+  readonly stats: RetrievalStats;
 }
 
 /**
@@ -68,15 +71,15 @@ export interface RetrievalResult {
  */
 export interface RetrievalStats {
   /** Number of seed entities found */
-  readonly seedCount: number
+  readonly seedCount: number;
   /** Total entities in subgraph */
-  readonly nodeCount: number
+  readonly nodeCount: number;
   /** Total relations in subgraph */
-  readonly edgeCount: number
+  readonly edgeCount: number;
   /** Traversal depth used */
-  readonly hops: number
+  readonly hops: number;
   /** Average relevance score */
-  readonly avgScore: number
+  readonly avgScore: number;
 }
 
 /**
@@ -87,19 +90,19 @@ export interface RetrievalStats {
  */
 export interface RetrievalOptions {
   /** Number of seed entities to find via embedding search (default: 5) */
-  readonly topK?: number
+  readonly topK?: number;
   /** Number of hops to traverse from seeds (default: 1) */
-  readonly hops?: number
+  readonly hops?: number;
   /** Maximum nodes in final subgraph (default: 50) */
-  readonly maxNodes?: number
+  readonly maxNodes?: number;
   /** Minimum similarity score for seed selection (default: 0.3) */
-  readonly minScore?: number
+  readonly minScore?: number;
   /** Filter to only entities with these types */
-  readonly includeTypes?: ReadonlyArray<string>
+  readonly includeTypes?: ReadonlyArray<string>;
   /** Whether to include entity attributes in context (default: true) */
-  readonly includeAttributes?: boolean
+  readonly includeAttributes?: boolean;
   /** Whether to include relation predicates in context (default: true) */
-  readonly includeRelations?: boolean
+  readonly includeRelations?: boolean;
 }
 
 /**
@@ -110,15 +113,15 @@ export interface RetrievalOptions {
  */
 export interface GroundedAnswer {
   /** The generated answer text */
-  readonly answer: string
+  readonly answer: string;
   /** Entity IDs cited in the answer */
-  readonly citations: ReadonlyArray<string>
+  readonly citations: ReadonlyArray<string>;
   /** Confidence score (0-1) */
-  readonly confidence: number
+  readonly confidence: number;
   /** Brief reasoning explanation */
-  readonly reasoning: string
+  readonly reasoning: string;
   /** The retrieval result used for generation */
-  readonly retrieval: RetrievalResult
+  readonly retrieval: RetrievalResult;
 }
 
 /**
@@ -129,11 +132,11 @@ export interface GroundedAnswer {
  */
 export interface GenerationOptions {
   /** Temperature for LLM generation (default: 0.3) */
-  readonly temperature?: number
+  readonly temperature?: number;
   /** Timeout for LLM call in milliseconds (default: 30000) */
-  readonly timeoutMs?: number
+  readonly timeoutMs?: number;
   /** Maximum retry attempts (default: 3) */
-  readonly maxAttempts?: number
+  readonly maxAttempts?: number;
 }
 
 /**
@@ -156,13 +159,13 @@ export interface AnswerOptions extends RetrievalOptions, GenerationOptions {}
  */
 export interface ReasoningStep {
   /** Source entity in this step */
-  readonly from: Entity
+  readonly from: Entity;
   /** Relation connecting from → to */
-  readonly relation: Relation
+  readonly relation: Relation;
   /** Target entity in this step */
-  readonly to: Entity
+  readonly to: Entity;
   /** Human-readable explanation of this step */
-  readonly explanation: string
+  readonly explanation: string;
 }
 
 /**
@@ -173,15 +176,15 @@ export interface ReasoningStep {
  */
 export interface ReasoningTrace {
   /** Ordered steps through the knowledge graph */
-  readonly steps: ReadonlyArray<ReasoningStep>
+  readonly steps: ReadonlyArray<ReasoningStep>;
   /** Natural language explanation of the full reasoning */
-  readonly explanation: string
+  readonly explanation: string;
   /** Confidence inherited from the grounded answer */
-  readonly confidence: number
+  readonly confidence: number;
   /** The original query */
-  readonly query: string
+  readonly query: string;
   /** Entity IDs involved in the reasoning path */
-  readonly involvedEntities: ReadonlyArray<string>
+  readonly involvedEntities: ReadonlyArray<string>;
 }
 
 /**
@@ -192,7 +195,7 @@ export interface ReasoningTrace {
  */
 export interface ExplainOptions extends GenerationOptions {
   /** Whether to generate NL explanations for each step (default: true) */
-  readonly generateStepExplanations?: boolean
+  readonly generateStepExplanations?: boolean;
 }
 
 /**
@@ -202,9 +205,9 @@ export interface ExplainOptions extends GenerationOptions {
  * @category Errors
  */
 export class GraphRAGGenerationError extends Data.TaggedError("GraphRAGGenerationError")<{
-  readonly message: string
-  readonly query: string
-  readonly cause?: unknown
+  readonly message: string;
+  readonly query: string;
+  readonly cause?: unknown;
 }> {}
 
 // =============================================================================
@@ -219,21 +222,21 @@ export class GraphRAGGenerationError extends Data.TaggedError("GraphRAGGeneratio
 const GroundedAnswerSchema = Schema.Struct({
   answer: Schema.String.annotate({
     title: "Answer",
-    description: "The answer to the question based on the knowledge graph context"
+    description: "The answer to the question based on the knowledge graph context",
   }),
   citations: Schema.Array(Schema.String).annotate({
     title: "Citations",
-    description: "Entity IDs from the context that support this answer (use exact IDs like 'alice', 'acme_corp')"
+    description: "Entity IDs from the context that support this answer (use exact IDs like 'alice', 'acme_corp')",
   }),
   confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
     title: "Confidence",
-    description: "Confidence score between 0 and 1 based on how well the context supports the answer"
+    description: "Confidence score between 0 and 1 based on how well the context supports the answer",
   }),
   reasoning: Schema.String.annotate({
     title: "Reasoning",
-    description: "Brief explanation of how the answer was derived from the knowledge graph"
-  })
-})
+    description: "Brief explanation of how the answer was derived from the knowledge graph",
+  }),
+});
 
 /**
  * Schema for reasoning trace LLM response
@@ -243,13 +246,13 @@ const GroundedAnswerSchema = Schema.Struct({
 const ReasoningTraceSchema = Schema.Struct({
   explanation: Schema.String.annotate({
     title: "Explanation",
-    description: "Natural language explanation of the complete reasoning process"
+    description: "Natural language explanation of the complete reasoning process",
   }),
   stepExplanations: Schema.Array(Schema.String).annotate({
     title: "Step Explanations",
-    description: "Explanation for each reasoning step in order (one per relationship traversed)"
-  })
-})
+    description: "Explanation for each reasoning step in order (one per relationship traversed)",
+  }),
+});
 
 /**
  * GraphRAG service interface
@@ -264,7 +267,7 @@ export interface GraphRAGService {
    * @param graph - Knowledge graph to index
    * @returns Number of entities indexed
    */
-  readonly index: (graph: KnowledgeGraph) => Effect.Effect<number, AnyEmbeddingError>
+  readonly index: (graph: KnowledgeGraph) => Effect.Effect<number, AnyEmbeddingError>;
 
   /**
    * Retrieve relevant context for a query
@@ -283,7 +286,7 @@ export interface GraphRAGService {
     graph: KnowledgeGraph,
     query: string,
     options?: RetrievalOptions
-  ) => Effect.Effect<RetrievalResult, AnyEmbeddingError>
+  ) => Effect.Effect<RetrievalResult, AnyEmbeddingError>;
 
   /**
    * Generate a grounded answer using LLM
@@ -300,7 +303,7 @@ export interface GraphRAGService {
     query: string,
     retrieval: RetrievalResult,
     options?: GenerationOptions
-  ) => Effect.Effect<GroundedAnswer, GraphRAGGenerationError | AiError.AiError | TimeoutError>
+  ) => Effect.Effect<GroundedAnswer, GraphRAGGenerationError | AiError.AiError | TimeoutError>;
 
   /**
    * Answer a question using knowledge graph (retrieve + generate)
@@ -317,7 +320,7 @@ export interface GraphRAGService {
     graph: KnowledgeGraph,
     query: string,
     options?: AnswerOptions
-  ) => Effect.Effect<GroundedAnswer, AnyEmbeddingError | GraphRAGGenerationError | AiError.AiError | TimeoutError>
+  ) => Effect.Effect<GroundedAnswer, AnyEmbeddingError | GraphRAGGenerationError | AiError.AiError | TimeoutError>;
 
   /**
    * Format a subgraph as LLM context
@@ -333,7 +336,7 @@ export interface GraphRAGService {
     subgraph: Subgraph,
     query: string,
     options?: Pick<RetrievalOptions, "includeAttributes" | "includeRelations">
-  ) => Effect.Effect<string>
+  ) => Effect.Effect<string>;
 
   /**
    * Generate a reasoning trace explaining how an answer was derived
@@ -349,23 +352,23 @@ export interface GraphRAGService {
     llm: LanguageModel.Service,
     answer: GroundedAnswer,
     options?: ExplainOptions
-  ) => Effect.Effect<ReasoningTrace, GraphRAGGenerationError | AiError.AiError | TimeoutError>
+  ) => Effect.Effect<ReasoningTrace, GraphRAGGenerationError | AiError.AiError | TimeoutError>;
 
   /**
    * Clear the entity index
    */
-  readonly clear: () => Effect.Effect<void>
+  readonly clear: Effect.Effect<void>;
 
   /**
    * Get index size
    */
-  readonly size: () => Effect.Effect<number>
+  readonly size: Effect.Effect<number>;
 }
 
 /**
  * RRF k constant (experimentally optimal per research)
  */
-const RRF_K = 60
+const RRF_K = 60;
 
 /**
  * Compute Reciprocal Rank Fusion score
@@ -376,25 +379,24 @@ const RRF_K = 60
  *
  * @param ranks - Array of ranks from different scoring methods (1-indexed)
  */
-const computeRRFScore = (ranks: ReadonlyArray<number>): number => {
-  return ranks.reduce((sum, rank) => sum + 1 / (rank + RRF_K), 0)
-}
+const computeRRFScore = (ranks: ReadonlyArray<number>): number =>
+  ranks.reduce((sum, rank) => sum + 1 / (rank + RRF_K), 0);
 
 /**
  * Extract type label from IRI
  */
 const typeLabel = (typeIri: string): string => {
-  const parts = typeIri.split(/[#/]/)
-  return parts[parts.length - 1] || typeIri
-}
+  const parts = typeIri.split(/[#/]/);
+  return parts[parts.length - 1] || typeIri;
+};
 
 /**
  * Extract predicate label from IRI
  */
 const predicateLabel = (predicateIri: string): string => {
-  const parts = predicateIri.split(/[#/]/)
-  return parts[parts.length - 1] || predicateIri
-}
+  const parts = predicateIri.split(/[#/]/);
+  return parts[parts.length - 1] || predicateIri;
+};
 
 /**
  * GraphRAG - Retrieval-Augmented Generation with Knowledge Graphs
@@ -403,9 +405,9 @@ const predicateLabel = (predicateIri: string): string => {
  * @category Service
  */
 export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
-  make: Effect.gen(function*() {
-    const entityIndex = yield* EntityIndex
-    const subgraphExtractor = yield* SubgraphExtractor
+  make: Effect.gen(function* () {
+    const entityIndex = yield* EntityIndex;
+    const subgraphExtractor = yield* SubgraphExtractor;
 
     /**
      * Build scored nodes with RRF fusion
@@ -415,97 +417,91 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
       seedScores: Map<string, number>,
       seedRanks: Map<string, number>
     ): ReadonlyArray<ScoredNode> => {
-      const scored: Array<ScoredNode> = []
+      const scored: Array<ScoredNode> = [];
 
       for (const entity of subgraph.nodes) {
-        const isSeed = subgraph.centerNodes.includes(entity.id)
-        const embeddingScore = seedScores.get(entity.id) ?? 0
+        const isSeed = subgraph.centerNodes.includes(entity.id);
+        const embeddingScore = seedScores.get(entity.id) ?? 0;
 
         // Compute hop distance (0 for seeds, estimate for others)
-        let hopDistance = 0
+        let hopDistance = 0;
         if (!isSeed) {
           // Estimate: non-seeds are at least 1 hop away
           // Could be more sophisticated with actual BFS tracking
-          hopDistance = 1
+          hopDistance = 1;
         }
 
         // Compute RRF score combining:
         // 1. Embedding similarity rank
         // 2. Hop distance (closer = better rank)
         // 3. Type relevance (could be added)
-        const embeddingRank = seedRanks.get(entity.id) ?? subgraph.nodes.length
-        const hopRank = hopDistance + 1 // 1-indexed
+        const embeddingRank = seedRanks.get(entity.id) ?? subgraph.nodes.length;
+        const hopRank = hopDistance + 1; // 1-indexed
 
-        const rrfScore = computeRRFScore([embeddingRank, hopRank])
+        const rrfScore = computeRRFScore([embeddingRank, hopRank]);
 
         // Normalize to 0-1 range (max possible is 2 / (1 + 60) ≈ 0.033)
         // We scale up for readability
-        const normalizedScore = Math.min(1, rrfScore * 30)
+        const normalizedScore = Math.min(1, rrfScore * 30);
 
         scored.push({
           entity,
           score: isSeed ? Math.max(normalizedScore, embeddingScore) : normalizedScore,
           hopDistance,
-          isSeed
-        })
+          isSeed,
+        });
       }
 
       // Sort by score descending
-      return scored.sort((a, b) => b.score - a.score)
-    }
+      return scored.sort((a, b) => b.score - a.score);
+    };
 
     /**
      * Format entities section of context
      */
-    const formatEntities = (
-      nodes: ReadonlyArray<ScoredNode>,
-      includeAttributes: boolean
-    ): string => {
-      const lines: Array<string> = []
+    const formatEntities = (nodes: ReadonlyArray<ScoredNode>, includeAttributes: boolean): string => {
+      const lines: Array<string> = [];
 
       for (const { entity, isSeed, score } of nodes) {
-        const types = entity.types.map(typeLabel).join(", ")
-        const seedMarker = isSeed ? " [SEED]" : ""
-        const scoreStr = (score * 100).toFixed(0)
+        const types = entity.types.map(typeLabel).join(", ");
+        const seedMarker = isSeed ? " [SEED]" : "";
+        const scoreStr = (score * 100).toFixed(0);
 
-        lines.push(`- ${entity.mention} (${types})${seedMarker} [relevance: ${scoreStr}%]`)
+        lines.push(`- ${entity.mention} (${types})${seedMarker} [relevance: ${scoreStr}%]`);
 
         if (includeAttributes && Object.keys(entity.attributes).length > 0) {
           for (const [prop, value] of Object.entries(entity.attributes)) {
-            const propLabel = predicateLabel(prop)
-            lines.push(`    ${propLabel}: ${String(value)}`)
+            const propLabel = predicateLabel(prop);
+            lines.push(`    ${propLabel}: ${String(value)}`);
           }
         }
       }
 
-      return lines.join("\n")
-    }
+      return lines.join("\n");
+    };
 
     /**
      * Format relations section of context
      */
-    const formatRelations = (
-      edges: ReadonlyArray<Relation>,
-      entityMap: Map<string, Entity>
-    ): string => {
-      const lines: Array<string> = []
+    const formatRelations = (edges: ReadonlyArray<Relation>, entityMap: Map<string, Entity>): string => {
+      const lines: Array<string> = [];
 
       for (const rel of edges) {
-        const subject = entityMap.get(rel.subjectId)
-        const subjectName = subject?.mention ?? rel.subjectId
-        const predLabel = predicateLabel(rel.predicate)
+        const subject = entityMap.get(rel.subjectId);
+        const subjectName = subject?.mention ?? rel.subjectId;
+        const predLabel = predicateLabel(rel.predicate);
 
         if (rel.isEntityReference && typeof rel.object === "string") {
-          const object = entityMap.get(rel.object)
-          const objectName = object?.mention ?? rel.object
-          lines.push(`- ${subjectName} → ${predLabel} → ${objectName}`)
+          const object = entityMap.get(rel.object);
+          const objectName = object?.mention ?? rel.object;
+          lines.push(`- ${subjectName} → ${predLabel} → ${objectName}`);
         } else {
-          lines.push(`- ${subjectName} → ${predLabel} → "${String(rel.object)}"`)
+          lines.push(`- ${subjectName} → ${predLabel} → "${String(rel.object)}"`);
         }
       }
 
-      return lines.join("\n")
-    }
+      return lines.join("\n");
+    };
 
     /**
      * Format complete context for LLM
@@ -516,150 +512,139 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
       scoredNodes: ReadonlyArray<ScoredNode>,
       options: Pick<RetrievalOptions, "includeAttributes" | "includeRelations">
     ): string => {
-      const includeAttributes = options.includeAttributes ?? true
-      const includeRelations = options.includeRelations ?? true
+      const includeAttributes = options.includeAttributes ?? true;
+      const includeRelations = options.includeRelations ?? true;
 
-      const entityMap = new Map(subgraph.nodes.map((e) => [e.id, e]))
+      const entityMap = new Map(subgraph.nodes.map((e) => [e.id, e]));
 
       // Build context sections
-      const sections: Array<string> = []
+      const sections: Array<string> = [];
 
       // Header with query context
-      sections.push("## Retrieved Knowledge Graph Context")
-      sections.push("")
-      sections.push(`Query: "${query}"`)
-      sections.push("")
+      sections.push("## Retrieved Knowledge Graph Context");
+      sections.push("");
+      sections.push(`Query: "${query}"`);
+      sections.push("");
 
       // Summary statistics
-      const seedCount = scoredNodes.filter((n) => n.isSeed).length
-      sections.push(`Found ${subgraph.nodes.length} relevant entities (${seedCount} primary matches)`)
-      sections.push(`with ${subgraph.edges.length} relationships.`)
-      sections.push("")
+      const seedCount = scoredNodes.filter((n) => n.isSeed).length;
+      sections.push(`Found ${subgraph.nodes.length} relevant entities (${seedCount} primary matches)`);
+      sections.push(`with ${subgraph.edges.length} relationships.`);
+      sections.push("");
 
       // Entities section
-      sections.push("### Relevant Entities")
-      sections.push("")
-      sections.push(formatEntities(scoredNodes, includeAttributes))
-      sections.push("")
+      sections.push("### Relevant Entities");
+      sections.push("");
+      sections.push(formatEntities(scoredNodes, includeAttributes));
+      sections.push("");
 
       // Relations section
       if (includeRelations && subgraph.edges.length > 0) {
-        sections.push("### Relationships")
-        sections.push("")
-        sections.push(formatRelations(subgraph.edges, entityMap))
-        sections.push("")
+        sections.push("### Relationships");
+        sections.push("");
+        sections.push(formatRelations(subgraph.edges, entityMap));
+        sections.push("");
       }
 
       // Footer guidance for LLM
-      sections.push("---")
-      sections.push("Use the above knowledge graph context to answer the query.")
-      sections.push("Cite specific entities and relationships when relevant.")
+      sections.push("---");
+      sections.push("Use the above knowledge graph context to answer the query.");
+      sections.push("Cite specific entities and relationships when relevant.");
 
-      return sections.join("\n")
-    }
+      return sections.join("\n");
+    };
 
-    const service: GraphRAGService = {
-      index: (graph) => entityIndex.index(graph),
+    const retrieve = Effect.fn("GraphRAG.retrieve")(function* (
+      graph: KnowledgeGraph,
+      query: string,
+      options: RetrievalOptions = {}
+    ) {
+      const topK = options.topK ?? 5;
+      const hops = options.hops ?? 1;
+      const maxNodes = options.maxNodes ?? 50;
+      const minScore = options.minScore ?? 0.3;
+      const similar = yield* entityIndex.findSimilar(query, topK, {
+        minScore,
+        ...(P.isUndefined(options.includeTypes) ? {} : { filterTypes: options.includeTypes }),
+      });
+      if (similar.length === 0) {
+        const emptySubgraph: Subgraph = {
+          nodes: [],
+          edges: [],
+          centerNodes: [],
+          depth: 0,
+        };
+        return {
+          subgraph: emptySubgraph,
+          scoredNodes: [],
+          context: `## Retrieved Knowledge Graph Context\n\nQuery: "${query}"\n\nNo relevant entities found in the knowledge graph.`,
+          query,
+          stats: {
+            seedCount: 0,
+            nodeCount: 0,
+            edgeCount: 0,
+            hops: 0,
+            avgScore: 0,
+          },
+        };
+      }
+      const seedScores = new Map<string, number>();
+      const seedRanks = new Map<string, number>();
+      similar.forEach((s, idx) => {
+        seedScores.set(s.entity.id, s.score);
+        seedRanks.set(s.entity.id, idx + 1);
+      });
+      const seedIds = similar.map((s) => s.entity.id);
+      const subgraph = yield* subgraphExtractor.extract(graph, seedIds, hops, {
+        maxNodes,
+      });
+      const scoredNodes = buildScoredNodes(subgraph, seedScores, seedRanks);
+      const context = formatContextImpl(subgraph, query, scoredNodes, options);
+      const avgScore =
+        scoredNodes.length > 0 ? scoredNodes.reduce((sum, n) => sum + n.score, 0) / scoredNodes.length : 0;
+      return {
+        subgraph,
+        scoredNodes,
+        context,
+        query,
+        stats: {
+          seedCount: similar.length,
+          nodeCount: subgraph.nodes.length,
+          edgeCount: subgraph.edges.length,
+          hops,
+          avgScore,
+        },
+      };
+    });
 
-      retrieve: (graph, query, options = {}) =>
-        Effect.gen(function*() {
-          const topK = options.topK ?? 5
-          const hops = options.hops ?? 1
-          const maxNodes = options.maxNodes ?? 50
-          const minScore = options.minScore ?? 0.3
-
-          // Step 1: Find similar entities via embedding search
-          const similar = yield* entityIndex.findSimilar(query, topK, {
-            minScore,
-            filterTypes: options.includeTypes
-          })
-
-          if (similar.length === 0) {
-            // Return empty result
-            const emptySubgraph: Subgraph = {
-              nodes: [],
-              edges: [],
-              centerNodes: [],
-              depth: 0
-            }
-            return {
-              subgraph: emptySubgraph,
-              scoredNodes: [],
-              context:
-                `## Retrieved Knowledge Graph Context\n\nQuery: "${query}"\n\nNo relevant entities found in the knowledge graph.`,
-              query,
-              stats: {
-                seedCount: 0,
-                nodeCount: 0,
-                edgeCount: 0,
-                hops: 0,
-                avgScore: 0
-              }
-            }
-          }
-
-          // Build seed score maps
-          const seedScores = new Map<string, number>()
-          const seedRanks = new Map<string, number>()
-          similar.forEach((s, idx) => {
-            seedScores.set(s.entity.id, s.score)
-            seedRanks.set(s.entity.id, idx + 1) // 1-indexed ranks
-          })
-
-          const seedIds = similar.map((s) => s.entity.id)
-
-          // Step 2: Extract N-hop subgraph
-          const subgraph = yield* subgraphExtractor.extract(graph, seedIds, hops, {
-            maxNodes
-          })
-
-          // Step 3: Score all nodes using RRF fusion
-          const scoredNodes = buildScoredNodes(subgraph, seedScores, seedRanks)
-
-          // Step 4: Format context
-          const context = formatContextImpl(subgraph, query, scoredNodes, options)
-
-          // Compute stats
-          const avgScore = scoredNodes.length > 0
-            ? scoredNodes.reduce((sum, n) => sum + n.score, 0) / scoredNodes.length
-            : 0
-
-          return {
-            subgraph,
-            scoredNodes,
-            context,
-            query,
-            stats: {
-              seedCount: similar.length,
-              nodeCount: subgraph.nodes.length,
-              edgeCount: subgraph.edges.length,
-              hops,
-              avgScore
-            }
-          }
-        }),
-
-      formatContext: (subgraph, query, options = {}) =>
+    const formatContext = Effect.fn("GraphRAG.formatContext")(
+      (
+        subgraph: Subgraph,
+        query: string,
+        options: Pick<RetrievalOptions, "includeAttributes" | "includeRelations"> = {}
+      ) =>
         Effect.sync(() => {
-          // Build basic scored nodes (no embedding scores available)
-          const scoredNodes: Array<ScoredNode> = subgraph.nodes.map((entity) => ({
-            entity,
-            score: subgraph.centerNodes.includes(entity.id) ? 1 : 0.5,
-            hopDistance: subgraph.centerNodes.includes(entity.id) ? 0 : 1,
-            isSeed: subgraph.centerNodes.includes(entity.id)
-          }))
+          const scoredNodes: Array<ScoredNode> = subgraph.nodes.map((entity) => {
+            const isSeed = subgraph.centerNodes.includes(entity.id);
+            return {
+              entity,
+              score: isSeed ? 1 : 0.5,
+              hopDistance: isSeed ? 0 : 1,
+              isSeed,
+            };
+          });
+          return formatContextImpl(subgraph, query, scoredNodes, options);
+        })
+    );
 
-          return formatContextImpl(subgraph, query, scoredNodes, options)
-        }),
-
-      generate: (llm, query, retrieval, options = {}) =>
-        Effect.gen(function*() {
-          const timeoutMs = options.timeoutMs ?? 30000
-          const maxAttempts = options.maxAttempts ?? 3
-
-          // Build prompt with context
-          const prompt =
-            `You are a knowledge graph assistant. Answer the user's question based ONLY on the provided knowledge graph context.
+    const generate = Effect.fn("GraphRAG.generate")(function* (
+      llm: LanguageModel.Service,
+      query: string,
+      retrieval: RetrievalResult,
+      options: GenerationOptions = {}
+    ) {
+      const response = yield* generateObjectWithFeedback(llm, {
+        prompt: `You are a knowledge graph assistant. Answer the user's question based ONLY on the provided knowledge graph context.
 
 ${retrieval.context}
 
@@ -667,197 +652,155 @@ ${retrieval.context}
 ${query}
 
 ## Instructions
-1. Answer the question using ONLY information from the knowledge graph context above
-2. Cite specific entity IDs (like 'alice', 'acme_corp') that support your answer
-3. If the context doesn't contain enough information, say so and explain what's missing
-4. Provide a confidence score based on how well the context supports your answer
-5. Briefly explain your reasoning
+1. Answer using only the knowledge graph context above
+2. Cite exact entity IDs that support the answer
+3. Explain when the context is insufficient
+4. Provide a confidence score between 0 and 1
+5. Briefly explain the reasoning`,
+        schema: GroundedAnswerSchema,
+        objectName: "grounded_answer",
+        maxAttempts: options.maxAttempts ?? 3,
+        serviceName: "GraphRAG",
+        timeoutMs: options.timeoutMs ?? 30000,
+      }).pipe(
+        Effect.mapError((error) =>
+          error._tag === "TimeoutError"
+            ? error
+            : new GraphRAGGenerationError({
+                message: `Failed to generate answer: ${error._tag}`,
+                query,
+                cause: error,
+              })
+        )
+      );
+      return {
+        answer: response.value.answer,
+        citations: response.value.citations,
+        confidence: response.value.confidence,
+        reasoning: response.value.reasoning,
+        retrieval,
+      };
+    });
 
-Respond with a JSON object containing:
-- answer: Your answer to the question
-- citations: Array of entity IDs that support your answer
-- confidence: A number between 0 and 1
-- reasoning: Brief explanation of how you derived the answer`
+    const answer = Effect.fn("GraphRAG.answer")(function* (
+      llm: LanguageModel.Service,
+      graph: KnowledgeGraph,
+      query: string,
+      options: AnswerOptions = {}
+    ) {
+      yield* entityIndex.index(graph);
+      const retrieval = yield* retrieve(graph, query, options);
+      return yield* generate(llm, query, retrieval, options);
+    });
 
-          // Call LLM with structured output
-          const response = yield* generateObjectWithFeedback(llm, {
-            prompt,
-            schema: GroundedAnswerSchema,
-            objectName: "grounded_answer",
-            maxAttempts,
-            serviceName: "GraphRAG",
-            timeoutMs
-          }).pipe(
-            Effect.mapError((e) =>
-              e._tag === "TimeoutError"
-                ? e
-                : new GraphRAGGenerationError({
-                  message: `Failed to generate answer: ${e._tag}`,
-                  query,
-                  cause: e
-                })
-            )
+    const explain = Effect.fn("GraphRAG.explain")(function* (
+      llm: LanguageModel.Service,
+      answer: GroundedAnswer,
+      options: ExplainOptions = {}
+    ) {
+      const { subgraph } = answer.retrieval;
+      const entityMap = new Map<string, Entity>(subgraph.nodes.map((entity) => [entity.id, entity]));
+      const cited = new Set(answer.citations);
+      const relevantEdges: Array<{ from: Entity; relation: Relation; to: Entity }> = [];
+
+      for (const relation of subgraph.edges) {
+        const from = entityMap.get(relation.subjectId);
+        const toId = relation.isEntityReference ? String(relation.object) : undefined;
+        const to = P.isNotUndefined(toId) ? entityMap.get(toId) : undefined;
+        if (P.isNotUndefined(from) && P.isNotUndefined(toId) && P.isNotUndefined(to)) {
+          if (cited.has(relation.subjectId) || cited.has(toId)) {
+            relevantEdges.push({ from, relation, to });
+          }
+        }
+      }
+
+      const involvedEntities = new Set<string>(answer.citations);
+      for (const edge of relevantEdges) {
+        involvedEntities.add(edge.from.id);
+        involvedEntities.add(edge.to.id);
+      }
+      const steps: Array<ReasoningStep> = relevantEdges.map((edge) => ({
+        ...edge,
+        explanation: "",
+      }));
+
+      if ((options.generateStepExplanations ?? true) && steps.length > 0) {
+        const stepsDescription = steps
+          .map(
+            (step, index) =>
+              `${index + 1}. ${step.from.mention} → ${predicateLabel(step.relation.predicate)} → ${step.to.mention}`
           )
+          .join("\n");
+        const response = yield* generateObjectWithFeedback(llm, {
+          prompt: `Explain how this answer was derived from a knowledge graph.
 
-          // Return full grounded answer
-          return {
-            answer: response.value.answer,
-            citations: response.value.citations,
-            confidence: response.value.confidence,
-            reasoning: response.value.reasoning,
-            retrieval
-          }
-        }),
-
-      answer: (llm, graph, query, options = {}) =>
-        Effect.gen(function*() {
-          // Index the graph first
-          yield* entityIndex.index(graph)
-
-          // Retrieve relevant context
-          const retrieval = yield* service.retrieve(graph, query, options)
-
-          // Generate grounded answer
-          return yield* service.generate(llm, query, retrieval, options)
-        }),
-
-      explain: (llm, answer, options = {}) =>
-        Effect.gen(function*() {
-          const timeoutMs = options.timeoutMs ?? 30000
-          const maxAttempts = options.maxAttempts ?? 3
-          const generateStepExplanations = options.generateStepExplanations ?? true
-
-          const { subgraph } = answer.retrieval
-          const entityMap = new Map<string, Entity>(subgraph.nodes.map((e) => [e.id, e]))
-
-          // Extract reasoning steps from edges connecting cited entities
-          // Find all edges where both subject and object are in citations or connected
-          const citedSet = new Set(answer.citations)
-          const relevantEdges: Array<{ from: Entity; relation: Relation; to: Entity }> = []
-
-          for (const edge of subgraph.edges) {
-            const fromEntity = entityMap.get(edge.subjectId)
-            const toEntityId = edge.isEntityReference ? String(edge.object) : null
-            const toEntity = toEntityId ? entityMap.get(toEntityId) : null
-
-            // Include edge if it connects cited entities or spans from cited to relevant
-            if (fromEntity && toEntity) {
-              const fromCited = citedSet.has(edge.subjectId)
-              const toCited = toEntityId && citedSet.has(toEntityId)
-
-              if (fromCited || toCited) {
-                relevantEdges.push({ from: fromEntity, relation: edge, to: toEntity })
-              }
-            }
-          }
-
-          // If no edges found, create steps from individual cited entities
-          const involvedEntities = new Set<string>()
-          for (const edge of relevantEdges) {
-            involvedEntities.add(edge.from.id)
-            involvedEntities.add(edge.to.id)
-          }
-          // Also add any cited entities not in edges
-          for (const citedId of answer.citations) {
-            involvedEntities.add(citedId)
-          }
-
-          // Build reasoning steps (without explanations yet)
-          const steps: Array<ReasoningStep> = relevantEdges.map((edge) => ({
-            from: edge.from,
-            relation: edge.relation,
-            to: edge.to,
-            explanation: "" // Will be filled by LLM
-          }))
-
-          // Generate explanations using LLM
-          if (generateStepExplanations && steps.length > 0) {
-            // Build prompt for step explanations
-            const stepsDescription = steps.map((s, i) => {
-              const predLabel = predicateLabel(s.relation.predicate)
-              return `${i + 1}. ${s.from.mention} → ${predLabel} → ${s.to.mention}`
-            }).join("\n")
-
-            const prompt = `You are explaining how an answer was derived from a knowledge graph.
-
-## Original Question
+## Question
 ${answer.retrieval.query}
 
-## Answer Given
+## Answer
 ${answer.answer}
 
-## Reasoning Steps (relationships used)
-${stepsDescription}
-
-## Task
-Generate a natural language explanation of the overall reasoning, plus a brief explanation for each step showing how it contributes to the answer.
-
-For the step explanations:
-- Keep each explanation to 1-2 sentences
-- Explain how the relationship helps answer the question
-- Reference the actual entities involved`
-
-            const response = yield* generateObjectWithFeedback(llm, {
-              prompt,
-              schema: ReasoningTraceSchema,
-              objectName: "reasoning_trace",
-              maxAttempts,
-              serviceName: "GraphRAG.explain",
-              timeoutMs
-            }).pipe(
-              Effect.mapError((e) =>
-                e._tag === "TimeoutError"
-                  ? e
-                  : new GraphRAGGenerationError({
-                    message: `Failed to generate reasoning trace: ${e._tag}`,
-                    query: answer.retrieval.query,
-                    cause: e
-                  })
-              )
-            )
-
-            // Merge explanations into steps
-            const stepsWithExplanations: Array<ReasoningStep> = steps.map((step, i) => ({
-              ...step,
-              explanation: response.value.stepExplanations[i] ||
-                `${step.from.mention} is connected to ${step.to.mention} via ${predicateLabel(step.relation.predicate)}`
-            }))
-
-            return {
-              steps: stepsWithExplanations,
-              explanation: response.value.explanation,
-              confidence: answer.confidence,
-              query: answer.retrieval.query,
-              involvedEntities: Array.from(involvedEntities)
-            }
-          }
-
-          // Return trace without LLM explanations
-          const stepsWithBasicExplanations: Array<ReasoningStep> = steps.map((step) => ({
+## Reasoning Steps
+${stepsDescription}`,
+          schema: ReasoningTraceSchema,
+          objectName: "reasoning_trace",
+          maxAttempts: options.maxAttempts ?? 3,
+          serviceName: "GraphRAG.explain",
+          timeoutMs: options.timeoutMs ?? 30000,
+        }).pipe(
+          Effect.mapError((error) =>
+            error._tag === "TimeoutError"
+              ? error
+              : new GraphRAGGenerationError({
+                  message: `Failed to generate reasoning trace: ${error._tag}`,
+                  query: answer.retrieval.query,
+                  cause: error,
+                })
+          )
+        );
+        return {
+          steps: steps.map((step, index) => ({
             ...step,
-            explanation: `${step.from.mention} is connected to ${step.to.mention} via ${
-              predicateLabel(step.relation.predicate)
-            }`
-          }))
+            explanation:
+              response.value.stepExplanations[index] ??
+              `${step.from.mention} is connected to ${step.to.mention} via ${predicateLabel(step.relation.predicate)}`,
+          })),
+          explanation: response.value.explanation,
+          confidence: answer.confidence,
+          query: answer.retrieval.query,
+          involvedEntities: Array.from(involvedEntities),
+        };
+      }
 
-          return {
-            steps: stepsWithBasicExplanations,
-            explanation: answer.reasoning,
-            confidence: answer.confidence,
-            query: answer.retrieval.query,
-            involvedEntities: Array.from(involvedEntities)
-          }
-        }),
+      return {
+        steps: steps.map((step) => ({
+          ...step,
+          explanation: `${step.from.mention} is connected to ${step.to.mention} via ${predicateLabel(step.relation.predicate)}`,
+        })),
+        explanation: answer.reasoning,
+        confidence: answer.confidence,
+        query: answer.retrieval.query,
+        involvedEntities: Array.from(involvedEntities),
+      };
+    });
 
-      clear: () => entityIndex.clear(),
+    const service: GraphRAGService = {
+      index: entityIndex.index,
+      retrieve,
+      generate,
+      answer,
+      formatContext,
+      explain,
+      clear: entityIndex.clear,
+      size: entityIndex.size,
+    };
 
-      size: () => entityIndex.size()
-    }
-
-    return service
+    return service;
   }),
 }) {
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([EntityIndex.Default, SubgraphExtractor.Default]));
+  static readonly Default = Layer.effect(this, this.make).pipe(
+    Layer.provide([EntityIndex.Default, SubgraphExtractor.Default])
+  );
 }
 
 /**
@@ -868,4 +811,4 @@ For the step explanations:
  * @since 2.0.0
  * @category Layers
  */
-export const GraphRAGDefault = GraphRAG.Default
+export const GraphRAGDefault = GraphRAG.Default;

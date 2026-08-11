@@ -15,14 +15,18 @@
  * @module Runtime/RateLimitedLanguageModel
  */
 
-import { AiError, LanguageModel } from "effect/unstable/ai"
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
-import { Clock, Duration, Effect, Layer, Stream } from "effect"
-import * as O from "effect/Option"
-import { ConfigService } from "../Service/Config.ts"
-import { LlmAttributes } from "../Telemetry/LlmAttributes.ts"
-import type { CircuitOpenError } from "./CircuitBreaker.ts"
-import { makeCircuitBreaker } from "./CircuitBreaker.ts"
+import { Clock, DateTime, Duration, Effect, Layer, Stream } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import type * as S from "effect/Schema";
+import type { NoExcessProperties } from "effect/Types";
+import { AiError, LanguageModel, Response } from "effect/unstable/ai";
+import type * as Tool from "effect/unstable/ai/Tool";
+import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
+import { ConfigService } from "../Service/Config.ts";
+import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
+import type { CircuitOpenError } from "./CircuitBreaker.ts";
+import { makeCircuitBreaker } from "./CircuitBreaker.ts";
 
 /**
  * Rate limit configurations per provider
@@ -32,17 +36,20 @@ import { makeCircuitBreaker } from "./CircuitBreaker.ts"
  *
  * @internal
  */
-const RATE_LIMITS: Record<string, {
-  perSecond: number
-  perMinute: number
-}> = {
+const RATE_LIMITS: Record<
+  string,
+  {
+    perSecond: number;
+    perMinute: number;
+  }
+> = {
   // Anthropic: Very conservative - 2/sec burst, 20/min sustained
   anthropic: { perSecond: 2, perMinute: 20 },
   // OpenAI: Slightly higher limits
   openai: { perSecond: 3, perMinute: 30 },
   // Google: Similar to Anthropic
-  google: { perSecond: 2, perMinute: 20 }
-}
+  google: { perSecond: 2, perMinute: 20 },
+};
 
 /**
  * Create a rate-limited LanguageModel layer
@@ -64,147 +71,268 @@ const RATE_LIMITS: Record<string, {
 /**
  * Track LLM call statistics for observability
  */
-let callCount = 0
+let callCount = 0;
 
 export const RateLimitedLanguageModelLayer = Layer.effect(
   LanguageModel.LanguageModel,
-  Effect.gen(function*() {
-    const config = yield* ConfigService
-    const baseLlm = yield* LanguageModel.LanguageModel
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const baseLlm = yield* LanguageModel.LanguageModel;
     // Get rate limit config for the current provider
-    const rateLimitConfig = RATE_LIMITS[config.llm.provider] ?? { perSecond: 2, perMinute: 20 }
+    const rateLimitConfig = RATE_LIMITS[config.llm.provider] ?? { perSecond: 2, perMinute: 20 };
 
-    const limiter = yield* RateLimiter.make.pipe(Effect.provide(RateLimiter.layerStoreMemory))
+    const limiter = yield* RateLimiter.make;
 
     // Compose both rate limiters - request must pass both
-    const rateLimiter = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | RateLimiter.RateLimiterError, R> =>
-      Effect.gen(function*() {
+    const rateLimiter = <A, E, R>(
+      effect: Effect.Effect<A, E, R>
+    ): Effect.Effect<A, E | RateLimiter.RateLimiterError, R> =>
+      Effect.gen(function* () {
         const perSecond = yield* limiter.consume({
           key: `${config.llm.provider}:per-second`,
           limit: rateLimitConfig.perSecond,
           window: "1 second",
           algorithm: "fixed-window",
-          onExceeded: "delay"
-        })
+          onExceeded: "delay",
+        });
         const perMinute = yield* limiter.consume({
           key: `${config.llm.provider}:per-minute`,
           limit: rateLimitConfig.perMinute,
           window: "1 minute",
           algorithm: "fixed-window",
-          onExceeded: "delay"
-        })
-        const delay = Duration.max(perSecond.delay, perMinute.delay)
-        if (!Duration.isZero(delay)) yield* Effect.sleep(delay)
-        return yield* effect
-      })
+          onExceeded: "delay",
+        });
+        const delay = Duration.max(perSecond.delay, perMinute.delay);
+        if (!Duration.isZero(delay)) yield* Effect.sleep(delay);
+        return yield* effect;
+      });
 
     yield* Effect.logInfo("Dual rate limiter initialized", {
       provider: config.llm.provider,
       perSecond: rateLimitConfig.perSecond,
-      perMinute: rateLimitConfig.perMinute
-    })
+      perMinute: rateLimitConfig.perMinute,
+    });
 
     // Initialize Circuit Breaker
     // This provides a safety valve for when the API is failing repeatedly
     const circuitBreaker = yield* makeCircuitBreaker({
       maxFailures: 5, // Open after 5 consecutive failures
       resetTimeout: Duration.minutes(2), // Wait 2 minutes before testing recovery
-      successThreshold: 2 // Require 2 successful calls to close circuit
-    })
+      successThreshold: 2, // Require 2 successful calls to close circuit
+    });
 
     // Helper to wrap LLM calls with rate limiting and observability
-    const withRateLimit = <A, E, R>(
-      method: string,
-      effect: Effect.Effect<A, E, R>
-    ): Effect.Effect<A, E, R> => {
-      const callId = ++callCount
+    const withRateLimit = <A, E, R>(method: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => {
+      const callId = ++callCount;
 
       return Clock.currentTimeMillis.pipe(
         Effect.tap((_startTime) =>
           Effect.logDebug("LLM call queued", {
             provider: config.llm.provider,
             method,
-            callId
+            callId,
           })
         ),
         Effect.flatMap((startTime) =>
           // Apply protection layers:
           // 1. Circuit Breaker (fail fast if API is down)
           // 2. Rate Limiter (wait for token)
-          circuitBreaker.protect(
-            rateLimiter(effect).pipe(
-              Effect.catchTag("RateLimiterError", (error) =>
-                Effect.fail(AiError.UnknownError.make({
-                  description: `Rate limiter failed for ${method}`,
-                  metadata: { method, cause: error }
-                }) as E)
+          circuitBreaker
+            .protect(
+              rateLimiter(effect).pipe(
+                Effect.catchTag("RateLimiterError", (error) =>
+                  Effect.fail(
+                    AiError.UnknownError.make({
+                      description: `Rate limiter failed for ${method}`,
+                      metadata: { method, cause: error },
+                    }) as E
+                  )
+                )
               )
             )
-          ).pipe(
-            // Convert CircuitOpenError to AiError.UnknownError
-            // This maintains compatibility with LanguageModel error channel (E must extend AiError)
-            // while preserving circuit breaker state information
-            Effect.catchTag("CircuitOpenError", (err) => {
-              // Type assertion is safe here - we know err is CircuitOpenError based on the tag
-              const circuitErr = err as CircuitOpenError
-              const lastFailureStr = O.match(circuitErr.lastFailureTime, {
-                onNone: () => "unknown",
-                onSome: (lastFailureTime) => new Date(lastFailureTime).toISOString()
-              })
-              return Effect.fail(
-                AiError.UnknownError.make({
-                  description:
-                    `Circuit breaker is open. Last failure: ${lastFailureStr}. Reset timeout: ${circuitErr.resetTimeoutMs}ms`,
-                  metadata: {
-                    module: "RateLimitedLanguageModel",
-                    method: `${method} (circuit breaker)`,
-                    cause: circuitErr
-                  }
-                }) as E // Safe cast since E extends AiError.AiError
-              )
-            }),
-            Effect.tap((_result) =>
-              Clock.currentTimeMillis.pipe(
-                Effect.flatMap((endTime) => {
-                  const waitMs = Number(endTime - startTime)
-                  return Effect.all([
-                    Effect.logDebug("LLM call completed", {
-                      provider: config.llm.provider,
-                      method,
-                      callId,
-                      rateLimiterWaitMs: waitMs
-                    }),
-                    Effect.annotateCurrentSpan(LlmAttributes.RATE_LIMITER_WAIT_MS, waitMs),
-                    Effect.annotateCurrentSpan(LlmAttributes.LLM_CALL_ID, callId),
-                    Effect.annotateCurrentSpan(LlmAttributes.LLM_METHOD, method)
-                  ])
-                })
+            .pipe(
+              // Convert CircuitOpenError to AiError.UnknownError
+              // This maintains compatibility with LanguageModel error channel (E must extend AiError)
+              // while preserving circuit breaker state information
+              Effect.catchTag("CircuitOpenError", (err) => {
+                // Type assertion is safe here - we know err is CircuitOpenError based on the tag
+                const circuitErr = err as CircuitOpenError;
+                const lastFailureStr = O.match(circuitErr.lastFailureTime, {
+                  onNone: () => "unknown",
+                  onSome: (lastFailureTime) => DateTime.formatIso(DateTime.makeUnsafe(lastFailureTime)),
+                });
+                return Effect.fail(
+                  AiError.UnknownError.make({
+                    description: `Circuit breaker is open. Last failure: ${lastFailureStr}. Reset timeout: ${circuitErr.resetTimeoutMs}ms`,
+                    metadata: {
+                      module: "RateLimitedLanguageModel",
+                      method: `${method} (circuit breaker)`,
+                      cause: circuitErr,
+                    },
+                  }) as E // Safe cast since E extends AiError.AiError
+                );
+              }),
+              Effect.tap((_result) =>
+                Clock.currentTimeMillis.pipe(
+                  Effect.flatMap((endTime) => {
+                    const waitMs = Number(endTime - startTime);
+                    return Effect.all([
+                      Effect.logDebug("LLM call completed", {
+                        provider: config.llm.provider,
+                        method,
+                        callId,
+                        rateLimiterWaitMs: waitMs,
+                      }),
+                      Effect.annotateCurrentSpan(LlmAttributes.RATE_LIMITER_WAIT_MS, waitMs),
+                      Effect.annotateCurrentSpan(LlmAttributes.LLM_CALL_ID, callId),
+                      Effect.annotateCurrentSpan(LlmAttributes.LLM_METHOD, method),
+                    ]);
+                  })
+                )
               )
             )
-          )
         ),
         Effect.withSpan(`llm.${method}`, {
           attributes: {
             [LlmAttributes.PROVIDER]: config.llm.provider,
-            [LlmAttributes.MODEL]: config.llm.model
-          }
+            [LlmAttributes.MODEL]: config.llm.model,
+          },
         })
-      )
-    }
+      );
+    };
 
     // Return wrapped LanguageModel with all methods rate-limited
-    const generateObject = ((opts: Parameters<LanguageModel.Service["generateObject"]>[0]) =>
-      withRateLimit("generateObject", baseLlm.generateObject(opts))) as LanguageModel.Service["generateObject"]
-    const generateText = ((opts: Parameters<LanguageModel.Service["generateText"]>[0]) =>
-      withRateLimit("generateText", baseLlm.generateText(opts))) as LanguageModel.Service["generateText"]
-    const streamText = ((opts: Parameters<LanguageModel.Service["streamText"]>[0]) =>
-      Stream.unwrap(withRateLimit("streamText", Effect.sync(() => baseLlm.streamText(opts))))) as LanguageModel.Service["streamText"]
+    const generateObject = <
+      ObjectEncoded extends Record<string, any>,
+      StructuredOutputSchema extends S.Encoder<ObjectEncoded, unknown>,
+      Options extends NoExcessProperties<LanguageModel.GenerateObjectOptions<any, StructuredOutputSchema>, Options>,
+      Tools extends Record<string, Tool.Any> = {},
+    >(
+      options: Options & LanguageModel.GenerateObjectOptions<Tools, StructuredOutputSchema>
+    ) => withRateLimit("generateObject", baseLlm.generateObject(options));
 
-    return LanguageModel.LanguageModel.of({
+    type GenerateTextOptionsWithoutToolkit = Omit<LanguageModel.GenerateTextOptions<{}>, "toolkit"> & {
+      readonly toolkit?: undefined;
+    };
+
+    function generateText<Options extends NoExcessProperties<GenerateTextOptionsWithoutToolkit, Options>>(
+      options: Options & GenerateTextOptionsWithoutToolkit
+    ): Effect.Effect<
+      LanguageModel.GenerateTextResponse<{}>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
+    function generateText<
+      Tools extends Record<string, Tool.Any>,
+      Options extends NoExcessProperties<
+        LanguageModel.GenerateTextOptions<Tools> & { readonly toolkit: LanguageModel.ToolkitInput<Tools> },
+        Options
+      >,
+    >(
+      options: Options &
+        LanguageModel.GenerateTextOptions<Tools> & { readonly toolkit: LanguageModel.ToolkitInput<Tools> }
+    ): Effect.Effect<
+      LanguageModel.GenerateTextResponse<Tools>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
+    function generateText<
+      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } &
+        NoExcessProperties<LanguageModel.GenerateTextOptions<any>, Options>,
+    >(
+      options: Options &
+        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & { readonly toolkit: Options["toolkit"] }
+    ): Effect.Effect<
+      LanguageModel.GenerateTextResponse<LanguageModel.ExtractTools<Options>>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
+    function generateText(options: LanguageModel.GenerateTextOptions<Record<string, Tool.Any>>) {
+      if (P.isUndefined(options.toolkit)) {
+        const withoutToolkit = {
+          prompt: options.prompt,
+          ...(P.isNotUndefined(options.concurrency) ? { concurrency: options.concurrency } : {}),
+          ...(P.isNotUndefined(options.disableToolCallResolution)
+            ? { disableToolCallResolution: options.disableToolCallResolution }
+            : {}),
+          ...(P.isString(options.toolChoice) ? { toolChoice: options.toolChoice } : {}),
+        } satisfies GenerateTextOptionsWithoutToolkit;
+        return withRateLimit(
+          "generateText",
+          baseLlm.generateText<GenerateTextOptionsWithoutToolkit>(withoutToolkit)
+        );
+      }
+      const withToolkit = { ...options, toolkit: options.toolkit };
+      // The v4 public overload defaults arbitrary toolkit requirements to `any`.
+      return withRateLimit(
+        "generateText",
+        // @effect-diagnostics-next-line anyUnknownInErrorContext:off
+        baseLlm.generateText<Record<string, Tool.Any>, typeof withToolkit>(withToolkit)
+      );
+    }
+
+    function streamText<Options extends NoExcessProperties<GenerateTextOptionsWithoutToolkit, Options>>(
+      options: Options & GenerateTextOptionsWithoutToolkit
+    ): Stream.Stream<Response.StreamPart<{}>, LanguageModel.ExtractError<Options>, LanguageModel.ExtractServices<Options>>;
+    function streamText<
+      Tools extends Record<string, Tool.Any>,
+      Options extends NoExcessProperties<
+        LanguageModel.GenerateTextOptions<Tools> & { readonly toolkit: LanguageModel.ToolkitInput<Tools> },
+        Options
+      >,
+    >(
+      options: Options &
+        LanguageModel.GenerateTextOptions<Tools> & { readonly toolkit: LanguageModel.ToolkitInput<Tools> }
+    ): Stream.Stream<
+      Response.StreamPart<Tools>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
+    function streamText<
+      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } &
+        NoExcessProperties<LanguageModel.GenerateTextOptions<any>, Options>,
+    >(
+      options: Options &
+        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & { readonly toolkit: Options["toolkit"] }
+    ): Stream.Stream<
+      Response.StreamPart<LanguageModel.ExtractTools<Options>>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
+    function streamText(options: LanguageModel.GenerateTextOptions<Record<string, Tool.Any>>) {
+      if (P.isUndefined(options.toolkit)) {
+        const withoutToolkit = {
+          prompt: options.prompt,
+          ...(P.isNotUndefined(options.concurrency) ? { concurrency: options.concurrency } : {}),
+          ...(P.isNotUndefined(options.disableToolCallResolution)
+            ? { disableToolCallResolution: options.disableToolCallResolution }
+            : {}),
+          ...(P.isString(options.toolChoice) ? { toolChoice: options.toolChoice } : {}),
+        } satisfies GenerateTextOptionsWithoutToolkit;
+        return Stream.unwrap(
+          withRateLimit(
+            "streamText",
+            Effect.sync(() => baseLlm.streamText<GenerateTextOptionsWithoutToolkit>(withoutToolkit))
+          )
+        );
+      }
+      const withToolkit = { ...options, toolkit: options.toolkit };
+      return Stream.unwrap(
+        withRateLimit(
+          "streamText",
+          Effect.sync(() =>
+            baseLlm.streamText<Record<string, Tool.Any>, typeof withToolkit>(withToolkit)
+          )
+        )
+      );
+    }
+
+    const service: LanguageModel.Service = {
       generateObject,
       generateText,
       // streamText returns a Stream, so we rate-limit the stream creation
-      streamText
-    })
+      streamText,
+    };
+    return service;
   })
-)
+).pipe(Layer.provide(RateLimiter.layerStoreMemory));

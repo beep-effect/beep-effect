@@ -34,7 +34,8 @@ const WatchPaths = S.String.pipe(
 /**
  * Schema for `FileChangedEvent`.
  *
- * @example
+ * **Example** (Inspect the FileChangedEvent schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -54,7 +55,8 @@ export const FileChangedEvent = LiteralKit(["change", "add", "unlink"]).pipe(
 /**
  * Type-level model for `FileChangedEvent`.
  *
- * @example
+ * **Example** (Use FileChangedEvent as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -70,7 +72,8 @@ export type FileChangedEvent = typeof FileChangedEvent.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -96,7 +99,8 @@ export class Input extends S.Class<Input>($I`FileChangedInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -124,7 +128,8 @@ export class Output extends S.Class<Output>($I`FileChangedOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -140,7 +145,8 @@ export const passthrough = (): Output => Output.make();
 /**
  * Constructor for `watchPaths`.
  *
- * @example
+ * **Example** (Use watchPaths)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -156,7 +162,8 @@ export const watchPaths = (paths: ReadonlyArray<string>): Output => Output.make(
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -180,15 +187,16 @@ export const define = <E, R>(config: {
  * Build a FileChanged hook that only handles matching basenames from
  * `file_path`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.FileChanged.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -208,12 +216,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.FileChanged.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -238,12 +240,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.FileChanged.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

@@ -9,14 +9,16 @@
  * @module Service/WikidataClient
  */
 
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http"
-import { Data, Duration, Effect, Schema, Context, Layer } from "effect"
-import * as A from "effect/Array"
-import * as O from "effect/Option"
-import * as Order from "effect/Order"
-import * as Str from "effect/String"
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { Context, Data, Duration, Effect, Layer, Schema } from "effect";
+import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as Str from "effect/String";
+import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/WikidataClient");
 
@@ -28,16 +30,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/WikidataClient");
  * Error returned when Wikidata API request fails
  */
 export class WikidataApiError extends Data.TaggedError("WikidataApiError")<{
-  readonly message: string
-  readonly statusCode?: number
-  readonly cause?: unknown
+  readonly message: string;
+  readonly statusCode?: number;
+  readonly cause?: unknown;
 }> {}
 
 /**
  * Error returned when API rate limit is exceeded
  */
 export class WikidataRateLimitError extends Data.TaggedError("WikidataRateLimitError")<{
-  readonly retryAfter: Duration.Duration
+  readonly retryAfter: Duration.Duration;
 }> {}
 
 // =============================================================================
@@ -47,35 +49,36 @@ export class WikidataRateLimitError extends Data.TaggedError("WikidataRateLimitE
 /**
  * A candidate entity from Wikidata search
  */
-export interface WikidataCandidate {
+export const WikidataCandidate = Schema.Struct({
   /** Q-ID (e.g., "Q42") */
-  readonly qid: string
+  qid: Schema.String,
   /** Human-readable label */
-  readonly label: string
+  label: Schema.String,
   /** Entity description */
-  readonly description: O.Option<string>
+  description: Schema.Option(Schema.String),
   /** How the search matched (label or alias) */
-  readonly matchType: "label" | "alias"
+  matchType: Schema.Literals(["label", "alias"]),
   /** Language of the match */
-  readonly matchLanguage: string
+  matchLanguage: Schema.String,
   /** Normalized score (0-100) */
-  readonly score: number
+  score: Schema.Finite,
   /** Wikidata concept URI */
-  readonly conceptUri: string
-}
+  conceptUri: Schema.String,
+});
+export type WikidataCandidate = typeof WikidataCandidate.Type;
 
 /**
  * Options for entity search
  */
 export interface SearchOptions {
   /** Language code for search (default: "en") */
-  readonly language?: string
+  readonly language?: string;
   /** Maximum results to return (default: 10, max: 50) */
-  readonly limit?: number
+  readonly limit?: number;
   /** Entity type to search for */
-  readonly type?: "item" | "property" | "lexeme"
+  readonly type?: "item" | "property" | "lexeme";
   /** Strict language matching */
-  readonly strictLanguage?: boolean
+  readonly strictLanguage?: boolean;
 }
 
 // =============================================================================
@@ -85,31 +88,31 @@ export interface SearchOptions {
 const WikidataSearchMatch = Schema.Struct({
   type: Schema.String,
   language: Schema.String,
-  text: Schema.String
-})
+  text: Schema.String,
+});
 
 const WikidataSearchResult = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
-  pageid: Schema.Number.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  pageid: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   concepturi: Schema.String,
   url: Schema.String,
   label: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   description: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   match: WikidataSearchMatch,
-  aliases: Schema.Array(Schema.String).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-})
+  aliases: Schema.Array(Schema.String).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+});
 
 const WikidataSearchResponse = Schema.Struct({
   searchinfo: Schema.Struct({
-        search: Schema.String
-      }).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    search: Schema.String,
+  }).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   search: Schema.Array(WikidataSearchResult),
-  success: Schema.Number.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  "search-continue": Schema.Number.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-})
+  success: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  "search-continue": Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+});
 
-type WikidataSearchResultType = typeof WikidataSearchResult.Type
+type WikidataSearchResultType = typeof WikidataSearchResult.Type;
 
 // =============================================================================
 // Scoring
@@ -124,54 +127,54 @@ const calculateScore = (
   position: number,
   _totalResults: number
 ): number => {
-  const queryLower = Str.trim(Str.toLowerCase(query))
-  const labelLower = Str.trim(Str.toLowerCase(O.getOrElse(result.label, () => result.title)))
-  const matchText = Str.trim(Str.toLowerCase(result.match.text))
+  const queryLower = Str.trim(Str.toLowerCase(query));
+  const labelLower = Str.trim(Str.toLowerCase(O.getOrElse(result.label, () => result.title)));
+  const matchText = Str.trim(Str.toLowerCase(result.match.text));
 
   // Base score from match type
-  let baseScore: number
+  let baseScore: number;
   if (result.match.type === "label") {
     if (labelLower === queryLower) {
-      baseScore = 100 // Exact label match
+      baseScore = 100; // Exact label match
     } else if (labelLower.startsWith(queryLower)) {
-      baseScore = 90 // Label prefix match
+      baseScore = 90; // Label prefix match
     } else if (labelLower.includes(queryLower)) {
-      baseScore = 80 // Label contains query
+      baseScore = 80; // Label contains query
     } else {
-      baseScore = 70 // Other label match
+      baseScore = 70; // Other label match
     }
   } else {
     // Alias match
     if (matchText === queryLower) {
-      baseScore = 85 // Exact alias match
+      baseScore = 85; // Exact alias match
     } else if (matchText.startsWith(queryLower)) {
-      baseScore = 75 // Alias prefix match
+      baseScore = 75; // Alias prefix match
     } else {
-      baseScore = 65 // Other alias match
+      baseScore = 65; // Other alias match
     }
   }
 
   // Position penalty (higher positions are better)
   // Deduct up to 10 points based on position
-  const positionPenalty = Math.min(10, position * 2)
+  const positionPenalty = Math.min(10, position * 2);
 
   // Normalize to 0-100
-  return Math.max(0, Math.min(100, baseScore - positionPenalty))
-}
+  return Math.max(0, Math.min(100, baseScore - positionPenalty));
+};
 
 // =============================================================================
 // Service
 // =============================================================================
 
-const WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php"
+const WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
 
 export class WikidataClient extends Context.Service<WikidataClient>()($I`WikidataClient`, {
-  make: Effect.gen(function*() {
-    const httpClient = yield* HttpClient.HttpClient
+  make: Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient;
 
     // Rate limiting state
-    let lastRequestTime = 0
-    const minRequestInterval = 100 // 100ms between requests
+    let lastRequestTime = 0;
+    const minRequestInterval = 100; // 100ms between requests
 
     /**
      * Search for entities matching the query
@@ -180,21 +183,16 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       query: string,
       options: SearchOptions = {}
     ): Effect.Effect<ReadonlyArray<WikidataCandidate>, WikidataApiError | WikidataRateLimitError> =>
-      Effect.gen(function*() {
-        const {
-          language = "en",
-          limit = 10,
-          strictLanguage = false,
-          type = "item"
-        } = options
+      Effect.gen(function* () {
+        const { language = "en", limit = 10, strictLanguage = false, type = "item" } = options;
 
         // Simple rate limiting
-        const now = Date.now()
-        const timeSinceLastRequest = now - lastRequestTime
+        const now = yield* Clock.currentTimeMillis;
+        const timeSinceLastRequest = now - lastRequestTime;
         if (timeSinceLastRequest < minRequestInterval) {
-          yield* Effect.sleep(Duration.millis(minRequestInterval - timeSinceLastRequest))
+          yield* Effect.sleep(Duration.millis(minRequestInterval - timeSinceLastRequest));
         }
-        lastRequestTime = Date.now()
+        lastRequestTime = yield* Clock.currentTimeMillis;
 
         // Build request
         const params = new URLSearchParams({
@@ -207,79 +205,79 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
           limit: String(Math.min(limit, 50)),
           strictlanguage: strictLanguage ? "1" : "0",
           // Respect server load with maxlag
-          maxlag: "5"
-        })
+          maxlag: "5",
+        });
 
-        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`)
+        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
 
         const res = yield* httpClient.execute(request).pipe(
-          Effect.mapError((error) =>
-            new WikidataApiError({
-              message: `Failed to search Wikidata: ${error}`,
-              cause: error
-            })
+          Effect.mapError(
+            (error) =>
+              new WikidataApiError({
+                message: `Failed to search Wikidata: ${error}`,
+                cause: error,
+              })
           )
-        )
+        );
 
         // Check for rate limiting
         if (res.status === 429) {
-          const retryAfter = res.headers["retry-after"]
-          const seconds = retryAfter ? parseInt(retryAfter, 10) : 60
-          return yield* Effect.fail(
-            new WikidataRateLimitError({
-              retryAfter: Duration.seconds(seconds)
-            })
-          )
+          const retryAfter = res.headers["retry-after"];
+          const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+          return yield* new WikidataRateLimitError({
+            retryAfter: Duration.seconds(seconds),
+          });
         }
 
         // Check for maxlag exceeded
         if (res.status === 503) {
-          return yield* Effect.fail(
-            new WikidataRateLimitError({
-              retryAfter: Duration.seconds(5)
-            })
-          )
+          return yield* new WikidataRateLimitError({
+            retryAfter: Duration.seconds(5),
+          });
         }
 
         // Parse JSON from response
         const response = yield* res.json.pipe(
-          Effect.mapError((error) =>
-            new WikidataApiError({
-              message: `Failed to parse Wikidata response: ${error}`,
-              cause: error
-            })
+          Effect.mapError(
+            (error) =>
+              new WikidataApiError({
+                message: `Failed to parse Wikidata response: ${error}`,
+                cause: error,
+              })
           )
-        )
+        );
 
         // Parse response
         const parsed = yield* Schema.decodeUnknownEffect(WikidataSearchResponse)(response).pipe(
-          Effect.catch((error) =>
-            Effect.fail(
+          Effect.mapError(
+            (error) =>
               new WikidataApiError({
                 message: `Failed to parse Wikidata response: ${error}`,
-                cause: error
+                cause: error,
               })
-            )
           )
-        )
+        );
 
         // Convert to candidates with scores
-        const candidates = A.map(parsed.search, (result, index): WikidataCandidate => ({
-          qid: result.id,
-          label: O.getOrElse(result.label, () => result.title),
-          description: result.description,
-          matchType: result.match.type === "label" ? "label" as const : "alias" as const,
-          matchLanguage: result.match.language,
-          score: calculateScore(query, result, index, parsed.search.length),
-          conceptUri: result.concepturi
-        }))
+        const candidates = A.map(
+          parsed.search,
+          (result, index): WikidataCandidate => ({
+            qid: result.id,
+            label: O.getOrElse(result.label, () => result.title),
+            description: result.description,
+            matchType: result.match.type === "label" ? ("label" as const) : ("alias" as const),
+            matchLanguage: result.match.language,
+            score: calculateScore(query, result, index, parsed.search.length),
+            conceptUri: result.concepturi,
+          })
+        );
 
         // Sort by score descending
         return A.sort(
           candidates,
           Order.mapInput(Order.flip(Order.Number), (candidate: WikidataCandidate) => candidate.score)
-        )
-      })
+        );
+      });
 
     /**
      * Get entity details by Q-ID
@@ -288,50 +286,52 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       qid: string,
       language: string = "en"
     ): Effect.Effect<WikidataCandidate | null, WikidataApiError> =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const params = new URLSearchParams({
           action: "wbgetentities",
           format: "json",
           ids: qid,
           languages: language,
-          props: "labels|descriptions|aliases"
-        })
+          props: "labels|descriptions|aliases",
+        });
 
-        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`)
+        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
 
         const res = yield* httpClient.execute(request).pipe(
-          Effect.mapError((error) =>
-            new WikidataApiError({
-              message: `Failed to get entity ${qid}: ${error}`,
-              cause: error
-            })
+          Effect.mapError(
+            (error) =>
+              new WikidataApiError({
+                message: `Failed to get entity ${qid}: ${error}`,
+                cause: error,
+              })
           )
-        )
+        );
 
         const response = yield* res.json.pipe(
-          Effect.mapError((error) =>
-            new WikidataApiError({
-              message: `Failed to parse entity response: ${error}`,
-              cause: error
-            })
+          Effect.mapError(
+            (error) =>
+              new WikidataApiError({
+                message: `Failed to parse entity response: ${error}`,
+                cause: error,
+              })
           )
-        )
+        );
 
         // Basic parsing - the response structure is complex
-        const entities = (response as { entities?: Record<string, unknown> }).entities
-        if (!entities || !entities[qid]) {
-          return null
+        const entities = (response as { entities?: Record<string, unknown> }).entities;
+        if (P.isUndefined(entities) || P.not(P.isTruthy)(entities[qid])) {
+          return null;
         }
 
         const entity = entities[qid] as {
-          id: string
-          labels?: Record<string, { value: string }>
-          descriptions?: Record<string, { value: string }>
-          concepturi?: string
-        }
+          id: string;
+          labels?: Record<string, { value: string }>;
+          descriptions?: Record<string, { value: string }>;
+          concepturi?: string;
+        };
 
-        const label = entity.labels?.[language]?.value ?? qid
-        const description = entity.descriptions?.[language]?.value
+        const label = entity.labels?.[language]?.value ?? qid;
+        const description = entity.descriptions?.[language]?.value;
 
         return {
           qid: entity.id,
@@ -340,23 +340,21 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
           matchType: "label" as const,
           matchLanguage: language,
           score: 100, // Direct lookup
-          conceptUri: `http://www.wikidata.org/entity/${qid}`
-        }
-      })
+          conceptUri: `http://www.wikidata.org/entity/${qid}`,
+        };
+      });
 
     /**
      * Validate Q-ID format
      */
-    const validateQid = (qid: string): boolean => {
-      return /^Q\d+$/.test(qid)
-    }
+    const validateQid = (qid: string): boolean => /^Q\d+$/.test(qid);
 
     return {
       searchEntities,
       getEntity,
-      validateQid
-    }
-  })
+      validateQid,
+    };
+  }),
 }) {
-    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([FetchHttpClient.layer]));
+  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([FetchHttpClient.layer]));
 }

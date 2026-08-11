@@ -8,8 +8,8 @@
  * @since 2.0.0
  */
 
-import { Prompt } from "effect/unstable/ai"
-import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts"
+import { Prompt } from "effect/unstable/ai";
+import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 
 /**
  * Create a Prompt with cache control for Anthropic
@@ -33,27 +33,16 @@ import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts"
  *
  * @since 2.0.0
  */
-export const makeCachedPrompt = (
-  systemMessage: string,
-  userMessage: string,
-  _enableCaching: boolean
-): Prompt.Prompt => {
-  // Use structured messages with separate system and user messages
-  // This structure enables prompt caching at the provider level:
-  // - System message: stable (ontology schema, rules) - cacheable
-  // - User message: variable (input text) - not cached
-  //
-  // Note: Actual cache_control headers are set at the Anthropic client level,
-  // not in @effect/ai Prompt. The separation of system/user is the key structure.
-  return Prompt.fromMessages([
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const makeCachedPrompt = (systemMessage: string, userMessage: string, _enableCaching: boolean): Prompt.Prompt =>
+  Prompt.fromMessages([
     Prompt.makeMessage("system", {
-      content: systemMessage
+      content: systemMessage,
     }),
     Prompt.makeMessage("user", {
-      content: [Prompt.makePart("text", { text: userMessage })]
-    })
-  ])
-}
+      content: [Prompt.makePart("text", { text: userMessage })],
+    }),
+  ]);
 
 /**
  * Create a Prompt from StructuredPrompt
@@ -66,7 +55,6 @@ export const makeCachedPrompt = (
  *
  * @since 2.0.0
  */
-export const makeCachedPromptFromStructured = (
-  structured: StructuredPrompt,
-  enableCaching: boolean
-): Prompt.Prompt => makeCachedPrompt(structured.systemMessage, structured.userMessage, enableCaching)
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const makeCachedPromptFromStructured = (structured: StructuredPrompt, enableCaching: boolean): Prompt.Prompt =>
+  makeCachedPrompt(structured.systemMessage, structured.userMessage, enableCaching);

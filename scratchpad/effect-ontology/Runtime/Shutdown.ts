@@ -8,11 +8,12 @@
  * @module Runtime/Shutdown
  */
 
-import { $ScratchpadId } from "@beep/identity"
-import { Context, Layer } from "effect"
-const $I = $ScratchpadId.create("effect-ontology/Runtime/Shutdown")
+import { $ScratchpadId } from "@beep/identity";
+import { Context, Layer } from "effect";
 
-import { Data, Duration, Effect, Ref } from "effect"
+const $I = $ScratchpadId.create("effect-ontology/Runtime/Shutdown");
+
+import { Data, Duration, Effect, Ref } from "effect";
 
 /**
  * Shutdown configuration
@@ -21,15 +22,15 @@ export interface ShutdownConfig {
   /**
    * Maximum time to wait for in-flight requests to complete
    */
-  readonly drainTimeoutMs: number
+  readonly drainTimeoutMs: number;
 }
 
 /**
  * Default shutdown configuration
  */
 export const DEFAULT_SHUTDOWN_CONFIG: ShutdownConfig = {
-  drainTimeoutMs: 30_000
-}
+  drainTimeoutMs: 30_000,
+};
 
 /**
  * Error thrown when request is rejected during shutdown
@@ -38,7 +39,7 @@ export const DEFAULT_SHUTDOWN_CONFIG: ShutdownConfig = {
  * @category Errors
  */
 export class ShutdownError extends Data.TaggedError("ShutdownError")<{
-  readonly message: string
+  readonly message: string;
 }> {}
 
 /**
@@ -72,83 +73,77 @@ export class ShutdownError extends Data.TaggedError("ShutdownError")<{
  * @category Services
  */
 export class ShutdownService extends Context.Service<ShutdownService>()($I`ShutdownService`, {
-  make: Effect.gen(function*() {
-    const inFlightRef = yield* Ref.make(0)
-    const shuttingDownRef = yield* Ref.make(false)
-    const config = DEFAULT_SHUTDOWN_CONFIG // could be injected
+  make: Effect.gen(function* () {
+    const inFlightRef = yield* Ref.make(0);
+    const shuttingDownRef = yield* Ref.make(false);
+    const config = DEFAULT_SHUTDOWN_CONFIG; // could be injected
 
     return {
       /**
        * Track a request for graceful shutdown
        */
       trackRequest: <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | ShutdownError, R> =>
-        Effect.gen(function*() {
-          const isShuttingDown = yield* Ref.get(shuttingDownRef)
+        Effect.gen(function* () {
+          const isShuttingDown = yield* Ref.get(shuttingDownRef);
           if (isShuttingDown) {
-            return yield* Effect.fail(
-              new ShutdownError({
-                message: "Service is shutting down, not accepting new requests"
-              })
-            )
+            return yield* new ShutdownError({
+              message: "Service is shutting down, not accepting new requests",
+            });
           }
 
-          yield* Ref.update(inFlightRef, (n) => n + 1)
+          yield* Ref.update(inFlightRef, (n) => n + 1);
 
-          return yield* effect.pipe(
-            Effect.ensuring(Ref.update(inFlightRef, (n) => n - 1))
-          )
+          return yield* effect.pipe(Effect.ensuring(Ref.update(inFlightRef, (n) => n - 1)));
         }),
 
       /**
        * Get current in-flight request count
        */
-      inFlightCount: (): Effect.Effect<number> => Ref.get(inFlightRef),
+      inFlightCount: Ref.get(inFlightRef),
 
       /**
        * Initiate shutdown - stop accepting new requests
        */
-      initiateShutdown: (): Effect.Effect<void> =>
-        Effect.gen(function*() {
-          yield* Ref.set(shuttingDownRef, true)
-          yield* Effect.logInfo("Graceful shutdown initiated")
-        }),
+      initiateShutdown: Effect.gen(function* () {
+        yield* Ref.set(shuttingDownRef, true);
+        yield* Effect.logInfo("Graceful shutdown initiated");
+      }),
 
       /**
        * Check if shutdown has been initiated
        */
-      isShuttingDown: (): Effect.Effect<boolean> => Ref.get(shuttingDownRef),
+      isShuttingDown: Ref.get(shuttingDownRef),
 
       /**
        * Drain in-flight requests with timeout
        */
-      drain: (): Effect.Effect<void> =>
-        Effect.gen(function*() {
-          yield* Effect.logInfo("Draining in-flight requests")
+      drain: Effect.gen(function* () {
+        yield* Effect.logInfo("Draining in-flight requests");
 
-          // Poll until no in-flight requests or timeout
-          yield* Effect.gen(function*() {
-            let remaining = yield* Ref.get(inFlightRef)
-            while (remaining > 0) {
-              yield* Effect.sleep(Duration.millis(100))
-              remaining = yield* Ref.get(inFlightRef)
-            }
-          }).pipe(
-            Effect.timeout(Duration.millis(config.drainTimeoutMs)),
-            Effect.catch(() =>
-              Effect.gen(function*() {
-                const remaining = yield* Ref.get(inFlightRef)
-                yield* Effect.logWarning("Drain timeout exceeded", {
-                  remainingRequests: remaining,
-                  timeoutMs: config.drainTimeoutMs
-                })
-              })
-            )
+        // Poll until no in-flight requests or timeout
+        yield* Effect.gen(function* () {
+          let remaining = yield* Ref.get(inFlightRef);
+          while (remaining > 0) {
+            yield* Effect.sleep(Duration.millis(100));
+            remaining = yield* Ref.get(inFlightRef);
+          }
+        }).pipe(
+          Effect.timeout(Duration.millis(config.drainTimeoutMs)),
+          Effect.catch(() =>
+            Effect.gen(function* () {
+              const remaining = yield* Ref.get(inFlightRef);
+              yield* Effect.logWarning("Drain timeout exceeded", {
+                remainingRequests: remaining,
+                timeoutMs: config.drainTimeoutMs,
+              });
+            })
           )
+        );
 
-          yield* Effect.logInfo("Drain complete")
-        })
-    }
-  })
+        yield* Effect.logInfo("Drain complete");
+      }),
+    };
+  }),
 }) {
-  static readonly Default = Layer.effect(this, this.make)
+  static readonly Default = Layer.effect(this, this.make);
 }

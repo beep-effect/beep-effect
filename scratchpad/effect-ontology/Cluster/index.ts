@@ -10,6 +10,6 @@
  * @module Cluster
  */
 
-export * from "./BackpressureHandler.ts"
-export * from "./ExtractionEntity.ts"
-export * from "./ExtractionEntityHandler.ts"
+export * from "./BackpressureHandler.ts";
+export * from "./ExtractionEntity.ts";
+export * from "./ExtractionEntityHandler.ts";

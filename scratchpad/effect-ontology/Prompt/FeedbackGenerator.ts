@@ -106,7 +106,13 @@ export class Violation extends S.Class<Violation>($I`Violation`)(
 export const extractViolations = (error: SchemaError.SchemaError): ReadonlyArray<Violation> =>
   A.map(formatStandardIssue(error.issue).issues, (issue) =>
     Violation.make({
-      path: issue.path === undefined ? "root" : A.join(A.map(issue.path, (segment) => Formatter.format(segment)), "."),
+      path:
+        issue.path === undefined
+          ? "root"
+          : A.join(
+              A.map(issue.path, (segment) => Formatter.format(segment)),
+              "."
+            ),
       message: issue.message,
     })
   );
@@ -147,6 +153,7 @@ const firstRuleInCategory = (ruleSet: RuleSet, category: RuleCategory): O.Option
  * @category getters
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const findMatchingRule = (violation: Violation, ruleSet: RuleSet): O.Option<ExtractionRule> => {
   const path = Str.toLowerCase(violation.path);
   const message = Str.toLowerCase(violation.message);
@@ -183,6 +190,7 @@ export const findMatchingRule = (violation: Violation, ruleSet: RuleSet): O.Opti
  * @category formatting
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const interpolate = (template: string, values: Readonly<Record<string, unknown>>): string =>
   pipe(
     R.toEntries(values),
@@ -212,6 +220,7 @@ export const interpolate = (template: string, values: Readonly<Record<string, un
  * @category error-handling
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateFeedback = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   pipe(
     extractViolations(error),
@@ -282,6 +291,7 @@ const buildRuleReminders = (error: SchemaError.SchemaError, ruleSet: RuleSet): P
  * @category error-handling
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateTreeFeedback = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
@@ -314,6 +324,7 @@ export const generateTreeFeedback = (error: SchemaError.SchemaError, ruleSet: Ru
  * @category formatting
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateImprovementPrompt = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
@@ -356,8 +367,10 @@ const matchesAny = (message: string, patterns: ReadonlyArray<RegExp>): boolean =
  */
 export const isRetryable = (error: SchemaError.SchemaError): boolean => {
   const violations = extractViolations(error);
-  return A.isReadonlyArrayNonEmpty(violations) &&
+  return (
+    A.isReadonlyArrayNonEmpty(violations) &&
     !A.some(violations, (violation) => matchesAny(violation.message, structuralPatterns)) &&
     A.length(A.filter(violations, (violation: Violation) => matchesAny(violation.message, retryablePatterns))) >=
-      A.length(violations) * 0.5;
+      A.length(violations) * 0.5
+  );
 };

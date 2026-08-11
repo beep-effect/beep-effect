@@ -10,9 +10,9 @@
  * @module Service/EmbeddingRequest
  */
 
-import { Request } from "effect"
-import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
-import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts"
+import { Request } from "effect";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts";
 
 /**
  * Request to embed a single text
@@ -24,10 +24,10 @@ import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./Embedding
  * @category Request
  */
 export interface EmbedTextRequest extends Request.Request<Embedding, AnyEmbeddingError> {
-  readonly _tag: "EmbedTextRequest"
-  readonly text: string
-  readonly taskType: EmbeddingTaskType
-  readonly metadata: ProviderMetadata
+  readonly _tag: "EmbedTextRequest";
+  readonly text: string;
+  readonly taskType: EmbeddingTaskType;
+  readonly metadata: ProviderMetadata;
 }
 
 /**
@@ -36,7 +36,7 @@ export interface EmbedTextRequest extends Request.Request<Embedding, AnyEmbeddin
  * @since 2.0.0
  * @category Request
  */
-export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextRequest")
+export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextRequest");
 
 /**
  * Generate a unique hash for an embedding request
@@ -48,4 +48,4 @@ export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextReque
  * @category Utilities
  */
 export const embedRequestHash = (req: EmbedTextRequest): string =>
-  `${req.metadata.providerId}::${req.metadata.modelId}::${req.taskType}::${req.text}`
+  `${req.metadata.providerId}::${req.metadata.modelId}::${req.taskType}::${req.text}`;

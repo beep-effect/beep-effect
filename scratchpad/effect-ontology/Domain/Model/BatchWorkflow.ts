@@ -296,9 +296,7 @@ const BatchStateDefinition = S.TaggedUnion({
     error: BatchFailure,
     lastSuccessfulStage: S.OptionFromOptionalKey(
       S.Literals(["pending", "preprocessing", "extracting", "resolving", "validating", "ingesting"])
-    ).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    ).pipe(SchemaUtils.withNoneDefault),
   },
 });
 

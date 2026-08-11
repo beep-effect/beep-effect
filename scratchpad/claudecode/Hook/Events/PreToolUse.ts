@@ -29,15 +29,16 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PreToolUse");
 /**
  * Decoded PreToolUse hook input received on stdin.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.Input)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PreToolUseInput`)(
   {
@@ -60,15 +61,16 @@ export class Input extends S.Class<Input>($I`PreToolUseInput`)(
  * Valid `permissionDecision` values. `defer` suspends a headless tool call
  * for later resumption; omit output entirely for a neutral no-op.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.PermissionDecision)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const PermissionDecision = LiteralKit(["allow", "deny", "ask", "defer"]).pipe(
   $I.annoteSchema("PermissionDecision", {
@@ -79,7 +81,8 @@ export const PermissionDecision = LiteralKit(["allow", "deny", "ask", "defer"]).
 /**
  * Type-level model for `PermissionDecision`.
  *
- * @example
+ * **Example** (Use PermissionDecision as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -96,15 +99,16 @@ export type PermissionDecision = typeof PermissionDecision.Type;
  * `hookSpecificOutput` payload for a PreToolUse hook. This is where the
  * permission decision lives.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.HookSpecificOutput)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PreToolUseHookSpecificOutput`)(
   {
@@ -122,15 +126,16 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PreToolUs
 /**
  * Full PreToolUse hook output, including universal fields.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.Output)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PreToolUseOutput`)(
   {
@@ -153,15 +158,16 @@ export class Output extends S.Class<Output>($I`PreToolUseOutput`)(
 /**
  * Build an `allow` decision. The tool call proceeds.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build `allow` decision)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.allow)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const allow = (reason?: string): Output =>
   Output.make({
@@ -177,15 +183,16 @@ export const allow = (reason?: string): Output =>
 /**
  * Build a no-op output. The tool proceeds through normal permission flow.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build no-op output)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.passthrough)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
@@ -193,15 +200,16 @@ export const passthrough = (): Output => Output.make();
  * Build a `deny` decision with a required explanation. The tool call
  * is blocked and the reason is fed back to Claude.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build `deny` decision with a required explanation)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.deny)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const deny = (reason: string): Output =>
   Output.make({
@@ -218,15 +226,16 @@ export const deny = (reason: string): Output =>
  * Build an `ask` decision. Claude Code shows the user a permission
  * prompt for the tool call.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build `ask` decision)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.ask)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const ask = (reason?: string): Output =>
   Output.make({
@@ -244,15 +253,16 @@ export const ask = (reason?: string): Output =>
  * `stop_reason: "tool_deferred"` so an outer process can resume later.
  * Use `passthrough()` for a neutral no-op.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build `defer` decision)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.defer)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const defer = (reason?: string): Output =>
   Output.make({
@@ -269,15 +279,16 @@ export const defer = (reason?: string): Output =>
  * Build an `allow` decision that replaces the tool input with a
  * modified version.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.allowWithUpdatedInput)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output =>
   Output.make({
@@ -298,24 +309,21 @@ export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unkn
 /**
  * Build a runnable PreToolUse hook from a handler effect.
  *
- * @category constructors
- * @since 0.0.0
- * @example
- * ```ts
- * import * as Effect from 'effect/Effect'
- * import { Hook } from 'effect-claudecode'
+ * **Example** (Inspect the hook definition)
  *
- * const hook = Hook.PreToolUse.onTool({
- *   toolName: "Bash",
- *   handler: ({ tool }) => Effect.succeed(
- *     tool.command.includes("rm -rf /")
- *       ? Hook.PreToolUse.deny('destructive')
- *       : Hook.PreToolUse.passthrough()
- *   )
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { Hook } from "effect-claudecode"
+ *
+ * const hook = Hook.PreToolUse.define({
+ *   handler: () => Effect.succeed(Hook.PreToolUse.passthrough())
  * })
  *
- * Hook.runMain(hook)
+ * console.log(hook.event) // "PreToolUse"
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const define = <E, R>(config: {
   readonly handler: (input: Input) => Effect.Effect<Output, E, R>;
@@ -330,15 +338,16 @@ export const define = <E, R>(config: {
  * Build a PreToolUse hook that only handles a specific supported tool.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PreToolUse hook that only handles a specific supported tool)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type BashHook = Hook.PreToolUse.OnToolConfig<"Bash", never, never>
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
   readonly toolName: T;
@@ -350,7 +359,8 @@ export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
 /**
  * Constructor for `onTool`.
  *
- * @example
+ * **Example** (Use onTool)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -381,15 +391,16 @@ export const onTool = <const T extends Tool.SupportedToolName, E, R>(
  * Build a PreToolUse hook that only handles matching `tool_name` values.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PreToolUse hook that only handles matching `tool_name` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -409,15 +420,16 @@ export const onMatcher = <E, R>(config: {
  * Build a PreToolUse hook from a custom typed tool adapter.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PreToolUse hook from a custom typed tool adapter)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreToolUse.onAdapter)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onAdapter = <TName extends string, TTool, E, R>(config: {
   readonly adapter: Tool.PreToolAdapter<TName, TTool>;
@@ -444,12 +456,6 @@ export const onAdapter = <TName extends string, TTool, E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PreToolUse.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -474,12 +480,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PreToolUse.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -504,12 +504,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PreToolUse.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

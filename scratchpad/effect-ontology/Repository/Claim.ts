@@ -9,39 +9,41 @@
  * @module Repository/Claim
  */
 
-import { $ScratchpadId } from "@beep/identity"
-import { DrizzleError } from "@beep/drizzle"
-import { Context, Layer } from "effect"
-const $I = $ScratchpadId.create("effect-ontology/Repository/Claim")
+import { DrizzleError } from "@beep/drizzle";
+import { $ScratchpadId } from "@beep/identity";
+import { Context, Layer } from "effect";
+import * as P from "effect/Predicate";
 
-import { PostgresDrizzle } from "@beep/postgres"
-import { and, desc, eq, isNull, or, sql } from "drizzle-orm"
-import { DateTime, Effect, Option } from "effect"
-import { claims, correctionClaims, corrections } from "./schema.ts"
-import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts"
+const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
+
+import { PostgresDrizzle } from "@beep/postgres";
+import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { DateTime, Effect, Option } from "effect";
+import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts";
+import { claims, correctionClaims, corrections } from "./schema.ts";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ClaimId = string
-export type ArticleId = string
-export type CorrectionId = string
+export type ClaimId = string;
+export type ArticleId = string;
+export type CorrectionId = string;
 
 export interface ClaimFilter {
-  readonly ontologyId?: string
-  readonly articleId?: ArticleId
-  readonly subjectIri?: string
-  readonly predicateIri?: string
-  readonly rank?: "preferred" | "normal" | "deprecated"
-  readonly includeDeprecated?: boolean
-  readonly limit?: number
-  readonly offset?: number
+  readonly ontologyId?: string;
+  readonly articleId?: ArticleId;
+  readonly subjectIri?: string;
+  readonly predicateIri?: string;
+  readonly rank?: "preferred" | "normal" | "deprecated";
+  readonly includeDeprecated?: boolean;
+  readonly limit?: number;
+  readonly offset?: number;
 }
 
 export interface ConflictCandidate {
-  readonly existingClaim: ClaimRow
-  readonly conflictType: "position" | "temporal" | "contradictory"
+  readonly existingClaim: ClaimRow;
+  readonly conflictType: "position" | "temporal" | "contradictory";
 }
 
 // =============================================================================
@@ -49,8 +51,8 @@ export interface ConflictCandidate {
 // =============================================================================
 
 export class ClaimRepository extends Context.Service<ClaimRepository>()($I`ClaimRepository`, {
-  make: Effect.gen(function*() {
-    const drizzle = yield* PostgresDrizzle
+  make: Effect.gen(function* () {
+    const drizzle = yield* PostgresDrizzle;
 
     // -------------------------------------------------------------------------
     // CRUD Operations
@@ -59,73 +61,67 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Insert a new claim
      */
-    const insertClaim = (claim: ClaimInsertRow) =>
-      Effect.gen(function*() {
-        const [result] = yield* drizzle.insert(claims).values(claim).returning()
-        return result
-      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)))
+    const insertClaim = Effect.fn("insertClaim")(
+      function* (claim: ClaimInsertRow) {
+        const [result] = yield* drizzle.insert(claims).values(claim).returning();
+        return result;
+      },
+      Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause))
+    );
 
     /**
      * Get claim by ID
      */
-    const getClaim = (id: ClaimId) =>
-      Effect.gen(function*() {
-        const [result] = yield* drizzle.select().from(claims).where(eq(claims.id, id)).limit(1)
-        return Option.fromNullishOr(result)
-      })
+    const getClaim = Effect.fn("getClaim")(function* (id: ClaimId) {
+      const [result] = yield* drizzle.select().from(claims).where(eq(claims.id, id)).limit(1);
+      return Option.fromNullishOr(result);
+    });
 
     /**
      * Build WHERE conditions from a filter
      */
     const buildWhereConditions = (filter: ClaimFilter) => {
-      const conditions = []
+      const conditions = [];
 
-      if (filter.ontologyId) {
-        conditions.push(eq(claims.ontologyId, filter.ontologyId))
+      if (P.isNotUndefined(filter.ontologyId)) {
+        conditions.push(eq(claims.ontologyId, filter.ontologyId));
       }
-      if (filter.articleId) {
-        conditions.push(eq(claims.articleId, filter.articleId))
+      if (P.isNotUndefined(filter.articleId)) {
+        conditions.push(eq(claims.articleId, filter.articleId));
       }
-      if (filter.subjectIri) {
-        conditions.push(eq(claims.subjectIri, filter.subjectIri))
+      if (P.isNotUndefined(filter.subjectIri)) {
+        conditions.push(eq(claims.subjectIri, filter.subjectIri));
       }
-      if (filter.predicateIri) {
-        conditions.push(eq(claims.predicateIri, filter.predicateIri))
+      if (P.isNotUndefined(filter.predicateIri)) {
+        conditions.push(eq(claims.predicateIri, filter.predicateIri));
       }
-      if (filter.rank) {
-        conditions.push(eq(claims.rank, filter.rank))
+      if (P.isNotUndefined(filter.rank)) {
+        conditions.push(eq(claims.rank, filter.rank));
       }
-      if (!filter.includeDeprecated) {
-        conditions.push(isNull(claims.deprecatedAt))
+      if (P.isUndefined(filter.includeDeprecated)) {
+        conditions.push(isNull(claims.deprecatedAt));
       }
 
-      return conditions
-    }
+      return conditions;
+    };
 
     /**
      * Get claims with filters
      */
-    const getClaims = (filter: ClaimFilter) =>
-      Effect.gen(function*() {
-        const conditions = buildWhereConditions(filter)
-
-        let query = drizzle
-          .select()
-          .from(claims)
-          .orderBy(desc(claims.assertedAt))
-
-        if (conditions.length > 0) {
-          query = query.where(and(...conditions)) as typeof query
-        }
-        if (filter.limit) {
-          query = query.limit(filter.limit) as typeof query
-        }
-        if (filter.offset) {
-          query = query.offset(filter.offset) as typeof query
-        }
-
-        return yield* query
-      })
+    const getClaims = Effect.fn("getClaims")(function* (filter: ClaimFilter) {
+      const conditions = buildWhereConditions(filter);
+      let query = drizzle.select().from(claims).orderBy(desc(claims.assertedAt));
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as typeof query;
+      }
+      if (P.isNotUndefined(filter.limit)) {
+        query = query.limit(filter.limit) as typeof query;
+      }
+      if (P.isNotUndefined(filter.offset)) {
+        query = query.offset(filter.offset) as typeof query;
+      }
+      return yield* query;
+    });
 
     // -------------------------------------------------------------------------
     // Query Operations
@@ -134,24 +130,24 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get claims by article
      */
-    const getClaimsByArticle = (articleId: ArticleId) => getClaims({ articleId, includeDeprecated: false })
+    const getClaimsByArticle = (articleId: ArticleId) => getClaims({ articleId, includeDeprecated: false });
 
     /**
      * Get claims by subject IRI
      */
-    const getClaimsBySubject = (subjectIri: string) => getClaims({ subjectIri, includeDeprecated: false })
+    const getClaimsBySubject = (subjectIri: string) => getClaims({ subjectIri, includeDeprecated: false });
 
     /**
      * Get preferred claims for a subject + predicate
      */
     const getPreferredClaims = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, rank: "preferred" })
+      getClaims({ subjectIri, predicateIri, rank: "preferred" });
 
     /**
      * Get all claims for a subject + predicate (including deprecated)
      */
     const getClaimHistory = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, includeDeprecated: true })
+      getClaims({ subjectIri, predicateIri, includeDeprecated: true });
 
     // -------------------------------------------------------------------------
     // Deprecation & Corrections
@@ -160,80 +156,64 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Deprecate a claim due to a correction
      */
-    const deprecateClaim = (claimId: ClaimId, correctionId: CorrectionId) =>
-      Effect.gen(function*() {
-        const now = yield* DateTime.now
-        yield* drizzle
-            .update(claims)
-            .set({
-              deprecatedAt: DateTime.toDate(now),
-              deprecatedBy: correctionId,
-              rank: "deprecated"
-            })
-            .where(eq(claims.id, claimId))
-      })
+    const deprecateClaim = Effect.fn("deprecateClaim")(function* (claimId: ClaimId, correctionId: CorrectionId) {
+      const now = yield* DateTime.now;
+      yield* drizzle
+        .update(claims)
+        .set({
+          deprecatedAt: DateTime.toDate(now),
+          deprecatedBy: correctionId,
+          rank: "deprecated",
+        })
+        .where(eq(claims.id, claimId));
+    });
 
     /**
      * Promote a claim to preferred rank
      */
     const promoteToPreferred = (claimId: ClaimId) =>
-      drizzle
-          .update(claims)
-          .set({ rank: "preferred" })
-          .where(eq(claims.id, claimId))
+      drizzle.update(claims).set({ rank: "preferred" }).where(eq(claims.id, claimId));
 
     /**
      * Insert a correction
      */
-    const insertCorrection = (correction: CorrectionInsertRow) =>
-      Effect.gen(function*() {
-        const [result] = yield* drizzle.insert(corrections).values(correction).returning()
-        return result
-      })
+    const insertCorrection = Effect.fn("insertCorrection")(function* (correction: CorrectionInsertRow) {
+      const [result] = yield* drizzle.insert(corrections).values(correction).returning();
+      return result;
+    });
 
     /**
      * Get correction by ID
      */
-    const getCorrection = (id: CorrectionId) =>
-      Effect.gen(function*() {
-        const [result] = yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1)
-        return Option.fromNullishOr(result)
-      })
+    const getCorrection = Effect.fn("getCorrection")(function* (id: CorrectionId) {
+      const [result] = yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1);
+      return Option.fromNullishOr(result);
+    });
 
     /**
      * Link claims to a correction
      */
-    const linkClaimsToCorrection = (
-      correctionId: CorrectionId,
-      originalClaimId: ClaimId,
-      newClaimId?: ClaimId
-    ) =>
+    const linkClaimsToCorrection = (correctionId: CorrectionId, originalClaimId: ClaimId, newClaimId?: ClaimId) =>
       drizzle.insert(correctionClaims).values({
-          correctionId,
-          originalClaimId,
-          newClaimId: newClaimId ?? null
-        })
+        correctionId,
+        originalClaimId,
+        newClaimId: newClaimId ?? null,
+      });
 
     /**
      * Get correction chain for a claim (all corrections that affected it)
      */
-    const getCorrectionChain = (claimId: ClaimId) =>
-      Effect.gen(function*() {
-        const result = yield* drizzle
-            .select({
-              correction: corrections
-            })
-            .from(correctionClaims)
-            .innerJoin(corrections, eq(correctionClaims.correctionId, corrections.id))
-            .where(
-              or(
-                eq(correctionClaims.originalClaimId, claimId),
-                eq(correctionClaims.newClaimId, claimId)
-              )
-            )
-            .orderBy(desc(corrections.correctionDate))
-        return result.map((r) => r.correction)
-      })
+    const getCorrectionChain = Effect.fn("getCorrectionChain")(function* (claimId: ClaimId) {
+      const result = yield* drizzle
+        .select({
+          correction: corrections,
+        })
+        .from(correctionClaims)
+        .innerJoin(corrections, eq(correctionClaims.correctionId, corrections.id))
+        .where(or(eq(correctionClaims.originalClaimId, claimId), eq(correctionClaims.newClaimId, claimId)))
+        .orderBy(desc(corrections.correctionDate));
+      return result.map((r) => r.correction);
+    });
 
     // -------------------------------------------------------------------------
     // Conflict Detection
@@ -249,47 +229,58 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     const findConflictingClaims = (
       claim: ClaimInsertRow | ClaimRow
     ): Effect.Effect<Array<ConflictCandidate>, DrizzleError> =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // Find claims with same subject + predicate but different value
         const candidates = yield* drizzle
-            .select()
-            .from(claims)
-            .where(
-              and(
-                eq(claims.subjectIri, claim.subjectIri),
-                eq(claims.predicateIri, claim.predicateIri),
-                isNull(claims.deprecatedAt) // Only active claims
-              )
+          .select()
+          .from(claims)
+          .where(
+            and(
+              eq(claims.subjectIri, claim.subjectIri),
+              eq(claims.predicateIri, claim.predicateIri),
+              isNull(claims.deprecatedAt) // Only active claims
             )
+          );
 
-        const conflicts: Array<ConflictCandidate> = []
+        const conflicts: Array<ConflictCandidate> = [];
 
         for (const existing of candidates) {
           // Skip if same claim or same value
-          if ("id" in claim && existing.id === claim.id) continue
-          if (existing.objectValue === claim.objectValue) continue
+          if ("id" in claim && existing.id === claim.id) continue;
+          if (existing.objectValue === claim.objectValue) continue;
 
           // Check for temporal overlap if both have validity periods
-          if (claim.validFrom && claim.validTo && existing.validFrom && existing.validTo) {
-            const claimStart = claim.validFrom instanceof Date ? claim.validFrom : new Date(claim.validFrom as string)
-            const claimEnd = claim.validTo instanceof Date ? claim.validTo : new Date(claim.validTo as string)
-            const existingStart = existing.validFrom
-            const existingEnd = existing.validTo
+          if (
+            P.isNotNullish(claim.validFrom) &&
+            P.isNotNullish(claim.validTo) &&
+            P.isNotNull(existing.validFrom) &&
+            P.isNotNull(existing.validTo)
+          ) {
+            const claimStart =
+              claim.validFrom instanceof Date
+                ? claim.validFrom
+                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validFrom as string));
+            const claimEnd =
+              claim.validTo instanceof Date
+                ? claim.validTo
+                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validTo as string));
+            const existingStart = existing.validFrom;
+            const existingEnd = existing.validTo;
 
             // Check overlap: (StartA <= EndB) and (EndA >= StartB)
             if (claimStart <= existingEnd && claimEnd >= existingStart) {
-              conflicts.push({ existingClaim: existing, conflictType: "temporal" })
-              continue
+              conflicts.push({ existingClaim: existing, conflictType: "temporal" });
+              continue;
             }
           }
 
           // Position conflict: same subject+predicate, different value, no temporal qualifier
           // This indicates potentially contradictory information
-          conflicts.push({ existingClaim: existing, conflictType: "position" })
+          conflicts.push({ existingClaim: existing, conflictType: "position" });
         }
 
-        return conflicts
-      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)))
+        return conflicts;
+      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
 
     // -------------------------------------------------------------------------
     // Bulk Operations
@@ -298,11 +289,10 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Insert multiple claims in a batch
      */
-    const insertClaimsBatch = (claimList: Array<ClaimInsertRow>) =>
-      Effect.gen(function*() {
-        if (claimList.length === 0) return []
-        return yield* drizzle.insert(claims).values(claimList).returning()
-      })
+    const insertClaimsBatch = Effect.fn("insertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
+      if (claimList.length === 0) return [];
+      return yield* drizzle.insert(claims).values(claimList).returning();
+    });
 
     /**
      * Upsert multiple claims in a batch (idempotent)
@@ -311,36 +301,29 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      * (article_id, subject_iri, predicate_iri, object_value).
      * Returns only the newly inserted claims.
      */
-    const upsertClaimsBatch = (claimList: Array<ClaimInsertRow>) =>
-      Effect.gen(function*() {
-        if (claimList.length === 0) return []
-        return yield* drizzle
-            .insert(claims)
-            .values(claimList)
-            .onConflictDoNothing({
-              target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue]
-            })
-            .returning()
-      })
+    const upsertClaimsBatch = Effect.fn("upsertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
+      if (claimList.length === 0) return [];
+      return yield* drizzle
+        .insert(claims)
+        .values(claimList)
+        .onConflictDoNothing({
+          target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue],
+        })
+        .returning();
+    });
 
     /**
      * Count claims with filters using SQL COUNT
      */
-    const countClaims = (filter: ClaimFilter) =>
-      Effect.gen(function*() {
-        const conditions = buildWhereConditions(filter)
-
-        let query = drizzle
-          .select({ count: sql<number>`count(*)::int` })
-          .from(claims)
-
-        if (conditions.length > 0) {
-          query = query.where(and(...conditions)) as typeof query
-        }
-
-        const result = yield* query
-        return result[0]?.count ?? 0
-      })
+    const countClaims = Effect.fn("countClaims")(function* (filter: ClaimFilter) {
+      const conditions = buildWhereConditions(filter);
+      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(claims);
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as typeof query;
+      }
+      const result = yield* query;
+      return result[0]?.count ?? 0;
+    });
 
     return {
       // CRUD
@@ -368,9 +351,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
       // Bulk
       insertClaimsBatch,
       upsertClaimsBatch,
-      countClaims
-    }
+      countClaims,
+    };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make)
+  static readonly Default = Layer.effect(this, this.make);
 }

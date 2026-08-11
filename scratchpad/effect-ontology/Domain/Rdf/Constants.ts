@@ -13,8 +13,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { SafePnPrefix } from "@beep/identity";
-import { $ScratchpadId } from "@beep/identity";
+import { $ScratchpadId, SafePnPrefix } from "@beep/identity";
 import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
@@ -25,7 +24,8 @@ import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { SchemaUtils } from "@beep/schema";
 import { R } from "@beep/utils";
 import * as S from "effect/Schema";
-import { IRI, type IRI as IriValue } from "./Types.ts";
+import type { IRI as IriValue } from "./Types.ts";
+import { IRI } from "./Types.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Constants");
 

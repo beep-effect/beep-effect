@@ -8,49 +8,46 @@
  * @module Utils/ClaimFactory
  */
 
-import { Effect, Hash } from "effect"
-import * as A from "effect/Array"
-import * as Match from "effect/Match"
-import * as MutableHashMap from "effect/MutableHashMap"
-import type { Entity, Relation } from "../Domain/Model/Entity.ts"
-import { CLAIMS, RDF, XSD } from "../Domain/Rdf/Constants.ts"
-import {
-  type IRI,
-  Literal,
-  Quad,
-  type RdfTerm
-} from "../Domain/Rdf/Types.ts"
-import * as O from "effect/Option"
-import { ClaimId, type ClaimRank } from "../Domain/Schema/KnowledgeModel.ts"
-import type { CreateClaimInput } from "../Service/Claim.ts"
-import { buildIri } from "./Rdf.ts"
+import { Effect, Hash } from "effect";
+import * as A from "effect/Array";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import { CLAIMS, RDF, XSD } from "../Domain/Rdf/Constants.ts";
+import type { IRI, RdfTerm } from "../Domain/Rdf/Types.ts";
+import { Literal, Quad } from "../Domain/Rdf/Types.ts";
+import type { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
+import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
+import type { CreateClaimInput } from "../Service/Claim.ts";
+import { buildIri } from "./Rdf.ts";
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
-const claimLiteral = (input: {
-  readonly value: string
-  readonly datatype?: IRI
-}): Literal => Literal.make({
-  value: input.value,
-  language: O.none(),
-  datatype: O.fromNullishOr(input.datatype)
-})
+const claimLiteral = (input: { readonly value: string; readonly datatype?: IRI }): Literal =>
+  Literal.make({
+    value: input.value,
+    language: O.none(),
+    datatype: O.fromNullishOr(input.datatype),
+  });
 
 const claimQuad = (input: {
-  readonly subject: IRI
-  readonly predicate: IRI
-  readonly object: RdfTerm
-  readonly graph: IRI | undefined
-}): Quad => Quad.make({
-  subject: input.subject,
-  predicate: input.predicate,
-  object: input.object,
-  graph: O.fromNullishOr(input.graph)
-})
+  readonly subject: IRI;
+  readonly predicate: IRI;
+  readonly object: RdfTerm;
+  readonly graph: IRI | undefined;
+}): Quad =>
+  Quad.make({
+    subject: input.subject,
+    predicate: input.predicate,
+    object: input.object,
+    graph: O.fromNullishOr(input.graph),
+  });
 
 // =============================================================================
 // Types
@@ -64,15 +61,15 @@ const claimQuad = (input: {
  */
 export interface ClaimFactoryOptions {
   /** Base namespace for entity IRIs */
-  readonly baseNamespace: string
+  readonly baseNamespace: string;
   /** Document ID (used as articleId in claims) */
-  readonly documentId: string
+  readonly documentId: string;
   /** Ontology ID for namespace scoping */
-  readonly ontologyId: string
+  readonly ontologyId: string;
   /** Default confidence score (0-1) */
-  readonly defaultConfidence?: number
+  readonly defaultConfidence?: number;
   /** Default claim rank */
-  readonly defaultRank?: ClaimRank
+  readonly defaultRank?: ClaimRank;
 }
 
 /**
@@ -86,16 +83,16 @@ export interface ClaimFactoryOptions {
  */
 export interface IriCollisionWarning {
   /** The entity ID that collides */
-  readonly entityId: string
+  readonly entityId: string;
   /** The IRI that would be produced */
-  readonly iri: string
+  readonly iri: string;
   /** All entities with this ID (first is kept, others are duplicates) */
   readonly entities: ReadonlyArray<{
-    readonly mention: string
-    readonly types: ReadonlyArray<string>
-    readonly documentId?: string
-    readonly chunkIndex?: number
-  }>
+    readonly mention: string;
+    readonly types: ReadonlyArray<string>;
+    readonly documentId?: string;
+    readonly chunkIndex?: number;
+  }>;
 }
 
 /**
@@ -106,13 +103,13 @@ export interface IriCollisionWarning {
  */
 export interface IriCollisionReport {
   /** Whether any collisions were detected */
-  readonly hasCollisions: boolean
+  readonly hasCollisions: boolean;
   /** List of collision warnings */
-  readonly collisions: ReadonlyArray<IriCollisionWarning>
+  readonly collisions: ReadonlyArray<IriCollisionWarning>;
   /** Total entity count before deduplication */
-  readonly totalEntities: number
+  readonly totalEntities: number;
   /** Unique entity count after deduplication */
-  readonly uniqueEntities: number
+  readonly uniqueEntities: number;
 }
 
 /**
@@ -125,7 +122,7 @@ export interface IriCollisionReport {
  */
 export interface ClaimData extends CreateClaimInput {
   /** Generated claim ID */
-  readonly claimId: ClaimId
+  readonly claimId: ClaimId;
 }
 
 // =============================================================================
@@ -157,33 +154,31 @@ export interface ClaimData extends CreateClaimInput {
  * @since 2.0.0
  * @category Validation
  */
-export const detectIriCollisions = (
-  entities: Iterable<Entity>,
-  baseNamespace: string
-): IriCollisionReport => {
-  const entityMap = MutableHashMap.empty<string, Array<Entity>>()
-  let totalEntities = 0
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const detectIriCollisions = (entities: Iterable<Entity>, baseNamespace: string): IriCollisionReport => {
+  const entityMap = MutableHashMap.empty<string, Array<Entity>>();
+  let totalEntities = 0;
 
   // Group entities by ID
   for (const entity of entities) {
-    totalEntities++
+    totalEntities++;
     O.match(MutableHashMap.get(entityMap, entity.id), {
       onNone: () => MutableHashMap.set(entityMap, entity.id, [entity]),
-      onSome: (existing) => MutableHashMap.set(entityMap, entity.id, A.append(existing, entity))
-    })
+      onSome: (existing) => MutableHashMap.set(entityMap, entity.id, A.append(existing, entity)),
+    });
   }
 
   // Find collisions (IDs with more than one entity)
-  const collisions: Array<IriCollisionWarning> = []
+  const collisions: Array<IriCollisionWarning> = [];
   for (const [entityId, entityList] of entityMap) {
     if (entityList.length > 1) {
       // Check if they're actually different entities (different types/mentions)
       const isDifferent = A.some(entityList, (e, i) =>
-        A.some(A.drop(entityList, i + 1), (other) =>
-          e.mention !== other.mention ||
-          A.join(e.types, ",") !== A.join(other.types, ",")
+        A.some(
+          A.drop(entityList, i + 1),
+          (other) => e.mention !== other.mention || A.join(e.types, ",") !== A.join(other.types, ",")
         )
-      )
+      );
 
       if (isDifferent) {
         collisions.push({
@@ -193,9 +188,9 @@ export const detectIriCollisions = (
             mention: e.mention,
             types: e.types,
             ...(O.isSome(e.documentId) ? { documentId: e.documentId.value } : {}),
-            ...(O.isSome(e.chunkIndex) ? { chunkIndex: e.chunkIndex.value } : {})
-          }))
-        })
+            ...(O.isSome(e.chunkIndex) ? { chunkIndex: e.chunkIndex.value } : {}),
+          })),
+        });
       }
     }
   }
@@ -204,9 +199,9 @@ export const detectIriCollisions = (
     hasCollisions: collisions.length > 0,
     collisions,
     totalEntities,
-    uniqueEntities: MutableHashMap.size(entityMap)
-  }
-}
+    uniqueEntities: MutableHashMap.size(entityMap),
+  };
+};
 
 /**
  * Check for IRI collisions and return Effect with warning
@@ -221,24 +216,28 @@ export const detectIriCollisions = (
  * @since 2.0.0
  * @category Validation
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const checkIriCollisions = (
   entities: ReadonlyArray<Entity>,
   baseNamespace: string
 ): Effect.Effect<ReadonlyArray<Entity>> =>
-  Effect.gen(function*() {
-    const report = detectIriCollisions(entities, baseNamespace)
+  Effect.gen(function* () {
+    const report = detectIriCollisions(entities, baseNamespace);
 
     if (report.hasCollisions) {
       for (const collision of report.collisions) {
-        const mentions = A.join(A.map(collision.entities, (entity) => `"${entity.mention}"`), ", ")
+        const mentions = A.join(
+          A.map(collision.entities, (entity) => `"${entity.mention}"`),
+          ", "
+        );
         yield* Effect.logWarning(
           `IRI collision detected for entity '${collision.entityId}': ${collision.entities.length} distinct entities would merge into ${collision.iri}. Mentions: ${mentions}`
-        )
+        );
       }
     }
 
-    return entities
-  })
+    return entities;
+  });
 
 // =============================================================================
 // Claim ID Generation
@@ -258,6 +257,7 @@ export const checkIriCollisions = (
  * @since 2.0.0
  * @category Constructors
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const generateClaimId = (
   subjectIri: string,
   predicateIri: string,
@@ -265,10 +265,10 @@ export const generateClaimId = (
   articleId: string
 ): ClaimId => {
   // Create deterministic hash from claim content
-  const contentKey = `${subjectIri}|${predicateIri}|${objectValue}|${articleId}`
-  const hash = Math.abs(Hash.string(contentKey)).toString(16).padStart(12, "0")
-  return ClaimId.make(`claim-${hash}`)
-}
+  const contentKey = `${subjectIri}|${predicateIri}|${objectValue}|${articleId}`;
+  const hash = Math.abs(Hash.string(contentKey)).toString(16).padStart(12, "0");
+  return ClaimId.make(`claim-${hash}`);
+};
 
 // =============================================================================
 // Entity to Claims
@@ -311,30 +311,31 @@ export const generateClaimId = (
  * @since 2.0.0
  * @category Transformations
  */
-export const entityToClaims = (
-  entity: Entity,
-  options: ClaimFactoryOptions
-): ReadonlyArray<ClaimData> => {
-  const claims: Array<ClaimData> = []
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const entityToClaims = (entity: Entity, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
+  const claims: Array<ClaimData> = [];
+  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
 
   // Build subject IRI
-  const subjectIri = buildIri(baseNamespace, entity.id)
+  const subjectIri = buildIri(baseNamespace, entity.id);
 
   // Get evidence from entity mentions (first mention if available)
-  const firstMention = A.head(entity.mentions)
+  const firstMention = A.head(entity.mentions);
   const evidence = O.map(firstMention, (mention) => ({
     text: mention.text,
     startOffset: mention.startChar,
-    endOffset: mention.endChar
-  }))
+    endOffset: mention.endChar,
+  }));
 
   // Confidence from first mention or default
-  const confidence = O.getOrElse(O.flatMap(firstMention, (mention) => mention.confidence), () => defaultConfidence)
+  const confidence = O.getOrElse(
+    O.flatMap(firstMention, (mention) => mention.confidence),
+    () => defaultConfidence
+  );
 
   // 1. Create claims for each rdf:type
   for (const typeIri of entity.types) {
-    const claimId = generateClaimId(subjectIri, RDF_TYPE, typeIri, documentId)
+    const claimId = generateClaimId(subjectIri, RDF_TYPE, typeIri, documentId);
 
     claims.push({
       claimId,
@@ -345,16 +346,16 @@ export const entityToClaims = (
       articleId: documentId,
       ontologyId,
       confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {})
-    })
+      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+    });
   }
 
   // 2. Create claims for each attribute
   for (const [predicateIri, value] of Object.entries(entity.attributes)) {
-    const objectValue = String(value)
-    const objectType = typeof value === "string" && value.startsWith("http") ? "iri" : "literal"
+    const objectValue = String(value);
+    const objectType = typeof value === "string" && value.startsWith("http") ? "iri" : "literal";
 
-    const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId)
+    const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId);
 
     claims.push({
       claimId,
@@ -365,12 +366,12 @@ export const entityToClaims = (
       articleId: documentId,
       ontologyId,
       confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {})
-    })
+      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+    });
   }
 
-  return claims
-}
+  return claims;
+};
 
 // =============================================================================
 // Relation to Claim
@@ -405,14 +406,12 @@ export const entityToClaims = (
  * @since 2.0.0
  * @category Transformations
  */
-export const relationToClaim = (
-  relation: Relation,
-  options: ClaimFactoryOptions
-): ClaimData => {
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const relationToClaim = (relation: Relation, options: ClaimFactoryOptions): ClaimData => {
+  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
 
   // Build subject IRI
-  const subjectIri = buildIri(baseNamespace, relation.subjectId)
+  const subjectIri = buildIri(baseNamespace, relation.subjectId);
 
   // Build object value (entity reference or literal)
   const [objectValue, objectType] = Match.value(relation.object).pipe(
@@ -420,23 +419,23 @@ export const relationToClaim = (
       EntityReference: ({ value }) => [buildIri(baseNamespace, value), "iri"] as const,
       Text: ({ value }) => [value, "literal"] as const,
       Number: ({ value }) => [String(value), "literal"] as const,
-      Boolean: ({ value }) => [String(value), "literal"] as const
+      Boolean: ({ value }) => [String(value), "literal"] as const,
     })
-  )
+  );
 
   // Get evidence from relation
   const evidence = O.map(relation.evidence, (span) => ({
     text: span.text,
     startOffset: span.startChar,
-    endOffset: span.endChar
-  }))
+    endOffset: span.endChar,
+  }));
 
   const confidence = O.getOrElse(
     O.flatMap(relation.evidence, (span) => span.confidence),
     () => defaultConfidence
-  )
+  );
 
-  const claimId = generateClaimId(subjectIri, relation.predicate, objectValue, documentId)
+  const claimId = generateClaimId(subjectIri, relation.predicate, objectValue, documentId);
 
   return {
     claimId,
@@ -447,9 +446,9 @@ export const relationToClaim = (
     articleId: documentId,
     ontologyId,
     confidence,
-    ...(O.isSome(evidence) ? { evidence: evidence.value } : {})
-  }
-}
+    ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+  };
+};
 
 // =============================================================================
 // Batch Conversions
@@ -465,21 +464,22 @@ export const relationToClaim = (
  * @since 2.0.0
  * @category Transformations
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const entitiesToClaims = (
   entities: Iterable<Entity>,
   options: ClaimFactoryOptions
 ): ReadonlyArray<ClaimData> => {
-  const claims: Array<ClaimData> = []
+  const claims: Array<ClaimData> = [];
 
   for (const entity of entities) {
-    const entityClaims = entityToClaims(entity, options)
+    const entityClaims = entityToClaims(entity, options);
     for (const claim of entityClaims) {
-      claims.push(claim)
+      claims.push(claim);
     }
   }
 
-  return claims
-}
+  return claims;
+};
 
 /**
  * Convert multiple relations to claims
@@ -491,18 +491,19 @@ export const entitiesToClaims = (
  * @since 2.0.0
  * @category Transformations
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const relationsToClaims = (
   relations: Iterable<Relation>,
   options: ClaimFactoryOptions
 ): ReadonlyArray<ClaimData> => {
-  const claims: Array<ClaimData> = []
+  const claims: Array<ClaimData> = [];
 
   for (const relation of relations) {
-    claims.push(relationToClaim(relation, options))
+    claims.push(relationToClaim(relation, options));
   }
 
-  return claims
-}
+  return claims;
+};
 
 /**
  * Convert a KnowledgeGraph (entities + relations) to claims
@@ -515,16 +516,12 @@ export const relationsToClaims = (
  * @since 2.0.0
  * @category Transformations
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const knowledgeGraphToClaims = (
   entities: Iterable<Entity>,
   relations: Iterable<Relation>,
   options: ClaimFactoryOptions
-): ReadonlyArray<ClaimData> => {
-  return [
-    ...entitiesToClaims(entities, options),
-    ...relationsToClaims(relations, options)
-  ]
-}
+): ReadonlyArray<ClaimData> => [...entitiesToClaims(entities, options), ...relationsToClaims(relations, options)];
 
 // =============================================================================
 // Claim to RDF Quads (Pure, no DB required)
@@ -544,14 +541,11 @@ export const knowledgeGraphToClaims = (
  * @since 2.0.0
  * @category RDF
  */
-export const claimDataToQuads = (
-  claim: ClaimData,
-  graphUri?: string,
-  extractedAt?: string
-): ReadonlyArray<Quad> => {
-  const quads: Array<Quad> = []
-  const claimIri = `${CLAIMS.namespace}${claim.claimId}` as IRI
-  const graph = graphUri as IRI | undefined
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const claimDataToQuads = (claim: ClaimData, graphUri?: string, extractedAt?: string): ReadonlyArray<Quad> => {
+  const quads: Array<Quad> = [];
+  const claimIri = `${CLAIMS.namespace}${claim.claimId}` as IRI;
+  const graph = graphUri as IRI | undefined;
 
   // Type assertion: claim:id a claims:Claim
   quads.push(
@@ -559,9 +553,9 @@ export const claimDataToQuads = (
       subject: claimIri,
       predicate: RDF.type,
       object: CLAIMS.Claim,
-      graph
+      graph,
     })
-  )
+  );
 
   // RDF reification: rdf:subject
   quads.push(
@@ -569,9 +563,9 @@ export const claimDataToQuads = (
       subject: claimIri,
       predicate: RDF.subject,
       object: claim.subjectIri as IRI,
-      graph
+      graph,
     })
-  )
+  );
 
   // RDF reification: rdf:predicate
   quads.push(
@@ -579,23 +573,22 @@ export const claimDataToQuads = (
       subject: claimIri,
       predicate: RDF.predicate,
       object: claim.predicateIri as IRI,
-      graph
+      graph,
     })
-  )
+  );
 
   // RDF reification: rdf:object (IRI or Literal)
-  const objectTerm = claim.objectType === "iri"
-    ? claim.objectValue as IRI
-    : claimLiteral({ value: claim.objectValue })
+  const objectTerm =
+    claim.objectType === "iri" ? (claim.objectValue as IRI) : claimLiteral({ value: claim.objectValue });
 
   quads.push(
     claimQuad({
       subject: claimIri,
       predicate: RDF.object,
       object: objectTerm,
-      graph
+      graph,
     })
-  )
+  );
 
   // Rank (default: Normal)
   quads.push(
@@ -603,9 +596,9 @@ export const claimDataToQuads = (
       subject: claimIri,
       predicate: CLAIMS.rank,
       object: CLAIMS.Normal,
-      graph
+      graph,
     })
-  )
+  );
 
   // Confidence
   quads.push(
@@ -614,25 +607,25 @@ export const claimDataToQuads = (
       predicate: CLAIMS.confidence,
       object: claimLiteral({
         value: String(claim.confidence),
-        datatype: XSD.double
+        datatype: XSD.double,
       }),
-      graph
+      graph,
     })
-  )
+  );
 
   // Extracted at
-  if (extractedAt) {
+  if (P.isNotUndefined(extractedAt)) {
     quads.push(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.extractedAt,
         object: claimLiteral({
           value: extractedAt,
-          datatype: XSD.dateTime
+          datatype: XSD.dateTime,
         }),
-        graph
+        graph,
       })
-    )
+    );
   }
 
   // Source article
@@ -641,40 +634,40 @@ export const claimDataToQuads = (
       subject: claimIri,
       predicate: CLAIMS.statedIn,
       object: `${CLAIMS.namespace}article/${claim.articleId}` as IRI,
-      graph
+      graph,
     })
-  )
+  );
 
   // Evidence
-  if (claim.evidence) {
-    const evidenceIri = `${claimIri}/evidence` as IRI
+  if (P.isNotUndefined(claim.evidence)) {
+    const evidenceIri = `${claimIri}/evidence` as IRI;
 
     quads.push(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.hasEvidence,
         object: evidenceIri,
-        graph
+        graph,
       })
-    )
+    );
 
     quads.push(
       claimQuad({
         subject: evidenceIri,
         predicate: RDF.type,
         object: CLAIMS.Evidence,
-        graph
+        graph,
       })
-    )
+    );
 
     quads.push(
       claimQuad({
         subject: evidenceIri,
         predicate: CLAIMS.evidenceText,
         object: claimLiteral({ value: claim.evidence.text }),
-        graph
+        graph,
       })
-    )
+    );
 
     quads.push(
       claimQuad({
@@ -682,11 +675,11 @@ export const claimDataToQuads = (
         predicate: CLAIMS.startOffset,
         object: claimLiteral({
           value: String(claim.evidence.startOffset),
-          datatype: XSD.integer
+          datatype: XSD.integer,
         }),
-        graph
+        graph,
       })
-    )
+    );
 
     quads.push(
       claimQuad({
@@ -694,15 +687,15 @@ export const claimDataToQuads = (
         predicate: CLAIMS.endOffset,
         object: claimLiteral({
           value: String(claim.evidence.endOffset),
-          datatype: XSD.integer
+          datatype: XSD.integer,
         }),
-        graph
+        graph,
       })
-    )
+    );
   }
 
-  return quads
-}
+  return quads;
+};
 
 /**
  * Convert multiple ClaimData to RDF quads
@@ -715,19 +708,20 @@ export const claimDataToQuads = (
  * @since 2.0.0
  * @category RDF
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const claimsDataToQuads = (
   claims: ReadonlyArray<ClaimData>,
   graphUri?: string,
   extractedAt?: string
 ): ReadonlyArray<Quad> => {
-  const allQuads: Array<Quad> = []
+  const allQuads: Array<Quad> = [];
 
   for (const claim of claims) {
-    const quads = claimDataToQuads(claim, graphUri, extractedAt)
+    const quads = claimDataToQuads(claim, graphUri, extractedAt);
     for (const quad of quads) {
-      allQuads.push(quad)
+      allQuads.push(quad);
     }
   }
 
-  return allQuads
-}
+  return allQuads;
+};

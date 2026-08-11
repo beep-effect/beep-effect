@@ -8,201 +8,207 @@
  * @module Cli/Commands/Extract
  */
 
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli"
-import { FileSystem, Path } from "effect"
-import { BunServices } from "@effect/platform-bun"
-import { ConfigProvider, Console, Duration, Effect, Layer, Option } from "effect"
-import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts"
-import { OntologyRef } from "../../Domain/Model/Ontology.ts"
-import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts"
-import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts"
-import { RdfBuilder } from "../../Service/Rdf.ts"
-import { withErrorHandler } from "../ErrorHandler.ts"
+import * as BunServices from "@effect/platform-bun/BunServices";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Args from "effect/unstable/cli/Argument";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
+import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts";
+import { OntologyRef } from "../../Domain/Model/Ontology.ts";
+import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
+import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
+import { RdfBuilder } from "../../Service/Rdf.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const ontologyArg = Args.file("ontology").pipe(
-  Args.withDescription("Path to ontology file (Turtle)")
-)
+const ontologyArg = Args.file("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
 
-const textOption = Options.string("text").pipe(
-  Options.withAlias("t"),
-  Options.optional,
-  Options.withDescription("Inline text to extract from")
-)
+const textOption = Flag.string("text").pipe(
+  Flag.withAlias("t"),
+  Flag.optional,
+  Flag.withDescription("Inline text to extract from")
+);
 
-const fileOption = Options.file("file").pipe(
-  Options.withAlias("f"),
-  Options.optional,
-  Options.withDescription("Path to file containing text to extract")
-)
+const fileOption = Flag.file("file").pipe(
+  Flag.withAlias("f"),
+  Flag.optional,
+  Flag.withDescription("Path to file containing text to extract")
+);
 
-const noExternalVocabsOption = Options.boolean("no-external-vocabs").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Skip loading external vocabularies (PROV-O, ORG, FOAF)")
-)
+const noExternalVocabsOption = Flag.boolean("no-external-vocabs").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Skip loading external vocabularies (PROV-O, ORG, FOAF)")
+);
 
-const formatOption = Options.choice("format", ["json", "turtle"]).pipe(
-  Options.withAlias("o"),
-  Options.withDefault("json" as const),
-  Options.withDescription("Output format: json (default) or turtle")
-)
+const formatOption = Flag.choice("format", ["json", "turtle"]).pipe(
+  Flag.withAlias("o"),
+  Flag.withDefault("json" as const),
+  Flag.withDescription("Output format: json (default) or turtle")
+);
 
-const concurrencyOption = Options.integer("concurrency").pipe(
-  Options.withAlias("c"),
-  Options.withDefault(4),
-  Options.withDescription("Extraction concurrency (default: 4)")
-)
+const concurrencyOption = Flag.integer("concurrency").pipe(
+  Flag.withAlias("c"),
+  Flag.withDefault(4),
+  Flag.withDescription("Extraction concurrency (default: 4)")
+);
 
 // =============================================================================
 // Helpers
 // =============================================================================
 
+class ExtractInputError extends Data.TaggedError("ExtractInputError")<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
+
 /**
  * Read input text from various sources (inline, file, or stdin)
  */
-const readInputText = (
-  textOpt: Option.Option<string>,
-  fileOpt: Option.Option<string>
-): Effect.Effect<string, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
+const readInputText = Effect.fn("Extract.readInputText")(function* (
+  textOpt: O.Option<string>,
+  fileOpt: O.Option<string>
+) {
+    const fs = yield* FileSystem.FileSystem;
 
     // Priority: --text > --file > stdin
-    if (Option.isSome(textOpt)) {
-      return textOpt.value
+    if (O.isSome(textOpt)) {
+      return textOpt.value;
     }
 
-    if (Option.isSome(fileOpt)) {
-      return yield* fs.readFileString(fileOpt.value)
+    if (O.isSome(fileOpt)) {
+      return yield* fs.readFileString(fileOpt.value);
     }
 
     // Read from stdin
-    const stdin = yield* Effect.tryPromise({
-      try: async () => {
-        // Check if stdin has data (non-blocking check)
-        const { stdin } = await import("node:process")
-        if (stdin.isTTY) {
-          throw new Error("No input provided. Use --text, --file, or pipe input via stdin.")
-        }
-
-        // Read all stdin
-        const chunks: Buffer[] = []
-        for await (const chunk of stdin) {
-          chunks.push(chunk as Buffer)
-        }
-        return Buffer.concat(chunks).toString("utf-8")
-      },
-      catch: (error) => new Error(`Failed to read stdin: ${error}`)
-    })
-
-    if (!stdin.trim()) {
-      return yield* Effect.fail(new Error("No input provided. Use --text, --file, or pipe input via stdin."))
+    const { stdin } = yield* Effect.tryPromise({
+      try: () => import("node:process"),
+      catch: (cause) => new ExtractInputError({ message: "Failed to access stdin", cause }),
+    });
+    if (stdin.isTTY) {
+      return yield* new ExtractInputError({
+        message: "No input provided. Use --text, --file, or pipe input via stdin.",
+      });
     }
 
-    return stdin
-  })
+    const input = yield* Effect.callback<string, ExtractInputError>((resume) => {
+        const chunks: Buffer[] = [];
+        const onData = (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        const onEnd = () => resume(Effect.succeed(Buffer.concat(chunks).toString("utf-8")));
+        const onError = (cause: unknown) =>
+          resume(Effect.fail(new ExtractInputError({ message: "Failed to read stdin", cause })));
+        stdin.on("data", onData);
+        stdin.once("end", onEnd);
+        stdin.once("error", onError);
+        return Effect.sync(() => {
+          stdin.off("data", onData);
+          stdin.off("end", onEnd);
+          stdin.off("error", onError);
+        });
+    });
+
+    if (P.not(P.isTruthy)(input.trim())) {
+      return yield* new ExtractInputError({
+        message: "No input provided. Use --text, --file, or pipe input via stdin.",
+      });
+    }
+
+    return input;
+});
 
 /**
  * Create a content hash from text (for OntologyRef)
  */
 const createContentHash = (content: string): string => {
-  const hash = Bun.hash(content).toString(16).padStart(16, "0")
-  return hash.slice(0, 16)
-}
+  const hash = Bun.hash(content).toString(16).padStart(16, "0");
+  return hash.slice(0, 16);
+};
 
 // =============================================================================
 // Command Implementation
 // =============================================================================
 
-const extractHandler = (
+const extractHandler = Effect.fn("extractHandler")(function* (
   ontologyPath: string,
-  text: Option.Option<string>,
-  file: Option.Option<string>,
+  text: O.Option<string>,
+  file: O.Option<string>,
   noExternalVocabs: boolean,
   format: "json" | "turtle",
   concurrency: number
-) =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const path = yield* Path.Path
-
-    // Read input text
-    const inputText = yield* readInputText(text, file)
-
-    yield* Console.error(`Ontology: ${ontologyPath}`)
-    yield* Console.error(`External vocabs: ${noExternalVocabs ? "disabled" : "enabled"}`)
-    yield* Console.error(`Input: ${inputText.length} chars`)
-    yield* Console.error(`Format: ${format}`)
-    yield* Console.error(`Concurrency: ${concurrency}`)
-    yield* Console.error("---")
-
-    // Read ontology content for hash
-    const ontologyContent = yield* fs.readFileString(ontologyPath)
-    const contentHash = createContentHash(ontologyContent) as OntologyRef["contentHash"]
-
-    // Extract name from filename
-    const basename = path.basename(ontologyPath, ".ttl")
-
-    // Build OntologyRef
-    const ontologyRef = OntologyRef.make({
-      namespace: "cli" as OntologyRef["namespace"],
-      name: basename as OntologyRef["name"],
-      contentHash
-    })
-
-    // Build RunConfig with defaults
-    const runConfig = RunConfig.make({
-      ontology: ontologyRef,
-      chunking: ChunkingConfig.make({
-        maxChunkSize: 2000,
-        preserveSentences: true,
-        overlapTokens: 50
-      }),
-      llm: LlmConfig.make({
-        model: "claude-haiku-4-5",
-        temperature: 0.1,
-        maxTokens: 4096,
-        timeout: Duration.millis(60_000)
-      }),
-      concurrency,
-      enableGrounding: true
-    })
-
-    // Run extraction
-    const workflow = yield* ExtractionWorkflow
-    const graph = yield* workflow.extract(inputText, runConfig)
-
-    yield* Console.error(`\nExtracted: ${graph.entities.length} entities, ${graph.relations.length} relations`)
-
-    // Output results
-    if (format === "json") {
-      const output = {
-        entities: graph.entities.map((e) => ({
-          id: e.id,
-          mention: e.mention,
-          types: e.types,
-          attributes: e.attributes
-        })),
-        relations: graph.relations.map((r) => ({
-          subjectId: r.subjectId,
-          predicate: r.predicate,
-          object: r.object
-        }))
-      }
-      yield* Console.log(JSON.stringify(output, null, 2))
-    } else {
-      // Turtle format - build RDF store and serialize
-      const rdf = yield* RdfBuilder
-      const store = yield* rdf.makeStore
-      yield* rdf.addEntities(store, graph.entities, { targetNamespace: "http://cli.example.org/data/" })
-      yield* rdf.addRelations(store, graph.relations, { targetNamespace: "http://cli.example.org/data/" })
-      const turtle = yield* rdf.toTurtle(store)
-      yield* Console.log(turtle)
-    }
-  })
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const inputText = yield* readInputText(text, file);
+  yield* Console.error(`Ontology: ${ontologyPath}`);
+  yield* Console.error(`External vocabs: ${noExternalVocabs ? "disabled" : "enabled"}`);
+  yield* Console.error(`Input: ${inputText.length} chars`);
+  yield* Console.error(`Format: ${format}`);
+  yield* Console.error(`Concurrency: ${concurrency}`);
+  yield* Console.error("---");
+  const ontologyContent = yield* fs.readFileString(ontologyPath);
+  const contentHash = createContentHash(ontologyContent) as OntologyRef["contentHash"];
+  const basename = path.basename(ontologyPath, ".ttl");
+  const ontologyRef = OntologyRef.make({
+    namespace: "cli" as OntologyRef["namespace"],
+    name: basename as OntologyRef["name"],
+    contentHash,
+  });
+  const runConfig = RunConfig.make({
+    ontology: ontologyRef,
+    chunking: ChunkingConfig.make({
+      maxChunkSize: 2000,
+      preserveSentences: true,
+      overlapTokens: 50,
+    }),
+    llm: LlmConfig.make({
+      model: "claude-haiku-4-5",
+      temperature: 0.1,
+      maxTokens: 4096,
+      timeout: Duration.millis(60000),
+    }),
+    concurrency,
+    enableGrounding: true,
+  });
+  const workflow = yield* ExtractionWorkflow;
+  const graph = yield* workflow.extract(inputText, runConfig);
+  yield* Console.error(`\nExtracted: ${graph.entities.length} entities, ${graph.relations.length} relations`);
+  if (format === "json") {
+    const output = {
+      entities: graph.entities.map((e) => ({
+        id: e.id,
+        mention: e.mention,
+        types: e.types,
+        attributes: e.attributes,
+      })),
+      relations: graph.relations.map((r) => ({
+        subjectId: r.subjectId,
+        predicate: r.predicate,
+        object: r.object,
+      })),
+    };
+    const outputJson = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }))(output);
+    yield* Console.log(outputJson);
+  } else {
+    const rdf = yield* RdfBuilder;
+    const store = yield* rdf.makeStore;
+    yield* rdf.addEntities(store, graph.entities, { targetNamespace: "http://cli.example.org/data/" });
+    yield* rdf.addRelations(store, graph.relations, { targetNamespace: "http://cli.example.org/data/" });
+    const turtle = yield* rdf.toTurtle(store);
+    yield* Console.log(turtle);
+  }
+});
 
 // =============================================================================
 // Layer Composition
@@ -218,19 +224,13 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
   // Create a config provider that checks our overrides first, then falls back to env
   const customConfigProvider = ConfigProvider.fromUnknown({
     ONTOLOGY_PATH: ontologyPath,
-    ...(noExternalVocabs
-      ? { ONTOLOGY_EXTERNAL_VOCABS_PATH: "__SKIP_EXTERNAL_VOCABS__" }
-      : {})
-  }).pipe(
-    ConfigProvider.orElse(ConfigProvider.fromEnv())
-  )
+    ...(noExternalVocabs ? { ONTOLOGY_EXTERNAL_VOCABS_PATH: "__SKIP_EXTERNAL_VOCABS__" } : {}),
+  }).pipe(ConfigProvider.orElse(ConfigProvider.fromEnv()));
 
   // Build extraction layer with custom config provider
   // This ensures config overrides are applied before any services are constructed
-  return makeCliExtractionLayer(customConfigProvider).pipe(
-    Layer.provideMerge(BunServices.layer)
-  )
-}
+  return makeCliExtractionLayer(customConfigProvider).pipe(Layer.provideMerge(BunServices.layer));
+};
 
 // =============================================================================
 // Command Definition
@@ -244,15 +244,14 @@ export const extractCommand = Command.make(
     file: fileOption,
     noExternalVocabs: noExternalVocabsOption,
     format: formatOption,
-    concurrency: concurrencyOption
+    concurrency: concurrencyOption,
   },
   ({ concurrency, file, format, noExternalVocabs, ontology, text }) =>
     withErrorHandler(
       extractHandler(ontology, text, file, noExternalVocabs, format, concurrency).pipe(
         Effect.scoped,
+        // @effect-diagnostics-next-line strictEffectProvide:off
         Effect.provide(makeExtractLayer(ontology, noExternalVocabs))
       )
     )
-).pipe(
-  Command.withDescription("Extract knowledge graph from text using ontology-guided LLM prompting")
-)
+).pipe(Command.withDescription("Extract knowledge graph from text using ontology-guided LLM prompting"));

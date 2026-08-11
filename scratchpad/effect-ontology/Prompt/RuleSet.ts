@@ -727,6 +727,7 @@ export const RELATION_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const makeEntityRuleSet = (
   classes: ReadonlyArray<ClassDefinition>,
   datatypeProperties: ReadonlyArray<PropertyDefinition>
@@ -815,6 +816,7 @@ export const makeEntityRuleSet = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const makeRelationRuleSet = (
   entityIds: ReadonlyArray<string>,
   properties: ReadonlyArray<PropertyDefinition>

@@ -8,9 +8,10 @@
  * @module Utils/QuadDelta
  */
 
-import { Effect } from "effect"
-import type * as N3 from "n3"
-import type { RdfStore } from "../Service/Rdf.ts"
+import { Effect } from "effect";
+import type * as N3 from "n3";
+import type { RdfStore } from "../Service/Rdf.ts";
+import * as A from "effect/Array";
 
 /**
  * Serializes a quad to a canonical string form for comparison.
@@ -19,24 +20,21 @@ import type { RdfStore } from "../Service/Rdf.ts"
  * @internal
  */
 const serializeQuad = (quad: N3.Quad): string => {
-  const subject = quad.subject.termType === "NamedNode"
-    ? quad.subject.value
-    : `_:${quad.subject.value}`
+  const subject = quad.subject.termType === "NamedNode" ? quad.subject.value : `_:${quad.subject.value}`;
 
-  const predicate = quad.predicate.value
+  const predicate = quad.predicate.value;
 
-  const object = quad.object.termType === "Literal"
-    ? `"${quad.object.value}"^^${(quad.object as N3.Literal).datatype?.value ?? "xsd:string"}`
-    : quad.object.termType === "BlankNode"
-    ? `_:${quad.object.value}`
-    : quad.object.value
+  const object =
+    quad.object.termType === "Literal"
+      ? `"${quad.object.value}"^^${(quad.object as N3.Literal).datatype?.value ?? "xsd:string"}`
+      : quad.object.termType === "BlankNode"
+        ? `_:${quad.object.value}`
+        : quad.object.value;
 
-  const graph = quad.graph.termType === "DefaultGraph"
-    ? ""
-    : quad.graph.value
+  const graph = quad.graph.termType === "DefaultGraph" ? "" : quad.graph.value;
 
-  return `${subject}|${predicate}|${object}|${graph}`
-}
+  return `${subject}|${predicate}|${object}|${graph}`;
+};
 
 /**
  * Delta result containing new quads and statistics
@@ -46,13 +44,13 @@ const serializeQuad = (quad: N3.Quad): string => {
  */
 export interface QuadDelta {
   /** Quads present in enriched but not in original */
-  readonly newQuads: ReadonlyArray<N3.Quad>
+  readonly newQuads: ReadonlyArray<N3.Quad>;
   /** Count of original quads */
-  readonly originalCount: number
+  readonly originalCount: number;
   /** Count of enriched quads */
-  readonly enrichedCount: number
+  readonly enrichedCount: number;
   /** Count of new quads (enrichedCount - originalCount if no duplicates removed) */
-  readonly deltaCount: number
+  readonly deltaCount: number;
 }
 
 /**
@@ -70,26 +68,24 @@ export interface QuadDelta {
  * @since 2.0.0
  * @category Functions
  */
-export const computeQuadDelta = (
-  original: RdfStore,
-  enriched: RdfStore
-): Effect.Effect<QuadDelta> =>
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const computeQuadDelta = (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
   Effect.sync(() => {
-    const originalQuads = original._store.getQuads(null, null, null, null)
-    const enrichedQuads = enriched._store.getQuads(null, null, null, null)
+    const originalQuads = original._store.getQuads(null, null, null, null);
+    const enrichedQuads = enriched._store.getQuads(null, null, null, null);
 
     // Build set of serialized original quads for O(1) lookup
-    const originalSet = new Set<string>()
+    const originalSet = new Set<string>();
     for (const quad of originalQuads) {
-      originalSet.add(serializeQuad(quad))
+      originalSet.add(serializeQuad(quad));
     }
 
     // Find quads in enriched that aren't in original
-    const newQuads: Array<N3.Quad> = []
+    const newQuads: Array<N3.Quad> = [];
     for (const quad of enrichedQuads) {
-      const serialized = serializeQuad(quad)
+      const serialized = serializeQuad(quad);
       if (!originalSet.has(serialized)) {
-        newQuads.push(quad)
+        newQuads.push(quad);
       }
     }
 
@@ -97,9 +93,9 @@ export const computeQuadDelta = (
       newQuads,
       originalCount: originalQuads.length,
       enrichedCount: enrichedQuads.length,
-      deltaCount: newQuads.length
-    }
-  })
+      deltaCount: newQuads.length,
+    };
+  });
 
 /**
  * Groups delta quads by the predicate that produced them.
@@ -110,20 +106,18 @@ export const computeQuadDelta = (
  * @since 2.0.0
  * @category Functions
  */
-export const groupDeltaByPredicate = (
-  delta: QuadDelta
-): Map<string, ReadonlyArray<N3.Quad>> => {
-  const grouped = new Map<string, Array<N3.Quad>>()
+export const groupDeltaByPredicate = (delta: QuadDelta): Map<string, ReadonlyArray<N3.Quad>> => {
+  const grouped = new Map<string, Array<N3.Quad>>();
 
   for (const quad of delta.newQuads) {
-    const predicate = quad.predicate.value
-    const existing = grouped.get(predicate) ?? []
-    existing.push(quad)
-    grouped.set(predicate, existing)
+    const predicate = quad.predicate.value;
+    const existing = grouped.get(predicate) ?? [];
+    existing.push(quad);
+    grouped.set(predicate, existing);
   }
 
-  return grouped
-}
+  return grouped;
+};
 
 /**
  * Filters delta to only include type inferences (rdf:type triples).
@@ -131,12 +125,10 @@ export const groupDeltaByPredicate = (
  * @since 2.0.0
  * @category Functions
  */
-export const filterTypeInferences = (
-  delta: QuadDelta
-): ReadonlyArray<N3.Quad> => {
-  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-  return delta.newQuads.filter((quad) => quad.predicate.value === RDF_TYPE)
-}
+export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<N3.Quad> => {
+  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+  return A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE);
+};
 
 /**
  * Creates a summary of the delta for logging/telemetry.
@@ -144,29 +136,29 @@ export const filterTypeInferences = (
  * @since 2.0.0
  * @category Functions
  */
-export const summarizeDelta = (delta: QuadDelta): {
-  readonly originalTriples: number
-  readonly enrichedTriples: number
-  readonly inferredTriples: number
-  readonly inferenceRatio: number
-  readonly predicateBreakdown: Record<string, number>
+export const summarizeDelta = (
+  delta: QuadDelta
+): {
+  readonly originalTriples: number;
+  readonly enrichedTriples: number;
+  readonly inferredTriples: number;
+  readonly inferenceRatio: number;
+  readonly predicateBreakdown: Record<string, number>;
 } => {
-  const grouped = groupDeltaByPredicate(delta)
-  const predicateBreakdown: Record<string, number> = {}
+  const grouped = groupDeltaByPredicate(delta);
+  const predicateBreakdown: Record<string, number> = {};
 
   for (const [predicate, quads] of grouped) {
     // Extract local name from IRI for readable keys
-    const localName = predicate.split("#").pop() ?? predicate.split("/").pop() ?? predicate
-    predicateBreakdown[localName] = quads.length
+    const localName = predicate.split("#").pop() ?? predicate.split("/").pop() ?? predicate;
+    predicateBreakdown[localName] = quads.length;
   }
 
   return {
     originalTriples: delta.originalCount,
     enrichedTriples: delta.enrichedCount,
     inferredTriples: delta.deltaCount,
-    inferenceRatio: delta.originalCount > 0
-      ? delta.deltaCount / delta.originalCount
-      : 0,
-    predicateBreakdown
-  }
-}
+    inferenceRatio: delta.originalCount > 0 ? delta.deltaCount / delta.originalCount : 0,
+    predicateBreakdown,
+  };
+};

@@ -21,11 +21,12 @@
  * @module Service/BatchStateBridge
  */
 
-import { Context, Effect, Fiber, Layer, PubSub, Stream } from "effect"
-import type { BatchState } from "../Domain/Model/BatchWorkflow.ts"
-import { broadcastDomainEvent } from "../Runtime/EventBroadcastRouter.ts"
-import { BatchStateHub } from "./BatchState.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Effect, Fiber, Layer, PubSub, Stream } from "effect";
+import type { BatchState } from "../Domain/Model/BatchWorkflow.ts";
+import { broadcastDomainEvent } from "../Runtime/EventBroadcastRouter.ts";
+import { BatchStateHub } from "./BatchState.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
 
 // =============================================================================
@@ -41,14 +42,14 @@ const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
  *
  * @since 2.0.0
  */
-export interface BatchStateBridge {
+export interface BatchStateBridgeShape {
   /**
    * Get the current status of the bridge fiber
    */
-  readonly isRunning: Effect.Effect<boolean>
+  readonly isRunning: Effect.Effect<boolean>;
 }
 
-export const BatchStateBridge = Context.Service<BatchStateBridge>($I`BatchStateBridge`)
+export class BatchStateBridge extends Context.Service<BatchStateBridge, BatchStateBridgeShape>()($I `BatchStateBridge`) {}
 
 // =============================================================================
 // Implementation
@@ -66,8 +67,8 @@ const toBroadcastPayload = (state: BatchState) => ({
   createdAt: state.createdAt.toString(),
   updatedAt: state.updatedAt.toString(),
   // Include stage-specific details
-  ...getStageDetails(state)
-})
+  ...getStageDetails(state),
+});
 
 /**
  * Extract stage-specific details for the broadcast payload
@@ -75,15 +76,15 @@ const toBroadcastPayload = (state: BatchState) => ({
 const getStageDetails = (state: BatchState): Record<string, unknown> => {
   switch (state._tag) {
     case "Pending":
-      return { documentCount: state.documentCount }
+      return { documentCount: state.documentCount };
 
     case "Preprocessing":
       return {
         documentsTotal: state.documentsTotal,
         documentsClassified: state.documentsClassified,
         documentsFailed: state.documentsFailed,
-        enrichedManifestUri: state.enrichedManifestUri
-      }
+        enrichedManifestUri: state.enrichedManifestUri,
+      };
 
     case "Extracting":
       return {
@@ -91,53 +92,49 @@ const getStageDetails = (state: BatchState): Record<string, unknown> => {
         documentsCompleted: state.documentsCompleted,
         documentsFailed: state.documentsFailed,
         currentDocumentId: state.currentDocumentId,
-        progress: state.documentsTotal > 0
-          ? Math.round((state.documentsCompleted / state.documentsTotal) * 100)
-          : 0
-      }
+        progress: state.documentsTotal > 0 ? Math.round((state.documentsCompleted / state.documentsTotal) * 100) : 0,
+      };
 
     case "Resolving":
       return {
         extractionOutputUri: state.extractionOutputUri,
         entitiesTotal: state.entitiesTotal,
-        clustersFormed: state.clustersFormed
-      }
+        clustersFormed: state.clustersFormed,
+      };
 
     case "Validating":
       return {
         resolvedGraphUri: state.resolvedGraphUri,
-        validationStartedAt: state.validationStartedAt.toString()
-      }
+        validationStartedAt: state.validationStartedAt.toString(),
+      };
 
     case "Ingesting":
       return {
         validatedGraphUri: state.validatedGraphUri,
         triplesTotal: state.triplesTotal,
         triplesIngested: state.triplesIngested,
-        progress: state.triplesTotal > 0
-          ? Math.round((state.triplesIngested / state.triplesTotal) * 100)
-          : 0
-      }
+        progress: state.triplesTotal > 0 ? Math.round((state.triplesIngested / state.triplesTotal) * 100) : 0,
+      };
 
     case "Complete":
       return {
         canonicalGraphUri: state.canonicalGraphUri,
         stats: state.stats,
-        completedAt: state.completedAt.toString()
-      }
+        completedAt: state.completedAt.toString(),
+      };
 
     case "Failed":
       return {
         failedAt: state.failedAt.toString(),
         failedInStage: state.failedInStage,
         error: state.error,
-        lastSuccessfulStage: state.lastSuccessfulStage
-      }
+        lastSuccessfulStage: state.lastSuccessfulStage,
+      };
 
     default:
-      return {}
+      return {};
   }
-}
+};
 
 /**
  * Create the BatchStateBridge service
@@ -146,52 +143,40 @@ const getStageDetails = (state: BatchState): Record<string, unknown> => {
  * The bridge runs as a background fiber and is automatically cleaned up when
  * the service scope closes.
  */
-const makeBatchStateBridge = Effect.fn("makeBatchStateBridge")(function*() {
-  const batchStateHub = yield* BatchStateHub
-
-  // Subscribe to batch state changes
-  const subscription = yield* PubSub.subscribe(batchStateHub)
-
-  // Track running status
-  let running = true
-
-  // Start background fiber to bridge states to events
+const makeBatchStateBridge = Effect.gen(function* () {
+  const batchStateHub = yield* BatchStateHub;
+  const subscription = yield* PubSub.subscribe(batchStateHub);
+  let running = true;
   const fiber = yield* Stream.fromSubscription(subscription).pipe(
     Stream.tap(
-      Effect.fn("BatchStateBridge.broadcastState")(function*(state)  {
+      Effect.fn("BatchStateBridge.broadcastState")(function* (state) {
         yield* Effect.logDebug("Bridging batch state to WebSocket", {
           batchId: state.batchId,
           ontologyId: state.ontologyId,
-          stage: state._tag
-        })
-
+          stage: state._tag,
+        });
         yield* broadcastDomainEvent(state.ontologyId, {
           event: "BatchStateChanged",
           primaryKey: `batch:${state.batchId}`,
-          payload: toBroadcastPayload(state)
-        })
+          payload: toBroadcastPayload(state),
+        });
       })
     ),
     Stream.runDrain,
-    Effect.catch((error) => Effect.logError("BatchStateBridge error", { error: String(error) })),
     Effect.forkChild
-  )
-
-  // Cleanup on scope close
+  );
   yield* Effect.addFinalizer(
-    Effect.fn("BatchStateBridge.finalize")(function*() {
-      running = false
-      yield* Fiber.interrupt(fiber)
-      yield* Effect.logInfo("BatchStateBridge stopped")
+    Effect.fn("BatchStateBridge.finalize")(function* () {
+      running = false;
+      yield* Fiber.interrupt(fiber);
+      yield* Effect.logInfo("BatchStateBridge stopped");
     }, Effect.orDie)
-  )
-
-  yield* Effect.logInfo("BatchStateBridge started")
-
+  );
+  yield* Effect.logInfo("BatchStateBridge started");
   return BatchStateBridge.of({
-    isRunning: Effect.succeed(running)
-  })
-})()
+    isRunning: Effect.succeed(running),
+  });
+});
 
 // =============================================================================
 // Layer
@@ -214,11 +199,11 @@ const makeBatchStateBridge = Effect.fn("makeBatchStateBridge")(function*() {
  *
  * @since 2.0.0
  */
-export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStateBridge)
+export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStateBridge);
 
 /**
  * Default layer (alias for BatchStateBridgeLive)
  *
  * @since 2.0.0
  */
-export const BatchStateBridgeDefault = BatchStateBridgeLive
+export const BatchStateBridgeDefault = BatchStateBridgeLive;

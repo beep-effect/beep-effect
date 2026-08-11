@@ -8,10 +8,11 @@
  * @module Service/EmbeddingProvider
  */
 
-import type { Effect } from "effect"
-import { Context } from "effect"
-import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
 import { $ScratchpadId } from "@beep/identity";
+import type { Effect } from "effect";
+import { Context } from "effect";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
 
 /**
@@ -26,11 +27,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
  * @since 2.0.0
  * @category Types
  */
-export type EmbeddingTaskType =
-  | "search_query"
-  | "search_document"
-  | "clustering"
-  | "classification"
+export type EmbeddingTaskType = "search_query" | "search_document" | "clustering" | "classification";
 
 /**
  * Embedding vector type
@@ -38,7 +35,7 @@ export type EmbeddingTaskType =
  * @since 2.0.0
  * @category Types
  */
-export type Embedding = ReadonlyArray<number>
+export type Embedding = ReadonlyArray<number>;
 
 /**
  * Embedding request for batching
@@ -47,8 +44,8 @@ export type Embedding = ReadonlyArray<number>
  * @category Types
  */
 export interface EmbeddingRequest {
-  readonly text: string
-  readonly taskType: EmbeddingTaskType
+  readonly text: string;
+  readonly taskType: EmbeddingTaskType;
 }
 
 /**
@@ -61,17 +58,17 @@ export interface ProviderMetadata {
   /**
    * Provider identifier (nomic, voyage, openai)
    */
-  readonly providerId: "nomic" | "voyage" | "openai"
+  readonly providerId: "nomic" | "voyage" | "openai";
 
   /**
    * Model identifier (e.g., "voyage-3.5-lite", "nomic-embed-text-v1.5")
    */
-  readonly modelId: string
+  readonly modelId: string;
 
   /**
    * Native embedding dimension (e.g., 512, 768, 1024)
    */
-  readonly dimension: number
+  readonly dimension: number;
 }
 
 /**
@@ -87,7 +84,7 @@ export interface EmbeddingProviderMethods {
   /**
    * Get provider metadata (used for cache key generation)
    */
-  readonly metadata: ProviderMetadata
+  readonly metadata: ProviderMetadata;
 
   /**
    * Embed a batch of texts
@@ -100,7 +97,7 @@ export interface EmbeddingProviderMethods {
    */
   readonly embedBatch: (
     requests: ReadonlyArray<EmbeddingRequest>
-  ) => Effect.Effect<ReadonlyArray<Embedding>, AnyEmbeddingError>
+  ) => Effect.Effect<ReadonlyArray<Embedding>, AnyEmbeddingError>;
 
   /**
    * Compute cosine similarity between two vectors
@@ -111,7 +108,7 @@ export interface EmbeddingProviderMethods {
    * @param b - Second embedding vector
    * @returns Similarity score between -1 and 1
    */
-  readonly cosineSimilarity: (a: Embedding, b: Embedding) => number
+  readonly cosineSimilarity: (a: Embedding, b: Embedding) => number;
 }
 
 /**
@@ -120,7 +117,9 @@ export interface EmbeddingProviderMethods {
  * @since 2.0.0
  * @category Service
  */
-export class EmbeddingProvider extends Context.Service<EmbeddingProvider, EmbeddingProviderMethods>()($I`EmbeddingProvider`) {}
+export class EmbeddingProvider extends Context.Service<EmbeddingProvider, EmbeddingProviderMethods>()(
+  $I`EmbeddingProvider`
+) {}
 
 /**
  * Compute cosine similarity between two vectors
@@ -131,19 +130,20 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
  * @since 2.0.0
  * @category Utilities
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const cosineSimilarity = (a: Embedding, b: Embedding): number => {
-  if (a.length !== b.length || a.length === 0) return 0
+  if (a.length !== b.length || a.length === 0) return 0;
 
-  let dot = 0
-  let normA = 0
-  let normB = 0
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
 
   for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i]
-    normA += a[i] * a[i]
-    normB += b[i] * b[i]
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
   }
 
-  if (normA === 0 || normB === 0) return 0
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB))
-}
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+};

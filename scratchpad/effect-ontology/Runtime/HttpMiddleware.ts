@@ -8,30 +8,32 @@
  * @module Runtime/HttpMiddleware
  */
 
-import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { Clock, Effect, HashSet, Option, Redacted } from "effect"
-import * as A from "effect/Array"
-import * as Str from "effect/String"
-import { ConfigService } from "../Service/Config.ts"
-import { ShutdownService } from "./Shutdown.ts"
+import { Clock, Effect, HashSet, Option, Redacted } from "effect";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Str from "effect/String";
+import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { ConfigService } from "../Service/Config.ts";
+import { ShutdownService } from "./Shutdown.ts";
 
 /**
  * Paths that are exempt from authentication (health checks)
  */
-const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/deep"]
+const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/deep"];
 
 /**
  * Check if a path is public (exempt from auth)
  */
-const isPublicPath = (path: string): boolean => A.contains(PUBLIC_PATHS, path) || Str.startsWith("/health/")(path)
+const isPublicPath = (path: string): boolean => A.contains(PUBLIC_PATHS, path) || Str.startsWith("/health/")(path);
 
 /**
  * Parse API keys from comma-separated string
  */
 const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<string> => {
-  const raw = Redacted.value(redacted)
-  return HashSet.fromIterable(A.filter(A.map(Str.split(raw, ","), Str.trim), Str.isNonEmpty))
-}
+  const raw = Redacted.value(redacted);
+  return HashSet.fromIterable(A.filter(A.map(Str.split(raw, ","), Str.trim), Str.isNonEmpty));
+};
 
 /**
  * Middleware to enforce API key authentication
@@ -44,58 +46,61 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * @since 2.0.0
  * @category Middleware
  */
-export const makeAuthMiddleware = Effect.gen(function*() {
-  const config = yield* ConfigService
+export const makeAuthMiddleware = Effect.gen(function* () {
+  const config = yield* ConfigService;
 
   // Skip auth if not required
   if (!config.api.requireAuth) {
-    return HttpMiddleware.make((app) => app)
+    return HttpMiddleware.make((app) => app);
   }
 
   // Parse API keys
   const apiKeys = Option.match(config.api.keys, {
     onNone: () => HashSet.empty<string>(),
-    onSome: parseApiKeys
-  })
+    onSome: parseApiKeys,
+  });
 
   // If auth is required but no keys configured, log warning
   if (HashSet.size(apiKeys) === 0) {
-    yield* Effect.logWarning("API.REQUIRE_AUTH is true but no API.KEYS configured - all requests will be rejected")
+    yield* Effect.logWarning("API.REQUIRE_AUTH is true but no API.KEYS configured - all requests will be rejected");
   }
 
   return HttpMiddleware.make((app) =>
-    Effect.gen(function*() {
-      const request = yield* HttpServerRequest.HttpServerRequest
-      const path = request.url
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const path = request.url;
 
       // Skip auth for public paths
       if (isPublicPath(path)) {
-        return yield* app
+        return yield* app;
       }
 
       // Get API key from header
-      const apiKeyHeader = request.headers["x-api-key"]
-      const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader
+      const apiKeyHeader = request.headers["x-api-key"];
+      const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
 
       // Validate API key
-      if (!apiKey || !HashSet.has(apiKeys, apiKey)) {
+      if (P.not(P.isTruthy)(apiKey) || !HashSet.has(apiKeys, apiKey)) {
         yield* Effect.logWarning("Unauthorized request", {
           path,
-          hasKey: !!apiKey,
-          remoteAddress: request.headers["x-forwarded-for"] ?? "unknown"
-        })
+          hasKey: !P.not(P.isTruthy)(apiKey),
+          remoteAddress: request.headers["x-forwarded-for"] ?? "unknown",
+        });
 
-        return yield* HttpServerResponse.json({
-          error: "UNAUTHORIZED",
-          message: "Missing or invalid API key. Provide X-API-Key header."
-        }, { status: 401 })
+        return yield* HttpServerResponse.json(
+          {
+            error: "UNAUTHORIZED",
+            message: "Missing or invalid API key. Provide X-API-Key header.",
+          },
+          { status: 401 }
+        );
       }
 
       // API key valid, proceed with request
-      return yield* app
+      return yield* app;
     })
-  )
-})
+  );
+});
 
 /**
  * Middleware to track active requests for graceful shutdown
@@ -103,18 +108,11 @@ export const makeAuthMiddleware = Effect.gen(function*() {
  * @since 2.0.0
  * @category Middleware
  */
-export const makeShutdownMiddleware = Effect.gen(function*() {
-  const shutdown = yield* ShutdownService
+export const makeShutdownMiddleware = Effect.gen(function* () {
+  const shutdown = yield* ShutdownService;
 
-  return HttpMiddleware.make((app) =>
-    Effect.gen(function*() {
-      // 1. Wrap the app effect with tracking
-      // We pass `app` (which is the result of proper middleware chaining, i.e., handler logic)
-      // into `trackRequest`.
-      return yield* shutdown.trackRequest(app)
-    })
-  )
-})
+  return HttpMiddleware.make((app) => shutdown.trackRequest(app));
+});
 
 /**
  * Middleware to log HTTP requests with timing
@@ -129,55 +127,57 @@ export const makeShutdownMiddleware = Effect.gen(function*() {
  */
 export const makeLoggingMiddleware = Effect.sync(() =>
   HttpMiddleware.make((app) =>
-    Effect.gen(function*() {
-      const request = yield* HttpServerRequest.HttpServerRequest
-      const start = yield* Clock.currentTimeMillis
-      const requestId = crypto.randomUUID().slice(0, 8)
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const start = yield* Clock.currentTimeMillis;
+      const requestId = Math.abs(yield* Random.nextInt)
+        .toString(16)
+        .slice(0, 8);
 
-      const path = request.url
-      const method = request.method
+      const path = request.url;
+      const method = request.method;
 
       // Use debug level for health checks to reduce noise
-      const isHealthCheck = Str.startsWith("/health")(path)
-      const logLevel = isHealthCheck ? Effect.logDebug : Effect.logInfo
+      const isHealthCheck = Str.startsWith("/health")(path);
+      const logLevel = isHealthCheck ? Effect.logDebug : Effect.logInfo;
 
       yield* logLevel("HTTP request started", {
         requestId,
         method,
-        path
-      })
+        path,
+      });
 
       // Execute the handler and capture the response
       const response = yield* app.pipe(
         Effect.tap((res) =>
-            Effect.gen(function*() {
-              const elapsed = (yield* Clock.currentTimeMillis) - start
+          Effect.gen(function* () {
+            const elapsed = (yield* Clock.currentTimeMillis) - start;
 
-              yield* logLevel("HTTP request completed", {
-                requestId,
-                method,
-                path,
-                status: res.status,
-                durationMs: elapsed
-              })
-            })
+            yield* logLevel("HTTP request completed", {
+              requestId,
+              method,
+              path,
+              status: res.status,
+              durationMs: elapsed,
+            });
+          })
         ),
         Effect.tapError((error) =>
-            Effect.gen(function*() {
-              const elapsed = (yield* Clock.currentTimeMillis) - start
+          Effect.gen(function* () {
+            const elapsed = (yield* Clock.currentTimeMillis) - start;
 
-              yield* Effect.logWarning("HTTP request failed", {
-                requestId,
-                method,
-                path,
-                error: String(error),
-                durationMs: elapsed
-              })
-            })
+            yield* Effect.logWarning("HTTP request failed", {
+              requestId,
+              method,
+              path,
+              error: String(error),
+              durationMs: elapsed,
+            });
+          })
         )
-      )
+      );
 
-      return response
+      return response;
     })
   )
-)
+);

@@ -8,6 +8,6 @@
  * @module cli
  */
 
-import { runCli } from "./Cli/index.ts"
+import { runCli } from "./Cli/index.ts";
 
-runCli(Bun.argv)
+runCli(Bun.argv);

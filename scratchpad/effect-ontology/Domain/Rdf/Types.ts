@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $ScratchpadId, SafePnLocal } from "@beep/identity";
 import { AbsoluteIRI as CanonicalAbsoluteIRI, IRI as CanonicalIRI } from "@beep/rdf/Iri";
 import { SchemaUtils } from "@beep/schema";
@@ -18,10 +19,13 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
  * **Example** (Create an IRI)
  *
  * ```ts
+ * import { IRI } from "@effect-ontology/Rdf/Types.ts"
+ *
  * const person = IRI.fromUnknown("https://schema.org/Person")
+ * console.log(person) // "https://schema.org/Person"
  * ```
  *
- * @category Schemas
+ * @category schemas
  * @since 0.0.0
  */
 export const IRI = CanonicalIRI.pipe(
@@ -31,13 +35,28 @@ export const IRI = CanonicalIRI.pipe(
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime value accepted by {@link IRI}. @since 0.0.0 */
+/**
+ * Decoded branded identifier produced by the {@link IRI} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IRI = typeof IRI.Type;
 
 /**
  * RDF named-node identifier represented as a validated branded IRI string.
  *
- * @category Schemas
+ * **Example** (Decode a named node)
+ *
+ * ```ts
+ * import { NamedNode } from "@effect-ontology/Rdf/Types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const node = S.decodeUnknownSync(NamedNode)("https://schema.org/Person")
+ * console.log(node) // "https://schema.org/Person"
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const NamedNode = IRI.pipe(
@@ -46,10 +65,28 @@ export const NamedNode = IRI.pipe(
   })
 );
 
-/** Decoded RDF named-node identifier. @since 0.0.0 */
+/**
+ * Decoded named-node identifier produced by the {@link NamedNode} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NamedNode = typeof NamedNode.Type;
 
-/** Backward-compatible schema name for {@link IRI}. @since 0.0.0 */
+/**
+ * Backward-compatible runtime schema name for {@link IRI}.
+ *
+ * **Example** (Decode through the compatibility name)
+ *
+ * ```ts
+ * import { IriSchema } from "@effect-ontology/Rdf/Types.ts"
+ *
+ * console.log(IriSchema.fromUnknown("https://schema.org/Thing"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IriSchema = IRI;
 
 /**
@@ -58,10 +95,13 @@ export const IriSchema = IRI;
  * **Example** (Create an ontology IRI)
  *
  * ```ts
+ * import { AbsoluteIRI } from "@effect-ontology/Rdf/Types.ts"
+ *
  * const ontology = AbsoluteIRI.fromUnknown("https://example.org/ontology")
+ * console.log(ontology) // "https://example.org/ontology"
  * ```
  *
- * @category Schemas
+ * @category schemas
  * @since 0.0.0
  */
 export const AbsoluteIRI = CanonicalAbsoluteIRI.pipe(
@@ -71,7 +111,12 @@ export const AbsoluteIRI = CanonicalAbsoluteIRI.pipe(
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime value accepted by {@link AbsoluteIRI}. @since 0.0.0 */
+/**
+ * Decoded absolute identifier produced by the {@link AbsoluteIRI} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AbsoluteIRI = typeof AbsoluteIRI.Type;
 
 /**
@@ -80,10 +125,13 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  * **Example** (Create a local name)
  *
  * ```ts
+ * import { LocalName } from "@effect-ontology/Rdf/Types.ts"
+ *
  * const label = LocalName.fromUnknown("prefLabel")
+ * console.log(label) // "prefLabel"
  * ```
  *
- * @category Schemas
+ * @category schemas
  * @since 0.0.0
  */
 export const LocalName = SafePnLocal.pipe(
@@ -91,10 +139,16 @@ export const LocalName = SafePnLocal.pipe(
   $I.annoteSchema("LocalName", {
     description: "Turtle-safe PN_LOCAL value used as the local component of an IRI.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({ decodeSync: S.decodeSync(schema) }))
 );
 
-/** Runtime value accepted by {@link LocalName}. @since 0.0.0 */
+/**
+ * Decoded Turtle-safe name produced by the {@link LocalName} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LocalName = typeof LocalName.Type;
 
 /**
@@ -103,10 +157,13 @@ export type LocalName = typeof LocalName.Type;
  * **Example** (Create a blank node)
  *
  * ```ts
+ * import { BlankNode } from "@effect-ontology/Rdf/Types.ts"
+ *
  * const node = BlankNode.make("_:b0")
+ * console.log(node) // "_:b0"
  * ```
  *
- * @category Schemas
+ * @category schemas
  * @since 0.0.0
  */
 export const BlankNode = S.TemplateLiteral(["_:", S.NonEmptyString]).pipe(
@@ -117,7 +174,12 @@ export const BlankNode = S.TemplateLiteral(["_:", S.NonEmptyString]).pipe(
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime value accepted by {@link BlankNode}. @since 0.0.0 */
+/**
+ * Decoded blank-node identifier produced by the {@link BlankNode} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BlankNode = typeof BlankNode.Type;
 
 const LiteralFields = {
@@ -151,13 +213,17 @@ const LiteralFields = {
  * **Example** (Create a typed literal)
  *
  * ```ts
+ * import { IRI, Literal } from "@effect-ontology/Rdf/Types.ts"
+ * import * as O from "effect/Option"
+ *
  * const count = Literal.make({
  *   value: "42",
  *   datatype: O.some(IRI.make("http://www.w3.org/2001/XMLSchema#integer"))
  * })
+ * console.log(count.toJSON().value) // "42"
  * ```
  *
- * @category Models
+ * @category models
  * @since 0.0.0
  */
 export class Literal extends S.Class<Literal>($I`Literal`)(
@@ -166,7 +232,24 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
     description: "RDF literal with a lexical value and optional language or datatype qualifier.",
   })
 ) {
-  /** Convert the literal to its stable JSON representation. @since 0.0.0 */
+  static readonly is = S.is(this);
+
+  /**
+   * Converts this literal to its stable tagged JSON representation.
+   *
+   * **Example** (Serialize a language-tagged literal)
+   *
+   * ```ts
+   * import { Literal } from "@effect-ontology/Rdf/Types.ts"
+   * import * as O from "effect/Option"
+   *
+   * const label = Literal.make({ value: "bonjour", language: O.some("fr") })
+   * console.log(label.toJSON().language) // "fr"
+   * ```
+   *
+   * @returns A tagged plain object with absent qualifiers encoded as `undefined`.
+   * @since 0.0.0
+   */
   toJSON() {
     return {
       _tag: "Literal" as const,
@@ -180,7 +263,17 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
 /**
  * RDF term accepted in an object position.
  *
- * @category Schemas
+ * **Example** (Decode a literal RDF term)
+ *
+ * ```ts
+ * import { Literal, RdfTerm } from "@effect-ontology/Rdf/Types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const term = S.decodeUnknownSync(RdfTerm)({ value: "Ada" })
+ * console.log(S.is(Literal)(term)) // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const RdfTerm = S.Union([IRI, BlankNode, Literal]).pipe(
@@ -189,13 +282,28 @@ export const RdfTerm = S.Union([IRI, BlankNode, Literal]).pipe(
   })
 );
 
-/** Runtime value accepted by {@link RdfTerm}. @since 0.0.0 */
+/**
+ * Decoded IRI, blank node, or literal produced by the {@link RdfTerm} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RdfTerm = typeof RdfTerm.Type;
 
 /**
  * RDF term accepted in object position.
  *
- * @category Schemas
+ * **Example** (Decode an object-position blank node)
+ *
+ * ```ts
+ * import { ObjectTerm } from "@effect-ontology/Rdf/Types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const term = S.decodeUnknownSync(ObjectTerm)("_:result")
+ * console.log(term) // "_:result"
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const ObjectTerm = RdfTerm.pipe(
@@ -204,7 +312,12 @@ export const ObjectTerm = RdfTerm.pipe(
   })
 );
 
-/** Decoded RDF object-position term. @since 0.0.0 */
+/**
+ * Decoded object-position RDF term produced by the {@link ObjectTerm} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ObjectTerm = typeof ObjectTerm.Type;
 
 const TripleFields = {
@@ -231,7 +344,21 @@ const TripleFields = {
 /**
  * Graph-independent RDF statement.
  *
- * @category Models
+ * **Example** (Decode and serialize a triple)
+ *
+ * ```ts
+ * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const triple = S.decodeUnknownSync(Triple)({
+ *   subject: "https://example.org/ada",
+ *   predicate: "https://schema.org/name",
+ *   object: { value: "Ada" }
+ * })
+ * console.log(triple.toJSON()._tag) // "Triple"
+ * ```
+ *
+ * @category models
  * @since 0.0.0
  */
 export class Triple extends S.Class<Triple>($I`Triple`)(
@@ -240,13 +367,32 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
     description: "Graph-independent RDF statement containing subject, predicate, and object terms.",
   })
 ) {
-  /** Convert the triple to its stable JSON representation. @since 0.0.0 */
+  /**
+   * Converts this triple to its stable tagged JSON representation.
+   *
+   * **Example** (Read the serialized predicate)
+   *
+   * ```ts
+   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+   * import * as S from "effect/Schema"
+   *
+   * const triple = S.decodeUnknownSync(Triple)({
+   *   subject: "https://example.org/ada",
+   *   predicate: "https://schema.org/name",
+   *   object: { value: "Ada" }
+   * })
+   * console.log(triple.toJSON().predicate) // "https://schema.org/name"
+   * ```
+   *
+   * @returns A tagged plain object whose literal object is recursively serialized.
+   * @since 0.0.0
+   */
   toJSON() {
     return {
       _tag: "Triple" as const,
       subject: this.subject,
       predicate: this.predicate,
-      object: this.object instanceof Literal ? this.object.toJSON() : this.object,
+      object: S.is(Literal)(this.object) ? this.object.toJSON() : this.object,
     };
   }
 }
@@ -266,7 +412,22 @@ const QuadFields = {
 /**
  * RDF statement with optional named-graph scope.
  *
- * @category Models
+ * **Example** (Decode a named-graph quad)
+ *
+ * ```ts
+ * import { Quad } from "@effect-ontology/Rdf/Types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const quad = S.decodeUnknownSync(Quad)({
+ *   subject: "https://example.org/ada",
+ *   predicate: "https://schema.org/name",
+ *   object: { value: "Ada" },
+ *   graph: "https://example.org/people"
+ * })
+ * console.log(quad.toJSON()._tag) // "Quad"
+ * ```
+ *
+ * @category models
  * @since 0.0.0
  */
 export class Quad extends S.Class<Quad>($I`Quad`)(
@@ -275,7 +436,26 @@ export class Quad extends S.Class<Quad>($I`Quad`)(
     description: "RDF statement with optional named-graph scope.",
   })
 ) {
-  /** Discard graph scope and return the corresponding triple. @since 0.0.0 */
+  /**
+   * Discards graph scope and returns the corresponding triple.
+   *
+   * **Example** (Project a quad to a triple)
+   *
+   * ```ts
+   * import { Quad } from "@effect-ontology/Rdf/Types.ts"
+   * import * as S from "effect/Schema"
+   *
+   * const quad = S.decodeUnknownSync(Quad)({
+   *   subject: "https://example.org/ada",
+   *   predicate: "https://schema.org/name",
+   *   object: { value: "Ada" }
+   * })
+   * console.log(quad.toTriple().toJSON()._tag) // "Triple"
+   * ```
+   *
+   * @returns A graph-independent triple containing the same RDF terms.
+   * @since 0.0.0
+   */
   toTriple(): Triple {
     return Triple.make({
       subject: this.subject,
@@ -284,16 +464,34 @@ export class Quad extends S.Class<Quad>($I`Quad`)(
     });
   }
 
-  /** Convert the quad to its stable JSON representation. @since 0.0.0 */
+  /**
+   * Converts this quad to its stable tagged JSON representation.
+   *
+   * **Example** (Read the serialized graph)
+   *
+   * ```ts
+   * import { Quad } from "@effect-ontology/Rdf/Types.ts"
+   * import * as S from "effect/Schema"
+   *
+   * const quad = S.decodeUnknownSync(Quad)({
+   *   subject: "https://example.org/ada",
+   *   predicate: "https://schema.org/name",
+   *   object: { value: "Ada" },
+   *   graph: "https://example.org/people"
+   * })
+   * console.log(quad.toJSON().graph) // "https://example.org/people"
+   * ```
+   *
+   * @returns A tagged plain object whose optional graph is encoded as `undefined` when absent.
+   * @since 0.0.0
+   */
   toJSON() {
     return {
       _tag: "Quad" as const,
       subject: this.subject,
       predicate: this.predicate,
-      object: this.object instanceof Literal ? this.object.toJSON() : this.object,
+      object: S.is(Literal)(this.object) ? this.object.toJSON() : this.object,
       graph: O.getOrUndefined(this.graph),
     };
   }
 }
-
-export * from "./Constants.ts";

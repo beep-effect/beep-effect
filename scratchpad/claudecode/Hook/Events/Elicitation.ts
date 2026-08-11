@@ -24,7 +24,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/Elicitation");
 /**
  * Schema for `Action`.
  *
- * @example
+ * **Example** (Inspect the Action schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -44,7 +45,8 @@ export const Action = LiteralKit(["accept", "decline", "cancel"]).pipe(
 /**
  * Type-level model for `Action`.
  *
- * @example
+ * **Example** (Use Action as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -60,7 +62,8 @@ export type Action = typeof Action.Type;
 /**
  * Schema for `Mode`.
  *
- * @example
+ * **Example** (Inspect the Mode schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -80,7 +83,8 @@ export const Mode = LiteralKit(["form", "url"]).pipe(
 /**
  * Type-level model for `Mode`.
  *
- * @example
+ * **Example** (Use Mode as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -96,7 +100,8 @@ export type Mode = typeof Mode.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -126,7 +131,8 @@ export class Input extends S.Class<Input>($I`ElicitationInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -151,7 +157,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Elicitati
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -179,7 +186,8 @@ export class Output extends S.Class<Output>($I`ElicitationOutput`)(
 /**
  * Constructor for `accept`.
  *
- * @example
+ * **Example** (Use accept)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -204,7 +212,8 @@ export const accept = (content?: Readonly<Record<string, unknown>>): Output =>
 /**
  * Constructor for `decline`.
  *
- * @example
+ * **Example** (Use decline)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -228,7 +237,8 @@ export const decline = (): Output =>
 /**
  * Constructor for `cancel`.
  *
- * @example
+ * **Example** (Use cancel)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -252,22 +262,24 @@ export const cancel = (): Output =>
 /**
  * No-op output — Claude Code continues the normal elicitation flow.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.Elicitation.passthrough)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -291,15 +303,16 @@ export const define = <E, R>(config: {
  * Build an Elicitation hook that only handles matching `mcp_server_name`
  * values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.Elicitation.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -321,12 +334,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Elicitation.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -351,12 +358,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Elicitation.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -381,12 +382,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Elicitation.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

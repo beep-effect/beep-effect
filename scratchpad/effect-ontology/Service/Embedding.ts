@@ -8,25 +8,21 @@
  * @module Service/Embedding
  */
 
-import { Clock, Context, Effect, Layer, Option } from "effect"
-import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
-import { MetricsService } from "../Telemetry/Metrics.ts"
-import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts"
-import { EmbeddingCache } from "./EmbeddingCache.ts"
-import {
-  cosineSimilarity as cosineSim,
-  type Embedding,
-  EmbeddingProvider,
-  type EmbeddingTaskType,
-  type ProviderMetadata
-} from "./EmbeddingProvider.ts"
-import { EmbedTextRequest } from "./EmbeddingRequest.ts"
-import { makeEmbeddingResolver } from "./EmbeddingResolver.ts"
 import { $ScratchpadId } from "@beep/identity";
+import { Clock, Context, Effect, Layer, Option } from "effect";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import { MetricsService } from "../Telemetry/Metrics.ts";
+import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts";
+import { EmbeddingCache } from "./EmbeddingCache.ts";
+import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts";
+import { cosineSimilarity as cosineSim, EmbeddingProvider } from "./EmbeddingProvider.ts";
+import { EmbedTextRequest } from "./EmbeddingRequest.ts";
+import { makeEmbeddingResolver } from "./EmbeddingResolver.ts";
+
 const $I = $ScratchpadId.create("effect-ontology/Service/Embedding");
 
 // Re-export for backwards compatibility
-export { type NomicTaskType } from "./NomicNlp.ts"
+export type { NomicTaskType } from "./NomicNlp.ts";
 
 /**
  * EmbeddingService interface
@@ -36,7 +32,7 @@ export { type NomicTaskType } from "./NomicNlp.ts"
  * @since 2.0.0
  * @category Service
  */
-export interface EmbeddingService {
+export interface EmbeddingServiceMethods {
   /**
    * Embed a single text
    *
@@ -44,10 +40,7 @@ export interface EmbeddingService {
    * @param taskType - Task type for embedding (default: search_document)
    * @returns Embedding vector
    */
-  readonly embed: (
-    text: string,
-    taskType?: EmbeddingTaskType
-  ) => Effect.Effect<Embedding, AnyEmbeddingError>
+  readonly embed: (text: string, taskType?: EmbeddingTaskType) => Effect.Effect<Embedding, AnyEmbeddingError>;
 
   /**
    * Embed multiple texts efficiently with caching
@@ -63,7 +56,7 @@ export interface EmbeddingService {
   readonly embedBatch: (
     texts: ReadonlyArray<string>,
     taskType?: EmbeddingTaskType
-  ) => Effect.Effect<ReadonlyArray<Embedding>, AnyEmbeddingError>
+  ) => Effect.Effect<ReadonlyArray<Embedding>, AnyEmbeddingError>;
 
   /**
    * Compute cosine similarity between two vectors
@@ -72,14 +65,14 @@ export interface EmbeddingService {
    * @param b - Second embedding vector
    * @returns Similarity score between -1 and 1
    */
-  readonly cosineSimilarity: (a: Embedding, b: Embedding) => number
+  readonly cosineSimilarity: (a: Embedding, b: Embedding) => number;
 
   /**
    * Get current provider metadata
    *
    * @returns Provider metadata (providerId, modelId, dimension)
    */
-  readonly getProviderMetadata: () => Effect.Effect<ProviderMetadata>
+  readonly getProviderMetadata: Effect.Effect<ProviderMetadata>;
 }
 
 /**
@@ -88,7 +81,9 @@ export interface EmbeddingService {
  * @since 2.0.0
  * @category Service
  */
-export const EmbeddingService = Context.Service<EmbeddingService>($I`EmbeddingService`)
+export class EmbeddingService extends Context.Service<EmbeddingService, EmbeddingServiceMethods>()(
+  $I`EmbeddingService`
+) {}
 
 /**
  * EmbeddingService implementation with provider abstraction and Request API
@@ -107,70 +102,62 @@ export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingProvider | EmbeddingCache | MetricsService
 > = Layer.effect(
   EmbeddingService,
-  Effect.gen(function*() {
-    const provider = yield* EmbeddingProvider
-    const cache = yield* EmbeddingCache
-    const metrics = yield* MetricsService
+  Effect.gen(function* () {
+    const provider = yield* EmbeddingProvider;
+    const cache = yield* EmbeddingCache;
+    const metrics = yield* MetricsService;
 
-    const { metadata } = provider
-    const resolver = makeEmbeddingResolver(provider)
+    const { metadata } = provider;
+    const resolver = makeEmbeddingResolver(provider);
 
     /**
      * Embed with cache-through pattern and Request API batching
      */
-    const embedWithCache = (
-      text: string,
-      taskType: EmbeddingTaskType
-    ): Effect.Effect<Embedding, AnyEmbeddingError> =>
-      Effect.gen(function*() {
-        const startTime = yield* Clock.currentTimeMillis
+    const embedWithCache = (text: string, taskType: EmbeddingTaskType): Effect.Effect<Embedding, AnyEmbeddingError> =>
+      Effect.gen(function* () {
+        const startTime = yield* Clock.currentTimeMillis;
 
         // Generate versioned cache key (includes provider/model/dimension)
-        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata)
+        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata);
 
         // Check cache first
-        const cached = yield* cache.get(hash)
+        const cached = yield* cache.get(hash);
         if (Option.isSome(cached)) {
-          const latencyMs = (yield* Clock.currentTimeMillis) - startTime
-          yield* metrics.recordCacheHit(latencyMs)
-          return cached.value
+          const latencyMs = (yield* Clock.currentTimeMillis) - startTime;
+          yield* metrics.recordCacheHit(latencyMs);
+          return cached.value;
         }
 
         // Cache miss - use Request API for batching
-        const request = EmbedTextRequest({ text, taskType, metadata })
-        const embedding = yield* Effect.request(request, resolver)
+        const request = EmbedTextRequest({ text, taskType, metadata });
+        const embedding = yield* Effect.request(request, resolver);
 
         // Store in cache with versioned key
-        yield* cache.set(hash, embedding)
+        yield* cache.set(hash, embedding);
 
-        const latencyMs = (yield* Clock.currentTimeMillis) - startTime
-        yield* metrics.recordCacheMiss(latencyMs)
+        const latencyMs = (yield* Clock.currentTimeMillis) - startTime;
+        yield* metrics.recordCacheMiss(latencyMs);
 
-        return embedding
-      })
+        return embedding;
+      });
 
     return {
-      embed: (text, taskType = "search_document") => embedWithCache(text, taskType),
-
-      embedBatch: (texts, taskType = "search_document") => {
+      embed: Effect.fn("EmbeddingService.embed")((text, taskType = "search_document") =>
+        embedWithCache(text, taskType)
+      ),
+      embedBatch: Effect.fn("EmbeddingService.embedBatch")(function* (texts, taskType = "search_document") {
         if (texts.length === 0) {
-          return Effect.succeed([] as ReadonlyArray<Embedding>)
+          return [] as Array<Embedding>;
         }
-
-        // Use Effect.forEach with batching enabled
-        // The Request API will automatically batch these together
-        return Effect.forEach(texts, (text) => embedWithCache(text, taskType), {
+        return yield* Effect.forEach(texts, (text) => embedWithCache(text, taskType), {
           concurrency: "unbounded",
-          batching: true
-        })
-      },
-
+        });
+      }),
       cosineSimilarity: cosineSim,
-
-      getProviderMetadata: () => Effect.succeed(metadata)
-    }
+      getProviderMetadata: Effect.succeed(metadata),
+    };
   })
-)
+);
 
 /**
  * EmbeddingService with all dependencies
@@ -185,7 +172,7 @@ export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,
   never,
   EmbeddingProvider | EmbeddingCache | MetricsService
-> = EmbeddingServiceLive
+> = EmbeddingServiceLive;
 
 // =============================================================================
 // Legacy Compatibility
@@ -201,4 +188,4 @@ export const EmbeddingServiceDefault: Layer.Layer<
  * @since 2.0.0
  * @category Layers
  */
-export { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts"
+export { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";

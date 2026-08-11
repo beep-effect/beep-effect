@@ -46,14 +46,6 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Load");
 /**
  * Paths discovered during a plugin directory scan.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const getCommandPaths = (scanned: Plugin.PluginScan) => scanned.commandPaths
- * console.log(getCommandPaths)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,14 +71,6 @@ export interface PluginScan {
 
 /**
  * A fully loaded plugin directory.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const getPluginName = (loaded: Plugin.LoadedPlugin) => loaded.manifest.name
- * console.log(getPluginName)
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -590,14 +574,18 @@ const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
  * Inspect a plugin directory and infer the canonical manifest paths for the
  * discovered component files.
  *
- * @example
+ * **Example** (Inspect a plugin scan Effect)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Plugin.scan("./my-plugin")
- * console.log(program)
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Reads the plugin manifest and component directories through `FileSystem.FileSystem` and resolves paths with `Path.Path`.
  * @category decoding
  * @since 0.0.0
  */
@@ -740,14 +728,18 @@ export const scan = Effect.fn("Plugin.scan")(function* (
 /**
  * Load an existing plugin directory into a typed `PluginDefinition`.
  *
- * @example
+ * **Example** (Inspect a plugin load Effect)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Plugin.load("./my-plugin")
- * console.log(program)
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Reads and decodes the plugin manifest and referenced components through `FileSystem.FileSystem` and `Path.Path`.
  * @category decoding
  * @since 0.0.0
  */
@@ -802,7 +794,8 @@ export const load = Effect.fn("Plugin.load")(function* (
  * Normalize a plugin definition's manifest by preserving explicit layout
  * choices and filling in default paths for missing component/config entries.
  *
- * @example
+ * **Example** (Use sync)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *

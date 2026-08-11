@@ -8,9 +8,8 @@
  * @since 2.0.0
  */
 
-import { OtlpTracer } from "effect/unstable/observability"
-import type { HttpClient } from "effect/unstable/http/HttpClient"
-import { Layer } from "effect"
+import { Layer } from "effect";
+import { OtlpTracer } from "effect/unstable/observability";
 
 /**
  * Tracing configuration
@@ -20,11 +19,11 @@ import { Layer } from "effect"
  */
 export interface TracingConfig {
   /** Service name for traces */
-  readonly serviceName: string
+  readonly serviceName: string;
   /** OTLP endpoint URL (defaults to http://localhost:4318/v1/traces for Jaeger OTLP) */
-  readonly otlpEndpoint?: string
+  readonly otlpEndpoint?: string;
   /** Enable/disable tracing (defaults to true) */
-  readonly enabled?: boolean
+  readonly enabled?: boolean;
 }
 
 /**
@@ -41,26 +40,24 @@ export interface TracingConfig {
  * @since 2.0.0
  * @category constructors
  */
-export const makeTracingLayer = (
-  config: TracingConfig
-): Layer.Layer<never, never, HttpClient> => {
+export const makeTracingLayer = (config: TracingConfig) => {
   if (config.enabled === false) {
-    return Layer.empty as Layer.Layer<never, never, HttpClient>
+    return Layer.empty;
   }
 
   // Default to Jaeger's OTLP endpoint (Jaeger supports OTLP natively)
   // For Jaeger: http://localhost:4318/v1/traces (OTLP HTTP)
-  const otlpEndpoint = config.otlpEndpoint ?? "http://localhost:4318/v1/traces"
+  const otlpEndpoint = config.otlpEndpoint ?? "http://localhost:4318/v1/traces";
 
-  return OtelTracer.layer({
+  return OtlpTracer.layer({
     url: otlpEndpoint,
     resource: {
-      serviceName: config.serviceName
+      serviceName: config.serviceName,
     },
     exportInterval: "1 seconds", // Export every second for faster feedback
-    shutdownTimeout: "5 seconds"
-  })
-}
+    shutdownTimeout: "5 seconds",
+  });
+};
 
 /**
  * Test layer (no-op)
@@ -70,4 +67,4 @@ export const makeTracingLayer = (
  * @since 2.0.0
  * @category layers
  */
-export const TracingTestLayer: Layer.Layer<never> = Layer.empty
+export const TracingTestLayer: Layer.Layer<never> = Layer.empty;

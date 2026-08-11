@@ -12,39 +12,55 @@
  * @module Runtime/ProductionRuntime
  */
 
-import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic"
-import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai"
-import { FetchHttpClient } from "effect/unstable/http"
-import { Data, Effect, Layer } from "effect"
-import { ConfigService } from "../Service/Config.ts"
-import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts"
-import { Grounder } from "../Service/Grounder.ts"
+import {AnthropicClient, AnthropicLanguageModel} from "@effect/ai-anthropic";
+import {OpenAiClient, OpenAiLanguageModel} from "@effect/ai-openai";
+import {Data, Effect, Layer} from "effect";
+import {FetchHttpClient} from "effect/unstable/http";
+import {ConfigService} from "../Service/Config.ts";
+import {
+  EntityExtractor,
+  MentionExtractor,
+  RelationExtractor
+} from "../Service/Extraction.ts";
+import {Grounder} from "../Service/Grounder.ts";
 import {
   CentralRateLimiterServiceLive,
   StageTimeoutServiceLive,
-  TokenBudgetServiceLive
-} from "../Service/LlmControl/index.ts"
-import { makeTracingLayer } from "../Telemetry/Tracing.ts"
-import { HealthCheckService } from "./HealthCheck.ts"
-import { ExtractionRouter, HttpServerLive } from "./HttpServer.ts"
-import { LlmSemaphoreService } from "./LlmSemaphore.ts"
-import { RateLimitedLanguageModelLayer } from "./RateLimitedLanguageModel.ts"
-import { DEFAULT_SHUTDOWN_CONFIG, ShutdownError, ShutdownService } from "./Shutdown.ts"
+  TokenBudgetServiceLive,
+} from "../Service/LlmControl/index.ts";
+import {makeTracingLayer} from "../Telemetry/Tracing.ts";
+import {HealthCheckService} from "./HealthCheck.ts";
+import {ExtractionRouter} from "./HttpServer.ts";
+import {LlmSemaphoreService} from "./LlmSemaphore.ts";
+import {RateLimitedLanguageModelLayer} from "./RateLimitedLanguageModel.ts";
+import {
+  DEFAULT_SHUTDOWN_CONFIG,
+  ShutdownError,
+  ShutdownService
+} from "./Shutdown.ts";
 
+export {
+  CentralRateLimiterService, StageTimeoutService, TokenBudgetService
+} from "../Service/LlmControl/index.ts";
 // Re-export new infrastructure components
-export { HealthCheckService }
-export { ExtractionRouter, HttpServerLive }
-export { LlmSemaphoreService }
-export { DEFAULT_SHUTDOWN_CONFIG, ShutdownError, ShutdownService }
-
 // Re-export LLM Control services
-export { CentralRateLimiterServiceLive, StageTimeoutServiceLive, TokenBudgetServiceLive }
-export { CentralRateLimiterService, StageTimeoutService, TokenBudgetService } from "../Service/LlmControl/index.ts"
+export {
+  CentralRateLimiterServiceLive,
+  DEFAULT_SHUTDOWN_CONFIG,
+  ExtractionRouter,
+  HealthCheckService,
+  LlmSemaphoreService,
+  ShutdownError,
+  ShutdownService,
+  StageTimeoutServiceLive,
+  TokenBudgetServiceLive,
+};
 
 /** Error raised when configuration selects an unavailable Effect v4 AI adapter. */
 export class UnsupportedLlmProviderError extends Data.TaggedError("UnsupportedLlmProviderError")<{
-  readonly provider: string
-}> {}
+  readonly provider: string;
+}> {
+}
 
 /**
  * Create LanguageModel layer with ConfigService
@@ -67,47 +83,35 @@ export class UnsupportedLlmProviderError extends Data.TaggedError("UnsupportedLl
  * @since 2.0.0
  */
 export const makeLanguageModelLayer = Layer.unwrap(
-  Effect.gen(function*() {
-    const config = yield* ConfigService
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
 
     switch (config.llm.provider) {
       case "anthropic": {
-        return AnthropicLanguageModel.layer({ model: config.llm.model }).pipe(
-          Layer.provide(
-            AnthropicClient.layer({ apiKey: config.llm.apiKey }).pipe(
-              Layer.provide(FetchHttpClient.layer)
-            )
-          )
-        )
+        return AnthropicLanguageModel.layer({model: config.llm.model}).pipe(
+          Layer.provide(AnthropicClient.layer({apiKey: config.llm.apiKey}).pipe(Layer.provide(FetchHttpClient.layer)))
+        );
       }
 
       case "openai": {
-        return OpenAiLanguageModel.layer({ model: config.llm.model }).pipe(
-          Layer.provide(
-            OpenAiClient.layer({ apiKey: config.llm.apiKey }).pipe(
-              Layer.provide(FetchHttpClient.layer)
-            )
-          )
-        )
+        return OpenAiLanguageModel.layer({model: config.llm.model}).pipe(
+          Layer.provide(OpenAiClient.layer({apiKey: config.llm.apiKey}).pipe(Layer.provide(FetchHttpClient.layer)))
+        );
       }
 
       case "google": {
-        return yield* Effect.fail(new UnsupportedLlmProviderError({ provider: config.llm.provider }))
+        return yield* new UnsupportedLlmProviderError({provider: config.llm.provider});
       }
 
       default: {
         // Default to Anthropic
-        return AnthropicLanguageModel.layer({ model: config.llm.model }).pipe(
-          Layer.provide(
-            AnthropicClient.layer({ apiKey: config.llm.apiKey }).pipe(
-              Layer.provide(FetchHttpClient.layer)
-            )
-          )
-        )
+        return AnthropicLanguageModel.layer({model: config.llm.model}).pipe(
+          Layer.provide(AnthropicClient.layer({apiKey: config.llm.apiKey}).pipe(Layer.provide(FetchHttpClient.layer)))
+        );
       }
     }
   })
-)
+);
 
 /**
  * Rate-limited LanguageModel layer
@@ -117,9 +121,7 @@ export const makeLanguageModelLayer = Layer.unwrap(
  *
  * @since 2.0.0
  */
-export const RateLimitedLlmLayer = RateLimitedLanguageModelLayer.pipe(
-  Layer.provide(makeLanguageModelLayer)
-)
+export const RateLimitedLlmLayer = RateLimitedLanguageModelLayer.pipe(Layer.provide(makeLanguageModelLayer));
 
 /**
  * Production extraction layers with rate-limited LLM
@@ -139,7 +141,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
   MentionExtractor.Default,
   RelationExtractor.Default,
   Grounder.Default
-).pipe(Layer.provide(RateLimitedLlmLayer))
+).pipe(Layer.provide(RateLimitedLlmLayer));
 
 /**
  * OpenTelemetry tracing layer for Jaeger export
@@ -161,8 +163,8 @@ export const ExtractionLayersLive = Layer.mergeAll(
 export const TracingLive = makeTracingLayer({
   serviceName: "effect-ontology-extraction",
   otlpEndpoint: "http://localhost:4318/v1/traces",
-  enabled: true
-}).pipe(Layer.provide(FetchHttpClient.layer))
+  enabled: true,
+}).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
  * Production layers with tracing
@@ -174,10 +176,7 @@ export const TracingLive = makeTracingLayer({
  *
  * @since 2.0.0
  */
-export const ProductionLayersWithTracing = Layer.mergeAll(
-  ExtractionLayersLive,
-  TracingLive
-)
+export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, TracingLive);
 
 /**
  * Production infrastructure layers
@@ -220,7 +219,7 @@ export const LlmControlLive = Layer.mergeAll(
   TokenBudgetServiceLive,
   StageTimeoutServiceLive,
   CentralRateLimiterServiceLive
-)
+);
 
 export const ProductionInfrastructure = Layer.mergeAll(
   ExtractionLayersLive,
@@ -228,4 +227,4 @@ export const ProductionInfrastructure = Layer.mergeAll(
   LlmSemaphoreService.Default,
   LlmControlLive,
   TracingLive
-)
+);

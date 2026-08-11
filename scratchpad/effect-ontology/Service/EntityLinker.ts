@@ -9,11 +9,14 @@
  * @since 2.0.0
  * @module Service/EntityLinker
  */
-
-import { Graph, Option } from "effect"
-import type { ERNode, MentionRecord } from "../Domain/Model/EntityResolution.ts"
-import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts"
-import { EntityId } from "../Domain/Model/shared.ts"
+import * as Str from "effect/String";
+import {flow} from "effect/Function";
+import {Graph, Option} from "effect";
+import type {ERNode, MentionRecord} from "../Domain/Model/EntityResolution.ts";
+import type {
+  EntityResolutionGraph
+} from "../Domain/Model/EntityResolutionGraph.ts";
+import {EntityId} from "../Domain/Model/shared.ts";
 
 /**
  * Get canonical ID for an entity
@@ -37,13 +40,11 @@ import { EntityId } from "../Domain/Model/shared.ts"
  * @since 2.0.0
  * @category Query
  */
-export const getCanonicalId = (
-  erg: EntityResolutionGraph,
-  entityId: EntityId
-): Option.Option<EntityId> => {
-  const canonical = erg.canonicalMap[entityId]
-  return canonical !== undefined ? Option.some(canonical) : Option.none()
-}
+// @effect-diagnostics-next-line missingPipeableSignature:off
+export const getCanonicalId = (erg: EntityResolutionGraph, entityId: EntityId): Option.Option<EntityId> => {
+  const canonical = erg.canonicalMap[entityId];
+  return canonical !== undefined ? Option.some(canonical) : Option.none();
+};
 
 /**
  * Get all MentionRecords for a canonical entity
@@ -67,6 +68,7 @@ export const getCanonicalId = (
  * @since 2.0.0
  * @category Query
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off
 export const getMentionsForEntity = (
   erg: EntityResolutionGraph,
   canonicalId: EntityId
@@ -74,33 +76,33 @@ export const getMentionsForEntity = (
   // Find all entity IDs that map to this canonical ID
   const matchingIds = Object.entries(erg.canonicalMap)
     .filter(([_, canonical]) => canonical === canonicalId)
-    .map(([entityId]) => EntityId.fromUnknown(entityId))
+    .map(([entityId]) => EntityId.fromUnknown(entityId));
 
   // Look up MentionRecord nodes in the graph
-  const mentions: Array<MentionRecord> = []
+  const mentions: Array<MentionRecord> = [];
 
   for (const entityId of matchingIds) {
-    const nodeIdx = erg.entityIndex[entityId]
+    const nodeIdx = erg.entityIndex[entityId];
     if (nodeIdx !== undefined) {
-      const nodeOpt = Graph.getNode(erg.graph, nodeIdx)
+      const nodeOpt = Graph.getNode(erg.graph, nodeIdx);
       if (Option.isSome(nodeOpt)) {
-        const node = nodeOpt.value
+        const node = nodeOpt.value;
         if (isMentionRecord(node)) {
-          mentions.push(node)
+          mentions.push(node);
         }
       }
     }
   }
 
-  return mentions
-}
+  return mentions;
+};
 
 /**
  * Type guard for MentionRecord
  *
  * @internal
  */
-const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "MentionRecord"
+const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "MentionRecord";
 
 /**
  * Generate Mermaid diagram from EntityResolutionGraph
@@ -129,52 +131,56 @@ const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "
  * @category Visualization
  */
 export const toMermaid = (erg: EntityResolutionGraph): string => {
-  const lines: Array<string> = ["graph TD"]
+  const lines: Array<string> = ["graph TD"];
 
   // Collect nodes by type
-  const mentionNodes: Array<{ idx: Graph.NodeIndex; node: MentionRecord }> = []
-  const resolvedNodes: Array<{ idx: Graph.NodeIndex; canonicalId: string; mention: string }> = []
+  const mentionNodes: Array<{ idx: Graph.NodeIndex; node: MentionRecord }> = [];
+  const resolvedNodes: Array<{
+    idx: Graph.NodeIndex;
+    canonicalId: string;
+    mention: string
+  }> = [];
 
   for (const [idx, node] of Graph.entries(Graph.nodes(erg.graph))) {
     if (node._tag === "MentionRecord") {
-      mentionNodes.push({ idx, node })
+      mentionNodes.push({idx, node});
     } else if (node._tag === "ResolvedEntity") {
       resolvedNodes.push({
         idx,
         canonicalId: node.canonicalId,
-        mention: node.mention
-      })
+        mention: node.mention,
+      });
     }
   }
 
   // Add MentionRecord nodes (rectangles)
-  for (const { idx, node } of mentionNodes) {
-    const label = sanitizeLabel(`${node.mention} (chunk ${node.chunkIndex})`)
-    lines.push(`  m${idx}["${label}"]`)
+  for (const {idx, node} of mentionNodes) {
+    const label = sanitizeLabel(`${node.mention} (chunk ${node.chunkIndex})`);
+    lines.push(`  m${idx}["${label}"]`);
   }
 
   // Add ResolvedEntity nodes (stadium/pill shape)
-  for (const { canonicalId, idx, mention } of resolvedNodes) {
-    const label = sanitizeLabel(`${mention} [${canonicalId}]`)
-    lines.push(`  r${idx}(["${label}"])`)
+  for (const {canonicalId, idx, mention} of resolvedNodes) {
+    const label = sanitizeLabel(`${mention} [${canonicalId}]`);
+    lines.push(`  r${idx}(["${label}"])`);
   }
 
   // Add edges
   for (const [_edgeIdx, edgeInfo] of Graph.entries(Graph.edges(erg.graph))) {
-    const { data, source, target } = edgeInfo
+    const {data, source, target} = edgeInfo;
 
     if (data._tag === "ResolutionEdge") {
       // MentionRecord → ResolvedEntity (dashed)
-      lines.push(`  m${source} -.-> r${target}`)
+      lines.push(`  m${source} -.-> r${target}`);
     } else if (data._tag === "RelationEdge") {
       // ResolvedEntity → ResolvedEntity (solid with label)
-      const predLabel = extractLocalName(data.predicate)
-      lines.push(`  r${source} -->|${predLabel}| r${target}`)
+      const predLabel = extractLocalName(data.predicate);
+      lines.push(`  r${source} -->|${predLabel}| r${target}`);
     }
   }
 
-  return lines.join("\n")
-}
+  return lines.join("\n");
+};
 
 /**
  * Extract local name from IRI
@@ -182,22 +188,22 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
  * @internal
  */
 const extractLocalName = (iri: string): string => {
-  const hashIdx = iri.lastIndexOf("#")
-  if (hashIdx !== -1) return iri.slice(hashIdx + 1)
+  const hashIdx = iri.lastIndexOf("#");
+  if (hashIdx !== -1) return iri.slice(hashIdx + 1);
 
-  const slashIdx = iri.lastIndexOf("/")
-  if (slashIdx !== -1) return iri.slice(slashIdx + 1)
+  const slashIdx = iri.lastIndexOf("/");
+  if (slashIdx !== -1) return iri.slice(slashIdx + 1);
 
-  return iri
-}
+  return iri;
+};
 
 /**
  * Sanitize label for Mermaid (escape special characters)
  *
  * @internal
  */
-const sanitizeLabel = (label: string): string =>
-  label
-    .replace(/"/g, "'")
-    .replace(/\[/g, "(")
-    .replace(/\]/g, ")")
+const sanitizeLabel = flow(
+  Str.replace(/"/g, "'"),
+  Str.replace(/\[/g, "("),
+  Str.replace(/\]/g, ")")
+);
