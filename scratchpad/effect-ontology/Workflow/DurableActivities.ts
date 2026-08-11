@@ -37,14 +37,8 @@ import type {
   ValidationActivityInput
 } from "../Domain/Schema/Batch.ts"
 import { BatchManifest, ValidationActivityOutput } from "../Domain/Schema/Batch.ts"
-import type {
-  DocumentType,
-  EnrichedManifest,
-  EntityDensity,
-  LanguageCode,
-  PreprocessingActivityInput
-} from "../Domain/Schema/DocumentMetadata.ts"
-import { ChunkingStrategy, DocumentMetadata } from "../Domain/Schema/DocumentMetadata.ts"
+import type { EnrichedManifest, PreprocessingActivityInput } from "../Domain/Schema/DocumentMetadata.ts"
+import { ChunkingStrategy, DocumentMetadata, LanguageCode } from "../Domain/Schema/DocumentMetadata.ts"
 import { ClaimPersistenceService } from "../Service/ClaimPersistence.ts"
 import { ConfigService } from "../Service/Config.ts"
 import { CrossBatchEntityResolver, CrossBatchResolverConfig } from "../Service/CrossBatchEntityResolver.ts"
@@ -594,7 +588,8 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
               cause: String(cause)
             })
           )
-        ))
+        )
+      })
 
       // Apply validation policy from input or config
       // Config defaults: logOnly=false, failOnViolation=true, failOnWarning=false
@@ -805,7 +800,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 
       // Retry on generation mismatch (concurrent write detected)
       const maxRetries = 3
-      const _mergedStats = yield* mergeWithOptimisticLocking.pipe(
+      yield* mergeWithOptimisticLocking.pipe(
         Effect.retry({
           while: (error) => error instanceof GenerationMismatchError,
           times: maxRetries,
@@ -1940,8 +1935,6 @@ export type PreprocessingOutput = typeof PreprocessingOutput.Type
 const PREVIEW_SIZE = 4096
 
 /** Batch size for LLM classification calls */
-const CLASSIFICATION_BATCH_SIZE = 10
-
 /**
  * Build classification prompt for a batch of document previews
  */
@@ -2101,8 +2094,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
                     index: p.index,
                     preview: p.preview,
                     contentType: p.contentType
-        })
-      })
+                  }))
 
                   yield* Effect.logDebug("Classifying batch", {
                     batchId: input.batchId,
@@ -2198,7 +2190,6 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
                   } else {
                     // Use defaults for failed classifications
                     failedCount++
-                    const tokens = DocumentMetadata.estimateTokens(p.sizeBytes)
                     return DocumentMetadata.fallback({
                       documentId: p.documentId,
                       sourceUri: p.sourceUri,
@@ -2218,9 +2209,9 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               // 6. Compute stats
               const totalEstimatedTokens = documentMetadata.reduce((sum, d) => sum + d.estimatedTokens, 0)
               const avgComplexity = documentMetadata.reduce((sum, d) => sum + d.complexityScore, 0) / documentMetadata.length
-              const typeDistribution: Record<string, number> = {}
+              const typeDistribution: Record<string, NonNegativeInt> = {}
               for (const d of documentMetadata) {
-                typeDistribution[d.documentType] = (typeDistribution[d.documentType] ?? 0) + 1
+                typeDistribution[d.documentType] = NonNegativeInt.make((typeDistribution[d.documentType] ?? 0) + 1)
               }
 
               // 7. Compute duration and create EnrichedManifest
