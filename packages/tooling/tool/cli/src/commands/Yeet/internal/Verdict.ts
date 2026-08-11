@@ -14,7 +14,7 @@ import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
-import { identity, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
@@ -266,15 +266,16 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
  * @category predicates
  * @since 0.0.0
  */
-export const mergeReadyCriterionHolds = (
-  criteria: YeetMergeReadyCriteria,
-  criterion: YeetMergeReadyCriterion
-): boolean =>
+export const mergeReadyCriterionHolds: {
+  (criterion: YeetMergeReadyCriterion): (criteria: YeetMergeReadyCriteria) => boolean;
+  (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean;
+} = dual(2, (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean =>
   YeetMergeReadyCriterion.$match(criterion, {
     "closeout-run": () => criteria.closeoutRun,
     "checks-green": () => criteria.checksGreen,
     "threads-resolved": () => criteria.threadsResolved,
-  });
+  })
+);
 
 /**
  * Cross-field requirement that the three merge-readiness surfaces agree.
