@@ -331,3 +331,22 @@
   heavy-lane compile-cost session. General law: a lane that only ever ran on
   warm persistent workers has an unmeasured cold profile — measure one full
   cold run per lane before fleet cutovers.
+
+## Cross-layout actions/cache archives were the JSDoc degeneration
+
+- **Work:** root-causing the fleet JSDoc timeouts once a failing (not
+  cancelled) run finally served its log.
+- **What happened:** all failing fleet lanes carried ~519,000 log lines of
+  `tar: ../../../../../home/runner/.bun/install/cache/...: Cannot open` — the
+  bun-store actions/cache archives were saved on /home/runner-layout runners
+  and extracted on /home/ec2-user fleet VMs, failing per file for hundreds of
+  thousands of files. That grind inside the setup composite is the "8x CPU
+  work" that pushed a 4-minute lane past its 30-minute budget; lanes with
+  bigger budgets absorbed the storm invisibly. The turbo cache pair shares the
+  class via differing workdirs. The reverse direction never happened only
+  because an exact-key hit skips the save.
+- **Prevention:** cache keys now carry a runner-class segment
+  (`fleet`/`shared`) on all four keys and every restore-keys prefix —
+  cross-layout restores are structurally impossible. Law: any actions/cache
+  path anchored under HOME or the runner workdir must partition its key by
+  runner layout class.
