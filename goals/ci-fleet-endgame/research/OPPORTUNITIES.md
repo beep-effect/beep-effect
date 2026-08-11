@@ -367,3 +367,22 @@
   on "reclaims are rare at short durations" needs a same-night falsifier
   check — concentration in a single instance pool converts independent risk
   into correlated wave failure.
+
+## JSDoc Ratchet is CPU-anomalous on AL2023 fleet VMs — moved back to hosted
+
+- **Work:** landing the merge wave; the lane's fourth fleet run reached ~55 of
+  its 60 minutes at a steady ~25% CPU on 16 vCPUs.
+- **What happened:** with the cache storm fixed the lane still burned ~40x the
+  local run's CPU-seconds. Disk was ruled out live: EBS VolumeReadOps was ZERO
+  and queue length ~0 during the grind (page-cached), so it is genuine
+  compute. The same lane ran ~4 min locally, ~10 min on hosted Ubuntu 4-vCPU
+  runners, and ~7 min on Ubuntu burst workers with the SAME AMD hardware
+  family — the anomaly is AL2023-environment-specific to this lane's
+  workload, cause unattributed (candidates: bun/JSC behavior differences,
+  worker-pool scaling, systemd/cgroup limits on the runner unit).
+- **Prevention:** the lane returned to `ubuntu-24.04` (30-minute budget) — it
+  needs neither 64 GB nor fleet capacity, so fleet placement bought queue
+  latency for a 4–6x wall-time regression. Law: lane placement follows
+  measured per-lane profiles, not blanket "heavy goes to the fleet";
+  attribution of the AL2023 anomaly belongs to the heavy-lane session with a
+  reproducible harness (same commit, side-by-side AL2023 vs Ubuntu VM).

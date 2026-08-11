@@ -519,8 +519,8 @@ jobs:
 
   jsdoc-ratchet:
     name: JSDoc Ratchet
-    runs-on: beep-ec2-heavy
-    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
