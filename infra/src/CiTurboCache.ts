@@ -22,7 +22,8 @@ import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiTurboCache");
 
-const bucketNamePattern = /^(?!\d{1,3}(?:\.\d{1,3}){3}$)(?!.*\.\.)(?!.*\.-)(?!.*-\.)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/u;
+const bucketNamePattern =
+  /^(?!\d{1,3}(?:\.\d{1,3}){3}$)(?!.*\.\.)(?!.*\.-)(?!.*-\.)(?!xn--)(?!sthree-)(?!amzn-s3-demo-)(?!.*-s3alias$)(?!.*--ol-s3$)(?!.*\.mrap$)(?!.*--x-s3$)(?!.*--table-s3$)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/u;
 const kmsKeyArnPattern = /^arn:aws(?:-us-gov|-cn)?:kms:[a-z0-9-]+:\d{12}:key\/[A-Za-z0-9-]+$/u;
 const ssmParameterArnPattern = /^arn:aws(?:-us-gov|-cn)?:ssm:[a-z0-9-]+:\d{12}:parameter\/[A-Za-z0-9_./-]+$/u;
 const absoluteZipPathPattern = /^\/.+\.zip$/u;
@@ -44,8 +45,9 @@ const CacheBucketName = S.String.check(
   S.isPattern(bucketNamePattern, {
     identifier: $I`CacheBucketNameFormat`,
     title: "Cache Bucket Name Format",
-    description: "A lowercase, DNS-compatible S3 bucket name between 3 and 63 characters.",
-    message: "Expected a lowercase, DNS-compatible S3 bucket name",
+    description:
+      "A lowercase, DNS-compatible S3 bucket name between 3 and 63 characters, excluding S3-reserved prefixes (xn--, sthree-, amzn-s3-demo-) and suffixes (-s3alias, --ol-s3, .mrap, --x-s3, --table-s3).",
+    message: "Expected a lowercase, DNS-compatible S3 bucket name without S3-reserved prefixes or suffixes",
   })
 ).pipe(
   $I.annoteSchema("CacheBucketName", {
@@ -230,7 +232,8 @@ export class CiTurboCache extends pulumi.ComponentResource {
 
     const { config } = args;
     const accountId = aws.getCallerIdentityOutput({}, { parent: this }).accountId;
-    const permissionsBoundary = pulumi.interpolate`arn:aws:iam::${accountId}:policy/beep-ci-fleet-boundary`;
+    const partition = aws.getPartitionOutput({}, { parent: this }).partition;
+    const permissionsBoundary = pulumi.interpolate`arn:${partition}:iam::${accountId}:policy/beep-ci-fleet-boundary`;
 
     const bucket = new aws.s3.Bucket(
       `${name}-artifacts`,

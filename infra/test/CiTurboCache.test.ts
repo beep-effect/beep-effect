@@ -26,6 +26,25 @@ describe("@beep/infra CiTurboCache", () => {
     expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName: "ab" }))).toBe(true);
   });
 
+  it("rejects S3-reserved bucket name prefixes and suffixes", () => {
+    const reserved = [
+      "xn--beep-cache",
+      "sthree-beep-cache",
+      "amzn-s3-demo-beep-cache",
+      "beep-cache-s3alias",
+      "beep-cache--ol-s3",
+      "beep-cache.mrap",
+      "beep-cache--x-s3",
+      "beep-cache--table-s3",
+    ];
+    for (const bucketName of reserved) {
+      expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName }))).toBe(true);
+    }
+    expect(Result.isSuccess(decodeConfigValues({ ...validConfigValues, bucketName: "beep-cache-s3aliased" }))).toBe(
+      true
+    );
+  });
+
   it("accepts SSM parameter ARNs and rejects other ARN kinds", () => {
     expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
     expect(
