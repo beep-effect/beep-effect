@@ -109,3 +109,28 @@
   re-run the instantiation census post-beta.104 and drive the epistemic slice
   down first. This is the real fix behind the #607 stopgaps; the swap step and
   serial caps should be retired once the slice fits cold in runner memory.
+
+## Commitlint on the PR merge ref inherits every base-range violation
+
+- **Work:** PR #654 second review round — the hosted Commitlint check went red
+  immediately after the first fix-round push.
+- **Friction:** the lane lints `--from <merge-base> --to HEAD` on the synthetic
+  PR merge ref, so its range contains every `main` commit merged since the
+  branch forked. The red run's only violations were on `main`'s own #651
+  squash header (102 chars) plus its footer line — commits this branch never
+  authored and cannot rewrite. Attribution cost a log dig through interleaved
+  commit bodies before it was clear nothing local was wrong; the only fix is
+  merging `origin/main` so the merge-base advances past the offender, which
+  couples an unrelated sync commit to check greenness.
+- **Evidence:** run 31443081050 (`header must not be longer than 100
+  characters, current length is 102` against `e92b8b7d9d`, PR #651's squash
+  header) on a branch whose own commits all pass.
+- **Proposal:** two candidate fixes, either sufficient: (a) lint only the
+  PR-authored range — on the synthetic merge commit the FIRST parent is the
+  updated base and the PR head is the SECOND parent, so `--first-parent`
+  traversal would keep the inherited `main` commits and drop the authored
+  ones; select the second parent explicitly and lint
+  `merge-base..<head-parent>`; (b) enforce the squash-header length
+  server-side at merge time (the repo already treats merge messages as
+  commitlint input in prose, but #651 proves nothing gates it), so `main` can
+  never carry a header that poisons downstream PR ranges.
