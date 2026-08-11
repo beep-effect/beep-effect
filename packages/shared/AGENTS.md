@@ -61,11 +61,14 @@ Applies to every `*-tables` package (`@beep/shared-tables`,
 `@beep/epistemic-tables`, `@beep/workspace-tables`, …):
 
 - Keep table meaning tied to the owning domain's product language.
-- Generic projection's target owner is `@beep/effect-drizzle` (ecosystem
-  family; the package lands in `goals/effect-drizzle-graduation` P1). Until
-  that move ships, `@beep/drizzle` remains the current in-tree projection
-  owner — and it keeps execution permanently. A tables package only publishes
-  concrete tables for its domain.
+- Generic schema-derived projection now lives in-tree at
+  `@beep/effect-drizzle` (member root
+  `packages/ecosystem/effect-drizzle/**`). It graduated from `scratchpad/bsl`
+  (PR #651). `@beep/drizzle` keeps execution permanently. Shared and slice
+  tables keep their existing `@beep/drizzle` `EntityTable` projection patterns
+  until the future beep-adoption packet; BaseEntity parity is explicitly outside
+  this graduation packet. A tables package only publishes concrete tables for
+  its domain.
 - The only Drizzle allowance is metadata-only `pgTable` definition and index
   construction from domain descriptors — no connections, query execution,
   repositories, migrations, seeders, or live DB access.

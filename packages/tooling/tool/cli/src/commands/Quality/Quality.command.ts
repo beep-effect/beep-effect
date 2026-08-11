@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import { Console, DateTime, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
+import { Console, DateTime, Effect, FileSystem, flow, Inspectable, Layer, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -293,6 +294,10 @@ const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
 const effectDiagnosticsDirectivePrefix = "@effect-diagnostics";
 const effectDiagnosticsOffDirectivePattern = new RegExp(`${effectDiagnosticsDirectivePrefix}[^\\n]*:${"off"}\\b`, "u");
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
+const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity", "missingPipeableSignature"]);
+const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
+const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u));
+const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
 const effectTsgoReadmeParser = new XMLParser({
@@ -1440,6 +1445,116 @@ const renderTsgoRuleDiagnostics = (label: string, diagnostics: ReadonlyArray<str
     ? [`${label}:`, ...A.map(diagnostics, (diagnostic) => `  - ${diagnostic}`)]
     : [];
 
+const isDirectEcosystemMemberTsconfig = (filePath: string): boolean => {
+  const segments = Str.split(normalizePath(filePath), "/");
+  return (
+    A.length(segments) === 4 &&
+    O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
+    O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
+    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
+    O.exists(A.get(segments, 3), isTsconfigFileName)
+  );
+};
+
+const findDiagnosticSeverityMap = (
+  plugin: Readonly<Record<string, unknown>>
+): O.Option<Readonly<Record<string, unknown>>> =>
+  pipe(unknownRecordProperty(plugin, "diagnosticSeverity"), O.flatMap(decodeUnknownRecordOption));
+
+const collectEcosystemSeverityDiffDiagnostics = (
+  file: string,
+  baseSeverity: Readonly<Record<string, unknown>>,
+  severity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const baseRuleNames = pipe(R.keys(baseSeverity), A.sort(Order.String));
+  const configuredRuleNames = pipe(R.keys(severity), A.sort(Order.String));
+  const missing = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => !A.contains(configuredRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity is missing rule ${ruleName}`)
+  );
+  const unexpected = pipe(
+    configuredRuleNames,
+    A.filter((ruleName) => !A.contains(baseRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity has unexpected rule ${ruleName}`)
+  );
+  const mismatched = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
+    }),
+    A.map((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return `${file}: ecosystem diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+    })
+  );
+  return A.appendAll(A.appendAll(missing, unexpected), mismatched);
+};
+
+const collectEcosystemMemberProfileDiagnostics = (
+  file: string,
+  config: unknown,
+  baseSeverity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const plugin = findEffectLanguageServicePlugin(config);
+  if (O.isNone(plugin)) {
+    return A.empty();
+  }
+  if (!isDirectEcosystemMemberTsconfig(file)) {
+    return A.of(
+      `${file}: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json`
+    );
+  }
+  const severity = findDiagnosticSeverityMap(plugin.value);
+  return O.match(severity, {
+    onNone: () => A.of(`${file}: ecosystem @effect/language-service profile is missing diagnosticSeverity`),
+    onSome: (configured) => collectEcosystemSeverityDiffDiagnostics(file, baseSeverity, configured),
+  });
+};
+
+const collectEcosystemPluginProfileDiagnostics = (
+  basePlugin: Readonly<Record<string, unknown>>,
+  configs: ReadonlyArray<readonly [file: string, config: unknown]>
+): ReadonlyArray<string> =>
+  O.match(findDiagnosticSeverityMap(basePlugin), {
+    onNone: () => A.of("tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map"),
+    onSome: (baseSeverity) =>
+      A.flatMap(configs, ([file, config]) => collectEcosystemMemberProfileDiagnostics(file, config, baseSeverity)),
+  });
+
+/**
+ * Validate package-local Effect language-service profiles against the ecosystem family delta.
+ *
+ * **Example** (Check a conforming member profile)
+ *
+ * ```ts
+ * import { collectTsgoPluginProfileDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const basePlugin = { diagnosticSeverity: { floatingEffect: "error" } }
+ * const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(basePlugin, [])
+ * console.log(diagnostics.length) // => 0
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectTsgoPluginProfileDiagnosticsForTesting: {
+  (
+    configs: ReadonlyArray<readonly [file: string, config: unknown]>
+  ): (basePlugin: Readonly<Record<string, unknown>>) => ReadonlyArray<string>;
+  (
+    basePlugin: Readonly<Record<string, unknown>>,
+    configs: ReadonlyArray<readonly [file: string, config: unknown]>
+  ): ReadonlyArray<string>;
+} = dual(2, collectEcosystemPluginProfileDiagnostics);
+
 /**
  * Check that the root tsgo Effect diagnostics configuration enables every installed rule as an error.
  *
@@ -1534,6 +1649,30 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     "plugins",
     "@effect/language-service",
   ]);
+  const packageTsconfigFiles = yield* collectFiles(
+    path.join(repoRoot, "packages"),
+    (_normalized, name) => isTsconfigFileName(name),
+    (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
+  );
+  const packageTsconfigs = yield* Effect.forEach(
+    packageTsconfigFiles,
+    Effect.fnUntraced(function* (filePath) {
+      const text = yield* fs
+        .readFileString(filePath)
+        .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
+      const errors: Array<ParseError> = [];
+      const parsed = parse(text, errors, { allowTrailingComma: true, disallowComments: false });
+      if (A.isReadonlyArrayNonEmpty(errors)) {
+        return yield* QualityScriptCommandError.make({
+          message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
+          exitCode: 1,
+        });
+      }
+      return [normalizePath(path.relative(repoRoot, filePath)), parsed] as const;
+    }),
+    { concurrency: 8 }
+  );
+  const pluginProfileDiagnostics = collectEcosystemPluginProfileDiagnostics(plugin.value, packageTsconfigs);
   const scannedFiles = yield* Effect.forEach(
     effectDiagnosticsDirectiveScannedRoots,
     (root) =>
@@ -1566,6 +1705,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
     ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
     ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
+    ...renderTsgoRuleDiagnostics("invalid package Effect language-service profiles", pluginProfileDiagnostics),
     ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
   ];
 

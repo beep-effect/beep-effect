@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-11T05:04:15.592Z
+Generated: 2026-08-11T15:27:54.033Z
 
 ## Scope
 
@@ -14,11 +14,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 71 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2476 |
-| publicExports | 16217 |
+| publicModules | 2477 |
+| publicExports | 16226 |
 | openModules | 397 |
-| openExports | 133 |
-| missingExportExamples | 5 |
+| openExports | 132 |
+| missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 19 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 20 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 177 | 1344 | 46 | 10 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 178 | 1352 | 46 | 10 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -127,7 +127,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
 | 71 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 72 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 203 | 0 | 0 |
+| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 204 | 0 | 0 |
 | 74 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
 | 75 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 76 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
@@ -146,7 +146,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 89 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 90 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 412 | 0 | 0 |
 | 91 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 9 | 0 |
-| 92 | `@beep/infra` | `infra` | needs-remediation | 10 | 100 | 3 | 24 |
+| 92 | `@beep/infra` | `infra` | needs-remediation | 10 | 100 | 3 | 23 |
 | 93 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 94 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 95 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
@@ -354,14 +354,14 @@ Module findings:
 Export findings:
 - `src/commands/Ci/CiLane.ts:329` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:767` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
-- `src/commands/CreatePackage/CreatePackage.command.ts:91` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/CreatePackage/CreatePackage.command.ts:92` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:343` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:412` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:605` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:610` `runBunAudit` (const) - 1 documentation section/link violation(s)
 
 ### @beep/pglite
 
@@ -822,11 +822,10 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:127` `CiFleetControllerPulumiConfigValues` (const) - missing @example
-- `src/CiFleetController.ts:163` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:189` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:213` `loadCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:251` `CiFleetController` (class) - missing @example
+- `src/CiFleetController.ts:137` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:173` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:199` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:223` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:402` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:572` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:769` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)

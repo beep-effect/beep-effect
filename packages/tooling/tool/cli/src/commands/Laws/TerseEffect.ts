@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
 import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression } from "ts-morph";
 
@@ -579,7 +579,10 @@ const isExplicitDualOverloadCandidate = (functionDeclaration: FunctionDeclaratio
 export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRulesOptions) {
   const path = yield* Path.Path;
 
-  const isExcludedFile = (filePath: string): boolean => isExcludedLawScanPath(options.excludePaths, filePath);
+  const isExcludedFile = (filePath: string): boolean => {
+    const relative = toPosixPath(path.relative(process.cwd(), filePath));
+    return isEcosystemMemberSourcePath(relative) || isExcludedLawScanPath(options.excludePaths, filePath);
+  };
 
   const project = new Project({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),

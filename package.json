@@ -442,6 +442,7 @@
     "scratchpad",
     "tools/tsgo-shim",
     "packages/_internal/*",
+    "packages/ecosystem/*",
     "packages/foundation/capability/*",
     "packages/foundation/modeling/*",
     "packages/foundation/primitive/*",

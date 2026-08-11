@@ -1918,6 +1918,15 @@
       ],
       "@beep/schema/FileInfo": [
         "./packages/foundation/modeling/schema/src/FileInfo.ts"
+      ],
+      "@beep/effect-drizzle": [
+        "./packages/ecosystem/effect-drizzle/src/index.ts"
+      ],
+      "@beep/effect-drizzle/pg": [
+        "./packages/ecosystem/effect-drizzle/src/pg/index.ts"
+      ],
+      "@beep/effect-drizzle/sqlite": [
+        "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
       ]
     }
   }

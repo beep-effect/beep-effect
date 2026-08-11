@@ -1,0 +1,81 @@
+{
+  "name": "@beep/effect-drizzle",
+  "version": "0.0.0",
+  "description": "Derive Drizzle tables, relational metadata, and repositories from Effect schemas.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "packages/ecosystem/effect-drizzle"
+  },
+  "beep": {
+    "family": "ecosystem"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "beep:build": "tsc -b tsconfig.json --force && bun run babel",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:type-test",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+    "beep:type-test": "tstyche --config tstyche.config.json --root .",
+    "beep:lint": "biome check .",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "lint": "bun run beep:lint",
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./pg": "./src/pg/index.ts",
+    "./sqlite": "./src/sqlite/index.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": "./dist/index.js",
+      "./pg": "./dist/pg/index.js",
+      "./sqlite": "./dist/sqlite/index.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "peerDependencies": {
+    "drizzle-orm": "1.0.0-rc.4-fb12281",
+    "effect": "4.0.0-beta.106"
+  },
+  "devDependencies": {
+    "@beep/pglite": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "@effect/sql-pglite": "catalog:",
+    "@effect/sql-sqlite-bun": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "drizzle-kit": "catalog:",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "tstyche": "7.2.2",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

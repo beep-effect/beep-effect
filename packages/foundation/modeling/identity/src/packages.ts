@@ -190,7 +190,8 @@ const generatedComposers = $I.compose(
   "qa-capture",
   "gov-legal-mcp",
   "epistemic-client",
-  "epistemic-ui"
+  "epistemic-ui",
+  "effect-drizzle"
 );
 
 const composers = {
@@ -2455,3 +2456,19 @@ export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-clie
  * @since 0.0.0
  */
 export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = composers.$EpistemicUiId;
+
+/**
+ * Identity composer for `@beep/effect-drizzle`.
+ *
+ * **Example** (Compose an identifier)
+ *
+ * ```ts
+ * import { $EffectDrizzleId } from "@beep/identity/packages"
+ *
+ * console.log($EffectDrizzleId.make("EffectDrizzle"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle"> = composers.$EffectDrizzleId;

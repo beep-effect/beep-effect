@@ -19,6 +19,7 @@ import { printLines } from "../../internal/cli/Printer.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
+import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
@@ -54,6 +55,7 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/agents",
   "packages/architecture-lab",
   "packages/drivers",
+  "packages/ecosystem",
   "packages/epistemic/client",
   "packages/epistemic/config",
   "packages/epistemic/domain",
@@ -591,6 +593,7 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
 const lintSubcommands = [
   lintCircularCommand,
   lintDeprecatedApisCommand,
+  lintEcosystemPolarityCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,
   lintJudgeRubricCommand,
