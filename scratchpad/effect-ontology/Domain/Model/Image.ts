@@ -247,6 +247,14 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
 
   /** Non-throwing asset decoder. */
   static readonly decodeOption = S.decodeUnknownOption(ImageAsset);
+
+  static readonly decodeJsonStringEffect = S.decodeEffect(
+    S.fromJsonString(ImageAsset)
+  )
+
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }))
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset)
 }
 
 const ImageRefFields = {

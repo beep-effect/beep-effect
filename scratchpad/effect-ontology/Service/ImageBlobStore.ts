@@ -134,7 +134,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
             .pipe(Effect.map((bytes) => bytes !== undefined)),
 
         putMetadata: Effect.fn(function* (asset: ImageAsset) {
-          const json = yield* Schema.encodeEffect(Schema.fromJsonString(ImageAsset, { space: 2 }))(asset);
+          const json = yield* ImageAsset.encodeJsonStringEffect(asset);
           yield* storage.set(PathLayout.image.metadata(imagePathHash(asset.hash)), json);
         }),
 
@@ -142,7 +142,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           const content = yield* storage.get(PathLayout.image.metadata(imagePathHash(hash)));
           if (content === undefined) return Option.none();
 
-          const asset = yield* Schema.decodeEffect(Schema.fromJsonString(ImageAsset))(content);
+          const asset = yield* ImageAsset.decodeJsonStringEffect(content);
           return Option.some(asset);
         }),
 
@@ -157,7 +157,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           yield* storage.set(PathLayout.image.original(pathHash), bytes);
 
           // Create metadata
-          const asset = yield* Schema.decodeUnknownEffect(ImageAsset)({
+          const asset = yield* ImageAsset.decodeUnknownEffect({
             hash,
             contentType,
             sizeBytes: bytes.length,
