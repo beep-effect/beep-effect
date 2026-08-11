@@ -20,7 +20,7 @@ taxonomy is so similar I'm curious what your take is."
 
 Cloned the DOCO repo locally: `~/Downloads/ontologies/doco`
 (https://github.com/SPAROntologies/doco) — has doco.ttl / doco.jsonld /
-doco.nt / doco.owl / doco.graphml under `docs/current/`. PO and DEO are NOT
+doco.nt / doco.owl / doco.graphml under "docs/current/". PO and DEO are NOT
 vendored (owl:imports of purl.org IRIs only).
 
 Also worth looking at: metadata ontologies, and potentially better ontologies

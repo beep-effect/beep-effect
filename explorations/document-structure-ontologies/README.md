@@ -62,5 +62,4 @@ holes, no-gos? Iterate until confirmed, then decompose into `MAP.md`.
 - 2026-08-11: packet opened from live session (DOCO/PO analysis + DOCO clone
   axiom extraction already in hand); capture written; stage advanced to
   research; 5-lane Grok 4.5 (high) sweep launched into `research/grok/`;
-  FOLIO pages scraped for the ledger; branch
-  `docs/explore-document-structure-ontologies` created.
+  FOLIO pages scraped for the ledger; the packet branch was created.
