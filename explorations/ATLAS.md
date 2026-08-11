@@ -40,6 +40,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
+  research-stage. Next open question: which candidate contract bricks already
+  exist in-repo, and which are net-new? See the packet's
+  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md),
+  [`SOURCES.md`](./typed-agent-skill-contracts/research/SOURCES.md), and
+  [`SYNTHESIS.md`](./typed-agent-skill-contracts/research/mining/SYNTHESIS.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
   research-stage: mine Harvey + Engram's open-sourced synthetic law firm
   (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
