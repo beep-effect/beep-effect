@@ -19,7 +19,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, HashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -34,13 +34,11 @@ const BACKTICK_TOKEN = /`([a-z][a-z0-9-]*)`/g;
 // new meta token that must be admitted here explicitly.
 const PROMPT_META_TOKENS = HashSet.fromIterable(["lens"]);
 
-const lensesSection = (prompt: string): string =>
-  pipe(
-    prompt,
-    Str.match(LENSES_SECTION),
-    O.flatMap((match) => A.get(match, 1)),
-    O.getOrElse(thunkEmptyStr)
-  );
+const lensesSection: (prompt: string) => string = flow(
+  Str.match(LENSES_SECTION),
+  O.flatMap((match) => A.get(match, 1)),
+  O.getOrElse(thunkEmptyStr)
+);
 
 const promptLensTokens = (prompt: string): HashSet.HashSet<string> =>
   pipe(

@@ -64,6 +64,21 @@ export * from "./CiFleetController.ts";
  */
 export * from "./CiRunners.ts";
 /**
+ * Asymmetric Turbo remote-cache component exports.
+ *
+ * **Example** (Reference the cache component)
+ *
+ * ```ts
+ * import { CiTurboCache } from "@beep/infra"
+ *
+ * console.log(CiTurboCache)
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./CiTurboCache.ts";
+/**
  * OIP web Pulumi orchestration exports.
  *
  * @example
