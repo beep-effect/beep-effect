@@ -1231,8 +1231,10 @@ describe("quality task adapter", () => {
 
   it("runs combined root coverage tasks in ratchet mode", () => {
     const passthroughTasks = ["build", "check", "test", "coverage", "audit", "lint", "docgen"] as const;
-    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
-      rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]))
+    const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", undefined, () =>
+        rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]))
+      )
     );
 
     expect(steps[0]).toMatchObject({
@@ -1253,8 +1255,8 @@ describe("quality task adapter", () => {
   });
 
   it("runs root coverage as the ratchet gate by default", () => {
-    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
-      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
     );
 
     expect(steps).toHaveLength(1);
@@ -1276,8 +1278,10 @@ describe("quality task adapter", () => {
   });
 
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
-    const steps = withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
-      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
+        rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+      )
     );
 
     expect(steps[0]?.env).toMatchObject({
@@ -1298,8 +1302,10 @@ describe("quality task adapter", () => {
   });
 
   it("keeps report-only coverage reserved for baseline regeneration", () => {
-    const steps = withEnvVar("NODE_OPTIONS", undefined, () =>
-      rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--write-baseline", "--concurrency=1"]))
+    const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", undefined, () =>
+        rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--write-baseline", "--concurrency=1"]))
+      )
     );
 
     expect(steps).toHaveLength(1);

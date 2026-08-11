@@ -6,8 +6,9 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import { identity, SchemaTransformation } from "effect";
+import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -30,10 +31,18 @@ const $I = $UsptoId.create("Uspto.config");
 export const USPTO_API_URL = "https://api.uspto.gov";
 
 const stripTrailingSlash = Str.replace(/\/+$/, "");
+const NormalizedUsptoApiUrl = S.String.check(
+  S.makeFilter((value) => Bool.and(URLStr.is(value), Bool.not(Str.endsWith("/")(value))), {
+    identifier: $I`NormalizedUsptoApiUrlCheck`,
+    title: "Normalized USPTO API URL",
+    description: "A valid USPTO API base URL without trailing slashes.",
+    message: "USPTO API URL must not end with a slash",
+  })
+);
 
 const UsptoApiUrl = S.String.pipe(
   S.decodeTo(
-    S.String,
+    NormalizedUsptoApiUrl,
     SchemaTransformation.transform({
       decode: stripTrailingSlash,
       encode: identity,
