@@ -101,7 +101,7 @@ describe("@beep/infra CiFleetController", () => {
     expect(Result.isSuccess(withoutLabel)).toBe(true);
     expect(Result.isSuccess(withLabel)).toBe(true);
     if (Result.isSuccess(withoutLabel) && Result.isSuccess(withLabel)) {
-      expect(makeCiFleetControllerConfig(withoutLabel.success).runnerLabel).toBe("beep-ec2-heavy-shadow");
+      expect(makeCiFleetControllerConfig(withoutLabel.success).runnerLabel).toBe("beep-ec2-heavy");
       expect(makeCiFleetControllerConfig(withLabel.success).runnerLabel).toBe("beep-custom-shadow");
     }
   });

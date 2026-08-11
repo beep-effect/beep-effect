@@ -22,6 +22,8 @@ config:
   ciRunners:instanceType: m7i.2xlarge
   ciRunners:rootVolumeSizeGb: "100"
   ciRunners:maxRunMinutes: "60"
-  ciRunners:reaperTtlMinutes: "90"
+  # Above the 120-minute Check lane timeout so the tag-based reaper can never
+  # kill a fleet VM under a live job; ephemeral teardown is the module's duty.
+  ciRunners:reaperTtlMinutes: "150"
   ciRunners:amiSsmParameterName: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
-  ciFleetController:runnerLabel: beep-ec2-heavy-shadow
+  ciFleetController:runnerLabel: beep-ec2-heavy

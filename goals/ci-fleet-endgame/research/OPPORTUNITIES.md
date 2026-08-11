@@ -220,3 +220,169 @@
   the token-PUT probe and role-minimality enumeration — before any redeploy.
   Until then, main must NOT carry an active `userdata_post_install` DROP, or a
   redeploy re-breaks the fleet.
+
+## Turbo "remote cache on push" was a mirage
+
+- **Work:** cutover review — activating the P3 remote cache for the ephemeral
+  fleet.
+- **What happened:** `check.yml` push lanes set `TURBO_TOKEN`/`TURBO_TEAM`
+  secrets but no `TURBO_API`, which points turbo at Vercel's hosted API, and a
+  main `Check` job log shows no remote-cache banner at all — remote caching has
+  never been active in this repo's CI. Main's perceived cache speed came from
+  warm burst-worker local disks, which one-job-one-VM removes entirely.
+- **Prevention:** treat "cache enabled" as unproven until a run log shows the
+  remote-cache banner and a hit; any activation must wire `TURBO_API` alongside
+  the tokens, and acceptance is a logged cold/warm hit pair, not env presence.
+
+## Fleet no-pickup dispatches are fully attributed — control plane is healthy
+
+- **Work:** pre-cutover reliability audit of the 6-of-10 shadow dispatches that
+  were never picked up (one waited 33.6 minutes on 2026-08-11).
+- **What happened:** traced the 2026-08-11 case (run 31487753179) through the
+  webhook → dispatcher → scale-up CloudWatch logs: accepted at 11:41:36,
+  queued to SQS at :37, instance launched at :42 — six seconds end-to-end. The
+  instance was born with the since-rolled-back IMDS DROP userdata, i.e. this
+  was the Gate E incident itself, not a scale-up defect. The other five date to
+  the Aug 9–10 bring-up windows.
+- **Prevention:** attribute a no-pickup from the lambda chain (webhook →
+  dispatch-to-runner → scale-up → instance console) before suspecting the
+  module; keep a 10/10 consecutive-pickup gate as cutover acceptance.
+
+## enable_job_queued_check strands queued jobs on GitHub API lag
+
+- **Work:** the pre-cutover 10/10 pickup gate — seven probe dispatches against
+  the ephemeral fleet.
+- **What happened:** five picked up in 84–174s; two sat queued 25+ minutes.
+  Scale-up logged "No runner will be created, job is not queued." for both —
+  GitHub's jobs API reported not-queued for genuinely queued jobs (the same
+  API had 404'd a fresh job fail-open earlier the same day). In the module
+  source the not-queued branch `continue`s without adding the message to the
+  retry set, and only launched instances publish job-retry checks, so the
+  message is consumed and nothing ever revisits the job.
+- **Prevention:** `enable_job_queued_check: false` (the module's own ephemeral
+  default). With one-job-one-VM economics a cancelled job costs one
+  self-reaping VM for cents; a stranded production lane costs an operator.
+  General law: a pre-launch state check that consumes its message on a
+  negative answer must have a retry path, or it converts transient API lies
+  into permanent hangs.
+
+## The fleet image has no toolbelt — PLAN's user-data claim was optimistic
+
+- **Work:** pre-flip toolbelt verification for the heavy-lane cutover.
+- **What happened:** PLAN.md describes the module user-data as installing
+  "docker, git, jq, curl", but the module's actual `user-data.sh` installs only
+  docker (plus libicu in `install-runner.sh`), and the pinned AL2023 image
+  ships without git, unzip, zip, or jq. The first real lane would have died at
+  setup-bun (`unzip` missing, exit 127 — the same class the burst bring-up
+  receipted) and `actions/checkout` needs git for `fetch-depth: 0`.
+- **Prevention:** verify image contents from the module source and AMI
+  identity, not packet prose; the cutover PR adds a `userdata_post_install`
+  toolbelt install (root, boot-time, agent-safe — distinct from the uid-keyed
+  IMDS DROP class) until the P4 baked AMI absorbs it.
+
+## userdata_post_install is INLINED — a leaked `set -u` kills runner start
+
+- **Work:** first live wave post-cutover — all 10 fleet VMs registered but
+  stayed offline; console: `SEGMENT: unbound variable` at the runner-start
+  line, then `runner-start-failed with exit code 1`.
+- **What happened:** the module inlines `userdata_post_install` into its
+  single user-data bash script rather than executing it as a separate file, so
+  the toolbelt snippet's `set -eu` preamble changed the parent shell's options
+  and the downstream runner-start section died on its own legitimately-unset
+  variables. Fixed by subshell-scoping the snippet.
+- **Attribution correction:** the same-day IMDS-DROP rollback recorded the
+  DROP as starving the agent — but that script carried the same `set -eu`
+  preamble and failed at the same line. The toolbelt reproduction with no
+  firewall proves the option leak alone is sufficient; the DROP's specific
+  culpability is now unproven and its rework must retest with subshell-scoped
+  options before assuming a per-job hook is required.
+- **Prevention:** treat `userdata_post_install` as an inline fragment, never a
+  standalone script: no shebang, subshell-scope any `set` options, and gate
+  every post-install deploy on a fresh instance reaching `online`.
+
+## Fleet root volume was 8 GB — /dev/sda1 is an Ubuntu-ism on AL2023
+
+- **Work:** first real lanes on the cutover fleet — JSDoc Ratchet died with
+  `System.IO.IOException: No space left on device` in the runner's _diag log.
+- **What happened:** `block_device_mappings` used `device_name: /dev/sda1`
+  (copied from the Ubuntu burst stack, where that IS the root). AL2023's root
+  is `/dev/xvda`, so the 100 GB gp3 volume attached as an unused side disk and
+  every fleet VM ran on the AMI's 8 GB root. Echo probes never noticed; the
+  first checkout + bun install filled the disk in seconds.
+- **Prevention:** root-device names are AMI-family facts, not conventions —
+  verify with `describe-instances RootDeviceName` per image family. Real-lane
+  probes belong in every image/device change gate; echo probes prove pickup,
+  never capacity.
+
+## JSDoc Ratchet degenerates on the fleet — 8x the CPU work, cause unproven
+
+- **Work:** cutover acceptance — JSDoc Ratchet timed out at 30 minutes on
+  three consecutive fleet runs while every other heavy lane matched its warm
+  p50.
+- **What happened:** the lane is ~4 min locally (296s user, 133% CPU) and ran
+  ~10 min on equally-cold GitHub-hosted 4-vCPU runners, but on 16-vCPU fleet
+  VMs it sustains ~8.5% CPU (~1.3 cores) past 30 minutes — roughly 8x the
+  CPU-seconds of the local run, so it is doing MORE work, not the same work
+  slowly, and cold caches alone cannot explain it (hosted was always cold).
+  Timed-out/cancelled jobs never serve logs, so the interior is unobserved.
+- **Prevention/next:** timeout raised to 60 so a finishing run yields a green,
+  a measured wall time, and a served log to attribute from; the lane's
+  single-threaded inventory is now an explicit optimization target for the
+  heavy-lane compile-cost session. General law: a lane that only ever ran on
+  warm persistent workers has an unmeasured cold profile — measure one full
+  cold run per lane before fleet cutovers.
+
+## Cross-layout actions/cache archives were the JSDoc degeneration
+
+- **Work:** root-causing the fleet JSDoc timeouts once a failing (not
+  cancelled) run finally served its log.
+- **What happened:** all failing fleet lanes carried ~519,000 log lines of
+  `tar: ../../../../../home/runner/.bun/install/cache/...: Cannot open` — the
+  bun-store actions/cache archives were saved on /home/runner-layout runners
+  and extracted on /home/ec2-user fleet VMs, failing per file for hundreds of
+  thousands of files. That grind inside the setup composite is the "8x CPU
+  work" that pushed a 4-minute lane past its 30-minute budget; lanes with
+  bigger budgets absorbed the storm invisibly. The turbo cache pair shares the
+  class via differing workdirs. The reverse direction never happened only
+  because an exact-key hit skips the save.
+- **Prevention:** cache keys now carry a runner-class segment
+  (`fleet`/`shared`) on all four keys and every restore-keys prefix —
+  cross-layout restores are structurally impossible. Law: any actions/cache
+  path anchored under HOME or the runner workdir must partition its key by
+  runner layout class.
+
+## Cutover-night spot reclaims: three events, six jobs, one same-second sweep
+
+- **Work:** landing the cutover PR's final wave.
+- **What happened:** three separate spot events killed six fleet jobs in two
+  hours; the last swept three m7a.4xlarge VMs at the same second (all
+  `Service initiated` terminations at 19:49:32), failing Check, Docgen, and
+  JSDoc simultaneously. Every reclaim hit m7a.4xlarge — the pool
+  price-capacity-optimized kept selecting. Mid-job reclaims have no automatic
+  recovery (job_retry is pre-pickup only), so each event demanded a manual
+  re-run and the wave could not complete.
+- **Prevention:** capacity type flipped to on-demand for the bring-up window
+  (decision-record option "on-demand now, spot later"); revert to spot is one
+  line once steady-state wave stability is measured. Law: a spot decision made
+  on "reclaims are rare at short durations" needs a same-night falsifier
+  check — concentration in a single instance pool converts independent risk
+  into correlated wave failure.
+
+## JSDoc Ratchet is CPU-anomalous on AL2023 fleet VMs — moved back to hosted
+
+- **Work:** landing the merge wave; the lane's fourth fleet run reached ~55 of
+  its 60 minutes at a steady ~25% CPU on 16 vCPUs.
+- **What happened:** with the cache storm fixed the lane still burned ~40x the
+  local run's CPU-seconds. Disk was ruled out live: EBS VolumeReadOps was ZERO
+  and queue length ~0 during the grind (page-cached), so it is genuine
+  compute. The same lane ran ~4 min locally, ~10 min on hosted Ubuntu 4-vCPU
+  runners, and ~7 min on Ubuntu burst workers with the SAME AMD hardware
+  family — the anomaly is AL2023-environment-specific to this lane's
+  workload, cause unattributed (candidates: bun/JSC behavior differences,
+  worker-pool scaling, systemd/cgroup limits on the runner unit).
+- **Prevention:** the lane returned to `ubuntu-24.04` (30-minute budget) — it
+  needs neither 64 GB nor fleet capacity, so fleet placement bought queue
+  latency for a 4–6x wall-time regression. Law: lane placement follows
+  measured per-lane profiles, not blanket "heavy goes to the fleet";
+  attribution of the AL2023 anomaly belongs to the heavy-lane session with a
+  reproducible harness (same commit, side-by-side AL2023 vs Ubuntu VM).
