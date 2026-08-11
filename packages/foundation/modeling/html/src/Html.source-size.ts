@@ -31,7 +31,7 @@ import {
   isMediaQueryWithoutType,
   parseFromTokens as parseMediaQueryListFromTokens,
 } from "@csstools/media-query-list-parser";
-import { Match, Number as N, pipe, Result } from "effect";
+import { flow, Match, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -316,8 +316,13 @@ const skipIgnorable = (cursor: CalculationCursor): boolean => {
   return skippedWhitespace;
 };
 
-const delimiter = (node: ComponentValue | undefined): O.Option<string> =>
-  node !== undefined && isTokenNode(node) && isTokenDelim(node.value) ? O.some(node.value[4].value) : O.none();
+const delimiter: (node: ComponentValue | undefined) => O.Option<string> = flow(
+  O.fromUndefinedOr,
+  O.filter(isTokenNode),
+  O.map((node) => node.value),
+  O.filter(isTokenDelim),
+  O.map((token) => token[4].value)
+);
 
 const trimIgnorable = (nodes: ReadonlyArray<ComponentValue>): ReadonlyArray<ComponentValue> => {
   let start = 0;
@@ -346,15 +351,16 @@ const splitArguments = (nodes: ReadonlyArray<ComponentValue>): ReadonlyArray<Rea
   return arguments_;
 };
 
-const keywordArgument = (nodes: ReadonlyArray<ComponentValue>): O.Option<string> => {
-  const trimmed = trimIgnorable(nodes);
-  if (trimmed.length !== 1) return O.none();
-
-  const node = trimmed[0];
-  return node !== undefined && isTokenNode(node) && isTokenIdent(node.value)
-    ? O.some(toAsciiLowerCase(node.value[4].value))
-    : O.none();
-};
+const keywordArgument = (nodes: ReadonlyArray<ComponentValue>): O.Option<string> =>
+  pipe(
+    trimIgnorable(nodes),
+    O.liftPredicate((trimmed) => A.length(trimmed) === 1),
+    O.flatMap(A.head),
+    O.filter(isTokenNode),
+    O.map((node) => node.value),
+    O.filter(isTokenIdent),
+    O.map((token) => toAsciiLowerCase(token[4].value))
+  );
 
 const parseCalculation = (nodes: ReadonlyArray<ComponentValue>): O.Option<NumericType> => {
   const cursor: CalculationCursor = { nodes, position: 0 };
@@ -554,7 +560,7 @@ const parseMathFunction = (node: FunctionNode): O.Option<NumericType> => {
       const parsed = parseExactCalculations(arguments_, arguments_.length);
       return pipe(
         parsed,
-        O.filter((types) => A.every(types, isNumberType)),
+        O.filter(A.every(isNumberType)),
         O.map(() => NUMBER_TYPE)
       );
     }),
@@ -738,7 +744,7 @@ const parseSourceSizeEntries = (
     },
   });
   if (hasParseError) return failure("invalidCss");
-  if (entries.length === 0) return failure("invalidList");
+  if (A.isReadonlyArrayEmpty(entries)) return failure("invalidList");
 
   const meaningfulTokens = A.filter(tokens, (token) => !isTokenEOF(token) && !isTokenWhiteSpaceOrComment(token));
   if (pipe(A.last(meaningfulTokens), O.exists(isTokenComma))) return failure("invalidList", entries.length - 1);
@@ -765,7 +771,7 @@ const inspectLengthEntry = (
   }
 
   const mediaCondition = trimIgnorable(A.take(entry, entry.length - 1));
-  if (mediaCondition.length === 0) return failure("invalidList", entryIndex);
+  if (A.isReadonlyArrayEmpty(mediaCondition)) return failure("invalidList", entryIndex);
   return isAuthorMediaCondition(mediaCondition) ? Result.succeed(false) : failure("invalidMediaCondition", entryIndex);
 };
 

@@ -19,11 +19,15 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { A, flow, O, pipe, Str, Struct } from "@beep/utils";
-import { Effect, SchemaIssue, SchemaTransformation } from "effect";
+import * as Struct from "@beep/utils/Struct";
+import { Effect, flow, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
+import * as A from "effect/Array";
 import { identity } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
+import { readonlyStruct } from "./internal/Html.readonly.ts";
 
 const $I = $HtmlId.create("Html.attributes");
 
@@ -37,7 +41,7 @@ class HtmlAttributeDomainError extends TaggedErrorClass<HtmlAttributeDomainError
 
 const assertAsciiFoldUnique = (values: ReadonlyArray<string>, label: string, allowEmpty: boolean): void => {
   const folded = A.map(values, toAsciiLowerCase);
-  if ((!allowEmpty && A.some(values, Str.isEmpty)) || A.dedupe(folded).length !== values.length) {
+  if ((!allowEmpty && A.some(values, Str.isEmpty)) || A.length(A.dedupe(folded)) !== values.length) {
     throw HtmlAttributeDomainError.make({
       message: `${label} requires unique ASCII-case-folded${allowEmpty ? "" : " non-empty"} values`,
     });
@@ -90,19 +94,18 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
     S.decodeTo(
       Canonical,
       SchemaTransformation.transformOrFail({
-        decode: (value) =>
-          pipe(
-            findCanonical(value),
-            O.match({
-              onNone: () =>
-                Effect.fail(
-                  new SchemaIssue.InvalidValue({
-                    message: "Expected a permitted HTML enumerated-attribute keyword",
-                  })
-                ),
-              onSome: Effect.succeed,
-            })
-          ),
+        decode: flow(
+          findCanonical,
+          O.match({
+            onNone: () =>
+              Effect.fail(
+                new SchemaIssue.InvalidValue({
+                  message: "Expected a permitted HTML enumerated-attribute keyword",
+                })
+              ),
+            onSome: Effect.succeed,
+          })
+        ),
         encode: Effect.succeed,
       })
     ),
@@ -168,7 +171,7 @@ export const Translate = TranslateInput.pipe(
   S.decodeTo(
     TranslateBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "yes" : value),
+      decode: (value) => (Str.isEmpty(value) ? "yes" : value),
       encode: identity,
     })
   ),
@@ -212,7 +215,7 @@ export const ContentEditable = ContentEditableInput.pipe(
   S.decodeTo(
     ContentEditableBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "true" : value),
+      decode: (value) => (Str.isEmpty(value) ? "true" : value),
       encode: identity,
     })
   ),
@@ -289,7 +292,7 @@ export const SpellCheck = SpellCheckInput.pipe(
   S.decodeTo(
     SpellCheckBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "true" : value),
+      decode: (value) => (Str.isEmpty(value) ? "true" : value),
       encode: identity,
     })
   ),
@@ -333,7 +336,7 @@ export const WritingSuggestions = WritingSuggestionsInput.pipe(
   S.decodeTo(
     WritingSuggestionsBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "true" : value),
+      decode: (value) => (Str.isEmpty(value) ? "true" : value),
       encode: identity,
     })
   ),
@@ -415,7 +418,7 @@ export const AutoCorrect = AutoCorrectInput.pipe(
   S.decodeTo(
     AutoCorrectBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "on" : value),
+      decode: (value) => (Str.isEmpty(value) ? "on" : value),
       encode: identity,
     })
   ),
@@ -538,7 +541,7 @@ export const Hidden = HiddenInput.pipe(
   S.decodeTo(
     HiddenBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "hidden" : value),
+      decode: (value) => (Str.isEmpty(value) ? HiddenInput.Enum.hidden : value),
       encode: identity,
     })
   ),
@@ -582,7 +585,7 @@ export const Popover = PopoverInput.pipe(
   S.decodeTo(
     PopoverBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "auto" : value),
+      decode: (value) => (Str.isEmpty(value) ? PopoverInput.Enum.auto : value),
       encode: identity,
     })
   ),
@@ -704,7 +707,7 @@ export const CrossOrigin = CrossOriginInput.pipe(
   S.decodeTo(
     CrossOriginBase,
     SchemaTransformation.transform({
-      decode: (value) => (value === "" ? "anonymous" : value),
+      decode: (value) => (Str.isEmpty(value) ? CrossOriginInput.Enum.anonymous : value),
       encode: identity,
     })
   ),
@@ -1827,7 +1830,7 @@ type OptionalString = typeof OptionalString;
  * @category schemas
  * @since 0.0.0
  */
-export const EnumeratedGlobalAttributes = {
+export const EnumeratedGlobalAttributes = readonlyStruct({
   autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
   autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
   contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
@@ -1840,7 +1843,7 @@ export const EnumeratedGlobalAttributes = {
   spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
   translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
   writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
-} as const;
+});
 
 /**
  * The WHATWG global attributes (`dom.html#global-attributes`), value-typed.
@@ -1858,7 +1861,7 @@ export const EnumeratedGlobalAttributes = {
  * @category schemas
  * @since 0.0.0
  */
-export const StandardGlobalAttributes = {
+export const StandardGlobalAttributes = readonlyStruct({
   accesskey: OptionalString,
   ...EnumeratedGlobalAttributes,
   autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
@@ -1881,7 +1884,7 @@ export const StandardGlobalAttributes = {
   style: OptionalString,
   tabindex: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
   title: OptionalString,
-} as const;
+});
 
 /**
  * Key inside the AST's `dataset` attribute bag.
@@ -1956,11 +1959,11 @@ export type DatasetKey = typeof DatasetKey.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const DatasetAttribute = {
+export const DatasetAttribute = readonlyStruct({
   dataset: S.OptionFromOptionalKey(S.Record(DatasetKey, S.String)).pipe(SchemaUtils.withNoneDefault),
-} as const;
+});
 
-const ariaAttributeNames = [
+const ariaAttributeNames = LiteralKit([
   "aria-activedescendant",
   "aria-atomic",
   "aria-autocomplete",
@@ -2014,7 +2017,7 @@ const ariaAttributeNames = [
   "aria-valuemin",
   "aria-valuenow",
   "aria-valuetext",
-] as const;
+]).Options;
 
 /**
  * `role` plus the WAI-ARIA `aria-*` state and property attributes. Universally
@@ -2033,14 +2036,12 @@ const ariaAttributeNames = [
  * @category schemas
  * @since 0.0.0
  */
-export const AriaAttributes = {
+export const AriaAttributes = readonlyStruct({
   role: OptionalString,
-  ...(Struct.fromEntries(A.map(ariaAttributeNames, (n) => [n, OptionalString] as const)) as {
-    readonly [K in (typeof ariaAttributeNames)[number]]: OptionalString;
-  }),
-} as const;
+  ...Struct.fromEntries(A.map(ariaAttributeNames, (n) => Tuple.make(n, OptionalString))),
+});
 
-const eventHandlerNames = [
+const eventHandlerNames = LiteralKit([
   "onabort",
   "onauxclick",
   "onbeforeinput",
@@ -2113,7 +2114,7 @@ const eventHandlerNames = [
   "onvolumechange",
   "onwaiting",
   "onwheel",
-] as const;
+]).Options;
 
 /**
  * The global event-handler content attributes (`on*`). Universally permitted;
@@ -2132,11 +2133,9 @@ const eventHandlerNames = [
  * @category schemas
  * @since 0.0.0
  */
-export const EventHandlerAttributes = Struct.fromEntries(
-  A.map(eventHandlerNames, (n) => [n, OptionalString] as const)
-) as {
-  readonly [K in (typeof eventHandlerNames)[number]]: OptionalString;
-};
+export const EventHandlerAttributes = readonlyStruct(
+  Struct.fromEntries(A.map(eventHandlerNames, (n) => Tuple.make(n, OptionalString)))
+);
 
 /**
  * The complete global attribute bundle spread into every generated element
@@ -2155,12 +2154,12 @@ export const EventHandlerAttributes = Struct.fromEntries(
  * @category schemas
  * @since 0.0.0
  */
-export const GlobalAttributes = {
+export const GlobalAttributes = readonlyStruct({
   ...StandardGlobalAttributes,
   ...DatasetAttribute,
   ...AriaAttributes,
   ...EventHandlerAttributes,
-} as const;
+});
 
 /**
  * Struct schema over {@link GlobalAttributes}; the source of the shared global

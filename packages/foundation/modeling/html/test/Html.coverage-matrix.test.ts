@@ -339,6 +339,7 @@ describe("@beep/html serialization branch matrix", () => {
     expect(() => conformantRoot({} as ConformantHtml)).toThrow();
     expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
     expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
+    expect(Exit.isFailure(serializeExit({} as Parameters<typeof serialize>[0]))).toBe(true);
     expect(Exit.isFailure(Effect.runSyncExit(serializeSafe({} as SafeHtmlAst)))).toBe(true);
   });
 });

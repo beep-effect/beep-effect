@@ -10,9 +10,9 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Effect, pipe, Result } from "effect";
+import { Effect, flow, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -21,6 +21,7 @@ import { AriaAttributes, StandardGlobalAttributes, tokenizeHtmlSpaceSeparated } 
 import { conformantRoot } from "./Html.conformance.ts";
 import { toAsciiLowerCase } from "./Html.foreign.ts";
 import { HtmlRoot } from "./Html.model.ts";
+import { readonlyStruct } from "./internal/Html.readonly.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
 const $I = $HtmlId.create("Html.policy");
@@ -56,7 +57,7 @@ const {
  * @category schemas
  * @since 0.0.0
  */
-export const SafeHtmlAttributes = {
+export const SafeHtmlAttributes = readonlyStruct({
   class: classAttribute,
   dir,
   hidden,
@@ -70,7 +71,7 @@ export const SafeHtmlAttributes = {
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   role,
-} as const;
+});
 
 /**
  * Safe global-attribute object schema.
@@ -447,22 +448,24 @@ export class HtmlPolicyError extends TaggedErrorClass<HtmlPolicyError>($I`HtmlPo
   })
 ) {}
 
-const safeHtmlAstIssuer = new WeakSet<SafeHtmlAstValue>();
-const safeHtmlAstConformantValues = new WeakMap<SafeHtmlAstValue, ConformantHtml>();
+const safeHtmlAstConformantValues = new WeakMap<object, ConformantHtml>();
 
 declare const safeHtmlAstProof: unique symbol;
 
-declare class SafeHtmlAstValue {
-  private readonly [safeHtmlAstProof]: true;
+class SafeHtmlAstValue {
+  private declare readonly [safeHtmlAstProof]: true;
+
+  static readonly is = (value: unknown): value is SafeHtmlAstValue =>
+    P.isObject(value) && safeHtmlAstConformantValues.has(value);
+
+  constructor() {
+    Reflect.setPrototypeOf(this, null);
+  }
 }
 
-const isSafeHtmlAstValue = (value: unknown): value is SafeHtmlAstValue =>
-  P.isObject(value) && safeHtmlAstIssuer.has(value as unknown as SafeHtmlAstValue);
-
 const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
-  const value = Object.create(null) as SafeHtmlAstValue;
+  const value = new SafeHtmlAstValue();
   safeHtmlAstConformantValues.set(value, conformant);
-  safeHtmlAstIssuer.add(value);
   Object.freeze(value);
   return value;
 };
@@ -475,18 +478,19 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlAst } from "@beep/html"
  * import { Effect } from "effect"
- * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(S.is(SafeHtmlAst)(proof)) // true
+ * console.log(SafeHtmlAst.is(proof)) // true
+ * console.log(SafeHtmlAst.is({ ...proof })) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SafeHtmlAst = S.declare(isSafeHtmlAstValue).pipe(
+export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
+  SchemaUtils.withStatics(() => ({ is: SafeHtmlAstValue.is })),
   $I.annoteSchema("SafeHtmlAst", {
     description: "Runtime-issued proof of conservative HTML output safety.",
   })
@@ -516,17 +520,17 @@ export type SafeHtmlAst = typeof SafeHtmlAst.Type;
 /**
  * Canonical schema alias for a safe-policy-proven HTML node or root.
  *
- * **Example** (Check safe node schema)
+ * **Example** (Check safe node provenance)
  *
  * ```ts
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlNode } from "@beep/html"
  * import { Effect } from "effect"
- * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * console.log(S.is(SafeHtmlNode)(proof)) // true
+ * console.log(SafeHtmlNode.is(proof)) // true
+ * console.log(SafeHtmlNode.is({ ...proof })) // false
  * ```
  *
  * @category schemas
@@ -564,18 +568,18 @@ const isSafeHtmlElement = S.is(SafeHtmlElement);
 const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> =>
   A.isArray(node.children) ? A.filter(node.children, isRuntimeNode) : A.emptyReadonly();
 
-const safeGlobalAttributeNames = ["class", "dir", "hidden", "id", "lang", "title"] as const;
+const safeGlobalAttributeNames: ReadonlyArray<string> = ["class", "dir", "hidden", "id", "lang", "title"];
 
-const safeAriaAttributeNames = [
+const safeAriaAttributeNames: ReadonlyArray<string> = [
   "aria-current",
   "aria-describedby",
   "aria-description",
   "aria-hidden",
   "aria-label",
   "aria-labelledby",
-] as const;
+];
 
-const labelledElementNames = [
+const labelledElementNames: ReadonlyArray<string> = [
   "a",
   "article",
   "aside",
@@ -590,9 +594,9 @@ const labelledElementNames = [
   "table",
   "td",
   "th",
-] as const;
+];
 
-const roleCompatibility = [
+const roleCompatibility: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   ["article", ["article"]],
   ["banner", ["header"]],
   ["cell", ["td"]],
@@ -611,9 +615,9 @@ const roleCompatibility = [
   ["rowgroup", ["tbody", "tfoot", "thead"]],
   ["rowheader", ["th"]],
   ["table", ["table"]],
-] as const;
+];
 
-const safeElementAttributeNames = [
+const safeElementAttributeNames: ReadonlyArray<string> = [
   "alt",
   "cite",
   "colspan",
@@ -631,9 +635,9 @@ const safeElementAttributeNames = [
   "type",
   "value",
   "width",
-] as const;
+];
 
-const structuralElementNames = ["_tag", "children"] as const;
+const structuralElementNames: ReadonlyArray<string> = ["_tag", "children"];
 const SafeAnchorRelation = LiteralKit(["nofollow", "noopener", "noreferrer"]);
 const isSafeAnchorRelation = S.is(SafeAnchorRelation);
 
@@ -874,4 +878,4 @@ export const safeHtmlAstConformant = (value: SafeHtmlAst): ConformantHtml =>
  * @category getters
  * @since 0.0.0
  */
-export const safeHtmlAstRoot = (value: SafeHtmlAst): HtmlRoot.Type => conformantRoot(safeHtmlAstConformant(value));
+export const safeHtmlAstRoot: (value: SafeHtmlAst) => HtmlRoot.Type = flow(safeHtmlAstConformant, conformantRoot);

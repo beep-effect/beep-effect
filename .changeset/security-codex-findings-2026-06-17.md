@@ -5,7 +5,6 @@
 "@beep/editor": patch
 "@beep/ffmpeg": patch
 "@beep/file-processing": patch
-"@beep/form": patch
 "@beep/identity": patch
 "@beep/langextract": patch
 "@beep/lexical-schema": patch

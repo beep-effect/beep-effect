@@ -173,6 +173,6 @@ correlated against recorded `transitionstart`/`transitionend` events.
   fallback.
 - Session mechanics, lane choice, OBS provisioning, and collector/witness
   troubleshooting live in the `qa-session-ops` skill; evidence-reading
-  mechanics in `motion-evidence-review`; provenance in `exif-provenance`.
+  mechanics in `motion-evidence-review`.
 - Long publishes/proofs during the loop: nohup-detached + Monitor, never a
   harness background task (10-minute cap kills them).

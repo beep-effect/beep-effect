@@ -40,15 +40,13 @@
 ## SFV4-null-return refinements
 
 - TypeScript assertion functions are false positives when the only `undefined` is the void success branch. Example: `packages/foundation/modeling/utils/src/Struct.ts:57` and `:72`.
-- React components and plugins legitimately return `null` to render nothing. Examples: `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:103`, `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:351`, and `packages/foundation/ui-system/form/src/internal/FieldShell.tsx:75-77`.
-- Third-party UI contracts can require `null`: `packages/foundation/ui-system/form/src/internal/FieldBinding.tsx:430` bridges date/time picker values where `null` is the empty value.
+- React components and plugins legitimately return `null` to render nothing. Examples: `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:103` and `packages/foundation/ui-system/editor/src/chat/typeahead.tsx:351`.
 - Low-level primitive helpers in `@beep/utils` may expose an unsafe/nullish form only when the safe Option form also exists. Example: `packages/foundation/modeling/utils/src/internal/StructPath.ts:173` feeds `Struct.dotGet`; the public Option counterpart is the escape hatch.
 
 ## Defaults / Option escape hatches
 
-- Optional React props and DOM attribute omission should be rule-card escape hatches. Examples: `packages/foundation/ui-system/editor/src/composer.tsx:50`, `packages/foundation/ui-system/form/src/internal/FieldBinding.tsx:284`, and `packages/foundation/ui-system/form/src/fields/ToggleField.tsx:37`.
-- Schema-default bridges should not be flagged as body defaults. `packages/foundation/ui-system/form/src/core/FormOptions.ts:143` is the intended fallback from omitted TanStack `defaultValues` to `getEncodedDefaultFormValues(params.schema)`.
-- Storybook `Default` exports and schema-default fixtures are test/demo vocabulary, not package debt. Examples: `packages/foundation/ui-system/editor/stories/chat-composer.stories.tsx:36` and `packages/foundation/ui-system/form/test/FormOptions.test.ts:16`.
+- Optional React props and DOM attribute omission should be rule-card escape hatches. Example: `packages/foundation/ui-system/editor/src/composer.tsx:50`.
+- Storybook `Default` exports and schema-default fixtures are test/demo vocabulary, not package debt. Example: `packages/foundation/ui-system/editor/stories/chat-composer.stories.tsx:36`.
 - `@beep/types` and `@beep/utils` need package-charter allowlists: type-level conditional utilities such as `packages/foundation/primitive/types/src/TString.types.ts:30`, shared thunk helpers such as `packages/foundation/modeling/utils/src/thunk.ts:142`, and primitive string/text helpers such as `packages/foundation/modeling/utils/src/Text.ts:33` are the reusable vocabulary other packages should schema-wrap as needed.
 
 ---

@@ -13,6 +13,7 @@ import { CoreVocab, contractOption, prefixedNameOrIri } from "@beep/identity";
 import { O as OU } from "@beep/utils";
 import { flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -336,13 +337,7 @@ const externalFactSubjects = (ontology: AssembledOntology): ReadonlyArray<string
     ontology.facts,
     A.map((fact) => fact.subjectIri),
     A.dedupe,
-    A.filter(
-      (subjectIri) =>
-        !pipe(
-          ontology.classes,
-          A.some((assembled) => assembled.iri === subjectIri)
-        )
-    )
+    A.filter((subjectIri) => !pipe(ontology.classes, A.some(P.Struct({ iri: Eq.equals(subjectIri) }))))
   );
 
 const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate): JsonLdNode => ({
@@ -421,7 +416,7 @@ const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
   const ownedNamespace = withNamespaceSeparator(ontology.baseIri);
   const owned = pipe(
     localFromNamespace(ownedNamespace, iri),
-    O.map((local) => prefixedNameOrIri(local, { prefix: ontology.prefix, fullIri: iri }))
+    O.map(prefixedNameOrIri({ prefix: ontology.prefix, fullIri: iri }))
   );
 
   if (O.isSome(owned)) {
@@ -501,7 +496,7 @@ const classBlock = (ontology: AssembledOntology, assembled: AssembledClass): str
     ...pipe(
       assembled.description,
       O.match({
-        onNone: () => [],
+        onNone: A.empty,
         onSome: (description) => [`${turtleTerm(ontology, RDFS_COMMENT)} ${literalValue(description)}`],
       })
     ),
@@ -585,7 +580,7 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
         fact.predicateIri,
         ...(P.isString(fact.object)
           ? [fact.object]
-          : pipe(fact.object.datatypeIri, O.match({ onNone: () => [], onSome: (datatypeIri) => [datatypeIri] }))),
+          : pipe(fact.object.datatypeIri, O.match({ onNone: A.empty, onSome: (datatypeIri) => [datatypeIri] }))),
       ])
     ),
   ];

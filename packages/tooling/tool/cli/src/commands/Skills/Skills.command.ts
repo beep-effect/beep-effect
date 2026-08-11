@@ -272,22 +272,22 @@ export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
     skillPath: "skills/productivity/teach/SKILL.md",
   }),
   skillSource({
-    name: "ponytail",
-    source: "DietrichGebert/ponytail",
+    name: "portless",
+    source: "vercel-labs/portless",
     ref: "main",
-    skillPath: "skills/ponytail/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-review",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-review/SKILL.md",
+    skillPath: "skills/portless/SKILL.md",
   }),
   skillSource({
     name: "shadcn",
     source: "shadcn-ui/ui",
     ref: "main",
     skillPath: "skills/shadcn/SKILL.md",
+  }),
+  skillSource({
+    name: "turborepo",
+    source: "vercel/turborepo",
+    ref: "main",
+    skillPath: "skills/turborepo/SKILL.md",
   }),
 ];
 

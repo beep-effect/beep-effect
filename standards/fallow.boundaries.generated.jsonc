@@ -318,12 +318,6 @@
         ]
       },
       {
-        "name": "@beep/form",
-        "patterns": [
-          "packages/foundation/ui-system/form/src/**"
-        ]
-      },
-      {
         "name": "@beep/gov-legal-mcp",
         "patterns": [
           "packages/drivers/gov-legal-mcp/src/**"
@@ -1762,23 +1756,6 @@
         ]
       },
       {
-        "from": "@beep/form",
-        "allow": [
-          "@beep/form",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/test-utils",
-          "@beep/ui"
-        ],
-        "allowTypeOnly": [
-          "@beep/form",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/test-utils",
-          "@beep/ui"
-        ]
-      },
-      {
         "from": "@beep/gov-legal-mcp",
         "allow": [
           "@beep/ecfr",
@@ -3122,13 +3099,11 @@
       {
         "from": "@beep/storybook",
         "allow": [
-          "@beep/form",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"
         ],
         "allowTypeOnly": [
-          "@beep/form",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"

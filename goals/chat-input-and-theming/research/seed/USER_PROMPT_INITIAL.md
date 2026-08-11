@@ -8,7 +8,6 @@ These goals and explorations where completed or are in progress and are relevant
 - [agentic-professional-runtime](./goals/agentic-professional-runtime/)
 - [desktop-chat-surface](./goals/desktop-chat-surface/)
 - [epistemic-claim-lifecycle-gate](./goals/epistemic-claim-lifecycle-gate/)
-- [form](./goals/form/)
 - [langextract-capability](./goals/langextract-capability/)
 - [law-practice-office-action-extraction-rung](./goals/law-practice-office-action-extraction-rung/)
 - [law-practice-office-action-spike](./goals/law-practice-office-action-spike/)

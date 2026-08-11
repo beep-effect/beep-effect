@@ -384,20 +384,6 @@
       "enforcementScope": "declared-dependency-consistency"
     },
     {
-      "ruleId": "@beep/form",
-      "generatedRuleFrom": "@beep/form",
-      "sourceClass": "manifest-derived",
-      "sourceRefs": [
-        "package.json",
-        "packages/foundation/ui-system/form/package.json",
-        "standards/fallow.boundaries.generated.jsonc"
-      ],
-      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
-      "catalogRefs": [],
-      "promotionEligible": true,
-      "enforcementScope": "declared-dependency-consistency"
-    },
-    {
       "ruleId": "@beep/hubspot",
       "generatedRuleFrom": "@beep/hubspot",
       "sourceClass": "manifest-derived",

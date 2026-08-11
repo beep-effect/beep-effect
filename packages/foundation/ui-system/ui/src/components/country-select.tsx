@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { $FormId } from "@beep/identity";
+import { $UiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import {
   Combobox,
@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import { cn } from "../lib/index.ts";
 import type React from "react";
 
-const $I = $FormId.create("components/country-select");
+const $I = $UiId.create("components/country-select");
 
 /**
  * ISO 3166-1 alpha-2 country code schema accepted by the country primitives.

@@ -9,7 +9,7 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Result } from "effect";
+import { flow, Result } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -4811,5 +4811,5 @@ const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): Html
  * @since 0.0.0
  */
 export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
-  R.map(elementMetaSource, (value) => freezeElementMeta(decodeElementMeta(value)))
+  R.map(elementMetaSource, flow(decodeElementMeta, freezeElementMeta))
 );
