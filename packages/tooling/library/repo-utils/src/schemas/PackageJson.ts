@@ -245,7 +245,7 @@ const BeepToolingKind = S.Literals(["library", "tool", "policy-pack", "test-kit"
   })
 );
 
-const BeepPackageFamily = LiteralKit(["foundation", "drivers", "tooling"]).pipe(
+const BeepPackageFamily = LiteralKit(["foundation", "drivers", "tooling", "ecosystem"]).pipe(
   $I.annoteSchema("BeepPackageFamily", {
     title: "Beep Package Family",
     description: "Canonical package family discriminator for repo-local package metadata.",
@@ -284,8 +284,23 @@ class BeepToolingMetadata extends S.Class<BeepToolingMetadata>($I`BeepToolingMet
   })
 ) {}
 
+class BeepEcosystemMetadata extends S.Class<BeepEcosystemMetadata>($I`BeepEcosystemMetadata`)(
+  {
+    family: S.Literal("ecosystem"),
+  },
+  $I.annote("BeepEcosystemMetadata", {
+    title: "Beep Ecosystem Metadata",
+    description: "Repo-local package metadata for flat ecosystem packages.",
+  })
+) {}
+
 const BeepPackageMetadata = BeepPackageFamily.mapMembers(
-  Tuple.evolve([() => BeepFoundationMetadata, () => BeepDriverMetadata, () => BeepToolingMetadata])
+  Tuple.evolve([
+    () => BeepFoundationMetadata,
+    () => BeepDriverMetadata,
+    () => BeepToolingMetadata,
+    () => BeepEcosystemMetadata,
+  ])
 ).pipe(
   S.toTaggedUnion("family"),
   $I.annoteSchema("BeepPackageMetadata", {

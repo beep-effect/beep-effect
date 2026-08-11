@@ -7,6 +7,7 @@ const config = {
     "scratchpad/package.json",
     "tools/tsgo-shim/package.json",
     "packages/_internal/*/package.json",
+    "packages/ecosystem/*/package.json",
     "packages/foundation/capability/*/package.json",
     "packages/foundation/modeling/*/package.json",
     "packages/foundation/primitive/*/package.json",

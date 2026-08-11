@@ -91,6 +91,28 @@ const DriverPackageMetadata = S.Struct({
   }),
   scripts: S.Record(S.String, S.String),
 });
+const EcosystemPackageMetadata = S.Struct({
+  private: S.Literal(true),
+  beep: S.Struct({
+    family: S.Literal("ecosystem"),
+    kind: S.optionalKey(S.String),
+  }),
+  sideEffects: S.Literal(false),
+  exports: S.Record(S.String, S.String),
+  files: S.Array(S.String),
+  publishConfig: S.Struct({
+    access: S.Literal("public"),
+    provenance: S.Literal(true),
+    exports: S.Record(S.String, S.String),
+  }),
+  scripts: S.Record(S.String, S.String),
+  dependencies: S.optionalKey(S.Record(S.String, S.String)),
+  peerDependencies: S.Record(S.String, S.String),
+  optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
+  bundledDependencies: S.optionalKey(S.Unknown),
+  bundleDependencies: S.optionalKey(S.Unknown),
+  devDependencies: S.Record(S.String, S.String),
+});
 
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
@@ -102,6 +124,7 @@ const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManif
 const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
 const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
 const decodeDriverPackageMetadata = S.decodeUnknownSync(DriverPackageMetadata);
+const decodeEcosystemPackageMetadata = S.decodeUnknownSync(EcosystemPackageMetadata);
 const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig)(fc);
 const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig)(fc);
 const ExpectedGeneratedQualityScripts = {
@@ -329,6 +352,9 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "package.json"), {
     name: "@beep/test-root",
     private: true,
+    catalog: {
+      effect: "4.0.0-beta.106",
+    },
     workspaces: options.workspaces,
   });
   yield* writeJsonFile(path.join(rootDir, "tsconfig.json"), {
@@ -973,6 +999,81 @@ describe("create-package", { concurrent: false }, () => {
               expect(syncpackConfig).not.toContain(`"packages/drivers/runpod/package.json"`);
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "runpod", "Runpod");
+            })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
+    "creates polarity-correct ecosystem packages with flat family metadata",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(
+          {
+            workspaces: ["packages/foundation/*/*", "packages/ecosystem/*"],
+            references: ["packages/foundation/modeling/identity"],
+            paths: {
+              "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+              "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+            },
+            syncpackSources: [
+              "package.json",
+              "packages/foundation/*/*/package.json",
+              "packages/ecosystem/*/package.json",
+            ],
+          },
+          ({ fs, path, rootDir }) =>
+            Effect.gen(function* () {
+              yield* bootstrapIdentityWorkspace(rootDir);
+
+              yield* runCreatePackageCommand([
+                "portable-effect",
+                "--family",
+                "ecosystem",
+                "--description",
+                "Portable Effect library",
+              ]);
+
+              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/ecosystem/*"]);
+
+              const generatedPackage = decodeEcosystemPackageMetadata(
+                yield* readJsonFile(path.join(rootDir, "packages", "ecosystem", "portable-effect", "package.json"))
+              );
+              expect(generatedPackage.beep).toEqual({ family: "ecosystem" });
+              expect(generatedPackage.beep.kind).toBeUndefined();
+              expect(generatedPackage.sideEffects).toBe(false);
+              expect(generatedPackage.exports).toEqual({
+                "./package.json": "./package.json",
+                ".": "./src/index.ts",
+              });
+              expect(generatedPackage.files).toEqual([
+                "dist/**/*.js",
+                "dist/**/*.js.map",
+                "dist/**/*.d.ts",
+                "dist/**/*.d.ts.map",
+              ]);
+              expect(generatedPackage.publishConfig).toEqual({
+                access: "public",
+                provenance: true,
+                exports: {
+                  "./package.json": "./package.json",
+                  ".": "./dist/index.js",
+                },
+              });
+              expect(generatedPackage.dependencies).toBeUndefined();
+              expect(generatedPackage.peerDependencies).toEqual({ effect: "4.0.0-beta.106" });
+              expect(generatedPackage.optionalDependencies).toBeUndefined();
+              expect(generatedPackage.bundledDependencies).toBeUndefined();
+              expect(generatedPackage.bundleDependencies).toBeUndefined();
+              expect(generatedPackage.devDependencies.effect).toBe("catalog:");
+              expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
+              expect(generatedPackage.scripts.docgen).toBe("bun run ../../../packages/tooling/tool/docgen/src/bin.ts");
+
+              const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
+              expect(syncpackConfig).toContain(`"packages/ecosystem/*/package.json"`);
+              expect(syncpackConfig).not.toContain(`"packages/ecosystem/portable-effect/package.json"`);
             })
         )
       ),
