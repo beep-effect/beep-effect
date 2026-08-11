@@ -56,11 +56,11 @@ describe("detectNoLocationTs2589Flake", () => {
 
   it("quarantines check-lane task ids", () => {
     const output = [
-      "@beep/form:check: error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "Failed:    @beep/form#check",
+      "@beep/schema:check: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+      "Failed:    @beep/schema#check",
     ].join("\n");
     const tasks = O.getOrThrow(detectNoLocationTs2589Flake(output));
-    expect(tasks[0]).toMatchObject({ taskId: "@beep/form#check", packageName: "@beep/form", task: "check" });
+    expect(tasks[0]).toMatchObject({ taskId: "@beep/schema#check", packageName: "@beep/schema", task: "check" });
   });
 
   it("quarantines multiple attributed tasks up to the cap", () => {

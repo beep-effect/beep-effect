@@ -75,10 +75,7 @@ false-zero packages, and packet/docs evidence explicitly retains others
   not package-specific registrations; `docgen` is inherited through the
   workspace graph (`turbo.json:157-171,207-211`). Package removal therefore
   removes its task nodes once workspace/config references are gone.
-- **E9 — retained products.** `@beep/form` is a completed-retained package with
-  29 Storybook play tests (`goals/form/README.md:3-18`); the Storybook glob is
-  a documented non-import consumer (`knip.jsonc:93-105`). `@beep/pandoc-ast`
-  is completed-retained and part of the document interchange architecture
+- **E9 — retained products.** `@beep/pandoc-ast` is completed-retained and part of the document interchange architecture
   (`goals/pandoc-ast-foundation/README.md:3-25`). `@beep/shared-tables` is
   explicitly Active (`packages/shared/AGENTS.md:24-34,58-68`).
 - **E10 — retained future work.** `@beep/onepassword-cli` is a locked retained
@@ -141,7 +138,6 @@ All numeric cells derive from E3–E4.
 | 11 | `@beep/uspto-mcp` | 0p/0t; zero-consumer | 27.434; 17.933 / 1,905,271; 2703.5/2596.5/207/3994; 18 | Completed standalone host [E11]. | **keep** |
 | 12 | `@beep/pacer` | 0p/0t; zero-consumer | 27.203; 17.808 / 1,914,933; 2811.5/2915.5/227/3441; 24 | No product consumer or dedicated packet found; substantial tests mean recreation is costlier than a stub [E1,E14]. | **candidate** |
 | 13 | `@beep/discord` | 0p/0t; zero-consumer | 27.120; 18.095 / 1,746,422; 2699/2402/196/3728; 13 | OpenClaw names Discord as its v1 channel, but current infra does not import this driver [E10,E13]. | **candidate** |
-| 14 | `@beep/form` | 0p/0t; zero-consumer | 26.983; 17.710 / 2,198,569; 2732/2411.5/112.5/4017; 87 | Storybook consumes stories outside `src`; completed-retained [E9]. | **keep** |
 | 15 | `@beep/ontology` | 0p/0t; zero-consumer | 26.958; 17.293 / 1,913,454; 2810/2907.5/244/3703; 26 | Retained ontology foundation and future bridge [E10]. | **keep** |
 | 16 | `@beep/openclaw` | 0p/0t; zero-consumer | 26.799; 17.369 / 1,893,292; 2801/2672/239.5/3717; 35 | Live `infra/**` consumer excluded by request; active goal [E10]. | **keep** |
 | 17 | `@beep/ai-sync` | 0p/0t; zero-consumer | 26.724; 17.863 / 1,821,358; 2763/2519/226/3353; 24 | Root script invokes its package-local CLI (`package.json:364`). | **keep** |
@@ -213,7 +209,7 @@ though nothing imports an app package.
 `@beep/acp (0p/0t)`, `@beep/ai-sync (0p/0t)`,
 `@beep/architecture-lab-client (0p/0t)`, `@beep/courtlistener (0p/0t)`,
 `@beep/db-admin (0p/0t)`, `@beep/discord (0p/0t)`, `@beep/dol (0p/0t)`,
-`@beep/federal-register (0p/0t)`, `@beep/form (0p/0t)`,
+`@beep/federal-register (0p/0t)`,
 `@beep/gov-legal-mcp (0p/0t)`, `@beep/lint-rules (0p/0t)`,
 `@beep/m365-mcp (0p/0t)`, `@beep/nlp-mcp (0p/0t)`,
 `@beep/onepassword-cli (0p/0t)`, `@beep/ontology (0p/0t)`,

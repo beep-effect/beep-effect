@@ -492,6 +492,14 @@
       "description": "Per-worker shape: instance type, root volume, and in-guest self-destruct deadline."
     },
     {
+      "file": "infra/src/CiTurboCache.ts",
+      "symbol": "CiTurboCachePulumiConfigValues",
+      "kind": "schema-class",
+      "owner": "@beep/infra",
+      "identity": "CiTurboCachePulumiConfigValues",
+      "description": "Validated Pulumi configuration for the asymmetric Turbo cache component."
+    },
+    {
       "file": "infra/src/OipWeb.ts",
       "symbol": "OipAssetsBucketConfig",
       "kind": "schema-class",
@@ -10485,7 +10493,7 @@
       "description": "Input accepted by a color formatter."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "ArtifactId",
       "kind": "brand",
       "owner": "@beep/file-processing",
@@ -10493,7 +10501,7 @@
       "description": "A stable file-processing artifact identifier derived from a SHA-256 content digest."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "ArtifactLocator",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10501,7 +10509,7 @@
       "description": "Runtime-neutral locator for a source artifact."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "ArtifactLocatorKind",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10509,7 +10517,7 @@
       "description": "Runtime-neutral locator kinds accepted by file-processing operation inputs."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "ArtifactReference",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10517,7 +10525,7 @@
       "description": "Reference to an artifact materialized by an operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "ContentDigest",
       "kind": "brand",
       "owner": "@beep/file-processing",
@@ -10525,7 +10533,7 @@
       "description": "A SHA-256 content digest using the sha256:<hex> representation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "OperationId",
       "kind": "brand",
       "owner": "@beep/file-processing",
@@ -10533,7 +10541,7 @@
       "description": "A stable file-processing operation identifier derived from operation inputs."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
       "symbol": "SourceArtifact",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10541,23 +10549,7 @@
       "description": "Runtime-neutral source artifact metadata and optional in-memory bytes or text."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "ArchiveExportProcessFileResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ArchiveExportProcessFileResult",
-      "description": "Full source processing result for archive child export."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "ArchiveExportResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ArchiveExportResult",
-      "description": "Runtime-neutral child artifact export result for archive-like source files."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "ChildArtifactRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10565,23 +10557,7 @@
       "description": "JSONL-safe child artifact record emitted for archive exports."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "ExtractedProcessFileResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ExtractedProcessFileResult",
-      "description": "Full source processing result for text or metadata extraction."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "ExtractionResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ExtractionResult",
-      "description": "Runtime-neutral text and metadata extraction result."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "FailedFileProcessingFailureRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10589,7 +10565,7 @@
       "description": "JSONL-safe sanitized hard failure source record."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "FailedSourceProcessingRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10597,7 +10573,7 @@
       "description": "JSONL-safe failed source processing record emitted by the CLI proof."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "FileProcessingCoverageSummary",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10605,7 +10581,7 @@
       "description": "Aggregate processing coverage counts for the proof manifest."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "FileProcessingFailureReason",
       "kind": "union",
       "owner": "@beep/file-processing",
@@ -10613,7 +10589,7 @@
       "description": "Machine-readable skipped or failed source reason emitted in failures.jsonl."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "FileProcessingFailureRecord",
       "kind": "tagged-union",
       "owner": "@beep/file-processing",
@@ -10621,15 +10597,7 @@
       "description": "JSONL-safe sanitized skipped or failed source record."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "ProcessFileResult",
-      "kind": "tagged-union",
-      "owner": "@beep/file-processing",
-      "identity": "ProcessFileResult",
-      "description": "Runtime-neutral result for a full source processing operation."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "ProcessRunManifest",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10637,7 +10605,7 @@
       "description": "JSON-safe root manifest for a file-processing proof run."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "SkippedFileProcessingFailureRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10645,15 +10613,7 @@
       "description": "JSONL-safe sanitized skipped or failed source record."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "SkippedProcessFileResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "SkippedProcessFileResult",
-      "description": "Full source processing result for intentional skips."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "SkippedSourceProcessingRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10661,7 +10621,7 @@
       "description": "JSONL-safe skipped source processing record emitted by the CLI proof."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "SourceProcessingRecord",
       "kind": "tagged-union",
       "owner": "@beep/file-processing",
@@ -10669,15 +10629,7 @@
       "description": "JSONL-safe source processing record emitted by the CLI proof."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "SourceProcessingStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/file-processing",
-      "identity": "SourceProcessingStatus",
-      "description": "Per-source processing status used in sources.jsonl."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
       "symbol": "SucceededSourceProcessingRecord",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10685,7 +10637,63 @@
       "description": "JSONL-safe succeeded source processing record emitted by the CLI proof."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "ArchiveExportProcessFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ArchiveExportProcessFileResult",
+      "description": "Full source processing result for archive child export."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "ArchiveExportResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ArchiveExportResult",
+      "description": "Runtime-neutral child artifact export result for archive-like source files."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "ExtractedProcessFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ExtractedProcessFileResult",
+      "description": "Full source processing result for text or metadata extraction."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "ExtractionResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ExtractionResult",
+      "description": "Runtime-neutral text and metadata extraction result."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "ProcessFileResult",
+      "kind": "tagged-union",
+      "owner": "@beep/file-processing",
+      "identity": "ProcessFileResult",
+      "description": "Runtime-neutral result for a full source processing operation."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "SkippedProcessFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "SkippedProcessFileResult",
+      "description": "Full source processing result for intentional skips."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "symbol": "SourceProcessingStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/file-processing",
+      "identity": "SourceProcessingStatus",
+      "description": "Per-source processing status used in sources.jsonl."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
       "symbol": "TextArtifactReference",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10693,39 +10701,7 @@
       "description": "Reference to a text artifact emitted for one extraction operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
-      "symbol": "DetectFileOperation",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "DetectFileOperation",
-      "description": "Runtime-neutral request to detect a source artifact format."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
-      "symbol": "DetectionResult",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "DetectionResult",
-      "description": "Detected format for a source artifact."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
-      "symbol": "ExportArchiveOperation",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ExportArchiveOperation",
-      "description": "Runtime-neutral request to export child artifacts from an archive source."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
-      "symbol": "ExtractFileOperation",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ExtractFileOperation",
-      "description": "Runtime-neutral request to extract text and metadata from a source artifact."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.errors.ts",
       "symbol": "FileProcessingOperationError",
       "kind": "tagged-error",
       "owner": "@beep/file-processing",
@@ -10733,7 +10709,7 @@
       "description": "Sanitized operation-level error exposed by the file-processing capability boundary."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.errors.ts",
       "symbol": "FileProcessingOperationErrorReason",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10741,7 +10717,39 @@
       "description": "Operation-level failure reasons that hide driver, process, HTTP, and filesystem implementation details."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
+      "symbol": "DetectFileOperation",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "DetectFileOperation",
+      "description": "Runtime-neutral request to detect a source artifact format."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
+      "symbol": "DetectionResult",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "DetectionResult",
+      "description": "Detected format for a source artifact."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
+      "symbol": "ExportArchiveOperation",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ExportArchiveOperation",
+      "description": "Runtime-neutral request to export child artifacts from an archive source."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
+      "symbol": "ExtractFileOperation",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ExtractFileOperation",
+      "description": "Runtime-neutral request to extract text and metadata from a source artifact."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
       "symbol": "ProcessFileOperation",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10749,7 +10757,7 @@
       "description": "Runtime-neutral request to run the minimum file-processing vertical slice for one source."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.errors.ts",
       "symbol": "PathSafetyError",
       "kind": "tagged-error",
       "owner": "@beep/file-processing",
@@ -10757,7 +10765,7 @@
       "description": "Typed, fail-closed error raised when a candidate path escapes its allowed root or cannot be canonicalized."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.errors.ts",
       "symbol": "PathSafetyViolationReason",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10765,31 +10773,7 @@
       "description": "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, the pinned canonical root is not absolute, or the root or candidate could not be canonicalized."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
-      "symbol": "ResolveSourceTextRequest",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ResolveSourceTextRequest",
-      "description": "Request to resolve complete canonical text from an immutable provenance source identity."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
-      "symbol": "ResolvedSourceText",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "ResolvedSourceText",
-      "description": "Complete canonical source text whose source, extractor, and text digests have been verified."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
-      "symbol": "SourceTextPage",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "SourceTextPage",
-      "description": "Bounded canonical source-text page with absolute surrogate-safe UTF-16 offsets."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.errors.ts",
       "symbol": "SourceTextResolverError",
       "kind": "tagged-error",
       "owner": "@beep/file-processing",
@@ -10797,7 +10781,7 @@
       "description": "Typed, fail-closed failure emitted by canonical source-text resolution or paging."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.errors.ts",
       "symbol": "SourceTextResolverErrorReason",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10805,7 +10789,31 @@
       "description": "Fail-closed reasons emitted while resolving or paging canonical source text."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "symbol": "ResolveSourceTextRequest",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ResolveSourceTextRequest",
+      "description": "Request to resolve complete canonical text from an immutable provenance source identity."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "symbol": "ResolvedSourceText",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "ResolvedSourceText",
+      "description": "Complete canonical source text whose source, extractor, and text digests have been verified."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "symbol": "SourceTextPage",
+      "kind": "schema-class",
+      "owner": "@beep/file-processing",
+      "identity": "SourceTextPage",
+      "description": "Bounded canonical source-text page with absolute surrogate-safe UTF-16 offsets."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "DeferredSelectedStrategy",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10813,7 +10821,7 @@
       "description": "Resolved strategy for an intentionally deferred source artifact operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileFormatFamily",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10821,7 +10829,7 @@
       "description": "Deterministic file format families recognized by V1 file processing."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingCapability",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10829,7 +10837,7 @@
       "description": "Capability advertised by a file-processing engine."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingEngineDescriptor",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10837,7 +10845,7 @@
       "description": "Runtime-neutral descriptor for a file-processing engine implementation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingEngineFamily",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10845,7 +10853,7 @@
       "description": "Engine families selectable by file-processing strategies."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingOperationKind",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10853,7 +10861,7 @@
       "description": "Operation kinds modeled by the file-processing capability."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingSkipReason",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10861,7 +10869,7 @@
       "description": "Machine-readable reason for a deterministic skipped source."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "FileProcessingSupportDisposition",
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
@@ -10869,7 +10877,7 @@
       "description": "Whether an engine can process the source format in the current run."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "SelectedStrategy",
       "kind": "tagged-union",
       "owner": "@beep/file-processing",
@@ -10877,7 +10885,7 @@
       "description": "Resolved engine and support strategy for a source artifact operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "StrategyPreference",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10885,7 +10893,7 @@
       "description": "Engine preference requested for a file-processing operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "SupportedSelectedStrategy",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -10893,7 +10901,7 @@
       "description": "Resolved strategy for a supported source artifact operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
       "symbol": "UnsupportedSelectedStrategy",
       "kind": "schema-class",
       "owner": "@beep/file-processing",
@@ -18106,6 +18114,22 @@
       "description": "A file extension for a mime type that is a video."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
+      "symbol": "FileInfo",
+      "kind": "tagged-union",
+      "owner": "@beep/schema",
+      "identity": "FileInfo",
+      "description": "File-system stat metadata discriminated by entry kind."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
+      "symbol": "FileInfoType",
+      "kind": "literal-kit",
+      "owner": "@beep/schema",
+      "identity": "FileInfoType",
+      "description": "The supported kinds of file-system entries, with a helper for constructing union members."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.guards.ts",
       "symbol": "EndsWithSeparator",
       "kind": "brand",
@@ -19613,7 +19637,7 @@
     {
       "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
       "symbol": "PermissionsPolicyDirectives",
-      "kind": "schema-const",
+      "kind": "codec",
       "owner": "@beep/schema",
       "identity": "PermissionsPolicyDirectives",
       "description": "A record of `Permissions-Policy` directives to allowlist values."
@@ -21559,22 +21583,6 @@
       "owner": "@beep/editor",
       "identity": "YouTubeWatchRequest",
       "description": "Typed request emitted when a user activates the YouTube watch fallback."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/core/Errors.ts",
-      "symbol": "FieldErrorEntry",
-      "kind": "schema-class",
-      "owner": "@beep/form",
-      "identity": "FieldErrorEntry",
-      "description": "A single renderable form-field validation error."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
-      "symbol": "ValidateOn",
-      "kind": "literal-kit",
-      "owner": "@beep/form",
-      "identity": "ValidateOn",
-      "description": "Validation events supported by TanStack form validator routing."
     },
     {
       "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
@@ -25128,6 +25136,30 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigScope",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigScope",
+      "description": "Whether a snapshotted config file is per-root baseline guidance or session-effective config."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigSnapshotBoundsReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigSnapshotBoundsReport",
+      "description": "Budget, nested-root exclusions, and truncation outcome for one AI metrics config snapshot walk."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigSnapshotBudget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigSnapshotBudget",
+      "description": "Depth, file-count, per-file byte, and total byte bounds applied to a config snapshot walk."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
       "symbol": "AiMetricsConfigSnapshotDiff",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
@@ -25165,6 +25197,70 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsConfigSnapshotResult",
       "description": "Config snapshot manifest used to attribute AI-agent metrics to repo guidance changes."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigSnapshotStage",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigSnapshotStage",
+      "description": "Named stage of the AI metrics config snapshot pipeline."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigSnapshotStageTiming",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigSnapshotStageTiming",
+      "description": "Duration, file count, and byte count for one AI metrics config snapshot stage."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "symbol": "AiMetricsConfigSnapshotTruncationReason",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsConfigSnapshotTruncationReason",
+      "description": "Bound that stopped an AI metrics config snapshot walk short of the full tree."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "symbol": "AiMetricsDataRoot",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsDataRoot",
+      "description": "Resolved AI metrics data root and the precedence rung that produced it."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "symbol": "AiMetricsDataRootError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsDataRootError",
+      "description": "Typed failure raised when an AI metrics data root is not an absolute path."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "symbol": "AiMetricsDataRootInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsDataRootInput",
+      "description": "Flag, environment, home, and target inputs consumed by AI metrics data-root precedence."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "symbol": "AiMetricsDataRootSource",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsDataRootSource",
+      "description": "Precedence rung that produced a resolved AI metrics data root."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "symbol": "AiMetricsStateHomeInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsStateHomeInput",
+      "description": "Home directory and XDG_STATE_HOME inputs consumed by AI metrics state-home resolution."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
@@ -25365,6 +25461,62 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "HookPulseWaitReason",
       "description": "Observed or explicitly unknown reason that an agent session is waiting."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsCanonicalRoot",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsCanonicalRoot",
+      "description": "Clone, repository, worktree, and revision identity for one canonical AI metrics root."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsCanonicalRootInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsCanonicalRootInput",
+      "description": "Root path and optional hash salt used to derive one canonical AI metrics root identity."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsIdentityRegistry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsIdentityRegistry",
+      "description": "Persisted registry of canonical AI metrics roots and the source instances writing to them."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsIdentityRegistryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsIdentityRegistryError",
+      "description": "Typed failure raised while deriving or persisting AI metrics root identity."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsIdentityRegistryUpsertInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsIdentityRegistryUpsertInput",
+      "description": "Data root, home directory, root path, and agent brands merged into the AI metrics identity registry."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsRootKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsRootKind",
+      "description": "Whether a canonical AI metrics root is a primary clone or a linked git worktree."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "symbol": "AiMetricsSourceInstance",
+      "kind": "schema-class",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsSourceInstance",
+      "description": "One machine, canonical root, and agent brand triple producing AI metrics transcripts."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
@@ -29379,7 +29531,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "MakeCommandInstallInputOptions",
-      "description": "CLI install flags before environment-backed secret references are resolved."
+      "description": "CLI install flags, with the data root already resolved, before secret references are resolved."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
@@ -29387,7 +29539,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "MakeCommandInstallSpecOptions",
-      "description": "CLI install flags used to build a concrete AI metrics install spec."
+      "description": "CLI install flags, with the data root already resolved, used to build a concrete install spec."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
@@ -29780,18 +29932,6 @@
       "owner": "@beep/repo-cli",
       "identity": "WritePackageJsonOperation",
       "description": "Structured package.json operation selected by the architecture operation-plan factory."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
-      "symbol": "decodeCanonicalSliceOperationPlanJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
-      "symbol": "encodeCanonicalSliceOperationPlanJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts",
@@ -32022,6 +32162,14 @@
       "description": "A Git, tree-resolution, archive, UTF-8, manifest-decode, command-probe, or index-probe failure that must fail closed."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
+      "symbol": "KnowledgeProbeBootError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "KnowledgeProbeBootError",
+      "description": "An archive-local probe that exited non-zero before emitting structured output."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
       "symbol": "KnowledgeGoalUriRef",
       "kind": "schema-class",
@@ -32295,7 +32443,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeProbePolicy",
-      "description": "Whether archive-local command and index probes were allowed to execute."
+      "description": "Whether archive-local command and index probes were allowed to execute, and ran."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
@@ -32478,6 +32626,14 @@
       "owner": "@beep/repo-cli",
       "identity": "TerseEffectRulesSummary",
       "description": "Summary of terse Effect style migration results."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/JudgeRubric.ts",
+      "symbol": "JudgeRubricDrift",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JudgeRubricDrift",
+      "description": "Lenses missing from the judge prompt and unknown lens tokens the prompt names."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
@@ -33578,6 +33734,14 @@
       "owner": "@beep/repo-cli",
       "identity": "RunJSDocMigrateExtractOptions",
       "description": "Options accepted by the jsdoc-migrate extract stage: the extract.jsonl output path."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "symbol": "JSDocMigrateBlockInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JSDocMigrateBlockInput",
+      "description": "Block text, indentation, and title data consumed by the JSDoc migration rewriter."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
@@ -34813,6 +34977,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "symbol": "FleetSessionRegistryEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FleetSessionRegistryEntry",
+      "description": "The pid, procStart reuse guard, and working directory the fleet liveness probe reads from one Claude Code session-registry entry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
       "symbol": "FleetSnapshot",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -35007,7 +35179,15 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "GateFresh",
-      "description": "A gate artifact at least as new as every file this branch changed."
+      "description": "A gate artifact at least as new as every relevant file this branch changed."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
+      "symbol": "GateInputScope",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GateInputScope",
+      "description": "The changed-input family that can invalidate one cached gate artifact."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
@@ -35015,7 +35195,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "GateStale",
-      "description": "A gate artifact older than the newest file this branch changed, so it cannot have observed it."
+      "description": "A gate artifact older than the newest relevant file this branch changed, so it cannot have observed it."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
@@ -35031,7 +35211,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "GateUnproven",
-      "description": "A gate whose freshness could not be established because the artifact or the inputs are absent."
+      "description": "A gate whose freshness could not be established because its proof artifact is absent."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
@@ -35224,6 +35404,22 @@
       "description": "Options for building a Yeet run plan in a specific mode."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "symbol": "PrProvenance",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PrProvenance",
+      "description": "Origin and paste-ready resume command recorded in a Yeet pull request body."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "symbol": "PrProvenanceHarness",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "PrProvenanceHarness",
+      "description": "Harness that originated a Yeet pull request publish invocation."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
       "symbol": "ReplyDraft",
       "kind": "schema-class",
@@ -35325,7 +35521,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "YeetStatusArtifact",
-      "description": "Compact summary for a Yeet artifact read by status."
+      "description": "Compact summary for a Yeet artifact read by status, including closeout head binding."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
@@ -35521,6 +35717,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetMergeReadyFromEncoded",
+      "kind": "codec",
+      "owner": "@beep/repo-cli",
+      "identity": "YeetMergeReadyFromEncoded",
+      "description": "Merge readiness with safe normalization for legacy v2 verdict artifacts."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
       "symbol": "YeetOutcome",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -35581,7 +35785,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "PrCloseoutReport",
-      "description": "Structured PR closeout result emitted by Yeet."
+      "description": "Structured PR closeout result bound to the reviewed pull request head."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",

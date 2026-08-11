@@ -169,11 +169,6 @@
     // @beep/lexical-schema: unit tests exercise these Lexical dependencies.
     "lexical",
     "@lexical/list",
-    // @beep/storybook: package stories are discovered by Storybook's external
-    // stories glob; the host app declares @beep/form so Vite can resolve the
-    // workspace package while fallow attributes the imports to the package that
-    // owns the stories.
-    "@beep/form",
     // @beep/storybook: same stories-glob arrangement for the graph-3d driver
     // stories (goal graph-3d-view).
     "@beep/graph-3d",

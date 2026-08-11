@@ -27,8 +27,18 @@ const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
 const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/github_app_webhook_secret";
 
-const runnerInstanceTypes = ["m7i.2xlarge", "m7i-flex.2xlarge", "m7a.2xlarge", "m6i.2xlarge"];
+/**
+ * Keeps every runner at 64 GB so the build-mode census peaks of 47.59 GiB for
+ * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
+ * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
+ */
+const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
 const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
+
+// The runner agent and every job step both run as this user, so the two cannot
+// be told apart by uid at agent-start time — the reason the post-install IMDS
+// DROP was rolled back (see the class prose and CSF-003).
+const runnerRunAs = "ec2-user";
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -245,6 +255,53 @@ type CiFleetControllerArgs = {
  * Ephemeral GitHub Actions runner controller backed by the pinned Terraform
  * module through Pulumi's terraform-module provider.
  *
+ * **Gotchas**
+ *
+ * The host IMDS credential-theft mitigation (CSF-003) is NOT wired here. A
+ * post-install `iptables` OWNER-match DROP on the `runnerRunAs` uid was deployed
+ * and rolled back the same day: because the runner agent itself runs as that
+ * uid, the DROP starved the agent at start-up and the worker failed to register
+ * (`runner-start-failed`), which the Gate E probe caught before any heavy-lane
+ * cutover. A uid DROP cannot separate the agent from job steps when both share
+ * one uid, and a blanket DROP would additionally sever the root config-time IMDS
+ * the runner needs for JIT registration. The rework is a per-job
+ * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook that installs the DROP after the agent
+ * is running but before a job's steps, re-validated through Gate E before
+ * redeploy. Until then the controls that bound credential theft are the layers
+ * that remain live: IMDSv2 with hop limit 1 (blocks unprivileged containers), a
+ * minimal permissions-boundary-capped instance-profile role, the ephemeral
+ * one-job-one-VM lifecycle, and JIT config that keeps no registration token on
+ * the instance.
+ *
+ * **Example** (Provision the shadow-label controller)
+ *
+ * ```ts
+ * import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra"
+ *
+ * const config = makeCiFleetControllerConfig(
+ *   CiFleetControllerPulumiConfigValues.make({
+ *     githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
+ *     githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
+ *     githubAppKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+ *     githubAppWebhookSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/webhook-secret",
+ *     runnerBinariesSyncerLambdaZip: "/artifacts/runner-binaries-syncer.zip",
+ *     runnerRolePermissionsBoundaryArn: "arn:aws:iam::123456789012:policy/beep-ci-fleet-boundary",
+ *     runnersLambdaZip: "/artifacts/runners.zip",
+ *     terminationWatcherLambdaZip: "/artifacts/termination-watcher.zip",
+ *     webhookLambdaZip: "/artifacts/webhook.zip",
+ *   })
+ * )
+ *
+ * const controller = new CiFleetController("beep-ci-fleet", {
+ *   config,
+ *   region: "us-east-1",
+ *   subnetIds: ["subnet-abc", "subnet-def"],
+ *   vpcId: "vpc-123",
+ *   workerSecurityGroupId: "sg-456",
+ * })
+ * console.log(controller.webhook)
+ * ```
+ *
  * @category resources
  * @since 0.0.0
  */
@@ -396,7 +453,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
-        runner_run_as: "ec2-user",
+        runner_run_as: runnerRunAs,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         runners_maximum_count: 4,

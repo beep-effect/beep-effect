@@ -10,13 +10,14 @@
 /// <reference path="./whatwg-url.d.ts" />
 
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { A, Struct } from "@beep/utils";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { A, Eq, Struct } from "@beep/utils";
 import { color as parseCssColor } from "@csstools/css-color-parser";
 import { isWhiteSpaceOrCommentNode, parseListOfComponentValues } from "@csstools/css-parser-algorithms";
 import { tokenize as tokenizeCss } from "@csstools/css-tokenizer";
 import { isMediaQueryInvalid, parse as parseMediaQueryList } from "@csstools/media-query-list-parser";
 import { Effect, flow, Match, Number as N, pipe, Result } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -58,6 +59,7 @@ const $I = $HtmlId.create("Html.conformance");
 const isHtmlTag = S.is(HtmlTag);
 const isFiniteNumber = S.is(S.Finite);
 const isString = S.is(S.String);
+const readProperty = (value: unknown, key: PropertyKey): unknown => Reflect.get(Object(value), key);
 const HTML_URL_VALIDATION_BASE = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const ICON_SIZE_TOKEN_PATTERN = /^[1-9][0-9]*[xX][1-9][0-9]*$/u;
 const INTEGER_LIST_PATTERN = /^[\t\n\f\r ]*[+-]?[0-9]+(?:[\t\n\f\r ]*,[\t\n\f\r ]*[+-]?[0-9]+)*[\t\n\f\r ]*$/u;
@@ -69,6 +71,7 @@ class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
     _tag: S.String,
     attributes: S.Unknown.pipe(S.optionalKey),
     children: S.Array(S.suspend((): S.Codec<HtmlChildView> => HtmlChildView)).pipe(S.optionalKey),
+    content: S.Unknown.pipe(S.optionalKey),
     name: S.Unknown.pipe(S.optionalKey),
     namespace: S.String.pipe(S.optionalKey),
     value: S.Unknown.pipe(S.optionalKey),
@@ -202,22 +205,24 @@ export class HtmlConformanceError extends TaggedErrorClass<HtmlConformanceError>
   })
 ) {}
 
-const conformantIssuer = new WeakSet<ConformantHtmlValue>();
-const conformantRoots = new WeakMap<ConformantHtmlValue, HtmlRoot.Type>();
+const conformantRoots = new WeakMap<object, HtmlRoot.Type>();
 
 declare const conformantHtmlProof: unique symbol;
 
-declare class ConformantHtmlValue {
-  private readonly [conformantHtmlProof]: true;
+class ConformantHtmlValue {
+  private declare readonly [conformantHtmlProof]: true;
+
+  static readonly is = (value: unknown): value is ConformantHtmlValue =>
+    P.isObject(value) && conformantRoots.has(value);
+
+  constructor() {
+    Reflect.setPrototypeOf(this, null);
+  }
 }
 
-const isConformantHtmlValue = (value: unknown): value is ConformantHtmlValue =>
-  P.isObject(value) && conformantIssuer.has(value as unknown as ConformantHtmlValue);
-
 const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
-  const value = Object.create(null) as ConformantHtmlValue;
+  const value = new ConformantHtmlValue();
   conformantRoots.set(value, root);
-  conformantIssuer.add(value);
   Object.freeze(value);
   return value;
 };
@@ -225,21 +230,23 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
 /**
  * Runtime-issued proof that an HTML root passed {@link inspectConformance}.
  *
- * **Example** (Call `ConformantHtml`)
+ * **Example** (Check a conformance proof)
  *
  * ```ts
- * import { conform, conformantRoot } from "@beep/html/Html.conformance"
+ * import { conform, ConformantHtml, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
+ * console.log(ConformantHtml.is(proof)) // true
  * console.log(conformantRoot(proof)._tag) // "#fragment"
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ConformantHtml = S.declare(isConformantHtmlValue).pipe(
+export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
+  SchemaUtils.withStatics(() => ({ is: ConformantHtmlValue.is })),
   $I.annoteSchema("ConformantHtml", {
     description: "Runtime-issued proof of HTML AST conformance.",
   })
@@ -266,15 +273,14 @@ export type ConformantHtml = typeof ConformantHtml.Type;
 /**
  * Canonical schema alias for a conformance-proven HTML node or root.
  *
- * **Example** (Call `ConformantHtmlNode`)
+ * **Example** (Check a conformance-proven node)
  *
  * ```ts
  * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
  * import { Effect } from "effect"
- * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
- * console.log(S.is(ConformantHtmlNode)(proof)) // true
+ * console.log(ConformantHtmlNode.is(proof)) // true
  * ```
  *
  * @category schemas
@@ -373,8 +379,11 @@ const attributeTokensContainAny = (value: unknown, required: ReadonlyArray<strin
     O.exists((tokens) => A.some(required, (token) => A.contains(tokens, token)))
   );
 
-const hasNonBlankStringAttribute = (value: unknown): boolean =>
-  pipe(attributeValue(value), O.filter(isString), O.exists(flow(stripHtmlAsciiWhitespace, Str.isNonEmpty)));
+const hasNonBlankStringAttribute: (value: unknown) => boolean = flow(
+  attributeValue,
+  O.filter(isString),
+  O.exists(flow(stripHtmlAsciiWhitespace, Str.isNonEmpty))
+);
 
 const isValidHtmlUrlString = (value: string): boolean => {
   const candidate = stripHtmlAsciiWhitespace(value);
@@ -387,25 +396,27 @@ const isValidHtmlUrlString = (value: string): boolean => {
   );
 };
 
-const isValidNonEmptyHtmlUrl = (value: unknown): boolean =>
-  pipe(attributeValue(value), O.filter(isString), O.exists(isValidHtmlUrlString));
+const isValidNonEmptyHtmlUrl: (value: unknown) => boolean = flow(
+  attributeValue,
+  O.filter(isString),
+  O.exists(isValidHtmlUrlString)
+);
 
-const stringAttributeValue = (value: unknown): O.Option<string> => pipe(attributeValue(value), O.filter(isString));
+const stringAttributeValue: (value: unknown) => O.Option<string> = flow(attributeValue, O.filter(isString));
 
-const srcsetProfile = (value: unknown) =>
-  pipe(
-    stringAttributeValue(value),
-    O.flatMap((input) => inspectSrcset(input, isValidHtmlUrlString))
-  );
+const srcsetProfile = flow(stringAttributeValue, O.flatMap(inspectSrcset(isValidHtmlUrlString)));
 
 const sourceSizeAnalysis = (value: unknown) =>
   pipe(
     stringAttributeValue(value),
-    O.flatMap((input) =>
-      Result.match(inspectSourceSizeList(input), {
-        onFailure: O.none,
-        onSuccess: O.some,
-      })
+    O.flatMap(
+      flow(
+        inspectSourceSizeList,
+        Result.match({
+          onFailure: O.none,
+          onSuccess: O.some,
+        })
+      )
     )
   );
 
@@ -472,7 +483,7 @@ const isValidCssColor = (value: string): boolean => {
     A.filter((node) => !isWhiteSpaceOrCommentNode(node))
   );
   const node = nodes[0];
-  return !hasParseError && nodes.length === 1 && node !== undefined && parseCssColor(node) !== false;
+  return !hasParseError && nodes.length === 1 && P.isNotUndefined(node) && parseCssColor(node) !== false;
 };
 
 type ExactInteger = {
@@ -487,8 +498,10 @@ const normalizeExactInteger = (value: string): ExactInteger => {
   return { magnitude, negative: magnitude !== "0" && Str.startsWith("-")(token) };
 };
 
-const parseIntegerList = (value: string): O.Option<ReadonlyArray<ExactInteger>> =>
-  INTEGER_LIST_PATTERN.test(value) ? O.some(pipe(Str.split(",")(value), A.map(normalizeExactInteger))) : O.none();
+const parseIntegerList: (value: string) => O.Option<ReadonlyArray<ExactInteger>> = flow(
+  O.liftPredicate((value: string) => INTEGER_LIST_PATTERN.test(value)),
+  O.map(flow(Str.split(","), A.map(normalizeExactInteger)))
+);
 
 const compareIntegerMagnitude = (left: ExactInteger, right: ExactInteger): number =>
   left.magnitude.length === right.magnitude.length
@@ -511,7 +524,15 @@ type ElementOccurrence = {
 };
 
 const elementOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): ReadonlyArray<ElementOccurrence> => {
-  const own = isHtmlTag(node._tag) ? [{ node, path, tag: node._tag }] : A.emptyReadonly<ElementOccurrence>();
+  const own = isHtmlTag(node._tag)
+    ? [
+        {
+          node,
+          path,
+          tag: node._tag,
+        },
+      ]
+    : A.emptyReadonly<ElementOccurrence>();
   return [...own, ...A.flatMap(childrenOf(node), (child, index) => elementOccurrences(child, childPath(path, index)))];
 };
 
@@ -548,7 +569,7 @@ const effectiveCategories = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<s
     return (
       rules.length === 0 ||
       A.some(rules, (rule) => {
-        const value = (node as unknown as Record<string, unknown>)[rule.attribute];
+        const value = readProperty(node, rule.attribute);
         return Match.value(rule.condition).pipe(
           Match.when("present", () => hasAttribute(value)),
           Match.when("not-equals", () => {
@@ -579,7 +600,7 @@ const inspectForbiddenDescendants = (
     A.contains(ancestors, constraint.ancestor)
       ? pipe(
           constraint.attributes,
-          A.findFirst((attribute) => hasAttribute(Reflect.get(node, attribute))),
+          A.findFirst((attribute) => hasAttribute(readProperty(node, attribute))),
           O.match({
             onNone: () =>
               A.contains(constraint.tags, tag) ||
@@ -615,10 +636,14 @@ const inspectForbiddenDescendants = (
   );
   const namedAncestorIssues = A.flatMap(forbiddenNamedAncestorConstraints, (constraint) =>
     constraint.tag === tag &&
-    A.some(constraint.attributes, (attribute) => hasNonBlankStringAttribute(Reflect.get(node, attribute)))
+    A.some(constraint.attributes, (attribute) => hasNonBlankStringAttribute(readProperty(node, attribute)))
       ? pipe(
           elementOccurrences(node, path),
-          A.filter((occurrence) => occurrence.tag === constraint.descendant),
+          A.filter(
+            P.Struct({
+              tag: Eq.equals(constraint.descendant),
+            })
+          ),
           A.map((occurrence) =>
             makeIssue(
               occurrence.path,
@@ -639,8 +664,14 @@ const inspectElementAttributes = (
 ): ReadonlyArray<HtmlConformanceIssue> => {
   const meta = ELEMENT_META[tag];
   return pipe(
-    Struct.entries(node as unknown as Record<string, unknown>),
-    A.filter(([name, value]) => name !== "_tag" && name !== "children" && name !== "content" && hasAttribute(value)),
+    Struct.entries(node),
+    A.filter(
+      ([name, value]) =>
+        name !== "_tag" &&
+        name !== "children" &&
+        (name !== "content" || meta.textMode === "normal") &&
+        hasAttribute(value)
+    ),
     A.flatMap(([name]) =>
       A.contains(meta.obsoleteAttributes, name)
         ? [makeIssue(A.append(path, `attributes.${name}`), "obsoleteAttribute", `<${tag} ${name}> is obsolete`)]
@@ -661,9 +692,8 @@ const inspectSpecialAttributeSyntaxes = (
   node: HtmlChildView,
   tag: HtmlTag,
   path: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> => {
-  const attributes = node as unknown as Record<string, unknown>;
-  return A.flatMap(Struct.entries(attributes), ([attribute, value]) =>
+): ReadonlyArray<HtmlConformanceIssue> =>
+  A.flatMap(Struct.entries(node), ([attribute, value]) =>
     hasAttribute(value)
       ? pipe(
           R.get(HTML_ATTRIBUTE_SYNTAXES, `${tag}/${attribute}`),
@@ -696,11 +726,10 @@ const inspectSpecialAttributeSyntaxes = (
         )
       : A.emptyReadonly()
   );
-};
 
 const inputTypeState = (node: HtmlChildView): string =>
   pipe(
-    attributeValue((node as unknown as Record<string, unknown>).type),
+    attributeValue(node.type),
     O.filter(isString),
     O.getOrElse(() => "text")
   );
@@ -720,11 +749,10 @@ const inspectInputAttributeApplicability = (
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (tag !== "input") return A.emptyReadonly();
-  const attributes = node as unknown as Record<string, unknown>;
   const state = inputTypeState(node);
   const allowed = generatedInputStateEntry(HTML_INPUT_ATTRIBUTE_APPLICABILITY, state);
   return A.flatMap(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES, (attribute) =>
-    hasAttribute(attributes[attribute]) && !A.contains(allowed, attribute)
+    hasAttribute(readProperty(node, attribute)) && !A.contains(allowed, attribute)
       ? [
           makeIssue(
             A.append(path, `attributes.${attribute}`),
@@ -753,7 +781,15 @@ const advanceAutocompleteIndex = (
   tokens: ReadonlyArray<string>,
   index: number,
   matches: (token: string) => boolean
-): number => pipe(A.get(tokens, index), O.filter(matches), O.match({ onNone: () => index, onSome: () => index + 1 }));
+): number =>
+  pipe(
+    A.get(tokens, index),
+    O.filter(matches),
+    O.match({
+      onNone: () => index,
+      onSome: () => index + 1,
+    })
+  );
 
 const autocompleteFieldStart = (tokens: ReadonlyArray<string>): number => {
   const afterSection = advanceAutocompleteIndex(tokens, 0, Str.startsWith("section-"));
@@ -766,17 +802,23 @@ const autocompleteContactHint = (tokens: ReadonlyArray<string>, index: number): 
     O.filter((token) => A.contains(["home", "work", "mobile", "fax", "pager"], token))
   );
 
-const autocompleteDetail = (value: string): O.Option<AutocompleteDetail> => {
-  const tokens = tokenizeHtmlSpaceSeparated(value);
-  if (isAutocompleteToggle(tokens)) return O.none();
-  const detailStart = autocompleteFieldStart(tokens);
-  const contactHint = autocompleteContactHint(tokens, detailStart);
-  const fieldIndex = detailStart + (O.isSome(contactHint) ? 1 : 0);
-  return pipe(
-    A.get(tokens, fieldIndex),
-    O.map((field) => ({ contactHint, field, webauthn: tokens[fieldIndex + 1] === "webauthn" }))
-  );
-};
+const autocompleteDetail: (value: string) => O.Option<AutocompleteDetail> = flow(
+  tokenizeHtmlSpaceSeparated,
+  O.liftPredicate(P.not(isAutocompleteToggle)),
+  O.flatMap((tokens) => {
+    const detailStart = autocompleteFieldStart(tokens);
+    const contactHint = autocompleteContactHint(tokens, detailStart);
+    const fieldIndex = detailStart + (O.isSome(contactHint) ? 1 : 0);
+    return pipe(
+      A.get(tokens, fieldIndex),
+      O.map((field) => ({
+        contactHint,
+        field,
+        webauthn: tokens[fieldIndex + 1] === "webauthn",
+      }))
+    );
+  })
+);
 
 const autocompleteFieldGroup = (field: string): O.Option<string> =>
   pipe(
@@ -817,21 +859,36 @@ const autocompleteToggleIssues = (
       ]
     : A.emptyReadonly();
 
-const autocompleteDetailIssues = (
-  detail: AutocompleteDetail,
-  tag: HtmlTag,
-  state: string,
-  path: ReadonlyArray<string>
-): ReadonlyArray<HtmlConformanceIssue> =>
-  autocompleteDetailIsCompatible(detail, tag, state)
-    ? A.emptyReadonly()
-    : [
-        makeIssue(
-          A.append(path, "attributes.autocomplete"),
-          "attributeRelationship",
-          `<${tag} autocomplete> field tokens are not compatible with the ${state} control`
-        ),
-      ];
+const autocompleteDetailIssues: {
+  (
+    tag: HtmlTag,
+    state: string,
+    path: ReadonlyArray<string>
+  ): (detail: AutocompleteDetail) => ReadonlyArray<HtmlConformanceIssue>;
+  (
+    detail: AutocompleteDetail,
+    tag: HtmlTag,
+    state: string,
+    path: ReadonlyArray<string>
+  ): ReadonlyArray<HtmlConformanceIssue>;
+} = dual(
+  4,
+  (
+    detail: AutocompleteDetail,
+    tag: HtmlTag,
+    state: string,
+    path: ReadonlyArray<string>
+  ): ReadonlyArray<HtmlConformanceIssue> =>
+    autocompleteDetailIsCompatible(detail, tag, state)
+      ? A.emptyReadonly()
+      : [
+          makeIssue(
+            A.append(path, "attributes.autocomplete"),
+            "attributeRelationship",
+            `<${tag} autocomplete> field tokens are not compatible with the ${state} control`
+          ),
+        ]
+);
 
 const inspectAutocompleteValue = (
   node: HtmlChildView,
@@ -844,7 +901,7 @@ const inspectAutocompleteValue = (
     autocompleteDetail(autocomplete),
     O.match({
       onNone: () => autocompleteToggleIssues(tag, state, path),
-      onSome: (detail) => autocompleteDetailIssues(detail, tag, state, path),
+      onSome: autocompleteDetailIssues(tag, state, path),
     })
   );
 };
@@ -855,8 +912,7 @@ const inspectAutocompleteCompatibility = (
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (tag !== "input" && tag !== "textarea" && tag !== "select") return A.emptyReadonly();
-  const attributes = node as unknown as Record<string, unknown>;
-  const value = stringAttributeValue(attributes.autocomplete);
+  const value = stringAttributeValue(readProperty(node, "autocomplete"));
   return pipe(
     value,
     O.match({
@@ -873,14 +929,13 @@ const inspectButtonSubmitAttributes = (
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (tag !== "button") return A.emptyReadonly();
-  const attributes = node as unknown as Record<string, unknown>;
-  const explicitType = stringAttributeValue(attributes.type);
+  const explicitType = stringAttributeValue(node.type);
   const effectiveSubmit = pipe(
     explicitType,
     O.match({
       onNone: () =>
-        !hasAttribute(attributes.command) &&
-        !hasAttribute(attributes.commandfor) &&
+        !hasAttribute(readProperty(node, "command")) &&
+        !hasAttribute(readProperty(node, "commandfor")) &&
         !O.contains(A.last(ancestors), "select"),
       onSome: (type) => type === "submit",
     })
@@ -888,7 +943,7 @@ const inspectButtonSubmitAttributes = (
   return effectiveSubmit
     ? A.emptyReadonly()
     : A.flatMap(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES, (attribute) =>
-        hasAttribute(attributes[attribute])
+        hasAttribute(readProperty(node, attribute))
           ? [
               makeIssue(
                 A.append(path, `attributes.${attribute}`),
@@ -906,14 +961,14 @@ const inspectAreaCoordinates = (
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (tag !== "area") return A.emptyReadonly();
-  const attributes = node as unknown as Record<string, unknown>;
   const shape = pipe(
-    stringAttributeValue(attributes.shape),
+    stringAttributeValue(readProperty(node, "shape")),
     O.getOrElse(() => "rect")
   );
-  const coords = pipe(stringAttributeValue(attributes.coords), O.flatMap(parseIntegerList));
+  const coordsValue = readProperty(node, "coords");
+  const coords = pipe(stringAttributeValue(coordsValue), O.flatMap(parseIntegerList));
   const valid = Match.value(shape).pipe(
-    Match.when("default", () => !hasAttribute(attributes.coords)),
+    Match.when("default", () => !hasAttribute(coordsValue)),
     Match.when("circle", () =>
       O.exists(coords, (values) => values.length === 3 && values[2] !== undefined && !values[2].negative)
     ),
@@ -951,9 +1006,8 @@ const inspectMediaTypeAndColor = (
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (tag !== "link" && tag !== "source") return A.emptyReadonly();
-  const attributes = node as unknown as Record<string, unknown>;
   const mediaIssues = pipe(
-    stringAttributeValue(attributes.media),
+    stringAttributeValue(readProperty(node, "media")),
     O.filter((value) => !isValidMediaQueryList(value)),
     O.map(() =>
       makeIssue(
@@ -965,7 +1019,7 @@ const inspectMediaTypeAndColor = (
     O.toArray
   );
   const typeIssues = pipe(
-    stringAttributeValue(attributes.type),
+    stringAttributeValue(node.type),
     O.filter((value) => !isValidMimeType(value)),
     O.map(() =>
       makeIssue(A.append(path, "attributes.type"), "attributeRelationship", `<${tag} type> must be a valid MIME type`)
@@ -973,11 +1027,11 @@ const inspectMediaTypeAndColor = (
     O.toArray
   );
   const validColor = pipe(
-    stringAttributeValue(attributes.color),
-    O.exists((value) => attributeTokensContainAny(attributes.rel, ["mask-icon"]) && isValidCssColor(value))
+    stringAttributeValue(readProperty(node, "color")),
+    O.exists((value) => attributeTokensContainAny(readProperty(node, "rel"), ["mask-icon"]) && isValidCssColor(value))
   );
   const colorIssues =
-    tag === "link" && hasAttribute(attributes.color) && !validColor
+    tag === "link" && hasAttribute(readProperty(node, "color")) && !validColor
       ? [
           makeIssue(
             A.append(path, "attributes.color"),
@@ -989,29 +1043,26 @@ const inspectMediaTypeAndColor = (
   return [...mediaIssues, ...typeIssues, ...colorIssues];
 };
 
-const imgAllowsAutoSizes = (node: HtmlChildView): boolean => {
-  const attributes = node as unknown as Record<string, unknown>;
-  return (
-    attributeHasRequiredValue(attributes.loading, "lazy", true) &&
-    pipe(
-      sourceSizeAnalysis(attributes.sizes),
-      O.exists((analysis) => analysis.usesAuto)
-    )
+const imgAllowsAutoSizes = (node: HtmlChildView): boolean =>
+  attributeHasRequiredValue(readProperty(node, "loading"), "lazy", true) &&
+  pipe(
+    sourceSizeAnalysis(readProperty(node, "sizes")),
+    O.exists((analysis) => analysis.usesAuto)
   );
-};
 
 const inspectImgResponsiveRelationships = (
   node: HtmlChildView,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const attributes = node as unknown as Record<string, unknown>;
-  const profile = srcsetProfile(attributes.srcset);
-  const sizes = sourceSizeAnalysis(attributes.sizes);
-  const hasSrcset = hasAttribute(attributes.srcset);
-  const hasSizes = hasAttribute(attributes.sizes);
-  const loadingIsLazy = attributeHasRequiredValue(attributes.loading, "lazy", true);
+  const srcset = readProperty(node, "srcset");
+  const sizesValue = readProperty(node, "sizes");
+  const profile = srcsetProfile(srcset);
+  const sizes = sourceSizeAnalysis(sizesValue);
+  const hasSrcset = hasAttribute(srcset);
+  const hasSizes = hasAttribute(sizesValue);
+  const loadingIsLazy = attributeHasRequiredValue(readProperty(node, "loading"), "lazy", true);
   const sizesIsExactlyAuto = pipe(
-    stringAttributeValue(attributes.sizes),
+    stringAttributeValue(sizesValue),
     O.exists((value) => toAsciiLowerCase(value) === "auto")
   );
   const missingSizes = O.contains(profile, "width") && !hasSizes;
@@ -1049,17 +1100,19 @@ const inspectLinkResponsiveRelationships = (
   node: HtmlChildView,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const attributes = node as unknown as Record<string, unknown>;
-  const profile = srcsetProfile(attributes.imagesrcset);
-  const imageSizes = sourceSizeAnalysis(attributes.imagesizes);
-  const hasImageSrcset = hasAttribute(attributes.imagesrcset);
-  const hasImageSizes = hasAttribute(attributes.imagesizes);
+  const imageSrcset = readProperty(node, "imagesrcset");
+  const imageSizesValue = readProperty(node, "imagesizes");
+  const profile = srcsetProfile(imageSrcset);
+  const imageSizes = sourceSizeAnalysis(imageSizesValue);
+  const hasImageSrcset = hasAttribute(imageSrcset);
+  const hasImageSizes = hasAttribute(imageSizesValue);
   const imageSizesIncompatible = pipe(
     imageSizes,
     O.exists(() => !hasImageSrcset || O.contains(profile, "density"))
   );
   const iconSizesMisplaced =
-    hasAttribute(attributes.sizes) && !attributeTokensContainAny(attributes.rel, HTML_ICON_LINK_RELATIONS);
+    hasAttribute(readProperty(node, "sizes")) &&
+    !attributeTokensContainAny(readProperty(node, "rel"), HTML_ICON_LINK_RELATIONS);
   return [
     ...(O.contains(profile, "width") && !hasImageSizes
       ? [
@@ -1096,10 +1149,11 @@ const inspectPictureSourceResponsiveRelationships = (
   path: ReadonlyArray<string>,
   followingImage: O.Option<HtmlChildView>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const attributes = source as unknown as Record<string, unknown>;
-  const profile = srcsetProfile(attributes.srcset);
-  const sizes = sourceSizeAnalysis(attributes.sizes);
-  const hasSizes = hasAttribute(attributes.sizes);
+  const srcset = readProperty(source, "srcset");
+  const sizesValue = readProperty(source, "sizes");
+  const profile = srcsetProfile(srcset);
+  const sizes = sourceSizeAnalysis(sizesValue);
+  const hasSizes = hasAttribute(sizesValue);
   const followingImageAllowsAuto = pipe(followingImage, O.exists(imgAllowsAutoSizes));
   return [
     ...(O.contains(profile, "width") && !hasSizes && !followingImageAllowsAuto
@@ -1139,8 +1193,7 @@ const inspectPictureSourceResponsiveRelationships = (
 };
 
 const isResponsivePictureCandidate = (candidate: HtmlChildView): boolean =>
-  (candidate._tag === "source" || candidate._tag === "img") &&
-  hasAttribute((candidate as unknown as Record<string, unknown>).srcset);
+  (candidate._tag === "source" || candidate._tag === "img") && hasAttribute(candidate.srcset);
 
 const isMissingPictureSourceDifferentiator = (media: O.Option<string>, type: O.Option<string>): boolean =>
   O.isNone(media) && O.isNone(type);
@@ -1185,7 +1238,6 @@ const inspectPictureResponsiveChild = (
   index: number
 ): ReadonlyArray<HtmlConformanceIssue> => {
   if (child._tag !== "source") return A.emptyReadonly();
-  const attributes = child as unknown as Record<string, unknown>;
   const laterChildren = A.drop(children, index + 1);
   const followingImage = A.findFirst(laterChildren, (candidate) => candidate._tag === "img");
   const childIssuePath = childPath(path, index);
@@ -1194,8 +1246,8 @@ const inspectPictureResponsiveChild = (
     ...pictureSourceDifferentiationIssues(
       childIssuePath,
       A.some(laterChildren, isResponsivePictureCandidate),
-      stringAttributeValue(attributes.media),
-      stringAttributeValue(attributes.type)
+      stringAttributeValue(readProperty(child, "media")),
+      stringAttributeValue(child.type)
     ),
   ];
 };
@@ -1238,10 +1290,7 @@ const attributeRequirementAppliesToParent = (
     })
   );
 
-const attributeRequirementAppliesToAttributes = (
-  requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
-): boolean =>
+const attributeRequirementAppliesToAttributes = (requirement: HtmlAttributeRequirement, attributes: object): boolean =>
   pipe(
     requirement.when,
     O.fromUndefinedOr,
@@ -1250,11 +1299,13 @@ const attributeRequirementAppliesToAttributes = (
       onSome: (predicate) =>
         Match.value(predicate).pipe(
           Match.tags({
-            attributeContainsToken: ({ attribute, value }) => attributeTokensContainAll(attributes[attribute], [value]),
-            attributeEquals: ({ attribute, value }) => attributeEquals(attributes[attribute], value),
+            attributeContainsToken: ({ attribute, value }) =>
+              attributeTokensContainAll(readProperty(attributes, attribute), [value]),
+            attributeEquals: ({ attribute, value }) => attributeEquals(readProperty(attributes, attribute), value),
             attributeEqualsOrMissing: ({ attribute, value }) =>
-              !hasAttribute(attributes[attribute]) || attributeEquals(attributes[attribute], value),
-            attributePresent: ({ attribute }) => hasAttribute(attributes[attribute]),
+              !hasAttribute(readProperty(attributes, attribute)) ||
+              attributeEquals(readProperty(attributes, attribute), value),
+            attributePresent: ({ attribute }) => hasAttribute(readProperty(attributes, attribute)),
           }),
           Match.exhaustive
         ),
@@ -1263,11 +1314,11 @@ const attributeRequirementAppliesToAttributes = (
 
 const missingRequiredAttributeGroups = (
   requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
+  attributes: object
 ): ReadonlyArray<ReadonlyArray<string>> =>
   A.filter(
     requirement.required,
-    (alternatives) => !A.some(alternatives, (attribute) => hasAttribute(attributes[attribute]))
+    (alternatives) => !A.some(alternatives, (attribute) => hasAttribute(readProperty(attributes, attribute)))
   );
 
 const singleMissingRequiredAttribute = (missingRequired: ReadonlyArray<ReadonlyArray<string>>): O.Option<string> =>
@@ -1280,47 +1331,45 @@ const singleMissingRequiredAttribute = (missingRequired: ReadonlyArray<ReadonlyA
 
 const attributeRequirementHasForbiddenAttribute = (
   requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
+  attributes: object
 ): boolean =>
   pipe(
     requirement.forbidden,
     O.fromUndefinedOr,
-    O.exists((forbidden) => A.some(forbidden, (attribute) => hasAttribute(attributes[attribute])))
+    O.exists((forbidden) => A.some(forbidden, (attribute) => hasAttribute(readProperty(attributes, attribute))))
   );
 
-const attributeRequirementHasBlankAttribute = (
-  requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
-): boolean =>
+const attributeRequirementHasBlankAttribute = (requirement: HtmlAttributeRequirement, attributes: object): boolean =>
   pipe(
     requirement.nonBlank,
     O.fromUndefinedOr,
     O.exists((nonBlank) =>
       A.some(
         nonBlank,
-        (attribute) => hasAttribute(attributes[attribute]) && !hasNonBlankStringAttribute(attributes[attribute])
+        (attribute) =>
+          hasAttribute(readProperty(attributes, attribute)) &&
+          !hasNonBlankStringAttribute(readProperty(attributes, attribute))
       )
     )
   );
 
-const attributeValueConstraintIsSatisfied = (
-  constraint: AttributeValueConstraint,
-  attributes: Record<string, unknown>
-): boolean =>
+const attributeValueConstraintIsSatisfied = (constraint: AttributeValueConstraint, attributes: object): boolean =>
   Match.value(constraint).pipe(
     Match.tags({
-      allowedValues: ({ attribute, values }) => attributeHasAllowedValue(attributes[attribute], values),
-      containsAllTokens: ({ attribute, values }) => attributeTokensContainAll(attributes[attribute], values),
-      containsAnyToken: ({ attribute, values }) => attributeTokensContainAny(attributes[attribute], values),
+      allowedValues: ({ attribute, values }) => attributeHasAllowedValue(readProperty(attributes, attribute), values),
+      containsAllTokens: ({ attribute, values }) =>
+        attributeTokensContainAll(readProperty(attributes, attribute), values),
+      containsAnyToken: ({ attribute, values }) =>
+        attributeTokensContainAny(readProperty(attributes, attribute), values),
       equals: ({ asciiCaseInsensitive, attribute, value }) =>
-        attributeHasRequiredValue(attributes[attribute], value, asciiCaseInsensitive === true),
+        attributeHasRequiredValue(readProperty(attributes, attribute), value, asciiCaseInsensitive === true),
     }),
     Match.exhaustive
   );
 
 const attributeRequirementHasConstraintViolation = (
   requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
+  attributes: object
 ): boolean =>
   pipe(
     requirement.constraints,
@@ -1330,17 +1379,16 @@ const attributeRequirementHasConstraintViolation = (
     )
   );
 
-const attributeRequirementHasInvalidUrl = (
-  requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>
-): boolean =>
+const attributeRequirementHasInvalidUrl = (requirement: HtmlAttributeRequirement, attributes: object): boolean =>
   pipe(
     requirement.validNonEmptyUrl,
     O.fromUndefinedOr,
     O.exists((attributesToValidate) =>
       A.some(
         attributesToValidate,
-        (attribute) => hasAttribute(attributes[attribute]) && !isValidNonEmptyHtmlUrl(attributes[attribute])
+        (attribute) =>
+          hasAttribute(readProperty(attributes, attribute)) &&
+          !isValidNonEmptyHtmlUrl(readProperty(attributes, attribute))
       )
     )
   );
@@ -1359,7 +1407,7 @@ const attributeRequirementIssuePath = (
 
 const inspectAttributeRequirement = (
   requirement: HtmlAttributeRequirement,
-  attributes: Record<string, unknown>,
+  attributes: object,
   path: ReadonlyArray<string>,
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
@@ -1398,14 +1446,13 @@ const inspectAttributeRelationships = (
   path: ReadonlyArray<string>,
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  const attributes = node as unknown as Record<string, unknown>;
   const meta = ELEMENT_META[tag];
   const requiredIssues = A.flatMap(meta.attributeRequirements, (requirement) =>
-    inspectAttributeRequirement(requirement, attributes, path, ancestors)
+    inspectAttributeRequirement(requirement, node, path, ancestors)
   );
   const equalityIssues = A.flatMap(meta.attributeEqualities, (equality) =>
     pipe(
-      O.all([attributeValue(attributes[equality.left]), attributeValue(attributes[equality.right])]),
+      O.all([attributeValue(readProperty(node, equality.left)), attributeValue(readProperty(node, equality.right))]),
       O.exists(([left, right]) => left !== right)
     )
       ? [makeIssue(A.append(path, `attributes.${equality.left}`), "attributeRelationship", equality.message)]
@@ -1414,7 +1461,7 @@ const inspectAttributeRelationships = (
   const numericIssues = A.flatMap(meta.numericAttributeRelationships, (relationship) => {
     const numberValue = (attribute: string, fallback: number | undefined): O.Option<number> =>
       pipe(
-        attributeValue(attributes[attribute]),
+        attributeValue(readProperty(node, attribute)),
         O.filter(isFiniteNumber),
         O.orElse(() => O.fromUndefinedOr(fallback))
       );
@@ -1441,7 +1488,7 @@ const inspectDocumentVisibilityLimits = (root: HtmlRootView): ReadonlyArray<Html
         onSome: ({ maximum, unlessAttribute }): ReadonlyArray<HtmlConformanceIssue> => {
           const visible = A.filter(
             occurrences,
-            (occurrence) => occurrence.tag === tag && !hasAttribute(Reflect.get(occurrence.node, unlessAttribute))
+            (occurrence) => occurrence.tag === tag && !hasAttribute(readProperty(occurrence.node, unlessAttribute))
           );
           return visible.length > maximum
             ? A.map(visible, (occurrence) =>
@@ -1470,7 +1517,7 @@ const idOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): Readon
       ? pipe(
           attributeValue(node.attributes),
           O.filter(P.isObject),
-          O.flatMap((attributes) => O.fromUndefinedOr((attributes as Record<string, unknown>).id))
+          O.flatMap((attributes) => O.fromUndefinedOr(readProperty(attributes, "id")))
         )
       : O.none();
   const own = pipe(
@@ -1518,17 +1565,16 @@ const inspectIdReferences = (root: HtmlRootView): ReadonlyArray<HtmlConformanceI
   const headingCells = A.flatMap(elements, (occurrence) =>
     occurrence.tag === "th"
       ? pipe(
-          stringAttributeValue((occurrence.node as unknown as Record<string, unknown>).id),
+          stringAttributeValue(occurrence.node.id),
           O.map((id) => ({ id, table: nearestTablePath(occurrence.path, tables) })),
           O.toArray
         )
       : A.emptyReadonly()
   );
   return A.flatMap(elements, (occurrence) => {
-    const attributes = occurrence.node as unknown as Record<string, unknown>;
     if (occurrence.tag === "button") {
       return pipe(
-        stringAttributeValue(attributes.commandfor),
+        stringAttributeValue(readProperty(occurrence.node, "commandfor")),
         O.filter((value) => !A.some(ids, (candidate) => candidate.value === value)),
         O.map(() =>
           makeIssue(
@@ -1542,7 +1588,7 @@ const inspectIdReferences = (root: HtmlRootView): ReadonlyArray<HtmlConformanceI
     }
     if (occurrence.tag === "output") {
       return pipe(
-        stringAttributeValue(attributes.for),
+        stringAttributeValue(readProperty(occurrence.node, "for")),
         O.filter((value) =>
           A.some(tokenizeHtmlSpaceSeparated(value), (token) => !A.some(ids, (candidate) => candidate.value === token))
         ),
@@ -1559,7 +1605,7 @@ const inspectIdReferences = (root: HtmlRootView): ReadonlyArray<HtmlConformanceI
     if (occurrence.tag !== "td" && occurrence.tag !== "th") return A.emptyReadonly();
     const table = nearestTablePath(occurrence.path, tables);
     return pipe(
-      stringAttributeValue(attributes.headers),
+      stringAttributeValue(readProperty(occurrence.node, "headers")),
       O.filter((value) =>
         A.some(
           tokenizeHtmlSpaceSeparated(value),
@@ -1601,7 +1647,7 @@ const uniqueAttributeOccurrences = (
   const own = isHtmlTag(tag)
     ? A.flatMap(ELEMENT_META[tag].uniqueAttributes, (attribute) =>
         pipe(
-          attributeValue((node as unknown as Record<string, unknown>)[attribute]),
+          attributeValue(readProperty(node, attribute)),
           O.filter(isString),
           O.map((value) => ({
             attribute,
@@ -1783,7 +1829,13 @@ const inspectElementOrder = (
   if (!isHtmlTag(parent._tag)) return A.emptyReadonly();
   const elementChildren = pipe(
     children,
-    A.filter((child): child is HtmlChildView & { readonly _tag: HtmlTag } => isHtmlTag(child._tag))
+    A.filter(
+      (
+        child
+      ): child is HtmlChildView & {
+        readonly _tag: HtmlTag;
+      } => isHtmlTag(child._tag)
+    )
   );
   const elementTags = A.map(elementChildren, (child) => child._tag);
   const sequenceTags = A.filter(elementTags, (tag) => !isScriptSupporting(tag));
@@ -1838,8 +1890,11 @@ const inspectElementOrder = (
           const nestedChildren = childrenOf(child);
           const nestedTags = pipe(
             nestedChildren,
-            A.filter((nested) => isHtmlTag(nested._tag) && !isScriptSupporting(nested._tag)),
-            A.map((nested) => nested._tag as HtmlTag)
+            A.filter(
+              (nested): nested is HtmlChildView & { readonly _tag: HtmlTag } =>
+                isHtmlTag(nested._tag) && !isScriptSupporting(nested._tag)
+            ),
+            A.map((nested) => nested._tag)
           );
           const invalidNested = A.some(
             nestedChildren,
@@ -1881,8 +1936,7 @@ const inspectElementOrder = (
         : issue("<figcaption> must be the first or last significant child of <figure> and occur at most once")
     ),
     Match.when("colgroup", () =>
-      hasAttribute((parent as unknown as Record<string, unknown>).span) &&
-      A.some(elementTags, (tag) => tag === "col" || tag === "template")
+      hasAttribute(readProperty(parent, "span")) && A.some(elementTags, (tag) => tag === "col" || tag === "template")
         ? issue("<colgroup span> cannot contain <col> or <template> children")
         : A.emptyReadonly()
     ),
@@ -2025,8 +2079,16 @@ const inspectForeignChildBoundary = (
         (childNamespace === "svg" || childNamespace === "mathml") &&
         isString(childName) &&
         isForeignChildAtForeignBoundary(
-          { attributes: parentAttributes, name: parentName, namespace: parentNamespace },
-          { attributes: childAttributes, name: childName, namespace: childNamespace }
+          {
+            attributes: parentAttributes,
+            name: parentName,
+            namespace: parentNamespace,
+          },
+          {
+            attributes: childAttributes,
+            name: childName,
+            namespace: childNamespace,
+          }
         )
         ? A.emptyReadonly()
         : issue("The foreign child would change namespace or escape its opaque parent during HTML parsing");
@@ -2036,7 +2098,11 @@ const inspectForeignChildBoundary = (
         isHtmlTag(tag) &&
         (parentNamespace === "svg" || parentNamespace === "mathml") &&
         isString(parentName) &&
-        isHtmlChildAtForeignBoundary({ attributes: parentAttributes, name: parentName, namespace: parentNamespace })
+        isHtmlChildAtForeignBoundary({
+          attributes: parentAttributes,
+          name: parentName,
+          namespace: parentNamespace,
+        })
           ? A.emptyReadonly()
           : issue("HTML elements can occur inside opaque foreign content only at a modeled integration point")
     )

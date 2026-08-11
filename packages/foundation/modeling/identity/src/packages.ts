@@ -143,7 +143,6 @@ const generatedComposers = $I.compose(
   "editor",
   "html",
   "pandoc-ast",
-  "form",
   "pglite",
   "m365",
   "m365-mcp",
@@ -1642,23 +1641,6 @@ export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = composers.$HtmlI
  * @since 0.0.0
  */
 export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = composers.$PandocAstId;
-
-/**
- * Identity composer for `@beep/form`.
- *
- * **Example** (Make form package ID)
- *
- * ```ts
- * import { $FormId } from "@beep/identity"
- *
- * const id = $FormId.make("Form")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $FormId: Identity.IdentityComposer<"@beep/form"> = composers.$FormId;
 
 /**
  * Identity composer for `@beep/pglite`.

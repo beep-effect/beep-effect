@@ -1,9 +1,9 @@
 # SF-2 tail-b — capability/drivers/apps family (P4-wave2)
 
-Lane: eight packages, strictly sequential — `@beep/acp`, `@beep/form`,
+Lane: seven packages, strictly sequential — `@beep/acp`,
 `@beep/test-utils`, `@beep/mcp-kit`, `@beep/box`, `@beep/api-transport`,
 `@beep/langextract`, `@beep/ui` (+ AL-1a chart.tsx allowlist entry).
-Slices: `goals/standards-remediation/ops/slices/P4-wave2/beep__{acp,form,
+Slices: `goals/standards-remediation/ops/slices/P4-wave2/beep__{acp,
 test-utils,mcp-kit,box,api-transport,langextract,ui}.json`. No
 `standards/*.jsonc` touched. No commits made.
 
@@ -15,7 +15,7 @@ test-utils,mcp-kit,box,api-transport,langextract,ui}.json`. No
 | `@beep/box` | `src/Box.config.ts` |
 | `@beep/langextract` | `src/Extraction/index.ts` |
 | `@beep/ui` | `src/components/chart.tsx` |
-| `@beep/acp`, `@beep/form`, `@beep/test-utils`, `@beep/api-transport` | none — all entries verified unconvertible in place |
+| `@beep/acp`, `@beep/test-utils`, `@beep/api-transport` | none — all entries verified unconvertible in place |
 
 ## 1. `packages/drivers/acp` (4 entries) — no code changes
 
@@ -28,18 +28,7 @@ test-utils,mcp-kit,box,api-transport,langextract,ui}.json`. No
 
 Baseline check: `npx tsgo -b` in `packages/drivers/acp` — 0 errors (no edit made).
 
-## 2. `packages/foundation/ui-system/form` (4 entries) — no code changes
-
-| Symbol | Disposition | Evidence |
-|---|---|---|
-| `FieldOption<Value extends string = string>` (`core/Options.ts`) | unconvertible + **detector-bug? flag** | `label: React.ReactNode` — not schema-representable (React elements carry function-valued `type`/component refs; `S.declare`-wrapped ReactNode fails the §5.3 arbitrary/encode law identically to the `SegmentStrategy`/`FieldTierSet` precedent in `p2-s1-generic.md`). Consumed by 14+ `.tsx` `*Props` interfaces across the package (`FieldBinding.tsx`, `ComboboxFieldParts.tsx`, `SelectField.tsx`, `RadioGroupField.tsx`, etc. — grepped). **Detector gap**: `classifyGenericInterface` (`SchemaFirst.ts:1238-1259`) only exempts schema-infrastructure-extends (R6-1) and all-function-member (R6-2) generics; it has no ReactNode/render-boundary carve-out mirroring R11 signal (5) (`.tsx` + `*Props`/`*RenderProps`), which only applies inside `classifyComposedMembers`/non-generic paths. `FieldOption` is generic, so it falls through to the generic-exception bucket even though it is structurally the same render-boundary shape R11 already exempts elsewhere. Recommend: extend signal (5) into `classifyGenericInterface`. |
-| `CountryFieldDemo` (`stories/fields/storyHelpers.tsx:28`) | **detector-bug?** | `SFV4-fn-schema` (`fnSchemaEntryFromFunctionLike`, `SchemaFirst.ts:1791-1826`) fires on any exported function with an inline-object param/return in a schema-modeled file — called unconditionally, with **no `.tsx`/React-component exemption**, unlike its sibling rule `SFV4-null-return` which explicitly skips `.tsx` via `isNullReturnEligibleFilePath` (`SchemaFirst.ts:1880`, wired at `:2475`). `CountryFieldDemo`'s only inline param is `{ readonly kind: "combobox" \| "select" }`; the function itself is a React component returning `JSX.Element` (unannotated, so the return-type check doesn't independently trip). Converting to `Fn({input,output})`/`S.Class` is a category error here — the component's return value is a render tree, not schema-representable data. Recommend adding the same `.tsx`-boundary (or React-component-shape) exemption used by `SFV4-null-return` to `fnSchemaEntryFromFunctionLike`'s call site. |
-| `UploadFieldDemo` (`storyHelpers.tsx:49`) | **detector-bug?** | Identical reasoning to `CountryFieldDemo` (param `{ readonly kind: "upload" \| "uploadBox" }`). |
-| `assertUploadedPreview` (`storyHelpers.tsx:75`) | unconvertible | Param `{ readonly canvasElement: HTMLElement; readonly fileName: string; readonly svg: string }` bundles a live DOM node handle (`HTMLElement`) with two plain strings. `HTMLElement` is not schema-representable (same runtime-handle class as `Stdio`/`RpcClient` in acp) — this holds independent of the `.tsx`-exemption-gap argument above, since even a hypothetical fix to that gap wouldn't make a DOM handle serializable. |
-
-Baseline check: `npx tsgo -b` in `packages/foundation/ui-system/form` — 0 errors (no edit made).
-
-## 3. `packages/tooling/test-kit/test-utils` (4 entries) — no code changes
+## 2. `packages/tooling/test-kit/test-utils` (4 entries) — no code changes
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -50,7 +39,7 @@ Baseline check: `npx tsgo -b` in `packages/foundation/ui-system/form` — 0 erro
 
 Baseline check: `npx tsgo -b` in `packages/tooling/test-kit/test-utils` — 0 errors (no edit made).
 
-## 4. `packages/foundation/capability/mcp-kit` (3 entries) — FIXED 1/3
+## 3. `packages/foundation/capability/mcp-kit` (3 entries) — FIXED 1/3
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -60,7 +49,7 @@ Baseline check: `npx tsgo -b` in `packages/tooling/test-kit/test-utils` — 0 er
 
 Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (6 files, 23/23 passed) · `turbo run docgen --filter=@beep/mcp-kit` (succeeded, 45 examples) · `bunx biome check` (clean).
 
-## 5. `packages/drivers/box` (2 entries) — FIXED 1/2
+## 4. `packages/drivers/box` (2 entries) — FIXED 1/2
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -69,7 +58,7 @@ Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (6 files, 23/23 passe
 
 Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (2 files, 19/19 passed) · `turbo run docgen --filter=@beep/box` (succeeded, 4495 examples) · `bunx biome check` (clean).
 
-## 6. `packages/foundation/capability/api-transport` (2 entries) — no code changes
+## 5. `packages/foundation/capability/api-transport` (2 entries) — no code changes
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -78,7 +67,7 @@ Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (2 files, 19/19 passe
 
 Baseline check: `npx tsgo -b` in `packages/foundation/capability/api-transport` — 0 errors (no edit made).
 
-## 7. `packages/foundation/capability/langextract` (2 entries) — FIXED 2/2
+## 6. `packages/foundation/capability/langextract` (2 entries) — FIXED 2/2
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -89,7 +78,7 @@ Both findings are the same helper (`Extraction/index.ts:420-424`), flagged by `n
 
 Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (3 files, 19/19 passed) · `turbo run docgen --filter=@beep/langextract` (succeeded, 25 examples) · `bunx biome check` (clean).
 
-## 8. `packages/foundation/ui-system/ui` (2 schema-first + 1 allowlist) — FIXED 1/3
+## 7. `packages/foundation/ui-system/ui` (2 schema-first + 1 allowlist) — FIXED 1/3
 
 | Symbol | Disposition | Evidence |
 |---|---|---|
@@ -101,16 +90,15 @@ Verification: `npx tsgo -b` (0 errors) · `npx vitest run` (7 files, 32/32 passe
 
 ## Detector-bug? queue for driver verdict-challenge (D-C)
 
-1. **`classifyGenericInterface` (`SchemaFirst.ts:1238-1259`) has no render-boundary/ReactNode carve-out.** Affects `FieldOption` (`@beep/form`), and is the same root cause blocking `PgliteSqlTestLayerOptions`/`SqlTestDriver` (`@beep/test-utils`) from reaching their otherwise-applicable service-contract/mixed-signal exemptions — those checks only run in `classifyComposedMembers`/`classifyExtendsInterface`, never in the generic branch. Recommend: thread the R11 signal set (service-contract, curated-runtime-handle, ReactNode/`.tsx`-render-boundary) into `classifyGenericInterface` alongside the existing R6-1/R6-2 checks.
-2. **`fnSchemaEntryFromFunctionLike` (`SchemaFirst.ts:1791-1826`) has no `.tsx`/React-component exemption**, unlike its sibling `nullReturnEntryFromFunctionLike` which explicitly skips `.tsx` via `isNullReturnEligibleFilePath` (`:1880`, wired at `:2475`). Affects `CountryFieldDemo`/`UploadFieldDemo` (`@beep/form` Storybook helpers). Recommend mirroring the same `.tsx` skip (or a stronger "function body contains JSX" check) at the `fnSchemaEntryFromFunctionLike` call site (`:2478-2479`).
+1. **`classifyGenericInterface` (`SchemaFirst.ts:1238-1259`) has no mixed-signal carve-out.** This blocks `PgliteSqlTestLayerOptions`/`SqlTestDriver` (`@beep/test-utils`) from reaching their otherwise-applicable service-contract exemptions — those checks only run in `classifyComposedMembers`/`classifyExtendsInterface`, never in the generic branch. Recommend threading the R11 service-contract and curated-runtime-handle signals into `classifyGenericInterface` alongside the existing R6-1/R6-2 checks.
 
 Both are reported, not applied — fence 11 (detector changes never mix with code fixes) and fence 10 (lanes don't touch `packages/tooling/tool/cli/**`).
 
 ## Commands run (all outcomes green)
 
-- `npx tsgo -b` — clean in all 8 packages (4 with real edits, 4 baseline-only).
+- `npx tsgo -b` — clean in all 7 packages (4 with real edits, 3 baseline-only).
 - `npx vitest run` — `@beep/mcp-kit` 23/23, `@beep/box` 19/19, `@beep/langextract` 19/19, `@beep/ui` 32/32 (only the 4 edited packages; no test changes needed in the other 4).
 - `turbo run docgen --filter=<pkg>` — succeeded for `@beep/mcp-kit`, `@beep/box`, `@beep/langextract`, `@beep/ui`.
 - `bunx biome check <touched files>` — clean, no fixes needed, in all 4 edited packages.
 
-No `standards/*.jsonc` file was read for writing, only for context. No commits made. No files outside the 8 assigned packages were edited (confirmed via `git status --porcelain` against the pre-existing dirty tree from concurrent lanes on this branch).
+No `standards/*.jsonc` file was read for writing, only for context. No commits made. No files outside the 7 assigned packages were edited (confirmed via `git status --porcelain` against the pre-existing dirty tree from concurrent lanes on this branch).

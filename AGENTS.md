@@ -32,8 +32,7 @@ workflows in skills.
 
 - Before recreating a shared helper, schema, utility, model, or known symbol,
   search live source (`packages/**/src/**`) and package barrels
-  (`**/src/index.ts`) first; the `repo-symbol-discovery` skill carries the
-  canonical ripgrep recipes.
+  (`**/src/index.ts`) first with targeted ripgrep.
 - The old `standards/repo-exports.catalog.*` is retired; never look for it or
   run repo-export catalog commands as a discovery or proof step.
 
@@ -113,7 +112,8 @@ workflows in skills.
 
 ## Tool Routing
 
-- effect v3↔v4 differences: prefer the `effect-v4-imports` skill.
+- effect v3↔v4 differences: validate against the checked-in Effect source
+  (`.repos/effect`), never training-data priors.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA

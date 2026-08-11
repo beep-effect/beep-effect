@@ -20,7 +20,7 @@ alone under-represented the cluster's actual shape diversity.
 | `@beep/nlp-processing` | ~12 |
 | `@beep/nlp` | ~6 |
 | `@beep/test-utils`, `@beep/md`, `@beep/mcp-kit` | 3 each |
-| `@beep/utils`, `@beep/identity`, `@beep/form` | 2 each |
+| `@beep/utils`, `@beep/identity` | 2 each |
 | `@beep/lint-rules`, `@beep/langextract` | 1 each |
 
 Reading the actual symbols (not just the sample) surfaced **two structurally

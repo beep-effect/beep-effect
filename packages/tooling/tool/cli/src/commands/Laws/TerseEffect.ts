@@ -125,6 +125,7 @@ const OPTION_MATCH_HANDLER_NAMES = ["onNone", "onSome"] as const;
 const BOOL_MATCH_HANDLER_NAMES = ["onFalse", "onTrue"] as const;
 
 const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 
 const findingText = (sourceFile: import("ts-morph").SourceFile, filePath: string, kind: string, node: Node): string => {
   const position = sourceFile.getLineAndColumnAtPos(node.getStart());
@@ -588,9 +589,7 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
     skipAddingFilesFromTsConfig: true,
   });
 
-  for (const pattern of options.includePaths ?? INCLUDED_GLOBS) {
-    project.addSourceFilesAtPaths(pattern);
-  }
+  project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? SOURCE_FILE_GLOBS));
 
   const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => !isExcludedFile(sourceFile.getFilePath()));
 

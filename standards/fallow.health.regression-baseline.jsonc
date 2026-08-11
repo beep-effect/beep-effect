@@ -393,11 +393,6 @@
         "count": 1
       }
     },
-    "packages/foundation/ui-system/form/src/core/Path.ts": {
-      "complexity_moderate": {
-        "count": 2
-      }
-    },
     "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx": {
       "complexity_critical": {
         "count": 1

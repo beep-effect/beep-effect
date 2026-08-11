@@ -21,6 +21,7 @@ describe("Professional Desktop app", { concurrent: false }, () => {
       .findByTestId("chat-app")
       .then((chatApp) => {
         expect(chatApp).toBeInTheDocument();
+        expect(chatApp.querySelector('[data-slot="orb-background"]')).toBeNull();
         expect(screen.getByTestId("sidebar")).toBeInTheDocument();
         expect(screen.getByTestId("sidebar-new")).toBeInTheDocument();
       })

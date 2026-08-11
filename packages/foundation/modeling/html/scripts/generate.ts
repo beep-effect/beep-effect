@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -24,13 +24,30 @@ import { TaggedErrorClass } from "@beep/schema";
  */
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, FileSystem, flow, Layer, Logger, Match, MutableHashMap, MutableHashSet, Path, pipe } from "effect";
+import {
+  Effect,
+  FileSystem,
+  flow,
+  Layer,
+  Logger,
+  Match,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Path,
+  pipe,
+  Result,
+  Tuple,
+} from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EnumeratedGlobalAttributes, GlobalAttributes, tokenizeHtmlSpaceSeparated } from "../src/Html.attributes.ts";
+import { toAsciiLowerCase } from "../src/internal/Html.ascii.ts";
 
 const $I = $HtmlId.create("scripts/generate");
 
@@ -47,32 +64,38 @@ class HtmlGenerationError extends TaggedErrorClass<HtmlGenerationError>($I`HtmlG
 
 const isHtmlGenerationError = S.is(HtmlGenerationError);
 
-const htmlAsciiUppercaseCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const toHtmlAsciiLowerCase: (value: string) => string = flow(
-  Str.split(""),
-  A.map((character) =>
-    Str.includes(character)(htmlAsciiUppercaseCharacters) ? Str.toLowerCase(character) : character
-  ),
-  A.join("")
-);
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJson = (value: unknown): string =>
+  pipe(
+    encodeJsonResult(value),
+    Result.getOrThrowWith((cause) =>
+      HtmlGenerationError.make({
+        cause,
+        message: "HTML generator could not encode deterministic JSON",
+      })
+    )
+  );
+const jsonEqual = (left: unknown, right: unknown): boolean => encodeJson(left) === encodeJson(right);
+
+const htmlAsciiLowercaseCharacters = "abcdefghijklmnopqrstuvwxyz";
 
 const failGeneration = (message: string): never => {
   throw HtmlGenerationError.make({ message });
 };
 
 const assertExactInventory = (label: string, actual: ReadonlyArray<string>, expected: ReadonlyArray<string>): void => {
-  const normalizedActual = [...actual].sort();
-  const normalizedExpected = [...expected].sort();
-  if (JSON.stringify(normalizedActual) !== JSON.stringify(normalizedExpected)) {
+  const normalizedActual = A.sort(actual, Order.String);
+  const normalizedExpected = A.sort(expected, Order.String);
+  if (encodeJson(normalizedActual) !== encodeJson(normalizedExpected)) {
     failGeneration(
-      `HTML generator requires the exact ${label}; expected ${JSON.stringify(normalizedExpected)}, received ${JSON.stringify(normalizedActual)}`
+      `HTML generator requires the exact ${label}; expected ${encodeJson(normalizedExpected)}, received ${encodeJson(normalizedActual)}`
     );
   }
 };
 
 const IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256 = "be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a";
 const IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE = "2026-06-14";
-const LanguageSubtagRegistryKind = S.Literals([
+const LanguageSubtagRegistryKind = LiteralKit([
   "extlang",
   "grandfathered",
   "language",
@@ -94,26 +117,40 @@ const IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS: Readonly<Record<LanguageSubtagRegist
 };
 const IANA_LANGUAGE_SUBTAG_REGISTRY_RANGES = ["qaa..qtz", "Qaaa..Qabx", "QM..QZ", "XA..XZ"];
 
-interface LanguageSubtagRegistryRecord {
-  readonly prefixes: ReadonlyArray<string>;
-  readonly subtagOrTag: string;
-  readonly type: LanguageSubtagRegistryKind;
-}
+const LanguageSubtagRegistryRecord = S.Struct({
+  prefixes: S.Array(S.String),
+  subtagOrTag: S.String,
+  type: LanguageSubtagRegistryKind,
+}).pipe(
+  $I.annoteSchema("LanguageSubtagRegistryRecord", {
+    description: "Normalized fields from one IANA language-subtag registry record.",
+  })
+);
+type LanguageSubtagRegistryRecord = typeof LanguageSubtagRegistryRecord.Type;
 
-interface LanguageTagRegistryData {
-  readonly extlangPrefixes: Readonly<Record<string, string>>;
-  readonly fileDate: string;
-  readonly grandfathered: ReadonlyArray<string>;
-  readonly languages: ReadonlyArray<string>;
-  readonly regions: ReadonlyArray<string>;
-  readonly scripts: ReadonlyArray<string>;
-  readonly variants: ReadonlyArray<string>;
-}
+const LanguageTagRegistryData = S.Struct({
+  extlangPrefixes: S.Record(S.String, S.String),
+  fileDate: S.String,
+  grandfathered: S.Array(S.String),
+  languages: S.Array(S.String),
+  regions: S.Array(S.String),
+  scripts: S.Array(S.String),
+  variants: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("LanguageTagRegistryData", {
+    description: "Normalized IANA language-tag registry data rendered into the generated HTML module.",
+  })
+);
+type LanguageTagRegistryData = typeof LanguageTagRegistryData.Type;
 
 const asciiAlphaOrdinal = (value: string): number => {
   let ordinal = 0;
-  for (const character of value.toLowerCase()) {
-    const digit = character.charCodeAt(0) - 97;
+  for (const character of Str.toLowerCase(value)) {
+    const digit =
+      pipe(
+        Str.charCodeAt(character, 0),
+        O.getOrElse(() => failGeneration(`IANA registry range ${value} contains an empty character`))
+      ) - 97;
     if (digit < 0 || digit > 25) failGeneration(`IANA registry range ${value} is not ASCII alphabetic`);
     ordinal = ordinal * 26 + digit;
   }
@@ -121,49 +158,61 @@ const asciiAlphaOrdinal = (value: string): number => {
 };
 
 const asciiAlphaFromOrdinal = (ordinal: number, length: number): string => {
-  const characters = new Array<string>(length);
+  let characters = A.empty<string>();
   let remainder = ordinal;
-  for (let index = length - 1; index >= 0; index -= 1) {
-    characters[index] = String.fromCharCode(97 + (remainder % 26));
+  for (let index = 0; index < length; index += 1) {
+    const character = pipe(
+      Str.charAt(htmlAsciiLowercaseCharacters, remainder % 26),
+      O.getOrElse(() => failGeneration(`IANA registry ordinal ${ordinal} has an invalid alphabet offset`))
+    );
+    characters = A.prepend(characters, character);
     remainder = Math.floor(remainder / 26);
   }
   if (remainder !== 0) failGeneration(`IANA registry range ordinal ${ordinal} exceeds width ${length}`);
-  return characters.join("");
+  return A.join(characters, "");
 };
 
 const expandLanguageSubtag = (value: string): ReadonlyArray<string> => {
-  const [start, end, ...unexpected] = value.split("..");
-  if (end === undefined) return [value.toLowerCase()];
-  if (start === undefined || unexpected.length > 0 || start.length !== end.length) {
+  const [start, end, ...unexpected] = Str.split(value, "..");
+  if (end === undefined) return [Str.toLowerCase(value)];
+  if (start === undefined || A.isReadonlyArrayNonEmpty(unexpected) || Str.length(start) !== Str.length(end)) {
     return failGeneration(`IANA registry range ${value} is malformed`);
   }
   const startOrdinal = asciiAlphaOrdinal(start);
   const endOrdinal = asciiAlphaOrdinal(end);
   if (endOrdinal < startOrdinal) return failGeneration(`IANA registry range ${value} is descending`);
-  return A.makeBy(endOrdinal - startOrdinal + 1, (index) => asciiAlphaFromOrdinal(startOrdinal + index, start.length));
+  return A.makeBy(endOrdinal - startOrdinal + 1, (index) =>
+    asciiAlphaFromOrdinal(startOrdinal + index, Str.length(start))
+  );
 };
 
 const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData => {
-  const [header, ...blocks] = source.replace(/\r\n?/gu, "\n").split("\n%%\n");
-  const fileDate = header?.match(/^File-Date: ([0-9]{4}-[0-9]{2}-[0-9]{2})$/u)?.[1];
+  const [header, ...blocks] = pipe(source, Str.replace(/\r\n?/gu, "\n"), Str.split("\n%%\n"));
+  const fileDate = pipe(
+    header,
+    O.fromUndefinedOr,
+    O.flatMap(Str.match(/^File-Date: ([0-9]{4}-[0-9]{2}-[0-9]{2})$/u)),
+    O.flatMap(A.get(1)),
+    O.getOrUndefined
+  );
   if (fileDate !== IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE) {
     return failGeneration(
       `IANA registry requires File-Date ${IANA_LANGUAGE_SUBTAG_REGISTRY_FILE_DATE}; received ${fileDate ?? "missing"}`
     );
   }
 
-  const records = blocks.map((block): LanguageSubtagRegistryRecord => {
+  const records = A.map(blocks, (block): LanguageSubtagRegistryRecord => {
     const fields = MutableHashMap.empty<string, Array<string>>();
-    for (const line of block.trim().split("\n")) {
-      const separator = line.indexOf(":");
-      if (separator <= 0) continue;
-      const name = line.slice(0, separator);
-      const values = pipe(
-        MutableHashMap.get(fields, name),
-        O.getOrElse((): Array<string> => [])
+    for (const line of pipe(block, Str.trim, Str.split("\n"))) {
+      const separator = pipe(
+        line,
+        Str.indexOf(":"),
+        O.getOrElse(() => -1)
       );
-      values.push(line.slice(separator + 1).trim());
-      MutableHashMap.set(fields, name, values);
+      if (separator <= 0) continue;
+      const name = pipe(line, Str.slice(0, separator));
+      const values = pipe(MutableHashMap.get(fields, name), O.getOrElse(A.empty<string>));
+      MutableHashMap.set(fields, name, A.append(values, pipe(line, Str.slice(separator + 1), Str.trim)));
     }
     const type = pipe(MutableHashMap.get(fields, "Type"), O.flatMap(A.head), O.getOrUndefined);
     const subtagOrTag = pipe(
@@ -184,23 +233,33 @@ const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData =>
   });
 
   for (const [type, expected] of R.toEntries(IANA_LANGUAGE_SUBTAG_REGISTRY_COUNTS)) {
-    const actual = records.filter((record) => record.type === type).length;
+    const actual = pipe(records, A.filter(P.Struct({ type: Eq.equals(type) })), A.length);
     if (actual !== expected) {
       return failGeneration(`IANA registry requires ${expected} ${type} records; received ${actual}`);
     }
   }
   assertExactInventory(
     "IANA registry range inventory",
-    records.map((record) => record.subtagOrTag).filter((value) => value.includes("..")),
+    pipe(
+      records,
+      A.map((record) => record.subtagOrTag),
+      A.filter(Str.includes(".."))
+    ),
     IANA_LANGUAGE_SUBTAG_REGISTRY_RANGES
   );
 
   const valuesFor = (type: LanguageSubtagRegistryKind): ReadonlyArray<string> => {
-    const values = records
-      .filter((record) => record.type === type)
-      .flatMap((record) => expandLanguageSubtag(record.subtagOrTag))
-      .sort();
-    if (A.dedupe(values).length !== values.length) {
+    const values = pipe(
+      records,
+      A.filter(
+        P.Struct({
+          type: Eq.equals(type),
+        })
+      ),
+      A.flatMap((record) => expandLanguageSubtag(record.subtagOrTag)),
+      A.sort(Order.String)
+    );
+    if (A.length(A.dedupe(values)) !== A.length(values)) {
       return failGeneration(`IANA registry contains a duplicate expanded ${type} value`);
     }
     return values;
@@ -209,22 +268,24 @@ const parseLanguageSubtagRegistry = (source: string): LanguageTagRegistryData =>
   const extlangs = valuesFor("extlang");
   const languages = valuesFor("language");
   const extlangPrefixes = R.fromEntries(
-    records
-      .filter((record) => record.type === "extlang")
-      .map((record) => {
+    pipe(
+      records,
+      A.filter(P.Struct({ type: Eq.equals("extlang") })),
+      A.map((record) => {
         const [prefix] = record.prefixes;
-        if (prefix === undefined || record.prefixes.length !== 1) {
+        if (prefix === undefined || A.length(record.prefixes) !== 1) {
           return failGeneration(
-            `IANA registry extlang ${record.subtagOrTag} requires exactly one Prefix; received ${JSON.stringify(record.prefixes)}`
+            `IANA registry extlang ${record.subtagOrTag} requires exactly one Prefix; received ${encodeJson(record.prefixes)}`
           );
         }
-        const normalizedExtlang = record.subtagOrTag.toLowerCase();
-        const normalizedPrefix = prefix.toLowerCase();
+        const normalizedExtlang = Str.toLowerCase(record.subtagOrTag);
+        const normalizedPrefix = Str.toLowerCase(prefix);
         if (!A.contains(languages, normalizedPrefix)) {
           return failGeneration(`IANA registry extlang ${record.subtagOrTag} has invalid registered Prefix ${prefix}`);
         }
-        return [normalizedExtlang, normalizedPrefix] as const;
+        return Tuple.make(normalizedExtlang, normalizedPrefix);
       })
+    )
   );
   assertExactInventory("IANA registry extlang prefix inventory", R.keys(extlangPrefixes), extlangs);
 
@@ -275,13 +336,13 @@ type GeneratedLanguageTagRegistry = Readonly<{
  * @since 0.0.0
  */
 export const IANA_LANGUAGE_TAG_REGISTRY: GeneratedLanguageTagRegistry = Object.freeze({
-  fileDate: ${JSON.stringify(registry.fileDate)},
-  languages: Object.freeze(${JSON.stringify(registry.languages)}),
-  extlangPrefixes: Object.freeze(${JSON.stringify(registry.extlangPrefixes)}),
-  scripts: Object.freeze(${JSON.stringify(registry.scripts)}),
-  regions: Object.freeze(${JSON.stringify(registry.regions)}),
-  variants: Object.freeze(${JSON.stringify(registry.variants)}),
-  grandfathered: Object.freeze(${JSON.stringify(registry.grandfathered)}),
+  fileDate: ${encodeJson(registry.fileDate)},
+  languages: Object.freeze(${encodeJson(registry.languages)}),
+  extlangPrefixes: Object.freeze(${encodeJson(registry.extlangPrefixes)}),
+  scripts: Object.freeze(${encodeJson(registry.scripts)}),
+  regions: Object.freeze(${encodeJson(registry.regions)}),
+  variants: Object.freeze(${encodeJson(registry.variants)}),
+  grandfathered: Object.freeze(${encodeJson(registry.grandfathered)}),
 });
 `;
 
@@ -369,7 +430,11 @@ const RESERVED = MutableHashSet.fromIterable([
 ]);
 
 const className = (tag: string): string => {
-  const pascal = Str.toUpperCase(tag.charAt(0)) + tag.slice(1);
+  const first = pipe(
+    Str.charAt(tag, 0),
+    O.getOrElse(() => "")
+  );
+  const pascal = Str.concat(Str.toUpperCase(first), pipe(tag, Str.slice(1)));
   return MutableHashSet.has(RESERVED, pascal) ? `${pascal}Element` : pascal;
 };
 
@@ -385,38 +450,30 @@ const CATEGORIES: ReadonlyArray<readonly [string, string]> = [
   ["ScriptSupporting", "script-supporting"],
 ];
 
-type Kind = "void" | "text" | "normal";
-type TextMode = "normal" | "raw-text" | "rcdata" | "plaintext";
+const Kind = LiteralKit(["void", "text", "normal"]).pipe(
+  $I.annoteSchema("Kind", {
+    description: "Generated HTML element content-body kind.",
+  })
+);
+type Kind = typeof Kind.Type;
 
-interface AttributeSpec {
-  readonly encoded: string;
-  readonly runtime: string;
-  readonly type: string;
-}
+const TextMode = LiteralKit(["normal", "raw-text", "rcdata", "plaintext"]).pipe(
+  $I.annoteSchema("TextMode", {
+    description: "HTML tokenizer text mode associated with a generated element.",
+  })
+);
+type TextMode = typeof TextMode.Type;
 
-interface El {
-  readonly attributeEqualities: ReadonlyArray<AttributeEquality>;
-  readonly attributeRequirements: ReadonlyArray<AttributeRequirement>;
-  readonly categories: ReadonlyArray<string>;
-  readonly childGrammar: string | undefined;
-  readonly children: ReadonlyArray<string>;
-  readonly childSequencePattern: string | undefined;
-  readonly cls: string;
-  readonly conditionalCategories: ReadonlyArray<ConditionalCategoryRule>;
-  readonly currentAttributes: ReadonlyArray<string>;
-  readonly encoded: string;
-  readonly iface: string;
-  readonly kind: Kind;
-  readonly numericAttributeRelationships: ReadonlyArray<NumericAttributeRelationship>;
-  readonly obsolete: boolean;
-  readonly obsoleteAttributes: ReadonlyArray<string>;
-  readonly rules: ReviewedConformanceRules;
-  readonly runtime: string;
-  readonly tag: string;
-  readonly textMode: TextMode;
-  readonly type: string;
-  readonly uniqueAttributes: ReadonlyArray<string>;
-}
+const AttributeSpec = S.Struct({
+  encoded: S.String,
+  runtime: S.String,
+  type: S.String,
+}).pipe(
+  $I.annoteSchema("AttributeSpec", {
+    description: "Generated runtime, decoded, and encoded source fragments for one HTML attribute.",
+  })
+);
+type AttributeSpec = typeof AttributeSpec.Type;
 
 /** A single webref definition entry from `ed/dfns/html.json`. */
 class Dfn extends S.Class<Dfn>($I`Dfn`)(
@@ -538,17 +595,27 @@ const AttributeValueConstraint = S.Union([
     description: "Generated relationship constraint over an HTML attribute value.",
   })
 );
+const isAllowedValuesConstraint = P.isTagged("allowedValues");
 
 const AttributeRequirementPredicate = S.Union([
-  S.TaggedStruct("attributeContainsToken", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeContainsToken", {
+    attribute: S.String,
+    value: S.String,
+  }),
   S.TaggedStruct("attributeEquals", { attribute: S.String, value: S.String }),
-  S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
+  S.TaggedStruct("attributeEqualsOrMissing", {
+    attribute: S.String,
+    value: S.String,
+  }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
   $I.annoteSchema("AttributeRequirementPredicate", {
     description: "Generated predicate controlling when an HTML attribute requirement applies.",
   })
 );
+const isAttributeContainsTokenPredicate = P.isTagged("attributeContainsToken");
+const isAttributeEqualsOrMissingPredicate = P.isTagged("attributeEqualsOrMissing");
+const isAttributeEqualityPredicate = P.or(P.isTagged("attributeEquals"), isAttributeEqualsOrMissingPredicate);
 
 class AttributeRequirement extends S.Class<AttributeRequirement>($I`AttributeRequirement`)(
   {
@@ -672,13 +739,47 @@ class ObsoleteInterfacesDoc extends S.Class<ObsoleteInterfacesDoc>($I`ObsoleteIn
   $I.annote("ObsoleteInterfacesDoc", { description: "Local obsolete interface override document." })
 ) {}
 
-interface RawData {
-  readonly classification: Classification;
-  readonly contentModel: Record<string, ContentModelEntry>;
-  readonly dfns: ReadonlyArray<Dfn>;
-  readonly elements: ReadonlyArray<WebrefElement>;
-  readonly obsoleteInterfaces: Record<string, string>;
-}
+const El = S.Struct({
+  attributeEqualities: S.Array(AttributeEquality),
+  attributeRequirements: S.Array(AttributeRequirement),
+  categories: S.Array(S.String),
+  childGrammar: S.UndefinedOr(S.String),
+  children: S.Array(S.String),
+  childSequencePattern: S.UndefinedOr(S.String),
+  cls: S.String,
+  conditionalCategories: S.Array(ConditionalCategoryRule),
+  currentAttributes: S.Array(S.String),
+  encoded: S.String,
+  iface: S.String,
+  kind: Kind,
+  numericAttributeRelationships: S.Array(NumericAttributeRelationship),
+  obsolete: S.Boolean,
+  obsoleteAttributes: S.Array(S.String),
+  rules: ReviewedConformanceRules,
+  runtime: S.String,
+  tag: S.String,
+  textMode: TextMode,
+  type: S.String,
+  uniqueAttributes: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("El", {
+    description: "Normalized generator state for one HTML element model and metadata entry.",
+  })
+);
+type El = typeof El.Type;
+
+const RawData = S.Struct({
+  classification: Classification,
+  contentModel: S.Record(S.String, ContentModelEntry),
+  dfns: S.Array(Dfn),
+  elements: S.Array(WebrefElement),
+  obsoleteInterfaces: S.Record(S.String, S.String),
+}).pipe(
+  $I.annoteSchema("RawData", {
+    description: "Decoded pinned datasets consumed by the pure HTML model builder.",
+  })
+);
+type RawData = typeof RawData.Type;
 
 // ---------------------------------------------------------------------------
 // pure build
@@ -687,15 +788,19 @@ interface RawData {
 const optionalRuntime = (schema: string): string =>
   `S.OptionFromOptionalKey(${schema}).pipe(SchemaUtils.withNoneDefault)`;
 
-const literalUnion = (values: ReadonlyArray<string>): string =>
-  values.map((value) => JSON.stringify(value)).join(" | ");
+const literalUnion: (values: ReadonlyArray<string>) => string = flow(A.map(encodeJson), A.join(" | "));
 
-type ReviewedCurrentAttributeGap = {
-  readonly pinned: ReadonlyArray<string>;
-  readonly reviewed: ReadonlyArray<string>;
-  readonly tag: string;
-  readonly webref: ReadonlyArray<string>;
-};
+const ReviewedCurrentAttributeGap = S.Struct({
+  pinned: S.Array(S.String),
+  reviewed: S.Array(S.String),
+  tag: S.String,
+  webref: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("ReviewedCurrentAttributeGap", {
+    description: "Pinned and reviewed current-attribute inventories compared for one HTML element.",
+  })
+);
+type ReviewedCurrentAttributeGap = typeof ReviewedCurrentAttributeGap.Type;
 
 /**
  * Requires every pinned current attribute missing from webref to have an exact
@@ -705,29 +810,46 @@ type ReviewedCurrentAttributeGap = {
  */
 export const assertReviewedCurrentAttributeGap = (input: ReviewedCurrentAttributeGap): void => {
   const webrefNames = MutableHashSet.fromIterable(input.webref);
-  const missingFromWebref = input.pinned.filter((name) => !MutableHashSet.has(webrefNames, name)).sort();
-  const reviewedNames = [...input.reviewed].sort();
-  if (JSON.stringify(missingFromWebref) !== JSON.stringify(reviewedNames)) {
+  const missingFromWebref = pipe(
+    input.pinned,
+    A.filter((name) => !MutableHashSet.has(webrefNames, name)),
+    A.sort(Order.String)
+  );
+  const reviewedNames = A.sort(input.reviewed, Order.String);
+  if (encodeJson(missingFromWebref) !== encodeJson(reviewedNames)) {
     failGeneration(
-      `HTML generator current-attribute gap for <${input.tag}> requires an exact reviewed override; expected ${JSON.stringify(missingFromWebref)}, received ${JSON.stringify(reviewedNames)}`
+      `HTML generator current-attribute gap for <${input.tag}> requires an exact reviewed override; expected ${encodeJson(missingFromWebref)}, received ${encodeJson(reviewedNames)}`
     );
   }
 };
 
-const buildModel = (data: RawData): { model: string; meta: string; conforming: number; total: number } => {
+const buildModel = (
+  data: RawData
+): {
+  model: string;
+  meta: string;
+  conforming: number;
+  total: number;
+} => {
   const { classification, contentModel, dfns, elements: elementsData, obsoleteInterfaces } = data;
 
-  const elementDfns = dfns.filter((d) => d.type === "element");
-  const elementNames: ReadonlyArray<string> = elementDfns.map((d) => d.linkingText[0]);
+  const elementDfns = A.filter(dfns, (d) => d.type === "element");
+  const elementNames: ReadonlyArray<string> = A.map(elementDfns, (d) => d.linkingText[0]);
   const elementNameSet = MutableHashSet.fromIterable(elementNames);
   const isObsolete = (d: Dfn | undefined): boolean => d !== undefined && /\/obsolete\.html/.test(d.href);
+  const findElementDfn = (tag: string): Dfn | undefined =>
+    pipe(
+      elementDfns,
+      A.findFirst((entry) => entry.linkingText[0] === tag),
+      O.getOrUndefined
+    );
 
   // element -> specific attribute names (webref `for` arrays already expand
   // groups to concrete element names; the only non-element `for` tokens are the
   // global groups, which we skip).
   const elemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
   for (const name of elementNames) MutableHashMap.set(elemAttrs, name, MutableHashSet.empty<string>());
-  for (const ea of dfns.filter((d) => d.type === "element-attr")) {
+  for (const ea of A.filter(dfns, (d) => d.type === "element-attr")) {
     const attr = ea.linkingText[0];
     for (const f of ea.for ?? []) {
       if (MutableHashSet.has(elementNameSet, f)) {
@@ -739,32 +861,31 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   // "element/attr" (or "group/attr") -> permitted value keywords
   const enumValues = MutableHashMap.empty<string, Array<string>>();
-  for (const av of dfns.filter((d) => d.type === "attr-value")) {
+  for (const av of A.filter(dfns, (d) => d.type === "attr-value")) {
     for (const f of av.for ?? []) {
-      const arr = MutableHashMap.get(enumValues, f).pipe(O.getOrElse((): Array<string> => []));
-      arr.push(av.linkingText[0]);
-      MutableHashMap.set(enumValues, f, arr);
+      const arr = MutableHashMap.get(enumValues, f).pipe(O.getOrElse(A.empty<string>));
+      MutableHashMap.set(enumValues, f, A.append(arr, av.linkingText[0]));
     }
   }
   for (const [key, values] of R.toEntries(classification.enumeratedAttributeValueOverrides)) {
-    if (A.dedupe(values).length !== values.length) {
+    if (A.length(A.dedupe(values)) !== A.length(values)) {
       failGeneration(`HTML generator enumerated-value override for ${key} contains duplicate keywords`);
     }
-    MutableHashMap.set(enumValues, key, [...values]);
+    MutableHashMap.set(enumValues, key, A.copy(values));
   }
   for (const [tag, requirements] of R.toEntries(classification.attributeRequirements)) {
     for (const requirement of requirements) {
       for (const constraint of requirement.constraints ?? []) {
-        if (constraint._tag !== "allowedValues") {
+        if (!isAllowedValuesConstraint(constraint)) {
           continue;
         }
         const key = `${tag}/${constraint.attribute}`;
         const values = pipe(
           MutableHashMap.get(enumValues, key),
-          O.getOrElse((): Array<string> => []),
+          O.getOrElse(A.empty<string>),
           A.appendAll(constraint.values),
           A.dedupe,
-          A.sort(Str.Order)
+          A.sort(Order.String)
         );
         MutableHashMap.set(enumValues, key, values);
       }
@@ -778,12 +899,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const currentElemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
   const obsoleteElemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
   for (const tag of elementNames) {
-    const definition = elementDfns.find((entry) => entry.linkingText[0] === tag);
+    const definition = findElementDfn(tag);
     const webref = MutableHashMap.get(elemAttrs, tag).pipe(
       O.getOrElse((): MutableHashSet.MutableHashSet<string> => MutableHashSet.empty())
     );
     const webrefSpecific = MutableHashSet.fromIterable(
-      [...webref].filter((name) => !MutableHashSet.has(globalKeys, name))
+      A.filter(webref, (name) => !MutableHashSet.has(globalKeys, name))
     );
     if (isObsolete(definition)) {
       MutableHashMap.set(currentElemAttrs, tag, MutableHashSet.empty());
@@ -794,29 +915,29 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     const pinned =
       contentModel[tag]?.attributes ??
       failGeneration(`HTML generator has no pinned current-attribute inventory for conforming <${tag}>`);
-    if (!pinned.includes("globals")) {
+    if (!A.contains(pinned, "globals")) {
       failGeneration(`HTML generator requires the pinned <${tag}> inventory to classify global attributes explicitly`);
     }
-    const pinnedSpecific = MutableHashSet.fromIterable(pinned.filter((name) => name !== "globals"));
-    const reviewed = [...(classification.currentAttributeOverrides[tag] ?? [])].sort();
+    const pinnedSpecific = MutableHashSet.fromIterable(A.filter(pinned, (name) => name !== "globals"));
+    const reviewed = A.sort(classification.currentAttributeOverrides[tag] ?? A.empty(), Order.String);
     assertReviewedCurrentAttributeGap({
-      pinned: [...pinnedSpecific],
+      pinned: A.fromIterable(pinnedSpecific),
       reviewed,
       tag,
-      webref: [...webrefSpecific],
+      webref: A.fromIterable(webrefSpecific),
     });
     MutableHashMap.set(currentElemAttrs, tag, pinnedSpecific);
     MutableHashMap.set(
       obsoleteElemAttrs,
       tag,
-      MutableHashSet.fromIterable([...webrefSpecific].filter((name) => !MutableHashSet.has(pinnedSpecific, name)))
+      MutableHashSet.fromIterable(A.filter(webrefSpecific, (name) => !MutableHashSet.has(pinnedSpecific, name)))
     );
   }
   for (const tag of R.keys(classification.currentAttributeOverrides)) {
     if (!MutableHashSet.has(elementNameSet, tag)) {
       failGeneration(`HTML generator current-attribute override names unknown element <${tag}>`);
     }
-    if (isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))) {
+    if (isObsolete(findElementDfn(tag))) {
       failGeneration(`HTML generator current-attribute override names obsolete element <${tag}>`);
     }
   }
@@ -841,7 +962,9 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const plaintextEls = MutableHashSet.fromIterable(classification.plaintext);
   const normalEls = MutableHashSet.fromIterable(classification.normal);
   const emptyContentModelEls = MutableHashSet.fromIterable(classification.emptyContentModelElements);
-  const globalBooleanAttributes = R.keys(GlobalAttributes).filter((name) => S.is(GlobalAttributes[name])(O.some(true)));
+  const globalBooleanAttributes = A.filter(R.keys(GlobalAttributes), (name) =>
+    S.is(GlobalAttributes[name])(O.some(true))
+  );
   for (const name of globalBooleanAttributes) {
     if (!MutableHashSet.has(booleanAttrs, name)) {
       failGeneration(`HTML generator boolean registry omits global BooleanAttribute field ${name}`);
@@ -862,10 +985,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "writingsuggestions",
   ];
   if (
-    JSON.stringify(R.keys(EnumeratedGlobalAttributes).sort()) !== JSON.stringify(requiredEnumeratedGlobalAttributes)
+    encodeJson(A.sort(R.keys(EnumeratedGlobalAttributes), Order.String)) !==
+    encodeJson(requiredEnumeratedGlobalAttributes)
   ) {
     failGeneration(
-      `HTML generator requires the exact hand-authored enumerated global-attribute inventory; expected ${JSON.stringify(requiredEnumeratedGlobalAttributes)}, received ${JSON.stringify(R.keys(EnumeratedGlobalAttributes).sort())}`
+      `HTML generator requires the exact hand-authored enumerated global-attribute inventory; expected ${encodeJson(requiredEnumeratedGlobalAttributes)}, received ${encodeJson(A.sort(R.keys(EnumeratedGlobalAttributes), Order.String))}`
     );
   }
   const isClassifiedAs = (
@@ -904,8 +1028,8 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   MutableHashMap.forEach(enumValues, (values, key) => {
     const [tag = "", attribute = ""] = Str.split("/")(key);
     if (isClassifiedAs(caseSensitiveKeywordAttrs, tag, attribute)) return;
-    const folded = A.map(values, toHtmlAsciiLowerCase);
-    if (A.dedupe(folded).length !== values.length) {
+    const folded = A.map(values, toAsciiLowerCase);
+    if (A.length(A.dedupe(folded)) !== A.length(values)) {
       failGeneration(`HTML generator ASCII-case-insensitive domain ${key} contains folded duplicate keywords`);
     }
     if (isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) && A.some(values, Str.isEmpty)) {
@@ -1014,7 +1138,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     conditionalInputAttributes
   );
   for (const [state, attributes] of R.toEntries(classification.inputAttributeApplicability)) {
-    if (A.dedupe(attributes).length !== attributes.length) {
+    if (A.length(A.dedupe(attributes)) !== A.length(attributes)) {
       failGeneration(`HTML generator input applicability for ${state} contains duplicate attributes`);
     }
     for (const attribute of attributes) {
@@ -1103,34 +1227,31 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   );
   for (const [state, groups] of R.toEntries(classification.autocompleteInputStateGroups)) {
     if (
-      A.dedupe(groups).length !== groups.length ||
+      A.length(A.dedupe(groups)) !== A.length(groups) ||
       A.some(groups, (group) => !A.contains(autocompleteGroupNames, group))
     ) {
       failGeneration(`HTML generator autocomplete groups for input state ${state} are duplicated or unclassified`);
     }
   }
   if (
-    A.dedupe(classification.autocompleteContactFields).length !== classification.autocompleteContactFields.length ||
+    A.length(A.dedupe(classification.autocompleteContactFields)) !==
+      A.length(classification.autocompleteContactFields) ||
     A.some(classification.autocompleteContactFields, (field) => !A.contains(autocompleteFields, field))
   ) {
     failGeneration("HTML generator autocomplete contact fields must be unique classified autocomplete fields");
   }
 
   const requiredCaseSensitiveKeywordAttributes = ["ol/type"];
-  if (
-    JSON.stringify([...caseSensitiveKeywordAttrs].sort()) !== JSON.stringify(requiredCaseSensitiveKeywordAttributes)
-  ) {
+  const caseSensitiveKeywordAttributeInventory = A.sort(caseSensitiveKeywordAttrs, Order.String);
+  if (!jsonEqual(caseSensitiveKeywordAttributeInventory, requiredCaseSensitiveKeywordAttributes)) {
     failGeneration(
-      `HTML generator requires the exact case-sensitive keyword-attribute inventory; expected ${JSON.stringify(requiredCaseSensitiveKeywordAttributes)}, received ${JSON.stringify([...caseSensitiveKeywordAttrs].sort())}`
+      `HTML generator requires the exact case-sensitive keyword-attribute inventory; expected ${encodeJson(requiredCaseSensitiveKeywordAttributes)}, received ${encodeJson(caseSensitiveKeywordAttributeInventory)}`
     );
   }
-  const orderedListTypeValues = pipe(
-    MutableHashMap.get(enumValues, "ol/type"),
-    O.getOrElse((): Array<string> => [])
-  );
+  const orderedListTypeValues = pipe(MutableHashMap.get(enumValues, "ol/type"), O.getOrElse(A.empty<string>));
   if (
-    orderedListTypeValues.length === 0 ||
-    A.dedupe(A.map(orderedListTypeValues, Str.toLowerCase)).length === orderedListTypeValues.length
+    A.isReadonlyArrayEmpty(orderedListTypeValues) ||
+    A.length(A.dedupe(A.map(orderedListTypeValues, Str.toLowerCase))) === A.length(orderedListTypeValues)
   ) {
     failGeneration("HTML generator case-sensitive keyword exceptions must distinguish ASCII case semantically");
   }
@@ -1143,46 +1264,50 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "script/blocking",
     "style/blocking",
   ];
-  if (
-    JSON.stringify(R.keys(classification.enumeratedAttributeValueOverrides).sort()) !==
-    JSON.stringify(requiredEnumeratedAttributeValueOverrides)
-  ) {
+  const enumeratedAttributeValueOverrideKeys = A.sort(
+    R.keys(classification.enumeratedAttributeValueOverrides),
+    Order.String
+  );
+  if (!jsonEqual(enumeratedAttributeValueOverrideKeys, requiredEnumeratedAttributeValueOverrides)) {
     failGeneration(
-      `HTML generator requires the exact enumerated-value override inventory; expected ${JSON.stringify(requiredEnumeratedAttributeValueOverrides)}, received ${JSON.stringify(R.keys(classification.enumeratedAttributeValueOverrides).sort())}`
+      `HTML generator requires the exact enumerated-value override inventory; expected ${encodeJson(requiredEnumeratedAttributeValueOverrides)}, received ${encodeJson(enumeratedAttributeValueOverrideKeys)}`
     );
   }
   if (
-    JSON.stringify(classification.enumeratedAttributeValueOverrides["area/shape"]) !==
-    JSON.stringify(["circle", "default", "poly", "rect"])
+    !jsonEqual(classification.enumeratedAttributeValueOverrides["area/shape"], ["circle", "default", "poly", "rect"])
   ) {
     failGeneration("HTML generator requires the exact conforming <area shape> keyword domain");
   }
   const formEncodingKeywords = ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"];
   for (const attribute of ["button/formenctype", "input/formenctype"]) {
-    if (
-      JSON.stringify(classification.enumeratedAttributeValueOverrides[attribute]) !==
-      JSON.stringify(formEncodingKeywords)
-    ) {
+    if (!jsonEqual(classification.enumeratedAttributeValueOverrides[attribute], formEncodingKeywords)) {
       failGeneration(`HTML generator requires the exact conforming ${attribute} keyword domain`);
     }
   }
   for (const attribute of ["link/blocking", "script/blocking", "style/blocking"]) {
-    if (JSON.stringify(classification.enumeratedAttributeValueOverrides[attribute]) !== JSON.stringify(["render"])) {
+    if (!jsonEqual(classification.enumeratedAttributeValueOverrides[attribute], ["render"])) {
       failGeneration(`HTML generator requires the exact conforming ${attribute} token domain`);
     }
   }
   if (
-    JSON.stringify(classification.enumeratedAttributeValueOverrides["meta/http-equiv"]) !==
-    JSON.stringify(["content-type", "default-style", "refresh", "x-ua-compatible", "content-security-policy"])
+    !jsonEqual(classification.enumeratedAttributeValueOverrides["meta/http-equiv"], [
+      "content-type",
+      "default-style",
+      "refresh",
+      "x-ua-compatible",
+      "content-security-policy",
+    ])
   ) {
     failGeneration("HTML generator requires the exact current conforming meta/http-equiv keyword domain");
   }
 
   const elementClassifications = [voidEls, rawTextEls, rcDataEls, plaintextEls, normalEls];
   for (const tag of elementNames) {
-    const matches = elementClassifications.filter((classificationSet) =>
-      MutableHashSet.has(classificationSet, tag)
-    ).length;
+    const matches = pipe(
+      elementClassifications,
+      A.filter((classificationSet) => MutableHashSet.has(classificationSet, tag)),
+      A.length
+    );
     if (matches !== 1) {
       failGeneration(`HTML generator requires exactly one element classification for <${tag}>; found ${matches}`);
     }
@@ -1195,14 +1320,14 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
   }
 
-  for (const [classificationName, classificationSet] of [
-    ["void", voidEls],
-    ["rawText", rawTextEls],
-    ["rcData", rcDataEls],
-    ["plaintext", plaintextEls],
-    ["normal", normalEls],
-    ["emptyContentModelElements", emptyContentModelEls],
-  ] as const) {
+  for (const [classificationName, classificationSet] of A.make(
+    Tuple.make("void", voidEls),
+    Tuple.make("rawText", rawTextEls),
+    Tuple.make("rcData", rcDataEls),
+    Tuple.make("plaintext", plaintextEls),
+    Tuple.make("normal", normalEls),
+    Tuple.make("emptyContentModelElements", emptyContentModelEls)
+  )) {
     for (const tag of classificationSet) {
       if (!MutableHashSet.has(elementNameSet, tag)) {
         failGeneration(`HTML generator ${classificationName} classification names unknown element <${tag}>`);
@@ -1240,23 +1365,22 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "table",
     "video",
   ];
-  const configuredGrammarTags = R.keys(classification.specialChildGrammars).sort();
-  if (JSON.stringify(configuredGrammarTags) !== JSON.stringify(grammarRequiredTags)) {
+  const configuredGrammarTags = A.sort(R.keys(classification.specialChildGrammars), Order.String);
+  if (!jsonEqual(configuredGrammarTags, grammarRequiredTags)) {
     failGeneration(
-      `HTML generator requires an exact special-child grammar inventory; expected ${JSON.stringify(grammarRequiredTags)}, received ${JSON.stringify(configuredGrammarTags)}`
+      `HTML generator requires an exact special-child grammar inventory; expected ${encodeJson(grammarRequiredTags)}, received ${encodeJson(configuredGrammarTags)}`
     );
   }
-  const opaqueContentTokens = [
-    ...MutableHashSet.fromIterable(
-      R.values(contentModel).flatMap((entry) =>
-        (entry.children ?? []).filter((token) => Str.includes("inner content elements")(token))
-      )
-    ),
-  ].sort();
-  const expandedContentTokens = R.keys(classification.contentTokenExpansions).sort();
-  if (JSON.stringify(opaqueContentTokens) !== JSON.stringify(expandedContentTokens)) {
+  const opaqueContentTokens = pipe(
+    R.values(contentModel),
+    A.flatMap((entry) => A.filter(entry.children ?? A.empty(), Str.includes("inner content elements"))),
+    MutableHashSet.fromIterable,
+    A.sort(Order.String)
+  );
+  const expandedContentTokens = A.sort(R.keys(classification.contentTokenExpansions), Order.String);
+  if (!jsonEqual(opaqueContentTokens, expandedContentTokens)) {
     failGeneration(
-      `HTML generator requires an exact contextual content-token expansion inventory; expected ${JSON.stringify(opaqueContentTokens)}, received ${JSON.stringify(expandedContentTokens)}`
+      `HTML generator requires an exact contextual content-token expansion inventory; expected ${encodeJson(opaqueContentTokens)}, received ${encodeJson(expandedContentTokens)}`
     );
   }
   const modeledAttributesFor = (tag: string): MutableHashSet.MutableHashSet<string> =>
@@ -1270,7 +1394,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     if (
       tag === undefined ||
       attribute === undefined ||
-      unexpected.length > 0 ||
+      A.isReadonlyArrayNonEmpty(unexpected) ||
       !MutableHashSet.has(elementNameSet, tag) ||
       !MutableHashSet.has(modeledAttributesFor(tag), attribute)
     ) {
@@ -1285,17 +1409,22 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "srcset",
     "srclang",
   ]);
-  const requiredAttributeSyntaxKeys = elementNames
-    .flatMap((tag) =>
-      [...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>()))]
-        .filter((attribute) => MutableHashSet.has(syntaxSensitiveAttributeNames, attribute))
-        .map((attribute) => `${tag}/${attribute}`)
-    )
-    .sort();
-  const configuredAttributeSyntaxKeys = R.keys(classification.attributeSyntaxes).sort();
-  if (JSON.stringify(configuredAttributeSyntaxKeys) !== JSON.stringify(requiredAttributeSyntaxKeys)) {
+  const requiredAttributeSyntaxKeys = pipe(
+    elementNames,
+    A.flatMap((tag) =>
+      pipe(
+        MutableHashMap.get(currentElemAttrs, tag),
+        O.getOrElse(() => MutableHashSet.empty<string>()),
+        A.filter((attribute) => MutableHashSet.has(syntaxSensitiveAttributeNames, attribute)),
+        A.map((attribute) => `${tag}/${attribute}`)
+      )
+    ),
+    A.sort(Order.String)
+  );
+  const configuredAttributeSyntaxKeys = A.sort(R.keys(classification.attributeSyntaxes), Order.String);
+  if (!jsonEqual(configuredAttributeSyntaxKeys, requiredAttributeSyntaxKeys)) {
     failGeneration(
-      `HTML generator requires an exact special-attribute syntax inventory; expected ${JSON.stringify(requiredAttributeSyntaxKeys)}, received ${JSON.stringify(configuredAttributeSyntaxKeys)}`
+      `HTML generator requires an exact special-attribute syntax inventory; expected ${encodeJson(requiredAttributeSyntaxKeys)}, received ${encodeJson(configuredAttributeSyntaxKeys)}`
     );
   }
   for (const [key, syntax] of R.toEntries(classification.attributeSyntaxes)) {
@@ -1308,7 +1437,12 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
           : tag === "link" && attribute === "sizes"
             ? "icon-sizes"
             : "source-size-list";
-    if (tag === undefined || attribute === undefined || unexpected.length > 0 || syntax !== expectedSyntax) {
+    if (
+      tag === undefined ||
+      attribute === undefined ||
+      A.isReadonlyArrayNonEmpty(unexpected) ||
+      syntax !== expectedSyntax
+    ) {
       failGeneration(`HTML generator special-attribute syntax for ${key} must be ${expectedSyntax}`);
     }
   }
@@ -1331,16 +1465,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "th",
     "video",
   ];
-  const configuredConformanceRuleTags = R.keys(classification.conformanceRules).sort();
-  if (JSON.stringify(configuredConformanceRuleTags) !== JSON.stringify(requiredConformanceRuleTags)) {
+  const configuredConformanceRuleTags = A.sort(R.keys(classification.conformanceRules), Order.String);
+  if (!jsonEqual(configuredConformanceRuleTags, requiredConformanceRuleTags)) {
     failGeneration(
-      `HTML generator requires an exact reviewed conformance-rule inventory; expected ${JSON.stringify(requiredConformanceRuleTags)}, received ${JSON.stringify(configuredConformanceRuleTags)}`
+      `HTML generator requires an exact reviewed conformance-rule inventory; expected ${encodeJson(requiredConformanceRuleTags)}, received ${encodeJson(configuredConformanceRuleTags)}`
     );
   }
-  const configuredForbiddenDescendantTags = R.toEntries(classification.conformanceRules)
-    .filter(([, rules]) => rules.forbiddenDescendants !== undefined)
-    .map(([tag]) => tag)
-    .sort();
+  const configuredForbiddenDescendantTags = pipe(
+    R.toEntries(classification.conformanceRules),
+    A.filter(([, rules]) => rules.forbiddenDescendants !== undefined),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
   const requiredForbiddenDescendantTags = [
     "a",
     "address",
@@ -1357,53 +1493,61 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "th",
     "video",
   ];
-  if (JSON.stringify(configuredForbiddenDescendantTags) !== JSON.stringify(requiredForbiddenDescendantTags)) {
+  if (!jsonEqual(configuredForbiddenDescendantTags, requiredForbiddenDescendantTags)) {
     failGeneration(
-      `HTML generator requires an exact forbidden-descendant inventory; expected ${JSON.stringify(requiredForbiddenDescendantTags)}, received ${JSON.stringify(configuredForbiddenDescendantTags)}`
+      `HTML generator requires an exact forbidden-descendant inventory; expected ${encodeJson(requiredForbiddenDescendantTags)}, received ${encodeJson(configuredForbiddenDescendantTags)}`
     );
   }
-  const configuredPermittedAncestorTags = R.toEntries(classification.conformanceRules)
-    .filter(([, rules]) => rules.permittedAncestors !== undefined)
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(configuredPermittedAncestorTags) !== JSON.stringify(["main"])) {
+  const configuredPermittedAncestorTags = pipe(
+    R.toEntries(classification.conformanceRules),
+    A.filter(([, rules]) => rules.permittedAncestors !== undefined),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(configuredPermittedAncestorTags, ["main"])) {
     failGeneration(
-      `HTML generator requires permitted-ancestor metadata exactly for <main>; received ${JSON.stringify(configuredPermittedAncestorTags)}`
+      `HTML generator requires permitted-ancestor metadata exactly for <main>; received ${encodeJson(configuredPermittedAncestorTags)}`
     );
   }
-  const configuredRequiredAncestorTags = R.toEntries(classification.conformanceRules)
-    .filter(([, rules]) => rules.requiredAncestor !== undefined)
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(configuredRequiredAncestorTags) !== JSON.stringify(["area"])) {
+  const configuredRequiredAncestorTags = pipe(
+    R.toEntries(classification.conformanceRules),
+    A.filter(([, rules]) => rules.requiredAncestor !== undefined),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(configuredRequiredAncestorTags, ["area"])) {
     failGeneration(
-      `HTML generator requires required-ancestor metadata exactly for <area>; received ${JSON.stringify(configuredRequiredAncestorTags)}`
+      `HTML generator requires required-ancestor metadata exactly for <area>; received ${encodeJson(configuredRequiredAncestorTags)}`
     );
   }
-  const configuredDocumentVisibilityTags = R.toEntries(classification.conformanceRules)
-    .filter(([, rules]) => rules.documentVisibilityLimit !== undefined)
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(configuredDocumentVisibilityTags) !== JSON.stringify(["main"])) {
+  const configuredDocumentVisibilityTags = pipe(
+    R.toEntries(classification.conformanceRules),
+    A.filter(([, rules]) => rules.documentVisibilityLimit !== undefined),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(configuredDocumentVisibilityTags, ["main"])) {
     failGeneration(
-      `HTML generator requires document-visibility metadata exactly for <main>; received ${JSON.stringify(configuredDocumentVisibilityTags)}`
+      `HTML generator requires document-visibility metadata exactly for <main>; received ${encodeJson(configuredDocumentVisibilityTags)}`
     );
   }
   const configuredForbiddenNamedAncestors = classification.conformanceRules.main?.forbiddenNamedAncestors;
-  const requiredForbiddenNamedAncestors = [{ attributes: ["aria-label", "aria-labelledby", "title"], tag: "form" }];
-  if (JSON.stringify(configuredForbiddenNamedAncestors) !== JSON.stringify(requiredForbiddenNamedAncestors)) {
+  const requiredForbiddenNamedAncestors = [
+    {
+      attributes: ["aria-label", "aria-labelledby", "title"],
+      tag: "form",
+    },
+  ];
+  if (!jsonEqual(configuredForbiddenNamedAncestors, requiredForbiddenNamedAncestors)) {
     failGeneration(
-      `HTML generator requires the exact named-ancestor exclusion for <main>; expected ${JSON.stringify(requiredForbiddenNamedAncestors)}, received ${JSON.stringify(configuredForbiddenNamedAncestors)}`
+      `HTML generator requires the exact named-ancestor exclusion for <main>; expected ${encodeJson(requiredForbiddenNamedAncestors)}, received ${encodeJson(configuredForbiddenNamedAncestors)}`
     );
   }
   const knownCategories = MutableHashSet.fromIterable(
-    R.values(contentModel).flatMap((entry) => entry.categories ?? [])
+    A.flatMap(R.values(contentModel), (entry) => entry.categories ?? A.empty())
   );
   for (const [tag, rules] of R.toEntries(classification.conformanceRules)) {
-    if (
-      !MutableHashSet.has(elementNameSet, tag) ||
-      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
-    ) {
+    if (!MutableHashSet.has(elementNameSet, tag) || isObsolete(findElementDfn(tag))) {
       failGeneration(`HTML generator conformance rules name non-current element <${tag}>`);
     }
     if (
@@ -1417,7 +1561,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     }
     if (rules.forbiddenDescendants !== undefined) {
       const { attributes, categories, tags } = rules.forbiddenDescendants;
-      if (attributes.length + categories.length + tags.length === 0) {
+      if (A.length(attributes) + A.length(categories) + A.length(tags) === 0) {
         failGeneration(`HTML generator forbidden-descendant rules for <${tag}> must not be empty`);
       }
       for (const attribute of attributes) {
@@ -1435,10 +1579,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         }
       }
       for (const descendantTag of tags) {
-        if (
-          !MutableHashSet.has(elementNameSet, descendantTag) ||
-          isObsolete(elementDfns.find((entry) => entry.linkingText[0] === descendantTag))
-        ) {
+        if (!MutableHashSet.has(elementNameSet, descendantTag) || isObsolete(findElementDfn(descendantTag))) {
           failGeneration(
             `HTML generator forbidden-descendant rules for <${tag}> reference non-current <${descendantTag}>`
           );
@@ -1446,27 +1587,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
     for (const ancestorTag of rules.permittedAncestors ?? []) {
-      if (
-        !MutableHashSet.has(elementNameSet, ancestorTag) ||
-        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === ancestorTag))
-      ) {
+      if (!MutableHashSet.has(elementNameSet, ancestorTag) || isObsolete(findElementDfn(ancestorTag))) {
         failGeneration(`HTML generator conformance rules for <${tag}> permit non-current <${ancestorTag}>`);
       }
     }
     if (rules.requiredAncestor !== undefined) {
       const ancestorTag = rules.requiredAncestor;
-      if (
-        !MutableHashSet.has(elementNameSet, ancestorTag) ||
-        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === ancestorTag))
-      ) {
+      if (!MutableHashSet.has(elementNameSet, ancestorTag) || isObsolete(findElementDfn(ancestorTag))) {
         failGeneration(`HTML generator conformance rules for <${tag}> require non-current <${ancestorTag}>`);
       }
     }
     for (const condition of rules.forbiddenNamedAncestors ?? []) {
-      if (
-        !MutableHashSet.has(elementNameSet, condition.tag) ||
-        isObsolete(elementDfns.find((entry) => entry.linkingText[0] === condition.tag))
-      ) {
+      if (!MutableHashSet.has(elementNameSet, condition.tag) || isObsolete(findElementDfn(condition.tag))) {
         failGeneration(`HTML generator named-ancestor rules for <${tag}> reference non-current <${condition.tag}>`);
       }
       const ancestorAttributes = modeledAttributesFor(condition.tag);
@@ -1490,23 +1622,20 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   }
 
   const requiredConditionalCategoryTags = ["a", "audio", "img", "input", "link", "meta", "object", "video"];
-  const configuredConditionalCategoryTags = R.keys(classification.conditionalCategories).sort();
-  if (JSON.stringify(configuredConditionalCategoryTags) !== JSON.stringify(requiredConditionalCategoryTags)) {
+  const configuredConditionalCategoryTags = A.sort(R.keys(classification.conditionalCategories), Order.String);
+  if (!jsonEqual(configuredConditionalCategoryTags, requiredConditionalCategoryTags)) {
     failGeneration(
-      `HTML generator requires an exact conditional-category inventory; expected ${JSON.stringify(requiredConditionalCategoryTags)}, received ${JSON.stringify(configuredConditionalCategoryTags)}`
+      `HTML generator requires an exact conditional-category inventory; expected ${encodeJson(requiredConditionalCategoryTags)}, received ${encodeJson(configuredConditionalCategoryTags)}`
     );
   }
   for (const [tag, rules] of R.toEntries(classification.conditionalCategories)) {
-    if (
-      !MutableHashSet.has(elementNameSet, tag) ||
-      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
-    ) {
+    if (!MutableHashSet.has(elementNameSet, tag) || isObsolete(findElementDfn(tag))) {
       failGeneration(`HTML generator conditional-category metadata names non-current element <${tag}>`);
     }
     const modeledAttributes = modeledAttributesFor(tag);
     for (const rule of rules) {
       const categories = contentModel[tag]?.categories ?? [];
-      if (!categories.includes(rule.category)) {
+      if (!A.contains(categories, rule.category)) {
         failGeneration(`HTML generator conditional category ${tag}/${rule.category} is absent from pinned categories`);
       }
       if (!MutableHashSet.has(modeledAttributes, rule.attribute)) {
@@ -1521,11 +1650,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         const tokens = tokenizeHtmlSpaceSeparated(rule.value ?? "");
         const attributeValues = pipe(
           MutableHashMap.get(enumValues, `${tag}/${rule.attribute}`),
-          O.getOrElse((): Array<string> => [])
+          O.getOrElse(A.empty<string>)
         );
         if (
-          tokens.length === 0 ||
-          A.dedupe(tokens).length !== tokens.length ||
+          A.isReadonlyArrayEmpty(tokens) ||
+          A.length(A.dedupe(tokens)) !== A.length(tokens) ||
           A.some(tokens, (token) => Str.toLowerCase(token) !== token || !A.contains(attributeValues, token))
         ) {
           failGeneration(
@@ -1535,7 +1664,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
   }
-  const attributeRequirementTags = R.keys(classification.attributeRequirements).sort();
+  const attributeRequirementTags = A.sort(R.keys(classification.attributeRequirements), Order.String);
   const requiredAttributeRequirementTags = [
     "a",
     "area",
@@ -1549,18 +1678,20 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "source",
     "track",
   ];
-  if (JSON.stringify(attributeRequirementTags) !== JSON.stringify(requiredAttributeRequirementTags)) {
+  if (!jsonEqual(attributeRequirementTags, requiredAttributeRequirementTags)) {
     failGeneration(
-      `HTML generator requires an exact attribute-requirement inventory; expected ${JSON.stringify(requiredAttributeRequirementTags)}, received ${JSON.stringify(attributeRequirementTags)}`
+      `HTML generator requires an exact attribute-requirement inventory; expected ${encodeJson(requiredAttributeRequirementTags)}, received ${encodeJson(attributeRequirementTags)}`
     );
   }
-  const nonBlankRequirementTags = R.toEntries(classification.attributeRequirements)
-    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.nonBlank !== undefined))
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(nonBlankRequirementTags) !== JSON.stringify(["link"])) {
+  const nonBlankRequirementTags = pipe(
+    R.toEntries(classification.attributeRequirements),
+    A.filter(([, requirements]) => A.some(requirements, (requirement) => requirement.nonBlank !== undefined)),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(nonBlankRequirementTags, ["link"])) {
     failGeneration(
-      `HTML generator requires non-blank attribute requirements exactly for <link>; received ${JSON.stringify(nonBlankRequirementTags)}`
+      `HTML generator requires non-blank attribute requirements exactly for <link>; received ${encodeJson(nonBlankRequirementTags)}`
     );
   }
   const linkNonBlankRequirements = A.filter(
@@ -1568,29 +1699,33 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     (requirement) => requirement.nonBlank !== undefined
   );
   if (
-    linkNonBlankRequirements.length !== 1 ||
-    JSON.stringify(linkNonBlankRequirements[0]?.nonBlank) !== JSON.stringify(["imagesrcset"]) ||
-    JSON.stringify(linkNonBlankRequirements[0]?.required) !== JSON.stringify([["href", "imagesrcset"]]) ||
-    JSON.stringify(linkNonBlankRequirements[0]?.validNonEmptyUrl) !== JSON.stringify(["href"])
+    A.length(linkNonBlankRequirements) !== 1 ||
+    !jsonEqual(linkNonBlankRequirements[0]?.nonBlank, ["imagesrcset"]) ||
+    !jsonEqual(linkNonBlankRequirements[0]?.required, [["href", "imagesrcset"]]) ||
+    !jsonEqual(linkNonBlankRequirements[0]?.validNonEmptyUrl, ["href"])
   ) {
     failGeneration("HTML generator requires <link> to have an address and validates href as a non-empty URL");
   }
-  const validNonEmptyUrlRequirementTags = R.toEntries(classification.attributeRequirements)
-    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.validNonEmptyUrl !== undefined))
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(validNonEmptyUrlRequirementTags) !== JSON.stringify(["link"])) {
+  const validNonEmptyUrlRequirementTags = pipe(
+    R.toEntries(classification.attributeRequirements),
+    A.filter(([, requirements]) => A.some(requirements, (requirement) => requirement.validNonEmptyUrl !== undefined)),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(validNonEmptyUrlRequirementTags, ["link"])) {
     failGeneration(
-      `HTML generator requires valid non-empty URL requirements exactly for <link>; received ${JSON.stringify(validNonEmptyUrlRequirementTags)}`
+      `HTML generator requires valid non-empty URL requirements exactly for <link>; received ${encodeJson(validNonEmptyUrlRequirementTags)}`
     );
   }
-  const constrainedRequirementTags = R.toEntries(classification.attributeRequirements)
-    .filter(([, requirements]) => A.some(requirements, (requirement) => requirement.constraints !== undefined))
-    .map(([tag]) => tag)
-    .sort();
-  if (JSON.stringify(constrainedRequirementTags) !== JSON.stringify(["link", "meta"])) {
+  const constrainedRequirementTags = pipe(
+    R.toEntries(classification.attributeRequirements),
+    A.filter(([, requirements]) => A.some(requirements, (requirement) => requirement.constraints !== undefined)),
+    A.map(([tag]) => tag),
+    A.sort(Order.String)
+  );
+  if (!jsonEqual(constrainedRequirementTags, ["link", "meta"])) {
     failGeneration(
-      `HTML generator requires value constraints exactly for <link> and <meta>; received ${JSON.stringify(constrainedRequirementTags)}`
+      `HTML generator requires value constraints exactly for <link> and <meta>; received ${encodeJson(constrainedRequirementTags)}`
     );
   }
   const metaCharsetRequirements = A.filter(
@@ -1599,7 +1734,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   );
   const metaCharsetConstraint = metaCharsetRequirements[0]?.constraints?.[0];
   if (
-    metaCharsetRequirements.length !== 1 ||
+    A.length(metaCharsetRequirements) !== 1 ||
     metaCharsetRequirements[0]?.when?._tag !== "attributePresent" ||
     metaCharsetRequirements[0]?.when.attribute !== "charset" ||
     metaCharsetConstraint?._tag !== "equals" ||
@@ -1613,21 +1748,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const trackSubtitleRequirements = A.filter(
     classification.attributeRequirements.track ?? [],
     (requirement) =>
-      requirement.when?._tag === "attributeEqualsOrMissing" &&
+      isAttributeEqualsOrMissingPredicate(requirement.when) &&
       requirement.when.attribute === "kind" &&
       requirement.when.value === "subtitles"
   );
-  if (
-    trackSubtitleRequirements.length !== 1 ||
-    JSON.stringify(trackSubtitleRequirements[0]?.required) !== JSON.stringify([["srclang"]])
-  ) {
+  if (A.length(trackSubtitleRequirements) !== 1 || !jsonEqual(trackSubtitleRequirements[0]?.required, [["srclang"]])) {
     failGeneration("HTML generator requires <track> with omitted kind or kind=subtitles to have srclang");
   }
   const linkAsValues = pipe(
     MutableHashMap.get(enumValues, "link/as"),
-    O.getOrElse((): Array<string> => []),
+    O.getOrElse(A.empty<string>),
     A.dedupe,
-    A.sort(Str.Order)
+    A.sort(Order.String)
   );
   const requiredLinkAsValues = [
     "audioworklet",
@@ -1644,16 +1776,13 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     "track",
     "worker",
   ];
-  if (JSON.stringify(linkAsValues) !== JSON.stringify(requiredLinkAsValues)) {
+  if (!jsonEqual(linkAsValues, requiredLinkAsValues)) {
     failGeneration(
-      `HTML generator requires the exact link/as preload destination domain; expected ${JSON.stringify(requiredLinkAsValues)}, received ${JSON.stringify(linkAsValues)}`
+      `HTML generator requires the exact link/as preload destination domain; expected ${encodeJson(requiredLinkAsValues)}, received ${encodeJson(linkAsValues)}`
     );
   }
   for (const [tag, requirements] of R.toEntries(classification.attributeRequirements)) {
-    if (
-      !MutableHashSet.has(elementNameSet, tag) ||
-      isObsolete(elementDfns.find((entry) => entry.linkingText[0] === tag))
-    ) {
+    if (!MutableHashSet.has(elementNameSet, tag) || isObsolete(findElementDfn(tag))) {
       failGeneration(`HTML generator attribute-requirement metadata names non-current element <${tag}>`);
     }
     const modeledAttributes = modeledAttributesFor(tag);
@@ -1663,24 +1792,24 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
           `HTML generator attribute requirement for <${tag}> references unknown ${requirement.when.attribute}`
         );
       }
-      if (requirement.when?._tag === "attributeContainsToken") {
+      if (isAttributeContainsTokenPredicate(requirement.when)) {
         const { attribute, value } = requirement.when;
         if (!isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute)) {
           failGeneration(
             `HTML generator token predicate for <${tag}> references non-token-list attribute ${attribute}`
           );
         }
-        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse((): Array<string> => []));
+        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
         if (Str.toLowerCase(value) !== value || !A.contains(values, value)) {
           failGeneration(
             `HTML generator token predicate for <${tag} ${attribute}> references unclassified token ${value}`
           );
         }
       }
-      if (requirement.when?._tag === "attributeEquals" || requirement.when?._tag === "attributeEqualsOrMissing") {
+      if (isAttributeEqualityPredicate(requirement.when)) {
         const { attribute, value } = requirement.when;
-        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse((): Array<string> => []));
-        if (values.length > 0 && !A.contains(values, value)) {
+        const values = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+        if (A.isReadonlyArrayNonEmpty(values) && !A.contains(values, value)) {
           failGeneration(
             `HTML generator equality predicate for <${tag} ${attribute}> references unclassified value ${value}`
           );
@@ -1700,11 +1829,9 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         Match.value(constraint).pipe(
           Match.tags({
             allowedValues: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
-                O.getOrElse((): Array<string> => [])
-              );
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
               if (
-                A.dedupe(values).length !== values.length ||
+                A.length(A.dedupe(values)) !== A.length(values) ||
                 A.some(
                   values,
                   (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
@@ -1716,12 +1843,10 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
               }
             },
             containsAllTokens: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
-                O.getOrElse((): Array<string> => [])
-              );
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
               if (
                 !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
-                A.dedupe(values).length !== values.length ||
+                A.length(A.dedupe(values)) !== A.length(values) ||
                 A.some(
                   values,
                   (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
@@ -1733,12 +1858,10 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
               }
             },
             containsAnyToken: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
-                O.getOrElse((): Array<string> => [])
-              );
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
               if (
                 !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
-                A.dedupe(values).length !== values.length ||
+                A.length(A.dedupe(values)) !== A.length(values) ||
                 A.some(
                   values,
                   (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
@@ -1750,10 +1873,8 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
               }
             },
             equals: ({ attribute, value }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(
-                O.getOrElse((): Array<string> => [])
-              );
-              if (Str.isEmpty(value) || (domain.length > 0 && !A.contains(domain, value))) {
+              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+              if (Str.isEmpty(value) || (A.isReadonlyArrayNonEmpty(domain) && !A.contains(domain, value))) {
                 failGeneration(
                   `HTML generator equality constraint for <${tag} ${attribute}> references unclassified value ${value}`
                 );
@@ -1764,10 +1885,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         );
       }
       for (const parent of requirement.whenParents ?? []) {
-        if (
-          !MutableHashSet.has(elementNameSet, parent) ||
-          isObsolete(elementDfns.find((entry) => entry.linkingText[0] === parent))
-        ) {
+        if (!MutableHashSet.has(elementNameSet, parent) || isObsolete(findElementDfn(parent))) {
           failGeneration(`HTML generator attribute requirement for <${tag}> references non-current parent <${parent}>`);
         }
       }
@@ -1795,16 +1913,16 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
   }
-  const attributeEqualityTags = R.keys(classification.attributeEqualities).sort();
+  const attributeEqualityTags = A.sort(R.keys(classification.attributeEqualities), Order.String);
   const requiredAttributeEqualityTags = ["map"];
-  if (JSON.stringify(attributeEqualityTags) !== JSON.stringify(requiredAttributeEqualityTags)) {
+  if (!jsonEqual(attributeEqualityTags, requiredAttributeEqualityTags)) {
     failGeneration(
-      `HTML generator requires an exact attribute-equality inventory; expected ${JSON.stringify(requiredAttributeEqualityTags)}, received ${JSON.stringify(attributeEqualityTags)}`
+      `HTML generator requires an exact attribute-equality inventory; expected ${encodeJson(requiredAttributeEqualityTags)}, received ${encodeJson(attributeEqualityTags)}`
     );
   }
   for (const [tag, equalities] of R.toEntries(classification.attributeEqualities)) {
     const modeledAttributes = modeledAttributesFor(tag);
-    if (equalities.length !== 1 || equalities[0]?.left !== "id" || equalities[0]?.right !== "name") {
+    if (A.length(equalities) !== 1 || equalities[0]?.left !== "id" || equalities[0]?.right !== "name") {
       failGeneration(`HTML generator requires <${tag}> attribute equality to be exactly id = name`);
     }
     for (const equality of equalities) {
@@ -1815,11 +1933,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
   }
-  const htmlIdValueAttributeInventory = [...htmlIdValueAttrs].sort();
+  const htmlIdValueAttributeInventory = A.sort(htmlIdValueAttrs, Order.String);
   const requiredHtmlIdValueAttributeInventory = ["map/name"];
-  if (JSON.stringify(htmlIdValueAttributeInventory) !== JSON.stringify(requiredHtmlIdValueAttributeInventory)) {
+  if (!jsonEqual(htmlIdValueAttributeInventory, requiredHtmlIdValueAttributeInventory)) {
     failGeneration(
-      `HTML generator requires an exact HTML id-value attribute inventory; expected ${JSON.stringify(requiredHtmlIdValueAttributeInventory)}, received ${JSON.stringify(htmlIdValueAttributeInventory)}`
+      `HTML generator requires an exact HTML id-value attribute inventory; expected ${encodeJson(requiredHtmlIdValueAttributeInventory)}, received ${encodeJson(htmlIdValueAttributeInventory)}`
     );
   }
   for (const key of A.appendAll(classification.idReferenceAttributes, classification.idReferenceListAttributes)) {
@@ -1827,22 +1945,22 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     if (
       tag === undefined ||
       attribute === undefined ||
-      unexpected.length > 0 ||
+      A.isReadonlyArrayNonEmpty(unexpected) ||
       !MutableHashSet.has(elementNameSet, tag) ||
       !MutableHashSet.has(modeledAttributesFor(tag), attribute)
     ) {
       failGeneration(`HTML generator id-reference inventory references unknown ${key}`);
     }
   }
-  const uniqueAttributeTags = R.keys(classification.uniqueAttributes).sort();
+  const uniqueAttributeTags = A.sort(R.keys(classification.uniqueAttributes), Order.String);
   const requiredUniqueAttributeTags = ["map"];
-  if (JSON.stringify(uniqueAttributeTags) !== JSON.stringify(requiredUniqueAttributeTags)) {
+  if (!jsonEqual(uniqueAttributeTags, requiredUniqueAttributeTags)) {
     failGeneration(
-      `HTML generator requires an exact tree-unique attribute inventory; expected ${JSON.stringify(requiredUniqueAttributeTags)}, received ${JSON.stringify(uniqueAttributeTags)}`
+      `HTML generator requires an exact tree-unique attribute inventory; expected ${encodeJson(requiredUniqueAttributeTags)}, received ${encodeJson(uniqueAttributeTags)}`
     );
   }
   for (const [tag, attributes] of R.toEntries(classification.uniqueAttributes)) {
-    if (JSON.stringify([...attributes].sort()) !== JSON.stringify(["name"])) {
+    if (!jsonEqual(A.sort(attributes, Order.String), ["name"])) {
       failGeneration(`HTML generator requires <${tag}> tree-unique attributes to be exactly ["name"]`);
     }
     const modeledAttributes = modeledAttributesFor(tag);
@@ -1852,11 +1970,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
   }
-  const numericRelationshipTags = R.keys(classification.numericAttributeRelationships).sort();
+  const numericRelationshipTags = A.sort(R.keys(classification.numericAttributeRelationships), Order.String);
   const requiredNumericRelationshipTags = ["input", "meter", "progress", "textarea"];
-  if (JSON.stringify(numericRelationshipTags) !== JSON.stringify(requiredNumericRelationshipTags)) {
+  if (!jsonEqual(numericRelationshipTags, requiredNumericRelationshipTags)) {
     failGeneration(
-      `HTML generator requires an exact numeric-relationship inventory; expected ${JSON.stringify(requiredNumericRelationshipTags)}, received ${JSON.stringify(numericRelationshipTags)}`
+      `HTML generator requires an exact numeric-relationship inventory; expected ${encodeJson(requiredNumericRelationshipTags)}, received ${encodeJson(numericRelationshipTags)}`
     );
   }
   const isNumericAttribute = (tag: string, attribute: string): boolean =>
@@ -1868,7 +1986,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     isClassifiedAs(positiveIntegerAttrs, tag, attribute) ||
     classification.boundedIntegerAttributes[attribute] !== undefined;
   for (const [tag, relationships] of R.toEntries(classification.numericAttributeRelationships)) {
-    if (relationships.length === 0) {
+    if (A.isReadonlyArrayEmpty(relationships)) {
       failGeneration(`HTML generator numeric-relationship metadata for <${tag}> must not be empty`);
     }
     const modeledAttributes = modeledAttributesFor(tag);
@@ -1882,11 +2000,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       }
     }
   }
-  for (const [label, adjustments] of [
-    ["SVG element", classification.svgElementNameAdjustments],
-    ["SVG attribute", classification.svgAttributeNameAdjustments],
-    ["MathML attribute", classification.mathMlAttributeNameAdjustments],
-  ] as const) {
+  for (const [label, adjustments] of A.make(
+    Tuple.make("SVG element", classification.svgElementNameAdjustments),
+    Tuple.make("SVG attribute", classification.svgAttributeNameAdjustments),
+    Tuple.make("MathML attribute", classification.mathMlAttributeNameAdjustments)
+  )) {
     for (const [lowercase, canonical] of R.toEntries(adjustments)) {
       if (Str.toLowerCase(lowercase) !== lowercase || Str.toLowerCase(canonical) !== lowercase) {
         failGeneration(`${label} adjustment ${lowercase} -> ${canonical} is not a browser fixed-point pair`);
@@ -1999,20 +2117,23 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       };
     }
     const valsOption = MutableHashMap.get(enumValues, `${el}/${attr}`);
-    if (isClassifiedAs(spaceSeparatedTokenAttrs, el, attr) && O.isSome(valsOption) && valsOption.value.length > 0) {
-      const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
+    if (
+      isClassifiedAs(spaceSeparatedTokenAttrs, el, attr) &&
+      O.isSome(valsOption) &&
+      A.isReadonlyArrayNonEmpty(valsOption.value)
+    ) {
+      const uniq = A.fromIterable(MutableHashSet.fromIterable(valsOption.value));
       return {
-        runtime: optionalRuntime(`makeSpaceSeparatedTokenList(${JSON.stringify(uniq)})`),
+        runtime: optionalRuntime(`makeSpaceSeparatedTokenList(${encodeJson(uniq)})`),
         type: "O.Option<string>",
         encoded: "string",
       };
     }
-    if (O.isSome(valsOption) && valsOption.value.length > 0) {
-      const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
+    if (O.isSome(valsOption) && A.isReadonlyArrayNonEmpty(valsOption.value)) {
+      const uniq = A.fromIterable(MutableHashSet.fromIterable(valsOption.value));
       const union = literalUnion(uniq);
       if (isClassifiedAs(caseSensitiveKeywordAttrs, el, attr)) {
-        const schema =
-          uniq.length === 1 ? `S.Literal(${JSON.stringify(uniq[0])})` : `S.Literals(${JSON.stringify(uniq)})`;
+        const schema = A.length(uniq) === 1 ? `S.Literal(${encodeJson(uniq[0])})` : `S.Literals(${encodeJson(uniq)})`;
         return {
           runtime: optionalRuntime(schema),
           type: `O.Option<${union}>`,
@@ -2025,7 +2146,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         );
       }
       return {
-        runtime: optionalRuntime(`makeAsciiCaseInsensitiveEnumerated(${JSON.stringify(uniq)})`),
+        runtime: optionalRuntime(`makeAsciiCaseInsensitiveEnumerated(${encodeJson(uniq)})`),
         type: `O.Option<${union}>`,
         encoded: "string",
       };
@@ -2099,16 +2220,34 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   // Generated runtime field body + TS type bodies for an element's specific
   // attributes (globals/`_tag`/children excluded).
-  const specificBodies = (el: string): { encoded: string; runtime: string; type: string } => {
+  const specificBodies = (
+    el: string
+  ): {
+    encoded: string;
+    runtime: string;
+    type: string;
+  } => {
     const current = MutableHashMap.get(currentElemAttrs, el).pipe(O.getOrElse(() => MutableHashSet.empty<string>()));
     const obsolete = MutableHashMap.get(obsoleteElemAttrs, el).pipe(O.getOrElse(() => MutableHashSet.empty<string>()));
-    const attrs = [...MutableHashSet.fromIterable([...current, ...obsolete])].sort();
-    if (attrs.length === 0) return { encoded: "", runtime: "", type: "" };
-    const fields = attrs.map((attr) => [attr, valueSchema(el, attr)] as const);
+    const attrs = A.sort(MutableHashSet.fromIterable(A.appendAll(current, obsolete)), Order.String);
+    if (A.isReadonlyArrayEmpty(attrs)) return { encoded: "", runtime: "", type: "" };
+    const fields = A.map(attrs, (attr) => Tuple.make(attr, valueSchema(el, attr)));
     return {
-      runtime: fields.map(([attr, spec]) => `${JSON.stringify(attr)}: ${spec.runtime}`).join(", "),
-      type: fields.map(([attr, spec]) => `readonly ${JSON.stringify(attr)}: ${spec.type}`).join("; "),
-      encoded: fields.map(([attr, spec]) => `readonly ${JSON.stringify(attr)}?: ${spec.encoded}`).join("; "),
+      runtime: pipe(
+        fields,
+        A.map(([attr, spec]) => `${encodeJson(attr)}: ${spec.runtime}`),
+        A.join(", ")
+      ),
+      type: pipe(
+        fields,
+        A.map(([attr, spec]) => `readonly ${encodeJson(attr)}: ${spec.type}`),
+        A.join("; ")
+      ),
+      encoded: pipe(
+        fields,
+        A.map(([attr, spec]) => `readonly ${encodeJson(attr)}?: ${spec.encoded}`),
+        A.join("; ")
+      ),
     };
   };
 
@@ -2117,54 +2256,62 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       O.getOrElse(() => obsoleteInterfaces[name] ?? (obsolete ? "HTMLUnknownElement" : "HTMLElement"))
     );
 
-  const els: ReadonlyArray<El> = [...elementNames].sort().map((tag): El => {
-    const d = elementDfns.find((x) => x.linkingText[0] === tag);
-    const obsolete = isObsolete(d);
-    const kind: Kind = MutableHashSet.has(voidEls, tag)
-      ? "void"
-      : MutableHashSet.has(rawTextEls, tag) ||
-          MutableHashSet.has(rcDataEls, tag) ||
-          MutableHashSet.has(plaintextEls, tag)
-        ? "text"
-        : "normal";
-    const textMode: TextMode = MutableHashSet.has(plaintextEls, tag)
-      ? "plaintext"
-      : MutableHashSet.has(rcDataEls, tag)
-        ? "rcdata"
-        : MutableHashSet.has(rawTextEls, tag)
-          ? "raw-text"
+  const els: ReadonlyArray<El> = pipe(
+    elementNames,
+    A.sort(Order.String),
+    A.map((tag): El => {
+      const d = findElementDfn(tag);
+      const obsolete = isObsolete(d);
+      const kind: Kind = MutableHashSet.has(voidEls, tag)
+        ? "void"
+        : MutableHashSet.has(rawTextEls, tag) ||
+            MutableHashSet.has(rcDataEls, tag) ||
+            MutableHashSet.has(plaintextEls, tag)
+          ? "text"
           : "normal";
-    const { encoded, runtime, type } = specificBodies(tag);
-    const currentAttributes = [
-      ...MutableHashMap.get(currentElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
-    ].sort();
-    const obsoleteAttributes = [
-      ...MutableHashMap.get(obsoleteElemAttrs, tag).pipe(O.getOrElse(() => MutableHashSet.empty<string>())),
-    ].sort();
-    return {
-      tag,
-      cls: className(tag),
-      attributeEqualities: classification.attributeEqualities[tag] ?? [],
-      attributeRequirements: classification.attributeRequirements[tag] ?? [],
-      encoded,
-      obsolete,
-      kind,
-      iface: interfaceOf(tag, obsolete),
-      categories: contentModel[tag]?.categories ?? [],
-      children: contentModel[tag]?.children ?? [],
-      conditionalCategories: classification.conditionalCategories[tag] ?? [],
-      currentAttributes,
-      numericAttributeRelationships: classification.numericAttributeRelationships[tag] ?? [],
-      obsoleteAttributes,
-      rules: classification.conformanceRules[tag] ?? ReviewedConformanceRules.make({}),
-      childSequencePattern: classification.childSequencePatterns[tag],
-      childGrammar: classification.specialChildGrammars[tag],
-      runtime,
-      textMode,
-      type,
-      uniqueAttributes: classification.uniqueAttributes[tag] ?? [],
-    };
-  });
+      const textMode: TextMode = MutableHashSet.has(plaintextEls, tag)
+        ? "plaintext"
+        : MutableHashSet.has(rcDataEls, tag)
+          ? "rcdata"
+          : MutableHashSet.has(rawTextEls, tag)
+            ? "raw-text"
+            : "normal";
+      const { encoded, runtime, type } = specificBodies(tag);
+      const currentAttributes = pipe(
+        MutableHashMap.get(currentElemAttrs, tag),
+        O.getOrElse(() => MutableHashSet.empty<string>()),
+        A.sort(Order.String)
+      );
+      const obsoleteAttributes = pipe(
+        MutableHashMap.get(obsoleteElemAttrs, tag),
+        O.getOrElse(() => MutableHashSet.empty<string>()),
+        A.sort(Order.String)
+      );
+      return {
+        tag,
+        cls: className(tag),
+        attributeEqualities: classification.attributeEqualities[tag] ?? A.empty(),
+        attributeRequirements: classification.attributeRequirements[tag] ?? A.empty(),
+        encoded,
+        obsolete,
+        kind,
+        iface: interfaceOf(tag, obsolete),
+        categories: contentModel[tag]?.categories ?? A.empty(),
+        children: contentModel[tag]?.children ?? A.empty(),
+        conditionalCategories: classification.conditionalCategories[tag] ?? A.empty(),
+        currentAttributes,
+        numericAttributeRelationships: classification.numericAttributeRelationships[tag] ?? A.empty(),
+        obsoleteAttributes,
+        rules: classification.conformanceRules[tag] ?? ReviewedConformanceRules.make({}),
+        childSequencePattern: classification.childSequencePatterns[tag],
+        childGrammar: classification.specialChildGrammars[tag],
+        runtime,
+        textMode,
+        type,
+        uniqueAttributes: classification.uniqueAttributes[tag] ?? A.empty(),
+      };
+    })
+  );
 
   const childField = (kind: Kind): string =>
     kind === "void" ? "" : kind === "text" ? "    content: S.String," : "    children: HtmlChildren,";
@@ -2190,17 +2337,21 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   const elementBlock = (e: El): string => {
     const desc = `The <${e.tag}> element.${e.obsolete ? " Obsolete / non-conforming (WHATWG §16.2)." : ""}`;
-    const runtimeFields = ["    ...GlobalAttributes,", e.runtime !== "" ? `    ${e.runtime},` : "", childField(e.kind)]
-      .filter((l) => l !== "")
-      .join("\n");
+    const runtimeFields = pipe(
+      ["    ...GlobalAttributes,", e.runtime !== "" ? `    ${e.runtime},` : "", childField(e.kind)],
+      A.filter(Str.isNonEmpty),
+      A.join("\n")
+    );
     const typeFields = (encoded: boolean): string =>
-      [
-        `    readonly _tag: "${e.tag}";`,
-        encoded ? (e.encoded !== "" ? `    ${e.encoded};` : "") : e.type !== "" ? `    ${e.type};` : "",
-        childTypeField(e.kind, encoded),
-      ]
-        .filter((l) => l !== "")
-        .join("\n");
+      pipe(
+        [
+          `    readonly _tag: "${e.tag}";`,
+          encoded ? (e.encoded !== "" ? `    ${e.encoded};` : "") : e.type !== "" ? `    ${e.type};` : "",
+          childTypeField(e.kind, encoded),
+        ],
+        A.filter(Str.isNonEmpty),
+        A.join("\n")
+      );
     return `/**
  * ${desc}
  *
@@ -2221,7 +2372,7 @@ export class ${e.cls} extends S.TaggedClass<${e.cls}>($I\`${e.cls}\`)(
   {
 ${runtimeFields}
   },
-  $I.annote("${e.cls}", { description: ${JSON.stringify(desc)} })
+  $I.annote("${e.cls}", { description: ${encodeJson(desc)} })
 ) {}
 /**
  * Companion namespace for {@link ${e.cls}}.
@@ -2269,7 +2420,7 @@ ${typeFields(true)}
 export class ${cls} extends S.TaggedClass<${cls}>($I\`${cls}\`)(
   "${tag}",
   { children: HtmlChildren },
-  $I.annote("${cls}", { description: ${JSON.stringify(desc)} })
+  $I.annote("${cls}", { description: ${encodeJson(desc)} })
 ) {}
 /**
  * Companion namespace for {@link ${cls}}.
@@ -2454,17 +2605,33 @@ export declare namespace ForeignElement {
   };
 }`;
 
-  const childMembers = [...els.map((e) => e.cls), "ForeignElement", "Text", "Comment"];
-  const rootMembers = [...childMembers, "Document", "Fragment"];
-  const unionMembers = [...rootMembers, "Doctype"];
+  const childMembers = pipe(
+    els,
+    A.map((e) => e.cls),
+    A.appendAll(["ForeignElement", "Text", "Comment"])
+  );
+  const rootMembers = A.appendAll(childMembers, ["Document", "Fragment"]);
+  const unionMembers = A.append(rootMembers, "Doctype");
 
   const categoryUnion = (name: string, cat: string): string => {
-    const matching = els.filter((e) => e.categories.includes(cat));
-    if (matching.length === 0) return "";
-    const members = matching.map((e) => e.cls);
-    const types = members.map((m) => `${m}.Type`).join(" | ");
-    const encodeds = members.map((m) => `${m}.Encoded`).join(" | ");
-    const representative = matching[0]!;
+    const matching = A.filter(els, (e) => A.contains(e.categories, cat));
+    if (A.isReadonlyArrayEmpty(matching)) return "";
+    const members = A.map(matching, (e) => e.cls);
+    const types = pipe(
+      members,
+      A.map((m) => `${m}.Type`),
+      A.join(" | ")
+    );
+    const encodeds = pipe(
+      members,
+      A.map((m) => `${m}.Encoded`),
+      A.join(" | ")
+    );
+    const representative = pipe(
+      matching,
+      A.head,
+      O.getOrElse(() => failGeneration(`HTML generator category ${cat} has no representative`))
+    );
     return `/**
  * Advisory sub-union of elements in the "${cat}" content category. Non-normative
  * (derived from the WHATWG element index); see \`data/SOURCES.md\`.
@@ -2484,7 +2651,7 @@ export declare namespace ForeignElement {
 export const ${name} = taggedUnion<${types}, ${encodeds}>(
   "${name}",
   "Advisory ${cat}-content element union.",
-  [${members.join(", ")}]
+  [${A.join(members, ", ")}]
 );`;
   };
 
@@ -2642,7 +2809,7 @@ export declare namespace HtmlChildren {
 export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
   "HtmlChild",
   "Nodes valid as element or fragment children.",
-  [${childMembers.join(", ")}]
+  [${A.join(childMembers, ", ")}]
 );
 
 /**
@@ -2663,10 +2830,18 @@ export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
 export declare namespace HtmlChild {
   /** @since 0.0.0 */
   export type Type =
-${childMembers.map((m) => `    | ${m}.Type`).join("\n")};
+${pipe(
+  childMembers,
+  A.map((m) => `    | ${m}.Type`),
+  A.join("\n")
+)};
   /** @since 0.0.0 */
   export type Encoded =
-${childMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
+${pipe(
+  childMembers,
+  A.map((m) => `    | ${m}.Encoded`),
+  A.join("\n")
+)};
 }
 
 /**
@@ -2687,7 +2862,7 @@ ${childMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
 export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
   "HtmlRoot",
   "HTML document, fragment, element, or child-node root.",
-  [${rootMembers.join(", ")}]
+  [${A.join(rootMembers, ", ")}]
 );
 
 /**
@@ -2708,14 +2883,22 @@ export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
 export declare namespace HtmlRoot {
   /** @since 0.0.0 */
   export type Type =
-${rootMembers.map((m) => `    | ${m}.Type`).join("\n")};
+${pipe(
+  rootMembers,
+  A.map((m) => `    | ${m}.Type`),
+  A.join("\n")
+)};
   /** @since 0.0.0 */
   export type Encoded =
-${rootMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
+${pipe(
+  rootMembers,
+  A.map((m) => `    | ${m}.Encoded`),
+  A.join("\n")
+)};
 }
 
 /**
- * Discriminated union of every HTML AST node — all ${els.length} elements plus the
+ * Discriminated union of every HTML AST node — all ${A.length(els)} elements plus the
  * text, comment, foreign, doctype, document, and fragment node kinds.
  *
  * **Example** (Match an anchor against HtmlNode)
@@ -2733,7 +2916,7 @@ ${rootMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
 export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
   "HtmlNode",
   "Discriminated union of all HTML AST nodes.",
-  [${unionMembers.join(", ")}]
+  [${A.join(unionMembers, ", ")}]
 );
 /**
  * Companion namespace for {@link HtmlNode}.
@@ -2754,74 +2937,94 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
 export declare namespace HtmlNode {
   /** @since 0.0.0 */
   export type Type =
-${unionMembers.map((m) => `    | ${m}.Type`).join("\n")};
+${pipe(
+  unionMembers,
+  A.map((m) => `    | ${m}.Type`),
+  A.join("\n")
+)};
   /** @since 0.0.0 */
   export type Encoded =
-${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
+${pipe(
+  unionMembers,
+  A.map((m) => `    | ${m}.Encoded`),
+  A.join("\n")
+)};
 }`;
 
-  const model = [
-    header,
-    containerNode("Fragment", "#fragment", "A document fragment node (a detached group of children)."),
-    documentNode,
-    foreignNode,
-    ...els.map(elementBlock),
-    unionBlock,
-    ...CATEGORIES.map(([n, c]) => categoryUnion(n, c)).filter((s) => s !== ""),
-  ].join("\n\n");
+  const model = pipe(
+    [
+      header,
+      containerNode("Fragment", "#fragment", "A document fragment node (a detached group of children)."),
+      documentNode,
+      foreignNode,
+      ...A.map(els, elementBlock),
+      unionBlock,
+      ...pipe(
+        CATEGORIES,
+        A.map(([n, c]) => categoryUnion(n, c)),
+        A.filter(Str.isNonEmpty)
+      ),
+    ],
+    A.join("\n\n")
+  );
 
-  const metaEntries = els
-    .map((e) => {
+  const metaEntries = pipe(
+    els,
+    A.map((e) => {
       const conformance = e.obsolete ? "non-conforming" : "conforming";
       const childSequencePattern =
-        e.childSequencePattern === undefined ? "" : ` childSequencePattern: ${JSON.stringify(e.childSequencePattern)},`;
-      const childGrammar = e.childGrammar === undefined ? "" : ` childGrammar: ${JSON.stringify(e.childGrammar)},`;
-      const currentAttributes =
-        e.currentAttributes.length === 0
-          ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
-          : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${JSON.stringify(e.currentAttributes)}]`;
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${JSON.stringify(e.obsoleteAttributes)}, conditionalCategories: ${JSON.stringify(e.conditionalCategories)}, attributeEqualities: ${JSON.stringify(e.attributeEqualities)}, attributeRequirements: ${JSON.stringify(e.attributeRequirements)}, numericAttributeRelationships: ${JSON.stringify(e.numericAttributeRelationships)}, rules: ${JSON.stringify(e.rules)}, uniqueAttributes: ${JSON.stringify(e.uniqueAttributes)},${childSequencePattern}${childGrammar} },`;
-    })
-    .join("\n");
+        e.childSequencePattern === undefined ? "" : ` childSequencePattern: ${encodeJson(e.childSequencePattern)},`;
+      const childGrammar = e.childGrammar === undefined ? "" : ` childGrammar: ${encodeJson(e.childGrammar)},`;
+      const currentAttributes = A.isReadonlyArrayEmpty(e.currentAttributes)
+        ? "HTML_GLOBAL_ATTRIBUTE_NAMES"
+        : `[...HTML_GLOBAL_ATTRIBUTE_NAMES, ...${encodeJson(e.currentAttributes)}]`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${encodeJson(e.categories)}, children: ${encodeJson(e.children)}, currentAttributes: ${currentAttributes}, obsoleteAttributes: ${encodeJson(e.obsoleteAttributes)}, conditionalCategories: ${encodeJson(e.conditionalCategories)}, attributeEqualities: ${encodeJson(e.attributeEqualities)}, attributeRequirements: ${encodeJson(e.attributeRequirements)}, numericAttributeRelationships: ${encodeJson(e.numericAttributeRelationships)}, rules: ${encodeJson(e.rules)}, uniqueAttributes: ${encodeJson(e.uniqueAttributes)},${childSequencePattern}${childGrammar} },`;
+    }),
+    A.join("\n")
+  );
 
-  const tagValues = JSON.stringify(els.map((element) => element.tag));
-  const categoryValues = JSON.stringify(
-    [...MutableHashSet.fromIterable(els.flatMap((element) => element.categories))].sort()
+  const tagValues = encodeJson(A.map(els, (element) => element.tag));
+  const categoryValues = encodeJson(
+    A.sort(MutableHashSet.fromIterable(A.flatMap(els, (element) => element.categories)), Order.String)
   );
-  const contentTokenValues = JSON.stringify(
-    [...MutableHashSet.fromIterable(els.flatMap((element) => element.children))].sort()
+  const contentTokenValues = encodeJson(
+    A.sort(MutableHashSet.fromIterable(A.flatMap(els, (element) => element.children)), Order.String)
   );
-  const booleanAttributeValues = JSON.stringify([...booleanAttrs].sort());
-  const attributeSyntaxValues = JSON.stringify(
-    [...MutableHashSet.fromIterable(R.values(classification.attributeSyntaxes))].sort()
+  const booleanAttributeValues = encodeJson(A.sort(booleanAttrs, Order.String));
+  const attributeSyntaxValues = encodeJson(
+    A.sort(MutableHashSet.fromIterable(R.values(classification.attributeSyntaxes)), Order.String)
   );
-  const attributeSyntaxes = JSON.stringify(classification.attributeSyntaxes);
-  const childGrammarValues = JSON.stringify(
-    [...MutableHashSet.fromIterable(R.values(classification.specialChildGrammars))].sort()
+  const attributeSyntaxes = encodeJson(classification.attributeSyntaxes);
+  const childGrammarValues = encodeJson(
+    A.sort(MutableHashSet.fromIterable(R.values(classification.specialChildGrammars)), Order.String)
   );
-  const svgElementNameAdjustments = JSON.stringify(classification.svgElementNameAdjustments);
-  const svgAttributeNameAdjustments = JSON.stringify(classification.svgAttributeNameAdjustments);
-  const mathMlAttributeNameAdjustments = JSON.stringify(classification.mathMlAttributeNameAdjustments);
-  const xmlAttributeNames = JSON.stringify([...classification.xmlAttributeNames].sort());
-  const globalAttributeNames = JSON.stringify([...globalKeys].sort());
+  const svgElementNameAdjustments = encodeJson(classification.svgElementNameAdjustments);
+  const svgAttributeNameAdjustments = encodeJson(classification.svgAttributeNameAdjustments);
+  const mathMlAttributeNameAdjustments = encodeJson(classification.mathMlAttributeNameAdjustments);
+  const xmlAttributeNames = encodeJson(A.sort(classification.xmlAttributeNames, Order.String));
+  const globalAttributeNames = encodeJson(A.sort(globalKeys, Order.String));
   const readonlyArrayRecord = (record: Readonly<Record<string, ReadonlyArray<string>>>): string => `{
-${R.toEntries(record)
-  .map(([key, values]) => `  ${JSON.stringify(key)}: Object.freeze(${JSON.stringify(values)}),`)
-  .join("\n")}
+${pipe(
+  R.toEntries(record),
+  A.map(([key, values]) => `  ${encodeJson(key)}: Object.freeze(${encodeJson(values)}),`),
+  A.join("\n")
+)}
 }`;
   const autocompleteFieldGroups = readonlyArrayRecord(classification.autocompleteFieldGroups);
   const autocompleteInputStateGroups = readonlyArrayRecord(classification.autocompleteInputStateGroups);
   const inputAttributeApplicability = readonlyArrayRecord(classification.inputAttributeApplicability);
-  const autocompleteContactFields = JSON.stringify(classification.autocompleteContactFields);
-  const buttonSubmitOnlyAttributes = JSON.stringify(classification.buttonSubmitOnlyAttributes);
-  const conditionalInputAttributeNames = JSON.stringify(conditionalInputAttributes);
-  const iconLinkRelations = JSON.stringify(classification.iconLinkRelations);
-  const idReferenceAttributes = JSON.stringify(classification.idReferenceAttributes);
-  const idReferenceListAttributes = JSON.stringify(classification.idReferenceListAttributes);
+  const autocompleteContactFields = encodeJson(classification.autocompleteContactFields);
+  const buttonSubmitOnlyAttributes = encodeJson(classification.buttonSubmitOnlyAttributes);
+  const conditionalInputAttributeNames = encodeJson(conditionalInputAttributes);
+  const iconLinkRelations = encodeJson(classification.iconLinkRelations);
+  const idReferenceAttributes = encodeJson(classification.idReferenceAttributes);
+  const idReferenceListAttributes = encodeJson(classification.idReferenceListAttributes);
   const contentTokenExpansions = `{
-${R.toEntries(classification.contentTokenExpansions)
-  .map(([token, values]) => `  ${JSON.stringify(token)}: Object.freeze(${JSON.stringify(values)}),`)
-  .join("\n")}
+${pipe(
+  R.toEntries(classification.contentTokenExpansions),
+  A.map(([token, values]) => `  ${encodeJson(token)}: Object.freeze(${encodeJson(values)}),`),
+  A.join("\n")
+)}
 }`;
 
   const meta = `/**
@@ -2835,8 +3038,8 @@ ${R.toEntries(classification.contentTokenExpansions)
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { flow, Result } from "effect";
 import * as R from "effect/Record";
-import { Result } from "effect";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
@@ -3770,7 +3973,7 @@ ${metaEntries}
 };
 
 const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
-  Result.getOrThrow(S.decodeUnknownResult(HtmlElementMeta)(value));
+  S.decodeUnknownResult(HtmlElementMeta)(value).pipe(Result.getOrThrow);
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
@@ -3787,12 +3990,16 @@ const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): Html
  * @since 0.0.0
  */
 export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.freeze(
-  R.map(elementMetaSource, (value) => freezeElementMeta(decodeElementMeta(value)))
+  R.map(elementMetaSource, flow(decodeElementMeta, freezeElementMeta))
 );
 `;
 
-  const conforming = els.filter((e) => !e.obsolete).length;
-  return { model, meta, conforming, total: els.length };
+  const conforming = pipe(
+    els,
+    A.filter((e) => !e.obsolete),
+    A.length
+  );
+  return { model, meta, conforming, total: A.length(els) };
 };
 
 // ---------------------------------------------------------------------------
@@ -3806,12 +4013,20 @@ const program = Effect.gen(function* () {
   const dataDir = path.join(pkgRoot, "data");
   const srcDir = path.join(pkgRoot, "src");
 
-  const readJson = <Schema extends S.Top>(schema: Schema, rel: string) =>
-    fs
-      .readFileString(path.join(dataDir, rel))
-      .pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(schema), { errors: "all", onExcessProperty: "error" }))
-      );
+  const readJson = Effect.fn("HtmlGenerator.readJson")(function* <Schema extends S.Top>(schema: Schema, rel: string) {
+    const source = yield* fs.readFileString(path.join(dataDir, rel));
+    return yield* S.decodeEffect(S.fromJsonString(schema), {
+      errors: "all",
+      onExcessProperty: "error",
+    })(source).pipe(
+      Effect.mapError((cause) =>
+        HtmlGenerationError.make({
+          cause,
+          message: `HTML generator could not decode ${rel}`,
+        })
+      )
+    );
+  });
 
   const dfnsDoc = yield* readJson(DfnsDoc, "webref/dfns-html.json");
   const elementsDoc = yield* readJson(ElementsDoc, "webref/elements-html.json");

@@ -99,7 +99,6 @@ package	dir	files	lines	symbols	types	instantiations	memory_used_k	max_rss_k	par
 @beep/dock-react	packages/foundation/ui-system/dock-react	981	522451	1251872	621686	2356564	894675	1809200	0.038	0.012	17.937	17.989	0	0	Version 7.0.2+effect-tsgo.0.24.3
 @beep/dock	packages/foundation/ui-system/dock	956	491688	1181357	570724	2231145	838620	1741856	0.034	0.017	17.924	17.977	0	0	Version 7.0.2+effect-tsgo.0.24.3
 @beep/editor	packages/foundation/ui-system/editor	1371	570670	1245136	614727	2509644	1151988	2403936	0.041	0.015	18.669	18.727	0	0	Version 7.0.2+effect-tsgo.0.24.3
-@beep/form	packages/foundation/ui-system/form	2325	578070	1135856	523850	2198569	877370	1822824	0.050	0.015	17.710	17.778	14	1	Version 7.0.2+effect-tsgo.0.24.3
 @beep/ui	packages/foundation/ui-system/ui	7898	819337	2093203	781925	4606815	1532192	3090940	0.108	0.013	18.666	18.803	0	0	Version 7.0.2+effect-tsgo.0.24.3
 @beep/db-admin	packages/_internal/db-admin	1450	529565	9039160	2906857	4980615	4980940	7672468	0.059	0.015	20.334	20.410	0	0	Version 7.0.2+effect-tsgo.0.24.3
 @beep/law-practice-domain	packages/law-practice/domain	1059	489477	1836188	865141	2602866	1397428	2139256	0.039	0.012	19.025	19.079	0	0	Version 7.0.2+effect-tsgo.0.24.3

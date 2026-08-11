@@ -16,7 +16,9 @@
  */
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { dual, flow } from "effect/Function";
+import { flow, Tuple } from "effect";
+import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -106,41 +108,65 @@ const hasForeignAttribute = (entries: ForeignAttributeEntries, predicate: (name:
   A.some(entries, ([name]) => predicate(name));
 
 const hasHtmlIntegrationEncoding: (entries: ForeignAttributeEntries) => boolean = flow(
-  A.findFirst(([name]) => name === "encoding"),
-  O.map(([, value]) => value),
+  A.findFirst(P.Tuple([Eq.equals("encoding"), P.isUnknown])),
+  O.map(Tuple.get(1)),
   O.filter(P.isString),
   O.map(toAsciiLowerCase),
   O.exists(isHtmlIntegrationEncoding)
 );
 
-const isHtmlIntegrationPoint = (
-  namespace: ForeignNamespace,
-  name: string,
-  attributes: ForeignAttributeEntries
-): boolean =>
+const isHtmlIntegrationPoint: {
+  (namespace: ForeignNamespace, name: string, attributes: ForeignAttributeEntries): boolean;
+  (name: string, attributes: ForeignAttributeEntries): (namespace: ForeignNamespace) => boolean;
+} = dual(3, (namespace: ForeignNamespace, name: string, attributes: ForeignAttributeEntries): boolean =>
   namespace === "svg"
     ? isSvgHtmlIntegrationPointName(name)
-    : name === "annotation-xml" && hasHtmlIntegrationEncoding(attributes);
+    : name === "annotation-xml" && hasHtmlIntegrationEncoding(attributes)
+);
 
-const isMathMlTextIntegrationPoint = (namespace: ForeignNamespace, name: string): boolean =>
-  namespace === "mathml" && isMathMlTextIntegrationPointName(name);
+const isMathMlTextIntegrationPoint: {
+  (namespace: ForeignNamespace, name: string): boolean;
+  (name: string): (namespace: ForeignNamespace) => boolean;
+} = dual(
+  2,
+  (namespace: ForeignNamespace, name: string): boolean =>
+    namespace === "mathml" && isMathMlTextIntegrationPointName(name)
+);
 
-const entersForeignNamespaceFromHtml = (namespace: ForeignNamespace, name: string): boolean =>
-  (namespace === "svg" && name === "svg") || (namespace === "mathml" && name === "math");
+const entersForeignNamespaceFromHtml: {
+  (namespace: ForeignNamespace, name: string): boolean;
+  (name: string): (namespace: ForeignNamespace) => boolean;
+} = dual(
+  2,
+  (namespace: ForeignNamespace, name: string): boolean =>
+    (namespace === "svg" && name === "svg") || (namespace === "mathml" && name === "math")
+);
 
-const isForeignBreakoutStartTag = (name: string, attributes: ForeignAttributeEntries): boolean =>
-  isForeignBreakoutElementName(name) ||
-  (name === "font" && hasForeignAttribute(attributes, isFontBreakoutAttributeName));
+const isForeignBreakoutStartTag: {
+  (name: string, attributes: ForeignAttributeEntries): boolean;
+  (attributes: ForeignAttributeEntries): (name: string) => boolean;
+} = dual(
+  2,
+  (name: string, attributes: ForeignAttributeEntries): boolean =>
+    isForeignBreakoutElementName(name) ||
+    (name === "font" && hasForeignAttribute(attributes, isFontBreakoutAttributeName))
+);
 
-const browserAdjustedName = (name: string, adjustments: Readonly<Record<string, string>>): string => {
+const browserAdjustedName: {
+  (name: string, adjustments: Readonly<Record<string, string>>): string;
+  (adjustments: Readonly<Record<string, string>>): (name: string) => string;
+} = dual(2, (name: string, adjustments: Readonly<Record<string, string>>): string => {
   const lowercase = toAsciiLowerCase(name);
   return adjustments[lowercase] ?? lowercase;
-};
+});
 
-const hasMatchingNamespacePrefix = (namespace: ForeignNamespace, name: string): boolean => {
+const hasMatchingNamespacePrefix: {
+  (namespace: ForeignNamespace, name: string): boolean;
+  (name: string): (namespace: ForeignNamespace) => boolean;
+} = dual(2, (namespace: ForeignNamespace, name: string): boolean => {
   const [prefix] = Str.split(":")(name);
   return !Str.includes(":")(name) || (namespace === "svg" ? prefix === "svg" : prefix === "mathml");
-};
+});
 
 /**
  * Tests whether an opaque foreign element name is unchanged by HTML parsing.

@@ -121,7 +121,5 @@ Keep `Schema` as the source of truth for pure data models.
 
 ## Escalation
 
-- Use `effect-first-development` when the task is broader than schema work.
-- Use `effect-services` or `effect-v4-services` for service and layer wiring.
-- Use `effect-error-handling` or `effect-v4-errors` for recovery strategy and
-  typed error flow outside schema modeling.
+- Use `effect-first-development` when the task is broader than schema work,
+  including service/layer wiring and typed error flow outside schema modeling.

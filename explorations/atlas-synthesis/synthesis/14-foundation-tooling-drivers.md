@@ -94,7 +94,6 @@ _Symbol counts from `standards/repo-exports.catalog.md` (read, not regenerated);
 | Package | Path | Purpose | What's inside |
 |---|---|---|---|
 | **`@beep/ui`** | `packages/foundation/ui-system/ui` | Core component system (~121 src files, ~461 symbols). | `components/` (a full shadcn/base-ui-style kit: accordion, dialog, drawer, command, combobox, calendar, chart, plus domain-flavored ones like `knowledge-graph.tsx`, `conversation.tsx`, `orb.tsx`, `live-waveform.tsx`, a `blocks/` dir, an `editor/` dir), `hooks/` (`useMobile`, `useNumberInput`, `use-scribe`, `useSpinner`), `themes/`, `styles/`, `lib/`. |
-| `@beep/form` | `packages/foundation/ui-system/form` | Form system, split `core` (headless) + `react`. | Schema-driven forms compose with `@beep/schema`. |
 | `@beep/editor` | `packages/foundation/ui-system/editor` | Lexical-based rich-text editor UI. | `composer`, `viewer`, mermaid decorator/view, youtube embed nodes, `artifact-ref-node`. Pairs with `@beep/lexical-schema`. |
 
 > The UI brick is **mature and broad** — it's the fastest path to a product UI surface. The desktop app (`@beep/professional-desktop`, active in git status) and `oip-web` already consume it. Storybook (`apps/storybook`) is a config-only host over `@beep/ui`.
@@ -185,7 +184,7 @@ For future **IP-law product** work (graduating `law-practice` past domain-only),
 | Reuse base entity/value vocabulary | `@beep/shared-domain` | shared |
 | Pull patent data | `@beep/uspto` | drivers |
 | Reason/extract over documents | `@beep/anthropic` (+ `@beep/langextract`, `@beep/nlp`, `@beep/file-processing`, `@beep/tika`/`@beep/libpff`) | drivers + capability |
-| Build the UI | `@beep/ui` + `@beep/form` + `@beep/editor` | ui-system |
+| Build the UI | `@beep/ui` + `@beep/editor` | ui-system |
 | Test it | `@beep/test-utils` | test-kit |
 | Scaffold the package | `beep create-package` (`@beep/repo-cli`) inheriting `@beep/repo-configs` | tooling |
 | Helper hygiene (Str/Equal/Option/…) | `@beep/utils` | modeling |
