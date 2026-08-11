@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-11T15:27:54.033Z",
+  "generatedAt": "2026-08-11T22:02:08.413Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,9 +66,9 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 59,
     "publicModules": 2477,
-    "publicExports": 16226,
+    "publicExports": 16229,
     "openModules": 397,
-    "openExports": 132,
+    "openExports": 135,
     "missingExportExamples": 4,
     "missingExportCategories": 0,
     "missingExportSince": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 511,
+    "multiple-description-paragraphs": 514,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -14780,7 +14780,7 @@
         "srcDir": "src",
         "sourceFileCount": 42,
         "publicModuleCount": 41,
-        "publicExportCount": 261
+        "publicExportCount": 263
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -14790,7 +14790,7 @@
       },
       "counts": {
         "openModules": 3,
-        "openExports": 0,
+        "openExports": 2,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
@@ -14802,7 +14802,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 3,
+          "multiple-description-paragraphs": 5,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -15189,7 +15189,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -15233,7 +15233,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -16969,12 +16969,38 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PrincipalSchema",
+          "exportKind": "interface",
+          "filePath": "src/entity/Principal.ts",
+          "repoPath": "packages/shared/domain/src/entity/Principal.ts",
+          "line": 257,
+          "anchor": "packages-shared-domain-src-entity-principal-ts-257-principalschema",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "Principal",
           "exportKind": "const",
           "filePath": "src/entity/Principal.ts",
           "repoPath": "packages/shared/domain/src/entity/Principal.ts",
-          "line": 252,
-          "anchor": "packages-shared-domain-src-entity-principal-ts-252-principal",
+          "line": 279,
+          "anchor": "packages-shared-domain-src-entity-principal-ts-279-principal",
           "currentTags": [
             "@category",
             "@since"
@@ -16995,8 +17021,8 @@
           "exportKind": "type",
           "filePath": "src/entity/Principal.ts",
           "repoPath": "packages/shared/domain/src/entity/Principal.ts",
-          "line": 284,
-          "anchor": "packages-shared-domain-src-entity-principal-ts-284-principal",
+          "line": 299,
+          "anchor": "packages-shared-domain-src-entity-principal-ts-299-principal",
           "currentTags": [
             "@category",
             "@since"
@@ -17017,8 +17043,8 @@
           "exportKind": "namespace",
           "filePath": "src/entity/Principal.ts",
           "repoPath": "packages/shared/domain/src/entity/Principal.ts",
-          "line": 304,
-          "anchor": "packages-shared-domain-src-entity-principal-ts-304-principal",
+          "line": 319,
+          "anchor": "packages-shared-domain-src-entity-principal-ts-319-principal",
           "currentTags": [
             "@category",
             "@since"
@@ -17256,12 +17282,38 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "SourceKindSchema",
+          "exportKind": "interface",
+          "filePath": "src/entity/SourceKind.ts",
+          "repoPath": "packages/shared/domain/src/entity/SourceKind.ts",
+          "line": 37,
+          "anchor": "packages-shared-domain-src-entity-sourcekind-ts-37-sourcekindschema",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "SourceKind",
           "exportKind": "const",
           "filePath": "src/entity/SourceKind.ts",
           "repoPath": "packages/shared/domain/src/entity/SourceKind.ts",
-          "line": 29,
-          "anchor": "packages-shared-domain-src-entity-sourcekind-ts-29-sourcekind",
+          "line": 53,
+          "anchor": "packages-shared-domain-src-entity-sourcekind-ts-53-sourcekind",
           "currentTags": [
             "@category",
             "@since"
@@ -17282,8 +17334,8 @@
           "exportKind": "type",
           "filePath": "src/entity/SourceKind.ts",
           "repoPath": "packages/shared/domain/src/entity/SourceKind.ts",
-          "line": 55,
-          "anchor": "packages-shared-domain-src-entity-sourcekind-ts-55-sourcekind",
+          "line": 70,
+          "anchor": "packages-shared-domain-src-entity-sourcekind-ts-70-sourcekind",
           "currentTags": [
             "@category",
             "@since"
@@ -267108,8 +267160,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 137,
-          "anchor": "infra-src-cifleetcontroller-ts-137-cifleetcontrollerpulumiconfigvalues",
+          "line": 152,
+          "anchor": "infra-src-cifleetcontroller-ts-152-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -267132,8 +267184,8 @@
           "exportKind": "type",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 165,
-          "anchor": "infra-src-cifleetcontroller-ts-165-cifleetcontrollerpulumiconfigvalues",
+          "line": 180,
+          "anchor": "infra-src-cifleetcontroller-ts-180-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -267154,8 +267206,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 173,
-          "anchor": "infra-src-cifleetcontroller-ts-173-cifleetcontrollerconfig",
+          "line": 188,
+          "anchor": "infra-src-cifleetcontroller-ts-188-cifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -267178,8 +267230,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 199,
-          "anchor": "infra-src-cifleetcontroller-ts-199-makecifleetcontrollerconfig",
+          "line": 214,
+          "anchor": "infra-src-cifleetcontroller-ts-214-makecifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -267202,8 +267254,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 223,
-          "anchor": "infra-src-cifleetcontroller-ts-223-loadcifleetcontrollerconfig",
+          "line": 238,
+          "anchor": "infra-src-cifleetcontroller-ts-238-loadcifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -267226,8 +267278,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 308,
-          "anchor": "infra-src-cifleetcontroller-ts-308-cifleetcontroller",
+          "line": 341,
+          "anchor": "infra-src-cifleetcontroller-ts-341-cifleetcontroller",
           "currentTags": [
             "@category",
             "@since"
@@ -292873,7 +292925,7 @@
         "srcDir": "src",
         "sourceFileCount": 261,
         "publicModuleCount": 261,
-        "publicExportCount": 1679
+        "publicExportCount": 1680
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -292883,7 +292935,7 @@
       },
       "counts": {
         "openModules": 24,
-        "openExports": 0,
+        "openExports": 1,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
@@ -292895,7 +292947,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 1,
-          "multiple-description-paragraphs": 22,
+          "multiple-description-paragraphs": 23,
           "leading-blank": 0,
           "trailing-blank": 1,
           "invalid-heading": 0,
@@ -297930,7 +297982,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -330118,12 +330170,38 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "SemanticVersionSchema",
+          "exportKind": "interface",
+          "filePath": "src/SemanticVersion.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
+          "line": 57,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-57-semanticversionschema",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "SemanticVersion",
           "exportKind": "const",
           "filePath": "src/SemanticVersion.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
-          "line": 62,
-          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-62-semanticversion",
+          "line": 91,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-91-semanticversion",
           "currentTags": [
             "@category",
             "@since"
@@ -330144,8 +330222,8 @@
           "exportKind": "type",
           "filePath": "src/SemanticVersion.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
-          "line": 93,
-          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-93-semanticversion",
+          "line": 109,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-109-semanticversion",
           "currentTags": [
             "@see",
             "@category",
