@@ -107,6 +107,41 @@ const expectFlowThunkFindings = (summary: TerseEffectSummary) => {
 };
 
 describe("terse effect laws", () => {
+  it("exempts ecosystem members in full and explicit include scans", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeDefaultTsconfig;
+          const source = A.join(
+            [
+              'import * as A from "effect/Array";',
+              "",
+              "export const values = { onNone: () => A.empty<string>() };",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/ecosystem/member/src/index.ts", source);
+          yield* writeProjectFile(DemoSourcePath, source);
+
+          const fullSummary = yield* runTerseRules(false, true);
+          expect(fullSummary.changedFiles).toEqual([DemoSourcePath]);
+          expect(fullSummary.strictFailure).toBe(true);
+
+          const explicitSummary = yield* runTerseEffectRules(
+            TerseEffectRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              excludePaths: [],
+              includePaths: ["packages/ecosystem/member/src/index.ts"],
+            })
+          );
+          expect(explicitSummary.changedFiles).toEqual([]);
+          expect(explicitSummary.strictFailure).toBe(false);
+        })
+      ).pipe(provideScopedLayer(NodeTestLayer))
+    ));
+
   it("reports helper simplifications in dry-run check mode without rewriting files", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

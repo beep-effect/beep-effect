@@ -32,26 +32,30 @@ Use this command for execution-capable sessions:
 3. [`PLAN.md`](./PLAN.md) - active execution plan.
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
-6. `scratchpad/bsl/research/graduation-decisions.md` - the locked operator
-   decisions this packet executes.
+6. [`research/bsl/graduation-decisions.md`](./research/bsl/graduation-decisions.md)
+   - the locked operator decisions this packet executes.
 
 ## Current Phase
 
-P0 — Doctrine: ecosystem family docs PR. Charter the family in the standards
-(doc 14 + grammar/summary/glossary/decision/index edits + the shared-tables
-projection line) and register this packet; land it as a docs-only PR via yeet.
+P1 — Package creation: move, harness, gates PR. git-mv `scratchpad/bsl` into
+the member root `packages/ecosystem/effect-drizzle/**`, land the manifest per
+SPEC constraints 6-7, the `@effect/vitest` harness migration, the member
+tstyche lane, the inverted-import gate in repo lint, the family-encoding
+tooling extensions, and `scratchpad/bsl` retirement.
 
 ## Latest Evidence
 
-Exploration merged: PR #651 (`e92b8b7d9d`, 2026-08-10) — `scratchpad/bsl` at
-86/86 tests, 402 assertions, two dialects, Greptile 5/5. P0 PR: not yet
-opened.
+P0 merged: PR #658 (`4857be45cb`, 2026-08-10) — ecosystem family doctrine
+(doc 14 + grammar/summary/glossary/decision/index + shared-tables projection
+line) live on `main`; 26 checks green, zero unresolved threads, Greptile 5/5.
+Exploration merged earlier: PR #651 (`e92b8b7d9d`, 2026-08-10) —
+`scratchpad/bsl` at 86/86 tests, 402 assertions, two dialects.
 
 ## Notes
 
 - Beep adoption (BaseEntity parity, EntityTable replacement) is deliberately
   OUT — future packet chartered by
-  `scratchpad/bsl/research/baseentity-migration-plan.md`.
+  [`research/bsl/baseentity-migration-plan.md`](./research/bsl/baseentity-migration-plan.md).
 - npm publication stays gated (`private: true`) until effect v4 stable and
   drizzle 1.0 final; pre-npm feedback flows through the public repository
   meanwhile, and the unscoped `effect-drizzle` npm-name ask is the operator's

@@ -1475,6 +1475,13 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   repoCliStep(repoRoot, "lint:native-runtime", scopedLawArgs("native-runtime", ["--check"], files)),
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
+  repoCliStep(
+    repoRoot,
+    "lint:ecosystem-polarity",
+    files === undefined
+      ? ["lint", "ecosystem-polarity"]
+      : ["lint", "ecosystem-polarity", "--include", A.join(files, ",")]
+  ),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
   repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
   repoCliStep(

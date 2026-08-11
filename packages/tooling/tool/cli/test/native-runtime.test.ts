@@ -27,6 +27,34 @@ const expectStrictNativeError = (
 };
 
 describe("native runtime laws", () => {
+  it("exempts ecosystem members in full and explicit include scans", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeDefaultTsconfig;
+          const source = "export const value = new Date();\n";
+          yield* writeProjectFile("packages/ecosystem/member/src/index.ts", source);
+          yield* writeProjectFile("packages/demo/src/index.ts", source);
+
+          const fullSummary = yield* runNoNativeRuntimeRules(
+            NoNativeRuntimeRulesOptions.make({ strictCheck: true, excludePaths: [] })
+          );
+          expect(fullSummary.affectedFiles).toEqual(["packages/demo/src/index.ts"]);
+          expect(fullSummary.strictFailure).toBe(true);
+
+          const explicitSummary = yield* runNoNativeRuntimeRules(
+            NoNativeRuntimeRulesOptions.make({
+              strictCheck: true,
+              excludePaths: [],
+              includePaths: ["packages/ecosystem/member/src/index.ts"],
+            })
+          );
+          expect(explicitSummary.scannedFiles).toBe(0);
+          expect(explicitSummary.strictFailure).toBe(false);
+        })
+      ).pipe(provideScopedLayer(NodeTestLayer))
+    ));
+
   it("fails strict check for non-hotspot warnings", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

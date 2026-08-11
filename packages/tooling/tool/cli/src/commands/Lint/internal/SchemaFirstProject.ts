@@ -8,6 +8,7 @@
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { Effect, Path } from "effect";
 import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
+import { isEcosystemMemberSourcePath } from "../../Laws/internal/LawScan.ts";
 import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
 
 /**
@@ -64,6 +65,13 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
 /**
  * Predicate for source paths excluded from schema-first scans.
  *
+ * **Details**
+ *
+ * Ecosystem members (`packages/ecosystem/<member>/...`) are excluded alongside
+ * the generic TypeScript source exclusions: published-package standards
+ * supersede the repo's schema-first style law inside that family
+ * (`standards/architecture/14-ecosystem-packages.md`, Style-Law Scoping).
+ *
  * **Example** (Check excluded dist path)
  *
  * ```ts
@@ -75,4 +83,5 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
  * @category predicates
  * @since 0.0.0
  */
-export const isSchemaFirstExcludedFile = isExcludedTypeScriptSourcePath;
+export const isSchemaFirstExcludedFile = (filePath: string): boolean =>
+  isEcosystemMemberSourcePath(filePath) || isExcludedTypeScriptSourcePath(filePath);

@@ -37,14 +37,15 @@ database access remains banned.
 | `DbSchema` | Metadata-only aggregate for exported shared tables. |
 | `@beep/shared-tables/table/Table` | Compatibility subpath re-exporting `@beep/drizzle` `EntityTable` type helpers. |
 
-Generic table projection's target owner is `@beep/effect-drizzle` (member
-root `packages/ecosystem/effect-drizzle/**`, landing via
-`goals/effect-drizzle-graduation` P1; graduated from `scratchpad/bsl`). Until
-that move ships, `@beep/drizzle` remains the current in-tree projection
-owner — and execution (the SQL service, transactions, error normalization)
-stays in `@beep/drizzle` permanently. Shared table
-packages publish concrete shared product table metadata; they do not own a
-separate SQL DSL or a domain-to-persistence mapping layer.
+Generic schema-derived projection now lives in-tree at
+`@beep/effect-drizzle` (member root
+`packages/ecosystem/effect-drizzle/**`). It graduated from `scratchpad/bsl`
+(PR #651). `@beep/drizzle` keeps execution (the SQL service, transactions, and
+error normalization) permanently. Shared and slice tables keep their existing
+`@beep/drizzle` `EntityTable` projection patterns until the future beep-adoption
+packet; BaseEntity parity is explicitly outside this graduation packet. Shared
+table packages publish concrete shared product table metadata; they do not own
+a separate SQL DSL or a domain-to-persistence mapping layer.
 
 ## Development
 

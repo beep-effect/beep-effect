@@ -1396,6 +1396,31 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/ecosystem/effect-drizzle": {
+      "name": "@beep/effect-drizzle",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@beep/pglite": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "@effect/sql-pg": "catalog:",
+        "@effect/sql-pglite": "catalog:",
+        "@effect/sql-sqlite-bun": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@electric-sql/pglite": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "drizzle-kit": "catalog:",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+        "tstyche": "7.2.2",
+        "typescript": "catalog:",
+        "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "1.0.0-rc.4-fb12281",
+        "effect": "4.0.0-beta.106",
+      },
+    },
     "packages/epistemic/client": {
       "name": "@beep/epistemic-client",
       "version": "0.0.0",
@@ -3193,6 +3218,8 @@
     "@beep/ecfr": ["@beep/ecfr@workspace:packages/drivers/ecfr"],
 
     "@beep/editor": ["@beep/editor@workspace:packages/foundation/ui-system/editor"],
+
+    "@beep/effect-drizzle": ["@beep/effect-drizzle@workspace:packages/ecosystem/effect-drizzle"],
 
     "@beep/epistemic-client": ["@beep/epistemic-client@workspace:packages/epistemic/client"],
 
@@ -7567,6 +7594,8 @@
     "tsconfig-paths": ["tsconfig-paths@4.2.0", "", { "dependencies": { "json5": "^2.2.2", "minimist": "^1.2.6", "strip-bom": "^3.0.0" } }, "sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "tstyche": ["tstyche@7.2.2", "", { "peerDependencies": { "typescript": ">=5.4" }, "optionalPeers": ["typescript"], "bin": "./dist/bin.js" }, "sha512-pd0CZjwjzxCzRiBAH/SEx4IaMS6ti/KA8cWc22Bx1Wa5FF30JeFQa/zAfXpjWkrJNmFqaOJrTaZDF+ji3P2TmA=="],
 
     "tuf-js": ["tuf-js@4.1.0", "", { "dependencies": { "@tufjs/models": "4.1.0", "debug": "^4.4.3", "make-fetch-happen": "^15.0.1" } }, "sha512-50QV99kCKH5P/Vs4E2Gzp7BopNV+KzTXqWeaxrfu5IQJBOULRsTIS9seSsOVT8ZnGXzCyx55nYWAi4qJzpZKEQ=="],
 

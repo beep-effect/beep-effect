@@ -128,4 +128,33 @@ describe("effect import laws", () => {
         })
       ).pipe(provideScopedLayer(testLayer))
     ));
+
+  it("exempts ecosystem members in full and explicit include scans", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = 'import * as Duration from "effect/Duration";\nexport const value = Duration.seconds(1);\n';
+          yield* writeProjectFile("packages/ecosystem/member/src/index.ts", source);
+          yield* writeProjectFile("packages/demo/src/index.ts", source);
+
+          const fullSummary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ write: false, strictCheck: true, excludePaths: [] })
+          );
+          expect(fullSummary.changedFiles).toEqual(["packages/demo/src/index.ts"]);
+          expect(fullSummary.strictFailure).toBe(true);
+
+          const explicitSummary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: false,
+              strictCheck: true,
+              excludePaths: [],
+              includePaths: ["packages/ecosystem/member/src/index.ts"],
+            })
+          );
+          expect(explicitSummary.changedFiles).toEqual([]);
+          expect(explicitSummary.strictFailure).toBe(false);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
 });
