@@ -27,8 +27,27 @@ const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
 const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/github_app_webhook_secret";
 
-const runnerInstanceTypes = ["m7i.2xlarge", "m7i-flex.2xlarge", "m7a.2xlarge", "m6i.2xlarge"];
+/**
+ * Keeps every runner at 64 GB so the build-mode census peaks of 47.59 GiB for
+ * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
+ * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
+ */
+const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
 const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
+
+const runnerImdsPostInstall = `#!/bin/sh
+set -eu
+
+command -v iptables >/dev/null 2>&1 || dnf install -y iptables-nft
+runner_uid="$(id -u ec2-user)"
+if iptables -C OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP 2>/dev/null; then
+  rule_status="already present"
+else
+  iptables -I OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP
+  rule_status="installed"
+fi
+logger -t beep-ci-imds "IPv4 IMDS OWNER drop rule $rule_status for ec2-user uid $runner_uid"
+`;
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -245,6 +264,13 @@ type CiFleetControllerArgs = {
  * Ephemeral GitHub Actions runner controller backed by the pinned Terraform
  * module through Pulumi's terraform-module provider.
  *
+ * **Gotchas**
+ *
+ * IMDSv2 with hop limit 1 blocks container access, while the post-install
+ * OWNER-match DROP blocks the host `ec2-user` job process for CSF-003. This
+ * fleet has no IPv6, so the IPv4 IMDS rule is sufficient, and JIT config keeps
+ * no runner registration token on the instance.
+ *
  * @category resources
  * @since 0.0.0
  */
@@ -397,6 +423,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
         runner_run_as: "ec2-user",
+        userdata_post_install: runnerImdsPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         runners_maximum_count: 4,

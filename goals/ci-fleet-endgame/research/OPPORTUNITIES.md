@@ -1,5 +1,32 @@
 # Opportunities
 
+## AL2023 does not guarantee iptables in the standard AMI
+
+- **Work:** Adding the post-install host-IMDS OWNER rule to the AL2023 runner.
+- **Friction:** The AL2023 package repository provides the nft-backed
+  `iptables-nft` compatibility package, but the standard-AMI package comparison
+  does not list `iptables` as preinstalled. Relying on another installer to
+  pull it transitively would make this security control image-dependent.
+- **Evidence:** Amazon Linux's package inventory lists `iptables-nft` for x86_64,
+  while its standard AL2-to-AL2023 AMI comparison shows `iptables` only on the
+  AL2 side.
+- **Proposal:** Security userdata that needs the compatibility command should
+  conditionally install `iptables-nft` before applying rules, as this controller
+  hook now does.
+
+## Interactive zsh startup noise obscures verification output
+
+- **Work:** Running the P2 controller hardening's four required verification
+  commands through `zsh -ic`.
+- **Friction:** Every command emitted non-fatal interactive-shell diagnostics
+  before the actual tool output, making clean pass/fail evidence harder to read.
+- **Evidence:** The repeated startup output included `can't change option: zle`,
+  `can't change option: monitor`, and `gitstatus failed to initialize`; all four
+  requested commands nevertheless exited 0.
+- **Proposal:** Skip prompt and gitstatus initialization when interactive zsh
+  has no TTY, so automation using the repository's documented `zsh -ic`
+  commands produces only verification output.
+
 ## Burst reaper kills busy workers mid-job
 
 - **Work:** Post-merge main run for PR #633 on the manual burst fleet.
@@ -134,3 +161,23 @@
   server-side at merge time (the repo already treats merge messages as
   commitlint input in prose, but #651 proves nothing gates it), so `main` can
   never carry a header that poisons downstream PR ranges.
+
+## Host IMDS block shares the runner-agent uid — deploy needs a probe gate
+
+- **Work:** P2 controller hardening — adding the CSF-003 host IMDS mitigation.
+- **Risk (not yet friction):** the OWNER-match DROP keys on the `ec2-user`
+  uid, and the runner AGENT also runs as `ec2-user` (`runner_run_as`). The
+  mitigation is safe only because the instance-profile role is consumed by
+  boot-time root steps (AMI SSM resolution, binary sync) and runtime IMDS
+  consumers are off (`enable_cloudwatch_agent: false`,
+  `enable_ssm_on_runners: false`), so the agent's poll loop uses its JIT token,
+  not IMDS. This is the canonical github-aws-runners pattern, but it is a
+  runtime property the code cannot prove.
+- **Required deploy gate (red-team Gate E):** the first `pulumi up` carrying
+  this change must be followed by a probe job on the shadow label that proves
+  BOTH: (a) job pickup still works — the agent was not cut off from anything it
+  needs; and (b) `curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+  from a job step now fails/times out. If (a) regresses, the agent needed IMDS
+  at runtime and the rule must move to a post-agent-start hook or a
+  path-scoped local proxy. Do not flip the heavy-lane cutover until Gate E
+  passes.
