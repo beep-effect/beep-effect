@@ -244,7 +244,7 @@ describe("yeet merge readiness", () => {
 
   it.effect("decodes a legacy headless closeout report and treats it as stale", () =>
     Effect.gen(function* () {
-      const report = yield* S.decodeUnknownEffect(PrCloseoutReport)({
+      const report = yield* S.decodeEffect(PrCloseoutReport)({
         actionableReviewThreadCount: 0,
         botCommentCount: 0,
         greptile: {},
