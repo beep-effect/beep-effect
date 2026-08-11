@@ -20,18 +20,18 @@ import type { VariantSchema } from "effect/unstable/schema";
 /**
  * Runtime marker carried by every `@beep/effect-drizzle` field wrapper.
  *
+ * @internal
  * @category symbols
  * @since 0.0.0
  */
-/** @internal */
 const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
  * Type of the runtime `@beep/effect-drizzle` field marker.
  *
+ * @internal
  * @category symbols
  * @since 0.0.0
  */
-/** @internal */
 type TypeId = typeof TypeId;
 
 /**
@@ -43,19 +43,19 @@ type TypeId = typeof TypeId;
  * concrete config is invariant and rejects valid literal variant records, so
  * this mirrors Effect's erased-field boundary rather than widening `@beep/effect-drizzle` data.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type AnySchema = Top | VariantSchema.Field<any>;
 
 /**
  * Pipeable wrapper correlating one schema with its SQL metadata.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> extends Pipeable {
   readonly meta: M;
   readonly schema: Sch;
@@ -65,19 +65,19 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 /**
  * Existential `@beep/effect-drizzle` field used at runtime boundaries.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type Any = Field<AnySchema, Meta.Meta>;
 
 /**
  * Bare schema, variant field, or existing `@beep/effect-drizzle` field accepted by combinators.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type Input = AnySchema | Any;
 
 const Proto = {
@@ -90,10 +90,10 @@ const Proto = {
 /**
  * Construct the correlated schema-and-metadata field wrapper.
  *
+ * @internal
  * @category constructors
  * @since 0.0.0
  */
-/** @internal */
 export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(schema: Sch, meta: M): Field<Sch, M> => {
   const self = Object.create(Proto);
   self.schema = schema;
@@ -104,39 +104,45 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(sch
 /**
  * Test whether an unknown value is a `@beep/effect-drizzle` field wrapper.
  *
+ * @internal
  * @category guards
  * @since 0.0.0
  */
-/** @internal */
 const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
 
 /**
  * Schema type obtained by normalizing an {@link Input}.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type SchemaFrom<I extends Input> = I extends Field<infer Sch, Meta.Meta> ? Sch : Extract<I, AnySchema>;
 
 /**
  * The metadata type an input resolves to; bare schemas start at {@link Meta.Empty}.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type MetaFrom<I extends Input> = I extends Field<AnySchema, infer M> ? M : Meta.Empty;
 
 /**
  * Normalize a bare schema, variant field, or existing field into one wrapper.
  *
+ * @internal
  * @category constructors
  * @since 0.0.0
  */
-/** @internal */
 export function from<I extends Input>(input: I): Field<SchemaFrom<I>, MetaFrom<I>>;
-/** @internal */
+/**
+ * Internal helper `from`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function from(input: Input): Any {
   if (isField(input)) {
     return input;
@@ -147,10 +153,10 @@ export function from(input: Input): Any {
 /**
  * Field type produced after applying a metadata patch to an input.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type Patched<I extends Input, Patch extends Meta.Patch> = Field<SchemaFrom<I>, Meta.Merge<MetaFrom<I>, Patch>>;
 
 /**
@@ -158,10 +164,10 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<SchemaFro
  * combinator goes through, so the merge logic and its type correlation live
  * in exactly one place.
  *
+ * @internal
  * @category combinators
  * @since 0.0.0
  */
-/** @internal */
 export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I, p: Patch): Patched<I, Patch> => {
   const f = from(input);
   return make(f.schema, Meta.merge(f.meta, p));
@@ -174,10 +180,10 @@ export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I,
 /**
  * Encoded database-facing type of an input; variant fields use `select`.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type EncodedOf<I extends Input> = SchemaEncoded<SchemaFrom<I>>;
 
 type SchemaEncoded<Sch> =
@@ -203,10 +209,10 @@ type SchemaEncoded<Sch> =
  * When a constraint fails, its message literal appears in the assignability
  * diagnostic on the offending pipe call.
  *
+ * @internal
  * @category errors
  * @since 0.0.0
  */
-/** @internal */
 export interface SqlTypeError<Msg extends string> {
   readonly "~effect-drizzle.error": Msg;
 }
@@ -214,10 +220,10 @@ export interface SqlTypeError<Msg extends string> {
 /**
  * Validate an input's non-null encoded carrier against an allowed SQL carrier.
  *
+ * @internal
  * @category validation
  * @since 0.0.0
  */
-/** @internal */
 export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exclude<EncodedOf<I>, null>] extends [
   Allowed,
 ]
@@ -231,10 +237,10 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exc
 /**
  * Reject inputs whose encoded database representation admits `null`.
  *
+ * @internal
  * @category validation
  * @since 0.0.0
  */
-/** @internal */
 export type ValidateNonNullable<I extends Input, Msg extends string> =
   null extends EncodedOf<I> ? SqlTypeError<Msg> : unknown;
 
@@ -251,10 +257,10 @@ type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> = Dimensions ex
 /**
  * Validate that an array element declaration owns one scalar column spec.
  *
+ * @internal
  * @category validation
  * @since 0.0.0
  */
-/** @internal */
 export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extends undefined
   ? SqlTypeError<"pg.array requires an element schema with an explicit base column combinator">
   : MetaFrom<I>["dimensions"] extends 0
@@ -264,10 +270,10 @@ export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extend
 /**
  * Validate an outer schema against an element carrier and declared array depth.
  *
+ * @internal
  * @category validation
  * @since 0.0.0
  */
-/** @internal */
 export type ValidateArrayEncoded<I extends Input, Element extends Input, Dimensions extends 1 | 2 | 3 | 4 | 5> = [
   Exclude<EncodedOf<I>, null>,
 ] extends [ArrayCarrier<EncodedOf<Element>, Dimensions>]

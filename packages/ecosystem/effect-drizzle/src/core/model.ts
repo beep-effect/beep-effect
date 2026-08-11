@@ -44,8 +44,13 @@ export class ModelInvariantError extends TaggedError<ModelInvariantError>("@beep
   }
 ) {}
 
-/** Internal structural model bound shared by dialect projectors. */
-/** @internal */
+/**
+ * Internal structural model bound shared by dialect projectors.
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
 export interface AnyModel {
   readonly sql: {
     readonly tableName: string;

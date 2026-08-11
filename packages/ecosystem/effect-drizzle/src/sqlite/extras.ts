@@ -33,8 +33,13 @@ const validateName = (name: string): string => {
   return name;
 };
 
-/** Failure raised when SQLite table-extra structure cannot be represented faithfully. */
-/** @internal */
+/**
+ * Failure raised when SQLite table-extra structure cannot be represented faithfully.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export class TableExtraError extends TaggedError<TableExtraError>("@beep/effect-drizzle/sqlite/TableExtraError")(
   "TableExtraError",
   { message: StringSchema },
@@ -507,8 +512,13 @@ const validateColumns = (node: Node): void => {
   }
 };
 
-/** Validate a model's complete declared extra set before Drizzle emission. */
-/** @internal */
+/**
+ * Validate a model's complete declared extra set before Drizzle emission.
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
   if (new Set(names).size !== names.length) {

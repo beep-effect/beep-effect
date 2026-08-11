@@ -31,8 +31,13 @@ import type { AST } from "effect/SchemaAST";
 import type * as Field from "./Field.ts";
 import type * as Meta from "./Meta.ts";
 
-/** Failure to derive one unambiguous SQL column from an encoded schema. */
-/** @internal */
+/**
+ * Failure to derive one unambiguous SQL column from an encoded schema.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export class DeriveColumnError extends TaggedError<DeriveColumnError>("@beep/effect-drizzle/DeriveColumnError")(
   "DeriveColumnError",
   { message: StringSchema, fieldName: StringSchema, astTag: StringSchema },
@@ -41,8 +46,13 @@ export class DeriveColumnError extends TaggedError<DeriveColumnError>("@beep/eff
   }
 ) {}
 
-/** Dialect hooks consumed by the shared classification algorithm. */
-/** @internal */
+/**
+ * Dialect hooks consumed by the shared classification algorithm.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Classifier<Column extends Meta.ColumnSpec> {
   readonly entityColumn: (tableName: string) => Column;
   readonly entityTableName: (schema: Top) => Option<string>;
@@ -50,8 +60,13 @@ export interface Classifier<Column extends Meta.ColumnSpec> {
   readonly selectSchemaOf: (schema: Field.AnySchema) => Top;
 }
 
-/** Dialect-neutral result of encoded-AST classification. */
-/** @internal */
+/**
+ * Dialect-neutral result of encoded-AST classification.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Classified<Column extends Meta.ColumnSpec> {
   readonly column: Column;
   readonly nullable: boolean;
@@ -83,8 +98,13 @@ export const flattenEncoded = (
   return of(node);
 };
 
-/** Derive one dialect column and nullability from a field's encoded AST. */
-/** @internal */
+/**
+ * Derive one dialect column and nullability from a field's encoded AST.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const classify = <Column extends Meta.ColumnSpec>(
   schema: Field.AnySchema,
   fieldName: string,

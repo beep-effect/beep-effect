@@ -21,8 +21,13 @@ class SqlExpressionError extends TaggedError<SqlExpressionError>("@beep/effect-d
   { description: "A schema-level SQL expression contains bound parameters." }
 ) {}
 
-/** Reject parameters in CHECK, partial-index, generated, and default expressions. */
-/** @internal */
+/**
+ * Reject parameters in CHECK, partial-index, generated, and default expressions.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const assertNoSqlParameters = (params: ReadonlyArray<unknown>, context: string): void => {
   if (params.length !== 0) {
     throw SqlExpressionError.make({
@@ -32,24 +37,44 @@ export const assertNoSqlParameters = (params: ReadonlyArray<unknown>, context: s
   }
 };
 
-/** Minimal column identity required by the dialect-neutral field wrapper. */
-/** @internal */
+/**
+ * Minimal column identity required by the dialect-neutral field wrapper.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface ColumnSpec {
   readonly dialect: string;
   readonly ident: string;
   readonly kind: string;
 }
 
-/** Supported array depth carried by field metadata. */
-/** @internal */
+/**
+ * Supported array depth carried by field metadata.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type ArrayDimension = 0 | 1 | 2 | 3 | 4 | 5;
 
-/** Identity-generation intent shared by integer-capable dialects. */
-/** @internal */
+/**
+ * Identity-generation intent shared by integer-capable dialects.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type IdentityMode = "always" | "byDefault" | false;
 
-/** Foreign-key referential actions understood by Drizzle. */
-/** @internal */
+/**
+ * Foreign-key referential actions understood by Drizzle.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type FkAction = "cascade" | "restrict" | "no action" | "set null" | "set default";
 
 /** Cheap guard for author-provided referential actions. */
@@ -61,8 +86,13 @@ const isFkAction = (value: unknown): value is FkAction =>
   value === "set null" ||
   value === "set default";
 
-/** Foreign-key target resolved from identity statics or supplied explicitly. */
-/** @internal */
+/**
+ * Foreign-key target resolved from identity statics or supplied explicitly.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface References<TableName extends string = string, ColumnName extends string = string> {
   readonly columnName: ColumnName;
   readonly onDelete: FkAction | undefined;
@@ -70,8 +100,13 @@ export interface References<TableName extends string = string, ColumnName extend
   readonly tableName: TableName;
 }
 
-/** Cheap shape guard used where references cross an author-input seam. */
-/** @internal */
+/**
+ * Cheap shape guard used where references cross an author-input seam.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const isReferences = (value: unknown): value is References =>
   hasProperty(value, "tableName") &&
   isString(value.tableName) &&
@@ -84,8 +119,13 @@ export const isReferences = (value: unknown): value is References =>
   hasProperty(value, "onUpdate") &&
   (isUndefined(value.onUpdate) || isFkAction(value.onUpdate));
 
-/** Server-default descriptor union. */
-/** @internal */
+/**
+ * Server-default descriptor union.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Default = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   value: { readonly value: unknown };
@@ -93,58 +133,113 @@ export type Default = TaggedEnum<{
   unsafeSql: { readonly sql: string };
 }>;
 
-/** Constructors, guards, and exhaustive matcher for defaults. */
-/** @internal */
+/**
+ * Constructors, guards, and exhaustive matcher for defaults.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Default = /* @__PURE__ */ taggedEnum<Default>();
 
-/** Typed SQL-expression default descriptor. */
-/** @internal */
+/**
+ * Typed SQL-expression default descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type DefaultSqlExpr<Carrier> = Omit<Extract<Default, { readonly _tag: "sqlExpr" }>, "expression"> & {
   readonly expression: SQL<Carrier>;
 };
 
-/** Literal-value default descriptor. */
-/** @internal */
+/**
+ * Literal-value default descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type DefaultValue<Encoded> = Omit<Extract<Default, { readonly _tag: "value" }>, "value"> & {
   readonly value: Encoded;
 };
 
-/** Current-time default descriptor. */
-/** @internal */
+/**
+ * Current-time default descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type DefaultNow = Extract<Default, { readonly _tag: "now" }>;
 
-/** Explicit raw-SQL default descriptor. */
-/** @internal */
+/**
+ * Explicit raw-SQL default descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type UnsafeDefaultSql = Extract<Default, { readonly _tag: "unsafeSql" }>;
 
-/** Generated-column descriptor union. */
-/** @internal */
+/**
+ * Generated-column descriptor union.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Generated = TaggedEnum<{
   sqlExpr: { readonly expression: SQL<unknown> };
   unsafeSql: { readonly sql: string };
   identityAlways: {};
 }>;
 
-/** Constructors, guards, and exhaustive matcher for generated columns. */
-/** @internal */
+/**
+ * Constructors, guards, and exhaustive matcher for generated columns.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Generated = /* @__PURE__ */ taggedEnum<Generated>();
 
-/** Typed generated SQL-expression descriptor. */
-/** @internal */
+/**
+ * Typed generated SQL-expression descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type GeneratedSqlExpr<Carrier> = Omit<Extract<Generated, { readonly _tag: "sqlExpr" }>, "expression"> & {
   readonly expression: SQL<Carrier>;
 };
 
-/** Explicit raw-SQL generated descriptor. */
-/** @internal */
+/**
+ * Explicit raw-SQL generated descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql" }>;
 
-/** Identity-always generated descriptor. */
-/** @internal */
+/**
+ * Identity-always generated descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type GeneratedIdentityAlways = Extract<Generated, { readonly _tag: "identityAlways" }>;
 
-/** Literal-preserving SQL intent carried by every field. */
-/** @internal */
+/**
+ * Literal-preserving SQL intent carried by every field.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Meta<C extends ColumnSpec = ColumnSpec> {
   readonly column: C | undefined;
   readonly columnName: string | undefined;
@@ -159,8 +254,13 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
   readonly version: boolean;
 }
 
-/** Exact initial metadata type for a bare schema field. */
-/** @internal */
+/**
+ * Exact initial metadata type for a bare schema field.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Empty extends Meta {
   readonly column: undefined;
   readonly columnName: undefined;
@@ -175,8 +275,13 @@ export interface Empty extends Meta {
   readonly version: false;
 }
 
-/** Canonical metadata value for a bare schema field. */
-/** @internal */
+/**
+ * Canonical metadata value for a bare schema field.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const empty: Empty = {
   column: undefined,
   dimensions: 0,
@@ -191,20 +296,41 @@ export const empty: Empty = {
   references: undefined,
 };
 
-/** Partial metadata update produced by a field combinator. */
-/** @internal */
+/**
+ * Partial metadata update produced by a field combinator.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Patch = { readonly [K in keyof Meta]?: Meta[K] };
 
-/** Literal-preserving metadata merge type. */
-/** @internal */
+/**
+ * Literal-preserving metadata merge type.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Merge<M extends Meta, P extends Patch> = {
   readonly [K in keyof Meta]: K extends keyof P ? (P[K] extends undefined ? M[K] : Exclude<P[K], undefined>) : M[K];
 };
 
-/** Merge a literal-preserving patch into existing metadata. */
-/** @internal */
+/**
+ * Merge a literal-preserving patch into existing metadata.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function merge<const M extends Meta, const P extends Patch>(meta: M, patch: P): Merge<M, P>;
-/** @internal */
+/**
+ * Internal helper `merge`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function merge(meta: Meta, patch: Patch): Meta {
   return {
     column: isUndefined(patch.column) ? meta.column : patch.column,

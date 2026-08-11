@@ -1,4 +1,8 @@
-/** SQLite column derivation from encoded Effect schema carriers. */
+/**
+ * SQLite column derivation from encoded Effect schema carriers.
+ *
+ * @since 0.0.0
+ */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { every, filter, some } from "effect/Array";
 import { none, some as someOption } from "effect/Option";
@@ -23,25 +27,30 @@ export { DeriveColumnError, isEntityIdLike };
 /**
  * SQLite derivation view of the dialect-neutral EntityId static schema.
  *
+ * @internal
  * @category schemas
  * @since 0.0.0
  */
-/** @internal */
 export const EntityIdLike = EntityIdLikeSchema;
 /**
  * Static EntityId metadata consumed by SQLite derivation.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type EntityIdLike = EntityIdLikeType;
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type JsonCarrier = ReadonlyArray<unknown> | { readonly [key: string]: unknown };
 
-/** Select-side schema type of a plain schema or variant field. */
-/** @internal */
+/**
+ * Select-side schema type of a plain schema or variant field.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type SelectSchemaOf<Sch> =
   Sch extends VariantSchema.Field<infer Config>
     ? Config extends { readonly select: infer Select }
@@ -68,8 +77,13 @@ type DeriveFromEncoded<E> =
                   ? SqliteColumn.Text<"json">
                   : never;
 
-/** Require every non-null encoded member to be an array or string-keyed record. */
-/** @internal */
+/**
+ * Require every non-null encoded member to be an array or string-keyed record.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export const isStructuralJson = (schema: Field.AnySchema): boolean => {
   const members = filter(
     flattenEncoded(toEncoded(selectSchemaOf(schema).ast), "(unknown)"),
@@ -78,8 +92,13 @@ export const isStructuralJson = (schema: Field.AnySchema): boolean => {
   return members.length > 0 && every(members, (member) => member._tag === "Objects" || member._tag === "Arrays");
 };
 
-/** Structural JSON carrier shared by SQLite JSON-mode combinator constraints. */
-/** @internal */
+/**
+ * Structural JSON carrier shared by SQLite JSON-mode combinator constraints.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type StructuralJson = JsonCarrier;
 
 /** SQLite descriptor derived from an encoded carrier, or `never` when ambiguous. */
@@ -93,8 +112,13 @@ type Derived<I extends Field.Input> =
       : never
     : DeriveFromEncoded<Exclude<Field.EncodedOf<I>, null>>;
 
-/** Explicit SQLite descriptor when present, otherwise the derived descriptor. */
-/** @internal */
+/**
+ * Explicit SQLite descriptor when present, otherwise the derived descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type ResolvedColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends undefined
   ? Derived<I>
   : Field.MetaFrom<I>["column"] extends SqliteColumn.Spec
@@ -107,8 +131,13 @@ export type ResolvedColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] 
         : never
       : never;
 
-/** Return the database/select schema of a plain schema or variant field. */
-/** @internal */
+/**
+ * Return the database/select schema of a plain schema or variant field.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   if (VariantSchema.isField(schema)) {
     const select: unknown = schema.schemas.select;
@@ -122,8 +151,13 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   return schema;
 };
 
-/** Derive one SQLite descriptor and its encoded nullability. */
-/** @internal */
+/**
+ * Derive one SQLite descriptor and its encoded nullability.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export const classify = (
   schema: Field.AnySchema,
   fieldName: string
@@ -135,11 +169,21 @@ export const classify = (
     fromSchemaAST: SqliteColumn.Spec.fromSchemaAST,
   });
 
-/** Test encoded select nullability. */
-/** @internal */
+/**
+ * Test encoded select nullability.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export const isNullable = (schema: Field.AnySchema): boolean =>
   some(flattenEncoded(toEncoded(selectSchemaOf(schema).ast), "(unknown)"), isTagged("Null"));
 
-/** Collect the finite encoded literal union used by SQLite enum checks. */
-/** @internal */
+/**
+ * Collect the finite encoded literal union used by SQLite enum checks.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export const stringLiteralValues = (schema: Field.AnySchema) => collectStringLiteralValues(schema, selectSchemaOf);

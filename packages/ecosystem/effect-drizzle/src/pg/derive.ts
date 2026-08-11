@@ -18,6 +18,8 @@
  * Nullability never derives a column: `Null` union members are stripped (they
  * feed `.notNull()` instead), and an encoded `Undefined` is rejected — SQL
  * absence must be represented as `null` in selected rows.
+ *
+ * @since 0.0.0
  */
 // fallow-ignore-file code-duplication -- collectMaxLengths/collectExactLengths are deliberately parallel dual-signature AST walkers over distinct check kinds; sharing their spine would obscure the per-check policy (doc 14 family; review at next dialect addition)
 
@@ -65,10 +67,10 @@ export { DeriveColumnError };
 /**
  * PostgreSQL derivation view of the dialect-neutral EntityId static schema.
  *
+ * @internal
  * @category schemas
  * @since 0.0.0
  */
-/** @internal */
 export const EntityIdLike = EntityIdLikeSchema;
 /**
  * Test unknown input for EntityId schema statics.
@@ -80,10 +82,10 @@ export { isEntityIdLike };
 /**
  * Static EntityId metadata consumed by PostgreSQL derivation.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type EntityIdLike = EntityIdLikeType;
 
 // ---------------------------------------------------------------------------
@@ -95,10 +97,10 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
 /**
  * Select-side schema type of an input; variant fields contribute `select`.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type SelectSchemaOf<Sch> =
   Sch extends VariantSchema.Field<infer Config> ? (Config extends { readonly select: infer Sel } ? Sel : never) : Sch;
 
@@ -129,10 +131,10 @@ type DeriveFromEncoded<E> =
  * The column spec a bare Input derives, or `never` when derivation is
  * ambiguous and explicit metadata is required.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;
@@ -145,10 +147,10 @@ type Derived<I extends Field.Input> =
 /**
  * Column descriptor an input resolves to: explicit metadata wins, then derivation.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type ResolvedColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] extends undefined
   ? Derived<I>
   : Field.MetaFrom<I>["column"] extends PgColumn.Spec
@@ -168,10 +170,10 @@ export type ResolvedColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] 
 /**
  * Return the select-side schema used as the database representation.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   if (VariantSchema.isField(schema)) {
     const select: unknown = schema.schemas.select;
@@ -190,10 +192,10 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * Explicit metadata should be consulted first; this is the bare-schema path
  * and the nullability oracle for both paths.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const classify = (
   schema: Field.AnySchema,
   fieldName: string
@@ -212,10 +214,10 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
 /**
  * Test nullability of a field input's encoded select representation.
  *
+ * @internal
  * @category guards
  * @since 0.0.0
  */
-/** @internal */
 export const isNullable = (schema: Field.AnySchema): boolean =>
   some(flattenEncoded(toEncoded(selectSchemaOf(schema).ast), "(unknown)"), isTagged("Null"));
 
@@ -232,10 +234,10 @@ const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
 /**
  * Resolve the scalar encoded AST under an exact PostgreSQL array depth.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const arrayElementAST = (schema: Field.AnySchema, dimensions: Exclude<PgColumn.ArrayDimension, 0>): AST => {
   const current = reduce(range(1, dimensions), nonNullEncodedAST(schema), (node) => {
     if (isTagged(node, "Arrays")) {
@@ -257,10 +259,10 @@ export const arrayElementAST = (schema: Field.AnySchema, dimensions: Exclude<PgC
 /**
  * Return the non-null encoded AST used by a scalar element declaration.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 
 const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
@@ -356,10 +358,10 @@ export const carrier = (schema: Field.AnySchema, dimensions: PgColumn.ArrayDimen
  * Nullable literal schemas are accepted after stripping `null`; broad strings,
  * templates, and mixed literal families return `None`.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const stringLiteralValues = (schema: Field.AnySchema): Option<readonly [string, ...string[]]> =>
   collectStringLiteralValues(schema, selectSchemaOf);
 
@@ -401,10 +403,10 @@ const collectMaxLengths: {
 /**
  * Collect every installed `isMaxLength` bound on the encoded select schema.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const maxLengths = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded), collectMaxLengths(empty()));
 
 const exactLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {

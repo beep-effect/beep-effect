@@ -7,6 +7,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+/** PostgreSQL column combinators and SQL modifiers.
+ * @category combinators
+ * @since 0.0.0
+ */
 export * from "./combinators.ts";
 /** Default PostgreSQL column metadata combinator.
  * @category combinators

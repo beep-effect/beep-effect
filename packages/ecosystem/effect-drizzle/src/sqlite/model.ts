@@ -264,8 +264,13 @@ export type ValidateFields<F extends FieldsInput> = {
     ? Field.SqlTypeError<"model declares multiple optimistic-version fields">
     : unknown);
 
-/** Diagnostic returned when Model omits its self type. */
-/** @internal */
+/**
+ * Diagnostic returned when Model omits its self type.
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export type MissingSelfGeneric =
   "Missing `Self` generic — use `class Self extends sqlite.Model<Self>(identifier)({ ... }) {}`";
 
@@ -486,17 +491,23 @@ const finiteRealSchema = (schema: Field.AnySchema): Field.AnySchema => {
 /**
  * Shared runtime seam used by bare SQLite models and SQLite kit entities.
  *
+ * @internal
  * @category constructors
  * @since 0.0.0
  */
-/** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
   annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<F> | undefined
 ): ModelClass<Self, F>;
-/** @internal */
+/**
+ * Internal helper `makeModelClass`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,

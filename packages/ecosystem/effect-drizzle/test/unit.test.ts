@@ -14,7 +14,7 @@ import { hasProperty } from "effect/Predicate";
 import {
   Array as ArraySchema,
   Boolean as BooleanSchema,
-  decodeUnknownSync,
+  decodeSync,
   FiniteFromString,
   is,
   isLengthBetween,
@@ -708,8 +708,8 @@ describe("varchar authoring modes", () => {
     if (!isSchema(injected.schema)) {
       throw new Error("varchar injection unexpectedly produced a variant field");
     }
-    expect(decodeUnknownSync(injected.schema)("42")).toBe(42);
-    expect(() => decodeUnknownSync(injected.schema)("123")).toThrow();
+    expect(decodeSync(injected.schema)("42")).toBe(42);
+    expect(() => decodeSync(injected.schema)("123")).toThrow();
   });
 
   it("verifies instead of double-injecting when the schema already carries a bound", () => {

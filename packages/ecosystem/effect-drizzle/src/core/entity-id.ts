@@ -19,10 +19,10 @@ const isNonEmptyString = is(NonEmptyString);
 /**
  * Structural statics carried by dialect-free EntityId schemas.
  *
+ * @internal
  * @category schemas
  * @since 0.0.0
  */
-/** @internal */
 export const EntityIdLike = declare<EntityIdLikeShape>(
   (input): input is EntityIdLikeShape =>
     hasProperty(input, "tableName") &&
@@ -39,17 +39,17 @@ export const EntityIdLike = declare<EntityIdLikeShape>(
 /**
  * Decoded structural statics recognized by {@link EntityIdLike}.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 export type EntityIdLike = typeof EntityIdLike.Type;
 
 /**
  * Test unknown input for EntityId schema statics.
  *
+ * @internal
  * @category guards
  * @since 0.0.0
  */
-/** @internal */
 export const isEntityIdLike = is(EntityIdLike);

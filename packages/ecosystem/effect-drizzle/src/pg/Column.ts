@@ -1,4 +1,8 @@
-/** PostgreSQL column descriptors and their colocated Drizzle compilers. */
+/**
+ * PostgreSQL column descriptors and their colocated Drizzle compilers.
+ *
+ * @since 0.0.0
+ */
 
 import {
   bigint,
@@ -75,16 +79,31 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError>("@beep/effe
 /** @internal */
 type IdentityMode = Meta.IdentityMode;
 
-/** PostgreSQL scalar or array depth. */
-/** @internal */
+/**
+ * PostgreSQL scalar or array depth.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type ArrayDimension = Meta.ArrayDimension;
 
-/** Drizzle-supported PostgreSQL array suffix. */
-/** @internal */
+/**
+ * Drizzle-supported PostgreSQL array suffix.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type ArrayDimensionString = "[]" | "[][]" | "[][][]" | "[][][][]" | "[][][][][]";
 
-/** Numeric array depth represented by a suffix. */
-/** @internal */
+/**
+ * Numeric array depth represented by a suffix.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type DimensionOf<Suffix extends ArrayDimensionString> = Suffix extends "[]"
   ? 1
   : Suffix extends "[][]"
@@ -95,8 +114,13 @@ export type DimensionOf<Suffix extends ArrayDimensionString> = Suffix extends "[
         ? 4
         : 5;
 
-/** Common builder surface used by centralized modifier projection. */
-/** @internal */
+/**
+ * Common builder surface used by centralized modifier projection.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface DrizzleBuilder extends AnyPgColumnBuilder {
   array(): DrizzleBuilder;
   array(dimensions: ArrayDimensionString): DrizzleBuilder;
@@ -112,8 +136,13 @@ const applyIdentity = (
   kind: Exclude<IdentityMode, false>
 ): DrizzleBuilder => (kind === "always" ? builder.generatedAlwaysAsIdentity() : builder.generatedByDefaultAsIdentity());
 
-/** Storage identity for a number-encoded entity id. */
-/** @internal */
+/**
+ * Storage identity for a number-encoded entity id.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
 
 type SpecDefinition = {
@@ -200,17 +229,40 @@ type SpecDefinition = {
   bytea: { readonly dialect: "pg"; readonly kind: "bytea"; readonly ident: "bytea" };
 };
 
-/** Complete internal PostgreSQL descriptor algebra. */
-/** @internal */
+/**
+ * Complete internal PostgreSQL descriptor algebra.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Spec = TaggedEnum<SpecDefinition>;
 
-/** @internal */
+/**
+ * Internal type-level shape `Text`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Text = Extract<Spec, { readonly _tag: "text" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Varchar`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Varchar<L extends number = number> = Omit<Extract<Spec, { readonly _tag: "varchar" }>, "length"> & {
   readonly length: L;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Enum`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Enum<Name extends string = string, Value extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "enum" }>,
   "ident" | "name" | "values"
@@ -219,12 +271,24 @@ export type Enum<Name extends string = string, Value extends string = string> = 
   readonly name: Name;
   readonly values: readonly [Value, ...Value[]];
 };
-/** @internal */
+/**
+ * Internal type-level shape `Custom`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Custom<SqlType extends string = string> = Omit<
   Extract<Spec, { readonly _tag: "custom" }>,
   "ident" | "sqlType"
 > & { readonly ident: `custom<${SqlType}>`; readonly sqlType: SqlType };
-/** @internal */
+/**
+ * Internal type-level shape `Numeric`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Numeric<
   Precision extends number | undefined = number | undefined,
   Scale extends number | undefined = number | undefined,
@@ -232,57 +296,147 @@ export type Numeric<
   readonly precision: Precision;
   readonly scale: Scale;
 };
-/** @internal */
+/**
+ * Internal type-level shape `DateColumn`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DateColumn<Mode extends "string" | "date" = "string" | "date"> = Omit<
   Extract<Spec, { readonly _tag: "date" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Char`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Char<Length extends number = number> = Omit<Extract<Spec, { readonly _tag: "char" }>, "length"> & {
   readonly length: Length;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Json`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Json = Extract<Spec, { readonly _tag: "json" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Real`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Bigserial`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Bigserial<Mode extends "number" | "bigint" = "number" | "bigint"> = Omit<
   Extract<Spec, { readonly _tag: "bigserial" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Smallserial`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Smallserial = Extract<Spec, { readonly _tag: "smallserial" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Uuid`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Uuid = Extract<Spec, { readonly _tag: "uuid" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Integer`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Integer<Ident extends "integer" | EntityIdIdent<string> = "integer" | EntityIdIdent<string>> = Omit<
   Extract<Spec, { readonly _tag: "integer" }>,
   "ident"
 > & {
   readonly ident: Ident;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Smallint`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Smallint = Extract<Spec, { readonly _tag: "smallint" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Bigint`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Bigint<Mode extends "number" | "bigint" = "number" | "bigint"> = Omit<
   Extract<Spec, { readonly _tag: "bigint" }>,
   "mode"
 > & {
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Serial`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Serial = Extract<Spec, { readonly _tag: "serial" }>;
-/** @internal */
+/**
+ * Internal type-level shape `DoublePrecision`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DoublePrecision = Extract<Spec, { readonly _tag: "doublePrecision" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Bool`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Bool = Extract<Spec, { readonly _tag: "boolean" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Jsonb`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Jsonb = Extract<Spec, { readonly _tag: "jsonb" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Timestamp`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Timestamp<Mode extends "date" | "string" = "date" | "string", Timezone extends boolean = boolean> = Omit<
   Extract<Spec, { readonly _tag: "timestamp" }>,
   "ident" | "mode" | "withTimezone"
@@ -291,7 +445,13 @@ export type Timestamp<Mode extends "date" | "string" = "date" | "string", Timezo
   readonly mode: Mode;
   readonly withTimezone: Timezone;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Bytea`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Bytea = Extract<Spec, { readonly _tag: "bytea" }>;
 
 const Constructors = /* @__PURE__ */ taggedEnum<Spec>();
@@ -308,7 +468,13 @@ const requireLength = (length: number): number =>
     : invariant("PostgreSQL character length must be an integer from 1 through 10,485,760.");
 
 const makeText = (): Text => Constructors.text({ dialect: "pg", kind: "text", ident: "text" });
-/** @internal */
+/**
+ * Internal helper `Text`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Text = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => makeText() },
   { toDrizzleBuilder: (_spec: Text, name: string) => text(name) }
@@ -323,7 +489,13 @@ function makeVarchar(props: { readonly length: number }): Varchar {
     length: requireLength(props.length),
   });
 }
-/** @internal */
+/**
+ * Internal helper `Varchar`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Varchar = /* @__PURE__ */ assignStatics(
   { make: makeVarchar },
   {
@@ -346,9 +518,21 @@ function makeEnum(props: {
   }
   return Constructors.enum({ dialect: "pg", kind: "enum", ...props });
 }
-/** @internal */
+/**
+ * Internal type-level shape `EnumInstance`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EnumInstance = PgEnum<[string, ...string[]]>;
-/** @internal */
+/**
+ * Internal helper `Enum`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Enum = /* @__PURE__ */ assignStatics(
   { make: makeEnum },
   {
@@ -368,9 +552,21 @@ function makeCustom(props: { readonly ident: `custom<${string}>`; readonly sqlTy
   }
   return Constructors.custom({ dialect: "pg", kind: "custom", ...props });
 }
-/** @internal */
+/**
+ * Internal type-level shape `CustomBuilder`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CustomBuilder = ReturnType<ReturnType<typeof customType<{ data: unknown; driverData: unknown }>>>;
-/** @internal */
+/**
+ * Internal helper `Custom`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Custom = /* @__PURE__ */ assignStatics(
   { make: makeCustom },
   {
@@ -394,7 +590,13 @@ function makeNumeric(props: { readonly precision: number | undefined; readonly s
   }
   return Constructors.numeric({ dialect: "pg", kind: "numeric", ident: "numeric", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Numeric`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Numeric = /* @__PURE__ */ assignStatics(
   { make: makeNumeric },
   {
@@ -416,7 +618,13 @@ function makeDate<const Mode extends "string" | "date">(props: { readonly mode: 
 function makeDate(props: { readonly mode: "string" | "date" }): DateColumn {
   return Constructors.date({ dialect: "pg", kind: "date", ident: "date", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `DateColumn`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const DateColumn = /* @__PURE__ */ assignStatics(
   { make: makeDate },
   {
@@ -434,7 +642,13 @@ function makeChar(props: { readonly length: number }): Char {
     length: requireLength(props.length),
   });
 }
-/** @internal */
+/**
+ * Internal helper `Char`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Char = /* @__PURE__ */ assignStatics(
   { make: makeChar },
   {
@@ -481,12 +695,24 @@ const fixedBytea = /* @__PURE__ */ Constructors.bytea({
   ident: "bytea",
 });
 
-/** @internal */
+/**
+ * Internal helper `Json`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Json = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedJson },
   { toDrizzleBuilder: (_spec: Json, name: string): PgJsonBuilder => json(name) }
 );
-/** @internal */
+/**
+ * Internal helper `Real`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Real = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedReal },
   { toDrizzleBuilder: (_spec: Real, name: string): PgRealBuilder => real(name) }
@@ -501,7 +727,13 @@ function makeBigserial(props: { readonly mode: "number" | "bigint" }): Bigserial
     ...props,
   });
 }
-/** @internal */
+/**
+ * Internal helper `Bigserial`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Bigserial = /* @__PURE__ */ assignStatics(
   { make: makeBigserial },
   {
@@ -509,14 +741,26 @@ export const Bigserial = /* @__PURE__ */ assignStatics(
       mode === "number" ? bigserial(name, { mode: "number" }) : bigserial(name, { mode: "bigint" }),
   }
 );
-/** @internal */
+/**
+ * Internal helper `Smallserial`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Smallserial = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedSmallserial },
   {
     toDrizzleBuilder: (_spec: Smallserial, name: string): PgSmallSerialBuilder => smallserial(name),
   }
 );
-/** @internal */
+/**
+ * Internal helper `Uuid`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Uuid = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedUuid },
   { toDrizzleBuilder: (_spec: Uuid, name: string) => uuid(name) }
@@ -528,7 +772,13 @@ function makeInteger<const Ident extends "integer" | EntityIdIdent<string>>(prop
 function makeInteger(props: { readonly ident: "integer" | EntityIdIdent<string> }): Integer {
   return Constructors.integer({ dialect: "pg", kind: "integer", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Integer`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Integer = /* @__PURE__ */ assignStatics(
   { make: makeInteger },
   {
@@ -538,7 +788,13 @@ export const Integer = /* @__PURE__ */ assignStatics(
     },
   }
 );
-/** @internal */
+/**
+ * Internal helper `Smallint`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Smallint = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedSmallint },
   {
@@ -553,7 +809,13 @@ function makeBigint<const Mode extends "number" | "bigint">(props: { readonly mo
 function makeBigint(props: { readonly mode: "number" | "bigint" }): Bigint {
   return Constructors.bigint({ dialect: "pg", kind: "bigint", ident: "bigint", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Bigint`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Bigint = /* @__PURE__ */ assignStatics(
   { make: makeBigint },
   {
@@ -567,24 +829,48 @@ export const Bigint = /* @__PURE__ */ assignStatics(
           : applyIdentity(bigint(name, { mode: "bigint" }), identity),
   }
 );
-/** @internal */
+/**
+ * Internal helper `Serial`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Serial = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedSerial },
   { toDrizzleBuilder: (_spec: Serial, name: string) => serial(name) }
 );
-/** @internal */
+/**
+ * Internal helper `DoublePrecision`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const DoublePrecision = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedDoublePrecision },
   {
     toDrizzleBuilder: (_spec: DoublePrecision, name: string) => doublePrecision(name),
   }
 );
-/** @internal */
+/**
+ * Internal helper `Bool`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Bool = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedBool },
   { toDrizzleBuilder: (_spec: Bool, name: string) => boolean(name) }
 );
-/** @internal */
+/**
+ * Internal helper `Jsonb`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Jsonb = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedJsonb },
   { toDrizzleBuilder: (_spec: Jsonb, name: string) => jsonb(name) }
@@ -606,7 +892,13 @@ function makeTimestamp(props: {
   }
   return Constructors.timestamp({ dialect: "pg", kind: "timestamp", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Timestamp`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Timestamp = /* @__PURE__ */ assignStatics(
   { make: makeTimestamp },
   {
@@ -616,7 +908,13 @@ export const Timestamp = /* @__PURE__ */ assignStatics(
         : timestamp(name, { mode: "string", withTimezone }),
   }
 );
-/** @internal */
+/**
+ * Internal helper `Bytea`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Bytea = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedBytea },
   { toDrizzleBuilder: (_spec: Bytea, name: string) => bytea(name) }
@@ -646,8 +944,13 @@ const knownTags: ReadonlyArray<Spec["_tag"]> = [
   "bytea",
 ];
 
-/** Cheap full-enough shape guard for hand-built author descriptors. */
-/** @internal */
+/**
+ * Cheap full-enough shape guard for hand-built author descriptors.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const isSpec = (value: unknown): value is Spec => {
   if (
     !hasProperty(value, "_tag") ||
@@ -769,8 +1072,13 @@ const toDrizzleBuilder = /* @__PURE__ */ dual<
     })
 );
 
-/** Matching, guards, and compilation statics for the union. */
-/** @internal */
+/**
+ * Matching, guards, and compilation statics for the union.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Spec = /* @__PURE__ */ (() => ({
   $is: Constructors.$is,
   $match: Constructors.$match,
@@ -803,13 +1111,30 @@ export const Spec = /* @__PURE__ */ (() => ({
   toDrizzleBuilder,
 }))();
 
-/** Resolve a field-derived enum name without widening its literals. */
-/** @internal */
+/**
+ * Resolve a field-derived enum name without widening its literals.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type ResolveName<C extends Spec, Key extends string> = C extends Enum<"", infer Value> ? Enum<Key, Value> : C;
 
-/** @internal */
+/**
+ * Internal helper `resolveName`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function resolveName<C extends Spec, const Key extends string>(spec: C, key: Key): ResolveName<C, Key>;
-/** @internal */
+/**
+ * Internal helper `resolveName`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function resolveName(spec: Spec, key: string): Spec {
   return Spec.guards.enum(spec) && spec.name === ""
     ? Enum.make({ name: key, ident: `enum<${key}>`, values: spec.values })
@@ -818,19 +1143,43 @@ export function resolveName(spec: Spec, key: string): Spec {
 
 /** @internal */
 type IdentOf<C extends Spec> = C["ident"];
-/** @internal */
+/**
+ * Internal type-level shape `StorageIdent`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Dimensions extends 0
   ? IdentOf<C>
   : `array<${IdentOf<C>},${Dimensions}>`;
 
-/** @internal */
+/**
+ * Internal helper `storageIdent`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function storageIdent<C extends Spec, D extends ArrayDimension>(spec: C, dimensions: D): StorageIdent<C, D>;
-/** @internal */
+/**
+ * Internal helper `storageIdent`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
   return dimensions === 0 ? spec.ident : `array<${spec.ident},${dimensions}>`;
 }
 
-/** @internal */
+/**
+ * Internal type-level shape `ArrayCarrier`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimensions extends 0
   ? Carrier
   : Dimensions extends 1
@@ -843,9 +1192,21 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimension
           ? ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>
           : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>;
 
-/** @internal */
+/**
+ * Internal type-level shape `IdentityKind`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IdentityKind = "integer" | "smallint" | "bigint";
-/** @internal */
+/**
+ * Internal helper `isIdentityKind`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const isIdentityKind = (value: unknown): value is IdentityKind =>
   value === "integer" || value === "smallint" || value === "bigint";
 
@@ -858,7 +1219,13 @@ export const isIdentityKind = (value: unknown): value is IdentityKind =>
 export const isNumberInteger = (spec: Spec): spec is Integer | Smallint | Bigint<"number"> =>
   Spec.guards.integer(spec) || Spec.guards.smallint(spec) || (Spec.guards.bigint(spec) && spec.mode === "number");
 
-/** @internal */
+/**
+ * Internal type-level shape `CarrierOf`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid | Enum | Char | Numeric
   ? string
   : C extends Integer<"integer" | EntityIdIdent<string>> | Smallint | Serial | Smallserial | DoublePrecision | Real
@@ -889,10 +1256,22 @@ export type CarrierOf<C extends Spec> = C extends Text | Varchar | Uuid | Enum |
                     ? unknown
                     : never;
 
-/** @internal */
+/**
+ * Internal type-level shape `CarrierTag`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes" | "unknown";
 
-/** @internal */
+/**
+ * Internal type-level shape `Carrier`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Carrier {
   readonly dimensions: ArrayDimension;
   readonly tag: CarrierTag;
@@ -927,7 +1306,13 @@ const carrierTag = (spec: Spec): CarrierTag => {
   });
 };
 
-/** @internal */
+/**
+ * Internal helper `carrier`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => ({
   tag: carrierTag(spec),
   dimensions,

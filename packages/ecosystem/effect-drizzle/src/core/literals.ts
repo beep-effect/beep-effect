@@ -46,10 +46,10 @@ const stringLiteralsFromAST = (
 /**
  * Collect a finite non-empty encoded string-literal union for a dialect adapter.
  *
+ * @internal
  * @category getters
  * @since 0.0.0
  */
-/** @internal */
 export const stringLiteralValues = (
   schema: Field.AnySchema,
   selectSchemaOf: (schema: Field.AnySchema) => { readonly ast: AST }

@@ -1,4 +1,8 @@
-/** Shared type-level and runtime SQL naming invariants. */
+/**
+ * Shared type-level and runtime SQL naming invariants.
+ *
+ * @since 0.0.0
+ */
 import { String as StringSchema, TaggedError } from "effect/Schema";
 
 /**

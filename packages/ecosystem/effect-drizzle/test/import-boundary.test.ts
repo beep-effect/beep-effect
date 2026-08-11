@@ -170,7 +170,12 @@ describe("dialect import boundaries", () => {
   );
 });
 
-describe("bundle isolation", () => {
+// Bun.build only exists under the Bun runtime; the coverage lane runs Vitest
+// on Node, where this suite must skip rather than fail. Bun-driven unit runs
+// keep proving bundle isolation.
+const hasBunBuild = typeof Bun !== "undefined" && typeof Bun.build === "function";
+
+describe.runIf(hasBunBuild)("bundle isolation", () => {
   it.effect(
     "drops unrelated PostgreSQL column families and SQLite from an integer import",
     fnUntraced(function* () {

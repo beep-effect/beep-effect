@@ -53,8 +53,13 @@ export const Variant = {
   },
 };
 
-/** Internal `VariantSchema` factory from which the public helpers are derived. */
-/** @internal */
+/**
+ * Internal `VariantSchema` factory from which the public helpers are derived.
+ *
+ * @internal
+ * @category guards
+ * @since 0.0.0
+ */
 export const factory = /* @__PURE__ */ VariantSchema.make({
   variants,
   defaultVariant: "select",

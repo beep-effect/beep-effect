@@ -103,10 +103,10 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
 /**
  * Metadata after column derivation and automatic reference resolution.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 type ResolvedMetaOf<I extends Field.Input, Key extends string = string> = Meta.Merge<
   Field.MetaFrom<I>,
   {
@@ -208,10 +208,10 @@ export type EffectiveSchema<I extends Field.Input> =
 /**
  * Effective variant-aware schema record derived from a `@beep/effect-drizzle` field record.
  *
+ * @internal
  * @category models
  * @since 0.0.0
  */
-/** @internal */
 type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
@@ -319,10 +319,10 @@ export type ValidateFields<F extends FieldsInput> = {
 /**
  * Compile-time diagnostic returned when {@link Model} omits its self type.
  *
+ * @internal
  * @category errors
  * @since 0.0.0
  */
-/** @internal */
 export type MissingSelfGeneric =
   `Missing \`Self\` generic — use \`class Self extends EffectDrizzle.Model<Self>(identifier)({ ... }) {}\``;
 
@@ -535,17 +535,23 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
  * This is the shared runtime seam used by bare {@link Model} and kit-provided
  * entities. Runtime invariants remain authoritative when types are suppressed.
  *
+ * @internal
  * @category constructors
  * @since 0.0.0
  */
-/** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,
   annotations: Annotations.Annotations | undefined,
   extras: TableExtras.Callback<F> | undefined
 ): ModelClass<Self, F>;
-/** @internal */
+/**
+ * Internal helper `makeModelClass`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function makeModelClass(
   identifier: string,
   fields: FieldsInput,

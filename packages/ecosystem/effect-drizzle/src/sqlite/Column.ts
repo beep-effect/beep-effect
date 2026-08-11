@@ -1,4 +1,8 @@
-/** SQLite storage-class descriptors and their colocated Drizzle compilers. */
+/**
+ * SQLite storage-class descriptors and their colocated Drizzle compilers.
+ *
+ * @since 0.0.0
+ */
 
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 
@@ -48,26 +52,52 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError>(
   { description: "A SQLite column descriptor violates its shape invariant." }
 ) {}
 
-/** SQLite number-encoded EntityId storage identity. */
-/** @internal */
+/**
+ * SQLite number-encoded EntityId storage identity.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`;
-/** @internal */
+/**
+ * Internal type-level shape `ArrayDimension`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArrayDimension = Meta.ArrayDimension;
 
 /** Modes supported by the installed SQLite text builder. */
 /** @internal */
 type TextMode = "text" | "json";
 
-/** Modes supported by the installed SQLite integer builder. */
-/** @internal */
+/**
+ * Modes supported by the installed SQLite integer builder.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type IntegerMode = "number" | "boolean" | "timestamp" | "timestamp_ms";
 
-/** Modes supported by the installed SQLite blob builder. */
-/** @internal */
+/**
+ * Modes supported by the installed SQLite blob builder.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type BlobMode = "buffer" | "json" | "bigint";
 
-/** Modes supported by the installed SQLite numeric builder. */
-/** @internal */
+/**
+ * Modes supported by the installed SQLite numeric builder.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type NumericMode = "number" | "bigint";
 
 type SpecDefinition = {
@@ -108,19 +138,42 @@ type SpecDefinition = {
   };
 };
 
-/** Complete internal SQLite descriptor algebra. */
-/** @internal */
+/**
+ * Complete internal SQLite descriptor algebra.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type Spec = TaggedEnum<SpecDefinition>;
 
-/** @internal */
+/**
+ * Internal type-level shape `Text`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Text<Mode extends TextMode = TextMode> = Omit<Extract<Spec, { readonly _tag: "text" }>, "mode"> & {
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Enum`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Enum<Value extends string = string> = Omit<Extract<Spec, { readonly _tag: "enum" }>, "values"> & {
   readonly values: readonly [Value, ...Value[]];
 };
-/** @internal */
+/**
+ * Internal type-level shape `Integer`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Integer<
   Mode extends IntegerMode = IntegerMode,
   Ident extends "integer" | EntityIdIdent<string> = "integer" | EntityIdIdent<string>,
@@ -128,20 +181,43 @@ export type Integer<
   readonly ident: Ident;
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Real`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Real = Extract<Spec, { readonly _tag: "real" }>;
-/** @internal */
+/**
+ * Internal type-level shape `Blob`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Blob<Mode extends BlobMode = BlobMode> = Omit<Extract<Spec, { readonly _tag: "blob" }>, "mode"> & {
   readonly mode: Mode;
 };
-/** @internal */
+/**
+ * Internal type-level shape `Numeric`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Numeric<Mode extends NumericMode = NumericMode> = Omit<
   Extract<Spec, { readonly _tag: "numeric" }>,
   "mode"
 > & { readonly mode: Mode };
 
-/** Broad runtime builder surface used by centralized modifier projection. */
-/** @internal */
+/**
+ * Broad runtime builder surface used by centralized modifier projection.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface DrizzleBuilder extends ColumnBuilderBase {
   default(value: unknown): DrizzleBuilder;
   generatedAlwaysAs(value: SQL | (() => SQL), config?: { readonly mode?: "virtual" | "stored" }): DrizzleBuilder;
@@ -159,7 +235,13 @@ function makeText<const Mode extends TextMode>(props: { readonly mode: Mode }): 
 function makeText(props: { readonly mode: TextMode }): Text {
   return Constructors.text({ dialect: "sqlite", kind: "text", ident: "text", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Text`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Text = /* @__PURE__ */ assignStatics(
   { make: makeText },
   {
@@ -177,7 +259,13 @@ function makeEnum(props: { readonly values: readonly [string, ...string[]] }): E
     values: props.values,
   });
 }
-/** @internal */
+/**
+ * Internal helper `Enum`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Enum = /* @__PURE__ */ assignStatics(
   { make: makeEnum },
   {
@@ -196,7 +284,13 @@ function makeInteger(props: {
 }): Integer {
   return Constructors.integer({ dialect: "sqlite", kind: "integer", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Integer`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Integer = /* @__PURE__ */ assignStatics(
   { make: makeInteger },
   {
@@ -215,7 +309,13 @@ export const Integer = /* @__PURE__ */ assignStatics(
 );
 
 const fixedReal = /* @__PURE__ */ Constructors.real({ dialect: "sqlite", kind: "real", ident: "real" });
-/** @internal */
+/**
+ * Internal helper `Real`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Real = /* @__PURE__ */ assignStatics(
   { make: (_props: {}) => fixedReal },
   { toDrizzleBuilder: (_spec: Real, name: string): SQLiteRealBuilder => real(name) }
@@ -225,7 +325,13 @@ function makeBlob<const Mode extends BlobMode>(props: { readonly mode: Mode }): 
 function makeBlob(props: { readonly mode: BlobMode }): Blob {
   return Constructors.blob({ dialect: "sqlite", kind: "blob", ident: "blob", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Blob`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Blob = /* @__PURE__ */ assignStatics(
   { make: makeBlob },
   {
@@ -245,7 +351,13 @@ function makeNumeric<const Mode extends NumericMode>(props: { readonly mode: Mod
 function makeNumeric(props: { readonly mode: NumericMode }): Numeric {
   return Constructors.numeric({ dialect: "sqlite", kind: "numeric", ident: "numeric", ...props });
 }
-/** @internal */
+/**
+ * Internal helper `Numeric`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Numeric = /* @__PURE__ */ assignStatics(
   { make: makeNumeric },
   {
@@ -257,8 +369,13 @@ export const Numeric = /* @__PURE__ */ assignStatics(
 const knownTags: ReadonlyArray<Spec["_tag"]> = ["text", "enum", "integer", "real", "blob", "numeric"];
 const isIntegerIdent = (value: string): boolean => value === "integer" || /^entityId<"[^"\n]+">$/.test(value);
 
-/** Cheap full-enough guard for descriptors crossing author-controlled seams. */
-/** @internal */
+/**
+ * Cheap full-enough guard for descriptors crossing author-controlled seams.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const isSpec = (value: unknown): value is Spec => {
   if (
     !hasProperty(value, "_tag") ||
@@ -353,8 +470,13 @@ const toDrizzleBuilder = /* @__PURE__ */ dual<
     })
 );
 
-/** Guards, exhaustive matching, derivation, and compilation for SQLite specs. */
-/** @internal */
+/**
+ * Guards, exhaustive matching, derivation, and compilation for SQLite specs.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const Spec = /* @__PURE__ */ (() => ({
   $is: Constructors.$is,
   $match: Constructors.$match,
@@ -372,8 +494,13 @@ export const Spec = /* @__PURE__ */ (() => ({
   toDrizzleBuilder,
 }))();
 
-/** Encoded carrier represented by a SQLite descriptor. */
-/** @internal */
+/**
+ * Encoded carrier represented by a SQLite descriptor.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type CarrierOf<C extends Spec> =
   C extends Text<infer Mode>
     ? Mode extends "json"
@@ -418,31 +545,65 @@ const carrierTag = (spec: Spec): CarrierTag =>
     numeric: ({ mode }): CarrierTag => mode,
   });
 
-/** SQLite storage identity used by foreign-key compatibility checks. */
-/** @internal */
+/**
+ * SQLite storage identity used by foreign-key compatibility checks.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Dimensions extends 0 ? C["ident"] : never;
 
-/** @internal */
+/**
+ * Internal type-level shape `ArrayCarrier`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> = Dimensions extends 0 ? Carrier : never;
 
-/** @internal */
+/**
+ * Internal helper `storageIdent`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function storageIdent<C extends Spec, Dimensions extends ArrayDimension>(
   spec: C,
   dimensions: Dimensions
 ): StorageIdent<C, Dimensions>;
-/** @internal */
+/**
+ * Internal helper `storageIdent`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function storageIdent(spec: Spec, dimensions: ArrayDimension): string {
   if (dimensions !== 0) return invariant("SQLite storage identities cannot carry array dimensions.");
   return spec.ident;
 }
 
-/** Runtime carrier witness used by foreign-key compatibility checks. */
-/** @internal */
+/**
+ * Runtime carrier witness used by foreign-key compatibility checks.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Carrier {
   readonly dimensions: 0;
   readonly tag: CarrierTag;
 }
-/** @internal */
+/**
+ * Internal helper `carrier`.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => {
   if (dimensions !== 0) return invariant("SQLite carriers cannot carry array dimensions.");
   return { tag: carrierTag(spec), dimensions };

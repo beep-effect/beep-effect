@@ -19,8 +19,13 @@ import type { AnyRelation, RelationsBuilder, RelationsBuilderConfig, Schema } fr
 import type * as Meta from "./Meta.ts";
 import type { Dialect } from "./names.ts";
 
-/** Resolved directed foreign-key edge used during assembly. */
-/** @internal */
+/**
+ * Resolved directed foreign-key edge used during assembly.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Edge {
   readonly optional: boolean;
   readonly reference: Meta.References;
@@ -31,16 +36,26 @@ export interface Edge {
   readonly targetKey: string;
 }
 
-/** Two foreign-key edges forming a narrow junction table. */
-/** @internal */
+/**
+ * Two foreign-key edges forming a narrow junction table.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface Junction {
   readonly key: string;
   readonly left: Edge;
   readonly right: Edge;
 }
 
-/** Derive a forward relation name from an id field. */
-/** @internal */
+/**
+ * Derive a forward relation name from an id field.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export const relationName = (fieldName: string): string =>
   fieldName.endsWith("Id") ? slice(0, -2)(fieldName) : `${fieldName}Relation`;
 
@@ -74,14 +89,24 @@ interface RelationModel {
   };
 }
 
-/** Model registry consumed by the shared relation assembler. */
-/** @internal */
+/**
+ * Model registry consumed by the shared relation assembler.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface RelationModels {
   readonly [key: string]: RelationModel;
 }
 
-/** Tagged dialect error callback used by the shared relation assembler. */
-/** @internal */
+/**
+ * Tagged dialect error callback used by the shared relation assembler.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type AssemblyFailure = (message: string, sourceTable: string, fieldName: string, targetTable: string) => never;
 
 /**
@@ -191,10 +216,10 @@ const invokeRelationFactory = (
 /**
  * Build the dialect-neutral direct, reverse, and junction relation configuration.
  *
+ * @internal
  * @category constructors
  * @since 0.0.0
  */
-/** @internal */
 export const makeRelationsConfig =
   <Tables extends Schema>(
     models: RelationModels,

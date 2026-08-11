@@ -123,3 +123,32 @@ done, the evidence, what would have prevented it.
   were healthy.
 - **Prevented by:** a preflight that detects unsupported Bun worker
   environments and says so, instead of reporting an empty-but-failing run.
+
+## 2026-08-11 — hosted checks unmasked three locally-green gates
+
+- **Doing:** first hosted run of the P1 PR after six green-converging local
+  verify rounds.
+- **Evidence:** (1) `check:tsgo:tests` flagged TS377112 in a member test that
+  every local lane had passed; (2) the root docgen metadata check reported 189
+  member exports missing metadata — locally the member's gitignored
+  `.beep/docgen/proof.json` let the check skip raw analysis, and the raw
+  parser reads only the second block of the split `/** doc */` +
+  `/** @internal */` pattern; (3) the coverage lane runs Vitest on Node, where
+  the `Bun.build` bundle-isolation test throws instead of skipping. All three
+  were reproduced locally only after deleting the proof manifest / switching
+  runtime.
+- **Prevented by:** a verify mode that deletes local proof manifests (or a CI
+  parity flag) so "green local" can't depend on artifacts CI never sees, and
+  runtime guards on Bun-only tests as a default authoring pattern.
+
+## 2026-08-11 — bun global cache corruption spliced foreign bytes into effect
+
+- **Doing:** cold member test typecheck between hosted-failure fixes.
+- **Evidence:** `node_modules/effect/dist/Schema.d.ts:9424` contained a
+  spliced `"grounding_progress"` string (TS1003 parse error); reinstalling
+  relinked the same corrupt bytes from the bun global cache; `bun pm cache rm`
+  plus re-fetch restored the true file. CI was unaffected (fresh installs),
+  proving local-only corruption.
+- **Prevented by:** nothing repo-side — recorded so the failure signature
+  (parse errors inside a dependency's dist with nonsense tokens) maps to
+  "purge the bun cache" instead of an upstream bug hunt.
