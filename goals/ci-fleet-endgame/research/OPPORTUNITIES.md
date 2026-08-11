@@ -192,3 +192,31 @@
   regresses, the agent needed IMDS at runtime and the rule must move to a
   post-agent-start hook or a path-scoped local proxy. Do not flip the
   heavy-lane cutover until Gate E passes.
+
+## The host IMDS DROP starved the runner agent — deployed and rolled back same day
+
+- **Work:** P2 deploy (PR #660) — `pulumi up` of the 64 GB types + the CSF-003
+  host IMDS `iptables` OWNER-match DROP, then the Gate E probe.
+- **What happened:** the DROP keys on the `ec2-user` uid, but `runner_run_as`
+  is `ec2-user` too, so the *agent* is that uid. The shadow worker booted on a
+  64 GB `m7a.4xlarge`, fetched its SSM/JIT config as root (root IMDS still
+  worked), then `runner-start-failed with exit code 1` when the agent started
+  as `ec2-user`. It never registered; the Gate E job hung queued until the
+  instance self-terminated. Confirmed from `ec2:GetConsoleOutput`: iptables-nft
+  installed at boot, then the runner start failed as ec2-user.
+- **Recovery:** cancelled the stuck run, rolled back ONLY `userdata_post_install`
+  via a targeted `pulumi up` (kept the 64 GB types), and a plain shadow probe
+  confirmed the fleet registered and ran again.
+- **Why it wasn't caught earlier:** it is a runtime property — the code
+  compiles, tests pass, and the canonical github-aws-runners uid-DROP pattern
+  looks right on paper. Only a live boot on the shadow label exposes that the
+  agent shares the job uid. This is exactly why Gate E gates the deploy, and
+  why "job pickup still works" is its first criterion.
+- **Proposal / rework:** a boot-time firewall rule is the wrong shape when the
+  agent and jobs share a uid. Move the DROP to a per-job
+  `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook (runs after the agent started the job,
+  before the job's steps, as the runner user via sudo), so agent start-up is
+  untouched while job steps are blocked. Re-validate through Gate E — including
+  the token-PUT probe and role-minimality enumeration — before any redeploy.
+  Until then, main must NOT carry an active `userdata_post_install` DROP, or a
+  redeploy re-breaks the fleet.
