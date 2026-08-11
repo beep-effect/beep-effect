@@ -509,9 +509,11 @@ export class CiFleetController extends pulumi.ComponentResource {
         runners_lambda_zip: args.config.runnersLambdaZip,
         // Concurrency cap, not a budget: each ephemeral VM lives exactly one
         // job, so the cap only decides how much of a wave runs in parallel. A
-        // full main wave is seven heavy lanes; ten absorbs an overlapping PR
-        // wave without serializing. Excess jobs retry from SQS every ~30s.
-        runners_maximum_count: 10,
+        // push wave requests seven heavy jobs (five verify lanes plus
+        // jsdoc-ratchet and build) and an overlapping PR wave adds six more —
+        // fourteen covers that worst case with one spare. Excess jobs retry
+        // from SQS every ~30s.
+        runners_maximum_count: 14,
         runners_ssm_housekeeper: {
           config: { dryRun: false, minimumDaysOld: 1 },
           enabled: true,

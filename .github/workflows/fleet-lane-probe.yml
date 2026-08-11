@@ -26,7 +26,7 @@ jobs:
   lane-probe:
     name: Lane Probe (${{ inputs.lane }})
     runs-on: ${{ inputs.target_label }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       PROBE_LANE: ${{ inputs.lane }}
       TURBO_CACHE: "local:rw"
@@ -47,8 +47,14 @@ jobs:
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "true"
+          cache-turbo: "false"
           cache-write: "false"
+
+      - name: Install typos
+        if: inputs.lane == 'lint'
+        uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
+        with:
+          tool: typos-cli@1.44.0
 
       - name: Run verification lane
         shell: bash
