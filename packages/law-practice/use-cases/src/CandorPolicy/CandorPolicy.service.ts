@@ -11,6 +11,7 @@
  */
 
 import { ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-processing/SourceText";
+import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDispositionLifecycle, PatentReference } from "@beep/law-practice-domain";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { Effect, HashSet, Layer } from "effect";
@@ -23,13 +24,31 @@ import { CandorGateVerdict, UncoveredEvent } from "./CandorPolicy.values.ts";
 import type { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
 import type { CandorFilingScope, UncoveredReason } from "./CandorPolicy.values.ts";
 
+const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.service");
+
 /**
  * Whether one event's discovery provenance puts it in the gate's quantified
  * set. Examiner-observed occurrences are recorded and never gate.
  */
 const isAiDiscovered = (event: PatentCitationEvent): boolean => event.discovery.kind === "AiDiscovered";
 
+const IdentifiedPatentReference = PatentReference.pipe(
+  S.check(
+    S.makeFilter((reference) => O.isSome(reference.number), {
+      identifier: $I`IdentifiedPatentReferenceCheck`,
+      title: "Identified patent reference",
+      description: "A patent reference carrying the publication number that identifies its document.",
+      message: "Expected a patent reference with a publication number",
+    })
+  ),
+  $I.annoteSchema("IdentifiedPatentReference", {
+    description: "Patent reference with a present publication number suitable for identity comparisons.",
+  })
+);
+const isIdentifiedPatentReference = S.is(IdentifiedPatentReference);
 const samePatentReference = S.toEquivalence(PatentReference);
+const sameIdentifiedPatentReference = (head: PatentReference, candidate: PatentReference): boolean =>
+  isIdentifiedPatentReference(head) && samePatentReference(head, candidate);
 
 /**
  * Every disposition id that some other recorded disposition retires.
@@ -63,11 +82,13 @@ const effectiveDispositions = (
 /**
  * Derive which events of one source group have been superseded.
  *
- * A supersession link is honoured only when the named event is present in the
- * group, its recorded observation carries exactly the named digest, and both
- * events name the same parsed patent reference. A dangling or mismatched link
- * is neither repaired nor ignored — it simply does not move the head, which is
- * what leaves forked lineage ambiguous.
+ * **Details**
+ *
+ * A supersession link is honoured only when the named event is present, its
+ * observation carries the named digest, and both events have equal parsed
+ * patent references whose head carries a publication number. Empty references,
+ * dangling links, and mismatches do not move the head, leaving lineage
+ * ambiguous rather than releasing an obligation.
  */
 const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
   HashSet.fromIterable(
@@ -80,7 +101,7 @@ const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
               (candidate) =>
                 candidate.id === ref.eventId &&
                 candidate.grounding.source.textDigest === ref.textDigest &&
-                samePatentReference(event.reference, candidate.reference)
+                sameIdentifiedPatentReference(event.reference, candidate.reference)
             ),
             (target) => target.id
           )

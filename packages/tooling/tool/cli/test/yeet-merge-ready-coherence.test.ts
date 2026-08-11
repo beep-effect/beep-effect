@@ -1,10 +1,15 @@
-import { YeetMergeReady, YeetMergeReadyCriteria, YeetVerdictJson } from "@beep/repo-cli/test/Yeet";
+import {
+  YeetMergeReady,
+  YeetMergeReadyCriteria,
+  YeetMergeReadyFromEncoded,
+  YeetVerdictJson,
+} from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReady);
+const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReadyFromEncoded);
 
 // A verdict document whose only variable part is the merge-readiness record, so
 // a decode failure can only come from the cross-field check.
@@ -111,6 +116,34 @@ describe("YeetMergeReady coherence", () => {
 });
 
 describe("YeetVerdictJson merge-readiness coherence", () => {
+  it.effect("downgrades a legacy ready verdict whose criteria omit closeoutRun", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady('{"ready":true,"criteria":{"checksGreen":true,"threadsResolved":true}}')
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.ready).toBe(false);
+      expect(mergeReady.failing).toStrictEqual(O.some("closeout-run"));
+      expect(mergeReady.criteria.closeoutRun).toBe(false);
+    })
+  );
+
+  it.effect("preserves a coherent legacy blocked verdict while defaulting closeoutRun to false", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady(
+          '{"ready":false,"failing":"checks-green","criteria":{"checksGreen":false,"threadsResolved":true}}'
+        )
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.ready).toBe(false);
+      expect(mergeReady.failing).toStrictEqual(O.some("checks-green"));
+      expect(mergeReady.criteria.closeoutRun).toBe(false);
+    })
+  );
+
   it.effect("decodes a verdict carrying a coherent merge-ready record", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
@@ -120,6 +153,17 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       );
 
       expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    })
+  );
+
+  it.effect("round-trips a current verdict byte-identically", () =>
+    Effect.gen(function* () {
+      const json = verdictJsonWithMergeReady(
+        '{"ready":false,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+      );
+      const decoded = yield* YeetVerdictJson.decode(json);
+
+      expect(yield* YeetVerdictJson.encode(decoded)).toBe(json);
     })
   );
 

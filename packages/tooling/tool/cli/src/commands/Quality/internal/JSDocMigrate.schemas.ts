@@ -19,8 +19,8 @@ const isJSDocMigrateProxyHost = S.is(JSDocMigrateProxyHost);
  *
  * **Details**
  *
- * Line breaks and the closing comment delimiter are rejected at decode time,
- * before model output can reach the source rewriter.
+ * ECMAScript line terminators and the closing comment delimiter are rejected
+ * at decode time before model output can reach the source rewriter.
  *
  * **Example** (Reject a comment breakout)
  *
@@ -36,11 +36,11 @@ const isJSDocMigrateProxyHost = S.is(JSDocMigrateProxyHost);
  * @since 0.0.0
  */
 export const JSDocMigrateInlineText = S.NonEmptyString.check(
-  S.isPattern(/^(?!.*\*\/)[^\r\n]+$/u, {
+  S.isPattern(/^(?!.*\*\/)[^\r\n\u2028\u2029]+$/u, {
     identifier: $I`JSDocMigrateInlineTextPattern`,
     title: "JSDoc migration inline text pattern",
-    description: "Non-empty single-line text that cannot terminate a JSDoc comment.",
-    message: "Expected single-line text without a closing comment delimiter",
+    description: "Non-empty text without ECMAScript line terminators or a JSDoc closing delimiter.",
+    message: "Expected text without line terminators or a closing comment delimiter",
   })
 ).pipe(
   $I.annoteSchema("JSDocMigrateInlineText", {

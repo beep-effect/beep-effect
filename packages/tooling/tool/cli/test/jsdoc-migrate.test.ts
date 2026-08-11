@@ -3,6 +3,7 @@ import {
   documentationShapeViolations,
   isPackageSourceFile,
   isPackageSourceFileIncludingGenerated,
+  JSDocMigrateInlineText,
   JSDocMigrateProxyUrl,
   jsdocMigrateBlockStats,
   jsdocMigrateConservationFindings,
@@ -618,6 +619,14 @@ describe("JSDocMigrateApply binding verification", () => {
 
 describe("JSDocMigrateTitles response validation", () => {
   const pending = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+
+  it("rejects every ECMAScript line separator while accepting a safe inline line", () => {
+    const isInlineText = S.is(JSDocMigrateInlineText);
+
+    expect(isInlineText("safe\u2028*/ const injected = true")).toBe(false);
+    expect(isInlineText("safe\u2029*/ const injected = true")).toBe(false);
+    expect(isInlineText("A plain safe line")).toBe(true);
+  });
 
   it("renders a prompt naming every pending anchor", () => {
     const prompt = jsdocMigrateTitlesPrompt(pending);

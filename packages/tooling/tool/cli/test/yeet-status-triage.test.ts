@@ -1,6 +1,7 @@
 import {
   deriveYeetMergeReady,
   GateUnproven,
+  PrCloseoutReport,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   YeetStatusArtifact,
@@ -16,7 +17,11 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const HEAD_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const HEAD_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 // Verbatim shape of a Greptile inline review body: a machine marker, a
 // shields.io severity badge, then the sentence a human actually reads.
@@ -54,11 +59,16 @@ const humanThread = YeetStatusReviewThread.make({
   commentDatabaseId: O.some(2412551123),
 });
 
-const closeoutArtifact = (issueCount: number, greptileScore: O.Option<string>) =>
+const closeoutArtifact = (
+  issueCount: number,
+  greptileScore: O.Option<string>,
+  reviewedHeadSha: O.Option<string> = O.some(HEAD_A)
+) =>
   YeetStatusArtifact.make({
     detail: "PR #560",
     issueCount,
     path: ".beep/yeet/runs/feature/pr-closeout.json",
+    reviewedHeadSha,
     state: "present",
     greptileScore,
   });
@@ -69,11 +79,13 @@ const openRemote = (fields: {
   readonly pendingCheckCount?: number;
   readonly unresolvedReviewThreadCount?: number;
   readonly unresolvedThreads?: O.Option<ReadonlyArray<YeetStatusReviewThread>>;
+  readonly headSha?: O.Option<string>;
 }) =>
   YeetStatusRemote.make({
     available: true,
     checked: true,
     detail: "PR #560 OPEN",
+    headSha: fields.headSha ?? O.some(HEAD_A),
     unresolvedReviewThreadCount: fields.unresolvedReviewThreadCount ?? 0,
     unresolvedThreads: fields.unresolvedThreads ?? O.some(A.empty<YeetStatusReviewThread>()),
     ...(fields.checkCount === undefined ? {} : { checkCount: fields.checkCount }),
@@ -198,6 +210,66 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
     expect(O.map(mergeReady, (value) => value.criteria.threadsResolved)).toStrictEqual(O.some(true));
   });
+
+  it("blocks on closeout-run when the reviewed head no longer matches the remote head", () => {
+    const mergeReady = deriveYeetMergeReady(
+      closeoutArtifact(0, O.some("5/5"), O.some(HEAD_A)),
+      openRemote({
+        checkCount: 24,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        unresolvedReviewThreadCount: 0,
+        headSha: O.some(HEAD_B),
+      })
+    );
+
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+  });
+
+  it("satisfies closeout-run when the reviewed and remote heads match", () => {
+    const mergeReady = deriveYeetMergeReady(
+      closeoutArtifact(0, O.some("5/5"), O.some(HEAD_A)),
+      openRemote({
+        checkCount: 24,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        unresolvedReviewThreadCount: 0,
+        headSha: O.some(HEAD_A),
+      })
+    );
+
+    expect(O.map(mergeReady, (value) => value.criteria.closeoutRun)).toStrictEqual(O.some(true));
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+  });
+
+  it.effect("decodes a legacy headless closeout report and treats it as stale", () =>
+    Effect.gen(function* () {
+      const report = yield* S.decodeUnknownEffect(PrCloseoutReport)({
+        actionableReviewThreadCount: 0,
+        botCommentCount: 0,
+        greptile: {},
+        issueCount: 0,
+        issues: [],
+        prNumber: 560,
+        prUrl: "https://github.com/example/repo/pull/560",
+        retriggeredGreptile: false,
+        schemaVersion: "yeet-pr-closeout/v1",
+      });
+      const mergeReady = deriveYeetMergeReady(
+        YeetStatusArtifact.make({
+          detail: "PR #560",
+          issueCount: report.issueCount,
+          path: "pr-closeout.json",
+          reviewedHeadSha: report.reviewedHeadSha,
+          state: "present",
+        }),
+        openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
+      );
+
+      expect(report.reviewedHeadSha).toStrictEqual(O.none());
+      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+    })
+  );
 
   it("recommends closeout before any remote rerun handoff when its artifact is missing", () => {
     const closeout = YeetStatusArtifact.make({ detail: "missing", path: "pr-closeout.json", state: "missing" });
