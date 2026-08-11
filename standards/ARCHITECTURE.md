@@ -52,6 +52,7 @@ Start with the smallest boundary that owns the meaning:
 | Product language deliberately shared by multiple slices | `shared/*`, after the shared-kernel promotion gate. |
 | External engines, SDKs, services, frameworks, or browser platform wrappers | `drivers/*`. |
 | Domain-agnostic reusable substrate owned by this repo | `foundation/*`, after the specific-home-first routing test. |
+| Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
 | Typed application/runtime configuration contracts | The slice or shared `config` package. |
 | Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
 | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
@@ -163,11 +164,15 @@ Non-slice artifacts are never `misc`.
 - `foundation` owns domain-agnostic reusable substrate
 - `drivers` owns flat repo-level technical boundary wrappers
 - `tooling` owns developer-operational code packages
+- `ecosystem` owns flat publishable libraries authored for external
+  consumption; member `src/` and runtime dependency edges are `@beep/*`-free,
+  and published-package standards supersede repo style laws inside members
+  (see [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md))
 
 Every non-slice artifact declares exactly one family so readers, reviewers, and
 tooling can infer the intended boundary before opening the first file. `kind`
 is required only for families that intentionally declare a kind segment;
-`drivers` remains the flat family exception.
+`drivers` and `ecosystem` remain the flat family exceptions.
 
 `packages/_internal/db-admin` is a narrow durable internal exception for
 repository-owned database migration aggregation and generated migration SQL.
@@ -442,11 +447,12 @@ context.
 
 The canonical non-slice families are:
 
-| Family       | Canonical kinds                                         | Purpose                                           |
-|--------------|---------------------------------------------------------|---------------------------------------------------|
-| `foundation` | `primitive`, `modeling`, `capability`, `ui-system`      | Repo-owned domain-agnostic reusable substrate.    |
-| `drivers`    | flat family; no extra kind segment                      | External engines, SDKs, services, and frameworks. |
-| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`            | Developer-operational code packages.              |
+| Family       | Canonical kinds                                         | Purpose                                                  |
+|--------------|---------------------------------------------------------|----------------------------------------------------------|
+| `foundation` | `primitive`, `modeling`, `capability`, `ui-system`      | Repo-owned domain-agnostic reusable substrate.           |
+| `drivers`    | flat family; no extra kind segment                      | External engines, SDKs, services, and frameworks.        |
+| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`            | Developer-operational code packages.                     |
+| `ecosystem`  | flat family; no extra kind segment                      | Publishable repo-authored libraries for external consumption. |
 
 The `shared` package family is not part of this table. `shared` remains the DDD
 shared kernel and canonical cross-slice slice. `foundation` is not a rename of
@@ -496,6 +502,7 @@ The canonical roots are:
 packages/foundation/<kind>/<name>
 packages/drivers/<name>
 packages/tooling/<kind>/<name>
+packages/ecosystem/<name>
 ```
 
 These roots sit beside slice roots such as `packages/iam/*` and the shared
@@ -507,6 +514,7 @@ Public package names follow the family role:
 foundation -> @beep/<purpose>
 drivers    -> @beep/<driver>
 tooling    -> @beep/repo-<purpose>
+ecosystem  -> @beep/<name> (the npm name; workspace name = published name)
 ```
 
 Examples:
@@ -521,6 +529,7 @@ packages/tooling/tool/cli                 -> @beep/repo-cli
 packages/tooling/library/repo-utils       -> @beep/repo-utils
 packages/tooling/policy-pack/repo-configs -> @beep/repo-configs
 packages/tooling/test-kit/test-utils      -> @beep/test-utils
+packages/ecosystem/effect-drizzle         -> @beep/effect-drizzle
 ```
 
 A shared UI primitives library such as `@beep/ui` is a
@@ -531,8 +540,8 @@ package. It is not a slice kind and not shared-kernel language.
 ### Required Metadata
 
 Every non-slice artifact declares machine-readable family metadata. `kind` is
-required for `foundation` and `tooling`. `drivers` is the explicit flat-family
-exception and omits `kind`.
+required for `foundation` and `tooling`. `drivers` and `ecosystem` are the
+explicit flat-family exceptions and omit `kind`.
 
 Code packages record it in `package.json`:
 
@@ -542,6 +551,15 @@ Code packages record it in `package.json`:
   "beep": {
     "family": "foundation",
     "kind": "modeling"
+  }
+}
+```
+
+```json
+{
+  "name": "@beep/effect-drizzle",
+  "beep": {
+    "family": "ecosystem"
   }
 }
 ```
@@ -612,6 +630,19 @@ the driver dependency and project reference directly, keep product semantics out
 of the driver, and keep reusable runtime substrate in `foundation` instead of
 using tooling as a backdoor dependency root.
 
+`ecosystem` inverts the polarity instead of layering:
+
+- member `src/` and runtime manifest edges (`dependencies`,
+  `peerDependencies`) carry no `@beep/*` dependency at all — not even
+  `foundation`; runtime dependencies are peers on the member's host libraries
+- member tests and `devDependencies` may use any repo package (test kits,
+  harnesses, fixtures)
+- any repo package that could legally depend on the member's published npm
+  artifact may depend on the workspace member the same way; the member is
+  consumed in-repo like an external library
+- the family charter, artifact policy, and gate profile live in
+  [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md)
+
 ### Slice Consumption Rules
 
 Slices and the shared kernel may consume `foundation`, but only in boundary-
@@ -636,8 +667,9 @@ appropriate ways:
   of acyclic ceiling that drivers respect among themselves, applied to slices.
 - Product slices and shared-kernel packages do not depend on
   `packages/tooling/*/*`.
-- `foundation`, `drivers`, and `tooling` do not depend on product slices or the
-  shared kernel.
+- `foundation`, `drivers`, `tooling`, and `ecosystem` do not depend on product
+  slices or the shared kernel; `ecosystem` member `src/` additionally depends
+  on no `@beep/*` package at all.
 
 ### Canonical File-Role Anchors
 

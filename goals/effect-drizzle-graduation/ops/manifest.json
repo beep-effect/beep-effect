@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-drizzle-graduation",
+    "title": "Effect-Drizzle Graduation",
+    "status": "active",
+    "created": "2026-08-10",
+    "updated": "2026-08-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-drizzle-graduation",
+  "lifecycle": "active",
+  "mission": "Graduate scratchpad/bsl into packages/ecosystem/effect-drizzle: charter the ecosystem package family in the architecture standards (P0 docs PR); move the module with the @effect/vitest harness, the member tstyche lane, and the inverted-import gate (P1); integrate family CI — bundle probe and member-lane wiring (P2).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "scratchpad/bsl",
+    "graduated": "2026-08-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "standards/architecture/07-non-slice-families.md",
+    "standards/architecture/14-ecosystem-packages.md",
+    "goals/effect-drizzle-graduation/README.md",
+    "goals/effect-drizzle-graduation/SPEC.md",
+    "goals/effect-drizzle-graduation/PLAN.md",
+    "goals/effect-drizzle-graduation/GOAL.md",
+    "goals/effect-drizzle-graduation/research/SOURCES.md",
+    "scratchpad/bsl/research/graduation-decisions.md",
+    "scratchpad/bsl/research/publishing-standards.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-drizzle-graduation/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Doctrine: ecosystem family docs PR",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Package creation: move, harness, gates PR",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Quality integration + closeout PR",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/effect-drizzle-graduation/GOAL.md)\" -le 4000",
+    "jq . goals/effect-drizzle-graduation/ops/manifest.json",
+    "rg -n \"effect-drizzle-graduation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/effect-drizzle-graduation",
+    "git diff --check -- goals/effect-drizzle-graduation",
+    "bun run beep goals index --check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (beep adoption of the package is a FUTURE packet, not this one).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

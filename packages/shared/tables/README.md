@@ -37,7 +37,12 @@ database access remains banned.
 | `DbSchema` | Metadata-only aggregate for exported shared tables. |
 | `@beep/shared-tables/table/Table` | Compatibility subpath re-exporting `@beep/drizzle` `EntityTable` type helpers. |
 
-Generic table projection lives in `@beep/drizzle`. Shared table
+Generic table projection's target owner is `@beep/effect-drizzle` (member
+root `packages/ecosystem/effect-drizzle/**`, landing via
+`goals/effect-drizzle-graduation` P1; graduated from `scratchpad/bsl`). Until
+that move ships, `@beep/drizzle` remains the current in-tree projection
+owner — and execution (the SQL service, transactions, error normalization)
+stays in `@beep/drizzle` permanently. Shared table
 packages publish concrete shared product table metadata; they do not own a
 separate SQL DSL or a domain-to-persistence mapping layer.
 

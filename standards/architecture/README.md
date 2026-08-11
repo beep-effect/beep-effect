@@ -78,13 +78,14 @@ back here for the rationale once the shape clicks.
 | [`04-rich-domain-model.md`](04-rich-domain-model.md)                 | Why the repo prefers hybrid rich domain models over anemic data bags.          |
 | [`05-layer-composition.md`](05-layer-composition.md)                 | Why slice-local Layer composition replaces runtime God Layers.                 |
 | [`06-configuration-boundaries.md`](06-configuration-boundaries.md)   | Why config is a typed contract package, not env access or a constants dump.    |
-| [`07-non-slice-families.md`](07-non-slice-families.md)               | Why foundation, drivers, and tooling need explicit topology grammar.           |
+| [`07-non-slice-families.md`](07-non-slice-families.md)               | Why non-slice families (foundation, drivers, tooling, ecosystem) need explicit topology grammar. |
 | [`08-testing.md`](./08-testing.md)                                   | Testing strategy: domain in isolation, use-case stubs, fixture ownership, contract tests, slice-isolation guarantee. |
 | [`09-errors-across-boundaries.md`](./09-errors-across-boundaries.md) | Error translation across hexagonal boundaries: who translates, where, what the function looks like. |
 | [`10-cross-slice-coordination.md`](./10-cross-slice-coordination.md) | Workflow / saga / process-manager governance; future `shared/use-cases` event contracts; God Process Manager anti-pattern. |
 | [`11-evolution-and-deprecation.md`](./11-evolution-and-deprecation.md) | Slice retirement, future `shared/use-cases` versioning, port deprecation, feature-flag lifetime. |
 | [`12-observability.md`](./12-observability.md)                       | Span naming, attribute conventions, logging vs tracing vs Console; slice boundaries as span boundaries. |
 | [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md) | Scratchpad lane, minimum-viable-slice walkthrough, first cross-slice promotion, slice-path reading guide. |
+| [`14-ecosystem-packages.md`](./14-ecosystem-packages.md) | Why publishable repo-authored libraries get their own flat family: inverted `@beep/*` gate, style-law scoping, artifact/peer policy, release lane, gate profile, promotion/demotion. |
 
 ## Known Unknowns
 
