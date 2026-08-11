@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey } from "effect";
 import * as S from "effect/Schema";
@@ -242,7 +242,7 @@ export const RunStatus = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RunStatus", {
     description: "Discriminated extraction-run lifecycle with variant-specific timing and failure data.",
-    toArbitrary: () => () =>
+    toArbitrary: () => (fc) =>
       S.toArbitrary(
         S.TaggedUnion({
           Pending: {},
@@ -250,7 +250,7 @@ export const RunStatus = S.TaggedUnion({
           Complete: { completedAt: S.DateTimeUtcFromString },
           Failed: { failedAt: S.DateTimeUtcFromString, error: AuditError },
         })
-      ),
+      )(fc),
   })
 );
 

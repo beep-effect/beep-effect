@@ -8,7 +8,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
 import { HttpsUrl as CanonicalHttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Match } from "effect";
@@ -32,7 +32,7 @@ const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttp
   S.is(CanonicalHttpsUrl)(input)
 ).annotate({
   toArbitrary: () => (fc) =>
-    fc.uuid().map((id) => S.decodeUnknownSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
+    fc.uuid().map((id) => S.decodeSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
 });
 
 /**
@@ -245,7 +245,7 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
  * @since 0.0.0
  */
 export const ContentHash = Sha256Hex.annotate({
-  toArbitrary: () => () => S.toArbitrary(Sha256Hex),
+  toArbitrary: () => S.toArbitrary(Sha256Hex),
 }).pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
@@ -302,7 +302,7 @@ export type ContentHash = typeof ContentHash.Type;
  * @since 0.0.0
  */
 export const IdempotencyKey = Sha256Hex.annotate({
-  toArbitrary: () => () => S.toArbitrary(Sha256Hex),
+  toArbitrary: () => S.toArbitrary(Sha256Hex),
 }).pipe(
   S.brand("IdempotencyKey"),
   $I.annoteSchema("IdempotencyKey", {
@@ -448,7 +448,7 @@ const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]
 const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriEncoded)(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(GcsBucket), S.toArbitrary(GcsObjectName))
+      .tuple(S.toArbitrary(GcsBucket)(fc), S.toArbitrary(GcsObjectName)(fc))
       .map(([bucket, objectName]): BrandedGcsUri => `gs://${bucket}/${objectName}` as BrandedGcsUri),
 });
 
@@ -759,7 +759,7 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
   S.annotate({
     toArbitrary: () => (fc) =>
       fc
-        .tuple(S.toArbitrary(Namespace), S.toArbitrary(OntologyName), S.toArbitrary(ContentHash))
+        .tuple(S.toArbitrary(Namespace)(fc), S.toArbitrary(OntologyName)(fc), S.toArbitrary(ContentHash)(fc))
         .map(([namespace, name, hash]): `${string}/${string}@${string}` => `${namespace}/${name}@${hash}`),
   }),
   S.brand("OntologyVersion"),
@@ -929,7 +929,7 @@ export type ChunkId = typeof ChunkId.Type;
  * @since 0.0.0
  */
 export const ExtractionRunId = DocumentId.annotate({
-  toArbitrary: () => () => S.toArbitrary(DocumentId),
+  toArbitrary: () => S.toArbitrary(DocumentId),
 }).pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",

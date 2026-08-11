@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
@@ -297,7 +297,7 @@ const AuthErrorDefinition = S.Union([
 export const AuthError = AuthErrorDefinition.pipe(
   $I.annoteSchema("AuthError", {
     description: "Exhaustive tagged union of ontology transport authentication failures.",
-    toArbitrary: () => () => S.toArbitrary(AuthErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AuthErrorDefinition),
   })
 );
 

@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { FilePath, NonNegativeInt, SchemaUtils, TaggedErrorClass, URLStr } from "@beep/schema";
@@ -122,7 +122,7 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(ErrorUrl)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorUrl).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorUrl)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -209,7 +209,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(ErrorIri)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorIri).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorIri)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -345,7 +345,7 @@ export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -394,7 +394,7 @@ export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -444,7 +444,7 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -545,7 +545,7 @@ export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -636,7 +636,7 @@ export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -683,7 +683,7 @@ type OntologyErrorCodecStatics<Self> = {
  *
  * @example
  * ```ts
- * import { $ScratchpadId } from "@beep/identity/packages"
+ * import { $ScratchpadId } from "@beep/identity"
  * import * as S from "effect/Schema"
  * import { makeOntologyErrorClass } from "@effect-ontology/Error/Base.ts"
  *
@@ -873,7 +873,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-    toArbitrary: () => () => S.toArbitrary(BaseErrorDefinition),
+    toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 

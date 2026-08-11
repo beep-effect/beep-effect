@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorIri } from "./Base.ts";
@@ -266,7 +266,7 @@ const ShaclErrorDefinition = S.Union([
 export const ShaclError = ShaclErrorDefinition.pipe(
   $I.annoteSchema("ShaclError", {
     description: "Exhaustive tagged union of SHACL validation lifecycle failures.",
-    toArbitrary: () => () => S.toArbitrary(ShaclErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ShaclErrorDefinition),
   })
 );
 

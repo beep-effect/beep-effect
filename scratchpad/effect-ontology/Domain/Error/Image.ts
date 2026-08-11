@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as Duration from "effect/Duration";
@@ -285,7 +285,7 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-    toArbitrary: () => () => S.toArbitrary(ImageErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 

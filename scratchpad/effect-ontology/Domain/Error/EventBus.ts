@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
@@ -206,7 +206,7 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
 export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
   $I.annoteSchema("AnyEventBusError", {
     description: "Exhaustive tagged union of event-bus, Pub/Sub, and dead-letter failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyEventBusErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
   })
 );
 

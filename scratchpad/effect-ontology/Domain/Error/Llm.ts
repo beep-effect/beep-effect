@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
@@ -242,7 +242,7 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 export const AnyLlmError = AnyLlmErrorDefinition.pipe(
   $I.annoteSchema("AnyLlmError", {
     description: "Exhaustive tagged union of LLM operation failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyLlmErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyLlmErrorDefinition),
   })
 );
 

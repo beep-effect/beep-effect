@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import * as O from "effect/Option";
@@ -214,7 +214,7 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 export const CircuitError = CircuitErrorDefinition.pipe(
   $I.annoteSchema("CircuitError", {
     description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
-    toArbitrary: () => () => S.toArbitrary(CircuitErrorDefinition),
+    toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
   })
 );
 

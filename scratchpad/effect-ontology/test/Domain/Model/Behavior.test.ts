@@ -32,12 +32,12 @@ const now = DateTime.makeUnsafe("2026-07-25T12:00:00.000Z");
 
 describe("effect-ontology model behavior", () => {
   it("rejects reversed provenance and event intervals with informative checks", () => {
-    const span = S.decodeUnknownResult(EvidenceSpan)({
+    const span = S.decodeResult(EvidenceSpan)({
       text: "Seattle",
       startChar: 10,
       endChar: 3,
     });
-    const interval = S.decodeUnknownResult(EventInterval)({
+    const interval = S.decodeResult(EventInterval)({
       start: "2026-07-25T12:00:01.000Z",
       end: "2026-07-25T12:00:00.000Z",
     });

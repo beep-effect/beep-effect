@@ -6,7 +6,7 @@ import { LocalName, makeBlankNode, makeLiteral, makeNamedNode, Triple } from "..
 describe("effect-ontology RDF types", () => {
   it("derives arbitraries whose values satisfy local schemas", () => {
     for (const schema of [LocalName, Triple]) {
-      const arbitrary = S.toArbitrary(schema);
+      const arbitrary = S.toArbitrary(schema)(fc);
 
       fc.assert(
         fc.property(arbitrary, (value) => {

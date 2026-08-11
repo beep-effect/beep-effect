@@ -18,19 +18,19 @@ const contentHash = ContentHash.make("a".repeat(64));
 
 describe("effect-ontology schema-owned domain behavior", () => {
   it("enforces adaptive chunking and preprocessing bounds at decode time", () => {
-    const valid = S.decodeUnknownResult(ChunkingParams)({
+    const valid = S.decodeResult(ChunkingParams)({
       chunkSize: 500,
       overlapSentences: 2,
     });
-    const invalidSize = S.decodeUnknownResult(ChunkingParams)({
+    const invalidSize = S.decodeResult(ChunkingParams)({
       chunkSize: 0,
       overlapSentences: 2,
     });
-    const invalidOverlap = S.decodeUnknownResult(ChunkingParams)({
+    const invalidOverlap = S.decodeResult(ChunkingParams)({
       chunkSize: 500,
       overlapSentences: 11,
     });
-    const invalidBatchSize = S.decodeUnknownResult(PreprocessingOptions)({
+    const invalidBatchSize = S.decodeResult(PreprocessingOptions)({
       classificationBatchSize: 51,
     });
 
@@ -41,8 +41,8 @@ describe("effect-ontology schema-owned domain behavior", () => {
   });
 
   it("applies complete preprocessing defaults and Option-normalizes overrides", () => {
-    const defaults = S.decodeUnknownSync(PreprocessingOptions)({});
-    const override = S.decodeUnknownSync(PreprocessingOptions)({
+    const defaults = S.decodeSync(PreprocessingOptions)({});
+    const override = S.decodeSync(PreprocessingOptions)({
       chunkingStrategyOverride: "section_aware",
     });
 
@@ -80,7 +80,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
       sourceUri: GcsUri.fromUnknown("gs://beep-input/documents/report.txt"),
       contentType: MimeType.make("text/plain"),
       sizeBytes: NonNegativeInt.make(4_000),
-      preprocessedAt: S.decodeUnknownSync(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z"),
+      preprocessedAt: S.decodeSync(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z"),
     });
 
     expect(metadata.documentType).toBe("unknown");
@@ -103,7 +103,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
     const metadata = JobMetadataSchema.fromUnknown({
       id: BackgroundJobId.fromContentHash(contentHash),
     });
-    const reversed = S.decodeUnknownResult(TextSpan)({
+    const reversed = S.decodeResult(TextSpan)({
       start: 4,
       end: 3,
       text: "x",

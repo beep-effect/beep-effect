@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
@@ -144,8 +144,8 @@ const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof Timeli
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
         TimelineRangeFields.make({
-          from: S.decodeUnknownSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeUnknownSync(S.DateTimeUtcFromMillis)(from + duration),
+          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
+          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
         })
       ),
 });
@@ -594,7 +594,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
 export const ClaimConflict = ClaimConflictDefinition.pipe(
   $I.annoteSchema("ClaimConflict", {
     description: "Tagged claim conflict with status-specific nested resolution data.",
-    toArbitrary: () => () => S.toArbitrary(ClaimConflictDefinition),
+    toArbitrary: () => S.toArbitrary(ClaimConflictDefinition),
   })
 );
 

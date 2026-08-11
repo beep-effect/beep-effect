@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
 
@@ -131,7 +131,7 @@ const SparqlErrorDefinition = S.Union([SparqlExecutionError, SparqlLoadError]).p
 export const SparqlError = SparqlErrorDefinition.pipe(
   $I.annoteSchema("SparqlError", {
     description: "Exhaustive tagged union of SPARQL failures.",
-    toArbitrary: () => () => S.toArbitrary(SparqlErrorDefinition),
+    toArbitrary: () => S.toArbitrary(SparqlErrorDefinition),
   })
 );
 

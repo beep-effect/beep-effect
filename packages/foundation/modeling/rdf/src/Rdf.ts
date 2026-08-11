@@ -950,7 +950,7 @@ export const makeBlankNode = (value: string): BlankNode =>
  */
 export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiteralOptions`)(
   {
-    language: S.optional(S.String),
+    language: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("MakeLiteralOptions", {
     description: "Optional language settings for makeLiteral.",
@@ -959,7 +959,7 @@ export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiter
 
 const isMakeLiteralDataFirst = (args: IArguments): boolean => args.length >= 2 && P.isString(args[1]);
 
-const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptions = {}): Literal =>
+const makeLiteralInternal = (value: string, datatype: string, options = MakeLiteralOptions.make({})): Literal =>
   pipe(
     Literal.decodeUnknownResult({
       termType: "Literal",
@@ -1016,7 +1016,7 @@ export const makeLiteral: {
 export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions`)(
   {
     object: ObjectTerm,
-    graph: S.optional(GraphTerm),
+    graph: GraphTerm.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("MakeQuadOptions", {
     description: "Object and optional graph settings for makeQuad.",
@@ -1059,15 +1059,16 @@ export const makeQuad: {
   (subject: Subject, predicate: NamedNode, options: MakeQuadOptions): Quad;
   (predicate: NamedNode, object: ObjectTerm): (subject: Subject) => Quad;
   (predicate: NamedNode, options: MakeQuadOptions): (subject: Subject) => Quad;
-} = dual(3, (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptions): Quad => {
-  const options = isMakeQuadOptions(input) ? input : { object: input };
-  return Quad.make({
-    subject,
-    predicate,
-    object: options.object,
-    graph: options.graph ?? makeDefaultGraph(),
-  });
-});
+} = dual(
+  3,
+  (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptions): Quad =>
+    Quad.make({
+      subject,
+      predicate,
+      object: isMakeQuadOptions(input) ? input.object : input,
+      graph: isMakeQuadOptions(input) ? O.getOrElse(input.graph, makeDefaultGraph) : makeDefaultGraph(),
+    })
+);
 
 /**
  * Build a dataset from quads.

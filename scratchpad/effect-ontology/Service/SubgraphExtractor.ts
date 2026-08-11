@@ -1,0 +1,304 @@
+/**
+ * Service: Subgraph Extractor
+ *
+ * Extracts relevant subgraphs from knowledge graphs for GraphRAG context.
+ * Supports N-hop traversal from seed entities and relevance-based extraction.
+ *
+ * @since 2.0.0
+ * @module Service/SubgraphExtractor
+ */
+
+import { Effect, HashSet, Context, Layer } from "effect"
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts"
+import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts"
+import { EntityIndex, type FindSimilarOptions } from "./EntityIndex.ts"
+import { $ScratchpadId } from "@beep/identity";
+const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
+
+/**
+ * Extracted subgraph containing nodes and edges
+ *
+ * @since 2.0.0
+ * @category Types
+ */
+export interface Subgraph {
+  /** Entities in the subgraph */
+  readonly nodes: ReadonlyArray<Entity>
+  /** Relations in the subgraph */
+  readonly edges: ReadonlyArray<Relation>
+  /** Original seed entity IDs */
+  readonly centerNodes: ReadonlyArray<string>
+  /** Actual traversal depth used */
+  readonly depth: number
+}
+
+/**
+ * Options for N-hop extraction
+ *
+ * @since 2.0.0
+ * @category Types
+ */
+export interface ExtractOptions {
+  /** Maximum number of nodes to include (default: unlimited) */
+  readonly maxNodes?: number
+  /** Whether to follow outgoing relations (default: true) */
+  readonly followOutgoing?: boolean
+  /** Whether to follow incoming relations (default: true) */
+  readonly followIncoming?: boolean
+}
+
+/**
+ * Options for relevance-based extraction
+ *
+ * @since 2.0.0
+ * @category Types
+ */
+export interface ExtractRelevantOptions {
+  /** Number of seed entities to find (default: 5) */
+  readonly topK?: number
+  /** Number of hops to traverse from seeds (default: 1) */
+  readonly hops?: number
+  /** Minimum similarity score for seed selection (default: 0.3) */
+  readonly minSimilarity?: number
+  /** Type filter for seed entities */
+  readonly filterTypes?: ReadonlyArray<string>
+}
+
+/**
+ * SubgraphExtractor service interface
+ *
+ * @since 2.0.0
+ * @category Service
+ */
+export interface SubgraphExtractorService {
+  /**
+   * Extract subgraph around seed entities using N-hop traversal
+   *
+   * @param graph - Source knowledge graph
+   * @param seeds - Entity IDs to start traversal from
+   * @param hops - Number of hops to traverse (0 = seeds only)
+   * @param options - Optional extraction settings
+   */
+  readonly extract: (
+    graph: KnowledgeGraph,
+    seeds: ReadonlyArray<string>,
+    hops: number,
+    options?: ExtractOptions
+  ) => Effect.Effect<Subgraph>
+
+  /**
+   * Extract subgraph based on query relevance
+   *
+   * Uses EntityIndex to find similar entities, then extracts N-hop subgraph
+   *
+   * @param graph - Source knowledge graph (must be indexed first)
+   * @param query - Query string for relevance matching
+   * @param maxNodes - Maximum nodes to include in result
+   * @param options - Optional relevance extraction settings
+   */
+  readonly extractRelevant: (
+    graph: KnowledgeGraph,
+    query: string,
+    maxNodes: number,
+    options?: ExtractRelevantOptions
+  ) => Effect.Effect<Subgraph, AnyEmbeddingError>
+}
+
+/**
+ * Empty subgraph constant
+ */
+const emptySubgraph = (
+  centerNodes: ReadonlyArray<string>,
+  depth: number
+): Subgraph => ({
+  nodes: [],
+  edges: [],
+  centerNodes,
+  depth
+})
+
+/**
+ * SubgraphExtractor - Extracts relevant subgraphs for GraphRAG context
+ *
+ * @since 2.0.0
+ * @category Service
+ */
+export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()(
+  $I`SubgraphExtractor`,
+  {
+    make: Effect.gen(function*() {
+      const entityIndex = yield* EntityIndex
+
+      /**
+       * Perform N-hop BFS traversal from seed entities
+       */
+      const traverseHops = (
+        graph: KnowledgeGraph,
+        seeds: ReadonlyArray<string>,
+        hops: number,
+        options: ExtractOptions
+      ): { nodes: HashSet.HashSet<string>; edges: HashSet.HashSet<Relation> } => {
+        const followOutgoing = options.followOutgoing ?? true
+        const followIncoming = options.followIncoming ?? true
+        const maxNodes = options.maxNodes ?? Infinity
+
+        // Track visited nodes and collected edges
+        let visitedNodes = HashSet.fromIterable(seeds)
+        let collectedEdges = HashSet.empty<Relation>()
+
+        // Current frontier for BFS
+        let frontier = HashSet.fromIterable(seeds)
+
+        // Perform N hops
+        for (let hop = 0; hop < hops && HashSet.size(visitedNodes) < maxNodes; hop++) {
+          let nextFrontier = HashSet.empty<string>()
+
+          for (const entityId of frontier) {
+            // Check node limit
+            if (HashSet.size(visitedNodes) >= maxNodes) break
+
+            // Get outgoing relations
+            if (followOutgoing) {
+              const outgoing = graph.getRelationsFrom(entityId)
+              for (const rel of outgoing) {
+                collectedEdges = HashSet.add(collectedEdges, rel)
+
+                // If object is an entity reference, add to next frontier
+                if (rel.isEntityReference && typeof rel.object === "string") {
+                  if (!HashSet.has(visitedNodes, rel.object)) {
+                    nextFrontier = HashSet.add(nextFrontier, rel.object)
+                  }
+                }
+              }
+            }
+
+            // Get incoming relations
+            if (followIncoming) {
+              const incoming = graph.getRelationsTo(entityId)
+              for (const rel of incoming) {
+                collectedEdges = HashSet.add(collectedEdges, rel)
+
+                // Add subject to next frontier if not visited
+                if (!HashSet.has(visitedNodes, rel.subjectId)) {
+                  nextFrontier = HashSet.add(nextFrontier, rel.subjectId)
+                }
+              }
+            }
+          }
+
+          // Add next frontier to visited (respecting max nodes)
+          for (const nodeId of nextFrontier) {
+            if (HashSet.size(visitedNodes) >= maxNodes) break
+            visitedNodes = HashSet.add(visitedNodes, nodeId)
+          }
+
+          frontier = nextFrontier
+        }
+
+        return { nodes: visitedNodes, edges: collectedEdges }
+      }
+
+      /**
+       * Build subgraph from node and edge sets
+       */
+      const buildSubgraph = (
+        graph: KnowledgeGraph,
+        nodeIds: HashSet.HashSet<string>,
+        edges: HashSet.HashSet<Relation>,
+        centerNodes: ReadonlyArray<string>,
+        depth: number
+      ): Subgraph => {
+        // Collect entities
+        const nodes: Array<Entity> = []
+        for (const nodeId of nodeIds) {
+          const entity = graph.getEntity(nodeId)
+          if (entity) {
+            nodes.push(entity)
+          }
+        }
+
+        // Filter edges to only those with both endpoints in subgraph
+        const filteredEdges: Array<Relation> = []
+        for (const edge of edges) {
+          const hasSubject = HashSet.has(nodeIds, edge.subjectId)
+          const hasObject = !edge.isEntityReference ||
+            (typeof edge.object === "string" && HashSet.has(nodeIds, edge.object))
+
+          if (hasSubject && hasObject) {
+            filteredEdges.push(edge)
+          }
+        }
+
+        return {
+          nodes,
+          edges: filteredEdges,
+          centerNodes,
+          depth
+        }
+      }
+
+      const service: SubgraphExtractorService = {
+        extract: (graph, seeds, hops, options = {}) =>
+          Effect.sync(() => {
+            // Validate seeds exist in graph
+            const validSeeds = seeds.filter((id) => graph.getEntity(id) !== undefined)
+
+            if (validSeeds.length === 0) {
+              return emptySubgraph(seeds, 0)
+            }
+
+            // Perform traversal
+            const { edges, nodes } = traverseHops(graph, validSeeds, hops, options)
+
+            // Build and return subgraph
+            return buildSubgraph(graph, nodes, edges, validSeeds, hops)
+          }),
+
+        extractRelevant: (graph, query, maxNodes, options = {}) =>
+          Effect.gen(function*() {
+            const topK = options.topK ?? 5
+            const hops = options.hops ?? 1
+            const minSimilarity = options.minSimilarity ?? 0.3
+
+            // First, index the graph
+            yield* entityIndex.index(graph)
+
+            // Find similar entities
+            const findOptions: FindSimilarOptions = {
+              minScore: minSimilarity,
+              filterTypes: options.filterTypes
+            }
+
+            const similar = yield* entityIndex.findSimilar(query, topK, findOptions)
+
+            if (similar.length === 0) {
+              return emptySubgraph([], 0)
+            }
+
+            // Extract seeds from similar entities
+            const seeds = similar.map((s) => s.entity.id)
+
+            // Perform N-hop extraction with node limit
+            const { edges, nodes } = traverseHops(graph, seeds, hops, { maxNodes })
+
+            // Build subgraph
+            return buildSubgraph(graph, nodes, edges, seeds, hops)
+          })
+      }
+
+      return service
+    }),
+  }
+) {
+    static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([EntityIndex.Default]));
+}
+
+/**
+ * Default SubgraphExtractor layer
+ *
+ * Requires EmbeddingService dependencies to be provided.
+ *
+ * @since 2.0.0
+ * @category Layers
+ */
+export const SubgraphExtractorDefault = SubgraphExtractor.Default

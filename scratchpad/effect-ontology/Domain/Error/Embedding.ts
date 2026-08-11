@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import {
@@ -337,7 +337,7 @@ const AnyEmbeddingErrorDefinition = S.Union([
 export const AnyEmbeddingError = AnyEmbeddingErrorDefinition.pipe(
   $I.annoteSchema("AnyEmbeddingError", {
     description: "Exhaustive tagged union of embedding-operation failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyEmbeddingErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyEmbeddingErrorDefinition),
   })
 );
 

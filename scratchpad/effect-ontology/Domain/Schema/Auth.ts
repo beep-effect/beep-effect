@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 
@@ -13,7 +13,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Auth");
 const TicketTokenDefinition = S.NonEmptyString.pipe(S.Redacted);
 
 const TicketToken = TicketTokenDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(TicketTokenDefinition),
+  toArbitrary: () => S.toArbitrary(TicketTokenDefinition),
 }).pipe(
   $I.annoteSchema("TicketToken", {
     description: "Non-empty, redacted bearer credential used once to authenticate a WebSocket connection.",
@@ -23,7 +23,7 @@ const TicketToken = TicketTokenDefinition.annotate({
 const ApiKeyDefinition = S.NonEmptyString.pipe(S.Redacted);
 
 const ApiKey = ApiKeyDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ApiKeyDefinition),
+  toArbitrary: () => S.toArbitrary(ApiKeyDefinition),
 }).pipe(
   $I.annoteSchema("ApiKey", {
     description: "Non-empty API credential retained in redacted form inside a ticket record.",

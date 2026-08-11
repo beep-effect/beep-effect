@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PrimaryKey, pipe } from "effect";
 import * as A from "effect/Array";
@@ -184,7 +184,18 @@ const OntologyRefFields = {
   }),
 } as const;
 
-class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
+/**
+ * Content-addressed reference to one immutable ontology version.
+ *
+ * **Details**
+ *
+ * Namespace and name select the logical ontology while the full SHA-256 digest
+ * selects its exact bytes.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
   OntologyRefFields,
   $I.annote("OntologyRef", {
     description: "Content-addressed reference to one immutable ontology version.",
@@ -253,69 +264,17 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
   get shortId(): string {
     return `${this.namespace}/${this.name}`;
   }
+
+  /** Decodes an unknown input into a validated ontology reference. */
+  static readonly fromUnknown = S.decodeUnknownSync(OntologyRef);
+
+  /** Parses a canonical ontology storage path. */
+  static readonly fromPath = (path: unknown) =>
+    pipe(
+      PathLayout.ontology.decode(path),
+      Result.map(([namespace, name, contentHash]) => OntologyRef.make({ namespace, name, contentHash }))
+    );
 }
-
-/**
- * Content-addressed reference to one immutable ontology version.
- *
- * @remarks
- * Namespace and name select the logical ontology while the full SHA-256 digest
- * selects its exact bytes. Storage-path parsing and rendering share the
- * repository's `PathLayout` source of truth.
- *
- * @example
- * ```ts
- * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
- *
- * const ref = OntologyRef.fromUnknown({
- *   namespace: "football",
- *   name: "premier-league",
- *   contentHash: "a".repeat(64)
- * })
- * console.log(ref.shortId) // "football/premier-league"
- * ```
- *
- * @invariant The content hash identifies the exact ontology version.
- * @category value-objects
- * @since 0.0.0
- */
-export const OntologyRef = OntologyRefModel.annotate({
-  toArbitrary: () => () => S.toArbitrary(S.Struct(OntologyRefFields)).map((fields) => OntologyRefModel.make(fields)),
-}).pipe(
-  $I.annoteSchema("OntologyRef", {
-    description: "Content-addressed reference to one immutable ontology version.",
-  }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics(() => ({
-    /**
-     * Parses a canonical ontology storage path.
-     *
-     * @param path Candidate path produced by `PathLayout.ontology.encode`.
-     * @returns A successful content-addressed reference or a schema error.
-     */
-    fromPath: (path: unknown) =>
-      pipe(
-        PathLayout.ontology.decode(path),
-        Result.map(([namespace, name, contentHash]) => OntologyRefModel.make({ namespace, name, contentHash }))
-      ),
-  }))
-);
-
-/**
- * Runtime value decoded by {@link OntologyRef}.
- *
- * @example
- * ```ts
- * import type { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
- *
- * const path = (ref: OntologyRef): string => ref.storagePath
- * console.log(typeof path) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyRef = typeof OntologyRef.Type;
 
 const ClassDefinitionFields = {
   id: IRI.annotateKey({ description: "Full IRI of the OWL or RDFS class." }),
@@ -397,8 +356,8 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
  * @since 0.0.0
  */
 export const ClassDefinition = ClassDefinitionModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ClassDefinitionFields)).map((fields) => ClassDefinitionModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ClassDefinitionFields))(fc).map((fields) => ClassDefinitionModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
@@ -562,8 +521,8 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
  * @since 0.0.0
  */
 export const PropertyDefinition = PropertyDefinitionModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(PropertyDefinitionFields)).map((fields) => PropertyDefinitionModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(PropertyDefinitionFields))(fc).map((fields) => PropertyDefinitionModel.make(fields)),
 }).pipe(
   $I.annoteSchema("PropertyDefinition", {
     description: "RDF or OWL property metadata normalized for validation and semantic search.",
@@ -659,12 +618,21 @@ const OntologyContextFields = {
   ),
 } as const;
 
-class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyContext`)(
+export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext`)(
   OntologyContextFields,
   $I.annote("OntologyContext", {
     description: "Immutable ontology snapshot with cycle-safe class and property hierarchy traversal.",
   })
 ) {
+  /** Type guard for decoded ontology contexts. @since 0.0.0 */
+  static readonly is = S.is(OntologyContext);
+
+  /** Decode an unknown ontology context or throw a parse error. @since 0.0.0 */
+  static readonly fromUnknown = S.decodeUnknownSync(OntologyContext);
+
+  /** Decode an unknown ontology context into an `Option`. @since 0.0.0 */
+  static readonly decodeOption = S.decodeUnknownOption(OntologyContext);
+
   /**
    * Looks up a class by full IRI.
    *
@@ -965,28 +933,3 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
  * @category aggregates
  * @since 0.0.0
  */
-export const OntologyContext = OntologyContextModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(OntologyContextFields)).map((fields) => OntologyContextModel.make(fields)),
-}).pipe(
-  $I.annoteSchema("OntologyContext", {
-    description: "Immutable ontology snapshot with cycle-safe class and property hierarchy traversal.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link OntologyContext}.
- *
- * @example
- * ```ts
- * import type { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
- *
- * const count = (context: OntologyContext): number => context.classes.length
- * console.log(typeof count) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyContext = typeof OntologyContext.Type;

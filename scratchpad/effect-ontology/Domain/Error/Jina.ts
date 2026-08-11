@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as Duration from "effect/Duration";
@@ -248,7 +248,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-    toArbitrary: () => () => S.toArbitrary(JinaErrorDefinition),
+    toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
   })
 );
 

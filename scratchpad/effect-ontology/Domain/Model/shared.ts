@@ -10,7 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI as CanonicalIRI } from "@beep/rdf/Iri";
 import { URLStr as CanonicalURLStr, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -122,7 +122,7 @@ export type URLStr = typeof URLStr.Type;
  */
 export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
   .annotate({
-    toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(S.String), S.toArbitrary(S.Finite), S.toArbitrary(S.Boolean)),
+    toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(S.String)(fc), S.toArbitrary(S.Finite)(fc), S.toArbitrary(S.Boolean)(fc)),
   })
   .pipe(
     $I.annoteSchema("AttributeValue", {
@@ -172,7 +172,7 @@ export type AttributeValue = typeof AttributeValue.Type;
  */
 export const Attributes = S.Record(S.String, AttributeValue)
   .annotate({
-    toArbitrary: () => (fc) => fc.dictionary(fc.string(), S.toArbitrary(AttributeValue)),
+    toArbitrary: () => (fc) => fc.dictionary(fc.string(), S.toArbitrary(AttributeValue)(fc)),
   })
   .pipe(
     $I.annoteSchema("Attributes", {
@@ -220,7 +220,7 @@ export type Attributes = typeof Attributes.Type;
  * @since 0.0.0
  */
 export const Confidence = UnitInterval.annotate({
-  toArbitrary: () => () => S.toArbitrary(UnitInterval),
+  toArbitrary: () => S.toArbitrary(UnitInterval),
 }).pipe(
   $I.annoteSchema("Confidence", {
     description: "Finite confidence score on the closed unit interval from zero through one.",
@@ -268,7 +268,7 @@ export type Confidence = typeof Confidence.Type;
  */
 export const OptionalConfidence = S.OptionFromNullishOr(Confidence)
   .annotate({
-    toArbitrary: () => (fc) => fc.option(S.toArbitrary(Confidence), { nil: undefined }).map(O.fromUndefinedOr),
+    toArbitrary: () => (fc) => fc.option(S.toArbitrary(Confidence)(fc), { nil: undefined }).map(O.fromUndefinedOr),
   })
   .pipe(
     SchemaUtils.withNoneDefault,

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
@@ -28,41 +28,34 @@ class DocumentFailure extends S.Class<DocumentFailure>($I`DocumentFailure`)(
   })
 ) {}
 
-const DocumentSuccessFields = {
-  graphUri: GcsUri,
-  entityCount: NonNegativeInt,
-  relationCount: NonNegativeInt,
-  claimCount: NonNegativeInt,
-  startedAt: S.DateTimeUtcFromString,
-  completedAt: S.DateTimeUtcFromString,
-} as const;
-
-class DocumentSuccess extends S.Class<DocumentSuccess>($I`DocumentSuccess`)(
-  DocumentSuccessFields,
-  $I.annote("DocumentSuccess", {
-    description: "Completed document output location, counts, and timing.",
-  })
-) {}
-
-const DocumentStatusDefinition = S.TaggedUnion({
-  Pending: {
+const DocumentStatusDefinition = S.Union([
+  S.Struct({
+    status: S.tag("pending"),
     documentId: DocumentId,
-  },
-  Processing: {
+  }),
+  S.Struct({
+    status: S.tag("processing"),
     documentId: DocumentId,
     startedAt: S.DateTimeUtcFromString,
-  },
-  Success: {
+  }),
+  S.Struct({
+    status: S.tag("success"),
     documentId: DocumentId,
-    value: DocumentSuccess,
-  },
-  Failed: {
+    graphUri: GcsUri,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    claimCount: NonNegativeInt,
+    startedAt: S.DateTimeUtcFromString,
+    completedAt: S.DateTimeUtcFromString,
+  }),
+  S.Struct({
+    status: S.tag("failed"),
     documentId: DocumentId,
-    value: DocumentFailure,
+    error: DocumentFailure,
     startedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
     completedAt: S.DateTimeUtcFromString,
-  },
-});
+  }),
+]).pipe(S.toTaggedUnion("status"));
 
 /**
  * Per-document batch state with payloads nested by lifecycle variant.
@@ -78,10 +71,10 @@ const DocumentStatusDefinition = S.TaggedUnion({
  * import { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
  * const status = S.decodeUnknownSync(DocumentStatus)({
- *   _tag: "Pending",
+ *   status: "pending",
  *   documentId: "doc-0123456789ab"
  * })
- * console.log(status._tag) // "Pending"
+ * console.log(status.status) // "pending"
  * ```
  *
  * @category schemas
@@ -90,7 +83,7 @@ const DocumentStatusDefinition = S.TaggedUnion({
 export const DocumentStatus = DocumentStatusDefinition.pipe(
   $I.annoteSchema("DocumentStatus", {
     description: "Canonical discriminated lifecycle state for one document in a batch.",
-    toArbitrary: () => () => S.toArbitrary(DocumentStatusDefinition),
+    toArbitrary: () => S.toArbitrary(DocumentStatusDefinition),
   })
 );
 
@@ -101,7 +94,7 @@ export const DocumentStatus = DocumentStatusDefinition.pipe(
  * ```ts
  * import type { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
- * const tag = (status: DocumentStatus): DocumentStatus["_tag"] => status._tag
+ * const tag = (status: DocumentStatus): DocumentStatus["status"] => status.status
  * console.log(typeof tag) // "function"
  * ```
  *
@@ -184,7 +177,7 @@ const BatchCompletionStatsFields = {
   claimsExtracted: NonNegativeInt,
   clustersResolved: NonNegativeInt,
   triplesIngested: NonNegativeInt,
-  duration: S.DurationFromMillis,
+  totalDurationMs: S.DurationFromMillis,
 } as const;
 
 class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchCompletionStats`)(
@@ -254,57 +247,58 @@ export type BatchStage = typeof BatchStage.Type;
 
 const BatchStateDefinition = S.TaggedUnion({
   Pending: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     documentCount: NonNegativeInt,
   },
   Preprocessing: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     documentsTotal: NonNegativeInt,
     documentsClassified: NonNegativeInt,
     documentsFailed: NonNegativeInt,
     enrichedManifestUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
   },
   Extracting: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     documentsTotal: NonNegativeInt,
     documentsCompleted: NonNegativeInt,
     documentsFailed: NonNegativeInt,
     currentDocumentId: S.OptionFromOptionalKey(DocumentId).pipe(SchemaUtils.withNoneDefault),
-    documents: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
+    documentStatuses: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
   },
   Resolving: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     extractionOutputUri: GcsUri,
     entitiesTotal: NonNegativeInt,
     clustersFormed: NonNegativeInt,
   },
   Validating: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     resolvedGraphUri: GcsUri,
     validationStartedAt: S.DateTimeUtcFromString,
   },
   Ingesting: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     validatedGraphUri: GcsUri,
     triplesTotal: NonNegativeInt,
     triplesIngested: NonNegativeInt,
   },
   Complete: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     canonicalGraphUri: GcsUri,
     stats: BatchCompletionStats,
-    documents: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
+    documentStatuses: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
     completedAt: S.DateTimeUtcFromString,
   },
   Failed: {
-    batch: BatchIdentity,
+    ...BatchIdentityFields,
     failedAt: S.DateTimeUtcFromString,
-    failedInStage: S.Literals(BatchStage.omitOptions(["Complete", "Failed"])),
+    failedInStage: S.Literals(["pending", "preprocessing", "extracting", "resolving", "validating", "ingesting"]),
     error: BatchFailure,
-    lastSuccessfulStage: S.OptionFromOptionalKey(S.Literals(BatchStage.omitOptions(["Complete", "Failed"]))).pipe(
+    lastSuccessfulStage: S.OptionFromOptionalKey(
+      S.Literals(["pending", "preprocessing", "extracting", "resolving", "validating", "ingesting"])
+    ).pipe(
       SchemaUtils.withNoneDefault
     ),
-    documents: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
   },
 });
 
@@ -407,7 +401,7 @@ const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> 
 export const BatchState = BatchStateDefinition.pipe(
   $I.annoteSchema("BatchState", {
     description: "Discriminated batch-ingestion lifecycle with legal stage-specific payloads.",
-    toArbitrary: () => () => S.toArbitrary(BatchStateDefinition),
+    toArbitrary: () => S.toArbitrary(BatchStateDefinition),
   }),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({

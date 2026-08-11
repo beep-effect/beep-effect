@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorFilePath, ErrorIri, ErrorMessage, ErrorUri, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
 
@@ -357,7 +357,7 @@ const AnyOntologyErrorDefinition = S.Union([
 export const AnyOntologyError = AnyOntologyErrorDefinition.pipe(
   $I.annoteSchema("AnyOntologyError", {
     description: "Exhaustive tagged union of ontology lookup, loading, and embeddings failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyOntologyErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyOntologyErrorDefinition),
   })
 );
 

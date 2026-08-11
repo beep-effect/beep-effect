@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,7 +29,7 @@ const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(S.Json).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(S.Json)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -43,7 +43,7 @@ const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
 const ExtractionJsonArrayDefinition = S.Json.pipe(S.Array);
 
 const ExtractionJsonArray = ExtractionJsonArrayDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ExtractionJsonArrayDefinition),
+  toArbitrary: () => S.toArbitrary(ExtractionJsonArrayDefinition),
 }).pipe(
   $I.annoteSchema("ExtractionJsonArray", {
     description: "Readonly collection of serializable partial extraction payloads.",
@@ -56,7 +56,7 @@ const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ExtractionJsonArray).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ExtractionJsonArray)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -433,7 +433,7 @@ const AnyExtractionErrorDefinition = S.Union([
 export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
   $I.annoteSchema("AnyExtractionError", {
     description: "Exhaustive tagged union of extraction and row-validation failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyExtractionErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
   })
 );
 

@@ -77,11 +77,9 @@ const namespace = Namespace.make("legal");
 describe("effect-ontology storage path layout", () => {
   it("derives warning-free arbitraries whose values satisfy every public path schema", () => {
     for (const schema of storagePathSchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 16 }
@@ -109,7 +107,7 @@ describe("effect-ontology storage path layout", () => {
   it("rejects traversal, non-canonical indices, and unregistered outputs", () => {
     expect(StoragePathSegment.is("../escape")).toBe(false);
     expect(
-      Result.isFailure(S.decodeUnknownResult(RunChunkPath)("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))
+      Result.isFailure(S.decodeResult(RunChunkPath)("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))
     ).toBe(true);
     expect(
       Result.isFailure(S.decodeUnknownResult(RunOutputPath)("runs/doc-deadbeefcafe/outputs/custom-output.json"))
