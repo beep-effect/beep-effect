@@ -35,18 +35,31 @@ const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/githu
 const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
 const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
 
+// The IMDS block and the runner user are one decision: the OWNER-match rule
+// must key on the exact uid the jobs run as, so both the module's
+// `runner_run_as` and the drop rule below derive from this single constant. If
+// they diverged, jobs would keep IMDS access under the real runner uid.
+const runnerRunAs = "ec2-user";
+
+// Defense-in-depth, not containment: the runner user keeps passwordless sudo for
+// GitHub-hosted parity, so job code that escalates to root can still reach IMDS
+// or flush this rule. The PRIMARY control is therefore a minimal,
+// permissions-boundary-capped instance-profile role on an ephemeral
+// one-job-one-VM — a stolen credential is near-worthless and dies with the VM in
+// minutes. This OWNER-match DROP raises the bar for non-root job code as the
+// host-process complement to the hop-limit-1 container defense.
 const runnerImdsPostInstall = `#!/bin/sh
 set -eu
 
 command -v iptables >/dev/null 2>&1 || dnf install -y iptables-nft
-runner_uid="$(id -u ec2-user)"
+runner_uid="$(id -u ${runnerRunAs})"
 if iptables -C OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP 2>/dev/null; then
   rule_status="already present"
 else
   iptables -I OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP
   rule_status="installed"
 fi
-logger -t beep-ci-imds "IPv4 IMDS OWNER drop rule $rule_status for ec2-user uid $runner_uid"
+logger -t beep-ci-imds "IPv4 IMDS OWNER drop rule $rule_status for ${runnerRunAs} uid $runner_uid"
 `;
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
@@ -266,10 +279,17 @@ type CiFleetControllerArgs = {
  *
  * **Gotchas**
  *
- * IMDSv2 with hop limit 1 blocks container access, while the post-install
- * OWNER-match DROP blocks the host `ec2-user` job process for CSF-003. This
- * fleet has no IPv6, so the IPv4 IMDS rule is sufficient, and JIT config keeps
- * no runner registration token on the instance.
+ * IMDS defense is layered, and the OWNER-match DROP is the weakest layer, not a
+ * containment boundary: the runner user keeps passwordless sudo for hosted
+ * parity, so job code that escalates to root can still reach IMDS or flush the
+ * rule. The controls that actually bound credential theft are a minimal,
+ * permissions-boundary-capped instance-profile role and the ephemeral
+ * one-job-one-VM lifecycle, which reduce a stolen credential to a near-worthless
+ * value that dies with the VM. Hop limit 1 blocks container access, the DROP
+ * (keyed to `runnerRunAs`, never a divergent uid) blocks non-root host job code,
+ * this IPv4-only fleet needs no IPv6 rule, and JIT config keeps no runner
+ * registration token on the instance. The CSF-003 deploy gate (Gate E) must
+ * therefore verify role minimality, not just that the DROP is present.
  *
  * @category resources
  * @since 0.0.0
@@ -422,7 +442,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
-        runner_run_as: "ec2-user",
+        runner_run_as: runnerRunAs,
         userdata_post_install: runnerImdsPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,

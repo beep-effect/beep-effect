@@ -175,9 +175,15 @@
   runtime property the code cannot prove.
 - **Required deploy gate (red-team Gate E):** the first `pulumi up` carrying
   this change must be followed by a probe job on the shadow label that proves
-  BOTH: (a) job pickup still works — the agent was not cut off from anything it
-  needs; and (b) `curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
-  from a job step now fails/times out. If (a) regresses, the agent needed IMDS
-  at runtime and the rule must move to a post-agent-start hook or a
-  path-scoped local proxy. Do not flip the heavy-lane cutover until Gate E
-  passes.
+  ALL of: (a) job pickup still works — the agent was not cut off from anything
+  it needs; (b) a NON-sudo `curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+  from a job step fails/times out; and (c) the instance-profile role is
+  minimal. Note (c) is the real control, not the DROP: the runner user keeps
+  passwordless sudo for hosted parity, so `sudo curl` to IMDS is EXPECTED to
+  still succeed and is not itself a blocker — a host firewall rule cannot
+  contain root-capable job code. Instead enumerate the runner role's policies
+  and permissions boundary and confirm it grants only boot-time needs (AMI SSM
+  read, runner-binary S3 read); a non-minimal role IS a blocker. If (a)
+  regresses, the agent needed IMDS at runtime and the rule must move to a
+  post-agent-start hook or a path-scoped local proxy. Do not flip the
+  heavy-lane cutover until Gate E passes.
