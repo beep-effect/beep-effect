@@ -313,3 +313,21 @@
   verify with `describe-instances RootDeviceName` per image family. Real-lane
   probes belong in every image/device change gate; echo probes prove pickup,
   never capacity.
+
+## JSDoc Ratchet degenerates on the fleet — 8x the CPU work, cause unproven
+
+- **Work:** cutover acceptance — JSDoc Ratchet timed out at 30 minutes on
+  three consecutive fleet runs while every other heavy lane matched its warm
+  p50.
+- **What happened:** the lane is ~4 min locally (296s user, 133% CPU) and ran
+  ~10 min on equally-cold GitHub-hosted 4-vCPU runners, but on 16-vCPU fleet
+  VMs it sustains ~8.5% CPU (~1.3 cores) past 30 minutes — roughly 8x the
+  CPU-seconds of the local run, so it is doing MORE work, not the same work
+  slowly, and cold caches alone cannot explain it (hosted was always cold).
+  Timed-out/cancelled jobs never serve logs, so the interior is unobserved.
+- **Prevention/next:** timeout raised to 60 so a finishing run yields a green,
+  a measured wall time, and a served log to attribute from; the lane's
+  single-threaded inventory is now an explicit optimization target for the
+  heavy-lane compile-cost session. General law: a lane that only ever ran on
+  warm persistent workers has an unmeasured cold profile — measure one full
+  cold run per lane before fleet cutovers.
