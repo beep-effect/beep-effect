@@ -25,6 +25,15 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"] as const;
 /**
  * Runtime options for the ecosystem-polarity lint.
  *
+ * **Example** (Construct a full-scan option set)
+ *
+ * ```ts
+ * import { EcosystemPolarityOptions } from "@beep/repo-cli/commands/Lint"
+ *
+ * const options = EcosystemPolarityOptions.make({})
+ * console.log(options.includePaths) // undefined
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,6 +48,20 @@ export class EcosystemPolarityOptions extends S.Class<EcosystemPolarityOptions>(
 
 /**
  * A single ecosystem-polarity violation.
+ *
+ * **Example** (Construct a source-import violation)
+ *
+ * ```ts
+ * import { EcosystemPolarityViolation } from "@beep/repo-cli/commands/Lint"
+ *
+ * const violation = EcosystemPolarityViolation.make({
+ *   file: "packages/ecosystem/demo/src/index.ts",
+ *   line: 1,
+ *   kind: "source-import",
+ *   detail: "@beep/forbidden",
+ * })
+ * console.log(violation.kind) // "source-import"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -58,6 +81,15 @@ export class EcosystemPolarityViolation extends S.Class<EcosystemPolarityViolati
 /**
  * Summary returned by the ecosystem-polarity lint.
  *
+ * **Example** (Construct a clean summary)
+ *
+ * ```ts
+ * import { EcosystemPolaritySummary } from "@beep/repo-cli/commands/Lint"
+ *
+ * const summary = EcosystemPolaritySummary.make({ checkedMembers: 1, scannedSourceFiles: 33, violations: [] })
+ * console.log(summary.violations.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -74,6 +106,15 @@ export class EcosystemPolaritySummary extends S.Class<EcosystemPolaritySummary>(
 
 /**
  * Tagged filesystem or manifest failure raised while checking ecosystem polarity.
+ *
+ * **Example** (Construct a discovery failure)
+ *
+ * ```ts
+ * import { EcosystemPolarityError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EcosystemPolarityError.new("Failed to list packages/ecosystem.")
+ * console.log(error._tag) // "EcosystemPolarityError"
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -311,6 +352,16 @@ const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(fun
 /**
  * Check ecosystem members for forbidden repo-internal runtime edges.
  *
+ * **Example** (Run a full-repo polarity check)
+ *
+ * ```ts
+ * import { EcosystemPolarityOptions, runEcosystemPolarityCheck } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
+ *
+ * const program = runEcosystemPolarityCheck(EcosystemPolarityOptions.make({}))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -375,6 +426,14 @@ const runEcosystemPolarityLint = Effect.fn("EcosystemPolarity.runEcosystemPolari
 
 /**
  * Lint command enforcing ecosystem package runtime polarity.
+ *
+ * **Example** (Inspect the registered command name)
+ *
+ * ```ts
+ * import { lintEcosystemPolarityCommand } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(typeof lintEcosystemPolarityCommand) // "object"
+ * ```
  *
  * @category cli-commands
  * @since 0.0.0

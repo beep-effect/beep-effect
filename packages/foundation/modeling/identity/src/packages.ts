@@ -2478,15 +2478,15 @@ export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = c
 /**
  * Identity composer for `@beep/effect-drizzle`.
  *
- * @example
- * ```typescript
- * import { $EffectDrizzleId } from "@beep/identity"
+ * **Example** (Compose an identifier)
  *
- * const id = $EffectDrizzleId.make("EffectDrizzle")
- * void id
+ * ```ts
+ * import { $EffectDrizzleId } from "@beep/identity/packages"
+ *
+ * console.log($EffectDrizzleId.make("EffectDrizzle"))
  * ```
  *
- * @since 0.0.0
  * @category configuration
+ * @since 0.0.0
  */
 export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle"> = composers.$EffectDrizzleId;

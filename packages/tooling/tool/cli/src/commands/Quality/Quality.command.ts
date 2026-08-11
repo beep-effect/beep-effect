@@ -1532,6 +1532,16 @@ const collectEcosystemPluginProfileDiagnostics = (
 /**
  * Validate package-local Effect language-service profiles against the ecosystem family delta.
  *
+ * **Example** (Check a conforming member profile)
+ *
+ * ```ts
+ * import { collectTsgoPluginProfileDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const basePlugin = { diagnosticSeverity: { floatingEffect: "error" } }
+ * const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(basePlugin, [])
+ * console.log(diagnostics.length) // => 0
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */
