@@ -1,8 +1,8 @@
 /**
  * Builds PostgreSQL-aware Effect model classes from schema-owned fields.
  *
- * `class User extends EffectDrizzle.Model<User>($I\`User\`)({ ... }) {}` produces an
- * Effect schema class (via @beep/effect-drizzle's own `VariantSchema.make` instance — the same
+ * `class User extends EffectDrizzle.Model<User>(identifier)(fields) {}` produces an
+ * Effect schema class (via `@beep/effect-drizzle`'s own `VariantSchema.make` instance — the same
  * six variants as effect's `Model`, so `SqlModel.makeRepository` compatibility
  * stays structural) with `sql` statics carrying the resolved SQL metadata.
  *
@@ -206,7 +206,7 @@ export type EffectiveSchema<I extends Field.Input> =
       : never;
 
 /**
- * Effective variant-aware schema record derived from a @beep/effect-drizzle field record.
+ * Effective variant-aware schema record derived from a `@beep/effect-drizzle` field record.
  *
  * @category models
  * @since 0.0.0
@@ -395,7 +395,7 @@ export type ModelClass<Self, F extends FieldsInput> = VariantSchema.Class<
  * Use as a generic constraint for utilities that consume any PostgreSQL model
  * without preserving its exact fields.
  *
- * **Example** (Accept any @beep/effect-drizzle model)
+ * **Example** (Accept any `@beep/effect-drizzle` model)
  *
  * ```ts
  * import { String } from "effect/Schema"
@@ -528,7 +528,7 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
 };
 
 /**
- * Build one @beep/effect-drizzle model class after its public factory has validated the field set.
+ * Build one `@beep/effect-drizzle` model class after its public factory has validated the field set.
  *
  * **Details**
  *
@@ -734,7 +734,7 @@ export function makeModelClass(
  * cannot be mixed, and constructor-time validation still runs if type errors
  * were suppressed.
  *
- * **Example** (Define a @beep/effect-drizzle model)
+ * **Example** (Define a `@beep/effect-drizzle` model)
  *
  * ```ts
  * import { String } from "effect/Schema"

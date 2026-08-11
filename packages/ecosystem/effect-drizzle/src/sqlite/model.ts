@@ -483,7 +483,12 @@ const finiteRealSchema = (schema: Field.AnySchema): Field.AnySchema => {
     : refine(schema);
 };
 
-/** Shared runtime seam used by bare SQLite models and SQLite kit entities. */
+/**
+ * Shared runtime seam used by bare SQLite models and SQLite kit entities.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 /** @internal */
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,

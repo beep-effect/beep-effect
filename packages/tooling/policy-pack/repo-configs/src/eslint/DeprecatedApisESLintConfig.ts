@@ -36,6 +36,11 @@ const generatedAndBuildOutputIgnores = [
   "**/vendor/**",
   "**/*.gen.*",
   "**/*.d.ts",
+  // tstyche type-test files deliberately contain erroring type-level code
+  // (`.toRaiseError` negatives) and are excluded from every tsconfig, so the
+  // typed project service cannot parse them; deprecated-API usage in
+  // never-executed type assertions is not a runtime hazard.
+  "**/typetests/**/*.tst.ts",
 ] as const;
 
 /**

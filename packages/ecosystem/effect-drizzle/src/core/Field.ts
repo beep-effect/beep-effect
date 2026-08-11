@@ -1,5 +1,5 @@
 /**
- * The @beep/effect-drizzle field node: one correlated value owning an Effect schema AND its
+ * The `@beep/effect-drizzle` field node: one correlated value owning an Effect schema AND its
  * SQL metadata, with both visible to the type system.
  *
  * This is the load-bearing design decision of the experiment. Effect v4
@@ -18,7 +18,7 @@ import type { Top } from "effect/Schema";
 import type { VariantSchema } from "effect/unstable/schema";
 
 /**
- * Runtime marker carried by every @beep/effect-drizzle field wrapper.
+ * Runtime marker carried by every `@beep/effect-drizzle` field wrapper.
  *
  * @category symbols
  * @since 0.0.0
@@ -26,7 +26,7 @@ import type { VariantSchema } from "effect/unstable/schema";
 /** @internal */
 const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
- * Type of the runtime @beep/effect-drizzle field marker.
+ * Type of the runtime `@beep/effect-drizzle` field marker.
  *
  * @category symbols
  * @since 0.0.0
@@ -35,13 +35,13 @@ const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 type TypeId = typeof TypeId;
 
 /**
- * Schema forms a @beep/effect-drizzle field can wrap.
+ * Schema forms a `@beep/effect-drizzle` field can wrap.
  *
  * **Gotchas**
  *
  * Effect's current existential is `VariantSchema.Field<any>` internally. A
  * concrete config is invariant and rejects valid literal variant records, so
- * this mirrors Effect's erased-field boundary rather than widening @beep/effect-drizzle data.
+ * this mirrors Effect's erased-field boundary rather than widening `@beep/effect-drizzle` data.
  *
  * @category models
  * @since 0.0.0
@@ -63,7 +63,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 }
 
 /**
- * Existential @beep/effect-drizzle field used at runtime boundaries.
+ * Existential `@beep/effect-drizzle` field used at runtime boundaries.
  *
  * @category models
  * @since 0.0.0
@@ -72,7 +72,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 export type Any = Field<AnySchema, Meta.Meta>;
 
 /**
- * Bare schema, variant field, or existing @beep/effect-drizzle field accepted by combinators.
+ * Bare schema, variant field, or existing `@beep/effect-drizzle` field accepted by combinators.
  *
  * @category models
  * @since 0.0.0
@@ -102,7 +102,7 @@ export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(sch
 };
 
 /**
- * Test whether an unknown value is a @beep/effect-drizzle field wrapper.
+ * Test whether an unknown value is a `@beep/effect-drizzle` field wrapper.
  *
  * @category guards
  * @since 0.0.0
@@ -196,7 +196,7 @@ type SchemaEncoded<Sch> =
 // ---------------------------------------------------------------------------
 
 /**
- * Carrier for compile-time @beep/effect-drizzle diagnostics at a combinator callsite.
+ * Carrier for compile-time `@beep/effect-drizzle` diagnostics at a combinator callsite.
  *
  * **Details**
  *

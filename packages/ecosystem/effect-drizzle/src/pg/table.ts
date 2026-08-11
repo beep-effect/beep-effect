@@ -1,5 +1,5 @@
 /**
- * Postgres table projection: @beep/effect-drizzle model → real drizzle `pgTable`.
+ * Postgres table projection: `@beep/effect-drizzle` model → real drizzle `pgTable`.
  *
  * The type side maps every field's resolved column spec + meta brands onto
  * rc4's actual builder classes (`PgBuilderBase`) wrapped in the `Set*` brand

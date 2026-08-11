@@ -228,7 +228,7 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
   it("restricts NUMERIC modes to live representation-preserving carriers", () => {
     const client = new Database(":memory:");
     try {
-      client.exec("create table numeric_affinity_probe (value numeric)");
+      client.run("create table numeric_affinity_probe (value numeric)");
       const insertAffinity = client.query("insert into numeric_affinity_probe values (?)");
       insertAffinity.run("3.0e+5");
       insertAffinity.run("001.2300");
@@ -245,8 +245,8 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
       const bigints = sqliteTable("wave_e_numeric_bigint", {
         value: numeric({ mode: "bigint" }).notNull(),
       });
-      client.exec("create table wave_e_numeric_number (value numeric not null)");
-      client.exec("create table wave_e_numeric_bigint (value numeric not null)");
+      client.run("create table wave_e_numeric_number (value numeric not null)");
+      client.run("create table wave_e_numeric_bigint (value numeric not null)");
       const db = drizzle({ client });
       db.insert(numbers)
         .values([{ value: -1.25 }, { value: 0 }, { value: 42.5 }])
@@ -272,7 +272,7 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
   it("probes bun:sqlite NaN binding before the SQLite REAL refinement", () => {
     const client = new Database(":memory:");
     try {
-      client.exec("create table nan_binding_probe (value real)");
+      client.run("create table nan_binding_probe (value real)");
       client.query("insert into nan_binding_probe values (?)").run(Number.NaN);
       expect(client.query("select value, typeof(value) as storage from nan_binding_probe").get()).toEqual({
         value: null,
@@ -289,7 +289,7 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
       const table = sqliteTable("date_json_mode_probe", {
         value: text("value", { mode: "json" }).$type<Date>(),
       });
-      client.exec("create table date_json_mode_probe (value text not null)");
+      client.run("create table date_json_mode_probe (value text not null)");
       const date = toDate(makeUnsafe("2026-08-10T00:00:00.000Z"));
       const db = drizzle({ client });
       db.insert(table).values({ value: date }).run();
@@ -308,14 +308,14 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
     const client = new Database(":memory:");
     try {
       expect(() =>
-        client.exec(`
+        client.run(`
           create table wave_e_generated_volatile (
             value integer generated always as (random()) stored
           )
         `)
       ).toThrow();
       expect(() =>
-        client.exec(`
+        client.run(`
           create table wave_e_default_column_reference (
             source integer,
             value integer default (source + 1)
@@ -323,15 +323,15 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
         `)
       ).toThrow();
       expect(() =>
-        client.exec(`
+        client.run(`
           create table wave_e_check_subquery (
             value integer check (value > (select 0))
           )
         `)
       ).toThrow();
-      client.exec("create table wave_e_partial_index (value integer)");
+      client.run("create table wave_e_partial_index (value integer)");
       expect(() =>
-        client.exec(`
+        client.run(`
           create index wave_e_partial_index_volatile
           on wave_e_partial_index (value)
           where random() > 0.5
@@ -345,25 +345,25 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
   it("mirrors SQLite default, action, and cardinality boundaries", () => {
     const client = new Database(":memory:");
     try {
-      expect(() => client.exec("create table wave_e_empty ()")).toThrow();
+      expect(() => client.run("create table wave_e_empty ()")).toThrow();
       expect(() =>
-        client.exec(`
+        client.run(`
           create table wave_e_generated_only (
             value integer generated always as (1) stored
           )
         `)
       ).toThrow();
       expect(() =>
-        client.exec(`
+        client.run(`
           create table wave_e_too_many_columns (
             ${Array.from({ length: 2_001 }, (_, index) => `c${index} integer`).join(", ")}
           )
         `)
       ).toThrow();
-      expect(() => client.exec("create table wave_e_invalid_default (value real default (-Infinity))")).toThrow();
+      expect(() => client.run("create table wave_e_invalid_default (value real default (-Infinity))")).toThrow();
 
-      client.exec("pragma foreign_keys = on");
-      client.exec(`
+      client.run("pragma foreign_keys = on");
+      client.run(`
         create table wave_e_action_parent (id integer primary key);
         create table wave_e_action_child (
           id integer primary key,
