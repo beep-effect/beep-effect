@@ -112,8 +112,8 @@ workflows in skills.
 
 ## Tool Routing
 
-- effect v3↔v4 differences: validate against the v4 source
-  (`.repos/effect-v4` / effect-smol), never training-data priors.
+- effect v3↔v4 differences: validate against the checked-in Effect source
+  (`.repos/effect`), never training-data priors.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA

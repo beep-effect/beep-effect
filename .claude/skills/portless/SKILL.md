@@ -1,6 +1,6 @@
 ---
 name: portless
-description: Set up and use portless for named local dev server URLs (e.g. https://myapp.localhost instead of http://localhost:3000). Use when integrating portless into a project, configuring dev server names, setting up the local proxy, working with .localhost domains, or troubleshooting port/proxy issues.
+description: Set up and use portless for named local dev server URLs (e.g. http://myapp.beep.localhost:1355 instead of http://localhost:3000). Use when integrating portless into a project, configuring dev server names, setting up the local proxy, working with .localhost domains, or troubleshooting port/proxy issues.
 ---
 
 # Portless
@@ -35,20 +35,19 @@ When installed per-project, invoke via package.json scripts or `npx portless` (s
 
 ## Quick Start
 
+In this repository, package scripts are authoritative: they provide the app
+name, framework flags, and the shared portless configuration. Do not replace
+them with a raw framework command or start the default privileged HTTPS proxy.
+
 ```bash
-# Install globally (or add -D to a project)
-npm install -g portless
-
-# Run your app (auto-starts the HTTPS proxy on port 443)
-portless run next dev
-# -> https://<project>.localhost
-
-# Or with an explicit name
-portless myapp next dev
-# -> https://myapp.localhost
+# Run the selected app through its checked-in package script
+bun --cwd apps/oip-web run dev
+# -> http://oip-web.beep.localhost:1355
 ```
 
-The proxy auto-starts when you run an app. You can also start it explicitly with `portless proxy start`. Auto-start reuses the configuration (port, TLS, TLDs) from the most recent proxy run, so a restart or reboot does not silently revert to defaults. Explicit env vars always take priority.
+For another app, use that app package's `dev` script and navigate to
+`http://<name>.beep.localhost:1355`. The proxy auto-starts with the repository
+configuration when the script runs.
 
 In non-interactive environments (no TTY, or `CI=1`), portless exits with a descriptive error instead of prompting. Task runners like turborepo should pre-start the proxy.
 
@@ -360,6 +359,13 @@ An object supports all per-app fields (`name`, `script`, `appPort`, `proxy`):
 Precedence (closest wins): CLI flags > package.json `"portless"` key > portless.json app entry > defaults.
 
 ## Troubleshooting
+
+### Repository preview URLs
+
+The preview harness's auto-assigned `http://localhost:<port>` URL is not the
+canonical route for portless-wrapped apps in this repository. After starting
+the package's checked-in `dev` script, navigate to
+`http://<name>.beep.localhost:1355`.
 
 ### Run diagnostics
 

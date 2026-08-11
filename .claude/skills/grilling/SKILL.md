@@ -9,7 +9,7 @@ Interview the user relentlessly until you reach a shared understanding. Map this
 
 Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled — the questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one round, each question with your recommended answer. Then wait for the user's answers before the next round.
 
-Deliver a round with the AskUserQuestion tool: up to 4 questions per call, recommended option first and labelled "(Recommended)"; page a larger frontier across consecutive calls within the round. In a harness without a question tool, format each question as:
+Deliver a round with the AskUserQuestion tool: up to 3 questions per call, recommended option first and labelled "(Recommended)"; page a larger frontier across consecutive calls within the round. In a harness without a question tool, format each question as:
 
 ```
 ❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
