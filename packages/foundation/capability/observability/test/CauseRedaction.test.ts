@@ -101,11 +101,33 @@ describe("CauseRedaction", () => {
         Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
         LogRedactedCauseOptions.make({ message: "boundary failed" })
       ).pipe(Effect.provide(Logger.layer([logger])));
+      yield* logRedactedCause(
+        Cause.fail(new Error("info boundary")),
+        LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
+      ).pipe(Effect.provide(Logger.layer([logger])));
 
-      expect(annotations).toHaveLength(1);
+      expect(annotations).toHaveLength(2);
       expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
       expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
       expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
+      expect(annotations[0]?.cause_classification).toBe("failure");
+    })
+  );
+
+  it.effect(
+    "logs through the curried data-last form with the same redaction",
+    Effect.fnUntraced(function* () {
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+
+      yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
+        Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
+      ).pipe(Effect.provide(Logger.layer([logger])));
+
+      expect(annotations).toHaveLength(1);
+      expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
       expect(annotations[0]?.cause_classification).toBe("failure");
     })
   );
@@ -137,7 +159,7 @@ describe("CauseRedaction", () => {
 
   it("round-trips schema-derived redaction options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), (options) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(RedactCauseOptions)(options),
           S.decodeUnknownOption(RedactCauseOptions)
@@ -150,7 +172,7 @@ describe("CauseRedaction", () => {
 
   it("honors generated redaction bounds and channel rules", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), fc.string(), (options, rawMessage) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), fc.string(), (options, rawMessage) => {
         const cause = Cause.fail(new Error(rawMessage));
         const summary = summarizeCause(cause);
         const safe = redactCause(cause, options);

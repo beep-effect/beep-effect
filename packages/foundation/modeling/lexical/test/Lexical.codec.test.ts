@@ -23,9 +23,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
-const StateArbitrary = S.toArbitrary(SerializedEditorState);
-const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri);
-const DocumentArbitrary = S.toArbitrary(MdModel.Document);
+const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
+const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri)(fc);
+const DocumentArbitrary = S.toArbitrary(MdModel.Document)(fc);
 
 const mdText = (value: string) => MdModel.Text.make({ value });
 
@@ -291,7 +291,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
     fc.assert(
       fc.property(ArtifactUriArbitrary, (uri) => {
         expect(ArtifactUri.is(uri)).toBe(true);
-        expect(S.decodeUnknownSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
+        expect(S.decodeSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
       }),
       fcRuns(50)
     );
@@ -317,7 +317,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
     // Invalid info-strings are unconstructable via `Pre.make` now (the schema
     // validates the branded `CodeFenceLanguage` at construction); they can only
     // arrive on the wire, where Md decode folds them to None at the boundary.
-    const invalidLanguage = S.decodeUnknownSync(MdModel.Pre)({
+    const invalidLanguage = S.decodeSync(MdModel.Pre)({
       _tag: "pre",
       value: "console.log('beep')",
       language: "ts bad",
@@ -345,7 +345,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("drops Lexical-only text format bits (underline) per the lossiness profile", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)({
+    const state = S.decodeSync(SerializedEditorState)({
       root: {
         type: "root",
         version: 1,
@@ -394,7 +394,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("preserves nested lists through Lexical and Md projections", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)({
+    const state = S.decodeSync(SerializedEditorState)({
       root: {
         type: "root",
         version: 1,
@@ -574,7 +574,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
         // field (OptionFromNullOr), so the projected instance differs from its
         // encoded form. Decoding the instance directly would reject its real
         // Option; decoding the encoded form confirms the projection is valid.
-        expect(S.decodeUnknownSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
+        expect(S.decodeSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
       }),
       fcRuns(50)
     );

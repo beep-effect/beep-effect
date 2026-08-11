@@ -236,7 +236,7 @@ const numberInputTempInterfaceValueAtom = Atom.family((_scope: string) => Atom.m
 /**
  * Lowest safe integer supported by the hook defaults.
  *
- * **Example** (Log minSafeInteger constant)
+ * **Example** (Read the default minimum bound)
  *
  * ```ts
  * import { minSafeInteger } from "@beep/ui/hooks/useNumberInput"
@@ -252,7 +252,7 @@ export const minSafeInteger = Number.MIN_SAFE_INTEGER ?? -9007199254740991;
 /**
  * Highest safe integer supported by the hook defaults.
  *
- * **Example** (Log maxSafeInteger constant)
+ * **Example** (Read the default maximum bound)
  *
  * ```ts
  * import { maxSafeInteger } from "@beep/ui/hooks/useNumberInput"
@@ -268,7 +268,7 @@ export const maxSafeInteger = Number.MAX_SAFE_INTEGER ?? 9007199254740991;
 /**
  * Schema describing optional numeric bounds and controlled values for number input hooks.
  *
- * **Example** (Make boundary params)
+ * **Example** (Construct bounded input params)
  *
  * ```ts
  * import { BoundaryParams } from "@beep/ui/hooks/useNumberInput"
@@ -318,7 +318,7 @@ export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
 /**
  * Schema describing step and precision overrides for spinner changes.
  *
- * **Example** (Make spin params)
+ * **Example** (Construct half-step spin params)
  *
  * ```ts
  * import { SpinParams } from "@beep/ui/hooks/useNumberInput"
@@ -384,7 +384,7 @@ type SpinParamsValue = {
  *
  * Empty strings and invalid numeric strings normalize to `Option.none()`.
  *
- * **Example** (Parse text to number)
+ * **Example** (Parse editable text into a number)
  *
  * ```typescript
  * import * as O from "effect/Option"
@@ -397,12 +397,12 @@ type SpinParamsValue = {
  * console.log(O.isNone(missing)) // true
  * ```
  *
+ * @category utilities
  * @param value - Editable text from the input or parser.
  * @returns The parsed numeric value when available.
- * @category utilities
  * @since 0.0.0
  */
-export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
+export const toNumber: (input: unknown) => O.Option<number> = S.decodeUnknownOption(NumberInputFiniteFromText);
 
 /**
  * Format an optional numeric value using a fixed decimal precision.
@@ -412,7 +412,7 @@ export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
  * Invalid numeric values normalize to an empty string so the hook can safely render
  * controlled inputs.
  *
- * **Example** (Format number with precision)
+ * **Example** (Format a value at fixed precision)
  *
  * ```typescript
  * import { numberToString } from "@beep/ui/hooks/useNumberInput"
@@ -424,16 +424,16 @@ export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
  * console.log(empty) // ""
  * ```
  *
+ * @category utilities
  * @param value - Numeric value to render for the input.
  * @param precision - Number of fractional digits to keep.
  * @returns The formatted text representation for the current input value.
- * @category utilities
  * @since 0.0.0
  */
 export const numberToString: {
   (precision: number): (value: number | undefined) => string;
-  (value: number | undefined, precision?: number): string;
-} = dual(2, (value: number | undefined, precision = 0): string =>
+  (value: number | undefined, precision: number): string;
+} = dual(2, (value: number | undefined, precision: number): string =>
   pipe(
     O.fromUndefinedOr(value),
     O.map((numberValue) => numberValue.toFixed(precision)),
@@ -451,7 +451,7 @@ export const numberToString: {
  * applies a coarse `10x` multiplier. The returned value is clamped so precision
  * rounding never produces a no-op step.
  *
- * **Example** (Coarse and fine multipliers)
+ * **Example** (Apply shift and ctrl modifiers)
  *
  * ```typescript
  * import { getStepFactor } from "@beep/ui/hooks/useNumberInput"
@@ -463,7 +463,7 @@ export const numberToString: {
  * console.log(fine) // 0.2
  * ```
  *
- * **Example** (Pipe metaKey step factor)
+ * **Example** (Apply the data-last form in a pipe)
  *
  * ```typescript
  * import { pipe } from "effect"
@@ -474,11 +474,11 @@ export const numberToString: {
  * console.log(factor) // 0.5
  * ```
  *
+ * @category utilities
  * @param event - Modifier-key state captured from the current gesture.
  * @param step - Base step configured for the number input.
  * @param options - Decimal precision enforced by the number input.
  * @returns The effective step value for the current gesture.
- * @category utilities
  * @since 0.0.0
  */
 export const getStepFactor: {
@@ -498,7 +498,7 @@ export const getStepFactor: {
 /**
  * Event types reported through the `onChange` metadata callback.
  *
- * **Example** (Log event type options)
+ * **Example** (List the event type options)
  *
  * ```ts
  * import { NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
@@ -518,7 +518,7 @@ export const NumberInputEventType = LiteralKit(["change", "blur"]).pipe(
 /**
  * Runtime type for {@link NumberInputEventType}.
  *
- * **Example** (Annotate event type value)
+ * **Example** (Annotate an event type value)
  *
  * ```ts
  * import type { NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
@@ -536,7 +536,7 @@ export type NumberInputEventType = typeof NumberInputEventType.Type;
 /**
  * Error states reported through the `onChange` metadata callback.
  *
- * **Example** (Log error options)
+ * **Example** (List the range error options)
  *
  * ```ts
  * import { NumberInputError } from "@beep/ui/hooks/useNumberInput"
@@ -556,7 +556,7 @@ export const NumberInputError = LiteralKit(["exceed-max", "below-min"]).pipe(
 /**
  * Runtime type for {@link NumberInputError}.
  *
- * **Example** (Annotate error type value)
+ * **Example** (Annotate a range error value)
  *
  * ```ts
  * import type { NumberInputError } from "@beep/ui/hooks/useNumberInput"
@@ -574,7 +574,7 @@ export type NumberInputError = typeof NumberInputError.Type;
 /**
  * Metadata passed to `UseNumberInputOptions.onChange`.
  *
- * **Example** (Make change metadata)
+ * **Example** (Build change metadata for a callback)
  *
  * ```ts
  * import * as O from "effect/Option"
@@ -640,7 +640,7 @@ const getError = (value: number | undefined, min: number, max: number): O.Option
 /**
  * Options accepted by {@link useNumberBoundary} and {@link useNumberInput}.
  *
- * **Example** (Define input options)
+ * **Example** (Configure bounds and step)
  *
  * ```ts
  * import type { UseNumberInputOptions } from "@beep/ui/hooks/useNumberInput"
@@ -717,7 +717,7 @@ const effectiveStep = (provided: number | undefined, params: SpinParamsValue): n
  * Use this when you need number parsing, formatting, and range-aware increment/decrement
  * behavior but want to build your own DOM event handlers on top.
  *
- * **Example** (Use boundary hook)
+ * **Example** (Render managed boundary state)
  *
  * ```typescript
  * import React from "react"
@@ -731,15 +731,15 @@ const effectiveStep = (provided: number | undefined, params: SpinParamsValue): n
  * console.log(Example.name)
  * ```
  *
- * @param options - Number-input boundary and formatting options.
+ * @category components
+ * @param options - Boundary and formatting options, plus an optional `scope` atom-family key.
  * @returns Managed numeric and interface state helpers.
- * @category components
- * @category components
  * @since 0.0.0
+ * @category components
  */
-export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: string | undefined) => {
+export const useNumberBoundary = (options: UseNumberInputOptions & { readonly scope?: string | undefined } = {}) => {
   const generatedScope = useId();
-  const boundaryScope = scope ?? generatedScope;
+  const boundaryScope = options.scope ?? generatedScope;
   const boundaryParams = makeBoundaryParams(options);
   const spinParams = makeSpinParams(options);
   const { defaultValue, value, keepWithinRange = true, formatter = identity, parser = identity } = options;
@@ -805,7 +805,7 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
 /**
  * Fully managed number-input hook with keyboard and spinner controls.
  *
- * **Example** (Managed number input hook)
+ * **Example** (Wire an input element to the hook)
  *
  * ```ts
  * import React from "react"
@@ -819,8 +819,8 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
  * console.log(Example.name)
  * ```
  *
- * @category components
  * @since 0.0.0
+ * @category components
  */
 export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   const scope = useId();
@@ -841,10 +841,10 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   const step = effectiveStep(options.step, spinParams);
 
   const { interfaceValueAtom, interfaceValue, setInterfaceValue, numberValue, increment, decrement } =
-    useNumberBoundary(options, scope);
+    useNumberBoundary({ ...options, scope });
   const tempInterfaceValue = useAtomValue(numberInputTempInterfaceValueAtom(scope));
   const setTempInterfaceValue = useAtomSet(numberInputTempInterfaceValueAtom(scope));
-  const spinner = useSpinner(increment, decrement);
+  const spinner = useSpinner({ increment, decrement });
 
   useAtomInitialValues([[numberInputTempInterfaceValueAtom(scope), interfaceValue]]);
 

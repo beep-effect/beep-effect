@@ -47,15 +47,15 @@ const dataset = makeDataset([
 
 const boundDataset = (value: Dataset): Dataset => Dataset.make({ quads: pipe(value.quads, A.take(3)) });
 
-const DatasetArbitrary = S.toArbitrary(Dataset).map(boundDataset);
-const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetRequest).map((request) =>
+const DatasetArbitrary = S.toArbitrary(Dataset)(fc).map(boundDataset);
+const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
   CanonicalizeDatasetRequest.make({
     algorithm: request.algorithm,
     dataset: boundDataset(request.dataset),
     workLimit: request.workLimit,
   })
 );
-const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest).map((request) =>
+const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest)(fc).map((request) =>
   FingerprintDatasetRequest.make({
     algorithm: request.algorithm,
     dataset: boundDataset(request.dataset),
@@ -93,14 +93,14 @@ describe("Services and Surface", () => {
           FingerprintDatasetRequestArbitrary,
           (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
             const encodedDataset = Effect.runSync(S.encodeEffect(Dataset)(generatedDataset));
-            const decodedDataset = Effect.runSync(S.decodeUnknownEffect(Dataset)(encodedDataset));
+            const decodedDataset = Effect.runSync(S.decodeEffect(Dataset)(encodedDataset));
             const reencodedDataset = Effect.runSync(S.encodeEffect(Dataset)(decodedDataset));
 
             const encodedCanonicalizeRequest = Effect.runSync(
               S.encodeEffect(CanonicalizeDatasetRequest)(canonicalizeRequest)
             );
             const decodedCanonicalizeRequest = Effect.runSync(
-              S.decodeUnknownEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
+              S.decodeEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
             );
             const reencodedCanonicalizeRequest = Effect.runSync(
               S.encodeEffect(CanonicalizeDatasetRequest)(decodedCanonicalizeRequest)
@@ -110,7 +110,7 @@ describe("Services and Surface", () => {
               S.encodeEffect(FingerprintDatasetRequest)(fingerprintRequest)
             );
             const decodedFingerprintRequest = Effect.runSync(
-              S.decodeUnknownEffect(FingerprintDatasetRequest)(encodedFingerprintRequest)
+              S.decodeEffect(FingerprintDatasetRequest)(encodedFingerprintRequest)
             );
             const reencodedFingerprintRequest = Effect.runSync(
               S.encodeEffect(FingerprintDatasetRequest)(decodedFingerprintRequest)

@@ -406,4 +406,5 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  * @category utilities
  * @since 0.0.0
  */
-export const decodeContactSubmission = ContactSubmission.decodeUnknownEffect;
+export const decodeContactSubmission = (input: unknown): Effect.Effect<ContactSubmission, S.SchemaError> =>
+  ContactSubmission.decodeUnknownEffect(input);

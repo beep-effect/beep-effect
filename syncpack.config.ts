@@ -123,11 +123,17 @@ const config = {
       // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
       // @nodable/flexible-xml-parser, which references Buffer at module
       // scope and breaks every browser bundle.
-      // @effect/tsgo 0.20+ ships new rules (missingPipeableSignature,
-      // preferSchemaTypeProperty, schemaOpaqueInstanceMember, syncToSucceed)
-      // whose global enforcement surfaces ~756 violations; adopting them is
-      // its own remediation campaign. Platform binaries stay independently
-      // pinned to the build matching the installed native compiler.
+      // @effect/tsgo and its seven platform binaries move together and stay
+      // held back. The binaries are not cosmetic: `effect-tsgo patch` copies
+      // one over @typescript/typescript-<platform>/lib/tsc, so the platform pin
+      // *is* the compiler `bun run check` runs. Letting deps:update move them
+      // alone swaps the compiler silently, which is how 0.24.3 ended up nine
+      // minors ahead of a 0.19.0 wrapper.
+      // A bump also arms every rule absent from tsconfig.base.json's
+      // diagnosticSeverity map, because omitted rules run at their upstream
+      // default rather than off. 0.33.0 is adopted with eleven such rules
+      // parked at "off" pending a one-rule-per-PR ratchet; moving off 0.33.0
+      // without clearing that queue lands them all at once.
       // @biomejs/biome 2.5.7 stops formatting JSON piped through
       // `biome format --stdin-file-path`, so `renderBiomeJson` — the writer
       // behind `beep tsconfig-sync` for docgen.json/tsconfig.json — emits

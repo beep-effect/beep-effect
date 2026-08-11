@@ -36,7 +36,7 @@ const committedPolicyText = O.getOrElse(
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
-    const decoded = S.decodeUnknownSync(FileGenerationPlanInput)({
+    const decoded = S.decodeSync(FileGenerationPlanInput)({
       outputDir: "/tmp/demo",
       directories: ["src"],
       files: [{ relativePath: "src/index.ts", content: "export {};\n" }],
@@ -128,7 +128,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           'import * as fc from "fast-check";',
           'import * as S from "effect/Schema";',
           "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitraryLazy(Worker);",
+          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
           "fc.property(WorkerArbitrary, (worker) => typeof worker.id === 'string');",
         ].join("\n")
       )
@@ -139,14 +139,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           'import * as fc from "fast-check";',
           'import * as S from "effect/Schema";',
           "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitrary(Worker);",
+          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
           "fc.property(fc.array(WorkerArbitrary), (workers) => workers.every((worker) => typeof worker.id === 'string'));",
         ].join("\n")
       )
     ).toBe(true);
-    expect(sourceTextHasSchemaArbitraryPropertyCoverage("const WorkerArbitrary = S.toArbitraryLazy(Worker);")).toBe(
-      false
-    );
+    expect(sourceTextHasSchemaArbitraryPropertyCoverage("const WorkerArbitrary = S.toArbitrary(Worker);")).toBe(false);
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(
         'import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";'

@@ -11,7 +11,7 @@ import { Effect, Ref } from "effect";
 import * as S from "effect/Schema";
 import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed";
 
-const path = S.decodeUnknownSync(OntologyFilePath)("tmp/ontology-workbench/pizza-tutorial.ttl");
+const path = S.decodeSync(OntologyFilePath)("tmp/ontology-workbench/pizza-tutorial.ttl");
 
 const codec = TurtleCodec.of({
   parse: Effect.fn("OntologyWorkspaceSeedTest.TurtleCodec.parse")(() => Effect.die("not used")),

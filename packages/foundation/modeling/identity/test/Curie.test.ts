@@ -1,4 +1,12 @@
-import { CoreVocab, CurieFromIri, contractOption, expand, expandOption, expandPredicate } from "@beep/identity";
+import {
+  CoreVocab,
+  CurieFromIri,
+  contract,
+  contractOption,
+  expand,
+  expandOption,
+  expandPredicate,
+} from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Equal from "effect/Equal";
@@ -61,7 +69,7 @@ describe("CURIE codec", () => {
 
   it("round-trips generated CoreVocab IRIs through the schema codec", () => {
     fc.assert(
-      fc.property(S.toArbitrary(CurieFromIri), (iri) => {
+      fc.property(S.toArbitrary(CurieFromIri)(fc), (iri) => {
         const decoded = O.flatMap(S.encodeOption(CurieFromIri)(iri), S.decodeUnknownOption(CurieFromIri));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
@@ -86,6 +94,15 @@ describe("CURIE codec", () => {
 
   it("expands inverse predicates", () => {
     expect(expandPredicate("^rdfs:subClassOf")).toEqual({
+      iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      inverse: true,
+    });
+  });
+
+  it("supports data-last CURIE operations", () => {
+    expect(expand(CoreVocab)("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+    expect(contract(CoreVocab)("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
+    expect(expandPredicate(CoreVocab)("^rdfs:subClassOf")).toEqual({
       iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
       inverse: true,
     });

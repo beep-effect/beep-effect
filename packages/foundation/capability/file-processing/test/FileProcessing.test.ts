@@ -32,18 +32,18 @@ import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ArtifactIdArbitrary = S.toArbitrary(ArtifactId);
-const ContentDigestArbitrary = S.toArbitrary(ContentDigest);
-const OperationIdArbitrary = S.toArbitrary(OperationId);
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation);
-const ProcessFileOperationArbitrary = S.toArbitrary(ProcessFileOperation);
-const TextSpanArbitrary = S.toArbitrary(TextSpan);
-const ProcessRunManifestArbitrary = S.toArbitrary(ProcessRunManifest);
-const FileProcessingCoverageSummaryArbitrary = S.toArbitrary(FileProcessingCoverageSummary);
-const SourceProcessingRecordArbitrary = S.toArbitrary(SourceProcessingRecord);
-const FileProcessingFailureRecordArbitrary = S.toArbitrary(FileProcessingFailureRecord);
-const ChildArtifactRecordArbitrary = S.toArbitrary(ChildArtifactRecord);
+const ArtifactIdArbitrary = S.toArbitrary(ArtifactId)(fc);
+const ContentDigestArbitrary = S.toArbitrary(ContentDigest)(fc);
+const OperationIdArbitrary = S.toArbitrary(OperationId)(fc);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation)(fc);
+const ProcessFileOperationArbitrary = S.toArbitrary(ProcessFileOperation)(fc);
+const TextSpanArbitrary = S.toArbitrary(TextSpan)(fc);
+const ProcessRunManifestArbitrary = S.toArbitrary(ProcessRunManifest)(fc);
+const FileProcessingCoverageSummaryArbitrary = S.toArbitrary(FileProcessingCoverageSummary)(fc);
+const SourceProcessingRecordArbitrary = S.toArbitrary(SourceProcessingRecord)(fc);
+const FileProcessingFailureRecordArbitrary = S.toArbitrary(FileProcessingFailureRecord)(fc);
+const ChildArtifactRecordArbitrary = S.toArbitrary(ChildArtifactRecord)(fc);
 const decodeTextSpan = S.decodeUnknownEffect(TextSpan);
 const encodeTextSpan = S.encodeEffect(TextSpan);
 const decodeProcessRunManifestJson = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
@@ -66,13 +66,9 @@ const assertJsonRoundTrip = <A, EncodeError, DecodeError>(
 };
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  digest: S.decodeEffect(ContentDigest)("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   ),
 });
@@ -134,16 +130,16 @@ describe("@beep/file-processing", () => {
         ExtractFileOperationArbitrary,
         ProcessFileOperationArbitrary,
         (artifactId, digest, operationId, source, extractOperation, processOperation) => {
-          const decodedArtifactId = Effect.runSync(S.decodeUnknownEffect(ArtifactId)(artifactId));
-          const decodedDigest = Effect.runSync(S.decodeUnknownEffect(ContentDigest)(digest));
-          const decodedOperationId = Effect.runSync(S.decodeUnknownEffect(OperationId)(operationId));
+          const decodedArtifactId = Effect.runSync(S.decodeEffect(ArtifactId)(artifactId));
+          const decodedDigest = Effect.runSync(S.decodeEffect(ContentDigest)(digest));
+          const decodedOperationId = Effect.runSync(S.decodeEffect(OperationId)(operationId));
           const encodedSource = Effect.runSync(S.encodeEffect(SourceArtifact)(source));
-          const decodedSource = Effect.runSync(S.decodeUnknownEffect(SourceArtifact)(encodedSource));
+          const decodedSource = Effect.runSync(S.decodeEffect(SourceArtifact)(encodedSource));
           const reencodedSource = Effect.runSync(S.encodeEffect(SourceArtifact)(decodedSource));
           const encodedExtract = Effect.runSync(S.encodeEffect(ExtractFileOperation)(extractOperation));
-          const decodedExtract = Effect.runSync(S.decodeUnknownEffect(ExtractFileOperation)(encodedExtract));
+          const decodedExtract = Effect.runSync(S.decodeEffect(ExtractFileOperation)(encodedExtract));
           const encodedProcess = Effect.runSync(S.encodeEffect(ProcessFileOperation)(processOperation));
-          const decodedProcess = Effect.runSync(S.decodeUnknownEffect(ProcessFileOperation)(encodedProcess));
+          const decodedProcess = Effect.runSync(S.decodeEffect(ProcessFileOperation)(encodedProcess));
 
           expect(decodedArtifactId).toBe(artifactId);
           expect(decodedDigest).toBe(digest);

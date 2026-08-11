@@ -181,7 +181,7 @@ const bootstrapWorkspace = Effect.fn(function* (
 describe("tsconfig-sync", () => {
   it("round-trips arbitrary tsconfig reference documents", () => {
     fc.assert(
-      fc.property(S.toArbitrary(TsconfigReferences), (value) => expectTsconfigReferencesRoundTrip(value)),
+      fc.property(S.toArbitrary(TsconfigReferences)(fc), (value) => expectTsconfigReferencesRoundTrip(value)),
       { numRuns: 25 }
     );
   });

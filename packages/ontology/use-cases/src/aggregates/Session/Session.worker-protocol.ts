@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
 import { OntologySnapshot } from "./Session.projections.ts";
 import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.ts";
+import type * as Result from "effect/Result";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
@@ -302,7 +303,10 @@ export const encodeWorkerCommand = (command: WorkerCommand): typeof WorkerComman
  * @category codecs
  * @since 0.0.0
  */
-export const decodeWorkerCommand = S.decodeUnknownResult(WorkerCommand);
+// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerCommand)`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerCommand, S.SchemaError> =
+  S.decodeUnknownResult(WorkerCommand);
 
 /**
  * Encode a `WorkerResult` for the trip back across the worker boundary.
@@ -338,7 +342,10 @@ export const encodeWorkerResult = (result: WorkerResult): typeof WorkerResult.En
  * @category codecs
  * @since 0.0.0
  */
-export const decodeWorkerResult = S.decodeUnknownResult(WorkerResult);
+// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerResult)`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult, S.SchemaError> =
+  S.decodeUnknownResult(WorkerResult);
 
 /**
  * A command the graph worker could not decode.

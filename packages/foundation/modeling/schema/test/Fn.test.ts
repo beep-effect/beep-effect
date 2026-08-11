@@ -30,7 +30,7 @@ describe("Fn schema", () => {
     });
     const handler = (count: number) => count + 1;
 
-    expect(S.decodeUnknownSync(schema)(handler)).toBe(handler);
+    expect(S.decodeSync(schema)(handler)).toBe(handler);
     expect(S.encodeSync(schema)(handler)).toBe(handler);
   });
 
@@ -242,15 +242,17 @@ describe("Fn convenience exports", () => {
   it("accepts any runtime function via AnyFn", () => {
     const handler = () => "ok";
 
-    expect(S.decodeUnknownSync(AnyFn)(handler)).toBe(handler);
+    expect(S.decodeSync(AnyFn)(handler)).toBe(handler);
   });
 
   it("creates thunk schemas with ThunkOf", () => {
-    const schema = ThunkOf(S.FiniteFromString, S.String);
+    const schema = ThunkOf({ output: S.FiniteFromString, error: S.String });
     const impl = schema.implementSync(() => 1);
+    const infallible = ThunkOf(S.String);
 
     expect(impl()).toBe(1);
     expect(schema.errorSchema).toBe(S.String);
+    expect(infallible.errorSchema).toBe(S.Never);
   });
 
   it("derives formatter and equivalence instances", () => {

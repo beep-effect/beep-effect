@@ -31,7 +31,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PlatformError } from "effect";
 
-const AgentModeArbitrary = S.toArbitrary(AgentMode);
+const AgentModeArbitrary = S.toArbitrary(AgentMode)(fc);
 
 const repoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
@@ -107,7 +107,7 @@ describe("@beep/agents-domain", () => {
   it("round-trips schema-derived agent modes", () =>
     fc.assert(
       fc.property(AgentModeArbitrary, (mode) => {
-        const decoded = S.decodeUnknownSync(AgentMode)(mode);
+        const decoded = S.decodeSync(AgentMode)(mode);
         const encoded = S.encodeSync(AgentMode)(decoded);
 
         expect(encoded).toBe(mode);
@@ -142,7 +142,7 @@ describe("@beep/agents-domain", () => {
     );
     expect(assistantContentDocument).toStrictEqual(S.toJsonSchemaDocument(AssistantContent));
 
-    const decoded = S.decodeUnknownSync(RootAssistantBlock)({
+    const decoded = S.decodeSync(RootAssistantBlock)({
       type: "paragraph",
       children: [{ type: "text", text: "hello" }],
     });
@@ -186,7 +186,7 @@ describe("@beep/agents-domain", () => {
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }
@@ -283,7 +283,7 @@ describe("@beep/agents-domain", () => {
 
   it("rejects malformed assistant table and youtube blocks at the domain boundary", () => {
     expect(() =>
-      S.decodeUnknownSync(TableBlock)({
+      S.decodeSync(TableBlock)({
         type: "table",
         rows: [
           { cells: [{ children: [{ type: "text", text: "Name" }] }] },
@@ -295,7 +295,7 @@ describe("@beep/agents-domain", () => {
     ).toThrow(/Tables must contain/);
 
     expect(() =>
-      S.decodeUnknownSync(YouTubeBlock)({
+      S.decodeSync(YouTubeBlock)({
         type: "youtube",
         videoId: "https://youtu.be/dQw4w9WgXcQ",
       })

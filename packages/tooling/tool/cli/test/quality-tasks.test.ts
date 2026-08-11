@@ -523,8 +523,8 @@ describe("quality task adapter", () => {
   it("decodes the failure policy and wave report schemas", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(yield* S.decodeUnknownEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
-        const report = yield* S.decodeUnknownEffect(GithubCheckRunReport)({
+        expect(yield* S.decodeEffect(GithubCheckFailurePolicy)("fail-fast")).toBe("fail-fast");
+        const report = yield* S.decodeEffect(GithubCheckRunReport)({
           failurePolicy: "collect-all",
           lanes: [
             {
@@ -541,10 +541,10 @@ describe("quality task adapter", () => {
     ));
 
   it("property: the wave report schema round-trips arbitrary reports", () => {
-    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport);
+    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
     fc.assert(
       fc.property(ReportArbitrary, (report) => {
-        const decoded = S.decodeUnknownSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
+        const decoded = S.decodeSync(GithubCheckRunReport)(S.encodeSync(GithubCheckRunReport)(report));
         expect(decoded.schemaVersion).toBe("github-check-run/v1");
         expect(decoded.failurePolicy).toBe(report.failurePolicy);
         expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));

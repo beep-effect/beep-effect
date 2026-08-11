@@ -1,6 +1,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import {
+  makeUsptoError,
   normalizeUsptoApplicationNumber,
   normalizeUsptoPatentNumber,
   Uspto,
@@ -78,14 +79,14 @@ const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Laye
 const usptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
-const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber);
-const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber);
-const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput);
-const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata);
-const ContinuityArbitrary = S.toArbitrary(UsptoContinuity);
-const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference);
-const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason);
-const ErrorArbitrary = S.toArbitrary(UsptoError);
+const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber)(fc);
+const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber)(fc);
+const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput)(fc);
+const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata)(fc);
+const ContinuityArbitrary = S.toArbitrary(UsptoContinuity)(fc);
+const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason)(fc);
+const ErrorArbitrary = S.toArbitrary(UsptoError)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -199,6 +200,13 @@ describe("Uspto service", () => {
 });
 
 describe("Uspto identifier normalization", () => {
+  it("constructs errors in data-last form", () => {
+    const error = makeUsptoError({ cause: "socket hang up" })("transport");
+
+    expect(error.reason).toBe("transport");
+    expect(error.cause).toStrictEqual(O.some("socket hang up"));
+  });
+
   it("normalizes application numbers", () => {
     expect(normalizeUsptoApplicationNumber("16/138,242")).toStrictEqual(O.some("16138242"));
     expect(normalizeUsptoApplicationNumber("16-138-242")).toStrictEqual(O.some("16138242"));
@@ -217,7 +225,7 @@ describe("Uspto identifier normalization", () => {
 describe("Uspto schema parity", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
+      S.decodeResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
     );
     const metadata = decode(UsptoApplicationMetadata, {
       applicationNumberText: "16138242",

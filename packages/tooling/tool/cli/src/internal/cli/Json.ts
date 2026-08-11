@@ -6,7 +6,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { CauseTaggedError } from "@beep/schema";
+import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
@@ -149,6 +151,12 @@ export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(fun
   return yield* encodeJson(value);
 });
 
+/** Size guard and `jsonc.format` overrides accepted by {@link renderPrettyCommandJson}. */
+type RenderPrettyCommandJsonOptions = {
+  readonly maxLength?: number;
+  readonly formattingOptions?: jsonc.FormattingOptions;
+};
+
 /**
  * Pretty-render an already-encoded JSON string with a size guard.
  *
@@ -183,20 +191,20 @@ export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(fun
  * @category formatting
  * @since 0.0.0
  */
-export const renderPrettyCommandJson = (
-  encoded: string,
-  options?: {
-    readonly maxLength?: number;
-    readonly formattingOptions?: jsonc.FormattingOptions;
+export const renderPrettyCommandJson: {
+  (options?: RenderPrettyCommandJsonOptions): (encoded: string) => string;
+  (encoded: string, options?: RenderPrettyCommandJsonOptions): string;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (encoded: string, options?: RenderPrettyCommandJsonOptions): string => {
+    const maxLength = options?.maxLength;
+    if (maxLength !== undefined && encoded.length > maxLength) {
+      return `${encoded}\n`;
+    }
+    const edits = jsonc.format(encoded, undefined, options?.formattingOptions ?? DEFAULT_JSON_FORMATTING_OPTIONS);
+    return `${jsonc.applyEdits(encoded, edits)}\n`;
   }
-): string => {
-  const maxLength = options?.maxLength;
-  if (maxLength !== undefined && encoded.length > maxLength) {
-    return `${encoded}\n`;
-  }
-  const edits = jsonc.format(encoded, undefined, options?.formattingOptions ?? DEFAULT_JSON_FORMATTING_OPTIONS);
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
+);
 
 /**
  * Encode a JSON-compatible value and pretty-render it with a trailing newline.

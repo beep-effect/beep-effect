@@ -278,8 +278,8 @@ describe("P3 identity namespaces", () => {
   it("round-trips schema-derived ids for every identity namespace", () => {
     for (const spec of specs) {
       fc.assert(
-        fc.property(S.toArbitrary(spec.schema), (id) => {
-          const decoded = S.decodeUnknownSync(spec.schema)(id);
+        fc.property(S.toArbitrary(spec.schema)(fc), (id) => {
+          const decoded = S.decodeSync(spec.schema)(id);
           const encoded = S.encodeSync(spec.schema)(decoded);
 
           expect(encoded, spec.label).toBe(id);

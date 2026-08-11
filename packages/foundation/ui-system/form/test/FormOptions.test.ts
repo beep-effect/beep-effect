@@ -7,7 +7,7 @@ import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 const schema = S.Struct({ name: withKeyDefaults(S.String, "") });
-const ValidateOnArbitrary = S.toArbitrary(ValidateOn);
+const ValidateOnArbitrary = S.toArbitrary(ValidateOn)(fc);
 
 describe("@beep/form FormOptions", () => {
   it("makeFormOptions wires explicit defaults and a sync submit validator", () => {
@@ -59,7 +59,7 @@ describe("@beep/form FormOptions", () => {
     fc.assert(
       fc.property(ValidateOnArbitrary, (value) => {
         const encoded = Result.getOrThrow(S.encodeResult(ValidateOn)(value));
-        const decoded = Result.getOrThrow(S.decodeUnknownResult(ValidateOn)(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(ValidateOn)(encoded));
 
         expect(encoded).toBe(value);
         expect(decoded).toBe(value);

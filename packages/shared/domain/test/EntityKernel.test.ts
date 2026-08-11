@@ -226,7 +226,7 @@ describe("EntityRef and shared entity primitives", () => {
   it.effect(
     "builds entity references and validates primitive schemas",
     Effect.fnUntraced(function* () {
-      const id = yield* S.decodeUnknownEffect(DocumentId)(1);
+      const id = yield* S.decodeEffect(DocumentId)(1);
       const ref = EntityRef.make(DocumentId, id);
       const dataLastRef = EntityRef.make(id)(DocumentId);
       const resultRef = EntityRef.makeResult(DocumentId, id);
@@ -237,22 +237,22 @@ describe("EntityRef and shared entity primitives", () => {
       if (Result.isSuccess(resultRef)) {
         expect(resultRef.success.id).toBe(1);
       }
-      expect(yield* S.decodeUnknownEffect(EntityRef.EntityType)("SharedDocument")).toBe("SharedDocument");
+      expect(yield* S.decodeEffect(EntityRef.EntityType)("SharedDocument")).toBe("SharedDocument");
       const sha256Fixture = Str.repeat("a", 64);
-      expect(yield* S.decodeUnknownEffect(primitives.Sha256)(sha256Fixture)).toBe(sha256Fixture);
-      expect(yield* S.decodeUnknownEffect(primitives.Ed25519Signature)("signature")).toBe("signature");
-      expect(yield* S.decodeUnknownEffect(primitives.EncryptionKeyId)("key")).toBe("key");
-      expect(yield* S.decodeUnknownEffect(primitives.HybridLogicalClock)("clock")).toBe("clock");
-      expect(yield* S.decodeUnknownEffect(primitives.VectorClock)({ replica: 1 })).toEqual({ replica: 1 });
+      expect(yield* S.decodeEffect(primitives.Sha256)(sha256Fixture)).toBe(sha256Fixture);
+      expect(yield* S.decodeEffect(primitives.Ed25519Signature)("signature")).toBe("signature");
+      expect(yield* S.decodeEffect(primitives.EncryptionKeyId)("key")).toBe("key");
+      expect(yield* S.decodeEffect(primitives.HybridLogicalClock)("clock")).toBe("clock");
+      expect(yield* S.decodeEffect(primitives.VectorClock)({ replica: 1 })).toEqual({ replica: 1 });
     })
   );
 
   it("round-trips schema-derived document ids through entity references", () =>
     fc.assert(
-      fc.property(S.toArbitrary(DocumentId), (id) => {
+      fc.property(S.toArbitrary(DocumentId)(fc), (id) => {
         const ref = EntityRef.make(DocumentId, id);
         const encodedRef = S.encodeSync(EntityRef.EntityRef)(ref);
-        const decodedRef = S.decodeUnknownSync(EntityRef.EntityRef)(encodedRef);
+        const decodedRef = S.decodeSync(EntityRef.EntityRef)(encodedRef);
 
         expect(encodedRef).toEqual({
           entityType: DocumentId.entityType,

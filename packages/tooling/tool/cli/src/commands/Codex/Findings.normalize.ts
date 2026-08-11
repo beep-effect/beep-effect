@@ -11,9 +11,11 @@
 
 import { A, O, Str } from "@beep/utils";
 import { Effect, HashMap, Order } from "effect";
+import { dual } from "effect/Function";
 import { CodexFindingSeverity as Severity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import { CodexFindingRecord, CodexPacketPlan, CodexSeverityCounts } from "./Findings.schemas.ts";
+import type { Ordering } from "effect/Ordering";
 import type { CodexFindingSeverity, CodexFindingsCapturePayload } from "./Findings.capture.schemas.ts";
 
 /**
@@ -66,9 +68,15 @@ type OrderableFinding = {
  * @category utilities
  * @since 0.0.0
  */
-export const captureOrder: Order.Order<OrderableFinding> = Order.combine(
-  Order.mapInput(Order.Number, (finding: OrderableFinding) => severityRank(finding.severity)),
-  Order.mapInput(Order.String, (finding: OrderableFinding) => finding.codexId)
+export const captureOrder: {
+  (that: OrderableFinding): (self: OrderableFinding) => Ordering;
+  (self: OrderableFinding, that: OrderableFinding): Ordering;
+} = dual(
+  2,
+  Order.combine(
+    Order.mapInput(Order.Number, (finding: OrderableFinding) => severityRank(finding.severity)),
+    Order.mapInput(Order.String, (finding: OrderableFinding) => finding.codexId)
+  )
 );
 
 /**

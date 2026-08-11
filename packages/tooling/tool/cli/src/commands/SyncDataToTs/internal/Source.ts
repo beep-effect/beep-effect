@@ -157,28 +157,40 @@ export const formatTsDocCommentValue: (value: string) => string = flow(
  * @category constructors
  * @since 0.0.0
  */
-export const outputFile = (path: string, content: string): SyncDataOutputFile =>
-  SyncDataOutputFile.make({ path, content });
+export const outputFile: {
+  (content: string): (path: string) => SyncDataOutputFile;
+  (path: string, content: string): SyncDataOutputFile;
+} = dual(2, (path: string, content: string): SyncDataOutputFile => SyncDataOutputFile.make({ path, content }));
+
+type SourceMetadataExtras = Partial<Pick<SyncDataSourceMetadata, "version" | "published">>;
 
 /**
  * Create stable source metadata.
  *
+ * **Gotchas**
+ *
+ * `extras` is required so the helper stays arity-dispatched: pass `{}` when the
+ * source carries no version or published date.
+ *
  * @param source - The fetched source to describe.
- * @param extras - Optional version and published-date metadata.
+ * @param extras - Version and published-date metadata, possibly empty.
  * @returns Stable source metadata for the fetched source.
  * @category constructors
  * @since 0.0.0
  */
-export const sourceMetadata = (
-  source: SyncDataFetchedSource,
-  extras: Partial<Pick<SyncDataSourceMetadata, "version" | "published">> = {}
-): SyncDataSourceMetadata =>
-  SyncDataSourceMetadata.make({
-    id: source.id,
-    url: source.url,
-    sha256: source.sha256,
-    ...extras,
-  });
+export const sourceMetadata: {
+  (extras: SourceMetadataExtras): (source: SyncDataFetchedSource) => SyncDataSourceMetadata;
+  (source: SyncDataFetchedSource, extras: SourceMetadataExtras): SyncDataSourceMetadata;
+} = dual(
+  2,
+  (source: SyncDataFetchedSource, extras: SourceMetadataExtras): SyncDataSourceMetadata =>
+    SyncDataSourceMetadata.make({
+      id: source.id,
+      url: source.url,
+      sha256: source.sha256,
+      ...extras,
+    })
+);
 
 type FetchSourceOptions = {
   readonly headers?: Readonly<Record<string, string>>;
@@ -291,7 +303,7 @@ const decodeCsvText = Effect.fn("SyncDataToTs.decodeCsvText")(function* (content
         })
       ) {}
 
-      return S.decodeUnknownEffect(CSV({})(ParsedCsvRow))(content).pipe(
+      return S.decodeEffect(CSV({})(ParsedCsvRow))(content).pipe(
         Effect.map((rows) => attachCsvColumns(rows as ReadonlyArray<ParsedCsvRecord>, headerRow))
       );
     },

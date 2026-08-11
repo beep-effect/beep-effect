@@ -49,9 +49,9 @@ const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(s
   S.decodeUnknownSync(schema);
 
 const isJsonLdLiteralValue = S.is(JsonLdLiteralValue);
-const JsonLdContextArbitrary = S.toArbitrary(JsonLdContext);
-const JsonLdFrameArbitrary = S.toArbitrary(JsonLdFrame);
-const JsonLdLiteralValueArbitrary = S.toArbitrary(JsonLdLiteralValue);
+const JsonLdContextArbitrary = S.toArbitrary(JsonLdContext)(fc);
+const JsonLdFrameArbitrary = S.toArbitrary(JsonLdFrame)(fc);
+const JsonLdLiteralValueArbitrary = S.toArbitrary(JsonLdLiteralValue)(fc);
 
 const rawContext = {
   "@base": "https://example.com/",
@@ -163,15 +163,15 @@ describe("JSON-LD", () => {
         JsonLdFrameArbitrary,
         (context, literalValue, frame) => {
           const encodedContext = Effect.runSync(S.encodeEffect(JsonLdContext)(context));
-          const decodedContext = Effect.runSync(S.decodeUnknownEffect(JsonLdContext)(encodedContext));
+          const decodedContext = Effect.runSync(S.decodeEffect(JsonLdContext)(encodedContext));
           const reencodedContext = Effect.runSync(S.encodeEffect(JsonLdContext)(decodedContext));
 
           const encodedLiteralValue = Effect.runSync(S.encodeEffect(JsonLdLiteralValue)(literalValue));
-          const decodedLiteralValue = Effect.runSync(S.decodeUnknownEffect(JsonLdLiteralValue)(encodedLiteralValue));
+          const decodedLiteralValue = Effect.runSync(S.decodeEffect(JsonLdLiteralValue)(encodedLiteralValue));
           const reencodedLiteralValue = Effect.runSync(S.encodeEffect(JsonLdLiteralValue)(decodedLiteralValue));
 
           const encodedFrame = Effect.runSync(S.encodeEffect(JsonLdFrame)(frame));
-          const decodedFrame = Effect.runSync(S.decodeUnknownEffect(JsonLdFrame)(encodedFrame));
+          const decodedFrame = Effect.runSync(S.decodeEffect(JsonLdFrame)(encodedFrame));
           const reencodedFrame = Effect.runSync(S.encodeEffect(JsonLdFrame)(decodedFrame));
 
           expect(reencodedContext).toEqual(encodedContext);
@@ -243,7 +243,7 @@ describe("JSON-LD", () => {
 
   it("round-trips schema-derived JSON-LD stream serialize requests through encoded shapes", { timeout: 30000 }, () =>
     fc.assert(
-      fc.property(S.toArbitrary(JsonLdStreamSerializeRequest), (request) => {
+      fc.property(S.toArbitrary(JsonLdStreamSerializeRequest)(fc), (request) => {
         const encoded = S.encodeSync(JsonLdStreamSerializeRequest)(request);
         const decoded = S.decodeSync(JsonLdStreamSerializeRequest)(encoded);
 

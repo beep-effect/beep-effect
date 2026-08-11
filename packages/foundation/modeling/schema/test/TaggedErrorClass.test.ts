@@ -243,7 +243,7 @@ describe("TaggedErrorClass", () => {
     const equivalence = S.toEquivalence(BeepError);
     const made = BeepError.make({ beep: "boop" });
     const encoded = S.encodeUnknownSync(BeepError)(made);
-    const roundTripped = S.decodeUnknownSync(BeepError)(encoded);
+    const roundTripped = S.decodeSync(BeepError)(encoded);
 
     expect(roundTripped.beep).toBe("boop");
     expect(equivalence(roundTripped, made)).toBe(true);
@@ -259,7 +259,7 @@ describe("TaggedErrorClass", () => {
       count: 2,
     });
     const encoded = S.encodeUnknownSync(RecursiveExtendedBeepError)(made);
-    const roundTripped = S.decodeUnknownSync(RecursiveExtendedBeepError)(encoded);
+    const roundTripped = S.decodeSync(RecursiveExtendedBeepError)(encoded);
 
     expect(equivalence(roundTripped, made)).toBe(true);
     expect(
@@ -278,9 +278,9 @@ describe("TaggedErrorClass", () => {
     const equivalence = S.toEquivalence(RecursiveExtendedBeepError);
 
     fc.assert(
-      fc.property(S.toArbitrary(RecursiveExtendedBeepError), (sampled) => {
+      fc.property(S.toArbitrary(RecursiveExtendedBeepError)(fc), (sampled) => {
         const encoded = S.encodeUnknownSync(RecursiveExtendedBeepError)(sampled);
-        const roundTripped = S.decodeUnknownSync(RecursiveExtendedBeepError)(encoded);
+        const roundTripped = S.decodeSync(RecursiveExtendedBeepError)(encoded);
 
         expect(equivalence(roundTripped, sampled)).toBe(true);
       }),
@@ -291,18 +291,16 @@ describe("TaggedErrorClass", () => {
   it("honors explicit equivalence annotations on classes, input structs, and extensions", () => {
     const direct = CustomEquivalenceError.make({ beep: "boop" });
     const directEncoded = S.encodeUnknownSync(CustomEquivalenceError)(direct);
-    const directRoundTrip = S.decodeUnknownSync(CustomEquivalenceError)(directEncoded);
+    const directRoundTrip = S.decodeSync(CustomEquivalenceError)(directEncoded);
     const fromStruct = StructCustomEquivalenceError.make({ beep: "boop" });
     const fromStructEncoded = S.encodeUnknownSync(StructCustomEquivalenceError)(fromStruct);
-    const fromStructRoundTrip = S.decodeUnknownSync(StructCustomEquivalenceError)(fromStructEncoded);
+    const fromStructRoundTrip = S.decodeSync(StructCustomEquivalenceError)(fromStructEncoded);
     const extended = ExtendedCustomEquivalenceError.make({ beep: "boop", count: 2 });
     const extendedEncoded = S.encodeUnknownSync(ExtendedCustomEquivalenceError)(extended);
-    const extendedRoundTrip = S.decodeUnknownSync(ExtendedCustomEquivalenceError)(extendedEncoded);
+    const extendedRoundTrip = S.decodeSync(ExtendedCustomEquivalenceError)(extendedEncoded);
     const extendedFromStruct = StructExtendedCustomEquivalenceError.make({ beep: "boop", count: 2 });
     const extendedFromStructEncoded = S.encodeUnknownSync(StructExtendedCustomEquivalenceError)(extendedFromStruct);
-    const extendedFromStructRoundTrip = S.decodeUnknownSync(StructExtendedCustomEquivalenceError)(
-      extendedFromStructEncoded
-    );
+    const extendedFromStructRoundTrip = S.decodeSync(StructExtendedCustomEquivalenceError)(extendedFromStructEncoded);
 
     expect(S.toEquivalence(CustomEquivalenceError)(directRoundTrip, direct)).toBe(false);
     expect(S.toEquivalence(StructCustomEquivalenceError)(fromStructRoundTrip, fromStruct)).toBe(false);

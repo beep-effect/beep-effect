@@ -9,6 +9,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -568,7 +569,10 @@ export const normalizeKnipReportForTesting = (text: string) =>
  * @category testing
  * @since 0.0.0
  */
-export const compareKnipFindingsForTesting = compareFindings;
+export const compareKnipFindingsForTesting: {
+  (baseline: ReadonlyArray<KnipFinding>): (current: ReadonlyArray<KnipFinding>) => KnipComparison;
+  (current: ReadonlyArray<KnipFinding>, baseline: ReadonlyArray<KnipFinding>): KnipComparison;
+} = dual(2, compareFindings);
 
 /**
  * Build a deterministic Knip baseline for focused tests.

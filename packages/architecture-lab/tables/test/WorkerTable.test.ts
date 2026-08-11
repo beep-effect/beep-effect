@@ -9,7 +9,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(DomainWorker.WorkerOrganizationId);
-const WorkerArbitrary = S.toArbitrary(DomainWorker.Worker);
+const WorkerArbitrary = S.toArbitrary(DomainWorker.Worker)(fc);
 const WorkerEquivalence = S.toEquivalence(DomainWorker.Worker);
 
 describe("Worker table", () => {

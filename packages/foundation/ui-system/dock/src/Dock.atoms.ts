@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { Context, Effect, Layer, Logger } from "effect";
+import { dual } from "effect/Function";
 import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import type {
   DockAtomFeedEntry,
@@ -31,7 +32,7 @@ import type { DockEngine } from "./DockEngine.service.ts";
 /**
  * Console observability layer installed in each isolated Atom graph.
  *
- * **Example** (Build observability layer)
+ * **Example** (Installing console observability)
  *
  * ```ts
  * import { DockAtomObservabilityLive } from "@beep/dock"
@@ -119,35 +120,8 @@ const makeDockAtomGraph = <E>(
   };
 };
 
-/**
- * Builds a validated isolated Atom session from caller-provided services.
- *
- * **Details**
- *
- * Layer construction failures remain typed in the returned Effect.
- *
- * **Example** (Custom services atom session)
- *
- * ```ts
- * import { DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtomsWith, makeDockSnapshotStoreMemory } from "@beep/dock"
- * import { Effect, Layer } from "effect"
- *
- * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
- * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
- * const groupCount = await Effect.runPromise(
- *   Effect.acquireUseRelease(
- *     makeDockAtomsWith(Layer.mergeAll(DockEngineLive, makeDockSnapshotStoreMemory()), workspace),
- *     (session) => Effect.sync(() => session.registry.get(session.groupCountAtom)),
- *     (session) => Effect.sync(session.dispose)
- *   )
- * )
- * console.log(groupCount)
- * ```
- *
- * @category atoms
- * @since 0.0.0
- */
-export const makeDockAtomsWith = <E>(
+/** Shared implementation behind the dual `makeDockAtomsWith` signature. */
+const makeDockAtomsWithImpl = <E>(
   servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>,
   initial: DockWorkspace = DockWorkspace.empty
 ) =>
@@ -198,9 +172,53 @@ export const makeDockAtomsWith = <E>(
   );
 
 /**
+ * Named carrier for the session Effect so the dual signature does not repeat a
+ * deferred `ReturnType<...>` — docgen's type printer recurses forever on that form.
+ */
+interface DockAtomsSessionEffect<E> extends ReturnType<typeof makeDockAtomsWithImpl<E>> {}
+
+/**
+ * Builds a validated isolated Atom session from caller-provided services.
+ *
+ * **Details**
+ *
+ * Layer construction failures remain typed in the returned Effect.
+ *
+ * **Example** (Building a session with services)
+ *
+ * ```ts
+ * import { DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtomsWith, makeDockSnapshotStoreMemory } from "@beep/dock"
+ * import { Effect, Layer } from "effect"
+ *
+ * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
+ * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
+ * const groupCount = await Effect.runPromise(
+ *   Effect.acquireUseRelease(
+ *     makeDockAtomsWith(Layer.mergeAll(DockEngineLive, makeDockSnapshotStoreMemory()), workspace),
+ *     (session) => Effect.sync(() => session.registry.get(session.groupCountAtom)),
+ *     (session) => Effect.sync(session.dispose)
+ *   )
+ * )
+ * console.log(groupCount)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const makeDockAtomsWith: {
+  (
+    initial?: DockWorkspace
+  ): <E>(servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>) => DockAtomsSessionEffect<E>;
+  <E>(
+    servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>,
+    initial?: DockWorkspace
+  ): DockAtomsSessionEffect<E>;
+} = dual((args) => Layer.isLayer(args[0]), makeDockAtomsWithImpl);
+
+/**
  * Builds a validated isolated Atom session with live in-memory services.
  *
- * **Example** (Live in-memory atom session)
+ * **Example** (Building an in-memory session)
  *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtoms } from "@beep/dock"

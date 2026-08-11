@@ -69,11 +69,11 @@ const DRIVE_ID = "b!drive";
 const ITEM_ID = "01ABC";
 const DOWNLOAD_URL = "https://download.example.test/memo.docx";
 const METADATA_URL = `${GRAPH_BASE_URL}/drives/${DRIVE_ID}/items/${ITEM_ID}?$select=id%2Cname%2Csize%2Cfile%2Cfolder%2C%40microsoft.graph.downloadUrl`;
-const M365ConfigInputArbitrary = S.toArbitrary(M365ConfigInput);
-const M365ErrorArbitrary = S.toArbitrary(M365Error);
-const GraphDriveItemArbitrary = S.toArbitrary(GraphDriveItem);
-const M365ListMessagesRequestArbitrary = S.toArbitrary(M365ListMessagesRequest);
-const M365DriveItemDownloadArbitrary = S.toArbitrary(M365DriveItemDownload);
+const M365ConfigInputArbitrary = S.toArbitrary(M365ConfigInput)(fc);
+const M365ErrorArbitrary = S.toArbitrary(M365Error)(fc);
+const GraphDriveItemArbitrary = S.toArbitrary(GraphDriveItem)(fc);
+const M365ListMessagesRequestArbitrary = S.toArbitrary(M365ListMessagesRequest)(fc);
+const M365DriveItemDownloadArbitrary = S.toArbitrary(M365DriveItemDownload)(fc);
 const sameM365Error = S.toEquivalence(M365Error);
 const sameGraphDriveItem = S.toEquivalence(GraphDriveItem);
 const sameM365ListMessagesRequest = S.toEquivalence(M365ListMessagesRequest);
@@ -267,7 +267,7 @@ const routeFixture = (request: HttpClientRequest.HttpClientRequest): Effect.Effe
 describe("@beep/m365 service", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeUnknownResult(M365ConfigInput)({
+      S.decodeResult(M365ConfigInput)({
         authority: "https://login.microsoftonline.com/common",
         clientId: "client-id",
         graphBaseUrl: GRAPH_BASE_URL,
@@ -279,7 +279,7 @@ describe("@beep/m365 service", () => {
       })
     );
     const drive = Result.getOrThrow(
-      S.decodeUnknownResult(GraphDrive)({
+      S.decodeResult(GraphDrive)({
         id: DRIVE_ID,
         quota: {
           remaining: 12,
@@ -288,22 +288,22 @@ describe("@beep/m365 service", () => {
         },
       })
     );
-    const folder = Result.getOrThrow(S.decodeUnknownResult(GraphFolder)({ childCount: 2 }));
+    const folder = Result.getOrThrow(S.decodeResult(GraphFolder)({ childCount: 2 }));
     const item = Result.getOrThrow(
-      S.decodeUnknownResult(GraphDriveItem)({
+      S.decodeResult(GraphDriveItem)({
         folder: { childCount: 2 },
         id: ITEM_ID,
         size: 3,
       })
     );
     const messagesRequest = Result.getOrThrow(
-      S.decodeUnknownResult(M365ListMessagesRequest)({
+      S.decodeResult(M365ListMessagesRequest)({
         filter: "receivedDateTime ge 2026-01-01",
         top: 2,
         userId: "user-id",
       })
     );
-    const sitesRequest = Result.getOrThrow(S.decodeUnknownResult(M365ListSitesRequest)({}));
+    const sitesRequest = Result.getOrThrow(S.decodeResult(M365ListSitesRequest)({}));
     const error = M365Error.fromReason("throttled", {
       resource: "drives",
       retryAfterSeconds: 12,

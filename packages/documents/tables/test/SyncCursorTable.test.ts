@@ -15,7 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SyncCursorArbitrary = S.toArbitrary(DomainSyncCursor.SyncCursor);
+const SyncCursorArbitrary = S.toArbitrary(DomainSyncCursor.SyncCursor)(fc);
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
 const indexConfigNamed = (name: string) =>

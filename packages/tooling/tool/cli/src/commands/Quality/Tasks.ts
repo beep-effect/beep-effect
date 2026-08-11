@@ -23,6 +23,7 @@ import {
   Ref,
 } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -1520,10 +1521,14 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
  * @category utilities
  * @since 0.0.0
  */
-export const rootLintPolicyStepsForTesting = (
-  repoRoot: string,
-  files?: ReadonlyArray<string>
-): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files);
+export const rootLintPolicyStepsForTesting: {
+  (files?: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
+    rootRepoLintPolicySteps(repoRoot, files)
+);
 
 /**
  * Run the repo-wide root lint policy checks without the aggregate Turbo lint lane.
@@ -2114,4 +2119,7 @@ export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeCh
  * @category utilities
  * @since 0.0.0
  */
-export const lintFixChangedStepForTesting = lintFixChangedStep;
+export const lintFixChangedStepForTesting: {
+  (files: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+  (repoRoot: string, files: ReadonlyArray<string>): QualityTaskStep;
+} = dual(2, lintFixChangedStep);

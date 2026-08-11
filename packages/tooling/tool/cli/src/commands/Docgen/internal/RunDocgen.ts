@@ -151,18 +151,18 @@ const runDocgenForPackageEffect = Effect.fn("DocgenOperations.runDocgenForPackag
  */
 export const runDocgenForPackage: {
   (
-    targetPackage: DocgenWorkspacePackage,
     options?: RunDocgenForPackageOptions
-  ): Effect.Effect<
+  ): (
+    targetPackage: DocgenWorkspacePackage
+  ) => Effect.Effect<
     DocgenGenerationResult,
     DocgenGenerationResult,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner
   >;
   (
-    options: RunDocgenForPackageOptions
-  ): (
-    targetPackage: DocgenWorkspacePackage
-  ) => Effect.Effect<
+    targetPackage: DocgenWorkspacePackage,
+    options?: RunDocgenForPackageOptions
+  ): Effect.Effect<
     DocgenGenerationResult,
     DocgenGenerationResult,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner

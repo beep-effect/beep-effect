@@ -128,9 +128,8 @@ class IntakeFileMetadata extends S.Class<IntakeFileMetadata>($I`IntakeFileMetada
  */
 export const intakeRefusal = (file: IntakeFileMetadata): O.Option<string> =>
   Match.value(file.size).pipe(
-    Match.when(
-      (size) => size > MAX_INTAKE_FILE_BYTES,
-      (size) => O.some(`${formatMegabytes(size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`)
+    Match.when(N.isGreaterThan(MAX_INTAKE_FILE_BYTES), (size) =>
+      O.some(`${formatMegabytes(size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`)
     ),
     Match.when(0, () => O.some("This file is empty, so there is nothing to file.")),
     Match.orElse(O.none<string>)
@@ -326,38 +325,65 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   $I.annote("DocumentIntakeState", {
     description: "Renderer-owned document intake progress, results, and operator status.",
   })
-) {}
-
-const appendIntakeResult = (state: DocumentIntakeState, result: IntakeResultEntry): DocumentIntakeState =>
-  DocumentIntakeState.make({ ...state, results: A.append(state.results, result) });
-
-const clearIntakeResults = (state: DocumentIntakeState): DocumentIntakeState =>
-  DocumentIntakeState.make({ ...state, results: [] });
-
-const finishIntakeBatch = (state: DocumentIntakeState): DocumentIntakeState =>
-  DocumentIntakeState.make({
-    ...state,
-    activeBatches: NonNegativeInt.make(state.activeBatches - 1),
+) {
+  /**
+   * The canonical zero state: no batches, no results, idle vault selection.
+   */
+  static readonly initial = DocumentIntakeState.make({
+    activeBatches: NonNegativeInt.make(0),
+    isDragging: false,
+    results: [],
+    vaultSelection: VaultSelectionState.cases.idle.make(),
   });
 
-const startIntakeBatch = (state: DocumentIntakeState): DocumentIntakeState =>
-  DocumentIntakeState.make({
-    ...state,
-    activeBatches: NonNegativeInt.make(state.activeBatches + 1),
-  });
+  /**
+   * Append one completed intake result.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  appendResult(result: IntakeResultEntry): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, results: A.append(this.results, result) });
+  }
 
-const setIntakeDragging = (state: DocumentIntakeState, isDragging: boolean): DocumentIntakeState =>
-  DocumentIntakeState.make({ ...state, isDragging });
+  /**
+   * Drop all intake results.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  clearResults(): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, results: [] });
+  }
 
-const setVaultSelection = (state: DocumentIntakeState, vaultSelection: VaultSelectionState): DocumentIntakeState =>
-  DocumentIntakeState.make({ ...state, vaultSelection });
+  /**
+   * Record one more in-flight intake batch.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  startBatch(): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches + 1) });
+  }
 
-const initialDocumentIntakeState = DocumentIntakeState.make({
-  activeBatches: NonNegativeInt.make(0),
-  isDragging: false,
-  results: [],
-  vaultSelection: VaultSelectionState.cases.idle.make(),
-});
+  /**
+   * Record one in-flight intake batch finishing.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  finishBatch(): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches - 1) });
+  }
+
+  /**
+   * Set the drag-over highlight flag.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  withDragging(isDragging: boolean): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, isDragging });
+  }
+
+  /**
+   * Replace the vault-selection operator status.
+   */
+  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
+  withVaultSelection(vaultSelection: VaultSelectionState): DocumentIntakeState {
+    return DocumentIntakeState.make({ ...this, vaultSelection });
+  }
+}
 
 /**
  * Per-workspace document intake renderer state.
@@ -374,7 +400,7 @@ const initialDocumentIntakeState = DocumentIntakeState.make({
  * @since 0.0.0
  */
 export const documentIntakeStateAtoms = Atom.family((_workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  Atom.make(initialDocumentIntakeState)
+  Atom.make(DocumentIntakeState.initial)
 );
 
 /**
@@ -568,7 +594,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       const client = yield* DesktopIntakeClient;
       const stateAtom = documentIntakeStateAtoms(workspaceId);
       const canStart = ctx.registry.modify(stateAtom, (state) => {
-        const choosing = setVaultSelection(state, VaultSelectionState.cases.choosing.make());
+        const choosing = state.withVaultSelection(VaultSelectionState.cases.choosing.make());
         return VaultSelectionState.match(state.vaultSelection, {
           idle: () => Tuple.make(true, choosing),
           choosing: () => Tuple.make(false, state),
@@ -583,12 +609,13 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       });
       const browserPrompt = Effect.annotateCurrentSpan({
         "professional_desktop.intake.vault_selection.fallback": "browser_prompt",
-      }).pipe(Effect.andThen(Effect.sync(() => globalThis.window.prompt("Workspace vault path"))));
+      }).pipe(Effect.andThen(Effect.sync(() => O.fromNullishOr(globalThis.window.prompt("Workspace vault path")))));
       const selected = yield* hasTauriRuntime()
         ? Effect.tryPromise({
             try: () => invoke<string | null>("select_vault_directory"),
             catch: (cause) => VaultDirectoryPickerInvocationError.make({ cause }),
           }).pipe(
+            Effect.map(O.fromNullishOr),
             Effect.tapCause((cause) =>
               logIntakeCause(cause, "tauri vault directory picker failed", "pick_workspace_vault")
             ),
@@ -600,11 +627,11 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
                 Effect.andThen(
                   Effect.sync(() => {
                     ctx.registry.update(stateAtom, (state) =>
-                      setVaultSelection(state, VaultSelectionState.cases.failed.make({ message: failure.message }))
+                      state.withVaultSelection(VaultSelectionState.cases.failed.make({ message: failure.message }))
                     );
                   })
                 ),
-                Effect.as<string | null>(null)
+                Effect.as(O.none<string>())
               )
             )
           )
@@ -617,11 +644,11 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
               VaultDirectoryPickError: () => browserPrompt,
             })
           );
-      const selectedPath = O.fromNullishOr(selected).pipe(O.map(Str.trim), O.filter(Str.isNonEmpty));
+      const selectedPath = selected.pipe(O.map(Str.trim), O.filter(Str.isNonEmpty));
       if (O.isNone(selectedPath)) {
         const cancelled = ctx.registry.modify(stateAtom, (state) =>
           VaultSelectionState.guards.choosing(state.vaultSelection)
-            ? Tuple.make(true, setVaultSelection(state, VaultSelectionState.cases.idle.make()))
+            ? Tuple.make(true, state.withVaultSelection(VaultSelectionState.cases.idle.make()))
             : Tuple.make(false, state)
         );
         if (cancelled) {
@@ -635,7 +662,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       yield* Effect.annotateCurrentSpan({
         "professional_desktop.intake.vault_selection.outcome": "selected",
       });
-      ctx.registry.update(stateAtom, (state) => setVaultSelection(state, VaultSelectionState.cases.saving.make()));
+      ctx.registry.update(stateAtom, (state) => state.withVaultSelection(VaultSelectionState.cases.saving.make()));
       yield* decodeSetWorkspaceVaultInput({
         vaultRootPath: selectedPath.value,
         workspaceId,
@@ -652,8 +679,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
               Effect.andThen(
                 Effect.sync(() => {
                   ctx.registry.update(stateAtom, (state) =>
-                    setVaultSelection(
-                      state,
+                    state.withVaultSelection(
                       VaultSelectionState.cases.failed.make({
                         message: vaultConfigurationFailureMessage(failure),
                       })
@@ -669,7 +695,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
               Effect.andThen(
                 Effect.sync(() => {
                   ctx.registry.update(stateAtom, (state) =>
-                    setVaultSelection(state, VaultSelectionState.cases.idle.make())
+                    state.withVaultSelection(VaultSelectionState.cases.idle.make())
                   );
                 })
               )
@@ -695,7 +721,7 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
     "professional_desktop.intake.batch_size": A.length(files),
     "professional_desktop.workspace.id": workspaceId,
   });
-  ctx.registry.update(stateAtom, startIntakeBatch);
+  ctx.registry.update(stateAtom, (state) => state.startBatch());
   yield* Effect.forEach(
     files,
     (file) => {
@@ -703,8 +729,7 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
       const refusal = intakeRefusal(file);
       if (O.isSome(refusal)) {
         ctx.registry.update(stateAtom, (state) =>
-          appendIntakeResult(
-            state,
+          state.appendResult(
             IntakeResultEntry.cases.failure.make({
               fileName,
               message: refusal.value,
@@ -739,8 +764,7 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
           onFailure: (failure) =>
             Effect.sync(() => {
               ctx.registry.update(stateAtom, (state) =>
-                appendIntakeResult(
-                  state,
+                state.appendResult(
                   IntakeResultEntry.cases.failure.make({
                     fileName,
                     message: intakeFailureMessage(failure),
@@ -751,7 +775,7 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
           onSuccess: (document) =>
             Effect.sync(() => {
               ctx.registry.update(stateAtom, (state) =>
-                appendIntakeResult(state, IntakeResultEntry.cases.document.make({ document }))
+                state.appendResult(IntakeResultEntry.cases.document.make({ document }))
               );
             }),
         })
@@ -761,7 +785,7 @@ const processIntakeFiles = Effect.fn("professional_desktop.intake.process_files"
   ).pipe(
     Effect.ensuring(
       Effect.sync(() => {
-        ctx.registry.update(stateAtom, finishIntakeBatch);
+        ctx.registry.update(stateAtom, (state) => state.finishBatch());
       })
     )
   );
@@ -813,7 +837,7 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
     Effect.fnUntraced(function* ({ preventDefault }, ctx) {
       if (!isWorkspaceVaultConfigured(ctx, workspaceId)) return;
       yield* Effect.sync(preventDefault);
-      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => setIntakeDragging(state, true));
+      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => state.withDragging(true));
     })
   ),
   dragOver: professionalBrowserRuntime.fn<{ readonly preventDefault: () => void }>()(
@@ -828,7 +852,7 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
   }>()(
     Effect.fnUntraced(function* ({ currentTarget, relatedTarget }, ctx) {
       if (relatedTarget instanceof Node && currentTarget.contains(relatedTarget)) return;
-      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => setIntakeDragging(state, false));
+      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => state.withDragging(false));
     })
   ),
   drop: DesktopIntakeClient.runtime.fn<{
@@ -838,7 +862,7 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
     Effect.fnUntraced(function* ({ files, preventDefault }, ctx) {
       if (!isWorkspaceVaultConfigured(ctx, workspaceId)) return;
       yield* Effect.sync(preventDefault);
-      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => setIntakeDragging(state, false));
+      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) => state.withDragging(false));
       yield* processIntakeFiles(workspaceId, files, ctx);
     }),
     { concurrent: true }
@@ -852,22 +876,16 @@ export const intakeDomEventAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
 /**
  * Runtime action family that clears completed intake outcomes.
  *
- * **Example** (Check action family type)
- *
- * ```ts
- * import { clearIntakeResultsAtoms } from "@/intake/Intake.atoms"
- *
- * console.log(typeof clearIntakeResultsAtoms === "function") // true
- * ```
+ * Consumed through the intake surface view model's `actions.clearResults`.
  *
  * @category atoms
  * @since 0.0.0
  */
-export const clearIntakeResultsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+const clearIntakeResultsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   professionalBrowserRuntime.fn<void>()(
     Effect.fnUntraced(function* (_, ctx) {
       const stateAtom = documentIntakeStateAtoms(workspaceId);
-      ctx.registry.update(stateAtom, clearIntakeResults);
+      ctx.registry.update(stateAtom, (state) => state.clearResults());
     })
   )
 );
@@ -921,4 +939,109 @@ export const openIntakeFilePickerAtoms = Atom.family((workspaceId: WorkspaceIden
       });
     })
   )
+);
+
+/**
+ * The document intake view model consumed by `DocumentIntakeTarget`: current
+ * intake state, the vault-configuration flags derived from the workspace vault
+ * config, and the runtime-bound action dispatchers.
+ *
+ * **Details**
+ *
+ * `actions` is computed independently of `state`, so a component can hand its
+ * callbacks to children without re-binding them whenever intake state moves.
+ * `configured` and `needsOnboarding` are mutually exclusive and both `false`
+ * until the workspace vault configuration resolves.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface DocumentIntakeSurface {
+  readonly actions: {
+    readonly chooseVault: () => void;
+    readonly clearResults: () => void;
+    readonly dragEnter: (input: { readonly preventDefault: () => void }) => void;
+    readonly dragLeave: (input: { readonly currentTarget: Node; readonly relatedTarget: EventTarget | null }) => void;
+    readonly dragOver: (input: { readonly preventDefault: () => void }) => void;
+    readonly drop: (input: { readonly files: ReadonlyArray<File>; readonly preventDefault: () => void }) => void;
+    readonly fileSelection: (files: ReadonlyArray<File>) => void;
+    readonly openFilePicker: () => void;
+    readonly setFileInput: (element: HTMLInputElement | null) => void;
+  };
+  readonly configured: boolean;
+  readonly needsOnboarding: boolean;
+  readonly state: DocumentIntakeState;
+}
+
+/**
+ * Stable, non-reactive action record for the document intake surface, keyed by
+ * workspace.
+ *
+ * **Details**
+ *
+ * The actions read no reactive state, so this atom computes once per workspace
+ * and every closure — including the file-input React ref callback — stays
+ * referentially stable across intake state changes. Each dispatcher mounts the
+ * atom it writes to, keeping those fibers subscribed for as long as the record
+ * is observed.
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  Atom.make((get): DocumentIntakeSurface["actions"] => {
+    const domEvents = intakeDomEventAtoms(workspaceId);
+    const chooseVaultAtom = chooseWorkspaceVaultAtoms(workspaceId);
+    const clearResultsAtom = clearIntakeResultsAtoms(workspaceId);
+    const openFilePickerAtom = openIntakeFilePickerAtoms(workspaceId);
+    const setFileInputAtom = setIntakeFileInputAtoms(workspaceId);
+    get.mount(chooseVaultAtom);
+    get.mount(clearResultsAtom);
+    get.mount(domEvents.dragEnter);
+    get.mount(domEvents.dragLeave);
+    get.mount(domEvents.dragOver);
+    get.mount(domEvents.drop);
+    get.mount(domEvents.fileSelection);
+    get.mount(openFilePickerAtom);
+    get.mount(setFileInputAtom);
+    return {
+      chooseVault: () => get.set(chooseVaultAtom, void 0),
+      clearResults: () => get.set(clearResultsAtom, void 0),
+      dragEnter: (input) => get.set(domEvents.dragEnter, input),
+      dragLeave: (input) => get.set(domEvents.dragLeave, input),
+      dragOver: (input) => get.set(domEvents.dragOver, input),
+      drop: (input) => get.set(domEvents.drop, input),
+      fileSelection: (files) => get.set(domEvents.fileSelection, files),
+      openFilePicker: () => get.set(openFilePickerAtom, void 0),
+      setFileInput: (element) => get.set(setFileInputAtom, element),
+    };
+  })
+);
+
+/**
+ * One read for the document-intake surface: intake state, vault configuration
+ * flags, and the stable action record, keyed by workspace.
+ *
+ * **Example** (Inspect the surface atom family)
+ *
+ * ```ts
+ * import { documentIntakeSurfaceAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof documentIntakeSurfaceAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const documentIntakeSurfaceAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  Atom.make((get): DocumentIntakeSurface => {
+    const vaultConfig = get(workspaceVaultConfigAtom(workspaceId));
+    const state = get(documentIntakeStateAtoms(workspaceId));
+    return {
+      state,
+      configured: AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath),
+      needsOnboarding: AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath),
+      actions: get(documentIntakeActionsAtoms(workspaceId)),
+    };
+  })
 );

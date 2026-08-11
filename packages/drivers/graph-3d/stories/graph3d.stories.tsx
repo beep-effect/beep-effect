@@ -74,8 +74,8 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
   );
   const flattened = useMemo(() => flattenProjection(projection), [projection]);
 
-  const { containerRef, handle, error } = useGraph3DHandle(projection, setPicked);
-  const fps = useGraph3DFps(handle);
+  const { containerRef, handle, error } = useGraph3DHandle({ projection, onNodeSelect: setPicked });
+  const fps = useGraph3DFps({ handle });
 
   useEffect(() => {
     if (handle === undefined) {

@@ -103,7 +103,7 @@ export const OxlintReport = S.Struct({
   ).pipe(S.optional),
 });
 
-const emptyReport: S.Schema.Type<typeof OxlintReport> = { diagnostics: undefined };
+const emptyReport: typeof OxlintReport.Type = { diagnostics: undefined };
 
 /** Decode oxlint's stdout, tolerating non-JSON noise by returning an empty report. */
 const parseReport = jsonReportParser(OxlintReport, emptyReport);

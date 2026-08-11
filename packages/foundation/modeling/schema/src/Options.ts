@@ -67,7 +67,7 @@ import * as S from "effect/Schema";
  * import { OptionFromOptionalNullishKey } from "@beep/schema"
  *
  * const Payload = S.Struct({
- *   homepage: OptionFromOptionalNullishKey(S.URLFromString, { onNoneEncoding: null })
+ *   homepage: OptionFromOptionalNullishKey({ schema: S.URLFromString, onNoneEncoding: null })
  * })
  *
  * const encode = S.encodeSync(Payload)
@@ -80,15 +80,21 @@ import * as S from "effect/Schema";
  * ```
  *
  * @typeParam Schema - Schema used when the key is present with a non-nullish value.
- * @param schema - Schema used to decode `Some` values.
- * @param options - Controls how `None` is represented during encoding.
+ * @param schemaOrOptions - The `Some` schema, or an options object carrying that
+ *   schema plus the `None` encoding.
  * @returns A schema that decodes optional nullish keys into `Option` values.
  * @category schemas
  * @since 0.0.0
  */
-export const OptionFromOptionalNullishKey = <Schema extends S.Top>(
-  schema: Schema,
-  options?: {
-    readonly onNoneEncoding: "omit" | null | undefined;
-  }
-): S.OptionFromOptionalNullOr<Schema> => S.OptionFromOptionalNullOr(schema, options);
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(schema: Schema): S.OptionFromOptionalNullOr<Schema>;
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(options: {
+  readonly schema: Schema;
+  readonly onNoneEncoding: "omit" | null | undefined;
+}): S.OptionFromOptionalNullOr<Schema>;
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(
+  schemaOrOptions: Schema | { readonly schema: Schema; readonly onNoneEncoding: "omit" | null | undefined }
+): S.OptionFromOptionalNullOr<Schema> {
+  return S.isSchema(schemaOrOptions)
+    ? S.OptionFromOptionalNullOr(schemaOrOptions)
+    : S.OptionFromOptionalNullOr(schemaOrOptions.schema, { onNoneEncoding: schemaOrOptions.onNoneEncoding });
+}

@@ -18,12 +18,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc, TestClock } from "effect/testing";
 
 const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
-const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput);
+const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput)(fc);
 const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
-const InMemoryStateArbitrary = S.toArbitrary(InMemoryState);
-const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput);
-const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput);
-const TurnEntityInputArbitrary = S.toArbitrary(TurnEntityInput);
+const InMemoryStateArbitrary = S.toArbitrary(InMemoryState)(fc);
+const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput)(fc);
+const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput)(fc);
+const TurnEntityInputArbitrary = S.toArbitrary(TurnEntityInput)(fc);
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
 const makeTestThreadStore = makeInMemoryThreadStore().pipe(provideScopedLayer(CuidTestLayer));
@@ -148,7 +148,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when appending to an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
       const error = yield* store
         .appendTurn({ threadId: missing, parentTurnId: O.none(), role: "user", content: docOf("x") })
         .pipe(Effect.flip);
@@ -324,7 +324,7 @@ describe("ThreadStore in-memory", () => {
     "fails with ThreadStoreNotFound when setting the title for an unknown thread",
     Effect.fnUntraced(function* () {
       const store = yield* makeTestThreadStore;
-      const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+      const missing = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(999);
       const error = yield* store
         .setTitleIfEmpty({ threadId: missing, emptyTitle: "New thread", title: "Missing" })
         .pipe(Effect.flip);

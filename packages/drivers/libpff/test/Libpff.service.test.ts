@@ -23,12 +23,12 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation);
-const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig);
-const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions);
-const LibpffErrorArbitrary = S.toArbitrary(LibpffError);
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation)(fc);
+const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig)(fc);
+const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions)(fc);
+const LibpffErrorArbitrary = S.toArbitrary(LibpffError)(fc);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);
@@ -44,13 +44,9 @@ const decodePffexportMessageRecord = S.decodeUnknownEffect(PffexportMessageRecor
 const providePlatform = provideScopedLayer(NodeServices.layer);
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
   ),
 });

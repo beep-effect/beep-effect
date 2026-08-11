@@ -32,7 +32,7 @@ const nonReadOnlyWriteTool = Tool.make("write_cache", { success: S.String }).ann
 const unannotatedTool = Tool.make("unannotated_tool", { success: S.String });
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -238,7 +238,7 @@ describe("tier-gate schema parity laws", () => {
 
     assert.deepStrictEqual(audit.toolCallId, O.none());
     assert.throws(() =>
-      S.decodeUnknownSync(TierGateAuditRecord)({
+      S.decodeSync(TierGateAuditRecord)({
         tool: "search_documents",
         outcome: "approved",
         reason: "Tool is read-only and non-destructive; no approval required.",

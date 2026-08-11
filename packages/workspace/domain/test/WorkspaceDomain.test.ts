@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
-const MessageRoleArbitrary = S.toArbitrary(MessageRole);
+const MessageRoleArbitrary = S.toArbitrary(MessageRole)(fc);
 const publicIdFor = (entityType: string, id: number) =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
@@ -62,7 +62,7 @@ const baseEntityInput = (entityType: string, id: number) => ({
 });
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -85,7 +85,7 @@ describe("@beep/workspace-domain", () => {
   it("round-trips schema-derived message roles", () =>
     fc.assert(
       fc.property(MessageRoleArbitrary, (role) => {
-        const decoded = S.decodeUnknownSync(MessageRole)(role);
+        const decoded = S.decodeSync(MessageRole)(role);
         const encoded = S.encodeSync(MessageRole)(decoded);
 
         expect(encoded).toBe(role);

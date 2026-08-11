@@ -294,7 +294,7 @@ layer(TestLayer)("FsUtils", (it) => {
         yield* fs.writeFileString(`${tmpDir}/a/x.ts`, "");
         yield* fs.writeFileString(`${tmpDir}/a.ts`, "");
 
-        const files = yield* walkFiles(tmpDir);
+        const files = yield* pipe(tmpDir, walkFiles());
         // Global path order places "a.ts" before "a/x.ts" ('.' < '/');
         // a per-level DFS sort would descend "a" first and invert them.
         expect(files).toEqual([`${tmpDir}/a.ts`, `${tmpDir}/a/x.ts`]);

@@ -78,7 +78,7 @@ describe("CoreVocab runtime invariants", () => {
 
   it("round-trips generated vocabulary registries through their encoded shape", () => {
     fc.assert(
-      fc.property(S.toArbitrary(VocabRegistry), (registry) => {
+      fc.property(S.toArbitrary(VocabRegistry)(fc), (registry) => {
         const decoded = O.flatMap(S.encodeOption(VocabRegistry)(registry), S.decodeUnknownOption(VocabRegistry));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
@@ -87,6 +87,6 @@ describe("CoreVocab runtime invariants", () => {
   });
 
   it("accepts CoreVocab through the runtime registry schema", () => {
-    expect(O.isSome(S.decodeUnknownOption(VocabRegistry)(CoreVocab))).toBe(true);
+    expect(O.isSome(S.decodeOption(VocabRegistry)(CoreVocab))).toBe(true);
   });
 });

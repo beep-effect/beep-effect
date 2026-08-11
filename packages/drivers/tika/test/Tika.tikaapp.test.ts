@@ -15,8 +15,8 @@ import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
-const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig);
-const TikaContentTextArbitrary = S.toArbitrary(TikaContentText);
+const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig)(fc);
+const TikaContentTextArbitrary = S.toArbitrary(TikaContentText)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -59,8 +59,8 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
   yield* fs.writeFile(sourcePath, sourceBytes);
 
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
-  const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(sourcePath);
-  const relativePath = yield* S.decodeUnknownEffect(PosixPath)("document.pdf");
+  const locatorValue = yield* S.decodeEffect(PosixPath)(sourcePath);
+  const relativePath = yield* S.decodeEffect(PosixPath)("document.pdf");
 
   const operation = ExtractFileOperation.make({
     format,
@@ -84,7 +84,7 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
 
 describe("makeTikaAppFileProcessingEngine", () => {
   it("keeps tika-app schema wire inputs and normalization stable", () => {
-    const config = Result.getOrThrow(S.decodeUnknownResult(TikaAppEngineConfig)({ jarPath: "/opt/tika/tika-app.jar" }));
+    const config = Result.getOrThrow(S.decodeResult(TikaAppEngineConfig)({ jarPath: "/opt/tika/tika-app.jar" }));
 
     expect(config.javaPath).toBe("java");
     expect(config.timeoutMillis).toBe(PosInt.make(120_000));

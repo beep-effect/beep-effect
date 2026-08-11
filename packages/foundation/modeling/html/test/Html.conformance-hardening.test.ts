@@ -91,7 +91,7 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { isValidURLString, parseURL } from "whatwg-url";
 
-const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList);
+const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList)(fc);
 const htmlUrlValidationBase = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
@@ -944,10 +944,10 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
       expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
     }
-    expect(() => S.decodeUnknownSync(Link)({ _tag: "link", as: "video", href: "/resource", rel: "preload" })).toThrow();
-    const uppercaseCharset = S.decodeUnknownResult(Meta)({ _tag: "meta", charset: "UTF-8" });
+    expect(() => S.decodeSync(Link)({ _tag: "link", as: "video", href: "/resource", rel: "preload" })).toThrow();
+    const uppercaseCharset = S.decodeResult(Meta)({ _tag: "meta", charset: "UTF-8" });
     expect(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8")).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", charset: "iso-8859-1" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(Meta)({ _tag: "meta", charset: "iso-8859-1" }))).toBe(true);
     expect(() => Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("PreLoad") })).toThrow();
     expect(
       inspectConformance(
@@ -1220,7 +1220,7 @@ describe("@beep/html exact attribute domains", () => {
     fc.assert(
       fc.property(LinkRelationListArbitrary, (relation) => {
         expect(S.encodeSync(LinkRelationList)(relation)).toBe(relation);
-        expect(S.decodeUnknownSync(LinkRelationList)(relation)).toBe(relation);
+        expect(S.decodeSync(LinkRelationList)(relation)).toBe(relation);
       }),
       fcRuns(100)
     ));
@@ -1231,13 +1231,13 @@ describe("@beep/html exact attribute domains", () => {
     expect(() => makeSpaceSeparatedTokenList(["foo", "FOO"])).toThrow();
 
     const AsciiK = makeAsciiCaseInsensitiveEnumerated(["k"]);
-    expect(Result.isSuccess(S.decodeUnknownResult(AsciiK)("K"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(AsciiK)("K"))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(AsciiK)("K"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(AsciiK)("K"))).toBe(true);
   });
 
   it("keeps link relations open while enforcing shortcut-icon and token-list laws", () => {
     for (const relation of ["shortcut icon", "SHORTCUT ICON", "apple-touch-icon", "mask-icon", "x-beep"]) {
-      expect(Result.isSuccess(S.decodeUnknownResult(LinkRelationList)(relation))).toBe(true);
+      expect(Result.isSuccess(S.decodeResult(LinkRelationList)(relation))).toBe(true);
     }
     for (const relation of [
       "shortcut\ticon",
@@ -1246,26 +1246,26 @@ describe("@beep/html exact attribute domains", () => {
       "shortcut icon preload",
       "x-beep x-beep",
     ]) {
-      expect(Result.isFailure(S.decodeUnknownResult(LinkRelationList)(relation))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(LinkRelationList)(relation))).toBe(true);
     }
 
-    const idReferences = S.decodeUnknownResult(HtmlIdReferenceList)("First\tsecond");
+    const idReferences = S.decodeResult(HtmlIdReferenceList)("First\tsecond");
     expect(Result.isSuccess(idReferences) && idReferences.success === "First second").toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(HtmlIdReferenceList)("First first"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(HtmlIdReferenceList)("First First"))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(HtmlIdReferenceList)("First first"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(HtmlIdReferenceList)("First First"))).toBe(true);
   });
 
   it("keeps extension relations structural and conformant but narrows SafeHtml", () => {
-    const relations = S.decodeUnknownResult(HtmlRelationList)("X-BEEP me");
+    const relations = S.decodeResult(HtmlRelationList)("X-BEEP me");
     expect(Result.isSuccess(relations) && relations.success === "me x-beep").toBe(true);
-    const linkRelations = S.decodeUnknownResult(LinkRelationList)("noreferrer NOOPENER");
+    const linkRelations = S.decodeResult(LinkRelationList)("noreferrer NOOPENER");
     expect(Result.isSuccess(linkRelations) && linkRelations.success === "noopener noreferrer").toBe(true);
     for (const [schema, encoded] of [
       [Anchor, { _tag: "a", children: [], href: "/profile", rel: "me" }],
       [Area, { _tag: "area", href: "/profile", rel: "me" }],
       [Form, { _tag: "form", children: [], rel: "me" }],
     ] as const) {
-      expect(Result.isSuccess(S.decodeUnknownResult(schema)(encoded))).toBe(true);
+      expect(Result.isSuccess(S.decodeResult(schema)(encoded))).toBe(true);
     }
 
     for (const relation of ["me", "opener", "x-beep"]) {
@@ -1325,12 +1325,12 @@ describe("@beep/html exact attribute domains", () => {
       [Script, { _tag: "script", blocking: "RENDER", content: "" }],
       [Style, { _tag: "style", blocking: "RENDER", content: "" }],
     ] as const) {
-      expect(Result.isSuccess(S.decodeUnknownResult(schema)(encoded))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(schema)({ ...encoded, blocking: "render render" }))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(schema)({ ...encoded, blocking: "paint" }))).toBe(true);
+      expect(Result.isSuccess(S.decodeResult(schema)(encoded))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "render render" }))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "paint" }))).toBe(true);
     }
 
-    const link = S.decodeUnknownResult(Link)({
+    const link = S.decodeResult(Link)({
       _tag: "link",
       crossorigin: "",
       href: "/style.css",
@@ -1344,13 +1344,13 @@ describe("@beep/html exact attribute domains", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(Link)({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" })
+        S.decodeResult(Link)({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" })
       )
     ).toBe(true);
   });
 
   it("normalizes current metadata and form-control microsyntaxes", () => {
-    const globals = S.decodeUnknownResult(Div)({
+    const globals = S.decodeResult(Div)({
       _tag: "div",
       autocorrect: "",
       children: [],
@@ -1362,33 +1362,33 @@ describe("@beep/html exact attribute domains", () => {
         O.contains(globals.success.writingsuggestions, "true")
     ).toBe(true);
 
-    expect(
-      Result.isSuccess(S.decodeUnknownResult(Form)({ _tag: "form", "accept-charset": "UTF-8", children: [] }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(S.decodeUnknownResult(Form)({ _tag: "form", "accept-charset": "iso-8859-1", children: [] }))
-    ).toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(Meta)({ _tag: "meta", name: "X-Beep" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", name: "x beep" }))).toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(Meta)({ _tag: "meta", "http-equiv": "REFRESH" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(Meta)({ _tag: "meta", "http-equiv": "expires" }))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(Form)({ _tag: "form", "accept-charset": "UTF-8", children: [] }))).toBe(
+      true
+    );
+    expect(Result.isFailure(S.decodeResult(Form)({ _tag: "form", "accept-charset": "iso-8859-1", children: [] }))).toBe(
+      true
+    );
+    expect(Result.isSuccess(S.decodeResult(Meta)({ _tag: "meta", name: "X-Beep" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(Meta)({ _tag: "meta", name: "x beep" }))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(Meta)({ _tag: "meta", "http-equiv": "REFRESH" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(Meta)({ _tag: "meta", "http-equiv": "expires" }))).toBe(true);
 
     for (const command of ["toggle-popover", "TOGGLE-POPOVER", "--", "--Beep\nCommand"]) {
       expect(
-        Result.isSuccess(S.decodeUnknownResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
+        Result.isSuccess(S.decodeResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
       ).toBe(true);
     }
     for (const command of ["", "rotate", "-beep"]) {
       expect(
-        Result.isFailure(S.decodeUnknownResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
+        Result.isFailure(S.decodeResult(Button)({ _tag: "button", children: [], command, commandfor: "target" }))
       ).toBe(true);
     }
 
     for (const step of ["any", "ANY", 0.25]) {
-      expect(Result.isSuccess(S.decodeUnknownResult(Input)({ _tag: "input", step }))).toBe(true);
+      expect(Result.isSuccess(S.decodeResult(Input)({ _tag: "input", step }))).toBe(true);
     }
     for (const step of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, "sometimes"]) {
-      expect(Result.isFailure(S.decodeUnknownResult(Input)({ _tag: "input", step }))).toBe(true);
+      expect(Result.isFailure(S.decodeResult(Input)({ _tag: "input", step }))).toBe(true);
     }
   });
 });
@@ -1607,7 +1607,7 @@ describe("@beep/html exact attribute conformance", () => {
       const encoded = S.encodeResult(HtmlElementMeta)(meta);
       expect(Result.isSuccess(encoded)).toBe(true);
       if (Result.isFailure(encoded)) continue;
-      expect(Result.isSuccess(S.decodeUnknownResult(HtmlElementMeta)(encoded.success))).toBe(true);
+      expect(Result.isSuccess(S.decodeResult(HtmlElementMeta)(encoded.success))).toBe(true);
     }
   });
 });

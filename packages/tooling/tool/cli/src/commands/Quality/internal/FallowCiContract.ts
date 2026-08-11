@@ -230,7 +230,21 @@ type FallowCiContractDiagnosticOptions = {
  * @category testing
  * @since 0.0.0
  */
-export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
+export const fallowCiUploadDiagnosticsForTesting: {
+  (
+    jobUsesValues: ReadonlyArray<string>,
+    uploadArtifactSteps: ReadonlyArray<unknown>,
+    expectOutDir: string,
+    ifNoFilesFound: string
+  ): (requireUpload: boolean) => ReadonlyArray<string>;
+  (
+    requireUpload: boolean,
+    jobUsesValues: ReadonlyArray<string>,
+    uploadArtifactSteps: ReadonlyArray<unknown>,
+    expectOutDir: string,
+    ifNoFilesFound: string
+  ): ReadonlyArray<string>;
+} = dual(5, fallowCiUploadDiagnostics);
 
 /**
  * Validate the parsed Fallow CI workflow contract.

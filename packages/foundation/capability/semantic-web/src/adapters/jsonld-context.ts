@@ -44,7 +44,7 @@ const decodeIriReference = (
   reason: JsonLdContextError["reason"],
   subject: string
 ): Effect.Effect<IRIReference, JsonLdContextError> =>
-  S.decodeUnknownEffect(IRIReference)(value).pipe(
+  S.decodeEffect(IRIReference)(value).pipe(
     Effect.mapError((cause) =>
       makeContextError(reason, `Failed to decode JSON-LD IRI reference "${value}": ${String(cause)}`, subject)
     )
@@ -55,7 +55,7 @@ const decodeNonEmptyString = (
   reason: JsonLdContextError["reason"],
   subject: string
 ): Effect.Effect<typeof S.NonEmptyString.Type, JsonLdContextError> =>
-  S.decodeUnknownEffect(S.NonEmptyString)(value).pipe(
+  S.decodeEffect(S.NonEmptyString)(value).pipe(
     Effect.mapError((cause) =>
       makeContextError(reason, `Failed to decode JSON-LD compact term "${value}": ${String(cause)}`, subject)
     )

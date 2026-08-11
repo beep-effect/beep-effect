@@ -904,21 +904,17 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
  * @since 0.0.0
  */
 export const createContentSecurityPolicyOptionHeaderValue = (
-  option?: undefined | ContentSecurityPolicyOption,
-  fetchDirectiveToStringConverter = FetchDirective.convertToString,
-  documentDirectiveToStringConverter = DocumentDirective.convertToString,
-  navigationDirectiveToStringConverter = NavigationDirective.convertToString,
-  reportingDirectiveToStringConverter = ReportingDirective.convertToString
+  option?: undefined | ContentSecurityPolicyOption
 ): O.Option<string> => {
   if (P.isUndefined(option)) return O.none();
   if (option === false) return O.none();
 
   const value = pipe(
     A.make(
-      fetchDirectiveToStringConverter(option.directives),
-      documentDirectiveToStringConverter(option.directives),
-      navigationDirectiveToStringConverter(option.directives),
-      reportingDirectiveToStringConverter(option.directives)
+      FetchDirective.convertToString(option.directives),
+      DocumentDirective.convertToString(option.directives),
+      NavigationDirective.convertToString(option.directives),
+      ReportingDirective.convertToString(option.directives)
     ),
     A.filter(Str.isNonEmpty),
     A.join(directiveValueSeparator)
@@ -977,7 +973,7 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
         return O.none<string>();
       }
 
-      const decodedOption = yield* S.decodeUnknownEffect(ContentSecurityPolicyOptionStruct)(option).pipe(
+      const decodedOption = yield* S.decodeEffect(ContentSecurityPolicyOptionStruct)(option).pipe(
         Effect.mapError((cause) =>
           CspError.make({
             message: cause.message,

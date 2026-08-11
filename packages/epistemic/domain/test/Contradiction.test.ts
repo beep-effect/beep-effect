@@ -255,8 +255,8 @@ describe("Contradiction domain invariants", () => {
     });
     const canonical = canonicalizeContradiction(reversed, reversedBasis);
 
-    expect(Result.isFailure(S.decodeUnknownResult(CanonicalContradictionBeliefPair)(reversed))).toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(CanonicalContradictionBeliefPair)(canonical.pair))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(CanonicalContradictionBeliefPair)(reversed))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(CanonicalContradictionBeliefPair)(canonical.pair))).toBe(true);
     expect(canonical.pair.left).toStrictEqual(left);
     expect(canonical.pair.right).toStrictEqual(right);
     expect(canonical.matchBasis.leftEvidenceIds).toStrictEqual(leftEvidenceIds);
@@ -266,8 +266,8 @@ describe("Contradiction domain invariants", () => {
   it("rejects self-contradictions at submission and canonical persistence boundaries", () => {
     const selfPair = { left, right: left };
 
-    expect(Result.isFailure(S.decodeUnknownResult(ContradictionBeliefPair)(selfPair))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(CanonicalContradictionBeliefPair)(selfPair))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(ContradictionBeliefPair)(selfPair))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(CanonicalContradictionBeliefPair)(selfPair))).toBe(true);
   });
 
   it("keys detector identities and versions independently", () => {
@@ -358,9 +358,9 @@ describe("Contradiction domain invariants", () => {
   it("derives only constructive unique collections and canonical pairs", () => {
     fc.assert(
       fc.property(
-        S.toArbitrary(ContradictionMatchBasis),
-        S.toArbitrary(ContradictionAssessment),
-        S.toArbitrary(CanonicalContradictionBeliefPair),
+        S.toArbitrary(ContradictionMatchBasis)(fc),
+        S.toArbitrary(ContradictionAssessment)(fc),
+        S.toArbitrary(CanonicalContradictionBeliefPair)(fc),
         (basis, arbitraryAssessment, canonicalPair) => {
           expect(A.dedupe(basis.leftEvidenceIds)).toHaveLength(basis.leftEvidenceIds.length);
           expect(A.dedupe(basis.rightEvidenceIds)).toHaveLength(basis.rightEvidenceIds.length);

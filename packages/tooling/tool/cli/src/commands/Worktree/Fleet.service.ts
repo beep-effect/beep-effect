@@ -23,7 +23,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { A, O, Str } from "@beep/utils";
+import { A, O, P, Str } from "@beep/utils";
 import {
   Clock,
   Context,
@@ -36,8 +36,10 @@ import {
   MutableHashSet,
   Order,
   Path,
+  pipe,
   Result,
 } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
 import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
@@ -126,30 +128,37 @@ export const FLEET_SURFACE_EXCLUDE_PREFIXES = [".repos/", "node_modules/", ".git
  * @category utilities
  * @since 0.0.0
  */
-export const classifyFleetLiveness = (
-  readings: FleetLivenessReadings,
-  windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS
-): FleetLivenessVerdict => {
-  const candidates: ReadonlyArray<readonly [boolean, FleetLivenessProbe]> = [
-    [readings.processMatches > 0, "process-cwd"],
-    [readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds, "transcript-mtime"],
-    [readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds, "worktree-mtime"],
-    [readings.sessionMatches > 0, "claude-session"],
-  ];
-  const evidence = A.map(
-    A.filter(candidates, ([active]) => active),
-    ([, probe]) => probe
-  );
-  if (evidence.length > 0) {
-    return FleetLivenessVerdict.make({ status: "live", evidence });
+export const classifyFleetLiveness: {
+  (windowSeconds?: number): (readings: FleetLivenessReadings) => FleetLivenessVerdict;
+  (readings: FleetLivenessReadings, windowSeconds?: number): FleetLivenessVerdict;
+} = dual(
+  (args: IArguments) => args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !P.isNumber(args[0])),
+  // fallow-ignore-next-line complexity -- existing fleet tests exhaustively cover the conservative liveness branches
+  (readings: FleetLivenessReadings, windowSeconds: number = FLEET_LIVENESS_WINDOW_SECONDS): FleetLivenessVerdict => {
+    const candidates: ReadonlyArray<readonly [boolean, FleetLivenessProbe]> = [
+      [readings.processMatches > 0, "process-cwd"],
+      [readings.transcript._tag === "measured" && readings.transcript.ageSeconds < windowSeconds, "transcript-mtime"],
+      [
+        readings.worktreeMtime._tag === "measured" && readings.worktreeMtime.ageSeconds < windowSeconds,
+        "worktree-mtime",
+      ],
+      [readings.sessionMatches > 0, "claude-session"],
+    ];
+    const evidence = A.map(
+      A.filter(candidates, ([active]) => active),
+      ([, probe]) => probe
+    );
+    if (evidence.length > 0) {
+      return FleetLivenessVerdict.make({ status: "live", evidence });
+    }
+    const transcriptNegative = readings.transcript._tag !== "failed";
+    const worktreeNegative = readings.worktreeMtime._tag === "measured";
+    if (readings.processScanComplete && transcriptNegative && worktreeNegative) {
+      return FleetLivenessVerdict.make({ status: "dormant", evidence: [] });
+    }
+    return FleetLivenessVerdict.make({ status: "unknown", evidence: [] });
   }
-  const transcriptNegative = readings.transcript._tag !== "failed";
-  const worktreeNegative = readings.worktreeMtime._tag === "measured";
-  if (readings.processScanComplete && transcriptNegative && worktreeNegative) {
-    return FleetLivenessVerdict.make({ status: "dormant", evidence: [] });
-  }
-  return FleetLivenessVerdict.make({ status: "unknown", evidence: [] });
-};
+);
 
 const RENAME_OR_COPY_STATUS = /[RC]/;
 
@@ -1259,7 +1268,8 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
     onSome: Effect.succeed,
     onNone: () =>
       Effect.map(runGitProbe(currentRoot, ["rev-parse", "--git-common-dir"]), (probe): string =>
-        gitStdout(probe).pipe(
+        pipe(
+          gitStdout(probe),
           O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
           O.getOrElse(() => path.dirname(currentRoot))
         )
@@ -1267,11 +1277,10 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
   });
 
   const homeDir = O.orElse(O.fromUndefinedOr(options.homeDir), () => homeDirectory());
-  const scannerDir = O.getOrElse(O.fromUndefinedOr(options.scannerDir), () =>
-    O.match(cacheDirectory(homeDir), {
-      onNone: () => path.join(fleetRoot, ".beep-fleet-scanner"),
-      onSome: (cache) => path.join(cache, "beep", "fleet-scanner"),
-    })
+  const scannerDir = pipe(
+    O.fromUndefinedOr(options.scannerDir),
+    O.orElse(() => O.map(cacheDirectory(homeDir), (cache) => path.join(cache, "beep", "fleet-scanner"))),
+    O.getOrElse(() => path.join(fleetRoot, ".beep-fleet-scanner"))
   );
 
   const { clones, stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);

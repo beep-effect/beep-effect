@@ -1,6 +1,8 @@
 import {
   decodeChatCompletionChunk,
+  decodeChatCompletionResponse,
   makeFromProvider,
+  model as makeLanguageModel,
   OpenAiCompatAssistantDelta,
   OpenAiCompatAssistantMessage,
   OpenAiCompatChatCompletionChoice,
@@ -37,13 +39,13 @@ import type { TUnsafe } from "@beep/types";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
-const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions);
-const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig);
-const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage);
-const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat);
-const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest);
-const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse);
-const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk);
+const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions)(fc);
+const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig)(fc);
+const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage)(fc);
+const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat)(fc);
+const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest)(fc);
+const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse)(fc);
+const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk)(fc);
 
 const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
 const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
@@ -126,6 +128,20 @@ const makeOpenAiCompatClientLayer = (respond: TestRespond) =>
   );
 
 layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (it) => {
+  it.effect(
+    "supports data-last codecs and model construction",
+    Effect.fnUntraced(function* () {
+      const response = yield* decodeChatCompletionResponse()(Result.getOrThrow(encodeResponse(makeResponse("hello"))));
+      const chunk = yield* decodeChatCompletionChunk()({
+        choices: [{ delta: { content: "hello", role: "assistant" }, index: 0 }],
+      });
+
+      expect(response.choices).toHaveLength(1);
+      expect(chunk.choices).toHaveLength(1);
+      expect(makeLanguageModel()("compat-model")).toBeDefined();
+    })
+  );
+
   it("keeps encoded OpenAI-compatible schema wire shapes byte-identical", () => {
     const clientOptions = OpenAiCompatClientOptions.make({
       headers: O.some({ "X-Provider": "test" }),

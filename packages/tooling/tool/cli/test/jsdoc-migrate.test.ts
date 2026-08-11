@@ -764,8 +764,8 @@ describe("JSDocMigrateApply orphan tolerance", () => {
   });
 });
 
-describe("JSDoc zero-legacy path predicates", () => {
-  it("excludes generated paths from the default non-generated scope and includes them when asked", () => {
+describe("JSDoc cleanup-on-touch path predicate", () => {
+  it("includes hand-authored package source and excludes generated source", () => {
     const hand = "packages/shared/schema/src/Kits.ts";
     const generated = "packages/drivers/acp/src/_generated/schema.gen.ts";
     expect(isPackageSourceFile(hand)).toBe(true);

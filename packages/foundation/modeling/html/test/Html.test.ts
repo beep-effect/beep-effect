@@ -30,13 +30,13 @@ import { FastCheck as fc } from "effect/testing";
 
 const decode = S.decodeUnknownSync(HtmlNode);
 const encode = S.encodeSync(HtmlNode);
-const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
-const TextArbitrary = S.toArbitrary(Text);
-const CommentArbitrary = S.toArbitrary(Comment);
-const DoctypeArbitrary = S.toArbitrary(Doctype);
-const InputArbitrary = S.toArbitrary(Input);
-const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta);
+const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct)(fc);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
+const TextArbitrary = S.toArbitrary(Text)(fc);
+const CommentArbitrary = S.toArbitrary(Comment)(fc);
+const DoctypeArbitrary = S.toArbitrary(Doctype)(fc);
+const InputArbitrary = S.toArbitrary(Input)(fc);
+const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta)(fc);
 
 const encodeWith = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

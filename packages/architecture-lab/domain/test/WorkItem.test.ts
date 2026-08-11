@@ -16,7 +16,7 @@ const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown, unknown>>
   schema: Schema,
   numRuns = 10
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeUnknownSync(schema);
   const equivalent = S.toEquivalence(schema);

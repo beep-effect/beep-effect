@@ -75,7 +75,7 @@ export const BiomeReport = S.Struct({
   ).pipe(S.optional),
 });
 
-const emptyReport: S.Schema.Type<typeof BiomeReport> = { diagnostics: undefined };
+const emptyReport: typeof BiomeReport.Type = { diagnostics: undefined };
 
 /** Decode Biome's stdout, tolerating non-JSON noise by returning an empty report. */
 const parseReport = jsonReportParser(BiomeReport, emptyReport);

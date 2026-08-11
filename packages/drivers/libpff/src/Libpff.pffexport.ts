@@ -615,7 +615,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export item read failed" })));
 
   const decodeChildPath = (value: string): Effect.Effect<O.Option<PosixPath>> =>
-    S.decodeUnknownEffect(PosixPath)(value).pipe(Effect.option);
+    S.decodeEffect(PosixPath)(value).pipe(Effect.option);
 
   const deriveChildId = (operation: ExportArchiveOperation, relativePath: string) =>
     deriveArtifactId([operation.source.id, relativePath]).pipe(

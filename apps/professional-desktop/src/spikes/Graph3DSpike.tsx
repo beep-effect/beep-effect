@@ -22,7 +22,7 @@ import {
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { A, N, O, pipe, thunkNull } from "@beep/utils";
+import { A, N, O, pipe, thunkEmptyStr, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Duration, Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
@@ -42,7 +42,34 @@ class StressPreset extends S.Class<StressPreset>($I`StressPreset`)(
   $I.annote("StressPreset", {
     description: "Synthetic graph dimensions used by one Graph3D stress preset.",
   })
-) {}
+) {
+  static readonly equivalence = S.toEquivalence(StressPreset);
+
+  static readonly default = StressPreset.make({
+    label: "2.5k / 5k",
+    nodeCount: NonNegativeInt.make(2_500),
+    edgeCount: NonNegativeInt.make(5_000),
+  });
+
+  static readonly presets: ReadonlyArray<StressPreset> = [
+    StressPreset.make({
+      label: "1k / 2k",
+      nodeCount: NonNegativeInt.make(1_000),
+      edgeCount: NonNegativeInt.make(2_000),
+    }),
+    StressPreset.default,
+    StressPreset.make({
+      label: "2.5k / 12.5k",
+      nodeCount: NonNegativeInt.make(2_500),
+      edgeCount: NonNegativeInt.make(12_500),
+    }),
+    StressPreset.make({
+      label: "5k / 10k",
+      nodeCount: NonNegativeInt.make(5_000),
+      edgeCount: NonNegativeInt.make(10_000),
+    }),
+  ];
+}
 
 class StressReport extends S.Class<StressReport>($I`StressReport`)(
   {
@@ -142,32 +169,7 @@ type Graph3DSpikeStatus = typeof Graph3DSpikeStatus.Type;
 
 const renderingStatus: Graph3DSpikeStatus = Graph3DSpikeStatus.cases.rendering.make();
 
-const DEFAULT_PRESET = StressPreset.make({
-  label: "2.5k / 5k",
-  nodeCount: NonNegativeInt.make(2_500),
-  edgeCount: NonNegativeInt.make(5_000),
-});
-const stressPresetEquivalence = S.toEquivalence(StressPreset);
-const PRESETS = [
-  StressPreset.make({
-    label: "1k / 2k",
-    nodeCount: NonNegativeInt.make(1_000),
-    edgeCount: NonNegativeInt.make(2_000),
-  }),
-  DEFAULT_PRESET,
-  StressPreset.make({
-    label: "2.5k / 12.5k",
-    nodeCount: NonNegativeInt.make(2_500),
-    edgeCount: NonNegativeInt.make(12_500),
-  }),
-  StressPreset.make({
-    label: "5k / 10k",
-    nodeCount: NonNegativeInt.make(5_000),
-    edgeCount: NonNegativeInt.make(10_000),
-  }),
-];
-
-const selectedPresetAtom = Atom.make(DEFAULT_PRESET);
+const selectedPresetAtom = Atom.make(StressPreset.default);
 const stressReportAtom = Atom.make<O.Option<StressReport>>(O.none());
 const projectionAtom = Atom.readable((get) => {
   const preset = get(selectedPresetAtom);
@@ -322,7 +324,7 @@ export function Graph3DSpike(): JSX.Element {
           {pipe(
             heap,
             O.map((megabytes) => ` heap ${megabytes}MB`),
-            O.getOrElse(() => "")
+            O.getOrElse(thunkEmptyStr)
           )}
         </div>
         {O.match(stats, {
@@ -348,11 +350,11 @@ export function Graph3DSpike(): JSX.Element {
         })}
       </div>
       <div className="absolute bottom-3 left-3 flex gap-2">
-        {A.map(PRESETS, (candidate) => (
+        {A.map(StressPreset.presets, (candidate) => (
           <button
             key={candidate.label}
             type="button"
-            className={`rounded border px-2 py-1 text-xs ${stressPresetEquivalence(candidate, preset) ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
+            className={`rounded border px-2 py-1 text-xs ${StressPreset.equivalence(candidate, preset) ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
             onClick={() => selectPreset(candidate)}
           >
             {candidate.label}

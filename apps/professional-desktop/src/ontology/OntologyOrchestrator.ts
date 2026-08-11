@@ -181,12 +181,12 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
       ),
     SaveOntologyDocument: ({ path, session }) => operations.saveDocument(path, session),
     PreviewOntologyTurtle: ({ session }) => operations.previewTurtle(session),
-    ApplyOntologyBatch: (payload) => operations.applyBatch(payload),
+    ApplyOntologyBatch: operations.applyBatch,
     GetOntologySnapshot: ({ session }) => operations.getSnapshot(session),
-    RunOntologyInference: (payload) => operations.runInference(payload),
-    RunOntologySparql: (payload) => operations.runSparql(payload),
-    RunOntologyValidation: (payload) => operations.runValidation(payload),
-    ExportOntologyProvenance: (payload) => operations.exportProvenance(payload),
+    RunOntologyInference: operations.runInference,
+    RunOntologySparql: operations.runSparql,
+    RunOntologyValidation: operations.runValidation,
+    ExportOntologyProvenance: operations.exportProvenance,
   });
 
 /**

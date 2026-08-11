@@ -13,8 +13,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
 
@@ -629,4 +632,7 @@ export class CodexFindingsCapturePayload extends S.Class<CodexFindingsCapturePay
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCodexFindingsCapturePayload = S.decodeUnknownEffect(CodexFindingsCapturePayload);
+export const decodeCodexFindingsCapturePayload: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CodexFindingsCapturePayload, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CodexFindingsCapturePayload, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CodexFindingsCapturePayload));

@@ -44,21 +44,21 @@ const fakeFace = FaceDetection.make({
   }),
 });
 
-const PositivePixelDimensionArbitrary = S.toArbitrary(PositivePixelDimension);
-const FaceDetectionConfidenceArbitrary = S.toArbitrary(FaceDetectionConfidence);
-const RawFaceDetectionConfidenceArbitrary = S.toArbitrary(RawFaceDetectionConfidence);
-const FaceDetectionPercentageArbitrary = S.toArbitrary(FaceDetectionPercentage);
-const FaceDetectionTopKArbitrary = S.toArbitrary(FaceDetectionTopK);
-const NonNegativeImageCoordinateArbitrary = S.toArbitrary(NonNegativeImageCoordinate);
-const FaceDetectionOperationArbitrary = S.toArbitrary(FaceDetectionOperation);
-const FaceDetectionImageRequestArbitrary = S.toArbitrary(FaceDetectionImageRequest);
-const FaceDetectionBoxArbitrary = S.toArbitrary(FaceDetectionBox);
-const FaceDetectionArbitrary = S.toArbitrary(FaceDetection);
-const FaceDetectionResultArbitrary = S.toArbitrary(FaceDetectionResult);
-const FaceDetectionErrorFromUnknownOptionsArbitrary = S.toArbitrary(FaceDetectionErrorFromUnknownOptions).filter(
+const PositivePixelDimensionArbitrary = S.toArbitrary(PositivePixelDimension)(fc);
+const FaceDetectionConfidenceArbitrary = S.toArbitrary(FaceDetectionConfidence)(fc);
+const RawFaceDetectionConfidenceArbitrary = S.toArbitrary(RawFaceDetectionConfidence)(fc);
+const FaceDetectionPercentageArbitrary = S.toArbitrary(FaceDetectionPercentage)(fc);
+const FaceDetectionTopKArbitrary = S.toArbitrary(FaceDetectionTopK)(fc);
+const NonNegativeImageCoordinateArbitrary = S.toArbitrary(NonNegativeImageCoordinate)(fc);
+const FaceDetectionOperationArbitrary = S.toArbitrary(FaceDetectionOperation)(fc);
+const FaceDetectionImageRequestArbitrary = S.toArbitrary(FaceDetectionImageRequest)(fc);
+const FaceDetectionBoxArbitrary = S.toArbitrary(FaceDetectionBox)(fc);
+const FaceDetectionArbitrary = S.toArbitrary(FaceDetection)(fc);
+const FaceDetectionResultArbitrary = S.toArbitrary(FaceDetectionResult)(fc);
+const FaceDetectionErrorFromUnknownOptionsArbitrary = S.toArbitrary(FaceDetectionErrorFromUnknownOptions)(fc).filter(
   (options) => O.isNone(options.cause)
 );
-const FaceDetectionErrorArbitrary = S.toArbitrary(FaceDetectionError).filter((error) => O.isNone(error.cause));
+const FaceDetectionErrorArbitrary = S.toArbitrary(FaceDetectionError)(fc).filter((error) => O.isNone(error.cause));
 
 const expectCodecIdentity = <Schema extends S.Codec<unknown, unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));

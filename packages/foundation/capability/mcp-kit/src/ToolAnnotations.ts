@@ -74,6 +74,33 @@ export class FourHintAnnotations extends S.Class<FourHintAnnotations>($I`FourHin
 }
 
 /**
+ * The tool a hint combinator hands back: the caller's own tool type, kept
+ * deferred rather than widened.
+ *
+ * **Details**
+ *
+ * `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
+ * shape rather than the specific tool it was called on, so every annotation
+ * combinator in this kit re-narrows to the caller's `T`. Spelling that
+ * result through this alias keeps a combinator's pipeable and data-first
+ * overloads relatable to one another while preserving the caller's exact
+ * tool type at both call sites.
+ *
+ * **Example** (Reference the AnnotatedTool alias)
+ *
+ * ```ts
+ * import type { AnnotatedTool } from "@beep/mcp-kit"
+ * import type * as AiTool from "effect/unstable/ai/Tool"
+ *
+ * type Annotated = AnnotatedTool<AiTool.Any>
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AnnotatedTool<T extends AiTool.Any> = T extends unknown ? T : never;
+
+/**
  * Applies all four MCP tool-behavior hints to a tool in one call.
  *
  * **Example** (Annotate tool with four hints)
@@ -91,11 +118,11 @@ export class FourHintAnnotations extends S.Class<FourHintAnnotations>($I`FourHin
  * @since 0.0.0
  */
 export const annotateFourHints: {
-  (hints: FourHintAnnotations): <T extends AiTool.Any>(tool: T) => T;
-  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T;
+  (hints: FourHintAnnotations): <T extends AiTool.Any>(tool: T) => AnnotatedTool<T>;
+  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): AnnotatedTool<T>;
 } = dual(
   2,
-  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T =>
+  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): AnnotatedTool<T> =>
     // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
     // shape rather than the caller's specific `T`; the annotation chain does
     // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.

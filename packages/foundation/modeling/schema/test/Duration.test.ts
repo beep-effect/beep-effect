@@ -86,7 +86,7 @@ describe("DurationFromInput", () => {
   });
 
   it("derives Duration values from the schema arbitrary that re-validate as durations", () => {
-    const arbitrary = S.toArbitrary(Duration.FromInput);
+    const arbitrary = S.toArbitrary(Duration.FromInput)(fc);
     const isDuration = S.is(Duration.Schema);
 
     fc.assert(

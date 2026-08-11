@@ -11,6 +11,7 @@ import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Domain");
@@ -1017,13 +1018,18 @@ type FileNewOptionsInput = Exclude<(typeof FileNewOptions)["~type.make.in"], voi
  *
  * const sorted = A.sort(ByPath)([second, first])
  * console.log(sorted[0]?.name)
+ * console.log(ByPath(second)(first))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const ByPath: Order.Order<Module> = Order.mapInput(Str.Order, (module: Module) =>
-  pipe(module.path, A.join("/"), Str.toLowerCase)
+export const ByPath: {
+  (that: Module): (self: Module) => Ordering.Ordering;
+  (self: Module, that: Module): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Str.Order, (module: Module) => pipe(module.path, A.join("/"), Str.toLowerCase))
 );
 
 /**
