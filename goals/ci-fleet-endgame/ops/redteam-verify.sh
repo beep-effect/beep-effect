@@ -115,7 +115,8 @@ fi
 
 instance_id=""
 if [[ -s "${run_log}" ]]; then
-  instance_id="$(sed -n 's/.*IMDS instance-id: \(i-[0-9a-f][0-9a-f]*\).*/\1/p' "${run_log}" | head -1)"
+  # CSF-003 denies runner-user IMDS access; the workflow derives identity from RUNNER_NAME.
+  instance_id="$(sed -n 's/.*Runner instance-id: \(i-[0-9a-f][0-9a-f]*\).*/\1/p' "${run_log}" | head -1)"
 fi
 aws_available=0
 if command -v aws >/dev/null 2>&1 && aws sts get-caller-identity >/dev/null 2>&1; then

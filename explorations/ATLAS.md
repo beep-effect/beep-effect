@@ -56,6 +56,22 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   respected — static pulse-first HTML v1 then read-only React v2 as a MAP
   candidate; push+poll realtime; git-markdown packets stay the sole system
   of record, hosted trackers ruled out). Next: `BRIEF.md`.
+- [`document-structure-ontologies`](./document-structure-ontologies/README.md) —
+  shape-stage (align complete, D1–D6 logged; BRIEF.md drafted, awaiting
+  operator review): DOCO/PO/DEO vs the
+  `@beep/md`/`@beep/pandoc-ast`/`@beep/lexical-schema` AST family (the
+  recursive tagged unions already implement PO's content-model axioms) + a
+  5-lane Grok 4.5 sweep (~250KB cited reports in
+  [`research/grok/`](./document-structure-ontologies/research/grok/)).
+  Converged on a 5-layer stack: PO cited not adopted; DOCO/DEO + FaBiO/CiTO
+  wire vocab in `@beep/rdf`; home-grown patent-document schema (CFR 1.77 /
+  MPEP §608 / WIPO ST.96 — no vendorable patent ontology exists, gap
+  confirmed across Lynx, FOLIO live probes, and academic KGs); FOLIO as
+  optional matter-tag interop (D6: pinned vetted slice); FOLIO-MCP-style
+  browse tools planned for the existing governed ontology toolkit (D4) for
+  `apps/professional-desktop` drafting agents. Related:
+  `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
+  D1–D27 binds layering).
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   research-stage. Next open question: which candidate contract bricks already
   exist in-repo, and which are net-new? See the packet's
