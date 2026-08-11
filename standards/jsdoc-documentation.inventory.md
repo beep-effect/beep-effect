@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-10T19:15:54.045Z
+Generated: 2026-08-10T22:26:38.605Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 61 |
-| publicModules | 2498 |
-| publicExports | 16292 |
+| publicModules | 2500 |
+| publicExports | 16297 |
 | openModules | 407 |
 | openExports | 133 |
 | missingExportExamples | 5 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 81 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
 | 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 83 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
-| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 54 | 176 | 25 | 0 |
+| 84 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 181 | 25 | 0 |
 | 85 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 2 |
 | 86 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 89 | 0 | 0 |
 | 87 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |

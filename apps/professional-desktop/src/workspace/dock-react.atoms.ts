@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { O, P } from "@beep/utils";
+import { O } from "@beep/utils";
 import { dual } from "effect/Function";
 import { Atom } from "effect/unstable/reactivity";
 import type { GroupId } from "@beep/dock";
@@ -50,6 +50,22 @@ export const dockAtomBridge: {
 } = dual(2, <A>(graph: DesktopDockGraph, atom: Atom.Atom<A>): Atom.Atom<A> => bridgedDockAtoms(graph)(atom));
 
 /**
+ * The dockview adapter API once `onReady` has delivered it, `None` before.
+ *
+ * **Example** (Inspect the dock API atom)
+ *
+ * ```ts
+ * import { dockApiAtom } from "@/workspace/dock-react.atoms"
+ *
+ * console.log(typeof dockApiAtom) // "object"
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pipe(Atom.keepAlive);
+
+/**
  * Mirrors the focused dock group once the adapter API has arrived.
  *
  * **Example** (Check atom factory type)
@@ -64,7 +80,10 @@ export const dockAtomBridge: {
  * @since 0.0.0
  */
 export const focusedDockGroupAtom = Atom.family((graph: DesktopDockGraph) =>
-  Atom.family((api: DockviewAdapterApi | undefined) =>
-    Atom.make((get) => (P.isUndefined(api) ? O.none<GroupId>() : get(dockAtomBridge(graph, api.atoms.focusedGroup))))
+  Atom.make((get) =>
+    O.match(get(dockApiAtom), {
+      onNone: O.none<GroupId>,
+      onSome: (api) => get(dockAtomBridge(graph, api.atoms.focusedGroup)),
+    })
   )
 );

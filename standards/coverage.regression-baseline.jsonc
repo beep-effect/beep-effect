@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-08-10T12:19:35.537Z",
-  "git_sha": "8da31d3b1a602cdd141f9260e7711bc951b1239b",
+  "generated_at": "2026-08-10T17:26:59.282Z",
+  "git_sha": "349e0370888d8e3ba82eaa79dc27e73146a9b2f4",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -23,10 +23,10 @@
     },
     "@beep/agents-client": {
       "path": "packages/agents/client",
-      "lines": 87.93,
-      "statements": 86.74,
-      "branches": 67.69,
-      "functions": 78.02,
+      "lines": 87.87,
+      "statements": 86.69,
+      "branches": 66.66,
+      "functions": 77.77,
       "uncovered": {
         "lines": 28,
         "statements": 33,
@@ -999,9 +999,9 @@
     "@beep/observability": {
       "path": "packages/foundation/capability/observability",
       "lines": 69.92,
-      "statements": 69.84,
+      "statements": 69.79,
       "branches": 49.03,
-      "functions": 58.96,
+      "functions": 58.82,
       "uncovered": {
         "lines": 197,
         "statements": 209,
@@ -1245,15 +1245,15 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 70.89,
-      "statements": 69.78,
-      "branches": 61.85,
-      "functions": 60.5,
+      "lines": 70.96,
+      "statements": 69.6,
+      "branches": 61.82,
+      "functions": 59.98,
       "uncovered": {
-        "lines": 703,
-        "statements": 779,
-        "branches": 206,
-        "functions": 466
+        "lines": 669,
+        "statements": 748,
+        "branches": 184,
+        "functions": 447
       }
     },
     "@beep/protobuf": {
@@ -1336,15 +1336,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 69,
-      "statements": 68.71,
-      "branches": 54.8,
-      "functions": 60.62,
+      "lines": 69.08,
+      "statements": 68.8,
+      "branches": 54.87,
+      "functions": 60.77,
       "uncovered": {
-        "lines": 8227,
-        "statements": 8639,
-        "branches": 4472,
-        "functions": 3028
+        "lines": 8233,
+        "statements": 8644,
+        "branches": 4475,
+        "functions": 3029
       }
     },
     "@beep/repo-configs": {
@@ -1414,10 +1414,10 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 92.98,
-      "statements": 92.13,
+      "lines": 93,
+      "statements": 92.16,
       "branches": 87.17,
-      "functions": 87.05,
+      "functions": 87.1,
       "uncovered": {
         "lines": 275,
         "statements": 324,

@@ -392,16 +392,22 @@ fn renderer_observability_config(
     metadata: tauri::State<'_, DesktopRuntimeMetadata>,
 ) -> RendererObservabilityConfig {
     RendererObservabilityConfig {
-        build_commit: env::var("BEEP_BUILD_COMMIT").ok(),
+        build_commit: env::var("BEEP_BUILD_COMMIT")
+            .ok()
+            .filter(|value| !value.trim().is_empty()),
         deployment_environment: env::var("BEEP_DEPLOYMENT_ENVIRONMENT")
-            .unwrap_or_else(|_| "qa".to_string()),
+            .ok()
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| "qa".to_string()),
         launch_id: metadata.launch_id.clone(),
         log_level: native_logging_config().effect_level,
         otlp_url: env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
             .ok()
             .filter(|value| !value.trim().is_empty()),
         qa_session_id: env::var("BEEP_QA_SESSION_ID")
-            .unwrap_or_else(|_| metadata.session_id.clone()),
+            .ok()
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| metadata.session_id.clone()),
     }
 }
 

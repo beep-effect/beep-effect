@@ -13,7 +13,6 @@ import {
   dockPersistenceBindingAtom,
   isPanelActive,
   isPanelOpen,
-  LEGACY_DOCK_SNAPSHOT_KEYS,
   makeDesktopDockGraph,
   makeResetDockSnapshotAtom,
   panelOperation,
@@ -23,7 +22,6 @@ describe("Desktop dock shell", { concurrent: false }, () => {
   afterEach(() => {
     cleanup();
     globalThis.localStorage.removeItem(DOCK_SNAPSHOT_KEY);
-    globalThis.localStorage.removeItem(LEGACY_DOCK_SNAPSHOT_KEYS[0]);
   });
 
   it.effect(
@@ -100,23 +98,6 @@ describe("Desktop dock shell", { concurrent: false }, () => {
 
       expect(isPanelActive(workspace, "chat")).toBe(true);
       expect(panels.length).toBe(9);
-      expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).toBeNull();
-    })
-  );
-
-  it.effect(
-    "removes retired v1 snapshot keys at boot without touching the default",
-    Effect.fnUntraced(function* () {
-      // A v1 snapshot decodes but references the retired coarse `ontology`
-      // renderer; the boot must delete the key rather than restore from it.
-      globalThis.localStorage.setItem(LEGACY_DOCK_SNAPSHOT_KEYS[0], "stale v1 snapshot");
-
-      const graph = yield* makeDesktopDockGraph;
-      const workspace = graph.registry.get(graph.workspaceAtom);
-      graph.dispose();
-
-      expect(globalThis.localStorage.getItem(LEGACY_DOCK_SNAPSHOT_KEYS[0])).toBeNull();
-      expect(isPanelActive(workspace, "chat")).toBe(true);
       expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).toBeNull();
     })
   );

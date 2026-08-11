@@ -18,7 +18,7 @@ import { CodeBlockView } from "@beep/editor/code-block-view";
 import { MermaidView } from "@beep/editor/mermaid-view";
 import { YouTubeEmbed } from "@beep/editor/youtube-embed";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
-import { A, O, Str } from "@beep/utils";
+import { A, O, Str, thunk0 } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";
 import { dual } from "effect/Function";
 import type { TableBlock } from "@beep/agents-domain/values/AssistantContent";
@@ -88,7 +88,7 @@ export const stableOccurrenceKeys: {
   const counts = MutableHashMap.empty<string, number>();
   return A.map(items, (item) => {
     const baseKey = boundedKey(renderKey(item));
-    const occurrence = O.getOrElse(MutableHashMap.get(counts, baseKey), () => 0);
+    const occurrence = O.getOrElse(MutableHashMap.get(counts, baseKey), thunk0);
     MutableHashMap.set(counts, baseKey, occurrence + 1);
     return occurrence === 0 ? baseKey : `${baseKey}#${occurrence}`;
   });

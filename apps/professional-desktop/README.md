@@ -15,10 +15,13 @@ Composer drafts remain general `@beep/md` documents so persisted content is not
 silently rewritten. Before send, the desktop refines the draft through
 `@beep/md/Md.safe`. A legacy draft containing trusted raw HTML or Markdown is
 projected into the editor as literal text, but its original persisted form stays
-untouched. The composer shows an escaped preview and requires an explicit
-“Send escaped literal copy” action before the normalized safe document can be
-submitted. An out-of-policy link or embedded URL is non-confirmable and must be
-edited first, as is text containing a NUL character or lone UTF-16 surrogate.
+untouched. Every safety violation is refused, never confirmable: trusted raw
+HTML or Markdown, a link or embedded URL outside the safe destination policy,
+text containing a NUL character or a lone UTF-16 surrogate, and duplicate
+footnote definitions all disable Send and raise a message-only refusal banner.
+The refused content is never echoed back into the editor and the persisted
+draft is kept, so there is no confirm-and-send path — the operator edits the
+draft into safe content and sends that.
 
 The desktop persists canonical `@beep/md` content, not Lexical wire. Persisted
 messages are projected to the editor vocabulary for rich rendering; if that
