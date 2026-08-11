@@ -220,3 +220,30 @@
   the token-PUT probe and role-minimality enumeration — before any redeploy.
   Until then, main must NOT carry an active `userdata_post_install` DROP, or a
   redeploy re-breaks the fleet.
+
+## Turbo "remote cache on push" was a mirage
+
+- **Work:** cutover review — activating the P3 remote cache for the ephemeral
+  fleet.
+- **What happened:** `check.yml` push lanes set `TURBO_TOKEN`/`TURBO_TEAM`
+  secrets but no `TURBO_API`, which points turbo at Vercel's hosted API, and a
+  main `Check` job log shows no remote-cache banner at all — remote caching has
+  never been active in this repo's CI. Main's perceived cache speed came from
+  warm burst-worker local disks, which one-job-one-VM removes entirely.
+- **Prevention:** treat "cache enabled" as unproven until a run log shows the
+  remote-cache banner and a hit; any activation must wire `TURBO_API` alongside
+  the tokens, and acceptance is a logged cold/warm hit pair, not env presence.
+
+## Fleet no-pickup dispatches are fully attributed — control plane is healthy
+
+- **Work:** pre-cutover reliability audit of the 6-of-10 shadow dispatches that
+  were never picked up (one waited 33.6 minutes on 2026-08-11).
+- **What happened:** traced the 2026-08-11 case (run 31487753179) through the
+  webhook → dispatcher → scale-up CloudWatch logs: accepted at 11:41:36,
+  queued to SQS at :37, instance launched at :42 — six seconds end-to-end. The
+  instance was born with the since-rolled-back IMDS DROP userdata, i.e. this
+  was the Gate E incident itself, not a scale-up defect. The other five date to
+  the Aug 9–10 bring-up windows.
+- **Prevention:** attribute a no-pickup from the lambda chain (webhook →
+  dispatch-to-runner → scale-up → instance console) before suspecting the
+  module; keep a 10/10 consecutive-pickup gate as cutover acceptance.

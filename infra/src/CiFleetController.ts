@@ -22,7 +22,7 @@ import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 const $I = $InfraId.create("CiFleetController");
 
 const defaultAmiSsmParameterName = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64";
-const defaultRunnerLabel = "beep-ec2-heavy-shadow";
+const defaultRunnerLabel = "beep-ec2-heavy";
 const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
 const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/github_app_webhook_secret";
@@ -273,7 +273,16 @@ type CiFleetControllerArgs = {
  * one-job-one-VM lifecycle, and JIT config that keeps no registration token on
  * the instance.
  *
- * **Example** (Provision the shadow-label controller)
+ * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
+ * job whose runner died between launch and pickup (spot reclaim, boot
+ * failure) — without it such a job waits on GitHub's six-hour queue timeout,
+ * because nothing else re-delivers it. A spot reclaim mid-job still fails
+ * that job and only a workflow re-run recovers it; spot is kept anyway as a
+ * deliberate ~3x cost trade against on-demand. `runners_maximum_count` bounds
+ * concurrent instances only — jobs beyond the cap retry from SQS as capacity
+ * frees rather than being dropped.
+ *
+ * **Example** (Provision the heavy-lane fleet controller)
  *
  * ```ts
  * import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra"
@@ -396,12 +405,12 @@ export class CiFleetController extends pulumi.ComponentResource {
         enable_organization_runners: false,
         /**
          * Require an exact label-set match so ordinary `self-hosted` jobs
-         * cannot reach the shadow fleet without naming its dedicated label.
+         * cannot reach the fleet without naming its dedicated label.
          *
          * **Gotchas**
          *
-         * Default labels plus any-match webhook filtering widened the shadow
-         * fleet to ordinary `self-hosted` jobs, so both label sets must be exact.
+         * Default labels plus any-match webhook filtering widened the fleet
+         * to ordinary `self-hosted` jobs, so both label sets must be exact.
          */
         enable_runner_bidirectional_label_match: true,
         enable_runner_on_demand_failover_for_errors: onDemandFailoverErrors,
@@ -433,6 +442,16 @@ export class CiFleetController extends pulumi.ComponentResource {
           zip: args.config.terminationWatcherLambdaZip,
         },
         instance_types: runnerInstanceTypes,
+        // Rescues a job whose runner died between launch and pickup (spot
+        // reclaim, boot failure) by re-checking the still-queued job and
+        // scaling up again; a runner lost mid-job is out of its reach and
+        // needs a workflow re-run.
+        job_retry: {
+          delay_backoff: 2,
+          delay_in_seconds: 120,
+          enable: true,
+          max_attempts: 2,
+        },
         kms_key_arn: args.config.githubAppKmsKeyArn,
         logging_retention_in_days: 14,
         minimum_running_time_in_minutes: 5,
@@ -456,7 +475,11 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_run_as: runnerRunAs,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
-        runners_maximum_count: 4,
+        // Concurrency cap, not a budget: each ephemeral VM lives exactly one
+        // job, so the cap only decides how much of a wave runs in parallel. A
+        // full main wave is seven heavy lanes; ten absorbs an overlapping PR
+        // wave without serializing. Excess jobs retry from SQS every ~30s.
+        runners_maximum_count: 10,
         runners_ssm_housekeeper: {
           config: { dryRun: false, minimumDaysOld: 1 },
           enabled: true,

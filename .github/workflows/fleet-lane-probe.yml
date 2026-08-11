@@ -1,0 +1,57 @@
+name: Fleet Lane Probe
+
+# Operator-dispatched validation: runs a REAL verification lane on a chosen
+# runner label. Used before the heavy-lane cutover (target_label
+# beep-ec2-heavy-shadow proves toolbelt parity and cold-start cost on the
+# ephemeral fleet) and after it as a fleet health probe.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_label:
+        description: Runner label to dispatch the probe onto
+        required: false
+        type: string
+        default: beep-ec2-heavy
+      lane:
+        description: "Verification lane id (summarize-capable: lint, check, test-unit, test-integration, coverage)"
+        required: false
+        type: string
+        default: test-integration
+
+permissions:
+  contents: read
+
+jobs:
+  lane-probe:
+    name: Lane Probe (${{ inputs.lane }})
+    runs-on: ${{ inputs.target_label }}
+    timeout-minutes: 60
+    env:
+      PROBE_LANE: ${{ inputs.lane }}
+      TURBO_CACHE: "local:rw"
+    steps:
+      - name: Report worker identity
+        shell: bash
+        run: |
+          echo "runner: ${RUNNER_NAME:-unset} on $(hostname)"
+          nproc
+          free -g
+
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "true"
+          cache-write: "false"
+
+      - name: Run verification lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run beep ci lane "$PROBE_LANE" --summarize
