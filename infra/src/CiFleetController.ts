@@ -42,13 +42,17 @@ const runnerRunAs = "ec2-user";
 
 // The module's own user-data installs only docker and libicu, and the pinned
 // AL2023 image ships without git, unzip, zip, or jq — setup-bun dies exit-127
-// without unzip and checkout needs git. Root package installs at boot are
-// agent-safe (unlike the rolled-back uid-keyed IMDS DROP, which starved the
-// agent itself); the P4 baked AMI later absorbs this into the image.
-const runnerToolbeltPostInstall = `#!/bin/sh
-set -eu
-dnf install -y git unzip zip jq
-logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+// without unzip and checkout needs git. The P4 baked AMI later absorbs this
+// into the image. The module INLINES this snippet into its single user-data
+// bash script, so shell options must stay subshell-scoped: a leaked `set -u`
+// kills the downstream runner-start section on its own unset variables
+// (`SEGMENT: unbound variable`, runner-start-failed) — which is also the
+// failure signature the rolled-back IMDS DROP produced.
+const runnerToolbeltPostInstall = `(
+  set -eu
+  dnf install -y git unzip zip jq
+  logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+)
 `;
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
@@ -270,12 +274,17 @@ type CiFleetControllerArgs = {
  *
  * The host IMDS credential-theft mitigation (CSF-003) is NOT wired here. A
  * post-install `iptables` OWNER-match DROP on the `runnerRunAs` uid was deployed
- * and rolled back the same day: because the runner agent itself runs as that
- * uid, the DROP starved the agent at start-up and the worker failed to register
+ * and rolled back the same day after the worker failed to register
  * (`runner-start-failed`), which the Gate E probe caught before any heavy-lane
- * cutover. A uid DROP cannot separate the agent from job steps when both share
- * one uid, and a blanket DROP would additionally sever the root config-time IMDS
- * the runner needs for JIT registration. The rework is a per-job
+ * cutover. The original attribution blamed the DROP starving the agent, but the
+ * toolbelt post-install later reproduced the identical failure with no firewall
+ * at all: the module inlines `userdata_post_install` into its user-data script,
+ * and a leaked `set -u` kills the runner-start section on its own unset
+ * variables — so the DROP's specific culpability is unproven and the rework
+ * must retest it with subshell-scoped options. A uid DROP still cannot separate
+ * the agent from job steps when both share one uid, and a blanket DROP would
+ * additionally sever the root config-time IMDS the runner needs for JIT
+ * registration. The rework is a per-job
  * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook that installs the DROP after the agent
  * is running but before a job's steps, re-validated through Gate E before
  * redeploy. Until then the controls that bound credential theft are the layers

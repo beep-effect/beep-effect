@@ -279,3 +279,23 @@
   identity, not packet prose; the cutover PR adds a `userdata_post_install`
   toolbelt install (root, boot-time, agent-safe — distinct from the uid-keyed
   IMDS DROP class) until the P4 baked AMI absorbs it.
+
+## userdata_post_install is INLINED — a leaked `set -u` kills runner start
+
+- **Work:** first live wave post-cutover — all 10 fleet VMs registered but
+  stayed offline; console: `SEGMENT: unbound variable` at the runner-start
+  line, then `runner-start-failed with exit code 1`.
+- **What happened:** the module inlines `userdata_post_install` into its
+  single user-data bash script rather than executing it as a separate file, so
+  the toolbelt snippet's `set -eu` preamble changed the parent shell's options
+  and the downstream runner-start section died on its own legitimately-unset
+  variables. Fixed by subshell-scoping the snippet.
+- **Attribution correction:** the same-day IMDS-DROP rollback recorded the
+  DROP as starving the agent — but that script carried the same `set -eu`
+  preamble and failed at the same line. The toolbelt reproduction with no
+  firewall proves the option leak alone is sufficient; the DROP's specific
+  culpability is now unproven and its rework must retest with subshell-scoped
+  options before assuming a per-job hook is required.
+- **Prevention:** treat `userdata_post_install` as an inline fragment, never a
+  standalone script: no shebang, subshell-scope any `set` options, and gate
+  every post-install deploy on a fresh instance reaching `online`.
