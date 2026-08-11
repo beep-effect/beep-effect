@@ -7,6 +7,9 @@
 - **Provenance:** cross-lane rollup [`mining/SYNTHESIS.md`](./mining/SYNTHESIS.md); raw lane
   outputs also retained outside the repo at `~/YeeBois/research/daily/08-10-2026/mining/`
   (logs, prompts, status).
+- **Mined revision:** OpenLinkSoftware/ai-agent-skills commit
+  [`929692f45d1b48ea990884154f82707c7a7cc5c2`](https://github.com/OpenLinkSoftware/ai-agent-skills/tree/929692f45d1b48ea990884154f82707c7a7cc5c2).
+  File paths cited by the lane reports are relative to that immutable tree.
 
 ## 1. Mined source corpus
 
@@ -20,6 +23,15 @@
 | `mining/ops-publishing.md` | Ops & publishing lane | OpenLinkSoftware/ai-agent-skills | `iodbc-dsn-manager/`, `openlink-request-broker-configurator/`, `screencast-recorder/`, `pinchtab/`, `weblog-from-webdav/`, `website-from-webdav/` | ref-leases, capability gates, deployable-vs-live algebra, publication sagas | port (shapes) |
 | `mining/meta-authoring.md` | Skill-authoring meta lane | OpenLinkSoftware/ai-agent-skills | `AGENTS.md`, `opal-agent-skill-assembler/`, `uriburner-opal-agent-skills/`, `templates/`, `scripts/`, `showcases-and-explainers/`, `fuxi-engineer/`, `wc2026-*` | authoring lifecycle, bounded KG loop + receipts, scene proof contracts | port (shapes) |
 | (session pass) | agent-rdf-memory Fable analysis | OpenLinkSoftware/ai-agent-skills | `agent-rdf-memory/` | intent-routing ontology, sparse manifest, transcript-audit gate, write triggers | clean summary in `CAPTURE.md`; port (shapes) |
+
+**Pinned source anchors:** protocols ([A2A workflow](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/a2a-client/SKILL.md#L32-L65)); KG pipeline
+([harness alignment](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/kg-generator/SKILL.md#L23-L70)); RDF infographic
+([strict harness contract](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/rdf-infographic-skill/SKILL.md#L48-L99)); query skills
+([discovery preflight](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/data-twingler/SKILL.md#L145-L190)); identity and commerce
+([YouID delivery gates](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/youid/SKILL.md#L81-L116)); ops and publishing
+([screencast evidence workflow](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/screencast-recorder/SKILL.md#L27-L122)); meta-authoring
+([repository agent law](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/AGENTS.md#L5-L45)); agent-rdf-memory
+([load and retrieval gates](https://github.com/OpenLinkSoftware/ai-agent-skills/blob/929692f45d1b48ea990884154f82707c7a7cc5c2/agent-rdf-memory/AGENTS.md#L1-L57)).
 
 **How these inform this packet:** each lane report carries its own ranked "Steal-worthy for
 beep-effect" list and a "Dead ends" list; the rollup thesis (contract-rich, enforcement-poor →

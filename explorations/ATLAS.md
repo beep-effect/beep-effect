@@ -41,15 +41,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  research-stage: port the contract *shapes* mined from OpenLink's
-  `ai-agent-skills` corpus (2026-08-10, seven Codex lanes; rollup in
-  `research/mining/SYNTHESIS.md`) into Effect Schema, where contract = gate.
-  Corpus verdict: contract-rich, enforcement-poor — evidence ladders
-  (acceptance ≠ semantic success), discovery-before-invocation state machines,
-  authoritative-artifact re-extraction, bounded recovery with audit receipts,
-  provenance-claimed-never-proven. AI Barrister gold-path metrics captured as
-  the candidate eval layer for legal KG reasoning. Next: in-repo capability
-  inventory, then broader landscape sweep.
+  research-stage. Next open question: which candidate contract bricks already
+  exist in-repo, and which are net-new? See the packet's
+  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md),
+  [`SOURCES.md`](./typed-agent-skill-contracts/research/SOURCES.md), and
+  [`SYNTHESIS.md`](./typed-agent-skill-contracts/research/mining/SYNTHESIS.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
   research-stage: mine Harvey + Engram's open-sourced synthetic law firm
   (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
