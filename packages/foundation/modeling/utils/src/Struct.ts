@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
 import { lookupAtPath, pathLookupToOption, unsafeDotGet } from "./internal/StructPath.ts";
+import type { LazyArg } from "effect/Function";
 import type { Get, Paths, Simplify } from "type-fest";
 import type { PathLookup as InternalPathLookup, PathInput } from "./internal/StructPath.ts";
 
@@ -212,6 +213,20 @@ export const dotGetOption: {
 };
 
 /**
+ * Selects the result of {@link mapPath}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so every data-first signature of
+ * {@link mapPath} shares a named return type with its data-last counterpart.
+ * Every concrete instantiation resolves back to `B`.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MapPathResult<B> = B extends unknown ? B : never;
+
+/**
  * Applies a unary function to a value retrieved from a struct by path.
  *
  * **Details**
@@ -249,44 +264,44 @@ export const mapPath: {
   <A, B, const P extends string>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => B;
+  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => MapPathResult<B>;
   <A, B, const P extends ReadonlyArray<string>>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: Get<S, P> extends A ? S : never) => B;
+  ): <S extends object>(self: Get<S, P> extends A ? S : never) => MapPathResult<B>;
   <S extends object, A, B, const P extends string & Paths<S>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): B;
+  ): MapPathResult<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): B;
+  ): MapPathResult<B>;
 } = dual(
   3,
-  <S extends object, B>(self: S, f: (a: unknown) => B, options: { readonly path: PathInput }): B =>
-    f(unsafeDotGet(self, pathFromOptions(options)))
+  <S extends object, B>(self: S, f: (a: unknown) => B, options: { readonly path: PathInput }): MapPathResult<B> =>
+    cast(f(unsafeDotGet(self, pathFromOptions(options))))
 ) as {
   <A, B, const P extends string>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => B;
+  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => MapPathResult<B>;
   <A, B, const P extends ReadonlyArray<string>>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: Get<S, P> extends A ? S : never) => B;
+  ): <S extends object>(self: Get<S, P> extends A ? S : never) => MapPathResult<B>;
   <S extends object, A, B, const P extends string & Paths<S>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): B;
+  ): MapPathResult<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): B;
+  ): MapPathResult<B>;
 };
 
 /**
@@ -327,45 +342,45 @@ export const mapPathLazy: {
   <A, B, const P extends string>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => () => B;
+  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => LazyArg<B>;
   <A, B, const P extends ReadonlyArray<string>>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: Get<S, P> extends A ? S : never) => () => B;
+  ): <S extends object>(self: Get<S, P> extends A ? S : never) => LazyArg<B>;
   <S extends object, A, B, const P extends string & Paths<S>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): () => B;
+  ): LazyArg<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): () => B;
+  ): LazyArg<B>;
 } = dual(
   3,
-  <S extends object, B>(self: S, f: (a: unknown) => B, options: { readonly path: PathInput }): (() => B) =>
+  <S extends object, B>(self: S, f: (a: unknown) => B, options: { readonly path: PathInput }): LazyArg<B> =>
     () =>
       f(unsafeDotGet(self, pathFromOptions(options)))
 ) as {
   <A, B, const P extends string>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => () => B;
+  ): <S extends object>(self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never) => LazyArg<B>;
   <A, B, const P extends ReadonlyArray<string>>(
     f: (a: A) => B,
     options: { readonly path: P }
-  ): <S extends object>(self: Get<S, P> extends A ? S : never) => () => B;
+  ): <S extends object>(self: Get<S, P> extends A ? S : never) => LazyArg<B>;
   <S extends object, A, B, const P extends string & Paths<S>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): () => B;
+  ): LazyArg<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
     self: S,
     f: Get<S, P> extends A ? (a: A) => B : never,
     options: { readonly path: P }
-  ): () => B;
+  ): LazyArg<B>;
 };
 
 /**
@@ -406,11 +421,11 @@ export const mapPathLazy: {
  * @since 0.0.0
  */
 export const getLazy: {
-  <S extends object, const K extends keyof S>(key: K): (self: S) => () => S[K];
-  <S extends object, const K extends keyof S>(self: S, key: K): () => S[K];
+  <S extends object, const K extends keyof S>(key: K): (self: S) => LazyArg<S[K]>;
+  <S extends object, const K extends keyof S>(self: S, key: K): LazyArg<S[K]>;
 } = dual(
   2,
-  <S extends object, const K extends keyof S>(self: S, key: K): (() => S[K]) =>
+  <S extends object, const K extends keyof S>(self: S, key: K): LazyArg<S[K]> =>
     () =>
       self[key]
 );
@@ -839,6 +854,20 @@ export type DeepPartial<T> = T extends readonly (infer U)[]
     : T;
 
 /**
+ * Selects the result of {@link deepMerge}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link deepMerge} share a single named return type. Every
+ * concrete instantiation resolves back to `T`.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DeepMerged<T> = T extends unknown ? T : never;
+
+/**
  * Recursively merges a `DeepPartial` patch into a base struct, producing a new
  * struct of the same shape. Nested plain objects are merged key-by-key,
  * `undefined` patch values are skipped, and non-object values overwrite.
@@ -869,11 +898,11 @@ export type DeepPartial<T> = T extends readonly (infer U)[]
  * @since 0.0.0
  */
 export const deepMerge: {
-  <T extends Record<string, unknown>>(current: T, patch: DeepPartial<T>): T;
-  <T extends Record<string, unknown>>(patch: DeepPartial<T>): (current: T) => T;
-} = dual(2, <T extends Record<string, unknown>>(current: T, patch: DeepPartial<T>): T => {
+  <T extends Record<string, unknown>>(current: T, patch: DeepPartial<T>): DeepMerged<T>;
+  <T extends Record<string, unknown>>(patch: DeepPartial<T>): (current: T) => DeepMerged<T>;
+} = dual(2, <T extends Record<string, unknown>>(current: T, patch: DeepPartial<T>): DeepMerged<T> => {
   if (!P.isObject(current) || !P.isObject(patch)) {
-    return patch as T;
+    return cast(patch);
   }
 
   const next = { ...current } as Record<string, unknown>;
@@ -885,5 +914,5 @@ export const deepMerge: {
     next[key] = P.isObject(existing) && P.isObject(value) ? deepMerge(existing, value) : value;
   }
 
-  return next as T;
+  return cast(next);
 });

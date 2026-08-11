@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 
+import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
@@ -72,7 +73,6 @@ import { Config, DateTime, Effect, FileSystem, Layer, Path, pipe } from "effect"
 import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { JsonObject } from "@beep/schema/Json";
 import type { Crypto } from "effect";
 
@@ -270,36 +270,248 @@ class ContradictionQaFact extends S.Class<ContradictionQaFact>($I`ContradictionQ
   $I.annote("ContradictionQaFact", {
     description: "Exact persisted fact used by one contradiction browser-QA belief or proposal.",
   })
-) {}
+) {
+  static readonly equivalence = S.toEquivalence(ContradictionQaFact);
+  static readonly decodeOption = S.decodeUnknownOption(ContradictionQaFact);
+}
 
-type EvidenceSpecification = {
-  readonly artifactFixtureKey: string;
-  readonly createdAt: number;
-  readonly publicIdSuffix: Cuid;
-  readonly span: typeof EvidenceSpan.Encoded;
-  readonly spanFixtureKey: string;
+const evidenceSpecificationFields = {
+  artifactFixtureKey: S.String,
+  createdAt: S.Finite,
+  publicIdSuffix: Cuid,
+  span: S.toEncoded(EvidenceSpan),
+  spanFixtureKey: S.String,
 };
 
-type BeliefSpecification = {
-  readonly fact: ContradictionQaFact;
-  readonly identity: typeof LogicalEdgeIdentity.Encoded;
-  readonly recordedAt: number;
+// Self-typed annotations (examples, toArbitrary, ...) must live in an explicitly
+// annotated const: inline in the extends clause they force TS to resolve the
+// class while its base type is still being computed (TS2310/TS2506).
+const evidenceSpecificationAnnotations: S.Annotations.Declaration<
+  EvidenceSpecification,
+  readonly [S.Struct<typeof evidenceSpecificationFields>]
+> = $I.annoteClass<S.declare<EvidenceSpecification>, readonly [S.Struct<typeof evidenceSpecificationFields>]>(
+  "EvidenceSpecification",
+  {
+    description: "Deterministic evidence fixture specification consumed by the contradiction browser-QA seed.",
+    examples: [
+      {
+        artifactFixtureKey: "artifactFixtureKey",
+        createdAt: 1,
+        publicIdSuffix: Cuid.make("a123"),
+        span: {
+          confidence: 0.99,
+          endChar: Str.length("The renewal notice lists 15 July 2027."),
+          quote: "The renewal notice lists 15 July 2027.",
+          startChar: 0,
+        },
+        spanFixtureKey: "",
+      },
+    ],
+  }
+);
+
+class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSpecification`)(
+  evidenceSpecificationFields,
+  evidenceSpecificationAnnotations
+) {
+  static readonly deadlineVerified = EvidenceSpecification.make({
+    artifactFixtureKey: "qa.contradiction.deadline.executed-amendment",
+    createdAt: 1_767_225_600_100,
+    publicIdSuffix: Cuid.fromUnknown("deadline"),
+    span: {
+      confidence: 0.99,
+      endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
+      quote: CONTRADICTION_QA_ANCHOR_QUOTE,
+      startChar: CONTRADICTION_QA_ANCHOR_START,
+    },
+    spanFixtureKey: "qa.contradiction.deadline.executed-amendment.anchor",
+  });
+
+  static readonly deadlineUnverified = EvidenceSpecification.make({
+    artifactFixtureKey: "qa.contradiction.deadline.renewal-notice",
+    createdAt: 1_767_225_600_200,
+    publicIdSuffix: Cuid.fromUnknown("notice"),
+    span: {
+      confidence: 0.91,
+      endChar: Str.length("The renewal notice lists 15 July 2027."),
+      quote: "The renewal notice lists 15 July 2027.",
+      startChar: 0,
+    },
+    spanFixtureKey: "qa.contradiction.deadline.renewal-notice.anchor",
+  });
+
+  static readonly capAgreement = EvidenceSpecification.make({
+    artifactFixtureKey: "qa.contradiction.liability-cap.executed-agreement",
+    createdAt: 1_767_225_601_100,
+    publicIdSuffix: Cuid.fromUnknown("agreement"),
+    span: {
+      confidence: 0.97,
+      endChar: Str.length("Liability is capped at USD 1,000,000."),
+      quote: "Liability is capped at USD 1,000,000.",
+      startChar: 0,
+    },
+    spanFixtureKey: "qa.contradiction.liability-cap.executed-agreement.anchor",
+  });
+
+  static readonly capEmail = EvidenceSpecification.make({
+    artifactFixtureKey: "qa.contradiction.liability-cap.negotiation-email",
+    createdAt: 1_767_225_601_200,
+    publicIdSuffix: Cuid.fromUnknown("email"),
+    span: {
+      confidence: 0.88,
+      endChar: Str.length("The negotiated cap is USD 750,000."),
+      quote: "The negotiated cap is USD 750,000.",
+      startChar: 0,
+    },
+    spanFixtureKey: "qa.contradiction.liability-cap.negotiation-email.anchor",
+  });
+}
+
+class BeliefSpecification extends S.Class<BeliefSpecification>($I`BeliefSpecification`)(
+  {
+    fact: ContradictionQaFact,
+    identity: S.toEncoded(LogicalEdgeIdentity),
+    recordedAt: S.Finite,
+  },
+  $I.annote("BeliefSpecification", {
+    description: "Deterministic belief fixture specification consumed by the contradiction browser-QA seed.",
+  })
+) {
+  static readonly deadlineAmendment = BeliefSpecification.make({
+    fact: ContradictionQaFact.make({
+      issue: "Renewal deadline",
+      statement: "The executed amendment sets the renewal deadline to 30 June 2027.",
+      value: "2027-06-30",
+    }),
+    identity: {
+      evidenceScope: "qa:contradiction:deadline:executed-amendment",
+      matterScope: "qa:contract-review",
+      orgScope: "1",
+      qualifiers: {
+        fixture: "contradiction-qa",
+        side: "executed-amendment",
+      },
+      relation: "supports",
+      source: {
+        entityRef: "qa:contract:renewal-deadline",
+        kind: "entity",
+      },
+      target: {
+        observationRef: "qa:observation:deadline:executed-amendment",
+        kind: "observation",
+      },
+    },
+    recordedAt: 1_767_225_600_300,
+  });
+
+  static readonly deadlineNotice = BeliefSpecification.make({
+    fact: ContradictionQaFact.make({
+      issue: "Renewal deadline",
+      statement: "The renewal notice lists the renewal deadline as 15 July 2027.",
+      value: "2027-07-15",
+    }),
+    identity: {
+      evidenceScope: "qa:contradiction:deadline:renewal-notice",
+      matterScope: "qa:contract-review",
+      orgScope: "1",
+      qualifiers: {
+        fixture: "contradiction-qa",
+        side: "renewal-notice",
+      },
+      relation: "supports",
+      source: {
+        entityRef: "qa:contract:renewal-deadline",
+        kind: "entity",
+      },
+      target: {
+        observationRef: "qa:observation:deadline:renewal-notice",
+        kind: "observation",
+      },
+    },
+    recordedAt: 1_767_225_600_400,
+  });
+
+  static readonly capAgreement = BeliefSpecification.make({
+    fact: ContradictionQaFact.make({
+      issue: "Liability cap",
+      statement: "The executed agreement caps aggregate liability at USD 1,000,000.",
+      value: "USD 1000000",
+    }),
+    identity: {
+      evidenceScope: "qa:contradiction:liability-cap:executed-agreement",
+      matterScope: "qa:contract-review",
+      orgScope: "1",
+      qualifiers: {
+        fixture: "contradiction-qa",
+        side: "executed-agreement",
+      },
+      relation: "supports",
+      source: {
+        entityRef: "qa:contract:liability-cap",
+        kind: "entity",
+      },
+      target: {
+        observationRef: "qa:observation:liability-cap:agreement",
+        kind: "observation",
+      },
+    },
+    recordedAt: 1_767_225_601_300,
+  });
+
+  static readonly capEmail = BeliefSpecification.make({
+    fact: ContradictionQaFact.make({
+      issue: "Liability cap",
+      statement: "The negotiation email records an agreed liability cap of USD 750,000.",
+      value: "USD 750000",
+    }),
+    identity: {
+      evidenceScope: "qa:contradiction:liability-cap:negotiation-email",
+      matterScope: "qa:contract-review",
+      orgScope: "1",
+      qualifiers: {
+        fixture: "contradiction-qa",
+        side: "negotiation-email",
+      },
+      relation: "supports",
+      source: {
+        entityRef: "qa:contract:liability-cap",
+        kind: "entity",
+      },
+      target: {
+        observationRef: "qa:observation:liability-cap:email",
+        kind: "observation",
+      },
+    },
+    recordedAt: 1_767_225_601_400,
+  });
+}
+
+const candidateSpecificationFields = {
+  confidence: S.Finite,
+  detector: S.String,
+  leftBelief: EdgeVersion,
+  leftEvidence: Evidence,
+  proposalFact: ContradictionQaFact,
+  proposalRationale: S.String,
+  proposalSeed: S.String,
+  receiptSeed: S.String,
+  recordedAt: S.Finite,
+  rightBelief: EdgeVersion,
+  rightEvidence: Evidence,
 };
 
-type CandidateSpecification = {
-  readonly confidence: number;
-  readonly detector: string;
-  readonly leftEvidence: Evidence;
-  readonly leftBelief: EdgeVersion;
-  readonly proposalFact: ContradictionQaFact;
-  readonly proposalLosingBelief: "left" | "right";
-  readonly proposalRationale: string;
-  readonly proposalSeed: string;
-  readonly receiptSeed: string;
-  readonly recordedAt: number;
-  readonly rightEvidence: Evidence;
-  readonly rightBelief: EdgeVersion;
-};
+const CandidateSpecification = LiteralKit(["left", "right"])
+  .toTaggedUnion("proposalLosingBelief")({
+    left: candidateSpecificationFields,
+    right: candidateSpecificationFields,
+  })
+  .pipe(
+    $I.annoteSchema("CandidateSpecification", {
+      description: "Contradiction candidate fixture discriminated on which persisted belief the proposal supersedes.",
+    })
+  );
+
+type CandidateSpecification = typeof CandidateSpecification.Type;
 
 const evidenceTable = DbSchema.evidence;
 const evidenceVerificationTable = DbSchema.evidenceVerification;
@@ -320,173 +532,11 @@ const decodeWorkspaceVaultRootPath = S.decodeUnknownEffect(WorkspaceVaultRootPat
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeSourceTextDigest = S.decodeUnknownEffect(SourceTextDigest);
 const decodeEvidenceIds = S.decodeUnknownEffect(S.NonEmptyArray(EpistemicIdentity.EvidenceId));
-const evidenceSpanEquivalent = S.toEquivalence(EvidenceSpan);
-const factEquivalent = S.toEquivalence(ContradictionQaFact);
-const decodeFact = S.decodeUnknownOption(ContradictionQaFact);
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
+const evidenceSpanEquivalent = S.toEquivalence(EvidenceSpan);
 const sourceBytes = new TextEncoder().encode(CONTRADICTION_QA_SOURCE_TEXT);
 
 const fixtureValidFrom = instant(1_767_225_600_000);
-
-const deadlineVerifiedEvidence: EvidenceSpecification = {
-  artifactFixtureKey: "qa.contradiction.deadline.executed-amendment",
-  createdAt: 1_767_225_600_100,
-  publicIdSuffix: Cuid.fromUnknown("deadline"),
-  span: {
-    confidence: 0.99,
-    endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
-    quote: CONTRADICTION_QA_ANCHOR_QUOTE,
-    startChar: CONTRADICTION_QA_ANCHOR_START,
-  },
-  spanFixtureKey: "qa.contradiction.deadline.executed-amendment.anchor",
-};
-
-const deadlineUnverifiedEvidence: EvidenceSpecification = {
-  artifactFixtureKey: "qa.contradiction.deadline.renewal-notice",
-  createdAt: 1_767_225_600_200,
-  publicIdSuffix: Cuid.fromUnknown("notice"),
-  span: {
-    confidence: 0.91,
-    endChar: Str.length("The renewal notice lists 15 July 2027."),
-    quote: "The renewal notice lists 15 July 2027.",
-    startChar: 0,
-  },
-  spanFixtureKey: "qa.contradiction.deadline.renewal-notice.anchor",
-};
-
-const capAgreementEvidence: EvidenceSpecification = {
-  artifactFixtureKey: "qa.contradiction.liability-cap.executed-agreement",
-  createdAt: 1_767_225_601_100,
-  publicIdSuffix: Cuid.fromUnknown("agreement"),
-  span: {
-    confidence: 0.97,
-    endChar: Str.length("Liability is capped at USD 1,000,000."),
-    quote: "Liability is capped at USD 1,000,000.",
-    startChar: 0,
-  },
-  spanFixtureKey: "qa.contradiction.liability-cap.executed-agreement.anchor",
-};
-
-const capEmailEvidence: EvidenceSpecification = {
-  artifactFixtureKey: "qa.contradiction.liability-cap.negotiation-email",
-  createdAt: 1_767_225_601_200,
-  publicIdSuffix: Cuid.fromUnknown("email"),
-  span: {
-    confidence: 0.88,
-    endChar: Str.length("The negotiated cap is USD 750,000."),
-    quote: "The negotiated cap is USD 750,000.",
-    startChar: 0,
-  },
-  spanFixtureKey: "qa.contradiction.liability-cap.negotiation-email.anchor",
-};
-
-const deadlineAmendmentBelief: BeliefSpecification = {
-  fact: ContradictionQaFact.make({
-    issue: "Renewal deadline",
-    statement: "The executed amendment sets the renewal deadline to 30 June 2027.",
-    value: "2027-06-30",
-  }),
-  identity: {
-    evidenceScope: "qa:contradiction:deadline:executed-amendment",
-    matterScope: "qa:contract-review",
-    orgScope: "1",
-    qualifiers: {
-      fixture: "contradiction-qa",
-      side: "executed-amendment",
-    },
-    relation: "supports",
-    source: {
-      entityRef: "qa:contract:renewal-deadline",
-      kind: "entity",
-    },
-    target: {
-      observationRef: "qa:observation:deadline:executed-amendment",
-      kind: "observation",
-    },
-  },
-  recordedAt: 1_767_225_600_300,
-};
-
-const deadlineNoticeBelief: BeliefSpecification = {
-  fact: ContradictionQaFact.make({
-    issue: "Renewal deadline",
-    statement: "The renewal notice lists the renewal deadline as 15 July 2027.",
-    value: "2027-07-15",
-  }),
-  identity: {
-    evidenceScope: "qa:contradiction:deadline:renewal-notice",
-    matterScope: "qa:contract-review",
-    orgScope: "1",
-    qualifiers: {
-      fixture: "contradiction-qa",
-      side: "renewal-notice",
-    },
-    relation: "supports",
-    source: {
-      entityRef: "qa:contract:renewal-deadline",
-      kind: "entity",
-    },
-    target: {
-      observationRef: "qa:observation:deadline:renewal-notice",
-      kind: "observation",
-    },
-  },
-  recordedAt: 1_767_225_600_400,
-};
-
-const capAgreementBelief: BeliefSpecification = {
-  fact: ContradictionQaFact.make({
-    issue: "Liability cap",
-    statement: "The executed agreement caps aggregate liability at USD 1,000,000.",
-    value: "USD 1000000",
-  }),
-  identity: {
-    evidenceScope: "qa:contradiction:liability-cap:executed-agreement",
-    matterScope: "qa:contract-review",
-    orgScope: "1",
-    qualifiers: {
-      fixture: "contradiction-qa",
-      side: "executed-agreement",
-    },
-    relation: "supports",
-    source: {
-      entityRef: "qa:contract:liability-cap",
-      kind: "entity",
-    },
-    target: {
-      observationRef: "qa:observation:liability-cap:agreement",
-      kind: "observation",
-    },
-  },
-  recordedAt: 1_767_225_601_300,
-};
-
-const capEmailBelief: BeliefSpecification = {
-  fact: ContradictionQaFact.make({
-    issue: "Liability cap",
-    statement: "The negotiation email records an agreed liability cap of USD 750,000.",
-    value: "USD 750000",
-  }),
-  identity: {
-    evidenceScope: "qa:contradiction:liability-cap:negotiation-email",
-    matterScope: "qa:contract-review",
-    orgScope: "1",
-    qualifiers: {
-      fixture: "contradiction-qa",
-      side: "negotiation-email",
-    },
-    relation: "supports",
-    source: {
-      entityRef: "qa:contract:liability-cap",
-      kind: "entity",
-    },
-    target: {
-      observationRef: "qa:observation:liability-cap:email",
-      kind: "observation",
-    },
-  },
-  recordedAt: 1_767_225_601_400,
-};
 
 const seedError = (reason: ContradictionQaSeedErrorReason, message: string): ContradictionQaSeedError =>
   ContradictionQaSeedError.new(reason, message);
@@ -509,8 +559,8 @@ const sourceConflict =
 
 const factMatches = (actual: Readonly<Record<string, unknown>>, expected: ContradictionQaFact): boolean =>
   pipe(
-    decodeFact(actual),
-    O.exists((decoded) => factEquivalent(decoded, expected))
+    ContradictionQaFact.decodeOption(actual),
+    O.exists((decoded) => ContradictionQaFact.equivalence(decoded, expected))
   );
 
 const factRecord = (fact: ContradictionQaFact): JsonObject => ({
@@ -615,7 +665,7 @@ const ensureEvidence = Effect.fn("ContradictionQaSeed.ensureEvidence")(function*
 const ensureBelief = Effect.fn("ContradictionQaSeed.ensureBelief")(function* (specification: BeliefSpecification) {
   const db = yield* PostgresDrizzle;
   const repository = yield* EdgeAuthorityRepository;
-  const identity = yield* S.decodeUnknownEffect(LogicalEdgeIdentity)(specification.identity).pipe(
+  const identity = yield* S.decodeEffect(LogicalEdgeIdentity)(specification.identity).pipe(
     Effect.mapError(() => seedError("belief-conflict", "A contradiction QA belief identity is invalid."))
   );
   const expectedLogicalKey = logicalEdgeKey(identity);
@@ -780,7 +830,10 @@ const submitCandidate = Effect.fn("ContradictionQaSeed.submitCandidate")(functio
     leftEvidenceIds,
     rightEvidenceIds,
   });
-  const losingBelief = specification.proposalLosingBelief === "left" ? left : right;
+  const losingBelief = CandidateSpecification.match(specification, {
+    left: () => left,
+    right: () => right,
+  });
   const proposalId = ContradictionProposalId.make(yield* digestText(specification.proposalSeed));
   const proposalContent = {
     fact: factRecord(specification.proposalFact),
@@ -976,10 +1029,10 @@ export const seedContradictionQaFixtures = Effect.fn("ContradictionQaSeed.seed")
   const [verifiedDeadlineEvidence, unverifiedDeadlineEvidence, agreementCapEvidence, emailCapEvidence] =
     yield* Effect.all(
       [
-        ensureEvidence(deadlineVerifiedEvidence),
-        ensureEvidence(deadlineUnverifiedEvidence),
-        ensureEvidence(capAgreementEvidence),
-        ensureEvidence(capEmailEvidence),
+        ensureEvidence(EvidenceSpecification.deadlineVerified),
+        ensureEvidence(EvidenceSpecification.deadlineUnverified),
+        ensureEvidence(EvidenceSpecification.capAgreement),
+        ensureEvidence(EvidenceSpecification.capEmail),
       ],
       { concurrency: 1 }
     );
@@ -987,53 +1040,55 @@ export const seedContradictionQaFixtures = Effect.fn("ContradictionQaSeed.seed")
 
   const [deadlineAmendment, deadlineNotice, capAgreement, capEmail] = yield* Effect.all(
     [
-      ensureBelief(deadlineAmendmentBelief),
-      ensureBelief(deadlineNoticeBelief),
-      ensureBelief(capAgreementBelief),
-      ensureBelief(capEmailBelief),
+      ensureBelief(BeliefSpecification.deadlineAmendment),
+      ensureBelief(BeliefSpecification.deadlineNotice),
+      ensureBelief(BeliefSpecification.capAgreement),
+      ensureBelief(BeliefSpecification.capEmail),
     ],
     { concurrency: 1 }
   );
 
   yield* Effect.all(
     [
-      submitCandidate({
-        confidence: 0.98,
-        detector: "professional-desktop.qa.deadline-conflict",
-        leftBelief: deadlineAmendment,
-        leftEvidence: verifiedDeadlineEvidence,
-        proposalFact: ContradictionQaFact.make({
-          issue: "Renewal deadline",
-          statement: "The executed amendment controls and the renewal deadline is 30 June 2027.",
-          value: "2027-06-30",
-        }),
-        proposalLosingBelief: "right",
-        proposalRationale: "The executed amendment post-dates and controls over the generated renewal notice.",
-        proposalSeed: "professional-desktop.qa.deadline.proposal",
-        receiptSeed: "professional-desktop.qa.deadline.receipt",
-        recordedAt: 1_767_225_600_700,
-        rightBelief: deadlineNotice,
-        rightEvidence: unverifiedDeadlineEvidence,
-      }),
-      submitCandidate({
-        confidence: 0.94,
-        detector: "professional-desktop.qa.liability-cap-conflict",
-        leftBelief: capAgreement,
-        leftEvidence: agreementCapEvidence,
-        proposalFact: ContradictionQaFact.make({
-          issue: "Liability cap",
-          statement: "The executed agreement controls and caps aggregate liability at USD 1,000,000.",
-          value: "USD 1000000",
-        }),
-        proposalLosingBelief: "right",
-        proposalRationale:
-          "The executed agreement is the authoritative final instrument; the negotiation email is superseded.",
-        proposalSeed: "professional-desktop.qa.liability-cap.proposal",
-        receiptSeed: "professional-desktop.qa.liability-cap.receipt",
-        recordedAt: 1_767_225_601_700,
-        rightBelief: capEmail,
-        rightEvidence: emailCapEvidence,
-      }),
+      submitCandidate(
+        CandidateSpecification.cases.right.make({
+          confidence: 0.98,
+          detector: "professional-desktop.qa.deadline-conflict",
+          leftBelief: deadlineAmendment,
+          leftEvidence: verifiedDeadlineEvidence,
+          proposalFact: ContradictionQaFact.make({
+            issue: "Renewal deadline",
+            statement: "The executed amendment controls and the renewal deadline is 30 June 2027.",
+            value: "2027-06-30",
+          }),
+          proposalRationale: "The executed amendment post-dates and controls over the generated renewal notice.",
+          proposalSeed: "professional-desktop.qa.deadline.proposal",
+          receiptSeed: "professional-desktop.qa.deadline.receipt",
+          recordedAt: 1_767_225_600_700,
+          rightBelief: deadlineNotice,
+          rightEvidence: unverifiedDeadlineEvidence,
+        })
+      ),
+      submitCandidate(
+        CandidateSpecification.cases.right.make({
+          confidence: 0.94,
+          detector: "professional-desktop.qa.liability-cap-conflict",
+          leftBelief: capAgreement,
+          leftEvidence: agreementCapEvidence,
+          proposalFact: ContradictionQaFact.make({
+            issue: "Liability cap",
+            statement: "The executed agreement controls and caps aggregate liability at USD 1,000,000.",
+            value: "USD 1000000",
+          }),
+          proposalRationale:
+            "The executed agreement is the authoritative final instrument; the negotiation email is superseded.",
+          proposalSeed: "professional-desktop.qa.liability-cap.proposal",
+          receiptSeed: "professional-desktop.qa.liability-cap.receipt",
+          recordedAt: 1_767_225_601_700,
+          rightBelief: capEmail,
+          rightEvidence: emailCapEvidence,
+        })
+      ),
     ],
     { concurrency: 1, discard: true }
   );

@@ -30,7 +30,7 @@ const SyncDriftTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(11);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(11);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
 const listConflictsInput = ListOpenConflictsInput.make({ workspaceId });

@@ -13,7 +13,7 @@ describe("HttpStatus", () => {
   it("round-trips every status code derived from the source schema", () => {
     const decode = S.decodeSync(HttpStatus.Schema);
     const encode = S.encodeSync(HttpStatus.Schema);
-    const arbitrary = S.toArbitrary(HttpStatus.Schema);
+    const arbitrary = S.toArbitrary(HttpStatus.Schema)(fc);
 
     fc.assert(
       fc.property(arbitrary, (code) => {

@@ -13,11 +13,11 @@ describe("ThreadTimeline", () => {
   it.effect(
     "decodes a thread timeline with resolved message and tool-call items",
     Effect.fnUntraced(function* () {
-      const threadId = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeUnknownEffect(WorkspaceIdentity.TurnId)(20);
+      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
+      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
       const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
 
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
         threadId: 10,
         turns: [
           {
@@ -43,9 +43,9 @@ describe("ThreadTimeline", () => {
   it.effect(
     "keeps thread input and timeline encoded shapes stable",
     Effect.fnUntraced(function* () {
-      const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(7);
-      const threadId = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeUnknownEffect(WorkspaceIdentity.TurnId)(20);
+      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(7);
+      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
+      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
       const content = Document.make({ children: [] });
       const encodedContent = yield* S.encodeEffect(Document)(content);
 
@@ -91,7 +91,7 @@ describe("ThreadTimeline", () => {
       expect(Thread.TimelineItem.is(timeline.turns[0]?.items[0])).toBe(true);
 
       expect(
-        yield* S.decodeUnknownEffect(Thread.TimelineTurn)({
+        yield* S.decodeEffect(Thread.TimelineTurn)({
           turnId: 20,
           turnIndex: 0,
           parentTurnId: null,
@@ -110,6 +110,17 @@ describe("ThreadTimeline", () => {
       expect(turnId).toStrictEqual(timeline.turns[0]?.turnId);
     })
   );
+
+  it("union-derived guards discriminate timeline items by kind", () => {
+    const content = S.encodeSync(Document)(Document.make({ children: [] }));
+    const message = S.decodeSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
+    const toolCall = S.decodeSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
+
+    expect(Thread.TimelineItem.guards.message(message)).toBe(true);
+    expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
+    expect(Thread.TimelineItem.guards.tool_call(toolCall)).toBe(true);
+    expect(Thread.TimelineItem.guards.tool_call(message)).toBe(false);
+  });
 
   it("schema-derived arbitraries round-trip through exported schemas", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [
@@ -132,7 +143,7 @@ describe("ThreadTimeline", () => {
       const encode = S.encodeSync(schema);
       const equivalent = S.toEquivalence(schema);
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => equivalent(decode(encode(value)), value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => equivalent(decode(encode(value)), value)),
         fcRuns(5)
       );
     }
@@ -176,7 +187,7 @@ describe("ThreadTimeline", () => {
     "keeps a timeline with no edits intact, in turn order",
     Effect.fnUntraced(function* () {
       const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
         threadId: 10,
         turns: [
           {

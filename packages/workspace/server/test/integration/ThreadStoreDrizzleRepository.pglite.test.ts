@@ -174,7 +174,7 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
           const store = yield* makeDrizzleThreadStore();
           const workspaceId = yield* decodeWorkspaceId(4);
-          const legacy = yield* S.decodeUnknownEffect(Thread)({
+          const legacy = yield* S.decodeEffect(Thread)({
             createdAt: 1,
             createdByPrincipal: { component: "Runtime", kind: "System" },
             entityType: "WorkspaceThread",

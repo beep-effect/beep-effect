@@ -150,6 +150,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
     issues,
     prNumber: pr.number,
     prUrl: pr.url ?? "",
+    reviewedHeadSha: O.fromUndefinedOr(pr.headRefOid),
     retriggeredGreptile: options.retriggerGreptile,
     schemaVersion: "yeet-pr-closeout/v1",
     states,

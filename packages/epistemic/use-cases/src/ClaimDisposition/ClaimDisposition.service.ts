@@ -24,6 +24,7 @@ import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { Context, DateTime, Effect, flow } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -324,20 +325,25 @@ const buildRejection = (
  * @category constructors
  * @since 0.0.0
  */
-export const makeClaimGateOutcomeResolver = (
-  dispositions: ClaimDispositionRepositoryShape,
-  transition: ClaimTransitionShape
-): ClaimGateOutcomeResolverShape => ({
-  resolve: (input) =>
-    ClaimGateResult.match(input.gateResult, {
-      admitted: () =>
-        Effect.map(transition.advance(input.claim, input.gateResult), (claim) =>
-          ClaimGateOutcome.make({ claim, disposition: O.none() })
-        ),
-      rejected: (rejection) =>
-        DateTime.now.pipe(
-          Effect.flatMap((resolvedAt) => dispositions.record(buildRejection(input, rejection.violations, resolvedAt))),
-          Effect.map((disposition) => ClaimGateOutcome.make({ claim: input.claim, disposition: O.some(disposition) }))
-        ),
-    }).pipe(Effect.withSpan("epistemic.claim_disposition.resolve_gate_outcome")),
-});
+export const makeClaimGateOutcomeResolver: {
+  (transition: ClaimTransitionShape): (dispositions: ClaimDispositionRepositoryShape) => ClaimGateOutcomeResolverShape;
+  (dispositions: ClaimDispositionRepositoryShape, transition: ClaimTransitionShape): ClaimGateOutcomeResolverShape;
+} = dual(
+  2,
+  (dispositions: ClaimDispositionRepositoryShape, transition: ClaimTransitionShape): ClaimGateOutcomeResolverShape => ({
+    resolve: (input) =>
+      ClaimGateResult.match(input.gateResult, {
+        admitted: () =>
+          Effect.map(transition.advance(input.claim, input.gateResult), (claim) =>
+            ClaimGateOutcome.make({ claim, disposition: O.none() })
+          ),
+        rejected: (rejection) =>
+          DateTime.now.pipe(
+            Effect.flatMap((resolvedAt) =>
+              dispositions.record(buildRejection(input, rejection.violations, resolvedAt))
+            ),
+            Effect.map((disposition) => ClaimGateOutcome.make({ claim: input.claim, disposition: O.some(disposition) }))
+          ),
+      }).pipe(Effect.withSpan("epistemic.claim_disposition.resolve_gate_outcome")),
+  })
+);

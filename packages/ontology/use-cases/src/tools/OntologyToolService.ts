@@ -238,12 +238,12 @@ const applyAndSave = Effect.fn("Ontology.Tools.applyAndSave")(function* (
     .pipe(Effect.mapError(mapLayerError("save")));
   const saved = yield* openSavedOntology(request);
   const validation = yield* OntologyValidationRunner;
-  const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.prov.ttl`).pipe(
+  const provPath = yield* S.decodeEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.prov.ttl`).pipe(
     Effect.mapError(mapLayerError("provenance-journal-path"))
   );
-  const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)(
-    `${request.path}.${saved.fingerprint}.dataset.ttl`
-  ).pipe(Effect.mapError(mapLayerError("provenance-journal-path")));
+  const datasetPath = yield* S.decodeEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.dataset.ttl`).pipe(
+    Effect.mapError(mapLayerError("provenance-journal-path"))
+  );
   yield* validation
     .exportProvenance(ExportOntologyProvenanceCommand.make({ session: application.session, provPath, datasetPath }))
     .pipe(Effect.mapError(mapLayerError("provenance-journal")));

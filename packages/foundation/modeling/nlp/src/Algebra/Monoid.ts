@@ -28,7 +28,7 @@ import { dual } from "effect/Function";
  * import { dual } from "effect/Function"
  *
  * const combineScores: Monoid.Monoid<number>["combine"] = dual(2, (left, right) => left + right)
- * const Sum: Monoid.Monoid<number> = Monoid.make(0, combineScores)
+ * const Sum: Monoid.Monoid<number> = Monoid.make({ empty: 0, combine: combineScores })
  * const total = Monoid.fold(Sum)([2, 3, 5])
  *
  * console.log(total)
@@ -56,7 +56,14 @@ export interface Monoid<A> {
 }
 
 /**
- * Helper to create a Monoid instance
+ * Helper to create a Monoid instance from its identity element and its
+ * associative operation.
+ *
+ * **Details**
+ *
+ * The identity element and the operation are co-equal fields of the same
+ * algebraic structure rather than a subject and an argument, so they are
+ * supplied together as a single options object.
  *
  * **Example** (Creating score monoid)
  *
@@ -65,7 +72,7 @@ export interface Monoid<A> {
  * import { dual } from "effect/Function"
  *
  * const combineScores: Monoid.Monoid<number>["combine"] = dual(2, (left, right) => left + right)
- * const scoreMonoid = Monoid.make(0, combineScores)
+ * const scoreMonoid = Monoid.make({ empty: 0, combine: combineScores })
  * const score = scoreMonoid.combine(7, 4)
  *
  * console.log(score)
@@ -75,9 +82,9 @@ export interface Monoid<A> {
  * @category constructors
  * @since 0.0.0
  */
-export const make = <A>(empty: A, combine: Monoid<A>["combine"]): Monoid<A> => ({
-  empty,
-  combine,
+export const make = <A>(options: { readonly empty: A; readonly combine: Monoid<A>["combine"] }): Monoid<A> => ({
+  empty: options.empty,
+  combine: options.combine,
 });
 
 /**

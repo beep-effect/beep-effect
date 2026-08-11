@@ -68,8 +68,13 @@ case "${1:-status}" in
       exit 0
     fi
     rm -f "${staged}"
-    # Lost the race, or it was already disarmed — same outcome either way: the gap
-    # began at whatever start is already recorded, so leave it alone.
+    # Lost the race, or it was already disarmed. Only an effective sentinel makes
+    # those outcomes equivalent: `ln` can also fail on a dangling symlink or a
+    # filesystem that refuses hard links, and neither failure disables the hook.
+    if [ ! -e "${sentinel}" ]; then
+      echo "hook-pulse disarm failed: sentinel was not published" >&2
+      exit 1
+    fi
     #
     # jq's `//` cannot cover an EMPTY sentinel: with no input jq emits nothing and
     # still exits 0, so neither the alternative nor `||` fires and the message

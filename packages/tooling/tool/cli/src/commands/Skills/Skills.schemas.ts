@@ -6,8 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.schemas");
 
@@ -1168,7 +1171,10 @@ export const isSkillsLockV2 = S.is(SkillsLockV2);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillUpstream = S.decodeUnknownEffect(SkillUpstream);
+export const decodeSkillUpstream: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillUpstream, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillUpstream, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillUpstream));
 /**
  * Encodes a {@link SkillUpstream} identity back to its wire shape.
  *
@@ -1198,7 +1204,10 @@ export const decodeSkillUpstream = S.decodeUnknownEffect(SkillUpstream);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillUpstream = S.encodeUnknownEffect(SkillUpstream);
+export const encodeSkillUpstream: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillUpstream.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillUpstream.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillUpstream));
 /**
  * Decodes an unknown value as a {@link SkillSnapshotFile} manifest entry.
  *
@@ -1222,7 +1231,10 @@ export const encodeSkillUpstream = S.encodeUnknownEffect(SkillUpstream);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillSnapshotFile = S.decodeUnknownEffect(SkillSnapshotFile);
+export const decodeSkillSnapshotFile: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillSnapshotFile, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillSnapshotFile, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillSnapshotFile));
 /**
  * Encodes a {@link SkillSnapshotFile} manifest entry back to its wire shape.
  *
@@ -1246,7 +1258,10 @@ export const decodeSkillSnapshotFile = S.decodeUnknownEffect(SkillSnapshotFile);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillSnapshotFile = S.encodeUnknownEffect(SkillSnapshotFile);
+export const encodeSkillSnapshotFile: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillSnapshotFile.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillSnapshotFile.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillSnapshotFile));
 /**
  * Decodes an unknown value as a {@link SkillSnapshot}.
  *
@@ -1273,7 +1288,10 @@ export const encodeSkillSnapshotFile = S.encodeUnknownEffect(SkillSnapshotFile);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillSnapshot = S.decodeUnknownEffect(SkillSnapshot);
+export const decodeSkillSnapshot: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillSnapshot, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillSnapshot, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillSnapshot));
 /**
  * Encodes a {@link SkillSnapshot} back to its wire shape.
  *
@@ -1300,7 +1318,10 @@ export const decodeSkillSnapshot = S.decodeUnknownEffect(SkillSnapshot);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillSnapshot = S.encodeUnknownEffect(SkillSnapshot);
+export const encodeSkillSnapshot: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillSnapshot.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillSnapshot.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillSnapshot));
 /**
  * Decodes an unknown value as a {@link SkillLicense}.
  *
@@ -1324,7 +1345,10 @@ export const encodeSkillSnapshot = S.encodeUnknownEffect(SkillSnapshot);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillLicense = S.decodeUnknownEffect(SkillLicense);
+export const decodeSkillLicense: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillLicense, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillLicense, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillLicense));
 /**
  * Encodes a {@link SkillLicense} back to its wire shape.
  *
@@ -1348,7 +1372,10 @@ export const decodeSkillLicense = S.decodeUnknownEffect(SkillLicense);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillLicense = S.encodeUnknownEffect(SkillLicense);
+export const encodeSkillLicense: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillLicense.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillLicense.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillLicense));
 /**
  * Decodes an unknown value as a {@link SkillProvenance} claim.
  *
@@ -1374,7 +1401,10 @@ export const encodeSkillLicense = S.encodeUnknownEffect(SkillLicense);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillProvenance = S.decodeUnknownEffect(SkillProvenance);
+export const decodeSkillProvenance: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillProvenance, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillProvenance, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillProvenance));
 /**
  * Encodes a {@link SkillProvenance} claim back to its wire shape.
  *
@@ -1400,7 +1430,10 @@ export const decodeSkillProvenance = S.decodeUnknownEffect(SkillProvenance);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillProvenance = S.encodeUnknownEffect(SkillProvenance);
+export const encodeSkillProvenance: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillProvenance.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillProvenance.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillProvenance));
 /**
  * Decodes an unknown value as a {@link SkillPatch}.
  *
@@ -1426,7 +1459,10 @@ export const encodeSkillProvenance = S.encodeUnknownEffect(SkillProvenance);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillPatch = S.decodeUnknownEffect(SkillPatch);
+export const decodeSkillPatch: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillPatch, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillPatch, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillPatch));
 /**
  * Encodes a {@link SkillPatch} back to its wire shape.
  *
@@ -1452,7 +1488,10 @@ export const decodeSkillPatch = S.decodeUnknownEffect(SkillPatch);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillPatch = S.encodeUnknownEffect(SkillPatch);
+export const encodeSkillPatch: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillPatch.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillPatch.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillPatch));
 /**
  * Decodes an unknown value as a {@link SkillPatches} series.
  *
@@ -1476,7 +1515,10 @@ export const encodeSkillPatch = S.encodeUnknownEffect(SkillPatch);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillPatches = S.decodeUnknownEffect(SkillPatches);
+export const decodeSkillPatches: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillPatches, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillPatches, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillPatches));
 /**
  * Encodes a {@link SkillPatches} series back to its wire shape.
  *
@@ -1500,7 +1542,10 @@ export const decodeSkillPatches = S.decodeUnknownEffect(SkillPatches);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillPatches = S.encodeUnknownEffect(SkillPatches);
+export const encodeSkillPatches: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillPatches.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillPatches.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillPatches));
 /**
  * Decodes an unknown value as a {@link SkillEffective} identity.
  *
@@ -1525,7 +1570,10 @@ export const encodeSkillPatches = S.encodeUnknownEffect(SkillPatches);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillEffective = S.decodeUnknownEffect(SkillEffective);
+export const decodeSkillEffective: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillEffective, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillEffective, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillEffective));
 /**
  * Encodes a {@link SkillEffective} identity back to its wire shape.
  *
@@ -1550,7 +1598,10 @@ export const decodeSkillEffective = S.decodeUnknownEffect(SkillEffective);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillEffective = S.encodeUnknownEffect(SkillEffective);
+export const encodeSkillEffective: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillEffective.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillEffective.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillEffective));
 /**
  * Decodes an unknown value as a {@link SkillLockV2Entry}.
  *
@@ -1568,7 +1619,10 @@ export const encodeSkillEffective = S.encodeUnknownEffect(SkillEffective);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillLockV2Entry = S.decodeUnknownEffect(SkillLockV2Entry);
+export const decodeSkillLockV2Entry: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillLockV2Entry, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillLockV2Entry, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillLockV2Entry));
 /**
  * Encodes a {@link SkillLockV2Entry} back to its wire shape.
  *
@@ -1586,7 +1640,10 @@ export const decodeSkillLockV2Entry = S.decodeUnknownEffect(SkillLockV2Entry);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillLockV2Entry = S.encodeUnknownEffect(SkillLockV2Entry);
+export const encodeSkillLockV2Entry: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillLockV2Entry.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillLockV2Entry.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillLockV2Entry));
 /**
  * Decodes an unknown value as a {@link SkillsLockV2} document.
  *
@@ -1604,7 +1661,10 @@ export const encodeSkillLockV2Entry = S.encodeUnknownEffect(SkillLockV2Entry);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillsLockV2 = S.decodeUnknownEffect(SkillsLockV2);
+export const decodeSkillsLockV2: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillsLockV2, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillsLockV2, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillsLockV2));
 /**
  * Encodes a {@link SkillsLockV2} document back to its wire shape.
  *
@@ -1622,7 +1682,10 @@ export const decodeSkillsLockV2 = S.decodeUnknownEffect(SkillsLockV2);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillsLockV2 = S.encodeUnknownEffect(SkillsLockV2);
+export const encodeSkillsLockV2: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillsLockV2.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillsLockV2.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillsLockV2));
 
 const SkillsLockV2Json = S.fromJsonString(SkillsLockV2);
 
@@ -1649,7 +1712,10 @@ const SkillsLockV2Json = S.fromJsonString(SkillsLockV2);
  * @category codecs
  * @since 0.0.0
  */
-export const decodeSkillsLockV2Json = S.decodeUnknownEffect(SkillsLockV2Json);
+export const decodeSkillsLockV2Json: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillsLockV2, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillsLockV2, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillsLockV2Json));
 /**
  * Encodes a {@link SkillsLockV2} document as a `skills-lock.json` string.
  *
@@ -1672,4 +1738,7 @@ export const decodeSkillsLockV2Json = S.decodeUnknownEffect(SkillsLockV2Json);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSkillsLockV2Json = S.encodeUnknownEffect(SkillsLockV2Json);
+export const encodeSkillsLockV2Json: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillsLockV2Json));

@@ -14,20 +14,20 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const TextNodeArbitrary = S.toArbitrary(GraphSchema.TextNode);
-const TextEdgeArbitrary = S.toArbitrary(GraphSchema.TextEdge);
-const EntityNodeArbitrary = S.toArbitrary(GraphSchema.EntityNode);
-const POSNodeArbitrary = S.toArbitrary(GraphSchema.POSNode);
-const LemmaNodeArbitrary = S.toArbitrary(GraphSchema.LemmaNode);
-const DependencyNodeArbitrary = S.toArbitrary(GraphSchema.DependencyNode);
-const RelationNodeArbitrary = S.toArbitrary(GraphSchema.RelationNode);
-const NLPAnalysisArbitrary = S.toArbitrary(GraphSchema.NLPAnalysis);
+const TextNodeArbitrary = S.toArbitrary(GraphSchema.TextNode)(fc);
+const TextEdgeArbitrary = S.toArbitrary(GraphSchema.TextEdge)(fc);
+const EntityNodeArbitrary = S.toArbitrary(GraphSchema.EntityNode)(fc);
+const POSNodeArbitrary = S.toArbitrary(GraphSchema.POSNode)(fc);
+const LemmaNodeArbitrary = S.toArbitrary(GraphSchema.LemmaNode)(fc);
+const DependencyNodeArbitrary = S.toArbitrary(GraphSchema.DependencyNode)(fc);
+const RelationNodeArbitrary = S.toArbitrary(GraphSchema.RelationNode)(fc);
+const NLPAnalysisArbitrary = S.toArbitrary(GraphSchema.NLPAnalysis)(fc);
 
 describe("TextNode", () => {
   it.effect(
     "decodes a valid node and round-trips",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(GraphSchema.TextNode)({
+      const decoded = yield* S.decodeEffect(GraphSchema.TextNode)({
         text: "Hello world.",
         type: "sentence",
         timestamp: 0,
@@ -35,7 +35,7 @@ describe("TextNode", () => {
       expect(decoded.text).toBe("Hello world.");
       expect(decoded.type).toBe("sentence");
       const encoded = yield* S.encodeEffect(GraphSchema.TextNode)(decoded);
-      const redecoded = yield* S.decodeUnknownEffect(GraphSchema.TextNode)(encoded);
+      const redecoded = yield* S.decodeEffect(GraphSchema.TextNode)(encoded);
       expect(redecoded.text).toBe(decoded.text);
     })
   );
@@ -73,18 +73,16 @@ describe("Schema-derived graph payloads", () => {
           const encodedRelationNode = Effect.runSync(S.encodeEffect(GraphSchema.RelationNode)(relationNode));
           const encodedAnalysis = Effect.runSync(S.encodeEffect(GraphSchema.NLPAnalysis)(analysis));
 
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.TextNode)(encodedTextNode))).toEqual(textNode);
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.TextEdge)(encodedTextEdge))).toEqual(textEdge);
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.EntityNode)(encodedEntityNode))).toEqual(entityNode);
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.POSNode)(encodedPOSNode))).toEqual(posNode);
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.LemmaNode)(encodedLemmaNode))).toEqual(lemmaNode);
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.DependencyNode)(encodedDependencyNode))).toEqual(
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.TextNode)(encodedTextNode))).toEqual(textNode);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.TextEdge)(encodedTextEdge))).toEqual(textEdge);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.EntityNode)(encodedEntityNode))).toEqual(entityNode);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.POSNode)(encodedPOSNode))).toEqual(posNode);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.LemmaNode)(encodedLemmaNode))).toEqual(lemmaNode);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.DependencyNode)(encodedDependencyNode))).toEqual(
             dependencyNode
           );
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.RelationNode)(encodedRelationNode))).toEqual(
-            relationNode
-          );
-          expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.NLPAnalysis)(encodedAnalysis))).toEqual(analysis);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.RelationNode)(encodedRelationNode))).toEqual(relationNode);
+          expect(Effect.runSync(S.decodeEffect(GraphSchema.NLPAnalysis)(encodedAnalysis))).toEqual(analysis);
         }
       ),
       fcRuns(50)
@@ -108,7 +106,7 @@ describe("TextEdge", () => {
         "relates-to",
       ] as const;
       for (const relation of relations) {
-        const decoded = yield* S.decodeUnknownEffect(GraphSchema.TextEdge)({ relation });
+        const decoded = yield* S.decodeEffect(GraphSchema.TextEdge)({ relation });
         expect(decoded.relation).toBe(relation);
       }
     })
@@ -127,7 +125,7 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "EntityNode preserves span and type",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(GraphSchema.EntityNode)({
+      const decoded = yield* S.decodeEffect(GraphSchema.EntityNode)({
         text: "Apple Inc.",
         entityType: "ORG",
         span: { start: 0, end: 10 },
@@ -136,7 +134,7 @@ describe("Annotation nodes round-trip", () => {
       expect(decoded.entityType).toBe("ORG");
       expect(decoded.span).toEqual({ start: 0, end: 10 });
       const encoded = yield* S.encodeEffect(GraphSchema.EntityNode)(decoded);
-      const redecoded = yield* S.decodeUnknownEffect(GraphSchema.EntityNode)(encoded);
+      const redecoded = yield* S.decodeEffect(GraphSchema.EntityNode)(encoded);
       expect(redecoded.text).toBe("Apple Inc.");
     })
   );
@@ -144,14 +142,14 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "POSNode and LemmaNode decode",
     Effect.fnUntraced(function* () {
-      const pos = yield* S.decodeUnknownEffect(GraphSchema.POSNode)({
+      const pos = yield* S.decodeEffect(GraphSchema.POSNode)({
         text: "runs",
         tag: "VBZ",
         position: 1,
         timestamp: 0,
       });
       expect(pos.tag).toBe("VBZ");
-      const lemma = yield* S.decodeUnknownEffect(GraphSchema.LemmaNode)({
+      const lemma = yield* S.decodeEffect(GraphSchema.LemmaNode)({
         token: "running",
         lemma: "run",
         position: 0,
@@ -164,7 +162,7 @@ describe("Annotation nodes round-trip", () => {
   it.effect(
     "DependencyNode and RelationNode decode",
     Effect.fnUntraced(function* () {
-      const dep = yield* S.decodeUnknownEffect(GraphSchema.DependencyNode)({
+      const dep = yield* S.decodeEffect(GraphSchema.DependencyNode)({
         relation: "nsubj",
         head: { text: "runs", position: 2 },
         dependent: { text: "dog", position: 1 },
@@ -172,7 +170,7 @@ describe("Annotation nodes round-trip", () => {
         timestamp: 0,
       });
       expect(dep.relation).toBe("nsubj");
-      const rel = yield* S.decodeUnknownEffect(GraphSchema.RelationNode)({
+      const rel = yield* S.decodeEffect(GraphSchema.RelationNode)({
         relationType: "FOUNDED_BY",
         subject: { text: "Apple Inc.", entityType: "ORG", span: { start: 0, end: 10 } },
         object: { text: "Steve Jobs", entityType: "PERSON", span: { start: 14, end: 24 } },
@@ -187,7 +185,7 @@ describe("NLPAnalysis", () => {
   it.effect(
     "decodes a summary",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(GraphSchema.NLPAnalysis)({
+      const decoded = yield* S.decodeEffect(GraphSchema.NLPAnalysis)({
         text: "Hi there. Bye.",
         sentences: ["Hi there.", "Bye."],
         tokens: ["Hi", "there", ".", "Bye", "."],

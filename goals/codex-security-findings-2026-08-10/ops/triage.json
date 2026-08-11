@@ -1,0 +1,467 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "fix/codex-findings-batch",
+    "expectedCount": 18,
+    "capturedCount": 18,
+    "capturedAt": "2026-08-10",
+    "captureMethod": "signed-in-csv-export",
+    "note": "P2 triage complete: 6 already-fixed, 5 fix-now, 7 defer-p2, 0 false-positive. Deferred items require fleet, sandbox, agent-policy, or coverage-baseline design work outside this patch."
+  },
+  "lanes": {
+    "ci-fleet-cutover": {
+      "ownerArea": "CI fleet architecture",
+      "findingIds": ["CSF-001", "CSF-002", "CSF-003", "CSF-004"],
+      "disposition": "defer-p2"
+    },
+    "already-fixed": {
+      "ownerArea": "Merged and branch-local remediations",
+      "findingIds": [
+        "CSF-005",
+        "CSF-007",
+        "CSF-009",
+        "CSF-010",
+        "CSF-015",
+        "CSF-016"
+      ],
+      "disposition": "already-fixed"
+    },
+    "repo-cli-security": {
+      "ownerArea": "Repo CLI",
+      "findingIds": ["CSF-006", "CSF-008", "CSF-013"],
+      "disposition": "fix-now"
+    },
+    "deferred-tooling-design": {
+      "ownerArea": "Repo CLI architecture",
+      "findingIds": ["CSF-011", "CSF-018"],
+      "disposition": "defer-p2"
+    },
+    "agent-policy": {
+      "ownerArea": "Repository agent policy",
+      "findingIds": ["CSF-012"],
+      "disposition": "defer-p2"
+    },
+    "hook-kill-switch": {
+      "ownerArea": "AI metrics instrumentation",
+      "findingIds": ["CSF-014"],
+      "disposition": "fix-now"
+    },
+    "candor-integrity": {
+      "ownerArea": "Law practice candor policy",
+      "findingIds": ["CSF-017"],
+      "disposition": "fix-now"
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "08ee74d0eb18819187fd02f570b4d57c",
+      "title": "PR code now runs on self-hosted EC2 CI lanes",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "7e730d757312e56ccfbbc87b1e2adfe18e562820",
+      "ownerArea": "CI fleet architecture",
+      "lane": "ci-fleet-cutover",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Pull-request jobs execute repository-controlled code on owned runners. The durable fix is the one-job-one-VM ephemeral cutover, not a workflow-only gate in PR-editable content."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "382c538bc3c8819195f83b4a36b002fb",
+      "title": "Non-ephemeral CI runners expose PR jobs to trusted push secrets",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "7de49674756e76cdd4fa3864a13cb6a38b79ffb1",
+      "ownerArea": "CI fleet architecture",
+      "lane": "ci-fleet-cutover",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Reusable burst runners can persist state from an untrusted PR job into a later trusted push job. Isolation requires JIT ephemeral runners and separated trust lanes."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "a3a281b2a3d881919fdcbf68ee2364f0",
+      "title": "PR code now runs on owned EC2 CI runners",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "69045830e2c3acca1ec771e23a5e4be3a9fc0e3c",
+      "ownerArea": "CI fleet architecture",
+      "lane": "ci-fleet-cutover",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "This is the same untrusted-PR-on-owned-runner boundary as CSF-001 on additional lanes. The fleet cutover must remove persistence and worker credentials structurally."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "c799c2269d748191997ff176ce4bfd48",
+      "title": "Shadow runner exposes AWS role creds to job code",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "37f289a025b5072e7099a24d195103ab8b2ea4f1",
+      "ownerArea": "CI fleet architecture",
+      "lane": "ci-fleet-cutover",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Host-process job steps can reach instance metadata even though container probes cannot. The fix belongs in bootstrap identity removal or host-level IMDS isolation during the ephemeral cutover."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "14981c9702288191a821494c38525185",
+      "title": "Yeet PR footer leaks local paths and AI session IDs",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "4ec4cd15cd0002530066780efe6e47328a8df6d4",
+      "ownerArea": "Repo CLI Yeet provenance",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "Merged PR #650 tokenizes the configured home prefix before PR provenance is rendered, so the private home path reported by this finding is absent on current HEAD."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/yeet-pr-provenance.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "23c96402ecec8191977f281cddc19ec7",
+      "title": "LLM title data can break out of JSDoc comments",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "634b7ef88c43415804f1784da6b4bc6fdcea8804",
+      "ownerArea": "Repo CLI quality tooling",
+      "lane": "repo-cli-security",
+      "disposition": "fix-now",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Model-provided titles and see-purpose text were decoded as unrestricted strings before direct JSDoc interpolation."
+      },
+      "remediation": {
+        "status": "fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrate.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
+          "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/jsdoc-migrate.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "3561ae76e178819197ff2ab53f5cb3bc",
+      "title": "Shadow CI runners can be triggered by default labels",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "5398819bf12c812abd25168ffbf6595ba47b7fd4",
+      "ownerArea": "CI fleet controller",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "Merged PR #649 sets bidirectional label matching and disables default runner labels; the Pulumi update was applied."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": ["infra/src/CiFleetController.ts"],
+        "verificationCommands": ["bun run --cwd infra check"]
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "6e4c67fc822081918e9546cd4a412c56",
+      "title": "JSDoc title tool can leak API tokens to arbitrary proxy URLs",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "e500bac6a9afd11992f5749d5da884e956171cf7",
+      "ownerArea": "Repo CLI quality tooling",
+      "lane": "repo-cli-security",
+      "disposition": "fix-now",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "A caller-controlled proxy URL received the first available provider credential without destination validation."
+      },
+      "remediation": {
+        "status": "fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrate.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
+          "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/jsdoc-migrate.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "7eb0a6bd45b88191bc8ccb7d830b4b75",
+      "title": "Agent friction logging can leak secrets into public ledgers",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "2ad30781e2e27a0d65b2cf8804e891fab47a47d0",
+      "ownerArea": "Agent instructions",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "AGENTS.md now requires secret redaction, home-path tokenization, session identifier removal, and minimal error excerpts before a friction receipt is tracked."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": ["AGENTS.md"],
+        "verificationCommands": [
+          "rg -n 'redact secrets|absolute home paths|session/machine ids' AGENTS.md"
+        ]
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "8cc4ed6cc8f48191b6999a7d8659db54",
+      "title": "Unescaped branch names in sweep handoff commands",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "b4a06cefa361c56bbb17f00ce4495663c44283ad",
+      "ownerArea": "Repo CLI Yeet sweep",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "Rendered Git refs and branch operands now pass through the shared shell-quoting helper, including operator handoffs."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+          "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/yeet-sweep-plan.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "98d316271ef08191a2b6939597ae8fec",
+      "title": "Semantic-delta probes execute untrusted archive code",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "774d118c0645ebe46d4a43690efd388562e1c72f",
+      "ownerArea": "Repo CLI knowledge architecture",
+      "lane": "deferred-tooling-design",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed-partially-mitigated",
+        "rationale": "Current code skips fork pull-request probes, but same-repository and local scans still execute archive-local modules. Removing that class requires a non-executing probe design or an explicit sandbox boundary."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "dfdc1765ff48819183742283aec1b66c",
+      "title": "Agent configs disable sandbox and approval safeguards",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "fbc8632526343f8a74d65390591d19f61012c465",
+      "ownerArea": "Repository agent policy",
+      "lane": "agent-policy",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Current configuration still selects unrestricted Codex defaults and a broad GitHub CLI grant. Both implicated config surfaces are policy-owned and edit-protected in this session, so a one-sided patch would be incomplete."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "fcbbae0865ec819198226bd6ae156169",
+      "title": "Git option injection via fleet origin URL",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "6b42b239a64e845716fc48f415d8c7d70ab5a92e",
+      "ownerArea": "Repo CLI worktree fleet",
+      "lane": "repo-cli-security",
+      "disposition": "fix-now",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "The resolved origin URL was passed after Git options without an option terminator in both remote probe commands."
+      },
+      "remediation": {
+        "status": "fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/worktree-fleet-scan.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-014",
+      "codexId": "0af8bec915008191bda6375ea0ef2255",
+      "title": "Hook-pulse disarm can falsely succeed without disabling hooks",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "e9a1fadb985f7e632129646d36a73472ed9233f0",
+      "ownerArea": "AI metrics instrumentation",
+      "lane": "hook-kill-switch",
+      "disposition": "fix-now",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Any failed hard-link publish was treated as an existing effective sentinel, including a dangling symlink that the writer does not observe."
+      },
+      "remediation": {
+        "status": "fixed",
+        "changedFiles": [
+          ".claude/hooks/hook-pulse-switch.sh",
+          "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/library/ai-metrics && bunx --bun vitest run test/hook-pulse-writer.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-015",
+      "codexId": "1acf7579db408191aaa5d44b34b73e08",
+      "title": "Missing closeout artifact marks PR merge-ready",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "b25c7a6068938ff4f59b79a43f58044b5680f6d9",
+      "ownerArea": "Repo CLI Yeet status",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "Merge readiness now requires a present closeout artifact before thread and issue counts can satisfy the gate."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+          "packages/tooling/tool/cli/test/yeet-status-triage.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/yeet-status-triage.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-016",
+      "codexId": "1fc0b5b546048191bb1e25d597e1424a",
+      "title": "Raw GitHub job names in TSV enable spreadsheet injection",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "3d38bc5f2dcbbd14a1a638b8966ab77759175f2e",
+      "ownerArea": "Repo CLI CI timing reports",
+      "lane": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "fixed-on-current-head",
+        "rationale": "TSV string cells are normalized to one line and formula-leading values are prefixed so spreadsheet imports treat them as text."
+      },
+      "remediation": {
+        "status": "already-fixed",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "packages/tooling/tool/cli/test/ci-lane-timings.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/tooling/tool/cli && bunx --bun vitest run test/ci-lane-timings.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-017",
+      "codexId": "2d34ada6ee4481918084f95a0d6414db",
+      "title": "Candor gate can release unrelated superseded AI citations",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "5e4df6be4ae3a088c8c3b3d750f5090e068df9cc",
+      "ownerArea": "Law practice candor policy",
+      "lane": "candor-integrity",
+      "disposition": "fix-now",
+      "validation": {
+        "status": "confirmed",
+        "rationale": "Supersession checked only event identity and source digest, allowing a different patent reference in the same source group to retire the gated citation."
+      },
+      "remediation": {
+        "status": "fixed",
+        "changedFiles": [
+          "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.service.ts",
+          "packages/law-practice/use-cases/test/CandorPolicy.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/law-practice/use-cases && bunx --bun vitest run test/CandorPolicy.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-018",
+      "codexId": "bdaf5007ae688191a499967b959b5a86",
+      "title": "Coverage ratchet can miss offset test regressions",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "3082ae31d10320b8dd49a68b7a2112b8ce169758",
+      "ownerArea": "Repo CLI coverage architecture",
+      "lane": "deferred-tooling-design",
+      "disposition": "defer-p2",
+      "validation": {
+        "status": "confirmed-known-limitation",
+        "rationale": "Package-level percentage and uncovered totals cannot distinguish offsetting deletions from lost coverage. Closing the gap requires a per-file baseline redesign rather than a local predicate tweak."
+      },
+      "remediation": {
+        "status": "deferred",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    }
+  ]
+}

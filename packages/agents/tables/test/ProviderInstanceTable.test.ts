@@ -14,7 +14,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance);
+const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance)(fc);
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
 const providerInstanceRow = {

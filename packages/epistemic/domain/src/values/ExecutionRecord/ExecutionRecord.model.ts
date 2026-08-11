@@ -22,7 +22,7 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
-import { O } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime } from "effect";
@@ -672,29 +672,32 @@ export type ChainVerification = typeof ChainVerification.Type;
  * @category predicates
  * @since 0.0.0
  */
-export const verifyExecutionDecisionChain = (
-  records: ReadonlyArray<ExecutionDecisionRecord>,
-  expectedRunKey?: ExecutionRunKey
-): ChainVerification => {
-  let previousHash: DecisionRecordHash | undefined = undefined;
-  let runKey: ExecutionRunKey | undefined = expectedRunKey;
-  let index = 0;
-  for (const record of records) {
-    const prev = O.getOrUndefined(record.prevHash);
-    runKey = runKey ?? record.runKey;
-    if (
-      record.runKey !== runKey ||
-      record.seq !== index ||
-      prev !== previousHash ||
-      !verifyExecutionDecisionHash(record)
-    ) {
-      return ChainVerification.make({ result: "chain-broken", atIndex: NonNegativeInt.make(index) });
+export const verifyExecutionDecisionChain: {
+  (expectedRunKey?: ExecutionRunKey): (records: ReadonlyArray<ExecutionDecisionRecord>) => ChainVerification;
+  (records: ReadonlyArray<ExecutionDecisionRecord>, expectedRunKey?: ExecutionRunKey): ChainVerification;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (records: ReadonlyArray<ExecutionDecisionRecord>, expectedRunKey?: ExecutionRunKey): ChainVerification => {
+    let previousHash: DecisionRecordHash | undefined = undefined;
+    let runKey: ExecutionRunKey | undefined = expectedRunKey;
+    let index = 0;
+    for (const record of records) {
+      const prev = O.getOrUndefined(record.prevHash);
+      runKey = runKey ?? record.runKey;
+      if (
+        record.runKey !== runKey ||
+        record.seq !== index ||
+        prev !== previousHash ||
+        !verifyExecutionDecisionHash(record)
+      ) {
+        return ChainVerification.make({ result: "chain-broken", atIndex: NonNegativeInt.make(index) });
+      }
+      previousHash = record.hash;
+      index += 1;
     }
-    previousHash = record.hash;
-    index += 1;
+    return ChainVerification.make({ result: "chain-intact" });
   }
-  return ChainVerification.make({ result: "chain-intact" });
-};
+);
 
 /**
  * Cross-checks one outcome record against the decision it claims to settle.

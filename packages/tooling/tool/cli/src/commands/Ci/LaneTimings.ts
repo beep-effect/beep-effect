@@ -43,12 +43,14 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, DateTime, Effect, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
@@ -292,11 +294,17 @@ const epochMillis = (value: string | null): O.Option<number> =>
  * @category mapping
  * @since 0.0.0
  */
-export const ciTimestampSpanSeconds = (from: string | null, to: string | null): O.Option<number> =>
-  pipe(
-    O.zipWith(epochMillis(from), epochMillis(to), (start, end) => (end - start) / 1_000),
-    O.filter((seconds) => seconds >= 0)
-  );
+export const ciTimestampSpanSeconds: {
+  (to: string | null): (from: string | null) => O.Option<number>;
+  (from: string | null, to: string | null): O.Option<number>;
+} = dual(
+  2,
+  (from: string | null, to: string | null): O.Option<number> =>
+    pipe(
+      O.zipWith(epochMillis(from), epochMillis(to), (start, end) => (end - start) / 1_000),
+      O.filter((seconds) => seconds >= 0)
+    )
+);
 
 /**
  * Pickup latency for a job, defined only on the first attempt.
@@ -476,11 +484,22 @@ export const ciLaneTimingRow = (job: CiWorkflowJob): CiLaneTimingRow =>
  * @category mapping
  * @since 0.0.0
  */
-export const withCiLanePeakRss = (
-  rows: ReadonlyArray<CiLaneTimingRow>,
-  peakRssByJobName: Readonly<Record<string, number>>
-): ReadonlyArray<CiLaneTimingRow> =>
-  A.map(rows, (row) => CiLaneTimingRow.make({ ...row, peakRssBytes: O.fromNullishOr(peakRssByJobName[row.jobName]) }));
+export const withCiLanePeakRss: {
+  (
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): (rows: ReadonlyArray<CiLaneTimingRow>) => ReadonlyArray<CiLaneTimingRow>;
+  (
+    rows: ReadonlyArray<CiLaneTimingRow>,
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): ReadonlyArray<CiLaneTimingRow>;
+} = dual(
+  2,
+  (
+    rows: ReadonlyArray<CiLaneTimingRow>,
+    peakRssByJobName: Readonly<Record<string, number>>
+  ): ReadonlyArray<CiLaneTimingRow> =>
+    A.map(rows, (row) => CiLaneTimingRow.make({ ...row, peakRssBytes: O.fromNullishOr(peakRssByJobName[row.jobName]) }))
+);
 
 const numberOrder = Order.Number;
 
@@ -559,6 +578,13 @@ const TSV_COLUMNS = [
 
 const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: () => "", onSome: String });
 
+const TSV_FORMULA_PREFIXES = ["=", "+", "-", "@"] as const;
+
+const tsvStringCell = (value: string): string => {
+  const sanitized = Str.replaceAll(/[\t\r\n]/gu, " ")(value);
+  return A.some(TSV_FORMULA_PREFIXES, (prefix) => Str.startsWith(prefix)(sanitized)) ? `'${sanitized}` : sanitized;
+};
+
 /**
  * Render collected rows as the TSV this repo's timing analyses consume.
  *
@@ -567,7 +593,8 @@ const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: ()
  * An absent measurement renders as an empty cell rather than `0`, so a
  * spreadsheet average over `pickupSeconds` skips re-dispatched attempts instead
  * of pulling the mean toward zero — the filter surviving all the way to the
- * last consumer.
+ * last consumer. String cells are single-line and formula-leading values are
+ * prefixed with a single quote so spreadsheet import treats them as text.
  *
  * **Example** (Render the header row)
  *
@@ -585,16 +612,16 @@ const tsvCell = (value: O.Option<number>): string => O.match(value, { onNone: ()
 export const renderCiLaneTimingsTsv = (rows: ReadonlyArray<CiLaneTimingRow>): string =>
   A.join(
     [
-      A.join(TSV_COLUMNS, "\t"),
+      A.join(A.map(TSV_COLUMNS, tsvStringCell), "\t"),
       ...A.map(rows, (row) =>
         A.join(
           [
             String(row.runId),
             String(row.runAttempt),
             String(row.jobId),
-            row.jobName,
-            row.conclusion,
-            row.runnerClass,
+            tsvStringCell(row.jobName),
+            tsvStringCell(row.conclusion),
+            tsvStringCell(row.runnerClass),
             String(row.infraFailure),
             tsvCell(row.pickupSeconds),
             tsvCell(row.setupSeconds),
@@ -658,7 +685,10 @@ export const renderCiLaneTimingsSummary = (report: CiLaneTimingsReport): string 
  * @category codecs
  * @since 0.0.0
  */
-export const decodeCiWorkflowJobsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
+export const decodeCiWorkflowJobsPage: {
+  (options?: SchemaAST.ParseOptions): (input: unknown) => Effect.Effect<CiWorkflowJobsPage, S.SchemaError>;
+  (input: unknown, options?: SchemaAST.ParseOptions): Effect.Effect<CiWorkflowJobsPage, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage)));
 
 class CiWorkflowRun extends S.Class<CiWorkflowRun>($I`CiWorkflowRun`)(
   { id: S.Finite },

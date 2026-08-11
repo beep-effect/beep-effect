@@ -6,11 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FileSha256Hash, MediaDimensions, PositiveMediaDimension } from "./Media.schemas.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/Normalize.schemas");
 
@@ -383,7 +385,10 @@ export class NormalizeManifest extends S.Class<NormalizeManifest>($I`NormalizeMa
  * @category decoding
  * @since 0.0.0
  */
-export const decodeNormalizeMaxLongEdge = S.decodeUnknownEffect(PositiveMediaDimension);
+export const decodeNormalizeMaxLongEdge: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<PositiveMediaDimension, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<PositiveMediaDimension, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(PositiveMediaDimension));
 
 /**
  * Encode a normalize manifest into its JSON-safe shape.
@@ -399,4 +404,7 @@ export const decodeNormalizeMaxLongEdge = S.decodeUnknownEffect(PositiveMediaDim
  * @category encoding
  * @since 0.0.0
  */
-export const encodeNormalizeManifest = S.encodeUnknownEffect(NormalizeManifest);
+export const encodeNormalizeManifest: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof NormalizeManifest.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof NormalizeManifest.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(NormalizeManifest));

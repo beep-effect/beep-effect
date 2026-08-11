@@ -143,7 +143,7 @@ describe("@beep/infra CiRunners", () => {
     const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
 
     const encoded = Effect.runSync(S.encodeUnknownEffect(CiRunnersNetworkConfig)(network));
-    const decoded = Effect.runSync(S.decodeUnknownEffect(CiRunnersNetworkConfig)(encoded));
+    const decoded = Effect.runSync(S.decodeEffect(CiRunnersNetworkConfig)(encoded));
 
     expect(equivalent(decoded, network)).toBe(true);
   });

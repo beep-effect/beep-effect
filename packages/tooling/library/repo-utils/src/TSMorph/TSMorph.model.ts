@@ -1032,7 +1032,7 @@ export type ProjectCacheKey = typeof ProjectCacheKey.Type;
 const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(SymbolFilePath), S.toArbitrary(SymbolQualifiedName), S.toArbitrary(SymbolKind))
+      .tuple(S.toArbitrary(SymbolFilePath)(fc), S.toArbitrary(SymbolQualifiedName)(fc), S.toArbitrary(SymbolKind)(fc))
       .map(([filePath, qualifiedName, kind]) => `${filePath}::${qualifiedName}#${kind}` as typeof symbolIdentity.Type),
 });
 
@@ -1709,7 +1709,7 @@ class TsMorphScopeEntrypointFile extends S.Class<TsMorphScopeEntrypointFile>($I`
   })
 ) {
   static readonly new = (filePath: string) =>
-    TsMorphScopeEntrypointFile.make({ filePath: S.decodeUnknownSync(TypeScriptFilePath)(filePath) });
+    TsMorphScopeEntrypointFile.make({ filePath: S.decodeSync(TypeScriptFilePath)(filePath) });
 }
 
 /**

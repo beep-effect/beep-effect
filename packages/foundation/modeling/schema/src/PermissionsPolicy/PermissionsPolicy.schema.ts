@@ -6,9 +6,10 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { A, Struct } from "@beep/utils";
-import { Effect, pipe, SchemaTransformation } from "effect";
+import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -300,6 +301,10 @@ export const PermissionsPolicyDirectiveValue = S.Union([
  */
 export type PermissionsPolicyDirectiveValue = typeof PermissionsPolicyDirectiveValue.Type;
 
+const PermissionsPolicyDirectivesInput = S.Record(S.String, PermissionsPolicyDirectiveValue);
+const PermissionsPolicyDirectivesValue = S.Record(PermissionsPolicyDirectiveKey, PermissionsPolicyDirectiveValue);
+const isPermissionsPolicyDirectiveKey = S.is(PermissionsPolicyDirectiveKey);
+
 /**
  * Schema for a directive map used to build the header value.
  *
@@ -316,10 +321,17 @@ export type PermissionsPolicyDirectiveValue = typeof PermissionsPolicyDirectiveV
  * @category schemas
  * @since 0.0.0
  */
-export const PermissionsPolicyDirectives = S.Record(
-  PermissionsPolicyDirectiveKey,
-  PermissionsPolicyDirectiveValue
-).pipe(
+export const PermissionsPolicyDirectives = PermissionsPolicyDirectivesInput.pipe(
+  S.decodeTo(
+    PermissionsPolicyDirectivesValue,
+    SchemaTransformation.transformOrFail({
+      decode: (input, options) =>
+        A.every(R.keys(input), isPermissionsPolicyDirectiveKey)
+          ? S.decodeEffect(PermissionsPolicyDirectivesValue)(input).pipe(Effect.mapError((error) => error.issue))
+          : Effect.fail(new SchemaIssue.InvalidValue({ message: "Invalid directive name" }, input, options)),
+      encode: Effect.succeed,
+    })
+  ),
   $I.annoteSchema("PermissionsPolicyDirectives", {
     description: "A record of `Permissions-Policy` directives to allowlist values.",
   })
@@ -500,15 +512,15 @@ export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undef
   }),
   SchemaUtils.withStatics(() => {
     const createValue: (
-      option?: undefined | PermissionsPolicyOption
+      option?: undefined | typeof PermissionsPolicyOption.Encoded
     ) => Effect.Effect<O.Option<string>, SecureHeaderError> = Effect.fnUntraced(function* (
-      option?: undefined | PermissionsPolicyOption
+      option?: undefined | typeof PermissionsPolicyOption.Encoded
     ) {
       if (P.isUndefined(option) || option === false) {
         return O.none<string>();
       }
 
-      const decodedOption = yield* S.decodeUnknownEffect(PermissionsPolicyOptionStruct)(option).pipe(
+      const decodedOption = yield* S.decodeEffect(PermissionsPolicyOptionStruct)(option).pipe(
         Effect.mapError((cause) =>
           PermissionsPolicyError.make({
             message: cause.message,
@@ -521,10 +533,10 @@ export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undef
     });
 
     const create: (
-      option?: undefined | PermissionsPolicyOption,
+      option?: undefined | typeof PermissionsPolicyOption.Encoded,
       headerValueCreator?: undefined | typeof createValue
     ) => Effect.Effect<O.Option<internal.ResponseHeader>, SecureHeaderError> = Effect.fnUntraced(function* (
-      option?: undefined | PermissionsPolicyOption,
+      option?: undefined | typeof PermissionsPolicyOption.Encoded,
       headerValueCreator: typeof createValue = createValue
     ) {
       const value = yield* headerValueCreator(option);

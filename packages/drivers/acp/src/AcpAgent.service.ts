@@ -567,6 +567,26 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
 });
 
 /**
+ * Transport plus agent options accepted by {@link layer}.
+ *
+ * **Example** (Configuring an ACP agent layer)
+ *
+ * ```ts
+ * import type * as Stdio from "effect/Stdio"
+ * import type { AcpAgentLayerOptions } from "@beep/acp/agent"
+ *
+ * const fromStdio = (stdio: Stdio.Stdio): AcpAgentLayerOptions => ({ stdio, logIncoming: true })
+ * console.log(fromStdio)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface AcpAgentLayerOptions extends AcpAgentOptions {
+  readonly stdio: Stdio.Stdio;
+}
+
+/**
  * Constructs a layer for an ACP agent over the provided transport.
  *
  * **Example** (Layer over Stdio transport)
@@ -575,14 +595,14 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
  * import type * as Stdio from "effect/Stdio"
  * import { layer } from "@beep/acp/agent"
  *
- * const fromStdio = (stdio: Stdio.Stdio) => layer(stdio)
+ * const fromStdio = (stdio: Stdio.Stdio) => layer({ stdio })
  * console.log(fromStdio)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const layer = (stdio: Stdio.Stdio, options: AcpAgentOptions = {}): Layer.Layer<AcpAgent> =>
+export const layer = ({ stdio, ...options }: AcpAgentLayerOptions): Layer.Layer<AcpAgent> =>
   Layer.effect(AcpAgent, make(stdio, options));
 
 /**

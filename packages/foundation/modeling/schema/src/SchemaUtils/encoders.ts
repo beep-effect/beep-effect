@@ -6,9 +6,22 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { Effect, Exit, Result, SchemaAST } from "effect";
 import type * as O from "effect/Option";
+
+/**
+ * Application signature shared by every encoder factory in this module.
+ *
+ * Each factory returns a function of this shape: it takes the value to encode
+ * and optional parse options that override the options captured when the
+ * encoder was built.
+ *
+ * Naming this call signature (instead of spelling it inline) is what lets the
+ * pipeable-signature analysis relate each factory's return type.
+ */
+type SchemaEncoder<Input, Output> = (input: Input, overrideOptions?: SchemaAST.ParseOptions) => Output;
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema, returning an
@@ -43,13 +56,25 @@ import type * as O from "effect/Option";
  * @category encoding
  * @since 0.0.0
  */
-export const encodeEffect =
-  <TSchema extends S.Constraint>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
+export const encodeEffect: {
   (
-    input: TSchema["Type"],
-    overrideOptions?: SchemaAST.ParseOptions
-  ): Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]> =>
-    S.encodeUnknownEffect(schema, options)(input, overrideOptions);
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.Constraint>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>>;
+  <TSchema extends S.Constraint>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.Constraint>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownEffect(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes unknown input with schema errors preserved in an `Effect` failure
@@ -88,13 +113,25 @@ export const encodeEffect =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownEffect =
-  <TSchema extends S.Constraint>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
+export const encodeUnknownEffect: {
   (
-    input: unknown,
-    overrideOptions?: SchemaAST.ParseOptions
-  ): Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]> =>
-    S.encodeUnknownEffect(schema, options)(input, overrideOptions);
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.Constraint>(
+    schema: TSchema
+  ) => SchemaEncoder<unknown, Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>>;
+  <TSchema extends S.Constraint>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.Constraint>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Effect.Effect<TSchema["Encoded"], S.SchemaError, TSchema["EncodingServices"]>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownEffect(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes an `unknown` input against a schema synchronously, returning an
@@ -135,10 +172,25 @@ export const encodeUnknownEffect =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownExit =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: unknown, overrideOptions?: SchemaAST.ParseOptions): Exit.Exit<TSchema["Encoded"], S.SchemaError> =>
-    S.encodeUnknownExit(schema, options)(input, overrideOptions);
+export const encodeUnknownExit: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<unknown, Exit.Exit<TSchema["Encoded"], S.SchemaError>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Exit.Exit<TSchema["Encoded"], S.SchemaError>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Exit.Exit<TSchema["Encoded"], S.SchemaError>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownExit(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema synchronously,
@@ -180,10 +232,25 @@ export const encodeUnknownExit =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeExit =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: TSchema["Type"], overrideOptions?: SchemaAST.ParseOptions): Exit.Exit<TSchema["Encoded"], S.SchemaError> =>
-    S.encodeUnknownExit(schema, options)(input, overrideOptions);
+export const encodeExit: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], Exit.Exit<TSchema["Encoded"], S.SchemaError>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Exit.Exit<TSchema["Encoded"], S.SchemaError>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Exit.Exit<TSchema["Encoded"], S.SchemaError>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownExit(schema, options)(input, overrideOptions)
+);
 /**
  * Encodes an `unknown` input against a schema, returning an `Option` that is
  * `Some` with the encoded value on success or `None` for schema mismatches.
@@ -222,10 +289,25 @@ export const encodeExit =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownOption =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: unknown, overrideOptions?: SchemaAST.ParseOptions): O.Option<TSchema["Encoded"]> =>
-    S.encodeUnknownOption(schema, options)(input, overrideOptions);
+export const encodeUnknownOption: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<unknown, O.Option<TSchema["Encoded"]>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, O.Option<TSchema["Encoded"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, O.Option<TSchema["Encoded"]>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownOption(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema, returning an
@@ -264,10 +346,25 @@ export const encodeUnknownOption =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeOption =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: TSchema["Type"], overrideOptions?: SchemaAST.ParseOptions): O.Option<TSchema["Encoded"]> =>
-    S.encodeOption(schema, options)(input, overrideOptions);
+export const encodeOption: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], O.Option<TSchema["Encoded"]>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], O.Option<TSchema["Encoded"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], O.Option<TSchema["Encoded"]>> =>
+    (input, overrideOptions) =>
+      S.encodeOption(schema, options)(input, overrideOptions)
+);
 /**
  * Encodes an `unknown` input against a schema, returning a `Result` that
  * succeeds with the encoded value or fails with a {@link S.SchemaError} for schema
@@ -306,10 +403,25 @@ export const encodeOption =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownResult =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: unknown, overrideOptions?: SchemaAST.ParseOptions): Result.Result<TSchema["Encoded"], S.SchemaError> =>
-    S.encodeUnknownResult(schema, options)(input, overrideOptions);
+export const encodeUnknownResult: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<unknown, Result.Result<TSchema["Encoded"], S.SchemaError>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Result.Result<TSchema["Encoded"], S.SchemaError>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Result.Result<TSchema["Encoded"], S.SchemaError>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownResult(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema, returning a
@@ -349,13 +461,25 @@ export const encodeUnknownResult =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeResult =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
+export const encodeResult: {
   (
-    input: TSchema["Type"],
-    overrideOptions?: SchemaAST.ParseOptions
-  ): Result.Result<TSchema["Encoded"], S.SchemaError> =>
-    S.encodeResult(schema, options)(input, overrideOptions);
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], Result.Result<TSchema["Encoded"], S.SchemaError>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Result.Result<TSchema["Encoded"], S.SchemaError>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Result.Result<TSchema["Encoded"], S.SchemaError>> =>
+    (input, overrideOptions) =>
+      S.encodeResult(schema, options)(input, overrideOptions)
+);
 /**
  * Encodes an `unknown` input against a schema, returning a `Promise` that
  * resolves with the encoded value or rejects with a {@link S.SchemaError} for
@@ -391,10 +515,25 @@ export const encodeResult =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownPromise =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: unknown, overrideOptions?: SchemaAST.ParseOptions) =>
-    S.encodeUnknownPromise(schema, options)(input, overrideOptions);
+export const encodeUnknownPromise: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<unknown, Promise<TSchema["Encoded"]>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Promise<TSchema["Encoded"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, Promise<TSchema["Encoded"]>> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownPromise(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema, returning a
@@ -431,10 +570,25 @@ export const encodeUnknownPromise =
  * @category encoding
  * @since 0.0.0
  */
-export const encodePromise =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: TSchema["Type"], overrideOptions?: SchemaAST.ParseOptions): Promise<TSchema["Encoded"]> =>
-    S.encodePromise(schema, options)(input, overrideOptions);
+export const encodePromise: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], Promise<TSchema["Encoded"]>>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Promise<TSchema["Encoded"]>>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], Promise<TSchema["Encoded"]>> =>
+    (input, overrideOptions) =>
+      S.encodePromise(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes an `unknown` input against a schema synchronously, throwing a
@@ -471,10 +625,23 @@ export const encodePromise =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeUnknownSync =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: unknown, overrideOptions?: SchemaAST.ParseOptions): TSchema["Encoded"] =>
-    S.encodeUnknownSync(schema, options)(input, overrideOptions);
+export const encodeUnknownSync: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema) => SchemaEncoder<unknown, TSchema["Encoded"]>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, TSchema["Encoded"]>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<unknown, TSchema["Encoded"]> =>
+    (input, overrideOptions) =>
+      S.encodeUnknownSync(schema, options)(input, overrideOptions)
+);
 
 /**
  * Encodes a typed input (the schema's `Type`) against a schema synchronously,
@@ -508,7 +675,22 @@ export const encodeUnknownSync =
  * @category encoding
  * @since 0.0.0
  */
-export const encodeSync =
-  <TSchema extends S.ConstraintEncoder<unknown>>(schema: TSchema, options?: SchemaAST.ParseOptions) =>
-  (input: TSchema["Type"], overrideOptions?: SchemaAST.ParseOptions): TSchema["Encoded"] =>
-    S.encodeSync(schema, options)(input, overrideOptions);
+export const encodeSync: {
+  (
+    options?: SchemaAST.ParseOptions
+  ): <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema
+  ) => SchemaEncoder<TSchema["Type"], TSchema["Encoded"]>;
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], TSchema["Encoded"]>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <TSchema extends S.ConstraintEncoder<unknown>>(
+    schema: TSchema,
+    options?: SchemaAST.ParseOptions
+  ): SchemaEncoder<TSchema["Type"], TSchema["Encoded"]> =>
+    (input, overrideOptions) =>
+      S.encodeSync(schema, options)(input, overrideOptions)
+);

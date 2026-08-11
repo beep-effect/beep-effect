@@ -11,8 +11,13 @@ import {
   DistinctionDetail,
   DocketCitation,
   DurableLocatorOptions,
+  extractPatentFigures,
+  extractPatentNumber,
   FullCaseCitation,
   FullCitation,
+  getKindCodeExplanation,
+  getPatentDisplay,
+  getStatusFromKindCode,
   IdCitation,
   IdsSubmissionFact,
   KindCode,
@@ -35,6 +40,7 @@ import {
   PatentNumber,
   PinciteInfo,
   PriorArtReference,
+  parsePatentSections,
   RegulationCitation,
   Rejection,
   RejectionGround,
@@ -58,7 +64,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 10): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -96,6 +102,30 @@ const citationBaseWire = (text: string) => ({
 });
 
 describe("@beep/law-practice-domain", () => {
+  it("handles patent metadata helper defaults and representative values", () => {
+    expect(getStatusFromKindCode()).toBe("unknown");
+    expect(getStatusFromKindCode({ country: "WO" })).toBe("international");
+    expect(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") })).toBe("granted");
+    expect(O.isNone(getKindCodeExplanation())).toBe(true);
+    expect(O.getOrThrow(getKindCodeExplanation({ country: "EP", kindCode: "A1" }))).toContain("European");
+
+    const display = getPatentDisplay({
+      metadata: { country: "US", kind_code: "B2", patent_number: "7654321" },
+    });
+    expect(display.formatted).toBe("US 7,654,321 B2");
+    expect(getPatentDisplay().status).toBe("unknown");
+    expect(extractPatentFigures()).toEqual([]);
+    expect(extractPatentFigures({ imageUrls: { figure1: "https://example.com/patents/figure-1.png" } })).toHaveLength(
+      1
+    );
+
+    const content = "## Abstract\nA compact tool.\n\n## Claims\n1. A tool.";
+    const sections = parsePatentSections({ content, requestedSections: ["abstract", "claims"] });
+    expect(O.getOrThrow(sections.abstract)).toContain("A compact tool.");
+    expect(O.getOrThrow(sections.claims)).toBe("1. A tool.");
+    expect(extractPatentNumber({ content: "**Patent Number:** US 7,654,321 B2" })).toBe("US 7654321 B2");
+  });
+
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
     expect(LegalClientStatus.fromUnknown("active_client")).toBe("active_client");
@@ -153,7 +183,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("covers patent identifiers with schema-derived arbitraries", () => {
     fc.assert(
-      fc.property(S.toArbitrary(PatentNumber), (patentNumber) => {
+      fc.property(S.toArbitrary(PatentNumber)(fc), (patentNumber) => {
         expect(S.is(PatentNumber)(patentNumber)).toBe(true);
       }),
       fcRuns(25)
@@ -395,40 +425,40 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes sparse citation values and materializes definitive defaults when encoded", () => {
     const baseWire = citationBaseWire("citation");
-    const base = S.decodeUnknownSync(CitationBase)(baseWire);
-    const fullCase = S.decodeUnknownSync(FullCaseCitation)({
+    const base = S.decodeSync(CitationBase)(baseWire);
+    const fullCase = S.decodeSync(FullCaseCitation)({
       ...baseWire,
       type: "case",
       volume: 410,
       reporter: "U.S.",
     });
-    const id = S.decodeUnknownSync(IdCitation)({ ...baseWire, type: "id" });
-    const supra = S.decodeUnknownSync(SupraCitation)({ ...baseWire, type: "supra" });
-    const shortForm = S.decodeUnknownSync(ShortFormCaseCitation)({
+    const id = S.decodeSync(IdCitation)({ ...baseWire, type: "id" });
+    const supra = S.decodeSync(SupraCitation)({ ...baseWire, type: "supra" });
+    const shortForm = S.decodeSync(ShortFormCaseCitation)({
       ...baseWire,
       type: "shortFormCase",
       volume: 410,
       reporter: "U.S.",
     });
-    const neutral = S.decodeUnknownSync(NeutralCitation)({
+    const neutral = S.decodeSync(NeutralCitation)({
       ...baseWire,
       type: "neutral",
       year: 2023,
       documentNumber: "128749",
     });
-    const statute = S.decodeUnknownSync(StatuteCitation)({ ...baseWire, type: "statute" });
-    const regulation = S.decodeUnknownSync(RegulationCitation)({ ...baseWire, type: "regulation" });
-    const statutesAtLarge = S.decodeUnknownSync(StatutesAtLargeCitation)({
+    const statute = S.decodeSync(StatuteCitation)({ ...baseWire, type: "statute" });
+    const regulation = S.decodeSync(RegulationCitation)({ ...baseWire, type: "regulation" });
+    const statutesAtLarge = S.decodeSync(StatutesAtLargeCitation)({
       ...baseWire,
       type: "statutesAtLarge",
       volume: 100,
       page: 3743,
     });
-    const parenthetical = S.decodeUnknownSync(Parenthetical)({ text: "holding", type: "holding" });
-    const pincite = S.decodeUnknownSync(PinciteInfo)({ isRange: false, raw: "570" });
-    const resolution = S.decodeUnknownSync(ResolutionResult)({ confidence: 1 });
-    const context = S.decodeUnknownSync(ContextOptions)({});
-    const locator = S.decodeUnknownSync(DurableLocatorOptions)({});
+    const parenthetical = S.decodeSync(Parenthetical)({ text: "holding", type: "holding" });
+    const pincite = S.decodeSync(PinciteInfo)({ isRange: false, raw: "570" });
+    const resolution = S.decodeSync(ResolutionResult)({ confidence: 1 });
+    const context = S.decodeSync(ContextOptions)({});
+    const locator = S.decodeSync(DurableLocatorOptions)({});
 
     expect(S.encodeSync(CitationBase)(base).warnings).toStrictEqual([]);
     expect(S.encodeSync(FullCaseCitation)(fullCase)).toMatchObject({
@@ -659,6 +689,6 @@ describe("@beep/law-practice-domain", () => {
 
     // encode -> decode is identity across the S.suspend recursion knot
     const equivalent = S.toEquivalence(Citation);
-    expect(equivalent(S.decodeUnknownSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
+    expect(equivalent(S.decodeSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
   });
 });

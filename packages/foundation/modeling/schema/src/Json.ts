@@ -6,6 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
 
 const $I = $SchemaId.create("Json");
 
@@ -106,7 +107,13 @@ export type JsonArray = typeof JsonArray.Type;
  * @category codecs
  * @since 0.0.0
  */
-export const decodeJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+// Unary by contract: the underlying codec also accepts `ParseOptions`, but a
+// dual is undecidable here — `input` is `unknown` and the options are optional,
+// so a one-argument call and a data-last call are indistinguishable. Callers
+// that need parse options build their own codec from `S.fromJsonString`.
+export const decodeJsonString: (input: unknown) => Effect.Effect<unknown, S.SchemaError> = S.decodeUnknownEffect(
+  S.fromJsonString(S.Unknown)
+);
 
 /**
  * Encodes an unknown JSON-compatible value into a compact JSON string.
@@ -125,4 +132,8 @@ export const decodeJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown
  * @category codecs
  * @since 0.0.0
  */
-export const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+// Unary by contract: see {@link decodeJsonString}. `input` is `unknown`, so no
+// predicate can separate a data-first call from a data-last one.
+export const encodeJsonString: (input: unknown) => Effect.Effect<string, S.SchemaError> = S.encodeUnknownEffect(
+  S.fromJsonString(S.Unknown)
+);

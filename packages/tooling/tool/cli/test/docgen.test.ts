@@ -158,7 +158,7 @@ describe("Docgen operations", () => {
     expect(decoded.srcDir).toBe("src");
     expect(decoded.exclude).toEqual([]);
 
-    const arbitrary = S.toArbitrary(DocgenConfigDocument);
+    const arbitrary = S.toArbitrary(DocgenConfigDocument)(fc);
     const sameConfig = S.toEquivalence(DocgenConfigDocument);
     fc.assert(
       fc.property(arbitrary, (config) =>
@@ -1607,7 +1607,7 @@ export const AccountFlags = {
  * @category schemas
  * @since 0.0.0
  */
-export type AccountFlags = Schema.Schema.Type<typeof AccountFlags>;
+export type AccountFlags = typeof AccountFlags.Type;
 
 /**
  * Account graph schema.
@@ -4218,7 +4218,7 @@ export const ValidExport = packageDocAnchor;
 
 describe("DocgenQualityWorkerEvalReport schema", () => {
   it("every schema-derived report round-trips through its JSON codec", () => {
-    const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport);
+    const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport)(fc);
     const encodeReportJson = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
     const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
 

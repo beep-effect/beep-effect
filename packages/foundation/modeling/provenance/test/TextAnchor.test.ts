@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
-const TextAnchorArbitrary = S.toArbitrary(TextAnchor);
+const TextAnchorArbitrary = S.toArbitrary(TextAnchor)(fc);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
 describe("@beep/provenance TextAnchor", () => {
@@ -18,7 +18,7 @@ describe("@beep/provenance TextAnchor", () => {
     "decodes a well-formed anchor and re-slices the source text to the quote",
     Effect.fnUntraced(function* () {
       const source = "a claimed fact appears here";
-      const anchor = yield* S.decodeUnknownEffect(TextAnchor)({
+      const anchor = yield* S.decodeEffect(TextAnchor)({
         startChar: 0,
         endChar: 14,
         quote: "a claimed fact",
@@ -52,17 +52,15 @@ describe("@beep/provenance TextAnchor", () => {
     expect(isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })).toBe(true);
     expect(isInternallyConsistent({ startChar: 0, endChar: 1, quote: "fabricated" })).toBe(false);
     expect(isInternallyConsistent({ startChar: 4, endChar: 0, quote: "fact" })).toBe(false);
-    expect(Result.isFailure(S.decodeUnknownResult(TextAnchor)({ startChar: 0, endChar: 1, quote: "fabricated" }))).toBe(
-      true
-    );
-    expect(Result.isFailure(S.decodeUnknownResult(TextAnchor)({ startChar: 4, endChar: 0, quote: "fact" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(TextAnchor)({ startChar: 0, endChar: 1, quote: "fabricated" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(TextAnchor)({ startChar: 4, endChar: 0, quote: "fact" }))).toBe(true);
   });
 
   it("round-trips schema-derived anchors through the encoded wire shape", () =>
     fc.assert(
       fc.property(TextAnchorArbitrary, (anchor) => {
         const encoded = Result.getOrThrow(S.encodeUnknownResult(TextAnchor)(anchor));
-        const decoded = Result.getOrThrow(S.decodeUnknownResult(TextAnchor)(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(TextAnchor)(encoded));
 
         expect(encoded).toEqual({
           startChar: anchor.startChar,

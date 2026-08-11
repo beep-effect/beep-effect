@@ -755,6 +755,11 @@ now only:
 - `drivers` for flat repo-level external boundary wrappers
 - `tooling` for developer-operational code packages
 
+*(Amended 2026-08-10: the family list above is superseded — `ecosystem` was
+added as a fourth canonical non-slice family; see the 2026-08-10 entry "Add
+The `ecosystem` Package Family". The retirement of assistant bundles itself
+stands unchanged.)*
+
 Runtime-specific assistant files may exist only as normal harness-native
 configuration, such as Claude project settings or skills. They are not
 workspace packages, do not carry `beep` family/kind metadata, and are not part
@@ -1266,6 +1271,51 @@ rather than scanner-exemption because republishing token-shaped scraped
 strings in a public repository is a leak vector regardless of scanner
 posture; gitleaks remains the fail-closed backstop that catches sanitizer
 bugs.
+
+## 2026-08-10: Add The `ecosystem` Package Family
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a fourth non-slice family: `ecosystem`
+(`packages/ecosystem/<name>` = `@beep/<name>` = the npm name; flat, like
+`drivers`). Members are repo-authored libraries built for external consumption
+and consumed in-repo like any third-party dependency. The family charter is
+`14-ecosystem-packages.md`: member `src/` and runtime manifest edges are
+`@beep/*`-free while tests and `devDependencies` are unrestricted;
+published-package standards supersede repo effect-first style laws inside
+members; artifacts are ESM-only with strict exports maps,
+`sideEffects: false`, `stripInternal` declarations, and peers-only runtime
+dependencies; members stay `private: true` until upstream peers are stable.
+Members run a member-scoped tstyche type-test lane created at package
+creation — a deliberate, family-scoped exception to the 2026-08 repo-wide
+type-test removal above, because a member's published `.d.ts` is its product
+and a type-level regression is a user-facing break. This supersedes the
+"now only" three-family clause of the 2026-05-01 "Retire Assistant Bundles
+From Architecture" entry: the canonical non-slice families are now
+`foundation`, `drivers`, `tooling`, and `ecosystem`. First member:
+`@beep/effect-drizzle`, graduating from `scratchpad/bsl` — the exploration
+was proven and merged in PR #651; the package move itself lands in the P1
+phase of `goals/effect-drizzle-graduation`. It owns schema-derived
+projection/DDL/repositories, while `@beep/drizzle` (drivers) keeps
+execution — the shared-tables projection contract now points at
+`@beep/effect-drizzle`.
+
+Rationale:
+
+The `scratchpad/bsl` experiment produced a library whose audience is the wider
+effect ecosystem, not this repo's product. No existing family fits: `drivers`
+wraps external engines for internal consumption, `foundation` is internal
+substrate, and both may import `@beep/*` freely — the exact thread a published
+artifact must not carry. Inverting the import polarity at a family boundary
+makes publishability a structural property the repo can lint, rather than a
+per-package promise. Family creation, polarity, style-law scoping,
+artifact/peer/release/gate posture, and sequencing were locked by operator
+grill 2026-08-10; the charter's promotion/demotion mechanics and release-lane
+operational detail in doc 14 (including the operator-only `private` flip)
+were authored in the P0 docs PR and ratified through its review. Execution is
+tracked in `goals/effect-drizzle-graduation`.
 
 ## Known Unknowns
 

@@ -3,6 +3,8 @@ import {
   documentationShapeViolations,
   isPackageSourceFile,
   isPackageSourceFileIncludingGenerated,
+  JSDocMigrateInlineText,
+  JSDocMigrateProxyUrl,
   jsdocMigrateBlockStats,
   jsdocMigrateConservationFindings,
   jsdocMigrateExtractRecordsForFile,
@@ -18,6 +20,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, MutableHashMap } from "effect";
+import * as S from "effect/Schema";
 
 const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
 
@@ -617,6 +620,14 @@ describe("JSDocMigrateApply binding verification", () => {
 describe("JSDocMigrateTitles response validation", () => {
   const pending = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
 
+  it("rejects every ECMAScript line separator while accepting a safe inline line", () => {
+    const isInlineText = S.is(JSDocMigrateInlineText);
+
+    expect(isInlineText("safe\u2028*/ const injected = true")).toBe(false);
+    expect(isInlineText("safe\u2029*/ const injected = true")).toBe(false);
+    expect(isInlineText("A plain safe line")).toBe(true);
+  });
+
   it("renders a prompt naming every pending anchor", () => {
     const prompt = jsdocMigrateTitlesPrompt(pending);
     for (const record of pending) {
@@ -676,6 +687,29 @@ describe("JSDocMigrateTitles response validation", () => {
     expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample)))).toBe(true);
   });
 
+  it("rejects multiline and comment-closing model text", () => {
+    const multiline = JSON.stringify(
+      pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper\nconst injected = true"] }))
+    );
+    const commentClosing = JSON.stringify(
+      pending.map((record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
+    );
+
+    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(multiline, pending)))).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(commentClosing, pending)))).toBe(
+      true
+    );
+  });
+
+  it("accepts only literal loopback HTTP proxy URLs", () => {
+    const decode = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
+
+    expect(Exit.isSuccess(Effect.runSyncExit(decode("http://127.0.0.1:8317")))).toBe(true);
+    expect(Exit.isSuccess(Effect.runSyncExit(decode("http://[::1]:8317")))).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(decode("https://example.com")))).toBe(true);
+    expect(Exit.isFailure(Effect.runSyncExit(decode("http://localhost:8317")))).toBe(true);
+  });
+
   it("rejects a see-purpose count that disagrees with the block", () => {
     const withSee = jsdocMigrateExtractRecordsForFile(
       "packages/x/src/see.ts",
@@ -730,8 +764,8 @@ describe("JSDocMigrateApply orphan tolerance", () => {
   });
 });
 
-describe("JSDoc zero-legacy path predicates", () => {
-  it("excludes generated paths from the default non-generated scope and includes them when asked", () => {
+describe("JSDoc cleanup-on-touch path predicate", () => {
+  it("includes hand-authored package source and excludes generated source", () => {
     const hand = "packages/shared/schema/src/Kits.ts";
     const generated = "packages/drivers/acp/src/_generated/schema.gen.ts";
     expect(isPackageSourceFile(hand)).toBe(true);

@@ -9,9 +9,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Order, pipe, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import type * as Ordering from "effect/Ordering";
 
 const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.schemas");
 /**
@@ -242,7 +244,10 @@ export const isRootDepIndexKey = S.is(RootDepIndexKey);
  * @category utilities
  * @since 0.0.0
  */
-export const stringArrayEquivalence = S.toEquivalence(StringArray);
+export const stringArrayEquivalence: {
+  (that: StringArray): (self: StringArray) => boolean;
+  (self: StringArray, that: StringArray): boolean;
+} = dual(2, S.toEquivalence(StringArray));
 /**
  * Ascending string order used for deterministic config output.
  *
@@ -258,7 +263,10 @@ export const stringArrayEquivalence = S.toEquivalence(StringArray);
  * @category utilities
  * @since 0.0.0
  */
-export const byStringAscending: Order.Order<string> = Str.orderAsc;
+export const byStringAscending: {
+  (that: string): (self: string) => Ordering.Ordering;
+  (self: string, that: string): Ordering.Ordering;
+} = Str.orderAsc;
 type SourceOnlyTestKitAlias = readonly [aliasKey: string, sourcePath: string];
 const repoCliPackageName = "@beep/repo-cli" as const;
 const repoCliSourceOnlyTestKitAliases = [
@@ -395,7 +403,10 @@ export type TsconfigSyncMode = typeof TsconfigSyncMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const tsconfigSyncModeEquivalence = S.toEquivalence(TsconfigSyncMode);
+export const tsconfigSyncModeEquivalence: {
+  (that: TsconfigSyncMode): (self: TsconfigSyncMode) => boolean;
+  (self: TsconfigSyncMode, that: TsconfigSyncMode): boolean;
+} = dual(2, S.toEquivalence(TsconfigSyncMode));
 /**
  * Tuple type for tsconfig-sync mode flags.
  *
@@ -1045,10 +1056,22 @@ export class TsconfigWithPaths extends S.Class<TsconfigWithPaths>($I`TsconfigWit
  * @category utilities
  * @since 0.0.0
  */
-export const byWorkspaceRelativeDirAscending: Order.Order<WorkspaceDescriptor> = Order.mapInput(
-  Str.orderAsc,
-  (descriptor: WorkspaceDescriptor) => descriptor.relativeDir
+export const byWorkspaceRelativeDirAscending: {
+  (that: WorkspaceDescriptor): (self: WorkspaceDescriptor) => Ordering.Ordering;
+  (self: WorkspaceDescriptor, that: WorkspaceDescriptor): Ordering.Ordering;
+} = dual(
+  2,
+  Order.mapInput(Str.orderAsc, (descriptor: WorkspaceDescriptor) => descriptor.relativeDir)
 );
+const plannedChangeFileOrder: Order.Order<PlannedFileChange> = Order.mapInput(
+  Str.orderAsc,
+  (change: PlannedFileChange) => change.filePath
+);
+const plannedChangeSectionOrder: Order.Order<PlannedFileChange> = Order.mapInput(
+  Str.orderAsc,
+  (change: PlannedFileChange) => change.section
+);
+
 /**
  * Planned-change order by file path.
  *
@@ -1070,10 +1093,10 @@ export const byWorkspaceRelativeDirAscending: Order.Order<WorkspaceDescriptor> =
  * @category utilities
  * @since 0.0.0
  */
-export const byPlannedChangeFileAscending: Order.Order<PlannedFileChange> = Order.mapInput(
-  Str.orderAsc,
-  (change: PlannedFileChange) => change.filePath
-);
+export const byPlannedChangeFileAscending: {
+  (that: PlannedFileChange): (self: PlannedFileChange) => Ordering.Ordering;
+  (self: PlannedFileChange, that: PlannedFileChange): Ordering.Ordering;
+} = dual(2, plannedChangeFileOrder);
 /**
  * Planned-change order by managed section.
  *
@@ -1095,10 +1118,10 @@ export const byPlannedChangeFileAscending: Order.Order<PlannedFileChange> = Orde
  * @category utilities
  * @since 0.0.0
  */
-export const byPlannedChangeSectionAscending: Order.Order<PlannedFileChange> = Order.mapInput(
-  Str.orderAsc,
-  (change: PlannedFileChange) => change.section
-);
+export const byPlannedChangeSectionAscending: {
+  (that: PlannedFileChange): (self: PlannedFileChange) => Ordering.Ordering;
+  (self: PlannedFileChange, that: PlannedFileChange): Ordering.Ordering;
+} = dual(2, plannedChangeSectionOrder);
 /**
  * Combined planned-change order for deterministic reporting.
  *
@@ -1120,7 +1143,10 @@ export const byPlannedChangeSectionAscending: Order.Order<PlannedFileChange> = O
  * @category utilities
  * @since 0.0.0
  */
-export const byPlannedChangeAscending = Order.combine(byPlannedChangeFileAscending, byPlannedChangeSectionAscending);
+export const byPlannedChangeAscending: {
+  (that: PlannedFileChange): (self: PlannedFileChange) => Ordering.Ordering;
+  (self: PlannedFileChange, that: PlannedFileChange): Ordering.Ordering;
+} = dual(2, Order.combine(plannedChangeFileOrder, plannedChangeSectionOrder));
 
 /**
  * Internal schema helpers consumed by tsconfig-sync planner modules.

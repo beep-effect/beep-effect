@@ -124,7 +124,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
@@ -155,7 +155,7 @@ describe("uspto-mcp fixture proofs", () => {
       const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));
 
       assert.isFalse(result.isError);
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })))(
+      const decoded = yield* S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })))(
         textOf(result)
       );
       assert.strictEqual(decoded.error, "api_key_required");
@@ -175,7 +175,7 @@ describe("uspto-mcp fixture proofs", () => {
         applicationNumberText: S.String,
         inventionTitle: S.optionalKey(S.String),
       }).pipe(S.Array, S.fromJsonString);
-      const decoded = yield* S.decodeUnknownEffect(ApplicationMetadataArray)(textOf(result));
+      const decoded = yield* S.decodeEffect(ApplicationMetadataArray)(textOf(result));
       assert.strictEqual(decoded.length, 1);
       assert.strictEqual(decoded[0]?.applicationNumberText, "16138242");
       assert.strictEqual(decoded[0]?.inventionTitle, "Adjustable widget assembly");
@@ -195,7 +195,7 @@ describe("uspto-mcp fixture proofs", () => {
       // The complete-tier payload for 200 documents comfortably exceeds the
       // default 8000-byte budget; the response must have been reshaped down
       // to a smaller named tier rather than returned inline in full.
-      const projection = yield* S.decodeUnknownEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
+      const projection = yield* S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
 
       assert.strictEqual(projection._tag, "Inline");
       if (projection._tag === "Inline") {
@@ -211,9 +211,9 @@ describe("uspto-mcp schema parity", () => {
     "keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
     Effect.fnUntraced(function* () {
       const explicitWire = { applicationNumber: "16138242", budgetBytes: 8000 };
-      const decoded = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)(explicitWire);
+      const decoded = yield* S.decodeEffect(UsptoGetDocumentsParams)(explicitWire);
       const encoded = yield* S.encodeEffect(UsptoGetDocumentsParams)(decoded);
-      const defaulted = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
+      const defaulted = yield* S.decodeEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
 
       assert.deepEqual(encoded, explicitWire);
       assert.strictEqual(defaulted.budgetBytes, 8000);
@@ -234,8 +234,8 @@ describe("uspto-mcp schema parity", () => {
         envelope: { columns: ["documentIdentifier"], rows: [["DOC-1"]] },
       };
 
-      const failure = yield* S.decodeUnknownEffect(UsptoMcpFailure)(failureWire);
-      const projection = yield* S.decodeUnknownEffect(DocumentsProjectionOutput)(projectionWire);
+      const failure = yield* S.decodeEffect(UsptoMcpFailure)(failureWire);
+      const projection = yield* S.decodeEffect(DocumentsProjectionOutput)(projectionWire);
 
       assert.isTrue(UsptoMcpFailure.is(failure));
       assert.isTrue(DocumentsProjectionOutput.is(projection));

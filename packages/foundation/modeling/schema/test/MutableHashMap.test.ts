@@ -12,7 +12,7 @@ describe("MutableHashMapFromSelf", () => {
       key: S.String,
       value: S.FiniteFromString,
     });
-    const decoded = S.decodeUnknownSync(schema)(MutableHashMap_.make(["a", "1"], ["b", "2"]));
+    const decoded = S.decodeSync(schema)(MutableHashMap_.make(["a", "1"], ["b", "2"]));
 
     expect(schema.key).toBe(S.String);
     expect(schema.value).toBe(S.FiniteFromString);
@@ -72,7 +72,7 @@ describe("MutableHashMap", () => {
       key: S.String,
       value: S.FiniteFromString,
     });
-    const decoded = S.decodeUnknownSync(schema)([
+    const decoded = S.decodeSync(schema)([
       ["a", "1"],
       ["b", "2"],
     ]);
@@ -114,7 +114,7 @@ describe("MutableHashMap", () => {
       key: S.String,
       value: S.FiniteFromString,
     });
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
     const equivalence = S.toEquivalence(schema);

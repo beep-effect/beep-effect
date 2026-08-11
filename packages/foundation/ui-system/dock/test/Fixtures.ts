@@ -27,6 +27,7 @@ import {
   TabsNode,
   TextPanelView,
 } from "@beep/dock";
+import { dual } from "effect/Function";
 import type { DockCommand } from "@beep/dock";
 
 export const groupOne = GroupId.make("group-one");
@@ -57,12 +58,18 @@ const origin = ApiCommandOrigin.make({
   requestId: "poc-test",
 });
 
-export const envelope = (id: string, command: DockCommand): DockCommandEnvelope =>
-  DockCommandEnvelope.make({
-    commandId: CommandId.make(id),
-    origin,
-    command,
-  });
+export const envelope: {
+  (command: DockCommand): (id: string) => DockCommandEnvelope;
+  (id: string, command: DockCommand): DockCommandEnvelope;
+} = dual(
+  2,
+  (id: string, command: DockCommand): DockCommandEnvelope =>
+    DockCommandEnvelope.make({
+      commandId: CommandId.make(id),
+      origin,
+      command,
+    })
+);
 
 export const openPanelOne = envelope(
   "command-open-one",

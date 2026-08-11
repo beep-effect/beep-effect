@@ -8,7 +8,7 @@ export default mergeConfig(
     test: {
       exclude: ["test/fixtures/**"],
       fileParallelism: false,
-      globalSetup: [path.join(__dirname, "test/global-cleanup.ts")],
+      globalSetup: [path.join(import.meta.dirname, "test/global-cleanup.ts")],
       sequence: {
         concurrent: false,
       },

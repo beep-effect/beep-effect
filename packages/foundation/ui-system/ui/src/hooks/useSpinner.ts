@@ -116,12 +116,15 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * React hook used by spinner buttons to repeatedly increment or decrement a value
  * while the button remains pressed.
  *
- * **Details**
- *
  * The hook performs one immediate step on press, waits for the configured hold delay,
  * and then repeats the selected action at a fixed interval until `stop` is called.
  *
- * **Example** (Spinner button hold repeat)
+ * The two callbacks are co-equal, so there is no honest data-last argument to
+ * curry on — and a React hook must never be applied in pipe position anyway.
+ * They travel together in a single `actions` bag instead of as two positional
+ * parameters.
+ *
+ * **Example** (Import useSpinner in a component)
  *
  * ```tsx
  * import React from "react"
@@ -140,16 +143,15 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * console.log(useSpinner)
  * ```
  *
- * @param increment - Callback invoked for upward spinner movement.
- * @param decrement - Callback invoked for downward spinner movement.
- * @returns Spinner controls for starting and stopping repeated actions.
  * @category components
+ * @param actions - Upward and downward spinner callbacks.
+ * @returns Spinner controls for starting and stopping repeated actions.
  * @since 0.0.0
  */
 /**
  * Use spinner hook.
  *
- * **Example** (Import useSpinner hook)
+ * **Example** (Import useSpinner export)
  *
  * ```ts
  * import { useSpinner } from "@beep/ui/hooks/useSpinner"
@@ -160,7 +162,10 @@ const spinnerCleanupAtom = Atom.family((scope: string) =>
  * @category components
  * @since 0.0.0
  */
-export function useSpinner<T>(increment: (params?: T) => void, decrement: (params?: T) => void) {
+export function useSpinner<T>(actions: {
+  readonly increment: (params?: T) => void;
+  readonly decrement: (params?: T) => void;
+}) {
   const scope = useId();
   const dispatch = useAtomSet(spinnerCommandAtom(scope));
 
@@ -178,12 +183,12 @@ export function useSpinner<T>(increment: (params?: T) => void, decrement: (param
     up: (params?: T) =>
       dispatch({
         _tag: "start",
-        run: () => increment(params),
+        run: () => actions.increment(params),
       }),
     down: (params?: T) =>
       dispatch({
         _tag: "start",
-        run: () => decrement(params),
+        run: () => actions.decrement(params),
       }),
     stop: () => dispatch({ _tag: "stop" }),
   };

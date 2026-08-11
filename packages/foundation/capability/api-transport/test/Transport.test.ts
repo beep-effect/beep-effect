@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as Headers from "effect/unstable/http/Headers";
 
-const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot);
+const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot)(fc);
 const RateLimitSnapshotEquivalence = S.toEquivalence(RateLimitSnapshot);
 const decodeRateLimitSnapshot = S.decodeUnknownEffect(RateLimitSnapshot);
 const encodeRateLimitSnapshot = S.encodeEffect(RateLimitSnapshot);
@@ -19,7 +19,7 @@ const HeaderRoundTripSnapshot = S.Struct({
   remaining: S.optionalKey(HeaderRoundTripNumber),
   reset: S.optionalKey(HeaderRoundTripNumber),
 });
-const HeaderRoundTripSnapshotArbitrary = S.toArbitrary(HeaderRoundTripSnapshot).map((snapshot) =>
+const HeaderRoundTripSnapshotArbitrary = S.toArbitrary(HeaderRoundTripSnapshot)(fc).map((snapshot) =>
   RateLimitSnapshot.make(snapshot)
 );
 
@@ -54,7 +54,7 @@ describe("@beep/api-transport", () => {
       },
     });
     const encoded = Effect.runSync(S.encodeEffect(ApiTransportOptions)(options));
-    const decoded = Effect.runSync(S.decodeUnknownEffect(ApiTransportOptions)(encoded));
+    const decoded = Effect.runSync(S.decodeEffect(ApiTransportOptions)(encoded));
 
     expect(S.is(ApiTransportOptions)(decoded)).toBe(true);
     expect(ApiAuth.$is("ApiKeyQueryAuth")(decoded.auth)).toBe(true);

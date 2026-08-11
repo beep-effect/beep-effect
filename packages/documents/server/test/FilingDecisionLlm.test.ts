@@ -160,7 +160,7 @@ describe("@beep/documents-server FilingTextExtraction", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const intake = yield* Document.DocumentIntake;
       const vaultRootPath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-documents-extraction-fail-" });
-      const input = yield* S.decodeUnknownEffect(Document.IntakeDroppedFileInput)({
+      const input = yield* S.decodeEffect(Document.IntakeDroppedFileInput)({
         content: Buffer.from("complaint body").toString("base64"),
         filingContext: DefaultVaultFilingContext,
         intakeBatchId: "batch-extraction-fail",

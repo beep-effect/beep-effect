@@ -292,7 +292,7 @@ const SourceTextPageChecks = S.makeFilterGroup([
   ),
 ]);
 
-const sourceTextIdentityArbitrary = S.toArbitraryLazy(SourceTextIdentity);
+const sourceTextIdentityArbitrary = S.toArbitrary(SourceTextIdentity);
 
 const SourceTextPageSchema = SourceTextPageStruct.mapFields(identity)
   .check(SourceTextPageChecks)

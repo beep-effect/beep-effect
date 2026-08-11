@@ -15,7 +15,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { RoundNumber, SequenceNumber } from "@beep/qa-capture";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Qa/Inventory.schemas");
 
@@ -528,7 +531,10 @@ export class QaInventory extends S.Class<QaInventory>($I`QaInventory`)(
  * @category codecs
  * @since 0.0.0
  */
-export const decodeQaInventory = S.decodeUnknownEffect(QaInventory);
+export const decodeQaInventory: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<QaInventory, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<QaInventory, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(QaInventory));
 
 /**
  * Encode a {@link QaInventory} back to its JSON-ready shape.
@@ -553,4 +559,7 @@ export const decodeQaInventory = S.decodeUnknownEffect(QaInventory);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeQaInventory = S.encodeEffect(QaInventory);
+export const encodeQaInventory: {
+  (options?: AST.ParseOptions): (input: QaInventory) => Effect.Effect<typeof QaInventory.Encoded, S.SchemaError>;
+  (input: QaInventory, options?: AST.ParseOptions): Effect.Effect<typeof QaInventory.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(QaInventory));

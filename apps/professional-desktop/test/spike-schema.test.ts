@@ -75,7 +75,7 @@ describe("spike state schemas", () => {
   it("derives only valid Cosmos spike counts from the production schema", () => {
     fc.assert(
       fc.property(
-        S.toArbitrary(CosmosSpikeSize),
+        S.toArbitrary(CosmosSpikeSize)(fc),
         (size) =>
           isSyntheticProjectionCount(size.edgeCount) &&
           isSyntheticProjectionNodeCount(size.elementCount) &&

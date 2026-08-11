@@ -182,7 +182,11 @@ export class XAiRequestOptions extends S.Class<XAiRequestOptions>($I`XAiRequestO
   $I.annote("XAiRequestOptions", {
     description: "Request options accepted by every xAI endpoint method.",
   })
-) {}
+) {
+  declare readonly headers: Readonly<Record<string, string>>;
+  declare readonly path: Readonly<Record<string, string>>;
+  declare readonly query: Readonly<Record<string, XAiQueryValue>>;
+}
 
 /**
  * JSON response returned by the xAI driver.

@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const ATTEMPT_ID_TEXT = "550e8400-e29b-41d4-a716-446655440000";
-const ATTEMPT_ID = S.decodeUnknownSync(UUID)(ATTEMPT_ID_TEXT);
+const ATTEMPT_ID = S.decodeSync(UUID)(ATTEMPT_ID_TEXT);
 
 const verdict = YeetVerdict.make({
   schemaVersion: "yeet-verdict/v2",
@@ -94,6 +94,7 @@ describe("YeetVerdictJson", () => {
             ready: false,
             failing: O.some("threads-resolved"),
             criteria: YeetMergeReadyCriteria.make({
+              closeoutRun: true,
               checksGreen: true,
               threadsResolved: false,
               greptileScore: O.some("5/5"),
@@ -119,6 +120,6 @@ describe("YeetVerdictJson", () => {
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual(["checks-green", "threads-resolved"]);
+    expect(YeetMergeReadyCriterion.Options).toEqual(["closeout-run", "checks-green", "threads-resolved"]);
   });
 });

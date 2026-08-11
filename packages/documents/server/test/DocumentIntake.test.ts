@@ -49,7 +49,7 @@ describe("@beep/documents-server DocumentIntake", () => {
     const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
 
     fc.assert(
-      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64), (bytes) => {
+      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64)(fc), (bytes) => {
         const encoded = Result.getOrThrow(encode(bytes));
         const decoded = Result.getOrThrow(decode(encoded));
 
@@ -88,7 +88,7 @@ describe("@beep/documents-server DocumentIntake", () => {
       const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
       const bytes = new TextEncoder().encode("unclassifiable body");
 
-      const input = yield* S.decodeUnknownEffect(Document.IntakeDroppedFileInput)({
+      const input = yield* S.decodeEffect(Document.IntakeDroppedFileInput)({
         content: Buffer.from(bytes).toString("base64"),
         filingContext: DefaultVaultFilingContext,
         intakeBatchId: "Batch 42",

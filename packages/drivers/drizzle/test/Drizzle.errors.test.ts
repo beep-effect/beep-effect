@@ -26,9 +26,9 @@ const makeClient = (execute: DrizzleClient["execute"]): DrizzleClient => {
   return client;
 };
 
-const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext);
-const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError);
-const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows);
+const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext)(fc);
+const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError)(fc);
+const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows)(fc);
 
 describe("DrizzleError", () => {
   it("constructs the single public tagged driver error", () => {
@@ -274,7 +274,7 @@ describe("DrizzleError", () => {
   });
 
   it("decodes an omitted cause as none", () => {
-    const error = S.decodeUnknownSync(DrizzleError)({
+    const error = S.decodeSync(DrizzleError)({
       _tag: "DrizzleError",
       operation: "execute",
     });
@@ -291,7 +291,7 @@ describe("DrizzleError", () => {
       params: O.some([123]),
     });
     const encoded = Result.getOrThrow(S.encodeResult(DrizzleErrorContext)(context));
-    const decoded = Result.getOrThrow(S.decodeUnknownResult(DrizzleErrorContext)(encoded));
+    const decoded = Result.getOrThrow(S.decodeResult(DrizzleErrorContext)(encoded));
 
     expect(encoded).toEqual({
       query: "select * from accounts where id = $1",
@@ -307,7 +307,7 @@ describe("DrizzleError", () => {
       params: O.some(["<redacted>"]),
     });
     const encoded = Result.getOrThrow(error.pipe(S.encodeResult(DrizzleError)));
-    const decoded = Result.getOrThrow(S.decodeUnknownResult(DrizzleError)(encoded));
+    const decoded = Result.getOrThrow(S.decodeResult(DrizzleError)(encoded));
 
     expect(encoded).toEqual({
       _tag: "DrizzleError",

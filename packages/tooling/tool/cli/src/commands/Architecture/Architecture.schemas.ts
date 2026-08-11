@@ -9,7 +9,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Architecture/Architecture.schemas");
 
@@ -948,7 +950,10 @@ const decodeOperationPlanJson = S.decodeUnknownEffect(S.fromJsonString(Canonical
  * @category codecs
  * @since 0.0.0
  */
-export const encodeCanonicalSliceOperationPlanJson = encodeOperationPlanJson;
+export const encodeCanonicalSliceOperationPlanJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, encodeOperationPlanJson);
 
 /**
  * Decode operation-plan JSON text.
@@ -975,4 +980,7 @@ export const encodeCanonicalSliceOperationPlanJson = encodeOperationPlanJson;
  * @category codecs
  * @since 0.0.0
  */
-export const decodeCanonicalSliceOperationPlanJson = decodeOperationPlanJson;
+export const decodeCanonicalSliceOperationPlanJson: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CanonicalSliceOperationPlan, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CanonicalSliceOperationPlan, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, decodeOperationPlanJson);

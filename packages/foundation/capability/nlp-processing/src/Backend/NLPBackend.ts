@@ -462,20 +462,36 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
 /**
  * Construct a {@link BackendNotSupported} failure with a default message.
  *
+ * **Details**
+ *
+ * The overriding message travels in an options object — as it does on
+ * {@link BackendNotSupported.forOperation} — so the backend name can be applied
+ * last from a `pipe` without the two strings becoming ambiguous.
+ *
  * **Example** (Build not-supported failure)
  *
  * ```ts
+ * import { pipe } from "effect"
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = notSupported("minimal", "dependencyParsing")
+ * const custom = pipe("minimal", notSupported("dependencyParsing", { message: "No parser bundled" }))
+ *
  * console.log(error.message.includes("dependencyParsing")) // true
+ * console.log(custom.message) // "No parser bundled"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const notSupported = (backend: string, operation: string, message?: string): BackendNotSupported =>
-  BackendNotSupported.forOperation(backend, operation, message === undefined ? undefined : { message });
+export const notSupported: {
+  (backend: string, operation: string, options?: BackendNotSupportedOptions): BackendNotSupported;
+  (operation: string, options?: BackendNotSupportedOptions): (backend: string) => BackendNotSupported;
+} = dual(
+  isBackendNotSupportedDataFirst,
+  (backend: string, operation: string, options?: BackendNotSupportedOptions): BackendNotSupported =>
+    BackendNotSupported.forOperation(backend, operation, options)
+);
 
 /**
  * Construct a {@link BackendInitError} from an unknown initialization cause.
@@ -509,5 +525,11 @@ export const initError: typeof BackendInitError.fromCause = BackendInitError.fro
  * @category constructors
  * @since 0.0.0
  */
-export const operationError = (backend: string, operation: string, cause: unknown): BackendOperationError =>
-  BackendOperationError.fromCause(backend, operation, { cause });
+export const operationError: {
+  (backend: string, operation: string, cause: unknown): BackendOperationError;
+  (operation: string, cause: unknown): (backend: string) => BackendOperationError;
+} = dual(
+  3,
+  (backend: string, operation: string, cause: unknown): BackendOperationError =>
+    BackendOperationError.fromCause(backend, operation, { cause })
+);

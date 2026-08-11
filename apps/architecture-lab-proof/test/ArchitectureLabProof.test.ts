@@ -40,12 +40,9 @@ describe("architecture lab proof app", () => {
 
   it("round-trips the proof result schema with schema-derived arbitraries", () => {
     fc.assert(
-      fc.property(S.toArbitrary(ArchitectureLabProofResult), (value) => {
+      fc.property(S.toArbitrary(ArchitectureLabProofResult)(fc), (value) => {
         expect(
-          Equal.equals(
-            S.decodeUnknownSync(ArchitectureLabProofResult)(S.encodeSync(ArchitectureLabProofResult)(value)),
-            value
-          )
+          Equal.equals(S.decodeSync(ArchitectureLabProofResult)(S.encodeSync(ArchitectureLabProofResult)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)

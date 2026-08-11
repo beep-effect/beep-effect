@@ -58,7 +58,7 @@ const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstrain
 const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
 const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-validation");
+const sessionId = S.decodeSync(SessionId)("session-validation");
 const material = makeNamedNode("https://example.test/materials#Material");
 const marker = makeNamedNode("https://example.test/marker");
 const markerValue = makeNamedNode("https://example.test/marker-value");

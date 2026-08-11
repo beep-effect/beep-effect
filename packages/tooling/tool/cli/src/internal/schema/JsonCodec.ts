@@ -85,6 +85,13 @@ export const JsonStringCodec = <Sch extends S.Codec<unknown, unknown>>(schema: S
 };
 
 /**
+ * Decoder from JSON text into a schema's decoded type, failing with a
+ * caller-owned error. Named so {@link decodeOrFail}'s data-first and data-last
+ * signatures return the same type rather than two structural twins.
+ */
+type JsonTextDecoder<Sch extends S.Codec<unknown, unknown>, E> = (text: string) => Effect.Effect<Sch["Type"], E>;
+
+/**
  * Decode JSON text through a schema, mapping any `SchemaError` to a caller-owned
  * error at the boundary.
  *
@@ -113,18 +120,18 @@ export const JsonStringCodec = <Sch extends S.Codec<unknown, unknown>>(schema: S
  */
 export const decodeOrFail: {
   <Sch extends S.Codec<unknown, unknown>, E>(
+    toError: (error: S.SchemaError) => E
+  ): (schema: Sch) => JsonTextDecoder<Sch, E>;
+  <Sch extends S.Codec<unknown, unknown>, E>(
     schema: Sch,
     toError: (error: S.SchemaError) => E
-  ): (text: string) => Effect.Effect<Sch["Type"], E>;
-  <Sch extends S.Codec<unknown, unknown>, E>(
-    toError: (error: S.SchemaError) => E
-  ): (schema: Sch) => (text: string) => Effect.Effect<Sch["Type"], E>;
+  ): JsonTextDecoder<Sch, E>;
 } = dual(
   2,
   <Sch extends S.Codec<unknown, unknown>, E>(
     schema: Sch,
     toError: (error: S.SchemaError) => E
-  ): ((text: string) => Effect.Effect<Sch["Type"], E>) => {
+  ): JsonTextDecoder<Sch, E> => {
     const decode = S.decodeUnknownEffect(S.fromJsonString(schema));
     return (text) => decode(text).pipe(Effect.mapError(toError));
   }

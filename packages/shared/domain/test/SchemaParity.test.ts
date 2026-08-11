@@ -30,7 +30,7 @@ const CustomDocumentId = makeSharedId("document", {
 });
 
 const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options?: { readonly numRuns?: number }) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -116,7 +116,7 @@ describe("shared-domain schema parity", () => {
     "keeps fromString byte-identical with the LocalDateFromString codec",
     Effect.fnUntraced(function* () {
       const viaHelper = yield* fromString("2024-06-15");
-      const viaSchema = yield* S.decodeUnknownEffect(LocalDateFromString)("2024-06-15");
+      const viaSchema = yield* S.decodeEffect(LocalDateFromString)("2024-06-15");
 
       assert.strictEqual(Equal.equals(viaHelper, viaSchema), true);
       assert.deepEqual(yield* S.encodeEffect(LocalDateFromString)(viaHelper), "2024-06-15");

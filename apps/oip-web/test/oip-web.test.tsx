@@ -44,7 +44,7 @@ import {
 } from "@/content";
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 
-const contactFormEmail = Result.getOrThrow(S.decodeUnknownResult(EmailString)("tom@example.com"));
+const contactFormEmail = Result.getOrThrow(S.decodeResult(EmailString)("tom@example.com"));
 
 vi.mock("next/image", () =>
   vi.importActual<typeof import("react")>("react").then((ReactModule) => {
@@ -165,13 +165,13 @@ const setWindowScrollY = (scrollY: number) =>
     value: scrollY,
   });
 
-const OipSiteContentArbitrary = S.toArbitrary(OipSiteContent);
+const OipSiteContentArbitrary = S.toArbitrary(OipSiteContent)(fc);
 const OipSiteContentEquivalence = S.toEquivalence(OipSiteContent);
-const ContactSubmissionArbitrary = S.toArbitrary(ContactSubmission);
+const ContactSubmissionArbitrary = S.toArbitrary(ContactSubmission)(fc);
 const ContactSubmissionEquivalence = S.toEquivalence(ContactSubmission);
-const ContactSubmissionFormPayloadArbitrary = S.toArbitrary(ContactSubmissionFormPayload);
+const ContactSubmissionFormPayloadArbitrary = S.toArbitrary(ContactSubmissionFormPayload)(fc);
 const ContactSubmissionFormPayloadEquivalence = S.toEquivalence(ContactSubmissionFormPayload);
-const ContactSubmissionResponseArbitrary = S.toArbitrary(ContactSubmissionResponse);
+const ContactSubmissionResponseArbitrary = S.toArbitrary(ContactSubmissionResponse)(fc);
 const ContactSubmissionResponseEquivalence = S.toEquivalence(ContactSubmissionResponse);
 const encodeOipSiteContent = S.encodeSync(OipSiteContent);
 const decodeOipSiteContent = S.decodeUnknownSync(OipSiteContent);
@@ -286,7 +286,12 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         const contactPayload = validContactPayload();
         const submission = yield* ContactSubmission.decodeUnknownEffect(contactPayload);
         const submissionFromAlias = yield* decodeContactSubmission(contactPayload);
+        const submissionWithOptionNamedField = yield* decodeContactSubmission({
+          ...contactPayload,
+          errors: "all",
+        });
         expect(submission).toEqual(submissionFromAlias);
+        expect(submissionWithOptionNamedField).toEqual(submission);
       })
     ));
 

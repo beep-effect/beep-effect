@@ -274,7 +274,7 @@ export type PacerConfigLoadOptionsInput = typeof PacerConfigLoadOptions.Encoded;
  */
 export const loadPacerConfig = Effect.fn("Pacer.loadPacerConfig")((rawOptions: PacerConfigLoadOptionsInput) =>
   Effect.gen(function* () {
-    const options = yield* S.decodeUnknownEffect(PacerConfigLoadOptions)(rawOptions).pipe(
+    const options = yield* S.decodeEffect(PacerConfigLoadOptions)(rawOptions).pipe(
       Effect.mapError((cause) => PacerConfigError.make_(unknownCauseMessage(cause)))
     );
     const loginId = yield* Config.redacted(PACER_ENV.username);

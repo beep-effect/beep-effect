@@ -63,8 +63,8 @@ const message = GraphMessage.make({ id: MessageId, subject: O.some("Review") });
 const event = GraphEvent.make({ id: EventId, subject: O.some("Planning") });
 const listItem = GraphListItem.make({ id: "list-item-id", fields: O.none() });
 
-const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError);
-const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig);
+const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError)(fc);
+const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig)(fc);
 const sameM365ToolError = S.toEquivalence(M365ToolError);
 const sameM365McpServerConfig = S.toEquivalence(M365McpServerConfig);
 
@@ -209,16 +209,14 @@ describe("M365 MCP server", () => {
       fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
         assert.isTrue(
           sameM365ToolError(
-            Result.getOrThrow(
-              S.decodeUnknownResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))
-            ),
+            Result.getOrThrow(S.decodeResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))),
             failure
           )
         );
         assert.isTrue(
           sameM365McpServerConfig(
             Result.getOrThrow(
-              S.decodeUnknownResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
+              S.decodeResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
             ),
             config
           )

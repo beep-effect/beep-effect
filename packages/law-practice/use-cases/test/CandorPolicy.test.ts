@@ -89,7 +89,7 @@ type SourceEntry = {
  * what makes declared supersession meaningful.
  */
 const observation = Effect.fnUntraced(function* (name: string, text: string) {
-  const hex = yield* S.decodeUnknownEffect(Sha256HexFromBytes)(utf8.encode(text));
+  const hex = yield* S.decodeEffect(Sha256HexFromBytes)(utf8.encode(text));
   const digest = `sha256:${hex}`;
   const encoded = {
     extractor: { name: "utf8", version: "1" },
@@ -119,7 +119,7 @@ type EventOptions = {
   readonly discovery?: "AiDiscovered" | "ExaminerObserved";
   readonly possibleDuplicateOf?: number;
   readonly quarantine?: { readonly rawDetail: string; readonly reason: "unknown-code" | "malformed-record" };
-  readonly reference?: string;
+  readonly reference?: string | null;
   readonly supersedes?: { readonly eventId: number; readonly textDigest: string };
 };
 
@@ -136,7 +136,7 @@ const eventFixture = (id: number, o: Observation, options: EventOptions = {}) =>
     observedAt: id,
     possibleDuplicateOf: options.possibleDuplicateOf ?? null,
     quarantine: options.quarantine ?? null,
-    reference: { number: options.reference ?? "7654321" },
+    reference: options.reference === null ? {} : { number: options.reference ?? "7654321" },
     supersedes: options.supersedes ?? null,
   });
 
@@ -214,7 +214,7 @@ const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =
   Layer.mergeAll(CandorPolicyLive, readerLayer(build), resolverLayer(build)).pipe(Layer.provideMerge(TestCrypto));
 
 const evaluateFiling = Effect.fnUntraced(function* () {
-  const citingApplication = yield* S.decodeUnknownEffect(CitingApplicationIdentity)(FILING_ENCODED);
+  const citingApplication = yield* S.decodeEffect(CitingApplicationIdentity)(FILING_ENCODED);
   const policy = yield* CandorPolicy;
   return yield* policy.evaluate(CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(1) }));
 });
@@ -302,6 +302,34 @@ const supersession = (options: {
 
     return { dispositions, events, sources: [sourceEntry(older), sourceEntry(newer)] } satisfies Fixture;
   });
+
+/** A crafted head tries to retire a different patent citation from the same source. */
+const foreignReferenceSupersession = Effect.fnUntraced(function* () {
+  const older = yield* observation("a", TEXT_A);
+  const newer = yield* observation("a", TEXT_A2);
+  return {
+    dispositions: [yield* dispositionFixture(10, targets(2, newer))],
+    events: [
+      yield* eventFixture(1, older),
+      yield* eventFixture(2, newer, { reference: "9999999", supersedes: targets(1, older) }),
+    ],
+    sources: [sourceEntry(older), sourceEntry(newer)],
+  } satisfies Fixture;
+});
+
+/** A crafted head tries to supersede through two equally empty references. */
+const emptyReferenceSupersession = Effect.fnUntraced(function* () {
+  const older = yield* observation("a", TEXT_A);
+  const newer = yield* observation("a", TEXT_A2);
+  return {
+    dispositions: [yield* dispositionFixture(10, targets(2, newer))],
+    events: [
+      yield* eventFixture(1, older, { reference: null }),
+      yield* eventFixture(2, newer, { reference: null, supersedes: targets(1, older) }),
+    ],
+    sources: [sourceEntry(older), sourceEntry(newer)],
+  } satisfies Fixture;
+});
 
 /** Two observations of one source, neither declaring supersession. */
 const forkedLineage = Effect.fnUntraced(function* () {
@@ -498,6 +526,36 @@ describe("CandorPolicy — declared supersession moves currency", () => {
         const verdict = yield* evaluateFiling();
         expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
         expect(blockedEventIds(verdict)).toEqual([1, 2]);
+      })
+    );
+  });
+});
+
+describe("CandorPolicy — supersession stays within one patent reference", () => {
+  layer(scenario(emptyReferenceSupersession()))((it) => {
+    it.effect("does not honor equality between two empty patent references", () =>
+      Effect.gen(function* () {
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
+        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+      })
+    );
+  });
+
+  layer(scenario(foreignReferenceSupersession()))((it) => {
+    it.effect("does not release an AI citation through a foreign reference's disposition", () =>
+      Effect.gen(function* () {
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
+        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+      })
+    );
+  });
+
+  layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()))((it) => {
+    it.effect("honors supersession between equal references with a publication number", () =>
+      Effect.gen(function* () {
+        expectReleased(yield* evaluateFiling());
       })
     );
   });

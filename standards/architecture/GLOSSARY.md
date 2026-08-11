@@ -12,14 +12,14 @@ invariants, or transitions span multiple child entities or values.
 ## Artifact Family
 
 The top-level architecture class for a non-slice artifact. The canonical
-non-slice families are `foundation`, `drivers`, and `tooling`.
+non-slice families are `foundation`, `drivers`, `tooling`, and `ecosystem`.
 
 ## Artifact Kind
 
 The canonical role inside an artifact family. Every non-slice artifact belongs
 to exactly one family. Kinds remain required for families that intentionally
-declare a kind segment, such as `foundation` and `tooling`; `drivers` is the
-flat-family exception.
+declare a kind segment, such as `foundation` and `tooling`; `drivers` and
+`ecosystem` are the flat-family exceptions.
 
 ## Adapter
 
@@ -147,6 +147,17 @@ by default.
 The non-slice family for flat repo-level external boundary wrappers. Drivers may
 depend on `foundation` and other drivers when acyclic, but they do not depend on
 product slices or the shared kernel.
+
+## Ecosystem Package
+
+A member of the flat `ecosystem` family
+(`packages/ecosystem/<name>` = `@beep/<name>` = the npm name): a repo-authored
+library built for external consumption and consumed in-repo like any
+third-party dependency. Member `src/` and runtime manifest edges
+(`dependencies`/`peerDependencies`) are `@beep/*`-free; tests and
+`devDependencies` are unrestricted. Published-package standards supersede repo
+effect-first style laws inside members. Charter:
+[14-ecosystem-packages.md](./14-ecosystem-packages.md).
 
 ## Foundation Family
 

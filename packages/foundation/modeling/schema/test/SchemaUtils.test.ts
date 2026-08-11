@@ -22,7 +22,7 @@ describe("pluck", () => {
       column2: S.String,
     }).pipe(pluck("column1"));
 
-    expect(S.decodeUnknownSync(schema)({ column1: "1" })).toBe(1);
+    expect(S.decodeSync(schema)({ column1: "1" })).toBe(1);
   });
 
   it("encodes the selected field value back into a one-property struct", () => {
@@ -237,14 +237,14 @@ describe("withEmptyArrayDefaults", () => {
       tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
     });
 
-    expect(A.isReadonlyArrayEmpty(S.decodeUnknownSync(Settings)({}).tags)).toBe(true);
+    expect(A.isReadonlyArrayEmpty(S.decodeSync(Settings)({}).tags)).toBe(true);
   });
 
   it("supports the data-first call style", () => {
     const Tags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
     const Settings = S.Struct({ tags: Tags });
 
-    expect(A.isReadonlyArrayEmpty(S.decodeUnknownSync(Settings)({ tags: undefined }).tags)).toBe(true);
+    expect(A.isReadonlyArrayEmpty(S.decodeSync(Settings)({ tags: undefined }).tags)).toBe(true);
   });
 });
 
@@ -271,8 +271,8 @@ describe("withNoneDefault", () => {
       label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     });
 
-    expect(O.isNone(S.decodeUnknownSync(Node)({}).label)).toBe(true);
-    expect(S.decodeUnknownSync(Node)({ label: "x" }).label).toStrictEqual(O.some("x"));
+    expect(O.isNone(S.decodeSync(Node)({}).label)).toBe(true);
+    expect(S.decodeSync(Node)({ label: "x" }).label).toStrictEqual(O.some("x"));
   });
 });
 
@@ -297,7 +297,7 @@ describe("withConstantDefault", () => {
     });
 
     expect(() => S.decodeUnknownSync(Node)({})).toThrow();
-    expect(S.decodeUnknownSync(Node)({ version: 1 }).version).toBe(1);
+    expect(S.decodeSync(Node)({ version: 1 }).version).toBe(1);
   });
 });
 
@@ -306,7 +306,7 @@ describe("withCodecStatics", () => {
 
   it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
     fc.assert(
-      fc.property(S.toArbitrary(S.NonEmptyString), (sampled) => {
+      fc.property(S.toArbitrary(S.NonEmptyString)(fc), (sampled) => {
         expect(Slug.is(sampled)).toBe(S.is(S.NonEmptyString)(sampled));
         expect(Slug.fromUnknown(sampled)).toBe(sampled);
         expect(O.isSome(Slug.decodeOption(sampled))).toBe(true);

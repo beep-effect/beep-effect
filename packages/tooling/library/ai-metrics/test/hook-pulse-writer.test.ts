@@ -583,7 +583,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     // round-trip half proves the NDJSON line the ledger stores is lossless for
     // every such row, which is what P4 replay actually depends on.
     fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1), (value) => {
+      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
         const line = encodeHookPulseRow(value);
 
         expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
@@ -1118,6 +1118,24 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         // that an overwrite is unambiguous rather than clock-resolution noise.
         expect(yield* readSentinel(store)).toEqual(O.some(seededSentinelJson));
         expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
+      })
+    )
+  );
+
+  it.effect("fails loudly when a dangling sentinel prevents disarm", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* makeSwitchStore();
+        yield* fs.makeDirectory(store.evidenceRoot, { recursive: true });
+        yield* fs.symlink(path.join(store.evidenceRoot, "missing-sentinel-target"), store.sentinelPath);
+
+        const run = yield* runSwitch(store, ["disarm", "privacy-stop"]);
+
+        expect(run.exitCode).not.toBe(0);
+        expect(run.stdout).toBe("");
+        expect(run.stderr).toContain("sentinel was not published");
       })
     )
   );

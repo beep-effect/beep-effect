@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Config, Console, Effect, MutableHashMap, Order, pipe, Semaphore } from "effect";
+import { Config, Console, Effect, MutableHashMap, Order, pipe, Redacted, Semaphore } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -16,6 +16,8 @@ import { QualityScriptCommandError } from "../Quality.errors.ts";
 import {
   defaultJSDocMigrateExtractPath,
   defaultJSDocMigrateTitlesPath,
+  JSDocMigrateInlineText,
+  JSDocMigrateProxyUrl,
   JSDocMigrateRemarksRouting,
   JSDocMigrateTitleRecord,
 } from "./JSDocMigrate.schemas.ts";
@@ -37,38 +39,25 @@ const migrateTitlesError = (message: string): QualityScriptCommandError =>
     exitCode: 1,
   });
 
-/**
- * Env keys that may hold the local CLIProxyAPI bearer (OpenAI-compatible
- * clients use `OPENAI_API_KEY`; Claude Code shells often export
- * `ANTHROPIC_AUTH_TOKEN` to the same client-token).
- */
-const proxyAuthEnvKeys = ["OPENAI_API_KEY", "CLI_PROXY_API_KEY", "ANTHROPIC_AUTH_TOKEN"] as const;
-
-const resolveProxyAuthToken: Effect.Effect<O.Option<string>> = Effect.gen(function* () {
-  for (const key of proxyAuthEnvKeys) {
-    const value = yield* Config.string(key).pipe(Config.option, Effect.orDie);
-    if (O.isSome(value) && Str.isNonEmpty(value.value)) {
-      return O.some(value.value);
-    }
-  }
-  return O.none<string>();
-});
+const resolveProxyAuthToken: Effect.Effect<O.Option<Redacted.Redacted<string>>> = Config.redacted(
+  "CLI_PROXY_API_KEY"
+).pipe(Config.option, Effect.orDie, Effect.map(O.filter((value) => Str.isNonEmpty(Redacted.value(value)))));
 
 const authorizeProxyRequest = (
   request: HttpClientRequest.HttpClientRequest,
-  token: O.Option<string>
+  token: O.Option<Redacted.Redacted<string>>
 ): HttpClientRequest.HttpClientRequest =>
   O.match(token, {
     onNone: () => request,
-    onSome: (value) => HttpClientRequest.setHeader(request, "Authorization", `Bearer ${value}`),
+    onSome: (value) => HttpClientRequest.setHeader(request, "Authorization", `Bearer ${Redacted.value(value)}`),
   });
 
 const TitleSuggestion = S.Struct({
   anchor: S.String,
-  titles: S.Array(S.String),
+  titles: S.Array(JSDocMigrateInlineText),
   remarks: S.optionalKey(JSDocMigrateRemarksRouting),
   leadEnd: S.optionalKey(S.Int),
-  seePurposes: S.Array(S.String).pipe(S.optionalKey),
+  seePurposes: S.Array(JSDocMigrateInlineText).pipe(S.optionalKey),
 });
 
 const TitleSuggestionList = S.Array(TitleSuggestion);
@@ -83,6 +72,7 @@ const ChatCompletionResponse = S.Struct({
 
 const decodeChatCompletion = S.decodeUnknownEffect(ChatCompletionResponse);
 const decodeSuggestionList = S.decodeUnknownEffect(S.fromJsonString(TitleSuggestionList));
+const decodeProxyUrl = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
 
 /**
  * Default local CLIProxyAPI endpoint used by the title pass.
@@ -465,7 +455,7 @@ const chatCompletionContent = (
             const snippet = Str.slice(0, 240)(bodyText);
             return Effect.fail(migrateTitlesError(`Proxy returned HTTP ${candidate.status}: ${snippet}`));
           }
-          return S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(bodyText).pipe(
+          return S.decodeEffect(S.fromJsonString(S.Unknown))(bodyText).pipe(
             Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response body is not JSON.")),
             Effect.flatMap((body) =>
               decodeChatCompletion(body).pipe(
@@ -498,15 +488,16 @@ const titleRetryBackoffMs = (message: string, tryIndex: number): number => {
 };
 
 const requestTitlesForFile = Effect.fn("JSDocMigrateTitles.requestTitlesForFile")(function* (
-  proxyUrl: string,
+  proxyUrl: URL,
   model: string,
   pending: ReadonlyArray<JSDocMigrateExtractRecord>
 ): Effect.fn.Return<ReadonlyArray<JSDocMigrateTitleRecord>, QualityScriptCommandError, HttpClient.HttpClient> {
   const client = yield* HttpClient.HttpClient;
   const proxyToken = yield* resolveProxyAuthToken;
+  const proxyHref = Str.endsWith("/")(proxyUrl.href) ? Str.slice(0, -1)(proxyUrl.href) : proxyUrl.href;
   const attempt = Effect.fnUntraced(function* (previousProblem: string | undefined) {
     const request = authorizeProxyRequest(
-      HttpClientRequest.post(`${proxyUrl}/v1/chat/completions`).pipe(
+      HttpClientRequest.post(`${proxyHref}/v1/chat/completions`).pipe(
         HttpClientRequest.bodyJsonUnsafe({
           model,
           messages: [{ role: "user", content: titlesPromptWithRetryNote(pending, previousProblem) }],
@@ -565,7 +556,9 @@ export const runJSDocMigrateTitles = Effect.fn("JSDocMigrateTitles.run")(functio
   const { fs, path, repoRoot } = yield* jsdocMigrateRunContext();
   const extractPath = path.resolve(repoRoot, options.extract ?? defaultJSDocMigrateExtractPath);
   const titlesPath = path.resolve(repoRoot, options.titles ?? defaultJSDocMigrateTitlesPath);
-  const proxyUrl = options.proxyUrl ?? defaultJSDocMigrateProxyUrl;
+  const proxyUrl = yield* decodeProxyUrl(options.proxyUrl ?? defaultJSDocMigrateProxyUrl).pipe(
+    Effect.mapError((cause) => QualityScriptCommandError.new(cause, "JSDoc title proxy URL must be loopback HTTP."))
+  );
   const model = options.model ?? defaultJSDocMigrateTitlesModel;
 
   const extract = yield* readJSDocMigrateExtractRequired(extractPath);

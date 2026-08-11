@@ -46,19 +46,19 @@ type EcfrTestHttpShape = {
 
 class EcfrTestHttp extends Context.Service<EcfrTestHttp, EcfrTestHttpShape>()($TestI`EcfrTestHttp`) {}
 
-const EcfrConfigInputArbitrary = S.toArbitrary(EcfrConfigInput);
-const EcfrErrorReasonArbitrary = S.toArbitrary(EcfrErrorReason);
-const EcfrErrorOptionsArbitrary = S.toArbitrary(EcfrErrorOptions).map((options) =>
+const EcfrConfigInputArbitrary = S.toArbitrary(EcfrConfigInput)(fc);
+const EcfrErrorReasonArbitrary = S.toArbitrary(EcfrErrorReason)(fc);
+const EcfrErrorOptionsArbitrary = S.toArbitrary(EcfrErrorOptions)(fc).map((options) =>
   EcfrErrorOptions.make({ status: options.status })
 );
-const EcfrErrorArbitrary = S.toArbitrary(EcfrError).map((error) =>
+const EcfrErrorArbitrary = S.toArbitrary(EcfrError)(fc).map((error) =>
   EcfrError.of(error.reason, EcfrErrorOptions.make({ status: error.status }))
 );
-const AgenciesResponseArbitrary = S.toArbitrary(AgenciesResponse);
-const CorrectionsResponseArbitrary = S.toArbitrary(CorrectionsResponse);
-const SearchResultsResponseArbitrary = S.toArbitrary(SearchResultsResponse);
-const StructureNodeArbitrary = S.toArbitrary(StructureNode);
-const VersionsResponseArbitrary = S.toArbitrary(VersionsResponse);
+const AgenciesResponseArbitrary = S.toArbitrary(AgenciesResponse)(fc);
+const CorrectionsResponseArbitrary = S.toArbitrary(CorrectionsResponse)(fc);
+const SearchResultsResponseArbitrary = S.toArbitrary(SearchResultsResponse)(fc);
+const StructureNodeArbitrary = S.toArbitrary(StructureNode)(fc);
+const VersionsResponseArbitrary = S.toArbitrary(VersionsResponse)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

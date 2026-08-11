@@ -19,6 +19,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -194,13 +195,50 @@ export const MAX_SCAN_DEPTH = 16;
  * @category utilities
  * @since 0.0.0
  */
-export const scanSensitiveText = (surface: string, value: string): ReadonlyArray<SensitiveTextHit> =>
-  A.map(
-    A.filter(rules, (rule) => rule.pattern.test(value)),
-    (rule) => SensitiveTextHit.make({ code: rule.code, surface })
-  );
+export const scanSensitiveText: {
+  (value: string): (surface: string) => ReadonlyArray<SensitiveTextHit>;
+  (surface: string, value: string): ReadonlyArray<SensitiveTextHit>;
+} = dual(
+  2,
+  (surface: string, value: string): ReadonlyArray<SensitiveTextHit> =>
+    A.map(
+      A.filter(rules, (rule) => rule.pattern.test(value)),
+      (rule) => SensitiveTextHit.make({ code: rule.code, surface })
+    )
+);
 
 const decodeRecord = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
+
+const scanSensitiveUnknownAtDepth = (
+  surface: string,
+  value: unknown,
+  depth: number
+): ReadonlyArray<SensitiveTextHit> => {
+  if (depth > MAX_SCAN_DEPTH) {
+    return A.of(SensitiveTextHit.make({ code: "max-scan-depth", surface }));
+  }
+
+  if (P.isString(value)) {
+    return scanSensitiveText(surface, value);
+  }
+
+  if (A.isArray(value)) {
+    return A.flatMap(value, (entry, index) => scanSensitiveUnknownAtDepth(`${surface}[${index}]`, entry, depth + 1));
+  }
+
+  const record = decodeRecord(value);
+  if (O.isSome(record)) {
+    return A.flatMap(R.keys(record.value), (key) => {
+      const nested = `${surface}.${key}`;
+      return A.appendAll(
+        scanSensitiveText(nested, key),
+        scanSensitiveUnknownAtDepth(nested, record.value[key], depth + 1)
+      );
+    });
+  }
+
+  return A.empty<SensitiveTextHit>();
+};
 
 /**
  * Walk an arbitrary decoded JSON value and report every refusal it carries.
@@ -229,34 +267,17 @@ const decodeRecord = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
  *
  * @param surface - Logical address prefix for nested hits.
  * @param value - Decoded JSON value to walk.
- * @param depth - Current recursion depth; callers pass none.
  * @returns Every refusal the value carries, addressed by surface.
  * @category utilities
  * @since 0.0.0
  */
-export const scanSensitiveUnknown = (surface: string, value: unknown, depth = 0): ReadonlyArray<SensitiveTextHit> => {
-  if (depth > MAX_SCAN_DEPTH) {
-    return A.of(SensitiveTextHit.make({ code: "max-scan-depth", surface }));
-  }
-
-  if (P.isString(value)) {
-    return scanSensitiveText(surface, value);
-  }
-
-  if (A.isArray(value)) {
-    return A.flatMap(value, (entry, index) => scanSensitiveUnknown(`${surface}[${index}]`, entry, depth + 1));
-  }
-
-  const record = decodeRecord(value);
-  if (O.isSome(record)) {
-    return A.flatMap(R.keys(record.value), (key) => {
-      const nested = `${surface}.${key}`;
-      return A.appendAll(scanSensitiveText(nested, key), scanSensitiveUnknown(nested, record.value[key], depth + 1));
-    });
-  }
-
-  return A.empty<SensitiveTextHit>();
-};
+export const scanSensitiveUnknown: {
+  (value: unknown): (surface: string) => ReadonlyArray<SensitiveTextHit>;
+  (surface: string, value: unknown): ReadonlyArray<SensitiveTextHit>;
+} = dual(
+  2,
+  (surface: string, value: unknown): ReadonlyArray<SensitiveTextHit> => scanSensitiveUnknownAtDepth(surface, value, 0)
+);
 
 /**
  * Render hits as stable, value-free surface labels.

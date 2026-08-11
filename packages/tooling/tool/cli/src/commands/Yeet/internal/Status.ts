@@ -10,6 +10,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -27,7 +28,14 @@ import {
   unprovenGateVerdicts,
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
-import { YeetMergeReady, YeetMergeReadyCriteria, YeetMergeReadyCriterion, YeetVerdict } from "./Verdict.ts";
+import {
+  mergeReadyCriterionHolds,
+  YeetMergeReady,
+  YeetMergeReadyCriteria,
+  YeetMergeReadyCriterion,
+  YeetMergeReadyFromEncoded,
+  YeetVerdict,
+} from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GateStalenessVerdict } from "./GateStaleness.ts";
@@ -93,6 +101,12 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
 /**
  * Summary for a Yeet artifact read by status.
  *
+ * **Details**
+ *
+ * Closeout summaries carry `reviewedHeadSha` so merge readiness can reject a
+ * report written for an older pull request head. Legacy summaries decode with
+ * no recorded head and therefore remain stale.
+ *
  * **Example** (Construct a yeet status artifact)
  *
  * ```ts
@@ -118,11 +132,12 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
     mode: S.optionalKey(S.String),
     outcome: S.optionalKey(S.String),
     repairCommand: S.optionalKey(S.String),
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     schemaVersion: S.optionalKey(S.String),
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetStatusArtifact", {
-    description: "Compact summary for a Yeet artifact read by status.",
+    description: "Compact summary for a Yeet artifact read by status, including closeout head binding.",
   })
 ) {}
 
@@ -256,7 +271,7 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     statusPath: S.String,
     verdict: YeetStatusArtifact,
     worktree: YeetStatusWorktree,
-    mergeReady: YeetMergeReady.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
     unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
   },
@@ -525,6 +540,7 @@ const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatu
     detail: `PR #${report.prNumber}: ${report.issueCount} closeout issue(s), ${report.actionableReviewThreadCount} actionable thread(s)`,
     issueCount: report.issueCount,
     path,
+    reviewedHeadSha: report.reviewedHeadSha,
     schemaVersion: report.schemaVersion,
     state: "present",
     greptileScore: O.fromUndefinedOr(report.greptile.score),
@@ -899,6 +915,8 @@ const checksAreGreen = (remote: YeetStatusRemote): boolean =>
     O.exists(() => (remote.failingCheckCount ?? 0) === 0 && (remote.pendingCheckCount ?? 0) === 0)
   );
 
+const sameHeadSha = S.toEquivalence(S.String);
+
 // The live remote thread count is the authoritative surface; the closeout
 // artifact is a prior run's record and only blocks when it EXISTS and still
 // reports open issues. Requiring its presence would conflate "closeout has
@@ -911,17 +929,37 @@ const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemo
     O.exists((count) => count > 0)
   );
 
+// The closeout-run criterion binds to a specific revision: a closeout artifact
+// satisfies it only when the head it reviewed is the head the PR currently
+// points at. Legacy reports without a recorded head never bind.
+const closeoutBindsCurrentHead = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
+  pipe(
+    closeout.reviewedHeadSha,
+    O.exists((reviewedHeadSha) => O.exists(remote.headSha, (headSha) => sameHeadSha(reviewedHeadSha, headSha)))
+  );
+
+// The first unsatisfied hard criterion in protocol order, or `None` when every
+// one holds. Order mirrors the closeout -> checks -> threads escalation the
+// merge protocol asks an operator to walk.
+const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetMergeReadyCriterion> =>
+  pipe(
+    YeetMergeReadyCriterion.Options,
+    A.findFirst((criterion) => !mergeReadyCriterionHolds(criteria, criterion))
+  );
+
 /**
  * Fold the merge protocol's three surfaces into one merge-readiness verdict.
  *
  * **Details**
  *
  * Status already fetches everything the protocol asks a human to read, so the
- * only thing missing was a name for the answer. `checks-green` and
- * `threads-resolved` are the hard criteria and are reported in that order —
- * a red pipeline is the blocker worth acting on first even when threads are
- * also open. The Greptile score rides along as display-only: it is a target the
- * operator judges, not a gate this verdict enforces.
+ * only thing missing was a name for the answer. `closeout-run`, `checks-green`,
+ * and `threads-resolved` are the hard criteria. A missing closeout artifact is
+ * its own blocker while the live thread criterion continues to report only the
+ * state it knows. A present closeout satisfies `closeout-run` only when its
+ * recorded reviewed head equals the current remote head; legacy headless and
+ * stale reports remain blockers. The Greptile score rides along as display-only:
+ * it is a target the operator judges, not a gate this verdict enforces.
  *
  * **Gotchas**
  *
@@ -957,38 +995,31 @@ const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemo
  * @category diagnostics
  * @since 0.0.0
  */
-export const deriveYeetMergeReady = (
-  closeout: YeetStatusArtifact,
-  remote: YeetStatusRemote
-): O.Option<YeetMergeReady> => {
+export const deriveYeetMergeReady: {
+  (remote: YeetStatusRemote): (closeout: YeetStatusArtifact) => O.Option<YeetMergeReady>;
+  (closeout: YeetStatusArtifact, remote: YeetStatusRemote): O.Option<YeetMergeReady>;
+} = dual(2, (closeout: YeetStatusArtifact, remote: YeetStatusRemote): O.Option<YeetMergeReady> => {
   if (!remote.checked || !remote.available) {
     return O.none();
   }
-  const checksGreen = checksAreGreen(remote);
-  const threadsResolved = threadsAreResolved(closeout, remote);
-  const failing = !checksGreen
-    ? O.some(YeetMergeReadyCriterion.Enum["checks-green"])
-    : threadsResolved
-      ? O.none<YeetMergeReadyCriterion>()
-      : O.some(YeetMergeReadyCriterion.Enum["threads-resolved"]);
-  return O.some(
-    YeetMergeReady.make({
-      ready: O.isNone(failing),
-      failing,
-      criteria: YeetMergeReadyCriteria.make({
-        checksGreen,
-        threadsResolved,
-        greptileScore: closeout.greptileScore,
-      }),
-    })
-  );
-};
+  const criteria = YeetMergeReadyCriteria.make({
+    closeoutRun: closeout.state === "present" && closeoutBindsCurrentHead(closeout, remote),
+    checksGreen: checksAreGreen(remote),
+    threadsResolved: threadsAreResolved(closeout, remote),
+    greptileScore: closeout.greptileScore,
+  });
+  const failing = firstFailingCriterion(criteria);
+  return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
+});
 
 const nextCommandForRemote = (
   verdict: YeetStatusArtifact,
   closeout: YeetStatusArtifact,
   remote: YeetStatusRemote
 ): string => {
+  if (closeout.state !== "present") {
+    return CLOSEOUT_COMMAND;
+  }
   if (O.exists(deriveYeetMergeReady(closeout, remote), (mergeReady) => mergeReady.ready)) {
     return MERGE_READY_COMMAND;
   }
@@ -1255,4 +1286,16 @@ export const yeetStatusPathForTesting = statusPathForContext;
  * @category testing
  * @since 0.0.0
  */
-export const yeetStatusNextCommandForTesting = nextCommandForStatus;
+export const yeetStatusNextCommandForTesting: {
+  (
+    verdict: YeetStatusArtifact,
+    closeout: YeetStatusArtifact,
+    remote: YeetStatusRemote
+  ): (worktree: YeetStatusWorktree) => string;
+  (
+    worktree: YeetStatusWorktree,
+    verdict: YeetStatusArtifact,
+    closeout: YeetStatusArtifact,
+    remote: YeetStatusRemote
+  ): string;
+} = dual(4, nextCommandForStatus);

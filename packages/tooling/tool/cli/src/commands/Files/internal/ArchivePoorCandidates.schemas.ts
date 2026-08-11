@@ -6,11 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { MediaDimensions, PositiveMediaDimension } from "./Media.schemas.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/ArchivePoorCandidates.schemas");
 
@@ -508,7 +510,10 @@ export class ArchivePoorCandidatesManifest extends S.Class<ArchivePoorCandidates
  * @category decoding
  * @since 0.0.0
  */
-export const decodeArchivePoorCandidatesOptions = S.decodeUnknownEffect(ArchivePoorCandidatesOptions);
+export const decodeArchivePoorCandidatesOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ArchivePoorCandidatesOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ArchivePoorCandidatesOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ArchivePoorCandidatesOptions));
 
 /**
  * Encode a poor-candidate archive manifest into its JSON-safe shape.
@@ -524,4 +529,12 @@ export const decodeArchivePoorCandidatesOptions = S.decodeUnknownEffect(ArchiveP
  * @category encoding
  * @since 0.0.0
  */
-export const encodeArchivePoorCandidatesManifest = S.encodeUnknownEffect(ArchivePoorCandidatesManifest);
+export const encodeArchivePoorCandidatesManifest: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<typeof ArchivePoorCandidatesManifest.Encoded, S.SchemaError>;
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<typeof ArchivePoorCandidatesManifest.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(ArchivePoorCandidatesManifest));

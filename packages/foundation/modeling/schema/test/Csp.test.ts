@@ -5,7 +5,7 @@ import { FastCheck as fc } from "effect/testing";
 
 describe("CspDirectives", () => {
   it("round-trips schema-derived directive-field samples through encode/decode", () => {
-    const arbitrary = S.toArbitrary(CspDirectives);
+    const arbitrary = S.toArbitrary(CspDirectives)(fc);
     const decode = S.decodeUnknownSync(CspDirectives);
     const encode = S.encodeSync(CspDirectives);
 

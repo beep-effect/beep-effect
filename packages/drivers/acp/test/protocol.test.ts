@@ -1,4 +1,4 @@
-import { Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
+import { Client as AcpClient, Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -41,12 +41,12 @@ const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const decodeRequestPermissionResponse = Schema.decodeEffect(Schema.fromJsonString(RequestPermissionResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
 const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
-const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse);
-const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent);
-const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions);
-const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification);
-const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError);
+const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
+const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse)(fc);
+const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent)(fc);
+const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions)(fc);
+const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification)(fc);
+const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc);
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
@@ -510,6 +510,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const handle = yield* makeHandle({
         ACP_MOCK_EXIT_IMMEDIATELY_CODE: "7",
       });
+      assert.isDefined(AcpClient.layerChildProcess({ handle }));
       const firstMessage = yield* Deferred.make<unknown>();
       const termination = yield* Deferred.make<AcpError.AcpError>();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({

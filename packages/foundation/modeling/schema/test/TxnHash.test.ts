@@ -54,6 +54,6 @@ describe("CryptoTxnHash", () => {
       txnHash: CryptoTxnHash,
     });
 
-    expect(() => S.decodeUnknownSync(Payload)({ txnHash: "invalid" })).toThrow(`at ["txnHash"]`);
+    expect(() => S.decodeSync(Payload)({ txnHash: "invalid" })).toThrow(`at ["txnHash"]`);
   });
 });

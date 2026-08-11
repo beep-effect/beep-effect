@@ -45,7 +45,7 @@ const SCHEMA_CODEC_HELPERS = [
   "encodeSync",
 ] as const;
 const SCHEMA_ARBITRARY_NAMESPACE_NAMES = ["S", "Schema"] as const;
-const SCHEMA_ARBITRARY_HELPERS = ["toArbitrary", "toArbitraryLazy"] as const;
+const SCHEMA_ARBITRARY_HELPERS = ["toArbitrary"] as const;
 const REPO_SCHEMA_ARBITRARY_HELPERS = ["assertSchemaArbitraryDecodesToSelf"] as const;
 // Schema-derived property coverage requires deriving the arbitrary from the
 // schema itself and using it in a property, or through repo-owned helpers that
@@ -109,6 +109,9 @@ export const literalMemberEquals: {
 
 const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").CallExpression): boolean => {
   const expression = callExpression.getExpression();
+  if (Node.isCallExpression(expression)) {
+    return isSchemaArbitraryCallExpression(expression);
+  }
   return (
     Node.isPropertyAccessExpression(expression) &&
     Node.isIdentifier(expression.getExpression()) &&
@@ -215,7 +218,7 @@ const sourceHasSchemaArbitraryPropertyCoverage = (sourceFile: import("ts-morph")
  * ```ts
  * import { sourceTextHasSchemaArbitraryPropertyCoverage } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("fc.property(S.toArbitrary(Worker), (worker) => true)"))
+ * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("fc.property(S.toArbitrary(Worker)(fc), (worker) => true)"))
  * ```
  *
  * @param sourceText - TypeScript source text to inspect.

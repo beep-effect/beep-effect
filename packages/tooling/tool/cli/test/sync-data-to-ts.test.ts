@@ -312,7 +312,7 @@ const csvTarget: SyncDataTarget = {
       canonical,
       recordCount: rows.length,
       summary: `${rows.length} csv rows`,
-      sources: [sourceMetadata(source)],
+      sources: [sourceMetadata(source, {})],
     });
   }).pipe(Effect.withSpan("SyncDataToTsTest.acquireCsv")),
 };
@@ -348,7 +348,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       Effect.gen(function* () {
         const result = yield* syncTargetForTesting(process.cwd(), "dry-run", csvTarget);
         const encoded = yield* S.encodeEffect(SyncDataTargetResult)(result);
-        const decoded = yield* S.decodeUnknownEffect(SyncDataTargetResult)(encoded);
+        const decoded = yield* S.decodeEffect(SyncDataTargetResult)(encoded);
 
         expect(result.fileResults).toHaveLength(2);
         expect(result.canonicalPatch.length).toBeGreaterThan(0);

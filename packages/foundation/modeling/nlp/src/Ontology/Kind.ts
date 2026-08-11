@@ -24,6 +24,7 @@
 import { $NlpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $NlpId.create("Ontology/Kind");
@@ -174,13 +175,20 @@ export type TypedText<K extends TextKind> = S.Schema.Type<ReturnType<typeof Type
 // Smart Constructors
 // =============================================================================
 
-const makeTyped =
-  <K extends TextKind>(kind: K) =>
-  (content: string, metadata?: Record<string, unknown>): TypedText<K> => {
-    const schema = TypedTextSchema(S.Literal(kind));
+type TypedTextConstructor<K extends TextKind> = {
+  (metadata?: Record<string, unknown>): (content: string) => TypedText<K>;
+  (content: string, metadata?: Record<string, unknown>): TypedText<K>;
+};
 
-    return metadata !== undefined ? schema.make({ kind, content, metadata }) : schema.make({ kind, content });
-  };
+const makeTyped = <K extends TextKind>(kind: K): TypedTextConstructor<K> =>
+  dual(
+    (args) => P.isString(args[0]),
+    (content: string, metadata?: Record<string, unknown>): TypedText<K> => {
+      const schema = TypedTextSchema(S.Literal(kind));
+
+      return metadata !== undefined ? schema.make({ kind, content, metadata }) : schema.make({ kind, content });
+    }
+  );
 
 /**
  * Create document-level typed text at the top of the structural hierarchy.
@@ -196,8 +204,7 @@ const makeTyped =
  * @category constructors
  * @since 0.0.0
  */
-export const Document: (content: string, metadata?: Record<string, unknown>) => TypedText<"Document"> =
-  makeTyped("Document");
+export const Document: TypedTextConstructor<"Document"> = makeTyped("Document");
 
 /**
  * Create paragraph-level typed text for a logical block in a document.
@@ -213,8 +220,7 @@ export const Document: (content: string, metadata?: Record<string, unknown>) => 
  * @category constructors
  * @since 0.0.0
  */
-export const Paragraph: (content: string, metadata?: Record<string, unknown>) => TypedText<"Paragraph"> =
-  makeTyped("Paragraph");
+export const Paragraph: TypedTextConstructor<"Paragraph"> = makeTyped("Paragraph");
 
 /**
  * Create sentence-level typed text for a complete utterance or statement.
@@ -230,8 +236,7 @@ export const Paragraph: (content: string, metadata?: Record<string, unknown>) =>
  * @category constructors
  * @since 0.0.0
  */
-export const Sentence: (content: string, metadata?: Record<string, unknown>) => TypedText<"Sentence"> =
-  makeTyped("Sentence");
+export const Sentence: TypedTextConstructor<"Sentence"> = makeTyped("Sentence");
 
 /**
  * Create token-level typed text for one word, symbol, or punctuation mark.
@@ -247,7 +252,7 @@ export const Sentence: (content: string, metadata?: Record<string, unknown>) => 
  * @category constructors
  * @since 0.0.0
  */
-export const Token: (content: string, metadata?: Record<string, unknown>) => TypedText<"Token"> = makeTyped("Token");
+export const Token: TypedTextConstructor<"Token"> = makeTyped("Token");
 
 /**
  * Create character-level typed text for the atomic textual stratum.
@@ -263,8 +268,7 @@ export const Token: (content: string, metadata?: Record<string, unknown>) => Typ
  * @category constructors
  * @since 0.0.0
  */
-export const Character: (content: string, metadata?: Record<string, unknown>) => TypedText<"Character"> =
-  makeTyped("Character");
+export const Character: TypedTextConstructor<"Character"> = makeTyped("Character");
 
 /**
  * Create entity-level typed text for a semantic mention extracted from prose.
@@ -280,7 +284,7 @@ export const Character: (content: string, metadata?: Record<string, unknown>) =>
  * @category constructors
  * @since 0.0.0
  */
-export const Entity: (content: string, metadata?: Record<string, unknown>) => TypedText<"Entity"> = makeTyped("Entity");
+export const Entity: TypedTextConstructor<"Entity"> = makeTyped("Entity");
 
 /**
  * Create relation-level typed text for a semantic edge between entities.
@@ -296,8 +300,7 @@ export const Entity: (content: string, metadata?: Record<string, unknown>) => Ty
  * @category constructors
  * @since 0.0.0
  */
-export const Relation: (content: string, metadata?: Record<string, unknown>) => TypedText<"Relation"> =
-  makeTyped("Relation");
+export const Relation: TypedTextConstructor<"Relation"> = makeTyped("Relation");
 
 /**
  * Create embedding-level typed text for vector-space metadata about content.
@@ -313,8 +316,7 @@ export const Relation: (content: string, metadata?: Record<string, unknown>) => 
  * @category constructors
  * @since 0.0.0
  */
-export const Embedding: (content: string, metadata?: Record<string, unknown>) => TypedText<"Embedding"> =
-  makeTyped("Embedding");
+export const Embedding: TypedTextConstructor<"Embedding"> = makeTyped("Embedding");
 
 /**
  * Create dependency-level typed text for syntactic dependency arcs.
@@ -330,8 +332,7 @@ export const Embedding: (content: string, metadata?: Record<string, unknown>) =>
  * @category constructors
  * @since 0.0.0
  */
-export const Dependency: (content: string, metadata?: Record<string, unknown>) => TypedText<"Dependency"> =
-  makeTyped("Dependency");
+export const Dependency: TypedTextConstructor<"Dependency"> = makeTyped("Dependency");
 
 /**
  * Create chunk-level typed text for shallow-parsing constituents.
@@ -347,7 +348,7 @@ export const Dependency: (content: string, metadata?: Record<string, unknown>) =
  * @category constructors
  * @since 0.0.0
  */
-export const Chunk: (content: string, metadata?: Record<string, unknown>) => TypedText<"Chunk"> = makeTyped("Chunk");
+export const Chunk: TypedTextConstructor<"Chunk"> = makeTyped("Chunk");
 
 /**
  * Create POS-level typed text for part-of-speech annotations.
@@ -363,7 +364,7 @@ export const Chunk: (content: string, metadata?: Record<string, unknown>) => Typ
  * @category constructors
  * @since 0.0.0
  */
-export const POS: (content: string, metadata?: Record<string, unknown>) => TypedText<"POS"> = makeTyped("POS");
+export const POS: TypedTextConstructor<"POS"> = makeTyped("POS");
 
 /**
  * Create lemma-level typed text for canonical token forms.
@@ -379,7 +380,7 @@ export const POS: (content: string, metadata?: Record<string, unknown>) => Typed
  * @category constructors
  * @since 0.0.0
  */
-export const Lemma: (content: string, metadata?: Record<string, unknown>) => TypedText<"Lemma"> = makeTyped("Lemma");
+export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
 
 // =============================================================================
 // Kind Relations (Partial Order Structure)

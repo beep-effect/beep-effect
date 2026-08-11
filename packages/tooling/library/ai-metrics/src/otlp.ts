@@ -716,15 +716,16 @@ const readableSpanFor =
     kind: SpanKind.INTERNAL,
     links: [],
     name: projection.spanName,
-    ...(projection.parentSpanId === undefined
-      ? {}
-      : {
-          parentSpanContext: {
-            spanId: projection.parentSpanId,
-            traceFlags: TraceFlags.SAMPLED,
-            traceId: projection.traceId,
-          },
-        }),
+    ...O.getSomesStruct({
+      parentSpanContext: pipe(
+        O.fromUndefinedOr(projection.parentSpanId),
+        O.map((parentSpanId) => ({
+          spanId: parentSpanId,
+          traceFlags: TraceFlags.SAMPLED,
+          traceId: projection.traceId,
+        }))
+      ),
+    }),
     resource,
     spanContext: () => ({
       spanId: projection.spanId,

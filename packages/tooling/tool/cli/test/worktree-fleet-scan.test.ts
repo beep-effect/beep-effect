@@ -165,6 +165,33 @@ describe("fleet mirror scan", () => {
   );
 
   it.live(
+    "treats an option-like origin URL as a repository operand",
+    () =>
+      withScratchFleet((fixture) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const marker = path.join(fixture.tmpDir, "option-injection-marker");
+          const service = yield* FleetMirrorService;
+          const snapshot = yield* service.scan(
+            FleetScanOptions.make({
+              startFrom: fixture.alpha,
+              fleetRoot: fixture.fleetRoot,
+              originUrl: `--upload-pack=touch ${marker}`,
+              scannerDir: fixture.scannerDir,
+              homeDir: fixture.homeDir,
+              targetRef: "main",
+            })
+          );
+
+          expect(snapshot.target.materialized).toBe(false);
+          expect(yield* fs.exists(marker)).toBe(false);
+        })
+      ),
+    SCAN_TIMEOUT_MILLIS
+  );
+
+  it.live(
     "fires signal 3 and keeps signals 1 and 2 silent when main moves onto a measured policy path",
     () =>
       withScratchFleet((fixture) =>
