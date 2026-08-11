@@ -125,8 +125,12 @@
 - **Evidence:** run 31443081050 (`header must not be longer than 100
   characters, current length is 102` against `e92b8b7d9d`, PR #651's squash
   header) on a branch whose own commits all pass.
-- **Proposal:** two candidate fixes, either sufficient: (a) lint first-parent
-  commits only on the merge ref so base-range history is excluded; (b) enforce
-  the squash-header length server-side at merge time (the repo already treats
-  merge messages as commitlint input in prose, but #651 proves nothing gates
-  it), so `main` can never carry a header that poisons downstream PR ranges.
+- **Proposal:** two candidate fixes, either sufficient: (a) lint only the
+  PR-authored range — on the synthetic merge commit the FIRST parent is the
+  updated base and the PR head is the SECOND parent, so `--first-parent`
+  traversal would keep the inherited `main` commits and drop the authored
+  ones; select the second parent explicitly and lint
+  `merge-base..<head-parent>`; (b) enforce the squash-header length
+  server-side at merge time (the repo already treats merge messages as
+  commitlint input in prose, but #651 proves nothing gates it), so `main` can
+  never carry a header that poisons downstream PR ranges.

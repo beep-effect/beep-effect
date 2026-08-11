@@ -8,17 +8,29 @@ Do NOT work in the worktrees named `ci-cache`, `findings-batch`, `tsperf-census`
 
 The build-mode typecheck census
 (`goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`, raw data in
-`research/data/build-mode-census.tsv`; on the `research/build-mode-census`
-worktree until its PR merges) measured cold `tsgo -b` RSS for the nine heaviest
-packages. Findings that bind this work:
+`research/data/build-mode-census.tsv`, full transcript in
+`research/data/build-mode-census-transcript.md`) measured cold `tsgo -b` RSS
+for a nine-package sample selected from the prior isolated census — NOT the
+nine heaviest: `@beep/law-practice-server`, `@beep/practice-kg-mcp`,
+`@beep/ontology-client`, and `@beep/agents-client` had higher isolated RSS
+than several included rows and have no build-mode measurement yet. Findings
+that bind this work:
 
-- `@beep/professional-desktop`: **47.59 GiB** build vs 10.82 isolated (4.40x);
-  a second cold run measured 36.86 GiB — both exceed a 32 GB worker alone.
+- `@beep/professional-desktop`: two cold runs measured **36.86 GiB** (first)
+  and **47.59 GiB** (rerun) vs 10.82 isolated — both exceed a 32 GB worker
+  alone; the census table uses the rerun (4.40x).
 - `@beep/epistemic-server`: **24.77 GiB** build vs 5.09 isolated (4.87x).
 - `@beep/db-admin`: 11.86 GiB (1.62x). Everything else is ~1x or below.
-- Falsified: disabling target declaration emit moved epistemic RSS only
-  **-2.8%**. Do not chase target emit; the mass is checking/inference across
-  the build closure.
+- Falsified: disabling the target package's own declaration emit moved
+  epistemic RSS only **-2.8%**. That rules out target emit as the dominant
+  term and nothing more — it does not attribute the remainder among
+  checking/inference, dependency declaration emit, and build-program
+  retention.
+- These rows bound the COLD WORST CASE of one process compiling the whole
+  closure. The hosted Check lane runs root Turbo at concurrency one with
+  every dependency's `check` task first as its own process (outputs
+  preserved), so the CI graph's real per-process peak is unmeasured and
+  process sharding may partially duplicate Turbo's existing ordering.
 - `isolatedDeclarations` compiled clean on a leaf with zero edits — a viable
   migration experiment, but no proven RSS lever. Not the first move.
 - A concurrency cap **cannot** reach the target: epistemic is 24.77 GiB at
@@ -27,34 +39,45 @@ packages. Findings that bind this work:
 ## Goal and acceptance
 
 Make every CI typecheck invocation fit a 32 GB worker with headroom — the
-fleet's P2 acceptance is "typecheck OOM impossible", and the working target
-from the census is **sub-16 GiB peak per process** (safe at concurrency two).
+fleet's P2 acceptance is "typecheck OOM impossible". The per-process working
+target is **sub-13 GiB peak**, and per-process conformance alone is NOT
+acceptance: two conforming processes at concurrency two must leave real
+system headroom.
 
-Accept when:
+Accept when ALL of:
 
 1. A measured table (same method as the census: cold, closure-cleaned,
    `/usr/bin/time -v`, `timeout 1200s`, TSV committed to
    `goals/ci-fleet-endgame/research/data/`) shows every shard/process peak
-   under 16 GiB, or documents the best achieved ceiling with the residual gap
-   attributed.
-2. The mechanism is merged, not just measured: whatever invokes typecheck in
+   under 13 GiB. A best-achieved ceiling above budget with the residual gap
+   attributed is a documented STOP CONDITION, not an acceptance branch — it
+   makes the gap the next work item and the handoff remains unaccepted.
+2. A measured concurrency-two run of the two heaviest conforming processes
+   peaks under **26 GiB combined**, leaving at least 6 GiB on a 32 GB worker
+   for the OS, Bun/Turbo wrappers, and compiler launch overlap.
+3. The mechanism is merged, not just measured: whatever invokes typecheck in
    CI (turbo task graph / package scripts / beep CLI lane) actually runs the
    shards as separate OS processes so memory is released between them. A
    single multi-target `tsgo -b` process is NOT sufficient proof of release —
    the census says so explicitly.
-3. Cold-start is honest: no warm `tsconfig.tsbuildinfo` in any accepted
+4. Cold-start is honest: no warm `tsconfig.tsbuildinfo` in any accepted
    measurement (warm build-info masks real cost; delete
    `node_modules/.tmp/tsconfig.tsbuildinfo` through the closure and verify
    zero before measuring).
 
 ## Ranked plan (from the census — follow this order)
 
-1. **Closure-shard census first (the next falsifiable step).** Split
-   `professional-desktop`'s and `epistemic-server`'s project-reference
-   closures into separately invoked shards (e.g. build referenced projects
-   first in their own processes, then the target with `--noResolve`-equivalent
-   warm dist). Measure per-shard peaks. This either proves the sub-16 GiB path
-   or falsifies build-graph splitting before any invasive change.
+1. **Measure the real CI workload first (the next falsifiable step).** Record
+   per-process RSS from a cold root Check run (root Turbo, concurrency one,
+   `^check` prerequisites running first as their own processes with outputs
+   preserved) — this is the graph CI actually executes and it may already
+   deliver most of the memory release that sharding would add. Then measure
+   each heavy target after its `^check` prerequisites complete, extend the
+   census to the four omitted higher-isolated-RSS packages
+   (law-practice-server, practice-kg-mcp, ontology-client, agents-client),
+   and only shard closures whose measured post-prerequisite peak still
+   exceeds budget. This either proves the sub-13 GiB path or falsifies
+   build-graph splitting before any invasive change.
 2. **Demand-scoping for professional-desktop.** It aggregates `@beep/html`,
    `@beep/md`, and agents surfaces whose own rows are only 3.3–4.2 GiB.
    Narrow what its entry points import (barrel de-blasting, subpath imports)

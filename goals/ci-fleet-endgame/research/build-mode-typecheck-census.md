@@ -4,8 +4,8 @@ Measured 2026-08-10 on `research/build-mode-census`. This census measures the re
 project-reference build workload. It does not modify the retained isolated census.
 
 Raw measurements are in
-[`data/build-mode-census.tsv`](./data/build-mode-census.tsv). Command transcripts are in
-`.beep/codex-buildmode-census-report.md`.
+[`data/build-mode-census.tsv`](./data/build-mode-census.tsv). The full command transcript is
+committed as [`data/build-mode-census-transcript.md`](./data/build-mode-census-transcript.md).
 
 ## Method
 
@@ -90,11 +90,13 @@ composite and continued emitting declarations. This was a measurement probe, not
 | `@beep/epistemic-server` | 24.77 GiB | 36.90 s | 24.08 GiB | 32.48 s | -2.8% |
 | `@beep/md` | 3.76 GiB | 9.97 s | 3.99 GiB | 11.62 s | +5.9% |
 
-Answer: target declaration emit does not dominate the 24.7 GiB peak. Removing it saved only
-705 MiB for epistemic server, while md moved in the opposite direction. The evidence attributes
-the peak primarily to type checking, inference, and instantiation mass in the build closure.
-P2 did not disable declarations in referenced projects, because project references require their
-declaration surfaces. It therefore rules out target emit, not every byte of dependency emit.
+Answer: the target package's own declaration emit does not dominate the 24.7 GiB peak. Removing
+it saved only 705 MiB for epistemic server, while md moved in the opposite direction. P2 did not
+disable declarations in referenced projects, because project references require their
+declaration surfaces, so this probe rules out target emit and nothing more: it does not
+distribute the remaining 24.08 GiB among checking and inference, dependency declaration emit,
+and build-program retention. Attributing that remainder needs a dependency-emit A/B or a
+compiler trace.
 
 ## Isolated declarations probe
 
@@ -140,9 +142,21 @@ closure-shard census with a fresh process per shard.
 - P2 disables declaration emit only for the target project, not referenced dependencies.
 - P3 measures a compatible tiny leaf and yields no heavy-package annotation count.
 - No row exceeded 20 minutes, so none was aborted. No package outside the requested nine-row
-  baseline scope was measured.
+  baseline scope was measured, and that scope is a selected sample, not the nine highest
+  isolated-RSS rows: the prior isolated census records higher isolated RSS for
+  `@beep/law-practice-server`, `@beep/practice-kg-mcp`, `@beep/ontology-client`, and
+  `@beep/agents-client` than for included rows such as md, html, and types, and none of those
+  four has a build-mode measurement yet.
+- This cold, closure-cleaned standalone invocation is not the workload the hosted Check lane
+  runs: CI dispatches root Turbo at concurrency one, and `turbo.json` orders every workspace
+  dependency's own `check` task first as a separate process whose dist and build-info outputs
+  are preserved. These rows therefore bound the cold worst case of one process compiling the
+  whole closure; they do not establish the per-process peak of the actual CI graph, and
+  process-per-package sharding may partially duplicate what Turbo ordering already provides.
+  Per-target RSS measured after `^check` prerequisites complete (or a cold root Check run with
+  per-process RSS recording) is required before treating any row here as the fleet blocker.
 - The 16 GiB target is not yet achieved by evidence in this document. This census identifies the
-  failing rows and rejects target declaration emit as the primary explanation.
+  failing rows and rejects the target package's own declaration emit as the primary explanation.
 
 All probe overrides were removed. Final SHA-256 checks for every touched target config matched
 their pre-probe values; no tsconfig remained modified.
