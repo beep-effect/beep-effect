@@ -247,3 +247,21 @@
 - **Prevention:** attribute a no-pickup from the lambda chain (webhook →
   dispatch-to-runner → scale-up → instance console) before suspecting the
   module; keep a 10/10 consecutive-pickup gate as cutover acceptance.
+
+## enable_job_queued_check strands queued jobs on GitHub API lag
+
+- **Work:** the pre-cutover 10/10 pickup gate — seven probe dispatches against
+  the ephemeral fleet.
+- **What happened:** five picked up in 84–174s; two sat queued 25+ minutes.
+  Scale-up logged "No runner will be created, job is not queued." for both —
+  GitHub's jobs API reported not-queued for genuinely queued jobs (the same
+  API had 404'd a fresh job fail-open earlier the same day). In the module
+  source the not-queued branch `continue`s without adding the message to the
+  retry set, and only launched instances publish job-retry checks, so the
+  message is consumed and nothing ever revisits the job.
+- **Prevention:** `enable_job_queued_check: false` (the module's own ephemeral
+  default). With one-job-one-VM economics a cancelled job costs one
+  self-reaping VM for cents; a stranded production lane costs an operator.
+  General law: a pre-launch state check that consumes its message on a
+  negative answer must have a retry path, or it converts transient API lies
+  into permanent hangs.

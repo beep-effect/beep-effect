@@ -280,7 +280,10 @@ type CiFleetControllerArgs = {
  * that job and only a workflow re-run recovers it; spot is kept anyway as a
  * deliberate ~3x cost trade against on-demand. `runners_maximum_count` bounds
  * concurrent instances only — jobs beyond the cap retry from SQS as capacity
- * frees rather than being dropped.
+ * frees rather than being dropped. `enable_job_queued_check` stays false: its
+ * not-queued branch consumes the scale-up message with no retry, so GitHub
+ * API propagation lag would strand a genuinely queued job forever — a wasted
+ * VM on a cancelled job is the cheaper failure.
  *
  * **Example** (Provision the heavy-lane fleet controller)
  *
@@ -400,7 +403,12 @@ export class CiFleetController extends pulumi.ComponentResource {
         enable_cloudwatch_agent: false,
         enable_ephemeral_runners: true,
         enable_jit_config: true,
-        enable_job_queued_check: true,
+        // The module's ephemeral default. The pre-launch "is the job still
+        // queued" GitHub lookup hits API propagation lag, and its not-queued
+        // branch consumes the scale-up message with NO retry path — two live
+        // probes stranded 25+ minutes proved it. A cancelled job now costs
+        // one self-reaping VM instead of a stranded lane.
+        enable_job_queued_check: false,
         enable_managed_runner_security_group: false,
         enable_organization_runners: false,
         /**
