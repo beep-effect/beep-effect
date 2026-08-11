@@ -60,19 +60,26 @@ but a Container in print-shaped formats.
 - `@beep/pandoc-ast` (`Pandoc.model.ts`, `Pandoc.mapping.ts`): same
   bipartition + `Div` (generic Container md lacks), `Note` (Popup),
   `UnknownInline`/`UnknownBlock` escape hatches; mapping to `@beep/md` is
-  where pattern demotion (lossiness) lives today, implicitly.
+  where pattern demotion lives today. `PandocMappingIssue` already reports
+  typed `lossy`/`unsupported` diagnostics; PO classification should enrich
+  those reports, not replace them.
 - `@beep/lexical-schema` (`Lexical.model.ts`): `ElementNode` vs `TextBase`
   hierarchy — PO Structured vs Flat; `RootNode` is a non-textual Container;
-  `Lexical.normalize` enforces containment laws procedurally.
+  `StrictRootChildType`, `strictNodeChildren`, and `StrictRootNode` in
+  `Lexical.model.ts` enforce the recursive containment grammar. The Lexical
+  codec already documents the Md projection's lossiness profile.
 - `@beep/rdf` (`packages/foundation/modeling/rdf/src/Vocab/`): hand vocab
   modules `Oa.ts` (Web Annotation — anchors), `Prov.ts`, `Dcterms.ts`,
   `Skos.ts`, `Owl.ts`, `Rdfs.ts`, `Rdf.ts` + `generated/*.terms.ts` with
   `vocab-terms.data.json` — a generator target shape for `Doco.terms.ts`/
-  `Deo.terms.ts`/`Pattern.terms.ts`.
+  `Deo.terms.ts`/`Fabio.terms.ts`/`Cito.terms.ts`. The current `CoreVocab`
+  registry and `VocabTerms.ts` generator know only RDF, RDFS, SKOS, OWL, and
+  DCTERMS, so acquisition, registry, export, and drift-test work is required.
 - `@beep/ontology` (`packages/foundation/modeling/ontology/src/`):
-  `TaxonomyLoader`/`TaxonomyRegistry` eat TTL/JSON-LD (seed:
-  `seed/legal-intake.ttl|.jsonld`); `Fold.*` modules; `SemanticFoundation`
-  models. DOCO's ttl/jsonld are loader-ready.
+  `TaxonomyLoader`/`TaxonomyRegistry` load vetted repo-specific
+  `TaxonomySeed` JSON-LD slices; `Fold.*` modules; `SemanticFoundation`
+  models. Upstream Turtle or ontology-shaped JSON-LD is not loader-ready and
+  needs an explicit conversion/import step.
 - `apps/professional-desktop`: the agent surface the ontology access is for
   (drafting responses / patent applications).
 - Related packets: `explorations/lynx-lkg-ontology-grounding` (Lynx corpus
@@ -152,9 +159,10 @@ each layer has a different best-fit source:
    ontology-as-prompt** (lane 4's #1 pattern, FOLIO MCP as the legal
    instance: 12 tools — discovery/browse/query/relationship/export — over
    REST or local mode, `uvx folio-mcp`, repo alea-institute/folio-mcp). The
-   proposed move: a **beep-taxonomy MCP** mirroring FOLIO's tool shape over
-   `@beep/ontology`'s TaxonomyRegistry, serving vetted vendor slices + the
-   patent-structure schema. Lane 4's supporting evidence: structure-aware
+   proposed move: add taxonomy-shaped tools to the existing governed
+   ontology MCP surface over `@beep/ontology`'s TaxonomyRegistry, serving
+   vetted vendor slices + the patent-structure schema. Lane 4's supporting
+   evidence: structure-aware
    chunking (DOCO section/paragraph folds) is a top retrieval lever; OG-RAG
    (arXiv:2412.15235, +55% fact recall) is the academic template for
    ontology-grounded retrieval; anti-patterns = whole-ontology prompt
@@ -166,8 +174,9 @@ hybrid graph+vector retrieval — i.e. exactly layers 3–5, not re-implementing
 SPAR's scholarly stack. "AI writes patent claims end-to-end" is overclaimed;
 section structuring + boilerplate is the shipped reality.
 
-Full detail + URL ledgers: `research/grok/01..05-*.md` (each has its own
-ranked shortlist, license notes, and fit-assessment section). Lane scrape
+Full detail + URL ledgers: `research/grok/01..05-*.md` (each is indexed from
+the central `research/SOURCES.md` ledger and has its own ranked shortlist,
+license notes, and fit-assessment section). Lane scrape
 caches under `research/grok/.firecrawl*` are the on-disk copies of cited
 pages; raw agent transcripts in `research/grok/raw/`.
 

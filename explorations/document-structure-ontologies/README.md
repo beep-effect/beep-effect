@@ -45,6 +45,11 @@ holes, no-gos? Iterate until confirmed, then decompose into `MAP.md`.
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
 
+- 2026-08-11 (publish review): PR #662 opened; full local Yeet proof passed.
+  Review hardening made the pending operator shape review machine-readable,
+  corrected licensing/import/generator and AST-lossiness claims, replaced
+  unlicensed page captures with original notes, consolidated provenance, and
+  retained `shape`/`active` pending operator confirmation of BRIEF.md.
 - 2026-08-11 (align+shape): align-prep repo dive corrected the research
   record — a governed 9-tool ontology MCP toolkit already exists
   (`packages/ontology/use-cases`+`server`, professional-desktop transport),

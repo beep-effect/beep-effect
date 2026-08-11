@@ -7,10 +7,10 @@
 | DOCO spec (HTML) | https://sparontologies.github.io/doco/current/doco.html | clone: `~/Downloads/ontologies/doco/docs/current/` | CC-BY 4.0 (stated in spec header) | permissive ⇒ port/vendor with attribution |
 | PO spec (HTML) | https://sparontologies.github.io/po/current/po.html | scraped 2026-08-11 (session) | not verified | reference only until license verified |
 | DOCO repo | https://github.com/SPAROntologies/doco | `~/Downloads/ontologies/doco` (out-of-repo clone) | CC-BY 4.0 per ontology header; repo license not checked | verify repo LICENSE before vendoring ttl/jsonld |
-| DEO (imported by DOCO) | http://purl.org/spar/deo | not on disk | not verified | reference only |
+| DEO (imported by DOCO) | https://sparontologies.github.io/deo/current/deo.html | not on disk | CC-BY 3.0 (official ontology page) | may generate pinned terms with attribution; record the 3.0 notice |
 | FOLIO explorer | https://folio.openlegalstandard.org/explore | scrape failed (JS SPA renders empty); use API docs https://folio.openlegalstandard.org/docs | FOLIO license — verify | pending verification |
-| FOLIO MCP overview | https://openlegalstandard.org/resources/folio-mcp/ | `research/folio/folio-mcp.md` | — | reference |
-| FOLIO MCP tools (12 tools, 18k+ concepts) | https://openlegalstandard.org/resources/folio-mcp-tools/ | `research/folio/folio-mcp-tools.md` | — | reference |
+| FOLIO MCP overview | https://openlegalstandard.org/resources/folio-mcp/ | original notes: `research/folio/folio-mcp.md` | page redistribution terms not verified | link/reference only; do not retain page capture |
+| FOLIO MCP tools (12 tools, 18k+ concepts) | https://openlegalstandard.org/resources/folio-mcp-tools/ | original notes: `research/folio/folio-mcp-tools.md` | page redistribution terms not verified | link/reference only; do not retain page capture |
 | FOLIO MCP server repo | https://github.com/alea-institute/folio-mcp | not cloned | check repo LICENSE | reference; candidate pattern donor for an MCP surface over `@beep/ontology` TaxonomyLoader |
 
 ## Sweep reports (machine-generated, Grok 4.5 high, 2026-08-11)
@@ -20,6 +20,21 @@ layer; lane scrape caches in `research/grok/.firecrawl*/` are reproducible,
 local-only copies of cited pages. Both are ignored in this public repo.
 Reports: `research/grok/0{1..5}-*.md`, each with its own §Sources URL ledger.
 Every claim inside must carry its own URL; treat uncited claims as unverified.
+
+### Central sweep citation index
+
+These report files and their cited URL ledgers are part of this packet's
+provenance contract and must travel with it at graduation. The central index
+keeps a cold session from losing a lane merely because its detailed citations
+remain next to the claims they support.
+
+| Lane | Report and external-citation ledger | Scope | Default disposition |
+| --- | --- | --- | --- |
+| 1 | [`01-metadata-ontologies.md`](./grok/01-metadata-ontologies.md#8-sources-canonical-urls) | metadata, bibliographic, citation, annotation, and provenance vocabularies | reference only unless a source has an explicit licensed disposition below |
+| 2 | [`02-legal-document-structure.md`](./grok/02-legal-document-structure.md#18-sources-appendix-url-ledger) | legal-document standards, patent XML/practice, and structure ontologies | reference only unless a source has an explicit licensed disposition below |
+| 3 | [`03-folio-and-legal-kg.md`](./grok/03-folio-and-legal-kg.md#12-source-ledger-non-exhaustive-but-load-bearing) | FOLIO, SALI, LKIF, Lynx, and live FOLIO API probes | reference only unless a source has an explicit licensed disposition below |
+| 4 | [`04-ontology-llm-integration.md`](./grok/04-ontology-llm-integration.md#9-source-index-urls-cited) | GraphRAG, MCP, constrained generation, and structure-aware retrieval | method/reference only |
+| 5 | [`05-x-and-practitioner-signal.md`](./grok/05-x-and-practitioner-signal.md) | practitioner signal cross-checked against primary project sources | signal only; primary sources govern claims |
 
 ## Key upstream artifacts surfaced by the sweep
 
@@ -46,7 +61,12 @@ Every claim inside must carry its own URL; treat uncited claims as unverified.
 | Pandoc AST + mapping | `packages/foundation/modeling/pandoc-ast/src/` |
 | Lexical schema + normalize | `packages/foundation/modeling/lexical/src/` |
 | RDF vocab modules + generator shape | `packages/foundation/modeling/rdf/src/Vocab/` |
-| Taxonomy loader/registry + TTL/JSON-LD seeds | `packages/foundation/modeling/ontology/src/` |
+| Taxonomy loader/registry + repo-specific `TaxonomySeed` JSON-LD slices | `packages/foundation/modeling/ontology/src/` |
+| Governed nine-tool ontology MCP toolkit | `packages/ontology/use-cases/src/tools/`, `packages/ontology/server/` |
+| Ontology MCP desktop transport + integration harness | `apps/professional-desktop/server/OntologyMcpTransport.ts`, `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts` |
+| Law-practice domain/server/use-cases slice | `packages/law-practice/domain/`, `packages/law-practice/server/`, `packages/law-practice/use-cases/` |
+| Practice-KG MCP claims-batch consumer | `apps/practice-kg-mcp/` |
+| USPTO MCP driver | `packages/drivers/uspto-mcp/` |
 | Professional Desktop (agent surface) | `apps/professional-desktop` |
 
 ## Cross-links

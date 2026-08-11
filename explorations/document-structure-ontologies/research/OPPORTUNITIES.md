@@ -1,5 +1,17 @@
 # Opportunities
 
+## 2026-08-11 — monitor raced GitHub check-suite registration
+
+- **Work:** Monitoring PR #662 immediately after a successful full proof and
+  push through `beep yeet publish --monitor`.
+- **Evidence:** The push succeeded, but `gh pr checks --watch` returned "no
+  checks reported" before GitHub registered the new head's check suite. Yeet
+  marked the publish failed even though a subsequent remote status found 26
+  checks, with no failures and 21 pending.
+- **Prevention:** Treat an empty check list immediately after push as a
+  bounded propagation state: retry with backoff before classifying the
+  monitor phase as failed.
+
 ## 2026-08-11 — staged-only restore conflicted with a formatter rewrite
 
 - **Work:** Publishing this exploration from a checkout with unrelated

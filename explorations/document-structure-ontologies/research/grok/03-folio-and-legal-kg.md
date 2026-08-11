@@ -169,7 +169,7 @@ NOTICES credits original LMSS contributors including Damien Riehl, Michael Bomma
 | **FOLIO software** (folio-python, folio-mcp, folio-api code) | **MIT** | [folio-mcp README](https://github.com/alea-institute/folio-mcp), [folio-python README](https://github.com/alea-institute/folio-python) | **Use/modify/ship freely** with MIT notice |
 | **SALI LMSS** | **MIT** (repo) | [sali-legal/LMSS](https://github.com/sali-legal/LMSS) | Permissive code/data license; still **verify** any separate membership or trademark constraints before marketing “SALI-certified” |
 | **LKIF-core** | **CC BY 4.0** (updated 2026-02-23) | [lkif-core README](https://github.com/RinkeHoekstra/lkif-core) | Port-with-attribution |
-| **Lynx LKG** | **CC BY 4.0** | [lynx LKG deep-dive](../../lynx-lkg-ontology-grounding/research/02-lkg-ontology-deep-dive.md), [lkg.ttl](http://lynx-project.eu/doc/lkg.ttl) | Port-with-attribution |
+| **Lynx LKG** | **CC BY 4.0** | [lynx LKG deep-dive](../../../lynx-lkg-ontology-grounding/research/02-lkg-ontology-deep-dive.md), [lkg.ttl](http://lynx-project.eu/doc/lkg.ttl) | Port-with-attribution |
 
 **CC BY practical note:** attribution is mandatory; no copyleft on derivatives. For a public monorepo, keep `NOTICES`/attribution rows in the vendor slice manifest when shipping FOLIO-derived JSON-LD seeds.
 
@@ -313,7 +313,7 @@ IRI (2026-08-11): `https://folio.openlegalstandard.org/RkF_JygU6SwyGAijZ3c8bsA` 
 
 **Bottom line:** FOLIO is useful to tag *that a matter is patent prosecution* and *which UTBMS task a time entry is*, and to name USPTO / prior art / IP assets. It does **not** give agents a schema for *writing* a patent application or structured office-action response. That gap is **open** and must be filled by beep-effect’s own patent document ontology + AST rules (composing DoCO-like structure, OA annotation, and domain schemas).
 
-This matches the earlier Lynx reference-ontology sweep conclusion: **zero patent/IP-specific structural modelling** across that 15-ontology list either ([03-reference-ontologies-sweep.md](../../lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md) §0.4).
+This matches the earlier Lynx reference-ontology sweep conclusion: **zero patent/IP-specific structural modelling** across that 15-ontology list either ([03-reference-ontologies-sweep.md](../../../lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md) §0.4).
 
 ---
 

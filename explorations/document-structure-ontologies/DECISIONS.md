@@ -26,23 +26,28 @@ decomposition, not any single layer — D2+ decide each layer's fate.
 layer); retrieval-first reframing (chunking win is real but is a consumer of
 the layers, not the frame); bespoke frame (none proposed).
 
-## 2026-08-11 — D2: Vocab scope — all four, one generator pass
+## 2026-08-11 — D2: Vocab scope — all four, with acquisition work
 
 **Question:** Which vocab modules get generated into `@beep/rdf`, in what
-order — Doco, Deo, FaBiO, CiTO (all CC-BY 4.0)? And does PO become a vocab
-module or stay a LiteralKit?
+order — Doco, Deo, FaBiO, CiTO? And does PO become a vocab module or stay a
+LiteralKit?
 
-**Answer:** Generate all four terms modules in one pass. PO stays a
-LiteralKit next to the ASTs — it is a type discipline, not graph vocabulary.
+**Answer:** Generate all four terms modules from version-pinned, attributed
+upstream artifacts. PO stays a LiteralKit next to the ASTs — it is a type
+discipline, not graph vocabulary. DEO's official ontology page establishes
+CC-BY 3.0 (not 4.0); the other selected SPAR artifacts use CC-BY 4.0.
 
-**Rationale:** The generator pipeline (`generated/*.terms.ts` +
-`vocab-terms.data.json`) already exists, so marginal cost per vocabulary is
-low; uniform licensing; consumers (annotation layer, chunker, drafting
-agents) then choose freely without a second vendoring round.
+**Rationale:** The existing generator is only a target shape: `CoreVocab` and
+`VocabTerms.ts` currently hard-code RDF, RDFS, SKOS, OWL, and DCTERMS. This
+slice must add a curated acquisition source, registry entries, generator
+inputs, exports, attribution, and drift tests for DOCO, DEO, FaBiO, and CiTO.
+Their compatible attribution licenses permit one implementation slice once
+the exact pinned artifacts and notices are recorded; consumers (annotation
+layer, chunker, drafting agents) can then share one source of terms.
 
-**Rejected:** DOCO+DEO-first and FaBiO+CiTO-first (needless sequencing of
-mechanical work); defer-all (risks the annotation layer shipping ad-hoc IRIs
-that need migration).
+**Rejected:** treating the current generator as already capable of ingesting
+the four vocabularies; unpinned downloads; defer-all (risks the annotation
+layer shipping ad-hoc IRIs that need migration).
 
 ## 2026-08-11 — D3: Patent-document schema lives in @beep/law-practice-domain
 
@@ -95,8 +100,9 @@ Md/Pandoc/Lexical constructors?
 **Answer:** A PO LiteralKit plus an annotation stamped on each tagged class,
 colocated with the schema definition. Correspondence tables and the mapping
 conservation-law property tests ("pattern preserved or explicitly demoted,
-never silently") derive from the annotations; Pandoc.report gains demotion
-language.
+never silently") derive from the annotations. They classify and reuse the
+existing `PandocMappingIssue` and Lexical codec lossiness diagnostics rather
+than introducing a second reporting mechanism.
 
 **Rationale:** Schema-is-truth — a constructor's pattern is part of its
 meaning, so it belongs on the schema, not in a sidecar that drifts. The
@@ -113,9 +119,11 @@ themselves).
 matter/billing-only patent depth?
 
 **Answer:** Vendor only the IP-relevant branches (IP Law areas, UTBMS
-PA*/TR* task trees, USPTO/governmental entities, coarse document types) as a
-vetted CC-BY-attributed seed for TaxonomyLoader, pinned to a FOLIO release;
-serve through the extended MCP browse tools.
+PA*/TR* task trees, USPTO/governmental entities, coarse document types),
+pinned to a FOLIO release. Add an explicit conversion/curation step from the
+upstream ontology into the repo-specific `TaxonomySeed` JSON-LD schema,
+validate the resulting vetted CC-BY-attributed seed through TaxonomyLoader,
+and serve it through the extended MCP browse tools.
 
 **Rationale:** Follows the lynx packet's vetted-vendor-slice precedent.
 Governance risk is contained — a fork-war outcome affects a future slice

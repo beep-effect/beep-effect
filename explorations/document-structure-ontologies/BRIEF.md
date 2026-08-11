@@ -13,12 +13,14 @@ nowhere), an RDF/KG layer with no document-structure or citation-intent
 vocabulary, a governed ontology MCP toolkit with no taxonomy worth browsing,
 and no typed notion of what a patent application's sections, claims, or
 drafting rules *are*. Research confirmed no vendorable patent-document
-ontology exists anywhere — we must author that layer, and the generic layers
-are ready to vendor (all CC-BY).
+ontology exists anywhere — we must author that layer. The generic SPAR
+vocabularies are available under attribution licenses, but their acquisition,
+curation, generator integration, and notices are net-new work.
 
 Without this: retrieval chunks documents blind to structure, agents get
 matter/section knowledge via prompt-stuffing (the documented anti-pattern),
-and mapping lossiness between Md/Pandoc/Lexical stays folklore.
+and the existing Md/Pandoc/Lexical lossiness diagnostics have no shared
+document-pattern classification.
 
 ## Appetite
 
@@ -32,23 +34,24 @@ Five layers, per D1–D6:
 
 1. **PO classification (D5).** PO LiteralKit + schema annotation on every
    tagged class in `Md.model` / `Pandoc.model` / `Lexical.model`. Derived:
-   cross-model correspondence table, conservation-law property tests
-   ("pattern preserved or explicitly demoted"), demotion language in
-   `Pandoc.report`.
-2. **Wire vocab (D2).** One generator pass adds `Doco`, `Deo`, `Fabio`,
-   `Cito` terms modules to `@beep/rdf/Vocab` (CC-BY attribution in
-   SOURCES/NOTICES). Annotation layer shape: OA anchors on AST node ids +
-   DOCO/DEO/FaBiO types + CiTO intents + PROV, over the *existing* vocab
-   modules.
+   cross-model correspondence table and conservation-law property tests
+   ("pattern preserved or explicitly demoted") over the existing typed
+   `PandocMappingIssue` and Lexical codec lossiness reports.
+2. **Wire vocab (D2).** Extend the curated vocabulary registry, acquisition
+   inputs, generator, exports, notices, and drift tests to add `Doco`, `Deo`,
+   `Fabio`, and `Cito` terms modules to `@beep/rdf/Vocab`. Annotation layer
+   shape: OA anchors on AST node ids + DOCO/DEO/FaBiO types + CiTO intents +
+   PROV, over the *existing* vocab modules.
 3. **Patent-document schema (D3).** In `@beep/law-practice-domain`:
    `PatentApplicationSection` literal domain (37 CFR 1.77(b) order),
    claim substructure (preamble/transition/body, independent/dependent
    graph), ST.96-aligned element names, heading normalizers over `@beep/md`.
    MPEP §608 / EPO F-IV cited as normative references in JSDoc/tests.
    First consumer: practice-kg-mcp claims batch.
-4. **FOLIO slice (D6).** Pinned, vetted CC-BY seed of the IP-relevant
-   branches (IP Law, UTBMS PA*/TR*, USPTO entities, coarse doc types) for
-   TaxonomyLoader, following the lynx vetted-slice precedent.
+4. **FOLIO slice (D6).** Convert a pinned IP-relevant upstream slice (IP Law,
+   UTBMS PA*/TR*, USPTO entities, coarse doc types) into the repo-specific
+   `TaxonomySeed` JSON-LD shape, then validate and vendor that vetted,
+   CC-BY-attributed seed for TaxonomyLoader, following the lynx precedent.
 5. **MCP browse tools (D4).** Extend the existing ontology toolkit with
    read-only folio-mcp-shaped tools (list branches, get concept /
    children / parents, search definitions) serving the loaded taxonomies —

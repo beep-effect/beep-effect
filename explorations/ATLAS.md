@@ -52,7 +52,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   MPEP §608 / WIPO ST.96 — no vendorable patent ontology exists, gap
   confirmed across Lynx, FOLIO live probes, and academic KGs); FOLIO as
   optional matter-tag interop (D6: pinned vetted slice); FOLIO-MCP-style
-  browse tools added to the existing governed ontology toolkit (D4) for
+  browse tools planned for the existing governed ontology toolkit (D4) for
   `apps/professional-desktop` drafting agents. Related:
   `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
   D1–D27 binds layering).

@@ -5,7 +5,9 @@
     "title": "Document-Structure & Metadata Ontologies over the AST Family",
     "status": "active",
     "stage": "shape",
-    "openQuestions": [],
+    "openQuestions": [
+      "Does BRIEF.md match the operator's intended problem, appetite, five-layer solution, constraints, and no-gos?"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
