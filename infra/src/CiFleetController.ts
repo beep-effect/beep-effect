@@ -35,32 +35,10 @@ const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/githu
 const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
 const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
 
-// The IMDS block and the runner user are one decision: the OWNER-match rule
-// must key on the exact uid the jobs run as, so both the module's
-// `runner_run_as` and the drop rule below derive from this single constant. If
-// they diverged, jobs would keep IMDS access under the real runner uid.
+// The runner agent and every job step both run as this user, so the two cannot
+// be told apart by uid at agent-start time — the reason the post-install IMDS
+// DROP was rolled back (see the class prose and CSF-003).
 const runnerRunAs = "ec2-user";
-
-// Defense-in-depth, not containment: the runner user keeps passwordless sudo for
-// GitHub-hosted parity, so job code that escalates to root can still reach IMDS
-// or flush this rule. The PRIMARY control is therefore a minimal,
-// permissions-boundary-capped instance-profile role on an ephemeral
-// one-job-one-VM — a stolen credential is near-worthless and dies with the VM in
-// minutes. This OWNER-match DROP raises the bar for non-root job code as the
-// host-process complement to the hop-limit-1 container defense.
-const runnerImdsPostInstall = `#!/bin/sh
-set -eu
-
-command -v iptables >/dev/null 2>&1 || dnf install -y iptables-nft
-runner_uid="$(id -u ${runnerRunAs})"
-if iptables -C OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP 2>/dev/null; then
-  rule_status="already present"
-else
-  iptables -I OUTPUT -m owner --uid-owner "$runner_uid" -d 169.254.169.254/32 -j DROP
-  rule_status="installed"
-fi
-logger -t beep-ci-imds "IPv4 IMDS OWNER drop rule $rule_status for ${runnerRunAs} uid $runner_uid"
-`;
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -279,20 +257,21 @@ type CiFleetControllerArgs = {
  *
  * **Gotchas**
  *
- * IMDS defense is layered, and the OWNER-match DROP is the weakest layer, not a
- * containment boundary: the runner user keeps passwordless sudo for hosted
- * parity AND can invoke Docker, so job code that escalates to root — directly
- * or through a privileged host-network container — can still reach IMDS or
- * flush the rule. A blanket DROP is not the answer either: it would sever the
- * root config-time IMDS access the runner needs to fetch its JIT registration,
- * killing the fleet. The controls that actually bound credential theft are a
- * minimal, permissions-boundary-capped instance-profile role and the ephemeral
- * one-job-one-VM lifecycle, which reduce a stolen credential to a near-worthless
- * value that dies with the VM. Hop limit 1 blocks unprivileged containers, the
- * DROP (keyed to `runnerRunAs`, never a divergent uid) blocks non-root host job
- * code, this IPv4-only fleet needs no IPv6 rule, and JIT config keeps no runner
- * registration token on the instance. The CSF-003 deploy gate (Gate E) must
- * therefore verify role minimality, not just that the DROP is present.
+ * The host IMDS credential-theft mitigation (CSF-003) is NOT wired here. A
+ * post-install `iptables` OWNER-match DROP on the `runnerRunAs` uid was deployed
+ * and rolled back the same day: because the runner agent itself runs as that
+ * uid, the DROP starved the agent at start-up and the worker failed to register
+ * (`runner-start-failed`), which the Gate E probe caught before any heavy-lane
+ * cutover. A uid DROP cannot separate the agent from job steps when both share
+ * one uid, and a blanket DROP would additionally sever the root config-time IMDS
+ * the runner needs for JIT registration. The rework is a per-job
+ * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook that installs the DROP after the agent
+ * is running but before a job's steps, re-validated through Gate E before
+ * redeploy. Until then the controls that bound credential theft are the layers
+ * that remain live: IMDSv2 with hop limit 1 (blocks unprivileged containers), a
+ * minimal permissions-boundary-capped instance-profile role, the ephemeral
+ * one-job-one-VM lifecycle, and JIT config that keeps no registration token on
+ * the instance.
  *
  * **Example** (Provision the shadow-label controller)
  *
@@ -475,7 +454,6 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
         runner_run_as: runnerRunAs,
-        userdata_post_install: runnerImdsPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         runners_maximum_count: 4,
