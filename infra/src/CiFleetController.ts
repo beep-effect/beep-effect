@@ -281,15 +281,47 @@ type CiFleetControllerArgs = {
  *
  * IMDS defense is layered, and the OWNER-match DROP is the weakest layer, not a
  * containment boundary: the runner user keeps passwordless sudo for hosted
- * parity, so job code that escalates to root can still reach IMDS or flush the
- * rule. The controls that actually bound credential theft are a minimal,
- * permissions-boundary-capped instance-profile role and the ephemeral
+ * parity AND can invoke Docker, so job code that escalates to root — directly
+ * or through a privileged host-network container — can still reach IMDS or
+ * flush the rule. A blanket DROP is not the answer either: it would sever the
+ * root config-time IMDS access the runner needs to fetch its JIT registration,
+ * killing the fleet. The controls that actually bound credential theft are a
+ * minimal, permissions-boundary-capped instance-profile role and the ephemeral
  * one-job-one-VM lifecycle, which reduce a stolen credential to a near-worthless
- * value that dies with the VM. Hop limit 1 blocks container access, the DROP
- * (keyed to `runnerRunAs`, never a divergent uid) blocks non-root host job code,
- * this IPv4-only fleet needs no IPv6 rule, and JIT config keeps no runner
+ * value that dies with the VM. Hop limit 1 blocks unprivileged containers, the
+ * DROP (keyed to `runnerRunAs`, never a divergent uid) blocks non-root host job
+ * code, this IPv4-only fleet needs no IPv6 rule, and JIT config keeps no runner
  * registration token on the instance. The CSF-003 deploy gate (Gate E) must
  * therefore verify role minimality, not just that the DROP is present.
+ *
+ * **Example** (Provision the shadow-label controller)
+ *
+ * ```ts
+ * import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra"
+ *
+ * const config = makeCiFleetControllerConfig(
+ *   CiFleetControllerPulumiConfigValues.make({
+ *     githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
+ *     githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
+ *     githubAppKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+ *     githubAppWebhookSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/webhook-secret",
+ *     runnerBinariesSyncerLambdaZip: "/artifacts/runner-binaries-syncer.zip",
+ *     runnerRolePermissionsBoundaryArn: "arn:aws:iam::123456789012:policy/beep-ci-fleet-boundary",
+ *     runnersLambdaZip: "/artifacts/runners.zip",
+ *     terminationWatcherLambdaZip: "/artifacts/termination-watcher.zip",
+ *     webhookLambdaZip: "/artifacts/webhook.zip",
+ *   })
+ * )
+ *
+ * const controller = new CiFleetController("beep-ci-fleet", {
+ *   config,
+ *   region: "us-east-1",
+ *   subnetIds: ["subnet-abc", "subnet-def"],
+ *   vpcId: "vpc-123",
+ *   workerSecurityGroupId: "sg-456",
+ * })
+ * console.log(controller.webhook)
+ * ```
  *
  * @category resources
  * @since 0.0.0

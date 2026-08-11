@@ -176,8 +176,13 @@
 - **Required deploy gate (red-team Gate E):** the first `pulumi up` carrying
   this change must be followed by a probe job on the shadow label that proves
   ALL of: (a) job pickup still works — the agent was not cut off from anything
-  it needs; (b) a NON-sudo `curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
-  from a job step fails/times out; and (c) the instance-profile role is
+  it needs; (b) a NON-sudo IMDSv2 probe from a job step fails/times out —
+  crucially, request a token first (`curl -X PUT
+  http://169.254.169.254/latest/api/token -H
+  'X-aws-ec2-metadata-token-ttl-seconds: 60'`) and require the TOKEN REQUEST
+  itself to be blocked, because with `http_tokens: required` a tokenless GET
+  already returns 401 even without the firewall rule and would pass a hollow
+  probe; and (c) the instance-profile role is
   minimal. Note (c) is the real control, not the DROP: the runner user keeps
   passwordless sudo for hosted parity, so `sudo curl` to IMDS is EXPECTED to
   still succeed and is not itself a blocker — a host firewall rule cannot
