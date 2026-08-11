@@ -40,6 +40,17 @@ const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCap
 // DROP was rolled back (see the class prose and CSF-003).
 const runnerRunAs = "ec2-user";
 
+// The module's own user-data installs only docker and libicu, and the pinned
+// AL2023 image ships without git, unzip, zip, or jq — setup-bun dies exit-127
+// without unzip and checkout needs git. Root package installs at boot are
+// agent-safe (unlike the rolled-back uid-keyed IMDS DROP, which starved the
+// agent itself); the P4 baked AMI later absorbs this into the image.
+const runnerToolbeltPostInstall = `#!/bin/sh
+set -eu
+dnf install -y git unzip zip jq
+logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+`;
+
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
 const absoluteZipPathPattern = /^\/.+\.zip$/u;
@@ -481,6 +492,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
         runner_run_as: runnerRunAs,
+        userdata_post_install: runnerToolbeltPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         // Concurrency cap, not a budget: each ephemeral VM lives exactly one

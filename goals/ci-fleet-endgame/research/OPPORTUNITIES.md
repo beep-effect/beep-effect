@@ -265,3 +265,17 @@
   General law: a pre-launch state check that consumes its message on a
   negative answer must have a retry path, or it converts transient API lies
   into permanent hangs.
+
+## The fleet image has no toolbelt — PLAN's user-data claim was optimistic
+
+- **Work:** pre-flip toolbelt verification for the heavy-lane cutover.
+- **What happened:** PLAN.md describes the module user-data as installing
+  "docker, git, jq, curl", but the module's actual `user-data.sh` installs only
+  docker (plus libicu in `install-runner.sh`), and the pinned AL2023 image
+  ships without git, unzip, zip, or jq. The first real lane would have died at
+  setup-bun (`unzip` missing, exit 127 — the same class the burst bring-up
+  receipted) and `actions/checkout` needs git for `fetch-depth: 0`.
+- **Prevention:** verify image contents from the module source and AMI
+  identity, not packet prose; the cutover PR adds a `userdata_post_install`
+  toolbelt install (root, boot-time, agent-safe — distinct from the uid-keyed
+  IMDS DROP class) until the P4 baked AMI absorbs it.
