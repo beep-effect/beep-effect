@@ -410,7 +410,10 @@ export class CiFleetController extends pulumi.ComponentResource {
         block_device_mappings: [
           {
             delete_on_termination: true,
-            device_name: "/dev/sda1",
+            // AL2023's root device — /dev/sda1 (the Ubuntu burst convention)
+            // leaves the AMI's 8 GB root in place and attaches this volume as
+            // an unused side disk; real lanes then die on a full root.
+            device_name: "/dev/xvda",
             encrypted: true,
             iops: 3000,
             throughput: 250,

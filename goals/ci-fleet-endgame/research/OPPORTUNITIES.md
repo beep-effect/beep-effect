@@ -299,3 +299,17 @@
 - **Prevention:** treat `userdata_post_install` as an inline fragment, never a
   standalone script: no shebang, subshell-scope any `set` options, and gate
   every post-install deploy on a fresh instance reaching `online`.
+
+## Fleet root volume was 8 GB — /dev/sda1 is an Ubuntu-ism on AL2023
+
+- **Work:** first real lanes on the cutover fleet — JSDoc Ratchet died with
+  `System.IO.IOException: No space left on device` in the runner's _diag log.
+- **What happened:** `block_device_mappings` used `device_name: /dev/sda1`
+  (copied from the Ubuntu burst stack, where that IS the root). AL2023's root
+  is `/dev/xvda`, so the 100 GB gp3 volume attached as an unused side disk and
+  every fleet VM ran on the AMI's 8 GB root. Echo probes never noticed; the
+  first checkout + bun install filled the disk in seconds.
+- **Prevention:** root-device names are AMI-family facts, not conventions —
+  verify with `describe-instances RootDeviceName` per image family. Real-lane
+  probes belong in every image/device change gate; echo probes prove pickup,
+  never capacity.
