@@ -80,6 +80,8 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
  * console.log(isSchemaFirstExcludedFile("packages/demo/dist/index.ts"))
  * ```
  *
+ * @param filePath - Repo-relative source path under consideration.
+ * @returns `true` when the path must not enter schema-first scans.
  * @category predicates
  * @since 0.0.0
  */
