@@ -962,7 +962,7 @@
     },
     "CSF-044": {
       "csf": "CSF-044",
-      "title": "Form path setter permits prototype poisoning",
+      "title": "Path setter permits prototype poisoning",
       "severity": "Low",
       "codexStatus": "New",
       "disposition": "remediate",
@@ -973,7 +973,7 @@
       "lane": "L32",
       "remediationStatus": "fixed (P5)",
       "verificationCommand": "bun run beep yeet verify (full doctrine proof)",
-      "changedFiles": ["packages/foundation/ui-system/form/src/core/Path.ts"]
+      "changedFiles": []
     },
     "CSF-045": {
       "csf": "CSF-045",

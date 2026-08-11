@@ -65,8 +65,8 @@ Rules:
    gesture path, coordinates, timing.
 3. Re-run just that scenario (`.beep/qa-capture.mjs` scenario name) or
    replay the gesture manually in Lane B at the recorded coordinates.
-4. Any extracted frame's own provenance (`exif-provenance` skill) identifies
-   its session if files got separated from the round dir.
+4. Any extracted frame's own XMP-beepQA provenance tags (inspect with
+   `exiftool`) identify its session if files got separated from the round dir.
 
 ## Auditing old evidence
 

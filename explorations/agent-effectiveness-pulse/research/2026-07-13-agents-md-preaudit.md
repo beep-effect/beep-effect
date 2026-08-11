@@ -72,7 +72,7 @@ Rough thematic matches; overlapping.
 | Runner/environment/tool-state failures | ~74 findings | Partly addressed (generic MCP stability, memory fallback). Silent on Bun/Vitest divergence, pipe exit-status masking, concurrent tree mutation, inherited-red attribution (goals/identity-iri-core/history/reflections/2026-07-02-claude.md:14). |
 | Discovery, exports, scaffolding, reuse | ~38 findings; 8 reflections mention new-package/scaffold onboarding | Partly addressed. Live-source/barrel discovery strong for repo symbols, too broad for installed dependencies. Architecture codegen does not promise a Yeet-clean package surface. |
 | Agent coordination and handoff | ~16 findings across 10 reflections | Largely silent: durable artifacts, exact scope ownership, separate worktrees are not codified. |
-| Browser/real-engine proof gaps | ~15 findings; 3 concrete cases | Silent except frontend tool routing. Green typecheck/jsdom did not catch browser behavior or missing styles (goals/chat-input-and-theming/history/reflections/2026-06-21-claude.md:23; goals/form/history/reflections/2026-06-18-codex.md:10). |
+| Browser/real-engine proof gaps | ~15 findings; 3 concrete cases | Silent except frontend tool routing. Green typecheck/jsdom did not catch browser behavior or missing styles (goals/chat-input-and-theming/history/reflections/2026-06-21-claude.md:23). |
 
 ## C. Skill inventory hygiene
 

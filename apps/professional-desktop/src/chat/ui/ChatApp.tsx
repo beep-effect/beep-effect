@@ -16,7 +16,6 @@
 
 import { createThreadAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { OrbBackground } from "@beep/ui/components/orb-background";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@beep/ui/components/resizable";
 import { A, DateTime, O } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -102,11 +101,10 @@ export function ChatApp(): JSX.Element {
     // shell owns the viewport; a surface fills what it is given, and only the panes
     // inside it scroll.
     <div
-      className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
       <YouTubeWatchOpener />
-      <OrbBackground tone="green" intensity="subtle" />
       {/* No second title bar. The app's nav already says where you are, and this
           header only repeated it — costing a strip of vertical height on the one
           surface that needs it most, and hiding the theme control where the other
@@ -134,9 +132,7 @@ export function ChatApp(): JSX.Element {
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel id="main-pane" minSize="40%" className="min-w-0">
-          {/* bg-background/60 damps the shared orb glow so the content area reads
-              quieter than the header and sidebar (Taskade-style ambience). */}
-          <main className="flex h-full min-h-0 flex-col bg-background/60">
+          <main className="flex h-full min-h-0 flex-col bg-background">
             {O.match(active, {
               onNone: () => (
                 <div className="flex flex-1 items-center justify-center text-center" data-testid="chat-no-thread">

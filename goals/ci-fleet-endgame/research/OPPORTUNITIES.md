@@ -1,5 +1,32 @@
 # Opportunities
 
+## AL2023 does not guarantee iptables in the standard AMI
+
+- **Work:** Adding the post-install host-IMDS OWNER rule to the AL2023 runner.
+- **Friction:** The AL2023 package repository provides the nft-backed
+  `iptables-nft` compatibility package, but the standard-AMI package comparison
+  does not list `iptables` as preinstalled. Relying on another installer to
+  pull it transitively would make this security control image-dependent.
+- **Evidence:** Amazon Linux's package inventory lists `iptables-nft` for x86_64,
+  while its standard AL2-to-AL2023 AMI comparison shows `iptables` only on the
+  AL2 side.
+- **Proposal:** Security userdata that needs the compatibility command should
+  conditionally install `iptables-nft` before applying rules, as this controller
+  hook now does.
+
+## Interactive zsh startup noise obscures verification output
+
+- **Work:** Running the P2 controller hardening's four required verification
+  commands through `zsh -ic`.
+- **Friction:** Every command emitted non-fatal interactive-shell diagnostics
+  before the actual tool output, making clean pass/fail evidence harder to read.
+- **Evidence:** The repeated startup output included `can't change option: zle`,
+  `can't change option: monitor`, and `gitstatus failed to initialize`; all four
+  requested commands nevertheless exited 0.
+- **Proposal:** Skip prompt and gitstatus initialization when interactive zsh
+  has no TTY, so automation using the repository's documented `zsh -ic`
+  commands produces only verification output.
+
 ## Burst reaper kills busy workers mid-job
 
 - **Work:** Post-merge main run for PR #633 on the manual burst fleet.
@@ -134,3 +161,62 @@
   server-side at merge time (the repo already treats merge messages as
   commitlint input in prose, but #651 proves nothing gates it), so `main` can
   never carry a header that poisons downstream PR ranges.
+
+## Host IMDS block shares the runner-agent uid — deploy needs a probe gate
+
+- **Work:** P2 controller hardening — adding the CSF-003 host IMDS mitigation.
+- **Risk (not yet friction):** the OWNER-match DROP keys on the `ec2-user`
+  uid, and the runner AGENT also runs as `ec2-user` (`runner_run_as`). The
+  mitigation is safe only because the instance-profile role is consumed by
+  boot-time root steps (AMI SSM resolution, binary sync) and runtime IMDS
+  consumers are off (`enable_cloudwatch_agent: false`,
+  `enable_ssm_on_runners: false`), so the agent's poll loop uses its JIT token,
+  not IMDS. This is the canonical github-aws-runners pattern, but it is a
+  runtime property the code cannot prove.
+- **Required deploy gate (red-team Gate E):** the first `pulumi up` carrying
+  this change must be followed by a probe job on the shadow label that proves
+  ALL of: (a) job pickup still works — the agent was not cut off from anything
+  it needs; (b) a NON-sudo IMDSv2 probe from a job step fails/times out —
+  crucially, request a token first (`curl -X PUT
+  http://169.254.169.254/latest/api/token -H
+  'X-aws-ec2-metadata-token-ttl-seconds: 60'`) and require the TOKEN REQUEST
+  itself to be blocked, because with `http_tokens: required` a tokenless GET
+  already returns 401 even without the firewall rule and would pass a hollow
+  probe; and (c) the instance-profile role is
+  minimal. Note (c) is the real control, not the DROP: the runner user keeps
+  passwordless sudo for hosted parity, so `sudo curl` to IMDS is EXPECTED to
+  still succeed and is not itself a blocker — a host firewall rule cannot
+  contain root-capable job code. Instead enumerate the runner role's policies
+  and permissions boundary and confirm it grants only boot-time needs (AMI SSM
+  read, runner-binary S3 read); a non-minimal role IS a blocker. If (a)
+  regresses, the agent needed IMDS at runtime and the rule must move to a
+  post-agent-start hook or a path-scoped local proxy. Do not flip the
+  heavy-lane cutover until Gate E passes.
+
+## The host IMDS DROP starved the runner agent — deployed and rolled back same day
+
+- **Work:** P2 deploy (PR #660) — `pulumi up` of the 64 GB types + the CSF-003
+  host IMDS `iptables` OWNER-match DROP, then the Gate E probe.
+- **What happened:** the DROP keys on the `ec2-user` uid, but `runner_run_as`
+  is `ec2-user` too, so the *agent* is that uid. The shadow worker booted on a
+  64 GB `m7a.4xlarge`, fetched its SSM/JIT config as root (root IMDS still
+  worked), then `runner-start-failed with exit code 1` when the agent started
+  as `ec2-user`. It never registered; the Gate E job hung queued until the
+  instance self-terminated. Confirmed from `ec2:GetConsoleOutput`: iptables-nft
+  installed at boot, then the runner start failed as ec2-user.
+- **Recovery:** cancelled the stuck run, rolled back ONLY `userdata_post_install`
+  via a targeted `pulumi up` (kept the 64 GB types), and a plain shadow probe
+  confirmed the fleet registered and ran again.
+- **Why it wasn't caught earlier:** it is a runtime property — the code
+  compiles, tests pass, and the canonical github-aws-runners uid-DROP pattern
+  looks right on paper. Only a live boot on the shadow label exposes that the
+  agent shares the job uid. This is exactly why Gate E gates the deploy, and
+  why "job pickup still works" is its first criterion.
+- **Proposal / rework:** a boot-time firewall rule is the wrong shape when the
+  agent and jobs share a uid. Move the DROP to a per-job
+  `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook (runs after the agent started the job,
+  before the job's steps, as the runner user via sudo), so agent start-up is
+  untouched while job steps are blocked. Re-validate through Gate E — including
+  the token-PUT probe and role-minimality enumeration — before any redeploy.
+  Until then, main must NOT carry an active `userdata_post_install` DROP, or a
+  redeploy re-breaks the fleet.

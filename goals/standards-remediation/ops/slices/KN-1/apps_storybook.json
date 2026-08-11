@@ -4,11 +4,6 @@
     {
       "kind": "dependencies",
       "file": "apps/storybook/package.json",
-      "name": "@beep/form"
-    },
-    {
-      "kind": "dependencies",
-      "file": "apps/storybook/package.json",
       "name": "effect"
     },
     {

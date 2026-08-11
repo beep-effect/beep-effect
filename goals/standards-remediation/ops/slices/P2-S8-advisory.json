@@ -1,6 +1,6 @@
 {
   "cluster": "S8-advisory",
-  "totalCount": 40,
+  "totalCount": 39,
   "sampled": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -61,16 +61,6 @@
       "line": 9,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
-      "symbol": "assertUploadedPreview",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 75,
-      "owner": "@beep/form",
-      "reason": "Storybook play-test helper receives DOM and file-fixture inputs at the React test boundary, so the inline object is an interaction fixture rather than schema-bearing domain data."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",

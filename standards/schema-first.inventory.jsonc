@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-10",
+  "generatedOn": "2026-08-11",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -278,7 +278,7 @@
       "reason": "Mixed terminal Chalk runtime: level is data-like, while the recursive styling surface and call signature are executable; color and option domains are already schema-backed."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.service.ts",
       "symbol": "FileProcessingEngineShape",
       "kind": "exported-type-literal",
       "status": "exception",

@@ -1,6 +1,5 @@
 ---
 "@beep/ui": patch
-"@beep/form": patch
 ---
 
 Await overlay visibility in Storybook interaction tests instead of asserting it in the microtask after a click.

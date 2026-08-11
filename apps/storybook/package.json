@@ -31,11 +31,9 @@
     "test:storybook": "bun run scripts/run-storybook-tests.mjs",
     "test:storybook:dock-react": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/dock-react/stories",
     "test:storybook:editor": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/editor/stories",
-    "test:storybook:form": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/form/stories",
     "test:storybook:ui": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/ui/stories"
   },
   "dependencies": {
-    "@beep/form": "workspace:^",
     "@beep/graph-3d": "workspace:^",
     "@beep/ui": "workspace:^",
     "@storybook/addon-a11y": "catalog:",

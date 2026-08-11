@@ -18,6 +18,7 @@
 import { LanguageModel } from "effect/unstable/ai"
 import { Activity } from "effect/unstable/workflow"
 import { Chunk, DateTime, Duration, Effect, Option, Schedule, Schema } from "effect"
+import * as A from "effect/Array"
 import * as N3 from "n3"
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts"
 import { type BatchId, ContentHash, GcsUri } from "../Domain/Identity.ts"
@@ -231,7 +232,7 @@ const storeToKnowledgeGraph = (store: RdfStore) =>
     const entities: Array<Entity> = []
     for (const iri of entityIris) {
       const types = entityTypes.get(iri) ?? []
-      if (types.length === 0) continue
+      if (!A.isReadonlyArrayNonEmpty(types)) continue
 
       const localName = extractLocalNameFromIri(iri)
       const mention = entityLabels.get(iri) ?? localName
@@ -240,7 +241,7 @@ const storeToKnowledgeGraph = (store: RdfStore) =>
         Entity.make({
           id: EntityId.make(localName),
           mention,
-          types: types.map(IRI.make),
+          types: A.map(types, IRI.fromUnknown),
           attributes: {}
         })
       )
@@ -272,7 +273,7 @@ const storeToKnowledgeGraph = (store: RdfStore) =>
           relations.push(
             Relation.make({
               subjectId,
-              predicate: IRI.make(predicate),
+              predicate: IRI.fromUnknown(predicate),
               object: RelationObject.cases.EntityReference.make({ value: objectId })
             })
           )
@@ -618,7 +619,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* Effect.logInfo("Validation activity complete", {
         batchId: input.batchId,
         conforms: report.conforms,
-        violations: report.violations.length,
+        violations: NonNegativeInt.make(report.violations.length),
         policyApplied: policy,
         durationMs: Duration.toMillis(DateTime.distance(start, end))
       })

@@ -6,7 +6,6 @@ const storyFilePattern = /\.stories\.[cm]?[tj]sx?$/;
 const defaultStoryRoots = [
   "../../packages/foundation/ui-system/ui/stories",
   "../../packages/foundation/ui-system/editor/stories",
-  "../../packages/foundation/ui-system/form/stories",
 ];
 
 const storyRoots = process.argv.slice(2);

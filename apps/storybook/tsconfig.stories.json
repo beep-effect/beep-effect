@@ -30,8 +30,6 @@
         "../../packages/foundation/ui-system/editor/src/index.ts"
       ],
       "@beep/editor/*": ["../../packages/foundation/ui-system/editor/src/*"],
-      "@beep/form": ["../../packages/foundation/ui-system/form/src/index.ts"],
-      "@beep/form/*": ["../../packages/foundation/ui-system/form/src/*"],
       "@beep/graph-3d": ["../../packages/drivers/graph-3d/src/index.ts"],
       "@beep/graph-3d/browser": [
         "../../packages/drivers/graph-3d/src/browser.ts"
