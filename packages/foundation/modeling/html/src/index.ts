@@ -31,6 +31,7 @@
 
 import { conform, inspectConformance } from "./Html.conformance.ts";
 import { enforceSafeHtml, inspectSafeHtml } from "./Html.policy.ts";
+import { readonlyStruct } from "./internal/Html.readonly.ts";
 import type * as Effect from "effect/Effect";
 import type { ConformantHtml, HtmlConformanceError } from "./Html.conformance.ts";
 import type { HtmlRoot } from "./Html.model.ts";
@@ -64,16 +65,16 @@ const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPoli
  * @category validation
  * @since 0.0.0
  */
-export const Html = {
-  Conformant: {
+export const Html = readonlyStruct({
+  Conformant: readonlyStruct({
     decode: decodeConformant,
     issues: inspectConformance,
-  },
-  Safe: {
+  }),
+  Safe: readonlyStruct({
     decode: decodeSafe,
     issues: inspectSafeHtml,
-  },
-} as const;
+  }),
+});
 
 /**
  * Package version.
@@ -90,7 +91,7 @@ export const Html = {
  * @category configuration
  * @since 0.0.0
  */
-export const VERSION = "0.0.0" as const;
+export const VERSION = "0.0.0";
 
 /**
  * HTML microsyntax and attribute schemas.

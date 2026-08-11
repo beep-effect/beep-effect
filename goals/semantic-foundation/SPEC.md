@@ -36,7 +36,7 @@ domain entities.
    log, mirrored in
    [`DECISIONS.md`](../../explorations/legal-ontology-landscape/DECISIONS.md).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (`explore`,
-   `repo-symbol-discovery`, `effect-first-development`,
+   `effect-first-development`,
    `schema-first-development` when implementation starts).
 3. `goals/README.md`, `explorations/README.md`, the goal template, and
    `goals/identity-iri-core` as packet exemplar.

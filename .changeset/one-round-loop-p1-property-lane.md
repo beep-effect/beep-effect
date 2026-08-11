@@ -31,7 +31,6 @@
 "@beep/ffmpeg": patch
 "@beep/file-processing": patch
 "@beep/firecrawl": patch
-"@beep/form": patch
 "@beep/govinfo": patch
 "@beep/html": patch
 "@beep/hubspot": patch

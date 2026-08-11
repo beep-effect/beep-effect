@@ -80,7 +80,9 @@ do not re-litigate without a new decision entry:
    with trigger / rejected with reason / explicitly waived, with evidence.
 9. **Ponytail scope:** installed `ponytail` + `ponytail-review` skills stay
    byte-identical to upstream; the full plugin/hooks enter only as a
-   controlled P7 treatment.
+   controlled P7 treatment. *(2026-08-10: both skills were removed from the
+   repo by operator decision; this scope item is moot — a P7 treatment, if
+   still wanted, must reinstall from upstream explicitly.)*
 10. **XState posture:** evidence-gated candidate, not a commitment. Direct
     `xstate@5.32.5` may compute pure transitions only; Effect owns
     persistence, fibers, retries, cancellation, durability. `effstate` and

@@ -15,7 +15,7 @@ contract:
 - `goals/domain-kernel-hardening/ops/manifest.json`
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, the
-`schema-model-specialist` / `schema-first-development` skills, and
+`schema-first-development` skill, and
 `standards/architecture/{02-shared-kernel,04-rich-domain-model,09-errors-across-boundaries}.md`.
 Higher-priority repo standards outrank packet prose when they conflict. Grounding
 lives in `explorations/domain-layer-hardening/` (synthesis 10-21, DECISIONS

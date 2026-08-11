@@ -59,13 +59,14 @@ each in-repo brick the packet composes. Never fabricate a URL — cite the
 RESEARCH.md section when none exists on disk. Register it in manifest
 `exploration.sources`.
 
-**align** — Grilling posture (as in the `grill-me` skill): walk the decision
-tree one branch-closing question at a time via AskUserQuestion, recommended
-answer first with reasoning; explore the codebase instead of asking when the
-repo can answer. After each resolution, append a dated entry to
-`DECISIONS.md` (Question / Answer / Rationale, including rejected options)
-and sync manifest `openQuestions`. Deferred questions are logged DEFERRED
-with reason, not silently dropped.
+**align** — Run the `/grilling` discipline over the decision tree: work the
+frontier in rounds (every currently-unblocked question per round, via
+AskUserQuestion, recommended answer first with reasoning); explore the
+codebase instead of asking when the repo can answer. After each settled
+round, append dated entries to `DECISIONS.md` (Question / Answer /
+Rationale, including rejected options) and sync manifest `openQuestions` to
+the remaining frontier. Deferred questions are logged DEFERRED with reason,
+not silently dropped.
 
 **shape** — Draft `BRIEF.md` (problem, appetite, solution sketch, rabbit
 holes, no-gos) from capture + research + decisions, at fat-marker fidelity —
@@ -100,7 +101,9 @@ exploration status — `graduated`, or keep
   `DECISIONS.md`; kill with a one-line epitaph in `ATLAS.md` Killed. Offer
   them when momentum or conviction dies — never let a packet rot as fake
   "active".
-- One question at a time during align; batch nothing but trivia.
+- Align asks in frontier rounds per `/grilling`: batch every
+  currently-unblocked question, never a question whose prerequisite is still
+  open this round.
 - `CAPTURE.md` is append-only; never tidy it.
 - Provenance is load-bearing: keep `research/SOURCES.md` current from research
   on, and never fabricate a source/URL/license — cite the on-disk RESEARCH

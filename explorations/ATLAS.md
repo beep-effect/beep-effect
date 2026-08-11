@@ -30,8 +30,7 @@ The durable "why" behind explorations. Seeded from
 The lego pieces already built. Authoritative inventories (link, never copy):
 
 - Existing exports: search with ripgrep over `packages/*/*/*/src/**` and the
-  package barrels (`packages/*/*/*/src/index.ts`), or use the
-  `repo-symbol-discovery` skill.
+  package barrels (`packages/*/*/*/src/index.ts`).
 - Package families: `packages/{foundation,shared,drivers,tooling}` (substrate),
   `packages/{workspace,agent-capability,epistemic,law-practice,architecture-lab}`
   (slices), `apps/*` (runtimes).
@@ -40,6 +39,23 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`packet-system-redesign`](./packet-system-redesign/README.md) —
+  align-complete, ready for shape: redesign of the explorations/goals packet
+  machinery itself — strict pre-code design gates, derived readiness,
+  control-plane event chains, evidence receipts, verifiable approvals,
+  tier-routed ceremony. Capture seeded 2026-08-10 from the Notion three-pass
+  proposal + Codex deep-research revision; six Grok research lanes
+  (web + GitHub + x.com) synthesized in the packet `RESEARCH.md`; the full
+  11-question align agenda resolved the same day as D1–D11 in
+  `DECISIONS.md` (per-event CAS event store, docs-PR digest approvals,
+  derived stage pair, computed tier floor, design gate at graduation,
+  generated ATLAS/README status, OPPORTUNITIES promotion, single
+  packet-core, self-hosting pilot, two-phase done, four flow metrics).
+  Same-day expansions: Pocock-skills comparison (frontier-rounds `/grilling`
+  ported); packets-app lane 7 researched and decided D12–D15 (KSA-D
+  respected — static pulse-first HTML v1 then read-only React v2 as a MAP
+  candidate; push+poll realtime; git-markdown packets stay the sole system
+  of record, hosted trackers ruled out). Next: `BRIEF.md`.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   research-stage. Next open question: which candidate contract bricks already
   exist in-repo, and which are net-new? See the packet's

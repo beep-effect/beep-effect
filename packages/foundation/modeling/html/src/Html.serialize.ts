@@ -12,9 +12,10 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Effect, flow, Match, Order, pipe, Result } from "effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,7 +29,7 @@ import {
   isHtmlChildAtForeignBoundary,
 } from "./Html.foreign.ts";
 import { ELEMENT_META, HtmlBooleanAttributeName, HtmlTag } from "./Html.meta.ts";
-import { HtmlRoot } from "./Html.model.ts";
+import { ForeignNamespace, HtmlRoot } from "./Html.model.ts";
 import { enforceSafeHtml, SafeHtmlAst, safeHtmlAstRoot } from "./Html.policy.ts";
 import type { ForeignElementName } from "./Html.attributes.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
@@ -37,7 +38,7 @@ const $I = $HtmlId.create("Html.serialize");
 const isHtmlTag = S.is(HtmlTag);
 const isBooleanAttributeName = S.is(HtmlBooleanAttributeName);
 const isForeignAttributeName = S.is(ForeignAttributeName);
-const isSafeHtmlAst = S.is(SafeHtmlAst);
+const isSafeHtmlAst = SafeHtmlAst.is;
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
 const byEntryName = Order.mapInput(Str.Order, ([name]: readonly [string, unknown]) => name);
 
@@ -89,22 +90,23 @@ export const UntrustedHtml = S.String.pipe(
  */
 export type UntrustedHtml = typeof UntrustedHtml.Type;
 
-const safeHtmlIssuer = new WeakSet<SafeHtmlValue>();
-const safeHtmlStrings = new WeakMap<SafeHtmlValue, string>();
+const safeHtmlStrings = new WeakMap<object, string>();
 
 declare const safeHtmlProof: unique symbol;
 
-declare class SafeHtmlValue {
-  private readonly [safeHtmlProof]: true;
+class SafeHtmlValue {
+  private declare readonly [safeHtmlProof]: true;
+
+  static readonly is = (value: unknown): value is SafeHtmlValue => P.isObject(value) && safeHtmlStrings.has(value);
+
+  constructor() {
+    Reflect.setPrototypeOf(this, null);
+  }
 }
 
-const isSafeHtmlValue = (value: unknown): value is SafeHtmlValue =>
-  P.isObject(value) && safeHtmlIssuer.has(value as unknown as SafeHtmlValue);
-
 const issueSafeHtml = (html: string): SafeHtmlValue => {
-  const value = Object.create(null) as SafeHtmlValue;
+  const value = new SafeHtmlValue();
   safeHtmlStrings.set(value, html);
-  safeHtmlIssuer.add(value);
   Object.freeze(value);
   return value;
 };
@@ -117,19 +119,27 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  * Unlike a structural brand, callers cannot manufacture this value from an
  * arbitrary string through a public constructor or schema decode.
  *
- * **Example** (Typing safeHtmlValue parameter)
+ * **Example** (Check SafeHtml provenance)
  *
  * ```ts
- * import { safeHtmlValue } from "@beep/html/Html.serialize"
+ * import { conform, enforceSafeHtml, Fragment, SafeHtml, serializeSafe } from "@beep/html"
+ * import { Effect } from "effect"
  *
- * const unwrap = (value: Parameters<typeof safeHtmlValue>[0]) => safeHtmlValue(value)
- * console.log(typeof unwrap) // "function"
+ * const html = Effect.runSync(
+ *   conform(Fragment.make({ children: [] })).pipe(
+ *     Effect.flatMap(enforceSafeHtml),
+ *     Effect.flatMap(serializeSafe)
+ *   )
+ * )
+ * console.log(SafeHtml.is(html)) // true
+ * console.log(SafeHtml.is({ ...html })) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SafeHtml = S.declare(isSafeHtmlValue).pipe(
+export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
+  SchemaUtils.withStatics(() => ({ is: SafeHtmlValue.is })),
   $I.annoteSchema("SafeHtml", {
     description: "Opaque HTML string issued only after conformance and safe-policy validation.",
   })
@@ -253,7 +263,7 @@ type RuntimeNode = {
 
 type RuntimeForeignNode = RuntimeNode & {
   readonly name: ForeignElementName;
-  readonly namespace: "svg" | "mathml";
+  readonly namespace: ForeignNamespace;
 };
 
 type RuntimeStringNode = RuntimeNode & {
@@ -261,19 +271,29 @@ type RuntimeStringNode = RuntimeNode & {
 };
 
 const isRuntimeNode = (value: unknown): value is RuntimeNode => P.isObject(value) && P.isString(value._tag);
+const isForeignNamespace = S.is(ForeignNamespace);
+const isRuntimeTextOrCommentNode = P.or(P.isTagged("#text"), P.isTagged("#comment"));
 
-const isRuntimeStringNode = (node: RuntimeNode, tag: "#comment" | "#text"): node is RuntimeStringNode =>
-  node._tag === tag && P.isString(node.value);
+const isRuntimeStringNode = (node: RuntimeNode, tag: "#comment" | "#text"): node is RuntimeStringNode => {
+  const value = node.value;
+  return P.isTagged(tag)(node) && P.isString(value);
+};
 
-const isRuntimeForeignNode = (node: RuntimeNode): node is RuntimeForeignNode =>
-  node._tag === "#foreign" &&
-  P.isString(node.name) &&
-  (node.namespace === "svg" || node.namespace === "mathml") &&
-  isForeignElementNameFixedPoint(node.namespace, node.name);
+const isRuntimeForeignNode = (node: RuntimeNode): node is RuntimeForeignNode => {
+  const name = node.name;
+  const namespace = node.namespace;
+  return (
+    P.isTagged("#foreign")(node) &&
+    P.isString(name) &&
+    isForeignNamespace(namespace) &&
+    isForeignElementNameFixedPoint(namespace, name)
+  );
+};
 
 const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> => {
   /* istanbul ignore else -- every encoded container node has a generated array-valued children field */
   if (A.isArray(node.children)) return A.filter(node.children, isRuntimeNode);
+  /* v8 ignore next -- the HtmlRoot encoder guarantees array-valued children for container nodes */
   return A.emptyReadonly();
 };
 
@@ -406,7 +426,8 @@ const serializeForeignChildren = Effect.fn("Html.serializeForeignChildren")(func
   const parentAttributes = runtimeForeignAttributeEntries(parent);
   const output = yield* Effect.forEach(runtimeChildren(parent), (child, index) => {
     const childPath = A.append(path, `children.${index}`);
-    if (child._tag === "#text" || child._tag === "#comment") {
+
+    if (isRuntimeTextOrCommentNode(child)) {
       return serializeRuntimeNode(child, childPath);
     }
     if (isRuntimeForeignNode(child)) {
@@ -510,10 +531,9 @@ const serializeForeignNode = (
   node: RuntimeForeignNode,
   path: ReadonlyArray<string>
 ): Effect.Effect<string, HtmlSerializeError> => {
-  const attributes =
-    node.attributes === undefined
-      ? Effect.succeed("")
-      : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
+  const attributes = P.isUndefined(node.attributes)
+    ? Effect.succeed("")
+    : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
   return Effect.all([
     Effect.succeed(`<${node.name}`),
     attributes,
@@ -585,8 +605,10 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
  * @category serialization
  * @since 0.0.0
  */
-export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, HtmlSerializeError> = (root) =>
-  serializeRoot(root).pipe(Effect.map(UntrustedHtml.make));
+export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, HtmlSerializeError> = flow(
+  serializeRoot,
+  Effect.map(UntrustedHtml.make)
+);
 
 /**
  * Canonically serializes a conformance proof as untrusted HTML.
@@ -609,9 +631,10 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
  * @category serialization
  * @since 0.0.0
  */
-export const serializeConformant: (value: ConformantHtml) => Effect.Effect<UntrustedHtml, HtmlSerializeError> = (
-  value
-) => serialize(conformantRoot(value));
+export const serializeConformant: (value: ConformantHtml) => Effect.Effect<UntrustedHtml, HtmlSerializeError> = flow(
+  conformantRoot,
+  serialize
+);
 
 const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type, HtmlSerializeError> =>
   isSafeHtmlAst(value)
@@ -658,8 +681,11 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  * @category serialization
  * @since 0.0.0
  */
-export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, HtmlSerializeError> = (value) =>
-  revalidateSafeHtmlAst(value).pipe(Effect.flatMap(serializeRoot), Effect.map(issueSafeHtml));
+export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, HtmlSerializeError> = flow(
+  revalidateSafeHtmlAst,
+  Effect.flatMap(serializeRoot),
+  Effect.map(issueSafeHtml)
+);
 
 /**
  * Extracts the string from an untrusted canonical serialization.
@@ -677,7 +703,7 @@ export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, Html
  * @category getters
  * @since 0.0.0
  */
-export const untrustedHtmlValue = (value: UntrustedHtml): string => value;
+export const untrustedHtmlValue: (value: UntrustedHtml) => string = identity;
 
 /**
  * Extracts the string from opaque, policy-proven HTML.

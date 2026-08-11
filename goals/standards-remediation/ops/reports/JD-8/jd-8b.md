@@ -32,7 +32,6 @@ apply would have mishandled.
 | `@beep/runpod` | 2 | 2 | 0 | 174 | 9/9 | clean |
 | `@beep/onepassword-cli` | 2 | 2 | 0 | 13 | 4/4 | clean |
 | `@beep/hubspot` | 1 | 1 | 0 | 20 | 6/6 | clean |
-| `@beep/form` | 1 | 1 | 0 | 115 | 19/19 | clean |
 | **Total** | **66** | **66** | **0** | — | — | — |
 
 † `@beep/agents-client`'s 3rd finding (`StreamingTurn`/`EditTarget`, counted
@@ -76,12 +75,6 @@ shape) held on the first docgen pass.
 both fixed):**
 - `@beep/repo-docgen`'s pattern already fixed in JD-8a repeated here:
   N/A (not present in this lane's packages).
-- `@beep/form`'s `TimeFieldProps` (`no-type-assertions-in-examples`): the
-  flagged example used `satisfies TimeFieldProps` (not a type assertion at
-  all) — the regex matched `as Effect` inside the unrelated **string
-  literal** `"Stores the selected time as Effect DateTime."` (a capitalized
-  word after "as" inside prose, not code). Fixed by rewording the string to
-  "using Effect DateTime" — zero semantic change, same example.
 - `packages/agents/client/src/Chat.atoms.ts`'s `TurnRequest` const
   (`missing-schema-annotation`) — a plain `S.Union([...]).pipe(S.toTaggedUnion("_tag"))`
   with no `$I` in scope. Fixed with `S.annotate({ description: ... })` added
@@ -138,7 +131,6 @@ entries above it, then route the two classes' third argument through
 - `packages/drivers/runpod/src/{Runpod.config.ts,Runpod.service.ts}`
 - `packages/drivers/onepassword-cli/src/{OnePasswordCli.models.ts,OnePasswordCli.service.ts}`
 - `packages/drivers/hubspot/src/HubSpot.config.ts`
-- `packages/foundation/ui-system/form/src/fields/TimeField.tsx`
 
 Recipe used throughout matches JD-1/JD-8a: `LiteralKit`/branded-schema type
 aliases get `export type X = typeof X.Type` + a compiling `@example` using

@@ -1543,25 +1543,6 @@
       "policyFlipped": true,
       "remediationNote": "Fixed 13 P2 records: schema-derived Lexical factory input types, attachment MIME/rejection codec statics, byte-count/capture-limit schemas, config field annotations/non-empty menu fields, exhaustive Mermaid render dispatch, SerializedEditorState.decodeOption reuse, and S.toArbitrary parity coverage. Remaining 22 records are pre-existing UI/Lexical boundary exceptions."
     },
-    "@beep/form": {
-      "path": "packages/foundation/ui-system/form",
-      "sanitized": "beep__form",
-      "family": "foundation",
-      "discovery": "done",
-      "remediation": "done",
-      "findingsByDomain": {
-        "S1": 7,
-        "S2": 14,
-        "S3": 4,
-        "S4": 4,
-        "S5": 6
-      },
-      "actionableCount": 0,
-      "exceptionCount": 35,
-      "parityProofRef": "packages/foundation/ui-system/form/test/FormOptions.test.ts (it: 'round-trips ValidateOn without changing its encoded shape')",
-      "policyFlipped": true,
-      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__form.json after removing fixed ValidateOn records: 35 records total, 35 exceptions, 0 remaining actionable. Fixed 2 duplicate ValidateOn records (S1 schema-first-inventory + S3 SFV4-static-api) by moving the validation-slot domain into a LiteralKit and routing buildValidators through ValidateOn.$match. Public string values and type imports remain unchanged. Added encoded-shape and S.toArbitrary round-trip parity coverage in FormOptions.test.ts. No cross-package ripples; policy flip intentionally skipped by orchestrator override. Package check/lint/vitest gates are green; final schema-first lint is blocked by two stale entries outside @beep/form."
-    },
     "@beep/ui": {
       "path": "packages/foundation/ui-system/ui",
       "sanitized": "beep__ui",

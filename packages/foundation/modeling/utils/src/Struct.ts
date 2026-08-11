@@ -40,6 +40,19 @@ const $I = $UtilsId.create("Struct");
 
 type NonEmptyStringKeyStruct<R extends object> = [keyof R & string] extends [never] ? never : R;
 
+type EntryValue<E extends readonly [PropertyKey, unknown], P extends E[0]> = E extends readonly [
+  infer K extends PropertyKey,
+  infer V,
+]
+  ? P extends K
+    ? V
+    : never
+  : never;
+
+type FromEntries<E extends readonly [PropertyKey, unknown]> = Simplify<{
+  [P in E[0]]: EntryValue<E, P>;
+}>;
+
 const NonEmptyStringKeys = S.NonEmptyArray(S.String);
 
 /**
@@ -667,9 +680,7 @@ export const keysNonEmpty = <const R extends object>(
  * @category constructors
  * @since 0.0.0
  */
-export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(
-  entries: Iterable<E>
-): Simplify<{ [P in E[0]]: Extract<E, readonly [P, unknown]>[1] }> => {
+export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(entries: Iterable<E>): FromEntries<E> => {
   const out: Record<PropertyKey, unknown> = {};
 
   for (const [key, value] of entries) {
@@ -681,7 +692,7 @@ export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(
     });
   }
 
-  return cast<Record<PropertyKey, unknown>, Simplify<{ [P in E[0]]: Extract<E, readonly [P, unknown]>[1] }>>(out);
+  return cast<Record<PropertyKey, unknown>, FromEntries<E>>(out);
 };
 
 /**

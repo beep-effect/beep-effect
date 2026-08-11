@@ -24,7 +24,6 @@ exact insertion point kn-1a used across its 17 identical fixes) — no `bun inst
 | unresolved | packages/foundation/capability/langextract/package.json | bun-types | **fixed** | same |
 | unresolved | packages/foundation/capability/mcp-kit/package.json | bun-types | **fixed** | same |
 | unresolved | packages/foundation/modeling/html/package.json | bun-types | **fixed** | same |
-| unresolved | packages/foundation/ui-system/form/package.json | bun-types | **fixed** | same |
 | binaries | apps/professional-desktop/scripts/build-sidecar.ts | rustc | **fixed (detector-scope)** | system Rust toolchain compiler, invoked via subprocess (`` await $`rustc -vV` ``) to read the host target triple for Tauri's `externalBin` naming convention — never an npm-installable dependency. Added `rustc` to `knip.jsonc` `ignoreBinaries`, same category as the existing `readlink` entry kn-1a added for the same reason (system binary invoked via subprocess). |
 
 No non-bun-types dependency or file findings appeared in any of the 9 packages — each package's only
@@ -42,7 +41,6 @@ as kn-1a's `readlink`/`op`/`beep-cli`/`portless` entries.
 - `packages/drivers/{box,ecfr,govinfo,wink}/package.json`
 - `packages/foundation/capability/{api-transport,langextract,mcp-kit}/package.json`
 - `packages/foundation/modeling/html/package.json`
-- `packages/foundation/ui-system/form/package.json`
 
 No commits made. `standards/knip.regression-baseline.jsonc` was not touched.
 

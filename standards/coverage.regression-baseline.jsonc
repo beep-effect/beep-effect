@@ -684,19 +684,6 @@
         "functions": 19
       }
     },
-    "@beep/form": {
-      "path": "packages/foundation/ui-system/form",
-      "lines": 30.31,
-      "statements": 30.92,
-      "branches": 35.06,
-      "functions": 18.89,
-      "uncovered": {
-        "lines": 223,
-        "statements": 239,
-        "branches": 100,
-        "functions": 103
-      }
-    },
     "@beep/gov-legal-mcp": {
       "path": "packages/drivers/gov-legal-mcp",
       "lines": 91.3,

@@ -21,7 +21,7 @@ intent. Win condition: **the first ~200 lines of any business-logic module read
 as pure intent** — no decode/guard helper wall, no `*Defaults` spreads, no
 imperative `let`/`for`/`push` loops.
 
-This is ponytail's minimalism aimed at existing schema-shaped code. It is a
+This is lazy-minimalism aimed at existing schema-shaped code. It is a
 *lens*, not a law source: the schema laws live in **`schema-first-development`**
 (and `effect-first-development` for anything broader). When crispening instinct
 conflicts with those laws, **the laws win**. Authoring *new* schemas or domain
@@ -131,5 +131,3 @@ in flight — daemon contention emits spurious failures; use read-only probes.
   `references/examples.md`.
 - **`effect-first-development`** — anything broader than schema work (services,
   errors, concurrency).
-- **`ponytail`** — the parent lazy-minimal ethos when the task isn't
-  schema-shaped.

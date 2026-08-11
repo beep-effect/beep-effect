@@ -4,8 +4,8 @@
  * @internal
  * @since 0.0.0
  */
-import { A } from "@beep/utils";
-import { flow } from "effect/Function";
+import { flow } from "effect";
+import * as A from "effect/Array";
 import * as Str from "effect/String";
 
 const ASCII_UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
