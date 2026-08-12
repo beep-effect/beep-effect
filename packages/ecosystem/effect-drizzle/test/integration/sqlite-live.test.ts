@@ -104,11 +104,6 @@ const runPush = (databasePath: string) =>
         inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
       const process = Bun.spawn(
         [
-          "script",
-          "-q",
-          "-e",
-          "/dev/null",
-          "--",
           nodeBinary,
           "./node_modules/.bin/drizzle-kit",
           "push",
@@ -124,6 +119,7 @@ const runPush = (databasePath: string) =>
         {
           cwd: repositoryRoot,
           env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
+          stdin: "ignore",
           stdout: "pipe",
           stderr: "pipe",
         }
