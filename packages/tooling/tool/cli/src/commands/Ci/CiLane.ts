@@ -162,6 +162,7 @@ export const CI_LANE_ID_VALUES = [
   "coverage",
   "desktop-ipc",
   "docgen",
+  "ecosystem",
   "fallow",
   "jsdoc-ratchet",
   "knip",
@@ -401,6 +402,17 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     replay: "exact",
     flags: ["--mode", "--base", "--head"],
     notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
+  }),
+  // This visible family context lands non-required; promotion is a later
+  // branch-ruleset action after it establishes a stable green history.
+  CiLaneDescriptor.make({
+    id: "ecosystem",
+    contextName: "Ecosystem Contracts",
+    required: false,
+    laneClass: "cli-runnable",
+    replay: "exact",
+    flags: [],
+    notes: "Runs the first ecosystem member's type and bundle contracts explicitly.",
   }),
   CiLaneDescriptor.make({
     id: "codegen",
@@ -835,6 +847,22 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       docgen: () => docgenLaneSteps(repoRoot, options),
+      // Target the first ecosystem member explicitly. Generalize member
+      // discovery only when a second ecosystem member exists.
+      ecosystem: () => [
+        QualityTaskStep.make({
+          label: "ci:ecosystem:effect-drizzle:type-test",
+          command: "bun",
+          args: ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:type-test"],
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:ecosystem:effect-drizzle:bundle-probe",
+          command: "bun",
+          args: ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:bundle-probe"],
+          cwd: repoRoot,
+        }),
+      ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
       "jsdoc-ratchet": () => [
         bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
@@ -1268,6 +1296,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     coverage: () => affectedFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
