@@ -34,7 +34,6 @@ import type * as Meta from "./Meta.ts";
 /**
  * Failure to derive one unambiguous SQL column from an encoded schema.
  *
- * @internal
  * @category utilities
  * @since 0.0.0
  */

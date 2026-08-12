@@ -5,6 +5,8 @@
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src"{{#if isEcosystem}},
+    "stripInternal": true,
+    "plugins": {{{effectLanguageServicePlugins}}}{{/if}}
   }
 }

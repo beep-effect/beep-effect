@@ -20,7 +20,6 @@ import type { VariantSchema } from "effect/unstable/schema";
 /**
  * Runtime marker carried by every `@beep/effect-drizzle` field wrapper.
  *
- * @internal
  * @category symbols
  * @since 0.0.0
  */
@@ -28,7 +27,6 @@ const TypeId: unique symbol = Symbol.for("@beep/effect-drizzle/Field");
 /**
  * Type of the runtime `@beep/effect-drizzle` field marker.
  *
- * @internal
  * @category symbols
  * @since 0.0.0
  */
@@ -43,16 +41,14 @@ type TypeId = typeof TypeId;
  * concrete config is invariant and rejects valid literal variant records, so
  * this mirrors Effect's erased-field boundary rather than widening `@beep/effect-drizzle` data.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type AnySchema = Top | VariantSchema.Field<any>;
 
 /**
- * Pipeable wrapper correlating one schema with its SQL metadata.
+ * Pipeable carrier correlating one schema with its inferred SQL metadata.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -63,18 +59,16 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 }
 
 /**
- * Existential `@beep/effect-drizzle` field used at runtime boundaries.
+ * Existential field carrier exposed through public combinator inference.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type Any = Field<AnySchema, Meta.Meta>;
 
 /**
- * Bare schema, variant field, or existing `@beep/effect-drizzle` field accepted by combinators.
+ * Bare schema, variant field, or existing field accepted by public combinators.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -113,7 +107,6 @@ const isField = (u: unknown): u is Any => hasProperty(u, TypeId);
 /**
  * Schema type obtained by normalizing an {@link Input}.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -122,7 +115,6 @@ export type SchemaFrom<I extends Input> = I extends Field<infer Sch, Meta.Meta> 
 /**
  * The metadata type an input resolves to; bare schemas start at {@link Meta.Empty}.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -153,7 +145,6 @@ export function from(input: Input): Any {
 /**
  * Field type produced after applying a metadata patch to an input.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -180,7 +171,6 @@ export const patch = <I extends Input, const Patch extends Meta.Patch>(input: I,
 /**
  * Encoded database-facing type of an input; variant fields use `select`.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -209,7 +199,6 @@ type SchemaEncoded<Sch> =
  * When a constraint fails, its message literal appears in the assignability
  * diagnostic on the offending pipe call.
  *
- * @internal
  * @category errors
  * @since 0.0.0
  */
@@ -220,7 +209,6 @@ export interface SqlTypeError<Msg extends string> {
 /**
  * Validate an input's non-null encoded carrier against an allowed SQL carrier.
  *
- * @internal
  * @category validation
  * @since 0.0.0
  */
@@ -237,7 +225,6 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exc
 /**
  * Reject inputs whose encoded database representation admits `null`.
  *
- * @internal
  * @category validation
  * @since 0.0.0
  */
@@ -257,7 +244,6 @@ type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> = Dimensions ex
 /**
  * Validate that an array element declaration owns one scalar column spec.
  *
- * @internal
  * @category validation
  * @since 0.0.0
  */
@@ -270,7 +256,6 @@ export type ValidateArrayElement<I extends Input> = MetaFrom<I>["column"] extend
 /**
  * Validate an outer schema against an element carrier and declared array depth.
  *
- * @internal
  * @category validation
  * @since 0.0.0
  */

@@ -17,9 +17,8 @@ type EntityIdLikeShape = {
 const isNonEmptyString = is(NonEmptyString);
 
 /**
- * Structural statics carried by dialect-free EntityId schemas.
+ * Structural statics carried by dialect-free EntityId schemas in public inference.
  *
- * @internal
  * @category schemas
  * @since 0.0.0
  */
@@ -39,7 +38,6 @@ export const EntityIdLike = declare<EntityIdLikeShape>(
 /**
  * Decoded structural statics recognized by {@link EntityIdLike}.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -48,7 +46,6 @@ export type EntityIdLike = typeof EntityIdLike.Type;
 /**
  * Test unknown input for EntityId schema statics.
  *
- * @internal
  * @category guards
  * @since 0.0.0
  */

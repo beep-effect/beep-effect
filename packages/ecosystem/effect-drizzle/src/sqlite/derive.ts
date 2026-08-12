@@ -35,7 +35,6 @@ export const EntityIdLike = EntityIdLikeSchema;
 /**
  * Static EntityId metadata consumed by SQLite derivation.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -47,7 +46,6 @@ type JsonCarrier = ReadonlyArray<unknown> | { readonly [key: string]: unknown };
 /**
  * Select-side schema type of a plain schema or variant field.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -95,14 +93,12 @@ export const isStructuralJson = (schema: Field.AnySchema): boolean => {
 /**
  * Structural JSON carrier shared by SQLite JSON-mode combinator constraints.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type StructuralJson = JsonCarrier;
 
 /** SQLite descriptor derived from an encoded carrier, or `never` when ambiguous. */
-/** @internal */
 type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;
@@ -115,7 +111,6 @@ type Derived<I extends Field.Input> =
 /**
  * Explicit SQLite descriptor when present, otherwise the derived descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */

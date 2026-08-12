@@ -29,8 +29,7 @@ import type { ValidateDerivedSqlName, ValidateSqlName } from "../core/names.ts";
 import type { Variant } from "../core/variant.ts";
 import type * as TableExtras from "./extras.ts";
 
-/** Internal dialect re-exports of the shared variant helpers.
- * @internal
+/** Shared variant helpers exposed by the SQLite model surface.
  * @category models
  * @since 0.0.0
  */
@@ -85,8 +84,7 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
         : undefined
       : undefined;
 
-/** Metadata after SQLite derivation and automatic EntityId references. */
-/** @internal */
+/** Metadata exposed after SQLite derivation and automatic EntityId references. */
 type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
   Field.MetaFrom<I>,
   { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
@@ -179,7 +177,7 @@ export type EffectiveSchema<I extends Field.Input> =
       ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
       : never;
 
-/** @internal */
+/** Variant-aware schema record exposed by SQLite model inference. */
 type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
@@ -267,7 +265,6 @@ export type ValidateFields<F extends FieldsInput> = {
 /**
  * Diagnostic returned when Model omits its self type.
  *
- * @internal
  * @category validation
  * @since 0.0.0
  */

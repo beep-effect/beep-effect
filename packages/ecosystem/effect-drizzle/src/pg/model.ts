@@ -37,9 +37,8 @@ import type { ValidateDerivedSqlName, ValidateSqlName } from "../core/names.ts";
 import type { Variant } from "../core/variant.ts";
 import type * as TableExtras from "./extras.ts";
 
-// Re-export the owning shared variant helpers for dialect internals.
-/** Internal dialect re-exports of the shared variant helpers.
- * @internal
+// Re-export the owning shared variant helpers for the public model surface.
+/** Shared variant helpers exposed by the PostgreSQL model surface.
  * @category models
  * @since 0.0.0
  */
@@ -103,7 +102,6 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
 /**
  * Metadata after column derivation and automatic reference resolution.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -208,7 +206,6 @@ export type EffectiveSchema<I extends Field.Input> =
 /**
  * Effective variant-aware schema record derived from a `@beep/effect-drizzle` field record.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -319,7 +316,6 @@ export type ValidateFields<F extends FieldsInput> = {
 /**
  * Compile-time diagnostic returned when {@link Model} omits its self type.
  *
- * @internal
  * @category errors
  * @since 0.0.0
  */

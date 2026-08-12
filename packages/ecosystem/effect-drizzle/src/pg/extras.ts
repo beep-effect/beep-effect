@@ -291,27 +291,83 @@ export type Check = Extract<Node, { readonly _tag: "check" }>;
 export type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>;
 
 const Nodes = /* @__PURE__ */ taggedEnum<Node>();
-/** Constructs a composite unique-constraint node.
+/**
+ * Constructs a composite unique-constraint node.
+ *
+ * **Example** (Infer the constructed node type)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * type Made = ReturnType<typeof Table.CompositeUnique.make> // => tagged compositeUnique node
+ * ```
+ *
+ * @see {@link compositeUnique} for the validated factory used in table extras.
  * @category constructors
  * @since 0.0.0
  */
 export const CompositeUnique = { make: Nodes.compositeUnique };
-/** Constructs a composite primary-key node.
+/**
+ * Constructs a composite primary-key node.
+ *
+ * **Example** (Infer the constructed node type)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * type Made = ReturnType<typeof Table.CompositePrimaryKey.make> // => tagged compositePrimaryKey node
+ * ```
+ *
+ * @see {@link compositePrimaryKey} for the validated factory used in table extras.
  * @category constructors
  * @since 0.0.0
  */
 export const CompositePrimaryKey = { make: Nodes.compositePrimaryKey };
-/** Constructs an index node.
+/**
+ * Constructs an index node.
+ *
+ * **Example** (Infer the constructed node type)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * type Made = ReturnType<typeof Table.Index.make> // => tagged index node
+ * ```
+ *
+ * @see {@link index} for the validated factory used in table extras.
  * @category constructors
  * @since 0.0.0
  */
 export const Index = { make: Nodes.index };
-/** Constructs a typed check-constraint node.
+/**
+ * Constructs a typed check-constraint node.
+ *
+ * **Example** (Infer the constructed node type)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * type Made = ReturnType<typeof Table.Check.make> // => tagged check node
+ * ```
+ *
+ * @see {@link check} for the validated factory used in table extras.
  * @category constructors
  * @since 0.0.0
  */
 export const Check = { make: Nodes.check };
-/** Constructs an explicitly unsafe SQL check node.
+/**
+ * Constructs an explicitly unsafe SQL check node.
+ *
+ * **Example** (Build an unsafe SQL check node)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * const node = Table.UnsafeCheckSql.make({ name: "user_name_check", sql: "name <> ''" })
+ * console.log(node._tag) // "unsafeCheckSql"
+ * ```
+ *
+ * @see {@link unsafeCheckSql} for the validated factory used in table extras.
  * @category constructors
  * @since 0.0.0
  */

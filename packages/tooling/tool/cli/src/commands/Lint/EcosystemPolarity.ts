@@ -224,8 +224,12 @@ const collectSourceFiles: (
   return A.sort(files, Order.String);
 });
 
-const literalSpecifier = (node: Node): O.Option<string> =>
-  Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) ? O.some(node.getLiteralText()) : O.none();
+const literalSpecifier = (node: Node): O.Option<string> => {
+  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
+    return O.some(node.getLiteralText());
+  }
+  return Node.isTemplateExpression(node) ? O.some(node.getHead().getLiteralText()) : O.none();
+};
 
 const collectSourceViolations = (
   project: Project,
@@ -292,16 +296,28 @@ const runtimeDependencyViolations = (
     dependencies,
     O.map((entries) =>
       pipe(
-        R.keys(entries),
-        A.filter(Str.startsWith("@beep/")),
-        A.map((dependency) =>
-          EcosystemPolarityViolation.make({
-            file: relativeManifestPath,
-            line: 1,
-            kind: "runtime-dependency",
-            detail: `${field}.${dependency}`,
-          })
-        )
+        R.toEntries(entries),
+        A.flatMap(([dependency, target]) => {
+          const detail = Str.startsWith("@beep/")(dependency)
+            ? O.some(`${field}.${dependency}`)
+            : pipe(
+                target,
+                O.liftPredicate(Str.startsWith("npm:@beep/")),
+                O.map((aliasTarget) => `${field}.${dependency} -> ${aliasTarget}`)
+              );
+          return O.match(detail, {
+            onNone: A.empty<EcosystemPolarityViolation>,
+            onSome: (violationDetail) =>
+              A.of(
+                EcosystemPolarityViolation.make({
+                  file: relativeManifestPath,
+                  line: 1,
+                  kind: "runtime-dependency",
+                  detail: violationDetail,
+                })
+              ),
+          });
+        })
       )
     ),
     O.getOrElse(A.empty<EcosystemPolarityViolation>)

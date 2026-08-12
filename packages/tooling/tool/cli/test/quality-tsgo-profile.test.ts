@@ -59,6 +59,16 @@ describe("quality tsgo ecosystem plugin profiles", () => {
     ]);
   });
 
+  it("rejects an ecosystem member tsconfig without a local plugin profile", () => {
+    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
+      ["packages/ecosystem/member/tsconfig.test.json", { compilerOptions: {} }],
+    ]);
+
+    expect(diagnostics).toEqual([
+      "ecosystem member tsconfig packages/ecosystem/member/tsconfig.test.json is missing the @effect/language-service family profile",
+    ]);
+  });
+
   it("rejects non-ecosystem package plugin overrides", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
       ["packages/shared/member/tsconfig.json", ecosystemConfig(BaseDiagnosticSeverity)],
