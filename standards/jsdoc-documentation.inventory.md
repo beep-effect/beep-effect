@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-11T15:27:54.033Z
+Generated: 2026-08-11T22:02:08.413Z
 
 ## Scope
 
@@ -15,9 +15,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
 | publicModules | 2477 |
-| publicExports | 16226 |
+| publicExports | 16229 |
 | openModules | 397 |
-| openExports | 132 |
+| openExports | 135 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 511 |
+| multiple-description-paragraphs | 514 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -68,7 +68,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 11 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 62 | 8 | 4 |
 | 12 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 19 | 71 | 1 | 0 |
 | 13 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 40 | 2 | 0 |
-| 14 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 261 | 3 | 0 |
+| 14 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 263 | 3 | 2 |
 | 15 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 16 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 17 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 0 |
@@ -151,7 +151,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 94 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 95 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 96 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
-| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1679 | 24 | 0 |
+| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1680 | 24 | 1 |
 | 98 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 48 | 8 | 4 |
 | 99 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 213 | 1 | 1 |
 | 100 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -274,6 +274,10 @@ Module findings:
 - `src/values/ClaimLifecycle/ClaimLifecycle.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/values/LocalDate/LocalDate.behavior.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/values/LocalDate/LocalDate.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+Export findings:
+- `src/entity/Principal.ts:257` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
+- `src/entity/SourceKind.ts:37` `SourceKindSchema` (interface) - 1 documentation section/link violation(s)
 
 ### @beep/gov-legal-mcp
 
@@ -822,10 +826,10 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:137` `CiFleetControllerPulumiConfigValues` (const) - missing @example
-- `src/CiFleetController.ts:173` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:199` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:223` `loadCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:152` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:188` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:214` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:238` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:402` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:572` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:769` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
@@ -906,6 +910,9 @@ Module findings:
 - `src/SchemaUtils/withCodecStatics.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/withConstructorDefaults.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+Export findings:
+- `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
 
 ### @beep/epistemic-server
 
