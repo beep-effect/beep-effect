@@ -1198,6 +1198,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "security",
   "build",
   "test-unit",
+  "ecosystem",
   "test-integration",
   "property",
   "docgen",

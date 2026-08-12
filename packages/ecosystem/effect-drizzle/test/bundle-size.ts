@@ -1,9 +1,20 @@
-export const compareBundleSize = (currentRawBytes: number, baselineRawBytes: number) => {
+// Below this floor the artifact is a tree-shaken stub, not a real bundle —
+// the Bun.build failure mode this harness exists to catch. Roughly half the
+// initial 7864-byte baseline; adjust deliberately alongside baselines.
+export const minimumBundleRawBytes = 4096;
+
+export const compareBundleSize = (
+  currentRawBytes: number,
+  baselineRawBytes: number,
+  minimumRawBytes: number = minimumBundleRawBytes
+) => {
   const delta = currentRawBytes - baselineRawBytes;
   return {
     currentRawBytes,
     baselineRawBytes,
+    minimumRawBytes,
     delta,
+    isCollapse: currentRawBytes < minimumRawBytes,
     isRegression: delta > 0,
   };
 };

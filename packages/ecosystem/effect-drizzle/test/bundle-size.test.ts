@@ -15,6 +15,16 @@ describe("bundle size comparison", () => {
   it("fails when the current size increases by one byte", () => {
     expect(compareBundleSize(101, 100).isRegression).toBe(true);
   });
+
+  it("flags a collapse below the stub floor even when it is a decrease", () => {
+    const comparison = compareBundleSize(30, 7864, 4096);
+    expect(comparison.isRegression).toBe(false);
+    expect(comparison.isCollapse).toBe(true);
+  });
+
+  it("does not flag healthy sizes above the floor", () => {
+    expect(compareBundleSize(7000, 7864, 4096).isCollapse).toBe(false);
+  });
 });
 
 describe("bundle size probe", () => {

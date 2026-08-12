@@ -6,7 +6,7 @@ import { build as buildLayer } from "effect/Layer";
 import { String as StringSchema, TaggedError, Unknown } from "effect/Schema";
 import { buildBundleConsumer, bundleConsumerEntrypointId, esbuildVersion } from "./bundle-build.ts";
 import committedBaseline from "./bundle-size.baseline.json" with { type: "json" };
-import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
+import { compareBundleSize, formatBundleSizeLine, minimumBundleRawBytes } from "./bundle-size.ts";
 
 const baselinePath = new URL("./bundle-size.baseline.json", import.meta.url).pathname;
 const testBaselineArgumentPrefix = "--test-baseline-raw-bytes=";
@@ -16,13 +16,42 @@ class BundleProbeError extends TaggedError<BundleProbeError>("@beep/effect-drizz
   { message: StringSchema, cause: Unknown }
 ) {}
 
-const measureBundleRawBytes = fnUntraced(function* () {
+const measureBundleConsumer = fnUntraced(function* () {
   const artifact = yield* tryPromise({
     try: buildBundleConsumer,
     catch: (cause) => BundleProbeError.make({ message: "Bundle build rejected", cause }),
   });
-  return artifact.rawBytes;
+  if (!artifact.text.includes("integer")) {
+    return yield* fail(
+      BundleProbeError.make({
+        message: "Bundle artifact lost the consumer surface (no integer symbol) — over-shaken stub",
+        cause: { rawBytes: artifact.rawBytes },
+      })
+    );
+  }
+  return artifact;
 });
+
+const validateBaselineIdentity = () => {
+  const mismatches: Array<string> = [];
+  if (committedBaseline.schemaVersion !== 1) {
+    mismatches.push(`schemaVersion ${committedBaseline.schemaVersion} (expected 1)`);
+  }
+  if (committedBaseline.entrypoint !== bundleConsumerEntrypointId) {
+    mismatches.push(`entrypoint ${committedBaseline.entrypoint} (expected ${bundleConsumerEntrypointId})`);
+  }
+  if (committedBaseline.esbuildVersion !== esbuildVersion) {
+    mismatches.push(`esbuildVersion ${committedBaseline.esbuildVersion} (installed ${esbuildVersion})`);
+  }
+  return mismatches.length === 0
+    ? succeed(undefined)
+    : fail(
+        BundleProbeError.make({
+          message: `Committed baseline identity does not match this probe; re-baseline deliberately: ${mismatches.join("; ")}`,
+          cause: committedBaseline,
+        })
+      );
+};
 
 const renderBaseline = (rawBytes: number): string => `{
   "schemaVersion": 1,
@@ -54,7 +83,7 @@ const resolveBaseline = () => {
 };
 
 const reportComparison = fnUntraced(function* (currentRawBytes: number, baselineRawBytes: number) {
-  const comparison = compareBundleSize(currentRawBytes, baselineRawBytes);
+  const comparison = compareBundleSize(currentRawBytes, baselineRawBytes, minimumBundleRawBytes);
   const line = formatBundleSizeLine(currentRawBytes, baselineRawBytes);
   yield* sync(() => {
     process.stdout.write(`${line}\n`);
@@ -63,6 +92,14 @@ const reportComparison = fnUntraced(function* (currentRawBytes: number, baseline
   if (summaryPath !== undefined) {
     const fs = yield* FileSystem;
     yield* fs.writeFileString(summaryPath, `- ${line}\n`, { flag: "a" });
+  }
+  if (comparison.isCollapse) {
+    return yield* fail(
+      BundleProbeError.make({
+        message: "Bundle raw byte size fell below the stub-collapse floor",
+        cause: comparison,
+      })
+    );
   }
   if (comparison.isRegression) {
     return yield* fail(
@@ -75,13 +112,14 @@ const reportComparison = fnUntraced(function* (currentRawBytes: number, baseline
 });
 
 const program = gen(function* () {
-  const currentRawBytes = yield* measureBundleRawBytes();
+  const artifact = yield* measureBundleConsumer();
   if (Bun.argv.includes("--write-baseline")) {
-    yield* writeBaseline(currentRawBytes);
-    return yield* reportComparison(currentRawBytes, currentRawBytes);
+    yield* writeBaseline(artifact.rawBytes);
+    return yield* reportComparison(artifact.rawBytes, artifact.rawBytes);
   }
+  yield* validateBaselineIdentity();
   const baselineRawBytes = yield* resolveBaseline();
-  return yield* reportComparison(currentRawBytes, baselineRawBytes);
+  return yield* reportComparison(artifact.rawBytes, baselineRawBytes);
 });
 
 const main = scoped(buildLayer(bunServicesLayer).pipe(flatMap((context) => program.pipe(provide(context)))));
