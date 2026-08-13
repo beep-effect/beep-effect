@@ -140,6 +140,7 @@ export const selfResolutionError = (node?: AstNode): InterpreterRuntimeError =>
 
 export type PromiseIdentity = MutableRef.MutableRef<O.Option<CodeModePromise>>
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolvePromiseValue = <R>(
   runner: CallbackRunner<R>,
   value: unknown,
@@ -176,6 +177,7 @@ export const resolvePromiseValue = <R>(
   })
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolvePromise = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,
@@ -190,6 +192,7 @@ export const resolvePromise = <R>(
   })
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokePromiseMethod = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   promises: PromiseRuntime<R>,
@@ -318,6 +321,7 @@ export const invokePromiseMethod = <R>(
   })
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokePromiseInstanceMethod = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,
@@ -365,6 +369,7 @@ export const invokePromiseInstanceMethod = <R>(
   })
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const constructPromise = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,
