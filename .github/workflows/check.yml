@@ -48,6 +48,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     strategy:
@@ -115,12 +116,12 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
     env:
-      # Verification runs PR-controlled code. Keep every secret-backed value on
-      # trusted push events only; PR lanes use local cache and fixture/default
-      # app configuration.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+      # PRs receive the repository read token; main pushes receive the
+      # turbo-cache-write environment's trusted write token.
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
       DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
       DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
       EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -327,14 +328,14 @@ jobs:
     name: Property Laws
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     env:
-      # Same secret posture as the verify matrix: PR-controlled code gets no
-      # repository secrets and uses local Turbo cache only.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -376,6 +377,7 @@ jobs:
     name: Fallow Advisory Envelopes
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     steps:
@@ -440,11 +442,10 @@ jobs:
         id: fallow
         shell: bash
         env:
-          # Fallow runs PR-controlled `bun run beep` code; keep repository
-          # secrets on push only and use local cache for pull requests.
-          TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+          TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+          TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+          TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope
@@ -562,11 +563,14 @@ jobs:
     if: github.event_name == 'push'
     runs-on: beep-ec2-heavy
     timeout-minutes: 40
+    environment: turbo-cache-write
     permissions:
       contents: read
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
       EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
