@@ -6,8 +6,11 @@ tmp/
 dist/
 build/
 .direnv/
-.idea/
 .playwright-mcp
+# Nested IDE dirs stay machine-local; the root .idea is tracked and curates
+# its own contents via the whitelist .idea/.gitignore
+**/.idea/
+!/.idea/
 # Environment and secrets - NEVER commit these
 .env
 .env.*

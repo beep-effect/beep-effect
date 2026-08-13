@@ -13,9 +13,9 @@
     "@beep/infra": "Test project lives at test/tsconfig.json (not tsconfig.test.json) and check runs only tsgo -b tsconfig.json; its ./**/*.test.ts include also leaves infra/test/schemaParity.ts unselected."
   },
   "check": {
-    "total_findings": 65,
+    "total_findings": 66,
     "missing_test_tsconfig": 65,
-    "unwired_test_tsconfig": 0
+    "unwired_test_tsconfig": 1
   },
   "findings": [
     {
@@ -162,6 +162,11 @@
       "package": "@beep/infra",
       "directory": "infra",
       "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/infra-turbo-cache-lambda",
+      "directory": "infra/lambda/turbo-cache",
+      "kind": "unwired-test-tsconfig"
     },
     {
       "package": "@beep/law-practice-domain",
