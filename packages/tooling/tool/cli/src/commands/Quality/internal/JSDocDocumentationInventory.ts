@@ -741,7 +741,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
   }
   if (Node.isClassDeclaration(node)) {
     const text = getDocNode(node).getText();
-    return /\b(?:S\.Class|Model\.Class|TaggedErrorClass)\b/.test(text);
+    return /\b(?:S\.(?:Class|TaggedError)|Model\.Class|TaggedErrorClass)\b/.test(text);
   }
   if (!Node.isVariableDeclaration(node)) {
     return false;

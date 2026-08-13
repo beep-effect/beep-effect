@@ -8,7 +8,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
-import { CauseTaggedError, PosInt } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import { A, O, R } from "@beep/utils";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
@@ -53,7 +53,7 @@ const $I = $PandocAstId.create("Pandoc.mapping");
  * import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping"
  *
  * const handled = Effect.fail("projection failed").pipe(
- *   PandocMappingError.mapError("Pandoc mapping failed."),
+ *   Effect.mapError((cause) => PandocMappingError.make({ cause, message: "Pandoc mapping failed." })),
  *   Effect.catchTag("PandocMappingError", (error) => Effect.succeed(error.message))
  * )
  * Effect.runPromise(handled).then(console.log)
@@ -62,8 +62,12 @@ const $I = $PandocAstId.create("Pandoc.mapping");
  * @category errors
  * @since 0.0.0
  */
-export class PandocMappingError extends CauseTaggedError<PandocMappingError>($I`PandocMappingError`)(
+export class PandocMappingError extends S.TaggedError<PandocMappingError>($I`PandocMappingError`)(
   "PandocMappingError",
+  {
+    message: S.String,
+    cause: S.Defect({ includeStack: true }),
+  },
   $I.annote("PandocMappingError", {
     description: "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed.",
   })
@@ -1254,7 +1258,7 @@ export const pandocToDocument = (
           })
       )
     ),
-    PandocMappingError.mapError("Pandoc to Md mapping failed.")
+    Effect.mapError((cause) => PandocMappingError.make({ cause, message: "Pandoc to Md mapping failed." }))
   );
 
 /**
@@ -1294,5 +1298,5 @@ export const documentToPandoc = (
           })
       )
     ),
-    PandocMappingError.mapError("Md to Pandoc mapping failed.")
+    Effect.mapError((cause) => PandocMappingError.make({ cause, message: "Md to Pandoc mapping failed." }))
   );

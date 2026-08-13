@@ -59,11 +59,6 @@ export * from "./Bytes.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./CauseTaggedError/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Color/index.ts";
 /**
  * @since 0.0.0
@@ -469,11 +464,6 @@ export * from "./SnakeStr.ts";
  * @category validation
  */
 export * from "./StatusCauseError.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./StatusCauseTaggedErrorClass/index.ts";
 /**
  * @since 0.0.0
  * @category validation

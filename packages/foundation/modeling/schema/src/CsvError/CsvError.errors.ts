@@ -10,22 +10,12 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
-import type { TaggedErrorClassFromFields } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("CsvError");
 const CsvErrorFields = {
   message: S.String,
   offset: S.optionalKey(S.Finite),
 } satisfies S.Struct.Fields;
-const CsvErrorBase: TaggedErrorClassFromFields<CsvError, "CsvError", typeof CsvErrorFields> =
-  TaggedErrorClass<CsvError>($I`CsvError`)(
-    "CsvError",
-    CsvErrorFields,
-    $I.annote("CsvError", {
-      description: "Raised when CSV parsing, header validation, or formatting fails.",
-    })
-  );
-
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
  *
@@ -41,7 +31,13 @@ const CsvErrorBase: TaggedErrorClassFromFields<CsvError, "CsvError", typeof CsvE
  * @category validation
  * @since 0.0.0
  */
-export class CsvError extends CsvErrorBase {}
+export class CsvError extends TaggedErrorClass<CsvError>($I`CsvError`)(
+  "CsvError",
+  CsvErrorFields,
+  $I.annote("CsvError", {
+    description: "Raised when CSV parsing, header validation, or formatting fails.",
+  })
+) {}
 
 /**
  * Construct a {@link CsvError}.

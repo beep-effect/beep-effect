@@ -14,7 +14,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit, LiteralKitKeyCollisionError, matchLiteral } from "../LiteralKit/index.ts";
 import { isNonNegative } from "../Number.ts";
-import type { TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass";
 import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
 
@@ -25,18 +24,6 @@ const MappedLiteralDuplicateErrorFields = {
   firstIndex: S.Int.check(isNonNegative),
   secondIndex: S.Int.check(isNonNegative),
 } satisfies S.Struct.Fields;
-const MappedLiteralDuplicateErrorBase: TaggedErrorClassFromFields<
-  MappedLiteralDuplicateError,
-  "MappedLiteralDuplicateError",
-  typeof MappedLiteralDuplicateErrorFields
-> = TaggedErrorClass<MappedLiteralDuplicateError>($I.make("MappedLiteralDuplicateError"))(
-  "MappedLiteralDuplicateError",
-  MappedLiteralDuplicateErrorFields,
-  $I.annote("MappedLiteralDuplicateError", {
-    title: "Mapped Literal Duplicate Error",
-    description: "Thrown when mapped literal entries are not one-to-one.",
-  })
-);
 
 type LiteralValue = SchemaAST.LiteralValue;
 type Literals = A.NonEmptyReadonlyArray<LiteralValue>;
@@ -102,7 +89,16 @@ type DirectionalKit<
  * @category errors
  * @since 0.0.0
  */
-export class MappedLiteralDuplicateError extends MappedLiteralDuplicateErrorBase {}
+export class MappedLiteralDuplicateError extends TaggedErrorClass<MappedLiteralDuplicateError>(
+  $I.make("MappedLiteralDuplicateError")
+)(
+  "MappedLiteralDuplicateError",
+  MappedLiteralDuplicateErrorFields,
+  $I.annote("MappedLiteralDuplicateError", {
+    title: "Mapped Literal Duplicate Error",
+    description: "Thrown when mapped literal entries are not one-to-one.",
+  })
+) {}
 
 type SeenState = {
   readonly from: HashMap.HashMap<LiteralValue, number>;

@@ -155,7 +155,9 @@ const readInputFile = Effect.fn("AIMetrics.readInputFile")(function* (input: str
   const absolutePath = path.resolve(input);
   const content = yield* fs
     .readFileString(absolutePath)
-    .pipe(AiMetricsCommandError.mapError("Failed to read transcript input."));
+    .pipe(
+      Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to read transcript input." }))
+    );
 
   return {
     absolutePath,
@@ -165,19 +167,25 @@ const readInputFile = Effect.fn("AIMetrics.readInputFile")(function* (input: str
 
 const encodeCommandJson = flow(
   encodeJson,
-  AiMetricsCommandError.mapError("Failed to encode AI metrics command output as JSON.")
+  Effect.mapError((cause) =>
+    AiMetricsCommandError.make({ cause, message: "Failed to encode AI metrics command output as JSON." })
+  )
 );
 
 const encodeInstallSpecCommandJson = flow(
   encodeInstallSpecJson,
-  AiMetricsCommandError.mapError("Failed to encode AI metrics install spec as JSON.")
+  Effect.mapError((cause) =>
+    AiMetricsCommandError.make({ cause, message: "Failed to encode AI metrics install spec as JSON." })
+  )
 );
 
 const readOptionalConfigString: (key: string) => Effect.Effect<O.Option<string>, AiMetricsCommandError> = Effect.fn(
   "AIMetrics.readOptionalConfigString"
 )((key) =>
   ConfigProvider.ConfigProvider.use(pipe(Config.string(key), Config.option).parse).pipe(
-    AiMetricsCommandError.mapError(`Failed to read ${key} from the Effect config provider.`)
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
+    )
   )
 );
 
@@ -187,7 +195,9 @@ const readOptionalRedactedConfigString: (
   "AIMetrics.readOptionalRedactedConfigString"
 )((key) =>
   ConfigProvider.ConfigProvider.use(pipe(key, Config.redacted, Config.option).parse).pipe(
-    AiMetricsCommandError.mapError(`Failed to read ${key} from the Effect config provider.`)
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
+    )
   )
 );
 
@@ -1180,7 +1190,11 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
 ): Effect.fn.Return<ReadonlyArray<string>, AiMetricsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const stat = yield* fs.stat(inputPath).pipe(AiMetricsCommandError.mapError("Failed to inspect privacy input."));
+  const stat = yield* fs
+    .stat(inputPath)
+    .pipe(
+      Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to inspect privacy input." }))
+    );
 
   if (stat.type === "File") {
     return [inputPath];
@@ -1225,7 +1239,12 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
   const files = yield* collectJsonlInputFiles(absolutePath);
   const chunks = yield* Effect.forEach(
     files,
-    (filePath) => fs.readFileString(filePath).pipe(AiMetricsCommandError.mapError("Failed to read transcript input.")),
+    (filePath) =>
+      fs
+        .readFileString(filePath)
+        .pipe(
+          Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to read transcript input." }))
+        ),
     { concurrency: 8 }
   );
 
@@ -1835,7 +1854,12 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   // exact mechanism that put the canonical store inside a clone. Refuse to render
   // anything before the root is proven absolute.
   yield* requireAbsoluteAiMetricsDataRoot(spec.storage.dataRoot).pipe(
-    AiMetricsCommandError.mapError("AI metrics forwarder timer units require an absolute --data-root.")
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({
+        cause,
+        message: "AI metrics forwarder timer units require an absolute --data-root.",
+      })
+    )
   );
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
@@ -2490,9 +2514,15 @@ const readMirrorManifest = Effect.fn("AIMetrics.readMirrorManifest")(function* (
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs
     .readFileString(manifestPath)
-    .pipe(AiMetricsCommandError.mapError("Failed to read AI metrics mirror manifest JSON."));
+    .pipe(
+      Effect.mapError((cause) =>
+        AiMetricsCommandError.make({ cause, message: "Failed to read AI metrics mirror manifest JSON." })
+      )
+    );
   return yield* decodeMirrorManifestJson(content).pipe(
-    AiMetricsCommandError.mapError("Failed to parse AI metrics mirror manifest JSON.")
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: "Failed to parse AI metrics mirror manifest JSON." })
+    )
   );
 });
 
@@ -2556,7 +2586,11 @@ const listMirrorBundleFiles = Effect.fn("AIMetrics.listMirrorBundleFiles")(funct
   ): Effect.fn.Return<ReadonlyArray<string>, AiMetricsCommandError, FileSystem.FileSystem | Path.Path> {
     const stat = yield* fs
       .stat(currentPath)
-      .pipe(AiMetricsCommandError.mapError("Failed to inspect AI metrics mirror bundle file inventory."));
+      .pipe(
+        Effect.mapError((cause) =>
+          AiMetricsCommandError.make({ cause, message: "Failed to inspect AI metrics mirror bundle file inventory." })
+        )
+      );
     if (stat.type === "File") {
       return [pipe(path.relative(bundleDir, currentPath), Str.replace(/\\/gu, "/"))];
     }
@@ -2566,7 +2600,11 @@ const listMirrorBundleFiles = Effect.fn("AIMetrics.listMirrorBundleFiles")(funct
 
     const entries = yield* fs
       .readDirectory(currentPath)
-      .pipe(AiMetricsCommandError.mapError("Failed to read AI metrics mirror bundle file inventory."));
+      .pipe(
+        Effect.mapError((cause) =>
+          AiMetricsCommandError.make({ cause, message: "Failed to read AI metrics mirror bundle file inventory." })
+        )
+      );
     const nested = yield* Effect.forEach(entries, (entry) => walk(path.join(currentPath, entry)), { concurrency: 8 });
     return A.flatten(nested);
   });
@@ -2763,7 +2801,9 @@ const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(f
   const manifestPath = `${remoteRoot}/manifest.json`;
   const captured = yield* runCapturedCommand("ssh", [host, `cat ${shellQuote(manifestPath)}`]);
   const manifest = yield* decodeMirrorManifestJson(captured.stdout).pipe(
-    AiMetricsCommandError.mapError("Failed to parse remote AI metrics mirror manifest JSON.")
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: "Failed to parse remote AI metrics mirror manifest JSON." })
+    )
   );
   yield* requireSafeMirrorManifest({
     manifest,
@@ -3046,9 +3086,18 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
               FROM ai_metrics_raw_archive_objects
               ORDER BY encrypted_at_epoch_ms
                 DESC LIMIT 1`)
-      .pipe(AiMetricsCommandError.mapError("Failed to select an AI metrics archive object for the decrypt drill."));
+      .pipe(
+        Effect.mapError((cause) =>
+          AiMetricsCommandError.make({
+            cause,
+            message: "Failed to select an AI metrics archive object for the decrypt drill.",
+          })
+        )
+      );
     const decoded = yield* decodeArchiveDrillRows(rows).pipe(
-      AiMetricsCommandError.mapError("Failed to decode AI metrics archive drill rows.")
+      Effect.mapError((cause) =>
+        AiMetricsCommandError.make({ cause, message: "Failed to decode AI metrics archive drill rows." })
+      )
     );
     const row = A.head(decoded);
     if (O.isNone(row)) {

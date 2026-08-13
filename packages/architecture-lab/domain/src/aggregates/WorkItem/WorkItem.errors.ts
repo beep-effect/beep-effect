@@ -10,7 +10,6 @@ import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 import { WorkItemId, WorkItemStatus } from "./WorkItem.values.ts";
-import type { TaggedErrorNewInput } from "@beep/schema";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors");
 
@@ -114,7 +113,7 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
    * @category factories
    * @since 0.0.0
    */
-  static fromStatus(input: TaggedErrorNewInput<typeof WorkItemInvalidTransition>) {
+  static fromStatus(input: (typeof WorkItemInvalidTransition)["~type.make.in"]) {
     return WorkItemInvalidTransition.make({
       workItemId: input.workItemId,
       from: input.from,

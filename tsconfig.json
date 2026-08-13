@@ -839,9 +839,6 @@
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
-      "@beep/schema/CauseTaggedError": [
-        "./packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
-      ],
       "@beep/schema/CommonTextSchemas": [
         "./packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
       ],
@@ -959,9 +956,6 @@
       ],
       "@beep/schema/StatusCauseError": [
         "./packages/foundation/modeling/schema/src/StatusCauseError.ts"
-      ],
-      "@beep/schema/StatusCauseTaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
       ],
       "@beep/schema/String": [
         "./packages/foundation/modeling/schema/src/String.ts"

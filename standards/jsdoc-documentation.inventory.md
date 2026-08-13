@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-13T09:27:48.495Z
+Generated: 2026-08-13T10:02:29.999Z
 
 ## Scope
 
@@ -14,10 +14,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2476 |
-| publicExports | 16229 |
+| publicModules | 2472 |
+| publicExports | 16212 |
 | openModules | 397 |
-| openExports | 135 |
+| openExports | 136 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -25,7 +25,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 0 |
 | unsafeExampleFindings | 0 |
-| schemaAnnotationFindings | 0 |
+| schemaAnnotationFindings | 2 |
 | undescribed-see | 12 |
 | multiple-description-paragraphs | 514 |
 | leading-blank | 0 |
@@ -150,7 +150,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 93 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 94 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 95 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
-| 96 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1680 | 24 | 1 |
+| 96 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 257 | 1663 | 24 | 2 |
 | 97 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 48 | 8 | 4 |
 | 98 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 215 | 1 | 1 |
 | 99 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -542,8 +542,8 @@ Module findings:
 Export findings:
 - `src/Lexical.model.ts:1136` `ElementNode` (class) - 1 documentation section/link violation(s)
 - `src/Lexical.model.ts:2198` `YouTubeNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3197` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3280` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3201` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3284` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
 
 ### @beep/scratchpad
 
@@ -912,6 +912,7 @@ Module findings:
 
 Export findings:
 - `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
+- `src/TaggedErrorClass/TaggedErrorClass.errors.ts:38` `TaggedErrorClass` (const) - 2 schema annotation/type-alias gap(s)
 
 ### @beep/epistemic-server
 

@@ -10,7 +10,6 @@ import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ArtifactId, OperationId } from "../Artifact/Artifact.schema.ts";
 import { FileFormatFamily } from "../Strategy/Strategy.schema.ts";
-import type { TaggedErrorNewInput } from "@beep/schema/TaggedErrorClass";
 
 const $I = $FileProcessingId.create("Operation");
 
@@ -102,6 +101,6 @@ export class FileProcessingOperationError extends TaggedErrorClass<FileProcessin
    */
   static readonly fromReason = (
     reason: FileProcessingOperationErrorReason,
-    options: Omit<TaggedErrorNewInput<typeof FileProcessingOperationError>, "reason">
+    options: Omit<(typeof FileProcessingOperationError)["~type.make.in"], "reason">
   ): FileProcessingOperationError => FileProcessingOperationError.make({ reason, ...options });
 }
