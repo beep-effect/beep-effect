@@ -259,6 +259,23 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
   );
 
   it.live(
+    "ignores a manual submission when the form is not open",
+    Effect.fnUntraced(function* () {
+      const client = DesktopIntakeClient.of(((tag: string) =>
+        Effect.die(
+          `workspace vault RPC must not run outside the manual form: ${tag}`
+        )) as unknown as DesktopIntakeClient["Service"]);
+      const registry = registryWithClient(client);
+      registry.mount(documentIntakeStateAtoms(workspaceId));
+
+      yield* runSubmitManualVaultPath(registry, selectedPath);
+
+      expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
+      registry.dispose();
+    })
+  );
+
+  it.live(
     "cancelling the manual form returns to the idle onboarding card",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
