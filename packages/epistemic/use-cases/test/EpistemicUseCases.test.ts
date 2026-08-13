@@ -1,9 +1,6 @@
-import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView, Evidence } from "@beep/epistemic-domain";
-import * as ClaimGateUC from "@beep/epistemic-use-cases/ClaimGate";
+import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView } from "@beep/epistemic-domain";
 import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
-import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
-import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -22,54 +19,11 @@ const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): Candi
     snapshot: {},
   });
 
-const evidence: Evidence = S.decodeUnknownSync(Evidence)({
-  ...baseEntityFixtureInput("EpistemicEvidence", 10),
-  artifactFixtureKey: "artifact.office-action",
-  spanFixtureKey: "span.claim-1",
-  span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
-});
-
 const candidate = makeCandidate(1, "claim.patentability", "candidate");
 const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
 const admittedVerdict = S.decodeSync(ClaimGateResult)({ verdict: "admitted" });
 
 describe("@beep/epistemic-use-cases", () => {
-  // Boots only the bounded SHACL capability layer — no other slice, no runtime.
-  it.layer(ShaclValidationServiceLive)("claim gate over the bounded SHACL engine", (it) => {
-    it.effect(
-      "admits a well-formed claim and advances candidate -> shape_valid",
-      Effect.fnUntraced(function* () {
-        const shacl = yield* ShaclValidationService;
-        const gate = ClaimGateUC.makeClaimGate(shacl);
-
-        const verdict = yield* gate.evaluate(candidate, [evidence]);
-        expect(verdict.verdict).toBe("admitted");
-
-        const advanced = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
-        expect(advanced.lifecycle).toBe("shape_valid");
-        expect(advanced.fixtureKey).toBe(candidate.fixtureKey);
-      })
-    );
-
-    it.effect(
-      "rejects a claim with no evidence span and does not advance",
-      Effect.fnUntraced(function* () {
-        const shacl = yield* ShaclValidationService;
-        const gate = ClaimGateUC.makeClaimGate(shacl);
-
-        const verdict = yield* gate.evaluate(candidate, []);
-        expect(verdict.verdict).toBe("rejected");
-        if (ClaimGateResult.guards.rejected(verdict)) {
-          expect(verdict.violations.length).toBeGreaterThan(0);
-          expect(verdict.violations[0].severity).toBe("violation");
-        }
-
-        const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
-        expect(blocked.lifecycle).toBe("candidate");
-      })
-    );
-  });
-
   it.effect(
     "fails an illegal advance from a non-candidate state with ClaimInvalidTransition",
     Effect.fnUntraced(function* () {

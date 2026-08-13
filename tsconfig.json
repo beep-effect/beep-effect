@@ -1927,6 +1927,9 @@
       ],
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/epistemic-server/ShaclValidation": [
+        "./packages/epistemic/server/src/ShaclValidation/index.ts"
       ]
     }
   }
