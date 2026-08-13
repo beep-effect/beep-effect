@@ -22,7 +22,7 @@ const warning = ShaclViolation.cases.Warning.make({
 });
 
 describe("effect-ontology SHACL schemas", () => {
-  it("derives warning-free, schema-valid values for every public SHACL schema", () => {
+  it("derives schema-valid values for every public SHACL schema", () => {
     const schemas: ReadonlyArray<S.Constraint> = [
       ShaclViolationSeverity,
       ShaclViolation,

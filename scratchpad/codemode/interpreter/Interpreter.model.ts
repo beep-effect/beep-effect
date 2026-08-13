@@ -954,6 +954,7 @@ export const InterpreterFailure = S.Union([
 export type InterpreterFailure = typeof InterpreterFailure.Type;
 
 /** Captures a synchronous interpreter adapter in the closed failure channel. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const tryInterpreter = <Value>(
   evaluate: () => Value,
   node?: AstNode
@@ -969,6 +970,7 @@ export const tryInterpreter = <Value>(
           ),
   });
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRuntimeError =>
   InterpreterRuntimeError.new(
     `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
@@ -978,6 +980,7 @@ export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRunti
   );
 
 export const isRecord = P.isObject;
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const asNode = (value: unknown, context: string): AstNode => {
   if (!AstNode.is(value)) {
     throw InterpreterRuntimeError.new(`Invalid AST node while reading ${context}.`);
@@ -985,6 +988,7 @@ export const asNode = (value: unknown, context: string): AstNode => {
   return value;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const getArray = (node: AstNode, key: string): Array<unknown> => {
   const value = node[key];
   if (!A.isArray(value)) {
@@ -993,6 +997,7 @@ export const getArray = (node: AstNode, key: string): Array<unknown> => {
   return value;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const getString = (node: AstNode, key: string): string => {
   const value = node[key];
   if (!P.isString(value)) {
@@ -1001,6 +1006,7 @@ export const getString = (node: AstNode, key: string): string => {
   return value;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const getBoolean = (node: AstNode, key: string): boolean => {
   const value = node[key];
   if (!P.isBoolean(value)) {
@@ -1009,11 +1015,13 @@ export const getBoolean = (node: AstNode, key: string): boolean => {
   return value;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const getOptionalNode = (node: AstNode, key: string): AstNode | undefined => {
   const value = node[key];
   return P.isNullish(value) ? undefined : asNode(value, key);
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const getNode = (node: AstNode, key: string): AstNode => asNode(node[key], key);
 
 export const sourceLocation = (node: AstNode): {

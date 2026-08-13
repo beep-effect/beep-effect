@@ -474,6 +474,7 @@ const renderSchema = (
 };
 
 /** Renders an Effect Schema as the TypeScript shape exposed to the guest. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const toTypeScript = (
   schema: S.Top,
   decoded = false,
@@ -496,6 +497,7 @@ export const toTypeScript = (
   );
 
 /** Renders a raw JSON Schema document after schema-first decoding. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const jsonSchemaToTypeScript = (
   schema: JsonSchema,
   pretty = false
@@ -585,10 +587,12 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
   );
 
 /** Renders one tool's input schema. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const inputTypeScript = (tool: Tool.Any, pretty = false): string =>
   jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty);
 
 /** Renders one tool's success and returned-failure schemas. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const outputTypeScript = (tool: Tool.Any, pretty = false): string => {
   const success = toTypeScript(tool.successSchema, true, pretty);
   if (tool.failureMode !== "return") return success;
