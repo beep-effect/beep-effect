@@ -87,7 +87,7 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            runner: beep-ec2-heavy
+            runner: ubuntu-24.04
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
