@@ -1243,7 +1243,7 @@ describe("quality task adapter", () => {
           // added on another branch must not break this assertion when the two
           // land together in a merge.
           const policyStepCount = A.length(rootLintPolicyStepsForTesting(tmpDir));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 2`);
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 3`);
         })
       )
     ));

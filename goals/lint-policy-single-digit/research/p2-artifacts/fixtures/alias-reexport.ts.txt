@@ -1,0 +1,5 @@
+import { deprecatedCall as aliasedCall } from "./api.ts";
+import { reexportedCall } from "./reexport.ts";
+
+export const aliasUsage = aliasedCall();
+export const reexportUsage = reexportedCall();
