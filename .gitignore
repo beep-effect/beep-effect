@@ -6,7 +6,6 @@ tmp/
 dist/
 build/
 .direnv/
-.idea/
 .playwright-mcp
 # Environment and secrets - NEVER commit these
 .env

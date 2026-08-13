@@ -1,0 +1,9 @@
+# Whitelist: everything in .idea/ is machine-local unless explicitly tracked below.
+# New shared project settings must be un-ignored here deliberately.
+/*
+!/.gitignore
+!/beep-effect.iml
+!/compiler.xml
+!/inspectionProfiles/
+!/modules.xml
+!/vcs.xml
