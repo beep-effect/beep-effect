@@ -58,7 +58,7 @@ describe("schema-first bubble shrinkwrap", () => {
   });
 
   test("author literals round-trip through the schema", () => {
-    const author = Effect.runSync(S.decodeUnknownEffect(BubbleAuthor)("agent"));
+    const author = Effect.runSync(S.decodeEffect(BubbleAuthor)("agent"));
 
     expect(Effect.runSync(S.encodeEffect(BubbleAuthor)(author))).toBe("agent");
   });

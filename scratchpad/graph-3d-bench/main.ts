@@ -167,7 +167,7 @@ const buildGraph = (): GraphData => {
         Math.floor(positions[i * 3 + 2]! / CELL)
       );
       const bucket = grid.get(k);
-      if (bucket) bucket.push(i);
+      if (bucket !== undefined) bucket.push(i);
       else grid.set(k, [i]);
     }
     // bounded many-body repulsion over the 27-cell neighborhood
@@ -182,7 +182,7 @@ const buildGraph = (): GraphData => {
         for (let oy = -1; oy <= 1; oy++)
           for (let oz = -1; oz <= 1; oz++) {
             const bucket = grid.get(cellKey(cx + ox, cy + oy, cz + oz));
-            if (!bucket) continue;
+            if (bucket === undefined) continue;
             for (const j of bucket) {
               if (j === i) continue;
               const dx = ix - positions[j * 3]!;
@@ -561,7 +561,7 @@ const mount = (container: HTMLElement, graph: GraphData): BenchHandle => {
       if (rankInBudget > opaqueBand && rankInBudget > K * 0.5) {
         bandOpacity = Math.max(0.1, 1 - smoothstep((rankInBudget - K * 0.5) / (K * 0.5)));
       }
-      const dimmed = selection && !selection.keep.has(id) ? 0.1 : 1;
+      const dimmed = selection !== null && !selection.keep.has(id) ? 0.1 : 1;
       const logical = logicalSize(graph.importance[id]!);
       const worldH = (logical + 8) * damping * 0.75;
       label.sprite.position.set(nodePos.x, nodePos.y + logical * 0.5 * damping * 0.75, nodePos.z);
@@ -570,10 +570,10 @@ const mount = (container: HTMLElement, graph: GraphData): BenchHandle => {
       label.sprite.visible = true;
       visibleLabels += 1;
     };
-    if (selection) admit(selection.anchor, 1);
+    if (selection !== null) admit(selection.anchor, 1);
     for (let rank = 0; rank < graph.order.length && poolIdx < Math.min(K, LABEL_POOL); rank++) {
       const id = graph.order[rank]!;
-      if (selection && id === selection.anchor) continue;
+      if (selection !== null && id === selection.anchor) continue;
       admit(id, poolIdx + 1);
     }
     for (; poolIdx < LABEL_POOL; poolIdx++) labelPool[poolIdx]!.sprite.visible = false;
@@ -751,7 +751,7 @@ let bench: BenchState | null = null;
 
 const heapMb = () => {
   const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
-  return memory ? Math.round(memory.usedJSHeapSize / 1048576) : null;
+  return memory !== undefined ? Math.round(memory.usedJSHeapSize / 1048576) : null;
 };
 
 const startBench = () => {
@@ -761,7 +761,7 @@ const startBench = () => {
 };
 
 const finishBench = () => {
-  if (!bench) return;
+  if (bench === null) return;
   const frames = bench.frames;
   const sorted = [...frames].sort((a, b) => a - b);
   const total = frames.reduce((a, b) => a + b, 0);
@@ -792,9 +792,10 @@ const finishBench = () => {
     gpu: (() => {
       const gl = document.createElement("canvas").getContext("webgl2");
       const ext = gl?.getExtension("WEBGL_debug_renderer_info");
-      return ext && gl ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "masked";
+      return gl !== null && ext !== null && ext !== undefined ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "masked";
     })(),
   };
+  // @effect-diagnostics-next-line globalConsole:off -- Browser benchmark protocol writes a machine-readable sentinel.
   console.log("BENCH_RESULT " + JSON.stringify(result));
   (window as unknown as { __benchResult: unknown }).__benchResult = result;
   bench = null;
@@ -802,7 +803,7 @@ const finishBench = () => {
 };
 
 onFrame = (dt) => {
-  if (bench) {
+  if (bench !== null) {
     const t = (performance.now() - bench.start) / 1000;
     bench.frames.push(dt);
     bench.labelSamples.push(handle.visibleLabels());
@@ -834,7 +835,7 @@ onFrame = (dt) => {
     `nodes ${NODE_COUNT}  edges ${EDGE_COUNT}  labels ${handle.visibleLabels()}\n` +
     `fps ${handle.fps().toFixed(1)}  layout ${graph.layoutMs.toFixed(0)}ms/${graph.layoutTicks}t  mount ${mountMs.toFixed(0)}ms\n` +
     `draw calls ${handle.drawCalls()}  tris ${handle.triangles()}  cam ${handle.camDist().toFixed(0)}` +
-    (bench ? `\nBENCH ${((performance.now() - bench.start) / 1000) | 0}s/${BENCH_SECONDS}s [${bench.phase}]` : "");
+    (bench !== null ? `\nBENCH ${((performance.now() - bench.start) / 1000) | 0}s/${BENCH_SECONDS}s [${bench.phase}]` : "");
 };
 
 document.getElementById("bench")!.addEventListener("click", startBench);
@@ -848,7 +849,9 @@ document.getElementById("remount")!.addEventListener("click", () => {
   handle.destroy();
   handle = mount(app, graph);
   mountMs = (performance.now() - t0) / 2;
+  // @effect-diagnostics-next-line globalConsole:off -- Browser benchmark protocol writes a machine-readable sentinel.
   console.log("REMOUNT_OK doubleMountAvgMs=" + mountMs.toFixed(1) + " canvases=" + app.querySelectorAll("canvas").length);
 });
 
+// @effect-diagnostics-next-line globalTimers:off -- Browser benchmark entrypoint schedules its one-shot automated run.
 if (params.get("auto") === "1") setTimeout(startBench, 1500);

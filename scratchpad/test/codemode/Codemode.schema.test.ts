@@ -57,14 +57,13 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   numRuns = 40
 ): void => {
-  const derived = S.toArbitrary(schema, { report: true });
+  const derived = S.toArbitrary(schema)(fc);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  expect(derived.report.warnings).toEqual(A.empty());
   fc.assert(
-    fc.property(derived.value, (value) =>
+    fc.property(derived, (value) =>
       equivalent(
         Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))),
         value
@@ -155,8 +154,8 @@ describe("CodeMode schema laws", () => {
   });
 
   it("decodes defaults once and keeps absent Option fields off the wire", () => {
-    const limits = S.decodeUnknownSync(ExecutionLimits)({});
-    const search = S.decodeUnknownSync(SearchInput)({});
+    const limits = S.decodeSync(ExecutionLimits)({});
+    const search = S.decodeSync(SearchInput)({});
 
     assert.strictEqual(O.isNone(limits.timeoutMs), true);
     assert.strictEqual(O.isNone(limits.maxToolCalls), true);
