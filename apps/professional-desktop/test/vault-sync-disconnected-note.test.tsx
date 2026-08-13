@@ -12,7 +12,7 @@ import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorks
 import type { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 
 const statusWith = (connected: boolean, disconnectReason: O.Option<DmsMirrorDisconnectReason>): VaultSyncStatus =>
-  S.decodeUnknownSync(VaultSyncStatus)({
+  S.decodeSync(VaultSyncStatus)({
     conflictItems: 0,
     connected,
     disconnectReason: O.getOrNull(disconnectReason),
