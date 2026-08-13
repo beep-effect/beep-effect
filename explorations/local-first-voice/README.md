@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,8 +15,8 @@ primitives with per-feature choice of local (Transformers.js) vs cloud models.
 
 ## Next Open Question
 
-run [`goals/voice-composer-slice`](../../goals/voice-composer-slice/README.md) P0
-spike (5-day cap) → proceed/reshape/stop
+None while graduated. The four gated follow-ons remain MAP re-entry points; a
+fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -32,6 +32,9 @@ spike (5-day cap) → proceed/reshape/stop
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. The four gated voice follow-ons remain MAP re-entry points, and
+  a fired gate reopens this packet at `decompose`.
 - 2026-07-14: de-drifted BRIEF/MAP to the four locked ratifications, created the
   missing provenance ledger, and graduated `voice-composer-slice` with the bounded
   Linux Tauri spike as P0; exploration stays active for absorbed/gated follow-ons.
