@@ -10,6 +10,7 @@ export type SyncIteratorRunner<R> = {
   readonly syncIterator: (value: unknown, node: AstNode) => Effect.Effect<IteratorCursor<R> | undefined, InterpreterFailure, R>
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const preserveConsumerError = <A, R>(
   cursor: IteratorCursor<R>,
   effect: Effect.Effect<A, InterpreterFailure, R>,

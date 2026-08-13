@@ -43,10 +43,12 @@ const focusNodeValue = (subject: Subject): string =>
 /**
  * Bounded SHACL-inspired validation service live layer.
  *
- * This is a deliberately minimal validator (target class, `minCount`,
- * `maxCount`, `datatype`, `hasValue`) that keeps the epistemic claim gate
- * dependency-free. It is not a full SHACL engine; the general-purpose
- * `shacl-engine`-backed implementation lives in the `@beep/shacl` driver.
+ * **Details**
+ *
+ * A deliberately minimal validator (target class, `minCount`, `maxCount`,
+ * `datatype`, `hasValue`) that keeps the epistemic claim gate dependency-free.
+ * It is not a full SHACL engine; the general-purpose `shacl-engine`-backed
+ * implementation lives in the `@beep/shacl` driver.
  *
  * **Example** (Validate empty dataset)
  *

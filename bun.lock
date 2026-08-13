@@ -670,15 +670,6 @@
         "vitest": "catalog:",
       },
     },
-    "packages/drivers/courtlistener": {
-      "name": "@beep/courtlistener",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
-      },
-    },
     "packages/drivers/discord": {
       "name": "@beep/discord",
       "version": "0.0.1",
@@ -712,15 +703,6 @@
         "bun-types": "catalog:",
         "docx": "catalog:",
         "pdf-lib": "catalog:",
-      },
-    },
-    "packages/drivers/dol": {
-      "name": "@beep/dol",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/drivers/drizzle": {
@@ -807,15 +789,6 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
-      },
-    },
-    "packages/drivers/federal-register": {
-      "name": "@beep/federal-register",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/drivers/ffmpeg": {
@@ -2744,13 +2717,6 @@
     "@babel/plugin-transform-modules-commonjs": "^8.0.1",
     "@babel/preset-react": "^8.0.1",
     "@base-ui/react": "^1.7.0",
-    "@better-auth/core": "^1.7.0-beta.10",
-    "@better-auth/infra": "^0.3.7",
-    "@better-auth/oauth-provider": "^1.7.0-beta.10",
-    "@better-auth/passkey": "^1.7.0-beta.10",
-    "@better-auth/scim": "^1.7.0-beta.10",
-    "@better-auth/sso": "^1.7.0-beta.10",
-    "@better-auth/stripe": "^1.7.0-beta.10",
     "@biomejs/biome": "2.5.6",
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.0",
@@ -2904,7 +2870,6 @@
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "babel-plugin-transform-next-use-client": "^1.1.1",
-    "better-auth": "^1.7.0-beta.10",
     "bippy": "^0.6.1",
     "box-node-sdk": "^10.14.0",
     "bun-types": "^1.3.14",
@@ -3168,8 +3133,6 @@
 
     "@beep/cosmos": ["@beep/cosmos@workspace:packages/drivers/cosmos"],
 
-    "@beep/courtlistener": ["@beep/courtlistener@workspace:packages/drivers/courtlistener"],
-
     "@beep/data": ["@beep/data@workspace:packages/foundation/primitive/data"],
 
     "@beep/db-admin": ["@beep/db-admin@workspace:packages/_internal/db-admin"],
@@ -3189,8 +3152,6 @@
     "@beep/documents-tables": ["@beep/documents-tables@workspace:packages/documents/tables"],
 
     "@beep/documents-use-cases": ["@beep/documents-use-cases@workspace:packages/documents/use-cases"],
-
-    "@beep/dol": ["@beep/dol@workspace:packages/drivers/dol"],
 
     "@beep/drizzle": ["@beep/drizzle@workspace:packages/drivers/drizzle"],
 
@@ -3221,8 +3182,6 @@
     "@beep/face-detection": ["@beep/face-detection@workspace:packages/drivers/face-detection"],
 
     "@beep/fc-runs": ["@beep/fc-runs@workspace:packages/tooling/test-kit/fc-runs"],
-
-    "@beep/federal-register": ["@beep/federal-register@workspace:packages/drivers/federal-register"],
 
     "@beep/ffmpeg": ["@beep/ffmpeg@workspace:packages/drivers/ffmpeg"],
 

@@ -147,10 +147,7 @@ const generatedComposers = $I.compose(
   "m365",
   "m365-mcp",
   "govinfo",
-  "federal-register",
   "ecfr",
-  "dol",
-  "courtlistener",
   "api-transport",
   "mcp-kit",
   "uspto-mcp",
@@ -175,7 +172,6 @@ const generatedComposers = $I.compose(
   "shacl",
   "storybook",
   "tsgo-shim",
-  "doc-text",
   "doc-text",
   "documents-tables",
   "tailscale",
@@ -1711,23 +1707,6 @@ export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = composers
 export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = composers.$GovinfoId;
 
 /**
- * Identity composer for `@beep/federal-register`.
- *
- * **Example** (Make Federal Register package ID)
- *
- * ```ts
- * import { $FederalRegisterId } from "@beep/identity"
- *
- * const id = $FederalRegisterId.make("FederalRegister")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $FederalRegisterId: Identity.IdentityComposer<"@beep/federal-register"> = composers.$FederalRegisterId;
-
-/**
  * Identity composer for `@beep/ecfr`.
  *
  * **Example** (Make eCFR package ID)
@@ -1743,40 +1722,6 @@ export const $FederalRegisterId: Identity.IdentityComposer<"@beep/federal-regist
  * @since 0.0.0
  */
 export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = composers.$EcfrId;
-
-/**
- * Identity composer for `@beep/dol`.
- *
- * **Example** (Make DOL package ID)
- *
- * ```ts
- * import { $DolId } from "@beep/identity"
- *
- * const id = $DolId.make("Dol")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $DolId: Identity.IdentityComposer<"@beep/dol"> = composers.$DolId;
-
-/**
- * Identity composer for `@beep/courtlistener`.
- *
- * **Example** (Make CourtListener package ID)
- *
- * ```ts
- * import { $CourtlistenerId } from "@beep/identity"
- *
- * const id = $CourtlistenerId.make("Courtlistener")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = composers.$CourtlistenerId;
 
 /**
  * Identity composer for `@beep/api-transport`.

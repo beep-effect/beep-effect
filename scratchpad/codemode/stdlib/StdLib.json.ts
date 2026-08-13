@@ -31,6 +31,7 @@ import {
  * omission semantics, or native error behavior. Host and protocol JSON uses
  * Effect Schema codecs elsewhere in CodeMode.
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeJsonMethod = <R>(
   runner: CallbackRunner<R>,
   ref: JsonMethodReference | JsonMethodName,

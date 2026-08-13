@@ -138,12 +138,6 @@
         ]
       },
       {
-        "name": "@beep/courtlistener",
-        "patterns": [
-          "packages/drivers/courtlistener/src/**"
-        ]
-      },
-      {
         "name": "@beep/data",
         "patterns": [
           "packages/foundation/primitive/data/src/**"
@@ -201,12 +195,6 @@
         "name": "@beep/documents-use-cases",
         "patterns": [
           "packages/documents/use-cases/src/**"
-        ]
-      },
-      {
-        "name": "@beep/dol",
-        "patterns": [
-          "packages/drivers/dol/src/**"
         ]
       },
       {
@@ -297,12 +285,6 @@
         "name": "@beep/fc-runs",
         "patterns": [
           "packages/tooling/test-kit/fc-runs/src/**"
-        ]
-      },
-      {
-        "name": "@beep/federal-register",
-        "patterns": [
-          "packages/drivers/federal-register/src/**"
         ]
       },
       {
@@ -1218,15 +1200,6 @@
         ]
       },
       {
-        "from": "@beep/courtlistener",
-        "allow": [
-          "@beep/courtlistener"
-        ],
-        "allowTypeOnly": [
-          "@beep/courtlistener"
-        ]
-      },
-      {
         "from": "@beep/data",
         "allow": [
           "@beep/data",
@@ -1416,15 +1389,6 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils"
-        ]
-      },
-      {
-        "from": "@beep/dol",
-        "allow": [
-          "@beep/dol"
-        ],
-        "allowTypeOnly": [
-          "@beep/dol"
         ]
       },
       {
@@ -1708,15 +1672,6 @@
         ],
         "allowTypeOnly": [
           "@beep/fc-runs"
-        ]
-      },
-      {
-        "from": "@beep/federal-register",
-        "allow": [
-          "@beep/federal-register"
-        ],
-        "allowTypeOnly": [
-          "@beep/federal-register"
         ]
       },
       {

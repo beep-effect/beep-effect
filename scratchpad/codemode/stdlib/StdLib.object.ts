@@ -27,6 +27,7 @@ const DirectObjectMethod = LiteralKit(
 )
 type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
   const requireObject = (): object => {
     const input = args[0]
@@ -88,6 +89,7 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
   })
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeObjectFromEntries = <R>(
   runner: SyncIteratorRunner<R>,
   source: unknown,

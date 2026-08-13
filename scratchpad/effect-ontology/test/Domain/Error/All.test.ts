@@ -117,7 +117,7 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology domain errors", () => {
-  it("derives warning-free, schema-valid values for every public error schema", () => {
+  it("derives schema-valid values for every public error schema", () => {
     for (const schema of publicSchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(

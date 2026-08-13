@@ -52,7 +52,7 @@ const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
 );
 
 describe("effect-ontology public schema surface", () => {
-  it("derives warning-free arbitraries whose samples satisfy every exported schema", () => {
+  it("derives arbitraries whose samples satisfy every exported schema", () => {
     expect(publicSchemas.length).toBeGreaterThan(50);
 
     for (const { name, schema } of publicSchemas) {
