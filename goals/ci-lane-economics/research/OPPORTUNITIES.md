@@ -76,3 +76,16 @@ evidence, what would have prevented it). Redact for the public repo.
   transitive resolution without adding a root dependency, or a package-manager
   mode that accepts a transitive package plus exact version and preserves it
   after the temporary root edge is removed.
+
+## 2026-08-13 — trusted file dependency installed without its build artifact
+
+- **Doing:** completing the clean-HEAD Yeet proof after the CI lane changes.
+- **Evidence:** a fresh frozen install left the trusted file dependency
+  `@pulumi/gharunners` without its ignored `bin/` output. Both the package Check
+  task and the independent test-tsgo census then resolved generated TypeScript
+  source under the repository's stricter compiler policy and failed. Running
+  the dependency's own postinstall produced its intended JavaScript and
+  declarations, after which both infra typecheck shapes passed.
+- **Would have prevented it:** make the root install lifecycle explicitly run
+  the generated SDK's postinstall; do not rely on Bun to execute lifecycle
+  scripts for a trusted `file:` dependency nested under a workspace.
