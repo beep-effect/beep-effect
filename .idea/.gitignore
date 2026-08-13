@@ -5,5 +5,7 @@
 !/beep-effect.iml
 !/compiler.xml
 !/inspectionProfiles/
+/inspectionProfiles/*
+!/inspectionProfiles/Project_Default.xml
 !/modules.xml
 !/vcs.xml
