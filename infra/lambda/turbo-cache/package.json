@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "./build.sh",
+    "bundle:check": "rm -rf build && bunx esbuild src/index.ts src/authorizer.ts src/writer.ts --bundle --platform=node --target=node22 --format=cjs --outdir=build --entry-names='[name]' --out-extension:.js=.cjs && node test/bundle-smoke.cjs build",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },

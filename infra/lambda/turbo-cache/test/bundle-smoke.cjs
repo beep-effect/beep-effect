@@ -5,7 +5,7 @@ const buildDirectory = process.argv[2];
 assert.ok(buildDirectory, "expected the build directory argument");
 
 for (const filename of ["index.cjs", "authorizer.cjs", "writer.cjs"]) {
-  const bundle = require(path.join(buildDirectory, filename));
+  const bundle = require(path.resolve(buildDirectory, filename));
   assert.equal(typeof bundle.handler, "function", `${filename} must export handler`);
 }
 

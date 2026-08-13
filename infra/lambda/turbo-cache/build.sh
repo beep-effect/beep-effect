@@ -17,18 +17,9 @@ bun install --frozen-lockfile
 bun run typecheck
 bun test
 
-rm -rf "${build_dir}"
-mkdir -p "${build_dir}"
-bunx esbuild src/index.ts src/authorizer.ts src/writer.ts \
-  --bundle \
-  --platform=node \
-  --target=node22 \
-  --format=cjs \
-  --outdir="${build_dir}" \
-  --entry-names='[name]' \
-  --out-extension:.js=.cjs
-
-node test/bundle-smoke.cjs "${build_dir}"
+# Shared with CI: infra's test:lambda chain runs the same bundle + smoke via
+# this script, so an esbuild resolution or handler-export break fails PRs.
+bun run bundle:check
 
 cp "${build_dir}/index.cjs" "${build_dir}/index.js"
 cp "${build_dir}/authorizer.cjs" "${build_dir}/authorizer.js"
