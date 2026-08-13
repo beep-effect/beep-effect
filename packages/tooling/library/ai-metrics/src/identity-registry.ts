@@ -179,7 +179,8 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
  * operator-provided salts. Every digest in the file changes meaning when the
  * salt changes, and a reader that cannot tell would silently treat the same
  * root as two. The fingerprint is optional only for decoding the pre-fingerprint
- * v1 shape; a populated legacy registry is refused and must be rebuilt.
+ * v1 shape; an upsert migrates a populated legacy registry only when a stable
+ * identity digest proves continuity with the current namespace.
  *
  * **Example** (An empty registry)
  *
@@ -777,6 +778,22 @@ const withFirstSeen = (root: AiMetricsCanonicalRoot, firstSeenAtEpochMillis: num
     worktreeIdHash: root.worktreeIdHash,
   });
 
+const legacyRegistrySharesIdentity = (
+  existing: AiMetricsIdentityRegistry,
+  instances: ReadonlyArray<AiMetricsSourceInstance>,
+  root: AiMetricsCanonicalRoot
+): boolean =>
+  A.some(
+    existing.roots,
+    (existingRoot) =>
+      Eq.equals(existingRoot.rootId, root.rootId) ||
+      Eq.equals(existingRoot.repositoryIdHash, root.repositoryIdHash) ||
+      Eq.equals(existingRoot.worktreeIdHash, root.worktreeIdHash)
+  ) ||
+  A.some(existing.sourceInstances, (existingInstance) =>
+    A.some(instances, (instance) => Eq.equals(existingInstance.homeDirHash, instance.homeDirHash))
+  );
+
 /**
  * Render an identity registry as the JSON persisted beside the data root.
  *
@@ -826,14 +843,14 @@ export const identityRegistryToJson: (
  * outright — a failure mode the lock alone does not close, since a stale lock
  * that an operator clears by hand can leave two writers briefly overlapping.
  *
- * A populated registry whose persisted `hashSaltStatus` differs from the current
- * run's is refused, not merged: its digests live in a different pseudonym
- * namespace, so merging would mix unjoinable identities under a single claimed
- * status and silently break every later join. The remedy is deliberate — delete
- * the registry file to rebuild it in the current namespace, or keep one data
- * root per salt. Same-status salt rotations (`provided` → a different provided
- * salt) are not detectable from the status alone; the registry stores no salt
- * fingerprint by design, so that hazard stays with the operator.
+ * A populated registry whose persisted `hashSaltStatus` or namespace fingerprint
+ * differs from the current run's is refused, not merged: its digests live in a
+ * different pseudonym namespace, so merging would silently break later joins.
+ * A legacy populated registry has no fingerprint. It is migrated only when its
+ * root, repository, worktree, or home-directory digests match a freshly derived
+ * identity; because those digests are salt-dependent, a match proves namespace
+ * continuity without persisting or exposing the salt. An unprovable legacy file
+ * remains a hard failure and must be rebuilt deliberately.
  */
 const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   readonly input: AiMetricsIdentityRegistryUpsertInput;
@@ -852,7 +869,11 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   );
   const existingPopulated =
     A.isReadonlyArrayNonEmpty(existing.roots) || A.isReadonlyArrayNonEmpty(existing.sourceInstances);
-  const existingNamespaceMatches = pipe(existing.hashSaltNamespaceId, O.exists(Eq.equals(hashSaltNamespaceId)));
+  const existingNamespaceMatches = pipe(
+    existing.hashSaltNamespaceId,
+    O.map(Eq.equals(hashSaltNamespaceId)),
+    O.getOrElse(() => legacyRegistrySharesIdentity(existing, instances, root))
+  );
   if (existingPopulated && (!Eq.equals(existing.hashSaltStatus, hashSaltStatus) || !existingNamespaceMatches)) {
     return yield* AiMetricsIdentityRegistryError.make({
       cause: { existing: existing.hashSaltStatus, incoming: hashSaltStatus },

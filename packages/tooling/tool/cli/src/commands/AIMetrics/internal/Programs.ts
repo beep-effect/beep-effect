@@ -1570,14 +1570,13 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
     })
   ).pipe(
     Effect.matchEffect({
-      onFailure: Effect.fn(function* () {
-        yield* Console.error(
-          `ai-metrics: OTLP export failed after forwarder run: ${forwarderOtlpExportFailureMessage}`
-        );
+      onFailure: Effect.fn(function* (error) {
+        const message = `${forwarderOtlpExportFailureMessage} ${error.message}`;
+        yield* Console.error(`ai-metrics: OTLP export failed after forwarder run: ${message}`);
         return forwarderOtlpExportFailed({
           endpoint,
           forwarderResult,
-          message: forwarderOtlpExportFailureMessage,
+          message,
           target,
         });
       }),
