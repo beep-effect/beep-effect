@@ -17,10 +17,8 @@ is valuable for beep-effect's semantic/KG work.
 
 ## Next Open Question
 
-Draft/review the shaped pitch for the ratified shortlist: span annotation
-first; SHACL generation behind M4; `lkg.ttl` routed through the document-
-structure FOLIO machinery; multilingual discipline deferred; ELI delivered as
-a reference-only research asset; lexicog receives a competency question.
+Does the operator approve [`BRIEF.md`](./BRIEF.md) as the shaped contract?
+No goal is scaffolded until that review passes.
 
 ## Read This First
 
@@ -32,6 +30,10 @@ a reference-only research asset; lexicog receives a competency question.
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md`; span annotation is
+  the lead, SHACL remains M4-gated, language discipline is a re-entry, and
+  lexicog CQ authoring is included. Stage remains `shape` for operator review.
 
 - 2026-08-13: align closed with all five questions resolved; stage advanced to
   `shape`. Span annotation leads, SHACL waits behind M4, multilingual work is a
