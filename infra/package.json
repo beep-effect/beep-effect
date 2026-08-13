@@ -27,7 +27,7 @@
     "beep:build": "echo 'no build needed'",
     "beep:check": "tsgo -b tsconfig.json",
     "beep:test": "bunx --bun vitest run --passWithNoTests && bun run test:lambda",
-    "test:lambda": "cd lambda/turbo-cache && bun install --frozen-lockfile && bun run typecheck && bun test && bun run bundle:check",
+    "test:lambda": "cd lambda/turbo-cache && bun install --frozen-lockfile && bun run typecheck && bun test && bun run bundle:check && bun run zip:check",
     "beep:lint": "biome check src/ test/",
     "beep:lint:fix": "biome check src/ test/ --write",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",

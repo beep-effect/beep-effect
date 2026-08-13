@@ -21,22 +21,4 @@ bun test
 # this script, so an esbuild resolution or handler-export break fails PRs.
 bun run bundle:check
 
-cp "${build_dir}/index.cjs" "${build_dir}/index.js"
-cp "${build_dir}/authorizer.cjs" "${build_dir}/authorizer.js"
-cp "${build_dir}/writer.cjs" "${build_dir}/writer.js"
-touch -t 198001010000 \
-  "${build_dir}/index.js" \
-  "${build_dir}/authorizer.js" \
-  "${build_dir}/writer.js"
-
-mkdir -p "${artifact_dir}"
-rm -f "${zip_path}"
-(
-  cd "${build_dir}"
-  zip -q -X "${zip_path}" index.js authorizer.js writer.js
-)
-
-zip_size="$(stat --format='%s' "${zip_path}")"
-zip_sha256="$(sha256sum "${zip_path}" | cut -d ' ' -f 1)"
-printf 'ZIP path: %s\nZIP size: %s bytes\nZIP sha256: %s\n' \
-  "${zip_path}" "${zip_size}" "${zip_sha256}"
+./package-zip.sh "${build_dir}" "${zip_path}"
