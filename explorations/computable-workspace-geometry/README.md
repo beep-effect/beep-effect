@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,26 +19,11 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Dock graduation IS UNDERWAY: the beep-effect6 write-gate on
-`apps/professional-desktop` was RELEASED 2026-07-14 (owner confirmation; the
-lane rotated off desktop surfaces — checkout on `docs/graph-3d-view-packet`,
-campaign branch dormant since Jul 13), and the dock system graduates via
-[`goals/dock-substrate-landing/`](../../goals/dock-substrate-landing/README.md)
-(`@beep/dock` + `@beep/dock-react` under `foundation/ui-system`, then the
-dock shell lands at the app root). Thread-virtualization (Goal #2) remains a
-separate later candidate — its editor-stack surface is distinct from the
-shell swap; re-confirm ownership when opening it. Goal #1 is CLOSED: PR #391
-merged 2026-07-14 and
-[`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
-completed-retained with reflection. Dock-adapter title-minima wiring MERGED
-2026-07-14 (PR #396) with a demo harness + live clamp proof (#397); bubble
-shrinkwrap MERGED 2026-07-14 (PR #399: `lineRanges`/`lineStats` pure root
-helpers + `scratchpad/bubbles` proof + live demo page). Remaining ungated
-candidates: layout-as-unit-tests doctrine (MAP), kernel residue (max
-constraints, LayoutPriority, snap-to-collapse — routed to
-[`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md)
-per the 2026-07-14 sibling review). Q2 v2 residue grows inside the driver
-package.
+None. The 2026-08-13 ownership confirmation resolved the thread-renderer gate,
+and [`goals/thread-virtualization`](../../goals/thread-virtualization/README.md)
+now owns that work. Kernel residue is retained in
+[`goals/dock-substrate-landing/README.md`](../../goals/dock-substrate-landing/README.md#residuals-from-scratchpad-what-is-left-v2)
+after the original scratchpad route was retired.
 
 ## Read This First
 
@@ -47,6 +32,13 @@ package.
 3. [`RESEARCH.md`](./RESEARCH.md) - pretext technical map, the isomorphism, the cost audit.
 
 ## Trail
+
+- 2026-08-13: operator confirmed editor-stack ownership clear for the thread
+  renderer (distinct from the 2026-07-14 desktop-shell release); graduated
+  [`goals/thread-virtualization`](../../goals/thread-virtualization/README.md)
+  and closed the exploration. The 2026-07-14 kernel-residue route named
+  `scratchpad/dockview/WHAT-IS-LEFT.md`; after its 2026-07-16 retirement, the
+  current copy lives in `goals/dock-substrate-landing/README.md` Residuals.
 
 - 2026-07-17 — First step-4 surface migration closed: `goals/ontology-workbench-migration` (dock capabilities M1, zero-behavior workbench split M2, nine-panel shell M3, four-round QA loop M4) merged via PRs #429/#433/#434 + the closeout PR. The browser QA loop graduated into `.claude/skills/browser-qa-loop`. Exploration remains active for thread-virtualization (Goal 2, gated).
 

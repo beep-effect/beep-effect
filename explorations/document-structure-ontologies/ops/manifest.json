@@ -4,10 +4,8 @@
     "slug": "document-structure-ontologies",
     "title": "Document-Structure & Metadata Ontologies over the AST Family",
     "status": "active",
-    "stage": "shape",
-    "openQuestions": [
-      "Does BRIEF.md match the operator's intended problem, appetite, five-layer solution, constraints, and no-gos?"
-    ],
+    "stage": "decompose",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
@@ -19,6 +17,6 @@
       "supersededBy": null
     },
     "created": "2026-08-11",
-    "updated": "2026-08-11"
+    "updated": "2026-08-13"
   }
 }

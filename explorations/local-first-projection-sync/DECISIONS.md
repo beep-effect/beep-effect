@@ -1,5 +1,11 @@
 # Local-First Projection Sync — Decisions
 
+## 2026-08-13 — Packet graduation and re-entry
+
+**Decision:** Close the packet as `graduated`. A gated candidate trigger —
+multi-window delivery evidence, a second projector-family owner, or graph
+projection approval after SSPL review — reopens it at `decompose`.
+
 The align gate closed on 2026-07-14. All seven questions and the fan-out
 primitive are ratified. Full research and provenance remain in
 [`RESEARCH.md`](./RESEARCH.md) and [`research/SOURCES.md`](./research/SOURCES.md).
