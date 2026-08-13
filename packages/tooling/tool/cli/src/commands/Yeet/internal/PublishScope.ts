@@ -840,7 +840,9 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
   return yield* failPublishScopeWithPacket(context, {
     message: `yeet publish refuses a stale base: files changed on this branch were also changed on ${context.base} since the merge-base, so the PR would conflict or silently regress them.`,
     paths: freshness.overlappingPaths,
-    remediation: `git fetch origin && git rebase ${context.base}, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.`,
+    // Merge, never rebase: rebasing a published branch demands a force-push
+    // this repository denies, and hosted CI proves the merge result anyway.
+    remediation: `git fetch origin && git merge ${context.base}, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.`,
     subCategory: "stale-base",
   });
 });

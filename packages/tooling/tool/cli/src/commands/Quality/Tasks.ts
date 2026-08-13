@@ -1456,52 +1456,99 @@ const isLawSourcePath = (filePath: string): boolean =>
   (Str.startsWith("apps/")(filePath) || Str.startsWith("packages/")(filePath) || Str.startsWith("infra/")(filePath)) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
-const scopedLawArgs = (
+const isEcosystemPolarityPath = (filePath: string): boolean => {
+  const segments = Str.split(filePath, "/");
+  const memberPathHead = A.get(segments, 3);
+
+  return (
+    O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
+    O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
+    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
+    O.exists(memberPathHead, (segment) => Str.equivalence("package.json")(segment) || Str.equivalence("src")(segment))
+  );
+};
+
+const isPackageTestImportPath = (filePath: string): boolean =>
+  Str.startsWith("packages/")(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
+  pipe(
+    Str.split(filePath, "/test/"),
+    A.head,
+    O.exists((prefix) => !Str.equivalence(filePath)(prefix) && !Str.includes("/src/")(prefix))
+  );
+
+const scopedRepoCliStep = (
+  repoRoot: string,
+  label: string,
+  args: ReadonlyArray<string>,
+  isRelevant: (filePath: string) => boolean,
+  files?: ReadonlyArray<string>
+): ReadonlyArray<QualityTaskStep> => {
+  if (P.isUndefined(files)) {
+    return A.of(repoCliStep(repoRoot, label, args));
+  }
+
+  return A.match(A.filter(files, isRelevant), {
+    onEmpty: A.empty,
+    onNonEmpty: (relevantFiles) =>
+      A.of(repoCliStep(repoRoot, label, [...args, "--include", A.join(relevantFiles, ",")])),
+  });
+};
+
+const scopedLawStep = (
+  repoRoot: string,
+  label: string,
   command: string,
   args: ReadonlyArray<string>,
   files?: ReadonlyArray<string>
-): ReadonlyArray<string> => [
-  "laws",
-  command,
-  ...args,
-  ...(files === undefined ? A.empty<string>() : ["--include", A.join(A.filter(files, isLawSourcePath), ",")]),
-];
+): ReadonlyArray<QualityTaskStep> =>
+  scopedRepoCliStep(repoRoot, label, ["laws", command, ...args], isLawSourcePath, files);
 
 const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> => [
-  repoCliStep(repoRoot, "lint:effect-imports", scopedLawArgs("effect-imports", ["--check"], files)),
-  repoCliStep(repoRoot, "lint:terse-effect", scopedLawArgs("terse-effect", ["--check", "--advisory"], files)),
-  repoCliStep(repoRoot, "lint:effect-fn", scopedLawArgs("effect-fn", ["--check"], files)),
-  repoCliStep(repoRoot, "lint:frozen-grant-set", scopedLawArgs("frozen-grant-set", ["--check"], files)),
-  repoCliStep(repoRoot, "lint:native-runtime", scopedLawArgs("native-runtime", ["--check"], files)),
-  repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
-  repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
-  repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
-  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
-  repoCliStep(
-    repoRoot,
-    "lint:package-test-imports",
-    files === undefined
-      ? ["lint", "package-test-imports"]
-      : ["lint", "package-test-imports", "--include", A.join(files, ",")]
-  ),
-  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
-  repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
-  repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
+  // Static LPT order from research/00-evidence-brief.md (run 31683014887):
+  // deprecated-apis 975199ms, docgen 197298ms, semantic-delta 78127ms,
+  // schema-first 51162ms, then every remaining step in descending measured duration.
+  repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
+  repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
   // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
   // introduced by this branch and lets the corpus keep its inherited ones.
   repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
-  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
-  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
-  repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
+  ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
-  repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
-  repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
+  ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
+  repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+  ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
   repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
-  bunxStep(repoRoot, "lint:typos", ["typos"]),
+  ...scopedLawStep(repoRoot, "lint:effect-fn", "effect-fn", ["--check"], files),
+  ...scopedRepoCliStep(
+    repoRoot,
+    "lint:package-test-imports",
+    ["lint", "package-test-imports"],
+    isPackageTestImportPath,
+    files
+  ),
+  ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
+  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+  repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
   // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
   bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
+  ...scopedRepoCliStep(
+    repoRoot,
+    "lint:ecosystem-polarity",
+    ["lint", "ecosystem-polarity"],
+    isEcosystemPolarityPath,
+    files
+  ),
+  repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
+  repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
+  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
+  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
+  repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
+  repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
+  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
+  bunxStep(repoRoot, "lint:typos", ["typos"]),
 ];
 
 /**

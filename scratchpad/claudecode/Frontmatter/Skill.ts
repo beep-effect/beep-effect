@@ -15,7 +15,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Skill");
 /**
  * A Claude Code field that accepts either one string or a string array.
  *
- * @example
+ * **Example** (Inspect string or string array)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
@@ -35,14 +36,6 @@ export const StringOrStringArray = S.Union([S.String, S.Array(S.String)]).pipe(
 /**
  * Type for {@link StringOrStringArray}. {@inheritDoc StringOrStringArray}
  *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const tools: Frontmatter.StringOrStringArray = ["Read", "Write"]
- * console.log(tools)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -51,7 +44,8 @@ export type StringOrStringArray = typeof StringOrStringArray.Type;
 /**
  * Reasoning-effort levels accepted by skill, command, and subagent frontmatter.
  *
- * @example
+ * **Example** (Inspect effort level)
+ *
  * ```ts
  * import { Frontmatter } from "effect-claudecode"
  *
@@ -70,14 +64,6 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
 /**
  * Type for {@link EffortLevel}. {@inheritDoc EffortLevel}
  *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const effort: Frontmatter.EffortLevel = "high"
- * console.log(effort)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -86,7 +72,8 @@ export type EffortLevel = typeof EffortLevel.Type;
 /**
  * Shell names accepted by skill and legacy command frontmatter.
  *
- * @example
+ * **Example** (Inspect frontmatter shell)
+ *
  * ```ts
  * import { Frontmatter } from "effect-claudecode"
  *
@@ -105,14 +92,6 @@ export const FrontmatterShell = LiteralKit(["bash", "powershell"]).pipe(
 /**
  * Type for {@link FrontmatterShell}. {@inheritDoc FrontmatterShell}
  *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const shell: Frontmatter.FrontmatterShell = "powershell"
- * console.log(shell)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +103,8 @@ export type FrontmatterShell = typeof FrontmatterShell.Type;
  * Optional wire keys decode to `Option`, keeping absence explicit inside the
  * harness while preserving Claude Code's original optional-key encoding.
  *
- * @example
+ * **Example** (Run SkillFrontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -169,17 +149,6 @@ export class SkillFrontmatter extends S.Class<SkillFrontmatter>($I`SkillFrontmat
 
 /**
  * Encoded input accepted at the Claude Code skill-frontmatter boundary.
- *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const input: Frontmatter.SkillFrontmatter.Encoded = {
- *   name: "review",
- *   "allowed-tools": ["Read"]
- * }
- * console.log(input.name)
- * ```
  *
  * @category dtos
  * @since 0.0.0

@@ -32,11 +32,14 @@ const $I = $ScratchpadId.create("claudecode/Mcp/JsonFile");
  * The full `.mcp.json` / `managed-mcp.json` file shape — a record of
  * named MCP server entries under `mcpServers`.
  *
- * @example
+ * **Example** (Create an empty MCP file)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
  * const file = Mcp.McpJsonFile.make({ mcpServers: {} })
+ *
+ * console.log(file.mcpServers) // {}
  * ```
  *
  * @category schemas
@@ -53,14 +56,6 @@ export class McpJsonFile extends S.Class<McpJsonFile>($I`McpJsonFile`)(
 
 /**
  * Companion types for {@link McpJsonFile}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = { mcpServers: {} } satisfies Mcp.McpJsonFile.Encoded
- * console.log(input.mcpServers)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -86,11 +81,15 @@ export declare namespace McpJsonFile {
 /**
  * Per-project entry inside `~/.claude.json`.
  *
- * @example
+ * **Example** (Create an empty project entry)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
  * const project = Mcp.ClaudeJsonProject.make({})
+ *
+ * console.log(O.isNone(project.mcpServers)) // true
  * ```
  *
  * @category schemas
@@ -107,14 +106,6 @@ export class ClaudeJsonProject extends S.Class<ClaudeJsonProject>($I`ClaudeJsonP
 
 /**
  * Companion types for {@link ClaudeJsonProject}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = {} satisfies Mcp.ClaudeJsonProject.Encoded
- * console.log(input)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -144,11 +135,15 @@ export declare namespace ClaudeJsonProject {
  * servers live under `projects[projectPath].mcpServers`. Other
  * Claude Code keys are intentionally ignored.
  *
- * @example
+ * **Example** (Create an empty user configuration)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
  * const file = Mcp.ClaudeJsonFile.make({})
+ *
+ * console.log(O.isNone(file.projects)) // true
  * ```
  *
  * @category schemas
@@ -166,14 +161,6 @@ export class ClaudeJsonFile extends S.Class<ClaudeJsonFile>($I`ClaudeJsonFile`)(
 
 /**
  * Companion types for {@link ClaudeJsonFile}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = {} satisfies Mcp.ClaudeJsonFile.Encoded
- * console.log(input)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -211,16 +198,6 @@ const ClaudeJsonFileJson = S.fromJsonString(ClaudeJsonFile).pipe(
 /**
  * Overrides used while resolving all MCP configuration scopes.
  *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const options: Mcp.EffectiveMcpLoadOptions = {
- *   projectMcpPath: "/workspace/.mcp.json"
- * }
- * console.log(options.projectMcpPath)
- * ```
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -239,16 +216,6 @@ export interface EffectiveMcpLoadOptions {
 
 /**
  * Overrides used while discovering enterprise-managed MCP configuration.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const options: Mcp.ManagedMcpLoadOptions = {
- *   managedMcpRoots: ["/etc/claude-code"]
- * }
- * console.log(options.managedMcpRoots)
- * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -281,13 +248,22 @@ const homeDirectory = Config.string("HOME").pipe(
 /**
  * Resolve the canonical `~/.claude.json` path.
  *
- * @example
+ * **Example** (Resolve the user configuration path)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
+ * import * as Str from "effect/String"
  *
- * console.log(Mcp.userClaudeJsonPath)
+ * const path = Effect.runSync(
+ *   Effect.provide(Mcp.userClaudeJsonPath, Path.layer)
+ * )
+ *
+ * console.log(Str.endsWith("/.claude.json")(path)) // true
  * ```
  *
+ * @effects Reads the `HOME` or `USERPROFILE` configuration value and requires `Path.Path` to join the path segments.
  * @category configuration
  * @since 0.0.0
  */
@@ -300,14 +276,21 @@ export const userClaudeJsonPath = Effect.gen(function* () {
 /**
  * Resolve the project `.mcp.json` path for a cwd.
  *
- * @example
+ * **Example** (Resolve a project MCP path)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
  *
- * const program = Mcp.projectMcpJsonPath("/workspace")
- * console.log(program)
+ * const path = Effect.runSync(
+ *   Effect.provide(Mcp.projectMcpJsonPath("/workspace"), Path.layer)
+ * )
+ *
+ * console.log(path) // "/workspace/.mcp.json"
  * ```
  *
+ * @effects Requires `Path.Path` to join the project-relative path without accessing the filesystem.
  * @category configuration
  * @since 0.0.0
  */
@@ -335,7 +318,8 @@ const managedRoots = (options: O.Option<ManagedMcpLoadOptions>): ReadonlyArray<s
 /**
  * Resolve candidate system `managed-mcp.json` paths.
  *
- * @example
+ * **Example** (Inspect managed mcp json paths)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -440,7 +424,8 @@ const mergeServerRecords = (
  * lower-precedence server with the same URL or stdio command/arguments.
  * Fields inside an individual server entry are never merged.
  *
- * @example
+ * **Example** (Create merge mcp json files)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -516,7 +501,8 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
  * The result contains only fields represented by the current MCP transport
  * schemas and omits the reserved `workspace` server name.
  *
- * @example
+ * **Example** (Create to claude code json)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -553,14 +539,18 @@ const projectClaudeJsonEntry = (file: ClaudeJsonFile, cwd: string, resolvedCwd: 
  * `workspace` is skipped with a warning because Claude Code reserves
  * that name internally.
  *
- * @example
+ * **Example** (Inspect the strict loader Effect)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Mcp.loadJson("/workspace/.mcp.json")
- * console.log(program)
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Reads and decodes the file through `FileSystem.FileSystem`, logging reserved names and failing with `McpConfigError` on read or decode errors.
  * @category decoding
  * @since 0.0.0
  */
@@ -579,14 +569,18 @@ export const loadJson = Effect.fn("Mcp.loadJson")(function* (
 /**
  * Read a `~/.claude.json` file and decode the MCP-related sections.
  *
- * @example
+ * **Example** (Inspect the Claude JSON loader Effect)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Mcp.loadClaudeJson("/home/user/.claude.json")
- * console.log(program)
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Reads the file through `FileSystem.FileSystem` and fails with `McpConfigError` when reading or decoding fails.
  * @category decoding
  * @since 0.0.0
  */
@@ -615,7 +609,8 @@ const loadManagedMcpWithOptions = Effect.fn("Mcp.loadManagedMcp")(function* (
  * Claude Code treats this file as exclusive enterprise control: when it
  * exists, user, project, local, and plugin MCP configs are suppressed.
  *
- * @example
+ * **Example** (Run loadManagedMcp)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -711,7 +706,8 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * system `managed-mcp.json` exists, it has exclusive control and the
  * returned config contains only managed servers.
  *
- * @example
+ * **Example** (Run loadEffective)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *

@@ -10,7 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI as CanonicalIRI } from "@beep/rdf/Iri";
 import { URLStr as CanonicalURLStr, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -221,7 +221,7 @@ export type Attributes = typeof Attributes.Type;
  * @since 0.0.0
  */
 export const Confidence = UnitInterval.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(UnitInterval)(fc),
+  toArbitrary: () => S.toArbitrary(UnitInterval),
 }).pipe(
   $I.annoteSchema("Confidence", {
     description: "Finite confidence score on the closed unit interval from zero through one.",

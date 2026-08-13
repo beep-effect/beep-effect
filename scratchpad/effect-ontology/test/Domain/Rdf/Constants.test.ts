@@ -29,18 +29,17 @@ describe("effect-ontology RDF vocabulary constants", () => {
     }
   });
 
-  it("reuses canonical RDF/JS named nodes for standards vocabularies", () => {
-    expect(RDF.type.termType).toBe("NamedNode");
-    expect(RDF.type.value).toBe("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    expect(OWL.ObjectProperty.value).toBe("http://www.w3.org/2002/07/owl#ObjectProperty");
-    expect(SKOS.prefLabel.value).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+  it("exposes branded IRI values for standards vocabularies", () => {
+    expect(RDF.type).toBe("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    expect(OWL.ObjectProperty).toBe("http://www.w3.org/2002/07/owl#ObjectProperty");
+    expect(SKOS.prefLabel).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
     expect(RDF_TYPE).toBe(RDF.type);
   });
 
-  it("retains explicit experimental namespaces without weakening term types", () => {
-    expect(CLAIMS.Claim.value).toBe("http://effect-ontology.dev/claims#Claim");
-    expect(CORE.Mention.termType).toBe("NamedNode");
-    expect(SCHEMA.Person.value).toBe("http://schema.org/Person");
+  it("retains explicit experimental namespaces as branded IRIs", () => {
+    expect(CLAIMS.Claim).toBe("http://effect-ontology.dev/claims#Claim");
+    expect(IRI.is(CORE.Mention)).toBe(true);
+    expect(SCHEMA.Person).toBe("http://schema.org/Person");
   });
 
   it("validates the complete known-vocabulary registry", () => {

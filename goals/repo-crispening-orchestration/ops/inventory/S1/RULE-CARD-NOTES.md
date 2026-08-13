@@ -32,7 +32,7 @@
 
 ## React package refinements
 
-- In `@beep/editor` and `@beep/form`, React component prop interfaces remain S1 exceptions when they primarily carry `ReactNode`, DOM events, `React.ComponentProps`, `LexicalEditor`, or render callbacks. Durable data still needs to be traced to the schema that owns it.
+- In `@beep/editor`, React component prop interfaces remain S1 exceptions when they primarily carry `ReactNode`, DOM events, `React.ComponentProps`, `LexicalEditor`, or render callbacks. Durable data still needs to be traced to the schema that owns it.
 - Do flag non-React factories inside UI packages when they create schema-modeled runtime data from untyped inputs. Examples from this batch: `$createArtifactRefNode` and `$createYouTubeNode` construct Lexical nodes whose serialized contracts are already pinned to `@beep/lexical-schema`.
 - Callback schemas declared with `S.declare` can be a legitimate endpoint for UI callbacks whose values are live framework handles or Promise-returning sources. Examples: editor `EditorEffect` and `MentionSource`.
 
@@ -41,10 +41,6 @@
 - In `@beep/types` and `@beep/utils`, generic mapped/conditional type utilities, dual-arity overload surfaces, and third-party adapter overloads should be recorded as exceptions instead of actionables unless they describe a concrete decoded/persisted payload.
 - Node/Bun compatibility overloads can need inline literal option structs for return-type narrowing. Example: `FileSystem.readdirSync({ withFileTypes: true })` beside the schema-backed general options model.
 - Atom runtime command envelopes with live UI/framework handles are port boundaries. Follow the data they produce; if the surviving value is schema-modeled, the command envelope is usually not an S1 target.
-
-## Literal-domain refinement
-
-- Exported runtime configuration literal unions remain good S1 targets even in UI packages when they are not component props and are matched at runtime. Example from this batch: `@beep/form` `ValidateOn` should follow nearby `LiteralKit` exemplars such as editor `SendOn` and UI `ThemeMode`.
 
 ---
 
@@ -161,7 +157,7 @@ Package audited:
 
 - Effect v4 APIs cited for proposed targets were re-checked in `.repos/effect-v4`: `S.is` at `Schema.ts:1256`, `S.decodeUnknownResult` at `:1564`, `S.optionalKey` at `:2270`, `S.String` at `:2968`, `S.Struct` at `:3403`, `S.NullOr` at `:4829`, `S.makeFilter` at `:6393`, `S.makeFilterGroup` at `:6458`, `S.isPattern` at `:6521`, `S.OptionFromOptionalKey` at `:8668`, `S.fromJsonString` at `:10983`, `S.File` at `:11015`, `S.Finite` at `:11380`, and `S.Class` at `:12696`.
 - `LiteralKit` helper reality was re-checked locally: helper statics are declared at `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657`, per-literal `.is` guards at `:659`, `.toTaggedUnion` at `:667`, overloads at `:743-748`, and guard construction at `:257`.
-- In-repo exemplars used for target shaping: `CurrencyCode` + `isCurrencyCode` at `packages/foundation/modeling/schema/src/CurrencyCode.ts:43` and `:118`; `HexColorInput` / `HexColor` string schemas at `packages/foundation/modeling/schema/src/Color/Color.hex.ts:114` and `:143`; the Storybook E.164 schema at `packages/foundation/ui-system/form/stories/fields/Phone.stories.tsx:6`; `ToastData` at `packages/foundation/ui-system/ui/src/components/toast.tsx:135`; and `CountryOption` at `packages/foundation/ui-system/ui/src/components/country-select.tsx:324`.
+- In-repo exemplars used for target shaping: `CurrencyCode` + `isCurrencyCode` at `packages/foundation/modeling/schema/src/CurrencyCode.ts:43` and `:118`; `HexColorInput` / `HexColor` string schemas at `packages/foundation/modeling/schema/src/Color/Color.hex.ts:114` and `:143`; `ToastData` at `packages/foundation/ui-system/ui/src/components/toast.tsx:135`; and `CountryOption` at `packages/foundation/ui-system/ui/src/components/country-select.tsx:324`.
 
 ---
 

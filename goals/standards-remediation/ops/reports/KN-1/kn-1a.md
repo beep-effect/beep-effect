@@ -3,7 +3,7 @@
 Lane scope: the conflict-free portion of the knip baseline (`standards/knip.regression-baseline.jsonc`,
 73 findings), package by package, sequentially. Skipped all conflicted scopes named in the task
 (`apps/professional-desktop`, `drivers/{box,ecfr,govinfo,wink}`,
-`capability/{api-transport,langextract,mcp-kit}`, `modeling/html`, `ui-system/form`) — zero edits in
+`capability/{api-transport,langextract,mcp-kit}`, `modeling/html`) — zero edits in
 those trees.
 
 ## Root-cause diagnosis (per task note #1)
@@ -84,10 +84,6 @@ Same "config-driven reference knip can't trace" family as oip-web:
   Registered as an explicit entry.
 - `vitest.storybook.setup.ts` (unused file) — referenced only via `setupFiles` inside
   `vitest.storybook.config.ts` (string path, not an import). Registered as an explicit entry.
-- `@beep/form` (unused dep) — genuinely needed: `main.ts`'s `stories` glob pulls in
-  `packages/foundation/ui-system/form/stories/**`, which import `@beep/form` directly — a sibling
-  workspace's files, invisible to knip's per-workspace scan of `apps/storybook`. Added to
-  `ignoreDependencies`.
 - `emojibase-data` (unused dep) — referenced by path string in `.storybook/main.ts`'s `staticDirs`,
   not a static import. Added to `ignoreDependencies`.
 
@@ -102,7 +98,7 @@ comments in the file itself):
    `.storybook/utils-browser.ts`.
 3. `ignore`: added `explorations/**`.
 4. `ignoreDependencies`: added `@microsoft/microsoft-graph-types`, `@lexical/code`, `@lexical/link`,
-   `@lexical/list`, `@lexical/rich-text`, `lexical`, `@beep/form`, `emojibase-data`, `oxlint`.
+   `@lexical/list`, `@lexical/rich-text`, `lexical`, `emojibase-data`, `oxlint`.
 5. `ignoreBinaries`: added `readlink`.
 
 `standards/knip.regression-baseline.jsonc` was **not** touched (driver-owned, per instructions).

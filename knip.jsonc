@@ -9,6 +9,17 @@
       // treat both module shapes as entries (src/index.ts is already covered by the exports map).
       "entry": ["src/*.ts", "src/*/index.ts"]
     },
+    "packages/ecosystem/effect-drizzle": {
+      // These consumers are invoked out of band: tstyche discovers the contract file,
+      // drizzle-kit receives the schema path via --schema, and the perf consumer is
+      // compiled independently of the member's ordinary test project.
+      "entry": [
+        "typetests/contracts.tst.ts",
+        "test/integration/sqlite-drizzle-schema.ts",
+        "test/perf.consumer.ts",
+        "test/bundle-pg-integer.consumer.ts"
+      ]
+    },
     "packages/law-practice/domain": {
       // Pinned data modules are intentionally package-private and have no public barrel.
       // Treat them as generated asset entries until the later domain-contract phase imports them.
@@ -61,6 +72,10 @@
     "explorations/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",
+    // Self-contained Lambda bundle source (own package.json + lockfile, not a workspace
+    // member): esbuild bundles it into the deployed ZIP via infra/lambda/turbo-cache/build.sh,
+    // so nothing in the workspace import graph reaches it.
+    "infra/lambda/**",
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
@@ -94,15 +109,12 @@
   // ws + @types/ws: genuinely imported by @beep/xai (src/XAi.service.ts) — knip misses the
   // `import WebSocket from "ws"` default import; @types/ws supplies its types.
   // @beep/repo-utils is referenced from app docgen.json files knip doesn't parse.
-  // @beep/form: apps/storybook's `main.ts` stories glob pulls in
-  // packages/foundation/ui-system/form/stories/**, which import `@beep/form` — a sibling
-  // workspace's story files, invisible to knip's per-workspace import scan of apps/storybook.
   // emojibase-data: referenced by path string in apps/storybook/.storybook/main.ts `staticDirs`,
   // not a static import.
   // inspeffct: intentionally exposed as a root developer CLI via `bun run inspeffct*` scripts;
   // knip sees the package script command as binary usage but does not count that as satisfying
   // the root devDependency.
-  // @beep/graph-3d: same story-glob shape as @beep/form — apps/storybook hosts
+  // @beep/graph-3d: apps/storybook hosts
   // packages/drivers/graph-3d/stories/** via a .storybook/main.ts glob, invisible to knip's
   // per-workspace import scan.
   // @vitest/browser: browser-mode runtime required by `vitest --config vitest.browser.config.ts`
@@ -135,7 +147,6 @@
     "brace-expansion",
     "fast-uri",
     "hono",
-    "@beep/form",
     "@beep/graph-3d",
     "@vitest/browser",
     "emojibase-data",

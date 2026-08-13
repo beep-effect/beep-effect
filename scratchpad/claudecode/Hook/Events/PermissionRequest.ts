@@ -29,15 +29,16 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PermissionRequest");
  * A pending permission-rule change Claude Code suggests alongside the
  * prompt. The hook handler can accept these in its `updatedPermissions`.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionRequest.PermissionRule)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class PermissionRule extends S.Class<PermissionRule>($I`PermissionRule`)(
   {
@@ -90,7 +91,8 @@ const PermissionDecisionBehavior = LiteralKit(["allow", "deny"]).pipe(
 /**
  * Schema for `PermissionSuggestion`.
  *
- * @example
+ * **Example** (Inspect the PermissionSuggestion schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -123,7 +125,8 @@ const PermissionSuggestions = PermissionSuggestion.pipe(
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -155,15 +158,16 @@ export class Input extends S.Class<Input>($I`PermissionRequestInput`)(
  * A permission rule update the hook may persist. Mirrors the shape of
  * `permission_suggestions` on the input side.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionRequest.RulePermissionUpdate)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class RulePermissionUpdate extends S.Class<RulePermissionUpdate>($I`RulePermissionUpdate`)(
   {
@@ -180,7 +184,8 @@ export class RulePermissionUpdate extends S.Class<RulePermissionUpdate>($I`RuleP
 /**
  * Schema for `ModePermissionUpdate`.
  *
- * @example
+ * **Example** (Inspect the ModePermissionUpdate schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -205,7 +210,8 @@ export class ModePermissionUpdate extends S.Class<ModePermissionUpdate>($I`ModeP
 /**
  * Schema for `DirectoryPermissionUpdate`.
  *
- * @example
+ * **Example** (Inspect the DirectoryPermissionUpdate schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -230,7 +236,8 @@ export class DirectoryPermissionUpdate extends S.Class<DirectoryPermissionUpdate
 /**
  * Schema for `PermissionUpdate`.
  *
- * @example
+ * **Example** (Inspect the PermissionUpdate schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -250,7 +257,8 @@ export const PermissionUpdate = S.Union([RulePermissionUpdate, ModePermissionUpd
 /**
  * Type-level model for `PermissionUpdate`.
  *
- * @example
+ * **Example** (Use PermissionUpdate as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -273,7 +281,8 @@ const PermissionUpdates = PermissionUpdate.pipe(
 /**
  * Schema for `PermissionDecision`.
  *
- * @example
+ * **Example** (Inspect the PermissionDecision schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -300,7 +309,8 @@ export class PermissionDecision extends S.Class<PermissionDecision>($I`Permissio
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -324,7 +334,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Permissio
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -356,7 +367,8 @@ export class Output extends S.Class<Output>($I`PermissionRequestOutput`)(
 /**
  * Constructor for `allow`.
  *
- * @example
+ * **Example** (Use allow)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -387,22 +399,24 @@ export const allow = (options?: {
 /**
  * No-op output — Claude Code proceeds with its normal permission request flow.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionRequest.passthrough)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
  * Constructor for `deny`.
  *
- * @example
+ * **Example** (Use deny)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -435,7 +449,8 @@ export const deny = (message: string, options?: { readonly interrupt?: boolean }
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -459,15 +474,16 @@ export const define = <E, R>(config: {
  * Build a PermissionRequest hook that only handles matching `tool_name`
  * values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PermissionRequest.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -489,12 +505,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.PermissionRule.Encoded
- * ```
  */
 export declare namespace PermissionRule {
   /**
@@ -519,12 +529,6 @@ export declare namespace PermissionRule {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.PermissionSuggestion.Encoded
- * ```
  */
 export declare namespace PermissionSuggestion {
   /**
@@ -549,12 +553,6 @@ export declare namespace PermissionSuggestion {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionRequest.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -579,12 +577,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.RulePermissionUpdate.Encoded
- * ```
  */
 export declare namespace RulePermissionUpdate {
   /**
@@ -609,12 +601,6 @@ export declare namespace RulePermissionUpdate {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.ModePermissionUpdate.Encoded
- * ```
  */
 export declare namespace ModePermissionUpdate {
   /**
@@ -639,12 +625,6 @@ export declare namespace ModePermissionUpdate {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.DirectoryPermissionUpdate.Encoded
- * ```
  */
 export declare namespace DirectoryPermissionUpdate {
   /**
@@ -669,12 +649,6 @@ export declare namespace DirectoryPermissionUpdate {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.PermissionDecision.Encoded
- * ```
  */
 export declare namespace PermissionDecision {
   /**
@@ -699,12 +673,6 @@ export declare namespace PermissionDecision {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionRequest.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -729,12 +697,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PermissionRequest.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

@@ -3,9 +3,11 @@
  *
  * @since 0.0.0
  */
-import { A } from "@beep/utils";
-import { HashSet, MutableHashSet, pipe } from "effect";
+
+import { flow, HashSet, MutableHashSet, pipe } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { IANA_LANGUAGE_TAG_REGISTRY } from "./Html.language-tag-registry.generated.ts";
 
@@ -26,14 +28,18 @@ const PRIVATE_USE_SUBTAG_PATTERN = /^[a-z0-9]{1,8}$/u;
 
 type ParsedLanguageTag = readonly [normalized: string, subtags: ReadonlyArray<string>, primary: string];
 
-const parseLanguageTag = (value: string): O.Option<ParsedLanguageTag> => {
-  if (Str.isEmpty(value) || !ASCII_TAG_PATTERN.test(value)) return O.none();
-
-  const normalized = Str.toLowerCase(value);
-  const subtags = Str.split("-")(normalized);
-  const primary = subtags[0];
-  return primary === undefined || A.some(subtags, Str.isEmpty) ? O.none() : O.some([normalized, subtags, primary]);
-};
+const parseLanguageTag: (value: string) => O.Option<ParsedLanguageTag> = flow(
+  O.liftPredicate((value: string) => Str.isNonEmpty(value) && ASCII_TAG_PATTERN.test(value)),
+  O.flatMap((value) => {
+    const normalized = Str.toLowerCase(value);
+    const subtags = Str.split("-")(normalized);
+    return pipe(
+      A.head(subtags),
+      O.filter(() => A.every(subtags, Str.isNonEmpty)),
+      O.map((primary): ParsedLanguageTag => [normalized, subtags, primary])
+    );
+  })
+);
 
 const isPrivateUseRange = (subtags: ReadonlyArray<string>, start: number): boolean => {
   const privateUse = A.drop(subtags, start);
@@ -43,13 +49,17 @@ const isPrivateUseRange = (subtags: ReadonlyArray<string>, start: number): boole
 };
 
 const isRegisteredPrimary = (primary: string): boolean =>
-  primary.length >= 2 && primary.length <= 8 && ALPHA_PATTERN.test(primary) && HashSet.has(languages, primary);
+  Str.length(primary) >= 2 &&
+  Str.length(primary) <= 8 &&
+  ALPHA_PATTERN.test(primary) &&
+  HashSet.has(languages, primary);
 
 const consumeExtlang = (subtags: ReadonlyArray<string>, primary: string, index: number): number => {
   const possible = subtags[index];
-  return primary.length <= 3 &&
-    possible !== undefined &&
-    possible.length === 3 &&
+
+  return Str.length(primary) <= 3 &&
+    P.isNotUndefined(possible) &&
+    Str.length(possible) === 3 &&
     ALPHA_PATTERN.test(possible) &&
     extlangPrefixes[possible] === primary
     ? index + 1
@@ -58,8 +68,8 @@ const consumeExtlang = (subtags: ReadonlyArray<string>, primary: string, index: 
 
 const consumeScript = (subtags: ReadonlyArray<string>, index: number): number => {
   const possible = subtags[index];
-  return possible !== undefined &&
-    possible.length === 4 &&
+  return P.isNotUndefined(possible) &&
+    Str.length(possible) === 4 &&
     ALPHA_PATTERN.test(possible) &&
     HashSet.has(scripts, possible)
     ? index + 1
@@ -68,46 +78,55 @@ const consumeScript = (subtags: ReadonlyArray<string>, index: number): number =>
 
 const consumeRegion = (subtags: ReadonlyArray<string>, index: number): number => {
   const possible = subtags[index];
-  return possible !== undefined && REGION_PATTERN.test(possible) && HashSet.has(regions, possible) ? index + 1 : index;
-};
-
-const scanVariants = (subtags: ReadonlyArray<string>, start: number): O.Option<number> => {
-  const seen = MutableHashSet.empty<string>();
-  let index = start;
-  let possible = subtags[index];
-
-  while (possible !== undefined && VARIANT_PATTERN.test(possible)) {
-    if (!HashSet.has(variants, possible) || MutableHashSet.has(seen, possible)) return O.none();
-    MutableHashSet.add(seen, possible);
-    index += 1;
-    possible = subtags[index];
-  }
-
-  return O.some(index);
+  return P.isNotUndefined(possible) && REGION_PATTERN.test(possible) && HashSet.has(regions, possible)
+    ? index + 1
+    : index;
 };
 
 const scanExtensionPayload = (subtags: ReadonlyArray<string>, start: number): O.Option<number> => {
   let index = start;
   while (EXTENSION_SUBTAG_PATTERN.test(subtags[index] ?? "")) index += 1;
-  return index === start ? O.none() : O.some(index);
+  return pipe(
+    index,
+    O.liftPredicate((end) => end > start)
+  );
 };
 
-const scanExtensions = (subtags: ReadonlyArray<string>, start: number): O.Option<number> => {
+const scanUniqueSubtags = (
+  subtags: ReadonlyArray<string>,
+  start: number,
+  pattern: RegExp,
+  consume: (subtags: ReadonlyArray<string>, index: number, subtag: string) => O.Option<number>
+): O.Option<number> => {
   const seen = MutableHashSet.empty<string>();
   let index = start;
   let possible = subtags[index];
 
-  while (possible !== undefined && EXTENSION_SINGLETON_PATTERN.test(possible)) {
+  while (P.isNotUndefined(possible) && pattern.test(possible)) {
     if (MutableHashSet.has(seen, possible)) return O.none();
     MutableHashSet.add(seen, possible);
-    const payloadEnd = scanExtensionPayload(subtags, index + 1);
-    if (O.isNone(payloadEnd)) return O.none();
-    index = payloadEnd.value;
+    const nextIndex = consume(subtags, index, possible);
+    if (O.isNone(nextIndex)) return O.none();
+    index = nextIndex.value;
     possible = subtags[index];
   }
 
   return O.some(index);
 };
+
+const scanVariants = (subtags: ReadonlyArray<string>, start: number): O.Option<number> =>
+  scanUniqueSubtags(subtags, start, VARIANT_PATTERN, (_subtags, index, subtag) =>
+    pipe(
+      subtag,
+      O.liftPredicate((possible) => HashSet.has(variants, possible)),
+      O.as(index + 1)
+    )
+  );
+
+const scanExtensions = (subtags: ReadonlyArray<string>, start: number): O.Option<number> =>
+  scanUniqueSubtags(subtags, start, EXTENSION_SINGLETON_PATTERN, (extensionSubtags, index) =>
+    scanExtensionPayload(extensionSubtags, index + 1)
+  );
 
 const isValidTagRemainder = (subtags: ReadonlyArray<string>, index: number): boolean =>
   subtags[index] === "x" ? isPrivateUseRange(subtags, index + 1) : index === subtags.length;
@@ -149,5 +168,7 @@ const isValidParsedLanguageTag = ([normalized, subtags, primary]: ParsedLanguage
  * @category validation
  * @since 0.0.0
  */
-export const isValidBcp47LanguageTag = (value: string): boolean =>
-  pipe(parseLanguageTag(value), O.exists(isValidParsedLanguageTag));
+export const isValidBcp47LanguageTag: (value: string) => boolean = flow(
+  parseLanguageTag,
+  O.exists(isValidParsedLanguageTag)
+);

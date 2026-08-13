@@ -6,12 +6,13 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { YamlTextToUnknown } from "@beep/schema";
-import { Str, thunk0 } from "@beep/utils";
+import { thunk0 } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 import { FrontmatterDecodeError, FrontmatterParseError, FrontmatterReadError } from "../Errors.ts";
 import { CommandFrontmatter } from "./Command.ts";
@@ -27,7 +28,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Parser");
  * The raw `frontmatter` remains `unknown` until one of the typed parse helpers
  * validates it against the corresponding Claude Code schema.
  *
- * @example
+ * **Example** (Split a decoded document)
+ *
  * ```ts
  * import { Frontmatter } from "effect-claudecode"
  *
@@ -54,7 +56,8 @@ export class ParsedFrontmatter extends S.Class<ParsedFrontmatter>($I`ParsedFront
 /**
  * Companion types for {@link ParsedFrontmatter}.
  *
- * @example
+ * **Example** (Describe the encoded document)
+ *
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
@@ -89,14 +92,16 @@ export declare namespace ParsedFrontmatter {
 /**
  * Result of validating parsed frontmatter against a concrete schema.
  *
- * @example
+ * **Example** (Read a decoded document body)
+ *
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
- * const bodyOf = (
- *   document: Frontmatter.DecodedFrontmatter<Frontmatter.SkillFrontmatter>
- * ): string => document.body
- * console.log(bodyOf)
+ * const document: Frontmatter.DecodedFrontmatter<string> = {
+ *   frontmatter: "review",
+ *   body: "# Review"
+ * }
+ * console.log(document.body) // "# Review"
  * ```
  *
  * @typeParam TFrontmatter - Runtime type produced by the selected frontmatter schema.
@@ -166,7 +171,8 @@ const decodeFrontmatter = <Schema extends S.Top>(
  * Missing or malformed delimiters are treated as a body-only document.
  * Invalid YAML fails with {@link FrontmatterParseError}.
  *
- * @example
+ * **Example** (Parse inline frontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -177,6 +183,7 @@ const decodeFrontmatter = <Schema extends S.Top>(
  * })
  * ```
  *
+ * @effects Annotates the current span and emits debug logs; may fail with {@link FrontmatterParseError}.
  * @category parsing
  * @since 0.0.0
  */
@@ -204,7 +211,8 @@ export const parse = Effect.fn("Frontmatter.parse")(function* (
 /**
  * Read a markdown file through `FileSystem` and parse its YAML frontmatter.
  *
- * @example
+ * **Example** (Parse frontmatter from a file)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { Effect } from "effect"
@@ -214,6 +222,7 @@ export const parse = Effect.fn("Frontmatter.parse")(function* (
  * Effect.runPromise(program).then((parsed) => console.log(parsed.body))
  * ```
  *
+ * @effects Requires `FileSystem.FileSystem`, reads the requested file, and may fail with read or YAML parse errors.
  * @category parsing
  * @since 0.0.0
  */
@@ -233,7 +242,8 @@ export const parseFile = Effect.fn("Frontmatter.parseFile")(function* (
 /**
  * Read and decode a Claude Code `SKILL.md` file.
  *
- * @example
+ * **Example** (Decode a skill file)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { Effect } from "effect"
@@ -243,6 +253,7 @@ export const parseFile = Effect.fn("Frontmatter.parseFile")(function* (
  * Effect.runPromise(program).then(({ body }) => console.log(body))
  * ```
  *
+ * @effects Requires `FileSystem.FileSystem`, reads the skill file, and may fail with read, parse, or decode errors.
  * @category decoding
  * @since 0.0.0
  */
@@ -260,7 +271,8 @@ export const parseSkillFile = Effect.fn("Frontmatter.parseSkillFile")(function* 
 /**
  * Read and decode a legacy Claude Code slash-command markdown file.
  *
- * @example
+ * **Example** (Decode a command file)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { Effect } from "effect"
@@ -270,6 +282,7 @@ export const parseSkillFile = Effect.fn("Frontmatter.parseSkillFile")(function* 
  * Effect.runPromise(program).then(({ body }) => console.log(body))
  * ```
  *
+ * @effects Requires `FileSystem.FileSystem`, reads the command file, and may fail with read, parse, or decode errors.
  * @category decoding
  * @since 0.0.0
  */
@@ -287,7 +300,8 @@ export const parseCommandFile = Effect.fn("Frontmatter.parseCommandFile")(functi
 /**
  * Read and decode a Claude Code subagent markdown file.
  *
- * @example
+ * **Example** (Decode a subagent file)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { Effect } from "effect"
@@ -297,6 +311,7 @@ export const parseCommandFile = Effect.fn("Frontmatter.parseCommandFile")(functi
  * Effect.runPromise(program).then(({ body }) => console.log(body))
  * ```
  *
+ * @effects Requires `FileSystem.FileSystem`, reads the subagent file, and may fail with read, parse, or decode errors.
  * @category decoding
  * @since 0.0.0
  */
@@ -314,7 +329,8 @@ export const parseSubagentFile = Effect.fn("Frontmatter.parseSubagentFile")(func
 /**
  * Read and decode a Claude Code output-style markdown file.
  *
- * @example
+ * **Example** (Decode an output style file)
+ *
  * ```ts
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { Effect } from "effect"
@@ -326,6 +342,7 @@ export const parseSubagentFile = Effect.fn("Frontmatter.parseSubagentFile")(func
  * Effect.runPromise(program).then(({ body }) => console.log(body))
  * ```
  *
+ * @effects Requires `FileSystem.FileSystem`, reads the output-style file, and may fail with read, parse, or decode errors.
  * @category decoding
  * @since 0.0.0
  */

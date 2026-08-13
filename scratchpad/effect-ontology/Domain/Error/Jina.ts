@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as Duration from "effect/Duration";
@@ -39,7 +39,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Jina");
  * @category errors
  * @since 0.0.0
  */
-export const JinaApiError = makeOntologyErrorClass(
+export const JinaApiError = makeOntologyErrorClass.make(
   $I`JinaApiError`,
   "JinaApiError",
   {
@@ -150,7 +150,7 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
  * @category errors
  * @since 0.0.0
  */
-export const JinaParseError = makeOntologyErrorClass(
+export const JinaParseError = makeOntologyErrorClass.make(
   $I`JinaParseError`,
   "JinaParseError",
   {
@@ -197,7 +197,7 @@ export type JinaParseError = typeof JinaParseError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const JinaTimeoutError = makeOntologyErrorClass(
+export const JinaTimeoutError = makeOntologyErrorClass.make(
   $I`JinaTimeoutError`,
   "JinaTimeoutError",
   {
@@ -248,7 +248,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(JinaErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
   })
 );
 

@@ -7,6 +7,7 @@
 
 import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
+import { CiTurboCache, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
 
 const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const controller = new CiFleetController("ci-fleet-controller", {
@@ -16,6 +17,7 @@ const controller = new CiFleetController("ci-fleet-controller", {
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
+const turboCache = new CiTurboCache("ci-turbo-cache", { config: loadCiTurboCacheConfig() });
 
 /**
  * Dedicated fleet VPC identifier.
@@ -128,3 +130,19 @@ export const flowLogGroupName = stack.flowLogGroupName;
  * @since 0.0.0
  */
 export const controllerWebhook = controller.webhook;
+
+/**
+ * Base URL CI jobs supply as `TURBO_API` for the asymmetric Turbo remote cache.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const turboCacheApiEndpoint = turboCache.apiEndpoint;
+
+/**
+ * S3 bucket holding Turbo remote-cache artifacts.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const turboCacheBucketName = turboCache.bucketName;

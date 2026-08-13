@@ -70,14 +70,6 @@ const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
 /**
  * A typed slash-command entry to be written to `commands/<name>.md`.
  *
- * @example
- * ```ts
- * import { Plugin } from "effect-claudecode"
- *
- * const entry = Plugin.command({ name: "greet", body: "Say hello." })
- * console.log(entry.name)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,18 +82,6 @@ export interface PluginCommandEntry {
 
 /**
  * A typed subagent entry to be written to `agents/<name>.md`.
- *
- * @example
- * ```ts
- * import { Plugin } from "effect-claudecode"
- *
- * const entry = Plugin.agent({
- *   name: "reviewer",
- *   description: "Reviews changes",
- *   body: "Review the requested changes."
- * })
- * console.log(entry.name)
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -116,14 +96,6 @@ export interface PluginAgentEntry {
 /**
  * A typed skill entry to be written to `skills/<name>/SKILL.md`.
  *
- * @example
- * ```ts
- * import { Plugin } from "effect-claudecode"
- *
- * const entry = Plugin.skill({ name: "review", body: "Review the changes." })
- * console.log(entry.name)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -136,14 +108,6 @@ export interface PluginSkillEntry {
 
 /**
  * A typed output-style entry to be written to `output-styles/<name>.md`.
- *
- * @example
- * ```ts
- * import { Plugin } from "effect-claudecode"
- *
- * const entry = Plugin.outputStyle({ name: "concise", body: "Be concise." })
- * console.log(entry.name)
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -158,17 +122,6 @@ export interface PluginOutputStyleEntry {
 /**
  * Encoded input accepted by {@link command}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const config = {
- *   name: "greet",
- *   body: "Say hello."
- * } satisfies Plugin.PluginCommandConfig
- * console.log(config.name)
- * ```
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -180,18 +133,6 @@ export type PluginCommandConfig = CommandFrontmatter.Encoded & {
 
 /**
  * Encoded input accepted by {@link agent}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const config = {
- *   name: "reviewer",
- *   description: "Reviews changes",
- *   body: "Review the requested changes."
- * } satisfies Plugin.PluginAgentConfig
- * console.log(config.name)
- * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -205,17 +146,6 @@ export type PluginAgentConfig = Omit<SubagentFrontmatter.Encoded, "name"> & {
 /**
  * Encoded input accepted by {@link skill}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const config = {
- *   name: "review",
- *   body: "Review the changes."
- * } satisfies Plugin.PluginSkillConfig
- * console.log(config.name)
- * ```
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -227,17 +157,6 @@ export type PluginSkillConfig = Omit<SkillFrontmatter.Encoded, "name"> & {
 
 /**
  * Encoded input accepted by {@link outputStyle}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const config = {
- *   name: "concise",
- *   body: "Be concise."
- * } satisfies Plugin.PluginOutputStyleConfig
- * console.log(config.name)
- * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -252,16 +171,6 @@ export type PluginOutputStyleConfig = Omit<OutputStyleFrontmatter.Encoded, "name
  * Config passed to `Plugin.define`. The `manifest` field accepts
  * either a `PluginManifest` instance or a plain object that satisfies
  * its constructor; the latter is validated on entry.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const config = {
- *   manifest: { name: "example-plugin" }
- * } satisfies Plugin.PluginConfig
- * console.log(config.manifest.name)
- * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -279,16 +188,6 @@ export interface PluginConfig {
 /**
  * The fully-formed plugin definition ready to be written. Components
  * default to empty arrays; optional config files default to `None`.
- *
- * @example
- * ```ts
- * import { Plugin } from "effect-claudecode"
- *
- * const definition = Plugin.define({
- *   manifest: { name: "example-plugin" }
- * })
- * console.log(definition.commands)
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -310,7 +209,8 @@ export interface PluginDefinition {
 /**
  * Build a typed slash-command entry.
  *
- * @example
+ * **Example** (Inspect command)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -334,7 +234,8 @@ export const command = (config: PluginCommandConfig): PluginCommandEntry => {
 /**
  * Build a typed subagent entry.
  *
- * @example
+ * **Example** (Inspect agent)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -365,7 +266,8 @@ export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
 /**
  * Build a typed skill entry.
  *
- * @example
+ * **Example** (Inspect skill)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -392,7 +294,8 @@ export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
 /**
  * Build a typed output-style entry.
  *
- * @example
+ * **Example** (Inspect output style)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -563,7 +466,8 @@ const resolveConfigRelativePath = (options: {
  * being stored. Component arrays default to empty; optional config
  * files become `O.none()` when absent.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -851,7 +755,8 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
  * your preferred platform layer at the call site (for example
  * `NodeFileSystem.layer` + `NodePath.layer` under Node).
  *
- * @example
+ * **Example** (Run write)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *

@@ -7,7 +7,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { flow } from "effect";
 import * as A from "effect/Array";
@@ -156,7 +156,7 @@ export const ShaclViolation = ShaclViolationDefinition.pipe(
   $I.annoteSchema("ShaclViolation", {
     description:
       "Normalized SHACL validation result with mandatory focus node, severity, diagnostic, and source constraint component.",
-    toArbitrary: () => (fc) => S.toArbitrary(ShaclViolationDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(ShaclViolationDefinition),
   })
 );
 

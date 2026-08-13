@@ -22,7 +22,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/MessageDisplay");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -51,7 +52,8 @@ export class Input extends S.Class<Input>($I`MessageDisplayInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -75,7 +77,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`MessageDi
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -103,7 +106,8 @@ export class Output extends S.Class<Output>($I`MessageDisplayOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -119,7 +123,8 @@ export const passthrough = (): Output => Output.make();
 /**
  * Constructor for `display`.
  *
- * @example
+ * **Example** (Use display)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -143,7 +148,8 @@ export const display = (displayContent: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -169,12 +175,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.MessageDisplay.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -199,12 +199,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.MessageDisplay.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -229,12 +223,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.MessageDisplay.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

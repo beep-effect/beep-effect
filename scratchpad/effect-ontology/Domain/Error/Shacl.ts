@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorIri } from "./Base.ts";
@@ -69,7 +69,7 @@ export type ValidationPolicySeverity = typeof ValidationPolicySeverity.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ShaclValidationError = makeOntologyErrorClass(
+export const ShaclValidationError = makeOntologyErrorClass.make(
   $I`ShaclValidationError`,
   "ShaclValidationError",
   {
@@ -110,7 +110,7 @@ export type ShaclValidationError = typeof ShaclValidationError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ShapesLoadError = makeOntologyErrorClass(
+export const ShapesLoadError = makeOntologyErrorClass.make(
   $I`ShapesLoadError`,
   "ShapesLoadError",
   {
@@ -154,7 +154,7 @@ export type ShapesLoadError = typeof ShapesLoadError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ValidationReportError = makeOntologyErrorClass(
+export const ValidationReportError = makeOntologyErrorClass.make(
   $I`ValidationReportError`,
   "ValidationReportError",
   {
@@ -201,7 +201,7 @@ export type ValidationReportError = typeof ValidationReportError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ValidationPolicyError = makeOntologyErrorClass(
+export const ValidationPolicyError = makeOntologyErrorClass.make(
   $I`ValidationPolicyError`,
   "ValidationPolicyError",
   {
@@ -266,7 +266,7 @@ const ShaclErrorDefinition = S.Union([
 export const ShaclError = ShaclErrorDefinition.pipe(
   $I.annoteSchema("ShaclError", {
     description: "Exhaustive tagged union of SHACL validation lifecycle failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(ShaclErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ShaclErrorDefinition),
   })
 );
 

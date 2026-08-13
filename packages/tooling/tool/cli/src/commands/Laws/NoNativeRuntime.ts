@@ -24,7 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
@@ -575,7 +575,8 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   );
   let usedAllowlistKeys = HashSet.empty<string>();
 
-  const isExcludedFile = (filePath: string): boolean => isExcludedLawScanPath(options.excludePaths, filePath);
+  const isExcludedFile = (filePath: string): boolean =>
+    isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
   const project = new Project({
     tsConfigFilePath: path.join(cwd, "tsconfig.json"),

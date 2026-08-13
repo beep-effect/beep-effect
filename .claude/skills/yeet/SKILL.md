@@ -30,8 +30,19 @@ git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
 
    Yeet publish warns whenever the branch is behind `origin/main` and refuses
    when branch files overlap commits landed on the base since the merge-base
-   (a conflicted or stale PR is likely). Rebase onto `origin/main` first;
-   `--allow-stale-base` is the explicit override.
+   (a conflicted or stale PR is likely). Catch up by merging the base into the
+   feature branch — never by rebasing:
+
+```bash
+git fetch origin
+git merge origin/main
+```
+
+   Resolve conflicts, re-run `bun run beep yeet verify`, then publish again.
+   Do not rebase a published branch: rebase implies a force-push, and this
+   repository denies `git push --force*`. GitHub squash-merge erases
+   feature-branch merge commits at land time anyway. `--allow-stale-base` is
+   the explicit override when proceeding despite overlap is intended.
 3. If the worktree contains unrelated changes, stage only the intended files.
    Never publish unrelated paths silently.
 4. Check for already-running heavyweight quality commands before starting a

@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
@@ -79,7 +79,7 @@ export type AuthenticationReason = typeof AuthenticationReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export const TicketExpiredError = makeOntologyErrorClass(
+export const TicketExpiredError = makeOntologyErrorClass.make(
   $I`TicketExpiredError`,
   "TicketExpiredError",
   {
@@ -136,7 +136,7 @@ export type TicketExpiredError = typeof TicketExpiredError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const TicketNotFoundError = makeOntologyErrorClass(
+export const TicketNotFoundError = makeOntologyErrorClass.make(
   $I`TicketNotFoundError`,
   "TicketNotFoundError",
   {
@@ -188,7 +188,7 @@ export type TicketNotFoundError = typeof TicketNotFoundError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const AuthenticationError = makeOntologyErrorClass(
+export const AuthenticationError = makeOntologyErrorClass.make(
   $I`AuthenticationError`,
   "AuthenticationError",
   {
@@ -241,7 +241,7 @@ export type AuthenticationError = typeof AuthenticationError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const InvalidApiKeyError = makeOntologyErrorClass(
+export const InvalidApiKeyError = makeOntologyErrorClass.make(
   $I`InvalidApiKeyError`,
   "InvalidApiKeyError",
   {
@@ -297,7 +297,7 @@ const AuthErrorDefinition = S.Union([
 export const AuthError = AuthErrorDefinition.pipe(
   $I.annoteSchema("AuthError", {
     description: "Exhaustive tagged union of ontology transport authentication failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(AuthErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(AuthErrorDefinition),
   })
 );
 

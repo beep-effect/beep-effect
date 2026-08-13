@@ -87,5 +87,5 @@ lane's route. One recording session per checkout at a time (pid-checked
 - The `chrome-devtools` MCP (slim, default-disabled in settings) attaches to
   the QA Chrome via `--browser-url` for perf traces and computed-style
   introspection — enable it for the session, keep it disabled otherwise.
-- Evidence reading is `motion-evidence-review`; artifact provenance is
-  `exif-provenance`.
+- Evidence reading is `motion-evidence-review`; artifact provenance lives in
+  XMP-beepQA tags (inspect with `exiftool`/`ffprobe`).

@@ -8,7 +8,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
 import { HttpsUrl as CanonicalHttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Match } from "effect";
@@ -32,7 +32,7 @@ const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttp
   S.is(CanonicalHttpsUrl)(input)
 ).annotate({
   toArbitrary: () => (fc) =>
-    fc.uuid().map((id) => S.decodeUnknownSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
+    fc.uuid().map((id) => S.decodeSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
 });
 
 /**
@@ -245,7 +245,7 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
  * @since 0.0.0
  */
 export const ContentHash = Sha256Hex.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(Sha256Hex)(fc),
+  toArbitrary: () => S.toArbitrary(Sha256Hex),
 }).pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
@@ -302,7 +302,7 @@ export type ContentHash = typeof ContentHash.Type;
  * @since 0.0.0
  */
 export const IdempotencyKey = Sha256Hex.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(Sha256Hex)(fc),
+  toArbitrary: () => S.toArbitrary(Sha256Hex),
 }).pipe(
   S.brand("IdempotencyKey"),
   $I.annoteSchema("IdempotencyKey", {
@@ -929,7 +929,7 @@ export type ChunkId = typeof ChunkId.Type;
  * @since 0.0.0
  */
 export const ExtractionRunId = DocumentId.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(DocumentId)(fc),
+  toArbitrary: () => S.toArbitrary(DocumentId),
 }).pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",

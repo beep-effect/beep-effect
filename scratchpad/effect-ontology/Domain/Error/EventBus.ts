@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/EventBus");
  * @category errors
  * @since 0.0.0
  */
-export const EventBusError = makeOntologyErrorClass(
+export const EventBusError = makeOntologyErrorClass.make(
   $I`EventBusError`,
   "EventBusError",
   {
@@ -82,7 +82,7 @@ export type EventBusError = typeof EventBusError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const PubSubError = makeOntologyErrorClass(
+export const PubSubError = makeOntologyErrorClass.make(
   $I`PubSubError`,
   "PubSubError",
   {
@@ -144,7 +144,7 @@ export type PubSubError = typeof PubSubError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const DeadLetterError = makeOntologyErrorClass(
+export const DeadLetterError = makeOntologyErrorClass.make(
   $I`DeadLetterError`,
   "DeadLetterError",
   {
@@ -206,7 +206,7 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
 export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
   $I.annoteSchema("AnyEventBusError", {
     description: "Exhaustive tagged union of event-bus, Pub/Sub, and dead-letter failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(AnyEventBusErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
   })
 );
 

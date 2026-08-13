@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Match } from "effect";
@@ -488,7 +488,7 @@ export type LanguageCode = typeof LanguageCode.Type;
  * @since 0.0.0
  */
 export const ComplexityScore = UnitInterval.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(UnitInterval)(fc),
+  toArbitrary: () => S.toArbitrary(UnitInterval),
 }).pipe(
   $I.annoteSchema("ComplexityScore", {
     description: "Finite normalized document-complexity score.",
@@ -759,7 +759,9 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
   $I.annote("EnrichedManifest", {
     description: "Versioned batch manifest containing normalized document metadata and preprocessing statistics.",
   })
-) {}
+) {
+  static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this))
+}
 
 /**
  * Input to the document-preprocessing activity.

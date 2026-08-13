@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { SecureHttpUrl } from "../Identity.ts";
@@ -60,7 +60,7 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
 export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
   $I.annoteSchema("SubmitJobSource", {
     description: "Discriminated inline-text or remote-HTTPS content source for an extraction job.",
-    toArbitrary: () => (fc) => S.toArbitrary(SubmitJobSourceDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(SubmitJobSourceDefinition),
   })
 );
 
@@ -347,7 +347,7 @@ const JobStatusResponseDefinition = S.Union([
 export const JobStatusResponse = JobStatusResponseDefinition.pipe(
   $I.annoteSchema("JobStatusResponse", {
     description: "Lifecycle-discriminated extraction response with state-specific terminal data.",
-    toArbitrary: () => (fc) => S.toArbitrary(JobStatusResponseDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(JobStatusResponseDefinition),
   })
 );
 

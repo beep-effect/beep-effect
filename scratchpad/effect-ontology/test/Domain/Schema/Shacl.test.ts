@@ -42,7 +42,7 @@ describe("effect-ontology SHACL schemas", () => {
   });
 
   it("enforces SHACL conformance as an exact function of result emptiness", () => {
-    const emptyReport = S.decodeUnknownResult(ShaclValidationReport)({
+    const emptyReport = S.decodeResult(ShaclValidationReport)({
       conforms: true,
       validatedAt: "2026-07-25T12:00:00.000Z",
       dataGraphTripleCount: 42,

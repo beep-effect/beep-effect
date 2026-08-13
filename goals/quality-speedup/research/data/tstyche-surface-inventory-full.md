@@ -38,7 +38,6 @@ The known statement that there are per-package `dtslint/tsconfig.json` files is 
 | `scratchpad/codemode/tstyche.json:2-4`; `scratchpad/codemode/tsconfig.dtslint.json:1-10` | experiment configs | local tstyche/dtslint configs | Delete. |
 | `scratchpad/codemode/dtslint/Codemode.tst.ts:1-4` | experiment test | imports tstyche | Delete. |
 | `packages/foundation/modeling/md/dtslint/tsconfig.exports.json:1-3` | special config | `exports.tst.ts` include | Delete. |
-| `packages/foundation/ui-system/form/dtslint/Path.test-d.ts:1-2` | non-tstyche dtslint test | path type assertions | Delete; outside the 142-file count. |
 | `packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts:38-42` | source exclusion | `/dtslint/` | Remove. |
 | `packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts:93-100` | ESLint config | app dtslint globs | Remove two globs. |
 | `packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts:251-255` | ESLint config | dtslint ignore | Remove. |
@@ -138,7 +137,6 @@ Secondary dependency cleanup discovered from deleted tests:
 - `packages/tooling/tool/cli/package.json:130` runs `cd ../../../.. && bunx tstyche`, so one workspace task re-runs the root config rather than a local file, potentially duplicating other workspace scripts.
 - 57 package test tsconfigs include dtslint though only one exact `dtslint/tsconfig.json` exists. Both generators emit the include (`packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.test.json.hbs:4`, `packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts:262`).
 - 101 sentinels matter semantically: tsconfig-sync uses directory existence, not test existence, as coverage signal (`packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts:256-289,390-392`). Deleting only tests would preserve/rebuild empty matches.
-- `packages/foundation/ui-system/form/dtslint/Path.test-d.ts:1` is outside the 142 count and unselected by dtslint-tsgo.
 - `packages/foundation/modeling/rdf/dtslint/Rdf.tst.ts:1-5` is the sole `.tst.ts` without a tstyche import, but remains configured.
 - `scratchpad/codemode` is invisible to root tstyche and dtslint-tsgo (`tstyche.json:4-101`, `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:249,1605-1611`) and needs explicit deletion.
 - Architecture codegen names 14 concrete test templates (`packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts:179,221,257,337,397,447,507,575,613,643,675,707,727,951`).
@@ -381,7 +379,6 @@ Secondary dependency cleanup discovered from deleted tests:
 | `packages/foundation/ui-system/dock-react/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
 | `packages/foundation/ui-system/dock/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
 | `packages/foundation/ui-system/editor/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
-| `packages/foundation/ui-system/form/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
 | `packages/foundation/ui-system/ui/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
 | `packages/law-practice/tables/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
 | `packages/ontology/client/dtslint/.gitkeep:1` | empty sentinel | tracked `dtslint/` directory | Delete file/directory. |
@@ -454,7 +451,6 @@ Secondary dependency cleanup discovered from deleted tests:
 | `packages/foundation/ui-system/dock-react/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
 | `packages/foundation/ui-system/dock/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
 | `packages/foundation/ui-system/editor/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
-| `packages/foundation/ui-system/form/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
 | `packages/law-practice/tables/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
 | `packages/ontology/client/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
 | `packages/ontology/config/tsconfig.test.json:4` | package test config | `include` contains `dtslint` | Edit line 4 to remove `dtslint`. |
@@ -552,7 +548,6 @@ These are current operational docs/templates, not goal/exploration history. Edit
 | `packages/foundation/modeling/ontology/README.md:49` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
 | `packages/foundation/modeling/pandoc-ast/README.md:127,132` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
 | `packages/foundation/ui-system/dock/README.md:41` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
-| `packages/foundation/ui-system/form/README.md:36` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
 | `packages/ontology/domain/README.md:50` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
 | `packages/ontology/server/README.md:41` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
 | `packages/ontology/use-cases/README.md:37` | current README | dtslint/tstyche/type-test guidance | Edit cited lines. |
@@ -622,8 +617,6 @@ Every `goals/**` and `explorations/**` hit is historical/packet evidence. The ex
 | `goals/firecrawl-driver/SPEC.md:360,379` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
 | `goals/firecrawl-driver/history/reflections/2026-07-11-claude.md:39` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
 | `goals/firecrawl-driver/ops/manifest.json:257,277` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
-| `goals/form/README.md:83` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
-| `goals/form/research/2026-06-18-codebase-grounding.md:36,43` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
 | `goals/identity-iri-core/history/p0-harness-evidence.md:31` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
 | `goals/identity-iri-fold/PLAN.md:12` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |
 | `goals/identity-iri-fold/SPEC.md:62` | historical record | legacy dtslint/tstyche/type-test reference | Historical-do-not-touch. |

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, URLStr } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
@@ -299,7 +299,7 @@ const BatchIngestResultDefinition = S.TaggedUnion({
 export const BatchIngestResult = BatchIngestResultDefinition.pipe(
   $I.annoteSchema("BatchIngestResult", {
     description: "Tagged per-link ingestion result with status-specific nested success data or a required error.",
-    toArbitrary: () => (fc) => S.toArbitrary(BatchIngestResultDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(BatchIngestResultDefinition),
   })
 );
 

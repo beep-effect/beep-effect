@@ -113,7 +113,6 @@ Legend: **src** = has `src/`; **test** = has `test/`; **#ts** = count of `.ts`/`
 | Package | Path | src | test | #ts | Purpose |
 |---|---|:--:|:--:|--:|---|
 | `@beep/ui` | `packages/foundation/ui-system/ui` | ✓ | ✓ | 121 | Core UI component system (461 unique symbols). |
-| `@beep/form` | `packages/foundation/ui-system/form` | ✓ | ✓ | 15 | Form system. |
 | `@beep/editor` | `packages/foundation/ui-system/editor` | ✓ | ✓ | 10 | Rich-text editor UI. |
 
 ### shared/*

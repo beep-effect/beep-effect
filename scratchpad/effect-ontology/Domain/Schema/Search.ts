@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
@@ -45,8 +45,8 @@ const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof Sear
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
         SearchDateRangeFields.make({
-          from: S.decodeUnknownSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeUnknownSync(S.DateTimeUtcFromMillis)(from + duration),
+          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
+          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
         })
       ),
 });

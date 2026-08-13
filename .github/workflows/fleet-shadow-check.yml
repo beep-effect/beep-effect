@@ -14,7 +14,7 @@ permissions: {}
 jobs:
   shadow-probe:
     name: Shadow Probe
-    runs-on: beep-ec2-heavy-shadow
+    runs-on: beep-ec2-heavy
     timeout-minutes: 10
     steps:
       - name: Prove the ephemeral worker
@@ -33,26 +33,26 @@ jobs:
           echo "RUNNER_NAME: ${RUNNER_NAME:-unset}"
           echo "hostname: $(hostname)"
 
-          instance_id=unavailable
-          role_name=unavailable
-          if token="$(curl --noproxy '*' --silent --show-error --fail \
+          # CSF-003 denies IMDS to the runner user by design; RUNNER_NAME carries the instance ID.
+          if [[ "${RUNNER_NAME:-}" =~ ^beep-ci-(i-[0-9a-f]+)$ ]]; then
+            instance_id="${BASH_REMATCH[1]}"
+          else
+            echo "Could not recover an instance ID from RUNNER_NAME"
+            exit 1
+          fi
+          echo "Runner instance-id: ${instance_id}"
+
+          if curl --noproxy '*' --silent --show-error --fail \
             --connect-timeout 3 --max-time 3 \
             --request PUT \
             --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
-            http://169.254.169.254/latest/api/token)"; then
-            instance_id="$(curl --noproxy '*' --silent --show-error --fail \
-              --connect-timeout 3 --max-time 3 \
-              --header "X-aws-ec2-metadata-token: ${token}" \
-              http://169.254.169.254/latest/meta-data/instance-id)" || instance_id=unavailable
-            role_name="$(curl --noproxy '*' --silent --show-error --fail \
-              --connect-timeout 3 --max-time 3 \
-              --header "X-aws-ec2-metadata-token: ${token}" \
-              http://169.254.169.254/latest/meta-data/iam/security-credentials/)" || role_name=unavailable
+            --output /dev/null \
+            http://169.254.169.254/latest/api/token; then
+            echo "FORBIDDEN SUCCESS: runner reached IMDSv2"
+            exit 1
           else
-            echo "IMDSv2 token request failed"
+            echo "DENIED AS EXPECTED: runner could not reach IMDSv2"
           fi
-          echo "IMDS instance-id: ${instance_id}"
-          echo "IMDS IAM role: ${role_name}"
 
       - name: Ensure AWS CLI is available
         if: ${{ inputs.redteam }}
@@ -96,6 +96,7 @@ jobs:
             exit 1
           fi
 
+          # CSF-003 denies IMDS credentials to the runner user by design.
           failed=0
           for parameter in github_app_key_base64 github_app_webhook_secret; do
             error_file="${RUNNER_TEMP}/ssm-${parameter}.error"
@@ -107,6 +108,8 @@ jobs:
               failed=1
             elif grep -Eqi 'AccessDenied|not authorized' "${error_file}"; then
               echo "DENIED AS EXPECTED: ${parameter}"
+            elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${error_file}"; then
+              echo "DENIED AS EXPECTED: ${parameter} (guest credentials unavailable)"
             else
               echo "UNEXPECTED ERROR: ${parameter}"
               sed -n '1,8p' "${error_file}"
@@ -127,12 +130,15 @@ jobs:
             exit 1
           fi
 
+          # CSF-003 denies IMDS credentials to the runner user by design.
           failed=0
           if aws s3api list-buckets >/dev/null 2>"${RUNNER_TEMP}/s3-list.error"; then
             echo "FORBIDDEN SUCCESS: listed S3 buckets"
             failed=1
           elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-list.error"; then
             echo "DENIED AS EXPECTED: list-buckets"
+          elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-list.error"; then
+            echo "DENIED AS EXPECTED: list-buckets (guest credentials unavailable)"
           else
             echo "UNEXPECTED ERROR: list-buckets"
             sed -n '1,8p' "${RUNNER_TEMP}/s3-list.error"
@@ -147,6 +153,8 @@ jobs:
             failed=1
           elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-put.error"; then
             echo "DENIED AS EXPECTED: put-object"
+          elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-put.error"; then
+            echo "DENIED AS EXPECTED: put-object (guest credentials unavailable)"
           else
             echo "UNEXPECTED ERROR: put-object"
             sed -n '1,8p' "${RUNNER_TEMP}/s3-put.error"

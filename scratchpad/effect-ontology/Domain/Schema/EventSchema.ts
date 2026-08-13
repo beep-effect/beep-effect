@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -30,7 +30,7 @@ const ClaimCorrectedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimCorrectedPayload = ClaimCorrectedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ClaimCorrectedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ClaimCorrectedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("ClaimCorrectedPayload", {
     description: "Journal payload linking an original claim to its curated replacement.",
@@ -46,7 +46,7 @@ const ClaimDeprecatedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimDeprecatedPayload = ClaimDeprecatedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ClaimDeprecatedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ClaimDeprecatedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("ClaimDeprecatedPayload", {
     description: "Journal payload recording claim deprecation and an optional negative-example artifact.",
@@ -62,7 +62,7 @@ const AliasAddedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const AliasAddedPayload = AliasAddedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(AliasAddedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(AliasAddedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("AliasAddedPayload", {
     description: "Journal payload recording a new surface-form alias for a canonical RDF entity.",
@@ -76,7 +76,7 @@ const ClaimPromotedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimPromotedPayload = ClaimPromotedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ClaimPromotedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ClaimPromotedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("ClaimPromotedPayload", {
     description: "Journal payload recording promotion of one claim to preferred rank.",
@@ -92,7 +92,7 @@ const EntityLinkedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const EntityLinkedPayload = EntityLinkedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(EntityLinkedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(EntityLinkedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("EntityLinkedPayload", {
     description: "Journal payload recording a confirmed link from a canonical entity to Wikidata.",
@@ -139,7 +139,7 @@ export const CurationEventGroup = EventGroup.empty
   })
   .add({
     tag: "EntityLinked",
-    primaryKey: (payload) => `${payload.ontologyId}:link:${payload.canonicalEntity.value}:${payload.wikidataQid}`,
+    primaryKey: (payload) => `${payload.ontologyId}:link:${payload.canonicalEntity}:${payload.wikidataQid}`,
     payload: EntityLinkedPayload,
   });
 
@@ -180,7 +180,7 @@ const ExtractionCompletedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const ExtractionCompletedPayload = ExtractionCompletedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ExtractionCompletedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ExtractionCompletedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("ExtractionCompletedPayload", {
     description: "Journal payload summarizing a terminal extraction outcome and its optional output artifact.",
@@ -197,7 +197,7 @@ const ValidationFailedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const ValidationFailedPayload = ValidationFailedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ValidationFailedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ValidationFailedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("ValidationFailedPayload", {
     description: "Journal payload summarizing failed validation and its optional report artifact.",
@@ -211,7 +211,7 @@ const BatchStateChangedPayloadDefinition = S.Struct({
   timestamp: S.DateTimeUtcFromString,
 });
 const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(BatchStateChangedPayloadDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(BatchStateChangedPayloadDefinition),
 }).pipe(
   $I.annoteSchema("BatchStateChangedPayload", {
     description: "Journal payload carrying the complete schema-validated batch workflow state.",

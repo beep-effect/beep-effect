@@ -44,8 +44,8 @@ the first packet that actually consumes them (see the exploration MAP).
 ## Source Hierarchy
 
 1. User objective: graduate the first slice of `domain-layer-hardening`.
-2. `AGENTS.md`, `CLAUDE.md`, required skills (`schema-model-specialist`,
-   `schema-first-development`, `effect-services`).
+2. `AGENTS.md`, `CLAUDE.md`, required skills (`schema-first-development`,
+   `effect-first-development`).
 3. `standards/ARCHITECTURE.md` + `standards/architecture/{02-shared-kernel,
    04-rich-domain-model,09-errors-across-boundaries}.md`.
 4. This `SPEC.md`. 5. `PLAN.md`. 6. `GOAL.md`. 7. `research/`, exploration synthesis.

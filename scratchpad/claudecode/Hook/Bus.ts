@@ -25,15 +25,16 @@ const $I = $ScratchpadId.create("claudecode/Hook/Bus");
 /**
  * Shape of the typed in-process hook event bus.
  *
- * @category services
- * @since 0.0.0
+ * **Example** (Name the bus interface)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type Example = Hook.Bus.Interface
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export interface Interface {
   readonly publish: (event: Events.HookInput) => Effect.Effect<void>;
@@ -46,15 +47,20 @@ export interface Interface {
 /**
  * Typed in-process hook event bus service.
  *
- * @category services
- * @since 0.0.0
+ * **Example** (Access the event stream)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Bus.Service)
+ * const events = Effect.service(Hook.Bus.Service).pipe(
+ *   Effect.map((bus) => bus.events)
+ * )
+ * console.log(events)
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class Service extends Context.Service<Service, Interface>()($I`Service`) {}
 
@@ -78,15 +84,17 @@ const make = Effect.gen(function* () {
 /**
  * Construct an in-process hook bus layer.
  *
- * @category layers
- * @since 0.0.0
+ * **Example** (Construct an event bus layer)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Layer from "effect/Layer"
  *
- * console.log(Hook.Bus.layer)
+ * console.log(Layer.isLayer(Hook.Bus.layer)) // true
  * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const layer = Layer.effect(Service, make);
 
@@ -97,30 +105,44 @@ export const layer = Layer.effect(Service, make);
 /**
  * Effectful access to the hook bus service.
  *
- * @category getters
- * @since 0.0.0
+ * **Example** (Run the bus accessor)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Bus.bus)
+ * Effect.runPromise(Hook.Bus.bus.pipe(Effect.provide(Hook.Bus.layer))).then(
+ *   (bus) => console.log(bus.events)
+ * )
  * ```
+ *
+ * @effects Requires {@link Service}; does not fail.
+ * @category getters
+ * @since 0.0.0
  */
 export const bus: Effect.Effect<Interface, never, Service> = Effect.service(Service);
 
 /**
  * Publish one hook event to the current bus.
  *
+ * **Example** (Publish a session-start event)
+ *
+ * ```ts
+ * import { Hook, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const event = S.decodeUnknownSync(Hook.SessionStart.Input)(
+ *   JSON.parse(Testing.fixtures.SessionStart())
+ * )
+ * Effect.runPromise(Hook.Bus.publish(event).pipe(Effect.provide(Hook.Bus.layer))).then(
+ *   () => console.log("published")
+ * )
+ * ```
+ *
+ * @effects Requires {@link Service} and publishes the event to all active subscribers.
  * @category getters
  * @since 0.0.0
- *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook.Bus.publish)
- * ```
  */
 export const publish = Effect.fn("Hook.Bus.publishEvent")(
   (event: Events.HookInput): Effect.Effect<void, never, Service> =>

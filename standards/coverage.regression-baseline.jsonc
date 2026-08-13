@@ -3,22 +3,22 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-08-10T17:26:59.282Z",
-  "git_sha": "349e0370888d8e3ba82eaa79dc27e73146a9b2f4",
+  "generated_at": "2026-08-11T22:16:03.392Z",
+  "git_sha": "64b08774b85107ef5cd3d5224c8034ebabf37c94",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
     "@beep/acp": {
       "path": "packages/drivers/acp",
-      "lines": 57.88,
-      "statements": 57.84,
-      "branches": 42.22,
-      "functions": 33.08,
+      "lines": 58.51,
+      "statements": 58.46,
+      "branches": 43.18,
+      "functions": 33.82,
       "uncovered": {
-        "lines": 334,
-        "statements": 341,
-        "branches": 52,
-        "functions": 273
+        "lines": 329,
+        "statements": 336,
+        "branches": 50,
+        "functions": 270
       }
     },
     "@beep/agents-client": {
@@ -259,7 +259,7 @@
       "path": "packages/foundation/capability/chalk",
       "lines": 94.03,
       "statements": 93.66,
-      "branches": 82.05,
+      "branches": 82.27,
       "functions": 85.78,
       "uncovered": {
         "lines": 30,
@@ -348,10 +348,10 @@
     },
     "@beep/doc-text": {
       "path": "packages/drivers/doc-text",
-      "lines": 84.09,
-      "statements": 83.33,
+      "lines": 84.78,
+      "statements": 84,
       "branches": 71.42,
-      "functions": 74.07,
+      "functions": 75,
       "uncovered": {
         "lines": 7,
         "statements": 8,
@@ -361,10 +361,10 @@
     },
     "@beep/dock": {
       "path": "packages/foundation/ui-system/dock",
-      "lines": 92.16,
-      "statements": 92.26,
+      "lines": 92.17,
+      "statements": 92.27,
       "branches": 83.46,
-      "functions": 88.38,
+      "functions": 88.4,
       "uncovered": {
         "lines": 84,
         "statements": 89,
@@ -491,15 +491,28 @@
     },
     "@beep/editor": {
       "path": "packages/foundation/ui-system/editor",
-      "lines": 49.57,
-      "statements": 47.23,
+      "lines": 49.62,
+      "statements": 47.26,
       "branches": 41.3,
-      "functions": 32.94,
+      "functions": 33.01,
       "uncovered": {
-        "lines": 600,
-        "statements": 715,
+        "lines": 598,
+        "statements": 713,
         "branches": 361,
-        "functions": 285
+        "functions": 284
+      }
+    },
+    "@beep/effect-drizzle": {
+      "path": "packages/ecosystem/effect-drizzle",
+      "lines": 84.38,
+      "statements": 83.91,
+      "branches": 81.64,
+      "functions": 76.76,
+      "uncovered": {
+        "lines": 258,
+        "statements": 286,
+        "branches": 194,
+        "functions": 174
       }
     },
     "@beep/epistemic-client": {
@@ -530,10 +543,10 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 93.14,
-      "statements": 91.66,
+      "lines": 93.16,
+      "statements": 91.68,
       "branches": 100,
-      "functions": 77.98,
+      "functions": 78.12,
       "uncovered": {
         "lines": 29,
         "statements": 38,
@@ -660,15 +673,15 @@
     },
     "@beep/file-processing": {
       "path": "packages/foundation/capability/file-processing",
-      "lines": 82.31,
-      "statements": 82.6,
+      "lines": 83.22,
+      "statements": 83.22,
       "branches": 84.93,
-      "functions": 68.93,
+      "functions": 69.9,
       "uncovered": {
-        "lines": 52,
-        "statements": 52,
+        "lines": 50,
+        "statements": 51,
         "branches": 11,
-        "functions": 32
+        "functions": 31
       }
     },
     "@beep/firecrawl": {
@@ -682,19 +695,6 @@
         "statements": 32,
         "branches": 8,
         "functions": 19
-      }
-    },
-    "@beep/form": {
-      "path": "packages/foundation/ui-system/form",
-      "lines": 30.31,
-      "statements": 30.92,
-      "branches": 35.06,
-      "functions": 18.89,
-      "uncovered": {
-        "lines": 223,
-        "statements": 239,
-        "branches": 100,
-        "functions": 103
       }
     },
     "@beep/gov-legal-mcp": {
@@ -730,23 +730,23 @@
       "branches": 0,
       "functions": 0,
       "uncovered": {
-        "lines": 578,
-        "statements": 603,
+        "lines": 580,
+        "statements": 605,
         "branches": 155,
         "functions": 70
       }
     },
     "@beep/html": {
       "path": "packages/foundation/modeling/html",
-      "lines": 99.03,
-      "statements": 99.07,
+      "lines": 99.08,
+      "statements": 99.16,
       "branches": 100,
-      "functions": 98.27,
+      "functions": 98.43,
       "uncovered": {
-        "lines": 16,
-        "statements": 17,
+        "lines": 15,
+        "statements": 15,
         "branches": 0,
-        "functions": 11
+        "functions": 10
       }
     },
     "@beep/hubspot": {
@@ -764,15 +764,15 @@
     },
     "@beep/identity": {
       "path": "packages/foundation/modeling/identity",
-      "lines": 94.88,
-      "statements": 94.8,
-      "branches": 87.94,
-      "functions": 85.82,
+      "lines": 95.25,
+      "statements": 95.15,
+      "branches": 88.65,
+      "functions": 87.23,
       "uncovered": {
-        "lines": 23,
-        "statements": 25,
-        "branches": 17,
-        "functions": 19
+        "lines": 22,
+        "statements": 24,
+        "branches": 16,
+        "functions": 18
       }
     },
     "@beep/langextract": {
@@ -790,15 +790,15 @@
     },
     "@beep/law-practice-domain": {
       "path": "packages/law-practice/domain",
-      "lines": 62.33,
-      "statements": 62.26,
-      "branches": 40.35,
-      "functions": 16.75,
+      "lines": 77.43,
+      "statements": 77.2,
+      "branches": 59.01,
+      "functions": 58.37,
       "uncovered": {
-        "lines": 232,
-        "statements": 240,
-        "branches": 34,
-        "functions": 154
+        "lines": 139,
+        "statements": 145,
+        "branches": 25,
+        "functions": 77
       }
     },
     "@beep/law-practice-server": {
@@ -829,10 +829,10 @@
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 71.06,
-      "statements": 71.77,
-      "branches": 88.23,
-      "functions": 56.09,
+      "lines": 71.9,
+      "statements": 72.54,
+      "branches": 89.18,
+      "functions": 57.14,
       "uncovered": {
         "lines": 68,
         "statements": 70,
@@ -855,10 +855,10 @@
     },
     "@beep/libpff": {
       "path": "packages/drivers/libpff",
-      "lines": 89.1,
-      "statements": 89.13,
+      "lines": 89.14,
+      "statements": 89.2,
       "branches": 79.19,
-      "functions": 76.55,
+      "functions": 76.87,
       "uncovered": {
         "lines": 51,
         "statements": 53,
@@ -868,15 +868,15 @@
     },
     "@beep/lint-rules": {
       "path": "packages/tooling/policy-pack/lint-rules",
-      "lines": 19.49,
-      "statements": 16.31,
-      "branches": 0,
-      "functions": 1.12,
+      "lines": 34.64,
+      "statements": 29.53,
+      "branches": 10.3,
+      "functions": 15.73,
       "uncovered": {
-        "lines": 285,
-        "statements": 359,
-        "branches": 194,
-        "functions": 175
+        "lines": 232,
+        "statements": 303,
+        "branches": 174,
+        "functions": 150
       }
     },
     "@beep/m365": {
@@ -920,10 +920,10 @@
     },
     "@beep/md": {
       "path": "packages/foundation/modeling/md",
-      "lines": 95.84,
-      "statements": 95.7,
-      "branches": 88.62,
-      "functions": 93.77,
+      "lines": 95.86,
+      "statements": 95.73,
+      "branches": 88.94,
+      "functions": 93.8,
       "uncovered": {
         "lines": 38,
         "statements": 42,
@@ -946,10 +946,10 @@
     },
     "@beep/nlp": {
       "path": "packages/foundation/modeling/nlp",
-      "lines": 86.21,
-      "statements": 82.47,
+      "lines": 86.23,
+      "statements": 82.49,
       "branches": 53.02,
-      "functions": 71.67,
+      "functions": 71.75,
       "uncovered": {
         "lines": 90,
         "statements": 132,
@@ -959,36 +959,36 @@
     },
     "@beep/nlp-mcp": {
       "path": "packages/drivers/nlp-mcp",
-      "lines": 39.55,
-      "statements": 39.06,
-      "branches": 0,
-      "functions": 28.81,
+      "lines": 45.83,
+      "statements": 45.28,
+      "branches": 9.35,
+      "functions": 42.62,
       "uncovered": {
-        "lines": 272,
-        "statements": 287,
-        "branches": 139,
-        "functions": 126
+        "lines": 247,
+        "statements": 261,
+        "branches": 126,
+        "functions": 105
       }
     },
     "@beep/nlp-processing": {
       "path": "packages/foundation/capability/nlp-processing",
-      "lines": 59.61,
-      "statements": 59.42,
-      "branches": 63.57,
-      "functions": 55.6,
+      "lines": 63.79,
+      "statements": 63.26,
+      "branches": 66.19,
+      "functions": 57.66,
       "uncovered": {
-        "lines": 374,
-        "statements": 409,
-        "branches": 51,
-        "functions": 182
+        "lines": 336,
+        "statements": 371,
+        "branches": 48,
+        "functions": 174
       }
     },
     "@beep/obs": {
       "path": "packages/drivers/obs",
-      "lines": 82.37,
-      "statements": 81.17,
+      "lines": 82.53,
+      "statements": 81.32,
       "branches": 66.66,
-      "functions": 63.73,
+      "functions": 64.51,
       "uncovered": {
         "lines": 40,
         "statements": 45,
@@ -998,23 +998,23 @@
     },
     "@beep/observability": {
       "path": "packages/foundation/capability/observability",
-      "lines": 69.92,
-      "statements": 69.79,
+      "lines": 69.96,
+      "statements": 69.94,
       "branches": 49.03,
-      "functions": 58.82,
+      "functions": 59.16,
       "uncovered": {
         "lines": 197,
-        "statements": 209,
+        "statements": 208,
         "branches": 106,
-        "functions": 119
+        "functions": 118
       }
     },
     "@beep/oip-web": {
       "path": "apps/oip-web",
-      "lines": 77.4,
-      "statements": 77.19,
+      "lines": 77.44,
+      "statements": 77.23,
       "branches": 62.58,
-      "functions": 70.13,
+      "functions": 70.27,
       "uncovered": {
         "lines": 120,
         "statements": 130,
@@ -1037,15 +1037,15 @@
     },
     "@beep/ontology": {
       "path": "packages/foundation/modeling/ontology",
-      "lines": 91.97,
-      "statements": 91.94,
+      "lines": 91.95,
+      "statements": 92.07,
       "branches": 83.25,
-      "functions": 86.71,
+      "functions": 86.95,
       "uncovered": {
         "lines": 47,
-        "statements": 49,
+        "statements": 48,
         "branches": 37,
-        "functions": 34
+        "functions": 33
       }
     },
     "@beep/ontology-client": {
@@ -1128,15 +1128,15 @@
     },
     "@beep/openai-compat": {
       "path": "packages/drivers/openai-compat",
-      "lines": 82.41,
-      "statements": 82.1,
-      "branches": 62.62,
-      "functions": 73.42,
+      "lines": 83.17,
+      "statements": 82.85,
+      "branches": 63.63,
+      "functions": 75,
       "uncovered": {
-        "lines": 54,
-        "statements": 56,
-        "branches": 37,
-        "functions": 38
+        "lines": 52,
+        "statements": 54,
+        "branches": 36,
+        "functions": 36
       }
     },
     "@beep/openclaw": {
@@ -1219,14 +1219,14 @@
     },
     "@beep/postgres": {
       "path": "packages/drivers/postgres",
-      "lines": 86.08,
-      "statements": 85.92,
-      "branches": 70.5,
-      "functions": 82.39,
+      "lines": 86.53,
+      "statements": 86.35,
+      "branches": 71.73,
+      "functions": 82.63,
       "uncovered": {
-        "lines": 43,
-        "statements": 47,
-        "branches": 41,
+        "lines": 42,
+        "statements": 46,
+        "branches": 39,
         "functions": 25
       }
     },
@@ -1245,15 +1245,15 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 70.96,
-      "statements": 69.6,
-      "branches": 61.82,
-      "functions": 59.98,
+      "lines": 71.11,
+      "statements": 69.82,
+      "branches": 62.7,
+      "functions": 60.1,
       "uncovered": {
-        "lines": 669,
-        "statements": 748,
-        "branches": 184,
-        "functions": 447
+        "lines": 668,
+        "statements": 746,
+        "branches": 182,
+        "functions": 446
       }
     },
     "@beep/protobuf": {
@@ -1284,10 +1284,10 @@
     },
     "@beep/qa-capture": {
       "path": "packages/tooling/library/qa-capture",
-      "lines": 50.65,
-      "statements": 51.12,
+      "lines": 50.71,
+      "statements": 51.18,
       "branches": 22.22,
-      "functions": 46.18,
+      "functions": 46.4,
       "uncovered": {
         "lines": 378,
         "statements": 390,
@@ -1297,15 +1297,15 @@
     },
     "@beep/rdf": {
       "path": "packages/foundation/modeling/rdf",
-      "lines": 96.5,
-      "statements": 96.48,
+      "lines": 96.65,
+      "statements": 96.77,
       "branches": 99.12,
-      "functions": 84.24,
+      "functions": 84.93,
       "uncovered": {
-        "lines": 23,
-        "statements": 24,
+        "lines": 22,
+        "statements": 22,
         "branches": 3,
-        "functions": 23
+        "functions": 22
       }
     },
     "@beep/rdf-canonize": {
@@ -1323,66 +1323,66 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 88.08,
-      "statements": 88.18,
-      "branches": 75.51,
-      "functions": 73.79,
+      "lines": 88.11,
+      "statements": 88.21,
+      "branches": 75.59,
+      "functions": 73.93,
       "uncovered": {
         "lines": 292,
         "statements": 297,
-        "branches": 156,
+        "branches": 155,
         "functions": 239
       }
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 69.08,
-      "statements": 68.8,
-      "branches": 54.87,
-      "functions": 60.77,
+      "lines": 69.29,
+      "statements": 69.01,
+      "branches": 55.28,
+      "functions": 61.04,
       "uncovered": {
-        "lines": 8233,
-        "statements": 8644,
-        "branches": 4475,
-        "functions": 3029
+        "lines": 8272,
+        "statements": 8686,
+        "branches": 4491,
+        "functions": 3044
       }
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",
-      "lines": 76.02,
-      "statements": 74.48,
-      "branches": 57.5,
-      "functions": 48.76,
+      "lines": 77.17,
+      "statements": 75.57,
+      "branches": 69.76,
+      "functions": 50,
       "uncovered": {
-        "lines": 88,
-        "statements": 100,
-        "branches": 17,
-        "functions": 62
+        "lines": 84,
+        "statements": 96,
+        "branches": 13,
+        "functions": 61
       }
     },
     "@beep/repo-docgen": {
       "path": "packages/tooling/tool/docgen",
-      "lines": 59.12,
-      "statements": 59.37,
-      "branches": 57.89,
-      "functions": 59.22,
+      "lines": 58.94,
+      "statements": 59.2,
+      "branches": 57.39,
+      "functions": 59.05,
       "uncovered": {
-        "lines": 403,
-        "statements": 418,
-        "branches": 96,
-        "functions": 137
+        "lines": 406,
+        "statements": 421,
+        "branches": 98,
+        "functions": 138
       }
     },
     "@beep/repo-utils": {
       "path": "packages/tooling/library/repo-utils",
-      "lines": 75.66,
-      "statements": 75.07,
-      "branches": 55.01,
-      "functions": 56.96,
+      "lines": 75.76,
+      "statements": 75.14,
+      "branches": 55.23,
+      "functions": 57.05,
       "uncovered": {
-        "lines": 396,
-        "statements": 418,
-        "branches": 202,
+        "lines": 395,
+        "statements": 417,
+        "branches": 201,
         "functions": 207
       }
     },
@@ -1414,15 +1414,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 93,
-      "statements": 92.16,
-      "branches": 87.17,
-      "functions": 87.1,
+      "lines": 93.07,
+      "statements": 92.22,
+      "branches": 87.29,
+      "functions": 87.35,
       "uncovered": {
-        "lines": 275,
-        "statements": 324,
-        "branches": 170,
-        "functions": 174
+        "lines": 274,
+        "statements": 323,
+        "branches": 169,
+        "functions": 173
       }
     },
     "@beep/semantic-web": {
@@ -1479,10 +1479,10 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 65.98,
-      "statements": 65.56,
+      "lines": 66.1,
+      "statements": 65.67,
       "branches": 54.38,
-      "functions": 46.32,
+      "functions": 46.71,
       "uncovered": {
         "lines": 100,
         "statements": 104,
@@ -1492,10 +1492,10 @@
     },
     "@beep/tika": {
       "path": "packages/drivers/tika",
-      "lines": 88.77,
-      "statements": 88.35,
+      "lines": 88.88,
+      "statements": 88.54,
       "branches": 74.54,
-      "functions": 83.82,
+      "functions": 84.28,
       "uncovered": {
         "lines": 21,
         "statements": 22,
@@ -1520,7 +1520,7 @@
       "path": "packages/foundation/ui-system/ui",
       "lines": 13.58,
       "statements": 13.66,
-      "branches": 4.67,
+      "branches": 4.62,
       "functions": 8.2,
       "uncovered": {
         "lines": 2297,
@@ -1532,9 +1532,9 @@
     "@beep/uspto": {
       "path": "packages/drivers/uspto",
       "lines": 83.21,
-      "statements": 81.75,
+      "statements": 81.87,
       "branches": 68.75,
-      "functions": 71.42,
+      "functions": 71.87,
       "uncovered": {
         "lines": 24,
         "statements": 27,
@@ -1557,10 +1557,10 @@
     },
     "@beep/utils": {
       "path": "packages/foundation/modeling/utils",
-      "lines": 86.23,
-      "statements": 82.93,
+      "lines": 86.3,
+      "statements": 83,
       "branches": 84.5,
-      "functions": 76.43,
+      "functions": 76.58,
       "uncovered": {
         "lines": 80,
         "statements": 113,
@@ -1570,15 +1570,15 @@
     },
     "@beep/venice-ai": {
       "path": "packages/drivers/venice-ai",
-      "lines": 86.9,
-      "statements": 87.1,
-      "branches": 76,
-      "functions": 72.02,
+      "lines": 87.53,
+      "statements": 87.71,
+      "branches": 77.33,
+      "functions": 73.61,
       "uncovered": {
-        "lines": 44,
-        "statements": 45,
-        "branches": 18,
-        "functions": 40
+        "lines": 42,
+        "statements": 43,
+        "branches": 17,
+        "functions": 38
       }
     },
     "@beep/wink": {
@@ -1648,15 +1648,15 @@
     },
     "@beep/xai": {
       "path": "packages/drivers/xai",
-      "lines": 71.46,
-      "statements": 71.13,
-      "branches": 61.81,
-      "functions": 64.9,
+      "lines": 72,
+      "statements": 71.65,
+      "branches": 62.72,
+      "functions": 66.02,
       "uncovered": {
-        "lines": 121,
-        "statements": 127,
-        "branches": 42,
-        "functions": 73
+        "lines": 119,
+        "statements": 125,
+        "branches": 41,
+        "functions": 71
       }
     }
   }

@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/effect-drizzle",
+        "patterns": [
+          "packages/ecosystem/effect-drizzle/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-client",
         "patterns": [
           "packages/epistemic/client/src/**"
@@ -315,12 +321,6 @@
         "name": "@beep/firecrawl",
         "patterns": [
           "packages/drivers/firecrawl/src/**"
-        ]
-      },
-      {
-        "name": "@beep/form",
-        "patterns": [
-          "packages/foundation/ui-system/form/src/**"
         ]
       },
       {
@@ -1502,6 +1502,17 @@
         ]
       },
       {
+        "from": "@beep/effect-drizzle",
+        "allow": [
+          "@beep/effect-drizzle",
+          "@beep/pglite"
+        ],
+        "allowTypeOnly": [
+          "@beep/effect-drizzle",
+          "@beep/pglite"
+        ]
+      },
+      {
         "from": "@beep/epistemic-client",
         "allow": [
           "@beep/epistemic-client",
@@ -1759,23 +1770,6 @@
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
-        ]
-      },
-      {
-        "from": "@beep/form",
-        "allow": [
-          "@beep/form",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/test-utils",
-          "@beep/ui"
-        ],
-        "allowTypeOnly": [
-          "@beep/form",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/test-utils",
-          "@beep/ui"
         ]
       },
       {
@@ -3025,9 +3019,11 @@
         "allow": [
           "@beep/dock",
           "@beep/dock-react",
+          "@beep/drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/postgres",
           "@beep/pretext",
           "@beep/rdf",
           "@beep/schema",
@@ -3037,9 +3033,11 @@
         "allowTypeOnly": [
           "@beep/dock",
           "@beep/dock-react",
+          "@beep/drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/postgres",
           "@beep/pretext",
           "@beep/rdf",
           "@beep/schema",
@@ -3122,13 +3120,11 @@
       {
         "from": "@beep/storybook",
         "allow": [
-          "@beep/form",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"
         ],
         "allowTypeOnly": [
-          "@beep/form",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"

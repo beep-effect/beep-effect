@@ -66,7 +66,7 @@ export const routeForCategory = (category: QualityIssueCategory): ReadonlyArray<
       QualityIssueRouting.make({ skill: "quality-review-fix-loop", reason: "Changeset policy failure" }),
     ],
     "repo-export-policy": () => [
-      QualityIssueRouting.make({ skill: "repo-symbol-discovery", reason: "Stale repo-export workflow reference" }),
+      QualityIssueRouting.make({ skill: "quality-review-fix-loop", reason: "Stale repo-export workflow reference" }),
     ],
     "security-audit": () => [
       QualityIssueRouting.make({ skill: "quality-review-fix-loop", reason: "Security audit failure" }),

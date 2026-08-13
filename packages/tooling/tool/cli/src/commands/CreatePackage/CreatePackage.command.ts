@@ -24,6 +24,7 @@ import * as O from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { applyJsoncModification as applySharedJsoncModification } from "../../internal/cli/Jsonc.ts";
@@ -117,11 +118,128 @@ export const resolveCreatePackageTemplateDir = Effect.fn(function* (
  */
 const VALID_TYPES = ["library", "tool", "app"] as const;
 const VALID_APP_KINDS = ["nextjs", "tauri", "runtime-proof"] as const;
-const VALID_FAMILIES = ["drivers", "foundation", "tooling"] as const;
+const VALID_FAMILIES = ["drivers", "ecosystem", "foundation", "tooling"] as const;
 const VALID_FOUNDATION_KINDS = ["primitive", "modeling", "capability", "ui-system"] as const;
 const VALID_TOOLING_KINDS = ["library", "tool", "policy-pack", "test-kit"] as const;
 const PACKAGE_NAME_PATTERN = /^[a-z_][a-z0-9._-]*$/;
 const PARENT_DIR_PATTERN = /^(?!.*\/\/)(?!.*\/$)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[a-z0-9][a-z0-9/_-]*$/;
+const ECOSYSTEM_EFFECT_LANGUAGE_SERVICE_PLUGINS = `[
+  {
+    "name": "@effect/language-service",
+    "namespaceImportPackages": ["effect", "@effect/*", "@beep/*"],
+    "ignoreEffectSuggestionsInTscExitCode": false,
+    "ignoreEffectWarningsInTscExitCode": false,
+    "ignoreEffectErrorsInTscExitCode": false,
+    "includeSuggestionsInTsc": true,
+    "skipDisabledOptimization": false,
+    "effectFn": ["span", "inferred-span", "suggested-span"],
+    "importAliases": {
+      "Array": "A",
+      "Option": "O",
+      "Predicate": "P",
+      "Record": "R",
+      "Schema": "S",
+      "Equal": "Eq"
+    },
+    "diagnosticSeverity": {
+      "abortControllerInEffect": "error",
+      "anyUnknownInErrorContext": "error",
+      "asyncFunction": "error",
+      "catchAllToMapError": "error",
+      "catchChainToFirstSuccessOf": "error",
+      "catchTagToCatchReason": "error",
+      "catchToIgnore": "error",
+      "catchToOrElseSucceed": "error",
+      "catchUnfailableEffect": "error",
+      "classSelfMismatch": "error",
+      "cryptoRandomUUID": "error",
+      "cryptoRandomUUIDInEffect": "error",
+      "deterministicKeys": "error",
+      "duplicatePackage": "error",
+      "effectDoNotation": "error",
+      "effectFnIife": "error",
+      "effectFnImplicitAny": "error",
+      "effectFnOpportunity": "error",
+      "effectGenUsesAdapter": "error",
+      "effectInFailure": "error",
+      "effectInVoidSuccess": "error",
+      "effectMapFlatten": "error",
+      "effectMapVoid": "error",
+      "effectSucceedWithVoid": "error",
+      "extendsNativeError": "error",
+      "flatMapToMap": "error",
+      "floatingEffect": "error",
+      "floatingEffectInVitest": "error",
+      "genericEffectServices": "error",
+      "globalConsole": "error",
+      "globalConsoleInEffect": "error",
+      "globalDate": "error",
+      "globalDateInEffect": "error",
+      "globalErrorInEffectCatch": "error",
+      "globalErrorInEffectFailure": "error",
+      "globalFetch": "error",
+      "globalFetchInEffect": "error",
+      "globalRandom": "error",
+      "globalRandomInEffect": "error",
+      "globalTimers": "error",
+      "globalTimersInEffect": "error",
+      "instanceOfSchema": "error",
+      "layerMergeAllWithDependencies": "error",
+      "lazyEffect": "error",
+      "lazyPromiseInEffectSync": "error",
+      "leakingRequirements": "error",
+      "missedPipeableOpportunity": "off",
+      "missingEffectContext": "error",
+      "missingEffectError": "error",
+      "missingEffectServiceDependency": "error",
+      "missingLayerContext": "error",
+      "missingPipeableSignature": "off",
+      "missingReturnYieldStar": "error",
+      "missingStarInYieldEffectGen": "error",
+      "multipleCatchTag": "error",
+      "multipleEffectProvide": "error",
+      "nestedEffectGenYield": "error",
+      "newPromise": "error",
+      "newSchemaClass": "error",
+      "nodeBuiltinImport": "error",
+      "nonObjectEffectServiceType": "error",
+      "outdatedApi": "error",
+      "overriddenSchemaConstructor": "error",
+      "preferSchemaOverJson": "error",
+      "preferSchemaTypeProperty": "error",
+      "preferTypedSchemaDecoder": "error",
+      "preferUnsafeConstructor": "error",
+      "processEnv": "error",
+      "processEnvInEffect": "error",
+      "promiseInEffectSuccess": "error",
+      "redundantOrDie": "error",
+      "redundantMapError": "error",
+      "redundantSchemaTagIdentifier": "error",
+      "returnEffectInGen": "error",
+      "runEffectInsideEffect": "error",
+      "schemaLiteralNonFinite": "error",
+      "schemaNumber": "error",
+      "schemaOpaqueInstanceMember": "error",
+      "schemaStructWithTag": "error",
+      "schemaSyncInEffect": "error",
+      "schemaUnionOfLiterals": "error",
+      "scopeInLayerEffect": "error",
+      "serviceNotAsClass": "error",
+      "strictBooleanExpressions": "error",
+      "strictEffectProvide": "error",
+      "syncToSucceed": "error",
+      "tryCatchInEffectGen": "error",
+      "unknownInEffectCatch": "error",
+      "unnecessaryArrowBlock": "error",
+      "unnecessaryEffectGen": "error",
+      "unnecessaryFailYieldableError": "error",
+      "unnecessaryPipe": "error",
+      "unnecessaryPipeChain": "error",
+      "unnecessaryTypeofType": "error",
+      "unsafeEffectTypeAssertion": "error"
+    }
+  }
+]`;
 
 const PackageType = LiteralKit(VALID_TYPES).pipe(
   $I.annoteSchema("PackageType", {
@@ -549,6 +667,8 @@ export class TemplateContext extends S.Class<TemplateContext>($I`TemplateContext
     isTauriApp: S.Boolean,
     isRuntimeProofApp: S.Boolean,
     isRealApp: S.Boolean,
+    isEcosystem: S.Boolean,
+    effectLanguageServicePlugins: S.String,
   },
   $I.annote("TemplateContext", {
     description: "Variables passed into every template during package scaffolding.",
@@ -787,7 +907,7 @@ export const createPackageCommand = Command.make(
       Flag.withDefault("")
     ),
     family: Flag.string("family").pipe(
-      Flag.withDescription("Optional canonical package family. Supports: drivers, foundation, or tooling"),
+      Flag.withDescription("Optional canonical package family. Supports: drivers, ecosystem, foundation, or tooling"),
       Flag.withDefault("")
     ),
     kind: Flag.string("kind").pipe(
@@ -918,6 +1038,15 @@ export const createPackageCommand = Command.make(
         message: `Drivers packages are a flat family and do not accept --kind.`,
       });
     }
+    if (
+      O.isSome(requestedPackageFamily) &&
+      packageFamilyEquivalence(requestedPackageFamily.value, "ecosystem") &&
+      Str.isNonEmpty(kindOption)
+    ) {
+      return yield* DomainError.make({
+        message: `Ecosystem packages are a flat family and do not accept --kind.`,
+      });
+    }
     const inferableToolingPackageType = pipe(
       packageType,
       O.liftPredicate(
@@ -996,6 +1125,7 @@ export const createPackageCommand = Command.make(
           O.map((kind) => `packages/tooling/${kind}`)
         ),
         pipe(requestedPackageFamily, O.filter(packageFamilyEquivalence("drivers")), O.as("packages/drivers")),
+        pipe(requestedPackageFamily, O.filter(packageFamilyEquivalence("ecosystem")), O.as("packages/ecosystem")),
         pipe(packageType, O.liftPredicate(packageTypeEquivalence("app")), O.as("apps")),
       ] satisfies ReadonlyArray<O.Option<string>>,
       O.firstSomeOf,
@@ -1090,6 +1220,8 @@ export const createPackageCommand = Command.make(
       isTauriApp: appKindIs(appKind, "tauri"),
       isRuntimeProofApp: appKindIs(appKind, "runtime-proof"),
       isRealApp: isRealAppKind(appKind),
+      isEcosystem: O.exists(packageFamily, packageFamilyEquivalence("ecosystem")),
+      effectLanguageServicePlugins: ECOSYSTEM_EFFECT_LANGUAGE_SERVICE_PLUGINS,
     });
 
     // ── Render templates and generate plan ─────────────────────────────
@@ -1108,6 +1240,23 @@ export const createPackageCommand = Command.make(
           ...(O.isSome(packageKind) ? { kind: packageKind.value } : {}),
         })
       : O.none<BeepPackageMetadata>();
+    const ecosystemMetadata = pipe(
+      packageMetadata,
+      O.filter((metadata) => packageFamilyEquivalence(metadata.family, "ecosystem"))
+    );
+    let ecosystemEffectPeerVersion = O.none<string>();
+    if (O.isSome(ecosystemMetadata)) {
+      const { packageJson: rootPackageJson } = yield* readRootPackageJsonDocument(repoRoot);
+      ecosystemEffectPeerVersion = pipe(
+        rootPackageJson.catalog,
+        O.flatMap((catalog) => R.get(catalog, "effect"))
+      );
+      if (O.isNone(ecosystemEffectPeerVersion)) {
+        return yield* DomainError.make({
+          message: `Root package.json catalog must define an exact effect version before creating an ecosystem package.`,
+        });
+      }
+    }
     const packageJson = yield* generatePackageJson(
       name,
       packageType,
@@ -1115,7 +1264,8 @@ export const createPackageCommand = Command.make(
       packagePath,
       packageMetadata,
       appKind,
-      withStoriesTsconfig
+      withStoriesTsconfig,
+      ecosystemEffectPeerVersion
     );
 
     const plan = fileGenerationPlanService.createPlan(
@@ -1211,6 +1361,48 @@ export const createPackageCommand = Command.make(
 
 // ── Template generators ────────────────────────────────────────────────────
 
+const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemPackageJson")(function* <
+  const BaseManifest extends object,
+  const Scripts extends object,
+>(baseManifest: BaseManifest, scripts: Scripts, metadata: BeepPackageMetadata, effectPeerVersion: O.Option<string>) {
+  if (O.isNone(effectPeerVersion)) {
+    return yield* DomainError.make({
+      message: `Root package.json catalog must define an exact effect version before creating an ecosystem package.`,
+    });
+  }
+
+  const pkg = {
+    ...baseManifest,
+    beep: metadata,
+    sideEffects: false,
+    exports: {
+      "./package.json": "./package.json",
+      ".": "./src/index.ts",
+    },
+    files: ["dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],
+    publishConfig: {
+      access: "public",
+      provenance: true,
+      exports: {
+        "./package.json": "./package.json",
+        ".": "./dist/index.js",
+      },
+    },
+    scripts,
+    peerDependencies: {
+      effect: effectPeerVersion.value,
+    },
+    devDependencies: {
+      "@types/node": "catalog:",
+      "@effect/vitest": "catalog:",
+      effect: "catalog:",
+    },
+  };
+
+  const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
+  return `${json}\n`;
+});
+
 /**
  * Build a pretty-printed `package.json` string for a new package.
  *
@@ -1224,6 +1416,7 @@ export const createPackageCommand = Command.make(
  * @param packagePath - Package path relative to repo root (e.g. `"packages/tooling/library/my-utils"`).
  * @param appKind - Optional app scaffold kind. Real app kinds generate framework manifests without package exports.
  * @param withStoriesTsconfig - Whether to add package-local Storybook story typechecking scripts.
+ * @param ecosystemEffectPeerVersion - Exact root-catalog Effect version for ecosystem package peers.
  * @returns A JSON string (with trailing newline) ready to be written to disk.
  * @category utilities
  * @since 0.0.0
@@ -1235,9 +1428,19 @@ const generatePackageJson: (
   packagePath: string,
   packageMetadata: O.Option<BeepPackageMetadata>,
   appKind: O.Option<AppKind>,
-  withStoriesTsconfig: boolean
+  withStoriesTsconfig: boolean,
+  ecosystemEffectPeerVersion: O.Option<string>
 ) => Effect.Effect<string, DomainError | S.SchemaError> = Effect.fn(
-  function* (name, type, description, packagePath, packageMetadata, appKind, withStoriesTsconfig) {
+  function* (
+    name,
+    type,
+    description,
+    packagePath,
+    packageMetadata,
+    appKind,
+    withStoriesTsconfig,
+    ecosystemEffectPeerVersion
+  ) {
     const rootRelative = toRootRelative(packagePath);
     const babelScript = "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps";
     const baseManifest = {
@@ -1359,6 +1562,42 @@ const generatePackageJson: (
         }
       : {};
 
+    const scripts = {
+      audit: "bun run --if-present beep:audit",
+      babel: babelScript,
+      "beep:audit":
+        "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+      "beep:build": "tsc -b tsconfig.json && bun run babel",
+      "beep:check": checkScript,
+      "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+      ...storyCheckScripts,
+      "beep:lint": "biome check .",
+      "beep:lint:fix": "biome check . --write",
+      "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+      "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+      build: "bun run beep:build",
+      check: "bun run beep:check",
+      coverage: "bunx vitest run --coverage --exclude=test/integration/**",
+      docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
+      lint: "bun run beep:lint",
+      "lint:fix": "bun run beep:lint:fix",
+      test: "bun run beep:test",
+      "test:integration": "bun run beep:test:integration",
+    };
+
+    const ecosystemMetadata = pipe(
+      packageMetadata,
+      O.filter((metadata) => packageFamilyEquivalence(metadata.family, "ecosystem"))
+    );
+    if (O.isSome(ecosystemMetadata)) {
+      return yield* generateEcosystemPackageJson(
+        baseManifest,
+        scripts,
+        ecosystemMetadata.value,
+        ecosystemEffectPeerVersion
+      );
+    }
+
     const pkg = {
       ...baseManifest,
       ...(O.isSome(packageMetadata)
@@ -1384,28 +1623,7 @@ const generatePackageJson: (
           "./internal/*": null,
         },
       },
-      scripts: {
-        audit: "bun run --if-present beep:audit",
-        babel: babelScript,
-        "beep:audit":
-          "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-        "beep:build": "tsc -b tsconfig.json && bun run babel",
-        "beep:check": checkScript,
-        "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-        ...storyCheckScripts,
-        "beep:lint": "biome check .",
-        "beep:lint:fix": "biome check . --write",
-        "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-        "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-        build: "bun run beep:build",
-        check: "bun run beep:check",
-        coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-        docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
-        lint: "bun run beep:lint",
-        "lint:fix": "bun run beep:lint:fix",
-        test: "bun run beep:test",
-        "test:integration": "bun run beep:test:integration",
-      },
+      scripts,
       dependencies,
       devDependencies: {
         "@types/node": "catalog:",

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
@@ -204,7 +204,7 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
 );
 
 const computeOntologyVersion = Effect.fn("OntologyEmbeddings.computeVersion")(function* (ontologyContent: string) {
-  return yield* S.decodeUnknownEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
+  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
 });
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
@@ -291,7 +291,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
-    toArbitrary: () => (fc) => S.toArbitrary(OntologyEmbeddingsJsonDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
   })
 );
 

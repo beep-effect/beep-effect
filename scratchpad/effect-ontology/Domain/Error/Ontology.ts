@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorFilePath, ErrorIri, ErrorMessage, ErrorUri, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
 
@@ -37,7 +37,7 @@ const commonFields = {
  * @category errors
  * @since 0.0.0
  */
-export const OntologyError = makeOntologyErrorClass(
+export const OntologyError = makeOntologyErrorClass.make(
   $I`OntologyError`,
   "OntologyError",
   commonFields,
@@ -74,7 +74,7 @@ export type OntologyError = typeof OntologyError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ClassNotFound = makeOntologyErrorClass(
+export const ClassNotFound = makeOntologyErrorClass.make(
   $I`ClassNotFound`,
   "ClassNotFound",
   {
@@ -116,7 +116,7 @@ export type ClassNotFound = typeof ClassNotFound.Type;
  * @category errors
  * @since 0.0.0
  */
-export const PropertyNotFound = makeOntologyErrorClass(
+export const PropertyNotFound = makeOntologyErrorClass.make(
   $I`PropertyNotFound`,
   "PropertyNotFound",
   {
@@ -158,7 +158,7 @@ export type PropertyNotFound = typeof PropertyNotFound.Type;
  * @category errors
  * @since 0.0.0
  */
-export const OntologyFileNotFound = makeOntologyErrorClass(
+export const OntologyFileNotFound = makeOntologyErrorClass.make(
   $I`OntologyFileNotFound`,
   "OntologyFileNotFound",
   {
@@ -200,7 +200,7 @@ export type OntologyFileNotFound = typeof OntologyFileNotFound.Type;
  * @category errors
  * @since 0.0.0
  */
-export const OntologyParsingFailed = makeOntologyErrorClass(
+export const OntologyParsingFailed = makeOntologyErrorClass.make(
   $I`OntologyParsingFailed`,
   "OntologyParsingFailed",
   {
@@ -243,7 +243,7 @@ export type OntologyParsingFailed = typeof OntologyParsingFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingsNotFound = makeOntologyErrorClass(
+export const EmbeddingsNotFound = makeOntologyErrorClass.make(
   $I`EmbeddingsNotFound`,
   "EmbeddingsNotFound",
   {
@@ -294,7 +294,7 @@ export type EmbeddingsNotFound = typeof EmbeddingsNotFound.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingsVersionMismatch = makeOntologyErrorClass(
+export const EmbeddingsVersionMismatch = makeOntologyErrorClass.make(
   $I`EmbeddingsVersionMismatch`,
   "EmbeddingsVersionMismatch",
   {
@@ -357,7 +357,7 @@ const AnyOntologyErrorDefinition = S.Union([
 export const AnyOntologyError = AnyOntologyErrorDefinition.pipe(
   $I.annoteSchema("AnyOntologyError", {
     description: "Exhaustive tagged union of ontology lookup, loading, and embeddings failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(AnyOntologyErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(AnyOntologyErrorDefinition),
   })
 );
 

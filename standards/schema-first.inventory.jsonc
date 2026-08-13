@@ -1,7 +1,14 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-10",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "generatedOn": "2026-08-11",
+  // infra scope covers the Effect workspace surfaces only: infra/lambda/** is a
+  // self-contained esbuild-bundled Lambda package (own package.json, no @beep/schema
+  // dependency), outside the schema-first law's reach by construction.
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/{src,test}/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -278,7 +285,7 @@
       "reason": "Mixed terminal Chalk runtime: level is data-like, while the recursive styling surface and call signature are executable; color and option domains are already schema-backed."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.service.ts",
       "symbol": "FileProcessingEngineShape",
       "kind": "exported-type-literal",
       "status": "exception",
@@ -578,6 +585,22 @@
       "line": 71,
       "owner": "@beep/ontology-server",
       "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
+    },
+    {
+      "file": "packages/shared/domain/src/entity/Principal.ts",
+      "symbol": "PrincipalSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/shared-domain",
+      "reason": "Not a data model: a named surface interface extending the annotated Principal schema's own type, exported so declaration emit references the name instead of serializing the derived tagged union structurally at every consumer position (typecheck-cost mitigation, goals/ci-fleet-endgame research/ci-graph-check-baseline.md)."
+    },
+    {
+      "file": "packages/shared/domain/src/entity/SourceKind.ts",
+      "symbol": "SourceKindSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/shared-domain",
+      "reason": "Not a data model: a named surface interface extending the annotated SourceKind schema's own type, exported so declaration emit references the name instead of serializing the literal-kit statics structurally at every consumer position (typecheck-cost mitigation, goals/ci-fleet-endgame research/ci-graph-check-baseline.md)."
     },
     {
       "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",

@@ -220,6 +220,9 @@
       "path": "packages/drivers/xai"
     },
     {
+      "path": "packages/ecosystem/effect-drizzle"
+    },
+    {
       "path": "packages/epistemic/client"
     },
     {
@@ -314,9 +317,6 @@
     },
     {
       "path": "packages/foundation/ui-system/editor"
-    },
-    {
-      "path": "packages/foundation/ui-system/form"
     },
     {
       "path": "packages/foundation/ui-system/ui"

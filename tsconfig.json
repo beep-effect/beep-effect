@@ -1129,7 +1129,6 @@
       "@beep/file-processing/PathSafety": [
         "./packages/foundation/capability/file-processing/src/PathSafety/index.ts"
       ],
-      "@beep/form": ["./packages/foundation/ui-system/form/src/index.ts"],
       "@beep/epistemic-domain/values/ClaimGate": [
         "./packages/epistemic/domain/src/values/ClaimGate/index.ts"
       ],
@@ -1644,16 +1643,6 @@
       "@beep/dock/internal/*": [
         "./packages/foundation/ui-system/dock/src/internal/*"
       ],
-      "@beep/form/components/*": [
-        "./packages/foundation/ui-system/form/src/components/*"
-      ],
-      "@beep/form/core/*": ["./packages/foundation/ui-system/form/src/core/*"],
-      "@beep/form/fields/*": [
-        "./packages/foundation/ui-system/form/src/fields/*"
-      ],
-      "@beep/form/hooks/*": [
-        "./packages/foundation/ui-system/form/src/hooks/*"
-      ],
       "@beep/nlp-processing/Backend/*": [
         "./packages/foundation/capability/nlp-processing/src/Backend/*"
       ],
@@ -1929,6 +1918,15 @@
       ],
       "@beep/schema/FileInfo": [
         "./packages/foundation/modeling/schema/src/FileInfo.ts"
+      ],
+      "@beep/effect-drizzle": [
+        "./packages/ecosystem/effect-drizzle/src/index.ts"
+      ],
+      "@beep/effect-drizzle/pg": [
+        "./packages/ecosystem/effect-drizzle/src/pg/index.ts"
+      ],
+      "@beep/effect-drizzle/sqlite": [
+        "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
       ]
     }
   }

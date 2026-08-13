@@ -26,22 +26,13 @@ sandbox_mode = "danger-full-access"
     name = "browser-qa-loop"
     enabled = true
   [[skills.config]]
-    name = "claude-frontend-lane"
+    name = "codex-findings"
     enabled = true
   [[skills.config]]
     name = "crispen"
     enabled = true
   [[skills.config]]
     name = "effect-first-development"
-    enabled = true
-  [[skills.config]]
-    name = "effect-services"
-    enabled = true
-  [[skills.config]]
-    name = "effect-v4-imports"
-    enabled = true
-  [[skills.config]]
-    name = "exif-provenance"
     enabled = true
   [[skills.config]]
     name = "explore"
@@ -53,10 +44,10 @@ sandbox_mode = "danger-full-access"
     name = "grill-with-docs"
     enabled = true
   [[skills.config]]
-    name = "jsdoc-annotation-specialist"
+    name = "grilling"
     enabled = true
   [[skills.config]]
-    name = "mcp-jetbrains"
+    name = "jsdoc-annotation-specialist"
     enabled = true
   [[skills.config]]
     name = "motion-evidence-review"
@@ -66,12 +57,6 @@ sandbox_mode = "danger-full-access"
     enabled = true
   [[skills.config]]
     name = "oracle"
-    enabled = true
-  [[skills.config]]
-    name = "ponytail"
-    enabled = true
-  [[skills.config]]
-    name = "ponytail-review"
     enabled = true
   [[skills.config]]
     name = "portless"
@@ -86,13 +71,7 @@ sandbox_mode = "danger-full-access"
     name = "reflect"
     enabled = true
   [[skills.config]]
-    name = "repo-symbol-discovery"
-    enabled = true
-  [[skills.config]]
     name = "schema-first-development"
-    enabled = true
-  [[skills.config]]
-    name = "schema-model-specialist"
     enabled = true
   [[skills.config]]
     name = "shadcn"

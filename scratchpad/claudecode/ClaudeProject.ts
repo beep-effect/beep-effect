@@ -35,7 +35,8 @@ const $I = $ScratchpadId.create("claudecode/ClaudeProject");
 /**
  * Configuration for {@link layer}.
  *
- * @example
+ * **Example** (Configure a project root)
+ *
  * ```ts
  * import type { ClaudeProject } from "effect-claudecode"
  *
@@ -54,7 +55,8 @@ export interface ClaudeProjectOptions {
 /**
  * Explicit cache invalidators for the project service.
  *
- * @example
+ * **Example** (Describe cache invalidators)
+ *
  * ```ts
  * import type { ClaudeProject } from "effect-claudecode"
  *
@@ -74,7 +76,8 @@ export interface ClaudeProjectInvalidate {
 /**
  * Project-scoped Claude Code resources.
  *
- * @example
+ * **Example** (Describe project resources)
+ *
  * ```ts
  * import type { ClaudeProject } from "effect-claudecode"
  *
@@ -104,12 +107,16 @@ export interface Interface {
 /**
  * Project-scoped Claude Code service.
  *
- * @example
+ * **Example** (Access the project service)
+ *
  * ```ts
  * import { ClaudeProject } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const project = Effect.service(ClaudeProject.Service)
+ * const cwd = Effect.service(ClaudeProject.Service).pipe(
+ *   Effect.map((project) => project.cwd)
+ * )
+ * console.log(cwd)
  * ```
  *
  * @category services
@@ -125,11 +132,14 @@ const providePlatform =
 /**
  * Construct a project service layer.
  *
- * @example
+ * **Example** (Build a project layer)
+ *
  * ```ts
  * import { ClaudeProject } from "effect-claudecode"
+ * import * as Layer from "effect/Layer"
  *
  * const projectLayer = ClaudeProject.layer({ cwd: process.cwd() })
+ * console.log(Layer.isLayer(projectLayer)) // true
  * ```
  *
  * @category layers
@@ -202,14 +212,17 @@ export const layer = (options: ClaudeProjectOptions): Layer.Layer<Service, never
 /**
  * Effectful access to the full project service.
  *
- * @example
+ * **Example** (Read the project root)
+ *
  * ```ts
  * import { ClaudeProject } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
  * const cwd = Effect.map(ClaudeProject.project, (service) => service.cwd)
+ * console.log(cwd)
  * ```
  *
+ * @effects Requires {@link Service}; does not fail.
  * @category getters
  * @since 0.0.0
  */
@@ -218,14 +231,18 @@ export const project: Effect.Effect<Interface, never, Service> = Effect.service(
 /**
  * Effectful access to the cached settings loader.
  *
- * @example
- * ```ts
- * import { ClaudeProject } from "effect-claudecode"
+ * **Example** (Load project settings)
  *
- * const settings = ClaudeProject.settings
- * console.log(settings)
+ * ```ts
+ * import { ClaudeProject, ClaudeRuntime } from "effect-claudecode"
+ *
+ * const runtime = ClaudeRuntime.project({ cwd: process.cwd() })
+ * const loaded = await runtime.runPromise(ClaudeProject.settings)
+ * console.log(loaded.permissions)
+ * await runtime.dispose()
  * ```
  *
+ * @effects Requires {@link Service} and reads the cached settings document; may fail with settings I/O or decode errors.
  * @category getters
  * @since 0.0.0
  */
@@ -234,14 +251,19 @@ export const settings = Effect.flatMap(project, (current) => current.settings);
 /**
  * Effectful access to the cached optional MCP config.
  *
- * @example
- * ```ts
- * import { ClaudeProject } from "effect-claudecode"
+ * **Example** (Inspect effective MCP configuration)
  *
- * const mcp = ClaudeProject.mcp
- * console.log(mcp)
+ * ```ts
+ * import { ClaudeProject, ClaudeRuntime } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ *
+ * const runtime = ClaudeRuntime.project({ cwd: process.cwd() })
+ * const loaded = await runtime.runPromise(ClaudeProject.mcp)
+ * console.log(O.isSome(loaded))
+ * await runtime.dispose()
  * ```
  *
+ * @effects Requires {@link Service} and reads the cached MCP configuration; may fail with {@link McpConfigError}.
  * @category getters
  * @since 0.0.0
  */
@@ -250,14 +272,18 @@ export const mcp = Effect.flatMap(project, (current) => current.mcp);
 /**
  * Effectful access to the cached plugin definition.
  *
- * @example
- * ```ts
- * import { ClaudeProject } from "effect-claudecode"
+ * **Example** (Inspect a loaded plugin)
  *
- * const plugin = ClaudeProject.plugin
- * console.log(plugin)
+ * ```ts
+ * import { ClaudeProject, ClaudeRuntime } from "effect-claudecode"
+ *
+ * const runtime = ClaudeRuntime.project({ cwd: process.cwd() })
+ * const loaded = await runtime.runPromise(ClaudeProject.plugin)
+ * console.log(loaded.skills.length)
+ * await runtime.dispose()
  * ```
  *
+ * @effects Requires {@link Service} and reads the cached plugin tree; may fail with {@link PluginLoadError}.
  * @category getters
  * @since 0.0.0
  */

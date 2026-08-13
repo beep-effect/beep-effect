@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Equal, Hash, pipe } from "effect";
 import * as A from "effect/Array";
@@ -247,7 +247,7 @@ export const RelationObject = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RelationObject", {
     description: "Explicit entity-reference or literal value used in a knowledge-graph relation.",
-    toArbitrary: () => (fc) =>
+    toArbitrary: () =>
       S.toArbitrary(
         S.TaggedUnion({
           EntityReference: { value: EntityId },
@@ -255,7 +255,7 @@ export const RelationObject = S.TaggedUnion({
           Number: { value: S.Finite },
           Boolean: { value: S.Boolean },
         })
-      )(fc),
+      ),
   })
 );
 

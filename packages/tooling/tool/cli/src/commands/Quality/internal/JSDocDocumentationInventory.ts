@@ -1475,8 +1475,18 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
     ? O.some(MutableHashSet.fromIterable(yield* runGitLines(repoRoot, ["ls-files"], gitCommandErrorAdapter)))
     : O.none<MutableHashSet.MutableHashSet<string>>();
   const rootPolicy = yield* analyzeRootPolicy(repoRoot, path);
+  // Ecosystem members are documented to the published-package grammar and
+  // gated by their own package docgen lane; the repo carrier grammar this
+  // inventory enforces does not govern them (standards/architecture/
+  // 14-ecosystem-packages.md, Style-Law Scoping).
+  const inventoriedNames = A.filter(topoNames, (packageName) =>
+    O.match(MutableHashMap.get(packageByName, packageName), {
+      onNone: () => true,
+      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path),
+    })
+  );
   const packages = yield* Effect.forEach(
-    topoNames,
+    inventoriedNames,
     (packageName, index) => {
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)

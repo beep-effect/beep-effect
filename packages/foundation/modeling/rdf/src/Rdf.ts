@@ -939,9 +939,10 @@ export const makeBlankNode = (value: string): BlankNode =>
  * **Example** (Literal language options)
  *
  * ```ts
- * import type { MakeLiteralOptions } from "@beep/rdf/Rdf"
+ * import { MakeLiteralOptions } from "@beep/rdf/Rdf"
+ * import * as O from "effect/Option"
  *
- * const options: MakeLiteralOptions = { language: "en" }
+ * const options = MakeLiteralOptions.make({ language: O.some("en") })
  * console.log(options)
  * ```
  *
@@ -950,16 +951,33 @@ export const makeBlankNode = (value: string): BlankNode =>
  */
 export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiteralOptions`)(
   {
-    language: S.optional(S.String),
+    language: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("MakeLiteralOptions", {
     description: "Optional language settings for makeLiteral.",
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link makeLiteral}.
+ *
+ * **Example** (Type literal options input)
+ *
+ * ```ts
+ * import type { MakeLiteralOptionsInput } from "@beep/rdf/Rdf"
+ *
+ * const options: MakeLiteralOptionsInput = { language: "en" }
+ * console.log(options.language)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export type MakeLiteralOptionsInput = typeof MakeLiteralOptions.Encoded;
+
 const isMakeLiteralDataFirst = (args: IArguments): boolean => args.length >= 2 && P.isString(args[1]);
 
-const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptions = {}): Literal =>
+const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptionsInput = {}): Literal =>
   pipe(
     Literal.decodeUnknownResult({
       termType: "Literal",
@@ -993,9 +1011,9 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
  */
 export const makeLiteral: {
   (value: string, datatype: string): Literal;
-  (value: string, datatype: string, options: MakeLiteralOptions): Literal;
+  (value: string, datatype: string, options: MakeLiteralOptionsInput): Literal;
   (datatype: string): (value: string) => Literal;
-  (datatype: string, options: MakeLiteralOptions): (value: string) => Literal;
+  (datatype: string, options: MakeLiteralOptionsInput): (value: string) => Literal;
 } = dual(isMakeLiteralDataFirst, makeLiteralInternal);
 
 /**
@@ -1016,14 +1034,41 @@ export const makeLiteral: {
 export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions`)(
   {
     object: ObjectTerm,
-    graph: S.optional(GraphTerm),
+    graph: GraphTerm.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("MakeQuadOptions", {
     description: "Object and optional graph settings for makeQuad.",
   })
 ) {}
 
-const isMakeQuadOptions = (input: ObjectTerm | MakeQuadOptions): input is MakeQuadOptions =>
+/**
+ * Constructor input accepted by {@link makeQuad}.
+ *
+ * **Example** (Type quad options input)
+ *
+ * ```ts
+ * import { MakeQuadOptionsInput, makeNamedNode } from "@beep/rdf/Rdf"
+ *
+ * const options = MakeQuadOptionsInput.make({
+ *   object: makeNamedNode("https://example.org/object")
+ * })
+ * console.log(options.object)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export class MakeQuadOptionsInput extends S.Class<MakeQuadOptionsInput>($I`MakeQuadOptionsInput`)(
+  {
+    object: ObjectTerm,
+    graph: GraphTerm.pipe(S.optionalKey),
+  },
+  $I.annote("MakeQuadOptionsInput", {
+    description: "In-memory object and optional graph input accepted by makeQuad.",
+  })
+) {}
+
+const isMakeQuadOptions = (input: ObjectTerm | MakeQuadOptionsInput): input is MakeQuadOptionsInput =>
   P.hasProperty(input, "object");
 
 const makeDefaultGraph = (): DefaultGraph =>
@@ -1056,18 +1101,21 @@ const makeDefaultGraph = (): DefaultGraph =>
  */
 export const makeQuad: {
   (subject: Subject, predicate: NamedNode, object: ObjectTerm): Quad;
-  (subject: Subject, predicate: NamedNode, options: MakeQuadOptions): Quad;
+  (subject: Subject, predicate: NamedNode, options: MakeQuadOptionsInput): Quad;
   (predicate: NamedNode, object: ObjectTerm): (subject: Subject) => Quad;
-  (predicate: NamedNode, options: MakeQuadOptions): (subject: Subject) => Quad;
-} = dual(3, (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptions): Quad => {
-  const options = isMakeQuadOptions(input) ? input : { object: input };
-  return Quad.make({
-    subject,
-    predicate,
-    object: options.object,
-    graph: options.graph ?? makeDefaultGraph(),
-  });
-});
+  (predicate: NamedNode, options: MakeQuadOptionsInput): (subject: Subject) => Quad;
+} = dual(
+  3,
+  (subject: Subject, predicate: NamedNode, input: ObjectTerm | MakeQuadOptionsInput): Quad =>
+    Quad.make({
+      subject,
+      predicate,
+      object: isMakeQuadOptions(input) ? input.object : input,
+      graph: isMakeQuadOptions(input)
+        ? pipe(input.graph, O.fromUndefinedOr, O.getOrElse(makeDefaultGraph))
+        : makeDefaultGraph(),
+    })
+);
 
 /**
  * Build a dataset from quads.

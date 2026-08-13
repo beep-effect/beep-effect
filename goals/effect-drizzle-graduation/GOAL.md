@@ -18,8 +18,8 @@ contract:
 - `goals/effect-drizzle-graduation/ops/manifest.json`
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`,
-`scratchpad/bsl/research/graduation-decisions.md` (locked operator decisions —
-constraints, not suggestions), and
+`goals/effect-drizzle-graduation/research/bsl/graduation-decisions.md` (locked
+operator decisions — constraints, not suggestions), and
 `standards/architecture/14-ecosystem-packages.md` once P0 lands. Higher-
 priority repo standards outrank packet prose when they conflict.
 
@@ -27,8 +27,9 @@ Scope:
 
 - In: `standards/ARCHITECTURE.md`, `standards/architecture/**`,
   `packages/shared/tables/README.md` (one contract line),
-  `packages/ecosystem/effect-drizzle/**`, `scratchpad/bsl/**` (retirement),
-  repo lint/gate wiring for the family, this packet, `goals/INDEX.md`.
+  `packages/ecosystem/effect-drizzle/**`, the retired `scratchpad/bsl/**`
+  source, this packet's `research/bsl/**`, repo lint/gate wiring for the
+  family, this packet, `goals/INDEX.md`.
 - Out: beep adoption of the package (BaseEntity parity, EntityTable
   replacement — a future packet), actual npm publication, new DSL features,
   any repo-wide type-test reintroduction.

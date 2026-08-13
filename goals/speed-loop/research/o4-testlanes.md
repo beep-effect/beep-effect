@@ -141,9 +141,9 @@ not receive either root Turbo group script until a real suite is added.
 - `@beep/html`, `@beep/lexical-schema`, `@beep/ontology`
   (`packages/foundation/modeling/html/package.json:37`,
   `lexical/package.json:37`, `ontology/package.json:33`)
-- `@beep/dock-react`, `@beep/dock`, `@beep/editor`, `@beep/form`
+- `@beep/dock-react`, `@beep/dock`, `@beep/editor`
   (`packages/foundation/ui-system/dock-react/package.json:37`,
-  `dock/package.json:36`, `editor/package.json:37`, `form/package.json:37`)
+  `dock/package.json:36`, `editor/package.json:37`)
 - `@beep/law-practice-tables` (`packages/law-practice/tables/package.json:32`)
 - `@beep/ontology-client`, `-config`, `-domain`, `-server`, `-ui`, `-use-cases`
   (`packages/ontology/client/package.json:33`, `config/package.json:32`,

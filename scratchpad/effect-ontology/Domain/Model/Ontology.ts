@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PrimaryKey, pipe } from "effect";
 import * as A from "effect/Array";
@@ -134,7 +134,8 @@ const SkosFields = {
 /**
  * Whether an ontology property links resources or carries a literal datatype.
  *
- * @example
+ * **Example** (Check property range kinds)
+ *
  * ```ts
  * import { PropertyRangeKind } from "@effect-ontology/Model/Ontology.ts"
  *
@@ -157,15 +158,7 @@ export const PropertyRangeKind = LiteralKit(["object", "datatype"])
   );
 
 /**
- * Runtime value accepted by {@link PropertyRangeKind}.
- *
- * @example
- * ```ts
- * import type { PropertyRangeKind } from "@effect-ontology/Model/Ontology.ts"
- *
- * const kind: PropertyRangeKind = "object"
- * console.log(kind) // "object"
- * ```
+ * Decoded `object` or `datatype` literal produced by the {@link PropertyRangeKind} schema.
  *
  * @category type-level
  * @since 0.0.0
@@ -184,7 +177,31 @@ const OntologyRefFields = {
   }),
 } as const;
 
-class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
+/**
+ * Content-addressed reference to one immutable ontology version.
+ *
+ * **Details**
+ *
+ * Namespace and name select the logical ontology while the full SHA-256 digest
+ * selects its exact bytes.
+ *
+ * **Example** (Create a content-addressed reference)
+ *
+ * ```ts
+ * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+ *
+ * const ref = OntologyRef.fromUnknown({
+ *   namespace: "legal",
+ *   name: "claims",
+ *   contentHash: "a".repeat(64)
+ * })
+ * console.log(ref.shortId) // "legal/claims"
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
   OntologyRefFields,
   $I.annote("OntologyRef", {
     description: "Content-addressed reference to one immutable ontology version.",
@@ -193,7 +210,8 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
   /**
    * Effect primary key for identity-aware collections.
    *
-   * @example
+   * **Example** (Build a stable primary key)
+   *
    * ```ts
    * import { PrimaryKey } from "effect"
    * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
@@ -215,7 +233,8 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
   /**
    * Canonical storage path for the referenced Turtle document.
    *
-   * @example
+   * **Example** (Encode a storage path)
+   *
    * ```ts
    * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -236,7 +255,8 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
   /**
    * Compact human-readable namespace and name.
    *
-   * @example
+   * **Example** (Read a compact identifier)
+   *
    * ```ts
    * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -253,70 +273,17 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
   get shortId(): string {
     return `${this.namespace}/${this.name}`;
   }
+
+  /** Decodes an unknown input into a validated ontology reference. */
+  static readonly fromUnknown = S.decodeUnknownSync(OntologyRef);
+
+  /** Parses a canonical ontology storage path. */
+  static readonly fromPath = (path: unknown) =>
+    pipe(
+      PathLayout.ontology.decode(path),
+      Result.map(([namespace, name, contentHash]) => OntologyRef.make({ namespace, name, contentHash }))
+    );
 }
-
-/**
- * Content-addressed reference to one immutable ontology version.
- *
- * @remarks
- * Namespace and name select the logical ontology while the full SHA-256 digest
- * selects its exact bytes. Storage-path parsing and rendering share the
- * repository's `PathLayout` source of truth.
- *
- * @example
- * ```ts
- * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
- *
- * const ref = OntologyRef.fromUnknown({
- *   namespace: "football",
- *   name: "premier-league",
- *   contentHash: "a".repeat(64)
- * })
- * console.log(ref.shortId) // "football/premier-league"
- * ```
- *
- * @invariant The content hash identifies the exact ontology version.
- * @category value-objects
- * @since 0.0.0
- */
-export const OntologyRef = OntologyRefModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(OntologyRefFields))(fc).map((fields) => OntologyRefModel.make(fields)),
-}).pipe(
-  $I.annoteSchema("OntologyRef", {
-    description: "Content-addressed reference to one immutable ontology version.",
-  }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics(() => ({
-    /**
-     * Parses a canonical ontology storage path.
-     *
-     * @param path Candidate path produced by `PathLayout.ontology.encode`.
-     * @returns A successful content-addressed reference or a schema error.
-     */
-    fromPath: (path: unknown) =>
-      pipe(
-        PathLayout.ontology.decode(path),
-        Result.map(([namespace, name, contentHash]) => OntologyRefModel.make({ namespace, name, contentHash }))
-      ),
-  }))
-);
-
-/**
- * Runtime value decoded by {@link OntologyRef}.
- *
- * @example
- * ```ts
- * import type { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
- *
- * const path = (ref: OntologyRef): string => ref.storagePath
- * console.log(typeof path) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyRef = typeof OntologyRef.Type;
 
 const ClassDefinitionFields = {
   id: IRI.annotateKey({ description: "Full IRI of the OWL or RDFS class." }),
@@ -345,7 +312,8 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
   /**
    * Builds a stable semantic-search document.
    *
-   * @example
+   * **Example** (Render a semantic-search document)
+   *
    * ```ts
    * import { ClassDefinition } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -375,13 +343,15 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
 /**
  * Normalized OWL or RDFS class definition.
  *
- * @remarks
+ * **Details**
+ *
  * Optional prose is represented with `Option`; all repeatable RDF and SKOS
  * predicates default to empty immutable arrays. `toDocument` preserves
  * synonyms and local property names for search without duplicating indexing
  * logic elsewhere.
  *
- * @example
+ * **Example** (Decode a class definition)
+ *
  * ```ts
  * import { ClassDefinition } from "@effect-ontology/Model/Ontology.ts"
  *
@@ -408,15 +378,7 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
 );
 
 /**
- * Runtime value decoded by {@link ClassDefinition}.
- *
- * @example
- * ```ts
- * import type { ClassDefinition } from "@effect-ontology/Model/Ontology.ts"
- *
- * const render = (definition: ClassDefinition): string => definition.toDocument()
- * console.log(typeof render) // "function"
- * ```
+ * Decoded class metadata produced by {@link ClassDefinition}, including its search-document behavior.
  *
  * @category type-level
  * @since 0.0.0
@@ -461,7 +423,8 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
   /**
    * Whether this property links one resource to another.
    *
-   * @example
+   * **Example** (Check an object property)
+   *
    * ```ts
    * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -482,7 +445,8 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
   /**
    * Whether this property carries an RDF literal value.
    *
-   * @example
+   * **Example** (Check a datatype property)
+   *
    * ```ts
    * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -503,7 +467,8 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
   /**
    * Builds a stable semantic-search document.
    *
-   * @example
+   * **Example** (Render a semantic-search document)
+   *
    * ```ts
    * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -540,11 +505,13 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
 /**
  * Normalized RDF or OWL property definition.
  *
- * @remarks
+ * **Details**
+ *
  * Domain and range are modeled as IRI collections, range behavior is a closed
  * literal domain, and functional cardinality defaults at construction.
  *
- * @example
+ * **Example** (Decode a property definition)
+ *
  * ```ts
  * import { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
  *
@@ -573,15 +540,7 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
 );
 
 /**
- * Runtime value decoded by {@link PropertyDefinition}.
- *
- * @example
- * ```ts
- * import type { PropertyDefinition } from "@effect-ontology/Model/Ontology.ts"
- *
- * const render = (definition: PropertyDefinition): string => definition.toDocument()
- * console.log(typeof render) // "function"
- * ```
+ * Decoded property metadata produced by {@link PropertyDefinition}, including range and search behavior.
  *
  * @category type-level
  * @since 0.0.0
@@ -660,16 +619,49 @@ const OntologyContextFields = {
   ),
 } as const;
 
-class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyContext`)(
+/**
+ * Complete immutable snapshot of ontology classes, properties, and hierarchy.
+ *
+ * **Details**
+ *
+ * Hierarchy traversal is cycle-safe, lookups expose `Option`, and inherited
+ * property resolution accepts either full IRIs or local class names. Empty
+ * collections and metadata are schema defaults.
+ *
+ * **Example** (Create an empty ontology context)
+ *
+ * ```ts
+ * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
+ *
+ * const context = OntologyContext.fromUnknown({})
+ * console.log(context.classes.length) // 0
+ * console.log(context.toDocuments().length) // 0
+ * ```
+ *
+ * @invariant Every hierarchy key and edge target is a valid IRI.
+ * @category aggregates
+ * @since 0.0.0
+ */
+export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext`)(
   OntologyContextFields,
   $I.annote("OntologyContext", {
     description: "Immutable ontology snapshot with cycle-safe class and property hierarchy traversal.",
   })
 ) {
+  /** Type guard for decoded ontology contexts. @since 0.0.0 */
+  static readonly is = S.is(OntologyContext);
+
+  /** Decode an unknown ontology context or throw a parse error. @since 0.0.0 */
+  static readonly fromUnknown = S.decodeUnknownSync(OntologyContext);
+
+  /** Decode an unknown ontology context into an `Option`. @since 0.0.0 */
+  static readonly decodeOption = S.decodeUnknownOption(OntologyContext);
+
   /**
    * Looks up a class by full IRI.
    *
-   * @example
+   * **Example** (Look up a class)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
@@ -692,7 +684,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Looks up a property by full IRI.
    *
-   * @example
+   * **Example** (Look up a property)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
@@ -715,7 +708,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Gets direct superclasses for a class.
    *
-   * @example
+   * **Example** (Read direct superclasses)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -738,7 +732,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Gets every superclass using cycle-safe transitive traversal.
    *
-   * @example
+   * **Example** (Traverse all superclasses)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -762,7 +757,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Gets direct subclasses for a class.
    *
-   * @example
+   * **Example** (Read direct subclasses)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -785,7 +781,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Tests reflexive, transitive subclass membership.
    *
-   * @example
+   * **Example** (Test subclass membership)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -809,7 +806,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Gets direct superproperties for a property.
    *
-   * @example
+   * **Example** (Read direct superproperties)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -832,7 +830,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Gets direct subproperties for a property.
    *
-   * @example
+   * **Example** (Read direct subproperties)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -855,7 +854,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Tests reflexive, transitive subproperty membership.
    *
-   * @example
+   * **Example** (Test subproperty membership)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -879,11 +879,13 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Resolves properties declared on a class or any of its superclasses.
    *
-   * @remarks
+   * **Details**
+   *
    * The query may be a full IRI or a local name. Comparison is case-insensitive
    * over local names because imported ontologies often mix namespace prefixes.
    *
-   * @example
+   * **Example** (Resolve inherited properties)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    * import { IRI } from "@effect-ontology/Model/shared.ts"
@@ -925,7 +927,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
   /**
    * Renders every class and property as semantic-search text.
    *
-   * @example
+   * **Example** (Render search documents)
+   *
    * ```ts
    * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
    *
@@ -944,50 +947,3 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
     );
   }
 }
-
-/**
- * Complete immutable snapshot of ontology classes, properties, and hierarchy.
- *
- * @remarks
- * Hierarchy traversal is cycle-safe, lookups expose `Option`, and inherited
- * property resolution accepts either full IRIs or local class names. Empty
- * collections and metadata are schema defaults.
- *
- * @example
- * ```ts
- * import { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
- *
- * const context = OntologyContext.fromUnknown({})
- * console.log(context.classes.length) // 0
- * console.log(context.toDocuments().length) // 0
- * ```
- *
- * @invariant Every hierarchy key and edge target is a valid IRI.
- * @category aggregates
- * @since 0.0.0
- */
-export const OntologyContext = OntologyContextModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(OntologyContextFields))(fc).map((fields) => OntologyContextModel.make(fields)),
-}).pipe(
-  $I.annoteSchema("OntologyContext", {
-    description: "Immutable ontology snapshot with cycle-safe class and property hierarchy traversal.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link OntologyContext}.
- *
- * @example
- * ```ts
- * import type { OntologyContext } from "@effect-ontology/Model/Ontology.ts"
- *
- * const count = (context: OntologyContext): number => context.classes.length
- * console.log(typeof count) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type OntologyContext = typeof OntologyContext.Type;

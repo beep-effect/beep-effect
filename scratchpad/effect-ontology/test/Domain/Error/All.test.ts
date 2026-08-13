@@ -131,7 +131,7 @@ describe("effect-ontology domain errors", () => {
 
   it("normalizes omitted metadata and applies safe schema defaults", () => {
     const base = Base.BaseError.make({ message: "Unexpected failure." });
-    const nullCause = S.decodeUnknownSync(Base.BaseError)({
+    const nullCause = S.decodeSync(Base.BaseError)({
       _tag: "BaseError",
       message: "Nullish failure metadata.",
       cause: null,

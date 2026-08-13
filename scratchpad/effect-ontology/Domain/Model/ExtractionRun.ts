@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey } from "effect";
 import * as S from "effect/Schema";
@@ -685,6 +685,8 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   outputPath(type: OutputType): string {
     return PathLayout.run.output(this.id, type);
   }
+
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ExtractionRun, { space: 2 }))
 }
 
 /**

@@ -23,7 +23,8 @@ const InlineMcpServerReference = S.Union([S.String, S.Record(S.String, S.Unknown
 /**
  * Display colors accepted by Claude Code subagent frontmatter.
  *
- * @example
+ * **Example** (Inspect subagent color)
+ *
  * ```ts
  * import { Frontmatter } from "effect-claudecode"
  *
@@ -42,14 +43,6 @@ export const SubagentColor = LiteralKit(["red", "blue", "green", "yellow", "purp
 /**
  * Type for {@link SubagentColor}. {@inheritDoc SubagentColor}
  *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const color: Frontmatter.SubagentColor = "purple"
- * console.log(color)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -61,7 +54,8 @@ export type SubagentColor = typeof SubagentColor.Type;
  * `name` and `description` remain required by the wire contract. Every
  * optional key decodes to `Option`.
  *
- * @example
+ * **Example** (Run SubagentFrontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -107,18 +101,6 @@ export class SubagentFrontmatter extends S.Class<SubagentFrontmatter>($I`Subagen
 
 /**
  * Encoded input accepted at the Claude Code subagent-frontmatter boundary.
- *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const input: Frontmatter.SubagentFrontmatter.Encoded = {
- *   name: "reviewer",
- *   description: "Reviews changes",
- *   permissionMode: "plan"
- * }
- * console.log(input.name)
- * ```
  *
  * @category dtos
  * @since 0.0.0

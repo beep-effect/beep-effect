@@ -92,3 +92,14 @@ cb5d50cf0a7e6ca0cf7b31be33f2ed931b36e92e:packages/effect/src/Config.ts:generic-a
 # False positive in the immutable Effect subtree squash used by the
 # 4.0.0-beta.105 refresh. Same Config.redacted JSDoc sample at line 1484.
 ceebcebce7e0ffff8dd377f524e05c9ceafde756:packages/effect/src/Config.ts:generic-api-key:1484
+
+# False positives in the immutable Effect subtree re-add used by the
+# 4.0.0-rc.108 refresh (`7d11d177cf`, content from 08a3c74133). Same upstream
+# JSDoc/fixture tokens as the beta.105 allowlist: Config.redacted `API_KEY`,
+# HTTPAPI curl header, EventLog identity fixture, and the NodeHttpServer
+# Sec-WebSocket-Key sample. Paths are subtree-relative because `git subtree
+# pull --squash` records upstream-relative paths.
+7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/effect/src/Config.ts:generic-api-key:1484
+7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/effect/HTTPAPI.md:curl-auth-header:1039
+7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/effect/test/unstable/eventlog/EventLogIdentityDerivation.test.ts:generic-api-key:6
+7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/platform/node/test/NodeHttpServer.test.ts:generic-api-key:853

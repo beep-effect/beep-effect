@@ -1,12 +1,14 @@
 /**
  * Audits every public schema declaration in the quarantined Domain tree.
  *
- * @remarks
+ * **Details**
+ *
  * Derivation must be warning-free, and every generated decoded value must
  * satisfy the schema that produced it. Scanning source modules rather than
  * barrels also catches schemas intentionally kept on explicit subpaths.
  *
- * @example
+ * **Example** (Audit public schemas)
+ *
  * ```sh
  * bun run --cwd scratchpad audit:effect-ontology-arbitraries
  * ```

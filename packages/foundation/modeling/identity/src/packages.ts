@@ -143,7 +143,6 @@ const generatedComposers = $I.compose(
   "editor",
   "html",
   "pandoc-ast",
-  "form",
   "pglite",
   "m365",
   "m365-mcp",
@@ -191,7 +190,8 @@ const generatedComposers = $I.compose(
   "qa-capture",
   "gov-legal-mcp",
   "epistemic-client",
-  "epistemic-ui"
+  "epistemic-ui",
+  "effect-drizzle"
 );
 
 const composers = {
@@ -1643,23 +1643,6 @@ export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = composers.$HtmlI
 export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = composers.$PandocAstId;
 
 /**
- * Identity composer for `@beep/form`.
- *
- * **Example** (Make form package ID)
- *
- * ```ts
- * import { $FormId } from "@beep/identity"
- *
- * const id = $FormId.make("Form")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $FormId: Identity.IdentityComposer<"@beep/form"> = composers.$FormId;
-
-/**
  * Identity composer for `@beep/pglite`.
  *
  * **Example** (Make PGlite package ID)
@@ -2473,3 +2456,19 @@ export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-clie
  * @since 0.0.0
  */
 export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = composers.$EpistemicUiId;
+
+/**
+ * Identity composer for `@beep/effect-drizzle`.
+ *
+ * **Example** (Compose an identifier)
+ *
+ * ```ts
+ * import { $EffectDrizzleId } from "@beep/identity/packages"
+ *
+ * console.log($EffectDrizzleId.make("EffectDrizzle"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle"> = composers.$EffectDrizzleId;

@@ -79,9 +79,9 @@ describe("effect-ontology identity schemas", () => {
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
     expect(SecureHttpUrl.is("https://example.org/report.pdf")).toBe(true);
     expect(SecureHttpUrl.is("http://example.org/report.pdf")).toBe(false);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsBucket)("192.168.5.4"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsBucket)("goog-ontology-state"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsObject)("snapshots//data.ttl"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsBucket)("goog-ontology-state"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsObject)("snapshots//data.ttl"))).toBe(true);
   });
 });

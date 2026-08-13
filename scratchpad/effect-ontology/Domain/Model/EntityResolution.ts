@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -185,7 +185,7 @@ const ERNodeDefinition = S.Union([MentionRecord, ResolvedEntity]).pipe(S.toTagge
 export const ERNode = ERNodeDefinition.pipe(
   $I.annoteSchema("ERNode", {
     description: "Mention-record or canonical-entity node in the two-tier resolution graph.",
-    toArbitrary: () => (fc) => S.toArbitrary(ERNodeDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(ERNodeDefinition),
   })
 );
 
@@ -302,7 +302,7 @@ const EREdgeDefinition = S.Union([ResolutionEdge, RelationEdge]).pipe(S.toTagged
 export const EREdge = EREdgeDefinition.pipe(
   $I.annoteSchema("EREdge", {
     description: "Resolution or ontology-relation edge in the two-tier entity-resolution graph.",
-    toArbitrary: () => (fc) => S.toArbitrary(EREdgeDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(EREdgeDefinition),
   })
 );
 

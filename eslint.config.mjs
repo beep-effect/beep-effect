@@ -21,5 +21,9 @@ const selectedESLintConfig = (() => {
 
 // `.claude/worktrees/**` holds session-local linked worktrees (other checkouts'
 // files that CI never sees); linting them couples this clone's gate to whatever
-// those sessions have checked out.
-export default [globalIgnores(["**/src-tauri/target/**", ".claude/worktrees/**"]), ...selectedESLintConfig];
+// those sessions have checked out. `infra/lambda/**/build/**` is gitignored
+// esbuild bundle output (vendored shim code) that eslint would otherwise scan.
+export default [
+  globalIgnores(["**/src-tauri/target/**", ".claude/worktrees/**", "infra/lambda/**/build/**"]),
+  ...selectedESLintConfig,
+];

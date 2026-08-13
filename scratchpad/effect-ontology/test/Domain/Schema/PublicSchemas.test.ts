@@ -67,7 +67,7 @@ describe("effect-ontology public schema surface", () => {
   });
 
   it("normalizes omitted batch options and requires a non-empty document set", () => {
-    const request = S.decodeUnknownResult(BatchRequest.BatchRequest)({
+    const request = S.decodeResult(BatchRequest.BatchRequest)({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
       ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
@@ -97,12 +97,12 @@ describe("effect-ontology public schema surface", () => {
   });
 
   it("represents extraction input and terminal output with discriminated variants", () => {
-    const source = S.decodeUnknownSync(Api.SubmitJobSource)({
+    const source = S.decodeSync(Api.SubmitJobSource)({
       _tag: "Remote",
       value: { url: "https://example.com/report.pdf" },
     });
     const missingSource = S.decodeUnknownResult(Api.SubmitJobRequest)({});
-    const notFound = S.decodeUnknownSync(BatchStatusResponse.BatchStatusResponse)({
+    const notFound = S.decodeSync(BatchStatusResponse.BatchStatusResponse)({
       _tag: "NotFound",
       value: { batchId: "batch-abc123def456" },
     });

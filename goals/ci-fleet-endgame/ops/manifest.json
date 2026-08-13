@@ -5,12 +5,12 @@
     "title": "CI Fleet Endgame",
     "status": "active",
     "created": "2026-08-08",
-    "updated": "2026-08-08",
+    "updated": "2026-08-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-fleet-endgame",
   "lifecycle": "active",
-  "statusNote": "P1 is complete; asymmetric cache and baked AMI work now precede the P2 cutover.",
+  "statusNote": "P0-P3 complete; P4 and P5 superseded into goals/ci-fleet-residue and goals/ci-lane-economics (2026-08-13 split); P6 fires when ci-lane-economics delivers the 20-minute outcome so the packet can close citing both charter halves.",
   "mission": "Deliver both co-primary CI endgames: an on-demand worker-per-job system and no required job that waits 20 minutes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,22 +61,28 @@
     {
       "id": "P2",
       "name": "Cut over to ephemeral workers",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Cutover merged in #666 (2026-08-11): 11/11 pickup gate, re-queue-to-fresh-runner proven live, burst registrations 75 to 6. Residue: full guest-isolation red-team re-run rides with the CSF-003 IMDS rework."
     },
     {
       "id": "P3",
       "name": "Asymmetric Turbo cache",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Shipped in #673 (infra activation: authorizer + HMAC writer, 10/10 probe matrix including read-token PUT denial and direct-invoke rejection) and #674 (CI consumption: PR read-only, main-only write environment), merged 2026-08-13. Write path proven live: the first write-enabled main wave seeded the bucket from 3 probe objects to 750 artifacts. Read path proven at protocol level by the probe matrix; the first turbo-level PR hit-rate observation is the opening datum of the ci-lane-economics P0 census (docs-only PRs run zero turbo tasks, so this split PR cannot supply it)."
     },
     {
       "id": "P4",
       "name": "Lockfile-keyed baked AMI",
-      "status": "pending"
+      "status": "superseded",
+      "statusNote": "Continues as goals/ci-fleet-residue P0 (2026-08-13 split).",
+      "supersededBy": "goals/ci-fleet-residue"
     },
     {
       "id": "P5",
       "name": "Performance and operations hardening",
-      "status": "pending"
+      "status": "superseded",
+      "statusNote": "Continues as goals/ci-lane-economics (2026-08-13 split); P6 remains gated on its 20-minute outcome so this packet closes citing both charter halves.",
+      "supersededBy": "goals/ci-lane-economics"
     },
     {
       "id": "P6",

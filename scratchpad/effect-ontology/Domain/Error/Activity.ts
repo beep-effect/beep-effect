@@ -100,7 +100,7 @@ const ActivityTimeoutErrorDefinition = ActivityErrorCases.cases.ActivityTimeout;
  * @since 0.0.0
  */
 export const ActivityTimeoutError = ActivityTimeoutErrorDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ActivityTimeoutErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityTimeoutErrorDefinition),
 }).pipe(
   $I.annoteSchema("ActivityTimeoutError", {
     description: "Serializable timeout at a named workflow activity stage.",
@@ -149,7 +149,7 @@ const ActivityServiceErrorDefinition = ActivityErrorCases.cases.ActivityServiceF
  * @since 0.0.0
  */
 export const ActivityServiceError = ActivityServiceErrorDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ActivityServiceErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityServiceErrorDefinition),
 }).pipe(
   $I.annoteSchema("ActivityServiceError", {
     description: "Serializable service-operation failure raised by a workflow activity.",
@@ -197,7 +197,7 @@ const ActivityNotFoundErrorDefinition = ActivityErrorCases.cases.ActivityNotFoun
  * @since 0.0.0
  */
 export const ActivityNotFoundError = ActivityNotFoundErrorDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ActivityNotFoundErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityNotFoundErrorDefinition),
 }).pipe(
   $I.annoteSchema("ActivityNotFoundError", {
     description: "Serializable missing-resource failure raised by a workflow activity.",
@@ -244,7 +244,7 @@ const ActivityValidationErrorDefinition = ActivityErrorCases.cases.ActivityValid
  * @since 0.0.0
  */
 export const ActivityValidationError = ActivityValidationErrorDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ActivityValidationErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityValidationErrorDefinition),
 }).pipe(
   $I.annoteSchema("ActivityValidationError", {
     description: "Serializable activity-input validation failure.",
@@ -287,7 +287,7 @@ const ActivityGenericErrorDefinition = ActivityErrorCases.cases.ActivityGeneric;
  * @since 0.0.0
  */
 export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ActivityGenericErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityGenericErrorDefinition),
 }).pipe(
   $I.annoteSchema("ActivityGenericError", {
     description: "Serializable fallback for an otherwise unclassified activity failure.",
@@ -387,7 +387,7 @@ const ActivityErrorDefinition = S.Union([
 export const ActivityError = ActivityErrorDefinition.pipe(
   $I.annoteSchema("ActivityError", {
     description: "Exhaustive journal-safe tagged union of workflow activity failures.",
-    toArbitrary: () => (fc) => S.toArbitrary(ActivityErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(ActivityErrorDefinition),
   }),
   SchemaUtils.withStatics(() => ({
     fromUnknown: makeGeneric,

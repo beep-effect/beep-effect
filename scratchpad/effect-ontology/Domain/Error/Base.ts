@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { FilePath, NonNegativeInt, SchemaUtils, TaggedErrorClass, URLStr } from "@beep/schema";
@@ -683,12 +683,12 @@ type OntologyErrorCodecStatics<Self> = {
  *
  * @example
  * ```ts
- * import { $ScratchpadId } from "@beep/identity/packages"
+ * import { $ScratchpadId } from "@beep/identity"
  * import * as S from "effect/Schema"
  * import { makeOntologyErrorClass } from "@effect-ontology/Error/Base.ts"
  *
  * const $I = $ScratchpadId.create("effect-ontology/example")
- * const ExampleError = makeOntologyErrorClass(
+ * const ExampleError = makeOntologyErrorClass.make(
  *   $I`ExampleError`,
  *   "ExampleError",
  *   { message: S.NonEmptyString },
@@ -707,31 +707,32 @@ type OntologyErrorCodecStatics<Self> = {
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Factory parameters are peers; none is pipeable data.
-export const makeOntologyErrorClass = <const Tag extends string, const Fields extends S.Struct.Fields>(
-  identifier: string,
-  tag: Tag,
-  fields: Fields,
-  annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
-): TaggedErrorClassFromFields<OntologyTaggedError<Tag, Fields>, Tag, Fields> &
-  OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
-  type Self = OntologyTaggedError<Tag, Fields>;
-  const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
-  const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
-    ...annotations,
-    toArbitrary:
-      ([from]) =>
-      () => ({
-        arbitrary: from.arbitrary.map(makeInstance),
-        terminal: from.terminal?.map(makeInstance),
-      }),
-  });
-  const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
-  return SchemaUtils.withStatics(ErrorClass, () => ({
-    is: S.is(ErrorClass),
-    fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),
-    decodeOption: S.decodeUnknownOption(ServiceFreeErrorClass),
-  }));
+export const makeOntologyErrorClass = {
+  make: <const Tag extends string, const Fields extends S.Struct.Fields>(
+    identifier: string,
+    tag: Tag,
+    fields: Fields,
+    annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
+  ): TaggedErrorClassFromFields<OntologyTaggedError<Tag, Fields>, Tag, Fields> &
+    OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
+    type Self = OntologyTaggedError<Tag, Fields>;
+    const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
+    const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
+      ...annotations,
+      toArbitrary:
+        ([from]) =>
+        () => ({
+          arbitrary: from.arbitrary.map(makeInstance),
+          terminal: from.terminal?.map(makeInstance),
+        }),
+    });
+    const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
+    return SchemaUtils.withStatics(ErrorClass, () => ({
+      is: S.is(ErrorClass),
+      fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),
+      decodeOption: S.decodeUnknownOption(ServiceFreeErrorClass),
+    }));
+  },
 };
 
 /**
@@ -757,7 +758,7 @@ export const makeOntologyErrorClass = <const Tag extends string, const Fields ex
  * @category errors
  * @since 0.0.0
  */
-export const BaseError = makeOntologyErrorClass(
+export const BaseError = makeOntologyErrorClass.make(
   $I`BaseError`,
   "BaseError",
   {
@@ -812,7 +813,7 @@ export type BaseError = typeof BaseError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const NotImplemented = makeOntologyErrorClass(
+export const NotImplemented = makeOntologyErrorClass.make(
   $I`NotImplemented`,
   "NotImplemented",
   {
@@ -874,7 +875,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-    toArbitrary: () => (fc) => S.toArbitrary(BaseErrorDefinition)(fc),
+  toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 

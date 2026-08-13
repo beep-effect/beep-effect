@@ -22,13 +22,38 @@ import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 const $I = $InfraId.create("CiFleetController");
 
 const defaultAmiSsmParameterName = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64";
-const defaultRunnerLabel = "beep-ec2-heavy-shadow";
+const defaultRunnerLabel = "beep-ec2-heavy";
 const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
 const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/github_app_webhook_secret";
 
-const runnerInstanceTypes = ["m7i.2xlarge", "m7i-flex.2xlarge", "m7a.2xlarge", "m6i.2xlarge"];
+/**
+ * Keeps every runner at 64 GB so the build-mode census peaks of 47.59 GiB for
+ * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
+ * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
+ */
+const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
 const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
+
+// The runner agent and every job step both run as this user, so the two cannot
+// be told apart by uid at agent-start time — the reason the post-install IMDS
+// DROP was rolled back (see the class prose and CSF-003).
+const runnerRunAs = "ec2-user";
+
+// The module's own user-data installs only docker and libicu, and the pinned
+// AL2023 image ships without git, unzip, zip, or jq — setup-bun dies exit-127
+// without unzip and checkout needs git. The P4 baked AMI later absorbs this
+// into the image. The module INLINES this snippet into its single user-data
+// bash script, so shell options must stay subshell-scoped: a leaked `set -u`
+// kills the downstream runner-start section on its own unset variables
+// (`SEGMENT: unbound variable`, runner-start-failed) — which is also the
+// failure signature the rolled-back IMDS DROP produced.
+const runnerToolbeltPostInstall = `(
+  set -eu
+  dnf install -y git unzip zip jq
+  logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+)
+`;
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -245,6 +270,71 @@ type CiFleetControllerArgs = {
  * Ephemeral GitHub Actions runner controller backed by the pinned Terraform
  * module through Pulumi's terraform-module provider.
  *
+ * **Gotchas**
+ *
+ * The host IMDS credential-theft mitigation (CSF-003) is NOT wired here. A
+ * post-install `iptables` OWNER-match DROP on the `runnerRunAs` uid was deployed
+ * and rolled back the same day after the worker failed to register
+ * (`runner-start-failed`), which the Gate E probe caught before any heavy-lane
+ * cutover. The original attribution blamed the DROP starving the agent, but the
+ * toolbelt post-install later reproduced the identical failure with no firewall
+ * at all: the module inlines `userdata_post_install` into its user-data script,
+ * and a leaked `set -u` kills the runner-start section on its own unset
+ * variables — so the DROP's specific culpability is unproven and the rework
+ * must retest it with subshell-scoped options. A uid DROP still cannot separate
+ * the agent from job steps when both share one uid, and a blanket DROP would
+ * additionally sever the root config-time IMDS the runner needs for JIT
+ * registration. The rework is a per-job
+ * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook that installs the DROP after the agent
+ * is running but before a job's steps, re-validated through Gate E before
+ * redeploy. Until then the controls that bound credential theft are the layers
+ * that remain live: IMDSv2 with hop limit 1 (blocks unprivileged containers), a
+ * minimal permissions-boundary-capped instance-profile role, the ephemeral
+ * one-job-one-VM lifecycle, and JIT config that keeps no registration token on
+ * the instance.
+ *
+ * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
+ * job whose runner died between launch and pickup (spot reclaim, boot
+ * failure) — without it such a job waits on GitHub's six-hour queue timeout,
+ * because nothing else re-delivers it. A capacity reclaim mid-job still fails
+ * that job and only a workflow re-run recovers it; the fleet runs on-demand
+ * for the bring-up window after cutover-night reclaim sweeps, with spot (a
+ * ~3x cost saving) as the intended steady state. `runners_maximum_count` bounds
+ * concurrent instances only — jobs beyond the cap retry from SQS as capacity
+ * frees rather than being dropped. `enable_job_queued_check` stays false: its
+ * not-queued branch consumes the scale-up message with no retry, so GitHub
+ * API propagation lag would strand a genuinely queued job forever — a wasted
+ * VM on a cancelled job is the cheaper failure.
+ *
+ * **Example** (Provision the heavy-lane fleet controller)
+ *
+ * ```ts
+ * import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra"
+ *
+ * const config = makeCiFleetControllerConfig(
+ *   CiFleetControllerPulumiConfigValues.make({
+ *     githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
+ *     githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
+ *     githubAppKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+ *     githubAppWebhookSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/webhook-secret",
+ *     runnerBinariesSyncerLambdaZip: "/artifacts/runner-binaries-syncer.zip",
+ *     runnerRolePermissionsBoundaryArn: "arn:aws:iam::123456789012:policy/beep-ci-fleet-boundary",
+ *     runnersLambdaZip: "/artifacts/runners.zip",
+ *     terminationWatcherLambdaZip: "/artifacts/termination-watcher.zip",
+ *     webhookLambdaZip: "/artifacts/webhook.zip",
+ *   })
+ * )
+ *
+ * const controller = new CiFleetController("beep-ci-fleet", {
+ *   config,
+ *   region: "us-east-1",
+ *   subnetIds: ["subnet-abc", "subnet-def"],
+ *   vpcId: "vpc-123",
+ *   workerSecurityGroupId: "sg-456",
+ * })
+ * console.log(controller.webhook)
+ * ```
+ *
  * @category resources
  * @since 0.0.0
  */
@@ -321,7 +411,10 @@ export class CiFleetController extends pulumi.ComponentResource {
         block_device_mappings: [
           {
             delete_on_termination: true,
-            device_name: "/dev/sda1",
+            // AL2023's root device — /dev/sda1 (the Ubuntu burst convention)
+            // leaves the AMI's 8 GB root in place and attaches this volume as
+            // an unused side disk; real lanes then die on a full root.
+            device_name: "/dev/xvda",
             encrypted: true,
             iops: 3000,
             throughput: 250,
@@ -334,17 +427,22 @@ export class CiFleetController extends pulumi.ComponentResource {
         enable_cloudwatch_agent: false,
         enable_ephemeral_runners: true,
         enable_jit_config: true,
-        enable_job_queued_check: true,
+        // The module's ephemeral default. The pre-launch "is the job still
+        // queued" GitHub lookup hits API propagation lag, and its not-queued
+        // branch consumes the scale-up message with NO retry path — two live
+        // probes stranded 25+ minutes proved it. A cancelled job now costs
+        // one self-reaping VM instead of a stranded lane.
+        enable_job_queued_check: false,
         enable_managed_runner_security_group: false,
         enable_organization_runners: false,
         /**
          * Require an exact label-set match so ordinary `self-hosted` jobs
-         * cannot reach the shadow fleet without naming its dedicated label.
+         * cannot reach the fleet without naming its dedicated label.
          *
          * **Gotchas**
          *
-         * Default labels plus any-match webhook filtering widened the shadow
-         * fleet to ordinary `self-hosted` jobs, so both label sets must be exact.
+         * Default labels plus any-match webhook filtering widened the fleet
+         * to ordinary `self-hosted` jobs, so both label sets must be exact.
          */
         enable_runner_bidirectional_label_match: true,
         enable_runner_on_demand_failover_for_errors: onDemandFailoverErrors,
@@ -365,7 +463,11 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
         },
         instance_allocation_strategy: "price-capacity-optimized",
-        instance_target_capacity_type: "spot",
+        // Bring-up posture: cutover night saw three correlated spot-reclaim
+        // events kill six jobs in two hours (one swept three VMs in the same
+        // second), so waves could not complete. Return to "spot" with a
+        // one-line revert once steady-state wave stability is proven.
+        instance_target_capacity_type: "on-demand",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,
@@ -376,6 +478,16 @@ export class CiFleetController extends pulumi.ComponentResource {
           zip: args.config.terminationWatcherLambdaZip,
         },
         instance_types: runnerInstanceTypes,
+        // Rescues a job whose runner died between launch and pickup (spot
+        // reclaim, boot failure) by re-checking the still-queued job and
+        // scaling up again; a runner lost mid-job is out of its reach and
+        // needs a workflow re-run.
+        job_retry: {
+          delay_backoff: 2,
+          delay_in_seconds: 120,
+          enable: true,
+          max_attempts: 2,
+        },
         kms_key_arn: args.config.githubAppKmsKeyArn,
         logging_retention_in_days: 14,
         minimum_running_time_in_minutes: 5,
@@ -396,10 +508,17 @@ export class CiFleetController extends pulumi.ComponentResource {
         },
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
-        runner_run_as: "ec2-user",
+        runner_run_as: runnerRunAs,
+        userdata_post_install: runnerToolbeltPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
-        runners_maximum_count: 4,
+        // Concurrency cap, not a budget: each ephemeral VM lives exactly one
+        // job, so the cap only decides how much of a wave runs in parallel. A
+        // push wave requests seven heavy jobs (five verify lanes plus
+        // jsdoc-ratchet and build) and an overlapping PR wave adds six more —
+        // fourteen covers that worst case with one spare. Excess jobs retry
+        // from SQS every ~30s.
+        runners_maximum_count: 14,
         runners_ssm_housekeeper: {
           config: { dryRun: false, minimumDaysOld: 1 },
           enabled: true,

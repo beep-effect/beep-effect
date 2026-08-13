@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
 import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
@@ -182,7 +182,7 @@ const canonicalEntityIdPattern = /^(?:entity-[a-f0-9]{12}|[a-z][a-z0-9_]*)$/;
 const eventIdPattern = /^event-[a-f0-9]{12}$/;
 
 const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string) {
-  return yield* S.decodeUnknownEffect(Sha256HexFromBytes)(utf8Encoder.encode(text));
+  return yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text));
 });
 
 /**
@@ -704,7 +704,7 @@ const EventTimeDefinition = S.TaggedUnion({
 export const EventTime = EventTimeDefinition.pipe(
   $I.annoteSchema("EventTime", {
     description: "Unspecified, instant, or interval temporal grounding for a tracked event.",
-    toArbitrary: () => (fc) => S.toArbitrary(EventTimeDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(EventTimeDefinition),
   })
 );
 

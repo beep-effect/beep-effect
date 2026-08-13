@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId } from "../Identity.ts";
@@ -84,7 +84,7 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
 export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
   $I.annoteSchema("BatchStatusResponse", {
     description: "Discriminated batch query response with variant-owned state, suspension, or missing data.",
-    toArbitrary: () => (fc) => S.toArbitrary(BatchStatusResponseDefinition)(fc),
+    toArbitrary: () => S.toArbitrary(BatchStatusResponseDefinition),
   })
 );
 

@@ -13,74 +13,23 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { SafePnPrefix } from "@beep/identity";
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId, SafePnPrefix } from "@beep/identity";
 import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
-import {
-  OWL_CLASS as CanonicalOwlClass,
-  OWL_DATATYPE_PROPERTY as CanonicalOwlDatatypeProperty,
-  OWL_OBJECT_PROPERTY as CanonicalOwlObjectProperty,
-  OWL_NAMESPACE,
-} from "@beep/rdf/Vocab/Owl";
-import {
-  PROV_ACTIVITY as CanonicalProvActivity,
-  PROV_AGENT as CanonicalProvAgent,
-  PROV_ENTITY as CanonicalProvEntity,
-  PROV_USED as CanonicalProvUsed,
-  PROV_WAS_GENERATED_BY as CanonicalProvWasGeneratedBy,
-  PROV_NAMESPACE,
-} from "@beep/rdf/Vocab/Prov";
-import {
-  RDF_FIRST as CanonicalRdfFirst,
-  RDF_NIL as CanonicalRdfNil,
-  RDF_REST as CanonicalRdfRest,
-  RDF_TYPE as CanonicalRdfType,
-  RDF_NAMESPACE,
-} from "@beep/rdf/Vocab/Rdf";
-import {
-  RDFS_CLASS as CanonicalRdfsClass,
-  RDFS_COMMENT as CanonicalRdfsComment,
-  RDFS_LABEL as CanonicalRdfsLabel,
-  RDFS_NAMESPACE,
-} from "@beep/rdf/Vocab/Rdfs";
-import {
-  SKOS_ALT_LABEL as CanonicalSkosAltLabel,
-  SKOS_BROADER as CanonicalSkosBroader,
-  SKOS_BROAD_MATCH as CanonicalSkosBroadMatch,
-  SKOS_CLOSE_MATCH as CanonicalSkosCloseMatch,
-  SKOS_CONCEPT as CanonicalSkosConcept,
-  SKOS_CONCEPT_SCHEME as CanonicalSkosConceptScheme,
-  SKOS_DEFINITION as CanonicalSkosDefinition,
-  SKOS_EXACT_MATCH as CanonicalSkosExactMatch,
-  SKOS_HAS_TOP_CONCEPT as CanonicalSkosHasTopConcept,
-  SKOS_HIDDEN_LABEL as CanonicalSkosHiddenLabel,
-  SKOS_IN_SCHEME as CanonicalSkosInScheme,
-  SKOS_NARROWER as CanonicalSkosNarrower,
-  SKOS_NARROW_MATCH as CanonicalSkosNarrowMatch,
-  SKOS_PREF_LABEL as CanonicalSkosPrefLabel,
-  SKOS_RELATED as CanonicalSkosRelated,
-  SKOS_RELATED_MATCH as CanonicalSkosRelatedMatch,
-  SKOS_SCOPE_NOTE as CanonicalSkosScopeNote,
-  SKOS_TOP_CONCEPT_OF as CanonicalSkosTopConceptOf,
-  SKOS_NAMESPACE,
-} from "@beep/rdf/Vocab/Skos";
-import {
-  XSD_ANY_URI as CanonicalXsdAnyUri,
-  XSD_BOOLEAN as CanonicalXsdBoolean,
-  XSD_DOUBLE as CanonicalXsdDouble,
-  XSD_INTEGER as CanonicalXsdInteger,
-  XSD_STRING as CanonicalXsdString,
-  XSD_NAMESPACE,
-} from "@beep/rdf/Vocab/Xsd";
+import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
+import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
+import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { SKOS_NAMESPACE } from "@beep/rdf/Vocab/Skos";
+import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { SchemaUtils } from "@beep/schema";
 import { R } from "@beep/utils";
 import * as S from "effect/Schema";
-import type { NamedNode } from "./Types.ts";
-import { IRI, makeNamedNode } from "./Types.ts";
+import type { IRI as IriValue } from "./Types.ts";
+import { IRI } from "./Types.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Constants");
 
-const vocabularyTerm = (namespace: string, localName: string): NamedNode => makeNamedNode(`${namespace}${localName}`);
+const vocabularyTerm = (namespace: string, localName: string): IriValue => IRI.make(`${namespace}${localName}`);
 
 /**
  * RDF 1.1 vocabulary terms used by extraction and graph serialization.
@@ -98,15 +47,15 @@ const vocabularyTerm = (namespace: string, localName: string): NamedNode => make
  * @since 0.0.0
  */
 export const RDF = {
-  type: CanonicalRdfType,
+  type: vocabularyTerm(RDF_NAMESPACE, "type"),
   Property: vocabularyTerm(RDF_NAMESPACE, "Property"),
   Statement: vocabularyTerm(RDF_NAMESPACE, "Statement"),
   subject: vocabularyTerm(RDF_NAMESPACE, "subject"),
   predicate: vocabularyTerm(RDF_NAMESPACE, "predicate"),
   object: vocabularyTerm(RDF_NAMESPACE, "object"),
-  first: CanonicalRdfFirst,
-  rest: CanonicalRdfRest,
-  nil: CanonicalRdfNil,
+  first: vocabularyTerm(RDF_NAMESPACE, "first"),
+  rest: vocabularyTerm(RDF_NAMESPACE, "rest"),
+  nil: vocabularyTerm(RDF_NAMESPACE, "nil"),
   List: vocabularyTerm(RDF_NAMESPACE, "List"),
 };
 
@@ -125,12 +74,12 @@ export const RDF = {
  * @since 0.0.0
  */
 export const RDFS = {
-  Class: CanonicalRdfsClass,
+  Class: vocabularyTerm(RDFS_NAMESPACE, "Class"),
   Resource: vocabularyTerm(RDFS_NAMESPACE, "Resource"),
   Literal: vocabularyTerm(RDFS_NAMESPACE, "Literal"),
   Datatype: vocabularyTerm(RDFS_NAMESPACE, "Datatype"),
-  label: CanonicalRdfsLabel,
-  comment: CanonicalRdfsComment,
+  label: vocabularyTerm(RDFS_NAMESPACE, "label"),
+  comment: vocabularyTerm(RDFS_NAMESPACE, "comment"),
   domain: vocabularyTerm(RDFS_NAMESPACE, "domain"),
   range: vocabularyTerm(RDFS_NAMESPACE, "range"),
   subClassOf: vocabularyTerm(RDFS_NAMESPACE, "subClassOf"),
@@ -154,11 +103,11 @@ export const RDFS = {
  * @since 0.0.0
  */
 export const OWL = {
-  Class: CanonicalOwlClass,
+  Class: vocabularyTerm(OWL_NAMESPACE, "Class"),
   Thing: vocabularyTerm(OWL_NAMESPACE, "Thing"),
   Nothing: vocabularyTerm(OWL_NAMESPACE, "Nothing"),
-  ObjectProperty: CanonicalOwlObjectProperty,
-  DatatypeProperty: CanonicalOwlDatatypeProperty,
+  ObjectProperty: vocabularyTerm(OWL_NAMESPACE, "ObjectProperty"),
+  DatatypeProperty: vocabularyTerm(OWL_NAMESPACE, "DatatypeProperty"),
   FunctionalProperty: vocabularyTerm(OWL_NAMESPACE, "FunctionalProperty"),
   InverseFunctionalProperty: vocabularyTerm(OWL_NAMESPACE, "InverseFunctionalProperty"),
   TransitiveProperty: vocabularyTerm(OWL_NAMESPACE, "TransitiveProperty"),
@@ -201,16 +150,16 @@ export const OWL = {
  * @since 0.0.0
  */
 export const PROV = {
-  Entity: CanonicalProvEntity,
-  Activity: CanonicalProvActivity,
-  Agent: CanonicalProvAgent,
-  wasGeneratedBy: CanonicalProvWasGeneratedBy,
+  Entity: vocabularyTerm(PROV_NAMESPACE, "Entity"),
+  Activity: vocabularyTerm(PROV_NAMESPACE, "Activity"),
+  Agent: vocabularyTerm(PROV_NAMESPACE, "Agent"),
+  wasGeneratedBy: vocabularyTerm(PROV_NAMESPACE, "wasGeneratedBy"),
   wasDerivedFrom: vocabularyTerm(PROV_NAMESPACE, "wasDerivedFrom"),
   wasAttributedTo: vocabularyTerm(PROV_NAMESPACE, "wasAttributedTo"),
   startedAtTime: vocabularyTerm(PROV_NAMESPACE, "startedAtTime"),
   endedAtTime: vocabularyTerm(PROV_NAMESPACE, "endedAtTime"),
   generatedAtTime: vocabularyTerm(PROV_NAMESPACE, "generatedAtTime"),
-  used: CanonicalProvUsed,
+  used: vocabularyTerm(PROV_NAMESPACE, "used"),
   wasAssociatedWith: vocabularyTerm(PROV_NAMESPACE, "wasAssociatedWith"),
 };
 
@@ -260,16 +209,16 @@ export const DCTERMS = {
  * @since 0.0.0
  */
 export const XSD = {
-  string: CanonicalXsdString,
-  integer: CanonicalXsdInteger,
+  string: vocabularyTerm(XSD_NAMESPACE, "string"),
+  integer: vocabularyTerm(XSD_NAMESPACE, "integer"),
   decimal: vocabularyTerm(XSD_NAMESPACE, "decimal"),
   float: vocabularyTerm(XSD_NAMESPACE, "float"),
-  double: CanonicalXsdDouble,
-  boolean: CanonicalXsdBoolean,
+  double: vocabularyTerm(XSD_NAMESPACE, "double"),
+  boolean: vocabularyTerm(XSD_NAMESPACE, "boolean"),
   date: vocabularyTerm(XSD_NAMESPACE, "date"),
   time: vocabularyTerm(XSD_NAMESPACE, "time"),
   dateTime: vocabularyTerm(XSD_NAMESPACE, "dateTime"),
-  anyURI: CanonicalXsdAnyUri,
+  anyURI: vocabularyTerm(XSD_NAMESPACE, "anyURI"),
 };
 
 /**
@@ -287,28 +236,28 @@ export const XSD = {
  * @since 0.0.0
  */
 export const SKOS = {
-  Concept: CanonicalSkosConcept,
-  ConceptScheme: CanonicalSkosConceptScheme,
+  Concept: vocabularyTerm(SKOS_NAMESPACE, "Concept"),
+  ConceptScheme: vocabularyTerm(SKOS_NAMESPACE, "ConceptScheme"),
   Collection: vocabularyTerm(SKOS_NAMESPACE, "Collection"),
   OrderedCollection: vocabularyTerm(SKOS_NAMESPACE, "OrderedCollection"),
-  prefLabel: CanonicalSkosPrefLabel,
-  altLabel: CanonicalSkosAltLabel,
-  hiddenLabel: CanonicalSkosHiddenLabel,
-  definition: CanonicalSkosDefinition,
-  scopeNote: CanonicalSkosScopeNote,
+  prefLabel: vocabularyTerm(SKOS_NAMESPACE, "prefLabel"),
+  altLabel: vocabularyTerm(SKOS_NAMESPACE, "altLabel"),
+  hiddenLabel: vocabularyTerm(SKOS_NAMESPACE, "hiddenLabel"),
+  definition: vocabularyTerm(SKOS_NAMESPACE, "definition"),
+  scopeNote: vocabularyTerm(SKOS_NAMESPACE, "scopeNote"),
   example: vocabularyTerm(SKOS_NAMESPACE, "example"),
   note: vocabularyTerm(SKOS_NAMESPACE, "note"),
-  broader: CanonicalSkosBroader,
-  narrower: CanonicalSkosNarrower,
-  related: CanonicalSkosRelated,
-  exactMatch: CanonicalSkosExactMatch,
-  closeMatch: CanonicalSkosCloseMatch,
-  broadMatch: CanonicalSkosBroadMatch,
-  narrowMatch: CanonicalSkosNarrowMatch,
-  relatedMatch: CanonicalSkosRelatedMatch,
-  inScheme: CanonicalSkosInScheme,
-  hasTopConcept: CanonicalSkosHasTopConcept,
-  topConceptOf: CanonicalSkosTopConceptOf,
+  broader: vocabularyTerm(SKOS_NAMESPACE, "broader"),
+  narrower: vocabularyTerm(SKOS_NAMESPACE, "narrower"),
+  related: vocabularyTerm(SKOS_NAMESPACE, "related"),
+  exactMatch: vocabularyTerm(SKOS_NAMESPACE, "exactMatch"),
+  closeMatch: vocabularyTerm(SKOS_NAMESPACE, "closeMatch"),
+  broadMatch: vocabularyTerm(SKOS_NAMESPACE, "broadMatch"),
+  narrowMatch: vocabularyTerm(SKOS_NAMESPACE, "narrowMatch"),
+  relatedMatch: vocabularyTerm(SKOS_NAMESPACE, "relatedMatch"),
+  inScheme: vocabularyTerm(SKOS_NAMESPACE, "inScheme"),
+  hasTopConcept: vocabularyTerm(SKOS_NAMESPACE, "hasTopConcept"),
+  topConceptOf: vocabularyTerm(SKOS_NAMESPACE, "topConceptOf"),
 };
 
 const extractionNamespace = IRI.fromUnknown("http://example.org/kg/");
@@ -556,7 +505,7 @@ const KnownVocabularyFromSelf = S.declare((input: unknown): input is KnownVocabu
       )
       .map(([prefix, name, publisher, specUrl]) =>
         KnownVocabularyModel.make({
-          prefix: S.decodeUnknownSync(SafePnPrefix)(prefix),
+          prefix: S.decodeSync(SafePnPrefix)(prefix),
           name,
           publisher,
           specUrl,

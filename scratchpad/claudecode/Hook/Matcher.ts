@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 
-import * as Arr from "effect/Array";
+import * as A from "effect/Array";
 import type * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 
@@ -29,20 +29,22 @@ const exactMatcherPattern = /^[A-Za-z0-9_|]+$/;
  * only from letters/digits/`_`/`|` are exact values or `|`-separated exact
  * lists, and strings containing any other character are JavaScript regexes.
  *
- * @category predicates
- * @since 0.0.0
- * @example
+ * **Example** (Match exact, listed, and regular-expression tools)
+ *
  * ```ts
- * import { Hook } from 'effect-claudecode'
+ * import { Hook } from "effect-claudecode"
  *
  * const isBash = Hook.matchTool('Bash')
  * const isEditOrWrite = Hook.matchTool('Edit|Write')
  * const isMcp = Hook.matchTool('mcp__.*')
  *
- * isBash('Bash')       // true
- * isBash('Bash(git)')  // false — exact match
- * isMcp('mcp__foo')    // true
+ * console.log(isBash("Bash")) // true
+ * console.log(isEditOrWrite("Write")) // true
+ * console.log(isMcp("mcp__foo")) // true
  * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const matchValue = (pattern: string | RegExp): ((name: string) => boolean) => {
   if (pattern instanceof RegExp) {
@@ -53,7 +55,7 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
   }
   if (exactMatcherPattern.test(pattern)) {
     const exactValues = Str.split(pattern, "|");
-    return (name: string) => Arr.contains(exactValues, name);
+    return (name: string) => A.contains(exactValues, name);
   }
   const regex = new RegExp(pattern);
   return (name: string) => regex.test(name);
@@ -62,15 +64,16 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
 /**
  * Test whether a matcher pattern matches a value, one-shot.
  *
- * @category predicates
- * @since 0.0.0
+ * **Example** (Test one tool name)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.testTool("Bash", "Bash"))
  * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testValue = (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name);
@@ -78,15 +81,22 @@ export const testValue = (pattern: string | RegExp, name: string): boolean => ma
 /**
  * Build a handler that runs only when the selected matcher value matches.
  *
- * @internal
+ * **Example** (Branch on a matcher)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.handleMatcher)
+ * const handle = Hook.handleMatcher({
+ *   matcher: "Bash",
+ *   select: (tool: string) => tool,
+ *   onMatch: () => Effect.succeed("matched"),
+ *   onMismatch: () => Effect.succeed("skipped")
+ * })
+ * console.log(Effect.runSync(handle("Bash"))) // "matched"
  * ```
  *
+ * @internal
  * @category predicates
  *
  * @since 0.0.0
@@ -104,15 +114,17 @@ export const handleMatcher =
 /**
  * Alias for `matchValue(...)` when matching `tool_name`.
  *
- * @category predicates
- * @since 0.0.0
+ * **Example** (Match a tool name)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.matchTool)
+ * const matches = Hook.matchTool("Bash")
+ * console.log(matches("Bash")) // true
  * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const matchTool = matchValue;
 
@@ -121,10 +133,8 @@ export const matchTool = matchValue;
  * FileChanged matcher strings on `|` and treats each segment as a literal
  * basename rather than a regular expression. `*` and `""` still match all.
  *
- * @category predicates
- * @since 0.0.0
+ * **Example** (Match an exact file basename)
  *
- * @example
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
@@ -133,7 +143,11 @@ export const matchTool = matchValue;
  *   matcher: "README.md|package.json",
  *   handler: () => Effect.succeed(Hook.FileChanged.passthrough())
  * })
+ * console.log(hook.event) // "FileChanged"
  * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const matchFileName = (pattern: string | RegExp): ((name: string) => boolean) => {
   if (pattern instanceof RegExp) {
@@ -143,21 +157,22 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
     return () => true;
   }
   const exactValues = Str.split(pattern, "|");
-  return (name: string) => Arr.contains(exactValues, name);
+  return (name: string) => A.contains(exactValues, name);
 };
 
 /**
  * Test whether a regex pattern matches a tool name, one-shot.
  *
- * @category predicates
- * @since 0.0.0
+ * **Example** (Test one tool matcher)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.testTool)
+ * console.log(Hook.testTool("Edit|Write", "Write")) // true
  * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testTool = testValue;

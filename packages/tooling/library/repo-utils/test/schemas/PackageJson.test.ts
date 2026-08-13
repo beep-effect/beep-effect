@@ -374,9 +374,17 @@ describe("PackageJson schema", () => {
         },
       });
 
+      const ecosystemResult = decodePackageJson({
+        name: "@beep/effect-drizzle",
+        beep: {
+          family: "ecosystem",
+        },
+      });
+
       expect(driverResult.beep).toEqual(O.some({ family: "drivers" }));
       expect(foundationResult.beep).toEqual(O.some({ family: "foundation", kind: "modeling" }));
       expect(toolingResult.beep).toEqual(O.some({ family: "tooling", kind: "library" }));
+      expect(ecosystemResult.beep).toEqual(O.some({ family: "ecosystem" }));
     });
 
     it("keeps npm-only schema separate from repo-only extensions", () => {
@@ -523,6 +531,18 @@ describe("PackageJson schema", () => {
             name: "pkg",
             dependencies: {
               "Invalid Name": "catalog:",
+            },
+          })
+        )
+      ).toBe(true);
+
+      expect(
+        Exit.isFailure(
+          decodePackageJsonExit({
+            name: "pkg",
+            beep: {
+              family: "ecosystem",
+              kind: "modeling",
             },
           })
         )

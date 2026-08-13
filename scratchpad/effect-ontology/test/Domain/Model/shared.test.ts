@@ -34,9 +34,9 @@ describe("effect-ontology shared model schemas", () => {
   });
 
   it("normalizes nullish confidence at the schema boundary", () => {
-    const fromNull = Result.getOrThrow(S.decodeUnknownResult(OptionalConfidence)(null));
-    const fromUndefined = Result.getOrThrow(S.decodeUnknownResult(OptionalConfidence)(undefined));
-    const present = Result.getOrThrow(S.decodeUnknownResult(OptionalConfidence)(0.8));
+    const fromNull = Result.getOrThrow(S.decodeResult(OptionalConfidence)(null));
+    const fromUndefined = Result.getOrThrow(S.decodeResult(OptionalConfidence)(undefined));
+    const present = Result.getOrThrow(S.decodeResult(OptionalConfidence)(0.8));
 
     expect(O.isNone(fromNull)).toBe(true);
     expect(O.isNone(fromUndefined)).toBe(true);

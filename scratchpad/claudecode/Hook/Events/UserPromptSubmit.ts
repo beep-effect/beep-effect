@@ -26,7 +26,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/UserPromptSubmit");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -55,7 +56,8 @@ export class Input extends S.Class<Input>($I`UserPromptSubmitInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -80,7 +82,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromp
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -115,15 +118,16 @@ export class Output extends S.Class<Output>($I`UserPromptSubmitOutput`)(
 /**
  * Allow the prompt to proceed without modification.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.UserPromptSubmit.allow)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const allow = (): Output => Output.make();
 
@@ -131,15 +135,16 @@ export const allow = (): Output => Output.make();
  * Block the prompt. It is erased from context and the reason is shown
  * to the user.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.UserPromptSubmit.block)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const block = (reason: string, options?: { readonly suppressOriginalPrompt?: boolean }): Output =>
@@ -152,15 +157,16 @@ export const block = (reason: string, options?: { readonly suppressOriginalPromp
 /**
  * Allow the prompt and inject additional context Claude will see.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.UserPromptSubmit.addContext)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
   Output.make({
@@ -175,15 +181,16 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Rename the session title. Often paired with `addContext`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.UserPromptSubmit.renameSession)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const renameSession = (sessionTitle: string, additionalContext?: string): Output =>
@@ -204,7 +211,8 @@ export const renameSession = (sessionTitle: string, additionalContext?: string):
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -230,12 +238,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptSubmit.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -260,12 +262,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptSubmit.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -290,12 +286,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptSubmit.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**
