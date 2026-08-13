@@ -28,6 +28,7 @@ import { Crypto, Effect, Encoding, Exit, FileSystem, Layer, Order, Path } from "
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type {
@@ -40,6 +41,7 @@ import type {
 } from "@beep/repo-cli/commands/Knowledge";
 
 const textEncoder = new TextEncoder();
+const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.String));
 const DEFAULT_INDEX = "# Goals Index\n";
 const DEFAULT_COMMAND_TREE = JSON.stringify({
   name: "beep-cli",
@@ -962,12 +964,13 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-hostile-surface-" });
         const rootModule = path.join(tempRoot, ROOT_MODULE_PATH);
         const markerPath = path.join(tempRoot, "archive-surface-module-executed");
+        const encodedMarkerPath = yield* encodeJsonString(markerPath);
         yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
         yield* fs.writeFileString(
           rootModule,
           [
             'import { Command } from "effect/unstable/cli"',
-            `await Bun.write(${JSON.stringify(markerPath)}, "executed")`,
+            `await Bun.write(${encodedMarkerPath}, "executed")`,
             "const chooseArchiveCode = true",
             'export const rootCommand = chooseArchiveCode ? Command.make("safe") : Command.make("evil\\u001B[31m\\u202E")',
             "",
@@ -1160,6 +1163,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         const scratchRoot = path.join(tempRoot, "scratch");
         const rootModule = path.join(currentCheckoutRoot, ROOT_MODULE_PATH);
         const markerPath = path.join(tempRoot, "archive-dotenv-executed");
+        const encodedMarkerPath = yield* encodeJsonString(markerPath);
         yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
         yield* fs.makeDirectory(archiveRoot, { recursive: true });
         yield* fs.symlink(path.join(repoRoot, "node_modules"), path.join(currentCheckoutRoot, "node_modules"));
@@ -1167,7 +1171,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           rootModule,
           [
             'import { Command } from "effect/unstable/cli"',
-            `if (process.env.ARCHIVE_DOTENV_SENTINEL === "loaded") await Bun.write(${JSON.stringify(markerPath)}, "executed")`,
+            `if (process.env.ARCHIVE_DOTENV_SENTINEL === "loaded") await Bun.write(${encodedMarkerPath}, "executed")`,
             'const doctor = Command.make("doctor")',
             'const goals = Command.make("goals").pipe(Command.withSubcommands([doctor]))',
             'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([goals]))',
