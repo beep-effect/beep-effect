@@ -4,7 +4,7 @@
     "slug": "packet-system-redesign",
     "title": "Exploration & Goal Packet System Redesign",
     "status": "active",
-    "stage": "align",
+    "stage": "shape",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -13,6 +13,6 @@
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-10"
+    "updated": "2026-08-13"
   }
 }
