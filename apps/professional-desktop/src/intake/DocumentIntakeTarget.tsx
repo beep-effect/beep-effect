@@ -9,7 +9,7 @@
 
 import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { Button } from "@beep/ui/components/button";
-import { A, O } from "@beep/utils";
+import { A, O, P } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { Fragment } from "react";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
@@ -58,38 +58,133 @@ const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
       }),
   });
 
-const VaultOnboarding = ({
+// The manual path form shown when no native folder picker is reachable. A
+// real labelled form replaces the old `window.prompt` fallback: submitting an
+// empty or unusable path keeps the form open with inline guidance, and Cancel
+// returns to the onboarding card instead of stranding the operator.
+const ManualVaultPathForm = ({
+  message,
+  onCancel,
+  onSubmit,
+}: {
+  readonly message: O.Option<string>;
+  readonly onCancel: () => void;
+  readonly onSubmit: (path: string) => void;
+}): JSX.Element => (
+  <form
+    className="mt-4"
+    data-testid="vault-manual-form"
+    onSubmit={(event) => {
+      event.preventDefault();
+      const value = new FormData(event.currentTarget).get("vault-path");
+      onSubmit(P.isString(value) ? value : "");
+    }}
+  >
+    <label className="text-sm font-medium" htmlFor="vault-manual-path">
+      Workspace vault folder
+    </label>
+    <input
+      id="vault-manual-path"
+      name="vault-path"
+      type="text"
+      placeholder="/home/you/Documents/beep-vault"
+      className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+      data-testid="vault-manual-path"
+    />
+    <p className="mt-1 text-xs text-muted-foreground">
+      No native folder picker is available in this session — enter the absolute path of a local folder.
+    </p>
+    {O.match(message, {
+      onNone: () => null,
+      onSome: (text) => (
+        <p className="mt-2 text-sm text-destructive" role="alert" data-testid="vault-manual-error">
+          {text}
+        </p>
+      ),
+    })}
+    <div className="mt-3 flex items-center gap-2">
+      <Button type="submit" data-testid="vault-manual-save">
+        Use this folder
+      </Button>
+      <Button type="button" variant="ghost" onClick={onCancel} data-testid="vault-manual-cancel">
+        Cancel
+      </Button>
+    </div>
+  </form>
+);
+
+const VaultChooseRow = ({
+  disabled,
+  label,
   onChoose,
+  status,
+}: {
+  readonly disabled: boolean;
+  readonly label: string;
+  readonly onChoose: () => void;
+  readonly status: O.Option<string>;
+}): JSX.Element => (
+  <div className="mt-4 flex items-center gap-3">
+    <Button type="button" disabled={disabled} onClick={onChoose} data-testid="vault-choose">
+      {label}
+    </Button>
+    {O.match(status, {
+      onNone: () => null,
+      onSome: (message) => <span className="text-sm text-muted-foreground">{message}</span>,
+    })}
+  </div>
+);
+
+const VaultOnboarding = ({
+  actions,
   selection,
 }: {
-  readonly onChoose: () => void;
+  readonly actions: DocumentIntakeSurface["actions"];
   readonly selection: VaultSelectionStateType;
-}): JSX.Element => {
-  const presentation = VaultSelectionState.match(selection, {
-    idle: () => ({ disabled: false, label: "Choose folder", status: O.none<string>() }),
-    choosing: () => ({ disabled: true, label: "Choosing folder…", status: O.some("Opening folder picker") }),
-    saving: () => ({ disabled: true, label: "Saving…", status: O.some("Saving workspace vault") }),
-    failed: ({ message }) => ({ disabled: false, label: "Choose folder", status: O.some(message) }),
-  });
-
-  return (
-    <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-      <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
-        <h1 className="text-lg font-semibold">Choose workspace vault</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
-        <div className="mt-4 flex items-center gap-3">
-          <Button type="button" disabled={presentation.disabled} onClick={onChoose} data-testid="vault-choose">
-            {presentation.label}
-          </Button>
-          {O.match(presentation.status, {
-            onNone: () => null,
-            onSome: (message) => <span className="text-sm text-muted-foreground">{message}</span>,
-          })}
-        </div>
-      </section>
-    </div>
-  );
-};
+}): JSX.Element => (
+  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+    <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
+      <h1 className="text-lg font-semibold">Choose workspace vault</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
+      {VaultSelectionState.match(selection, {
+        idle: () => (
+          <VaultChooseRow disabled={false} label="Choose folder" onChoose={actions.chooseVault} status={O.none()} />
+        ),
+        choosing: () => (
+          <VaultChooseRow
+            disabled
+            label="Choosing folder…"
+            onChoose={actions.chooseVault}
+            status={O.some("Opening folder picker")}
+          />
+        ),
+        manual: ({ message }) => (
+          <ManualVaultPathForm
+            message={message}
+            onCancel={actions.cancelManualVaultPath}
+            onSubmit={actions.submitManualVaultPath}
+          />
+        ),
+        saving: () => (
+          <VaultChooseRow
+            disabled
+            label="Saving…"
+            onChoose={actions.chooseVault}
+            status={O.some("Saving workspace vault")}
+          />
+        ),
+        failed: ({ message }) => (
+          <VaultChooseRow
+            disabled={false}
+            label="Choose folder"
+            onChoose={actions.chooseVault}
+            status={O.some(message)}
+          />
+        ),
+      })}
+    </section>
+  </div>
+);
 
 const IntakeBusyBadge = ({ activeBatches }: { readonly activeBatches: number }): JSX.Element | null =>
   activeBatches === 0 ? null : (
@@ -218,7 +313,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const surface = useAtomValue(documentIntakeSurfaceAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   if (surface.needsOnboarding) {
-    return <VaultOnboarding onChoose={surface.actions.chooseVault} selection={surface.state.vaultSelection} />;
+    return <VaultOnboarding actions={surface.actions} selection={surface.state.vaultSelection} />;
   }
 
   return <IntakeWorkspaceSurface surface={surface}>{children}</IntakeWorkspaceSurface>;

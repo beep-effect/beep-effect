@@ -8,6 +8,7 @@ import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { afterEach, describe, expect, vi } from "vitest";
 import {
+  cancelManualVaultPathAtoms,
   chooseWorkspaceVaultAtoms,
   DesktopIntakeClient,
   documentIntakeStateAtoms,
@@ -16,6 +17,7 @@ import {
   intakeFilesAtoms,
   openIntakeFilePickerAtoms,
   setIntakeFileInputAtoms,
+  submitManualVaultPathAtoms,
   VaultSelectionState,
   workspaceVaultConfigAtom,
 } from "@/intake/Intake.atoms";
@@ -80,6 +82,27 @@ const waitForSelection = (
 const runChooseVault = (registry: AtomRegistry.AtomRegistry) => {
   const action = chooseWorkspaceVaultAtoms(workspaceId);
   registry.mount(documentIntakeStateAtoms(workspaceId));
+  registry.mount(action);
+  registry.set(action, void 0);
+  return AtomRegistry.getResult(registry, action);
+};
+
+const openManualForm = (registry: AtomRegistry.AtomRegistry) => {
+  registry.mount(documentIntakeStateAtoms(workspaceId));
+  registry.update(documentIntakeStateAtoms(workspaceId), (state) =>
+    state.withVaultSelection(VaultSelectionState.cases.manual.make())
+  );
+};
+
+const runSubmitManualVaultPath = (registry: AtomRegistry.AtomRegistry, path: string) => {
+  const action = submitManualVaultPathAtoms(workspaceId);
+  registry.mount(action);
+  registry.set(action, path);
+  return AtomRegistry.getResult(registry, action);
+};
+
+const runCancelManualVaultPath = (registry: AtomRegistry.AtomRegistry) => {
+  const action = cancelManualVaultPathAtoms(workspaceId);
   registry.mount(action);
   registry.set(action, void 0);
   return AtomRegistry.getResult(registry, action);
@@ -151,6 +174,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         VaultSelectionState.match(selection, {
           idle: () => "",
           choosing: () => "",
+          manual: () => "",
           saving: () => "",
           failed: ({ message }) => message,
         })
@@ -160,20 +184,90 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
   );
 
   it.live(
-    "uses the observable browser prompt fallback when the sidecar picker fails",
+    "opens the manual path form when the sidecar picker fails",
     Effect.fnUntraced(function* () {
-      const prompt = vi.spyOn(window, "prompt").mockReturnValue(selectedPath);
+      const prompt = vi.spyOn(window, "prompt");
       const client = DesktopIntakeClient.of(((tag: string) =>
         tag === "PickVaultDirectory"
           ? Effect.fail(VaultDirectoryPickError.new("Native picker unavailable."))
-          : tag === "SetWorkspaceVault"
-            ? Effect.succeed(successfulConfig)
-            : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
+          : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
       const registry = registryWithClient(client);
 
       yield* runChooseVault(registry);
 
-      expect(prompt).toHaveBeenCalledOnce();
+      expect(prompt).not.toHaveBeenCalled();
+      expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
+        VaultSelectionState.cases.manual.make()
+      );
+      registry.dispose();
+    })
+  );
+
+  it.live(
+    "persists a manually entered vault path and settles back to idle",
+    Effect.fnUntraced(function* () {
+      const client = DesktopIntakeClient.of(((tag: string) =>
+        tag === "SetWorkspaceVault"
+          ? Effect.succeed(successfulConfig)
+          : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
+      const registry = registryWithClient(client);
+      openManualForm(registry);
+
+      yield* runSubmitManualVaultPath(registry, `  ${selectedPath}  `);
+
+      expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
+      registry.dispose();
+    })
+  );
+
+  it.live(
+    "keeps the manual form open with guidance when the submitted path is empty",
+    Effect.fnUntraced(function* () {
+      const client = DesktopIntakeClient.of(((tag: string) =>
+        Effect.die(
+          `workspace vault RPC must not run for an empty path: ${tag}`
+        )) as unknown as DesktopIntakeClient["Service"]);
+      const registry = registryWithClient(client);
+      openManualForm(registry);
+
+      yield* runSubmitManualVaultPath(registry, "   ");
+
+      expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
+        VaultSelectionState.cases.manual.make({ message: O.some("Enter the absolute path of a local folder.") })
+      );
+      registry.dispose();
+    })
+  );
+
+  it.live(
+    "keeps the manual form open with the persistence failure message",
+    Effect.fnUntraced(function* () {
+      const client = DesktopIntakeClient.of(((tag: string) =>
+        tag === "SetWorkspaceVault"
+          ? Effect.fail(WorkspaceVaultActionError.new("The selected vault is not writable."))
+          : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
+      const registry = registryWithClient(client);
+      openManualForm(registry);
+
+      yield* runSubmitManualVaultPath(registry, selectedPath);
+
+      expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
+        VaultSelectionState.cases.manual.make({ message: O.some("The selected vault is not writable.") })
+      );
+      registry.dispose();
+    })
+  );
+
+  it.live(
+    "cancelling the manual form returns to the idle onboarding card",
+    Effect.fnUntraced(function* () {
+      const client = DesktopIntakeClient.of(((tag: string) =>
+        Effect.die(`workspace vault RPC must not run on cancel: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
+      const registry = registryWithClient(client);
+      openManualForm(registry);
+
+      yield* runCancelManualVaultPath(registry);
+
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
       registry.dispose();
     })
