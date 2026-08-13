@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,19 +37,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — Package creation: move, harness, gates PR. git-mv `scratchpad/bsl` into
-the member root `packages/ecosystem/effect-drizzle/**`, land the manifest per
-SPEC constraints 6-7, the `@effect/vitest` harness migration, the member
-tstyche lane, the inverted-import gate in repo lint, the family-encoding
-tooling extensions, and `scratchpad/bsl` retirement.
+Complete. All three phases shipped: P0 doctrine (PR #658), P1 package
+creation (PRs #664 + #667), P2 quality integration + closeout (this PR).
 
 ## Latest Evidence
 
-P0 merged: PR #658 (`4857be45cb`, 2026-08-10) — ecosystem family doctrine
-(doc 14 + grammar/summary/glossary/decision/index + shared-tables projection
-line) live on `main`; 26 checks green, zero unresolved threads, Greptile 5/5.
-Exploration merged earlier: PR #651 (`e92b8b7d9d`, 2026-08-10) —
-`scratchpad/bsl` at 86/86 tests, 402 assertions, two dialects.
+P2: `Ecosystem Contracts` CI lane (member tstyche matrix + bundle ratchet,
+esbuild raw-byte baseline 7864), `test:integration:parallel` enrollment in
+the affected integration lane, docgen local/aggregate proofs, closeout
+reflection, and the lifecycle flip — landed together in the final PR.
+P1 merged: PR #664 (`6eb1f37024`) + review remediation PR #667
+(`6fecd1811b`) — member live at `packages/ecosystem/effect-drizzle`,
+89 runtime tests, tstyche 160 assertions on TS 5.9.3 + 6.0.3,
+`scratchpad/bsl` retired. P0 merged: PR #658 (`4857be45cb`) — family
+doctrine. Exploration: PR #651 (`e92b8b7d9d`).
 
 ## Notes
 

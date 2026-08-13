@@ -16,7 +16,8 @@
       "entry": [
         "typetests/contracts.tst.ts",
         "test/integration/sqlite-drizzle-schema.ts",
-        "test/perf.consumer.ts"
+        "test/perf.consumer.ts",
+        "test/bundle-pg-integer.consumer.ts"
       ]
     },
     "packages/law-practice/domain": {
