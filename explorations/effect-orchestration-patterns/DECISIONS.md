@@ -151,3 +151,14 @@ boundary.
 consumer and depends on evidence from `effect-v4-workflow-engine-spike`.
 `goals/uspto-prosecution-read` absorbs USPTO transport adoption; it is a
 cross-reference, not a candidate graduated by this packet.
+
+## 2026-08-13 — HOLDING-PEN CONVENTION — RATIFIED
+
+**Answer:** Graduate the packet now that its promised-now goal exists. Keep
+`circuit-breaker-consumer-spike`, `degraded-fanout-promotion`,
+`provider-build-selector`, and `llm-retry-consolidation` in `MAP.md` as re-entry
+points. A fired demand gate reopens this packet at `decompose`; it does not
+spawn a goal directly.
+
+**Rationale:** Demand-gated candidates preserve future routing without holding
+a completed exploration open.
