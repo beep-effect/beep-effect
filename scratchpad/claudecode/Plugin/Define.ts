@@ -226,7 +226,7 @@ export const command = (config: PluginCommandConfig): PluginCommandEntry => {
   return {
     name,
     ...(path !== undefined ? { path } : {}),
-    frontmatter: S.decodeUnknownSync(CommandFrontmatter)(frontmatter),
+    frontmatter: S.decodeSync(CommandFrontmatter)(frontmatter),
     body,
   };
 };
@@ -255,7 +255,7 @@ export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
   return {
     name,
     ...(path !== undefined ? { path } : {}),
-    frontmatter: S.decodeUnknownSync(SubagentFrontmatter)({
+    frontmatter: S.decodeSync(SubagentFrontmatter)({
       name,
       ...frontmatter,
     }),
@@ -283,7 +283,7 @@ export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
   return {
     name,
     ...(path !== undefined ? { path } : {}),
-    frontmatter: S.decodeUnknownSync(SkillFrontmatter)({
+    frontmatter: S.decodeSync(SkillFrontmatter)({
       name,
       ...frontmatter,
     }),
@@ -311,7 +311,7 @@ export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleE
   return {
     name,
     ...(path !== undefined ? { path } : {}),
-    frontmatter: S.decodeUnknownSync(OutputStyleFrontmatter)({
+    frontmatter: S.decodeSync(OutputStyleFrontmatter)({
       name,
       ...frontmatter,
     }),
@@ -324,14 +324,14 @@ const normalizeHooksConfig = (hooksConfig: HooksSection | HooksSectionEncoded | 
     ? O.none()
     : S.is(HooksSection)(hooksConfig)
       ? O.some(hooksConfig)
-      : S.decodeUnknownOption(HooksSection)(hooksConfig);
+      : S.decodeOption(HooksSection)(hooksConfig);
 
 const normalizeMcpConfig = (mcpConfig: McpJsonFile | McpJsonFile.Encoded | undefined): O.Option<McpJsonFile> =>
   mcpConfig === undefined
     ? O.none()
     : S.is(McpJsonFile)(mcpConfig)
       ? O.some(mcpConfig)
-      : S.decodeUnknownOption(McpJsonFile)(mcpConfig);
+      : S.decodeOption(McpJsonFile)(mcpConfig);
 
 const validateNamedFrontmatter = (entryName: string, frontmatterName: O.Option<string>, kind: string): void => {
   O.map(frontmatterName, (name) => {
@@ -488,9 +488,7 @@ const resolveConfigRelativePath = (options: {
  * @since 0.0.0
  */
 export const define = (config: PluginConfig): PluginDefinition => ({
-  manifest: S.is(PluginManifest)(config.manifest)
-    ? config.manifest
-    : S.decodeUnknownSync(PluginManifest)(config.manifest),
+  manifest: S.is(PluginManifest)(config.manifest) ? config.manifest : S.decodeSync(PluginManifest)(config.manifest),
   commands: config.commands ?? [],
   agents: A.map(config.agents ?? [], normalizeAgentEntry),
   skills: A.map(config.skills ?? [], normalizeSkillEntry),

@@ -59,9 +59,13 @@ CourtListener are explicit won't-do-until-product-pull deferrals. Each resumes
 independently from the committed research named below; P6 close bookkeeping is
 complete.
 
-The empty `packages/drivers/federal-register`, `packages/drivers/dol`, and
-`packages/drivers/courtlistener` scaffolds are intentional retained stubs. They
-are not deletion candidates and were not modified as part of this closeout.
+The empty Federal Register, DOL, and CourtListener workspace scaffolds were
+deleted by [`goals/honest-repo-signal`](../honest-repo-signal/README.md). Resume
+those drivers from
+[`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../honest-repo-signal/research/FOLLOW-UPS.md)
+when a product feature pulls them; recreate the package in the same PR as the
+first real surface. Committed research under [`research/`](./research/) is
+unchanged.
 
 ## Latest Evidence
 

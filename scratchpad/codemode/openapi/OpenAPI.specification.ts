@@ -1355,7 +1355,7 @@ export const validateBaseUrl = (
   value: string
 ): Result.Result<string, string> =>
   pipe(
-    S.decodeUnknownResult(S.URLFromString)(value),
+    S.decodeResult(S.URLFromString)(value),
     Result.mapError(
       () => `server URL '${value}' is not an absolute HTTP(S) URL`
     ),

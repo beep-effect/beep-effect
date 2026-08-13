@@ -34,7 +34,7 @@ export const IRI = CanonicalIRI.pipe(
   }),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
-    decodeResult: S.decodeResult(schema)
+    decodeResult: S.decodeResult(schema),
   }))
 );
 
@@ -154,6 +154,8 @@ export const LocalName = SafePnLocal.pipe(
  */
 export type LocalName = typeof LocalName.Type;
 
+const blankNodeDefinition = S.TemplateLiteral(["_:", S.NonEmptyString]).pipe(S.brand("BlankNode"));
+
 /**
  * RDF blank-node identifier, including the `_:` prefix.
  *
@@ -169,10 +171,10 @@ export type LocalName = typeof LocalName.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const BlankNode = S.TemplateLiteral(["_:", S.NonEmptyString]).pipe(
-  S.brand("BlankNode"),
+export const BlankNode = blankNodeDefinition.pipe(
   $I.annoteSchema("BlankNode", {
     description: "RDF blank-node identifier beginning with the `_:` prefix.",
+    toArbitrary: () => S.toArbitrary(blankNodeDefinition),
   }),
   SchemaUtils.withCodecStatics
 );
@@ -263,6 +265,8 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
   }
 }
 
+const rdfTermDefinition = S.Union([IRI, BlankNode, Literal]);
+
 /**
  * RDF term accepted in an object position.
  *
@@ -279,9 +283,10 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
  * @category schemas
  * @since 0.0.0
  */
-export const RdfTerm = S.Union([IRI, BlankNode, Literal]).pipe(
+export const RdfTerm = rdfTermDefinition.pipe(
   $I.annoteSchema("RdfTerm", {
     description: "IRI, blank node, or literal accepted in an RDF object position.",
+    toArbitrary: () => S.toArbitrary(rdfTermDefinition),
   })
 );
 
@@ -312,6 +317,7 @@ export type RdfTerm = typeof RdfTerm.Type;
 export const ObjectTerm = RdfTerm.pipe(
   $I.annoteSchema("ObjectTerm", {
     description: "Named-node, blank-node, or literal RDF term accepted in object position.",
+    toArbitrary: () => S.toArbitrary(RdfTerm),
   })
 );
 

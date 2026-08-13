@@ -222,10 +222,11 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 
 ### Drivers & domain (compose at the boundary)
 
-- **`@beep/courtlistener` driver** — `packages/drivers/courtlistener/src/index.ts`.
-  **Bare skeleton** (`VERSION = "0.0.0"` only; 1 src file), package license **MIT**. The
-  citation-lookup wrap is unbuilt here — this packet supplies it. (Tree-snapshot routes the
-  driver itself to `gov-legal-data-driver-codegen`; the citation-lookup slice to this packet.)
+- **`@beep/courtlistener` driver** — deleted 2026-08-13 (was a VERSION-only
+  MIT skeleton). Recreate when this packet's citation-lookup wrap is pulled;
+  see [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md).
+  (Tree-snapshot routed the driver to `gov-legal-data-driver-codegen`; the
+  citation-lookup slice stays here.)
 - **`@beep/anthropic` driver** — `packages/drivers/anthropic/src/`. The LLM driver to wire the
   Citations / `search_result` wire format through for native in-turn grounding.
 - **`@beep/agents-server` AssistantTurn kernel** — `packages/agents/server/src/AssistantTurn/`.
@@ -270,8 +271,10 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 - **CitationResolution / UnmatchedCitation lifecycle** — NOT FOUND. No `CitationResolution`,
   `UnmatchedCitation`, or 5-state resolution enum in `packages/`. (netNew #2)
 - **CourtListener citation-lookup driver wrap** — NOT FOUND. No `postCitationLookup` / lookup
-  handler in-repo; `@beep/courtlistener` is a `VERSION`-only skeleton. (The `courtlistener-sdk` /
-  `postCitationLookup` referenced in CAPTURE is an *external* mined repo, not in this tree.)
+  handler in-repo; `@beep/courtlistener` was deleted 2026-08-13 (was VERSION-only). Recreate via
+  [`FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md) if this wrap is pulled.
+  (The `courtlistener-sdk` / `postCitationLookup` referenced in CAPTURE is an *external* mined
+  repo, not in this tree.)
 - **Ground-before-cite / verbatim-citation guard contract** — NOT FOUND. No turn-scoped grounding
   contract, output-side re-verification ladder, or `EvaluateCitationQuality`-style judge. (netNew #3)
 - **Cross-chunk / cross-page straddle verifier** — NOT FOUND (partial). `@beep/langextract`

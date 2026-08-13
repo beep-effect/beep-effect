@@ -154,8 +154,8 @@ describe("CodeMode schema laws", () => {
   });
 
   it("decodes defaults once and keeps absent Option fields off the wire", () => {
-    const limits = S.decodeUnknownSync(ExecutionLimits)({});
-    const search = S.decodeUnknownSync(SearchInput)({});
+    const limits = S.decodeSync(ExecutionLimits)({});
+    const search = S.decodeSync(SearchInput)({});
 
     assert.strictEqual(O.isNone(limits.timeoutMs), true);
     assert.strictEqual(O.isNone(limits.maxToolCalls), true);

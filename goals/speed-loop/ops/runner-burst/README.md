@@ -1,46 +1,29 @@
-# Supervised runner burst — interim runbook
+# Supervised runner burst — retired
 
-Manual capacity for the `beep-ec2-heavy` lanes until the controller (ledger
-#91) automates dispatch. Battle-tested 2026-08-08 landing an eight-PR merge
-wave. These scripts are the vetted-porcelain path the repo's permission
-policy expects; their successor is a `beep runners` CLI command.
+The manual launch path was retired on 2026-08-13. Do not use this directory to
+create CI capacity. The production `CiFleetController` is the only supported
+owner of the `beep-ec2-heavy` runner label.
 
-## Preconditions
+The retired launcher created non-ephemeral repository runners and carried a
+reusable registration token in instance user-data. A pull-request job could
+therefore read registration material or persist state for a later trusted job.
+Those properties are incompatible with the controller's one-job-one-VM and JIT
+registration contract, so there is no break-glass launch exception.
 
-- Authenticated `aws login` session (any admin identity — the scripts switch
-  to the `beep-ci-runner-launcher` identity for launches internally).
-- `gh` authenticated with repo admin (mints single-use registration tokens).
-- `op` unlocked (launcher keys resolve from `op://BEEP_CI/aws-runner-launcher`).
-- Reaper TTL raised for the burst window (launch script prints the command
-  before it launches anything;
-  default 90 min WILL kill long-lived burst workers mid-job).
+## Cleanup only
 
-## Burst lifecycle
+`teardown-burst-runners.sh` remains solely to remove workers and runner
+registrations left by the retired path. It deliberately excludes controller
+instances that carry the fleet module's environment tag.
 
-1. `bash launch-burst-runners.sh <count>` — mints tokens, launches spot
-   workers from launch template `beep-ci-runner` (alternating fleet subnets),
-   waits ~90s, lists registrations. Success: `beep-ec2-i-*` rows `online`.
-2. Work happens. Watch for **zombie attrition**: compare
-   `gh api .../actions/runners` online count against
-   `aws ec2 describe-instances` running count; a VM without an agent is a
-   zombie — terminate it and launch a replacement. Non-ephemeral agents on
-   long-lived guests zombie silently (three times in one night); this is why
-   the controller uses one-job-one-VM ephemeral.
-3. `bash teardown-burst-runners.sh` — terminates all tagged workers, waits
-   until EC2 confirms termination, drops all `beep-ec2-i-*` registrations,
-   and prints the TTL-restore command. Any failed cleanup step aborts the
-   script.
+Run it only when legacy `beep-ec2-i-*` registrations or untagged burst workers
+still exist:
 
-## Known failure modes (all lived, see ledger runner-burst receipts)
+```sh
+bash teardown-burst-runners.sh
+```
 
-- Admin-identity launches fail on a legacy deny (`FreedomFramework-CI`,
-  t2.micro-only) — launches must use the launcher identity (scripts do).
-- Fresh spot use in a new account: mint `AWSServiceRoleForEC2Spot` once.
-- Do NOT approve outside-collaborator workflow runs while burst workers are
-  registered — non-ephemeral runners would execute them.
-- Cancelling a PR's run does not stop in-flight jobs instantly; a worker can
-  stay busy on a closed PR's job — cancel the run explicitly.
-- The registration token is workload-readable (user-data via IMDSv2) for its
-  1-hour life and reusable until expiry — accepted for break-glass use only.
-  After every burst, audit the runner list and deregister anything you did
-  not launch; the endgame controller's single-use JIT configs retire this.
+The script requires authenticated AWS and repository-admin GitHub sessions. It
+terminates matching legacy instances, removes their registrations, and prints
+the steady-state reaper-TTL restore command. Any failed cleanup step aborts the
+script.
