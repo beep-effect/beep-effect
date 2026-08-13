@@ -213,10 +213,10 @@ The `@beep/*` bricks this packet composes (from the bundle `secondaryTargets` /
 | Capability | Package path | Status |
 | --- | --- | --- |
 | GovInfo driver (Search HttpApi contract + value models: SearchResult/PackageInfo/GranuleMetadata) | `packages/drivers/govinfo` | **extend** — PARTIAL (schemas only; add service/config/auth/retry/cache layer) |
-| CourtListener driver | `packages/drivers/courtlistener` | **extend** — skeleton (`VERSION='0.0.0'`); P2-gated |
-| eCFR driver | `packages/drivers/ecfr` | **extend** — skeleton; keyless candidate for P1 |
-| DOL driver | `packages/drivers/dol` | **extend** — skeleton; P2-gated (keyed `api.data.gov`) |
-| Federal Register driver | `packages/drivers/federal-register` | **extend** — skeleton; keyless candidate for P1 |
+| CourtListener driver | deleted `packages/drivers/courtlistener` (2026-08-13) | **recreate** via `goals/honest-repo-signal/research/FOLLOW-UPS.md` when delivery resumes; do not extend a deleted tree |
+| eCFR driver | `packages/drivers/ecfr` | **extend** — live keyless driver; delivery P1 grew it to 15 ops |
+| DOL driver | deleted `packages/drivers/dol` (2026-08-13) | **recreate** via FOLLOW-UPS when delivery resumes |
+| Federal Register driver | deleted `packages/drivers/federal-register` (2026-08-13) | **recreate** via FOLLOW-UPS when delivery resumes |
 | Effect-native OpenAPI/JSON-schema codegen precedent (`openapi.json` + `scripts/generate.ts`, `*.generated`/`*.service`/`*.config` split) | `packages/drivers/runpod`, `packages/drivers/acp` | **reuse** — the codegen precedent to mirror instead of adopting Orval/axios |
 | Identity composer + schema kit (manifest repair: govinfo needs both) | `@beep/identity`, `@beep/schema` | **reuse** |
 | MCP tool-registration convention (deferred `gov-legal-mcp` consumer) | `@beep/nlp-mcp` | **reuse** (follow-on only) |

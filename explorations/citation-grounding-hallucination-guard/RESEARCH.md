@@ -271,8 +271,10 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 - **CitationResolution / UnmatchedCitation lifecycle** — NOT FOUND. No `CitationResolution`,
   `UnmatchedCitation`, or 5-state resolution enum in `packages/`. (netNew #2)
 - **CourtListener citation-lookup driver wrap** — NOT FOUND. No `postCitationLookup` / lookup
-  handler in-repo; `@beep/courtlistener` is a `VERSION`-only skeleton. (The `courtlistener-sdk` /
-  `postCitationLookup` referenced in CAPTURE is an *external* mined repo, not in this tree.)
+  handler in-repo; `@beep/courtlistener` was deleted 2026-08-13 (was VERSION-only). Recreate via
+  [`FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md) if this wrap is pulled.
+  (The `courtlistener-sdk` / `postCitationLookup` referenced in CAPTURE is an *external* mined
+  repo, not in this tree.)
 - **Ground-before-cite / verbatim-citation guard contract** — NOT FOUND. No turn-scoped grounding
   contract, output-side re-verification ladder, or `EvaluateCitationQuality`-style judge. (netNew #3)
 - **Cross-chunk / cross-page straddle verifier** — NOT FOUND (partial). `@beep/langextract`

@@ -34,6 +34,10 @@ Related but **not** a reason to keep the empty driver:
 
 ## After this packet: how to recreate a reserved driver
 
+The delivery packet's `GOAL.md` is recreate-first. It is not a license to
+edit deleted driver directories — `@beep/federal-register`, `@beep/dol`,
+and `@beep/courtlistener` trees are gone.
+
 1. Confirm a product-slice consumer (use-cases or server), not a name claim.
 2. `bun run beep create-package <name> --family drivers`.
 3. Land schemas/service/tests in the same PR as the package. No VERSION-only
