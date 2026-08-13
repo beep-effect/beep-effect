@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,15 +19,10 @@ extending the epistemic slice rather than an in-place edit of the closed gate.
 
 ## Next Open Question
 
-The retention lane's shape was ratified 2026-08-13 (see DECISIONS.md):
-mechanism now with tier/decay/threshold policy as schema-validated data behind a
-calibration-evidence phase gate; repo-native algorithm (agentmemory cited
-reference-only); first slice is a standalone operator tier/memory-pressure
-report with a delete-and-rebuild drill. Next action: scaffold
-`epistemic-memory-retention-projections` as a goal in the ceremony PR, then
-flip this packet to `graduated`. Contradiction triage cleared its gate
-when the core landed and graduated 2026-07-25 into
-[`goals/epistemic-contradiction-triage`](../../goals/epistemic-contradiction-triage/README.md).
+None. Row 3 graduated into
+[`epistemic-memory-retention-projections`](../../goals/epistemic-memory-retention-projections/README.md).
+Any later candidate or fired follow-on gate reopens this packet at
+`decompose`; RRF integration remains owned by its retrieval goal.
 
 ## Read This First
 
@@ -48,6 +43,11 @@ in-repo `@beep/*` brick it composes. Derived from the gold-intake cluster
 see [`explorations/_gold-intake`](../_gold-intake/).
 
 ## Trail
+
+- 2026-08-13 (ceremony): scaffolded
+  `epistemic-memory-retention-projections`, marked MAP row 3 graduated,
+  cross-linked manifests, and graduated the packet. Future candidates reopen
+  at `decompose`.
 
 - 2026-08-13: operator chose to SPIN the optional retention lane now and
   ratified its shape (policy-as-data, repo-native, standalone tier report
