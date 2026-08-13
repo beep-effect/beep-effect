@@ -48,9 +48,7 @@ describe("SyncOperation table", () => {
 
     expect(getTableConfig(syncOperationTable).name).toBe("documents_sync_operation");
     expect(SYNC_OPERATION_TABLE_NAME).toBe("documents_sync_operation");
-    expect(syncOperationTable.definition).toBe(DomainSyncOperation.SyncOperation.definition);
-    expect(syncOperationTable.definition.entityId.entityType).toBe("DocumentsSyncOperation");
-    expect(syncOperationTable.entitySchema).toBe(DomainSyncOperation.SyncOperation);
+    expect(DomainSyncOperation.SyncOperation.sql.tableName).toBe("documents_sync_operation");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.attemptCount.name).toBe("attempt_count");

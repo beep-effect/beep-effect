@@ -43,11 +43,13 @@ const uploadRow = {
 
 describe("SyncOperation entity", () => {
   it("wires SyncOperation to the documents identity", () => {
-    expect(SyncOperation.SyncOperation.definition.entityId.tableName).toBe("documents_sync_operation");
-    expect(SyncOperation.SyncOperation.definition.entityId.entityType).toBe("DocumentsSyncOperation");
-    expect(SyncOperation.SyncOperation.definition.persisted.idempotencyKey.columnName).toBe("idempotency_key");
-    expect(SyncOperation.SyncOperation.definition.persisted.operationType.columnName).toBe("operation_type");
-    expect(SyncOperation.SyncOperation.definition.persisted.syncItemId.storageKind).toBe("entityId");
+    expect(SyncOperation.SyncOperation.sql.tableName).toBe(DocumentsIdentity.SyncOperationId.tableName);
+    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("id");
+    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncOperation.SyncOperation.jsonCreate.fields)).toHaveLength(13);
+    expect(Object.keys(SyncOperation.SyncOperation.jsonUpdate.fields)).toHaveLength(13);
   });
 
   it("decodes and encodes a full upload outbox row", () => {

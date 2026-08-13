@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Message } from "@beep/workspace-domain/entities/Message";
+import { getTableName } from "drizzle-orm";
 
 /**
  * PGLite/Postgres Drizzle table for the workspace Message entity.
@@ -16,13 +17,19 @@ import { Message } from "@beep/workspace-domain/entities/Message";
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_message" = Message.Table.definition.tableName
- * const contentStorage: "jsonb" = Message.Table.definition.persisted.content.storageKind
- *
- * console.log(`${tableName}:${contentStorage}`)
+ * const tableName: "workspace_message" = Message.TABLE_NAME
+ * console.log(tableName)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Message);
+export const Table = toPgTable(Message);
+
+/**
+ * Physical Postgres table name derived from the Message entity.
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const TABLE_NAME = getTableName(Table);

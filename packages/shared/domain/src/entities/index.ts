@@ -6,7 +6,7 @@
  * ```ts
  * import { Membership } from "@beep/shared-domain/entities"
  *
- * console.log(Membership.Model.definition.tableName)
+ * console.log(Membership.Model.sql.tableName)
  * ```
  *
  * @category entities
@@ -21,7 +21,7 @@ export * as Membership from "./Membership/index.ts";
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  *
- * console.log(Organization.Model.definition.tableName)
+ * console.log(Organization.Model.sql.tableName)
  * ```
  *
  * @category entities
@@ -36,7 +36,7 @@ export * as Organization from "./Organization/index.ts";
  * ```ts
  * import { User } from "@beep/shared-domain/entities"
  *
- * console.log(User.Model.definition.tableName)
+ * console.log(User.Model.sql.tableName)
  * ```
  *
  * @category entities

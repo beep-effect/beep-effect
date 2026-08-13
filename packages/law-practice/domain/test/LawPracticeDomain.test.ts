@@ -226,12 +226,25 @@ describe("@beep/law-practice-domain", () => {
     }
   });
 
-  it("wires Matter to the law-practice BaseEntity identity", () => {
-    expect(Matter.definition.entityId).toBe(LawPractice.MatterId);
-    expect(Matter.definition.entityId.tableName).toBe("law_practice_matter");
-    expect(Matter.definition.entityId.entityType).toBe("LawPracticeMatter");
-    expect(Matter.definition.persisted.id.storageKind).toBe("entityId");
-    expect(Matter.definition.persisted.matterType.storageKind).toBe("literal");
+  it("wires Matter to the law-practice product-entity identity", () => {
+    expect(Matter.sql.tableName).toBe(LawPractice.MatterId.tableName);
+    expect(LawPractice.MatterId.entityType).toBe("LawPracticeMatter");
+    expect(Object.keys(Matter.insert.fields)).not.toContain("id");
+    expect(Object.keys(Matter.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Matter.update.fields)).toContain("id");
+    expect(Object.keys(Matter.update.fields)).toContain("rowVersion");
+    expect(Object.keys(Matter.jsonCreate.fields)).toEqual([
+      "displayName",
+      "fixtureKey",
+      "legalClientFixtureKey",
+      "matterType",
+    ]);
+    expect(Object.keys(Matter.jsonUpdate.fields)).toEqual([
+      "displayName",
+      "fixtureKey",
+      "legalClientFixtureKey",
+      "matterType",
+    ]);
   });
 
   it("decodes and constructs a Matter row", () => {

@@ -28,7 +28,7 @@ export * from "./Turn.converters.ts";
  * ```ts
  * import * as Turn from "@beep/workspace-tables/entities/Turn"
  *
- * console.log(Turn.Table.definition.entityId.entityType)
+ * console.log(Turn.TABLE_NAME)
  * ```
  *
  * @category tables

@@ -61,12 +61,15 @@ describe("@beep/agents-domain", () => {
     expect(AgentMode.is.deterministic_fixture("deterministic_fixture")).toBe(true);
   });
 
-  it("wires Agent to the agents BaseEntity identity", () => {
-    expect(Agent.definition.entityId).toBe(Agents.AgentId);
-    expect(Agent.definition.entityId.tableName).toBe("agents_agent");
-    expect(Agent.definition.entityId.entityType).toBe("AgentsAgent");
-    expect(Agent.definition.persisted.id.storageKind).toBe("entityId");
-    expect(Agent.definition.persisted.mode.storageKind).toBe("literal");
+  it("wires Agent to the agents product-entity identity", () => {
+    expect(Agent.sql.tableName).toBe(Agents.AgentId.tableName);
+    expect(Agents.AgentId.entityType).toBe("AgentsAgent");
+    expect(Object.keys(Agent.insert.fields)).not.toContain("id");
+    expect(Object.keys(Agent.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Agent.update.fields)).toContain("id");
+    expect(Object.keys(Agent.update.fields)).toContain("rowVersion");
+    expect(Object.keys(Agent.jsonCreate.fields)).toEqual(["fixtureKey", "mode", "name", "skillFixtureKey"]);
+    expect(Object.keys(Agent.jsonUpdate.fields)).toEqual(["fixtureKey", "mode", "name", "skillFixtureKey"]);
   });
 
   it("decodes and constructs an Agent row", () => {

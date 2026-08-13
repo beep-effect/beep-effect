@@ -27,7 +27,6 @@ describe("OrganizationTable", () => {
     const columns = getColumns(Organization.Table);
     const config = getTableConfig(Organization.Table);
 
-    expect(Organization.Table.definition.tableName).toBe("shared_organization");
     expect(config.name).toBe("shared_organization");
     expect(columns.id.name).toBe("id");
     expect(columns.id.primary).toBe(true);

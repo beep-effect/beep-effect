@@ -7,7 +7,8 @@
  */
 
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 
 /**
  * Drizzle table projection for documents SyncOperation entities.
@@ -30,7 +31,7 @@ import { EntityTable } from "@beep/drizzle";
  * @category tables
  * @since 0.0.0
  */
-export const syncOperationTable = EntityTable.pgTableFrom(DomainSyncOperation.SyncOperation);
+export const syncOperationTable = toPgTable(DomainSyncOperation.SyncOperation);
 
 /**
  * Physical Postgres table name derived from the SyncOperation entity definition.
@@ -51,4 +52,4 @@ export const syncOperationTable = EntityTable.pgTableFrom(DomainSyncOperation.Sy
  * @category tables
  * @since 0.0.0
  */
-export const SYNC_OPERATION_TABLE_NAME = syncOperationTable.definition.tableName;
+export const SYNC_OPERATION_TABLE_NAME = getTableName(syncOperationTable);

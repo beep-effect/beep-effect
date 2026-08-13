@@ -32,14 +32,29 @@ const probedAt = DateTime.makeUnsafe(probedAtIso);
 const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeResult(EnvVarName)(name));
 
 describe("@beep/agents-domain ProviderInstance", () => {
-  it("wires ProviderInstance to the agents BaseEntity identity", () => {
-    expect(ProviderInstance.definition.entityId).toBe(Agents.ProviderInstanceId);
-    expect(ProviderInstance.definition.entityId.tableName).toBe("agents_provider_instance");
-    expect(ProviderInstance.definition.entityId.entityType).toBe("AgentsProviderInstance");
-    expect(ProviderInstance.definition.persisted.kind.storageKind).toBe("literal");
-    expect(ProviderInstance.definition.persisted.envVars.storageKind).toBe("jsonb");
-    expect(ProviderInstance.definition.persisted.lastProbe.storageKind).toBe("jsonb");
-    expect(ProviderInstance.definition.persisted.homePath.storageKind).toBe("text");
+  it("wires ProviderInstance to the agents product-entity identity", () => {
+    expect(ProviderInstance.sql.tableName).toBe(Agents.ProviderInstanceId.tableName);
+    expect(Agents.ProviderInstanceId.entityType).toBe("AgentsProviderInstance");
+    expect(Object.keys(ProviderInstance.insert.fields)).not.toContain("id");
+    expect(Object.keys(ProviderInstance.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(ProviderInstance.update.fields)).toContain("id");
+    expect(Object.keys(ProviderInstance.update.fields)).toContain("rowVersion");
+    expect(Object.keys(ProviderInstance.jsonCreate.fields)).toEqual([
+      "binaryPath",
+      "envVars",
+      "homePath",
+      "kind",
+      "label",
+      "lastProbe",
+    ]);
+    expect(Object.keys(ProviderInstance.jsonUpdate.fields)).toEqual([
+      "binaryPath",
+      "envVars",
+      "homePath",
+      "kind",
+      "label",
+      "lastProbe",
+    ]);
   });
 
   it("rejects token-bearing env-var names and accepts benign ones", () => {

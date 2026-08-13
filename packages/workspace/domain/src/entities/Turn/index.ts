@@ -13,10 +13,17 @@
  * ```ts
  * import * as Turn from "@beep/workspace-domain/entities/Turn"
  *
- * console.log(Turn.Turn.definition.entityId.entityType)
+ * console.log(Turn.Turn.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export * from "./Turn.model.ts";
+/**
+ * Turn subsidiary value schema exports.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Turn.values.ts";

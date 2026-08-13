@@ -13,7 +13,7 @@
  * ```ts
  * import { Skill } from "@beep/agents-domain/entities/Skill"
  *
- * console.log(Skill.definition.entityId.tableName)
+ * console.log(Skill.sql.tableName)
  * ```
  *
  * @category entities

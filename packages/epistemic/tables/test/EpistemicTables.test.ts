@@ -124,9 +124,8 @@ describe("EpistemicTables", () => {
   it("materializes UsageRecord metadata without executing a live database", () => {
     const config = getTableConfig(UsageRecord.Table);
 
-    expect(UsageRecord.Table.definition.tableName).toBe("epistemic_usage_record");
-    expect(UsageRecord.Table.definition.entityId.entityType).toBe("EpistemicUsageRecord");
-    expect(UsageRecord.Table.entitySchema).toBe(UsageRecordModel);
+    expect(UsageRecord.TABLE_NAME).toBe("epistemic_usage_record");
+    expect(UsageRecordModel.sql.tableName).toBe("epistemic_usage_record");
     expect(config.name).toBe("epistemic_usage_record");
 
     const columns = getColumns(UsageRecord.Table);
@@ -145,6 +144,11 @@ describe("EpistemicTables", () => {
     expect(columns.provider.columnType).toBe("PgText");
     expect(columns.costUsdApproxMicros.name).toBe("cost_usd_approx_micros");
     expect(columns.costUsdApproxMicros.notNull).toBe(false);
+    expect(config.indexes.map((index) => index.config.name)).toEqual([
+      "epistemic_usage_record_org_id_btree_idx",
+      "epistemic_usage_record_source_btree_idx",
+      "epistemic_usage_record_public_id_unique_idx",
+    ]);
   });
 
   it("projects CandidateClaim onto the migrated column set", () => {

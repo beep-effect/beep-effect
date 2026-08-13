@@ -13,7 +13,7 @@
  * ```ts
  * import { Activity } from "@beep/epistemic-domain"
  *
- * console.log(Activity.definition.entityId.tableName)
+ * console.log(Activity.sql.tableName)
  * ```
  *
  * @category entities

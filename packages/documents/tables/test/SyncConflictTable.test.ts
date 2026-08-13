@@ -44,9 +44,7 @@ describe("SyncConflict table", () => {
 
     expect(getTableConfig(syncConflictTable).name).toBe("documents_sync_conflict");
     expect(SYNC_CONFLICT_TABLE_NAME).toBe("documents_sync_conflict");
-    expect(syncConflictTable.definition).toBe(DomainSyncConflict.SyncConflict.definition);
-    expect(syncConflictTable.definition.entityId.entityType).toBe("DocumentsSyncConflict");
-    expect(syncConflictTable.entitySchema).toBe(DomainSyncConflict.SyncConflict);
+    expect(DomainSyncConflict.SyncConflict.sql.tableName).toBe("documents_sync_conflict");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.conflictKind.name).toBe("conflict_kind");

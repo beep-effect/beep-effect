@@ -74,6 +74,7 @@
   },
   "dependencies": {
     "@beep/drizzle": "workspace:^",
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"

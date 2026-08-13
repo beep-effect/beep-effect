@@ -41,9 +41,7 @@ describe("SyncCursor table", () => {
 
     expect(getTableConfig(syncCursorTable).name).toBe("documents_sync_cursor");
     expect(SYNC_CURSOR_TABLE_NAME).toBe("documents_sync_cursor");
-    expect(syncCursorTable.definition).toBe(DomainSyncCursor.SyncCursor.definition);
-    expect(syncCursorTable.definition.entityId.entityType).toBe("DocumentsSyncCursor");
-    expect(syncCursorTable.entitySchema).toBe(DomainSyncCursor.SyncCursor);
+    expect(DomainSyncCursor.SyncCursor.sql.tableName).toBe("documents_sync_cursor");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.lastError.name).toBe("last_error");

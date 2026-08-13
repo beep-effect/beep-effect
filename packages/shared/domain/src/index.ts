@@ -46,7 +46,7 @@ export * as Aggregates from "./aggregates/index.ts";
  * ```ts
  * import { Entities } from "@beep/shared-domain"
  *
- * console.log(Entities.Organization.Model.definition.tableName)
+ * console.log(Entities.Organization.Model.sql.tableName)
  * ```
  *
  * @category entities

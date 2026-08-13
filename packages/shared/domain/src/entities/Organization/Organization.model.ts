@@ -6,15 +6,14 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { Slug } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import * as M from "@beep/schema/Model";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { SchemaUtils, Slug } from "@beep/schema";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as S from "effect/Schema";
 import * as Shared from "../../identity/Shared/index.ts";
 import { LicenseTier, Settings } from "./Organization.values.ts";
 
 const $I = $SharedDomainId.create("entities/Organization/Organization.model");
+const OrganizationEntity = ProductEntity.make(Shared.OrganizationId);
 
 /**
  * Shared-kernel Organization entity schema.
@@ -24,42 +23,32 @@ const $I = $SharedDomainId.create("entities/Organization/Organization.model");
  * ```ts
  * import { Organization } from "@beep/shared-domain/entities"
  *
- * console.log(Organization.Model.definition.entityId.tableName)
+ * console.log(Organization.Model.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class Model extends BaseEntity.Class<Model>($I`Model`)(
-  Shared.OrganizationId,
+export class Model extends OrganizationEntity.Entity<Model>(OrganizationEntity.tableName)(
   {
-    fields: {
-      legalName: S.NonEmptyString,
-      licenseTier: LicenseTier,
-      name: S.NonEmptyString,
-      parentOrgId: M.FieldOption(Shared.OrganizationId),
-      settings: Settings,
-      slug: Slug,
-    },
-    persisted: {
-      legalName: EntitySchema.persist.text({
-        columnName: "legal_name",
-      }),
-      licenseTier: EntitySchema.persist.literal({
-        columnName: "license_tier",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      name: EntitySchema.persist.text(),
-      parentOrgId: EntitySchema.persist.entityId({
-        columnName: "parent_org_id",
-      }),
-      settings: EntitySchema.persist.jsonb(),
-      slug: EntitySchema.persist.text({
-        indexHints: [EntitySchema.IndexHint.unique],
-      }),
-    },
+    legalName: S.NonEmptyString.pipe(OrganizationEntity.pg.text(), OrganizationEntity.pg.columnName("legal_name")),
+    licenseTier: LicenseTier.pipe(OrganizationEntity.pg.text(), OrganizationEntity.pg.columnName("license_tier")),
+    name: S.NonEmptyString.pipe(OrganizationEntity.pg.text()),
+    parentOrgId: S.OptionFromNullOr(Shared.OrganizationId).pipe(
+      SchemaUtils.withNoneDefault,
+      OrganizationEntity.pg.integer(),
+      OrganizationEntity.pg.columnName("parent_org_id")
+    ),
+    settings: Settings.pipe(OrganizationEntity.pg.jsonb()),
+    slug: Slug.pipe(OrganizationEntity.pg.text()),
+    ...OrganizationEntity.identityFields,
   },
   $I.annote("Model", {
     description: "Shared-kernel organization entity used as the tenant root concept.",
-  })
+  }),
+  (columns) => [
+    OrganizationEntity.Table.index("shared_organization_license_tier_lookup_idx", [columns.licenseTier]),
+    OrganizationEntity.Table.uniqueIndex("shared_organization_slug_unique_idx", [columns.slug]),
+    ...OrganizationEntity.entityExtras(columns),
+  ]
 ) {}

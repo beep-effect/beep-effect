@@ -50,9 +50,7 @@ describe("SyncItem table", () => {
 
     expect(getTableConfig(syncItemTable).name).toBe("documents_sync_item");
     expect(SYNC_ITEM_TABLE_NAME).toBe("documents_sync_item");
-    expect(syncItemTable.definition).toBe(DomainSyncItem.SyncItem.definition);
-    expect(syncItemTable.definition.entityId.entityType).toBe("DocumentsSyncItem");
-    expect(syncItemTable.entitySchema).toBe(DomainSyncItem.SyncItem);
+    expect(DomainSyncItem.SyncItem.sql.tableName).toBe("documents_sync_item");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.publicId.name).toBe("public_id");

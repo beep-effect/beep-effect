@@ -39,11 +39,22 @@ const mappedDriftRow = {
 
 describe("SyncConflict entity", () => {
   it("wires SyncConflict to the documents identity", () => {
-    expect(SyncConflict.SyncConflict.definition.entityId.tableName).toBe("documents_sync_conflict");
-    expect(SyncConflict.SyncConflict.definition.entityId.entityType).toBe("DocumentsSyncConflict");
-    expect(SyncConflict.SyncConflict.definition.persisted.conflictKind.columnName).toBe("conflict_kind");
-    expect(SyncConflict.SyncConflict.definition.persisted.remotePayload.storageKind).toBe("jsonb");
-    expect(SyncConflict.SyncConflict.definition.persisted.resolutionStatus.columnName).toBe("resolution_status");
+    expect(SyncConflict.SyncConflict.sql.tableName).toBe(DocumentsIdentity.SyncConflictId.tableName);
+    expect(Object.keys(SyncConflict.SyncConflict.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncConflict.SyncConflict.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncConflict.SyncConflict.update.fields)).toContain("id");
+    expect(Object.keys(SyncConflict.SyncConflict.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncConflict.SyncConflict.jsonCreate.fields)).toEqual([
+      "conflictKind",
+      "localRelPath",
+      "provider",
+      "remoteEventId",
+      "remoteId",
+      "remotePayload",
+      "resolutionStatus",
+      "syncItemId",
+      "workspaceId",
+    ]);
   });
 
   it("decodes and encodes a locally mapped drift row", () => {

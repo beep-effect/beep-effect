@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Workspace } from "@beep/workspace-domain/entities/Workspace";
+import { getTableName } from "drizzle-orm";
 
 /**
  * Workspace persistence table.
@@ -16,11 +17,19 @@ import { Workspace } from "@beep/workspace-domain/entities/Workspace";
  * ```ts
  * import { Table } from "@beep/workspace-tables/entities/Workspace"
  *
- * const tableName: "workspace_workspace" = Table.definition.tableName
+ * const tableName: "workspace_workspace" = TABLE_NAME
  * console.log(tableName)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Workspace);
+export const Table = toPgTable(Workspace);
+
+/**
+ * Physical Postgres table name derived from the Workspace entity.
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const TABLE_NAME = getTableName(Table);

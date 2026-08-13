@@ -38,7 +38,9 @@ type DbSchemaShape = {
  * ```ts
  * import { DbSchema } from "@beep/epistemic-tables"
  *
- * console.log(DbSchema.usageRecord.definition.tableName)
+ * import { getTableName } from "drizzle-orm"
+ *
+ * console.log(getTableName(DbSchema.usageRecord))
  * ```
  *
  * @category tables

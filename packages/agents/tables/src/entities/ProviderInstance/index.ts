@@ -28,7 +28,7 @@ export * from "./ProviderInstance.converters.ts";
  * ```ts
  * import * as ProviderInstance from "@beep/agents-tables/entities/ProviderInstance"
  *
- * console.log(ProviderInstance.providerInstanceTable.definition.entityId.entityType)
+ * console.log(ProviderInstance.PROVIDER_INSTANCE_TABLE_NAME)
  * ```
  *
  * @category tables

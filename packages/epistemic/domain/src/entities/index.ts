@@ -13,7 +13,7 @@
  * ```ts
  * import { Activity } from "@beep/epistemic-domain/entities"
  *
- * console.log(Activity.definition.entityId.tableName)
+ * console.log(Activity.sql.tableName)
  * ```
  *
  * @category entities
@@ -110,7 +110,7 @@ export * from "./EvidenceVerification/index.ts";
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain/entities"
  *
- * console.log(UsageRecord.definition.entityId.tableName)
+ * console.log(UsageRecord.sql.tableName)
  * ```
  *
  * @category entities

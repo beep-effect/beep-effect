@@ -13,7 +13,7 @@
  * ```ts
  * import { Entities } from "@beep/agents-domain"
  *
- * console.log(Entities.Agent.definition.entityId.entityType)
+ * console.log(Entities.Agent.sql.tableName)
  * ```
  *
  * @category entities
@@ -28,7 +28,7 @@ export * as Entities from "./entities/index.ts";
  * ```ts
  * import { Agent, Skill } from "@beep/agents-domain"
  *
- * console.log(Agent.definition.entityId.entityType, Skill.definition.entityId.tableName)
+ * console.log(Agent.sql.tableName, Skill.sql.tableName)
  * ```
  *
  * @category entities

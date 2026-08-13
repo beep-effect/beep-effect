@@ -160,7 +160,7 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
                       attributes: {
                         provider: record.provider,
                         subsystem: "usage_record",
-                        table: UsageRecordTable.Table.definition.tableName,
+                        table: UsageRecordTable.TABLE_NAME,
                       },
                     })
                   )

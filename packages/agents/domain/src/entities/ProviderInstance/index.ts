@@ -33,7 +33,7 @@ export * from "./ProviderInstance.behavior.ts";
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
  *
- * console.log(ProviderInstance.definition.entityId.entityType)
+ * console.log(ProviderInstance.sql.tableName)
  * ```
  *
  * @category entities

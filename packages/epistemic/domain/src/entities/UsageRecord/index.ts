@@ -13,7 +13,7 @@
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain/entities/UsageRecord"
  *
- * console.log(UsageRecord.definition.entityId.resource)
+ * console.log(UsageRecord.sql.tableName)
  * ```
  *
  * @category entities

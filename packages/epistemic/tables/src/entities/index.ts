@@ -103,7 +103,7 @@ export * as EvidenceVerification from "./EvidenceVerification/index.ts";
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-tables/entities"
  *
- * console.log(UsageRecord.Table.definition.tableName)
+ * console.log(UsageRecord.TABLE_NAME)
  * ```
  *
  * @category tables

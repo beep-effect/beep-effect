@@ -13,7 +13,7 @@
  * ```ts
  * import * as CandidateDraft from "@beep/workspace-tables/entities/CandidateDraft"
  *
- * console.log(CandidateDraft.Table.definition.entityId.entityType)
+ * console.log(CandidateDraft.TABLE_NAME)
  * ```
  *
  * @category tables

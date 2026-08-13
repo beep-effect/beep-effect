@@ -51,9 +51,8 @@ describe("WorkspaceTables", () => {
   it("materializes CandidateDraft metadata without executing a live database", () => {
     const config = getTableConfig(CandidateDraft.Table);
 
-    expect(CandidateDraft.Table.definition.tableName).toBe("workspace_candidate_draft");
-    expect(CandidateDraft.Table.definition.entityId.entityType).toBe("WorkspaceCandidateDraft");
-    expect(CandidateDraft.Table.entitySchema).toBe(CandidateDraftModel);
+    expect(CandidateDraft.TABLE_NAME).toBe("workspace_candidate_draft");
+    expect(CandidateDraftModel.sql.tableName).toBe("workspace_candidate_draft");
     expect(config.name).toBe("workspace_candidate_draft");
     expectBaseProjectionColumns(CandidateDraft.Table);
   });
@@ -61,9 +60,8 @@ describe("WorkspaceTables", () => {
   it("materializes CandidateProject metadata without executing a live database", () => {
     const config = getTableConfig(CandidateProject.Table);
 
-    expect(CandidateProject.Table.definition.tableName).toBe("workspace_candidate_project");
-    expect(CandidateProject.Table.definition.entityId.entityType).toBe("WorkspaceCandidateProject");
-    expect(CandidateProject.Table.entitySchema).toBe(CandidateProjectModel);
+    expect(CandidateProject.TABLE_NAME).toBe("workspace_candidate_project");
+    expect(CandidateProjectModel.sql.tableName).toBe("workspace_candidate_project");
     expect(config.name).toBe("workspace_candidate_project");
     expectBaseProjectionColumns(CandidateProject.Table);
   });
@@ -85,21 +83,25 @@ describe("WorkspaceTables", () => {
 
   it("materializes Thread, Turn, and Message metadata without executing a live database", () => {
     expect(getTableConfig(Thread.Table).name).toBe("workspace_thread");
-    expect(Thread.Table.entitySchema).toBe(ThreadModel);
+    expect(Thread.TABLE_NAME).toBe("workspace_thread");
+    expect(ThreadModel.sql.tableName).toBe("workspace_thread");
     expect(getColumns(Thread.Table).workspaceId.name).toBe("workspace_id");
 
     expect(getTableConfig(Turn.Table).name).toBe("workspace_turn");
-    expect(Turn.Table.entitySchema).toBe(TurnModel);
+    expect(Turn.TABLE_NAME).toBe("workspace_turn");
+    expect(TurnModel.sql.tableName).toBe("workspace_turn");
     expect(getColumns(Turn.Table).parentTurnId.name).toBe("parent_turn_id");
     expect(getColumns(Turn.Table).items.columnType).toBe("PgJsonb");
 
     expect(getTableConfig(Message.Table).name).toBe("workspace_message");
-    expect(Message.Table.entitySchema).toBe(MessageModel);
+    expect(Message.TABLE_NAME).toBe("workspace_message");
+    expect(MessageModel.sql.tableName).toBe("workspace_message");
     expect(getColumns(Message.Table).content.columnType).toBe("PgJsonb");
     expect(getColumns(Message.Table).role.name).toBe("role");
 
     expect(getTableConfig(Workspace.Table).name).toBe("workspace_workspace");
-    expect(Workspace.Table.entitySchema).toBe(WorkspaceModel);
+    expect(Workspace.TABLE_NAME).toBe("workspace_workspace");
+    expect(WorkspaceModel.sql.tableName).toBe("workspace_workspace");
     expect(getColumns(Workspace.Table).vaultRootPath.name).toBe("vault_root_path");
   });
 
