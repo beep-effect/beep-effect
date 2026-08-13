@@ -188,3 +188,17 @@
 - **Disposition:** refreshed the existing exception's line and replaced its
   generated count-only reason with the durable migration-test rationale and
   pointer to the domain's schema-derived property coverage.
+
+## CGF-014 — Generated goal-index drift appeared only in the full lint lane
+
+- **Doing:** completing exact-head Yeet verification after every package check
+  and the repository test-source compiler were green.
+- **Evidence:** the aggregate lint lane failed `goals:index-check` and
+  `knowledge:semantic-delta` because the active closeout packet's manifest was
+  not represented in generated `goals/INDEX.md`; the terminal summary exposed
+  only the aggregate lint failure until the retained substep log was inspected.
+- **Would prevent it:** regenerate and check the goal index whenever a packet
+  manifest is introduced or changes lifecycle state, and surface failing lint
+  substep names directly in the Yeet terminal verdict.
+- **Disposition:** regenerated `goals/INDEX.md` from manifests and proved it with
+  `bun run beep goals index --check` before restarting canonical verification.
