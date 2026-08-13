@@ -106,3 +106,17 @@ evidence, what would have prevented it). Redact for the public repo.
   workflow boundaries, or add an external closeout retry policy that recognizes
   the runner-shutdown signature and retries the failed job once the workflow is
   terminal without laundering the failed attempt into duration percentiles.
+
+## 2026-08-13 — retrying an obsolete run cancels the current-head matrix
+
+- **Doing:** closing PR #684 after rolling `Test Integration` back from the
+  GitHub-hosted experiment to `beep-ec2-heavy`.
+- **Evidence:** current-head run `31726953139` started for the rollback commit,
+  but a targeted retry of pre-rollback run `31723283969` was accepted at
+  17:42:22Z. The shared workflow concurrency group began cancelling every
+  current-head job during checkout at 17:42:24Z, leaving a wall of red checks
+  with no source task having run. Cancelling the obsolete retry was required
+  before publishing a fresh exact-head run.
+- **Would have prevented it:** scope retry automation to the PR's current head
+  SHA and refuse stale-run reruns; alternatively include the head SHA in the
+  concurrency key so a stale diagnostic retry cannot evict current-head proof.
