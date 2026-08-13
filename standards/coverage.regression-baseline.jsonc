@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-13T21:03:53.137Z",
-  "git_sha": "dc5ee3ab94fd2e23bb04a40b86f5fcb8e82655dd",
+  "generated_at": "2026-08-13T21:27:46.065Z",
+  "git_sha": "e62ffc8582173ee4b5048504a4430675794b4715",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -18972,12 +18972,12 @@
       "path": "apps/professional-desktop",
       "lines": 71.51,
       "statements": 70.24,
-      "branches": 64.28,
+      "branches": 63.69,
       "functions": 60.47,
       "uncovered": {
         "lines": 674,
         "statements": 752,
-        "branches": 180,
+        "branches": 183,
         "functions": 453
       },
       "files": {
@@ -19056,12 +19056,12 @@
         "apps/professional-desktop/src/chat/ui/ChatApp.tsx": {
           "lines": 65.21,
           "statements": 62.5,
-          "branches": 75,
+          "branches": 50,
           "functions": 35.71,
           "uncovered": {
             "lines": 8,
             "statements": 9,
-            "branches": 1,
+            "branches": 2,
             "functions": 9
           }
         },
@@ -19128,12 +19128,12 @@
         "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
           "lines": 68.18,
           "statements": 62.5,
-          "branches": 53.84,
+          "branches": 38.46,
           "functions": 30,
           "uncovered": {
             "lines": 7,
             "statements": 9,
-            "branches": 6,
+            "branches": 8,
             "functions": 7
           }
         },
