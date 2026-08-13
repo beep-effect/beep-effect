@@ -79,6 +79,33 @@ export class OnePasswordCliErrorOptions extends S.Class<OnePasswordCliErrorOptio
   })
 ) {}
 
+const OnePasswordCliErrorFields = {
+  cause: S.OptionFromOptionalKey(OnePasswordCliDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Inspectable originating defect, when available.",
+  }),
+  command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Executable command used for the failed 1Password CLI operation, when available.",
+  }),
+  exitCode: S.OptionFromOptionalKey(OnePasswordCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "1Password CLI process exit status, when the process returned one.",
+  }),
+  message: S.NonEmptyString.annotateKey({
+    description: "Redacted human-readable failure summary.",
+  }),
+  operation: S.NonEmptyString.annotateKey({
+    description: "Driver operation that emitted the failure.",
+  }),
+  stderr: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Trim-normalized redacted standard error captured from the 1Password CLI, when available.",
+  }),
+  stdout: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Trim-normalized redacted standard output captured from the 1Password CLI, when available.",
+  }),
+} satisfies S.Struct.Fields;
+const sameOnePasswordCliErrorFields = S.toEquivalence(S.TaggedStruct("OnePasswordCliError", OnePasswordCliErrorFields));
+const sameOnePasswordCliError = (self: OnePasswordCliError, that: OnePasswordCliError): boolean =>
+  sameOnePasswordCliErrorFields(self, that);
+
 /**
  * Technical failure raised by the `@beep/onepassword-cli` driver boundary.
  *
@@ -95,31 +122,13 @@ export class OnePasswordCliErrorOptions extends S.Class<OnePasswordCliErrorOptio
  */
 export class OnePasswordCliError extends S.TaggedError<OnePasswordCliError>($I`OnePasswordCliError`)(
   "OnePasswordCliError",
-  {
-    cause: S.OptionFromOptionalKey(OnePasswordCliDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Executable command used for the failed 1Password CLI operation, when available.",
-    }),
-    exitCode: S.OptionFromOptionalKey(OnePasswordCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "1Password CLI process exit status, when the process returned one.",
-    }),
-    message: S.NonEmptyString.annotateKey({
-      description: "Redacted human-readable failure summary.",
-    }),
-    operation: S.NonEmptyString.annotateKey({
-      description: "Driver operation that emitted the failure.",
-    }),
-    stderr: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Trim-normalized redacted standard error captured from the 1Password CLI, when available.",
-    }),
-    stdout: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Trim-normalized redacted standard output captured from the 1Password CLI, when available.",
-    }),
-  },
-  $I.annote("OnePasswordCliError", {
+  OnePasswordCliErrorFields,
+  $I.annoteClass<
+    S.declare<OnePasswordCliError>,
+    readonly [S.TaggedStruct<"OnePasswordCliError", typeof OnePasswordCliErrorFields>]
+  >("OnePasswordCliError", {
     description: "Redacted technical failure emitted by the 1Password CLI driver.",
+    toEquivalence: () => sameOnePasswordCliError,
   })
 ) {
   /**

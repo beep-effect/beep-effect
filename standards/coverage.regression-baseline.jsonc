@@ -791,15 +791,15 @@
     },
     "@beep/infra": {
       "path": "infra",
-      "lines": 53.17,
-      "statements": 53.5,
+      "lines": 52.94,
+      "statements": 53.27,
       "branches": 36.92,
-      "functions": 53.74,
+      "functions": 53.37,
       "uncovered": {
-        "lines": 332,
-        "statements": 338,
+        "lines": 336,
+        "statements": 342,
         "branches": 41,
-        "functions": 68
+        "functions": 69
       }
     },
     "@beep/langextract": {
@@ -1259,15 +1259,15 @@
     },
     "@beep/practice-kg-mcp": {
       "path": "apps/practice-kg-mcp",
-      "lines": 5.12,
-      "statements": 5,
+      "lines": 5.2,
+      "statements": 5.07,
       "branches": 0,
-      "functions": 4.22,
+      "functions": 4.16,
       "uncovered": {
-        "lines": 259,
-        "statements": 266,
-        "branches": 44,
-        "functions": 68
+        "lines": 255,
+        "statements": 262,
+        "branches": 38,
+        "functions": 69
       }
     },
     "@beep/pretext": {
@@ -1350,15 +1350,15 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 88.11,
-      "statements": 88.21,
-      "branches": 75.59,
-      "functions": 73.93,
+      "lines": 88.13,
+      "statements": 88.27,
+      "branches": 75.74,
+      "functions": 73.96,
       "uncovered": {
-        "lines": 292,
+        "lines": 293,
         "statements": 297,
-        "branches": 155,
-        "functions": 239
+        "branches": 154,
+        "functions": 240
       }
     },
     "@beep/repo-cli": {

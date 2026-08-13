@@ -132,6 +132,24 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
   })
 ) {}
 
+const GovinfoErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Original native or third-party defect when one was available.",
+    })
+  ),
+  reason: GovinfoErrorReason,
+  status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "HTTP response status associated with the GovInfo failure when one was available.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+const sameGovinfoErrorFields = S.toEquivalence(S.TaggedStruct("GovinfoError", GovinfoErrorFields));
+const sameGovinfoError = (self: GovinfoError, that: GovinfoError): boolean => sameGovinfoErrorFields(self, that);
+
 /**
  * Technical failure raised by the GovInfo REST API driver boundary.
  *
@@ -149,24 +167,14 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
  */
 export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
   "GovinfoError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Original native or third-party defect when one was available.",
-      })
-    ),
-    reason: GovinfoErrorReason,
-    status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "HTTP response status associated with the GovInfo failure when one was available.",
-      })
-    ),
-  },
-  $I.annote("GovinfoError", {
-    description: "Redacted technical failure raised by the GovInfo REST API driver boundary.",
-  })
+  GovinfoErrorFields,
+  $I.annoteClass<S.declare<GovinfoError>, readonly [S.TaggedStruct<"GovinfoError", typeof GovinfoErrorFields>]>(
+    "GovinfoError",
+    {
+      description: "Redacted technical failure raised by the GovInfo REST API driver boundary.",
+      toEquivalence: () => sameGovinfoError,
+    }
+  )
 ) {
   /**
    * Create a GovInfo driver error for a reason, optionally carrying a cause and status.
