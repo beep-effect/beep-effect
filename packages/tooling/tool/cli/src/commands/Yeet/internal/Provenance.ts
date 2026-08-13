@@ -61,7 +61,7 @@ const PrProvenancePath = S.String.check(
   })
 );
 
-const forbiddenGitBranchCharacter = /[\u0000-\u0020\u007f~^:?*[\]\\]/u;
+const forbiddenGitBranchCharacter = /[\u0000-\u0020\u007f~^:?*[\\]/u;
 
 /**
  * Git-valid branch name carried by local and public Yeet provenance.
