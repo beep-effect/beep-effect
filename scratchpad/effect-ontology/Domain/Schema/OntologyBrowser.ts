@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils, SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";

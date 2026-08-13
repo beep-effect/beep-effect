@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { GcsObject, OntologyName } from "../Identity.ts";
@@ -205,7 +205,7 @@ const OntologyRegistryJsonDefinition = S.fromJsonString(OntologyRegistry);
  * @since 0.0.0
  */
 export const OntologyRegistryJson = OntologyRegistryJsonDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(OntologyRegistry),
+  toArbitrary: () => S.toArbitrary(OntologyRegistry),
 }).pipe(
   $I.annoteSchema("OntologyRegistryJson", {
     description: "JSON-string codec for a complete validated ontology registry manifest.",
@@ -231,7 +231,7 @@ const OntologyEntryJsonDefinition = S.fromJsonString(OntologyEntry);
  * @since 0.0.0
  */
 export const OntologyEntryJson = OntologyEntryJsonDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(OntologyEntry),
+  toArbitrary: () => S.toArbitrary(OntologyEntry),
 }).pipe(
   $I.annoteSchema("OntologyEntryJson", {
     description: "JSON-string codec for one validated ontology registry entry.",

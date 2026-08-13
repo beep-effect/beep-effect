@@ -3,13 +3,13 @@
   "initiative": {
     "id": "effect-drizzle-graduation",
     "title": "Effect-Drizzle Graduation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-10",
-    "updated": "2026-08-11",
+    "updated": "2026-08-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-drizzle-graduation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Graduate scratchpad/bsl into packages/ecosystem/effect-drizzle: charter the ecosystem package family in the architecture standards (P0 docs PR); move the module with the @effect/vitest harness, the member tstyche lane, and the inverted-import gate (P1); integrate family CI — bundle probe and member-lane wiring (P2).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -57,12 +57,12 @@
     {
       "id": "P1",
       "name": "Package creation: move, harness, gates PR",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Quality integration + closeout PR",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

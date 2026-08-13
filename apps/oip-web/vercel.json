@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && rm -f node_modules/@typescript/typescript-linux-x64/lib/tsc.original.* && npx --yes bun@1.3.14 install",
+  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes bun@1.3.14 install --frozen-lockfile",
   "buildCommand": "cd ../.. && npx --yes bun@1.3.14 run --cwd apps/oip-web build:pwa"
 }

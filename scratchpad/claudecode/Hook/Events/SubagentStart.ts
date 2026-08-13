@@ -23,7 +23,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/SubagentStart");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -49,7 +50,8 @@ export class Input extends S.Class<Input>($I`SubagentStartInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -73,7 +75,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentS
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -101,7 +104,8 @@ export class Output extends S.Class<Output>($I`SubagentStartOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -117,7 +121,8 @@ export const passthrough = (): Output => Output.make();
 /**
  * Constructor for `addContext`.
  *
- * @example
+ * **Example** (Use addContext)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -141,7 +146,8 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -164,15 +170,16 @@ export const define = <E, R>(config: {
 /**
  * Build a SubagentStart hook that only handles matching `agent_type` values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build SubagentStart hook that only handles matching `agent_type` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.SubagentStart.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -194,12 +201,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SubagentStart.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -224,12 +225,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SubagentStart.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -254,12 +249,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SubagentStart.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

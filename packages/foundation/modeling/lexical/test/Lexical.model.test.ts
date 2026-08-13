@@ -300,7 +300,10 @@ describe("Lexical.model", { concurrent: false }, () => {
         expect(decodeEditorState(encodedState)).toEqual(state);
         expect(SerializedEditorState.decodeOption(encodedState)).toEqual(O.some(state));
       }),
-      fcRuns(50)
+      // Pinned at the original 50. Nightly `BEEP_FC_NUM_RUNS=1000` times out at
+      // 300s on unbounded SerializedEditorState trees (#663). Hard `numRuns`
+      // is the one-round-loop seed-exclude form: the env floor cannot raise it.
+      { numRuns: 50 }
     );
   });
 

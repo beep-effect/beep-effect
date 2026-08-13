@@ -3019,9 +3019,11 @@
         "allow": [
           "@beep/dock",
           "@beep/dock-react",
+          "@beep/drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/postgres",
           "@beep/pretext",
           "@beep/rdf",
           "@beep/schema",
@@ -3031,9 +3033,11 @@
         "allowTypeOnly": [
           "@beep/dock",
           "@beep/dock-react",
+          "@beep/drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/postgres",
           "@beep/pretext",
           "@beep/rdf",
           "@beep/schema",

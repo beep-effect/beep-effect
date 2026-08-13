@@ -6,16 +6,21 @@
  * and access members as `Hook.PreToolUse`, `Hook.runMain`, `Hook.dispatch`,
  * `Hook.Context`, `Hook.matchTool`, `Hook.readTranscript`, etc.
  *
- * @since 0.0.0
+ * **Example** (Define a hook through the namespace)
  *
- * @example
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook)
+ * const hook = Hook.PreToolUse.define({
+ *   handler: () => Effect.succeed(Hook.PreToolUse.passthrough())
+ * })
+ *
+ * console.log(hook.event) // "PreToolUse"
  * ```
  *
  * @category utilities
+ * @since 0.0.0
  */
 
 // ---------------------------------------------------------------------------
@@ -39,13 +44,6 @@ export {
 /**
  * Re-exports the ./Hook/Context.ts public surface.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -53,13 +51,6 @@ export {
 export * as Context from "./Hook/Context.ts";
 /**
  * Re-exports the ./Hook/Context.ts public surface.
- *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
  *
  * @category utilities
  *
@@ -84,13 +75,6 @@ export {
 /**
  * Re-exports the ./Hook/Envelope.ts public surface.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -110,13 +94,6 @@ export {
 /**
  * Re-exports the ./Hook/Matcher.ts public surface.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -129,13 +106,6 @@ export { matchTool, testTool } from "./Hook/Matcher.ts";
 
 /**
  * Re-exports the ./Hook/Transcript.ts public surface.
- *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
  *
  * @category utilities
  *
@@ -150,13 +120,6 @@ export { readTranscript } from "./Hook/Transcript.ts";
 /**
  * Re-exports the ./Hook/Bus.ts public surface.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -164,13 +127,6 @@ export { readTranscript } from "./Hook/Transcript.ts";
 export * as Bus from "./Hook/Bus.ts";
 /**
  * Re-exports the ./Hook/Bus.ts public surface.
- *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
  *
  * @category utilities
  *
@@ -185,13 +141,6 @@ export { bus, publish } from "./Hook/Bus.ts";
 /**
  * Re-exports the ./Hook/Tool.ts public surface.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -204,13 +153,6 @@ export * as Tool from "./Hook/Tool.ts";
 
 /**
  * Re-exports the ./Hook/Events/index.ts public surface.
- *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * console.log(Hook)
- * ```
  *
  * @category utilities
  *

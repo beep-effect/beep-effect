@@ -29,7 +29,8 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Validate");
 /**
  * Severity level for plugin issues.
  *
- * @example
+ * **Example** (Use a plugin issue severity)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -48,14 +49,6 @@ export const PluginIssueSeverity = LiteralKit(["error", "warning"]).pipe(
 /**
  * Runtime type represented by {@link PluginIssueSeverity}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const severity: Plugin.PluginIssueSeverity = "warning"
- * console.log(severity)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -64,7 +57,8 @@ export type PluginIssueSeverity = typeof PluginIssueSeverity.Type;
 /**
  * A validation or lint finding for a plugin definition.
  *
- * @example
+ * **Example** (Create a validation issue)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -73,6 +67,8 @@ export type PluginIssueSeverity = typeof PluginIssueSeverity.Type;
  *   severity: "error",
  *   message: "Duplicate command name."
  * })
+ *
+ * console.log(finding.code) // "duplicate-command-name"
  * ```
  *
  * @category models
@@ -92,18 +88,6 @@ export class PluginIssue extends S.Class<PluginIssue>($I`PluginIssue`)(
 
 /**
  * Companion types for {@link PluginIssue}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   code: "duplicate-command-name",
- *   severity: "error",
- *   message: "Duplicate command name."
- * } satisfies Plugin.PluginIssue.Encoded
- * console.log(input.code)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -129,11 +113,14 @@ export declare namespace PluginIssue {
 /**
  * Raised when `Plugin.validate` encounters one or more error-severity issues.
  *
- * @example
+ * **Example** (Create a validation failure)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const error = Plugin.PluginValidationError.make({ issues: [] })
+ *
+ * console.log(error._tag) // "PluginValidationError"
  * ```
  *
  * @category errors
@@ -149,17 +136,6 @@ export class PluginValidationError extends TaggedErrorClass<PluginValidationErro
 
 /**
  * Companion types for {@link PluginValidationError}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   _tag: "PluginValidationError",
- *   issues: []
- * } satisfies Plugin.PluginValidationError.Encoded
- * console.log(input._tag)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -185,7 +161,8 @@ export declare namespace PluginValidationError {
 /**
  * Structured lint report for an in-memory plugin definition.
  *
- * @example
+ * **Example** (Create an empty lint report)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -194,6 +171,8 @@ export declare namespace PluginValidationError {
  *   errors: [],
  *   warnings: []
  * })
+ *
+ * console.log(report.issues.length) // 0
  * ```
  *
  * @category models
@@ -212,18 +191,6 @@ export class PluginLintReport extends S.Class<PluginLintReport>($I`PluginLintRep
 
 /**
  * Companion types for {@link PluginLintReport}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   issues: [],
- *   errors: [],
- *   warnings: []
- * } satisfies Plugin.PluginLintReport.Encoded
- * console.log(input.issues)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -248,14 +215,6 @@ export declare namespace PluginLintReport {
 
 /**
  * Structured on-disk diagnostic report for a plugin root.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const getErrors = (report: Plugin.PluginDoctorReport) => report.errors
- * console.log(getErrors)
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -497,7 +456,8 @@ const validateSkillEntries = (definition: PluginDefinition | LoadedPlugin): Read
 /**
  * Lint a plugin definition and return all errors and warnings without failing.
  *
- * @example
+ * **Example** (Inspect lint)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -617,7 +577,8 @@ export const lint = (definition: PluginDefinition | LoadedPlugin): PluginLintRep
 /**
  * Validate a plugin definition and fail when any error-severity issue is found.
  *
- * @example
+ * **Example** (Inspect validate)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -642,14 +603,18 @@ export const validate = (
 /**
  * Load a plugin directory from disk and return a structured diagnostic report.
  *
- * @example
+ * **Example** (Inspect a plugin doctor Effect)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Plugin.doctor("./my-plugin")
- * console.log(program)
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Reads and decodes the plugin tree through `FileSystem.FileSystem` and `Path.Path`, failing with `PluginLoadError` on invalid sources.
  * @category diagnostics
  * @since 0.0.0
  */

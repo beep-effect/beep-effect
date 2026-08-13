@@ -25,7 +25,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/Stop");
 /**
  * Schema for `BackgroundTask`.
  *
- * @example
+ * **Example** (Inspect the BackgroundTask schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -56,7 +57,8 @@ export class BackgroundTask extends S.Class<BackgroundTask>($I`BackgroundTask`)(
 /**
  * Schema for `SessionCron`.
  *
- * @example
+ * **Example** (Inspect the SessionCron schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -82,7 +84,8 @@ export class SessionCron extends S.Class<SessionCron>($I`SessionCron`)(
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -114,7 +117,8 @@ export class Input extends S.Class<Input>($I`StopInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -138,7 +142,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`StopHookS
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -172,15 +177,16 @@ export class Output extends S.Class<Output>($I`StopOutput`)(
 /**
  * Allow Claude to stop its turn (the default).
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.Stop.allowStop)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const allowStop = (): Output => Output.make();
 
@@ -188,22 +194,24 @@ export const allowStop = (): Output => Output.make();
  * Force Claude to continue responding by emitting `decision: "block"`.
  * The `reason` is fed back to Claude as instructions for the continuation.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.Stop.block)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
  * Constructor for `addContext`.
  *
- * @example
+ * **Example** (Use addContext)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -231,7 +239,8 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -257,12 +266,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Stop.BackgroundTask.Encoded
- * ```
  */
 export declare namespace BackgroundTask {
   /**
@@ -287,12 +290,6 @@ export declare namespace BackgroundTask {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Stop.SessionCron.Encoded
- * ```
  */
 export declare namespace SessionCron {
   /**
@@ -317,12 +314,6 @@ export declare namespace SessionCron {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Stop.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -347,12 +338,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Stop.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -377,12 +362,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.Stop.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

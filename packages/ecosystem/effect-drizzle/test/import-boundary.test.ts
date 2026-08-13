@@ -16,6 +16,7 @@ import {
   ScriptTarget,
   SyntaxKind,
 } from "typescript";
+import { buildBundleConsumer } from "./bundle-build.ts";
 import type { Node } from "typescript";
 
 interface ModuleEdge {
@@ -173,30 +174,19 @@ describe("dialect import boundaries", () => {
   );
 });
 
-// Bun.build only exists under the Bun runtime; the coverage lane runs Vitest
-// on Node, where this suite must skip rather than fail. Bun-driven unit runs
-// keep proving bundle isolation.
-const hasBunBuild = typeof Bun !== "undefined" && typeof Bun.build === "function";
-
-describe.runIf(hasBunBuild)("bundle isolation", () => {
+describe("bundle isolation", () => {
   it.effect(
     "drops unrelated PostgreSQL column families and SQLite from an integer import",
     fnUntraced(function* () {
-      const result = yield* tryPromise(() =>
-        Bun.build({
-          entrypoints: [new URL("./bundle-pg-integer.consumer.ts", import.meta.url).pathname],
-          format: "esm",
-          minify: true,
-          target: "bun",
-        })
-      );
-      const outputs = yield* tryPromise(() => Promise.all(result.outputs.map((output) => output.text())));
-      const output = outputs.join("");
-      expect(result.success).toBe(true);
-      expect(outputs).toHaveLength(1);
-      expect(output).not.toContain("Custom-column identity must agree");
-      expect(output).not.toContain("Timestamp identity must agree");
-      expect(output).not.toContain("timestamp_ms");
+      const artifact = yield* tryPromise(buildBundleConsumer);
+      // A vacuous stub (the Bun.build shaker failure mode) cannot pass:
+      // the bundle must carry the real integer implementation.
+      expect(artifact.rawBytes).toBeGreaterThan(1000);
+      expect(artifact.text).toContain("integer");
+      expect(artifact.text).not.toContain("Custom-column identity must agree");
+      expect(artifact.text).not.toContain("Timestamp identity must agree");
+      expect(artifact.text).not.toContain("timestamp_ms");
+      expect(artifact.text).not.toContain("sqlite");
     })
   );
 });

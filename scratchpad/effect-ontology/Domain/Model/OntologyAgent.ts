@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Num from "effect/Number";
@@ -90,8 +90,8 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
  * @since 0.0.0
  */
 export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(OntologyAgentConfigFields)).map((fields) => OntologyAgentConfigModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(OntologyAgentConfigFields))(fc).map((fields) => OntologyAgentConfigModel.make(fields)),
 }).pipe(
   $I.annoteSchema("OntologyAgentConfig", {
     description: "Complete schema-defaulted policy for ontology-agent operations.",
@@ -183,8 +183,8 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
  * @since 0.0.0
  */
 export const ExtractionMetrics = ExtractionMetricsModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ExtractionMetricsFields)).map((fields) => ExtractionMetricsModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ExtractionMetricsFields))(fc).map((fields) => ExtractionMetricsModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ExtractionMetrics", {
     description: "Non-negative extraction counts, token use, elapsed duration, and optional run identity.",
@@ -330,8 +330,8 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
  * @since 0.0.0
  */
 export const ExtractionResult = ExtractionResultModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ExtractionResultFields)).map((fields) => ExtractionResultModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ExtractionResultFields))(fc).map((fields) => ExtractionResultModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ExtractionResult", {
     description: "Knowledge graph, metrics, optional Turtle, and optional SHACL validation report.",
@@ -412,8 +412,10 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
  * @since 0.0.0
  */
 export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsOptionsFields)).map((fields) => ExtractWithClaimsOptionsModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ExtractWithClaimsOptionsFields))(fc).map((fields) =>
+      ExtractWithClaimsOptionsModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
@@ -534,8 +536,10 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
  * @since 0.0.0
  */
 export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsResultFields)).map((fields) => ExtractWithClaimsResultModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ExtractWithClaimsResultFields))(fc).map((fields) =>
+      ExtractWithClaimsResultModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsResult", {
     description: "Extraction result extended with claim count and source-article provenance.",
@@ -588,7 +592,8 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
  * @since 0.0.0
  */
 export const QueryBinding = QueryBindingModel.annotate({
-  toArbitrary: () => () => S.toArbitrary(S.Struct(QueryBindingFields)).map((fields) => QueryBindingModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(QueryBindingFields))(fc).map((fields) => QueryBindingModel.make(fields)),
 }).pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
@@ -676,7 +681,8 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  * @since 0.0.0
  */
 export const QueryResult = QueryResultModel.annotate({
-  toArbitrary: () => () => S.toArbitrary(S.Struct(QueryResultFields)).map((fields) => QueryResultModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(QueryResultFields))(fc).map((fields) => QueryResultModel.make(fields)),
 }).pipe(
   $I.annoteSchema("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
@@ -733,8 +739,8 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
  * @since 0.0.0
  */
 export const ReasoningResult = ReasoningResultModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ReasoningResultFields)).map((fields) => ReasoningResultModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ReasoningResultFields))(fc).map((fields) => ReasoningResultModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ReasoningResult", {
     description: "Inferred-triple count, applied reasoning rules, and elapsed duration.",
@@ -835,8 +841,8 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
  * @since 0.0.0
  */
 export const ViolationsByLevel = ViolationsByLevelModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ViolationsByLevelFields)).map((fields) => ViolationsByLevelModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ViolationsByLevelFields))(fc).map((fields) => ViolationsByLevelModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ViolationsByLevel", {
     description: "SHACL diagnostics partitioned by standard severity.",
@@ -907,8 +913,8 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
  * @since 0.0.0
  */
 export const ViolationExplanation = ViolationExplanationModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ViolationExplanationFields)).map((fields) => ViolationExplanationModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ViolationExplanationFields))(fc).map((fields) => ViolationExplanationModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ViolationExplanation", {
     description: "Explainable SHACL diagnostic with focus, path, severity, and optional correction.",
@@ -1044,8 +1050,10 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
  * @since 0.0.0
  */
 export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(EnhancedValidationReportFields)).map((fields) => EnhancedValidationReportModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(EnhancedValidationReportFields))(fc).map((fields) =>
+      EnhancedValidationReportModel.make(fields)
+    ),
 }).pipe(
   $I.annoteSchema("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",

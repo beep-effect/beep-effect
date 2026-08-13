@@ -1,7 +1,8 @@
 /**
  * Human curation commands and their resulting events/jobs.
  *
- * @remarks
+ * **Details**
+ *
  * Actions, events, and jobs are schema-backed tagged unions. Status-specific
  * values are nested so impossible combinations of optional correction fields
  * cannot leak into curation behavior.
@@ -9,7 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
@@ -102,147 +103,219 @@ const CurationActionDefinition = S.TaggedUnion({
 /**
  * Replace one incorrect claim with a complete canonical RDF triple.
  *
- * @example
+ * **Example** (Decode a complete correction)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { CorrectTripleAction } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * const makeCorrection = CorrectTripleAction.make
- * console.log(makeCorrection)
+ * const action = S.decodeUnknownOption(CorrectTripleAction)({
+ *   _tag: "CorrectTripleAction",
+ *   ontologyId: "claims",
+ *   originalClaimId: "claim-abc123def456",
+ *   replacement: {
+ *     subject: "https://example.org/person/alice",
+ *     predicate: "https://schema.org/name",
+ *     object: "https://example.org/name/alice"
+ *   }
+ * })
+ * console.log(O.isSome(action)) // true
  * ```
  *
  * @invariant Replacement subject, predicate, and object are all present.
- * @category actions
+ * @category commands
  * @since 0.0.0
  */
 export const CorrectTripleAction = CurationActionDefinition.cases.CorrectTripleAction.pipe(
   $I.annoteSchema("CorrectTripleAction", {
     description: "Curation command that replaces an incorrect claim with a complete canonical RDF triple.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition.cases.CorrectTripleAction),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.CorrectTripleAction),
   })
 );
 
 /**
+ * Runtime correction command decoded by {@link CorrectTripleAction}.
+ *
+ * @see {@link CorrectTripleAction} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CorrectTripleAction = typeof CorrectTripleAction.Type;
+/**
  * Deprecate a claim without supplying a replacement.
  *
- * @example
+ * **Example** (Decode a claim deprecation)
+ *
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { MarkAsWrongAction } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * const action = S.decodeUnknownSync(MarkAsWrongAction)({
+ * const action = S.decodeUnknownOption(MarkAsWrongAction)({
+ *   _tag: "MarkAsWrongAction",
  *   ontologyId: "claims",
  *   claimId: "claim-abc123def456"
  * })
- * console.log(action.storeAsNegativeExample) // true
+ * console.log(O.isSome(action)) // true
  * ```
  *
- * @category actions
+ * @category commands
  * @since 0.0.0
  */
 export const MarkAsWrongAction = CurationActionDefinition.cases.MarkAsWrongAction.pipe(
   $I.annoteSchema("MarkAsWrongAction", {
     description: "Curation command that deprecates an incorrect claim and optionally records a negative example.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition.cases.MarkAsWrongAction),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.MarkAsWrongAction),
   })
 );
 
 /**
+ * Runtime deprecation command decoded by {@link MarkAsWrongAction}.
+ *
+ * @see {@link MarkAsWrongAction} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MarkAsWrongAction = typeof MarkAsWrongAction.Type;
+
+/**
  * Attach a surface-form alias to a canonical RDF entity.
  *
- * @example
+ * **Example** (Decode an alias command)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { AddAliasAction } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * const makeAlias = AddAliasAction.make
- * console.log(makeAlias)
+ * const action = S.decodeUnknownOption(AddAliasAction)({
+ *   _tag: "AddAliasAction",
+ *   ontologyId: "claims",
+ *   canonicalEntity: "https://example.org/person/alice",
+ *   aliasMention: "Alice"
+ * })
+ * console.log(O.isSome(action)) // true
  * ```
  *
- * @category actions
+ * @category commands
  * @since 0.0.0
  */
 export const AddAliasAction = CurationActionDefinition.cases.AddAliasAction.pipe(
   $I.annoteSchema("AddAliasAction", {
     description: "Curation command that attaches a surface-form alias to a canonical RDF entity.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition.cases.AddAliasAction),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.AddAliasAction),
   })
 );
-
+/**
+ * Runtime alias command decoded by {@link AddAliasAction}.
+ *
+ * @see {@link AddAliasAction} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AddAliasAction = typeof AddAliasAction.Type;
 /**
  * Promote a claim to preferred rank.
  *
- * @example
+ * **Example** (Decode a preferred-rank promotion)
+ *
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { PromoteToPreferredAction } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * const action = S.decodeUnknownSync(PromoteToPreferredAction)({
+ * const action = S.decodeUnknownOption(PromoteToPreferredAction)({
+ *   _tag: "PromoteToPreferredAction",
  *   ontologyId: "claims",
  *   claimId: "claim-abc123def456"
  * })
- * console.log(action._tag) // "PromoteToPreferredAction"
+ * console.log(O.isSome(action)) // true
  * ```
  *
- * @category actions
+ * @category commands
  * @since 0.0.0
  */
 export const PromoteToPreferredAction = CurationActionDefinition.cases.PromoteToPreferredAction.pipe(
   $I.annoteSchema("PromoteToPreferredAction", {
     description: "Curation command that promotes a claim to preferred rank.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition.cases.PromoteToPreferredAction),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.PromoteToPreferredAction),
   })
 );
-
+/**
+ * Runtime promotion command decoded by {@link PromoteToPreferredAction}.
+ *
+ * @see {@link PromoteToPreferredAction} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PromoteToPreferredAction = typeof PromoteToPreferredAction.Type;
 /**
  * Confirm an owl:sameAs link between a canonical entity and Wikidata.
  *
- * @example
+ * **Example** (Decode a Wikidata link)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { LinkToWikidataAction } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * const makeLink = LinkToWikidataAction.make
- * console.log(makeLink)
+ * const action = S.decodeUnknownOption(LinkToWikidataAction)({
+ *   _tag: "LinkToWikidataAction",
+ *   ontologyId: "claims",
+ *   canonicalEntity: "https://example.org/person/alice",
+ *   wikidataQid: "Q42"
+ * })
+ * console.log(O.isSome(action)) // true
  * ```
  *
- * @category actions
+ * @category commands
  * @since 0.0.0
  */
 export const LinkToWikidataAction = CurationActionDefinition.cases.LinkToWikidataAction.pipe(
   $I.annoteSchema("LinkToWikidataAction", {
     description: "Curation command that confirms an owl:sameAs link to one Wikidata item.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition.cases.LinkToWikidataAction),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.LinkToWikidataAction),
   })
 );
-
+/**
+ * Runtime Wikidata-link command decoded by {@link LinkToWikidataAction}.
+ *
+ * @see {@link LinkToWikidataAction} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkToWikidataAction = typeof LinkToWikidataAction.Type;
 /**
  * Tagged union of every supported human curation action.
  *
- * @example
+ * **Example** (Decode any curation action)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { CurationActionSchema } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(Object.keys(CurationActionSchema.cases).length) // 5
+ * const action = S.decodeUnknownOption(CurationActionSchema)({
+ *   _tag: "PromoteToPreferredAction",
+ *   ontologyId: "claims",
+ *   claimId: "claim-abc123def456"
+ * })
+ * console.log(O.isSome(action)) // true
  * ```
  *
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const CurationActionSchema = CurationActionDefinition.pipe(
   $I.annoteSchema("CurationAction", {
     description: "Tagged union of claim correction, deprecation, aliasing, promotion, and Wikidata-link actions.",
-    toArbitrary: () => () => S.toArbitrary(CurationActionDefinition),
+    toArbitrary: () => S.toArbitrary(CurationActionDefinition),
   })
 );
 
 /**
  * Runtime action decoded by {@link CurationActionSchema}.
- *
- * @example
- * ```ts
- * import type { CurationAction } from "@effect-ontology/Schema/CurationAction.ts"
- *
- * const actionName = (action: CurationAction) => action._tag
- * console.log(actionName)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -289,11 +362,22 @@ const CurationEventDefinition = S.TaggedUnion({
 /**
  * Event emitted after a claim correction is applied.
  *
- * @example
+ * **Example** (Decode a correction event)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { ClaimCorrectedEvent } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(ClaimCorrectedEvent.make)
+ * const event = S.decodeUnknownOption(ClaimCorrectedEvent)({
+ *   _tag: "ClaimCorrectedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   originalClaimId: "claim-abc123def456",
+ *   newClaimId: "claim-def456abc123",
+ *   correctionId: "correction-1"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category events
@@ -302,18 +386,27 @@ const CurationEventDefinition = S.TaggedUnion({
 export const ClaimCorrectedEvent = CurationEventDefinition.cases.ClaimCorrectedEvent.pipe(
   $I.annoteSchema("ClaimCorrectedEvent", {
     description: "Domain event emitted after a claim correction is applied successfully.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition.cases.ClaimCorrectedEvent),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimCorrectedEvent),
   })
 );
 
 /**
  * Event emitted after a claim is deprecated.
  *
- * @example
+ * **Example** (Decode a deprecation event)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { ClaimDeprecatedEvent } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(ClaimDeprecatedEvent.make)
+ * const event = S.decodeUnknownOption(ClaimDeprecatedEvent)({
+ *   _tag: "ClaimDeprecatedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   claimId: "claim-abc123def456"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category events
@@ -322,18 +415,29 @@ export const ClaimCorrectedEvent = CurationEventDefinition.cases.ClaimCorrectedE
 export const ClaimDeprecatedEvent = CurationEventDefinition.cases.ClaimDeprecatedEvent.pipe(
   $I.annoteSchema("ClaimDeprecatedEvent", {
     description: "Domain event emitted after an incorrect claim is deprecated.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition.cases.ClaimDeprecatedEvent),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimDeprecatedEvent),
   })
 );
 
 /**
  * Event emitted after an entity alias is added.
  *
- * @example
+ * **Example** (Decode an alias-added event)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { AliasAddedEvent } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(AliasAddedEvent.make)
+ * const event = S.decodeUnknownOption(AliasAddedEvent)({
+ *   _tag: "AliasAddedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   canonicalEntity: "https://example.org/person/alice",
+ *   aliasMention: "Alice",
+ *   aliasId: "alias-1"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category events
@@ -342,18 +446,27 @@ export const ClaimDeprecatedEvent = CurationEventDefinition.cases.ClaimDeprecate
 export const AliasAddedEvent = CurationEventDefinition.cases.AliasAddedEvent.pipe(
   $I.annoteSchema("AliasAddedEvent", {
     description: "Domain event emitted after a surface-form alias is attached to an entity.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition.cases.AliasAddedEvent),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.AliasAddedEvent),
   })
 );
 
 /**
  * Event emitted after a claim is promoted.
  *
- * @example
+ * **Example** (Decode a promotion event)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { ClaimPromotedEvent } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(ClaimPromotedEvent.make)
+ * const event = S.decodeUnknownOption(ClaimPromotedEvent)({
+ *   _tag: "ClaimPromotedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   claimId: "claim-abc123def456"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category events
@@ -362,18 +475,28 @@ export const AliasAddedEvent = CurationEventDefinition.cases.AliasAddedEvent.pip
 export const ClaimPromotedEvent = CurationEventDefinition.cases.ClaimPromotedEvent.pipe(
   $I.annoteSchema("ClaimPromotedEvent", {
     description: "Domain event emitted after a claim is promoted to preferred rank.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition.cases.ClaimPromotedEvent),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimPromotedEvent),
   })
 );
 
 /**
  * Event emitted after a Wikidata link is confirmed.
  *
- * @example
+ * **Example** (Decode an entity-link event)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { EntityLinkedEvent } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(EntityLinkedEvent.make)
+ * const event = S.decodeUnknownOption(EntityLinkedEvent)({
+ *   _tag: "EntityLinkedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   canonicalEntity: "https://example.org/person/alice",
+ *   wikidataQid: "Q42"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category events
@@ -382,41 +505,41 @@ export const ClaimPromotedEvent = CurationEventDefinition.cases.ClaimPromotedEve
 export const EntityLinkedEvent = CurationEventDefinition.cases.EntityLinkedEvent.pipe(
   $I.annoteSchema("EntityLinkedEvent", {
     description: "Domain event emitted after an entity is linked to a Wikidata item.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition.cases.EntityLinkedEvent),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.EntityLinkedEvent),
   })
 );
 
 /**
  * Tagged union of events emitted by curation actions.
  *
- * @example
- * ```ts
- * import type { CurationEvent } from "@effect-ontology/Schema/CurationAction.ts"
+ * **Example** (Decode any curation event)
  *
- * const eventName = (event: CurationEvent) => event._tag
- * console.log(eventName)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CurationEvent } from "@effect-ontology/Schema/CurationAction.ts"
+ *
+ * const event = S.decodeUnknownOption(CurationEvent)({
+ *   _tag: "ClaimPromotedEvent",
+ *   ontologyId: "claims",
+ *   timestamp: "2026-08-11T12:00:00.000Z",
+ *   claimId: "claim-abc123def456"
+ * })
+ * console.log(O.isSome(event)) // true
  * ```
  *
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const CurationEvent = CurationEventDefinition.pipe(
   $I.annoteSchema("CurationEvent", {
     description: "Tagged union of events emitted after successful curation actions.",
-    toArbitrary: () => () => S.toArbitrary(CurationEventDefinition),
+    toArbitrary: () => S.toArbitrary(CurationEventDefinition),
   })
 );
 
 /**
  * Runtime event decoded by {@link CurationEvent}.
- *
- * @example
- * ```ts
- * import type { CurationEvent as CurationEventValue } from "@effect-ontology/Schema/CurationAction.ts"
- *
- * const eventName = (event: CurationEventValue) => event._tag
- * console.log(eventName)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -439,74 +562,92 @@ const CurationJobDefinition = S.TaggedUnion({
 /**
  * Re-embed a canonical entity after curation changes its aliases.
  *
- * @example
+ * **Example** (Decode an embedding job)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { EmbeddingJob } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(EmbeddingJob.make)
+ * const job = S.decodeUnknownOption(EmbeddingJob)({
+ *   _tag: "EmbeddingJob",
+ *   ontologyId: "claims",
+ *   canonicalEntityId: "entity-1",
+ *   reason: "alias added"
+ * })
+ * console.log(O.isSome(job)) // true
  * ```
  *
- * @category jobs
+ * @category processes
  * @since 0.0.0
  */
 export const EmbeddingJob = CurationJobDefinition.cases.EmbeddingJob.pipe(
   $I.annoteSchema("EmbeddingJob", {
     description: "Asynchronous curation job that re-embeds a canonical entity.",
-    toArbitrary: () => () => S.toArbitrary(CurationJobDefinition.cases.EmbeddingJob),
+    toArbitrary: () => S.toArbitrary(CurationJobDefinition.cases.EmbeddingJob),
   })
 );
 
 /**
  * Update the prompt cache with a curated example.
  *
- * @example
+ * **Example** (Decode a prompt-cache job)
+ *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { PromptCacheJob } from "@effect-ontology/Schema/CurationAction.ts"
  *
- * console.log(PromptCacheJob.make)
+ * const job = S.decodeUnknownOption(PromptCacheJob)({
+ *   _tag: "PromptCacheJob",
+ *   ontologyId: "claims",
+ *   exampleId: "example-1",
+ *   isNegative: false
+ * })
+ * console.log(O.isSome(job)) // true
  * ```
  *
- * @category jobs
+ * @category processes
  * @since 0.0.0
  */
 export const PromptCacheJob = CurationJobDefinition.cases.PromptCacheJob.pipe(
   $I.annoteSchema("PromptCacheJob", {
     description: "Asynchronous curation job that updates the prompt example cache.",
-    toArbitrary: () => () => S.toArbitrary(CurationJobDefinition.cases.PromptCacheJob),
+    toArbitrary: () => S.toArbitrary(CurationJobDefinition.cases.PromptCacheJob),
   })
 );
 
 /**
  * Tagged union of asynchronous jobs requested by curation.
  *
- * @example
- * ```ts
- * import type { CurationJob } from "@effect-ontology/Schema/CurationAction.ts"
+ * **Example** (Decode any curation job)
  *
- * const jobName = (job: CurationJob) => job._tag
- * console.log(jobName)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CurationJob } from "@effect-ontology/Schema/CurationAction.ts"
+ *
+ * const job = S.decodeUnknownOption(CurationJob)({
+ *   _tag: "EmbeddingJob",
+ *   ontologyId: "claims",
+ *   canonicalEntityId: "entity-1",
+ *   reason: "alias added"
+ * })
+ * console.log(O.isSome(job)) // true
  * ```
  *
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const CurationJob = CurationJobDefinition.pipe(
   $I.annoteSchema("CurationJob", {
     description: "Tagged union of embedding and prompt-cache work requested by curation.",
-    toArbitrary: () => () => S.toArbitrary(CurationJobDefinition),
+    toArbitrary: () => S.toArbitrary(CurationJobDefinition),
   })
 );
 
 /**
  * Runtime job decoded by {@link CurationJob}.
- *
- * @example
- * ```ts
- * import type { CurationJob as CurationJobValue } from "@effect-ontology/Schema/CurationAction.ts"
- *
- * const jobName = (job: CurationJobValue) => job._tag
- * console.log(jobName)
- * ```
  *
  * @category type-level
  * @since 0.0.0
