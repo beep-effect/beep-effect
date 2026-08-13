@@ -79,7 +79,7 @@ Exact packages and role-files (role-suffix order:
 | `ClaimProjection` pure fn | `packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts` | post-contract helper | NET-NEW |
 | Slice composition / Layer surface | `packages/epistemic/server/src/...` | server tier | NET-NEW (thin) |
 | Bounded SHACL engine | `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`, `ShaclValidationResult`, `ShaclValidationViolation`) | engine brick | HAVE |
-| Provenance vocabulary | `@beep/semantic-web/services/provenance` + `@beep/rdf/Vocab/Prov` | PROV-O | HAVE |
+| Provenance vocabulary | `@beep/rdf/Vocab/Prov` | PROV-O | HAVE |
 | Evidence selector reference | `@beep/semantic-web/evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | offset shape reference | HAVE |
 
 The `use-cases` and `server` tiers are **new tiers inside the existing

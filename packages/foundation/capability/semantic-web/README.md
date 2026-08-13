@@ -1,7 +1,7 @@
 # @beep/semantic-web
 
-Semantic-web capability package for JSON-LD, SHACL/SPARQL service contracts,
-IRI/URI helpers, and compatibility surfaces.
+Semantic-web capability package for SHACL/SPARQL/canonicalization service
+contracts, IRI/URI helpers, and compatibility surfaces.
 
 Canonical RDF value models, PROV-O models, evidence anchors, and Web Annotation
 DTOs live in `@beep/rdf`. RDF Dataset Canonicalization lives in the driver
@@ -13,16 +13,14 @@ package `@beep/rdf-canonize`.
 - `@beep/semantic-web/uri`
 - `@beep/semantic-web/jsonld`
 - `@beep/semantic-web/services/*`
-- `@beep/semantic-web/adapters/jsonld-context`
-- `@beep/semantic-web/adapters/jsonld-document`
 - compatibility shims for `@beep/semantic-web/prov`, `@beep/semantic-web/evidence`, and `@beep/semantic-web/adapters/web-annotation`
 
 ## Canonical Imports
 
 ```ts
 import { IRI } from "@beep/semantic-web/iri"
-import { JsonLdDocument } from "@beep/semantic-web/jsonld"
-import { JsonLdDocumentService } from "@beep/semantic-web/services/jsonld-document"
+import { SparqlQueryService } from "@beep/semantic-web/services/sparql-query"
+import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation"
 import { ProvBundle, EvidenceAnchor, makeQuad } from "@beep/rdf"
 ```
 

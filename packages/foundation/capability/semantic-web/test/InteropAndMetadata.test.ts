@@ -5,9 +5,6 @@ import * as JsonLdModule from "@beep/semantic-web/jsonld";
 import * as ProvModule from "@beep/semantic-web/prov";
 import { getSemanticSchemaMetadata } from "@beep/semantic-web/semantic-schema-metadata";
 import * as CanonicalizationServiceModule from "@beep/semantic-web/services/canonicalization";
-import * as JsonLdDocumentServiceModule from "@beep/semantic-web/services/jsonld-document";
-import * as JsonLdStreamParseServiceModule from "@beep/semantic-web/services/jsonld-stream-parse";
-import * as JsonLdStreamSerializeServiceModule from "@beep/semantic-web/services/jsonld-stream-serialize";
 import * as ShaclValidationServiceModule from "@beep/semantic-web/services/shacl-validation";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -34,11 +31,6 @@ const auditModules = [
     name: "prov",
   },
   {
-    exclude: new Set(["JsonLdDocumentErrorReason", "JsonLdDocumentNormalizationProfile"]),
-    exports: JsonLdDocumentServiceModule,
-    name: "services/jsonld-document",
-  },
-  {
     exclude: new Set(["CanonicalizationAlgorithm"]),
     exports: CanonicalizationServiceModule,
     name: "services/canonicalization",
@@ -47,16 +39,6 @@ const auditModules = [
     exclude: new Set(["ShaclSeverity"]),
     exports: ShaclValidationServiceModule,
     name: "services/shacl-validation",
-  },
-  {
-    exclude: new Set(["JsonLdStreamMode", "JsonLdStreamParseErrorReason", "JsonLdStreamParseInput"]),
-    exports: JsonLdStreamParseServiceModule,
-    name: "services/jsonld-stream-parse",
-  },
-  {
-    exclude: new Set(["JsonLdStreamSerializeErrorReason"]),
-    exports: JsonLdStreamSerializeServiceModule,
-    name: "services/jsonld-stream-serialize",
   },
   {
     exclude: new Set(["WebAnnotationSelector"]),

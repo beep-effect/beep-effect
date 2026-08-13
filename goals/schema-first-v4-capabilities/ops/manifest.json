@@ -94,7 +94,6 @@
     "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
     "packages/foundation/capability/nlp/test/Graph/Schema.test.ts",
     "packages/foundation/capability/nlp/test/PatternCore.test.ts",
-    "packages/foundation/capability/semantic-web/test/JsonLd.test.ts",
     "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
     "packages/foundation/modeling/schema/test/Sha256.test.ts",
     "packages/foundation/modeling/schema/test/Email.test.ts",
