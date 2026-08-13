@@ -231,7 +231,7 @@ describe("Frontmatter.parse*File", () => {
   it.effect("parseCommandFile decodes the command frontmatter schema", () =>
     Effect.gen(function* () {
       const result = yield* Parser.parseCommandFile("/commands/review.md");
-      expect(result.frontmatter).toBeInstanceOf(Command.CommandFrontmatter);
+      expect(result.frontmatter).toBeInstanceOf(Command.CommandFrontmatter_);
       expect(result.frontmatter).toMatchObject({
         description: O.some("Review staged diffs"),
         model: O.some("claude-sonnet-4-6"),
@@ -275,7 +275,7 @@ describe("Frontmatter.parse*File", () => {
   it.effect("parseOutputStyleFile decodes the output-style frontmatter schema", () =>
     Effect.gen(function* () {
       const result = yield* Parser.parseOutputStyleFile("/output-styles/terse.md");
-      expect(result.frontmatter).toBeInstanceOf(OutputStyle.OutputStyleFrontmatter);
+      expect(result.frontmatter).toBeInstanceOf(OutputStyle.OutputStyleFrontmatter_);
       expect(result.frontmatter).toMatchObject({
         name: O.some("terse"),
         description: O.some("Keep responses compact"),

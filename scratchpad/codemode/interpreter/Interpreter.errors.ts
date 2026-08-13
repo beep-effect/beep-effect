@@ -113,10 +113,12 @@ export const caughtErrorValue = (thrown: unknown): unknown =>
   );
 
 /** Constructs one guest Error value. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
   createErrorValue(name, P.isUndefined(args[0]) ? "" : coerceToString(args[0]));
 
 /** Constructs one guest AggregateError value. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const constructAggregateErrorValue = <R>(
   runner: SyncIteratorRunner<R>,
   args: ReadonlyArray<unknown>,

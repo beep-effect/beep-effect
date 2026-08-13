@@ -132,6 +132,7 @@ export const isSupportedCallback = (value: unknown): value is SupportedCallback 
   // new-requiring constructors throw a TypeError. Math/JSON/console stay non-callable.
   (!RuntimeReference.guards.GlobalNamespace(value) || typeofValue(value) === "function");
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeIntrinsic = <R>(
   runner: CallbackRunner<R>,
   ref: IntrinsicReference,
@@ -222,6 +223,7 @@ const coerceNumericArgument = <R>(
   });
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
   const unavailable = (namespace: string, name: string): never => {
     throw InterpreterRuntimeError.new(`${namespace}.${name} is not available.`, node);
@@ -455,6 +457,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   );
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeArrayFrom = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   args: Array<unknown>,
@@ -490,6 +493,7 @@ export const invokeArrayFrom = <R>(
   });
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeGroupBy = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   namespace: "Map" | "Object",
@@ -648,6 +652,7 @@ const invokeStringReplacer = <R>(
   });
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const applyCollectionCallback = <R>(
   runner: CallbackRunner<R>,
   callback: unknown,

@@ -10,7 +10,7 @@ import {
 } from "../../../Domain/Model/OutputType.ts";
 
 describe("effect-ontology output artifact taxonomy", () => {
-  it("derives warning-free arbitraries for output types and filenames", () => {
+  it("derives arbitraries for output types and filenames", () => {
     for (const schema of [OutputType, OutputFilename]) {
       const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
