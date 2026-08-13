@@ -14,7 +14,7 @@ import { Effect, Layer } from "effect";
  * **Example** (Run a program when the module is the entrypoint)
  *
  * ```ts
- * import { runEntrypoint } from "@beep/practice-kg-mcp/entrypoint"
+ * import { runEntrypoint } from "../../src/entrypoint.ts"
  * import { Effect } from "effect"
  *
  * runEntrypoint({ isMain: false, program: Effect.void })
