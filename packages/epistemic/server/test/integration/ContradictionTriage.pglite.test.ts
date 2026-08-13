@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { CandidateClaim, ContradictionCandidate, Evidence, EvidenceVerification } from "@beep/epistemic-domain";
-import * as ContradictionIdentity from "@beep/epistemic-domain/identity/Epistemic";
 import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values";
 import {
   BeliefVersionRef,
@@ -48,6 +47,7 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import * as ContradictionIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import {

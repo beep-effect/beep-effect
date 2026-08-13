@@ -24,11 +24,11 @@ import { $EpistemicDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { identity, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import * as Epistemic from "../../identity/Epistemic.ts";
 import type { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction";
 
 const $I = $EpistemicDomainId.create("entities/Contradiction/Contradiction.model");

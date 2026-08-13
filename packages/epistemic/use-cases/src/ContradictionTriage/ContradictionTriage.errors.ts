@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

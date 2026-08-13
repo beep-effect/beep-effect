@@ -1,5 +1,4 @@
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   ListQueuedSyncOperationsForItemInput,
@@ -11,6 +10,8 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { NonNegativeInt } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -59,7 +60,7 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
   });
 
 const syncOperationRow = (seed: SyncOperationSeed, id: number) => ({
-  ...baseEntityFixtureInput(DomainSyncOperation.SyncOperationId.entityType, id),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, id),
   attemptCount: seed.attemptCount,
   idempotencyKey: seed.idempotencyKey,
   inputContentDigest: O.getOrNull(seed.inputContentDigest),

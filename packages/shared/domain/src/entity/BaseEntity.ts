@@ -11,7 +11,7 @@ import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Shared from "../identity/Shared.ts";
+import * as Shared from "../identity/Shared/index.ts";
 import { Principal } from "./Principal.ts";
 import * as PublicEntityId from "./PublicEntityId.ts";
 import { SourceKind } from "./SourceKind.ts";

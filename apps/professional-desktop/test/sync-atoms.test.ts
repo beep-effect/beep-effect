@@ -1,5 +1,5 @@
-import { SyncConflictId } from "@beep/documents-domain/entities/SyncConflict";
 import { VaultSyncActionError } from "@beep/documents-use-cases/public";
+import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@effect/vitest";
 import { Deferred, Duration, Effect, Equal, Layer, Ref, Schedule } from "effect";

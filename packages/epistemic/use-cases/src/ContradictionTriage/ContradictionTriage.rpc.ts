@@ -8,7 +8,6 @@
 import { ContradictionCandidate, ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -16,6 +15,7 @@ import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnch
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import { identity, Number as N } from "effect";
 import * as S from "effect/Schema";

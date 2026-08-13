@@ -7,9 +7,9 @@
  */
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabTablesId } from "@beep/identity/packages";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -65,7 +65,7 @@ export const workItemTable = pgTable(WORK_ITEM_TABLE_NAME, {
   id: text("id").primaryKey().$type<DomainWorkItem.WorkItemId>(),
   title: text("title").notNull().$type<DomainWorkItem.WorkItemTitle>(),
   status: text("status").notNull().$type<DomainWorkItem.WorkItemStatus>(),
-  assigneeId: integer("assignee_id").$type<DomainWorker.WorkerId>(),
+  assigneeId: integer("assignee_id").$type<ArchitectureLabIdentity.WorkerId>(),
   priority: text("priority").$type<DomainWorkPriority.WorkPriority>(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -142,7 +142,7 @@ class WorkItemInsertRow extends S.Class<WorkItemInsertRow>($I`WorkItemInsertRow`
     id: DomainWorkItem.WorkItemId,
     title: DomainWorkItem.WorkItemTitle,
     status: DomainWorkItem.WorkItemStatus,
-    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    assigneeId: S.NullOr(ArchitectureLabIdentity.WorkerId),
     priority: S.NullOr(DomainWorkPriority.WorkPriority),
   },
   $I.annote("WorkItemInsertRow", {
@@ -156,7 +156,7 @@ class WorkItemSelectedRow extends S.Class<WorkItemSelectedRow>($I`WorkItemSelect
     id: DomainWorkItem.WorkItemId,
     title: DomainWorkItem.WorkItemTitle,
     status: DomainWorkItem.WorkItemStatus,
-    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    assigneeId: S.NullOr(ArchitectureLabIdentity.WorkerId),
     priority: S.NullOr(DomainWorkPriority.WorkPriority),
     createdAt: S.Date,
     updatedAt: S.Date,

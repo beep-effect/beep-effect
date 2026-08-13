@@ -9,55 +9,13 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
+import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.model");
-
-/**
- * Entity identifier for a persisted documents SyncConflict.
- *
- * **Example** (Decode SyncConflictId value)
- *
- * ```ts
- * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
- * import * as S from "effect/Schema"
- *
- * const id: SyncConflictIdValue = S.decodeUnknownSync(SyncConflictId)(1)
- *
- * if (id !== 1 || SyncConflictId.tableName !== "documents_sync_conflict") {
- *   throw new Error("expected decoded SyncConflict id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncConflictId = Documents.SyncConflictId;
-
-/**
- * Runtime type for {@link SyncConflictId}.
- *
- * **Example** (Type SyncConflictId array)
- *
- * ```ts
- * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
- * import * as S from "effect/Schema"
- *
- * const id: SyncConflictIdValue = S.decodeUnknownSync(SyncConflictId)(1)
- * const ids: ReadonlyArray<SyncConflictIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncConflict id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncConflictId = typeof SyncConflictId.Type;
 
 /**
  * Kind of remote drift detected against the one-way mirror.
@@ -210,7 +168,7 @@ export class SyncConflict extends BaseEntity.Class<SyncConflict>($I`SyncConflict
       resolutionStatus: SyncConflictResolution.annotateKey({
         description: "Review status of the drift record.",
       }),
-      syncItemId: Documents.SyncItemId.pipe(S.OptionFromNullOr).annotateKey({
+      syncItemId: SyncItemId.pipe(S.OptionFromNullOr).annotateKey({
         description: "Sync-tracking row the drift maps to; none when the remote item is unknown locally.",
       }),
       workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({

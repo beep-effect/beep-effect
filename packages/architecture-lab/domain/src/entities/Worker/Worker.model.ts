@@ -10,54 +10,11 @@ import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import * as S from "effect/Schema";
-import * as ArchitectureLab from "../../identity/ArchitectureLab.ts";
 
 const $I = $ArchitectureLabDomainId.create("entities/Worker/Worker.model");
-
-/**
- * Entity identifier for a persisted architecture lab Worker.
- *
- * **Example** (Decode WorkerId schema)
- *
- * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)
- *
- * if (id !== 1) {
- *   throw new Error("expected decoded Worker id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const WorkerId = ArchitectureLab.WorkerId;
-
-/**
- * Runtime type for {@link WorkerId}.
- *
- * **Example** (Type WorkerId values)
- *
- * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)
- * const ids: ReadonlyArray<WorkerIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected Worker id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type WorkerId = typeof WorkerId.Type;
 
 /**
  * Organization identity used by the Worker proof entity.

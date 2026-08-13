@@ -64,6 +64,7 @@
   "dependencies": {
     "@beep/documents-domain": "workspace:^",
     "@beep/drizzle": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

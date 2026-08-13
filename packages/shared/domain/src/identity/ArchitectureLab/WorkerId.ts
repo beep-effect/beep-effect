@@ -1,5 +1,5 @@
 /**
- * Architecture lab slice-local entity identifiers.
+ * WorkerId schema and runtime type.
  *
  * @packageDocumentation
  * @category entity-ids
@@ -7,7 +7,7 @@
  */
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
-import * as EntityId from "@beep/shared-domain/entity/EntityId";
+import * as EntityId from "../../entity/EntityId.ts";
 
 const $I = $ArchitectureLabDomainId.create("identity/ArchitectureLab");
 const make = EntityId.factory("architecture_lab", $I);
@@ -18,7 +18,7 @@ const make = EntityId.factory("architecture_lab", $I);
  * **Example** (Decode WorkerId from number)
  *
  * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/identity/ArchitectureLab"
+ * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)
@@ -41,7 +41,7 @@ export const WorkerId = make("worker", {
  * **Example** (WorkerId type array usage)
  *
  * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/identity/ArchitectureLab"
+ * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)

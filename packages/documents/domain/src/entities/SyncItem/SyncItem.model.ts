@@ -9,56 +9,13 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 import { DocumentContentDigest } from "../../aggregates/Document/index.ts";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncItem/SyncItem.model");
-
-/**
- * Entity identifier for a persisted documents SyncItem.
- *
- * **Example** (Decode SyncItemId value)
- *
- * ```ts
- * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/entities/SyncItem"
- * import * as S from "effect/Schema"
- *
- * const id: SyncItemIdValue = S.decodeUnknownSync(SyncItemId)(1)
- *
- * if (id !== 1 || SyncItemId.tableName !== "documents_sync_item") {
- *   throw new Error("expected decoded SyncItem id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncItemId = Documents.SyncItemId;
-
-/**
- * Runtime type for {@link SyncItemId}.
- *
- * **Example** (Type SyncItemId array)
- *
- * ```ts
- * import { SyncItemId, type SyncItemId as SyncItemIdValue } from "@beep/documents-domain/entities/SyncItem"
- * import * as S from "effect/Schema"
- *
- * const id: SyncItemIdValue = S.decodeUnknownSync(SyncItemId)(1)
- * const ids: ReadonlyArray<SyncItemIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncItem id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncItemId = typeof SyncItemId.Type;
 
 /**
  * Reconciliation state for one mirrored vault item.

@@ -348,19 +348,19 @@
         "./packages/shared/domain/src/entity/primitives.ts"
       ],
       "@beep/shared-domain/identity/Agents": [
-        "./packages/shared/domain/src/identity/Agents.ts"
+        "./packages/shared/domain/src/identity/Agents/index.ts"
       ],
       "@beep/shared-domain/identity/Epistemic": [
-        "./packages/shared/domain/src/identity/Epistemic.ts"
+        "./packages/shared/domain/src/identity/Epistemic/index.ts"
       ],
       "@beep/shared-domain/identity/LawPractice": [
-        "./packages/shared/domain/src/identity/LawPractice.ts"
+        "./packages/shared/domain/src/identity/LawPractice/index.ts"
       ],
       "@beep/shared-domain/identity/Shared": [
-        "./packages/shared/domain/src/identity/Shared.ts"
+        "./packages/shared/domain/src/identity/Shared/index.ts"
       ],
       "@beep/shared-domain/identity/Workspace": [
-        "./packages/shared/domain/src/identity/Workspace.ts"
+        "./packages/shared/domain/src/identity/Workspace/index.ts"
       ],
       "@beep/agents-use-cases/proof": [
         "./packages/agents/use-cases/src/proof.ts"
@@ -513,12 +513,6 @@
       ],
       "@beep/architecture-lab-domain/entities/Worker": [
         "./packages/architecture-lab/domain/src/entities/Worker/index.ts"
-      ],
-      "@beep/architecture-lab-domain/identity": [
-        "./packages/architecture-lab/domain/src/identity/index.ts"
-      ],
-      "@beep/architecture-lab-domain/identity/ArchitectureLab": [
-        "./packages/architecture-lab/domain/src/identity/ArchitectureLab.ts"
       ],
       "@beep/architecture-lab-domain/values": [
         "./packages/architecture-lab/domain/src/values/index.ts"
@@ -1380,9 +1374,6 @@
       "@beep/documents-domain/entities": [
         "./packages/documents/domain/src/entities/index.ts"
       ],
-      "@beep/documents-domain/identity": [
-        "./packages/documents/domain/src/identity/index.ts"
-      ],
       "@beep/documents-domain/values": [
         "./packages/documents/domain/src/values/index.ts"
       ],
@@ -1477,9 +1468,6 @@
       ],
       "@beep/ontology-use-cases/tools": [
         "./packages/ontology/use-cases/src/tools/index.ts"
-      ],
-      "@beep/documents-domain/identity/Documents": [
-        "./packages/documents/domain/src/identity/Documents.ts"
       ],
       "@beep/documents-tables": ["./packages/documents/tables/src/index.ts"],
       "@beep/documents-tables/entities/SyncConflict": [
@@ -1796,12 +1784,6 @@
       ],
       "@beep/gov-legal-mcp": ["./packages/drivers/gov-legal-mcp/src/index.ts"],
       "@beep/gov-legal-mcp/*": ["./packages/drivers/gov-legal-mcp/src/*"],
-      "@beep/epistemic-domain/identity": [
-        "./packages/epistemic/domain/src/identity/index.ts"
-      ],
-      "@beep/epistemic-domain/identity/Epistemic": [
-        "./packages/epistemic/domain/src/identity/Epistemic.ts"
-      ],
       "@beep/epistemic-client": ["./packages/epistemic/client/src/index.ts"],
       "@beep/epistemic-domain/entities/Contradiction": [
         "./packages/epistemic/domain/src/entities/Contradiction/index.ts"
@@ -1908,6 +1890,12 @@
       ],
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/shared-domain/identity/ArchitectureLab": [
+        "./packages/shared/domain/src/identity/ArchitectureLab/index.ts"
+      ],
+      "@beep/shared-domain/identity/Documents": [
+        "./packages/shared/domain/src/identity/Documents/index.ts"
       ]
     }
   }

@@ -1,4 +1,5 @@
 import * as SyncItem from "@beep/documents-domain/entities/SyncItem";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const fileRow = {
-  ...baseEntityFixtureInput(SyncItem.SyncItemId.entityType, 1),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 1),
   contentDigest: "abc123",
   contentSizeBytes: 2048,
   itemKind: "file",

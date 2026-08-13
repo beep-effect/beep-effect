@@ -1,9 +1,10 @@
 import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
-const decodeWorkerId = S.decodeUnknownEffect(Worker.WorkerId);
+const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(Worker.WorkerOrganizationId);
 
 describe("Worker entity", () => {

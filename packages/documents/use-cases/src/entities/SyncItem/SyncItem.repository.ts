@@ -11,6 +11,7 @@ import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -146,7 +147,7 @@ export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepository
  * import * as S from "effect/Schema"
  *
  * const error = SyncItemRepositoryNotFound.make({
- *   syncItemId: S.decodeUnknownSync(DomainSyncItem.SyncItemId)(1)
+ *   syncItemId: S.decodeUnknownSync(DocumentsIdentity.SyncItemId)(1)
  * })
  * console.log(error._tag)
  * ```
@@ -159,7 +160,7 @@ export class SyncItemRepositoryNotFound extends S.TaggedError<SyncItemRepository
 )(
   "SyncItemRepositoryNotFound",
   {
-    syncItemId: DomainSyncItem.SyncItemId.annotateKey({
+    syncItemId: DocumentsIdentity.SyncItemId.annotateKey({
       description: "SyncItem identity that could not be found.",
     }),
   },

@@ -16,7 +16,6 @@
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
   ContradictionAssessment,
@@ -63,6 +62,7 @@ import { Cuid } from "@beep/schema/Cuid";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

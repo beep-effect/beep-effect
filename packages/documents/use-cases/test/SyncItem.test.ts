@@ -10,6 +10,7 @@ import {
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import { NonNegativeInt } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -55,7 +56,7 @@ const fileSeed = SyncItemSeed.make({
 });
 
 const syncItemRow = (seed: SyncItemSeed, id: number) => ({
-  ...baseEntityFixtureInput(DomainSyncItem.SyncItemId.entityType, id),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, id),
   contentDigest: O.getOrNull(seed.contentDigest),
   contentSizeBytes: O.getOrNull(seed.contentSizeBytes),
   itemKind: seed.itemKind,

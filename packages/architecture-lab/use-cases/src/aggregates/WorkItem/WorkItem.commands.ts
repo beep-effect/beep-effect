@@ -7,10 +7,10 @@
  */
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.commands");
@@ -69,7 +69,7 @@ export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`Cre
  *
  * const command = AssignWorkItemCommand.make({
  *   id: S.decodeUnknownSync(DomainWorkItem.WorkItemId)("work-item-1"),
- *   assignee: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   assignee: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(command.assignee) // 1
@@ -83,7 +83,7 @@ export class AssignWorkItemCommand extends S.Class<AssignWorkItemCommand>($I`Ass
     id: DomainWorkItem.WorkItemId.annotateKey({
       description: "WorkItem identity to assign.",
     }),
-    assignee: DomainWorker.WorkerId.annotateKey({
+    assignee: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity receiving the WorkItem assignment.",
     }),
   },

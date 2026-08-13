@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
@@ -273,7 +273,7 @@ export class ListOpenConflictsInput extends S.Class<ListOpenConflictsInput>($I`L
  * **Example** (Construct mark-reviewed input)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"

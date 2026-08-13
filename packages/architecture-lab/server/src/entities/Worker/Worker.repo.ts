@@ -20,12 +20,13 @@ import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import type { PostgresDrizzleDatabase } from "@beep/postgres";
+import type * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 
-type WorkerStore = HashMap.HashMap<DomainWorker.WorkerId, DomainWorker.Worker>;
+type WorkerStore = HashMap.HashMap<ArchitectureLabIdentity.WorkerId, DomainWorker.Worker>;
 
 const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(function* (
   store: Ref.Ref<WorkerStore>,
-  id: DomainWorker.WorkerId
+  id: ArchitectureLabIdentity.WorkerId
 ) {
   const workers = yield* Ref.get(store);
   const found = HashMap.get(workers, id);
@@ -50,7 +51,7 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  *   const repository = yield* makeInMemoryWorkerRepository()
  *   const worker = DomainWorker.create(
  *     DomainWorker.CreateWorkerInput.make({
- *       id: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *       id: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *       organizationId: S.decodeUnknownSync(DomainWorker.WorkerOrganizationId)(10),
  *       displayName: "Avery Reviewer"
  *     })
@@ -68,7 +69,7 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  * @since 0.0.0
  */
 export const makeInMemoryWorkerRepository = Effect.fn("ArchitectureLab.WorkerRepository.makeInMemory")(function* () {
-  const store = yield* Ref.make(HashMap.empty<DomainWorker.WorkerId, DomainWorker.Worker>());
+  const store = yield* Ref.make(HashMap.empty<ArchitectureLabIdentity.WorkerId, DomainWorker.Worker>());
 
   return WorkerUseCaseServer.Worker.WorkerRepository.of({
     create: Effect.fn("ArchitectureLab.WorkerRepository.create")(function* (worker) {
@@ -112,7 +113,7 @@ const repositoryUnavailable =
 
 const findDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.findDrizzle")(function* (
   db: PostgresDrizzleDatabase,
-  id: DomainWorker.WorkerId
+  id: ArchitectureLabIdentity.WorkerId
 ) {
   const rows = yield* db
     .select()
@@ -126,7 +127,7 @@ const findDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.findDrizzl
 
 const getDrizzleWorker = Effect.fn("ArchitectureLab.WorkerRepository.getDrizzle")(function* (
   db: PostgresDrizzleDatabase,
-  id: DomainWorker.WorkerId
+  id: ArchitectureLabIdentity.WorkerId
 ) {
   const found = yield* findDrizzleWorker(db, id);
   if (O.isNone(found)) {

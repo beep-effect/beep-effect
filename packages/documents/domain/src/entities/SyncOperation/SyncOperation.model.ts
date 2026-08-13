@@ -9,56 +9,14 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
+import { SyncOperationId } from "@beep/shared-domain/identity/Documents/SyncOperationId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 import { DocumentContentDigest } from "../../aggregates/Document/index.ts";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider, VaultRelPath } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.model");
-
-/**
- * Entity identifier for a persisted documents SyncOperation.
- *
- * **Example** (Decode SyncOperationId value)
- *
- * ```ts
- * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
- * import * as S from "effect/Schema"
- *
- * const id: SyncOperationIdValue = S.decodeUnknownSync(SyncOperationId)(1)
- *
- * if (id !== 1 || SyncOperationId.tableName !== "documents_sync_operation") {
- *   throw new Error("expected decoded SyncOperation id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncOperationId = Documents.SyncOperationId;
-
-/**
- * Runtime type for {@link SyncOperationId}.
- *
- * **Example** (Type SyncOperationId values)
- *
- * ```ts
- * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
- * import * as S from "effect/Schema"
- *
- * const id: SyncOperationIdValue = S.decodeUnknownSync(SyncOperationId)(1)
- * const ids: ReadonlyArray<SyncOperationIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncOperation id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncOperationId = typeof SyncOperationId.Type;
 
 /**
  * Kind of one-way push performed against the DMS mirror.
@@ -217,7 +175,7 @@ export class SyncOperation extends BaseEntity.Class<SyncOperation>($I`SyncOperat
       status: SyncOperationStatus.annotateKey({
         description: "Outbox lifecycle status of the operation.",
       }),
-      syncItemId: Documents.SyncItemId.annotateKey({
+      syncItemId: SyncItemId.annotateKey({
         description: "Sync-tracking row this operation pushes for.",
       }),
       targetName: S.NonEmptyString.annotateKey({

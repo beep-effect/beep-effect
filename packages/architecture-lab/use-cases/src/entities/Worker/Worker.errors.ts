@@ -6,9 +6,9 @@
  * @since 0.0.0
  */
 
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
@@ -45,7 +45,7 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
  * import * as S from "effect/Schema"
  *
  * const error = WorkerNotFound.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(error._tag) // "WorkerNotFound"
@@ -57,7 +57,7 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
 export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFound`)(
   "WorkerNotFound",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
   },
   $I.annote("WorkerNotFound", {
     title: "Worker not found",
@@ -76,7 +76,7 @@ export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFo
  * import * as S from "effect/Schema"
  *
  * const error = WorkerConflict.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *   reason: "Worker already exists"
  * })
  *
@@ -89,7 +89,7 @@ export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFo
 export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConflict`)(
   "WorkerConflict",
   {
-    workerId: DomainWorker.WorkerId.annotateKey({
+    workerId: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity whose command conflicted with persisted state.",
     }),
     reason: S.NonEmptyString.annotateKey({

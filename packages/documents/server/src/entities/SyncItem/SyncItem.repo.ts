@@ -20,6 +20,7 @@ import {
   SyncItemRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -45,7 +46,7 @@ const syncItemFromSeed = (id: number, seed: SyncItemSeed): DomainSyncItem.SyncIt
     contentSizeBytes: O.getOrNull(seed.contentSizeBytes),
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncItem.SyncItemId.entityType,
+    entityType: DocumentsIdentity.SyncItemId.entityType,
     id,
     itemKind: seed.itemKind,
     lastError: O.getOrNull(seed.lastError),
@@ -109,7 +110,7 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
  */
 export const makeInMemorySyncItemRepository = Effect.fn("Documents.SyncItemRepository.makeInMemory")(function* () {
   const { counter, snapshot, store } = yield* makeEntityStore(
-    HashMap.empty<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>()
+    HashMap.empty<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>()
   );
 
   return SyncItemRepository.of({

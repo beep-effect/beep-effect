@@ -9,55 +9,12 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { SyncCursorId } from "@beep/shared-domain/identity/Documents/SyncCursorId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.model");
-
-/**
- * Entity identifier for a persisted documents SyncCursor.
- *
- * **Example** (Decode SyncCursorId identifier)
- *
- * ```ts
- * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
- * import * as S from "effect/Schema"
- *
- * const id: SyncCursorIdValue = S.decodeUnknownSync(SyncCursorId)(1)
- *
- * if (id !== 1 || SyncCursorId.tableName !== "documents_sync_cursor") {
- *   throw new Error("expected decoded SyncCursor id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncCursorId = Documents.SyncCursorId;
-
-/**
- * Runtime type for {@link SyncCursorId}.
- *
- * **Example** (Type array of SyncCursorIds)
- *
- * ```ts
- * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
- * import * as S from "effect/Schema"
- *
- * const id: SyncCursorIdValue = S.decodeUnknownSync(SyncCursorId)(1)
- * const ids: ReadonlyArray<SyncCursorIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncCursor id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncCursorId = typeof SyncCursorId.Type;
 
 /**
  * Health status for a remote-event stream cursor.

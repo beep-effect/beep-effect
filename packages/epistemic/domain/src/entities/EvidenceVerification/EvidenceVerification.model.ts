@@ -15,7 +15,7 @@ import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnch
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
-import * as Epistemic from "../../identity/Epistemic.ts";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import type * as Result from "effect/Result";
 import type * as S from "effect/Schema";
 

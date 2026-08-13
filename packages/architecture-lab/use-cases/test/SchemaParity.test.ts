@@ -2,6 +2,7 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { Worker, WorkItem } from "@beep/architecture-lab-use-cases/public";
 import * as UseCaseServer from "@beep/architecture-lab-use-cases/server";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
@@ -10,7 +11,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const workItemId = Result.getOrThrow(S.decodeResult(DomainWorkItem.WorkItemId)("work-item-1"));
-const workerId = Result.getOrThrow(S.decodeResult(DomainWorker.WorkerId)(1));
+const workerId = Result.getOrThrow(S.decodeResult(ArchitectureLabIdentity.WorkerId)(1));
 const organizationId = Result.getOrThrow(S.decodeResult(DomainWorker.WorkerOrganizationId)(10));
 
 const schemaParityCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [

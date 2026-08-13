@@ -5,6 +5,7 @@ import {
   syncCursorTable,
   toSyncCursorInsert,
 } from "@beep/documents-tables/entities/SyncCursor";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const activeCursorRow = {
-  ...baseEntityFixtureInput(DomainSyncCursor.SyncCursorId.entityType, 30),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, 30),
   lastError: null,
   lastEventId: "evt-1",
   provider: "box",

@@ -27,6 +27,9 @@
       "path": "../../foundation/ui-system/ui/tsconfig.json"
     },
     {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {

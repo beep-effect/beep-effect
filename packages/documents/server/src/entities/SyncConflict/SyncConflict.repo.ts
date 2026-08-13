@@ -19,6 +19,7 @@ import {
   SyncConflictRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -41,7 +42,7 @@ const syncConflictFromSeed = (id: number, seed: SyncConflictSeed): DomainSyncCon
     conflictKind: seed.conflictKind,
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncConflict.SyncConflictId.entityType,
+    entityType: DocumentsIdentity.SyncConflictId.entityType,
     id,
     localRelPath: O.getOrNull(seed.localRelPath),
     orgId: 1,
@@ -97,7 +98,7 @@ const matchesRemoteEvent =
 export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConflictRepository.makeInMemory")(
   function* () {
     const { counter, snapshot, store } = yield* makeEntityStore(
-      HashMap.empty<DomainSyncConflict.SyncConflictId, DomainSyncConflict.SyncConflict>()
+      HashMap.empty<DocumentsIdentity.SyncConflictId, DomainSyncConflict.SyncConflict>()
     );
 
     return SyncConflictRepository.of({

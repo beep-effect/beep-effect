@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   ContradictionAssessment,
   ContradictionBeliefPair,
@@ -23,6 +22,7 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { DateTime, Effect, identity, Order } from "effect";
@@ -290,7 +290,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
  *
  * ```ts
  * import { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
- * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  *
  * const at = DateTime.makeUnsafe(0)
@@ -335,7 +335,7 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
  *
  * ```ts
  * import { GetExpandedContradictionCandidate } from "@beep/epistemic-use-cases/server"
- * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { DateTime } from "effect"
  *

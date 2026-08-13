@@ -8,7 +8,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
-import * as Shared from "../../identity/Shared.ts";
+import * as Shared from "../../identity/Shared/index.ts";
 import { Role, Status } from "./Membership.values.ts";
 
 const $I = $SharedDomainId.create("entities/Membership/Membership.model");

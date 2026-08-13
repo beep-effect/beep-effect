@@ -4,7 +4,6 @@ import {
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
-import * as EpistemicIdentity from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
@@ -35,6 +34,7 @@ import {
   toContradictionReceiptInsert,
 } from "@beep/epistemic-tables/entities/Contradiction";
 import { PosInt } from "@beep/schema/Int";
+import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";

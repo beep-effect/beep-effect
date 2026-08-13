@@ -64,6 +64,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/shared-domain": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

@@ -1,5 +1,5 @@
 /**
- * Epistemic slice-local identity exports.
+ * ArchitectureLab entity identifier namespace.
  *
  * @packageDocumentation
  * @category entity-ids
@@ -7,9 +7,9 @@
  */
 
 /**
- * Epistemic identity registry.
+ * WorkerId schema and runtime type exports.
  *
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Epistemic from "./Epistemic.ts";
+export * from "./WorkerId.ts";

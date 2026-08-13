@@ -9,7 +9,7 @@ import { $SharedDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as S from "effect/Schema";
-import * as Shared from "../../identity/Shared.ts";
+import * as Shared from "../../identity/Shared/index.ts";
 
 const $I = $SharedDomainId.create("entities/User/User.model");
 

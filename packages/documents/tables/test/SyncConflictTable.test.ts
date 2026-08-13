@@ -5,6 +5,7 @@ import {
   syncConflictTable,
   toSyncConflictInsert,
 } from "@beep/documents-tables/entities/SyncConflict";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const mappedDriftRow = {
-  ...baseEntityFixtureInput(DomainSyncConflict.SyncConflictId.entityType, 40),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, 40),
   conflictKind: "remoteEdit",
   localRelPath: "matters/client-default/complaint.pdf",
   provider: "box",

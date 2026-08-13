@@ -1,4 +1,5 @@
 import * as SyncConflict from "@beep/documents-domain/entities/SyncConflict";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const mappedDriftRow = {
-  ...baseEntityFixtureInput(SyncConflict.SyncConflictId.entityType, 1),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, 1),
   conflictKind: "remoteEdit",
   localRelPath: "matters/client-default/complaint.pdf",
   provider: "box",

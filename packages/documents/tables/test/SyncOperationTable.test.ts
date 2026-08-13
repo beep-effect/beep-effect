@@ -5,6 +5,7 @@ import {
   syncOperationTable,
   toSyncOperationInsert,
 } from "@beep/documents-tables/entities/SyncOperation";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const uploadRow = {
-  ...baseEntityFixtureInput(DomainSyncOperation.SyncOperationId.entityType, 20),
+  ...baseEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 20),
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:4",
   inputContentDigest: "abc123",
