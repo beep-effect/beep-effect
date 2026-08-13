@@ -90,12 +90,12 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Encoding, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
+import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
-import { FastCheck as fc } from "effect/testing";
+import { FastCheck as fc, TestClock } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
@@ -199,6 +199,22 @@ const succeedingThenRejectingSpanSender = (calls: Ref.Ref<number>): Layer.Layer<
           cause: { exportResultCode: 1 },
           message: "The AI metrics OTLP collector did not accept the exported spans.",
         });
+      }),
+    })
+  );
+
+const retryableThenSucceedingSpanSender = (calls: Ref.Ref<number>): Layer.Layer<AiMetricsOtlpSpanSender> =>
+  Layer.succeed(
+    AiMetricsOtlpSpanSender,
+    AiMetricsOtlpSpanSender.of({
+      send: Effect.fn("test.retryableThenSucceedingSpanSender.send")(function* () {
+        const call = yield* Ref.updateAndGet(calls, (count) => count + 1);
+        if (call === 1) {
+          return yield* AiMetricsOtlpExportError.make({
+            cause: new Error("Export failed with retryable status"),
+            message: "The AI metrics OTLP collector did not accept the exported spans.",
+          });
+        }
       }),
     })
   );
@@ -1991,6 +2007,22 @@ volumes:
           expect(exported.spanCount).toBe(1200);
           expect(requests.length).toBe(3);
           expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
+
+          const retryCalls = yield* Ref.make(0);
+          const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
+            inputFor("/v1/traces"),
+            AiMetricsOtlpSpanProjectionBatch.make({
+              projections: A.take(projections, 1),
+              sessionSpanCount: 0,
+              turnIds: [],
+              turnSpanCount: 1,
+            })
+          ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
+          yield* TestClock.adjust("2 seconds");
+          const retried = yield* Fiber.join(retryFiber);
+
+          expect(retried.spanCount).toBe(1);
+          expect(yield* Ref.get(retryCalls)).toBe(2);
 
           // A collector that rejects the batch must surface as a typed failure, never a
           // silent success. That confirmation is the whole reason delivery moved off

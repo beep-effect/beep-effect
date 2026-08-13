@@ -291,3 +291,169 @@
 - **Proposal:** Run publish verification in a durable process whose lifecycle
   is independent of conversational turn steering, and preserve the latest
   in-progress/terminal attempt instead of falling back to an older verdict.
+
+## Namespace fingerprint rollout stranded the legacy identity registry
+
+- **Work:** Verifying the post-closeout live forwarder after PR #647 landed.
+- **Friction:** The v1 registry schema decoded the pre-fingerprint shape, but
+  the upsert rejected every populated registry missing the new namespace id.
+  That made the compatibility field decode-only and put the timer into a
+  restart loop instead of migrating the live provenance record.
+- **Evidence:** The timer status reported `Failed to upsert the AI metrics
+  identity registry.` The persisted metadata was valid v1 with one root, two
+  source instances, `hashSaltStatus: provided`, and no namespace id; the guard
+  introduced in `fbc8632526` treated “missing” and “different” identically.
+- **Proposal:** Migrate a legacy registry only when a freshly derived stable
+  identity digest proves salt-namespace continuity, retain the refusal when no
+  digest matches, and preserve the typed registry cause at the forwarder CLI
+  boundary so operators see the actionable failure rather than its wrapper.
+
+## Forwarder replay flags do not resolve their own secret references
+
+- **Work:** Replaying the installed forwarder command from the fixed checkout
+  to migrate and verify the live registry.
+- **Friction:** Supplying the installed `--hash-salt-secret-ref` and
+  `--raw-archive-key-secret-ref` arguments was insufficient for a direct run;
+  the command exited before registry access with `Non-local AI metrics commands
+  require --hash-salt or BEEP_AI_METRICS_HASH_SALT.` The timer's surrounding
+  secret-injection wrapper is therefore part of the executable contract even
+  though the inner command advertises the references.
+- **Evidence:** A direct replay of the installed inner argv exited 1 with the
+  message above; no registry mutation occurred.
+- **Proposal:** Provide a canonical replay command that performs reference
+  resolution, or make the forwarder resolve its supplied secret references so
+  installed argv is independently reproducible without exposing secret values.
+
+## OTLP health masked Phoenix ingest-queue saturation
+
+- **Work:** Diagnosing the remaining OTLP failure after the registry migration
+  allowed the forwarder to reach export.
+- **Friction:** The Phoenix UI and health endpoint stayed 200 while trace posts
+  intermittently returned 503. The OpenTelemetry exporter reduced the terminal
+  cause to `Export failed with retryable status`, and the forwarder status then
+  replaced even that with a generic wrapper.
+- **Evidence:** Server access logs showed alternating 200 and 503 responses for
+  `POST /v1/traces`; the deployed Phoenix route defines 503 as `Server is at
+  capacity and cannot process more requests`. A retrying live drain subsequently
+  exported 35,972 pending spans, and the next drain reported zero pending.
+- **Proposal:** Retry only the same uncheckpointed chunk after the SDK's bounded
+  retryable-failure window, retain the existing per-chunk watermark, and include
+  the sanitized exporter message in forwarder status.
+
+## No-location TypeScript flake moved across unrelated packages
+
+- **Work:** Running the exact-head full Yeet verification for the AI metrics
+  recovery change after synchronizing the branch with current `main`.
+- **Friction:** The full build first emitted an unlocated `TS2589` for
+  `@beep/ui`; Yeet's standalone quarantine rerun then emitted the same
+  unlocated error for unrelated `@beep/xai`, so the lane stayed hard-failed
+  without identifying a source location in either package.
+- **Evidence:** `bun run beep yeet verify` reported `error TS2589: Type
+  instantiation is excessively deep and possibly infinite` first for
+  `@beep/ui#build`, then for `@beep/xai#build` during the quarantine rerun.
+- **Proposal:** When an unlocated `TS2589` migrates between packages, clear or
+  isolate stale TypeScript build state and rerun the affected package set once;
+  retain a hard failure only when the same package/source reproduces.
+
+## OSV classified a patched version as vulnerable
+
+- **Work:** Re-running the full Yeet proof after clearing the unrelated
+  no-location TypeScript build flake.
+- **Friction:** A newly surfaced advisory made the unchanged security lane fail
+  on `nanoid@3.3.17`, while the advisory itself defines versions below 3.3.17
+  as affected and names 3.3.17 as the patched v3 release.
+- **Evidence:** OSV Scanner 2.3.3 reported `GHSA-2v37-7h3g-55p8` against the
+  locked 3.3.17 artifact and simultaneously displayed `FIXED VERSION 3.3.17`;
+  the reviewed GitHub advisory lists affected `< 3.3.17` and patched `3.3.17`.
+- **Proposal:** Let the package manager refresh transitive-only resolutions to a
+  later patched release without creating a root dependency. If no later release
+  exists, use an expiring package/version-specific scanner override rather than
+  an advisory-wide ignore that could hide genuinely vulnerable versions.
+
+## Turbopack reused a corrupt generated cache marker
+
+- **Work:** Running the full build on the final AI metrics and transitive
+  security-repair fingerprint.
+- **Friction:** The unrelated OIP Web production build stopped because its
+  generated Turbopack database `CURRENT` marker contained four invalid bytes.
+  The hard failure provided no automatic clean-cache retry.
+- **Evidence:** `bun run beep yeet verify` failed `@beep/oip-web#build` with
+  `CURRENT is corrupt (4 bytes)` and `expected value at line 1 column 1` under
+  `apps/oip-web/.next/cache/turbopack`.
+- **Proposal:** For a Turbopack database-corruption signature, quarantine only
+  the named generated cache and retry the affected package once, while keeping
+  source/configuration failures hard.
+
+## Long full proof lost its publication base
+
+- **Work:** Publishing the fully verified AI metrics recovery through Yeet.
+- **Friction:** The branch was current when the full proof began, but `main`
+  advanced by three commits during the documentation lane. One incoming commit
+  also changed `bun.lock`, so Yeet refused publication after the eight-minute
+  proof and required a merge plus a complete re-proof.
+- **Evidence:** `bun run beep yeet publish --pr --monitor` reported the branch
+  three commits behind `origin/main` and named `bun.lock` as the overlapping
+  path. After that merge, `main` advanced once more during repair with the
+  dedicated transitive lockfile fix, requiring a second base synchronization.
+  The pattern recurred during PR review: a successful 998-second review-fix
+  proof finished three commits behind the base it had fetched at startup.
+- **Proposal:** Pin and surface base freshness at proof start, then allow a
+  verified-tree publication grace window when the new base has no semantic
+  conflict; otherwise fail before the expensive lanes or support proof reuse
+  after a clean base-only merge with an explicit overlap check.
+
+## Recovery diagnostics crossed privacy and provenance boundaries
+
+- **Work:** Closing review on the AI metrics live-recovery fix.
+- **Friction:** The first migration proof treated the repository digest as
+  evidence of salt continuity even though that digest is intentionally public
+  and salt-independent. The first status improvement also copied the typed
+  exporter's diagnostic message into durable status and stderr, where a future
+  transport could include a local path or response body.
+- **Evidence:** Two independent PR review threads identified the same
+  salt-rotation bypass, and a third identified the durable diagnostic leak.
+- **Proposal:** Name identity evidence by privacy class and permit legacy
+  namespace migration only from salt-dependent digests. Keep durable operator
+  status to a closed vocabulary of remediation messages; retain raw causes only
+  inside the typed failure channel and ephemeral debug tooling.
+
+## Review-fix formatting ran after the expensive typecheck sweep
+
+- **Work:** Proving the PR review fixes with Yeet's `review-fix` tier.
+- **Friction:** Two formatter-only diagnostics surfaced sequentially after the
+  uncached 731-file test-source typecheck, so each trivial line-wrap correction
+  invalidated several minutes of otherwise-green proof.
+- **Evidence:** The first run reached lint after a 380-second test-source sweep
+  and failed one AI metrics line; the corrected run repeated the sweep for 426
+  seconds before failing one CLI line.
+- **Proposal:** Run formatting and affected lint before the expensive isolated
+  typecheck in review-fix proofs, or provide a formatter preflight that reports
+  every changed-file style issue in one pass.
+
+## Review-fix proof could not publish after base synchronization
+
+- **Work:** Publishing the proven PR review fixes after merging the moving base.
+- **Friction:** The documented review-fix tier proved the exact staged tree, but
+  Yeet refused `publish --reuse-verified` because only full-tier proofs may
+  publish normal commits. The amend-only reuse path was no longer safe because
+  the required base merge was now `HEAD`.
+- **Evidence:** After a successful 1,171-second review-fix proof, Yeet reported
+  `proof tier review-fix is not full` and required a new full verification.
+- **Proposal:** Let a successful review-fix proof publish a dedicated fix commit
+  when the only intervening commits are a clean recorded base merge, or state
+  the amend-only limitation beside the review-fix workflow in the operator
+  guidance.
+
+## Clean-HEAD publication exhausted shared temporary storage
+
+- **Work:** Publishing the fully verified PR review fixes through Yeet.
+- **Friction:** Yeet created the review-fix commit, then its isolated
+  clean-HEAD install failed while copying a dependency because shared `/tmp`
+  had only 3.8 GiB free. Several abandoned `beep-csf-*` preflight directories
+  from earlier runs occupied more than 40 GiB.
+- **Evidence:** `bun run beep yeet publish --reuse-verified` failed with
+  `ENOSPC: copying file ...react-server-dom-turbopack-server.edge.production.js`;
+  `df -h /tmp` reported 94% use.
+- **Proposal:** Make clean-HEAD preflight directories self-cleaning on success,
+  failure, and interruption, and add a capacity preflight that reports and
+  safely reclaims stale Yeet-owned directories before copying dependencies.

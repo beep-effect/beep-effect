@@ -45,6 +45,13 @@ explicitly the anti-pattern half of the evidence.
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
 | https://github.com/OpenLinkSoftware/ai-agent-skills | MIT (LICENSE verified in clone 2026-08-10) | port-with-attribution | contract shapes, gate lists, state-machine phases, evidence-ladder semantics, receipt field sets; NOT implementations (regex validators, shell harnesses, secret handling) |
+| https://github.com/microsoft/agent-governance-toolkit | MIT (LICENSE fetched 2026-08-13) | port-with-attribution | ACS fail-closed evaluation discipline, pre/post intervention-point vocabulary, evidence size bounds, audit-record separation; NOT its policy engine or runtime |
+| https://github.com/in-toto/attestation | Apache-2.0 (LICENSE fetched 2026-08-13) | interop + vocabulary adoption | Statement/predicate/envelope split for evidence receipts; inspections ≈ re-extraction; SLSA VSA shape for gate summaries |
+
+Interop-target and reference-only repos/specs surveyed 2026-08-13 (MCP, Agent Skills, A2A,
+OASF, Oracle Agent Spec, LangChain, effect-smol, Temporal, Restate, XState, W3C PROV-O/Web
+Annotation/VC, C2PA, SLSA, Guardrails, Outlines, promptfoo, OpenAI Evals) carry per-URL license
+and disposition rows in the two landscape reports' `SOURCES ledger rows` sections (§3 below).
 
 ## 3. External research sources
 
@@ -55,16 +62,41 @@ explicitly the anti-pattern half of the evidence.
   Local PDF (kept out of this public repo):
   `~/YeeBois/research/daily/08-10-2026/mining/sources/ai-barrister-flight-simulator-iclr2026.pdf`.
 - https://github.com/OpenLinkSoftware/ai-agent-skills — the mined corpus itself (see §1/§2).
-- Broader landscape sweep NOT DONE — see `RESEARCH.md` §OPEN; add entries here as it lands.
+- **2026-08-13 landscape sweep (research close).** Two lane reports are the full per-URL
+  ledgers — every claim carries the URL the lane actually fetched, with license and disposition
+  in each report's terminal `SOURCES ledger rows` section:
+  - [`../research/landscape/skill-contract-formats.md`](../research/landscape/skill-contract-formats.md)
+    — MCP 2025-11-25 (tools/Tasks/resources/prompts/schema), Anthropic-originated Agent Skills
+    spec (agentskills.io), OpenAI function calling + Structured Outputs, Google A2A 1.0
+    (spec + normative protobuf), AGNTCY OASF (agent record, Agent Skills manifest/validation,
+    evaluation schemas), Oracle Agent Spec (+ tracing), LangChain/LangGraph tool contracts,
+    Effect AI `Tool`/`Toolkit` (effect-smol), Microsoft Agent Control Specification +
+    AGT-Evidence profile.
+  - [`../research/landscape/workflow-evidence-frameworks.md`](../research/landscape/workflow-evidence-frameworks.md)
+    — Temporal, Restate, XState, W3C PROV-O + PROV Constraints + Web Annotation, C2PA 2.4,
+    in-toto attestations + SLSA build provenance/VSA, W3C VC 2.0, Guardrails AI, Outlines,
+    promptfoo, OpenAI Evals.
 
 ## 4. In-repo capability references
 
-NOT YET INVENTORIED — the research-stage open task. Candidate bricks named (unverified) in
-`RESEARCH.md` §OPEN in-repo capability inventory: `@beep/schema` (LiteralKit, `$I`), yeet
-gate/verdict machinery, reflection-artifact lint, `qa-inventory/v1`, epistemic evidence-span
-substrate, citation extraction, `beep qa` witness artifacts, effect/unstable/httpapi surfaces,
-basic-memory + codegraph. Each must be confirmed with package + path (or marked NET-NEW) before
-align.
+Inventoried 2026-08-13 (research close). The two lane reports under
+[`inventory/`](./inventory/) are the ledger — every brick cited as package + `file:line`
+verified against the working tree, with per-port-component `EXISTS`/`PARTIAL`/`NET-NEW`
+verdict tables:
+
+- [`inventory/contract-kernel-evidence.md`](./inventory/contract-kernel-evidence.md) — ports
+  1/2/4: `@beep/schema` (LiteralKit, defaults), `@beep/identity` (`$I`), yeet gate/verdict/
+  proof machinery, reflection-artifact lint + goal manifests, `qa-inventory/v1`,
+  `@beep/provenance` verified anchors, `@beep/epistemic-*` claim gate, `@beep/exiftool` XMP
+  stamping.
+- [`inventory/protocol-query-memory.md`](./inventory/protocol-query-memory.md) — ports
+  3/5/6/7/8/10: `effect/unstable/http(api)` clients/servers, `@beep/api-transport`,
+  `@beep/m365` OAuth/PKCE, MCP/`@beep/mcp-kit`/`@beep/acp`, `@beep/semantic-web` + ontology
+  SPARQL path, `beep qa` pipeline, `@beep/ai-sync` skill/config schemas, memory wiring.
+
+Confirmed NOT FOUND (searched, not assumed): better-auth; A2A/ActivityPub anything; a
+citation-extraction or `knowledge*` package; browser ref-epochs/tab-leases; intent→context
+routing manifest; transcript-audit gate. `@beep/acp` is Agent Client Protocol, not A2A.
 
 ## 5. Cross-links & provenance
 
