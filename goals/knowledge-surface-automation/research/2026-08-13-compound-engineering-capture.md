@@ -1,3 +1,17 @@
+# Provenance
+
+Provenance: copied from `explorations/compound-engineering/CAPTURE.md`.
+Captured 2026-08-06; folded 2026-08-13 by operator decision. The friction-ledger
+law, buzz channel, and reflection skill cover the near-term need; this note
+preserves the always-on compounding vision as research input to
+knowledge-surface automation.
+
+This file is the canonical landing for the retired packet: historical routing
+artifacts (e.g. `explorations/graphnosis-prior-art/research/*`) reference the
+old `explorations/compound-engineering/CAPTURE.md` path and are immutable by
+convention; follow them here. Git history holds the byte-identical original.
+
+
 # Capture — compound engineering
 
 Append-only. Never interrogated, never reorganized.

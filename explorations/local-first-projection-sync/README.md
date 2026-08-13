@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` — `projection-dispatch-core` graduated; gated candidates remain.
+Status: `graduated` — gated candidates remain as re-entry points.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -16,10 +16,9 @@ must remain a weaker hint.
 
 ## Next Open Question
 
-None. The align gate is closed. Resume only when a gated candidate has its
-trigger: workflow persistence evidence for the graduated goal, live
-multi-connection topology for desktop fan-out, a second projector family, or
-separate approval for a graph projection.
+None. Reopen at `decompose` only when a gated candidate trigger fires: live
+multi-connection topology for desktop fan-out, a second projector-family
+owner, or graph projection approval after SSPL review.
 
 ## Graduated Goal
 
@@ -45,6 +44,10 @@ license-of-record conflict. TalentScore remains clean-room/reference-only until
 that conflict is reconciled.
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; multi-window delivery, a second
+  projector-family owner, or an approved graph projection after SSPL review
+  reopens the packet at `decompose` under the repository convention.
 
 - 2026-07-14: post-align shape/decompose/graduate — locked Q1–Q7 and fan-out, drafted the two-plane brief/map, graduated `projection-dispatch-core`, and kept the packet active for gated candidates.
 - 2026-07-14: research amendment — accounted for live Effect v4 `DurableQueue`, current epistemic/desktop capabilities, and superseded the v3-era in-memory hub premise.

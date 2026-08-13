@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` (first packet graduated; 6 more candidates remain)
+Status: `parked` (mirrors roadmap-paused `domain-kernel-hardening`)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -21,12 +21,10 @@ observability, and queryability — Effect-native, schema-first throughout — a
 
 ## Next Open Question
 
-The concrete resume trigger is the ROADMAP condition: paused
+Resume when roadmap-paused
 [`goals/domain-kernel-hardening`](../../goals/domain-kernel-hardening/README.md)
-opens when KG tables approach scale with PRD P2 librarian. Until packet 1
-advances, packets 2–7 remain held behind it according to the
-[`MAP.md`](./MAP.md) dependency graph. The six bounded law-practice consumers
-created 2026-07-14 are packet-5 shaping inputs only, not dependency clearance.
+unpauses. Packets 2–7 then receive a fresh align/shape pass because the domain
+layer will have drifted.
 
 ## Read This First
 
@@ -53,6 +51,10 @@ The approved execution plan lives at
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13: parked to mirror roadmap-paused
+  `goals/domain-kernel-hardening`. Resume when that goal unpauses; packets 2–7
+  require a fresh align/shape pass because the domain layer will have drifted.
 
 - 2026-07-14: sibling review held all six remaining candidates behind paused
   packet 1; recorded six new bounded law-practice goals as packet-5 shaping
