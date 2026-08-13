@@ -778,6 +778,14 @@ const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* 
 /**
  * Expose the closeout artifact writer to focused tests.
  *
+ * **Example** (Reference the closeout artifact writer)
+ *
+ * ```ts
+ * import { writePrCloseoutReportForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof writePrCloseoutReportForTesting) // "function"
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */
