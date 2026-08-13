@@ -43,6 +43,7 @@ export {
   PrCloseoutGateState,
   PrCloseoutOptions,
   PrCloseoutReport,
+  PrCloseoutReportJson,
   PrCloseoutWriteAction,
 } from "./closeout/Closeout.schemas.ts";
 export { closeoutGateStatesForTesting, greptileIssueLimitExceededForTesting } from "./closeout/Gates.ts";
