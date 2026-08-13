@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "check": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/.codex/config.toml",
+        "$TURBO_ROOT$/.claude/settings.json"
+      ]
+    },
+    "audit": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/.codex/config.toml",
+        "$TURBO_ROOT$/.claude/settings.json"
+      ]
+    }
+  }
+}
