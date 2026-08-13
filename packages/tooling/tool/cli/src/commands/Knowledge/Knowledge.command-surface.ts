@@ -659,6 +659,17 @@ const resolveStaticCommand = (
 /**
  * Source-only command-surface operations used by the semantic-delta archive oracle.
  *
+ * **Example** (Build a current-tree probe)
+ *
+ * ```ts
+ * import { KnowledgeCommandSurface } from "@beep/repo-cli/test/Knowledge"
+ * import * as Str from "effect/String"
+ *
+ * const source = KnowledgeCommandSurface.commandTreeProbeSource("/repo/commands/Root.ts")
+ *
+ * console.log(Str.includes("rootCommand")(source)) // true
+ * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
