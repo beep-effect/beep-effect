@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-13T18:38:32.277Z",
-  "git_sha": "450e6f7c6c11c3996ec8ae2996ed6afa483ea7ec",
+  "generated_at": "2026-08-13T20:06:18.319Z",
+  "git_sha": "f629fd81e240ca5547d0e7346daa70bd0313bb1d",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -1195,15 +1195,15 @@
     },
     "@beep/ai-sync": {
       "path": "packages/tooling/library/ai-sync",
-      "lines": 76.57,
-      "statements": 77.48,
-      "branches": 48.38,
-      "functions": 68.57,
+      "lines": 82.98,
+      "statements": 83.52,
+      "branches": 61.76,
+      "functions": 77.14,
       "uncovered": {
         "lines": 41,
         "statements": 43,
-        "branches": 16,
-        "functions": 22
+        "branches": 13,
+        "functions": 24
       },
       "files": {
         "packages/tooling/library/ai-sync/src/_generated/schemas.gen.ts": {
@@ -1315,15 +1315,15 @@
           }
         },
         "packages/tooling/library/ai-sync/src/validation.ts": {
-          "lines": 63.88,
-          "statements": 65.78,
-          "branches": 16.66,
-          "functions": 66.66,
+          "lines": 87.25,
+          "statements": 87.96,
+          "branches": 53.33,
+          "functions": 87.23,
           "uncovered": {
             "lines": 13,
             "statements": 13,
-            "branches": 10,
-            "functions": 4
+            "branches": 7,
+            "functions": 6
           }
         }
       }
@@ -18971,14 +18971,14 @@
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
       "lines": 71.51,
-      "statements": 70.28,
+      "statements": 70.24,
       "branches": 63.69,
-      "functions": 60.55,
+      "functions": 60.47,
       "uncovered": {
         "lines": 674,
-        "statements": 751,
+        "statements": 752,
         "branches": 183,
-        "functions": 452
+        "functions": 453
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
@@ -19187,14 +19187,14 @@
         },
         "apps/professional-desktop/src/chat/ui/YouTubeWatchOpener.tsx": {
           "lines": 96.55,
-          "statements": 93.75,
+          "statements": 90.62,
           "branches": 75,
-          "functions": 93.75,
+          "functions": 87.5,
           "uncovered": {
             "lines": 1,
-            "statements": 2,
+            "statements": 3,
             "branches": 1,
-            "functions": 1
+            "functions": 2
           }
         },
         "apps/professional-desktop/src/chat/ui/editor-state.atoms.ts": {
@@ -30256,65 +30256,17 @@
     },
     "@beep/semantic-web": {
       "path": "packages/foundation/capability/semantic-web",
-      "lines": 83.75,
-      "statements": 83.81,
-      "branches": 64.39,
-      "functions": 79.41,
+      "lines": 84.12,
+      "statements": 82.81,
+      "branches": 54.54,
+      "functions": 73.68,
       "uncovered": {
-        "lines": 83,
-        "statements": 84,
-        "branches": 73,
-        "functions": 42
+        "lines": 10,
+        "statements": 11,
+        "branches": 15,
+        "functions": 5
       },
       "files": {
-        "packages/foundation/capability/semantic-web/src/adapters/jsonld-context.ts": {
-          "lines": 65.45,
-          "statements": 65.45,
-          "branches": 43.75,
-          "functions": 78.57,
-          "uncovered": {
-            "lines": 19,
-            "statements": 19,
-            "branches": 18,
-            "functions": 3
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts": {
-          "lines": 88.17,
-          "statements": 88.46,
-          "branches": 71.92,
-          "functions": 84.25,
-          "uncovered": {
-            "lines": 33,
-            "statements": 33,
-            "branches": 32,
-            "functions": 20
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/adapters/jsonld-stream-parse.ts": {
-          "lines": 62.5,
-          "statements": 62.5,
-          "branches": 25,
-          "functions": 47.05,
-          "uncovered": {
-            "lines": 12,
-            "statements": 12,
-            "branches": 3,
-            "functions": 9
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/adapters/jsonld-stream-serialize.ts": {
-          "lines": 75.86,
-          "statements": 75.86,
-          "branches": 62.5,
-          "functions": 63.63,
-          "uncovered": {
-            "lines": 7,
-            "statements": 7,
-            "branches": 3,
-            "functions": 4
-          }
-        },
         "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts": {
           "lines": 77.77,
           "statements": 76.08,
@@ -30433,66 +30385,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/semantic-web/src/services/provenance.ts": {
-          "lines": 94.11,
-          "statements": 94.11,
-          "branches": 85.71,
-          "functions": 91.66,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 2,
-            "functions": 1
           }
         },
         "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts": {
