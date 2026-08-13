@@ -1,5 +1,17 @@
 # Decisions — grilling log
 
+## 2026-08-13 — Thread-renderer ownership gate resolved
+
+**Decision:** The operator confirmed editor-stack ownership clear for the
+thread renderer surface and authorized `goals/thread-virtualization`. The
+2026-07-14 beep-effect6 gate release covered only the desktop shell; this
+confirmation covers the distinct thread renderer surface.
+
+**Rationale:** The sole open question is resolved. The goal consumes the
+`@beep/pretext` root plus a client capture pass. The 2026-07-14 routing
+decision named `scratchpad/dockview/WHAT-IS-LEFT.md`; that scratchpad was
+retired 2026-07-16 and its residue migrated to the dock-substrate goal README.
+
 Align ran 2026-07-13 via `/grill-with-docs` (Ben present, four
 branch-closing questions). Convention: one question at a time,
 recommended answer first.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,10 +33,10 @@ FOLIO annotation migrations, and the vocab term-inventory codegen.
 
 ## Current Phase
 
-P3 Close: P0-P2 landed on `feat/identity-iri-fold` — evidence in
-[`history/p0-p2-evidence.md`](./history/p0-p2-evidence.md). The reflection and
-full local Yeet repair are green. Remaining: publish, hosted checks, and review
-closure to mergeable.
+Completed-retained. The branch merged as PR #536 on 2026-08-01; `Fold.*` is
+live on main. P0-P2 evidence remains in
+[`history/p0-p2-evidence.md`](./history/p0-p2-evidence.md), with the closeout
+reflection under `history/reflections/`.
 
 ## Latest Evidence
 
@@ -51,7 +51,9 @@ in-packet vocab codegen adopted into `SPEC.md`.
 
 ## Notes
 
-The sequence is strict: core → fold → fibered. `identity-iri-fibered` remains
-held until this packet lands. Do not absorb the Fibered kit, registry/store
-layers, or SHACL projection. `@beep/ontology` repopulation is additive: the
-FOLIO models and semantic-foundation M1 taxonomy surface stay in place.
+The sequence is strict: core → fold → fibered. This packet has landed, so the
+fibered trigger fired; its separately ratified goal remains blocked by the
+semantic-web PR2+PR3 cleanups. Do not retroactively absorb the Fibered kit,
+registry/store layers, or SHACL projection into this completed packet.
+`@beep/ontology` repopulation is additive: the FOLIO models and
+semantic-foundation M1 taxonomy surface stay in place.
