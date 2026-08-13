@@ -152,3 +152,31 @@ done, the evidence, what would have prevented it.
 - **Prevented by:** nothing repo-side — recorded so the failure signature
   (parse errors inside a dependency's dist with nonsense tokens) maps to
   "purge the bun cache" instead of an upstream bug hunt.
+
+## 2026-08-11 — JSDoc lane timeout on a slower host class delayed P1 convergence
+
+- **Doing:** driving the P1 follow-up PR (#667) to merge-ready; every lane but
+  JSDoc Ratchet settled green across repeated attempts.
+- **Evidence:** the lane runs ~7 minutes on the fleet's intended host class but
+  ran past its 30-minute budget on the replacement class the controller was
+  provisioning during the incident (three cancelled attempts, one with zero
+  failed steps at exactly the timeout). The fleet packet documents the same
+  incident family — cache-home placement and host-class anomalies — in
+  `goals/ci-fleet-endgame/research/OPPORTUNITIES.md`, and the lane has since
+  moved to GitHub-hosted `ubuntu-24.04`.
+- **Prevented by:** a declared host-class policy per lane (budget derived from
+  the class it actually runs on) plus cache-home parity between classes.
+
+## 2026-08-11 — merging before the reviewer set was terminal cost a follow-up PR
+
+- **Doing:** closing P1; PR #664 was merged while its final review-fix push was
+  still in flight.
+- **Evidence:** the merge landed at a pre-fix head, stranding five substantive
+  Codex findings — including published declarations broken by `stripInternal`
+  stripping types still referenced from public signatures. Recovery required a
+  dedicated follow-up (PR #667) with its own changeset, a fresh full
+  verification cycle, and another hosted-check treadmill through an unrelated
+  fleet incident.
+- **Prevented by:** treating "phase closed" as: reviewer set terminal AND every
+  actionable thread resolved AND the resolving commits present on the head
+  being merged — not first-green checks.

@@ -117,18 +117,18 @@ operator:
 
 ## Acceptance Criteria
 
-- [ ] P0: doc 14 exists and is indexed; family grammar, binding summary,
+- [x] P0: doc 14 exists and is indexed; family grammar, binding summary,
       glossary term, decision entry, and the shared-tables projection line all
       agree; packet registered in `goals/INDEX.md`; PR merged.
-- [ ] P1: `@beep/effect-drizzle` builds, checks, tests, and
+- [x] P1: `@beep/effect-drizzle` builds, checks, tests, and
       docgens green through standard lanes; the member tstyche lane exists and
       passes (matrix + exact `~effect-drizzle.error` literals via
       `.toRaiseError`); the inverted-import gate fails on a deliberate
       `@beep/*` import in `src/`; `scratchpad/bsl` is retired; PR merged.
-- [ ] P2: family lanes (member tstyche, bundle probe) run in CI;
+- [x] P2: family lanes (member tstyche, bundle probe) run in CI;
       manifest/README/INDEX flipped and closeout reflection landed in the
       final PR; PR merged.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

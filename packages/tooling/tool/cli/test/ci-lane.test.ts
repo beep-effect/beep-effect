@@ -59,7 +59,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(22);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(23);
   });
 
   it("covers every runnable lane id", () => {
@@ -77,6 +77,12 @@ describe("CI lane descriptors", () => {
       A.sort(Order.String)
     );
     expect(requiredContexts).toEqual(REQUIRED_CONTEXT_NAMES);
+  });
+
+  it("keeps the ecosystem contracts context visible but non-required", () => {
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "ecosystem"));
+    expect(descriptor.contextName).toBe("Ecosystem Contracts");
+    expect(descriptor.required).toBe(false);
   });
 
   it("marks the CI-only residue as unreplayable", () => {
@@ -118,6 +124,15 @@ describe("ciLaneStepsForTesting", () => {
 
     const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", prShapeOptions));
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
+  });
+
+  it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "ecosystem", baseOptions);
+    expect(A.map(steps, (step) => step.command)).toEqual(["bun", "bun"]);
+    expect(A.map(steps, (step) => [...step.args])).toEqual([
+      ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:type-test"],
+      ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:bundle-probe"],
+    ]);
   });
 
   it("matches coverage baseline regeneration concurrency", () => {

@@ -90,6 +90,12 @@ jobs:
             timeout_minutes: 40
             uses_turbo: "true"
             install_typos: "false"
+          - id: ecosystem
+            name: Ecosystem Contracts
+            runner: ubuntu-24.04
+            timeout_minutes: 30
+            uses_turbo: "false"
+            install_typos: "false"
           - id: coverage
             name: Coverage Regression
             runner: beep-ec2-heavy
@@ -220,7 +226,7 @@ jobs:
             lint|check|test-unit|test-integration|coverage)
               bun run beep ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
-            lint-policy|codegen)
+            lint-policy|codegen|ecosystem)
               bun run beep ci lane "${{ matrix.id }}"
               ;;
             repo-sanity)
