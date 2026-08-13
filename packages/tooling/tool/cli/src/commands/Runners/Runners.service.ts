@@ -7,11 +7,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, Context, DateTime, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
@@ -38,13 +41,61 @@ import type { BakeConfig } from "./Runners.schemas.ts";
 const $I = $RepoCliId.create("commands/Runners/Runners.service");
 const BAKE_COMPLETE_MARKER = "BEEP_RUNNERS_BAKE_COMPLETE";
 const REPORT_FILE_NAME = "runners-bake-report.json";
+const AWS_POLL_INTERVAL = Duration.seconds(15);
+const BAKE_WAIT_LIMIT = Duration.hours(6);
+const IMAGE_WAIT_LIMIT = Duration.hours(2);
+
+const BunVersion = S.String.check(
+  S.isPattern(/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u, {
+    identifier: $I`BunVersionPattern`,
+    title: "Bun version",
+    description: "Exact Bun semantic version safe for interpolation into runner bake shell commands.",
+    message: "Expected an exact Bun semantic version",
+  })
+).pipe($I.annoteSchema("BunVersion", { description: "Validated Bun release used by the runner bake." }));
+
+const AwsTagResourceType = LiteralKit(["image", "instance"]).pipe(
+  $I.annoteSchema("AwsTagResourceType", { description: "EC2 resource types tagged by the runner bake." })
+);
+
+class AwsTagSpecification extends S.Class<AwsTagSpecification>($I`AwsTagSpecification`)(
+  { ResourceType: AwsTagResourceType, Tags: S.Array(AwsTag) },
+  $I.annote("AwsTagSpecification", { description: "Complete JSON EC2 tag specification passed to the AWS CLI." })
+) {}
+
+class AwsEbsBlockDevice extends S.Class<AwsEbsBlockDevice>($I`AwsEbsBlockDevice`)(
+  {
+    DeleteOnTermination: S.Boolean,
+    Encrypted: S.Boolean,
+    Iops: S.Int,
+    Throughput: S.Int,
+    VolumeSize: S.Int,
+    VolumeType: S.Literal("gp3"),
+  },
+  $I.annote("AwsEbsBlockDevice", { description: "EBS settings for the temporary bake instance root volume." })
+) {}
+
+class AwsBlockDeviceMapping extends S.Class<AwsBlockDeviceMapping>($I`AwsBlockDeviceMapping`)(
+  { DeviceName: S.Literal("/dev/xvda"), Ebs: AwsEbsBlockDevice },
+  $I.annote("AwsBlockDeviceMapping", { description: "EC2 root block-device override for a runner bake." })
+) {}
+
+class AwsResourcePending extends TaggedErrorClass<AwsResourcePending>($I`AwsResourcePending`)(
+  "AwsResourcePending",
+  { actual: S.NonEmptyString, expected: S.NonEmptyString, resource: S.NonEmptyString },
+  $I.annote("AwsResourcePending", {
+    description: "Internal signal that an AWS resource has not reached its target state.",
+  })
+) {}
 
 const decodeParameter = S.decodeUnknownEffect(S.fromJsonString(AwsGetParameterResponse));
 const decodeRunInstances = S.decodeUnknownEffect(S.fromJsonString(AwsRunInstancesResponse));
 const decodeCreateImage = S.decodeUnknownEffect(S.fromJsonString(AwsCreateImageResponse));
 const decodeDescribeImages = S.decodeUnknownEffect(S.fromJsonString(AwsDescribeImagesResponse));
 const decodeConsoleOutput = S.decodeUnknownEffect(S.fromJsonString(AwsConsoleOutputResponse));
-const encodeTags = S.encodeUnknownEffect(S.fromJsonString(S.Array(AwsTag)));
+const decodeAwsStates = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.NonEmptyString)));
+const encodeTagSpecification = S.encodeEffect(S.fromJsonString(AwsTagSpecification));
+const encodeBlockDeviceMappings = S.encodeEffect(S.fromJsonString(S.Array(AwsBlockDeviceMapping)));
 
 /**
  * Local repository inputs that form the immutable bake key.
@@ -160,6 +211,31 @@ const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
   return result.output;
 });
 
+const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(function* (
+  repoRoot: string
+): Effect.fn.Return<void, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const args = ["status", "--porcelain=v1", "--untracked-files=all", "--", "bun.lock", ".bun-version"];
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "all",
+    trim: true,
+  }).pipe(RunnersCommandError.mapError("Failed to inspect runner bake inputs in Git."));
+  if (result.exitCode !== 0) {
+    return yield* RunnersCommandError.make({
+      message: "Failed to inspect runner bake inputs in Git.",
+      command: formatCommandLine("git", args),
+      exitCode: result.exitCode,
+    });
+  }
+  if (!Str.isEmpty(result.output)) {
+    return yield* RunnersCommandError.make({
+      message: "Refusing to bake while bun.lock or .bun-version has uncommitted changes.",
+    });
+  }
+});
+
 const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effect.fn.Return<
   BakeLocalInputs,
   RunnersCommandError,
@@ -170,15 +246,16 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
   const repoRoot = yield* findRepoRoot().pipe(RunnersCommandError.mapError("Failed to locate the repository root."));
   const lockfilePath = path.join(repoRoot, "bun.lock");
   const bunVersionPath = path.join(repoRoot, ".bun-version");
+  yield* assertBakeInputsClean(repoRoot);
   const lockfileSha256 = yield* hashFileSha256(lockfilePath, (cause) =>
     runnersError(`Failed to hash ${lockfilePath}.`, cause)
   );
-  const bunVersion = yield* fs
+  const rawBunVersion = yield* fs
     .readFileString(bunVersionPath)
     .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunVersionPath}.`));
-  if (Str.isEmpty(bunVersion)) {
-    return yield* RunnersCommandError.make({ message: `${bunVersionPath} is empty.` });
-  }
+  const bunVersion = yield* S.decodeEffect(BunVersion)(rawBunVersion).pipe(
+    RunnersCommandError.mapError(`${bunVersionPath} must contain an exact Bun semantic version.`)
+  );
   const gitRevision = yield* runGitRevision(repoRoot);
   return BakeLocalInputs.make({ repoRoot, lockfileSha256, bunVersion, gitRevision });
 });
@@ -196,8 +273,15 @@ const getParameter = Effect.fn("Runners.getParameter")(function* (region: string
   return response.Parameter.Value;
 });
 
-const getPriorPin = (region: string): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  getParameter(region, RUNNER_AMI_PIN_PARAMETER).pipe(Effect.option);
+const getPriorPin = (
+  region: string
+): Effect.Effect<O.Option<string>, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> =>
+  getParameter(region, RUNNER_AMI_PIN_PARAMETER).pipe(
+    Effect.map(O.some),
+    Effect.catchTag("RunnersCommandError", (error) =>
+      Str.includes("ParameterNotFound")(error.message) ? Effect.succeed(O.none()) : Effect.fail(error)
+    )
+  );
 
 const makeBakeScript = (inputs: BakeLocalInputs): string => `#!/usr/bin/env bash
 set -euo pipefail
@@ -245,6 +329,7 @@ const imageTags = (
 ): Readonly<Record<string, string>> =>
   pipe(
     config.tags,
+    R.set("beep-ci", "runner"),
     R.set("beep-ci:lockfile-sha256", inputs.lockfileSha256),
     R.set("beep-ci:bun-version", inputs.bunVersion),
     R.set("App", "ci-runners"),
@@ -258,9 +343,22 @@ const runInstance = Effect.fn("Runners.runInstance")(function* (
   baseAmiId: string,
   userData: string
 ) {
-  const instanceTagJson = yield* encodeTags(tagsFromRecord(requiredInstanceTags(config))).pipe(
-    RunnersCommandError.mapError("Failed to encode bake instance tags.")
-  );
+  const instanceTagJson = yield* encodeTagSpecification(
+    AwsTagSpecification.make({ ResourceType: "instance", Tags: tagsFromRecord(requiredInstanceTags(config)) })
+  ).pipe(RunnersCommandError.mapError("Failed to encode bake instance tags."));
+  const blockDeviceMappings = yield* encodeBlockDeviceMappings([
+    AwsBlockDeviceMapping.make({
+      DeviceName: "/dev/xvda",
+      Ebs: AwsEbsBlockDevice.make({
+        DeleteOnTermination: true,
+        Encrypted: true,
+        Iops: 3000,
+        Throughput: 250,
+        VolumeSize: 100,
+        VolumeType: "gp3",
+      }),
+    }),
+  ]).pipe(RunnersCommandError.mapError("Failed to encode bake instance block-device mappings."));
   const output = yield* runAws(config.region, [
     "ec2",
     "run-instances",
@@ -276,10 +374,12 @@ const runInstance = Effect.fn("Runners.runInstance")(function* (
     "HttpTokens=required,HttpEndpoint=enabled,HttpPutResponseHopLimit=1,InstanceMetadataTags=enabled",
     "--instance-initiated-shutdown-behavior",
     "stop",
+    "--block-device-mappings",
+    blockDeviceMappings,
     "--user-data",
     userData,
     "--tag-specifications",
-    `ResourceType=instance,Tags=${instanceTagJson}`,
+    instanceTagJson,
     "--count",
     "1",
     "--output",
@@ -301,8 +401,72 @@ const terminateInstance = (region: string, instanceId: string) =>
     Effect.ignore
   );
 
+const waitForAwsState = Effect.fn("Runners.waitForAwsState")(function* <R>(
+  resource: string,
+  expected: string,
+  limit: Duration.Duration,
+  readState: Effect.Effect<string, RunnersCommandError, R>
+) {
+  yield* readState.pipe(
+    Effect.flatMap((actual) =>
+      Str.Equivalence(actual, expected)
+        ? Effect.void
+        : Effect.fail(AwsResourcePending.make({ actual, expected, resource }))
+    ),
+    Effect.retry({
+      schedule: Schedule.spaced(AWS_POLL_INTERVAL).pipe(Schedule.upTo({ duration: limit })),
+      while: P.isTagged("AwsResourcePending"),
+    }),
+    Effect.catchTag("AwsResourcePending", (pending) =>
+      RunnersCommandError.make({
+        message: `${pending.resource} did not reach ${pending.expected} within ${Duration.format(limit)} (last state: ${pending.actual}).`,
+      })
+    )
+  );
+});
+
+const readInstanceState = Effect.fn("Runners.readInstanceState")(function* (region: string, instanceId: string) {
+  const output = yield* runAws(region, [
+    "ec2",
+    "describe-instances",
+    "--instance-ids",
+    instanceId,
+    "--query",
+    "Reservations[].Instances[].State.Name",
+    "--output",
+    "json",
+  ]);
+  const states = yield* parseAws("EC2 describe-instances state", decodeAwsStates, output);
+  return yield* A.head(states).pipe(
+    O.match({
+      onNone: () => Effect.fail(RunnersCommandError.make({ message: `AWS returned no state for ${instanceId}.` })),
+      onSome: Effect.succeed,
+    })
+  );
+});
+
+const readImageState = Effect.fn("Runners.readImageState")(function* (region: string, imageId: string) {
+  const output = yield* runAws(region, [
+    "ec2",
+    "describe-images",
+    "--image-ids",
+    imageId,
+    "--query",
+    "Images[].State",
+    "--output",
+    "json",
+  ]);
+  const states = yield* parseAws("EC2 describe-images state", decodeAwsStates, output);
+  return yield* A.head(states).pipe(
+    O.match({
+      onNone: () => Effect.fail(RunnersCommandError.make({ message: `AWS returned no state for ${imageId}.` })),
+      onSome: Effect.succeed,
+    })
+  );
+});
+
 const verifyBakeCompleted = Effect.fn("Runners.verifyBakeCompleted")(function* (region: string, instanceId: string) {
-  yield* runAws(region, ["ec2", "wait", "instance-stopped", "--instance-ids", instanceId]);
+  yield* waitForAwsState(instanceId, "stopped", BAKE_WAIT_LIMIT, readInstanceState(region, instanceId));
   const output = yield* runAws(region, [
     "ec2",
     "get-console-output",
@@ -313,8 +477,17 @@ const verifyBakeCompleted = Effect.fn("Runners.verifyBakeCompleted")(function* (
     "json",
   ]);
   const response = yield* parseAws("EC2 get-console-output", decodeConsoleOutput, output);
-  const completed = pipe(response.Output, O.exists(Str.includes(BAKE_COMPLETE_MARKER)));
-  if (!completed) {
+  const consoleOutput = yield* response.Output.pipe(
+    O.match({
+      onNone: () =>
+        Effect.fail(RunnersCommandError.make({ message: `AWS returned no console output for ${instanceId}.` })),
+      onSome: (encoded) =>
+        S.decodeEffect(S.StringFromBase64)(encoded).pipe(
+          RunnersCommandError.mapError(`AWS returned invalid base64 console output for ${instanceId}.`)
+        ),
+    })
+  );
+  if (!Str.includes(BAKE_COMPLETE_MARKER)(consoleOutput)) {
     return yield* RunnersCommandError.make({
       message: `Bake instance ${instanceId} stopped without the ${BAKE_COMPLETE_MARKER} success marker.`,
     });
@@ -325,12 +498,12 @@ const createImage = Effect.fn("Runners.createImage")(function* (
   config: BakeConfig,
   instanceId: string,
   tags: Readonly<Record<string, string>>,
-  bakeDate: string
+  inputs: BakeLocalInputs
 ) {
-  const imageTagJson = yield* encodeTags(tagsFromRecord(tags)).pipe(
-    RunnersCommandError.mapError("Failed to encode baked AMI tags.")
-  );
-  const name = `beep-ci-runners-${Str.replace(/[^0-9]/gu, "")(bakeDate)}`;
+  const imageTagJson = yield* encodeTagSpecification(
+    AwsTagSpecification.make({ ResourceType: "image", Tags: tagsFromRecord(tags) })
+  ).pipe(RunnersCommandError.mapError("Failed to encode baked AMI tags."));
+  const name = `beep-ci-runners-${Str.slice(0, 12)(inputs.lockfileSha256)}-${config.bakeTimestamp}`;
   const output = yield* runAws(config.region, [
     "ec2",
     "create-image",
@@ -342,12 +515,17 @@ const createImage = Effect.fn("Runners.createImage")(function* (
     "Lockfile-keyed beep CI runner image",
     "--no-reboot",
     "--tag-specifications",
-    `ResourceType=image,Tags=${imageTagJson}`,
+    imageTagJson,
     "--output",
     "json",
   ]);
   const response = yield* parseAws("EC2 create-image", decodeCreateImage, output);
-  yield* runAws(config.region, ["ec2", "wait", "image-available", "--image-ids", response.ImageId]);
+  yield* waitForAwsState(
+    response.ImageId,
+    "available",
+    IMAGE_WAIT_LIMIT,
+    readImageState(config.region, response.ImageId)
+  );
   return response.ImageId;
 });
 
@@ -386,10 +564,10 @@ const makePlan = Effect.fn("Runners.plan")(function* () {
         argv: ["aws", "ssm", "get-parameter", "--name", DEFAULT_RUNNER_BASE_AMI_PARAMETER],
       }),
       BakePlanStep.make({ name: "launch-bake-instance", argv: ["aws", "ec2", "run-instances"] }),
-      BakePlanStep.make({ name: "wait-for-bake", argv: ["aws", "ec2", "wait", "instance-stopped"] }),
+      BakePlanStep.make({ name: "wait-for-bake", argv: ["aws", "ec2", "describe-instances"] }),
       BakePlanStep.make({ name: "verify-console-marker", argv: ["aws", "ec2", "get-console-output", "--latest"] }),
       BakePlanStep.make({ name: "create-image", argv: ["aws", "ec2", "create-image", "--no-reboot"] }),
-      BakePlanStep.make({ name: "wait-for-image", argv: ["aws", "ec2", "wait", "image-available"] }),
+      BakePlanStep.make({ name: "wait-for-image", argv: ["aws", "ec2", "describe-images"] }),
       BakePlanStep.make({ name: "terminate-instance", argv: ["aws", "ec2", "terminate-instances"] }),
     ],
   });
@@ -448,7 +626,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
     runInstance(config, baseAmiId, userData),
     Effect.fn("Runners.useBakeInstance")(function* (instanceId) {
       yield* verifyBakeCompleted(config.region, instanceId);
-      return yield* createImage(config, instanceId, imageTags(config, inputs, baseAmiId, bakeDate), bakeDate);
+      return yield* createImage(config, instanceId, imageTags(config, inputs, baseAmiId, bakeDate), inputs);
     }),
     (instanceId) => terminateInstance(config.region, instanceId)
   );

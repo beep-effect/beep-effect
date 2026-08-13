@@ -107,6 +107,7 @@ const defaultTags = S.Record(S.String, S.String).pipe(
  *   subnetId: "subnet-0123456789abcdef0",
  *   securityGroupId: "sg-0123456789abcdef0",
  *   instanceProfile: "beep-runners-bake",
+ *   bakeTimestamp: 1786640400000,
  * })
  * console.log(config.instanceType) // "r7a.2xlarge"
  * ```
@@ -120,6 +121,7 @@ export class BakeConfig extends S.Class<BakeConfig>($I`BakeConfig`)(
     subnetId: S.NonEmptyString,
     securityGroupId: S.NonEmptyString,
     instanceProfile: S.NonEmptyString,
+    bakeTimestamp: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     baseAmiSsmParameter: defaultBaseAmiParameter,
     instanceType: defaultInstanceType,
     tags: defaultTags,

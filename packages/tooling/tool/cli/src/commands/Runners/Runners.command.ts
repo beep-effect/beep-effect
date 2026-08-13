@@ -7,6 +7,7 @@
 
 import { A } from "@beep/utils";
 import { Console, Effect, Match, pipe } from "effect";
+import * as Clock from "effect/Clock";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
@@ -140,11 +141,13 @@ const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: B
         const subnetId = yield* requiredFlag("subnet", options.subnet);
         const securityGroupId = yield* requiredFlag("security-group", options.securityGroup);
         const instanceProfile = yield* requiredFlag("instance-profile", options.instanceProfile);
+        const bakeTimestamp = yield* Clock.currentTimeMillis;
         const config = BakeConfig.make({
           region: options.region,
           subnetId,
           securityGroupId,
           instanceProfile,
+          bakeTimestamp,
           baseAmiSsmParameter: options.baseAmiParameter,
           instanceType: options.instanceType,
           tags: O.getOrElse(options.tags, () => ({})),
@@ -228,7 +231,7 @@ const bakeCommand = Command.make(
  * console.log(typeof runnersCommand)
  * ```
  *
- * @category use-cases
+ * @category cli-commands
  * @since 0.0.0
  */
 export const runnersCommand = Command.make("runners", {}, () => Console.log("runners commands: bake")).pipe(

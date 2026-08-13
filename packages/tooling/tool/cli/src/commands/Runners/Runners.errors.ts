@@ -50,6 +50,15 @@ export class RunnersCommandError extends TaggedErrorClass<RunnersCommandError>($
   /**
    * Construct a runner error from an unknown boundary cause.
    *
+   * **Example** (Wrap a boundary failure)
+   *
+   * ```ts
+   * import { RunnersCommandError } from "@beep/repo-cli/commands/Runners"
+   *
+   * const error = RunnersCommandError.new("aws unavailable")("Unable to reach AWS.")
+   * console.log(error.message) // "Unable to reach AWS."
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
@@ -60,6 +69,18 @@ export class RunnersCommandError extends TaggedErrorClass<RunnersCommandError>($
 
   /**
    * Map an unknown boundary cause into a runner bake error.
+   *
+   * **Example** (Create an Effect error mapper)
+   *
+   * ```ts
+   * import { RunnersCommandError } from "@beep/repo-cli/commands/Runners"
+   * import { Effect } from "effect"
+   *
+   * const program = Effect.fail("aws unavailable").pipe(
+   *   RunnersCommandError.mapError("Unable to reach AWS."),
+   * )
+   * console.log(Effect.isEffect(program)) // true
+   * ```
    *
    * @category errors
    * @since 0.0.0
