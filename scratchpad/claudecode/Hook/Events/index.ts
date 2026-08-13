@@ -97,15 +97,16 @@ export {
  * Discriminated union of every hook event input supported by
  * effect-claudecode, keyed on `hook_event_name`.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Inspect the union discriminator)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.HookInput)
+ * console.log(Hook.HookInput.ast._tag) // "Union"
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const HookInput = S.Union([
   // Tier 1
@@ -151,13 +152,6 @@ export const HookInput = S.Union([
 /**
  * Public utility for `HookInput`.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.HookInput
- * ```
- *
  * @category utilities
  *
  * @since 0.0.0
@@ -166,14 +160,6 @@ export type HookInput = typeof HookInput.Type;
 
 /**
  * JSON representation accepted by {@link HookInput}.
- *
- * @example
- * ```ts
- * import type { Hook } from "effect-claudecode"
- *
- * const accept = (input: Hook.HookInputEncoded) => input
- * console.log(accept)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -186,11 +172,5 @@ export type HookInputEncoded = typeof HookInput.Encoded;
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.HookEventName
- * ```
  */
 export type HookEventName = HookInput["hook_event_name"];

@@ -16,7 +16,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/OutputStyle");
  * Output styles influence response phrasing. All supported wire keys are
  * optional and decode to `Option`.
  *
- * @example
+ * **Example** (Run OutputStyleFrontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -46,17 +47,6 @@ export class OutputStyleFrontmatter extends S.Class<OutputStyleFrontmatter>($I`O
 
 /**
  * Encoded input accepted at the Claude Code output-style frontmatter boundary.
- *
- * @example
- * ```ts
- * import type { Frontmatter } from "effect-claudecode"
- *
- * const input: Frontmatter.OutputStyleFrontmatter.Encoded = {
- *   name: "terse",
- *   "keep-coding-instructions": true
- * }
- * console.log(input.name)
- * ```
  *
  * @category dtos
  * @since 0.0.0

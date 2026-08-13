@@ -26,7 +26,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PreCompact");
 /**
  * Schema for `Trigger`.
  *
- * @example
+ * **Example** (Inspect the Trigger schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -46,7 +47,8 @@ export const Trigger = LiteralKit(["manual", "auto"]).pipe(
 /**
  * Type-level model for `Trigger`.
  *
- * @example
+ * **Example** (Use Trigger as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -62,7 +64,8 @@ export type Trigger = typeof Trigger.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -92,7 +95,8 @@ export class Input extends S.Class<Input>($I`PreCompactInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -125,7 +129,8 @@ export class Output extends S.Class<Output>($I`PreCompactOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -141,7 +146,8 @@ export const passthrough = (): Output => Output.make();
 /**
  * Constructor for `block`.
  *
- * @example
+ * **Example** (Use block)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -161,7 +167,8 @@ export const block = (reason: string): Output => Output.make({ decision: O.some(
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -184,15 +191,16 @@ export const define = <E, R>(config: {
 /**
  * Build a PreCompact hook that only handles matching `trigger` values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PreCompact hook that only handles matching `trigger` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PreCompact.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -214,12 +222,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PreCompact.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -244,12 +246,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PreCompact.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

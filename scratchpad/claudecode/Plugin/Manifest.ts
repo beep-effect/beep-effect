@@ -14,11 +14,14 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Manifest");
 /**
  * Author or owner metadata shared by plugin and marketplace manifests.
  *
- * @example
+ * **Example** (Create author metadata)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const author = Plugin.AuthorInfo.make({ name: "Beep" })
+ *
+ * console.log(author.name) // "Beep"
  * ```
  *
  * @category schemas
@@ -37,14 +40,6 @@ export class AuthorInfo extends S.Class<AuthorInfo>($I`AuthorInfo`)(
 
 /**
  * Companion types for {@link AuthorInfo}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = { name: "Beep" } satisfies Plugin.AuthorInfo.Encoded
- * console.log(input.name)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -70,7 +65,8 @@ export declare namespace AuthorInfo {
 /**
  * One component path or a list of component paths.
  *
- * @example
+ * **Example** (Inspect component path spec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -90,14 +86,6 @@ export const ComponentPathSpec = S.Union([S.String, S.String.pipe(S.Array)]).pip
 /**
  * Runtime type decoded by {@link ComponentPathSpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const paths: Plugin.ComponentPathSpec = "./commands"
- * console.log(paths)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -106,7 +94,8 @@ export type ComponentPathSpec = typeof ComponentPathSpec.Type;
 /**
  * Hook configuration supplied by path or inline.
  *
- * @example
+ * **Example** (Inspect hooks spec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -126,14 +115,6 @@ export const HooksSpec = S.Union([S.String, S.String.pipe(S.Array), HooksSection
 /**
  * Runtime type decoded by {@link HooksSpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const hooks: Plugin.HooksSpec = "./hooks/hooks.json"
- * console.log(hooks)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -142,7 +123,8 @@ export type HooksSpec = typeof HooksSpec.Type;
 /**
  * MCP or LSP server configuration supplied by path or inline.
  *
- * @example
+ * **Example** (Inspect server config spec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -162,14 +144,6 @@ export const ServerConfigSpec = S.Union([S.String, S.String.pipe(S.Array), S.Rec
 /**
  * Runtime type decoded by {@link ServerConfigSpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const servers: Plugin.ServerConfigSpec = "./.mcp.json"
- * console.log(servers)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -178,7 +152,8 @@ export type ServerConfigSpec = typeof ServerConfigSpec.Type;
 /**
  * Supported user configuration value kinds.
  *
- * @example
+ * **Example** (Use a user configuration value kind)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -197,14 +172,6 @@ export const UserConfigType = LiteralKit(["string", "number", "boolean", "direct
 /**
  * Runtime type represented by {@link UserConfigType}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const kind: Plugin.UserConfigType = "file"
- * console.log(kind)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -213,7 +180,8 @@ export type UserConfigType = typeof UserConfigType.Type;
 /**
  * One user-facing plugin configuration entry.
  *
- * @example
+ * **Example** (Define a user setting)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
@@ -222,6 +190,8 @@ export type UserConfigType = typeof UserConfigType.Type;
  *   title: "Token",
  *   description: "Service token"
  * })
+ *
+ * console.log(entry.title) // "Token"
  * ```
  *
  * @category schemas
@@ -247,18 +217,6 @@ export class UserConfigEntry extends S.Class<UserConfigEntry>($I`UserConfigEntry
 /**
  * Companion types for {@link UserConfigEntry}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {
- *   type: "string",
- *   title: "Token",
- *   description: "Service token"
- * } satisfies Plugin.UserConfigEntry.Encoded
- * console.log(input.title)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -283,7 +241,8 @@ export declare namespace UserConfigEntry {
 /**
  * User configuration entries keyed by identifier.
  *
- * @example
+ * **Example** (Inspect user config record)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -303,14 +262,6 @@ export const UserConfigRecord = S.Record(S.String, UserConfigEntry).pipe(
 /**
  * Runtime type decoded by {@link UserConfigRecord}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const entries: Plugin.UserConfigRecord = {}
- * console.log(entries)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -319,11 +270,14 @@ export type UserConfigRecord = typeof UserConfigRecord.Type;
 /**
  * A plugin message-channel specification.
  *
- * @example
+ * **Example** (Define a message channel)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const channel = Plugin.ChannelSpec.make({ server: "notifications" })
+ *
+ * console.log(channel.server) // "notifications"
  * ```
  *
  * @category schemas
@@ -341,14 +295,6 @@ export class ChannelSpec extends S.Class<ChannelSpec>($I`ChannelSpec`)(
 
 /**
  * Companion types for {@link ChannelSpec}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = { server: "notifications" } satisfies Plugin.ChannelSpec.Encoded
- * console.log(input.server)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -374,11 +320,14 @@ export declare namespace ChannelSpec {
 /**
  * A named plugin dependency.
  *
- * @example
+ * **Example** (Declare a plugin dependency)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const dependency = Plugin.PluginDependency.make({ name: "base-plugin" })
+ *
+ * console.log(dependency.name) // "base-plugin"
  * ```
  *
  * @category schemas
@@ -396,14 +345,6 @@ export class PluginDependency extends S.Class<PluginDependency>($I`PluginDepende
 
 /**
  * Companion types for {@link PluginDependency}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = { name: "base-plugin" } satisfies Plugin.PluginDependency.Encoded
- * console.log(input.name)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -429,7 +370,8 @@ export declare namespace PluginDependency {
 /**
  * A dependency expressed by name or by a structured requirement.
  *
- * @example
+ * **Example** (Inspect dependency spec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
@@ -449,14 +391,6 @@ export const DependencySpec = S.Union([S.String, PluginDependency]).pipe(
 /**
  * Runtime type decoded by {@link DependencySpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const dependency: Plugin.DependencySpec = "base-plugin"
- * console.log(dependency)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -465,7 +399,8 @@ export type DependencySpec = typeof DependencySpec.Type;
 /**
  * Experimental plugin component paths.
  *
- * @example
+ * **Example** (Create experimental spec)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Plugin } from "effect-claudecode"
@@ -492,14 +427,6 @@ export class ExperimentalSpec extends S.Class<ExperimentalSpec>($I`ExperimentalS
 /**
  * Companion types for {@link ExperimentalSpec}.
  *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = {} satisfies Plugin.ExperimentalSpec.Encoded
- * console.log(input)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -524,11 +451,14 @@ export declare namespace ExperimentalSpec {
 /**
  * A Claude Code plugin manifest.
  *
- * @example
+ * **Example** (Create a minimal manifest)
+ *
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
  * const manifest = Plugin.PluginManifest.make({ name: "example-plugin" })
+ *
+ * console.log(manifest.name) // "example-plugin"
  * ```
  *
  * @category schemas
@@ -566,14 +496,6 @@ export class PluginManifest extends S.Class<PluginManifest>($I`PluginManifest`)(
 
 /**
  * Companion types for {@link PluginManifest}.
- *
- * @example
- * ```ts
- * import type { Plugin } from "effect-claudecode"
- *
- * const input = { name: "example-plugin" } satisfies Plugin.PluginManifest.Encoded
- * console.log(input.name)
- * ```
  *
  * @category type-level
  * @since 0.0.0

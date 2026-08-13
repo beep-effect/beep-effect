@@ -21,15 +21,17 @@ const $I = $ScratchpadId.create("claudecode/Hook/Envelope");
 /**
  * Effort levels reported in the common hook envelope.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Select an effort level)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * const level: Hook.EffortLevel = "high"
+ * console.log(level) // "high"
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"]).pipe(
   $I.annoteSchema("EffortLevel", {
@@ -40,7 +42,8 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
 /**
  * Type-level model for `EffortLevel`.
  *
- * @example
+ * **Example** (Name the effort-level type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -56,11 +59,14 @@ export type EffortLevel = typeof EffortLevel.Type;
 /**
  * Schema for `HookPermissionMode`.
  *
- * @example
+ * **Example** (Decode a permission mode)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.HookPermissionMode)
+ * const mode = S.decodeUnknownSync(Hook.HookPermissionMode)("plan")
+ * console.log(mode) // "plan"
  * ```
  *
  * @category schemas
@@ -83,7 +89,8 @@ export const HookPermissionMode = LiteralKit([
 /**
  * Type-level model for `HookPermissionMode`.
  *
- * @example
+ * **Example** (Name the permission-mode type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -99,11 +106,13 @@ export type HookPermissionMode = typeof HookPermissionMode.Type;
 /**
  * Schema for `HookEffort`.
  *
- * @example
+ * **Example** (Construct effort metadata)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.HookEffort)
+ * const effort = Hook.HookEffort.make({ level: "high" })
+ * console.log(effort.level) // "high"
  * ```
  *
  * @category schemas
@@ -123,7 +132,8 @@ export class HookEffort extends S.Class<HookEffort>($I`HookEffort`)(
  * `hook_event_name` remains `S.String` here; individual event schemas
  * override it with their event-specific literal.
  *
- * @example
+ * **Example** (Decode a custom envelope)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  * import * as S from "effect/Schema"
@@ -132,6 +142,14 @@ export class HookEffort extends S.Class<HookEffort>($I`HookEffort`)(
  *   ...Hook.envelopeFields,
  *   hook_event_name: S.Literal("Custom")
  * }) {}
+ *
+ * const input = S.decodeUnknownSync(CustomInput)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "Custom"
+ * })
+ * console.log(input.hook_event_name) // "Custom"
  * ```
  *
  * @category schemas
@@ -158,15 +176,22 @@ export const envelopeFields = {
  * The base envelope as a named, decodable class. Every hook event input
  * is a superset of these fields.
  *
- * @category schemas
- * @since 0.0.0
+ * **Example** (Construct a base envelope)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.HookEnvelope)
+ * const envelope = Hook.HookEnvelope.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionStart"
+ * })
+ * console.log(envelope.session_id) // "session-1"
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class HookEnvelope extends S.Class<HookEnvelope>($I`HookEnvelope`)(
   envelopeFields,
@@ -178,15 +203,18 @@ export class HookEnvelope extends S.Class<HookEnvelope>($I`HookEnvelope`)(
 /**
  * Decoded and wire-encoded companion types for {@link HookEffort}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to effort metadata)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type Wire = Hook.HookEffort.Encoded
+ * const effort = Hook.HookEffort.make({ level: "medium" })
+ * console.log(effort.level)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookEffort {
   /**
@@ -208,15 +236,23 @@ export declare namespace HookEffort {
 /**
  * Decoded and wire-encoded companion types for {@link HookEnvelope}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Relate the wire type to an envelope)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type Wire = Hook.HookEnvelope.Encoded
+ * const envelope = Hook.HookEnvelope.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionStart"
+ * })
+ * console.log(envelope.hook_event_name)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookEnvelope {
   /**

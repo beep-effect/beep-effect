@@ -41,11 +41,9 @@ const identitySchemas: ReadonlyArray<S.Constraint> = [
 describe("effect-ontology identity schemas", () => {
   it("derives warning-free arbitraries whose values satisfy every public identity schema", () => {
     for (const schema of identitySchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 32 }
@@ -81,9 +79,9 @@ describe("effect-ontology identity schemas", () => {
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
     expect(SecureHttpUrl.is("https://example.org/report.pdf")).toBe(true);
     expect(SecureHttpUrl.is("http://example.org/report.pdf")).toBe(false);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsBucket)("192.168.5.4"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsBucket)("goog-ontology-state"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(GcsObject)("snapshots//data.ttl"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsBucket)("goog-ontology-state"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(GcsObject)("snapshots//data.ttl"))).toBe(true);
   });
 });

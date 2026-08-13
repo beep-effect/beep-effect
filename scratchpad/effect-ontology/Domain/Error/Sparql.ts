@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
 
@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Sparql");
  * @category errors
  * @since 0.0.0
  */
-export const SparqlExecutionError = makeOntologyErrorClass(
+export const SparqlExecutionError = makeOntologyErrorClass.make(
   $I`SparqlExecutionError`,
   "SparqlExecutionError",
   {
@@ -77,7 +77,7 @@ export type SparqlExecutionError = typeof SparqlExecutionError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SparqlLoadError = makeOntologyErrorClass(
+export const SparqlLoadError = makeOntologyErrorClass.make(
   $I`SparqlLoadError`,
   "SparqlLoadError",
   {
@@ -131,7 +131,7 @@ const SparqlErrorDefinition = S.Union([SparqlExecutionError, SparqlLoadError]).p
 export const SparqlError = SparqlErrorDefinition.pipe(
   $I.annoteSchema("SparqlError", {
     description: "Exhaustive tagged union of SPARQL failures.",
-    toArbitrary: () => () => S.toArbitrary(SparqlErrorDefinition),
+    toArbitrary: () => S.toArbitrary(SparqlErrorDefinition),
   })
 );
 

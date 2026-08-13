@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,7 +29,7 @@ const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(S.Json).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(S.Json)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -43,7 +43,7 @@ const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
 const ExtractionJsonArrayDefinition = S.Json.pipe(S.Array);
 
 const ExtractionJsonArray = ExtractionJsonArrayDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ExtractionJsonArrayDefinition),
+  toArbitrary: () => S.toArbitrary(ExtractionJsonArrayDefinition),
 }).pipe(
   $I.annoteSchema("ExtractionJsonArray", {
     description: "Readonly collection of serializable partial extraction payloads.",
@@ -56,7 +56,7 @@ const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ExtractionJsonArray).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ExtractionJsonArray)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -93,14 +93,16 @@ const extractionFields = {
  * @category errors
  * @since 0.0.0
  */
-export const ExtractionError = makeOntologyErrorClass(
-  $I`ExtractionError`,
-  "ExtractionError",
-  extractionFields,
-  $I.annote("ExtractionError", {
-    description: "General extraction-process failure.",
-  })
-);
+export const ExtractionError = makeOntologyErrorClass
+  .make(
+    $I`ExtractionError`,
+    "ExtractionError",
+    extractionFields,
+    $I.annote("ExtractionError", {
+      description: "General extraction-process failure.",
+    })
+  )
+  .pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema) })));
 
 /** Runtime value decoded by {@link ExtractionError}.
  * @example
@@ -127,7 +129,7 @@ export type ExtractionError = typeof ExtractionError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const MentionExtractionFailed = makeOntologyErrorClass(
+export const MentionExtractionFailed = makeOntologyErrorClass.make(
   $I`MentionExtractionFailed`,
   "MentionExtractionFailed",
   extractionFields,
@@ -161,7 +163,7 @@ export type MentionExtractionFailed = typeof MentionExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EntityExtractionFailed = makeOntologyErrorClass(
+export const EntityExtractionFailed = makeOntologyErrorClass.make(
   $I`EntityExtractionFailed`,
   "EntityExtractionFailed",
   extractionFields,
@@ -195,7 +197,7 @@ export type EntityExtractionFailed = typeof EntityExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const RelationExtractionFailed = makeOntologyErrorClass(
+export const RelationExtractionFailed = makeOntologyErrorClass.make(
   $I`RelationExtractionFailed`,
   "RelationExtractionFailed",
   {
@@ -234,7 +236,7 @@ export type RelationExtractionFailed = typeof RelationExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SchemaGenerationFailed = makeOntologyErrorClass(
+export const SchemaGenerationFailed = makeOntologyErrorClass.make(
   $I`SchemaGenerationFailed`,
   "SchemaGenerationFailed",
   {
@@ -275,7 +277,7 @@ export type SchemaGenerationFailed = typeof SchemaGenerationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ValidationFailed = makeOntologyErrorClass(
+export const ValidationFailed = makeOntologyErrorClass.make(
   $I`ValidationFailed`,
   "ValidationFailed",
   {
@@ -325,7 +327,7 @@ export type ValidationFailed = typeof ValidationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EntityValidationFailed = makeOntologyErrorClass(
+export const EntityValidationFailed = makeOntologyErrorClass.make(
   $I`EntityValidationFailed`,
   "EntityValidationFailed",
   {
@@ -375,7 +377,7 @@ export type EntityValidationFailed = typeof EntityValidationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const RelationValidationFailed = makeOntologyErrorClass(
+export const RelationValidationFailed = makeOntologyErrorClass.make(
   $I`RelationValidationFailed`,
   "RelationValidationFailed",
   {
@@ -433,7 +435,7 @@ const AnyExtractionErrorDefinition = S.Union([
 export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
   $I.annoteSchema("AnyExtractionError", {
     description: "Exhaustive tagged union of extraction and row-validation failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyExtractionErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
   })
 );
 

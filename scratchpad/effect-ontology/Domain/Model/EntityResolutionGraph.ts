@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Graph from "effect/Graph";
@@ -228,8 +228,8 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
   $I.annoteSchema("ResolutionGraph", {
     description: "Immutable directed graph of entity-resolution nodes and edges.",
     toArbitrary: () => (fc) => {
-      const node = S.toArbitrary(ERNode);
-      const edge = S.toArbitrary(EREdge);
+      const node = S.toArbitrary(ERNode)(fc);
+      const edge = S.toArbitrary(EREdge)(fc);
 
       return fc.oneof(
         fc.constant(Graph.directed<ERNode, EREdge>()),

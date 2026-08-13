@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
 
@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Rdf");
  * @category errors
  * @since 0.0.0
  */
-export const RdfError = makeOntologyErrorClass(
+export const RdfError = makeOntologyErrorClass.make(
   $I`RdfError`,
   "RdfError",
   {
@@ -72,7 +72,7 @@ export type RdfError = typeof RdfError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SerializationFailed = makeOntologyErrorClass(
+export const SerializationFailed = makeOntologyErrorClass.make(
   $I`SerializationFailed`,
   "SerializationFailed",
   {
@@ -121,7 +121,7 @@ export type SerializationFailed = typeof SerializationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ParsingFailed = makeOntologyErrorClass(
+export const ParsingFailed = makeOntologyErrorClass.make(
   $I`ParsingFailed`,
   "ParsingFailed",
   {
@@ -175,7 +175,7 @@ const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFai
 export const AnyRdfError = AnyRdfErrorDefinition.pipe(
   $I.annoteSchema("AnyRdfError", {
     description: "Exhaustive tagged union of RDF-processing failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyRdfErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyRdfErrorDefinition),
   })
 );
 

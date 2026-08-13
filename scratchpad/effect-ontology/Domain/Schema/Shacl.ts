@@ -7,7 +7,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { flow } from "effect";
 import * as A from "effect/Array";
@@ -156,7 +156,7 @@ export const ShaclViolation = ShaclViolationDefinition.pipe(
   $I.annoteSchema("ShaclViolation", {
     description:
       "Normalized SHACL validation result with mandatory focus node, severity, diagnostic, and source constraint component.",
-    toArbitrary: () => () => S.toArbitrary(ShaclViolationDefinition),
+    toArbitrary: () => S.toArbitrary(ShaclViolationDefinition),
   })
 );
 
@@ -243,11 +243,11 @@ class ShaclValidationReportFields extends S.Class<ShaclValidationReportFields>($
 const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
   fc
     .record({
-      violations: fc.array(S.toArbitrary(ShaclViolation), { maxLength: 32 }),
-      validatedAt: S.toArbitrary(S.DateTimeUtcFromString),
-      dataGraphTripleCount: S.toArbitrary(NonNegativeInt),
-      shapesGraphTripleCount: S.toArbitrary(NonNegativeInt),
-      durationMs: S.toArbitrary(ValidationDurationMs),
+      violations: fc.array(S.toArbitrary(ShaclViolation)(fc), { maxLength: 32 }),
+      validatedAt: S.toArbitrary(S.DateTimeUtcFromString)(fc),
+      dataGraphTripleCount: S.toArbitrary(NonNegativeInt)(fc),
+      shapesGraphTripleCount: S.toArbitrary(NonNegativeInt)(fc),
+      durationMs: S.toArbitrary(ValidationDurationMs)(fc),
     })
     .map(({ violations, validatedAt, dataGraphTripleCount, shapesGraphTripleCount, durationMs }) =>
       ShaclValidationReportFields.make({

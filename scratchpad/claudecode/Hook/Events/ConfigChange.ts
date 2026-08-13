@@ -25,7 +25,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/ConfigChange");
 /**
  * Schema for `ConfigSource`.
  *
- * @example
+ * **Example** (Inspect the ConfigSource schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -51,13 +52,6 @@ export const ConfigSource = LiteralKit([
 /**
  * Type-level model for `ConfigSource`.
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * const source: Hook.ConfigChange.ConfigSource = "project_settings"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -66,7 +60,8 @@ export type ConfigSource = typeof ConfigSource.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -92,7 +87,8 @@ export class Input extends S.Class<Input>($I`ConfigChangeInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -121,7 +117,8 @@ export class Output extends S.Class<Output>($I`ConfigChangeOutput`)(
 /**
  * Constructor for `allow`.
  *
- * @example
+ * **Example** (Use allow)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -137,7 +134,8 @@ export const allow = (): Output => Output.make();
 /**
  * Constructor for `block`.
  *
- * @example
+ * **Example** (Use block)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -153,7 +151,8 @@ export const block = (reason: string): Output => Output.make({ decision: O.some(
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -176,15 +175,16 @@ export const define = <E, R>(config: {
 /**
  * Build a ConfigChange hook that only handles matching `source` values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build ConfigChange hook that only handles matching `source` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.ConfigChange.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -206,12 +206,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.ConfigChange.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -236,12 +230,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.ConfigChange.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

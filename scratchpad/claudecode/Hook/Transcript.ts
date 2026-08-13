@@ -40,22 +40,23 @@ const JsonValue = S.fromJsonString(S.Unknown).pipe(
  *
  * Requires `FileSystem.FileSystem` in the environment.
  *
+ * **Example** (Count transcript events)
+ *
+ * ```ts
+ * import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem"
+ * import * as Effect from "effect/Effect"
+ * import { Hook } from "effect-claudecode"
+ *
+ * const program = Hook.readTranscript("./transcript.jsonl").pipe(
+ *   Effect.map((events) => events.length),
+ *   Effect.provide(NodeFileSystem.layer)
+ * )
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
- * @example
- * ```ts
- * import * as Effect from 'effect/Effect'
- * import * as NodeFileSystem from '@effect/platform-node-shared/NodeFileSystem'
- * import { Hook } from 'effect-claudecode'
- *
- * const program = Effect.gen(function* () {
- *   const transcriptPath = yield* Hook.transcriptPath
- *   const events = yield* Hook.readTranscript(transcriptPath)
- *   return events.length
- * })
- *
- * program.pipe(Effect.provide(NodeFileSystem.layer))
- * ```
  */
 export const readTranscript = (
   path: string

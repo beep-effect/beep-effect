@@ -10,14 +10,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { Confidence } from "../Model";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf";
+import { Confidence } from "../Model/index.ts";
+import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf/index.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -353,7 +353,7 @@ const EvidenceSourceDefinition = S.TaggedUnion({
 const EvidenceSource = EvidenceSourceDefinition.pipe(
   $I.annoteSchema("EvidenceSource", {
     description: "Tagged evidence source containing either a GCS URI or an absolute resource IRI.",
-    toArbitrary: () => () => S.toArbitrary(EvidenceSourceDefinition),
+    toArbitrary: () => S.toArbitrary(EvidenceSourceDefinition),
   })
 );
 
@@ -424,7 +424,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  * @since 0.0.0
  */
 export const RdfObject = ObjectTerm.annotate({
-  toArbitrary: () => () => S.toArbitrary(ObjectTerm),
+  toArbitrary: () => S.toArbitrary(ObjectTerm),
 }).pipe(
   $I.annoteSchema("RdfObject", {
     description: "Canonical RDF/JS named-node, blank-node, or literal object term.",
@@ -596,7 +596,6 @@ export class Claim extends S.Class<Claim>($I`Claim`)(
   })
 ) {
   static readonly is = S.is(Claim);
-  static readonly fromUnknown = S.decodeUnknownSync(Claim);
 }
 
 /**
@@ -685,7 +684,6 @@ export class Assertion extends S.Class<Assertion>($I`Assertion`)(
   })
 ) {
   static readonly is = S.is(Assertion);
-  static readonly fromUnknown = S.decodeUnknownSync(Assertion);
 }
 
 /**
@@ -913,5 +911,4 @@ export class Event extends S.Class<Event>($I`Event`)(
   })
 ) {
   static readonly is = S.is(Event);
-  static readonly fromUnknown = S.decodeUnknownSync(Event);
 }

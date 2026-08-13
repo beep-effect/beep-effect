@@ -21,7 +21,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/TaskCompleted");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -50,7 +51,8 @@ export class Input extends S.Class<Input>($I`TaskCompletedInput`)(
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -77,7 +79,8 @@ export class Output extends S.Class<Output>($I`TaskCompletedOutput`)(
 /**
  * Constructor for `allow`.
  *
- * @example
+ * **Example** (Use allow)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -93,7 +96,8 @@ export const allow = (): Output => Output.make();
 /**
  * Constructor for `block`.
  *
- * @example
+ * **Example** (Use block)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -109,15 +113,16 @@ export const block = (reason: string): HookProcessOutput => stderrExit(reason);
 /**
  * Stop the teammate entirely after this hook runs.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.TaskCompleted.stopTeammate)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const stopTeammate = (reason: string): Output =>
   Output.make({ continue: O.some(false), stopReason: O.some(reason) });
@@ -125,7 +130,8 @@ export const stopTeammate = (reason: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -151,12 +157,6 @@ export const define = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.TaskCompleted.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -181,12 +181,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.TaskCompleted.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

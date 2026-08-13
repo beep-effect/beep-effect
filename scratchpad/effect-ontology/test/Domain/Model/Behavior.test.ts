@@ -32,12 +32,12 @@ const now = DateTime.makeUnsafe("2026-07-25T12:00:00.000Z");
 
 describe("effect-ontology model behavior", () => {
   it("rejects reversed provenance and event intervals with informative checks", () => {
-    const span = S.decodeUnknownResult(EvidenceSpan)({
+    const span = S.decodeResult(EvidenceSpan)({
       text: "Seattle",
       startChar: 10,
       endChar: 3,
     });
-    const interval = S.decodeUnknownResult(EventInterval)({
+    const interval = S.decodeResult(EventInterval)({
       start: "2026-07-25T12:00:01.000Z",
       end: "2026-07-25T12:00:00.000Z",
     });
@@ -76,7 +76,12 @@ describe("effect-ontology model behavior", () => {
       updatedAt: now,
     });
     const pending = BatchState.cases.Pending.make({
-      batch,
+      batchId: batch.batchId,
+      ontologyId: batch.ontologyId,
+      manifestUri: batch.manifestUri,
+      ontologyVersion: batch.ontologyVersion,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt,
       documentCount: NonNegativeInt.make(0),
     });
 

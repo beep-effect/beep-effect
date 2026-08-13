@@ -6,11 +6,13 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { A, R, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { stringify as stringifyYaml } from "yaml";
 
 import { CommandFrontmatter } from "./Command.ts";
@@ -29,7 +31,8 @@ const FrontmatterFields = S.Record(S.String, S.Unknown).pipe(
 /**
  * Runtime model for a markdown body paired with optional frontmatter fields.
  *
- * @example
+ * **Example** (Construct a body-only document)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { Frontmatter } from "effect-claudecode"
@@ -57,7 +60,8 @@ export class FrontmatterDocument extends S.Class<FrontmatterDocument>($I`Frontma
 /**
  * Encoded input accepted by {@link render}.
  *
- * @example
+ * **Example** (Describe encoded input)
+ *
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
@@ -119,7 +123,8 @@ const encodeFrontmatter = <Schema extends S.Top>(schema: Schema, input: Schema["
  * Rendering is effectful because both schema validation and YAML serialization
  * can fail. Empty or absent frontmatter produces the body unchanged.
  *
- * @example
+ * **Example** (Render optional frontmatter)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -128,6 +133,7 @@ const encodeFrontmatter = <Schema extends S.Top>(schema: Schema, input: Schema["
  *   .then((markdown) => console.log(markdown.includes("name: review")))
  * ```
  *
+ * @effects Validates the document and serializes YAML; may fail with schema or serialization errors.
  * @category formatting
  * @since 0.0.0
  */
@@ -140,7 +146,8 @@ export const render = Effect.fn("Frontmatter.render")((document: FrontmatterDocu
 /**
  * Render a legacy Claude Code slash-command markdown file.
  *
- * @example
+ * **Example** (Render a command file)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -149,6 +156,7 @@ export const render = Effect.fn("Frontmatter.render")((document: FrontmatterDocu
  *   .then((markdown) => console.log(markdown)) // "# /review"
  * ```
  *
+ * @effects Validates and encodes command frontmatter before serializing the markdown document.
  * @category formatting
  * @since 0.0.0
  */
@@ -162,7 +170,8 @@ export const renderCommand = Effect.fn("Frontmatter.renderCommand")(
 /**
  * Render a Claude Code `SKILL.md` file.
  *
- * @example
+ * **Example** (Render a skill file)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -171,6 +180,7 @@ export const renderCommand = Effect.fn("Frontmatter.renderCommand")(
  * Effect.runPromise(program).then((markdown) => console.log(markdown.includes("name: review")))
  * ```
  *
+ * @effects Validates and encodes skill frontmatter before serializing the markdown document.
  * @category formatting
  * @since 0.0.0
  */
@@ -184,7 +194,8 @@ export const renderSkill = Effect.fn("Frontmatter.renderSkill")(
 /**
  * Render a Claude Code subagent markdown file.
  *
- * @example
+ * **Example** (Render a subagent file)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -196,6 +207,7 @@ export const renderSkill = Effect.fn("Frontmatter.renderSkill")(
  * Effect.runPromise(program).then((markdown) => console.log(markdown.includes("name: reviewer")))
  * ```
  *
+ * @effects Validates and encodes subagent frontmatter before serializing the markdown document.
  * @category formatting
  * @since 0.0.0
  */
@@ -209,7 +221,8 @@ export const renderSubagent = Effect.fn("Frontmatter.renderSubagent")(
 /**
  * Render a Claude Code output-style markdown file.
  *
- * @example
+ * **Example** (Render an output style file)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
@@ -218,6 +231,7 @@ export const renderSubagent = Effect.fn("Frontmatter.renderSubagent")(
  * Effect.runPromise(program).then((markdown) => console.log(markdown.includes("name: terse")))
  * ```
  *
+ * @effects Validates and encodes output-style frontmatter before serializing the markdown document.
  * @category formatting
  * @since 0.0.0
  */

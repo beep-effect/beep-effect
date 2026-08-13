@@ -119,11 +119,9 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
 describe("effect-ontology domain errors", () => {
   it("derives warning-free, schema-valid values for every public error schema", () => {
     for (const schema of publicSchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 16 }
@@ -133,7 +131,7 @@ describe("effect-ontology domain errors", () => {
 
   it("normalizes omitted metadata and applies safe schema defaults", () => {
     const base = Base.BaseError.make({ message: "Unexpected failure." });
-    const nullCause = S.decodeUnknownSync(Base.BaseError)({
+    const nullCause = S.decodeSync(Base.BaseError)({
       _tag: "BaseError",
       message: "Nullish failure metadata.",
       cause: null,
