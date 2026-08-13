@@ -1515,6 +1515,13 @@ describe("quality task adapter", () => {
         ["--concurrency", "9", "--force", "--remote-only", "--output-logs=errors-only", "--summarize"]
       );
 
+      expect(A.map(steps, (step) => step.label)).toEqual([
+        "coverage:prebuild",
+        "coverage:shard-1",
+        "coverage:shard-2",
+        "coverage:shard-3",
+        "coverage:shard-4",
+      ]);
       expect(steps[0]?.args).toEqual([
         "turbo",
         "run",

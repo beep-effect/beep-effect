@@ -132,3 +132,16 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** a host-wide quality concurrency lease or
   fleet-aware local scheduler that serializes heavyweight proof phases across
   sibling checkouts while allowing unrelated lightweight work to continue.
+
+## 2026-08-13 — local coverage timing hid fleet contention
+
+- **Doing:** admitting the five-shard Coverage Regression redesign on the live
+  32-GB fleet runner after its complete local proof passed.
+- **Evidence:** PR #698 job `94583467537` passed all 124 package comparisons but
+  took 22m18s. Its 43-second prebuild was not the bottleneck: four mixed shards
+  took 14m59s-15m54s while the isolated `@beep/repo-cli` shard stretched from
+  its 12m48 baseline weight to 20m16s under five simultaneous Vitest coverage
+  processes.
+- **Would have prevented it:** a fleet-parity performance runner for admission
+  tests, or a coverage planner invariant that caps aggregate shard concurrency
+  at the runner's already accepted Turbo concurrency.

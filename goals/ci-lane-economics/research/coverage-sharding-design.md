@@ -33,25 +33,29 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
 
 1. Clean stale coverage outputs once.
 2. Prebuild the workspace once with the existing fleet concurrency of four.
-3. Run coverage with `turbo run coverage --only` in five concurrent,
+3. Run coverage with `turbo run coverage --only` in four concurrent,
    single-task shards, so dependency builds are neither skipped nor repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
 
 Least-loaded placement uses the accepted hosted package durations checked into
-the planner. Current baseline owners resolve to five stable shards containing
-1, 18, 34, 35, and 36 packages with modeled weights of 768, 599, 598, 598, and
-598 seconds. All 124 owners appear exactly once. New packages use a 15-second
-default and enter the same deterministic name-tiebroken placement.
+the planner. The 125 current owners resolve to four stable shards containing
+5, 32, 44, and 44 packages with modeled weights of 793 seconds each. Every
+owner appears exactly once; `@beep/shacl` is the one current owner not yet in
+the 124-package committed baseline. New packages use a 15-second default and
+enter the same deterministic name-tiebroken placement.
 
 ## Admission and rollback
 
-The local full-path proof passed on 2026-08-13 with remote cache disabled.
-All five shards completed without shutdown or OOM in 5m00s, 5m01s, 5m12s,
-6m02s, and 8m24s; the last shard was the intentionally isolated
+The first local full-path proof passed on 2026-08-13 with remote cache disabled.
+All five candidate shards completed without shutdown or OOM in 5m00s, 5m01s,
+5m12s, 6m02s, and 8m24s; the last shard was the intentionally isolated
 `@beep/repo-cli` long pole. The ratchet collected and compared all 124 package
-summaries. This proves the execution shape and completeness invariant, but it
-does not replace the live fleet timing admission.
+summaries. Live fleet job `94583467537` then rejected that five-way shape: the
+job passed correctness in 22m18s, but the four mixed shards took 14m59s to
+15m54s and the isolated `@beep/repo-cli` shard took 20m16s under aggregate
+five-way contention. The revised four-shard candidate matches the fleet's
+accepted Turbo concurrency instead of exceeding it.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

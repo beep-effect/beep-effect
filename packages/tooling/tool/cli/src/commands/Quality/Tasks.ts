@@ -110,7 +110,10 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
-const COVERAGE_FULL_SHARD_COUNT = 5;
+// Match the fleet's accepted Turbo concurrency. Five concurrent Vitest
+// coverage processes made the isolated repo-cli long pole slower than the
+// 20-minute job charter on live fleet hardware.
+const COVERAGE_FULL_SHARD_COUNT = 4;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
