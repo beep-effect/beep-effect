@@ -3,18 +3,18 @@
   "exploration": {
     "slug": "project-intelligence",
     "title": "Project Intelligence",
-    "status": "active",
+    "status": "parked",
     "stage": "capture",
     "openQuestions": [
-      "Is there current product pull for the fixture-first watched-source loop, and which existing authority/lifecycle substrate should own its first proof?"
+      "Resume when a legal-grade provenance consumer demands byte-reproducible authority."
     ],
     "sources": [],
     "links": {
       "goals": [],
       "docs": [],
-      "supersededBy": null
+      "supersededBy": "goals/nightly-research-routine"
     },
     "created": "2026-07-14",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }
