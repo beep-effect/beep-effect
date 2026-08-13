@@ -972,12 +972,12 @@
     },
     "@beep/oip-web": {
       "path": "apps/oip-web",
-      "lines": 77.44,
+      "lines": 77.29,
       "statements": 77.23,
       "branches": 62.58,
       "functions": 70.27,
       "uncovered": {
-        "lines": 120,
+        "lines": 121,
         "statements": 130,
         "branches": 58,
         "functions": 66
