@@ -53,6 +53,17 @@ const COVERAGE_NOOP_FILES = [
 
 const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/", "research/"] as const;
 
+// These tracked goal artifacts are executable test inputs, not documentation.
+// Keep the mapping next to the no-op policy so a goal-only change can remain
+// scoped without hiding the package whose tests consume the fixture.
+const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
+  ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc", "@beep/repo-cli"],
+];
+
+const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string, string]> = [
+  ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
+];
+
 // Seconds observed in the accepted zero-cache Coverage Regression run for
 // PR #684 (run 31727475076, job 94539333691). Unlisted packages use the
 // conservative default below. The weights influence placement only; every
@@ -394,11 +405,39 @@ const isGlobalCoverageInput = (filePath: string): boolean =>
 const isCoverageNoopInput = (filePath: string): boolean =>
   isExactFile(COVERAGE_NOOP_FILES, filePath) || hasPrefix(COVERAGE_NOOP_PREFIXES, filePath);
 
+const repositoryFixtureOwnerNameForFile = (filePath: string): O.Option<string> =>
+  pipe(
+    COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES,
+    A.findFirst(([fixturePath]) => fixturePath === filePath),
+    O.orElse(() =>
+      pipe(
+        COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES,
+        A.findFirst(([prefix]) => Str.startsWith(prefix)(filePath))
+      )
+    ),
+    O.map(([, packageName]) => packageName)
+  );
+
+const repositoryFixtureCoverageOwnerForFile = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  filePath: string
+): O.Option<CoverageScopeOwner> =>
+  pipe(
+    repositoryFixtureOwnerNameForFile(filePath),
+    O.flatMap((packageName) => A.findFirst(owners, (owner) => owner.packageName === packageName && owner.hasCoverage))
+  );
+
 const packageJsonPath = (owner: CoverageScopeOwner): string => `${owner.packagePath}/package.json`;
 
 const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): O.Option<string> => {
   if (isGlobalCoverageInput(filePath)) {
     return O.some(`${filePath}: global coverage input changed`);
+  }
+
+  if (O.isSome(repositoryFixtureOwnerNameForFile(filePath))) {
+    return O.isSome(repositoryFixtureCoverageOwnerForFile(owners, filePath))
+      ? O.none()
+      : O.some(`${filePath}: configured repository fixture coverage owner is unavailable`);
   }
 
   if (isCoverageNoopInput(filePath)) {
@@ -419,7 +458,8 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
 
 const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): O.Option<string> =>
   pipe(
-    ownerForFile(owners, filePath),
+    repositoryFixtureCoverageOwnerForFile(owners, filePath),
+    O.orElse(() => ownerForFile(owners, filePath)),
     O.filter((owner) => owner.hasCoverage),
     O.map((owner) => owner.packageName)
   );

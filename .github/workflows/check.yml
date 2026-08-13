@@ -248,7 +248,12 @@ jobs:
 
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
+        run: |
+          if [[ "${{ matrix.id }}" == "coverage" ]]; then
+            bun run beep ci append-turbo-summary --all
+          else
+            bun run beep ci append-turbo-summary
+          fi
 
       - name: Append Turbo summary (docgen affected)
         if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()

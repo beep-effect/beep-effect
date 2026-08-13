@@ -2370,6 +2370,15 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
 export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeChangedFiles;
 
 /**
+ * Collect committed and dirty changed paths using the same rename-safe scope as
+ * affected coverage. Exposed for focused integration tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectCoverageChangedFilesForTesting = collectChangedFiles;
+
+/**
  * Build the root lint fix changed-file step. Exposed for focused unit tests.
  *
  * **Example** (Run a quality task)

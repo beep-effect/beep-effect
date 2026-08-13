@@ -5,7 +5,10 @@ import {
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
-import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
+import {
+  collectCoverageChangedFilesForTesting,
+  collectGithubCheckLaneWavesForTesting,
+} from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   baselineEntriesLostByReplacement,
   CoveragePackageBaseline,
@@ -1438,6 +1441,52 @@ describe("quality task adapter", () => {
       packageNames: ["@beep/a", "@beep/b"],
     });
   });
+
+  it("selects repo-cli for tracked goal artifacts consumed by its tests", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/repo-cli",
+        packagePath: "packages/tooling/tool/cli",
+        hasCoverage: true,
+      }),
+    ];
+
+    expect(
+      planCoverageAffectedScope(owners, [
+        "goals/fallow-quality-enforcement/research/feature-matrix.jsonc",
+        "goals/speed-loop/ops/runner-burst/main.tf",
+      ])
+    ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"] });
+  });
+
+  it("collects both sides of a committed cross-package rename", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = process.cwd();
+          const sourcePath = path.join(repoRoot, "packages/a/test/moved.test.ts");
+          const destinationPath = path.join(repoRoot, "packages/b/test/moved.test.ts");
+
+          yield* runGit(repoRoot, ["init"]);
+          yield* runGit(repoRoot, ["config", "user.email", "coverage-scope@example.test"]);
+          yield* runGit(repoRoot, ["config", "user.name", "Coverage Scope Test"]);
+          yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+          yield* fs.writeFileString(sourcePath, "export const moved = true;\n");
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "initial"]);
+          yield* runGit(repoRoot, ["tag", "coverage-base"]);
+          yield* fs.makeDirectory(path.dirname(destinationPath), { recursive: true });
+          yield* fs.rename(sourcePath, destinationPath);
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "move fixture"]);
+
+          const changedFiles = yield* collectCoverageChangedFilesForTesting(repoRoot, "coverage-base", "HEAD");
+          expect(changedFiles).toEqual(["packages/a/test/moved.test.ts", "packages/b/test/moved.test.ts"]);
+        })
+      )
+    ));
 
   it("falls back to full coverage for global, unknown, manifest, or shared test-kit inputs", () => {
     const owners = [

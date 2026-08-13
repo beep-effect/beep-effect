@@ -16,6 +16,10 @@ Affected coverage resolves each changed path against the current workspace
 owners that define a `coverage` script.
 
 - Directly changed coverage owners become exact Turbo filters.
+- Rename detection is disabled for the changed-path census so a cross-package
+  move selects both the source and destination owners.
+- Tracked repository fixtures consumed by coverage tests map to their consuming
+  owner; current goal-backed repo-cli fixtures select `@beep/repo-cli`.
 - Every selected owner must emit `coverage-summary.json`; omission is a hard
   failure even when the owner is new to the committed baseline.
 - Root/global coverage inputs, unknown paths, deleted workspaces, and package
@@ -37,6 +41,10 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
    single-task shards, so dependency builds are neither skipped nor repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
+
+The workflow appends every Turbo summary from the prebuild and shard processes,
+so full-run cache, task-count, duration, and long-pole telemetry remains
+complete even though the lane now launches multiple Turbo processes.
 
 Least-loaded placement uses the accepted hosted package durations checked into
 the planner. The 125 current owners resolve to four stable shards containing
