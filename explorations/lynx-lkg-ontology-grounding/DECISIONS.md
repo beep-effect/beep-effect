@@ -13,7 +13,7 @@ with the reason.
 shape generation, advances behind its M4 gate. #3, language discipline, is
 deferred to a multilingual-CQ re-entry. #2, `lkg.ttl`, rides
 `document-structure-ontologies` FOLIO machinery. #5, the ELI donor profile, is
-delivered as a research asset; `goals/legal-rule-time-identity` opens later on
+delivered as a research asset; the future `legal-rule-time-identity` goal (not yet scaffolded) opens later on
 the hub cadence. This Lynx packet owns `lkg.ttl` vetting and its license check
 before the FOLIO `TaxonomySeed` machinery consumes it.
 

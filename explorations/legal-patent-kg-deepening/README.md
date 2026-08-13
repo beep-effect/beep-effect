@@ -23,7 +23,7 @@ closed its six-question align gate on 2026-08-13. The approved
 `uspto-patent-driver-depth` deep wedge remains QUEUED as a re-entry point; when
 its accumulating trigger fires, reopen this hub at `decompose`. ELI temporal /
 FRBR donor work is routed through the Lynx packet to future
-`goals/legal-rule-time-identity`, which opens only on operator call.
+the future `legal-rule-time-identity` goal (not yet scaffolded), which opens only on operator call.
 
 ## Read This First
 
