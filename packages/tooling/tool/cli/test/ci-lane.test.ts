@@ -34,14 +34,13 @@ const prShapeOptions = CiLaneRunOptions.make({
   summarize: true,
 });
 
-// The 17 required-check context names frozen by ruleset 10240248.
+// The 16 required-check context names read from ruleset 10240248 on 2026-08-13.
 const REQUIRED_CONTEXT_NAMES = [
   "Check",
   "Codegen Drift",
   "Commitlint",
   "Coverage Regression",
   "Docgen",
-  "JSDoc Ratchet",
   "Knip",
   "Lint",
   "Lint Policy",
@@ -85,6 +84,12 @@ describe("CI lane descriptors", () => {
     expect(descriptor.required).toBe(false);
   });
 
+  it("keeps the JSDoc ratchet visible but non-required", () => {
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "jsdoc-ratchet"));
+    expect(descriptor.contextName).toBe("JSDoc Ratchet");
+    expect(descriptor.required).toBe(false);
+  });
+
   it("marks the CI-only residue as unreplayable", () => {
     const residue = pipe(
       CI_LANE_DESCRIPTORS,
@@ -103,18 +108,18 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 
-  it("builds the PR-shape lint lane with TURBO_SCM_BASE", () => {
+  it("builds the PR-shape package lint graph with TURBO_SCM_BASE", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "lint", prShapeOptions);
     expect(A.length(steps)).toBe(1);
     const step = firstOf(steps);
-    expect(step.command).toBe("bun");
-    expect([...step.args]).toEqual(["run", "lint", "--", "--concurrency=2", "--affected", "--summarize"]);
+    expect(step.command).toBe("bunx");
+    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 
   it("builds the push-shape lint lane with the hosted-runner turbo cap", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", baseOptions));
-    expect([...step.args]).toEqual(["run", "lint", "--", "--concurrency=2"]);
+    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2"]);
     expect(step.env).toBeUndefined();
   });
 
