@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "honest-repo-signal",
+    "title": "Honest Repo Signal",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/honest-repo-signal",
+  "lifecycle": "active",
+  "statusNote": "P0 inventory and grill locks are in this packet. Empty-driver deletion excludes @beep/protobuf (owned by another clone).",
+  "mission": "One-night honesty pass: delete VERSION-only driver packages, keep their owning goals as follow-ups, stop coverage and history from lying, and ship the cheap public-repo and agent-kernel files.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": null,
+    "note": "Authored directly from the 2026-08-13 independent repo rating and grill-with-docs session. No exploration packet."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the one-night honesty pass ships as a Yeet-driven mergeable PR.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "standards/architecture/DECISIONS.md",
+    "standards/architecture/07-non-slice-families.md",
+    "standards/architecture/03-driver-boundaries.md",
+    "standards/architecture/11-evolution-and-deprecation.md",
+    "goals/honest-repo-signal/README.md",
+    "goals/honest-repo-signal/SPEC.md",
+    "goals/honest-repo-signal/PLAN.md",
+    "goals/honest-repo-signal/GOAL.md",
+    "goals/honest-repo-signal/research/SOURCES.md",
+    "goals/honest-repo-signal/research/FOLLOW-UPS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/FOLLOW-UPS.md",
+    "research/OPPORTUNITIES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/honest-repo-signal/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Lock inventory and follow-ups",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "One-night honesty pass",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/honest-repo-signal/GOAL.md)\" -le 4000",
+    "jq . goals/honest-repo-signal/ops/manifest.json",
+    "rg -n \"honest-repo-signal|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/honest-repo-signal",
+    "git diff --check -- goals/honest-repo-signal",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor"
+  ],
+  "stopConditions": [
+    "A VERSION-only driver has a first-party product consumer that is not a workspace alias or coverage row.",
+    "Deletion would collide with an in-flight protobuf removal in another clone.",
+    "The implementation would exceed the one-night cut list in SPEC.md.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

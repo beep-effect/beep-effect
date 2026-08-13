@@ -257,6 +257,24 @@ All changes must keep the repo quality commands green and follow the non-negotia
   commitlint ...`, `bun run beep ci lane desktop-ipc`, or the PR checks when
   they are relevant.
 - Follow the rules in [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md).
+- Human contribution and vulnerability reporting: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+  and [`SECURITY.md`](SECURITY.md). This repository is a public laboratory
+  and publication, not a community support project.
+
+---
+
+## First-party history vs `.repos/effect`
+
+First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
+`explorations/`, `standards/`, and the authored `docs/` tree.
+
+`.repos/effect` is a squash-pinned Effect v4 source pin so agents validate
+APIs against checked-in Effect source instead of training-data priors. It is
+force-tracked under an otherwise-ignored `.repos/*` rule.
+
+Do **not** add new full-history git subtrees. Refresh Effect with a squash.
+Historical subtree imports still sit in git objects and poison naive
+`git log` author counts — those names are not first-party contributors.
 
 ---
 

@@ -294,19 +294,6 @@
         "functions": 37
       }
     },
-    "@beep/courtlistener": {
-      "path": "packages/drivers/courtlistener",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
-      }
-    },
     "@beep/data": {
       "path": "packages/foundation/primitive/data",
       "lines": 92.07,
@@ -435,19 +422,6 @@
         "statements": 2,
         "branches": 0,
         "functions": 1
-      }
-    },
-    "@beep/dol": {
-      "path": "packages/drivers/dol",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
       }
     },
     "@beep/drizzle": {
@@ -634,19 +608,6 @@
     },
     "@beep/fc-runs": {
       "path": "packages/tooling/test-kit/fc-runs",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
-      }
-    },
-    "@beep/federal-register": {
-      "path": "packages/drivers/federal-register",
       "lines": 100,
       "statements": 100,
       "branches": 100,
