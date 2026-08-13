@@ -51,3 +51,24 @@ a parallel Python stack. Rejected alternatives: (a) vendoring/porting their
 Python — wrong runtime, parallel stack to maintain; (b) running their harness
 as-is long-term — acceptable only as a bootstrap/baseline harness while ours
 does not exist yet.
+
+## 2026-08-13 — Align closed: tracked-changes wedge and eval shape
+
+**Decision:** The wedge is tracked-changes-aware ingest. The U4 fixture spike
+is its P0 kill-gate. A 2026-08-13 code check found no explicit `ins`/`del`
+handling in `pandoc-ast`; generic `Span`/`Attr` likely carries the information
+at the Pandoc layer, but survival through md-canonical is unproven. If U4 fails
+hard, fall back to structural representation.
+
+The first corpus is synthetic C&H. A real diligence data room comes later and
+remains on-device only under OIP confidentiality. Run the upstream
+podman+metered-keys harness once for an externally comparable baseline, then
+build the Effect-native eval as the durable surface.
+
+Decompose into two goals: (1) the eval framework, including the one baseline
+run; and (2) the tracked-changes wedge rung. Generator and DMS rungs remain MAP
+re-entry points.
+
+**Rationale:** This selects the unclaimed, OIP-load-bearing wedge while making
+the uncertain conversion boundary fail fast and preserving an evidence-based
+fallback.

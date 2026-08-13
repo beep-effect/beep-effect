@@ -251,3 +251,17 @@ and repository contracts and should be shaped against concrete fixtures.
 **Rejected options:** Guessing the rules in the core goal; auto-approving
 detection; hiding duplicates only at presentation time; coupling contradiction
 existence to supersession.
+
+## 2026-08-13 — Spin the retention-projections lane
+
+**Decision:** Spin the optional `epistemic-memory-retention-projections` lane
+now. The mechanism ships now; tier, decay, and threshold policy remains
+schema-validated data behind a calibration-evidence phase gate. Use a
+repo-native algorithm with agentmemory cited reference-only.
+
+The first slice is a standalone operator tier/memory-pressure report with
+as-of and disposition-aware views plus a delete-and-rebuild drill. RRF weight
+integration is a follow-on for when `hybrid-retrieval-fusion-core` wakes.
+
+**Ceremony:** The shape is ratified 2026-08-13, but the goal scaffold belongs
+to the next ceremony PR.
