@@ -1428,15 +1428,15 @@
     },
     "@beep/repo-docgen": {
       "path": "packages/tooling/tool/docgen",
-      "lines": 59.12,
-      "statements": 59.37,
-      "branches": 57.89,
-      "functions": 59.22,
+      "lines": 58.94,
+      "statements": 59.2,
+      "branches": 57.39,
+      "functions": 59.05,
       "uncovered": {
-        "lines": 403,
-        "statements": 418,
-        "branches": 96,
-        "functions": 137
+        "lines": 406,
+        "statements": 421,
+        "branches": 98,
+        "functions": 138
       }
     },
     "@beep/repo-utils": {

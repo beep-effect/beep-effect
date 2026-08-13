@@ -389,6 +389,10 @@ const turboArgsForSelectedPackages = (
   `--concurrency=${localParallel(parallel)}`,
   "--summarize",
   "--ui=stream",
+  // No background daemon: a daemon spawned inside this child survives it and
+  // holds process handles, which repeatedly kept the hosted Docgen lane's bun
+  // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
+  "--daemon=false",
 ];
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
@@ -684,11 +688,18 @@ const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot
   yield* runStep("full docgen", "bun", ["run", "docgen"], repoRoot);
 });
 
+// Spawn the turbo binary directly: `bunx turbo` leaves a resident bun wrapper
+// between the CLI and turbo, and the hosted Docgen lane showed bun processes
+// on the fleet image failing to exit after successful work.
+const turboBinaryPath = (repoRoot: string): string => `${repoRoot}/node_modules/.bin/turbo`;
+
+const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => A.drop(turboArgs, 1);
+
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
   const dryRunOutput = yield* collectStepOutput(
     "turbo dry-run",
-    "bunx",
-    [...plan.turboArgs, "--dry-run=json"],
+    turboBinaryPath(repoRoot),
+    [...directTurboArgs(plan.turboArgs), "--dry-run=json"],
     repoRoot
   );
   const dryRun = yield* decodeTurboDryRun(dryRunOutput);
@@ -710,7 +721,7 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
     yield* checkPackageDocumentation(packages, plan.parallel);
-    yield* runStep("turbo docgen", "bunx", plan.turboArgs, repoRoot);
+    yield* runStep("turbo docgen", turboBinaryPath(repoRoot), directTurboArgs(plan.turboArgs), repoRoot);
   }
 
   yield* aggregatePackages(packages);

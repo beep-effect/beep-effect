@@ -30,6 +30,9 @@ import { A, Str } from "@beep/utils";
 export const TYPESCRIPT_SOURCE_EXCLUDED_SEGMENTS = [
   "/.repos/",
   "/ci-runners/sdks/",
+  // Self-contained esbuild-bundled Lambda packages (own package.json, no
+  // workspace deps) are deploy artifacts' source, not workspace lint surface.
+  "infra/lambda/",
   "/node_modules/",
   "/dist/",
   "/build/",

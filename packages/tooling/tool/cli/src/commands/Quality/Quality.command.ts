@@ -279,7 +279,9 @@ const $I = $RepoCliId.create("commands/Quality/ScriptCommands");
 const { githubCheckLaneWaves } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
-const ignoredTestPathSegments = ["/test/fixtures/"] as const;
+// infra/lambda/**: self-contained esbuild-bundled Lambda packages typecheck
+// their own tests via tsc in build.sh; they are not workspace test surface.
+const ignoredTestPathSegments = ["/test/fixtures/", "/infra/lambda/"] as const;
 // No `tooling` root: tooling workspaces live under `packages/tooling/*`, which
 // the `packages` root already walks. A top-level `tooling/` directory has never
 // existed in this repo, so the entry only cost a wasted existence probe.

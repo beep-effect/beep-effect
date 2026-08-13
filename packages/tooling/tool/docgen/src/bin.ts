@@ -7,7 +7,7 @@
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer } from "effect";
+import { Effect, Exit, Layer, Runtime } from "effect";
 import { Command } from "effect/unstable/cli";
 import { docgenCommand } from "./CLI.ts";
 import * as Domain from "./Domain.ts";
@@ -29,4 +29,15 @@ const program = Effect.scoped(
   )
 );
 
-BunRuntime.runMain(program);
+// The platform runner only hard-exits on failure or signal; a successful run
+// relies on the event loop draining, so a leaked handle wedges the process
+// after docgen completes (the "✓ succeeded"-then-hang CI class). Exit
+// explicitly on success.
+BunRuntime.runMain(program, {
+  teardown: (exit, onExit) => {
+    Runtime.defaultTeardown(exit, onExit);
+    if (Exit.isSuccess(exit)) {
+      process.exit(0);
+    }
+  },
+});

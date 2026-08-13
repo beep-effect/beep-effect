@@ -1,14 +1,15 @@
 /**
- * Pulumi component skeleton for the asymmetric beep CI Turbo remote cache.
+ * Pulumi component for the asymmetric beep CI Turbo remote cache.
  *
  * **Details**
  *
  * A Lambda authorizer applies the token-and-method matrix before the HTTP API
  * sends reads to a read-only shim process and artifact uploads to a separately
  * permissioned writer. Token values remain in SSM SecureString parameters.
- * This module is intentionally import-safe and is not instantiated by a stack
- * entrypoint. Deployment remains blocked on the Lambda payload-size decision
- * recorded in the P3 cache design.
+ * The `ci-runners` stack entrypoint instantiates this component. The P3
+ * payload-size gate passed before deployment: the only artifacts above the
+ * Lambda proxy ceiling are uncacheable app builds, which API Gateway rejects
+ * and Turbo tolerates as non-fatal upload warnings.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -129,6 +130,33 @@ export const CiTurboCachePulumiConfigValues = S.Class<CiTurboCachePulumiConfigVa
  */
 export type CiTurboCachePulumiConfigValues = typeof CiTurboCachePulumiConfigValues.Type;
 
+/**
+ * Load the Turbo cache configuration from the `ciTurboCache` Pulumi namespace.
+ *
+ * **Example** (Reference the loader)
+ *
+ * ```ts
+ * import { loadCiTurboCacheConfig } from "@beep/infra"
+ *
+ * console.log(loadCiTurboCacheConfig)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const loadCiTurboCacheConfig = (): CiTurboCachePulumiConfigValues => {
+  const config = new pulumi.Config("ciTurboCache");
+
+  return CiTurboCachePulumiConfigValues.make({
+    bucketName: config.require("bucketName"),
+    lambdaZipPath: config.require("lambdaZipPath"),
+    readOnlyTokenSsmParameterArn: config.require("readOnlyTokenSsmParameterArn"),
+    tokenKmsKeyArn: config.require("tokenKmsKeyArn"),
+    trustedWriteTokenSsmParameterArn: config.require("trustedWriteTokenSsmParameterArn"),
+    writerSharedSecretSsmParameterArn: config.require("writerSharedSecretSsmParameterArn"),
+  });
+};
+
 type CiTurboCacheArgs = {
   readonly config: CiTurboCachePulumiConfigValues;
 };
@@ -153,8 +181,7 @@ const lambdaAssumeRolePolicy = () =>
   });
 
 /**
- * Non-deployed component skeleton for a trusted-write and PR-read-only Turbo
- * remote cache.
+ * Trusted-write, PR-read-only asymmetric Turbo remote cache.
  *
  * **Details**
  *
@@ -493,6 +520,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "index.handler",
         memorySize: 512,
         name: `${name}-read`,
+        reservedConcurrentExecutions: 20,
         role: readRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -514,6 +542,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "writer.handler",
         memorySize: 512,
         name: `${name}-write`,
+        reservedConcurrentExecutions: 10,
         role: writeRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -535,6 +564,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "authorizer.handler",
         memorySize: 128,
         name: `${name}-authorizer`,
+        reservedConcurrentExecutions: 20,
         role: authorizerRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -602,16 +632,29 @@ export class CiTurboCache extends pulumi.ComponentResource {
         { parent: this }
       );
 
+    // No POST /v8/artifacts route: the pinned shim does not implement the
+    // artifact-query endpoint, so exposing it would authorize requests the
+    // backend can only 404. Clients get a plain API Gateway 404 instead.
     route("status", "GET /v8/artifacts/status", readIntegration);
     route("get-artifact", "GET /v8/artifacts/{hash}", readIntegration);
     route("head-artifact", "HEAD /v8/artifacts/{hash}", readIntegration);
-    route("query-artifact", "POST /v8/artifacts", readIntegration);
     route("events", "POST /v8/artifacts/events", readIntegration);
     route("put-artifact", "PUT /v8/artifacts/{hash}", writeIntegration);
 
     new aws.apigatewayv2.Stage(
       `${name}-default-stage`,
-      { apiId: api.id, autoDeploy: true, name: "$default" },
+      {
+        apiId: api.id,
+        autoDeploy: true,
+        // Bounded abuse ceiling: the read token is public-equivalent by
+        // design, so a leaked token must not translate into unbounded
+        // API Gateway/Lambda/S3 spend. CI waves stay far below these rates.
+        defaultRouteSettings: {
+          throttlingBurstLimit: 200,
+          throttlingRateLimit: 100,
+        },
+        name: "$default",
+      },
       { parent: this }
     );
     new aws.lambda.Permission(
