@@ -31,7 +31,7 @@ fixture office-action doc
 
 | slug | mission (one line) | slice | depends-on | key capabilities cited (REAL `@beep/*`) or NET-NEW |
 |---|---|---|---|---|
-| **`epistemic-claim-lifecycle-gate`** | Make the epistemic boundary reusable: full `ClaimLifecycle` state machine, the SHACL-gate mechanism, projection-as-pure-function, and the ported `EvidenceSpan` char-offset primitive — all owned by the epistemic slice, product-agnostic. | `epistemic` (`@beep/epistemic-domain` + `epistemic-use-cases`†) | **HAVE:** `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`), `@beep/semantic-web/services/provenance` (PROV-O), `@beep/semantic-web/evidence` (`EvidenceAnchor`/`TextPositionSelector`), `@beep/epistemic-domain` (`CandidateClaim`, `Evidence`, `Activity`, `ClaimLifecycle`). | **NET-NEW:** (1) `ClaimLifecycle` extended `candidate → shape_valid → consistency_checked → admitted` (today `LiteralKit(["candidate"])`); (2) `EvidenceSpan` char-offset fields on `Evidence` (today two opaque string refs); (3) `ClaimGate` service contract wrapping the bounded SHACL adapter; (4) `ClaimProjection` pure-function (in-memory, rebuilt from authority); (5) the lifecycle transition function. |
+| **`epistemic-claim-lifecycle-gate`** | Make the epistemic boundary reusable: full `ClaimLifecycle` state machine, the SHACL-gate mechanism, projection-as-pure-function, and the ported `EvidenceSpan` char-offset primitive — all owned by the epistemic slice, product-agnostic. | `epistemic` (`@beep/epistemic-domain` + `epistemic-use-cases`†) | **HAVE:** `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`), `@beep/rdf/Vocab/Prov` (PROV-O; the semantic-web provenance projection service was retired unconsumed), `@beep/semantic-web/evidence` (`EvidenceAnchor`/`TextPositionSelector`), `@beep/epistemic-domain` (`CandidateClaim`, `Evidence`, `Activity`, `ClaimLifecycle`). | **NET-NEW:** (1) `ClaimLifecycle` extended `candidate → shape_valid → consistency_checked → admitted` (today `LiteralKit(["candidate"])`); (2) `EvidenceSpan` char-offset fields on `Evidence` (today two opaque string refs); (3) `ClaimGate` service contract wrapping the bounded SHACL adapter; (4) `ClaimProjection` pure-function (in-memory, rebuilt from authority); (5) the lifecycle transition function. |
 | **`law-practice-office-action-spike`** | Add the IP-law vertical (OfficeAction / Claim / Rejection §101-§103-§112 / PriorArt / Distinction) as bespoke Effect-Schema, the IR→law-entity mapping, and wire the end-to-end loop on one fixture OA with a trivial view. | `law-practice` (`@beep/law-practice-domain` + `law-practice-use-cases`† + `law-practice-server`†) | **`epistemic-claim-lifecycle-gate`** (composed only via its public surface); **HAVE:** `@beep/langextract` (`Extraction`/`Alignment`/`Handoff`/`Service`/`Target`), `@beep/nlp/Handoff/Contract` (IR), `@beep/file-processing`, `@beep/tika`, `@beep/law-practice-domain` (`Matter`, `PatentAsset`, `LegalClient`), `@beep/rdf/Vocab/{Prov,Skos}` (light `@source`). | **NET-NEW:** (1) bespoke `OfficeAction`/`Claim`/`Rejection`/`PriorArtReference`/`Distinction` schemas; (2) the **IR→law-entity mapping** (generic `Entity`/`Relation`/`Span` → typed law entities); (3) the loop-wiring use-case; (4) one fixture OA (synthetic/public PDF) + a trivial ask/view. |
 
 † `epistemic-use-cases`, `law-practice-use-cases`, `law-practice-server` are
@@ -59,7 +59,7 @@ parallelizable, reusable half.
 | `ClaimLifecycle` transition fn | `packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts` | `.service.ts` — the state machine | **NET-NEW** |
 | `ClaimProjection` | `packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts` | pure fn (post-contract helper) | **NET-NEW** |
 | SHACL gate mechanism | `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`, `ShaclValidationResult`, `ShaclValidationViolation`) | bounded SHACL engine (targetClass/minCount/maxCount/datatype) | **HAVE** |
-| Provenance | `@beep/semantic-web/services/provenance` + `@beep/rdf/Vocab/Prov` | PROV-O `Activity`/`Agent`/`Derivation` | **HAVE** |
+| Provenance | `@beep/rdf/Vocab/Prov` (the `@beep/semantic-web/services/provenance` projection service was retired unconsumed, 2026-08) | PROV-O `Activity`/`Agent`/`Derivation` | **HAVE** |
 | Evidence anchor reference | `@beep/semantic-web/evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | W3C-annotation-style selector vocabulary to mirror | **HAVE** |
 
 ### 1.2 Phase shape (BINDING sequencing: schema → contract → impl → verify)
@@ -340,7 +340,7 @@ char-offset fields are NET-NEW even though the `Evidence` entity file is HAVE.
 - `CandidateClaim` already has a `lifecycle` field consuming `ClaimLifecycle`
   (`CandidateClaim.model.ts:34-44`) — so extending the union flows through.
 - HAVE bricks exist at the cited paths: `@beep/semantic-web/services/shacl-validation`
-  (`ShaclValidationService`, bounded subset), `@beep/semantic-web/services/provenance`
+  (`ShaclValidationService`, bounded subset), `@beep/rdf/Vocab/Prov`
   (PROV-O), `@beep/semantic-web/evidence` (`EvidenceAnchor`/`TextPositionSelector`),
   `@beep/nlp/Handoff/Contract` (generic IR), `@beep/langextract/Handoff`
   (`AnnotatedDocumentInput`), `@beep/file-processing`, `@beep/tika`,
