@@ -40,7 +40,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
-  align-complete, ready for shape: redesign of the explorations/goals packet
+  shape-stage with [`BRIEF.md`](./packet-system-redesign/BRIEF.md) drafted
+  for operator review: redesign of the explorations/goals packet
   machinery itself — strict pre-code design gates, derived readiness,
   control-plane event chains, evidence receipts, verifiable approvals,
   tier-routed ceremony. Capture seeded 2026-08-10 from the Notion three-pass
@@ -52,28 +53,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   generated ATLAS/README status, OPPORTUNITIES promotion, single
   packet-core, self-hosting pilot, two-phase done, four flow metrics).
   Same-day expansions: Pocock-skills comparison (frontier-rounds `/grilling`
-  ported); packets-app lane 7 researched and decided D12–D15 (KSA-D
+  ported); packets-app lane 7 researched and decided D12–D16 (KSA-D
   respected — static pulse-first HTML v1 then read-only React v2 as a MAP
   candidate; push+poll realtime; git-markdown packets stay the sole system
-  of record, hosted trackers ruled out). Next: `BRIEF.md`.
-- [`document-structure-ontologies`](./document-structure-ontologies/README.md) —
-  decompose-stage: D7 ratified the BRIEF as-is on 2026-08-13 and fixed four
-  goal packets (patent-document schema first, PO classification, SPAR wire +
-  annotation/DOCO fold, FOLIO slice + MCP browse tools); D8 routes Lynx
-  `lkg.ttl` through the FOLIO `TaxonomySeed` machinery. DOCO/PO/DEO vs the
-  `@beep/md`/`@beep/pandoc-ast`/`@beep/lexical-schema` AST family (the
-  recursive tagged unions already implement PO's content-model axioms) + a
-  5-lane Grok 4.5 sweep (~250KB cited reports in
-  [`research/grok/`](./document-structure-ontologies/research/grok/)).
-  Converged on a 5-layer stack: PO cited not adopted; DOCO/DEO + FaBiO/CiTO
-  wire vocab in `@beep/rdf`; home-grown patent-document schema (CFR 1.77 /
-  MPEP §608 / WIPO ST.96 — no vendorable patent ontology exists, gap
-  confirmed across Lynx, FOLIO live probes, and academic KGs); FOLIO as
-  optional matter-tag interop (D6: pinned vetted slice); FOLIO-MCP-style
-  browse tools planned for the existing governed ontology toolkit (D4) for
-  `apps/professional-desktop` drafting agents. Related:
-  `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
-  D1–D27 binds layering). Next: draft `MAP.md`.
+  of record, hosted trackers ruled out). Next: operator review of the BRIEF.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduate-stage, still active: spine graduated 2026-08-13 to
   [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
@@ -83,7 +66,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
   [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
-  shape-stage after align closed 2026-08-13: tracked-changes-aware ingest is
+  shape-stage with [`BRIEF.md`](./harvey-lab-firm-knowledge/BRIEF.md) and
+  [`MAP.md`](./harvey-lab-firm-knowledge/MAP.md) drafted for operator review:
+  tracked-changes-aware ingest is
   the wedge, with the U4 fixture spike as P0 kill-gate and structural
   representation as fallback. Synthetic C&H is first; run the upstream
   podman+metered-keys harness once, then keep an Effect-native eval as the
@@ -101,7 +86,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   pre-seeded: C&H is a standing test asset; their eval code is reference for a
   roll-our-own Effect-native eval.
 - [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
-  shape-stage after align closed 2026-08-13: span annotation leads; SHACL
+  shape-stage with [`BRIEF.md`](./lynx-lkg-ontology-grounding/BRIEF.md) and
+  [`MAP.md`](./lynx-lkg-ontology-grounding/MAP.md) drafted for operator
+  review: span annotation leads; SHACL
   generation waits behind M4; multilingual discipline is a re-entry;
   `lkg.ttl` rides document-structure-ontologies' FOLIO machinery; ELI is a
   reference-only research asset for future `legal-rule-time-identity`; and
@@ -125,7 +112,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
   shape-stage third wedge of the `legal-patent-kg-deepening` routing matrix;
-  all six align questions closed 2026-08-13. Full drafting event union ships,
+  [`BRIEF.md`](./patent-drafting-episode-ledger/BRIEF.md) and
+  [`MAP.md`](./patent-drafting-episode-ledger/MAP.md) are drafted for
+  operator review; no goal scaffolds before sign-off. All six align questions
+  closed 2026-08-13. Full drafting event union ships,
   watermark lag alone triggers fallback, rebuild proof compares bytes and
   answers, all seven annex policy fields ship in rung 1, §112(d)-closure
   support sets carry attorney-only verdicts, routing is fixed with override,
@@ -186,7 +176,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   enrichment, matter-wall enforcement, and rich-text annotation gated.
   **Queued (P2/P3, research-complete):**
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
-  (stage `graduate`, retention lane spun 2026-08-13): graduated
+  (closed `graduated` 2026-08-13): graduated
   [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
   the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
   operator Graphiti retirement without making product tables its backend —
@@ -194,8 +184,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated
   [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
   the same day (approval-gated `CONTRADICTS` candidates; Deferred spike B is its
-  P0 hard gate). Retention/tier projections now proceed through the ratified
-  optional-lane shape,
+  P0 hard gate), then graduated
+  [`epistemic-memory-retention-projections`](../goals/epistemic-memory-retention-projections/README.md)
+  on 2026-08-13 (repo-native mechanism now; policy-as-data behind calibration;
+  standalone tier/memory-pressure report plus delete/rebuild first; RRF
+  follow-on),
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
   (closed `graduated` 2026-08-13; four MAP re-entry points):
   graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
@@ -222,28 +215,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   provenance ledger (mined nuggets + upstream repos/licenses + external
   citations + in-repo bricks), registered in its manifest and cross-linked
   exploration↔goal (2026-06-30). Next: `/grill-with-docs` the four graduate-now wedges → shape → decompose → graduate.
-- [`identity-as-iri`](./identity-as-iri/README.md) (opened 2026-07-01, at
-  `graduate`; capture→graduate in two days — 3 spec docs, 12 repo-mining
-  reports, 3 audits, adversarially-verified synthesis, 6 decisions,
-  `goals/ontology-modeling-foundation` superseded, design proven by the
-  effect-only `scratchpad/identity` prototype at 27/27).
-  [`identity-iri-core`](../goals/identity-iri-core/README.md) is complete;
-  [`identity-iri-fold`](../goals/identity-iri-fold/README.md) merged as PR #536
-  on 2026-08-01 and is completed-retained. The fibered trigger fired;
-  `identity-iri-fibered` is ratified as one future goal with full MAP scope,
-  blocked by semantic-web PR2+PR3 cleanups
-  ([`MAP.md`](./identity-as-iri/MAP.md)) — merge `IdentityComposer`, the ontology layer, and fibered
-  metadata retrieval: identity path and IRI as two literal-typed encodings of
-  one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
-  over triples-as-tuples, `Fibered` kit from the `JSDocTagDefinition.make`
-  pattern. Seeded from a locked design handoff
-  ([`assets/identity-iri-fibration-handoff.md`](./identity-as-iri/assets/identity-iri-fibration-handoff.md),
-  D1–D9). Exploration's job: first-principles spec grounding (RFC/W3C prose),
-  repo audits (`SemanticSchemaMetadata`, `Id.ts` coupling, supersede
-  `goals/ontology-modeling-foundation`), and an effect-only scratchpad
-  prototype proving types/ergonomics before the packaging call
-  (all-in-`@beep/identity` vs identity/rdf/ontology split).
-
 ### Proposed
 
 - (none)
@@ -310,6 +281,27 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`document-structure-ontologies`](./document-structure-ontologies/README.md)
+  — graduated 2026-08-13 after live capability verification and four-goal
+  decomposition: [`patent-document-schema`](../goals/patent-document-schema/README.md)
+  ships first for the practice-KG claims batch, followed by
+  [`document-ast-pattern-classification`](../goals/document-ast-pattern-classification/README.md),
+  [`spar-document-annotation-wire`](../goals/spar-document-annotation-wire/README.md),
+  and [`folio-lynx-taxonomy-browse`](../goals/folio-lynx-taxonomy-browse/README.md).
+  Lynx `lkg.ttl` shares the final goal's TaxonomySeed machinery while the
+  Lynx packet retains source-specific vetting/license ownership. Later
+  candidates reopen at `decompose`.
+- [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
+  — graduated 2026-08-13 after all three MAP rows produced goals. The final
+  row, [`epistemic-memory-retention-projections`](../goals/epistemic-memory-retention-projections/README.md),
+  ships a repo-native rebuildable operator tier/memory-pressure report with
+  policy-as-data behind calibration evidence; RRF integration is follow-on.
+- [`identity-as-iri`](./identity-as-iri/README.md) — graduated 2026-08-13
+  after core and fold completed-retained and the fired capstone graduated into
+  [`identity-iri-fibered`](../goals/identity-iri-fibered/README.md). The
+  capstone carries the full MAP row but remains text-blocked by semantic-web
+  PR2+PR3 cleanups, which have no goal packets; discrete case, post-move SHACL
+  contract, and test/dev store Layer constraints are binding.
 - [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
   graduated 2026-08-13 after the candor and relator wedges completed and the
   episode-ledger align gate closed. `uspto-patent-driver-depth` remains a
