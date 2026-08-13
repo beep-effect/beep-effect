@@ -94,9 +94,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 180,
+      "line": 191,
       "owner": "@beep/db-admin",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Migration regression decodes fixed candor event, disposition, submission, and identity fixtures to prove the actual pre-upgrade refusal and post-upgrade constraints; schema-derived round-trip coverage for the law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",

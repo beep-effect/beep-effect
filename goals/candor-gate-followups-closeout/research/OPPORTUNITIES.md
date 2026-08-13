@@ -173,3 +173,18 @@
   changed-package form of `test-tsgo` for focused proof.
 - **Disposition:** explicitly typed the resolver fixture's Effect channel and
   asserted the blocked-error shape without unsafe union property access.
+
+## CGF-013 — Line-sensitive policy inventory drift was hidden by aggregate output
+
+- **Doing:** running final current-main Yeet verification after the complete
+  test-source compiler passed.
+- **Evidence:** schema-first lint treated the existing db-admin migration-suite
+  exception as both stale and newly missing because its first codec assertion
+  moved from line 180 to 191; the parallel lint output was truncated before the
+  diagnostic, leaving only `quality:lint: exit 1` in the terminal summary.
+- **Would prevent it:** key policy inventory entries by stable file and symbol
+  identity rather than source line, and persist each lint substep's complete
+  output path in the Yeet verdict.
+- **Disposition:** refreshed the existing exception's line and replaced its
+  generated count-only reason with the durable migration-test rationale and
+  pointer to the domain's schema-derived property coverage.
