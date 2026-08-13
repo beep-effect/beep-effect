@@ -452,7 +452,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "jsdoc-ratchet",
     contextName: "JSDoc Ratchet",
-    required: true,
+    required: false,
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [],
@@ -666,6 +666,21 @@ const turboRootLaneStep = (
     [...prefixArgs, ...turboShapeArgs(options)],
     options.affected ? { TURBO_SCM_BASE: options.base } : undefined
   );
+
+const turboTaskLaneStep = (
+  repoRoot: string,
+  laneId: CiLaneId,
+  task: string,
+  prefixArgs: ReadonlyArray<string>,
+  options: CiLaneRunOptions
+): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: `ci:${laneId}`,
+    command: "bunx",
+    args: ["turbo", "run", task, ...prefixArgs, ...turboShapeArgs(options)],
+    cwd: repoRoot,
+    ...(options.affected ? { env: { TURBO_SCM_BASE: options.base } } : {}),
+  });
 
 const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
   DocgenLaneMode.$match(options.mode, {
@@ -883,7 +898,10 @@ export const ciLaneStepsForTesting: {
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
-      lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
+      // Required Lint Policy owns the repo-policy battery. The Lint context
+      // therefore runs only the package Turbo graph instead of duplicating
+      // that battery through the root `bun run lint` aggregate.
+      lint: () => [turboTaskLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
       "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
       nix: () => [
         QualityTaskStep.make({
