@@ -3,12 +3,16 @@
   "exploration": {
     "slug": "identity-as-iri",
     "title": "Identity as IRI",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/identity-iri-core", "goals/identity-iri-fold"],
+      "goals": [
+        "goals/identity-iri-core",
+        "goals/identity-iri-fold",
+        "goals/identity-iri-fibered"
+      ],
       "docs": [],
       "supersededBy": null
     },

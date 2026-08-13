@@ -3,13 +3,14 @@
   "exploration": {
     "slug": "agent-memory-tiers-bitemporal-edges",
     "title": "Agent Memory Tiers & Bitemporal Edges",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "links": {
       "goals": [
         "goals/epistemic-bitemporal-edge-core",
-        "goals/epistemic-contradiction-triage"
+        "goals/epistemic-contradiction-triage",
+        "goals/epistemic-memory-retention-projections"
       ],
       "docs": [],
       "supersededBy": null
