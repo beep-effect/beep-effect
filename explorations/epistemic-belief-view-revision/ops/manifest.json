@@ -4,18 +4,19 @@
     "slug": "epistemic-belief-view-revision",
     "title": "Epistemic Belief View Revision",
     "status": "active",
-    "stage": "capture",
+    "stage": "research",
     "openQuestions": [
-      "Master align Q1: canonical names/owners for the typed verdict families",
-      "Master align Q3: retention classes for views-as-prunable-projections"
+      "Which proposed verdict-family names and owners should the epistemic goal family ratify?",
+      "Which fields define BeliefContentionKey and the minimal selection-policy and abstention vocabularies?",
+      "Should the first view delivery materialize prunable revisions or compute them on demand behind the same replay contract?"
     ],
-    "sources": [],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-25",
-    "updated": "2026-07-25"
+    "updated": "2026-08-13"
   }
 }

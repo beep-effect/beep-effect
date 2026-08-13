@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `capture`
+Stage: `research`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -30,18 +30,19 @@ closed `completed-retained` on 2026-07-25.
 
 ## Next Open Question
 
-Master align Q1 (inherited from the dispatch): what canonical names and owners
-should the repo adopt for the typed verdict families — shape validity, anchor
-fidelity, semantic stance, source authority/currentness, human disposition,
-action authorization, and release? A view's selection policy consumes several of
-these, so naming them is upstream of any view schema. Master align Q3
-(retention classes, with views as the canonical prunable projection) is the
-second question carried in.
+Which proposed verdict-family names and owners should the epistemic goal family
+ratify, and which exact fields define the projection-owned
+`BeliefContentionKey` used to compare distinct evidence-scoped authority
+lineages? After those are settled, align must choose the minimal policy and
+abstention vocabulary and whether first delivery materializes revisions or
+computes them on demand.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): seed decision, what the substrate now guarantees, fat-marker shape, inherited questions, tensions.
+3. [`RESEARCH.md`](./RESEARCH.md) - stage-1 synthesis: live contracts, proposed verdict names, view/revision semantics, and align frontier.
+4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## Trail
 
@@ -50,3 +51,8 @@ second question carried in.
   core). Capture landed with the verbatim seed decision, the substrate
   guarantees the view layer may lean on, the fat-marker projection shape, and
   inherited master align Q1/Q3.
+- 2026-08-13: research stage completed — grounded the shipped authority and
+  active triage contracts, proposed (without locking) the shared verdict-family
+  names, identified the evidence-scope/contention-key gap, and specified
+  deterministic view revision and retention semantics. `ATLAS.md` sync is
+  deferred to the campaign PR.
