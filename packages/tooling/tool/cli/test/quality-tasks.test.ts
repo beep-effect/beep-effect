@@ -1071,31 +1071,31 @@ describe("quality task adapter", () => {
 
     expect(A.map(steps, (step) => step.label)).toEqual([
       "lint",
-      "lint:effect-imports",
-      "lint:terse-effect",
-      "lint:effect-fn",
-      "lint:frozen-grant-set",
-      "lint:native-runtime",
-      "lint:allowlist",
-      "lint:tsgo-rules",
-      "lint:ecosystem-polarity",
-      "lint:identity-registry",
-      "lint:judge-rubric",
-      "lint:package-test-imports",
-      "lint:package-test-typecheck",
-      "lint:reflection-artifacts",
-      "lint:roadmap-refs",
+      "lint:deprecated-apis",
+      "lint:docgen",
       "knowledge:semantic-delta",
+      "lint:schema-first",
+      "lint:terse-effect",
+      "lint:jsdoc",
+      "lint:native-runtime",
+      "lint:identity-registry",
+      "lint:frozen-grant-set",
+      "lint:circular",
+      "lint:effect-fn",
+      "lint:package-test-imports",
+      "lint:effect-imports",
+      "lint:package-test-typecheck",
+      "lint:tsgo-rules",
+      "lint:oxlint",
+      "lint:ecosystem-polarity",
+      "lint:allowlist",
+      "lint:jsdoc-module-tags",
       "goals:doctor",
       "goals:index-check",
-      "lint:schema-first",
-      "lint:deprecated-apis",
-      "lint:jsdoc",
-      "lint:jsdoc-module-tags",
-      "lint:docgen",
-      "lint:circular",
+      "lint:reflection-artifacts",
+      "lint:roadmap-refs",
+      "lint:judge-rubric",
       "lint:typos",
-      "lint:oxlint",
     ]);
     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", []));
   });
@@ -1104,38 +1104,43 @@ describe("quality task adapter", () => {
     const steps = rootLintPolicyStepsForTesting("/repo");
 
     expect(A.map(steps, (step) => step.label)).toEqual([
-      "lint:effect-imports",
-      "lint:terse-effect",
-      "lint:effect-fn",
-      "lint:frozen-grant-set",
-      "lint:native-runtime",
-      "lint:allowlist",
-      "lint:tsgo-rules",
-      "lint:ecosystem-polarity",
-      "lint:identity-registry",
-      "lint:judge-rubric",
-      "lint:package-test-imports",
-      "lint:package-test-typecheck",
-      "lint:reflection-artifacts",
-      "lint:roadmap-refs",
+      "lint:deprecated-apis",
+      "lint:docgen",
       "knowledge:semantic-delta",
+      "lint:schema-first",
+      "lint:terse-effect",
+      "lint:jsdoc",
+      "lint:native-runtime",
+      "lint:identity-registry",
+      "lint:frozen-grant-set",
+      "lint:circular",
+      "lint:effect-fn",
+      "lint:package-test-imports",
+      "lint:effect-imports",
+      "lint:package-test-typecheck",
+      "lint:tsgo-rules",
+      "lint:oxlint",
+      "lint:ecosystem-polarity",
+      "lint:allowlist",
+      "lint:jsdoc-module-tags",
       "goals:doctor",
       "goals:index-check",
-      "lint:schema-first",
-      "lint:deprecated-apis",
-      "lint:jsdoc",
-      "lint:jsdoc-module-tags",
-      "lint:docgen",
-      "lint:circular",
+      "lint:reflection-artifacts",
+      "lint:roadmap-refs",
+      "lint:judge-rubric",
       "lint:typos",
-      "lint:oxlint",
     ]);
     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
   });
 
   it("passes changed TypeScript files to file-oriented policy laws", () => {
-    const files = ["packages/demo/src/index.ts", "README.md"];
+    const files = [
+      "packages/demo/src/index.ts",
+      "packages/demo/test/Example.test.ts",
+      "packages/ecosystem/demo/src/index.ts",
+      "README.md",
+    ];
     const steps = rootLintPolicyStepsForTesting("/repo", files);
 
     expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual([
@@ -1145,7 +1150,7 @@ describe("quality task adapter", () => {
       "effect-fn",
       "--check",
       "--include",
-      "packages/demo/src/index.ts",
+      "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts",
     ]);
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual([
@@ -1155,7 +1160,7 @@ describe("quality task adapter", () => {
       "allowlist-check",
     ]);
     expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
-      "packages/demo/src/index.ts,README.md"
+      "packages/demo/test/Example.test.ts"
     );
     expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual([
       "run",
@@ -1163,8 +1168,22 @@ describe("quality task adapter", () => {
       "lint",
       "ecosystem-polarity",
       "--include",
-      "packages/demo/src/index.ts,README.md",
+      "packages/ecosystem/demo/src/index.ts",
     ]);
+  });
+
+  it("omits empty changed-scope policy steps instead of constructing empty includes", () => {
+    const steps = rootLintPolicyStepsForTesting("/repo", ["docs/README.md"]);
+    const labels = A.map(steps, (step) => step.label);
+
+    expect(labels).not.toContain("lint:effect-imports");
+    expect(labels).not.toContain("lint:terse-effect");
+    expect(labels).not.toContain("lint:effect-fn");
+    expect(labels).not.toContain("lint:frozen-grant-set");
+    expect(labels).not.toContain("lint:native-runtime");
+    expect(labels).not.toContain("lint:ecosystem-polarity");
+    expect(labels).not.toContain("lint:package-test-imports");
+    expect(A.some(steps, (step) => A.some(step.args, Str.equivalence("")))).toBe(false);
   });
 
   it("runs repo-wide root lint policy with hosted-stable concurrency", () =>

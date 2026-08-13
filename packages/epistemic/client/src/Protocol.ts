@@ -8,6 +8,7 @@
 import { $EpistemicClientId } from "@beep/identity/packages";
 import { O, pipe, Str } from "@beep/utils";
 import { Layer, Result } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Atom } from "effect/unstable/reactivity";
@@ -64,7 +65,7 @@ export const resolveEpistemicRpcHttpUrl = (runtime: BrowserHttpRuntime | undefin
 
   return pipe(
     O.fromUndefinedOr(origin),
-    O.filter((value) => Str.startsWith(value, "http://") || Str.startsWith(value, "https://")),
+    O.filter(P.or(Str.startsWith("http://"), Str.startsWith("https://"))),
     O.flatMap((value) =>
       pipe(
         Result.try(() => new URL("/rpc", value).href),
