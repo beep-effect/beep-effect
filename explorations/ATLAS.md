@@ -135,19 +135,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   the product/operator boundary untouched). Research highlights: the
   never-compute boundary proved two-sided from MPEP/statute primary text.
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
-  capture-stage: bind model qualification to the exact model, adapter,
-  modality, prompt, wrapper, decoding configuration, and artifact digest —
-  no qualification transfer across any substitution; routed out of
-  `academia-corpus-mining` (align dispatch 2026-07-25).
+  align-stage: ratify identity assurance, requalification policy, and scoped
+  human dispositions for exact, digest-bound model arrangements.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
-  capture-stage: a recoverable, replayable projection that selects one working
-  assertion per logical lineage (or abstains) under a named policy, revised by
-  new versions with causal ancestry rather than by mutating evidence. Routed out
-  of `academia-corpus-mining` (align dispatch 2026-07-25, master Q4: the first
-  composition over the bitemporal core) once
-  [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md)
-  landed. Carries master align Q1 (verdict-family naming) and Q3 (retention
-  classes for prunable projections).
+  align-stage: ratify contention grouping, selection/abstention policy, and
+  replayable belief-view materialization over a new cross-lineage authority query.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /
