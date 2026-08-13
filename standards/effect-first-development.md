@@ -36,7 +36,7 @@ Use three layers:
 ### EF-1: Errors are data, not side effects
 
 - If logic can fail, return `Effect.Effect<A, E, R>` with a typed error `E`.
-- Use `TaggedErrorClass` from `@beep/schema` for public or cross-module failures.
+- Extend `S.TaggedError` from `effect/Schema` directly for public or cross-module failures.
 - Do not `throw` or use `new Error(...)` in production domain logic.
 
 Example:
@@ -46,11 +46,10 @@ import { Effect } from "effect"
 import * as O from "effect/Option"
 import * as S from "effect/Schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { TaggedErrorClass } from "@beep/schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class MissingConfigError extends TaggedErrorClass<MissingConfigError>($I`MissingConfigError`)(
+class MissingConfigError extends S.TaggedError<MissingConfigError>($I`MissingConfigError`)(
   "MissingConfigError",
   { key: S.String },
   $I.annote("MissingConfigError", { description: "Required configuration key is missing" })
@@ -108,11 +107,10 @@ Example:
 import { $PackageNameId } from "@beep/identity/packages"
 import { Effect } from "effect"
 import * as S from "effect/Schema"
-import { TaggedErrorClass } from "@beep/schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class CreateTaskInputError extends TaggedErrorClass<CreateTaskInputError>($I`CreateTaskInputError`)(
+class CreateTaskInputError extends S.TaggedError<CreateTaskInputError>($I`CreateTaskInputError`)(
   "CreateTaskInputError",
   { message: S.String },
   $I.annote("CreateTaskInputError", {
@@ -496,11 +494,10 @@ Example:
 import { $PackageNameId } from "@beep/identity/packages"
 import { Effect } from "effect"
 import * as S from "effect/Schema"
-import { TaggedErrorClass } from "@beep/schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class UserJsonError extends TaggedErrorClass<UserJsonError>($I`UserJsonError`)(
+class UserJsonError extends S.TaggedError<UserJsonError>($I`UserJsonError`)(
   "UserJsonError",
   { message: S.String },
   $I.annote("UserJsonError", {
@@ -1072,13 +1069,12 @@ const UnknownToString = S.Unknown.pipe(
 ### Template: Tagged error with Identity composer
 
 ```ts
-import { TaggedErrorClass } from "@beep/schema"
 import * as S from "effect/Schema"
 import { $PackageNameId } from "@beep/identity/packages"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class DomainError extends TaggedErrorClass<DomainError>($I`DomainError`)(
+class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
   "DomainError",
   {
     message: S.String
@@ -1086,6 +1082,14 @@ class DomainError extends TaggedErrorClass<DomainError>($I`DomainError`)(
   $I.annote("DomainError", { description: "Domain failure" })
 ) {}
 ```
+
+Use the package `$I` composer when a distinct namespaced schema identifier is
+wanted. If no distinct identifier is needed, omit it:
+`S.TaggedError<DomainError>()("DomainError", fields)`. Never pass a bare
+identifier equal to the tag; `redundantSchemaTagIdentifier` rejects it.
+
+Cause-carrying errors declare `cause: S.Defect({ includeStack: true })`
+explicitly in their fields.
 
 ### Template: Safe nullable boundary conversion
 
@@ -1183,8 +1187,8 @@ const summarize = (items: ReadonlyArray<string>) =>
     onNonEmpty: (values) => `count:${A.length(values)}`
   })
 
-export class SomeErrorOne extends TaggedErrorClass<SomeErrorOne>($I`SomeErrorOne`)("SomeErrorOne", { message: S.String}) {}
-export class SomeErrorTwo extends TaggedErrorClass<SomeErrorTwo>($I`SomeErrorTwo`)("SomeErrorTwo", { message: S.String}) {}
+export class SomeErrorOne extends S.TaggedError<SomeErrorOne>($I`SomeErrorOne`)("SomeErrorOne", { message: S.String}) {}
+export class SomeErrorTwo extends S.TaggedError<SomeErrorTwo>($I`SomeErrorTwo`)("SomeErrorTwo", { message: S.String}) {}
 
 export const SomeError = S.Union(
   [

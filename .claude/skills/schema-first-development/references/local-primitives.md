@@ -12,10 +12,7 @@ Use this baseline unless the file already follows a stronger local pattern.
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import {
-  LiteralKit,
-  TaggedErrorClass,
-} from "@beep/schema"
+import { LiteralKit } from "@beep/schema"
 import * as S from "effect/Schema"
 ```
 
@@ -111,10 +108,10 @@ Example:
 Use local transform helpers when they already encode the repo's expected
 behavior or failure handling.
 
-## Prefer `TaggedErrorClass` for Typed Error Schemas
+## Prefer `S.TaggedError` for Typed Error Schemas
 
-When an error is part of a module boundary, prefer `TaggedErrorClass` from
-`@beep/schema`.
+When an error is part of a module boundary, extend `S.TaggedError` from
+`effect/Schema` directly.
 
 This keeps the error itself schema-backed and consistent with the repo's error
 modeling style.
@@ -122,7 +119,7 @@ modeling style.
 Prefer:
 
 ```ts
-export class InputError extends TaggedErrorClass<InputError>($I`InputError`)(
+export class InputError extends S.TaggedError<InputError>($I`InputError`)(
   "InputError",
   { message: S.String },
   $I.annote("InputError", {
@@ -130,6 +127,12 @@ export class InputError extends TaggedErrorClass<InputError>($I`InputError`)(
   })
 ) {}
 ```
+
+Use the package `$I` composer when a distinct namespaced schema identifier is
+wanted. If no distinct identifier is needed, use
+`S.TaggedError<InputError>()("InputError", fields)`. Never pass a bare
+identifier equal to the tag. Cause-carrying errors declare
+`cause: S.Defect({ includeStack: true })` explicitly.
 
 ## Decide Between Raw `effect/Schema` and Local Helpers
 

@@ -45,7 +45,7 @@ Two checks with no law counterpart below:
 5. No nullish leak in domain logic; convert nullish to `Option` at boundaries.
 6. No direct `typeof` checks when `effect/Predicate` covers the case.
 7. No native `Object/Map/Set/Date/String` helpers in domain logic.
-8. For tooling source, use `TaggedErrorClass` from `@beep/schema`.
+8. For typed errors, extend `S.TaggedError` from `effect/Schema` directly. Use a package `$I` composer for a distinct namespaced identifier; otherwise omit the identifier, and never pass a bare identifier equal to the tag. Cause-carrying errors declare `cause: S.Defect({ includeStack: true })` explicitly.
 9. Exported APIs need JSDoc and docgen-clean examples.
 10. Do not finish with failing `check`, `lint`, `test`, or `docgen`.
 11. Do not suffix schema constants with `Schema`; use the domain name.

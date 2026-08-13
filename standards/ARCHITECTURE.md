@@ -1353,7 +1353,6 @@ capability, not product verbs:
 
 ````ts
 import { $DrizzleId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { Context, type Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 
@@ -1365,11 +1364,11 @@ const $I = $DrizzleId.create("Drizzle.service");
  * @category errors
  * @since 0.0.0
  */
-export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError`)(
+export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
   {
     operation: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.Defect({ includeStack: true }),
   },
   $I.annote("DrizzleError", {
     description: "Technical Drizzle driver failure scoped to a driver operation.",
@@ -1678,7 +1677,7 @@ Domain errors are actionable, and domain model behavior is pure:
 
 ````ts
 import { $IamDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $IamDomainId.create("entities/Membership/Membership.errors");
 
@@ -1688,7 +1687,7 @@ const $I = $IamDomainId.create("entities/Membership/Membership.errors");
  * @category errors
  * @since 0.0.0
  */
-export class MembershipAlreadyRevoked extends TaggedErrorClass<MembershipAlreadyRevoked>(
+export class MembershipAlreadyRevoked extends S.TaggedError<MembershipAlreadyRevoked>(
   $I`MembershipAlreadyRevoked`
 )(
   "MembershipAlreadyRevoked",
