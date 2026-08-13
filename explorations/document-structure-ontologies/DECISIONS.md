@@ -134,3 +134,23 @@ directly useful matter/task tags for an IP practice.
 runtime risk in a desktop app); defer (slice recipe is cheap and the MCP
 browse tools want a non-trivial taxonomy to serve); reject (forfeits interop
 with the broadest open legal taxonomy).
+
+## 2026-08-13 — D7: Shape sign-off and decomposition
+
+**Decision:** Ratify `BRIEF.md` as-is. Decompose into four goal packets, in
+this order: (1) patent-document schema first, consumed by the
+practice-kg-mcp claims batch; (2) PO classification; (3) SPAR wire vocabulary
+plus annotation shape, including the DOCO section fold; and (4) the FOLIO
+slice plus MCP browse tools.
+
+**Rationale:** The patent schema is the first concrete consumer contract; the
+remaining packets preserve the ratified layer boundaries without combining
+independent delivery units.
+
+## 2026-08-13 — D8: Lynx lkg.ttl routing
+
+**Decision:** Lynx `lkg.ttl` rides this packet's FOLIO `TaxonomySeed`
+machinery. Lynx owns the vetting and license check recorded in its packet.
+
+**Rationale:** One vetted-seed mechanism avoids a parallel vendor path while
+preserving source-specific provenance responsibility.

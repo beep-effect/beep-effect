@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `capture`
-Status: `active`
+Status: `parked`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,8 +15,8 @@ lifecycle, and decision-complete handoff artifacts.
 
 ## Next Open Question
 
-Which parts belong in repo-wide law and existing operator skills, and which
-still justify a separately shaped governance capability?
+Resume when `agentic-governance-laws` hits a wall requiring the full
+role-authority and expiring-exception protocol.
 
 ## Read This First
 
@@ -24,6 +24,11 @@ still justify a separately shaped governance capability?
 2. [`CAPTURE.md`](./CAPTURE.md) - distilled design seed and history pointers.
 
 ## Trail
+
+- 2026-08-13: parked because `agentic-governance-laws` owns the governance
+  seam and `agent-execution-authority` completed the execution seam. Resume
+  only if the laws goal hits a wall requiring the full role-authority and
+  expiring-exception protocol; the 2026-07-25 corpus requirements stay here.
 
 - 2026-07-25: sibling seam settled from the other side —
   [`agent-execution-sandbox`](../agent-execution-sandbox/DECISIONS.md) align

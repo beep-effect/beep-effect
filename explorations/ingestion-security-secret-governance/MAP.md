@@ -16,6 +16,13 @@ behind their named gates.
 | INCUBATE | Secret | `secret-resolution-contract` | Resolve provider-neutral credential references sequentially with typed continue/stop semantics, `Redacted` values, and non-secret source metadata. | Incubate app/server-local; foundation/capability promotion requires at least two proven consumers. Proposed precedence must be ratified. | Reuse `packages/drivers/onepassword-cli/src/OnePasswordCli.service.ts`, `packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts`, and technical availability metadata in `packages/foundation/capability/mcp-kit/src/SourceAuth.ts`. **NET-NEW:** provider-neutral resolver port/errors/precedence contract and driver adapters. |
 | BLOCKED | Secret | `per-user-credential-vault` | Store and lifecycle-manage product-owned encrypted credential records without leaking secret values. | Blocked on ownership/tenancy ratification, product-slice selection, and threat-model spike. | Reuse the AEAD envelope precedent in `packages/tooling/library/ai-metrics/src/archive.ts`. **NET-NEW:** credential record, wrapped per-user/per-credential keys, custody adapter, authorization, rotation, revocation, recovery, and deletion workflows. |
 
+## Re-entry Points
+
+The five non-graduated candidates are re-entry points under the repository's
+reopen-at-`decompose` convention. Reopen when `ingestion-secret-scrub` ships;
+the HTML, fetch, resolver-promotion, and vault rows retain their additional
+proof and ownership gates.
+
 ## Cross-Reference Boundaries
 
 | Surface | Relationship to this program | Exact boundary |
