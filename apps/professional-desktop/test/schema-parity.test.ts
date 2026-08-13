@@ -163,6 +163,7 @@ describe("@beep/professional-desktop schema parity", () => {
       const bootstrapStatusWire = {
         conflictItems: 0,
         connected: false,
+        disconnectReason: "credentials-missing",
         currentItems: 0,
         cursorPosition: null,
         errorItems: 0,
@@ -179,6 +180,7 @@ describe("@beep/professional-desktop schema parity", () => {
       const activeStatusWire = {
         conflictItems: 1,
         connected: true,
+        disconnectReason: null,
         currentItems: 3,
         cursorPosition: "now",
         errorItems: 0,

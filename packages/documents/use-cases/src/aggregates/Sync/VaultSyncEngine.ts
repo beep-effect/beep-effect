@@ -27,6 +27,7 @@ import {
   SyncOperationRepositoryNotFound,
   SyncOperationRepositoryUnavailable,
 } from "../../entities/SyncOperation/SyncOperation.repository.ts";
+import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
 import { DmsMirrorUnavailable, VaultScanFailed } from "./Sync.errors.ts";
 import type * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import type { Effect } from "effect";
@@ -45,6 +46,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
  * const status = S.decodeUnknownSync(VaultSyncStatus)({
  *   conflictItems: 0,
  *   connected: true,
+ *   disconnectReason: null,
  *   currentItems: 3,
  *   cursorPosition: "now",
  *   errorItems: 0,
@@ -67,6 +69,9 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     }),
     connected: S.Boolean.annotateKey({
       description: "Whether the DMS mirror adapter can reach the provider.",
+    }),
+    disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Why the provider is disconnected; none while the mirror probe reports connected.",
     }),
     currentItems: NonNegativeInt.annotateKey({
       description: "Number of tracked items in the current reconciliation state.",
@@ -318,6 +323,7 @@ export class MarkConflictReviewedInput extends S.Class<MarkConflictReviewedInput
  * const idleStatus = S.decodeUnknownSync(VaultSyncStatus)({
  *   conflictItems: 0,
  *   connected: false,
+ *   disconnectReason: "credentials-missing",
  *   currentItems: 0,
  *   cursorPosition: null,
  *   errorItems: 0,
@@ -372,6 +378,7 @@ export interface VaultSyncEngineShape {
  * const idleStatus = S.decodeUnknownSync(VaultSyncStatus)({
  *   conflictItems: 0,
  *   connected: false,
+ *   disconnectReason: "credentials-missing",
  *   currentItems: 0,
  *   cursorPosition: null,
  *   errorItems: 0,

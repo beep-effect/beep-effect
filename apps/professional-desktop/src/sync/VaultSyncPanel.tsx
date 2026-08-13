@@ -7,6 +7,7 @@
 
 "use client";
 
+import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
 import { A, O, thunkNull } from "@beep/utils";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -60,15 +61,23 @@ const VaultSyncStatusView = ({
         Loading sync status
       </p>
     ),
-    onFailure: () => (
+    onFailure: (failure) => (
       // The status query had no retry and nothing invalidates it, so a sidecar that
       // restarted -- or a single dropped request -- left this reading "unavailable"
       // for the rest of the session, long after sync had come back. A dead end with
-      // no way out is not a state; it is an abandonment.
+      // no way out is not a state; it is an abandonment. The waiting flag makes the
+      // retry visibly do something even when the refresh fails again immediately.
       <div className="mt-2 flex items-center gap-2" data-testid="vault-sync-status">
         <p className="text-xs text-destructive">Sync status is unavailable.</p>
-        <Button type="button" size="sm" variant="outline" onClick={onRetry} data-testid="vault-sync-status-retry">
-          Retry
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          disabled={failure.waiting}
+          data-testid="vault-sync-status-retry"
+        >
+          {failure.waiting ? "Retrying…" : "Retry"}
         </Button>
       </div>
     ),
@@ -85,6 +94,60 @@ const VaultSyncStatusView = ({
       </dl>
     ),
   });
+
+// Disconnected copy keyed on the sidecar's honest disconnect reason. Telling
+// the operator to set CLOUD_BOX_TOKEN when the token IS set (but the probe
+// failed) sent QA chasing configuration that was never the problem.
+const DisconnectedNote = ({
+  onRetry,
+  reason,
+  waiting,
+}: {
+  readonly onRetry: () => void;
+  readonly reason: O.Option<DmsMirrorDisconnectReason>;
+  readonly waiting: boolean;
+}): JSX.Element => {
+  const probeFailedNote = (
+    <div
+      className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
+      data-testid="vault-sync-setup-note"
+    >
+      <p>
+        Box credentials are configured, but the provider probe failed — the token may be expired or the mirror root
+        folder is unreachable. Sync stays paused until Box answers.
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="mt-2"
+        onClick={onRetry}
+        disabled={waiting}
+        data-testid="vault-sync-reconnect"
+      >
+        {waiting ? "Checking…" : "Retry connection"}
+      </Button>
+    </div>
+  );
+  return O.match(reason, {
+    // A disconnected status without a reason is an older sidecar; the probe
+    // path is the only honest guess that does not claim the token is unset.
+    onNone: () => probeFailedNote,
+    onSome: (value) =>
+      DmsMirrorDisconnectReason.$match(value, {
+        "credentials-missing": () => (
+          <p
+            className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
+            data-testid="vault-sync-setup-note"
+          >
+            Set CLOUD_BOX_TOKEN and restart the app to connect Box. OAuth setup ships when the Box test tenant is
+            provisioned.
+          </p>
+        ),
+        "probe-failed": () => probeFailedNote,
+      }),
+  });
+};
 
 const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState }): JSX.Element | null =>
   VaultSyncPanelState.match(state, {
@@ -120,11 +183,16 @@ const VaultSyncConflictsList = ({
   if (AsyncResult.isFailure(conflicts)) {
     return (
       <div className="mt-3 flex items-center gap-2" role="alert" data-testid="vault-sync-conflicts-failed">
-        <p className="text-xs text-destructive">
-          Open conflicts could not be loaded. The count above may be out of date.
-        </p>
-        <Button type="button" size="sm" variant="outline" onClick={onRetry} data-testid="vault-sync-conflicts-retry">
-          Retry
+        <p className="text-xs text-destructive">Open conflicts could not be loaded.</p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          disabled={conflicts.waiting}
+          data-testid="vault-sync-conflicts-retry"
+        >
+          {conflicts.waiting ? "Retrying…" : "Retry"}
         </Button>
       </div>
     );
@@ -217,13 +285,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       </div>
       <VaultSyncStatusView status={status} onRetry={refreshStatus} />
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
-        <p
-          className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
-          data-testid="vault-sync-setup-note"
-        >
-          Set CLOUD_BOX_TOKEN and restart the app to connect Box. OAuth setup ships when the Box test tenant is
-          provisioned.
-        </p>
+        <DisconnectedNote reason={status.value.disconnectReason} waiting={status.waiting} onRetry={refreshStatus} />
       ) : null}
       <div className="mt-3 flex items-center gap-2">
         <Button
