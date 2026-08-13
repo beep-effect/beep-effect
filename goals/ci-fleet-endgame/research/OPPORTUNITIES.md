@@ -438,3 +438,23 @@
   rather than hand-written mocks; and a structured log on the fail-closed
   path (cause class only, never secret material) so live denials attribute
   in one CloudWatch read instead of a source audit.
+
+## Bun cannot exit after successful docgen on the fleet lane (crash or hang)
+
+- **Work:** P3 activation PR closeout — Docgen lane on the fleet
+  (2026-08-13, run 31685113617, three consecutive attempts on one head).
+- **What happened:** every attempt completed the actual work — attempt 3's
+  log shows all 36 docgen tasks successful in 3m33s with the turbo summary
+  written — and then the wrapping `bun run docgen:local` process failed to
+  die: attempts 1-2 SIGABRTed during teardown seconds after
+  `✓ Docs generation succeeded!`, attempt 3 wedged silently for 40+ minutes
+  after the same success line and had to be cancelled. Two failure surfaces,
+  one defect: bun's post-main teardown after the docgen runner, on the fleet
+  image. Local runs and earlier hosted waves of the same content passed, so
+  content is exonerated. This also retro-explains the previously recorded
+  "fleet Docgen silent-hang" flake.
+- **Fix identified:** have the docgen:local CLI path force a clean
+  `process.exit(0)` after flushing output on success (and `exit(1)` on
+  failure) so bun's broken teardown never runs — removes both the crash and
+  hang modes for every future wave. Belongs to repo-cli; queued as a
+  follow-up alongside this receipt.
