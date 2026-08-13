@@ -1150,7 +1150,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
   it.effect("the degraded public detail removes bare CR and short absolute paths", () =>
     Effect.gen(function* () {
       const unsafeFailure = KnowledgeProbeBootError.make({
-        message: "failure at /secret\r\nthen C:\\secret\rOVERWRITE",
+        message: "failure at /secret\r\nthen C:\\secret\rOVERWRITE\u202Ehidden",
       });
       const base = {
         ...makeOracle(CLEAN_BASE),
@@ -1165,10 +1165,12 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       assert.notInclude(json, "/secret");
       assert.notInclude(json, "C:\\\\secret");
       assert.notInclude(json, "\\r");
+      assert.notInclude(json, "\u202E");
       assert.include(json, "<absolute-path>");
       assert.notInclude(human, "/secret");
       assert.notInclude(human, "C:\\secret");
       assert.notInclude(human, "\r");
+      assert.notInclude(human, "\u202E");
       assert.include(human, "<absolute-path>");
     })
   );

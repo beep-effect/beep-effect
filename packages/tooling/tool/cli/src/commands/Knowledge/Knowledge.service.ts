@@ -130,6 +130,7 @@ const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiv
     Str.replace(ANSI_ESCAPE_PATTERN, ""),
     Str.replace(OTHER_ESCAPE_PATTERN, ""),
     Str.replace(DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN, ""),
+    Str.replace(FORMAT_CHARACTER_PATTERN, ""),
     Str.replace(POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     Str.replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     sanitizeSensitiveText,
@@ -137,7 +138,7 @@ const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiv
   );
 
 const sanitizePublicFindingText = (input: string): string =>
-  pipe(sanitizeProbeDiagnostic(input), Str.replace(FORMAT_CHARACTER_PATTERN, ""), Str.replace(/\n+/gu, " "), Str.trim);
+  pipe(sanitizeProbeDiagnostic(input), Str.replace(/\n+/gu, " "), Str.trim);
 
 /**
  * Everything the scanner may read from one side of a comparison.
