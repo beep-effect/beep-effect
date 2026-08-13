@@ -1,5 +1,25 @@
 # Decisions
 
+## 2026-08-13 — Wave 2 executed; park on routing triage
+
+**Decision:** Record wave 2 as executed and keep the packet parked. The
+approved “97 legal-NLP/extraction papers” was an aggregate-only count and was
+largely consumed by July wave-1 deep reads, including the 144 June-29 papers
+already noted. The operator ratified re-triage by definition.
+
+Five first-page-grounded batches classified the 199-paper no-note backlog into
+core 2 / extended 44 / excluded 153. All 46 core+extended papers were deep-read:
+46/46 notes, zero failures. Synthesis lives outside the public repo at
+`~/YeeBois/research/academia-2026-07/synthesis/wave2-synthesis.md`.
+
+The synthesis found zero contradictions of the master ten findings and made 14
+routing proposals, including four candidate explorations:
+`legal-inference-policy`, `ontology-curation-governance`,
+`evidence-source-policy-calibration`, and `ontology-lifecycle-qa`.
+
+**Revival trigger:** The operator triages the synthesis routing table.
+Proposals never auto-enter the packet tree.
+
 <!--
 Stage 2. The grilling log. One entry per resolved branch-closing question,
 newest last. Unresolved questions live in ops/manifest.json `openQuestions`

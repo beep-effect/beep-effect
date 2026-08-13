@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -43,6 +43,10 @@ deterministic doc-structure"*; the anti-inference prompt-mode half is the siblin
 [`goals/langextract-capability`](../../goals/langextract-capability) Case-A note.
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; the four gated MAP rows are durable
+  re-entry points. Per the repository convention, first-slice acceptance in
+  `law-doc-structure-oa-slice` reopens this packet at `decompose`.
 
 - 2026-07-14: shape gate signed off; brief ratified as drafted; graduated
   [`law-doc-structure-oa-slice`](../../goals/law-doc-structure-oa-slice/README.md)

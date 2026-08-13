@@ -3,10 +3,10 @@
   "exploration": {
     "slug": "knowledge-workspace",
     "title": "Knowledge Workspace",
-    "status": "active",
+    "status": "parked",
     "stage": "capture",
     "openQuestions": [
-      "What is the smallest current-repo vertical that proves journal to graph projection to wiki-link authoring to temporal replay as one coherent experience?"
+      "Resume when the workspace product bet re-enters the roadmap."
     ],
     "sources": [],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-14",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }
