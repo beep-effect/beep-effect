@@ -21,6 +21,11 @@ hangs everything else on.
 scaffolded citation engine. `citation-ground-before-cite` remains queued behind
 all three contracts.
 
+**Trail (2026-08-13):** `@beep/courtlistener` was deleted as a VERSION-only
+stub. Recreate it from `goals/honest-repo-signal/research/FOLLOW-UPS.md` when
+this packet's citation-lookup wrap is pulled. Do not search a missing driver
+tree.
+
 ## Sources & provenance
 
 [`research/SOURCES.md`](./research/SOURCES.md) — provenance ledger joining the 11
