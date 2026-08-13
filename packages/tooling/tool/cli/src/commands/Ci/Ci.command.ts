@@ -280,8 +280,9 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
     return;
   }
 
-  const rendered = yield* Effect.forEach(summaryPaths, (summaryPath) =>
-    Effect.gen(function* () {
+  const rendered = yield* Effect.forEach(
+    summaryPaths,
+    Effect.fnUntraced(function* (summaryPath) {
       const exists = yield* fs.exists(summaryPath).pipe(Effect.orElseSucceed(thunkFalse));
       if (!exists) {
         return O.none<string>();

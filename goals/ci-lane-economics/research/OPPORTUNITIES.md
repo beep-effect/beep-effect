@@ -145,3 +145,27 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** a fleet-parity performance runner for admission
   tests, or a coverage planner invariant that caps aggregate shard concurrency
   at the runner's already accepted Turbo concurrency.
+
+## 2026-08-13 — review-fix proof omitted a blocking Effect law
+
+- **Doing:** publishing the final review fixes for the P2 Coverage redesign.
+- **Evidence:** two consecutive `yeet repair --tier review-fix` passes completed
+  green, but the hosted Lint Policy job then found one introduced `effect-fn`
+  violation in `Ci.command.ts`: an `Effect.forEach` callback directly returned
+  `Effect.gen`. The focused `bun run beep laws effect-fn --check` caught the
+  corrected shape immediately.
+- **Would have prevented it:** include every blocking hosted policy law in the
+  review-fix tier, or report excluded blocking sublanes explicitly before the
+  tier can be treated as publish-ready proof.
+
+## 2026-08-13 — cold hosted build failed once but passed clean reproduction
+
+- **Doing:** admitting the four-shard Coverage shape after PR cache access was
+  changed to local-only on main.
+- **Evidence:** exact-head job `94603831042` failed during its prebuild with
+  transient `@beep/nlp` TypeScript/Effect diagnostics after 17 of 52 tasks. A
+  fresh detached clone of the same commit then completed the full local-only
+  root build with 128/128 tasks, zero cache hits, in 1m11s.
+- **Would have prevented it:** make cold-build repeatability a first-class CI
+  probe and automatically retry this diagnostic signature once before
+  classifying it as a deterministic source failure.
