@@ -120,3 +120,15 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** scope retry automation to the PR's current head
   SHA and refuse stale-run reruns; alternatively include the head SHA in the
   concurrency key so a stale diagnostic retry cannot evict current-head proof.
+
+## 2026-08-13 — concurrent checkout proofs contaminated local lane timings
+
+- **Doing:** running the exact-head full Yeet proof to establish correctness
+  and collect clean local task weights for the P2 Coverage redesign.
+- **Evidence:** five independent checkout proofs were simultaneously running
+  the test-tsgo census on the same host. The exact-head proof finished green,
+  but its CPU-bound wall times were resource-contended and therefore are not
+  representative performance weights.
+- **Would have prevented it:** a host-wide quality concurrency lease or
+  fleet-aware local scheduler that serializes heavyweight proof phases across
+  sibling checkouts while allowing unrelated lightweight work to continue.

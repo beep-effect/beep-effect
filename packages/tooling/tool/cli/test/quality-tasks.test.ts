@@ -10,8 +10,10 @@ import {
   baselineEntriesLostByReplacement,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
+  CoverageScopeOwner,
   CoverageUncoveredCounts,
   collectEffectTsgoDiagnosticLines,
+  compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
@@ -35,6 +37,8 @@ import {
   mergeCoverageBaselinePackagesForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
+  planCoverageAffectedScope,
+  planCoverageFullShards,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
   QualityTaskGroupFailed,
@@ -1402,6 +1406,90 @@ describe("quality task adapter", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
       []
     );
+  });
+
+  it("fails when an exact selected coverage owner omits its summary", () => {
+    expect(
+      compareCoverageRegressionSnapshotsForExpectedPackagesForTesting(
+        coverageRegressionBaseline,
+        [],
+        ["@beep/existing", "@beep/new"]
+      ).missingActuals
+    ).toEqual(["@beep/existing", "@beep/new"]);
+  });
+
+  it("selects only directly changed coverage owners for an affected coverage run", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: true,
+      }),
+      CoverageScopeOwner.make({
+        packageName: "@beep/b",
+        packagePath: "packages/b",
+        hasCoverage: true,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["packages/b/src/B.ts", "packages/a/test/A.test.ts"])).toEqual({
+      _tag: "selected",
+      packageNames: ["@beep/a", "@beep/b"],
+    });
+  });
+
+  it("falls back to full coverage for global, unknown, or removed coverage inputs", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: false,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["package.json"])).toMatchObject({ _tag: "full" });
+    expect(
+      planCoverageAffectedScope(owners, ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"])
+    ).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["scripts/coverage-helper.ts"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/a/package.json"])).toMatchObject({ _tag: "full" });
+  });
+
+  it("skips affected coverage for docs-only and packages without a coverage task", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: false,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["goals/demo/PLAN.md", "packages/a/src/A.ts"])).toEqual({
+      _tag: "noop",
+    });
+  });
+
+  it("assigns every full-run coverage owner to exactly one stable weighted shard", () => {
+    const packageNames = [
+      "@beep/repo-cli",
+      "@beep/repo-utils",
+      "@beep/lexical-schema",
+      "@beep/professional-desktop",
+      "@beep/a",
+      "@beep/b",
+    ];
+    const shards = planCoverageFullShards(packageNames, 3);
+
+    expect(A.length(shards)).toBe(3);
+    expect(
+      pipe(
+        shards,
+        A.flatMap((shard) => shard.packageNames),
+        A.sort(Order.String)
+      )
+    ).toEqual(A.sort(packageNames, Order.String));
+    expect(planCoverageFullShards(packageNames, 3)).toEqual(shards);
+    expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
   });
 
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
