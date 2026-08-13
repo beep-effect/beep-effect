@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-13T17:18:29.839Z",
-  "git_sha": "623392c2a749d5bc700482ee1ebaa03a42206491",
+  "generated_at": "2026-08-13T17:50:12.456Z",
+  "git_sha": "b61f96a46dd0e9d05d42f9769a96e371b1e9332f",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -20551,15 +20551,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 69.69,
-      "statements": 69.41,
-      "branches": 55.61,
-      "functions": 61.62,
+      "lines": 69.7,
+      "statements": 69.42,
+      "branches": 55.65,
+      "functions": 61.64,
       "uncovered": {
-        "lines": 8207,
-        "statements": 8620,
+        "lines": 8206,
+        "statements": 8619,
         "branches": 4474,
-        "functions": 3021
+        "functions": 3020
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -24643,15 +24643,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts": {
-          "lines": 66.66,
-          "statements": 66.99,
-          "branches": 54.54,
-          "functions": 64.86,
+          "lines": 69.44,
+          "statements": 69.72,
+          "branches": 68.75,
+          "functions": 68.42,
           "uncovered": {
-            "lines": 34,
-            "statements": 34,
+            "lines": 33,
+            "statements": 33,
             "branches": 10,
-            "functions": 13
+            "functions": 12
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts": {
