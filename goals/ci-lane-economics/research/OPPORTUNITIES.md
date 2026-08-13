@@ -48,3 +48,16 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** a schema-aware goal phase-transition command, or
   running `bun run beep goals doctor` immediately after every raw manifest
   status edit and before any broad test lane.
+
+## 2026-08-13 — Yeet repair hint contradicted its structured failed sublane
+
+- **Doing:** attributing the first full publish proof failure after the P0/P1
+  packet update and initial P2 CI changes.
+- **Evidence:** the structured proof result identified only `quality:lint` as
+  failed and showed SAST passing, but the terminal repair hint classified the
+  failure as SAST. A direct goal-index check then identified the actual lint
+  failure: `goals/INDEX.md` had not been regenerated after the manifest phase
+  changes.
+- **Would have prevented it:** derive the repair hint from Yeet's structured
+  failed-sublane result before applying broad output fingerprints, and have the
+  manifest writer regenerate or explicitly name the goal-index follow-up.
