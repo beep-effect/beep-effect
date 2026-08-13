@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { PatentCitationEvent } from "@beep/law-practice-domain/entities/PatentCitationEvent";
 
 /**
@@ -20,18 +20,19 @@ import { PatentCitationEvent } from "@beep/law-practice-domain/entities/PatentCi
  * **Gotchas**
  *
  * The append-only guarantee this table sells is owned by the raw-SQL migration,
- * not by Drizzle metadata: `BaseEntity` still contributes `row_version`,
+ * not by Drizzle metadata: ProductEntity still contributes `row_version`,
  * `updated_at`, and `updated_by_principal` columns that no writer may move.
  *
  * **Example** (Read the projected table name)
  *
  * ```ts
  * import { PatentCitationEvent } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(PatentCitationEvent.Table.definition.tableName) // "law_practice_patent_citation_event"
+ * console.log(getTableName(PatentCitationEvent.Table)) // "law_practice_patent_citation_event"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(PatentCitationEvent);
+export const Table = toPgTable(PatentCitationEvent);

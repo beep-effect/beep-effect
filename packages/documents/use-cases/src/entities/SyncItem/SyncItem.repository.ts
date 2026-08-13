@@ -21,7 +21,7 @@ import type * as O from "effect/Option";
 const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
 
 /**
- * Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.
+ * Creation input for one sync-tracking row, excluding ProductEntity audit fields.
  *
  * **Example** (Making a SyncItem seed)
  *
@@ -92,7 +92,7 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     }),
   },
   $I.annote("SyncItemSeed", {
-    description: "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one sync-tracking row, excluding ProductEntity audit fields.",
   })
 ) {}
 
@@ -142,8 +142,8 @@ export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepository
  * **Example** (Building a not-found error)
  *
  * ```ts
- * import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem"
  * import { SyncItemRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncItem/server"
+ * import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents"
  * import * as S from "effect/Schema"
  *
  * const error = SyncItemRepositoryNotFound.make({

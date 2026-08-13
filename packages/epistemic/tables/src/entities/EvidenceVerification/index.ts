@@ -12,6 +12,7 @@
  *
  * ```ts
  * import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification"
+ * import { getTableName } from "drizzle-orm"
  *
  * console.log(typeof EvidenceVerification.toEvidenceVerificationInsert)
  * ```
@@ -28,7 +29,7 @@ export * from "./EvidenceVerification.converters.ts";
  * ```ts
  * import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification"
  *
- * console.log(EvidenceVerification.Table.definition.entityId.tableName)
+ * console.log(getTableName(EvidenceVerification.Table))
  * ```
  *
  * @category tables

@@ -17,7 +17,7 @@ import { getTableName } from "drizzle-orm";
  * ```ts
  * import { Thread } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_thread" = Thread.TABLE_NAME
+ * const tableName = Thread.TABLE_NAME
  * console.log(tableName)
  * ```
  *

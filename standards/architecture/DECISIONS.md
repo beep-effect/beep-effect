@@ -611,7 +611,8 @@ allowing Professional Desktop to keep its local-first file-backed database.
 
 ## 2026-04-27: Keep Shared Entity Metadata In The Shared Kernel
 
-- **Status:** Active
+- **Status:** Superseded
+- **Superseded-by:** [2026-08-13: Consolidate Persisted Entities On ProductEntity And Effect Drizzle](#2026-08-13-consolidate-persisted-entities-on-productentity-and-effect-drizzle)
 
 Decision:
 
@@ -1316,6 +1317,33 @@ grill 2026-08-10; the charter's promotion/demotion mechanics and release-lane
 operational detail in doc 14 (including the operator-only `private` flip)
 were authored in the P0 docs PR and ratified through its review. Execution is
 tracked in `goals/effect-drizzle-graduation`.
+
+## 2026-08-13: Consolidate Persisted Entities On ProductEntity And Effect Drizzle
+
+- **Status:** Active
+
+Decision:
+
+The persisted-entity stack swaps `BaseEntity`, `EntitySchema`, the
+hand-maintained `Model` and `VariantSchema` modules, and the `EntityTable`
+projector for `@beep/effect-drizzle` plus the shared-domain `ProductEntity` kit.
+Consolidated identity modules remain in `@beep/shared-domain/identity`; product
+`.model.ts` files own their entity schema and SQL metadata, `.values.ts` files
+own reusable supporting schemas, and `.behavior.ts` files own pure behavior.
+Tables project a model with `toPgTable`.
+
+The migration requires strict declarative DDL parity with the committed
+baseline. Database-only policy that effect-drizzle does not declare—PL/pgSQL
+append-only guards, triggers, named or exclusion constraints, partial indexes,
+and GIN indexes—stays byte-owned by the custom migration. It must not be copied
+into entity definitions.
+
+Rationale:
+
+One executable model should own domain decoding, persistence variants, column
+metadata, and table projection. Removing the parallel metadata stack eliminates
+drift while the byte-stable custom migration preserves database behavior that
+belongs to PostgreSQL rather than the portable entity declaration.
 
 ## Known Unknowns
 

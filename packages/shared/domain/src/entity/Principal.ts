@@ -257,7 +257,7 @@ type PrincipalSchemaBase = typeof PrincipalBase;
 export interface PrincipalSchema extends PrincipalSchemaBase {}
 
 /**
- * Tagged union used by every BaseEntity field that names an actor.
+ * Tagged union used by every ProductEntity field that names an actor.
  *
  * **Example** (Decode system principal)
  *

@@ -9,7 +9,7 @@
   },
   "references": [
     {
-      "path": "../../drivers/drizzle/tsconfig.json"
+      "path": "../../ecosystem/effect-drizzle/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"

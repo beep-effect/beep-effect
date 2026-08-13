@@ -28,9 +28,9 @@ import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecor
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { describe, expect, layer } from "@effect/vitest";
@@ -84,7 +84,7 @@ const scopeFor = (citingApplication: CitingApplicationIdentity.Encoded, orgId: n
 
 const eventFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
   S.decodeUnknownEffect(PatentCitationEvent)({
-    ...baseEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, seed),
     orgId,
     actor: "Applicant",
     citingApplication,
@@ -110,7 +110,7 @@ const eventFixture = (seed: number, citingApplication: CitingApplicationIdentity
 
 const dispositionFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
   S.decodeUnknownEffect(CandorDisposition)({
-    ...baseEntityFixtureInput(LawPractice.CandorDispositionId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, seed),
     orgId,
     citingApplication,
     decidedAt: seed,
@@ -123,7 +123,7 @@ const dispositionFixture = (seed: number, citingApplication: CitingApplicationId
 
 const submissionFactFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
   S.decodeUnknownEffect(IdsSubmissionFact)({
-    ...baseEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, seed),
     orgId,
     candidateWindow: {
       applicationFilingDate: null,

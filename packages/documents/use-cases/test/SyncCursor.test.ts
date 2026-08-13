@@ -6,7 +6,7 @@ import {
 } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -44,7 +44,7 @@ const cursorSeed = (streamPosition: string) =>
   });
 
 const syncCursorRow = (seed: SyncCursorSeed, id: number) => ({
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, id),
   lastError: O.getOrNull(seed.lastError),
   lastEventId: O.getOrNull(seed.lastEventId),
   provider: seed.provider,

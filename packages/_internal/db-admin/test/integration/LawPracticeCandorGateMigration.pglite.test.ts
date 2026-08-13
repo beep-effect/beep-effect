@@ -7,9 +7,9 @@ import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/Id
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -70,7 +70,7 @@ const sourceIdentity = {
 };
 
 const eventInput = {
-  ...baseEntityFixtureInput("LawPracticePatentCitationEvent", 1),
+  ...productEntityFixtureInput("LawPracticePatentCitationEvent", 1),
   actor: "Applicant",
   citingApplication,
   discovery: { kind: "AiDiscovered", model: { name: "reference-extractor", version: "3" } },
@@ -86,7 +86,7 @@ const eventInput = {
 };
 
 const dispositionInput = {
-  ...baseEntityFixtureInput("LawPracticeCandorDisposition", 1),
+  ...productEntityFixtureInput("LawPracticeCandorDisposition", 1),
   citingApplication,
   decidedAt: 2,
   disposes: { eventId: 1, textDigest: digest },
@@ -97,7 +97,7 @@ const dispositionInput = {
 };
 
 const submissionFactInput = {
-  ...baseEntityFixtureInput("LawPracticeIdsSubmissionFact", 1),
+  ...productEntityFixtureInput("LawPracticeIdsSubmissionFact", 1),
   candidateWindow: {
     applicationFilingDate: null,
     candidateWindow: "indeterminate",

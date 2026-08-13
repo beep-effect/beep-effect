@@ -17,7 +17,7 @@ import { getTableName } from "drizzle-orm";
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_turn" = Turn.TABLE_NAME
+ * const tableName = Turn.TABLE_NAME
  * console.log(tableName)
  * ```
  *

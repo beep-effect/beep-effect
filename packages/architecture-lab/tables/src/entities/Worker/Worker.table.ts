@@ -64,10 +64,10 @@ export const WORKER_TABLE_NAME = getTableName(workerTable);
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -98,10 +98,10 @@ export type WorkerRow = typeof workerTable.$inferSelect;
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -134,10 +134,10 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -170,10 +170,10 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { fromWorkerRow, toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *

@@ -34,7 +34,7 @@ const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 /**
  * Build a full SyncCursor entity from an upsert seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */

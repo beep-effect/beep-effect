@@ -56,7 +56,7 @@ import {
 } from "@beep/law-practice-domain";
 import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { assertSchemaArbitraryDecodesToSelf, baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -249,7 +249,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes and constructs a Matter row", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticeMatter", 5),
+      ...productEntityFixtureInput("LawPracticeMatter", 5),
       displayName: "Patent Application",
       fixtureKey: "matter.patent",
       legalClientFixtureKey: "legal-client.acme",
@@ -268,7 +268,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes an OfficeAction row", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticeOfficeAction", 10),
+      ...productEntityFixtureInput("LawPracticeOfficeAction", 10),
       applicationNumber: "16/123,456",
       fixtureKey: "office-action.first",
       matterFixtureKey: "matter.patent",
@@ -284,7 +284,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes a Claim row", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticeClaim", 11),
+      ...productEntityFixtureInput("LawPracticeClaim", 11),
       claimNumber: 1,
       fixtureKey: "claim.1",
       independent: true,
@@ -301,7 +301,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes a PriorArtReference row", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticePriorArtReference", 12),
+      ...productEntityFixtureInput("LawPracticePriorArtReference", 12),
       documentNumber: "US 9,999,999 B2",
       fixtureKey: "prior-art.smith",
       officeActionFixtureKey: "office-action.first",
@@ -316,7 +316,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes a Rejection row with a §102 anticipation ground", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticeRejection", 13),
+      ...productEntityFixtureInput("LawPracticeRejection", 13),
       claimFixtureKey: "claim.1",
       fixtureKey: "rejection-one-zero-two",
       ground: { referenceFixtureKey: "prior-art.smith", statute: "102" },
@@ -331,7 +331,7 @@ describe("@beep/law-practice-domain", () => {
 
   it("decodes a Distinction row anchored to the source text", () => {
     const input = {
-      ...baseEntityFixtureInput("LawPracticeDistinction", 14),
+      ...productEntityFixtureInput("LawPracticeDistinction", 14),
       anchor: { endChar: 14, quote: "a claimed fact", startChar: 0 },
       claimFixtureKey: "claim.1",
       detail: { kind: "missing_limitation", limitation: "a hinge coupling the lid to the base" },
@@ -349,20 +349,20 @@ describe("@beep/law-practice-domain", () => {
 
   it("keeps untouched entity wire fixtures byte-identical after decode", () => {
     const legalClientInput = {
-      ...baseEntityFixtureInput("LawPracticeLegalClient", 20),
+      ...productEntityFixtureInput("LawPracticeLegalClient", 20),
       displayName: "Acme Robotics",
       fixtureKey: "legal-client.acme",
       status: "active_client",
     };
     const legalContactInput = {
-      ...baseEntityFixtureInput("LawPracticeLegalContact", 21),
+      ...productEntityFixtureInput("LawPracticeLegalContact", 21),
       displayName: "Ada Founder",
       fixtureKey: "contact.ada",
       legalClientFixtureKey: "legal-client.acme",
       role: "founder",
     };
     const patentAssetInput = {
-      ...baseEntityFixtureInput("LawPracticePatentAsset", 22),
+      ...productEntityFixtureInput("LawPracticePatentAsset", 22),
       fixtureKey: "patent-asset.hinge",
       matterFixtureKey: "matter.hinge",
       status: "pre_filing",

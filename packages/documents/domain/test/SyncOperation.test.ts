@@ -1,6 +1,6 @@
 import * as SyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -25,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const uploadRow = {
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 1),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 1),
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:1",
   inputContentDigest: "abc123",

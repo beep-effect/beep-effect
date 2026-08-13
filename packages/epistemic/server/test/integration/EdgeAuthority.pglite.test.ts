@@ -23,9 +23,9 @@ import {
 } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -96,13 +96,13 @@ const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   const db = yield* makeDrizzle();
 
   const claim = decodeClaim({
-    ...baseEntityFixtureInput("EpistemicCandidateClaim", scenario),
+    ...productEntityFixtureInput("EpistemicCandidateClaim", scenario),
     fixtureKey: `claim.scenario-${scenario}`,
     lifecycle: "candidate",
     snapshot: {},
   });
   const evidence = decodeEvidence({
-    ...baseEntityFixtureInput("EpistemicEvidence", scenario),
+    ...productEntityFixtureInput("EpistemicEvidence", scenario),
     artifactFixtureKey: `artifact.scenario-${scenario}`,
     span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
     spanFixtureKey: `span.scenario-${scenario}`,
@@ -536,7 +536,7 @@ if (!shouldRunPgliteIntegration) {
           const dispositions = yield* ClaimDispositionRepository;
 
           const claim = {
-            ...baseEntityFixtureInput("EpistemicCandidateClaim", scenario.claimId),
+            ...productEntityFixtureInput("EpistemicCandidateClaim", scenario.claimId),
             fixtureKey: "claim.disposition.demo",
             lifecycle: "candidate",
             snapshot: {},

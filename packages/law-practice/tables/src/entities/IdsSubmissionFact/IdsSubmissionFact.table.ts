@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { IdsSubmissionFact } from "@beep/law-practice-domain/entities/IdsSubmissionFact";
 
 /**
@@ -29,11 +29,12 @@ import { IdsSubmissionFact } from "@beep/law-practice-domain/entities/IdsSubmiss
  *
  * ```ts
  * import { IdsSubmissionFact } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(IdsSubmissionFact.Table.definition.tableName) // "law_practice_ids_submission_fact"
+ * console.log(getTableName(IdsSubmissionFact.Table)) // "law_practice_ids_submission_fact"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(IdsSubmissionFact);
+export const Table = toPgTable(IdsSubmissionFact);

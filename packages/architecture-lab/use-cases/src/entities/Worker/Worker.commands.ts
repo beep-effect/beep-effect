@@ -22,6 +22,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { CreateWorkerCommand } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const command = CreateWorkerCommand.make({
@@ -62,6 +63,7 @@ export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateW
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { GetWorkerQuery } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const query = GetWorkerQuery.make({

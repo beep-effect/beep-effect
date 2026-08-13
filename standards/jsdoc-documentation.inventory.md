@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-13T20:06:22.075Z
+Generated: 2026-08-13T23:25:07.498Z
 
 ## Scope
 
@@ -11,21 +11,21 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 129 |
-| cleanPackages | 67 |
+| cleanPackages | 66 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 59 |
-| publicModules | 2513 |
-| publicExports | 16205 |
+| packagesNeedingRemediation | 60 |
+| publicModules | 2503 |
+| publicExports | 16057 |
 | openModules | 397 |
-| openExports | 135 |
-| missingExportExamples | 4 |
+| openExports | 143 |
+| missingExportExamples | 10 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 0 |
 | unsafeExampleFindings | 0 |
-| schemaAnnotationFindings | 0 |
+| schemaAnnotationFindings | 4 |
 | undescribed-see | 12 |
 | multiple-description-paragraphs | 514 |
 | leading-blank | 0 |
@@ -62,11 +62,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 5 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 7 | 0 | 0 |
 | 6 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 7 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 0 |
-| 8 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 42 | 0 | 0 |
+| 8 | `@beep/workspace-tables` | `packages/workspace/tables` | needs-remediation | 19 | 48 | 0 | 6 |
 | 9 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 62 | 8 | 4 |
 | 10 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 19 | 71 | 1 | 0 |
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 100 | 340 | 3 | 2 |
+| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 100 | 339 | 3 | 2 |
 | 13 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 14 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 15 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 0 |
@@ -80,7 +80,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 23 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 0 |
 | 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 25 | 145 | 13 | 0 |
 | 25 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
-| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 207 | 566 | 9 | 4 |
+| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 208 | 572 | 9 | 6 |
 | 27 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 9 | 82 | 0 | 0 |
 | 28 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 26 | 129 | 0 | 0 |
 | 29 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 19 | 1 | 0 |
@@ -108,14 +108,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 51 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 52 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 119 | 4 | 4 |
 | 53 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 7 | 50 | 0 | 0 |
-| 54 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |
+| 54 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 55 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 807 | 51 | 36 |
 | 56 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 252 | 4 | 0 |
 | 57 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 6 | 11 | 0 | 0 |
 | 58 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 59 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 107 | 4 | 0 |
 | 60 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
-| 61 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
+| 61 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 64 | 0 | 0 |
 | 62 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 19 | 54 | 0 | 0 |
 | 63 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 207 | 4 | 1 |
 | 64 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 325 | 0 | 0 |
@@ -125,7 +125,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 68 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 69 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 70 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 200 | 0 | 0 |
-| 71 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
+| 71 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 72 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 73 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
 | 74 | `@beep/box` | `packages/drivers/box` | clean | 103 | 676 | 0 | 0 |
@@ -135,7 +135,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 78 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 79 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
 | 80 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 183 | 25 | 0 |
-| 81 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 230 | 8 | 2 |
+| 81 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 236 | 8 | 2 |
 | 82 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 89 | 0 | 0 |
 | 83 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |
 | 84 | `@beep/firecrawl` | `packages/drivers/firecrawl` | clean | 5 | 267 | 0 | 0 |
@@ -147,8 +147,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 90 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 91 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 92 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
-| 93 | `@beep/documents-domain` | `packages/documents/domain` | clean | 22 | 78 | 0 | 0 |
-| 94 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 255 | 1660 | 24 | 1 |
+| 93 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 82 | 0 | 0 |
+| 94 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 236 | 1494 | 24 | 1 |
 | 95 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 48 | 8 | 4 |
 | 96 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 215 | 1 | 1 |
 | 97 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -176,10 +176,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 119 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
 | 120 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 1 | 0 |
 | 121 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 42 | 0 | 0 |
-| 122 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 13 | 46 | 0 | 0 |
+| 122 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
 | 123 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
 | 124 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 22 | 1 | 0 |
-| 125 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 86 | 4 | 0 |
+| 125 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
 | 126 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
 | 127 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
 | 128 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 119 | 0 | 0 |
@@ -226,6 +226,18 @@ Module findings:
 - `src/Pcl.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/PclClient.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+### @beep/workspace-tables
+
+Path: `packages/workspace/tables`
+
+Export findings:
+- `src/entities/CandidateDraft/CandidateDraft.table.ts:35` `TABLE_NAME` (const) - missing @example
+- `src/entities/CandidateProject/CandidateProject.table.ts:35` `TABLE_NAME` (const) - missing @example
+- `src/entities/Message/Message.table.ts:35` `TABLE_NAME` (const) - missing @example
+- `src/entities/Thread/Thread.table.ts:35` `TABLE_NAME` (const) - missing @example
+- `src/entities/Turn/Turn.table.ts:35` `TABLE_NAME` (const) - missing @example
+- `src/entities/Workspace/Workspace.table.ts:35` `TABLE_NAME` (const) - missing @example
 
 ### @beep/mcp-kit
 
@@ -439,6 +451,8 @@ Module findings:
 - `src/values/ShortFormCitationType/ShortFormCitationType.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
+- `src/entities/ActFrame/ActFrame.values.ts:499` `ActFramePreconditions` (const) - 2 schema annotation/type-alias gap(s)
+- `src/entities/ActFrame/ActFrame.values.ts:515` `PositionTransitions` (const) - 2 schema annotation/type-alias gap(s)
 - `src/values/KindCode/KindCode.model.ts:37` `KindCode` (const) - 1 documentation section/link violation(s)
 - `src/values/OfficeCode/OfficeCode.model.ts:38` `OfficeCode` (const) - 1 documentation section/link violation(s)
 - `src/values/PatentDocumentTriplet/PatentDocumentTriplet.model.ts:61` `PatentDocumentTriplet` (const) - 4 documentation section/link violation(s)
@@ -786,8 +800,8 @@ Module findings:
 - `src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/values/GrantSet/GrantSet.model.ts:282` `addGrant` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:496` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:281` `addGrant` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:495` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
 
 ### @beep/ecfr
 

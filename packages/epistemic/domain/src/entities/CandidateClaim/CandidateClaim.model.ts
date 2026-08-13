@@ -8,11 +8,11 @@
 import { ClaimLifecycle, EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.model");
+const CandidateClaimEntity = ProductEntity.make(Epistemic.CandidateClaimId);
 
 /**
  * Candidate claim proposed by an agent and tracked through admission.
@@ -46,29 +46,17 @@ const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.mod
  * @category entities
  * @since 0.0.0
  */
-export class CandidateClaim extends BaseEntity.Class<CandidateClaim>($I`CandidateClaim`)(
-  Epistemic.CandidateClaimId,
+export class CandidateClaim extends CandidateClaimEntity.Entity<CandidateClaim>(CandidateClaimEntity.tableName)(
   {
-    fields: {
-      fixtureKey: EpistemicFixtureKey.annotateKey({
-        description: "Stable fixture key for the candidate claim.",
-      }),
-      lifecycle: ClaimLifecycle,
-      snapshot: UnknownRecord,
-    },
-    persisted: {
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      lifecycle: EntitySchema.persist.literal({
-        columnName: "lifecycle",
-      }),
-      snapshot: EntitySchema.persist.jsonb({
-        columnName: "snapshot",
-      }),
-    },
+    fixtureKey: EpistemicFixtureKey.annotateKey({
+      description: "Stable fixture key for the candidate claim.",
+    }).pipe(CandidateClaimEntity.pg.text(), CandidateClaimEntity.pg.columnName("fixture_key")),
+    lifecycle: ClaimLifecycle.pipe(CandidateClaimEntity.pg.text()),
+    snapshot: UnknownRecord.pipe(CandidateClaimEntity.pg.jsonb()),
+    ...CandidateClaimEntity.identityFields,
   },
   $I.annote("CandidateClaim", {
     description: "Candidate claim proposed by an agent with source evidence.",
-  })
+  }),
+  CandidateClaimEntity.entityExtras
 ) {}

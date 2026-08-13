@@ -19,7 +19,7 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repository");
 
 /**
- * Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.
+ * Creation input for one remote-drift record, excluding ProductEntity audit fields.
  *
  * **Example** (Make remote-edit seed)
  *
@@ -72,7 +72,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     }),
   },
   $I.annote("SyncConflictSeed", {
-    description: "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one remote-drift record, excluding ProductEntity audit fields.",
   })
 ) {}
 

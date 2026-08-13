@@ -7,7 +7,7 @@ import {
   toSyncItemInsert,
 } from "@beep/documents-tables/entities/SyncItem";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -27,7 +27,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const fileRow = {
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 10),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 10),
   contentDigest: "abc123",
   contentSizeBytes: 2048,
   itemKind: "file",

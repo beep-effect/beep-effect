@@ -63,8 +63,8 @@ export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`Cre
  *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { AssignWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const command = AssignWorkItemCommand.make({

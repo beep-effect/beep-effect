@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { CandidateClaim, ContradictionCandidate, Evidence, EvidenceVerification } from "@beep/epistemic-domain";
+import {
+  CandidateClaim,
+  ContradictionCandidate,
+  Evidence,
+  EvidenceVerification,
+  manifestationKeyFor,
+} from "@beep/epistemic-domain";
 import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values";
 import {
   BeliefVersionRef,
@@ -42,7 +48,6 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
@@ -51,9 +56,9 @@ import * as ContradictionIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -85,7 +90,7 @@ const decodeIdentity = flow(S.decodeUnknownResult(LogicalEdgeIdentity), Result.g
 const decodeVerification = flow(S.decodeUnknownResult(EvidenceVerification), Result.getOrThrow);
 const decodeRecord = flow(S.decodeUnknownResult(RecordEdgeFact), Result.getOrThrow);
 const decodeAsOf = flow(S.decodeUnknownResult(EdgeAsOfQuery), Result.getOrThrow);
-const instant = flow(S.decodeUnknownResult(EntitySchema.DateTimeFromMillis), Result.getOrThrow);
+const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);
 const decodeEvidenceIds = flow(S.decodeUnknownResult(S.NonEmptyArray(EpistemicIdentity.EvidenceId)), Result.getOrThrow);
 const isReceiptKey = S.is(ContradictionReceiptKey);
 const receiptKeyEquivalent = S.toEquivalence(ContradictionReceiptKey);
@@ -130,11 +135,9 @@ const insertVerification = Effect.fnUntraced(function* (
     }),
     sourceScopeRef
   );
-  const manifestationKey = yield* Effect.fromResult(
-    EvidenceVerification.manifestationKeyFor(evidence.id, verifiedAnchor)
-  );
+  const manifestationKey = yield* Effect.fromResult(manifestationKeyFor(evidence.id, verifiedAnchor));
   const verification = decodeVerification({
-    ...baseEntityFixtureInput("EpistemicEvidenceVerification", scenario * 100 + ordinal),
+    ...productEntityFixtureInput("EpistemicEvidenceVerification", scenario * 100 + ordinal),
     createdAt,
     evidenceId: evidence.id,
     manifestationKey,
@@ -177,7 +180,7 @@ const seedScenario = Effect.fnUntraced(function* (
     .values([
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 1),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 1),
           fixtureKey: `contradiction.claim-${scenario}-a`,
           lifecycle: "candidate",
           orgId: organizationId,
@@ -186,7 +189,7 @@ const seedScenario = Effect.fnUntraced(function* (
       ),
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 2),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 2),
           fixtureKey: `contradiction.claim-${scenario}-b`,
           lifecycle: "candidate",
           orgId: organizationId,
@@ -200,7 +203,7 @@ const seedScenario = Effect.fnUntraced(function* (
     .values([
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
+          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
           artifactFixtureKey: `contradiction.source-${scenario}-a`,
           orgId: organizationId,
           span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
@@ -209,7 +212,7 @@ const seedScenario = Effect.fnUntraced(function* (
       ),
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
+          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
           artifactFixtureKey: `contradiction.source-${scenario}-b`,
           orgId: organizationId,
           span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
@@ -569,7 +572,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
           const foreignCandidate = ContradictionCandidate.make({
-            ...baseEntityFixtureInput("EpistemicContradictionCandidate", 10_902),
+            ...productEntityFixtureInput("EpistemicContradictionCandidate", 10_902),
             assessment: command.assessment,
             candidateDigest,
             candidateKey,
@@ -638,7 +641,7 @@ if (!shouldRunPgliteIntegration) {
             .values(
               toEvidenceInsert(
                 decodeEvidence({
-                  ...baseEntityFixtureInput("EpistemicEvidence", 10_503),
+                  ...productEntityFixtureInput("EpistemicEvidence", 10_503),
                   artifactFixtureKey: "contradiction.source-105-cross-org",
                   orgId: 2,
                   span: {
@@ -813,12 +816,10 @@ if (!shouldRunPgliteIntegration) {
             source: preCandidateVerification.verifiedAnchor.source,
           });
           const unrelatedVerification = decodeVerification({
-            ...baseEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
+            ...productEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
             createdAt: 1_450,
             evidenceId: decodedEvidenceA.id,
-            manifestationKey: Result.getOrThrow(
-              EvidenceVerification.manifestationKeyFor(decodedEvidenceA.id, unrelatedAnchor)
-            ),
+            manifestationKey: Result.getOrThrow(manifestationKeyFor(decodedEvidenceA.id, unrelatedAnchor)),
             updatedAt: 1_450,
             verifiedAnchor: unrelatedAnchor,
           });

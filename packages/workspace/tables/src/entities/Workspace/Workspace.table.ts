@@ -15,9 +15,9 @@ import { getTableName } from "drizzle-orm";
  * **Example** (Read workspace table name)
  *
  * ```ts
- * import { Table } from "@beep/workspace-tables/entities/Workspace"
+ * import { TABLE_NAME } from "@beep/workspace-tables/entities/Workspace"
  *
- * const tableName: "workspace_workspace" = TABLE_NAME
+ * const tableName = TABLE_NAME
  * console.log(tableName)
  * ```
  *

@@ -27,7 +27,7 @@ import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/Candidat
 import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { RecordEdgeFact, SupersedeEdgeFact, SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
 import { describe, expect, layer } from "@effect/vitest";
@@ -105,7 +105,7 @@ const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: num
     .values(
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", fixture),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", fixture),
           fixtureKey: `claim.${scenario}`,
           lifecycle: "candidate",
           snapshot: {},
@@ -118,7 +118,7 @@ const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: num
     .values(
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", fixture),
+          ...productEntityFixtureInput("EpistemicEvidence", fixture),
           artifactFixtureKey: `artifact.${scenario}`,
           span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
           spanFixtureKey: `span.${scenario}`,

@@ -29,7 +29,7 @@ import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecord";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -64,7 +64,7 @@ const SOURCE_B: Source = {
 
 const decodeCitingApplication = S.decodeUnknownEffect(CitingApplicationIdentity);
 
-/** Scope a filing to a tenant; `baseEntityFixtureInput` writes every row under org 1. */
+/** Scope a filing to a tenant; `productEntityFixtureInput` writes every row under org 1. */
 const decodeFiling = Effect.fnUntraced(function* (encoded: CitingApplicationIdentity.Encoded, org = 1) {
   const citingApplication = yield* decodeCitingApplication(encoded);
   return CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(org) });
@@ -85,7 +85,7 @@ const groundingOf = (source: Source) => ({
 
 const eventFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, source: Source, org = 1) =>
   S.decodeUnknownEffect(PatentCitationEvent)({
-    ...baseEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     orgId: org,
     actor: "Applicant",
     citingApplication,
@@ -106,7 +106,7 @@ const dispositionFixture = (
   org = 1
 ) =>
   S.decodeUnknownEffect(CandorDisposition)({
-    ...baseEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
     orgId: org,
     citingApplication,
     decidedAt: id,
@@ -119,7 +119,7 @@ const dispositionFixture = (
 
 const submissionFactFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, org = 1) =>
   S.decodeUnknownEffect(IdsSubmissionFact)({
-    ...baseEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, id),
     orgId: org,
     candidateWindow: {
       applicationFilingDate: null,

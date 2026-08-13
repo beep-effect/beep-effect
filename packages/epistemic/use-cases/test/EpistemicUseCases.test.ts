@@ -4,7 +4,7 @@ import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
 import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -16,14 +16,14 @@ const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>
   S.decodeUnknownSync(CandidateClaim)({
-    ...baseEntityFixtureInput("EpistemicCandidateClaim", id),
+    ...productEntityFixtureInput("EpistemicCandidateClaim", id),
     fixtureKey,
     lifecycle,
     snapshot: {},
   });
 
 const evidence: Evidence = S.decodeUnknownSync(Evidence)({
-  ...baseEntityFixtureInput("EpistemicEvidence", 10),
+  ...productEntityFixtureInput("EpistemicEvidence", 10),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },

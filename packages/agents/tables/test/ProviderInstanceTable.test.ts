@@ -6,7 +6,7 @@ import {
   providerInstanceTable,
   toProviderInstanceInsert,
 } from "@beep/agents-tables/entities/ProviderInstance";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -18,7 +18,7 @@ const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderI
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
 const providerInstanceRow = {
-  ...baseEntityFixtureInput("AgentsProviderInstance", 10),
+  ...productEntityFixtureInput("AgentsProviderInstance", 10),
   binaryPath: "/usr/local/bin/codex",
   envVars: {},
   homePath: null,

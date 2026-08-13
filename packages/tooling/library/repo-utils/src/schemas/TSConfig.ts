@@ -10,7 +10,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { LiteralKit, Model } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { JsoncTextToUnknown } from "@beep/schema/Jsonc";
 import { A, Str } from "@beep/utils";
 import { Cause, Effect, Exit, pipe, Result, SchemaGetter, SchemaIssue, Struct } from "effect";
@@ -18,6 +18,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { Model } from "effect/unstable/schema";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import type { DomainError } from "../errors/index.ts";
 

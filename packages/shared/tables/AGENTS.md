@@ -6,12 +6,11 @@ Shared-kernel persistence boundary proving shared `Membership`,
 
 | Surface | Key exports | Notes |
 | --- | --- | --- |
-| entry module | `Entities`, `DbSchema` | one `Table` per shared entity (`src/entities/*`) |
-| `src/table/Table.ts` | `EntityTable` | compatibility re-export for public `EntityTable` type helpers |
+| entry module | `Entities`, `DbSchema` | one projected `Table` per shared entity (`src/entities/*`) |
 
 ## Laws
 
 - Keep table meaning tied to shared domain language; new exports must be
   product-semantic, not generic database helpers.
 - The only Drizzle allowance is metadata-only `pgTable` definition and index
-  construction from shared-domain descriptors.
+  construction through `toPgTable` from shared-domain models.

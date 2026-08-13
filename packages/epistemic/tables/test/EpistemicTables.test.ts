@@ -10,7 +10,7 @@ import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposit
 import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion";
 import * as Evidence from "@beep/epistemic-tables/entities/Evidence";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
-import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -27,7 +27,7 @@ const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel)(fc);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
 const usageRecordInput = (id: number) => ({
-  ...baseEntityFixtureInput("EpistemicUsageRecord", id),
+  ...productEntityFixtureInput("EpistemicUsageRecord", id),
   activityId: 7,
   actor: systemPrincipal,
   costUsdApproxMicros: null,
@@ -43,14 +43,14 @@ const usageRecordInput = (id: number) => ({
 });
 
 const candidateClaimInput = (id: number) => ({
-  ...baseEntityFixtureInput("EpistemicCandidateClaim", id),
+  ...productEntityFixtureInput("EpistemicCandidateClaim", id),
   fixtureKey: "claim:patentability",
   lifecycle: "candidate",
   snapshot: { text: "The application describes a processor." },
 });
 
 const evidenceInput = (id: number) => ({
-  ...baseEntityFixtureInput("EpistemicEvidence", id),
+  ...productEntityFixtureInput("EpistemicEvidence", id),
   artifactFixtureKey: "artifact:oa-1",
   span: {
     confidence: 0.92,
@@ -64,7 +64,7 @@ const evidenceInput = (id: number) => ({
 // Exactly the decode input documented on EdgeVersion.model.ts: both temporal
 // axes arrive as epoch millis and every open bound as null.
 const edgeVersionInput = (id: number) => ({
-  ...baseEntityFixtureInput("EpistemicEdgeVersion", id),
+  ...productEntityFixtureInput("EpistemicEdgeVersion", id),
   evidenceScope: null,
   expiredAt: null,
   fact: { note: "cited in the office action" },
@@ -90,7 +90,7 @@ const edgeVersionInput = (id: number) => ({
 });
 
 const claimDispositionInput = (id: number) => ({
-  ...baseEntityFixtureInput("EpistemicClaimDisposition", id),
+  ...productEntityFixtureInput("EpistemicClaimDisposition", id),
   claimId: 3,
   reason: "Expected at least 1 value(s) for evidence.",
   resolvedAt: 1_000,
@@ -152,9 +152,7 @@ describe("EpistemicTables", () => {
   });
 
   it("projects CandidateClaim onto the migrated column set", () => {
-    expect(CandidateClaim.Table.definition.tableName).toBe("epistemic_candidate_claim");
-    expect(CandidateClaim.Table.definition.entityId.entityType).toBe("EpistemicCandidateClaim");
-    expect(CandidateClaim.Table.entitySchema).toBe(CandidateClaimModel);
+    expect(CandidateClaimModel.sql.tableName).toBe("epistemic_candidate_claim");
     expect(getTableConfig(CandidateClaim.Table).name).toBe("epistemic_candidate_claim");
 
     const columns = getColumns(CandidateClaim.Table);
@@ -173,9 +171,7 @@ describe("EpistemicTables", () => {
   });
 
   it("projects Evidence onto the migrated column set", () => {
-    expect(Evidence.Table.definition.tableName).toBe("epistemic_evidence");
-    expect(Evidence.Table.definition.entityId.entityType).toBe("EpistemicEvidence");
-    expect(Evidence.Table.entitySchema).toBe(EvidenceModel);
+    expect(EvidenceModel.sql.tableName).toBe("epistemic_evidence");
     expect(getTableConfig(Evidence.Table).name).toBe("epistemic_evidence");
 
     const columns = getColumns(Evidence.Table);
@@ -193,9 +189,7 @@ describe("EpistemicTables", () => {
   });
 
   it("projects EdgeVersion onto the migrated bitemporal column set", () => {
-    expect(EdgeVersion.Table.definition.tableName).toBe("epistemic_edge_version");
-    expect(EdgeVersion.Table.definition.entityId.entityType).toBe("EpistemicEdgeVersion");
-    expect(EdgeVersion.Table.entitySchema).toBe(EdgeVersionModel);
+    expect(EdgeVersionModel.sql.tableName).toBe("epistemic_edge_version");
     expect(getTableConfig(EdgeVersion.Table).name).toBe("epistemic_edge_version");
 
     const columns = getColumns(EdgeVersion.Table);
@@ -260,9 +254,7 @@ describe("EpistemicTables", () => {
   });
 
   it("projects ClaimDisposition onto the migrated column set", () => {
-    expect(ClaimDisposition.Table.definition.tableName).toBe("epistemic_claim_disposition");
-    expect(ClaimDisposition.Table.definition.entityId.entityType).toBe("EpistemicClaimDisposition");
-    expect(ClaimDisposition.Table.entitySchema).toBe(ClaimDispositionModel);
+    expect(ClaimDispositionModel.sql.tableName).toBe("epistemic_claim_disposition");
     expect(getTableConfig(ClaimDisposition.Table).name).toBe("epistemic_claim_disposition");
 
     const columns = getColumns(ClaimDisposition.Table);

@@ -28,7 +28,7 @@ export * from "./Activity/index.ts";
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-domain/entities"
  *
- * console.log(CandidateClaim.definition.entityId.tableName)
+ * console.log(CandidateClaim.sql.tableName)
  * ```
  *
  * @category entities
@@ -43,7 +43,7 @@ export * from "./CandidateClaim/index.ts";
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-domain/entities"
  *
- * console.log(ClaimDisposition.definition.entityId.tableName)
+ * console.log(ClaimDisposition.sql.tableName)
  * ```
  *
  * @category entities
@@ -65,7 +65,7 @@ export * from "./Contradiction/index.ts";
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-domain/entities"
  *
- * console.log(EdgeVersion.definition.entityId.tableName)
+ * console.log(EdgeVersion.sql.tableName)
  * ```
  *
  * @category entities
@@ -80,7 +80,7 @@ export * from "./EdgeVersion/index.ts";
  * ```ts
  * import { Evidence } from "@beep/epistemic-domain/entities"
  *
- * console.log(Evidence.definition.entityId.tableName)
+ * console.log(Evidence.sql.tableName)
  * ```
  *
  * @category entities
@@ -95,7 +95,7 @@ export * from "./Evidence/index.ts";
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-domain/entities"
  *
- * console.log(EvidenceVerification.definition.entityId.tableName)
+ * console.log(EvidenceVerification.sql.tableName)
  * ```
  *
  * @category entities

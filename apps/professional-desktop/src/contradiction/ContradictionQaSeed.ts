@@ -15,7 +15,7 @@
 
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
-import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import { EvidenceVerification, manifestationKeyFor } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import {
   BeliefVersionRef,
   ContradictionAssessment,
@@ -727,9 +727,9 @@ const ensureVerification = Effect.fn("ContradictionQaSeed.ensureVerification")(f
 ) {
   const db = yield* PostgresDrizzle;
   const createdAt = instant(1_767_225_600_500);
-  const manifestationKey = yield* Effect.fromResult(
-    EvidenceVerification.manifestationKeyFor(evidence.id, verifiedAnchor)
-  ).pipe(storageUnavailable("encode evidence verification manifestation"));
+  const manifestationKey = yield* Effect.fromResult(manifestationKeyFor(evidence.id, verifiedAnchor)).pipe(
+    storageUnavailable("encode evidence verification manifestation")
+  );
   const expected = EvidenceVerification.make({
     createdAt,
     createdByPrincipal: systemPrincipal,

@@ -124,28 +124,29 @@ nullish fields unless an external wire contract requires that shape; in those
 cases, decode or normalize the boundary value into an internal tagged model
 before case-specific behavior branches.
 
-Persisted entities follow the same law. `@beep/schema/EntitySchema` is the
-generic source-of-truth kernel: entity models are schema classes, their decoded
-side is domain language, and their encoded side is the persistence row shape.
-Entity fields use normal Effect Schema optional/nullish codecs
+Persisted entities follow the same law. A persisted product entity starts with
+`ProductEntity.make(EntityId)` from
+`@beep/shared-domain/entity/ProductEntity`. The returned effect-drizzle kit
+owns the schema class constructor, shared audit and identity fields, SQL table
+name, and shared indexes. The entity schema's decoded side is domain language,
+and its encoded side is the persistence row shape. Entity fields use normal
+Effect Schema optional/nullish codecs
 (`S.OptionFromNullOr`, `S.OptionFromOptionalKey`, `S.optionalKey`, and related
 variants) instead of bespoke nullable wrappers. Table projection code reads the
 Schema AST and rejects persisted selected-row fields whose encoded absence is
 optional, `undefined`, or ambiguous; SQL row absence must encode as `null`.
 
-Product entity invariants belong in class factories. Shared product entities
-use the `BaseEntity.Class` export from
-`@beep/shared-domain/entity/BaseEntity` to compose
-invariant fields such as entity identity, organization scope, provenance, schema
-version, and row version into the schema class. Entity-specific `.model.ts`
-files inline their own rich fields plus `persisted` descriptors next to the
-schema so domain shape and persistence shape drift together at compile time.
+Entity roles stay explicit. `.model.ts` calls the product kit, declares the
+schema class, colocates SQL column/index metadata through effect-drizzle, and
+spreads identity fields last. `.values.ts` owns reusable supporting schemas and
+literal domains. `.behavior.ts` owns pure behavior and derived guards that do
+not belong in the persistence declaration.
 
-Drizzle tables are projected, not hand-mapped. `@beep/drizzle` exposes the `EntityTable`
-owns the generic Drizzle projection and exposes `pgTableFrom(entity)`.
-Slice/shared `tables` packages may own concrete table metadata for their product
-language, but they do not own a second SQL DSL, live database execution,
-transactions, repositories, or migrations.
+Drizzle tables are projected, not hand-mapped. Slice/shared `tables` packages
+call `toPgTable(EntityModel)` from `@beep/effect-drizzle/pg` and publish only
+concrete table metadata for their product language. `@beep/drizzle` owns
+execution and transaction capability only. Table packages do not own a second
+SQL DSL, live database execution, transactions, repositories, or migrations.
 
 ### 6. Topology Is Compressed Context
 
@@ -1701,7 +1702,6 @@ export class MembershipAlreadyRevoked extends S.TaggedError<MembershipAlreadyRev
 ````ts
 import { $IamDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import * as Model from "@beep/schema/Model";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { AccountId } from "@beep/iam-domain/entities/Account";

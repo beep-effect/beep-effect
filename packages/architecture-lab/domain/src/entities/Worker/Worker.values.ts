@@ -79,7 +79,8 @@ export type WorkerStatus = typeof WorkerStatus.Type;
  * **Example** (Make CreateWorkerInput)
  *
  * ```ts
- * import { CreateWorkerInput, WorkerId, WorkerOrganizationId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { CreateWorkerInput, WorkerOrganizationId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import * as S from "effect/Schema"
  *
  * const input = CreateWorkerInput.make({

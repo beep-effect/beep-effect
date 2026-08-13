@@ -6,6 +6,13 @@
  * @since 0.0.0
  */
 
+/**
+ * Act frame behavior exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./ActFrame.behavior.ts";
 export * from "./ActFrame.model.ts";
 /**
  * Act frame value objects.

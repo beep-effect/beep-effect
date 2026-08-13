@@ -19,7 +19,7 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput, fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
@@ -74,7 +74,7 @@ describe("@beep/agents-domain", () => {
 
   it("decodes and constructs an Agent row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsAgent", 4),
+      ...productEntityFixtureInput("AgentsAgent", 4),
       fixtureKey: "agent.reviewer",
       mode: "deterministic_fixture",
       name: "Reviewer Agent",
@@ -93,7 +93,7 @@ describe("@beep/agents-domain", () => {
 
   it("decodes and constructs a Skill row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsSkill", 5),
+      ...productEntityFixtureInput("AgentsSkill", 5),
       fixtureKey: "skill.review",
       name: "Review Skill",
     };

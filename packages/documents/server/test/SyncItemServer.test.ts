@@ -16,7 +16,7 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -59,7 +59,7 @@ const itemSeed = (localRelPath: string) =>
 const byWorkspace = ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId });
 
 const detachedItem = S.decodeUnknownSync(DomainSyncItem.SyncItem)({
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 99),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 99),
   contentDigest: null,
   contentSizeBytes: null,
   itemKind: "file",

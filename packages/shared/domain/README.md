@@ -12,7 +12,8 @@ deliberately agree on the same driver-neutral product meaning.
 
 - Shared value objects and schema-first models tied to product language.
 - Shared domain events, pure policies, guards, and lifecycle behavior.
-- Driver-neutral access vocabulary and invariants that multiple slices reuse.
+- Shared access, identity, provenance, and persisted-entity invariants that
+  multiple slices reuse.
 
 ## Does Not Belong Here
 
@@ -32,7 +33,7 @@ deliberately agree on the same driver-neutral product meaning.
 - `Entities.User`
 - `Values.LocalDate`
 - `Identity.Shared`
-- `BaseEntity`
+- `ProductEntity`
 - `EntityId`
 - `EntityRef`
 - `Principal`
@@ -40,11 +41,11 @@ deliberately agree on the same driver-neutral product meaning.
 - `@beep/shared-domain/entity`
 - `@beep/shared-domain/entity/primitives`
 
-Persisted shared entities use `BaseEntity.Class` from
-`@beep/shared-domain/entity/BaseEntity` for shared product invariants and
-`@beep/schema/EntitySchema` descriptors for storage-neutral persistence
-metadata. Domain models remain schema-first; the decoded side is domain
-language and the encoded side is the persistence row shape.
+Persisted entities call `ProductEntity.make(EntityId)` from
+`@beep/shared-domain/entity/ProductEntity`. The kit composes shared product
+audit and identity fields with effect-drizzle schema and SQL metadata. Concrete
+identity definitions live under `@beep/shared-domain/identity`; table packages
+project entity models with `toPgTable`.
 
 ## Source Map
 
@@ -55,7 +56,7 @@ language and the encoded side is the persistence row shape.
 | `src/entities/Membership/`                   | Organization membership model and value vocabulary.         |
 | `src/entities/Organization/`                 | Organization model, value vocabulary, and pure behavior. |
 | `src/entities/User/`                         | Human account model.                                       |
-| `src/entity/index.ts`                        | Entity constructor barrel: `BaseEntity`, `EntityId`, `EntityRef`, `Principal`, `primitives`, and `SourceKind`. |
+| `src/entity/index.ts`                        | Product-entity kit and shared entity primitives. |
 | `src/entity/primitives.ts`                   | Shared driver-neutral entity primitive schemas.        |
 | `src/identity/index.ts`                      | Shared entity-id modules and identity vocabulary.      |
 | `src/values/index.ts`                        | Shared value objects.                                  |
@@ -65,6 +66,19 @@ language and the encoded side is the persistence row shape.
 | `src/values/LocalDate/LocalDate.behavior.ts` | Pure `LocalDate` behavior.                             |
 
 ## Promotion Records
+
+### Promotion record: ProductEntity and consolidated identity modules
+
+- **Date promoted:** 2026-08-13
+- **Shared product semantics:** Every persisted product row shares organization scope, actor provenance, source, schema version, row version, public identity, and one canonical entity-type identity.
+- **Current consumers:** `@beep/epistemic-domain`, `@beep/law-practice-domain`, `@beep/workspace-domain`, `@beep/agents-domain`, `@beep/documents-domain`, and `@beep/shared-domain` define persisted entities with this contract.
+- **Rejected homes:**
+  - Owning slice - the audit and identity meaning is deliberately identical across all product slices, so no one slice can own it.
+  - Foundation - organization scope, principals, source facets, public ids, and entity-type identity are Beep product language rather than domain-agnostic schema substrate.
+- **Surface:** `ProductEntity.make`, `ProductEntity.fields`, and `ProductEntity.ProductEntityKit` from `@beep/shared-domain/entity/ProductEntity`; consolidated ids from `@beep/shared-domain/identity/*`.
+- **Runtime limits:** no live Layers; effect-drizzle use is limited to executable schema, column, index, and table metadata.
+- **Coupling acceptors:** Entity-stack migration accepted the shared contract across all current slice consumers; PR review sign-off pending.
+- **Removal trigger:** retire when persisted product entities no longer share a common audit/identity contract or a replacement promotion record moves that contract to a different shared owner.
 
 ### Promotion record: User
 
@@ -83,7 +97,7 @@ language and the encoded side is the persistence row shape.
 
 - **Date promoted:** 2026-05-02
 - **Shared product semantics:** The organization-scoped relationship between a shared user and the organization they belong to.
-- **Current consumers:** all BaseEntity-backed product slices share `Identity.Shared.OrganizationId` tenant scoping; workspace, agents, law-practice, and shared table packages consume the shared entity contract.
+- **Current consumers:** all ProductEntity-backed product slices share `Identity.Shared.OrganizationId` tenant scoping; workspace, agents, law-practice, and shared table packages consume the shared entity contract.
 - **Rejected homes:**
   - Owning slice - `tenancy` owns future lifecycle workflows such as invites and role changes, but the membership noun is cross-slice product language.
   - Foundation - membership is product policy language, not reusable domain-agnostic substrate.

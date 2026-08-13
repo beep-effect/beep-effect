@@ -42,6 +42,7 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerNotFound } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerNotFound.make({
@@ -73,6 +74,7 @@ export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFo
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerConflict } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerConflict.make({

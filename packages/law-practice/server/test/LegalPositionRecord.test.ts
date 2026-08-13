@@ -36,7 +36,7 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -83,7 +83,7 @@ const transition = (label: string, kind: string) => ({
 
 const relatorFixture = (id: number, org = 1) =>
   S.decodeUnknownEffect(LegalPositionRelator)({
-    ...baseEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, id),
     orgId: org,
     assertingInterpreter: { kind: "User", userId: 1 },
     bearer: roleInput("lessee", 1),
@@ -97,7 +97,7 @@ const relatorFixture = (id: number, org = 1) =>
 
 const frameFixture = (id: number, org = 1) =>
   S.decodeUnknownEffect(ActFrame)({
-    ...baseEntityFixtureInput(LawPractice.ActFrameId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, id),
     orgId: org,
     act: { description: "assign the lease", polarity: "act" },
     creates: [transition("assignee-claim", "claim")],
@@ -118,7 +118,7 @@ const frameFixture = (id: number, org = 1) =>
 
 const exerciseFixture = (id: number, frame: number, org = 1) =>
   S.decodeUnknownEffect(PowerExercise)({
-    ...baseEntityFixtureInput(LawPractice.PowerExerciseId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, id),
     orgId: org,
     attemptedAt: 1_700_000_000_000 + id,
     authorityBasis: {
@@ -139,7 +139,7 @@ const exerciseFixture = (id: number, frame: number, org = 1) =>
 
 const correctionFixture = (id: number, frame: number, org = 1) =>
   S.decodeUnknownEffect(CorrectionDelta)({
-    ...baseEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, id),
     orgId: org,
     candidateRouting: "contradiction-candidate-input",
     correctedElements: [
@@ -158,7 +158,7 @@ const correctionFixture = (id: number, frame: number, org = 1) =>
 
 const candidateFixture = (id: number, relators: ReadonlyArray<number>, org = 1) =>
   S.decodeUnknownEffect(LegalOppositionCandidate)({
-    ...baseEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, id),
     orgId: org,
     candidate: { act: ACT, overlappingScope: scopeInput, relators },
     priorityBasis: null,

@@ -8,7 +8,7 @@ import {
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -50,7 +50,7 @@ const driftSeed = (remoteEventId: O.Option<string>) =>
   });
 
 const syncConflictRow = (seed: SyncConflictSeed, id: number) => ({
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, id),
   conflictKind: seed.conflictKind,
   localRelPath: O.getOrNull(seed.localRelPath),
   provider: seed.provider,

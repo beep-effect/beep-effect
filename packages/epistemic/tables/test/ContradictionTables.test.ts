@@ -2,6 +2,7 @@ import {
   ContradictionCandidate,
   ContradictionDisposition,
   ContradictionReceipt,
+  hasValidSeals,
 } from "@beep/epistemic-domain/entities/Contradiction";
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import {
@@ -37,7 +38,7 @@ import { PosInt } from "@beep/schema/Int";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
 import * as O from "effect/Option";
@@ -114,7 +115,7 @@ const encodedMatchBasis = Result.getOrThrow(S.encodeResult(ContradictionMatchBas
 const encodedPair = Result.getOrThrow(S.encodeResult(CanonicalContradictionBeliefPair)(pair));
 const candidate = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionCandidate)({
-    ...baseEntityFixtureInput("EpistemicContradictionCandidate", 1),
+    ...productEntityFixtureInput("EpistemicContradictionCandidate", 1),
     assessment: encodedAssessment,
     candidateDigest,
     candidateKey: contradictionCandidateKey(pair, matchBasis),
@@ -128,7 +129,7 @@ const candidate = Result.getOrThrow(
 const systemPrincipal = { component: "Runtime", kind: "System" } as const;
 const receipt = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionReceipt)({
-    ...baseEntityFixtureInput("EpistemicContradictionReceipt", 2),
+    ...productEntityFixtureInput("EpistemicContradictionReceipt", 2),
     candidateId: candidate.id,
     receiptKey: Str.repeat(64)("7"),
     receivedAt: 0,
@@ -137,7 +138,7 @@ const receipt = Result.getOrThrow(
 );
 const disposition = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionDisposition)({
-    ...baseEntityFixtureInput("EpistemicContradictionDisposition", 3),
+    ...productEntityFixtureInput("EpistemicContradictionDisposition", 3),
     candidateId: candidate.id,
     decision: {
       reason: "The passages concern different obligations.",
@@ -149,7 +150,7 @@ const disposition = Result.getOrThrow(
 );
 const formerEdge = Result.getOrThrow(
   S.decodeUnknownResult(EdgeVersion)({
-    ...baseEntityFixtureInput("EpistemicEdgeVersion", left.edgeVersionId),
+    ...productEntityFixtureInput("EpistemicEdgeVersion", left.edgeVersionId),
     createdAt: 0,
     evidenceScope: null,
     expiredAt: 0,
@@ -178,7 +179,7 @@ const formerEdge = Result.getOrThrow(
 );
 const replacementEdge = Result.getOrThrow(
   S.decodeUnknownResult(EdgeVersion)({
-    ...baseEntityFixtureInput("EpistemicEdgeVersion", 3),
+    ...productEntityFixtureInput("EpistemicEdgeVersion", 3),
     createdAt: 0,
     evidenceScope: null,
     expiredAt: null,
@@ -272,7 +273,7 @@ describe("Contradiction candidate row converters", () => {
     const decoded = Result.getOrThrow(fromContradictionCandidateRow({ ...insert, id: 1 }));
 
     expect("id" in insert).toBe(false);
-    expect(Result.getOrThrow(decoded.hasValidSeals())).toBe(true);
+    expect(Result.getOrThrow(hasValidSeals(decoded))).toBe(true);
     expect(decoded.candidateKey).toBe(candidate.candidateKey);
     expect(decoded.assessment.proposals).toHaveLength(2);
   });

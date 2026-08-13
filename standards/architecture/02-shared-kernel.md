@@ -13,9 +13,10 @@ Shared may contain:
   language
 - `shared/domain` driver-neutral primitives that multiple slices deliberately
   share
-- `shared/domain` entity metadata constructors when they encode shared product
-  semantics such as tenant organization scoping, actor provenance, and
-  source-kind vocabulary rather than reusable domain-agnostic schema substrate
+- `shared/domain` product-entity kits when they encode shared product semantics
+  such as tenant organization scoping, actor provenance, identity, and
+  source-kind vocabulary; these may compose the metadata-only
+  `@beep/effect-drizzle` schema kit but must not expose database execution
 - future `shared/config` contracts and config vocabulary that multiple slices
   deliberately agree on
 - future `shared/use-cases` application contracts when multiple slices
@@ -35,7 +36,7 @@ Shared should not contain:
 
 - product-specific behavior from one slice
 - a partial domain model waiting for a home
-- driver-specific leakage that domain packages will inherit
+- driver-specific runtime leakage that domain packages will inherit
 - workflows, process managers, schedulers, handlers, or concrete adapters that
   execute shared contracts
 - one-off convenience wrappers created to avoid a local import
@@ -46,8 +47,10 @@ Shared should not contain:
 - technical wrappers or external drivers
 - repo tooling or runtime-specific assistant wiring
 
-`shared/tables` may use a metadata-only table constructor for shared entity
-descriptors when the resulting tables encode shared product language. It must
+`shared/domain` may expose the promoted `ProductEntity` kit because its fields
+encode agreed product semantics; the underlying effect-drizzle dependency is
+limited to schema and SQL metadata. `shared/tables` may project those models
+with `toPgTable` when the resulting tables encode shared product language. It must
 not grow live database execution, transaction management, migration tooling, or
 repository helpers; those belong in drivers and server packages.
 

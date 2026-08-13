@@ -748,6 +748,14 @@
       "owner": "@beep/agents-client"
     },
     {
+      "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
+      "symbol": "Agent",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "Agent",
+      "description": "Persisted agent record that binds a fixture key to one skill fixture and execution mode."
+    },
+    {
       "file": "packages/agents/domain/src/entities/Agent/Agent.values.ts",
       "symbol": "AgentMode",
       "kind": "literal-kit",
@@ -758,7 +766,7 @@
     {
       "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.model.ts",
       "symbol": "ProviderInstance",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/agents-domain",
       "identity": "ProviderInstance",
       "description": "Persisted provider CLI instance holding binary, HOME, and env configuration plus the latest auth-probe snapshot; never provider tokens."
@@ -850,6 +858,14 @@
       "owner": "@beep/agents-domain",
       "identity": "UnauthenticatedSnapshot",
       "description": "Auth-snapshot variant for a provider CLI that responded but is logged out."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Skill/Skill.model.ts",
+      "symbol": "Skill",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "Skill",
+      "description": "Persisted skill record referenced by fixture-backed agents."
     },
     {
       "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
@@ -1561,6 +1577,14 @@
     },
     {
       "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+      "symbol": "Worker",
+      "kind": "schema-class",
+      "owner": "@beep/architecture-lab-domain",
+      "identity": "Worker",
+      "description": "Canonical architecture lab persisted entity used to prove entity archetype generation."
+    },
+    {
+      "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.values.ts",
       "symbol": "CreateWorkerInput",
       "kind": "schema-class",
       "owner": "@beep/architecture-lab-domain",
@@ -1568,7 +1592,7 @@
       "description": "Input required to create an active architecture lab Worker entity."
     },
     {
-      "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+      "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.values.ts",
       "symbol": "WorkerStatus",
       "kind": "literal-kit",
       "owner": "@beep/architecture-lab-domain",
@@ -1873,6 +1897,14 @@
     },
     {
       "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.model.ts",
+      "symbol": "SyncConflict",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncConflict",
+      "description": "Remote-drift record surfaced for review; v1 never auto-merges or mutates local vault content (SPEC D4)."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.values.ts",
       "symbol": "SyncConflictKind",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -1880,7 +1912,7 @@
       "description": "Kind of remote drift detected against the one-way mirror."
     },
     {
-      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.model.ts",
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.values.ts",
       "symbol": "SyncConflictResolution",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -1889,6 +1921,14 @@
     },
     {
       "file": "packages/documents/domain/src/entities/SyncCursor/SyncCursor.model.ts",
+      "symbol": "SyncCursor",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncCursor",
+      "description": "Durable remote-event stream cursor enabling drift detection to survive app restarts."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncCursor/SyncCursor.values.ts",
       "symbol": "SyncCursorStatus",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -1897,6 +1937,14 @@
     },
     {
       "file": "packages/documents/domain/src/entities/SyncItem/SyncItem.model.ts",
+      "symbol": "SyncItem",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncItem",
+      "description": "Durable sync-tracking row for one workspace-vault item mirrored one-way to a DMS provider."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncItem/SyncItem.values.ts",
       "symbol": "SyncItemState",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -1905,6 +1953,14 @@
     },
     {
       "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts",
+      "symbol": "SyncOperation",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncOperation",
+      "description": "Durable one-way push outbox operation from the local vault to the DMS mirror."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.values.ts",
       "symbol": "SyncOperationStatus",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -1912,7 +1968,7 @@
       "description": "Outbox lifecycle status for a queued push operation."
     },
     {
-      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts",
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.values.ts",
       "symbol": "SyncOperationType",
       "kind": "literal-kit",
       "owner": "@beep/documents-domain",
@@ -2371,7 +2427,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncConflictSeed",
-      "description": "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields."
+      "description": "Creation input for one remote-drift record, excluding ProductEntity audit fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
@@ -2395,7 +2451,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncCursorSeed",
-      "description": "Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields."
+      "description": "Upsert input for one remote-event stream cursor, excluding ProductEntity audit fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
@@ -2451,7 +2507,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncItemSeed",
-      "description": "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields."
+      "description": "Creation input for one sync-tracking row, excluding ProductEntity audit fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
@@ -2515,7 +2571,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncOperationSeed",
-      "description": "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields."
+      "description": "Creation input for one push-outbox operation, excluding ProductEntity audit fields."
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
@@ -9453,12 +9509,76 @@
       "description": "Server-only execution-authority settings: destination allowlist and pinned policy revision."
     },
     {
+      "file": "packages/epistemic/domain/src/entities/Activity/Activity.model.ts",
+      "symbol": "Activity",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "Activity",
+      "description": "Provenance activity produced by the runtime proof."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/CandidateClaim/CandidateClaim.model.ts",
+      "symbol": "CandidateClaim",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "CandidateClaim",
+      "description": "Candidate claim proposed by an agent with source evidence."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/ClaimDisposition/ClaimDisposition.model.ts",
       "symbol": "ClaimDisposition",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/epistemic-domain",
       "identity": "ClaimDisposition",
       "description": "Durable record of how a candidate claim was resolved."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
+      "symbol": "ContradictionCandidate",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ContradictionCandidate",
+      "description": "Immutable evidence-backed proposal that two exact belief versions contradict."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
+      "symbol": "ContradictionDisposition",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ContradictionDisposition",
+      "description": "Append-only human disposition rejecting a contradiction or recording its atomic supersession."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
+      "symbol": "ContradictionReceipt",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "ContradictionReceipt",
+      "description": "Durable receipt for a contradiction submission, including duplicate submissions."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts",
+      "symbol": "EdgeVersion",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EdgeVersion",
+      "description": "One immutable bitemporal version of one logical epistemic edge."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Evidence/Evidence.model.ts",
+      "symbol": "Evidence",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "Evidence",
+      "description": "Source span evidence reference."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.model.ts",
+      "symbol": "EvidenceVerification",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "EvidenceVerification",
+      "description": "Append-only evidence sidecar binding one evidence row to an exact verified text anchor."
     },
     {
       "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
@@ -9467,6 +9587,14 @@
       "owner": "@beep/epistemic-domain",
       "identity": "TurnFinalizationUsageAppend",
       "description": "Decoded append payload for a UsageRecord produced while finalizing a turn."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
+      "symbol": "UsageRecord",
+      "kind": "schema-class",
+      "owner": "@beep/epistemic-domain",
+      "identity": "UsageRecord",
+      "description": "Append-only usage attribution record linked to an epistemic Activity."
     },
     {
       "file": "packages/epistemic/domain/src/values/ClaimDispositionStatus/ClaimDispositionStatus.model.ts",
@@ -17614,74 +17742,6 @@
       "owner": "@beep/schema"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.constructors.ts",
-      "symbol": "int",
-      "kind": "schema-const",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "EncodedAbsenceKind",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "EncodedAbsenceKind",
-      "description": "Classifies how an encoded entity field represents absence at a persistence boundary."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "IndexHintKind",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "IndexHintKind",
-      "description": "Storage-neutral index hint kind attached to a persisted field."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "PersistStrategy",
-      "kind": "literal-kit",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "StorageKind",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "StorageKind",
-      "description": "Physical storage kind projected from a schema-first entity field."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "ValueStrategy",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "ValueStrategy",
-      "description": "Lifecycle strategy used to derive entity variants for a persisted field."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts",
-      "symbol": "EncodedFieldShape",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "EncodedFieldShapeMember",
-      "description": "Encoded field shape member with absence kind and null/undefined handling flags."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts",
-      "symbol": "EntityFieldInputError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema",
-      "identity": "EntityFieldInputError",
-      "description": "Entity field input validation failure."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts",
-      "symbol": "EntitySchemaAttachmentError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema",
-      "identity": "EntitySchemaAttachmentError",
-      "description": "EntitySchema metadata attachment invariant failure."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/EthAmount/EthAmount.schema.ts",
       "symbol": "EthAmount",
       "kind": "codec",
@@ -19233,14 +19293,6 @@
       "description": "An official IANA media type."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "Date",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "Date",
-      "description": "A DateTime.Utc serialized as a YYYY-MM-DD date string with time removed."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/NoOpen/NoOpen.schema.ts",
       "symbol": "NoOpenHeader",
       "kind": "codec",
@@ -20079,18 +20131,6 @@
       "owner": "@beep/schema",
       "identity": "UnitInterval",
       "description": "Schema for a real number in the closed unit interval [0, 1] (inclusive).\nThe canonical shape for probabilities, confidences, ratios, and normalized scores."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
-      "symbol": "Overridable",
-      "kind": "brand",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
-      "symbol": "Overrideable",
-      "kind": "brand",
-      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Xml.ts",
@@ -21575,12 +21615,26 @@
       "description": "The mode of the theme."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts",
+      "symbol": "ActFrame",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ActFrame",
+      "description": "One recorded reading of a norm as an act that creates, alters, or extinguishes legal positions."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
       "symbol": "ActFramePrecondition",
       "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "ActFramePrecondition",
       "description": "One condition a recorded act frame states, able to require a fact's absence."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+      "symbol": "ActFramePreconditions",
+      "kind": "schema-const",
+      "owner": "@beep/law-practice-domain"
     },
     {
       "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
@@ -21631,9 +21685,15 @@
       "description": "One position a recorded act frame creates or terminates, between two of its slots."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+      "symbol": "PositionTransitions",
+      "kind": "schema-const",
+      "owner": "@beep/law-practice-domain"
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/CandorDisposition/CandorDisposition.model.ts",
       "symbol": "CandorDisposition",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "CandorDisposition",
       "description": "One dated attorney judgment bound to one exact patent citation observation version."
@@ -21655,9 +21715,17 @@
       "description": "Minimal recorded attorney decision about one patent citation event."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/Claim/Claim.model.ts",
+      "symbol": "Claim",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Claim",
+      "description": "Patent claim entity for a single numbered claim under a patent asset."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.model.ts",
       "symbol": "CorrectionDelta",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "CorrectionDelta",
       "description": "One appended correction to a recorded interpretation, per element, with its review on the record."
@@ -21719,9 +21787,17 @@
       "description": "A transcribed validator report about one recorded interpretation."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/Distinction/Distinction.model.ts",
+      "symbol": "Distinction",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Distinction",
+      "description": "Distinction entity asserted to overcome a rejection against a claim."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/IdsSubmissionFact/IdsSubmissionFact.model.ts",
       "symbol": "IdsSubmissionFact",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "IdsSubmissionFact",
       "description": "One information-disclosure submission act recorded as presence-only facts, with its own operative date."
@@ -21807,12 +21883,28 @@
       "description": "Citation of the CFR capture and MPEP revision a recorded fact state was modeled from."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.model.ts",
+      "symbol": "LegalClient",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "LegalClient",
+      "description": "Legal client entity that owns law-practice contacts and matters."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.values.ts",
       "symbol": "LegalClientStatus",
       "kind": "literal-kit",
       "owner": "@beep/law-practice-domain",
       "identity": "LegalClientStatus",
       "description": "Legal client lifecycle status accepted by law-practice proof fixtures."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalContact/LegalContact.model.ts",
+      "symbol": "LegalContact",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "LegalContact",
+      "description": "Legal contact entity attached to a legal client."
     },
     {
       "file": "packages/law-practice/domain/src/entities/LegalContact/LegalContact.values.ts",
@@ -21825,7 +21917,7 @@
     {
       "file": "packages/law-practice/domain/src/entities/LegalOppositionCandidate/LegalOppositionCandidate.model.ts",
       "symbol": "LegalOppositionCandidate",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "LegalOppositionCandidate",
       "description": "One appended record that two stored relations were screened as prima facie opposed."
@@ -21839,6 +21931,14 @@
       "description": "One attorney's attributed assignment of a legal verdict family to an opposition candidate."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/LegalPositionRelator/LegalPositionRelator.model.ts",
+      "symbol": "LegalPositionRelator",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "LegalPositionRelator",
+      "description": "One stored advantage-side legal relation from which every other view of it is derived."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/LegalPositionRelator/LegalPositionRelator.values.ts",
       "symbol": "LegalPositionGrounding",
       "kind": "schema-class",
@@ -21847,12 +21947,36 @@
       "description": "Exercise lineage a stored legal position rests on: what produced it and what founded that power."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/Matter/Matter.model.ts",
+      "symbol": "Matter",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Matter",
+      "description": "Legal matter entity grouping prosecution work for one legal client."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/Matter/Matter.values.ts",
       "symbol": "MatterType",
       "kind": "literal-kit",
       "owner": "@beep/law-practice-domain",
       "identity": "MatterType",
       "description": "Matter type accepted by law-practice proof fixtures."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/OfficeAction/OfficeAction.model.ts",
+      "symbol": "OfficeAction",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "OfficeAction",
+      "description": "USPTO office action entity for a patent asset under examination."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Party/Party.model.ts",
+      "symbol": "Party",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Party",
+      "description": "One legal person a position can be held by or against, referencing an existing record by text."
     },
     {
       "file": "packages/law-practice/domain/src/entities/Party/Party.values.ts",
@@ -21871,6 +21995,14 @@
       "description": "Opaque text reference from a party to an existing law-practice record."
     },
     {
+      "file": "packages/law-practice/domain/src/entities/PatentAsset/PatentAsset.model.ts",
+      "symbol": "PatentAsset",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "PatentAsset",
+      "description": "Patent asset entity managed inside a prosecution matter."
+    },
+    {
       "file": "packages/law-practice/domain/src/entities/PatentAsset/PatentAsset.values.ts",
       "symbol": "PatentAssetStatus",
       "kind": "literal-kit",
@@ -21881,7 +22013,7 @@
     {
       "file": "packages/law-practice/domain/src/entities/PatentCitationEvent/PatentCitationEvent.model.ts",
       "symbol": "PatentCitationEvent",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "PatentCitationEvent",
       "description": "One observed, source-versioned occurrence of a patent reference cited against a filing."
@@ -21945,7 +22077,7 @@
     {
       "file": "packages/law-practice/domain/src/entities/PowerExercise/PowerExercise.model.ts",
       "symbol": "PowerExercise",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/law-practice-domain",
       "identity": "PowerExercise",
       "description": "One recorded attempt to exercise a power, kept on the record whether or not it took effect."
@@ -22021,6 +22153,22 @@
       "owner": "@beep/law-practice-domain",
       "identity": "PreconditionAssertionStatus",
       "description": "What somebody asserted about one of an act frame's preconditions on one occasion."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PriorArtReference/PriorArtReference.model.ts",
+      "symbol": "PriorArtReference",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "PriorArtReference",
+      "description": "Prior-art reference entity cited by an office action."
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Rejection/Rejection.model.ts",
+      "symbol": "Rejection",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Rejection",
+      "description": "A statutory rejection raised against a claim by an office action."
     },
     {
       "file": "packages/law-practice/domain/src/values/ActFrameElementRef/ActFrameElementRef.model.ts",
@@ -24487,6 +24635,14 @@
       "description": "Bounded SHACL validation result and verified repair proposals."
     },
     {
+      "file": "packages/shared/domain/src/entities/Membership/Membership.model.ts",
+      "symbol": "Model",
+      "kind": "schema-class",
+      "owner": "@beep/shared-domain",
+      "identity": "Model",
+      "description": "Shared organization membership entity."
+    },
+    {
       "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
       "symbol": "Role",
       "kind": "literal-kit",
@@ -24503,6 +24659,14 @@
       "description": "Shared organization membership lifecycle status."
     },
     {
+      "file": "packages/shared/domain/src/entities/Organization/Organization.model.ts",
+      "symbol": "Model",
+      "kind": "schema-class",
+      "owner": "@beep/shared-domain",
+      "identity": "Model",
+      "description": "Shared-kernel organization entity used as the tenant root concept."
+    },
+    {
       "file": "packages/shared/domain/src/entities/Organization/Organization.values.ts",
       "symbol": "LicenseTier",
       "kind": "literal-kit",
@@ -24517,6 +24681,14 @@
       "owner": "@beep/shared-domain",
       "identity": "Settings",
       "description": "Compliance and audit settings owned by a shared-kernel organization."
+    },
+    {
+      "file": "packages/shared/domain/src/entities/User/User.model.ts",
+      "symbol": "Model",
+      "kind": "schema-class",
+      "owner": "@beep/shared-domain",
+      "identity": "Model",
+      "description": "Shared-kernel human account entity."
     },
     {
       "file": "packages/shared/domain/src/entity/EntityId.ts",
@@ -36466,15 +36638,63 @@
       "description": "Result of checking a package-local docgen proof manifest."
     },
     {
+      "file": "packages/workspace/domain/src/entities/ApprovalGate/ApprovalGate.model.ts",
+      "symbol": "ApprovalGate",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "ApprovalGate",
+      "description": "Human approval gate for candidate work."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/CandidateDraft/CandidateDraft.model.ts",
+      "symbol": "CandidateDraft",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "CandidateDraft",
+      "description": "Candidate draft artifact proposed by an agent."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/CandidateProject/CandidateProject.model.ts",
+      "symbol": "CandidateProject",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "CandidateProject",
+      "description": "Candidate project proposed by an agent."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/CandidateTask/CandidateTask.model.ts",
+      "symbol": "CandidateTask",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "CandidateTask",
+      "description": "Candidate task proposed by an agent."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/ContextPacket/ContextPacket.model.ts",
+      "symbol": "ContextPacket",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "ContextPacket",
+      "description": "Bounded context packet returned through the SDK facade."
+    },
+    {
       "file": "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.model.ts",
       "symbol": "EmailArtifact",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/workspace-domain",
       "identity": "EmailArtifact",
       "description": "Normalized email artifact imported into a workspace thread."
     },
     {
       "file": "packages/workspace/domain/src/entities/Message/Message.model.ts",
+      "symbol": "Message",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "Message",
+      "description": "Md-aligned message content in a workspace turn."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/Message/Message.values.ts",
       "symbol": "MessageRole",
       "kind": "literal-kit",
       "owner": "@beep/workspace-domain",
@@ -36482,7 +36702,23 @@
       "description": "Author role for a workspace message."
     },
     {
+      "file": "packages/workspace/domain/src/entities/Thread/Thread.model.ts",
+      "symbol": "Thread",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "Thread",
+      "description": "Durable workspace conversation thread."
+    },
+    {
       "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "symbol": "Turn",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-domain",
+      "identity": "Turn",
+      "description": "Workspace turn aggregate with parent-turn lineage for branching."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "ActivityItem",
       "kind": "schema-class",
       "owner": "@beep/workspace-domain",
@@ -36490,7 +36726,7 @@
       "description": "Ordered turn item linking runtime provenance activity."
     },
     {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "ArtifactRefItem",
       "kind": "schema-class",
       "owner": "@beep/workspace-domain",
@@ -36498,7 +36734,7 @@
       "description": "Ordered turn item referencing a workspace artifact."
     },
     {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "MessageItem",
       "kind": "schema-class",
       "owner": "@beep/workspace-domain",
@@ -36506,7 +36742,7 @@
       "description": "Ordered turn item referencing persisted md-aligned message content."
     },
     {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "ToolCallItem",
       "kind": "schema-class",
       "owner": "@beep/workspace-domain",
@@ -36514,7 +36750,7 @@
       "description": "Ordered turn item recording a tool invocation request."
     },
     {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "ToolResultItem",
       "kind": "schema-class",
       "owner": "@beep/workspace-domain",
@@ -36522,15 +36758,7 @@
       "description": "Ordered turn item recording the result of a tool invocation."
     },
     {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
-      "symbol": "Turn",
-      "kind": "schema-const",
-      "owner": "@beep/workspace-domain",
-      "identity": "Turn",
-      "description": "Workspace turn aggregate with parent-turn lineage for branching."
-    },
-    {
-      "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
+      "file": "packages/workspace/domain/src/entities/Turn/Turn.values.ts",
       "symbol": "TurnItem",
       "kind": "tagged-union",
       "owner": "@beep/workspace-domain",
@@ -36540,7 +36768,7 @@
     {
       "file": "packages/workspace/domain/src/entities/Workspace/Workspace.model.ts",
       "symbol": "Workspace",
-      "kind": "schema-const",
+      "kind": "schema-class",
       "owner": "@beep/workspace-domain",
       "identity": "Workspace",
       "description": "User or team work area participating in a runtime scenario."

@@ -1,4 +1,4 @@
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { CandidateDraft as CandidateDraftModel } from "@beep/workspace-domain/entities/CandidateDraft";
 import { CandidateProject as CandidateProjectModel } from "@beep/workspace-domain/entities/CandidateProject";
 import { Message as MessageModel } from "@beep/workspace-domain/entities/Message";
@@ -107,7 +107,7 @@ describe("WorkspaceTables", () => {
 
   it("round-trips Thread, Turn, and Message rows through the converters", () => {
     const thread = S.decodeUnknownSync(ThreadModel)({
-      ...baseEntityFixtureInput("WorkspaceThread", 10),
+      ...productEntityFixtureInput("WorkspaceThread", 10),
       title: "Matter intake",
       workspaceId: 2,
     });
@@ -119,7 +119,7 @@ describe("WorkspaceTables", () => {
     expect(Thread.fromThreadRow({ ...threadInsert, id: 10 }).title).toBe("Matter intake");
 
     const message = S.decodeUnknownSync(MessageModel)({
-      ...baseEntityFixtureInput("WorkspaceMessage", 20),
+      ...productEntityFixtureInput("WorkspaceMessage", 20),
       content: { _tag: "document", children: [] },
       role: "user",
       threadId: 10,
@@ -132,7 +132,7 @@ describe("WorkspaceTables", () => {
     expect(Message.fromMessageRow({ ...messageInsert, id: 20 }).role).toBe("user");
 
     const turn = S.decodeUnknownSync(TurnModel)({
-      ...baseEntityFixtureInput("WorkspaceTurn", 30),
+      ...productEntityFixtureInput("WorkspaceTurn", 30),
       items: [{ itemType: "message", messageId: 20 }],
       parentTurnId: null,
       threadId: 10,
@@ -157,7 +157,7 @@ describe("WorkspaceTables", () => {
 
   it("round-trips Workspace rows through the converters", () => {
     const workspace = S.decodeUnknownSync(WorkspaceModel)({
-      ...baseEntityFixtureInput("WorkspaceWorkspace", 40),
+      ...productEntityFixtureInput("WorkspaceWorkspace", 40),
       fixtureKey: "workspace.default",
       name: "Default Workspace",
       organizationFixtureKey: "organization.default",

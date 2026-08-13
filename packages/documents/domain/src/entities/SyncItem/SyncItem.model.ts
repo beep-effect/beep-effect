@@ -24,7 +24,8 @@ const SyncItemEntity = ProductEntity.make(SyncItemId);
  * **Example** (Decode full SyncItem row)
  *
  * ```ts
- * import { SyncItem, SyncItemId } from "@beep/documents-domain/entities/SyncItem"
+ * import { SyncItem } from "@beep/documents-domain/entities/SyncItem"
+ * import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId"
  * import * as S from "effect/Schema"
  *
  * const item = S.decodeUnknownSync(SyncItem)({

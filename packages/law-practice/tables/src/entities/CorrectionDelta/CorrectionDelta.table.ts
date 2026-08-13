@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { CorrectionDelta } from "@beep/law-practice-domain/entities/CorrectionDelta";
 
 /**
@@ -28,11 +28,12 @@ import { CorrectionDelta } from "@beep/law-practice-domain/entities/CorrectionDe
  *
  * ```ts
  * import { CorrectionDelta } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(CorrectionDelta.Table.definition.tableName) // "law_practice_correction_delta"
+ * console.log(getTableName(CorrectionDelta.Table)) // "law_practice_correction_delta"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(CorrectionDelta);
+export const Table = toPgTable(CorrectionDelta);

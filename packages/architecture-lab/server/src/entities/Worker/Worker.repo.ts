@@ -44,6 +44,7 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { makeInMemoryWorkerRepository } from "@beep/architecture-lab-server/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *

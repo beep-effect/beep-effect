@@ -2,6 +2,8 @@ import {
   EvidenceVerification,
   EvidenceVerificationManifestation,
   evidenceVerificationManifestationKey,
+  hasValidManifestationKey,
+  manifestationKeyFor,
 } from "@beep/epistemic-domain";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
@@ -10,7 +12,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as S from "effect/Schema";
@@ -55,10 +57,9 @@ describe("EvidenceVerification", () => {
     );
   });
 
-  it("uses a slice-local BaseEntity identity", () => {
-    expect(EvidenceVerification.definition.entityId).toBe(Epistemic.EvidenceVerificationId);
-    expect(EvidenceVerification.definition.entityId.tableName).toBe("epistemic_evidence_verification");
-    expect(EvidenceVerification.definition.entityId.entityType).toBe("EpistemicEvidenceVerification");
+  it("uses the consolidated product identity", () => {
+    expect(EvidenceVerification.sql.tableName).toBe(Epistemic.EvidenceVerificationId.tableName);
+    expect(Epistemic.EvidenceVerificationId.entityType).toBe("EpistemicEvidenceVerification");
   });
 
   it("keys one exact evidence and verified-anchor manifestation", () => {
@@ -118,7 +119,7 @@ describe("EvidenceVerification", () => {
     const manifestationKey = Result.getOrThrow(evidenceVerificationManifestationKey(manifestation));
     const verification = Result.getOrThrow(
       S.decodeUnknownResult(EvidenceVerification)({
-        ...baseEntityFixtureInput("EpistemicEvidenceVerification", 7),
+        ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
         evidenceId: 4,
         manifestationKey,
         verifiedAnchor,
@@ -126,23 +127,19 @@ describe("EvidenceVerification", () => {
     );
     const tampered = EvidenceVerification.make({
       ...verification,
-      manifestationKey: Result.getOrThrow(
-        EvidenceVerification.manifestationKeyFor(SharedEpistemic.EvidenceId.make(5), verifiedAnchor)
-      ),
+      manifestationKey: Result.getOrThrow(manifestationKeyFor(SharedEpistemic.EvidenceId.make(5), verifiedAnchor)),
     });
 
-    expect(Result.getOrThrow(verification.hasValidManifestationKey())).toBe(true);
-    expect(Result.getOrThrow(tampered.hasValidManifestationKey())).toBe(false);
+    expect(Result.getOrThrow(hasValidManifestationKey(verification))).toBe(true);
+    expect(Result.getOrThrow(hasValidManifestationKey(tampered))).toBe(false);
     expect(verification.evidenceId).toBe(4);
     expect(verification.verifiedAnchor.source.textDigest).toBe(textDigest);
   });
 
   it("preserves the schema-first encoded row shape", () => {
-    const manifestationKey = Result.getOrThrow(
-      EvidenceVerification.manifestationKeyFor(SharedEpistemic.EvidenceId.make(4), verifiedAnchor)
-    );
+    const manifestationKey = Result.getOrThrow(manifestationKeyFor(SharedEpistemic.EvidenceId.make(4), verifiedAnchor));
     const input = {
-      ...baseEntityFixtureInput("EpistemicEvidenceVerification", 7),
+      ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
       evidenceId: 4,
       manifestationKey,
       verifiedAnchor: Result.getOrThrow(S.encodeUnknownResult(TextAnchorVerificationReceipt)(verifiedAnchor)),

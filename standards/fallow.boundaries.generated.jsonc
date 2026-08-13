@@ -878,12 +878,12 @@
         "allow": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/drizzle"
+          "@beep/effect-drizzle"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/drizzle"
+          "@beep/effect-drizzle"
         ]
       },
       {
@@ -1081,14 +1081,14 @@
         "allow": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/test-utils"
         ]
@@ -1364,14 +1364,14 @@
         "allow": [
           "@beep/documents-domain",
           "@beep/documents-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/documents-domain",
           "@beep/documents-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/test-utils"
         ]
@@ -1575,14 +1575,14 @@
       {
         "from": "@beep/epistemic-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
@@ -1948,14 +1948,14 @@
       {
         "from": "@beep/law-practice-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
@@ -3044,6 +3044,7 @@
       {
         "from": "@beep/shared-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
@@ -3051,6 +3052,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
@@ -3061,13 +3063,13 @@
       {
         "from": "@beep/shared-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
           "@beep/utils"
@@ -3318,13 +3320,13 @@
       {
         "from": "@beep/workspace-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"

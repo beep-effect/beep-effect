@@ -22,7 +22,8 @@ const SyncCursorEntity = ProductEntity.make(SyncCursorId);
  * **Example** (Decode full SyncCursor entity)
  *
  * ```ts
- * import { SyncCursor, SyncCursorId } from "@beep/documents-domain/entities/SyncCursor"
+ * import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor"
+ * import { SyncCursorId } from "@beep/shared-domain/identity/Documents/SyncCursorId"
  * import * as S from "effect/Schema"
  *
  * const cursor = S.decodeUnknownSync(SyncCursor)({

@@ -1,9 +1,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { Cuid, CuidState } from "@beep/schema/Cuid";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as DomainBarrel from "@beep/shared-domain";
 import * as EntityBarrel from "@beep/shared-domain/entity";
-import * as BaseEntity from "@beep/shared-domain/entity/BaseEntity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as Principal from "@beep/shared-domain/entity/Principal";
@@ -12,9 +10,9 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { fcRuns } from "@beep/test-utils";
-import { A, Str } from "@beep/utils";
+import { Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Exit, Layer, Order } from "effect";
+import { Crypto, Effect, Exit, Layer } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -58,30 +56,6 @@ const systemPrincipal = {
   kind: "System",
 } as const;
 
-class Document extends BaseEntity.BaseEntity.Class<Document>($I`Document`)(
-  DocumentId,
-  {
-    fields: {
-      note: S.String,
-      optionalNote: S.String.pipe(S.OptionFromNullOr),
-      payload: S.Record(S.String, S.Unknown),
-    },
-    persisted: {
-      note: EntitySchema.persist.text({
-        columnName: "note",
-      }),
-      optionalNote: EntitySchema.persist.text({
-        columnName: "optional_note",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      payload: EntitySchema.persist.jsonb(),
-    },
-  },
-  $I.annote("Document", {
-    description: "Document entity.",
-  })
-) {}
-
 class ProductDocument extends ProductDocumentEntity.Entity<ProductDocument>(ProductDocumentEntity.tableName)(
   {
     note: S.String.pipe(ProductDocumentEntity.pg.text()),
@@ -92,25 +66,6 @@ class ProductDocument extends ProductDocumentEntity.Entity<ProductDocument>(Prod
   }),
   ProductDocumentEntity.entityExtras
 ) {}
-
-const documentInput = {
-  createdAt: 1,
-  createdByPrincipal: systemPrincipal,
-  entityType: "SharedDocument",
-  id: 1,
-  note: "hello",
-  optionalNote: null,
-  orgId: 1,
-  payload: {
-    fixture: true,
-  },
-  publicId: "shared_document_a123",
-  rowVersion: 1,
-  schemaVersion: "0.0.0",
-  source: "Application",
-  updatedAt: 2,
-  updatedByPrincipal: systemPrincipal,
-} as const;
 
 describe("EntityId", () => {
   it.effect(
@@ -186,58 +141,8 @@ describe("PublicEntityId", () => {
   );
 });
 
-describe("BaseEntity", () => {
-  it("exports invariant fields and persistence descriptors", () => {
-    const orgIdIndexHints = BaseEntity.BaseEntity.definition.persisted.orgId.indexHints;
-
-    expect(BaseEntity.BaseEntity.definition.persisted.createdAt.valueStrategy).toBe("defaultedOnInsert");
-    expect(BaseEntity.BaseEntity.definition.persisted.createdByPrincipal.storageKind).toBe("jsonb");
-    expect(orgIdIndexHints === undefined ? undefined : A.map(orgIdIndexHints, (hint) => hint.kind)).toEqual([
-      "btree",
-      "lookup",
-    ]);
-    expect(BaseEntity.BaseEntity.definition.persisted.rowVersion.valueStrategy).toBe("incrementedOnWrite");
-    expect(BaseEntity.BaseEntity.definition.fields.source).toBe(SourceKind.SourceKind);
-  });
-
-  it.effect(
-    "extends with entity-specific schema fields and attached persistence metadata",
-    Effect.fnUntraced(function* () {
-      const document = yield* decodeEffect(Document)(documentInput);
-
-      expect(EntitySchema.getDefinition(Document)).toBe(Document.definition);
-      expect(Document.definition.entityId).toBe(DocumentId);
-      expect(Document.definition.tableName).toBe("shared_document");
-      expect(Document.definition.persisted.id.valueStrategy).toBe("generatedOnInsert");
-      expect(Document.definition.persisted.entityType.columnName).toBe("entity_type");
-      expect(Document.definition.persisted.publicId.columnName).toBe("public_id");
-      expect(Document.definition.persisted.publicId.valueStrategy).toBe("computedByServiceOnInsert");
-      expect(Document.definition.persisted.note.storageKind).toBe("text");
-      expect(Document.definition.persisted.optionalNote.indexHints?.[0]?.kind).toBe("lookup");
-      expect(Document.definition.persisted.payload.storageKind).toBe("jsonb");
-      expect(
-        EntitySchema.selectedRowFieldShape("optionalNote", Document.definition.fields.optionalNote).allowsNull
-      ).toBe(true);
-      expect(O.isNone(document.optionalNote)).toBe(true);
-      expect(document.payload).toEqual({ fixture: true });
-    })
-  );
-
-  it("derives variant field presence from persistence strategies", () => {
-    expect(A.sort(Object.keys(Document.fields), Order.String)).toContain("id");
-    expect(Object.keys(Document.insert.fields)).not.toContain("id");
-    expect(Object.keys(Document.insert.fields)).toContain("entityType");
-    expect(Object.keys(Document.insert.fields)).toContain("publicId");
-    expect(Object.keys(Document.update.fields)).not.toContain("publicId");
-    expect(Object.keys(Document.insert.fields)).toContain("note");
-    expect(Object.keys(Document.jsonCreate.fields)).not.toContain("createdAt");
-    expect(Object.keys(Document.jsonCreate.fields)).not.toContain("publicId");
-    expect(Object.keys(Document.jsonCreate.fields)).toContain("note");
-  });
-});
-
 describe("ProductEntity", () => {
-  it("preserves the six legacy variant memberships", () => {
+  it("preserves the six product variant memberships", () => {
     expect(Object.keys(ProductDocument.fields)).toContain("id");
     expect(Object.keys(ProductDocument.insert.fields)).toEqual(
       expect.arrayContaining([
@@ -366,14 +271,14 @@ describe("EntityRef and shared entity primitives", () => {
       expect(system.component).toBe("Runtime");
       expect(S.is(Principal.SystemPrincipal)(principal)).toBe(true);
       expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
-      expect(EntityBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
+      expect(EntityBarrel.ProductEntity.make).toBe(ProductEntity.make);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);
       expect(EntityBarrel.EntityRef.EntityRef).toBe(EntityRef.EntityRef);
       expect(EntityBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
       expect(EntityBarrel.Principal.Principal).toBe(Principal.Principal);
       expect(EntityBarrel.primitives.VectorClock).toBe(primitives.VectorClock);
       expect(EntityBarrel.SourceKind.SourceKind).toBe(SourceKind.SourceKind);
-      expect(DomainBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
+      expect(DomainBarrel.ProductEntity.make).toBe(ProductEntity.make);
       expect(DomainBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
     })
   );

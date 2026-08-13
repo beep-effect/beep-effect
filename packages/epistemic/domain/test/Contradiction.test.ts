@@ -1,4 +1,4 @@
-import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction";
+import { ContradictionCandidate, hasValidSeals } from "@beep/epistemic-domain/entities/Contradiction";
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
@@ -26,7 +26,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity";
 import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
 import * as A from "effect/Array";
@@ -95,7 +95,7 @@ const encodedMatchBasis = Result.getOrThrow(S.encodeResult(ContradictionMatchBas
 const encodedPair = Result.getOrThrow(S.encodeResult(CanonicalContradictionBeliefPair)(pair));
 const candidate = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionCandidate)({
-    ...baseEntityFixtureInput("EpistemicContradictionCandidate", 1),
+    ...productEntityFixtureInput("EpistemicContradictionCandidate", 1),
     assessment: encodedAssessment,
     candidateDigest,
     candidateKey: contradictionCandidateKey(pair, matchBasis),
@@ -390,7 +390,7 @@ describe("Contradiction domain invariants", () => {
   });
 
   it("recomputes every immutable candidate seal", () => {
-    expect(Result.getOrThrow(candidate.hasValidSeals())).toBe(true);
+    expect(Result.getOrThrow(hasValidSeals(candidate))).toBe(true);
   });
 
   it("rejects otherwise valid seals when a proposal targets a belief outside the candidate pair", () => {
@@ -425,7 +425,7 @@ describe("Contradiction domain invariants", () => {
       candidateDigest: unboundCandidateDigest,
     });
 
-    expect(Result.getOrThrow(unboundCandidate.hasValidSeals())).toBe(false);
+    expect(Result.getOrThrow(hasValidSeals(unboundCandidate))).toBe(false);
   });
 
   it("normalizes and bounds reasons persisted with both disposition decisions", () => {

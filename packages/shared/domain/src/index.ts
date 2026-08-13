@@ -54,21 +54,6 @@ export * as Aggregates from "./aggregates/index.ts";
  */
 export * as Entities from "./entities/index.ts";
 /**
- * Product-facing persisted entity base constructor.
- *
- * **Example** (Inspect createdAt column name)
- *
- * ```ts
- * import { BaseEntity } from "@beep/shared-domain"
- *
- * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export * as BaseEntity from "./entity/BaseEntity.ts";
-/**
  * Entity identifier constructor namespace.
  *
  * **Example** (Log EntityIdValue export)

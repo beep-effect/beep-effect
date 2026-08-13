@@ -263,9 +263,6 @@
   "@beep/workspace-domain/values/CandidateLifecycle": [
     "./packages/workspace/domain/src/values/CandidateLifecycle/index.ts"
   ],
-  "@beep/shared-domain/entity/BaseEntity": [
-    "./packages/shared/domain/src/entity/BaseEntity.ts"
-  ],
   "@beep/shared-domain/entity/EntityId": [
     "./packages/shared/domain/src/entity/EntityId.ts"
   ],
@@ -680,9 +677,6 @@
   "@beep/schema/CrossOriginResourcePolicy": [
     "./packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/index.ts"
   ],
-  "@beep/schema/EntitySchema": [
-    "./packages/foundation/modeling/schema/src/EntitySchema/index.ts"
-  ],
   "@beep/schema/FilePath": [
     "./packages/foundation/modeling/schema/src/FilePath/index.ts"
   ],
@@ -696,14 +690,8 @@
   "@beep/schema/MappedLiteralKit": [
     "./packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
   ],
-  "@beep/schema/Model": [
-    "./packages/foundation/modeling/schema/src/Model/index.ts"
-  ],
   "@beep/schema/Record": [
     "./packages/foundation/modeling/schema/src/Record/index.ts"
-  ],
-  "@beep/schema/VariantSchema": [
-    "./packages/foundation/modeling/schema/src/VariantSchema/index.ts"
   ],
   "@beep/acp/agent": ["./packages/drivers/acp/src/AcpAgent.service.ts"],
   "@beep/acp/client": ["./packages/drivers/acp/src/AcpClient.service.ts"],
@@ -754,9 +742,6 @@
   ],
   "@beep/schema/DateTimeUtcFromValid": [
     "./packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
-  ],
-  "@beep/schema/DomainModel": [
-    "./packages/foundation/modeling/schema/src/DomainModel.ts"
   ],
   "@beep/schema/EffectSchema": [
     "./packages/foundation/modeling/schema/src/EffectSchema.ts"
@@ -1726,5 +1711,8 @@
   ],
   "@beep/shared-domain/identity/Documents": [
     "./packages/shared/domain/src/identity/Documents/index.ts"
+  ],
+  "@beep/shared-domain/entity/ProductEntity": [
+    "./packages/shared/domain/src/entity/ProductEntity.ts"
   ]
 }

@@ -25,7 +25,8 @@ const SyncOperationEntity = ProductEntity.make(SyncOperationId);
  * **Example** (Decode SyncOperation entity)
  *
  * ```ts
- * import { SyncOperation, SyncOperationId } from "@beep/documents-domain/entities/SyncOperation"
+ * import { SyncOperation } from "@beep/documents-domain/entities/SyncOperation"
+ * import { SyncOperationId } from "@beep/shared-domain/identity/Documents/SyncOperationId"
  * import * as S from "effect/Schema"
  *
  * const operation = S.decodeUnknownSync(SyncOperation)({

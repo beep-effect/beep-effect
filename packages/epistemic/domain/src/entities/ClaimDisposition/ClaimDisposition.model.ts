@@ -6,13 +6,13 @@
  */
 import { ClaimDispositionStatus, ClaimGateViolation } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/ClaimDisposition/ClaimDisposition.model");
+const ClaimDispositionEntity = ProductEntity.make(Epistemic.ClaimDispositionId);
 
 const ClaimDispositionReason = S.NonEmptyString.pipe(
   $I.annoteSchema("ClaimDispositionReason", {
@@ -66,43 +66,32 @@ const ClaimDispositionReason = S.NonEmptyString.pipe(
  * @category entities
  * @since 0.0.0
  */
-export class ClaimDisposition extends BaseEntity.Class<ClaimDisposition>($I`ClaimDisposition`)(
-  Epistemic.ClaimDispositionId,
+export class ClaimDisposition extends ClaimDispositionEntity.Entity<ClaimDisposition>(ClaimDispositionEntity.tableName)(
   {
-    fields: {
-      claimId: Epistemic.CandidateClaimId.annotateKey({ description: "Candidate claim this disposition resolves." }),
-      reason: ClaimDispositionReason.annotateKey({ description: "Human-readable reason for the disposition." }),
-      resolvedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "When the disposition was decided.",
-      }),
-      resolvedBy: Principal.annotateKey({ description: "Principal that decided the disposition." }),
-      status: ClaimDispositionStatus.annotateKey({ description: "Status assigned to the claim." }),
-      violations: S.Array(ClaimGateViolation).annotateKey({
+    claimId: Epistemic.CandidateClaimId.annotateKey({
+      description: "Candidate claim this disposition resolves.",
+    }).pipe(ClaimDispositionEntity.pg.integer(), ClaimDispositionEntity.pg.columnName("claim_id")),
+    reason: ClaimDispositionReason.annotateKey({
+      description: "Human-readable reason for the disposition.",
+    }).pipe(ClaimDispositionEntity.pg.text()),
+    resolvedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "When the disposition was decided.",
+    }).pipe(ClaimDispositionEntity.pg.bigint("number"), ClaimDispositionEntity.pg.columnName("resolved_at")),
+    resolvedBy: Principal.annotateKey({
+      description: "Principal that decided the disposition.",
+    }).pipe(ClaimDispositionEntity.pg.jsonb(), ClaimDispositionEntity.pg.columnName("resolved_by")),
+    status: ClaimDispositionStatus.annotateKey({
+      description: "Status assigned to the claim.",
+    }).pipe(ClaimDispositionEntity.pg.text()),
+    violations: S.Array(ClaimGateViolation)
+      .annotateKey({
         description: "Claim gate violations recorded verbatim with the disposition.",
-      }),
-    },
-    persisted: {
-      claimId: EntitySchema.persist.entityId({
-        columnName: "claim_id",
-      }),
-      reason: EntitySchema.persist.text({
-        columnName: "reason",
-      }),
-      resolvedAt: EntitySchema.persist.timestampMillis({
-        columnName: "resolved_at",
-      }),
-      resolvedBy: EntitySchema.persist.jsonb({
-        columnName: "resolved_by",
-      }),
-      status: EntitySchema.persist.literal({
-        columnName: "status",
-      }),
-      violations: EntitySchema.persist.jsonb({
-        columnName: "violations",
-      }),
-    },
+      })
+      .pipe(ClaimDispositionEntity.pg.jsonb()),
+    ...ClaimDispositionEntity.identityFields,
   },
   $I.annote("ClaimDisposition", {
     description: "Durable record of how a candidate claim was resolved.",
-  })
+  }),
+  ClaimDispositionEntity.entityExtras
 ) {}

@@ -17,7 +17,7 @@ import { getTableName } from "drizzle-orm";
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_message" = Message.TABLE_NAME
+ * const tableName = Message.TABLE_NAME
  * console.log(tableName)
  * ```
  *

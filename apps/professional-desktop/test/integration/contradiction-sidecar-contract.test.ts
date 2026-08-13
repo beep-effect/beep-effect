@@ -9,7 +9,6 @@
 
 import { ContradictionListPayload } from "@beep/epistemic-use-cases/public";
 import { NonNegativeInt, PosInt } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
@@ -20,7 +19,7 @@ import { RpcTest } from "effect/unstable/rpc";
 import { RuntimeTest } from "@/runtime/Layer";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
 
-const instant = Result.getOrThrow(S.decodeResult(EntitySchema.DateTimeFromMillis)(2_000));
+const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));
 
 describe("@beep/professional-desktop desktop rpc contract", () => {
   it.effect(

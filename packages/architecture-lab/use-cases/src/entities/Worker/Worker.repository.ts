@@ -24,6 +24,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryNotFound } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryNotFound.make({
@@ -57,6 +58,7 @@ export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotF
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryConflict } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryConflict.make({
@@ -129,6 +131,7 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryU
  *   WorkerRepositoryError,
  *   WorkerRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  *
  * const isRepositoryError = WorkerRepositoryError.is
  *
@@ -188,6 +191,7 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
  *   WorkerRepositoryNotFound,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *

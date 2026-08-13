@@ -9,7 +9,7 @@ import {
   UnauthenticatedSnapshot,
 } from "@beep/agents-domain";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -112,7 +112,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("decodes, constructs, and round-trips a ProviderInstance row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 7),
+      ...productEntityFixtureInput("AgentsProviderInstance", 7),
       binaryPath: "/usr/local/bin/claude",
       envVars: { NO_PROXY: "localhost" },
       homePath: "/home/beep/.beep/providers/personal-max",
@@ -140,7 +140,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("applies schema defaults for envVars, homePath, and lastProbe at construction", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 8),
+      ...productEntityFixtureInput("AgentsProviderInstance", 8),
       binaryPath: "/usr/local/bin/codex",
       envVars: {},
       homePath: null,
@@ -159,7 +159,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("never stores token-bearing env-var names on a decoded instance", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 9),
+      ...productEntityFixtureInput("AgentsProviderInstance", 9),
       binaryPath: "/usr/local/bin/claude",
       envVars: { ANTHROPIC_AUTH_TOKEN: "sk-please-no" },
       homePath: null,

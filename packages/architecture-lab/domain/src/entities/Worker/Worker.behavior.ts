@@ -26,7 +26,8 @@ const publicIdFor = (id: WorkerId) => WorkerEntity.publicId.fromUnknown(`${Worke
  * **Example** (Create active Worker)
  *
  * ```ts
- * import { CreateWorkerInput, WorkerId, WorkerOrganizationId, create } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { CreateWorkerInput, WorkerOrganizationId, create } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import * as S from "effect/Schema"
  *
  * const worker = create(

@@ -24,7 +24,8 @@ const SyncConflictEntity = ProductEntity.make(SyncConflictId);
  * **Example** (Decode SyncConflict entity)
  *
  * ```ts
- * import { SyncConflict, SyncConflictId } from "@beep/documents-domain/entities/SyncConflict"
+ * import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict"
+ * import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId"
  * import * as S from "effect/Schema"
  *
  * const conflict = S.decodeUnknownSync(SyncConflict)({

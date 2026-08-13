@@ -12,7 +12,7 @@
       "path": "../domain/tsconfig.json"
     },
     {
-      "path": "../../drivers/drizzle/tsconfig.json"
+      "path": "../../ecosystem/effect-drizzle/tsconfig.json"
     },
     {
       "path": "../../shared/domain/tsconfig.json"

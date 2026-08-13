@@ -24,10 +24,10 @@ const WorkerEntity = ProductEntity.make(WorkerId);
  * import {
  *   CreateWorkerInput,
  *   Worker,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import * as S from "effect/Schema"
  *
  * const worker: Worker = create(

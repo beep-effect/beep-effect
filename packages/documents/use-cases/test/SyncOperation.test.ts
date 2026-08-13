@@ -13,7 +13,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -60,7 +60,7 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
   });
 
 const syncOperationRow = (seed: SyncOperationSeed, id: number) => ({
-  ...baseEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, id),
   attemptCount: seed.attemptCount,
   idempotencyKey: seed.idempotencyKey,
   inputContentDigest: O.getOrNull(seed.inputContentDigest),
