@@ -178,6 +178,10 @@ describe("@beep/law-practice-domain", () => {
     expect(S.is(OfficeCode)("AA")).toBe(false);
     expect(S.is(WipoSt13OfficeCode)("EP")).toBe(true);
     expect(S.is(WipoSt13OfficeCode)("US")).toBe(false);
+    expect(S.is(WipoSt13OfficeCode)("XX")).toBe(false);
+    expect(WipoSt13OfficeCode.is.EP("EP")).toBe(true);
+    expect("US" in WipoSt13OfficeCode.is).toBe(false);
+    expect("XX" in WipoSt13OfficeCode.is).toBe(false);
     expect(
       O.isSome(
         S.decodeUnknownOption(CitingApplicationIdentity)({

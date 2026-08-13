@@ -7,8 +7,3 @@
  */
 
 export * from "./PromotionGate.schema.ts";
-/**
- * @category services
- * @since 0.0.0
- */
-export * from "./PromotionGate.service.ts";

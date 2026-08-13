@@ -37,15 +37,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Closed. PR #575 merged as `5e4df6be4a`. The gate ships fail-closed with both rungs
-proven; the cross-slice consultation and its `foundation/capability` gate port are
-deferred with `research/01-gate-shape-check.md` as standing evidence, and the
-"widening the quantified gate set" align question stays parked. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
-`SPEC.md` decisions 10 and 11 kept rung 2 to the half that needs no cross-slice
-decision: durable ports, repository and layers, the slice's first db-admin
-migration with append-only guards, and the IDS fact records. The cross-slice
-consultation and its `foundation/capability` gate port are deferred with
-`research/01-gate-shape-check.md` as the standing evidence.
+Closed. PR #575 merged as `5e4df6be4a`; P0, P1, and the scoped P2 are complete.
+The successor packet terminally resolved both former align questions. Every
+current recorded event now enters the quantified set, and the only existing
+candidate-acceptance implementation consults a law-neutral, tenant-bound shared
+gate backed by a fail-closed candor adapter. The repository still has no
+production candidate-acceptance composition root, so the successor proves the
+contract and fixture acceptance boundary without claiming live product
+protection that does not exist.
 
 ## Latest Evidence
 
@@ -99,7 +98,7 @@ owner-directed scope widening — see the SPEC's "no unrelated refactors" criter
 | First db-admin migration + PGlite test + `AcceptedProofManifest` | `packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`, `test/integration/LawPracticeCandorGateMigration.pglite.test.ts`, four manifest entries |
 | Append-only guards proven, not just installed | The PGlite test asserts the exact constraint/trigger name sets, then that both an UPDATE and a DELETE against a recorded disposition are rejected |
 | IDS fact families as presence-only facts | `packages/law-practice/domain/src/entities/IdsSubmissionFact/` — candidate window (never a compliance label), 1.17(p)/(v) fees, 1.97(e) statement + 1.98(a)(4) assertion, 1.98 content presence, office treatment as observed, own operative date per act |
-| Live filing-promotion consultation | **Resolved by successor** — `../candor-gate-followups-closeout/` ships the law-neutral shared gate contract, the candidate-output acceptance consultation, and the fail-closed law adapter. |
+| Filing-promotion consultation | **Resolved by successor** — `../candor-gate-followups-closeout/` ships the tenant-bound shared gate contract, protects the repository's fixture candidate-acceptance boundary, and supplies a fail-closed law adapter. No production acceptance runtime exists to compose. |
 
 ## Follow-On Resolution (2026-08-13)
 
@@ -109,9 +108,9 @@ routed from this packet.
 
 | Former follow-on | Successor disposition |
 | --- | --- |
-| Cross-slice filing-promotion consultation | Implemented through `@beep/shared-use-cases/PromotionGate`, candidate-output acceptance, and the law-practice server adapter. |
+| Cross-slice filing-promotion consultation | Implemented at the only existing fixture candidate-acceptance boundary through tenant-bound `@beep/shared-use-cases/PromotionGate` and the law-practice server adapter; no nonexistent production composition root is claimed. |
 | Examiner-observed quantified set | Implemented; every current recorded event gates until it has a human disposition. |
-| ST.13 and USPTO-normalized identity | Primary authority disproved deterministic conversion; ST.13 requires a non-U.S. office and exact representations remain distinct. |
+| ST.13 and USPTO-normalized identity | Primary authority disproved deterministic conversion; ST.13 requires a known non-U.S. office, rejects `US`, `XX`, and absent/non-string office values, and exact representations remain distinct. The successor migration refuses unresolved legacy rows. |
 | Candor JSONB planner risk | Representative-volume PGlite proof uses the existing `org_id` index; no new physical index is justified. |
 | Shared test Crypto layer | Census found five distinct semantics and only two hazardous identical fakes; promotion is explicitly rejected. |
 
@@ -121,9 +120,9 @@ current citation targets for these dispositions.
 ## Notes
 
 - One packet, two strict rungs: rung 1 is the in-memory domain proof
-  (deliberately not shippable protection); rung 2 (durability + the slice's
-  first db-admin migration + live promotion-path invocation) is where risk
-  retirement lands.
+  (deliberately not shippable protection); rung 2 is durability plus the
+  slice's first db-admin migration. The successor later added the shared
+  contract and fixture acceptance invocation; no live product path exists.
 - Budget circuit-breaker: if rung 1 busts its week, drop
   `PatentFragmentLocator` entirely — never the observation-version binding or
   the fail-closed predicate.

@@ -122,9 +122,10 @@ export class DiscoveryModel extends S.Class<DiscoveryModel>($I`DiscoveryModel`)(
  *
  * **Details**
  *
- * This is the only member of {@link PatentCitationDiscovery} that the candor
- * gate quantifies over. Recording the model name and version keeps the finding
- * attributable to an exact build rather than to "the system".
+ * Recording the model name and version keeps the finding attributable to an
+ * exact build rather than to "the system". The candor gate now quantifies over
+ * every current recorded event, so examiner-observed events gate independently
+ * of this AI-specific provenance member.
  *
  * **Example** (Record an AI-discovered occurrence)
  *

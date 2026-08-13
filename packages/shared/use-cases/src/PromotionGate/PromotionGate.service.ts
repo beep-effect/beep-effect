@@ -9,7 +9,7 @@
 import { $SharedUseCasesId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type { Effect } from "effect";
-import type { PromotionGateVerdict, PromotionSubjectRef } from "./PromotionGate.schema.ts";
+import type { PromotionGateRequest, PromotionGateVerdict } from "./PromotionGate.schema.ts";
 
 const $I = $SharedUseCasesId.create("PromotionGate/PromotionGate.service");
 
@@ -26,7 +26,7 @@ const $I = $SharedUseCasesId.create("PromotionGate/PromotionGate.service");
  * @since 0.0.0
  */
 export interface PromotionGateShape {
-  readonly evaluate: (subject: PromotionSubjectRef) => Effect.Effect<PromotionGateVerdict>;
+  readonly evaluate: (request: PromotionGateRequest) => Effect.Effect<PromotionGateVerdict>;
 }
 
 /**
@@ -35,11 +35,20 @@ export interface PromotionGateShape {
  * **Example** (Provide an always-clear proof gate)
  *
  * ```ts
- * import { PromotionGate, PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
+ * import {
+ *   PromotionGateRequest,
+ *   PromotionGateVerdict,
+ *   PromotionSubjectRef,
+ *   PromotionTenantRef
+ * } from "@beep/shared-use-cases/PromotionGate"
+ * import { PromotionGate } from "@beep/shared-use-cases/server"
  * import { Effect } from "effect"
  *
  * const program = PromotionGate.pipe(
- *   Effect.flatMap((gate) => gate.evaluate({ id: "subject-1", kind: "example" })),
+ *   Effect.flatMap((gate) => gate.evaluate(PromotionGateRequest.make({
+ *     subject: PromotionSubjectRef.make({ id: "subject-1", kind: "example" }),
+ *     tenantRef: PromotionTenantRef.make("tenant-1")
+ *   }))),
  *   Effect.provideService(PromotionGate, PromotionGate.of({
  *     evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({}))
  *   }))

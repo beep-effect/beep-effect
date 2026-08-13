@@ -7,7 +7,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ApplicationNumber } from "../ApplicationNumber/index.ts";
 import { OfficeCode } from "../OfficeCode/index.ts";
@@ -77,15 +77,18 @@ export const UsptoNormalizedApplicationNumber = S.String.check(
  */
 export type UsptoNormalizedApplicationNumber = typeof UsptoNormalizedApplicationNumber.Type;
 
+const WipoSt13OfficeCodeBase = LiteralKit(OfficeCode.omitOptions(["US", "XX"]));
+
 /**
- * Non-U.S. ST.3 office code owning an observed ST.13 application number.
+ * Known non-U.S. ST.3 office code owning an observed ST.13 application number.
  *
  * **Details**
  *
  * The current WIPO office-practice table records that the United States uses
  * its eight-digit series-code/serial-number system with no ST.13 type or year
- * designation. A `US`-prefixed ST.13 identity would therefore be invented, so
- * this schema rejects it rather than trying to equate it with a USPTO number.
+ * designation. A `US`-prefixed ST.13 identity would therefore be invented.
+ * The ST.3 placeholder `XX` is also excluded because an unknown office cannot
+ * globally scope an otherwise office-local application number.
  *
  * **Example** (Accept an ST.13 office and reject the USPTO code)
  *
@@ -95,23 +98,18 @@ export type UsptoNormalizedApplicationNumber = typeof UsptoNormalizedApplication
  *
  * console.log(S.is(WipoSt13OfficeCode)("EP")) // true
  * console.log(S.is(WipoSt13OfficeCode)("US")) // false
+ * console.log(S.is(WipoSt13OfficeCode)("XX")) // false
  * ```
  *
  * @see {@link https://www.wipo.int/documents/d/standards/docs-en-07-02-06.pdf} for current U.S. application-number practice.
  * @category value-objects
  * @since 0.0.0
  */
-export const WipoSt13OfficeCode = OfficeCode.check(
-  S.makeFilter((officeCode) => officeCode !== OfficeCode.Enum.US, {
-    identifier: $I`WipoSt13OfficeCodeCheck`,
-    title: "Non-U.S. WIPO ST.13 office code",
-    description: "An ST.13 citing-application identity must name its non-U.S. issuing office.",
-    message: "USPTO application identities use the eight-digit series-code/serial-number representation, not ST.13.",
-  })
-).pipe(
+export const WipoSt13OfficeCode = WipoSt13OfficeCodeBase.pipe(
   $I.annoteSchema("WipoSt13OfficeCode", {
-    description: "Non-U.S. WIPO ST.3 office code recorded with an observed ST.13 citing application.",
-  })
+    description: "Known non-U.S. WIPO ST.3 office code recorded with an observed ST.13 citing application.",
+  }),
+  SchemaUtils.withLiteralKitStatics(WipoSt13OfficeCodeBase)
 );
 
 /**
@@ -209,9 +207,10 @@ export class WipoCitingApplication extends S.Class<WipoCitingApplication>($I`Wip
  *
  * There is no conversion between the two members. USPTO series codes span
  * multiple filing years, so the eight digits cannot supply ST.13's filing-year
- * field. The WIPO member therefore requires its ST.3 office code and rejects
- * `US`; callers query by the exact office-owned identity instead of inventing
- * cross-representation equality.
+ * field. The WIPO member therefore requires its known ST.3 office code and
+ * rejects `US` and the unknown-office placeholder `XX`; callers query by the
+ * exact office-owned identity instead of inventing cross-representation
+ * equality.
  *
  * This union is the only accepted citing-application identity. An
  * `OfficeAction.applicationNumber` free-text field and a `PatentAsset` fixture

@@ -102,3 +102,33 @@
 - **Disposition:** reran the frozen install without `--ignore-scripts`, which
   restored the declared executable; the standalone `infra` check and the
   subsequent aggregate check both pass. No infrastructure source was changed.
+
+## CGF-008 — Package-local guidance drifted from the binding architecture
+
+- **Doing:** closing the reviewer loop after promoting the first
+  `@beep/shared-use-cases` contract.
+- **Evidence:** the architecture standard and package promotion record described
+  the new active package, but `packages/shared/AGENTS.md` still said the package
+  did not exist. The reuse review also found a local kebab-case validator that
+  duplicated the exported `@beep/schema` `KebabCaseStr`.
+- **Would prevent it:** include scoped `AGENTS.md` temporal claims and live
+  source helper discovery in package-creation/promotion proof, not only the
+  binding architecture documents and generated workspace metadata.
+- **Disposition:** updated the package guide and derived the refusal-code schema
+  from `KebabCaseStr`; focused shared checks and the reviewer recheck pass.
+
+## CGF-009 — Persisted schema evolution lacked a legacy-row gate
+
+- **Doing:** reviewing the change from office-local ST.13 JSON to a globally
+  scoped identity requiring a known office code.
+- **Evidence:** the first implementation changed exact JSONB equality without a
+  deployment check for legacy `{ kind, applicationNumber }` rows, which could
+  have made existing evidence appear absent. Review also exposed PostgreSQL
+  `CHECK` three-valued logic for JSON `null` and the difference between a
+  two-uppercase-letter shape and the finite ST.3 domain.
+- **Would prevent it:** require every persisted schema change to state its
+  pre-existing-row strategy and run the actual new migration against a database
+  stopped at the immediately preceding migration.
+- **Disposition:** added an actual migration preflight, finite known-office
+  constraints on all three tables, desktop bundle sync, and pre-upgrade
+  missing/null/unknown-code regression tests. The focused migration suite passes.

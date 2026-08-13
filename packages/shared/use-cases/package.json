@@ -37,10 +37,6 @@
     "./public": "./src/public.ts",
     "./PromotionGate": "./src/PromotionGate/index.ts",
     "./server": "./src/server.ts",
-    "./aggregates/*": "./src/aggregates/*/index.ts",
-    "./aggregates/*/server": "./src/aggregates/*/server.ts",
-    "./entities/*": "./src/entities/*/index.ts",
-    "./entities/*/server": "./src/entities/*/server.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -60,10 +56,6 @@
       "./public": "./dist/public.js",
       "./PromotionGate": "./dist/PromotionGate/index.js",
       "./server": "./dist/server.js",
-      "./aggregates/*": "./dist/aggregates/*/index.js",
-      "./aggregates/*/server": "./dist/aggregates/*/server.js",
-      "./entities/*": "./dist/entities/*/index.js",
-      "./entities/*/server": "./dist/entities/*/server.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
