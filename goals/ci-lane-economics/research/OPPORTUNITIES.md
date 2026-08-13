@@ -89,3 +89,20 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** make the root install lifecycle explicitly run
   the generated SDK's postinstall; do not rely on Bun to execute lifecycle
   scripts for a trusted `file:` dependency nested under a workspace.
+
+## 2026-08-13 — a failed matrix job cannot be retried while its workflow is running
+
+- **Doing:** recovering the first P2 hosted admission wave after `Test
+  Integration` lost its GitHub-hosted runner.
+- **Evidence:** PR #684 attempt-one run `31723283969`, job `94525310886`,
+  received the runner shutdown signal after 10m25s; the verification step was
+  cancelled and four Turbo tasks exited 137. A targeted job-rerun API call then
+  returned `403: The workflow run containing this job is already running`, so
+  recovery had to wait for unrelated long-running matrix jobs to finish. The
+  accepted targeted retry, job `94533388363`, then reproduced the shutdown on a
+  different hosted runner after 11m21s total / 8m05s of Turbo work, firing the
+  packet's hosted-placement rollback.
+- **Would have prevented it:** give required lanes independently rerunnable
+  workflow boundaries, or add an external closeout retry policy that recognizes
+  the runner-shutdown signature and retries the failed job once the workflow is
+  terminal without laundering the failed attempt into duration percentiles.
