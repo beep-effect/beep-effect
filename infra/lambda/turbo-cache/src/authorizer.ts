@@ -25,10 +25,13 @@ const nonArtifactPaths = new Set(["/v8/artifacts/clean", "/v8/artifacts/events",
 const isArtifactPath = (rawPath: string): boolean =>
   artifactPathPattern.test(rawPath) && !nonArtifactPaths.has(rawPath);
 
+// The pinned turborepo-remote-cache@2.12.0 shim does not implement the
+// Vercel artifact-query endpoint (POST /v8/artifacts), so the matrix does not
+// authorize it and the HTTP API exposes no such route: clients get a plain
+// 404 instead of allow-then-404.
 const isReadRequest = (method: string, rawPath: string): boolean => {
   if (method === "GET" && rawPath === "/v8/artifacts/status") return true;
   if ((method === "GET" || method === "HEAD") && isArtifactPath(rawPath)) return true;
-  if (method === "POST" && rawPath === "/v8/artifacts") return true;
   return method === "POST" && rawPath === "/v8/artifacts/events";
 };
 
@@ -50,6 +53,21 @@ const bearerToken = (headers: HttpApiEvent["headers"]): string | undefined => {
   return token.length === 0 ? undefined : token;
 };
 
+/**
+ * Build the token-and-method REQUEST authorizer for the Turbo cache HTTP API.
+ *
+ * **Details**
+ *
+ * Applies the signed P3 matrix: either token may read; only the trusted token
+ * may `PUT` an artifact, and an allowed write mints the `writerSignature`
+ * HMAC the writer wrapper demands. Every failure path — missing/unknown
+ * token, SSM resolution error, identical-token degeneracy — denies.
+ *
+ * @param dependencies - Secret loader injection point for tests.
+ * @returns An API Gateway simple-response authorizer handler.
+ * @category constructors
+ * @since 0.0.0
+ */
 export const createAuthorizerHandler =
   ({ loadSecrets }: AuthorizerDependencies) =>
   async (event: HttpApiEvent): Promise<AuthorizerResponse> => {
@@ -74,4 +92,10 @@ export const createAuthorizerHandler =
     }
   };
 
+/**
+ * Deployed authorizer entrypoint wired to the live SSM secrets loader.
+ *
+ * @category handlers
+ * @since 0.0.0
+ */
 export const handler = createAuthorizerHandler({ loadSecrets: loadAuthorizerSecrets });

@@ -51,15 +51,14 @@ The installed `2.12.0` package's export map points `./aws-lambda` to
 
 No component environment-variable mismatch was found.
 
-There is one route-contract mismatch in the pinned shim: version `2.12.0` does
-not register `POST /v8/artifacts`. The signed matrix and current Pulumi
-component authorize and route that request, but the upstream handler will
-return 404. This package intentionally does not hide the mismatch with a local
-protocol adaptation: the requested read entry remains a direct re-export of
-the upstream Lambda handler. Before deployment, the component must remove that
-route if Turbo does not require it, or the component must point at a shim or
-separately approved adapter that implements it. The authorizer continues to
-allow the matrix row exactly as signed.
+Route-contract note: pinned shim `2.12.0` does not register
+`POST /v8/artifacts` (the Vercel artifact-query endpoint). The Pulumi
+component therefore exposes no such route and the authorizer matrix denies
+the path, so clients receive a plain API Gateway 404 instead of
+allow-then-404. Turbo's cache read/write cycle (`status`, `GET`/`HEAD`
+artifact, `events`, `PUT` artifact) never requires the query endpoint. If a
+future shim version implements it, re-add the route, the matrix row, and the
+matching tests together.
 
 ## Rebuild
 

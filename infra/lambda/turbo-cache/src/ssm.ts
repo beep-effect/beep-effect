@@ -1,6 +1,12 @@
 import { GetParameterCommand, GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import type { GetParameterCommandOutput, GetParametersCommandOutput } from "@aws-sdk/client-ssm";
 
+/**
+ * Warm-invocation cache lifetime for SSM-resolved secrets.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export const SECRET_CACHE_TTL_MS = 5 * 60 * 1_000;
 
 type Clock = () => number;
@@ -18,18 +24,36 @@ type GetParameterClient = {
   readonly send: (command: GetParameterCommand) => Promise<GetParameterCommandOutput>;
 };
 
+/**
+ * The three SecureString values the authorizer resolves per cold start.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AuthorizerSecrets = {
   readonly readOnlyToken: string;
   readonly trustedWriteToken: string;
   readonly writerSharedSecret: string;
 };
 
+/**
+ * Environment contract naming the authorizer's SSM parameter ARNs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AuthorizerSecretEnvironment = {
   readonly READ_ONLY_TOKEN_SSM_PARAMETER_ARN?: string;
   readonly TRUSTED_WRITE_TOKEN_SSM_PARAMETER_ARN?: string;
   readonly WRITER_SHARED_SECRET_SSM_PARAMETER_ARN?: string;
 };
 
+/**
+ * Environment contract naming the writer's HMAC-secret parameter ARN.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type WriterSecretEnvironment = {
   readonly WRITER_SHARED_SECRET_SSM_PARAMETER_ARN?: string;
 };
@@ -51,6 +75,19 @@ const nonEmptyParameterValue = (output: GetParametersCommandOutput, name: string
   return value;
 };
 
+/**
+ * Build the TTL-cached batch loader for the authorizer's three secrets.
+ *
+ * **Gotchas**
+ *
+ * `GetParameters` echoes plain parameter paths in `Name` even when queried by
+ * ARN — resolution matches on `Name` or `ARN` (the live-probe regression this
+ * package's tests now pin). Failed loads evict the cache so errors are not
+ * memoized.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const createAuthorizerSecretsLoader = (
   client: GetParametersClient,
   environment: AuthorizerSecretEnvironment,
@@ -101,6 +138,12 @@ export const createAuthorizerSecretsLoader = (
   };
 };
 
+/**
+ * Build the TTL-cached loader for the writer's shared HMAC secret.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const createWriterSecretLoader = (
   client: GetParameterClient,
   environment: WriterSecretEnvironment,
@@ -138,6 +181,12 @@ export const createWriterSecretLoader = (
 
 const ssmClient = new SSMClient({});
 
+/**
+ * Live authorizer secrets loader bound to the Lambda environment.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const loadAuthorizerSecrets = createAuthorizerSecretsLoader(
   { send: (command) => ssmClient.send(command) },
   {
@@ -147,6 +196,12 @@ export const loadAuthorizerSecrets = createAuthorizerSecretsLoader(
   }
 );
 
+/**
+ * Live writer HMAC-secret loader bound to the Lambda environment.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const loadWriterSecret = createWriterSecretLoader(
   { send: (command) => ssmClient.send(command) },
   {

@@ -41,7 +41,9 @@ const matrix = [
   ["GET", "/v8/artifacts/status", true, true],
   ["GET", "/v8/artifacts/abc123", true, true],
   ["HEAD", "/v8/artifacts/abc123", true, true],
-  ["POST", "/v8/artifacts", true, true],
+  // The pinned shim serves no artifact-query endpoint, so the matrix denies
+  // it and the HTTP API exposes no such route.
+  ["POST", "/v8/artifacts", false, false],
   ["POST", "/v8/artifacts/events", true, true],
   ["PUT", "/v8/artifacts/abc123", false, true],
   ["POST", "/v8/artifacts/clean", false, false],

@@ -520,6 +520,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "index.handler",
         memorySize: 512,
         name: `${name}-read`,
+        reservedConcurrentExecutions: 20,
         role: readRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -541,6 +542,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "writer.handler",
         memorySize: 512,
         name: `${name}-write`,
+        reservedConcurrentExecutions: 10,
         role: writeRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -562,6 +564,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         handler: "authorizer.handler",
         memorySize: 128,
         name: `${name}-authorizer`,
+        reservedConcurrentExecutions: 20,
         role: authorizerRole.arn,
         runtime: "nodejs22.x",
         tags: defaultTags,
@@ -629,16 +632,29 @@ export class CiTurboCache extends pulumi.ComponentResource {
         { parent: this }
       );
 
+    // No POST /v8/artifacts route: the pinned shim does not implement the
+    // artifact-query endpoint, so exposing it would authorize requests the
+    // backend can only 404. Clients get a plain API Gateway 404 instead.
     route("status", "GET /v8/artifacts/status", readIntegration);
     route("get-artifact", "GET /v8/artifacts/{hash}", readIntegration);
     route("head-artifact", "HEAD /v8/artifacts/{hash}", readIntegration);
-    route("query-artifact", "POST /v8/artifacts", readIntegration);
     route("events", "POST /v8/artifacts/events", readIntegration);
     route("put-artifact", "PUT /v8/artifacts/{hash}", writeIntegration);
 
     new aws.apigatewayv2.Stage(
       `${name}-default-stage`,
-      { apiId: api.id, autoDeploy: true, name: "$default" },
+      {
+        apiId: api.id,
+        autoDeploy: true,
+        // Bounded abuse ceiling: the read token is public-equivalent by
+        // design, so a leaked token must not translate into unbounded
+        // API Gateway/Lambda/S3 spend. CI waves stay far below these rates.
+        defaultRouteSettings: {
+          throttlingBurstLimit: 200,
+          throttlingRateLimit: 100,
+        },
+        name: "$default",
+      },
       { parent: this }
     );
     new aws.lambda.Permission(

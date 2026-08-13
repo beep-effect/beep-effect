@@ -165,6 +165,12 @@ Lambda, API Gateway, S3, IAM, and Lambda permissions cannot silently diverge.
 | `POST /v8/artifacts/clean` | no route | no route | none | none |
 | Any other method or path | no route | no route | none | none |
 
+Amendment (2026-08-13, activation review): pinned shim `2.12.0` implements no
+`POST /v8/artifacts` endpoint, so the deployed component exposes no such route
+and the authorizer denies the path — a plain 404 instead of allow-then-404.
+The row above records the original design; re-adding the route requires a shim
+that serves it plus matching matrix tests.
+
 The HTTP API invokes its request authorizer before a route integration. The
 authorizer interprets the bearer token and route method; API Gateway routes an
 allowed read directly to the read-only shim with `AUTH_MODE=none` and an allowed
