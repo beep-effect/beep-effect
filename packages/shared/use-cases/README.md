@@ -25,8 +25,8 @@ Contract-only use-cases package for the `shared` slice.
 - **Runtime limits:** contract and service tag only; no workflow, live Layer,
   driver, or vertical vocabulary.
 - **Coupling acceptors:** repository owner `@kriegcloud` owns both consuming
-  slices under `.github/CODEOWNERS`; operator acceptance is recorded by the
-  request to complete this successor. The published PR URL is added before
-  merge readiness.
+  slices under `.github/CODEOWNERS` and accepted their coupling by requesting
+  completion of this successor; review sign-off is recorded in
+  [PR #699](https://github.com/beep-effect/beep-effect/pull/699).
 - **Removal trigger:** retire when candidate promotion is replaced by a shared
   command/event contract that no longer needs synchronous refusal.
