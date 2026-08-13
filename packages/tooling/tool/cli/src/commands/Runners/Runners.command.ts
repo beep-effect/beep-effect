@@ -6,8 +6,7 @@
  */
 
 import { A } from "@beep/utils";
-import { Console, Effect, Match, pipe } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Console, Effect, Match, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";

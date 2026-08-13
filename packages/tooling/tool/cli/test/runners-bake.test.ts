@@ -27,12 +27,12 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const RunnersPlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 const encoder = new TextEncoder();
 
 const stubHandle = (output: string, exitCode = 0) =>
@@ -128,7 +128,7 @@ const argumentAfter = (argv: ReadonlyArray<string>, flag: string): O.Option<stri
 const makeBakeSpawner = (
   commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
   consoleOutput: string
-): ChildProcessSpawner.ChildProcessSpawner =>
+): ChildProcessSpawner.ChildProcessSpawner["Service"] =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("runner bake never spawns a piped command");
@@ -203,6 +203,14 @@ describe("runner bake schemas", () => {
       expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(original);
     })
   );
+
+  it("round-trips arbitrary reports through the JSON codec", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(BakeReport)(fc), (original) => {
+        const encoded = Effect.runSync(BakeReportJson.encode(original));
+        expect(Effect.runSync(BakeReportJson.decode(encoded))).toStrictEqual(original);
+      })
+    ));
 });
 
 describe("runner bake report writer", () => {
@@ -350,17 +358,23 @@ describe("runner bake planning and argv", () => {
           )
         );
       });
+      const testLayer = RunnersServiceLive.pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+            NodeFileSystem.layer,
+            NodePath.layer,
+            NodeCrypto.layer
+          )
+        )
+      );
       const { check, currentPlan } = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
         const currentPlan = yield* service.plan;
         yield* Ref.set(localPlan, O.some(currentPlan));
         const check = yield* service.check("us-west-2");
         return { check, currentPlan };
-      }).pipe(
-        Effect.provide(RunnersServiceLive),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-        provideScopedLayer(RunnersPlatformLayer)
-      );
+      }).pipe(provideScopedLayer(testLayer));
 
       expect(currentPlan.requiredFlags).toStrictEqual([
         "--region",
@@ -392,15 +406,21 @@ describe("runner bake planning and argv", () => {
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
         const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("BEEP_RUNNERS_BAKE_COMPLETE\n");
         const spawner = makeBakeSpawner(commands, consoleOutput);
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
         const reportPath = path.join(tmpDir, "bake-report.json");
         const baked = yield* Effect.gen(function* () {
           const service = yield* RunnersService;
           return yield* service.bake(bakeConfig(), O.some(reportPath));
-        }).pipe(
-          Effect.provide(RunnersServiceLive),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-          provideScopedLayer(RunnersPlatformLayer)
-        );
+        }).pipe(provideScopedLayer(testLayer));
         const captured = yield* Ref.get(commands);
         const runInstances = yield* A.findFirst(captured, A.contains("run-instances")).pipe(
           O.match({ onNone: () => Effect.die("missing run-instances"), onSome: Effect.succeed })
@@ -410,9 +430,12 @@ describe("runner bake planning and argv", () => {
         );
 
         expect(baked.amiId).toBe("ami-baked");
-        expect(argumentAfter(runInstances, "--tag-specifications")).toSatisfy(
-          O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
-        );
+        expect(
+          pipe(
+            argumentAfter(runInstances, "--tag-specifications"),
+            O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
+          )
+        ).toBe(true);
         expect(argumentAfter(runInstances, "--block-device-mappings")).toStrictEqual(
           O.some(
             '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
@@ -421,9 +444,12 @@ describe("runner bake planning and argv", () => {
         expect(argumentAfter(createImage, "--name")).toStrictEqual(
           O.some(`beep-ci-runners-${Str.slice(0, 12)(baked.lockfileSha256)}-1786640400000`)
         );
-        expect(argumentAfter(createImage, "--tag-specifications")).toSatisfy(
-          O.exists(Str.includes('{"Key":"beep-ci","Value":"runner"}'))
-        );
+        expect(
+          pipe(
+            argumentAfter(createImage, "--tag-specifications"),
+            O.exists(Str.includes('{"Key":"beep-ci","Value":"runner"}'))
+          )
+        ).toBe(true);
         expect(A.some(captured, A.contains("describe-instances"))).toBe(true);
         expect(A.some(captured, A.contains("describe-images"))).toBe(true);
         expect(A.some(captured, A.contains("wait"))).toBe(false);
@@ -438,14 +464,20 @@ describe("runner bake planning and argv", () => {
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
         const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("bake failed\n");
         const spawner = makeBakeSpawner(commands, consoleOutput);
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
         const error = yield* Effect.gen(function* () {
           const service = yield* RunnersService;
           return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
-        }).pipe(
-          Effect.provide(RunnersServiceLive),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-          provideScopedLayer(RunnersPlatformLayer)
-        );
+        }).pipe(provideScopedLayer(testLayer));
 
         expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
         expect(A.some(yield* Ref.get(commands), A.contains("terminate-instances"))).toBe(true);
@@ -463,14 +495,20 @@ describe("runner bake planning and argv", () => {
         const argv = [command.command, ...command.args];
         return Ref.update(commands, A.append(argv)).pipe(Effect.as(stubHandle(" M bun.lock")));
       });
+      const testLayer = RunnersServiceLive.pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+            NodeFileSystem.layer,
+            NodePath.layer,
+            NodeCrypto.layer
+          )
+        )
+      );
       const error = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
         return yield* Effect.flip(service.plan);
-      }).pipe(
-        Effect.provide(RunnersServiceLive),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-        provideScopedLayer(RunnersPlatformLayer)
-      );
+      }).pipe(provideScopedLayer(testLayer));
 
       expect(error.message).toBe("Refusing to bake while bun.lock or .bun-version has uncommitted changes.");
       expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
