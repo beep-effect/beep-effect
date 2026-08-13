@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `align`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,22 +17,13 @@ building on its graduated findings without re-litigating them.
 
 ## Next Open Question
 
-The third wedge,
-[`explorations/patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
-(opened 2026-08-06; packet-open PR #612 merged 2026-08-07), has COMPLETED
-its research stage: both locked lanes, the `RESEARCH.md` synthesis, review
-gate 1, and the Lane B catalog corrections back-filled into this packet's
-`research/00-catalog.json`/`SOURCES.md` (landed 2026-08-08 as a
-research-only PR under Benjamin's wrap-up directive — align outcomes follow
-in the next PR). It sits at stage `research` with six align branches in its
-`openQuestions`. Its next step is the align session — which is Benjamin's;
-BRIEF stays gated behind align.
-
-Behind it: **the FunctionalUnit extension into `uspto-patent-driver-depth`
-stays queued on Benjamin's call** — an approved routing-matrix slug needing
-only his go-ahead, not new routing approval. Goal execution on the two
-graduated packets (candor already implemented via PR #575; relator execution
-not started) is likewise his call.
+The hub is closed `graduated`. The candor and relator wedges completed, and
+[`patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+closed its six-question align gate on 2026-08-13. The approved
+`uspto-patent-driver-depth` deep wedge remains QUEUED as a re-entry point; when
+its accumulating trigger fires, reopen this hub at `decompose`. ELI temporal /
+FRBR donor work is routed through the Lynx packet to future
+`goals/legal-rule-time-identity`, which opens only on operator call.
 
 ## Read This First
 
@@ -45,6 +36,16 @@ not started) is likewise his call.
 7. [`BRIEF.md`](./BRIEF.md) / [`MAP.md`](./MAP.md) - template placeholders; shaping is gated on sign-off.
 
 ## Trail
+
+- 2026-08-13: hub closed `graduated`. Both completed goals remain linked:
+  [`patent-citation-candor-gate`](../../goals/patent-citation-candor-gate/README.md)
+  and [`legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md),
+  whose P1/P2 evidence logs and reflection confirm execution and closeout.
+  [`patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+  closed all six align questions. Lynx routes the ELI temporal/FRBR donor
+  profile to future `legal-rule-time-identity`. The queued
+  `uspto-patent-driver-depth` wedge accumulates the episode-ledger Q5 public
+  USPTO benchmark path; a fired trigger reopens this hub at `decompose`.
 
 - 2026-08-01: packet opened from a grill-with-docs interview; corpus at
   `~/YeeBois/research/legal-patent-ontology-knowledge-graph-and-related-research/`

@@ -3,16 +3,19 @@
   "exploration": {
     "slug": "legal-patent-kg-deepening",
     "title": "Legal & Patent KG Deepening",
-    "status": "active",
+    "status": "graduated",
     "stage": "align",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/patent-citation-candor-gate",
+        "goals/legal-position-relator-runtime"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-01",
-    "updated": "2026-08-06"
+    "updated": "2026-08-13"
   }
 }
