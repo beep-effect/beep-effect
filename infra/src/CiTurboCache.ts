@@ -1,14 +1,15 @@
 /**
- * Pulumi component skeleton for the asymmetric beep CI Turbo remote cache.
+ * Pulumi component for the asymmetric beep CI Turbo remote cache.
  *
  * **Details**
  *
  * A Lambda authorizer applies the token-and-method matrix before the HTTP API
  * sends reads to a read-only shim process and artifact uploads to a separately
  * permissioned writer. Token values remain in SSM SecureString parameters.
- * This module is intentionally import-safe and is not instantiated by a stack
- * entrypoint. Deployment remains blocked on the Lambda payload-size decision
- * recorded in the P3 cache design.
+ * The `ci-runners` stack entrypoint instantiates this component. The P3
+ * payload-size gate passed before deployment: the only artifacts above the
+ * Lambda proxy ceiling are uncacheable app builds, which API Gateway rejects
+ * and Turbo tolerates as non-fatal upload warnings.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -129,6 +130,33 @@ export const CiTurboCachePulumiConfigValues = S.Class<CiTurboCachePulumiConfigVa
  */
 export type CiTurboCachePulumiConfigValues = typeof CiTurboCachePulumiConfigValues.Type;
 
+/**
+ * Load the Turbo cache configuration from the `ciTurboCache` Pulumi namespace.
+ *
+ * **Example** (Reference the loader)
+ *
+ * ```ts
+ * import { loadCiTurboCacheConfig } from "@beep/infra"
+ *
+ * console.log(loadCiTurboCacheConfig)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const loadCiTurboCacheConfig = (): CiTurboCachePulumiConfigValues => {
+  const config = new pulumi.Config("ciTurboCache");
+
+  return CiTurboCachePulumiConfigValues.make({
+    bucketName: config.require("bucketName"),
+    lambdaZipPath: config.require("lambdaZipPath"),
+    readOnlyTokenSsmParameterArn: config.require("readOnlyTokenSsmParameterArn"),
+    tokenKmsKeyArn: config.require("tokenKmsKeyArn"),
+    trustedWriteTokenSsmParameterArn: config.require("trustedWriteTokenSsmParameterArn"),
+    writerSharedSecretSsmParameterArn: config.require("writerSharedSecretSsmParameterArn"),
+  });
+};
+
 type CiTurboCacheArgs = {
   readonly config: CiTurboCachePulumiConfigValues;
 };
@@ -153,8 +181,7 @@ const lambdaAssumeRolePolicy = () =>
   });
 
 /**
- * Non-deployed component skeleton for a trusted-write and PR-read-only Turbo
- * remote cache.
+ * Trusted-write, PR-read-only asymmetric Turbo remote cache.
  *
  * **Details**
  *

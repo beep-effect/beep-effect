@@ -13,3 +13,10 @@ config:
   ciFleetController:terminationWatcherLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/termination-watcher.zip
   ciFleetController:webhookLambdaZip: /home/elpresidank/beep-infra-artifacts/gha-runner/v7.10.1/webhook.zip
   ciFleetController:runnerLabel: beep-ec2-heavy
+  ciTurboCache:bucketName: beep-turbo-cache-832907639880
+  # Version dir tracks the pinned turborepo-remote-cache release inside the zip.
+  ciTurboCache:lambdaZipPath: /home/elpresidank/beep-infra-artifacts/turbo-cache/2.12.0/turbo-cache.zip
+  ciTurboCache:readOnlyTokenSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/beep-ci/cache/read-only-token
+  ciTurboCache:tokenKmsKeyArn: arn:aws:kms:us-east-1:832907639880:key/79ab38d9-2a9d-426b-b704-beb6fc5c971d
+  ciTurboCache:trustedWriteTokenSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/beep-ci/cache/trusted-write-token
+  ciTurboCache:writerSharedSecretSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/beep-ci/cache/writer-hmac-secret

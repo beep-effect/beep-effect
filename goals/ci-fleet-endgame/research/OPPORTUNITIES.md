@@ -419,3 +419,22 @@
   flat `tsconfig.check.json` (source mode) and skip declaration consumption
   entirely; the deeper fix (declaration emit that preserves type identity)
   is upstream work.
+
+## Mock-fidelity gap: SSM GetParameters echoes plain names for ARN queries
+
+- **Work:** P3 cache activation — first live probe wave against the deployed
+  authorizer (2026-08-12).
+- **What happened:** every valid-token request returned 403. The authorizer's
+  loader matched response entries with `parameter.Name === <queried ARN>`, but
+  the real `GetParameters` service echoes the plain parameter path in `Name`
+  even when queried by full ARN (the ARN arrives in the separate `ARN` field),
+  so every lookup missed and the fail-closed catch denied everything. All 31
+  unit tests passed because the mock mirrored the request shape instead of the
+  service response shape. The fail-closed design turned a lookup bug into a
+  clean deny — correct security posture, invisible cause: no log line
+  distinguishes "bad token" from "loader crashed".
+- **What would have prevented it:** a contract test against real service
+  response fixtures (captured `aws ssm get-parameters --names <arn>` output)
+  rather than hand-written mocks; and a structured log on the fail-closed
+  path (cause class only, never secret material) so live denials attribute
+  in one CloudWatch read instead of a source audit.
