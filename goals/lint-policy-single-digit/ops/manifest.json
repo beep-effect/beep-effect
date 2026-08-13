@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lint-policy-single-digit",
+    "title": "Lint Policy Single Digit",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lint-policy-single-digit",
+  "lifecycle": "active",
+  "mission": "Drive the hosted Lint Policy required check from ~20 min to single-digit minutes with the full-scope proof intact: parallel deprecated-apis shards + LPT ordering now, oxlint-tsgolint engine swap behind hard parity/timing gates, PR changed-scope explicitly deferred.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lint-policy-single-digit/README.md",
+    "goals/lint-policy-single-digit/SPEC.md",
+    "goals/lint-policy-single-digit/PLAN.md",
+    "goals/lint-policy-single-digit/GOAL.md",
+    "goals/lint-policy-single-digit/research/SOURCES.md",
+    "goals/one-round-loop/history/p0-parity-evidence.md",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+    "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/00-evidence-brief.md",
+    "research/01-engine-swap.md",
+    "research/02-inplace-optimization.md",
+    "research/03-lane-orchestration.md",
+    "research/04-pr-scoping-deferred.md",
+    "research/05-long-tail.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lint-policy-single-digit/GOAL.md"
+    }
+  ],
+  "baseline": {
+    "measuredOn": "2026-08-13",
+    "run": "31683014887",
+    "job": "94392586624",
+    "pr": 673,
+    "jobWallSeconds": 1195,
+    "setupSeconds": 66,
+    "lintPolicyCommandMs": 1124084,
+    "deprecatedApisMs": 975199,
+    "docgenMs": 197298,
+    "semanticDeltaMs": 78127,
+    "schemaFirstMs": 51162,
+    "stepCount": 25,
+    "stepConcurrency": 2,
+    "scope": "full",
+    "runner": "beep-ec2-heavy (r7a/r7i/r6i.2xlarge 8vCPU/64GiB or m7a.4xlarge 16vCPU/64GiB)",
+    "measurementMethod": "gh run job log [beep-cli] step timing lines; per-step table reproduced in research/00-evidence-brief.md"
+  },
+  "keyDecisions": [
+    {
+      "id": "target-full-scope-single-digit",
+      "decision": "The target is the FULL-SCOPE Lint Policy run under 10 minutes on every event (PR, escalation, main push, rerun). PR changed-scope is not required to meet it.",
+      "rationale": "Predictable gate: no PR-vs-push semantic split, no trigger-maintenance burden, and the proven one-round-loop local/hosted parity property stays closed. Locked in the 2026-08-13 grill session."
+    },
+    {
+      "id": "pr-changed-scope-deferred",
+      "decision": "PR changed-scope (research/04) is DEFERRED, not adopted. Revisit only if post-cutover timings still hurt; adoption then requires a durable gate-semantics record.",
+      "rationale": "It changes what a green PR proves. With the full-scope run at ~4 min after cutover, the ~2 min saved does not pay for the semantic risk and trigger maintenance. The empty-include fix (emit no step when the filtered changed set is empty) ships anyway because a step over zero files proves nothing."
+    },
+    {
+      "id": "engine-swap-behind-hard-gates",
+      "decision": "lint:deprecated-apis moves to one repo-wide `oxlint --type-aware` invocation (typescript/no-deprecated via oxlint-tsgolint) ONLY after three gates pass: (1) cold full scan <= 150s on the heavy runner, (2) parity corpus green including every allowDefaultProject script/fixture, (3) a shadow week comparing both engines on main pushes. ESLint stays the gate until then; gate failure means shards remain the endgame.",
+      "rationale": "tsgolint bundles upstream TS-go, not the repo's Effect tsgo fork; Effect-heavy inference drift and silent non-coverage of default-project files are the two failure modes that must be disproven with evidence, not assumed away."
+    },
+    {
+      "id": "outer-concurrency-2-until-cutover",
+      "decision": "Phase-1 keeps LINT_POLICY_STEP_CONCURRENCY at 2 and adds LPT (longest-first) step ordering; inner deprecated-apis shard concurrency is 4. Outer concurrency rises to 4 only in the cutover PR, when deprecated-apis is a single bounded process.",
+      "rationale": "Local probes measured schema-first ~14GiB and terse-effect ~10GiB peak RSS; outer 4 x heavy steps plus 4 inner ESLint processes risks recreating the exit-137 OOM flake class on the 64GiB runner. A flaky required check costs more than the last ~90s."
+    },
+    {
+      "id": "docgen-ownership-move-backlogged",
+      "decision": "Folding the lint:docgen analyzer (@category normalization, re-exports, file overviews) into the required Docgen lane and deleting the 197s step is BACKLOG, not scheduled. It is the designated next lever if the lane creeps toward 10 minutes.",
+      "rationale": "Only lever colliding with the in-flight CI-infra work (it touches check.yml and the Docgen lane), and the target is met without its ~1 minute. The two checkers are NOT proven identical; parity fixtures are prerequisite work recorded in research/05."
+    },
+    {
+      "id": "shadow-via-temp-standalone-workflow",
+      "decision": "The engine-swap shadow comparison runs in a temporary standalone workflow (schedule/workflow_dispatch on main), never as a step in check.yml. Deleted after cutover.",
+      "rationale": "Matches the ci-lane-shadow.yml precedent from goals/one-round-loop and avoids touching the CI surface currently under active work elsewhere."
+    },
+    {
+      "id": "parity-invariant-binding",
+      "decision": "Every change keeps the lane body in the beep CLI so hosted `bun run beep ci lane lint-policy` and local replay stay command-identical (one-round-loop P0 inversion).",
+      "rationale": "goals/one-round-loop/history/p0-parity-evidence.md proved same-SHA local/hosted parity; re-opening it is a regression, not a tradeoff."
+    },
+    {
+      "id": "no-architecture-decisions-entry",
+      "decision": "No standards/architecture/DECISIONS.md entry; decisions are recorded here.",
+      "rationale": "Reversible tooling/quality-gate work, not architecture-wide doctrine."
+    }
+  ],
+  "killedIdeas": [
+    "Pointing typescript-eslint projectService at tsconfig.check.json (projectService only honors the nearest literal tsconfig.json; research/01).",
+    "Persisting the ESLint cache across CI runs for no-deprecated (per-file cache validity never sees cross-package type changes; the only sound key is an exact type-universe hash that misses on every real TS PR; research/02).",
+    "One full-repo ESLint invocation (commit 4cd02e6962 split packages/epistemic to bound memory; a 10-file two-root probe already reached 4.07GiB RSS; research/02).",
+    "tsgo as deprecation scanner (no deprecation/suggestion CLI surface; research/01).",
+    "Biome noDeprecatedImports as replacement (imports only, not member/call/type uses; research/01).",
+    "Lowering maximumDefaultProjectFileMatchCount (a failure threshold, not a work bound; saves ~0s; research/02)."
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Baseline & Packet Bootstrap",
+      "status": "complete",
+      "exit": "Hosted per-step timing profile captured (baseline block); five exploration reports and the locked grill decisions recorded under research/."
+    },
+    {
+      "id": "P1",
+      "name": "Phase-1 CLI speedup PR",
+      "status": "pending",
+      "exit": "Deprecated-apis shards run 4-wide with per-shard cache files and --cache-strategy content; lint-policy steps launch longest-first; scoped steps are omitted (not emitted with --include \"\") when their filtered changed set is empty; outer concurrency unchanged at 2; focused tests cover shard command construction and the empty-set plan; PR yeeted to mergeable; hosted Lint Policy job wall <= 9 min observed on the PR."
+    },
+    {
+      "id": "P2",
+      "name": "Spike: oxlint-tsgolint behind gates",
+      "status": "pending",
+      "exit": "On a branch: oxlint-tsgolint installed, dedicated .oxlintrc profile, parity corpus (aliases/overloads/JSX/computed members/allowDefaultProject canaries) built and green or failures catalogued; cold full-scan wall + RSS measured on the heavy runner; temp standalone shadow workflow comparing normalized findings on main for one week. Go/no-go verdict recorded in history/."
+    },
+    {
+      "id": "P3",
+      "name": "Cutover PR (conditional on P2 gates)",
+      "status": "pending",
+      "exit": "Only if all three P2 gates pass: deprecated-apis becomes one oxlint --type-aware invocation, shard runner and ESLint deprecated profile removed, outer step concurrency raised to 4, shadow workflow deleted, dependency lands here; hosted lane <= 5 min observed. If any gate fails: record the verdict, keep shards as endgame, flip this phase to superseded."
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending",
+      "exit": "Packet lifecycle flipped and closeout reflection landed in the same PR as the final work; backlog items (docgen ownership move, PR changed-scope revisit) explicitly recorded as open levers."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lint-policy-single-digit/GOAL.md)\" -le 4000",
+    "jq . goals/lint-policy-single-digit/ops/manifest.json",
+    "bun run beep lint policy --full",
+    "bun run beep yeet verify",
+    "gh run view <run-id> --json jobs (hosted Lint Policy wall-time evidence per phase exit)"
+  ],
+  "stopConditions": [
+    "Hosted lane shows OOM/exit-137 or RSS regression after phase-1 lands: revert inner concurrency to sequential before any other tuning.",
+    "Any P2 gate fails: do NOT cut over; record the verdict and keep the shard architecture as the endgame.",
+    "Any change would touch .github/workflows/check.yml other than the temporary standalone shadow workflow file: stop and coordinate with the in-flight CI work first.",
+    "Any change would make hosted and local `beep ci lane lint-policy` run different commands: stop; the parity invariant binds.",
+    "Preserve unrelated user/worktree changes; never stage or commit files outside this packet and the named target surfaces."
+  ]
+}

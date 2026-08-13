@@ -392,7 +392,9 @@ const turboArgsForSelectedPackages = (
   // No background daemon: a daemon spawned inside this child survives it and
   // holds process handles, which repeatedly kept the hosted Docgen lane's bun
   // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
-  "--daemon=false",
+  // turbo 2.10.9 rejects `--daemon=false` ("unexpected value 'false'"); the
+  // boolean pair is `--daemon` / `--no-daemon`.
+  "--no-daemon",
 ];
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {

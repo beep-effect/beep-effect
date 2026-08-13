@@ -877,7 +877,7 @@ export const _pgParameterizedCheck = () => {
   class ParameterizedCheck extends Model<ParameterizedCheck>("ParameterizedCheck")({ value: WaveEString }, () => [
     Table.check("parameterized_check")(sql<boolean>`${1} > 0`),
   ]) {}
-  return getPgTableConfig(toPgTable(ParameterizedCheck));
+  return ParameterizedCheck.pipe(toPgTable, getPgTableConfig);
 };
 export const _pgParameterizedPartialIndex = () => {
   class ParameterizedPartialIndex extends Model<ParameterizedPartialIndex>("ParameterizedPartialIndex")(
@@ -888,7 +888,7 @@ export const _pgParameterizedPartialIndex = () => {
       }),
     ]
   ) {}
-  return getPgTableConfig(toPgTable(ParameterizedPartialIndex));
+  return ParameterizedPartialIndex.pipe(toPgTable, getPgTableConfig);
 };
 
 export const _pgDuplicateCompositeRuntime = () => {
@@ -899,7 +899,7 @@ export const _pgDuplicateCompositeRuntime = () => {
       Table.compositeUnique("duplicate_composite", [columns.one, columns.one]),
     ]
   ) {}
-  return getPgTableConfig(toPgTable(DuplicateComposite));
+  return DuplicateComposite.pipe(toPgTable, getPgTableConfig);
 };
 export const _pgNullableCompositePrimaryRuntime = () => {
   class NullableCompositePrimary extends Model<NullableCompositePrimary>("NullableCompositePrimary")(
@@ -909,14 +909,14 @@ export const _pgNullableCompositePrimaryRuntime = () => {
       Table.compositePrimaryKey("nullable_composite_pk", [columns.one, columns.two]),
     ]
   ) {}
-  return getPgTableConfig(toPgTable(NullableCompositePrimary));
+  return NullableCompositePrimary.pipe(toPgTable, getPgTableConfig);
 };
 export const _pgMultiplePrimaryKeys = () => {
   class MultiplePrimaryKeys extends Model<MultiplePrimaryKeys>("MultiplePrimaryKeys")(
     { id: Int.pipe(pg.integer(), pg.primaryKey()), one: Int, two: Int },
     (columns) => [Table.compositePrimaryKey("second_pk", [columns.one, columns.two])]
   ) {}
-  return getPgTableConfig(toPgTable(MultiplePrimaryKeys));
+  return MultiplePrimaryKeys.pipe(toPgTable, getPgTableConfig);
 };
 export const _pgDuplicateExtrasNames = () => {
   class DuplicateExtrasNames extends Model<DuplicateExtrasNames>("DuplicateExtrasNames")(
@@ -926,7 +926,7 @@ export const _pgDuplicateExtrasNames = () => {
       Table.check("same_extra")(sql<boolean>`true`),
     ]
   ) {}
-  return getPgTableConfig(toPgTable(DuplicateExtrasNames));
+  return DuplicateExtrasNames.pipe(toPgTable, getPgTableConfig);
 };
 export const _pgSetNullNonNullable = () => {
   class SetNullSource extends Model<SetNullSource>("SetNullSource")({
@@ -975,5 +975,5 @@ export const _pgTooManyIndexColumns = () => {
       return [Table.index("too_many_index_columns", [getOrThrow(head(values)), ...values.slice(1)])];
     }
   ) {}
-  return getPgTableConfig(toPgTable(TooManyIndexColumns));
+  return TooManyIndexColumns.pipe(toPgTable, getPgTableConfig);
 };

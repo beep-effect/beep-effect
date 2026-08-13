@@ -567,7 +567,7 @@ describe("schema corroboration and invariants", () => {
       body: StringSchema,
       summary: StringSchema.pipe(pg.varchar(80)),
     }) {}
-    const columns = getTableConfig(pg.toPgTable(ColumnProjection)).columns;
+    const columns = ColumnProjection.pipe(pg.toPgTable, getTableConfig).columns;
     expect(columnFrom(columns, "body").getSQLType()).toBe("text");
     expect(columnFrom(columns, "summary").getSQLType()).toBe("varchar(80)");
   });
@@ -587,7 +587,7 @@ describe("schema corroboration and invariants", () => {
       a: ArraySchema(StringSchema),
       lazy: suspend(() => NullOr(StringSchema)),
     }) {}
-    const columns = getTableConfig(pg.toPgTable(CarrierProjection)).columns;
+    const columns = CarrierProjection.pipe(pg.toPgTable, getTableConfig).columns;
     expect(CarrierProjection.sql.columns.s.column.ident).toBe("text");
     expect(CarrierProjection.sql.columns.b.column.ident).toBe("boolean");
     expect(columnFrom(columns, "n").notNull).toBe(false);
@@ -731,7 +731,7 @@ describe("Option paved road", () => {
       opt: OptionFromNullOr(StringSchema),
       opt2: EffectModel.FieldOption(StringSchema),
     }) {}
-    const columns = getTableConfig(pg.toPgTable(OptionProjection)).columns;
+    const columns = OptionProjection.pipe(pg.toPgTable, getTableConfig).columns;
     expect(columnFrom(columns, "opt").notNull).toBe(false);
     expect(columnFrom(columns, "opt_2").notNull).toBe(false);
   });
