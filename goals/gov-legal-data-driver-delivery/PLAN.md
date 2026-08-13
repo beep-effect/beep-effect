@@ -17,9 +17,11 @@ official FedReg spec (14 ops) + CourtListener official machine-readable
 capture committed under `research/specs/`, DOL auth mechanism verified
 (query-param `X-API-KEY` → `ApiKeyQueryAuth`), CL deltas recorded (no
 official OpenAPI endpoint — dated D4 correction in `SPEC.md`; SCOTUS
-visualizations deprecated → excluded). The empty Federal Register, DOL, and
-CourtListener package scaffolds are intentional retained stubs and are not part
-of this closeout's edit or deletion scope.
+visualizations deprecated → excluded). The empty Federal Register, DOL,
+and CourtListener scaffolds were deleted 2026-08-13 by
+`goals/honest-repo-signal`. Resume recreates each package in the same PR
+as the first real surface; do not extend deleted trees. See
+`goals/honest-repo-signal/research/FOLLOW-UPS.md`.
 
 ## Binding Sequencing
 
@@ -44,11 +46,11 @@ the deferred phases do not remain active branches of this packet.
 | --- | --- | --- | --- |
 | P0 research: matrix + specs | complete (2026-07-11) | Author `research/data-source-terms-matrix.md` (Federal Register, eCFR, DOL, CourtListener, govinfo rows; D2 columns). Commit official upstream specs for federal-register and courtlistener (CL `/api/schema/`); record the DOL donor spec (MIT) as bootstrap with attribution. Verify the DOL auth mechanism (header vs query `X-API-KEY`) against developer.dol.gov and record it. Record CL deprecated-endpoint deltas (e.g. SCOTUS visualizations). Cross-link the predecessor packet (P2 superseded-by note). | Matrix committed + registered in manifest `currentSourceOfTruth[]`; specs committed with provenance rows in `research/SOURCES.md`; DOL auth fact + CL deltas recorded; predecessor cross-links landed; AC#1 gate observable. |
 | P1 ecfr breadth | complete (2026-07-11) | Grow the committed `packages/drivers/ecfr/openapi.json` from today's hand-maintained 2-operation subset to the full 15-operation official surface (ecfr.gov v1 docs as authority; donor `v1-openapi3.json` as diff reference; record conversion/trim provenance in `research/SOURCES.md`), then regenerate via the existing `scripts/generate.ts` + descriptor pattern (admin corrections, search family, versioner ancestry/full/structure/versions). Full-title XML as typed raw-string payload (D7). Add Stream `*All` helpers for paginated search results (D5). | AC#2: committed spec at 15 operations + 15/15 descriptor parity; offline tests per endpoint group + multi-page search test; `bun run check --filter @beep/ecfr` green offline; codegen deterministic; docgen green. |
-| P2 federal-register | complete — won't-do-until-product-pull | Resume a Federal Register-only packet from `research/specs/federal-register-openapi.json`; retain the empty package scaffold unchanged until then. | Deferred with committed official spec as the restart point. |
-| P3 dol | complete — won't-do-until-product-pull | Resume a DOL-only packet from `research/data-source-terms-matrix.md` and `research/SOURCES.md`; retain the empty package scaffold unchanged until then. | Deferred with terms and auth research as the restart point. |
-| P4 courtlistener core | complete — won't-do-until-product-pull | Resume a CourtListener-only packet from the committed API-root capture and `research/courtlistener-deltas.md`; retain the empty package scaffold unchanged until then. | Deferred with committed official machine-readable research as the restart point. |
+| P2 federal-register | complete — won't-do-until-product-pull | Recreate `@beep/federal-register` from `research/specs/federal-register-openapi.json` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with committed official spec as the restart point. |
+| P3 dol | complete — won't-do-until-product-pull | Recreate `@beep/dol` from `research/data-source-terms-matrix.md` and `research/SOURCES.md` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with terms and auth research as the restart point. |
+| P4 courtlistener core | complete — won't-do-until-product-pull | Recreate `@beep/courtlistener` from the committed API-root capture and `research/courtlistener-deltas.md` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with committed official machine-readable research as the restart point. |
 | P5 courtlistener long tail | complete — won't-do-until-product-pull | Resume only after a product-pulled CourtListener core, using the API-root capture, OPTIONS ledger, and delta report. | Deferred with a per-driver, core-first restart path. |
-| P6 close | complete (2026-07-14) | Record the descoped deliverable, per-driver deferrals, retained stubs, successor/predecessor links, and closeout reflection. | Packet surfaces are internally consistent and ready for the later driver-applied status flip. |
+| P6 close | complete (2026-07-14) | Record the descoped deliverable, per-driver deferrals, deleted empty scaffolds, successor/predecessor links, and closeout reflection. | Packet surfaces are internally consistent and ready for the later driver-applied status flip. |
 
 ## P6 Closeout Checklist
 

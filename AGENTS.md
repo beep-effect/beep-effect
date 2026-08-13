@@ -33,15 +33,12 @@ workflows in skills.
 - Before recreating a shared helper, schema, utility, model, or known symbol,
   search live source (`packages/**/src/**`) and package barrels
   (`**/src/index.ts`) first with targeted ripgrep.
-- The old `standards/repo-exports.catalog.*` is retired; never look for it or
-  run repo-export catalog commands as a discovery or proof step.
 
 ## Quality Operator
 
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
-  `... verify`, `... publish --message "..."`, `... monitor` for End-to-End
-  Green (repair, proof, commit, push, PR checks, closeout, merge readiness).
-  Keep repo quality commands green.
+  `... verify`, `... publish --message "..."`, `... monitor`. Keep those
+  commands green.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also
@@ -58,18 +55,26 @@ workflows in skills.
   `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
   operator to relay them.
 
-## Codegen
+## Touch → Skill / Command
 
-- Use `bun run beep architecture` for canonical slice, concept, role, and
-  architecture proof generation instead of hand-authoring boilerplate.
+If you touch this, load or run this first. Do not hand-author around it.
+
+| Touch | Load / run |
+| --- | --- |
+| New workspace package | `bun run beep create-package` (do not `mkdir`) |
+| New slice / concept / role file | `bun run beep architecture` |
+| `packages/*/domain` or schemas | schema-first-development skill |
+| Effect service / Layer | effect-first-development skill |
+| JSDoc on exports | `.patterns/jsdoc-documentation.md` |
+| Gesture-bearing UI | browser-qa-loop skill |
+| PR publish / checks | yeet skill |
 
 ## Dev Servers
 
-- Dev servers run only through the portless-wrapped package scripts; canonical
-  URLs are `http://<name>.beep.localhost:1355`, where `<name>` is the
-  `portless` argument in that app's dev script.
-- Never launch raw `vite`/`next`/`storybook dev` or test against numeric
-  localhost ports; `PORTLESS=0 <script>` is diagnostic-only.
+- Dev servers run only through the portless-wrapped package scripts
+  (`http://<name>.beep.localhost:1355`). Never launch raw `vite`/`next`/
+  `storybook dev` or test numeric localhost ports; `PORTLESS=0` is
+  diagnostic-only.
 
 ## Browser QA
 

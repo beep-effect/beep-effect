@@ -192,7 +192,10 @@ const heroRotationDriverAtom = Atom.family((key: string) =>
       get.registry.update(indexAtom, (current) => (current + 1) % count);
     }, HERO_ROTATE_MS);
 
-    get.addFinalizer(() => window.clearInterval(timer));
+    get.addFinalizer(() => {
+      // Coverage/v8 disposes the atom registry after jsdom tears down `window`.
+      globalThis.clearInterval(timer);
+    });
   })
 );
 
