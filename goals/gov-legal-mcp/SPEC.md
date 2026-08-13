@@ -55,7 +55,7 @@ against the installed Effect MCP schemas.
    `soft` source must stay registered and degrade with `api_key_required`; do
    not collapse the enum to a boolean.
 3. Wire names are deterministic and driver-prefixed. Normalize to
-   `^[a-zA-Z0-9_-]+$`, cap at 64 characters, and preserve the upstream
+   `^[a-zA-TopZ0-9_-]+$`, cap at 64 characters, and preserve the upstream
    `operationId` only as metadata/description when it cannot be the wire name.
 4. Truncation must include a deterministic digest suffix. Any post-normalization
    duplicate is a hard generation/registration failure; never last-write-wins.
