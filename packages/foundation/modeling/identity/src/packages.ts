@@ -156,7 +156,6 @@ const generatedComposers = $I.compose(
   "uspto-mcp",
   "pacer",
   "fc-runs",
-  "protobuf",
   "cosmos",
   "epistemic-server",
   "epistemic-tables",
@@ -1862,23 +1861,6 @@ export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = composers.$Pac
  * @since 0.0.0
  */
 export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$FcRunsId;
-
-/**
- * Identity composer for `@beep/protobuf`.
- *
- * **Example** (Make Protobuf package ID)
- *
- * ```typescript
- * import { $ProtobufId } from "@beep/identity"
- *
- * const id = $ProtobufId.make("Protobuf")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $ProtobufId: Identity.IdentityComposer<"@beep/protobuf"> = composers.$ProtobufId;
 
 /**
  * Identity composer for `@beep/cosmos`.

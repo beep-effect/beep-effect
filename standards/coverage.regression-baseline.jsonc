@@ -1256,19 +1256,6 @@
         "functions": 446
       }
     },
-    "@beep/protobuf": {
-      "path": "packages/drivers/protobuf",
-      "lines": 0,
-      "statements": 0,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 1,
-        "statements": 1,
-        "branches": 0,
-        "functions": 0
-      }
-    },
     "@beep/provenance": {
       "path": "packages/foundation/modeling/provenance",
       "lines": 100,

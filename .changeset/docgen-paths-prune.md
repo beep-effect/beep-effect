@@ -81,7 +81,6 @@
 "@beep/postgres": patch
 "@beep/pretext": patch
 "@beep/professional-desktop": patch
-"@beep/protobuf": patch
 "@beep/provenance": patch
 "@beep/rdf": patch
 "@beep/rdf-canonize": patch

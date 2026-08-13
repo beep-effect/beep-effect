@@ -1419,8 +1419,6 @@
       "@beep/documents-use-cases/server": [
         "./packages/documents/use-cases/src/server.ts"
       ],
-      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
-      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"],
       "@beep/schema/Bytes": [
         "./packages/foundation/modeling/schema/src/Bytes.ts"
       ],

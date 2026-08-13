@@ -535,7 +535,6 @@
     "packages/drivers/courtlistener",
     "packages/drivers/uspto-mcp",
     "packages/drivers/pacer",
-    "packages/drivers/protobuf",
     "packages/drivers/tailscale",
     "packages/drivers/pretext",
     "packages/drivers/graph-3d",

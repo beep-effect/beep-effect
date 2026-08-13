@@ -1193,15 +1193,6 @@
         "vitest": "catalog:",
       },
     },
-    "packages/drivers/protobuf": {
-      "name": "@beep/protobuf",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
-      },
-    },
     "packages/drivers/rdf-canonize": {
       "name": "@beep/rdf-canonize",
       "version": "0.0.0",
@@ -3316,8 +3307,6 @@
     "@beep/pretext": ["@beep/pretext@workspace:packages/drivers/pretext"],
 
     "@beep/professional-desktop": ["@beep/professional-desktop@workspace:apps/professional-desktop"],
-
-    "@beep/protobuf": ["@beep/protobuf@workspace:packages/drivers/protobuf"],
 
     "@beep/provenance": ["@beep/provenance@workspace:packages/foundation/modeling/provenance"],
 

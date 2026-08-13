@@ -184,9 +184,6 @@
       "path": "packages/drivers/pretext"
     },
     {
-      "path": "packages/drivers/protobuf"
-    },
-    {
       "path": "packages/drivers/rdf-canonize"
     },
     {
