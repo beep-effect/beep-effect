@@ -26,7 +26,6 @@
       "Bash(bunx --bun vitest run:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)",
       "Bash(git fetch:*)",
       "Bash(git rebase:*)",
       "Bash(git switch:*)",

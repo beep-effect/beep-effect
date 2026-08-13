@@ -201,10 +201,11 @@ Still useful to know:
 - Tracked `.claude/settings.json` and `.mcp.json` come along automatically in
   any worktree.
 - The tracked Claude permissions auto-approve only named read-only `gh pr` and
-  `gh run` commands from the GitHub CLI. The repository workflow also retains
-  intentional `git push` and `beep yeet publish` grants. Direct `gh` mutations,
-  unrestricted `gh api`, `codex exec`, force pushes, admin merges, and
-  repository deletion require a separate approval or remain denied.
+  `gh run` commands from the GitHub CLI. The repository workflow retains the
+  intentional `beep yeet publish` grant, but direct `git push` requires an
+  approval. Direct `gh` mutations, unrestricted `gh api`, `codex exec`, force
+  pushes, admin merges, and repository deletion require a separate approval or
+  remain denied.
 - Gitignored files like `.claude/settings.local.json`, `CLAUDE.local.md`, and
   `.env` do not.
 - If you ever choose Claude-managed worktrees for throwaway tasks, `.worktreeinclude` can copy selected ignored files, but that is not part of the default `beep-effect` setup.
