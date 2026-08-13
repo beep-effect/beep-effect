@@ -61,3 +61,18 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** derive the repair hint from Yeet's structured
   failed-sublane result before applying broad output fingerprints, and have the
   manifest writer regenerate or explicitly name the goal-index follow-up.
+
+## 2026-08-13 — Bun cannot directly refresh a transitive-only package
+
+- **Doing:** clearing a newly revised Nano ID advisory that appeared between
+  two Yeet publication attempts.
+- **Evidence:** `bun update nanoid` added Nano ID 6 as a root dependency while
+  leaving PostCSS on vulnerable Nano ID 3.3.17; refreshing or temporarily
+  adding/removing the package also restored the stale transitive lock entry.
+  The minimal repair was a one-line lock resolution to 3.3.18 using the npm
+  registry integrity, proven by frozen install and the repository security
+  lane.
+- **Would have prevented it:** a documented repo command for refreshing one
+  transitive resolution without adding a root dependency, or a package-manager
+  mode that accepts a transitive package plus exact version and preserves it
+  after the temporary root edge is removed.
