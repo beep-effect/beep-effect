@@ -46,17 +46,17 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Provenance");
 const recentClaudeSessionWindow = Duration.hours(6);
 const futureClaudeSessionSkew = Duration.minutes(1);
 const provenanceDetectionTimeout = Duration.seconds(2);
-/** Absolute or home-tokenized path safe to record in public PR provenance. */
+/** Absolute or home-tokenized path retained only for local resume detection. */
 const PrProvenancePath = S.String.check(
   S.isPattern(/^(?:\/|~(?:\/|$))/u, {
     identifier: "PrProvenancePath",
     title: "PR provenance path",
-    description: "An absolute or '~/'-prefixed filesystem path recorded in pull request provenance.",
+    description: "An absolute or '~/'-prefixed filesystem path retained for local resume detection.",
     message: "Expected an absolute path or a home-tokenized path starting with '~/'",
   })
 ).pipe(
   $I.annoteSchema("PrProvenancePath", {
-    description: "Absolute or home-tokenized clone or linked-worktree path recorded in pull request provenance.",
+    description: "Absolute or home-tokenized clone or linked-worktree path retained for local resume detection.",
   })
 );
 
@@ -94,7 +94,7 @@ export const PrProvenanceHarness = LiteralKit(["claude-code", "codex", "unknown"
 export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
 
 /**
- * Clone, worktree, branch, and resumable harness identity for a Yeet PR.
+ * Local clone, worktree, branch, and resumable harness identity for Yeet.
  *
  * **Example** (Construct Codex provenance)
  *
@@ -116,7 +116,9 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  * **Details**
  *
  * `clonePath` is the absolute or home-tokenized main clone path. `worktreePath`
- * is present only when publish runs from a linked worktree.
+ * is present only when publish runs from a linked worktree. Rendering projects
+ * this local model into {@link PublicPrProvenance}; paths and resumable identity
+ * never enter the pull request body.
  *
  * @category models
  * @since 0.0.0
@@ -131,7 +133,42 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
     worktreePath: S.OptionFromNullOr(PrProvenancePath),
   },
   $I.annote("PrProvenance", {
-    description: "Origin and paste-ready resume command recorded in a Yeet pull request body.",
+    description: "Local origin and paste-ready resume command detected for a Yeet publish invocation.",
+  })
+) {}
+
+/**
+ * Public projection of Yeet provenance safe to append to a pull request.
+ *
+ * **Details**
+ *
+ * Local clone paths, linked-worktree paths, resume commands, and AI session
+ * identifiers deliberately do not cross this boundary.
+ *
+ * **Example** (Construct public provenance)
+ *
+ * ```ts
+ * import { PublicPrProvenance } from "@beep/repo-cli/test/Yeet"
+ *
+ * const provenance = PublicPrProvenance.make({
+ *   schemaVersion: 1,
+ *   branch: "feat/example",
+ *   harness: "codex",
+ * })
+ * console.log(provenance.branch)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PublicPrProvenance extends S.Class<PublicPrProvenance>($I`PublicPrProvenance`)(
+  {
+    schemaVersion: S.Literal(1),
+    branch: S.String,
+    harness: PrProvenanceHarness,
+  },
+  $I.annote("PublicPrProvenance", {
+    description: "Public, non-resumable provenance appended to a Yeet pull request body.",
   })
 ) {}
 
@@ -318,7 +355,7 @@ export const resumeCommandFor: {
   })
 );
 
-const encodePrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PrProvenance));
+const encodePublicPrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PublicPrProvenance));
 
 /**
  * Render provenance as the trailing Markdown section of a pull request body.
@@ -346,25 +383,24 @@ const encodePrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PrProvenan
  * @since 0.0.0
  */
 export const renderPrProvenance = (provenance: PrProvenance): string => {
-  const worktreeLine = pipe(
-    provenance.worktreePath,
-    O.map((worktreePath) => `- Worktree: \`${worktreePath}\`\n`),
-    O.getOrElse(() => "")
+  const publicProvenance = PublicPrProvenance.make({
+    schemaVersion: 1,
+    branch: provenance.branch,
+    harness: provenance.harness,
+  });
+  const encoded = pipe(
+    publicProvenance,
+    encodePublicPrProvenanceJson,
+    Result.getOrThrow,
+    renderPrettyCommandJson,
+    Str.trimEnd
   );
-  const encoded = pipe(provenance, encodePrProvenanceJson, Result.getOrThrow, renderPrettyCommandJson, Str.trimEnd);
   return `---
 
 ## Provenance
 
-- Clone: \`${provenance.clonePath}\`
-${worktreeLine}- Branch: \`${provenance.branch}\`
+- Branch: \`${provenance.branch}\`
 - Harness: \`${provenance.harness}\`
-
-Resume this session:
-
-\`\`\`sh
-${provenance.resumeCommand}
-\`\`\`
 
 <!-- yeet-provenance
 ${encoded}

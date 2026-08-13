@@ -12,7 +12,11 @@
       "Bash(git show:*)",
       "Bash(git branch:*)",
       "Bash(git worktree list:*)",
-      "Bash(gh:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
       "Bash(bun run beep yeet status:*)",
       "Bash(bun run beep yeet verify:*)",
       "Bash(bun run beep quality dev:*)",
@@ -43,8 +47,7 @@
       "Bash(bun run beep laws:*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
-      "Bash(bun install:*)",
-      "Bash(codex exec:*)"
+      "Bash(bun install:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",

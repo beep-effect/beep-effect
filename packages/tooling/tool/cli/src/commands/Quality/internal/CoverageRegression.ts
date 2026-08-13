@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
+import { A, Str, thunkFalse } from "@beep/utils";
+import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -73,8 +73,9 @@ type VitestCoveragePct = typeof VitestCoveragePct.Type;
  * one covered unit from a package below full coverage leaves a smaller ratio
  * than it started with — yet nothing regressed, because the covered subject was
  * removed rather than left untested. Adding untested code lowers the ratio too,
- * and that one is a real gap. The uncovered count separates them: it stays flat
- * when code is deleted and rises only when coverage is genuinely lost.
+ * and that one is a real gap. The uncovered count distinguishes the ordinary
+ * cases, while schema-v2 file provenance catches offsetting changes that leave
+ * the package count flat.
  *
  * @category models
  * @since 0.0.0
@@ -92,13 +93,34 @@ export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I
 ) {}
 
 /**
+ * Coverage percentages and uncovered counts for one repository file.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageFileBaseline extends S.Class<CoverageFileBaseline>($I`CoverageFileBaseline`)(
+  {
+    lines: S.Finite,
+    statements: S.Finite,
+    branches: S.Finite,
+    functions: S.Finite,
+    uncovered: CoverageUncoveredCounts,
+  },
+  $I.annote("CoverageFileBaseline", {
+    description: "Coverage metrics for one repo-relative source file in a workspace package.",
+  })
+) {}
+
+/**
  * Per-package coverage percentages stored in the committed baseline.
  *
  * **Gotchas**
  *
- * `uncovered` is optional so baselines written before it existed still decode.
- * When either side of a comparison lacks it the ratchet falls back to the
- * percentage-only rule, which is the stricter of the two.
+ * Schema version 2 requires both uncovered counts and per-file provenance.
+ * Surviving files fail closed on any metric drop beyond the floating-point
+ * epsilon. A package drop accompanied by any file-set change also fails closed:
+ * without source-control provenance, a true deletion and a move of newly
+ * untested code into another file produce the same coverage summary.
  *
  * @category models
  * @since 0.0.0
@@ -110,10 +132,11 @@ export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I
     statements: S.Finite,
     branches: S.Finite,
     functions: S.Finite,
-    uncovered: CoverageUncoveredCounts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    uncovered: CoverageUncoveredCounts,
+    files: S.Record(S.String, CoverageFileBaseline),
   },
   $I.annote("CoveragePackageBaseline", {
-    description: "Committed coverage percentages for one workspace package.",
+    description: "Committed package coverage totals with required per-file provenance.",
   })
 ) {}
 
@@ -125,7 +148,7 @@ export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I
  */
 export class CoverageRegressionBaseline extends S.Class<CoverageRegressionBaseline>($I`CoverageRegressionBaseline`)(
   {
-    schema_version: S.Literal(1),
+    schema_version: S.Literal(2),
     generated_at: S.String,
     git_sha: S.String,
     command: S.String,
@@ -136,6 +159,53 @@ export class CoverageRegressionBaseline extends S.Class<CoverageRegressionBaseli
     description: "Package coverage percentages used by the fail-on-drop ratchet.",
   })
 ) {}
+
+const LegacyCoveragePackageBaselineForMigration = S.Struct({
+  path: S.String,
+}).pipe(
+  $I.annoteSchema("LegacyCoveragePackageBaselineForMigration", {
+    description: "Minimal schema-v1 package entry needed to preserve package identity during full baseline migration.",
+  })
+);
+
+const LegacyCoverageRegressionBaselineForMigration = S.Struct({
+  schema_version: S.Literal(1),
+  generated_at: S.String,
+  git_sha: S.String,
+  command: S.String,
+  epsilon: S.Finite,
+  packages: S.Record(S.String, LegacyCoveragePackageBaselineForMigration),
+}).pipe(
+  $I.annoteSchema("LegacyCoverageRegressionBaselineForMigration", {
+    description:
+      "Legacy schema-v1 coverage document accepted only to require or perform a full migration to schema v2.",
+  })
+);
+
+const CoverageRegressionBaselineDocument = S.Union([
+  CoverageRegressionBaseline,
+  LegacyCoverageRegressionBaselineForMigration,
+]).pipe(
+  $I.annoteSchema("CoverageRegressionBaselineDocument", {
+    description: "Coverage baseline read boundary spanning current schema v2 and the one-way legacy migration input.",
+  })
+);
+
+type CoverageRegressionBaselineDocument = typeof CoverageRegressionBaselineDocument.Type;
+
+const isCurrentCoverageRegressionBaseline = (
+  document: CoverageRegressionBaselineDocument
+): document is CoverageRegressionBaseline => document.schema_version === 2;
+
+const baselineReadError = (cause: unknown): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(
+    `Failed to read ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+  );
+
+const baselineDecodeError = (cause: unknown): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(
+    `Failed to parse ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+  );
 
 class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCoverageMetric`)(
   {
@@ -161,14 +231,15 @@ class VitestCoverageSummaryTotal extends S.Class<VitestCoverageSummaryTotal>($I`
   })
 ) {}
 
-class VitestCoverageSummary extends S.Class<VitestCoverageSummary>($I`VitestCoverageSummary`)(
-  {
-    total: VitestCoverageSummaryTotal,
-  },
-  $I.annote("VitestCoverageSummary", {
+const VitestCoverageSummary = S.StructWithRest(S.Struct({ total: VitestCoverageSummaryTotal }), [
+  S.Record(S.String, VitestCoverageSummaryTotal),
+]).pipe(
+  $I.annoteSchema("VitestCoverageSummary", {
     description: "Minimal Vitest coverage-summary.json shape consumed by the ratchet.",
   })
-) {}
+);
+
+type VitestCoverageSummary = typeof VitestCoverageSummary.Type;
 
 /**
  * Baseline entry paired with the package it covers, used when reporting
@@ -213,12 +284,13 @@ export class CoverageComparisonFailure extends S.Class<CoverageComparisonFailure
   {
     actual: S.Finite,
     baseline: S.Finite,
+    filePath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     metric: CoverageMetricName,
     packageName: S.String,
     packagePath: S.String,
   },
   $I.annote("CoverageComparisonFailure", {
-    description: "One metric that dropped below its committed baseline for one package.",
+    description: "One metric that dropped below its committed package or file baseline.",
   })
 ) {}
 
@@ -264,21 +336,62 @@ const coveragePctValue = (value: VitestCoveragePct): number => (value === "Unkno
 
 const uncoveredCount = (metric: VitestCoverageMetric): number => metric.total - metric.covered;
 
-const toCoveragePackageBaseline = (path: string, summary: VitestCoverageSummary): CoveragePackageBaseline =>
+const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): CoverageUncoveredCounts =>
+  CoverageUncoveredCounts.make({
+    lines: uncoveredCount(summary.lines),
+    statements: uncoveredCount(summary.statements),
+    branches: uncoveredCount(summary.branches),
+    functions: uncoveredCount(summary.functions),
+  });
+
+const toCoverageFileBaseline = (summary: VitestCoverageSummaryTotal): CoverageFileBaseline =>
+  CoverageFileBaseline.make({
+    lines: coveragePctValue(summary.lines.pct),
+    statements: coveragePctValue(summary.statements.pct),
+    branches: coveragePctValue(summary.branches.pct),
+    functions: coveragePctValue(summary.functions.pct),
+    uncovered: toCoverageUncoveredCounts(summary),
+  });
+
+const coverageFileByPathOrder = Order.mapInput(
+  Order.String,
+  (entry: readonly [string, CoverageFileBaseline]) => entry[0]
+);
+
+const normalizedCoverageFilePath = (filePath: string, repoRoot: string, packageRoot: string, path: Path.Path): string =>
+  repoRelative(path.isAbsolute(filePath) ? filePath : path.resolve(packageRoot, filePath), repoRoot, path);
+
+const coverageFiles = (
+  repoRoot: string,
+  packageRoot: string,
+  path: Path.Path,
+  summary: VitestCoverageSummary
+): Record<string, CoverageFileBaseline> =>
+  pipe(
+    summary,
+    R.remove("total"),
+    R.toEntries,
+    A.map(([filePath, metrics]) =>
+      Tuple.make(normalizedCoverageFilePath(filePath, repoRoot, packageRoot, path), toCoverageFileBaseline(metrics))
+    ),
+    A.sort(coverageFileByPathOrder),
+    R.fromEntries
+  );
+
+const toCoveragePackageBaseline = (
+  repoRoot: string,
+  packageRoot: string,
+  path: Path.Path,
+  summary: VitestCoverageSummary
+): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
-    path,
+    path: repoRelative(packageRoot, repoRoot, path),
     lines: coveragePctValue(summary.total.lines.pct),
     statements: coveragePctValue(summary.total.statements.pct),
     branches: coveragePctValue(summary.total.branches.pct),
     functions: coveragePctValue(summary.total.functions.pct),
-    uncovered: O.some(
-      CoverageUncoveredCounts.make({
-        lines: uncoveredCount(summary.total.lines),
-        statements: uncoveredCount(summary.total.statements),
-        branches: uncoveredCount(summary.total.branches),
-        functions: uncoveredCount(summary.total.functions),
-      })
-    ),
+    uncovered: toCoverageUncoveredCounts(summary.total),
+    files: coverageFiles(repoRoot, packageRoot, path, summary),
   });
 
 const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshotEntry) => entry.packageName);
@@ -328,6 +441,34 @@ const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(
   );
 });
 
+/**
+ * Decode a Vitest coverage summary into the package baseline shape.
+ *
+ * This test seam exercises the same JSON boundary and repo-relative file-path
+ * normalization used by snapshot collection without requiring a workspace
+ * discovery fixture.
+ *
+ * @param repoRoot - Absolute repository root.
+ * @param packageRoot - Absolute workspace package root used for relative summary keys.
+ * @param summaryText - JSON text emitted by Vitest's coverage-summary reporter.
+ * @returns Package coverage totals and per-file provenance.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coveragePackageBaselineFromSummaryForTesting = Effect.fn(
+  "CoverageRegression.coveragePackageBaselineFromSummaryForTesting"
+)(function* (
+  repoRoot: string,
+  packageRoot: string,
+  summaryText: string
+): Effect.fn.Return<CoveragePackageBaseline, QualityTaskConfigurationError, Path.Path> {
+  const path = yield* Path.Path;
+  const summary = yield* decodeVitestCoverageSummary(summaryText).pipe(
+    QualityTaskConfigurationError.mapError("Failed to parse coverage summary fixture.")
+  );
+  return toCoveragePackageBaseline(repoRoot, packageRoot, path, summary);
+});
+
 const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(function* (
   repoRoot: string,
   path: Path.Path,
@@ -343,7 +484,7 @@ const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(fu
   const summary = yield* readCoverageSummary(summaryPath);
   return O.some({
     packageName: info.name,
-    baseline: toCoveragePackageBaseline(repoRelative(info.absolutePath, repoRoot, path), summary),
+    baseline: toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
   });
 });
 
@@ -483,7 +624,7 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
   const gitSha = yield* readGitSha(repoRoot);
 
   return CoverageRegressionBaseline.make({
-    schema_version: 1,
+    schema_version: 2,
     // A merge leaves most entries untouched, so claiming this run's timestamp
     // and revision for the whole document would attribute a provenance the
     // unmeasured entries do not have. Only a full regeneration earns fresh
@@ -510,14 +651,8 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
   return yield* readArtifact({
     path: baselinePath,
     schema: CoverageRegressionBaseline,
-    onReadError: (cause) =>
-      QualityTaskConfigurationError.new(
-        `Failed to read ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-      ),
-    onDecodeError: (cause) =>
-      QualityTaskConfigurationError.new(
-        `Failed to parse ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-      ),
+    onReadError: baselineReadError,
+    onDecodeError: baselineDecodeError,
   });
 });
 
@@ -532,17 +667,27 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
 const readPreviousBaseline = Effect.fn("CoverageRegression.readPreviousBaseline")(function* (
   repoRoot: string
 ): Effect.fn.Return<
-  O.Option<CoverageRegressionBaseline>,
+  O.Option<CoverageRegressionBaselineDocument>,
   QualityTaskConfigurationError,
   FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const exists = yield* fs
-    .exists(path.join(repoRoot, coverageRegressionBaselinePath))
-    .pipe(Effect.orElseSucceed(thunkFalse));
+  const baselinePath = path.join(repoRoot, coverageRegressionBaselinePath);
+  const exists = yield* fs.exists(baselinePath).pipe(Effect.orElseSucceed(thunkFalse));
 
-  return exists ? O.some(yield* readBaseline(repoRoot)) : O.none();
+  if (!exists) {
+    return O.none();
+  }
+
+  return O.some(
+    yield* readArtifact({
+      path: baselinePath,
+      schema: CoverageRegressionBaselineDocument,
+      onReadError: baselineReadError,
+      onDecodeError: baselineDecodeError,
+    })
+  );
 });
 
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
@@ -610,6 +755,18 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // missing file yields `None`; anything else propagates.
     const previous = yield* readPreviousBaseline(repoRoot);
 
+    if (
+      scoped &&
+      pipe(
+        previous,
+        O.exists((document) => !isCurrentCoverageRegressionBaseline(document))
+      )
+    ) {
+      return yield* QualityTaskConfigurationError.new(
+        `Refusing to write ${coverageRegressionBaselinePath}: schema version 1 requires a full ${coverageRegressionRegenerationCommand} run before scoped baseline updates can be merged.`
+      );
+    }
+
     if (!scoped) {
       const workspaceNames = yield* workspaceCoveragePackages(repoRoot, path).pipe(
         Effect.map(A.map((info) => info.name))
@@ -627,7 +784,8 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
       }
     }
 
-    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, scoped ? previous : O.none());
+    const previousCurrent = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
+    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, scoped ? previousCurrent : O.none());
     const content = yield* formatBaseline(baseline);
     yield* writeArtifact({
       path: path.join(repoRoot, coverageRegressionBaselinePath),
@@ -649,25 +807,15 @@ const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
   R.fromEntries(A.map(actuals, (entry) => [entry.packageName, entry] as const));
 
 /**
- * Whether a metric's percentage drop reflects lost coverage rather than deleted
- * covered code.
+ * Whether a metric's percentage drop reflects lost coverage rather than
+ * deleted covered code.
  *
  * A percentage falls both when untested code is added and when tested code is
  * removed, and only the first is a regression. The uncovered count tells them
- * apart: deleting covered code leaves it flat, losing coverage raises it. When
- * either side predates the count the percentage rule stands alone, which keeps
- * the stricter behaviour for baselines that have not been rewritten yet.
- *
- * Known blind spot. When the total does not shrink this is exact — coverage can
- * only be lost by raising the uncovered count. When the total does shrink, a
- * real regression can hide behind an exactly offsetting deletion: losing tests
- * on five covered units while five unrelated uncovered units are deleted moves
- * 60/100 to 55/95, which is byte-identical to simply deleting five covered
- * units. Package-level totals cannot separate those two histories at all, so
- * catching it would need per-file counts, which would grow the committed
- * baseline by roughly the size of the repo. The trade is deliberate: a rare miss
- * that needs a coincidental offset, in exchange for not failing every change
- * that deletes tested code.
+ * apart: deleting covered code leaves it flat, while genuine loss raises it. A
+ * changed file set also makes a package drop fail closed; otherwise a rename,
+ * removal, or move into a surviving file could hide lost coverage behind an
+ * offsetting deletion.
  *
  * @param metric - Metric being compared.
  * @param baseline - Committed entry for the package.
@@ -682,10 +830,9 @@ const metricRegressed = (
   epsilon: number
 ): boolean =>
   actual[metric] + epsilon < baseline[metric] &&
-  pipe(
-    O.zipWith(baseline.uncovered, actual.uncovered, (before, after) => after[metric] > before[metric]),
-    O.getOrElse(thunkTrue)
-  );
+  (actual.uncovered[metric] > baseline.uncovered[metric] ||
+    A.some(R.keys(baseline.files), (filePath) => !R.has(actual.files, filePath)) ||
+    A.some(R.keys(actual.files), (filePath) => !R.has(baseline.files, filePath)));
 
 const droppedMetrics = (
   packageName: string,
@@ -699,11 +846,83 @@ const droppedMetrics = (
     A.map((metric) => ({
       packageName,
       packagePath: baseline.path,
+      filePath: O.none(),
       metric,
       baseline: baseline[metric],
       actual: actual[metric],
     }))
   );
+
+const fileMetricRegressed = (
+  metric: CoverageMetricName,
+  baseline: CoverageFileBaseline,
+  actual: CoverageFileBaseline,
+  epsilon: number
+): boolean => actual[metric] + epsilon < baseline[metric];
+
+const droppedFileMetrics = (
+  packageName: string,
+  packagePath: string,
+  filePath: string,
+  baseline: CoverageFileBaseline,
+  actual: CoverageFileBaseline,
+  epsilon: number
+): ReadonlyArray<CoverageComparisonFailure> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => fileMetricRegressed(metric, baseline, actual, epsilon)),
+    A.map((metric) => ({
+      packageName,
+      packagePath,
+      filePath: O.some(filePath),
+      metric,
+      baseline: baseline[metric],
+      actual: actual[metric],
+    }))
+  );
+
+const perFileDroppedMetrics = (
+  packageName: string,
+  baseline: CoveragePackageBaseline,
+  actual: CoveragePackageBaseline,
+  epsilon: number
+): ReadonlyArray<CoverageComparisonFailure> =>
+  pipe(
+    R.toEntries(baseline.files),
+    A.sort(coverageFileByPathOrder),
+    A.flatMap(([filePath, fileBaseline]) =>
+      pipe(
+        actual.files,
+        R.get(filePath),
+        O.map((fileActual) =>
+          droppedFileMetrics(packageName, baseline.path, filePath, fileBaseline, fileActual, epsilon)
+        ),
+        // Coverage cannot tell a true deletion from code moved into a surviving
+        // file without tests. Any file-set change accompanying a package drop is
+        // therefore handled by the fail-closed package-level comparison.
+        O.getOrElse(A.empty<CoverageComparisonFailure>)
+      )
+    )
+  );
+
+const droppedCoverageMetrics = (
+  packageName: string,
+  baseline: CoveragePackageBaseline,
+  actual: CoveragePackageBaseline,
+  epsilon: number
+): ReadonlyArray<CoverageComparisonFailure> => {
+  const fileFailures = perFileDroppedMetrics(packageName, baseline, actual, epsilon);
+  const fileFailureMetrics = A.map(fileFailures, (failure) => failure.metric);
+  const packageOnlyFailures = pipe(
+    droppedMetrics(packageName, baseline, actual, epsilon),
+    A.filter((failure) => !A.contains(fileFailureMetrics, failure.metric))
+  );
+
+  // Package totals still catch uncovered code in newly added files. Prefer the
+  // file-level witness when both levels detect the same metric so diagnostics
+  // are precise without being duplicated.
+  return A.appendAll(fileFailures, packageOnlyFailures);
+};
 
 const compareCoverage = (
   baseline: CoverageRegressionBaseline,
@@ -721,7 +940,7 @@ const compareCoverage = (
       pipe(
         actualsByName,
         R.get(packageName),
-        O.map((actual) => droppedMetrics(packageName, packageBaseline, actual.baseline, baseline.epsilon)),
+        O.map((actual) => droppedCoverageMetrics(packageName, packageBaseline, actual.baseline, baseline.epsilon)),
         O.getOrElse(A.empty<CoverageComparisonFailure>)
       )
     )
@@ -769,7 +988,10 @@ const renderCoverageFailures = (failures: ReadonlyArray<CoverageComparisonFailur
   A.map(
     failures,
     (failure) =>
-      `  - ${failure.packageName} (${failure.packagePath}) ${failure.metric}: ${failure.actual} < ${failure.baseline}`
+      `  - ${failure.packageName} (${pipe(
+        failure.filePath,
+        O.getOrElse(() => failure.packagePath)
+      )}) ${failure.metric}: ${failure.actual} < ${failure.baseline}`
   );
 
 const renderNewPackageWarnings = (packages: ReadonlyArray<CoverageSnapshotEntry>): ReadonlyArray<string> =>

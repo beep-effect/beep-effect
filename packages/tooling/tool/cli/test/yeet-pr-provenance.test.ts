@@ -4,6 +4,7 @@ import {
   findRecentClaudeSession,
   mungeClaudeProjectPath,
   PrProvenance,
+  PublicPrProvenance,
   renderPrProvenance,
   resumeCommandFor,
   tokenizeHomePath,
@@ -181,7 +182,7 @@ describe("Yeet PR provenance", () => {
     );
   });
 
-  it.effect("tokenizes detected paths in both human and machine provenance", () =>
+  it.effect("keeps detected resume details local and omits them from public provenance", () =>
     Effect.gen(function* () {
       const clonePath = "/home/operator/YeeBois/projects/beep-effect3";
       const checkoutPath = `${clonePath}/.claude/worktrees/footer-redact`;
@@ -201,8 +202,9 @@ describe("Yeet PR provenance", () => {
         "cd ~/'YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact' &&\n  codex resume 'thread-123'"
       );
       expect(footer).not.toContain("/home/operator");
-      expect(footer).toContain("- Clone: `~/YeeBois/projects/beep-effect3`");
-      expect(footer).toContain("- Worktree: `~/YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact`");
+      expect(footer).not.toContain("~/YeeBois/projects/beep-effect3");
+      expect(footer).not.toContain("thread-123");
+      expect(footer).not.toContain("codex resume");
 
       const encoded = pipe(
         footer,
@@ -211,7 +213,13 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+      expect(yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded)).toStrictEqual(
+        PublicPrProvenance.make({
+          schemaVersion: 1,
+          branch: "fix/yeet-footer-redact-home",
+          harness: "codex",
+        })
+      );
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -235,6 +243,12 @@ describe("Yeet PR provenance", () => {
       expect(provenance.clonePath).toBe(clonePath);
       expect(provenance.worktreePath).toStrictEqual(O.some(checkoutPath));
       expect(provenance.resumeCommand).toBe(`cd '${checkoutPath}' &&\n  codex resume 'thread-123'`);
+
+      const footer = renderPrProvenance(provenance);
+      expect(footer).not.toContain(clonePath);
+      expect(footer).not.toContain(checkoutPath);
+      expect(footer).not.toContain("thread-123");
+      expect(footer).not.toContain("codex resume");
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -244,7 +258,7 @@ describe("Yeet PR provenance", () => {
     )
   );
 
-  it.effect("renders human and schema-decodable machine provenance twins", () =>
+  it.effect("renders public human and machine provenance without resumable identity", () =>
     Effect.gen(function* () {
       const provenance = PrProvenance.make({
         branch: "feat/yeet-pr-provenance",
@@ -257,11 +271,11 @@ describe("Yeet PR provenance", () => {
       const footer = renderPrProvenance(provenance);
 
       expect(footer).toContain("---\n\n## Provenance");
-      expect(footer).toContain("- Clone: `~/workspace/beep-effect`");
-      expect(footer).toContain("- Worktree: `~/workspace/beep-effect/.claude/worktrees/endgame`");
       expect(footer).toContain("- Branch: `feat/yeet-pr-provenance`");
       expect(footer).toContain("- Harness: `claude-code`");
-      expect(footer).toContain("```sh\ncd ~/'workspace/beep-effect' &&\n  claude --resume 'session-123'\n```");
+      expect(footer).not.toContain("~/workspace/beep-effect");
+      expect(footer).not.toContain("session-123");
+      expect(footer).not.toContain("claude --resume");
 
       const encoded = pipe(
         footer,
@@ -270,7 +284,13 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+      expect(yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded)).toStrictEqual(
+        PublicPrProvenance.make({
+          schemaVersion: 1,
+          branch: "feat/yeet-pr-provenance",
+          harness: "claude-code",
+        })
+      );
       expect(
         pipe(
           Str.split("\n")(footer),

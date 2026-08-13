@@ -572,7 +572,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         apiId: api.id,
         integrationMethod: "POST",
         integrationType: "AWS_PROXY",
-        integrationUri: readFunction.arn,
+        integrationUri: readFunction.invokeArn,
         payloadFormatVersion: "2.0",
       },
       { parent: this }
@@ -583,7 +583,7 @@ export class CiTurboCache extends pulumi.ComponentResource {
         apiId: api.id,
         integrationMethod: "POST",
         integrationType: "AWS_PROXY",
-        integrationUri: writeFunction.arn,
+        integrationUri: writeFunction.invokeArn,
         payloadFormatVersion: "2.0",
       },
       { parent: this }

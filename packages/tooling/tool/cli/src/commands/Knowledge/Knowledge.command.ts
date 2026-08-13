@@ -158,11 +158,11 @@ const runSemanticDelta = Effect.fn("KnowledgeCommand.runSemanticDelta")(function
  * **Gotchas**
  *
  * Probe coverage is lost in two ways, and both the human report and the JSON `probePolicy` field say
- * which one happened. On a pull request from a fork the run declines to execute archive-local probes
- * at all (`skipped-untrusted-context`); when the merge-base archive's own probe cannot boot — the
- * branch deleted a workspace export the base revision still imports — the run degrades instead of
- * failing (`skipped-base-boot-failure`) and prints the boot failure under the policy line. Read that
- * line before treating an empty `introduced` bucket as full coverage.
+ * which one happened. On a pull request from a fork the run declines to run current-checkout probes
+ * against archive data (`skipped-untrusted-context`). When the probe cannot interpret merge-base
+ * data, the run degrades instead of failing (`skipped-base-boot-failure`) and prints the boot failure
+ * under the policy line. Read that line before treating an empty `introduced` bucket as full
+ * coverage.
  *
  * **Example** (Read the subcommand identity)
  *

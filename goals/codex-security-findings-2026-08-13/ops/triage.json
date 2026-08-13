@@ -1,0 +1,427 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "codex/security-findings-2026-08-13",
+    "expectedCount": 13,
+    "capturedCount": 13,
+    "capturedAt": "2026-08-13",
+    "captureMethod": "signed-in-csv-export",
+    "note": "P2 and P3 complete: 12 remediate and 1 already-fixed. Six bounded fixes are hardened locally and Yeet repair passed all 9 lanes; the local quality-review-fix loop is authorized and Yeet verify awaits main reconciliation. Six CI findings remain architecture/deployment-blocked."
+  },
+  "lanes": {
+    "L1-ci-runner-admission": {
+      "status": "in-progress",
+      "findings": ["CSF-001", "CSF-003", "CSF-006"],
+      "title": "CI runner admission architecture"
+    },
+    "L2-legacy-runner-retirement": {
+      "status": "complete",
+      "findings": ["CSF-002"],
+      "title": "Legacy CI runner retirement"
+    },
+    "L3-ci-runner-workload-identity": {
+      "status": "in-progress",
+      "findings": ["CSF-004", "CSF-005", "CSF-008"],
+      "title": "CI runner workload identity"
+    },
+    "L4-yeet-public-provenance": {
+      "status": "complete",
+      "findings": ["CSF-007"],
+      "title": "Yeet public provenance"
+    },
+    "L5-semantic-delta-probe-isolation": {
+      "status": "complete",
+      "findings": ["CSF-009"],
+      "title": "Semantic-delta probe isolation"
+    },
+    "L6-agent-default-authority": {
+      "status": "complete",
+      "findings": ["CSF-010"],
+      "title": "Agent default authority"
+    },
+    "L7-candor-reference-integrity": {
+      "status": "complete",
+      "findings": ["CSF-011"],
+      "title": "Candor reference integrity"
+    },
+    "L8-per-file-coverage-ratchet": {
+      "status": "complete",
+      "findings": ["CSF-012"],
+      "title": "Per-file coverage ratchet"
+    },
+    "L9-ci-turbo-cache-invocation": {
+      "status": "complete",
+      "findings": ["CSF-013"],
+      "title": "CI Turbo cache invocation"
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "08ee74d0eb18819187fd02f570b4d57c",
+      "title": "PR code now runs on self-hosted EC2 CI lanes",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "7e730d757312e56ccfbbc87b1e2adfe18e562820",
+      "ownerArea": "CI runner admission architecture",
+      "lane": "L1-ci-runner-admission",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Five pull-request matrix lanes still target owned beep-ec2-heavy workers and execute repository-controlled setup and package code. Ephemeral VM teardown does not prevent the current job from reaching the owned-worker boundary."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: a durable admission boundary must be enforced outside pull-request-editable workflow content, active CI must land, and external GitHub organization runner-group plus AWS deployment proof must verify the result.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "382c538bc3c8819195f83b4a36b002fb",
+      "title": "Non-ephemeral CI runners expose PR jobs to trusted push secrets",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "7de49674756e76cdd4fa3864a13cb6a38b79ffb1",
+      "ownerArea": "Legacy CI runner lifecycle",
+      "lane": "L2-legacy-runner-retirement",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The executable legacy burst launcher can still create a reusable runner with the production label, allowing state from a pull-request job to survive into a later trusted job."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The legacy launcher is deleted, the remaining README is cleanup-only, and a regression test requires the launch surface to remain retired.",
+        "changedFiles": [
+          "goals/speed-loop/ops/runner-burst/launch-burst-runners.sh",
+          "goals/speed-loop/ops/runner-burst/README.md",
+          "packages/tooling/tool/cli/test/ci-runner-security.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/ci-runner-security.test.ts packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/repo-cli check"
+        ]
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "a3a281b2a3d881919fdcbf68ee2364f0",
+      "title": "PR code now runs on owned EC2 CI runners",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "69045830e2c3acca1ec771e23a5e4be3a9fc0e3c",
+      "ownerArea": "CI runner admission architecture",
+      "lane": "L1-ci-runner-admission",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Pull-request verification remains assigned to owned EC2 runners across multiple production lanes. One-job VM lifecycle reduces persistence but does not establish a trusted event-admission boundary."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: pull-request jobs must move to a non-privileged execution class or be admitted outside repository-editable YAML after active CI lands, then external GitHub organization runner-group plus AWS deployment proof must verify the result.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "c799c2269d748191997ff176ce4bfd48",
+      "title": "Shadow runner exposes AWS role creds to job code",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "37f289a025b5072e7099a24d195103ab8b2ea4f1",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L3-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Runner job steps execute on the host while instance metadata remains enabled. The configured hop limit constrains ordinary containers but does not block host-process access to the instance role."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: the fleet needs a bootstrap identity that is absent or unreachable during job execution, followed by deployed AWS proof against a hostile host-process probe.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "ca9a4a0353e481919011a7d8380f5068",
+      "title": "CI runner IMDS firewall rollback exposes AWS role creds",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "9b74f0013b6d0a08d4c10bbad3e2333fe70dc119",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L3-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The host-level metadata firewall was rolled back, metadata remains enabled, and the runner job shares the host user without a replacement job-start isolation hook."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: a root-resistant workload-identity boundary must replace the rolled-back firewall approach after active CI lands, followed by deployed AWS proof against ordinary and privileged probes.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "e841bb5393c08191a74ff574c0108bd8",
+      "title": "PR code can steal EC2 runner IAM credentials",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "8df3aa7244e0ebeb764010cc3a9a2e728d54864a",
+      "ownerArea": "CI runner admission architecture",
+      "lane": "L1-ci-runner-admission",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Production pull-request lanes run repository code on workers whose host can reach the instance role. Complete remediation requires both trusted-event admission and removal of usable cloud identity during jobs."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: the admission and workload-identity boundaries must land together, followed by external GitHub organization runner-group and AWS deployment proof.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "14981c9702288191a821494c38525185",
+      "title": "Yeet PR footer leaks local paths and AI session IDs",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "4ec4cd15cd0002530066780efe6e47328a8df6d4",
+      "ownerArea": "Repo CLI Yeet provenance",
+      "lane": "L4-yeet-public-provenance",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Home-prefix tokenization still leaves clone and worktree structure, a resume command, and the AI session identifier in visible and machine-readable PR provenance."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Public provenance uses a schema-backed branch-and-harness model; local paths, session identifiers, resume commands, and the legacy public footer are absent, with focused and package proof green.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+          "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/ci-runner-security.test.ts packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/repo-cli check"
+        ]
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "33cd94a12d788191afbec1edc25c433f",
+      "title": "Red-team gate misses sudo IMDS credential path",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "e65b2ff6d8655921a0dec7635bd990eab11a5c28",
+      "ownerArea": "CI runner workload identity",
+      "lane": "L3-ci-runner-workload-identity",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The red-team contract still enumerates four gates and omits the sudo or root metadata path. Adding a probe alone would not prevent privileged job code from reaching host metadata."
+      },
+      "remediation": {
+        "status": "in-progress",
+        "summary": "Architecture/deployment-blocked: Gate E and its deployed AWS proof depend on a root-resistant runner workload-identity boundary, not a workflow-only assertion.",
+        "changedFiles": [],
+        "verificationCommands": []
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "98d316271ef08191a2b6939597ae8fec",
+      "title": "Semantic-delta probes execute untrusted archive code",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "774d118c0645ebe46d4a43690efd388562e1c72f",
+      "ownerArea": "Repo CLI knowledge architecture",
+      "lane": "L5-semantic-delta-probe-isolation",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Fork pull requests are skipped, but local and same-repository comparisons still import executable modules from the archived revision during command and index probes."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Semantic archive probes execute only current-checkout command and index code; the internal oracle is available only through the source-only test kit, probe docs and diagnostics match the boundary, and hostile-archive, package, export, and local-docgen proof are green.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+          "packages/tooling/tool/cli/src/commands/Knowledge/index.ts",
+          "packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
+          "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/ci-runner-security.test.ts packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/repo-cli check",
+          "bun run docgen:local"
+        ]
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "dfdc1765ff48819183742283aec1b66c",
+      "title": "Agent configs disable sandbox and approval safeguards",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "fbc8632526343f8a74d65390591d19f61012c465",
+      "ownerArea": "Repository agent policy",
+      "lane": "L6-agent-default-authority",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Repository defaults select unrestricted Codex filesystem authority without approvals and grant Claude Code a wildcard GitHub CLI command family."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Codex defaults are explicit and safe, broad Claude GitHub CLI and Codex execution grants are removed, and AI-sync admits exactly the 47 checked-in Bash grants while rejecting broad families, wrappers, absolute executables, environment prefixes, and shell indirection; docs preserve intentional git push and Yeet publication grants and record the plural safety-validation surface.",
+        "changedFiles": [
+          ".codex/config.toml",
+          ".claude/settings.json",
+          "standards/git-worktrees.md",
+          "packages/tooling/library/ai-sync/scripts/ai-sync.ts",
+          "packages/tooling/library/ai-sync/AGENTS.md",
+          "packages/tooling/library/ai-sync/README.md",
+          "packages/tooling/library/ai-sync/src/validation.ts",
+          "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+          ".changeset/codex-security-findings-2026-08-13.md"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/library/ai-sync/test/ai-sync.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/ai-sync check",
+          "bun run --filter @beep/ai-sync lint",
+          "jq '[.permissions.allow[] | select(. == \"Bash\" or startswith(\"Bash(\"))] | length' .claude/settings.json",
+          "bun -e 'import parse from \"@changesets/parse\"; parse(await Bun.file(\".changeset/codex-security-findings-2026-08-13.md\").text())'"
+        ]
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "2d34ada6ee4481918084f95a0d6414db",
+      "title": "Candor gate can release unrelated superseded AI citations",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "5e4df6be4ae3a088c8c3b3d750f5090e068df9cc",
+      "ownerArea": "Law practice candor policy",
+      "lane": "L7-candor-reference-integrity",
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Commit 618e81f4c09455bd67327a12fa22047b30fc0284 binds supersession to schema-derived PatentReference equivalence and includes foreign-reference and empty-reference regressions."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Already fixed by commit 618e81f4c09455bd67327a12fa22047b30fc0284 and verified on current HEAD.",
+        "changedFiles": [
+          "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.service.ts",
+          "packages/law-practice/use-cases/test/CandorPolicy.test.ts"
+        ],
+        "verificationCommands": [
+          "cd packages/law-practice/use-cases && bunx --bun vitest run test/CandorPolicy.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "bdaf5007ae688191a499967b959b5a86",
+      "title": "Coverage ratchet can miss offset test regressions",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "3082ae31d10320b8dd49a68b7a2112b8ce169758",
+      "ownerArea": "Repo CLI coverage architecture",
+      "lane": "L8-per-file-coverage-ratchet",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Package-level percentages and uncovered totals cannot distinguish test loss in one file from an offsetting deletion of unrelated uncovered units."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Strict schema v2 requires normalized per-file provenance and fails closed on any file-set change accompanying a package percentage drop. A temporary-repository regression proves scoped v1 refusal and one-way full-writer v1-to-v2 migration; the regenerated baseline has 127 package file maps, and shared baseline read/decode error mappers keep Fallow clean.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+          "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+          "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+          "standards/coverage.regression-baseline.jsonc"
+        ],
+        "verificationCommands": [
+          "bun run coverage:baseline:write",
+          "cd packages/tooling/tool/cli && node ../../../../node_modules/vitest/vitest.mjs run test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "cd packages/tooling/tool/cli && bun run beep:check",
+          "cd packages/tooling/tool/cli && bunx biome check src/commands/Quality/internal/CoverageRegression.ts test/quality-tasks.test.ts",
+          "bun run beep quality fallow audit --check --quiet"
+        ]
+      }
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "cde426d1c9ec8191b780fe9a25c0b789",
+      "title": "Lambda API integrations use the wrong ARN",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "b8fb5c97aab1683252277f990e1ae54095312fbb",
+      "ownerArea": "CI Turbo cache infrastructure",
+      "lane": "L9-ci-turbo-cache-invocation",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Both API Gateway AWS_PROXY integrations use the Lambda function ARN instead of the invocation URI required by API Gateway."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Both integrations use Function.invokeArn, Pulumi mocks distinguish ARN properties, and focused, package-check, and lint proof are green.",
+        "changedFiles": [
+          "infra/src/CiTurboCache.ts",
+          "infra/test/CiTurboCache.test.ts",
+          ".changeset/codex-security-findings-2026-08-13.md"
+        ],
+        "verificationCommands": [
+          "cd infra && node ../node_modules/vitest/vitest.mjs run test/CiTurboCache.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "cd infra && bun run beep:check",
+          "cd infra && bun run beep:lint",
+          "bun -e 'import parse from \"@changesets/parse\"; parse(await Bun.file(\".changeset/codex-security-findings-2026-08-13.md\").text())'"
+        ]
+      }
+    }
+  ]
+}

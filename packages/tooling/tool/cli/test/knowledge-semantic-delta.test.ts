@@ -1,4 +1,5 @@
 import {
+  decodeKnowledgeUtf8,
   encodeKnowledgeSemanticDeltaReportJson,
   KNOWLEDGE_PROBE_DEPENDENT_KINDS,
   KnowledgeCommandResolved,
@@ -13,6 +14,8 @@ import {
   knowledgeSemanticDeltaFailure,
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
+import { makeKnowledgeArchiveOracle } from "@beep/repo-cli/test/Knowledge";
+import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -22,6 +25,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type {
   KnowledgeArchiveOracle,
   KnowledgeFinding,
@@ -131,7 +135,7 @@ const explodingProbeOracle = (
   options: OracleOptions = {}
 ): KnowledgeArchiveOracle => {
   const unreachable = KnowledgeOperationalError.make({
-    message: "Archive-local probe executed under a skipped probe policy.",
+    message: "Current-checkout probe executed against archive data under a skipped probe policy.",
   });
   return {
     ...makeOracle(sourceFiles, options),
@@ -141,14 +145,13 @@ const explodingProbeOracle = (
 };
 
 /**
- * A real archive boot failure, reproduced verbatim from the branch that deleted a barrel export the
- * merge-base CLI still imported. The blank line is part of Bun's own output, so the excerpt carried
- * into the report is exercised against the shape it actually has to survive.
+ * A representative current-checkout probe boot failure. The blank line is part of Bun's own output,
+ * so the excerpt carried into the report is exercised against the shape it actually has to survive.
  */
 const BOOT_FAILURE = KnowledgeProbeBootError.make({
   message: A.join(
     [
-      'Archive-local probe "/tmp/beep-knowledge-semantic-delta-8YSRkf/base-scratch/command-probe.ts" failed with exit 1.',
+      'Current-checkout probe against archive data "/tmp/beep-knowledge-semantic-delta-8YSRkf/base-scratch/command-probe.ts" failed with exit 1.',
       "SyntaxError: Export named 'DEFAULT_AI_METRICS_DATA_ROOT' not found in module '/repo/packages/tooling/library/ai-metrics/src/index.ts'.",
       "",
       "Bun v1.3.14 (Linux x64)",
@@ -682,7 +685,7 @@ describe("knowledge semantic-delta probe policy", () => {
     })
   );
 
-  it.effect("a skipped comparison declines to run archive-local probes at all", () =>
+  it.effect("a skipped comparison declines to run current-checkout probes against archive data", () =>
     Effect.gen(function* () {
       const service = yield* KnowledgeService;
       const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
@@ -720,6 +723,87 @@ describe("knowledge semantic-delta probe policy", () => {
       expect(kinds(probed)).toEqual(A.sort(["broken-tracked-path", ...KNOWLEDGE_PROBE_DEPENDENT_KINDS], Order.String));
       expect(kinds(skipped)).toEqual(["broken-tracked-path"]);
     })
+  );
+});
+
+describe("knowledge semantic-delta current-checkout probes", () => {
+  const ROOT_MODULE_PATH = "packages/tooling/tool/cli/src/commands/Root.ts";
+  const PORTFOLIO_MODULE_PATH = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
+  const ROOT_MARKER = "archive-root-module-executed";
+  const PORTFOLIO_MARKER = "archive-portfolio-module-executed";
+
+  it.effect("treats archived command modules and runtime configuration as data, never code", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-current-probe-" });
+        const currentCheckoutRoot = yield* findRepoRoot();
+        const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const bunExecutable = yield* processSpawner
+          .string(ChildProcess.make("which", ["bun"], { extendEnv: true }))
+          .pipe(Effect.map(Str.trim));
+        const archiveRoot = path.join(tempRoot, "archive");
+        const scratchRoot = path.join(tempRoot, "scratch");
+        const rootModule = path.join(archiveRoot, ROOT_MODULE_PATH);
+        const portfolioModule = path.join(archiveRoot, PORTFOLIO_MODULE_PATH);
+        const indexPath = path.join(archiveRoot, "goals", "INDEX.md");
+
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(portfolioModule), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(indexPath), { recursive: true });
+        yield* fs.writeFileString(
+          rootModule,
+          `await Bun.write("${ROOT_MARKER}", "executed")\nexport const rootCommand = undefined\n`
+        );
+        yield* fs.writeFileString(
+          portfolioModule,
+          `await Bun.write("${PORTFOLIO_MARKER}", "executed")\nexport const buildPortfolioIndexContent = undefined\n`
+        );
+        yield* fs.writeFileString(
+          path.join(archiveRoot, "bunfig.toml"),
+          `[run]\npreload = ["./${ROOT_MODULE_PATH}", "./${PORTFOLIO_MODULE_PATH}"]\n`
+        );
+        yield* fs.writeFileString(indexPath, DEFAULT_INDEX);
+
+        const oracle = yield* makeKnowledgeArchiveOracle(
+          currentCheckoutRoot,
+          archiveRoot,
+          scratchRoot,
+          [
+            KnowledgeTrackedEntry.make({
+              path: "goals/INDEX.md",
+              mode: "100644",
+              objectId: "fixture:index",
+            }),
+          ],
+          bunExecutable
+        );
+        const commands = yield* oracle.probeCommands([
+          ["goals", "doctor"],
+          ["goals", "doctro"],
+        ]);
+        const index = yield* oracle.indexBytes;
+        const expectedIndex = yield* decodeKnowledgeUtf8(
+          index.expected,
+          "Current-checkout index probe emitted malformed UTF-8."
+        );
+        const archivedIndex = yield* decodeKnowledgeUtf8(
+          index.archived,
+          "Archived index fixture emitted malformed UTF-8."
+        );
+
+        expect(commands).toEqual([
+          resolvedCommand(["goals", "doctor"]),
+          KnowledgeCommandUnknown.make({ canonicalPath: ["goals", "doctro"] }),
+        ]);
+        expect(expectedIndex).toContain("# Goals Index");
+        expect(archivedIndex).toBe(DEFAULT_INDEX);
+        expect(yield* fs.exists(path.join(archiveRoot, ROOT_MARKER))).toBe(false);
+        expect(yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER))).toBe(false);
+        expect(yield* fs.exists(path.join(archiveRoot, "node_modules"))).toBe(false);
+      })
+    ).pipe(provideScopedLayer(testLayer))
   );
 });
 

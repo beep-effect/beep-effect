@@ -25,7 +25,9 @@ import {
   UnknownNativeSchemaCell,
   V1_SCHEMA_COVERAGE,
   V1_TRANSFORM_EVIDENCE,
+  validateDogfoodConfigs,
   validateRepoConfig,
+  validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
 import { fcRuns } from "@beep/test-utils";
@@ -42,6 +44,7 @@ import type { Layer } from "effect";
 
 const emptyHash = AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const previousHash = AiSyncContentHash.make("0000000000000000000000000000000000000000000000000000000000000000");
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
@@ -269,6 +272,89 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
           expect(Exit.isFailure(invalid)).toBe(true);
           expect(String(invalid)).toContain('["skills"]["include_instructions"]');
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "separates native config compatibility from checked-in repository safety policy",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const codexPath = path.join(tmpDir, ".codex/config.toml");
+          const claudePath = path.join(tmpDir, ".claude/settings.json");
+
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          expect((yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId).toBe(
+            "codex-config"
+          );
+
+          const unsafeCodex = yield* Effect.exit(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          expect(Exit.isFailure(unsafeCodex)).toBe(true);
+          expect(String(unsafeCodex)).toContain('approval_policy must not be "never"');
+          expect(String(unsafeCodex)).toContain('sandbox_mode must not be "danger-full-access"');
+
+          yield* writeText(codexPath, "");
+          const implicitCodex = yield* Effect.exit(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          expect(Exit.isFailure(implicitCodex)).toBe(true);
+          expect(String(implicitCodex)).toContain("approval_policy must be explicitly set");
+          expect(String(implicitCodex)).toContain("sandbox_mode must be explicitly set");
+
+          yield* writeText(claudePath, '{"enabledMcpjsonServers":["codegraph"]}');
+          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" });
+
+          yield* Effect.forEach(
+            [
+              "Bash(gh:*)",
+              "Bash(gh *)",
+              "Bash(gh*)",
+              "Bash(*gh*)",
+              "Bash(*)",
+              "Bash",
+              "Bash(codex exec:*)",
+              "Bash(codex:*)",
+              "Bash(/usr/bin/gh:*)",
+              "Bash(env gh:*)",
+              "Bash(GH_PAGER=cat gh:*)",
+              "Bash(command codex exec:*)",
+              "Bash(bash:*)",
+              "Bash(timeout:*)",
+            ],
+            Effect.fn(function* (permission) {
+              yield* writeText(
+                claudePath,
+                encodeJson({ permissions: { allow: [permission] }, enabledMcpjsonServers: ["codegraph"] })
+              );
+              expect((yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId).toBe(
+                "claude-settings"
+              );
+
+              const unsafeClaude = yield* Effect.exit(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              expect(Exit.isFailure(unsafeClaude)).toBe(true);
+              expect(String(unsafeClaude)).toContain(permission);
+            }),
+            { discard: true }
+          );
+
+          yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
+          yield* writeText(
+            claudePath,
+            '{"permissions":{"allow":["Bash(gh pr view:*)","Bash(gh pr checks:*)","Bash(gh run view:*)"]}}'
+          );
+
+          const safeResults = yield* validateDogfoodConfigs(tmpDir);
+          expect(safeResults.map((result) => result.relativePath)).toEqual([
+            ".codex/config.toml",
+            ".claude/settings.json",
+          ]);
         })
       );
     })

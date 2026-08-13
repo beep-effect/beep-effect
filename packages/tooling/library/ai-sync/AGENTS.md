@@ -11,7 +11,7 @@ controller.
 | metadata | `TIER_ONE_SOURCES`, `V1_SCHEMA_COVERAGE`, `GENERATED_TIER_ONE_SOURCE_METADATA` | source pins, support matrix, committed Tier-1 hashes |
 | drift | `checkGeneratedArtifacts`, `checkStrictDrift`, `checkSourceDriftWithFetcher` | local offline and strict network drift checks |
 | transforms | `codexMcpServersToClaudeMcpJson`, `claudeMcpJsonToCodexConfig`, `claudeMcpJsonToJunieMcpJson`, `junieMcpJsonToClaudeMcpJson`, `normalizeInstructionDocument`, `normalizeAgentSkillFrontmatter` | only supported where V1 evidence says semantics are real |
-| validation | `validateRepoConfig`, `validateDogfoodConfig`, `validateCurrentCheckoutDogfood` | repo-local config validation with typed `AiSyncError` failures |
+| validation | `validateRepoConfig`, `validateRepoSafetyPolicy`, `validateDogfoodConfig`, `validateDogfoodConfigs`, `validateCurrentCheckoutDogfood`, `validateCurrentCheckoutDogfoodConfigs` | native config validation plus Codex-and-Claude repository safety checks with typed `AiSyncError` failures |
 
 ## Laws
 - Keep unsupported and undocumented cells explicit as `na` or
@@ -19,5 +19,6 @@ controller.
 - Keep package-local `check` offline. Use `drift --strict` for network checks.
 
 ## Commands
+- `bun run --cwd packages/tooling/library/ai-sync check`
 - `bun run --cwd packages/tooling/library/ai-sync generate`
 - `bun run --cwd packages/tooling/library/ai-sync drift --strict`

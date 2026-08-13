@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "codex-security-findings-2026-08-13",
+    "title": "Codex Security Findings (2026-08-13)",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-08-13",
+  "lifecycle": "active",
+  "statusNote": "P4 and P5 are in progress: six bounded fixes are hardened locally and Yeet repair is green at 9/9 lanes; the local quality-review-fix loop is authorized and Yeet verify awaits main reconciliation; six CI findings remain architecture/deployment-blocked.",
+  "blockedBy": [
+    "Runner admission and workload-identity architecture for CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008.",
+    "Active CI work must land and external GitHub organization runner-group/AWS deployment proof must pass before closeout; publication requires explicit operator authorization."
+  ],
+  "mission": "Remediate and close the 13 Codex Cloud security findings captured on 2026-08-13.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 13 Codex findings are resolved with zero packet-applicable open findings.",
+    "grandfathered": false
+  },
+  "branch": "codex/security-findings-2026-08-13",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-08-13/README.md",
+    "goals/codex-security-findings-2026-08-13/SPEC.md",
+    "goals/codex-security-findings-2026-08-13/PLAN.md",
+    "goals/codex-security-findings-2026-08-13/GOAL.md",
+    "goals/codex-security-findings-2026-08-13/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-08-13/GOAL.md"
+    }
+  ],
+  "source": {
+    "provider": "Codex Cloud Security UI",
+    "repository": "kriegcloud/beep-effect",
+    "url": "https://chatgpt.com/codex/cloud/security/findings/",
+    "capturedAt": "2026-08-13",
+    "captureMethodPolicy": "signed-in-csv-export",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-08-13/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 13,
+    "capturedCount": 13,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "High": 6,
+      "Medium": 4,
+      "Low": 1,
+      "Informational": 2
+    },
+    "dispositionCounts": {
+      "remediate": 12,
+      "already-fixed": 1,
+      "false-positive": 0,
+      "out-of-scope": 0,
+      "untriaged": 0
+    },
+    "note": "P2 and P3 are complete. Six bounded remediations are hardened locally, one finding was already fixed, Yeet repair passed all 9 lanes, the local quality-review-fix loop is authorized, Yeet verify awaits main reconciliation, and six CI trust-boundary findings remain architecture/deployment-blocked."
+  },
+  "closeoutPolicy": {
+    "fixed": "Already fixed",
+    "alreadyFixed": "Already fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict current-HEAD proof that affected code is absent, unreachable, non-shipped, already fixed, or materially misunderstood",
+    "fixPhilosophy": "minimal shared-root fixes with focused regression proof; reuse canonical repo helpers after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-08-13/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked records contain title, severity, Codex ID, source commit, public summary, decisions, changed files, and verification only."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Capture",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Validate",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Lane partition",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Remediate",
+      "status": "in-progress"
+    },
+    {
+      "id": "P5",
+      "name": "Repo proof",
+      "status": "in-progress"
+    },
+    {
+      "id": "P6",
+      "name": "Publish",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Monitor",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
+      "name": "Merge and close findings",
+      "status": "pending"
+    },
+    {
+      "id": "P9",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-08-13/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-08-13/ops/triage.json",
+    "bun -e 'import { decodeCodexTriageLedger } from \"./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts\"; import { Effect } from \"effect\"; const input = await Bun.file(\"goals/codex-security-findings-2026-08-13/ops/triage.json\").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'",
+    "test \"$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 13",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep yeet repair",
+    "bun -e 'import parse from \"@changesets/parse\"; const parsed = parse(await Bun.file(\".changeset/codex-security-findings-2026-08-13.md\").text()); const actual = parsed.releases.map(({ name, type }) => `${name}:${type}`).sort(); const expected = [\"@beep/ai-sync:patch\", \"@beep/infra:patch\"]; if (JSON.stringify(actual) !== JSON.stringify(expected)) process.exit(1)'",
+    "bun -e 'import { scanSensitiveText } from \"./packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts\"; const root = \"goals/codex-security-findings-2026-08-13\"; const glob = new Bun.Glob(\"**/*\"); const hits = []; for await (const path of glob.scan({ cwd: root, onlyFiles: true })) { if (path.startsWith(\"raw/\")) continue; hits.push(...scanSensitiveText(path, await Bun.file(`${root}/${path}`).text())); } if (hits.length > 0) process.exit(1)'",
+    "git diff --check -- goals/codex-security-findings-2026-08-13 goals/INDEX.md",
+    "jq -r '.findings[].commit' goals/codex-security-findings-2026-08-13/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The signed-in CSV export cannot be produced from the findings page.",
+    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
+    "A remediation requires an architecture or product decision outside packet scope.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

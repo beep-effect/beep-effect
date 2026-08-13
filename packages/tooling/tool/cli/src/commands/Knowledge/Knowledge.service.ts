@@ -16,7 +16,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { extract as extractTar } from "tar";
-import { runCaptured } from "../../internal/process/StepExec.ts";
+import { runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readGitRenames,
   readGitTree,
@@ -128,9 +128,9 @@ export interface KnowledgeArchiveOracle {
  * **Gotchas**
  *
  * `probePolicy` is one value for the comparison rather than one per oracle on purpose. Probing only
- * the base would report every archive-local command and index finding as resolved, and probing only
- * HEAD would report every one of them as introduced. This is a request, not a guarantee: a base
- * archive whose probe cannot boot downgrades the whole comparison, both sides at once.
+ * the base would report every archive-data command and index finding as resolved, and probing only
+ * HEAD would report every one of them as introduced. This is a request, not a guarantee: a base-data
+ * probe that cannot boot downgrades the whole comparison, both sides at once.
  *
  * @see {@link KnowledgeArchiveOracle} for the per-side read surface this input pairs.
  * @category services
@@ -437,7 +437,7 @@ const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
   const results = yield* oracle.probeCommands(A.map(occurrences, (occurrence) => occurrence.words));
   if (A.length(results) !== A.length(occurrences)) {
     return yield* KnowledgeOperationalError.make({
-      message: "Archive-local command probe returned a result count that did not match its inputs.",
+      message: "Current-checkout command probe returned a result count that did not match its archive-data inputs.",
     });
   }
   let candidates = A.empty<KnowledgeFindingCandidate>();
@@ -456,7 +456,7 @@ const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
         subject: nfc(`beep-command:${canonical}`),
         location: occurrence.location,
         message: `Unknown beep command path: ${canonical}.`,
-        remediation: "Update the inline command to a command available in the matching archive.",
+        remediation: "Update the inline command to one available in the current CLI command surface.",
       })
     );
   }
@@ -479,7 +479,7 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
       documentId,
       subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
       location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
-      message: "goals/INDEX.md differs from the archive-local manifest projection.",
+      message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
       remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
     })
   );
@@ -504,7 +504,7 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
   return { candidates, commands };
 });
 
-/** The archive-local reads one side's probe substep needs once the tracked-tree pass has finished. */
+/** The archive-data reads one side's probe substep needs once the tracked-tree pass has finished. */
 interface KnowledgeProbeSideInput {
   readonly commands: ReadonlyArray<KnowledgeCommandOccurrence>;
   readonly indexDocumentId: string;
@@ -583,8 +583,9 @@ const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(fun
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Both probe evaluators run Bun on the scanned revision's own code, so an untrusted comparison
-  // stops here with only the tracked-tree classes it derived without executing anything.
+  // Both evaluators run current-checkout code against the selected revision's data. The existing
+  // trust policy remains a defense-in-depth boundary: a skipped comparison stops here with only the
+  // tracked-tree classes and performs no data-driven probe work at all.
   if (!KnowledgeProbePolicy.is.enabled(input.probePolicy)) {
     return skippedProbeOutcome(input.probePolicy, O.none());
   }
@@ -651,7 +652,7 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * `input.probePolicy` is the requested policy, applied to both sides at once; the report carries the
  * policy that was actually achieved, which is weaker when the merge-base archive's probe failed to
  * boot. Either way a non-`enabled` report is still a well-formed delta, but one whose empty buckets
- * only cover the classes that need no archive-local execution.
+ * only cover the classes that need no executable probe.
  *
  * **Example** (Scan two empty archives)
  *
@@ -758,13 +759,14 @@ const ROOT_COMMAND_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
 
 /**
- * Command-probe program text, bound to absolute paths.
+ * Command-probe program text, bound to the executing checkout's command module.
  *
- * The probe module and its input live in the scratch root, never in the archive, so a scanned branch
- * that tracks a symlink at a scratch file name cannot redirect a write out of the sandbox. Only the
- * archive module it imports is read from `archiveRoot`.
+ * The probe module and its input live in the scratch root, never in the archive, so a scanned revision
+ * cannot redirect either file. The command implementation is also loaded from the checkout already
+ * executing the semantic-delta command. The archive is only the child process's working directory and
+ * therefore contributes data, never executable modules.
  *
- * @param rootCommandModule - Absolute path of the archive-local root command module.
+ * @param rootCommandModule - Absolute path of the current-checkout root command module.
  * @param inputPath - Absolute path of the tab-delimited command input file.
  * @returns Probe source ready to write into the scratch root.
  */
@@ -811,12 +813,13 @@ BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
 `;
 
 /**
- * Index-probe program text, bound to an absolute path.
+ * Index-probe program text, bound to the executing checkout's index builder.
  *
  * The projection still runs with the archive root as its working directory, so `"."` resolves to the
- * archive; only the module specifier and the probe file itself are absolute.
+ * archive data. The module specifier and probe file are absolute paths outside the archive, preventing
+ * an archived `PortfolioIndex.ts` (or one of its archived dependencies) from entering the module graph.
  *
- * @param portfolioIndexModule - Absolute path of the archive-local portfolio index module.
+ * @param portfolioIndexModule - Absolute path of the current-checkout portfolio index module.
  * @returns Probe source ready to write into the scratch root.
  */
 const indexProbeSource = (portfolioIndexModule: string): string => `
@@ -853,26 +856,31 @@ const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratc
 });
 
 const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
+  runtimeExecutable: string,
   archiveRoot: string,
   env: Readonly<Record<string, string>>,
-  scriptPath: string
+  scriptPath: string,
+  bunfigPath: string,
+  tsconfigPath: string
 ) {
-  const result = yield* runCaptured({
-    command: process.execPath,
-    args: [scriptPath],
+  const result = yield* runCapturedStreams({
+    command: runtimeExecutable,
+    args: [`--config=${bunfigPath}`, `--tsconfig-override=${tsconfigPath}`, "--no-env-file", scriptPath],
     cwd: archiveRoot,
     env,
     extendEnv: false,
-    source: "all",
-  }).pipe(KnowledgeOperationalError.mapError(`Failed to spawn archive-local probe "${scriptPath}".`));
+  }).pipe(
+    KnowledgeOperationalError.mapError(`Failed to spawn current-checkout probe against archive data "${scriptPath}".`)
+  );
   // The probe writes its structured output in one final call, so a non-zero exit means it never got
-  // there: the archive's own modules failed to load or the help action itself threw.
+  // there: the current-checkout probe failed to load or the projection itself failed.
   if (result.exitCode !== 0) {
+    const output = A.join([result.stdout, result.stderr], "");
     return yield* KnowledgeProbeBootError.make({
-      message: `Archive-local probe "${scriptPath}" failed with exit ${result.exitCode}.${Str.isEmpty(result.output) ? "" : `\n${result.output}`}`,
+      message: `Current-checkout probe against archive data "${scriptPath}" failed with exit ${result.exitCode}.${Str.isEmpty(output) ? "" : `\n${output}`}`,
     });
   }
-  return result.output;
+  return result.stdout;
 });
 
 const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProbeResult> => {
@@ -893,19 +901,60 @@ const decodeCommandProbeOutput = (
 ): Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError> => {
   const lines = Str.isEmpty(output) ? A.empty<string>() : Str.split(/\r?\n/u)(output);
   if (A.length(lines) !== expectedCount) {
-    return KnowledgeOperationalError.make({ message: "Archive-local command probe emitted malformed output." });
+    return KnowledgeOperationalError.make({
+      message: "Current-checkout command probe emitted malformed output for archive data.",
+    });
   }
   return O.match(O.all(A.map(lines, commandProbeResultFromLine)), {
-    onNone: () => KnowledgeOperationalError.make({ message: "Archive-local command probe emitted an unknown status." }),
+    onNone: () =>
+      KnowledgeOperationalError.make({
+        message: "Current-checkout command probe emitted an unknown status for archive data.",
+      }),
     onSome: Effect.succeed,
   });
 };
 
-const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(function* (
-  repoRoot: string,
+/**
+ * Builds one archive-backed semantic-delta oracle without executing code from the archive.
+ *
+ * **Details**
+ *
+ * Probe programs import their command and index implementations from `currentCheckoutRoot`. They run
+ * with `archiveRoot` as their working directory so those current implementations still inspect the
+ * selected revision's data. A scratch-owned Bun config, TypeScript config, dependency link, and input
+ * file prevent an archived config or module-resolution rule from injecting archive code before the
+ * probe starts.
+ *
+ * **Gotchas**
+ *
+ * `archiveRoot` is intentionally a data boundary, not a code root. Do not place probe scripts,
+ * dependency links, runtime configuration, or module specifiers beneath it.
+ *
+ * **Example** (Construct an archive-data oracle)
+ *
+ * ```ts
+ * import { makeKnowledgeArchiveOracle } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const program = makeKnowledgeArchiveOracle("/repo", "/tmp/archive", "/tmp/scratch", [])
+ * console.log(program)
+ * ```
+ *
+ * @internal
+ * @param currentCheckoutRoot - Repository root containing the CLI code already executing this scan.
+ * @param archiveRoot - Extracted revision used only as the probe working directory and data source.
+ * @param scratchRoot - Isolated directory for generated programs, inputs, and runtime configuration.
+ * @param trackedEntries - Git-tree entries belonging to the extracted revision.
+ * @param runtimeExecutable - Bun executable running the generated probe; defaults to this process.
+ * @returns An archive oracle whose executable module graph comes from the current checkout.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle")(function* (
+  currentCheckoutRoot: string,
   archiveRoot: string,
   scratchRoot: string,
-  trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>
+  trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>,
+  runtimeExecutable = process.execPath
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -914,11 +963,16 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
     .makeDirectory(scratchRoot, { recursive: true })
     .pipe(KnowledgeOperationalError.mapError("Failed to create an archive scratch root."));
   const env = yield* makeHermeticEnv(scratchRoot);
+  const bunfigPath = path.join(scratchRoot, "bunfig.toml");
+  const tsconfigPath = path.join(scratchRoot, "tsconfig.json");
   yield* fs
-    .symlink(path.join(repoRoot, "node_modules"), path.join(archiveRoot, "node_modules"))
-    .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive root."));
+    .writeFileString(bunfigPath, "# Semantic-delta probes intentionally ignore archive-local Bun configuration.\n")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta Bun configuration."));
   yield* fs
-    .symlink(path.join(repoRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
+    .writeFileString(tsconfigPath, "{}\n")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta TypeScript configuration."));
+  yield* fs
+    .symlink(path.join(currentCheckoutRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
     .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive scratch root."));
   const readBytes = Effect.fn("Knowledge.archiveReadBytes")(function* (repoPath: string) {
     return yield* fs
@@ -942,20 +996,22 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
           "\n"
         )
       )
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe input."));
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command probe input."));
     yield* fs
-      .writeFileString(scriptPath, commandProbeSource(path.join(archiveRoot, ROOT_COMMAND_MODULE), inputPath))
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe."));
-    const output = yield* runArchiveProcess(archiveRoot, env, scriptPath);
+      .writeFileString(scriptPath, commandProbeSource(path.join(currentCheckoutRoot, ROOT_COMMAND_MODULE), inputPath))
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command probe."));
+    const output = yield* runArchiveProcess(runtimeExecutable, archiveRoot, env, scriptPath, bunfigPath, tsconfigPath);
     return yield* decodeCommandProbeOutput(output, A.length(commands));
   });
 
   const indexBytes = Effect.gen(function* () {
     const scriptPath = path.join(scratchRoot, "index-probe.ts");
     yield* fs
-      .writeFileString(scriptPath, indexProbeSource(path.join(archiveRoot, PORTFOLIO_INDEX_MODULE)))
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local index probe."));
-    const expected = textEncoder.encode(yield* runArchiveProcess(archiveRoot, env, scriptPath));
+      .writeFileString(scriptPath, indexProbeSource(path.join(currentCheckoutRoot, PORTFOLIO_INDEX_MODULE)))
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout index probe."));
+    const expected = textEncoder.encode(
+      yield* runArchiveProcess(runtimeExecutable, archiveRoot, env, scriptPath, bunfigPath, tsconfigPath)
+    );
     const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
     return KnowledgeIndexBytes.make({ expected, archived });
   }).pipe(Effect.provide(runtime));
@@ -975,13 +1031,13 @@ const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
  * Materializes only the entry types the scan reads, so a hostile revision cannot aim extraction
  * anywhere.
  *
- * Regular files carry every scanned document and every module the probes import; directories carry
- * their structure. Links are dropped: the tracked-path oracle already comes from `git ls-tree` rather
- * than the extracted tree, documents whose blob is a link are filtered out by mode before they are
- * ever read, and a link entry in an untrusted archive is the classic primitive for redirecting a
- * later write out of the archive root. Dropping them also keeps `strict` extraction meaningful — a
- * repository that tracks a link through another link would otherwise abort the whole scan on an
- * entry nothing reads.
+ * Regular files carry every scanned document and archive-data input; directories carry their
+ * structure. Probe modules come exclusively from the current checkout. Links are dropped: the
+ * tracked-path oracle already comes from `git ls-tree` rather than the extracted tree, documents whose
+ * blob is a link are filtered out by mode before they are ever read, and a link entry in an untrusted
+ * archive is the classic primitive for redirecting a later read or write out of the archive root.
+ * Dropping them also keeps `strict` extraction meaningful — a repository that tracks a link through
+ * another link would otherwise abort the whole scan on an entry nothing reads.
  *
  * The argument is read structurally because the library shares this filter signature with archive
  * creation, where the second parameter is a stat result carrying no entry type at all. Extraction
@@ -1037,16 +1093,15 @@ const readHeadRepository = Effect.fn("Knowledge.readHeadRepository")(function* (
 });
 
 /**
- * Decides whether this invocation may execute archive-local `--help` and index probes.
+ * Decides whether this invocation may run current-checkout `--help` and index probes on archive data.
  *
  * **Details**
  *
- * Probing runs Bun on code taken from the scanned revision, which is the same trust boundary as
- * running that revision's tests. Locally, on `push`, and on a same-repo pull request that boundary is
- * already ours, so probes run. On a pull request whose head branch lives in another repository — a
- * fork of this public repository — probing would execute a contributor's code on our runner, so the
- * probe substep is skipped and the comparison degrades to the classes the tracked-tree oracle decides
- * on its own.
+ * Probing runs code from the checkout already executing this command and supplies the selected
+ * revision only as filesystem data. Locally, on `push`, and on a same-repo pull request, probes run.
+ * On a pull request whose head branch lives in another repository — a fork of this public repository
+ * — the probe substep remains skipped as defense in depth against data-driven behavior, and the
+ * comparison degrades to the classes the tracked-tree oracle decides on its own.
  *
  * **Gotchas**
  *
@@ -1147,8 +1202,18 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
           score: rename.score,
         })
       );
-      const base = yield* makeLiveArchiveOracle(repoRoot, baseRoot, path.join(tempRoot, "base-scratch"), baseEntries);
-      const head = yield* makeLiveArchiveOracle(repoRoot, headRoot, path.join(tempRoot, "head-scratch"), headEntries);
+      const base = yield* makeKnowledgeArchiveOracle(
+        repoRoot,
+        baseRoot,
+        path.join(tempRoot, "base-scratch"),
+        baseEntries
+      );
+      const head = yield* makeKnowledgeArchiveOracle(
+        repoRoot,
+        headRoot,
+        path.join(tempRoot, "head-scratch"),
+        headEntries
+      );
       return yield* scanKnowledgePair({ base, head, probePolicy, renames });
     })
   );
