@@ -26,12 +26,6 @@ import type { CandorFilingScope, UncoveredReason } from "./CandorPolicy.values.t
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.service");
 
-/**
- * Whether one event's discovery provenance puts it in the gate's quantified
- * set. Examiner-observed occurrences are recorded and never gate.
- */
-const isAiDiscovered = (event: PatentCitationEvent): boolean => event.discovery.kind === "AiDiscovered";
-
 const IdentifiedPatentReference = PatentReference.pipe(
   S.check(
     S.makeFilter((reference) => O.isSome(reference.number), {
@@ -186,46 +180,30 @@ const dispositionReason = (
 };
 
 /**
- * Evaluate one source group, returning the uncovered AI-discovered events it
- * contributes.
+ * Evaluate one source group, returning every recorded event it leaves
+ * uncovered.
  *
  * Currency is derived from declared supersession alone. A group with exactly
- * one head is answered by that head's coverage, and every AI-discovered event
- * in the group shares that answer — which is why superseding an observation
+ * one head is answered by that head's coverage, and every recorded event in
+ * the group shares that answer — which is why superseding an observation
  * never releases the gate and disposing the newer observation releases the
  * whole group at once. A group without exactly one head is ambiguous, and
  * ambiguity blocks.
  *
- * **Gotchas**
- *
- * The head's coverage is read WITHOUT regard to its discovery kind, so when an
- * examiner-observed observation supersedes an AI-discovered one the group is
- * cleared by dispositioning that examiner-observed head. This looks wrong and
- * is not: "examiner events record without gating" (SPEC decision 4) means an
- * examiner event never *initiates* gating — an examiner-only source has no
- * AI-discovered event and returns early above — not that an examiner
- * observation can never be the subject of a judgment. Once it supersedes an AI
- * finding it IS the current observation of that source, and whether candor is
- * still owed on that history is a legal question this package must never
- * compute, so it blocks until a human decides. Narrowing the head lookup to
- * AI-discovered events would leave no unsuperseded head at all and trip
- * `ambiguous-lineage` with no way to clear it. Pinned in both directions by the
- * "an examiner-observed head is dispositionable" suite in `CandorPolicy.test.ts`.
+ * Discovery provenance records how the event entered the system; it no longer
+ * decides whether the event participates. An examiner-observed event therefore
+ * initiates gating in its own right and remains clearable only by a human
+ * disposition bound to the current observation.
  */
 const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   group: ReadonlyArray<PatentCitationEvent>,
   dispositions: ReadonlyArray<CandorDisposition>
 ): Effect.fn.Return<ReadonlyArray<UncoveredEvent>, never, SourceTextResolver | import("effect/Crypto").Crypto> {
-  const aiEvents = A.filter(group, isAiDiscovered);
-  if (A.isReadonlyArrayNonEmpty(aiEvents) === false) {
-    return A.empty<UncoveredEvent>();
-  }
-
   const superseded = supersededEventIds(group);
   const heads = A.filter(group, (event) => !HashSet.has(superseded, event.id));
 
   const uncoveredWith = (reason: UncoveredReason) =>
-    A.map(aiEvents, (event) => UncoveredEvent.make({ eventId: event.id, reason }));
+    A.map(group, (event) => UncoveredEvent.make({ eventId: event.id, reason }));
 
   if (A.length(heads) !== 1) {
     return uncoveredWith("ambiguous-lineage");

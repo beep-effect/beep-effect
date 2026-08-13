@@ -4,10 +4,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import type { PromotionGate } from "@beep/shared-use-cases/PromotionGate";
 import type { Effect } from "effect";
 import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
 import type { CandidateOutputSet, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
-import type { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import type {
+  ProfessionalRuntimePromotionBlocked,
+  ProfessionalRuntimeValidationError,
+} from "./ProfessionalRuntime.errors.ts";
 import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
 
 /**
@@ -42,5 +47,9 @@ export interface ProfessionalRuntimeSdk {
    */
   readonly proposeCandidateOutputSet: (
     command: ProposeCandidateOutputSet
-  ) => Effect.Effect<CandidateOutputSet, ProfessionalRuntimeValidationError>;
+  ) => Effect.Effect<
+    CandidateOutputSet,
+    ProfessionalRuntimePromotionBlocked | ProfessionalRuntimeValidationError,
+    PromotionGate
+  >;
 }

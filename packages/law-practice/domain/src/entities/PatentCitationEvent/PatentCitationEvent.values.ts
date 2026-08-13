@@ -160,16 +160,16 @@ export class AiDiscovery extends S.Class<AiDiscovery>($I`AiDiscovery`)(
  *
  * **When to use**
  *
- * Use as the discriminator that decides whether an event participates in the
- * candor gate's quantified set.
+ * Use as the durable record of how an event entered the system. It does not
+ * decide whether the event participates in the candor gate.
  *
  * **Details**
  *
  * The union stays deliberately narrow at this rung: exactly the two provenances
- * whose gating behaviour the spec settles. Examiner-observed occurrences are
- * recorded and never gate; AI-discovered occurrences gate. Adding a member is
- * therefore a decision about the gate's quantifier, not a schema convenience,
- * which is why the `CitationMention` handoff waits on its own goal.
+ * whose provenance behavior the spec settles. Examiner-observed and
+ * AI-discovered occurrences now share the same fail-closed gating posture.
+ * Adding a member is still a domain decision, not a schema convenience, which
+ * is why the `CitationMention` handoff waits on its own goal.
  *
  * **Example** (Branch on discovery provenance)
  *

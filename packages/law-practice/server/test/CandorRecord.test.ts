@@ -41,7 +41,11 @@ import type { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/C
 // different numbers: scoping a read to one of them also proves the port's rule
 // that nothing matches across representations.
 const FILING_A: CitingApplicationIdentity.Encoded = { applicationNumber: "16138242", kind: "UsptoNormalized" };
-const FILING_B: CitingApplicationIdentity.Encoded = { applicationNumber: "102014000345678", kind: "WipoSt13" };
+const FILING_B: CitingApplicationIdentity.Encoded = {
+  applicationNumber: "102014000345678",
+  kind: "WipoSt13",
+  officeCode: "EP",
+};
 
 type Source = {
   readonly digest: string;

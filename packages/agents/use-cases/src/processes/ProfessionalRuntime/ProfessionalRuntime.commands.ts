@@ -6,6 +6,7 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
+import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import * as S from "effect/Schema";
 import { CandidateOutputSet, RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 
@@ -19,6 +20,7 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { ProposeCandidateOutputSet, RuntimeScope } from "@beep/agents-use-cases/public"
+ * import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate"
  * import { Effect } from "effect"
  *
  * const fixture = RuntimeFixtureInput.make({
@@ -45,6 +47,9 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  * const program = Effect.map(runRuntimeFixture(fixture), (outputSet) =>
  *   ProposeCandidateOutputSet.make({
  *     outputSet,
+ *     promotionSubjects: [
+ *       PromotionSubjectRef.make({ id: "application-16138242", kind: "patent-application" })
+ *     ],
  *     producedByPrincipalId: "principal-agent-runtime-fixture",
  *     scope: RuntimeScope.make({
  *       organizationId: "org-law-fixture",
@@ -65,6 +70,9 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 export class ProposeCandidateOutputSet extends S.Class<ProposeCandidateOutputSet>($I`ProposeCandidateOutputSet`)(
   {
     outputSet: CandidateOutputSet.annotateKey({ description: "Candidate output set proposed through the SDK." }),
+    promotionSubjects: S.NonEmptyArray(PromotionSubjectRef).annotateKey({
+      description: "Opaque product subjects whose vertical policies must clear before accepting the candidate output.",
+    }),
     producedByPrincipalId: S.NonEmptyString.annotateKey({
       description: "Principal identifier for the runtime producer proposing the output set.",
     }),

@@ -192,8 +192,9 @@ export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeIn
  * **Gotchas**
  *
  * Nothing here matches across representations: a filing recorded as a
- * normalized USPTO number is not found by its WIPO ST.13 form. Reconciling the
- * two is a named follow-on, never a silent equality rule.
+ * normalized USPTO number is not found by an ST.13 form. The USPTO number
+ * cannot supply ST.13's filing-year field, so this exact-representation rule is
+ * terminal rather than a deferred silent equality rule.
  *
  * **Example** (Build the adapter without touching a database)
  *

@@ -72,7 +72,12 @@ const migrateCandorTables = Effect.fnUntraced(function* () {
 // Two representations rather than two numbers: scoping a read to one of them
 // also holds the port's rule that nothing matches across representations.
 const FILING_A: CitingApplicationIdentity.Encoded = { applicationNumber: "16138242", kind: "UsptoNormalized" };
-const FILING_B: CitingApplicationIdentity.Encoded = { applicationNumber: "102014000345678", kind: "WipoSt13" };
+const FILING_A_JSON = S.encodeUnknownSync(S.fromJsonString(S.Unknown))(FILING_A);
+const FILING_B: CitingApplicationIdentity.Encoded = {
+  applicationNumber: "102014000345678",
+  kind: "WipoSt13",
+  officeCode: "EP",
+};
 
 const digest = `sha256:${"a".repeat(64)}`;
 
@@ -176,6 +181,95 @@ const candorTableNames: ReadonlyArray<string> = [
   "law_practice_ids_submission_fact",
   "law_practice_patent_citation_event",
 ];
+
+const representativeRowsPerTable = 10_000;
+const representativeRowsPerTenant = 100;
+const representativeTargetOrg = 50;
+
+const representativeInsertStatements: ReadonlyArray<string> = [
+  `INSERT INTO law_practice_candor_disposition (
+    created_at, created_by_principal, org_id, row_version, schema_version, source,
+    updated_at, updated_by_principal, citing_application, decided_at, disposes,
+    lifecycle, litigation_frame_judgment, rule56_judgment, supersedes, entity_type, public_id
+  )
+  SELECT created_at, created_by_principal, ((sample - 1) / 100)::integer + 1,
+    row_version, schema_version, source, updated_at, updated_by_principal,
+    CASE WHEN sample % 100 = 1 THEN citing_application
+      ELSE jsonb_build_object('kind', 'UsptoNormalized', 'applicationNumber', lpad(sample::text, 8, '0')) END,
+    decided_at, disposes, lifecycle, litigation_frame_judgment, rule56_judgment,
+    supersedes, entity_type, public_id || '-planner-' || sample::text
+  FROM law_practice_candor_disposition CROSS JOIN generate_series(1, $2) AS sample
+  WHERE id = $1`,
+  `INSERT INTO law_practice_ids_submission_fact (
+    created_at, created_by_principal, org_id, row_version, schema_version, source,
+    updated_at, updated_by_principal, candidate_window, citing_application, content,
+    fees, modeled_from, office_treatment, operative_date, statement, submission_kind,
+    entity_type, public_id
+  )
+  SELECT created_at, created_by_principal, ((sample - 1) / 100)::integer + 1,
+    row_version, schema_version, source, updated_at, updated_by_principal, candidate_window,
+    CASE WHEN sample % 100 = 1 THEN citing_application
+      ELSE jsonb_build_object('kind', 'UsptoNormalized', 'applicationNumber', lpad(sample::text, 8, '0')) END,
+    content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind,
+    entity_type, public_id || '-planner-' || sample::text
+  FROM law_practice_ids_submission_fact CROSS JOIN generate_series(1, $2) AS sample
+  WHERE id = $1`,
+  `INSERT INTO law_practice_patent_citation_event (
+    created_at, created_by_principal, org_id, row_version, schema_version, source,
+    updated_at, updated_by_principal, actor, citing_application, discovery, grounding,
+    observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, public_id
+  )
+  SELECT created_at, created_by_principal, ((sample - 1) / 100)::integer + 1,
+    row_version, schema_version, source, updated_at, updated_by_principal, actor,
+    CASE WHEN sample % 100 = 1 THEN citing_application
+      ELSE jsonb_build_object('kind', 'UsptoNormalized', 'applicationNumber', lpad(sample::text, 8, '0')) END,
+    discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference,
+    supersedes, entity_type, public_id || '-planner-' || sample::text
+  FROM law_practice_patent_citation_event CROSS JOIN generate_series(1, $2) AS sample
+  WHERE id = $1`,
+];
+
+interface ExplainPlanNode {
+  readonly "Actual Rows"?: number;
+  readonly "Index Name"?: string;
+  readonly "Node Type": string;
+  readonly Plans?: ReadonlyArray<ExplainPlanNode>;
+  readonly "Rows Removed by Filter"?: number;
+}
+
+interface ExplainDocument {
+  readonly Plan: ExplainPlanNode;
+}
+
+const collectPlanNodes = (node: ExplainPlanNode): ReadonlyArray<ExplainPlanNode> => [
+  node,
+  ...A.flatMap(node.Plans ?? [], collectPlanNodes),
+];
+
+const seedRepresentativePlannerVolume = Effect.fnUntraced(function* (seedRows: ReadonlyArray<number>) {
+  const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+
+  yield* Effect.forEach(
+    A.zip(representativeInsertStatements, seedRows),
+    ([statement, seedId]) => sql.unsafe(statement, [seedId, representativeRowsPerTable]),
+    { discard: true }
+  );
+  yield* Effect.forEach(candorTableNames, (table) => sql.unsafe(`ANALYZE ${table}`), { discard: true });
+});
+
+const explainFilingRead = Effect.fnUntraced(function* (table: string) {
+  const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+  const rows = yield* sql.unsafe<{ readonly "QUERY PLAN": ReadonlyArray<ExplainDocument> }>(
+    `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+     SELECT * FROM ${table}
+     WHERE org_id = $1 AND citing_application = $2::jsonb
+     ORDER BY id ASC`,
+    [representativeTargetOrg, FILING_A_JSON]
+  );
+  const document = rows[0]?.["QUERY PLAN"]?.[0];
+
+  return document === undefined ? [] : collectPlanNodes(document.Plan);
+});
 
 /**
  * Rewind every candor table's id sequence so the next append receives `nextId`.
@@ -331,6 +425,32 @@ if (!shouldRunPgliteIntegration) {
             earlier.submissionFact.id,
             later.submissionFact.id,
           ]);
+        }),
+        PgliteIntegrationTimeout
+      );
+    });
+
+    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("representative-volume query plans", (it) => {
+      it.effect(
+        "bounds every filing read by the existing tenant index before applying jsonb equality",
+        Effect.fnUntraced(function* () {
+          yield* migrateCandorTables();
+          const repository = yield* CandorRecordRepository;
+          const seed = yield* appendFiling(repository, FILING_A, 1, 1);
+
+          yield* seedRepresentativePlannerVolume([seed.disposition.id, seed.submissionFact.id, seed.event.id]);
+
+          for (const table of candorTableNames) {
+            const plan = yield* explainFilingRead(table);
+            const tenantIndexNode = A.findFirst(plan, (node) => node["Index Name"]?.includes("org_id") === true);
+
+            expect(O.isSome(tenantIndexNode), `${table} plan did not use an org_id index`).toBe(true);
+            expect(
+              O.getOrThrow(tenantIndexNode)["Rows Removed by Filter"],
+              `${table} plan scanned beyond one representative tenant`
+            ).toBeLessThan(representativeRowsPerTenant);
+            expect(O.getOrThrow(tenantIndexNode)["Actual Rows"], `${table} plan did not isolate one filing`).toBe(1);
+          }
         }),
         PgliteIntegrationTimeout
       );

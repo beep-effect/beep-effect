@@ -5,12 +5,16 @@
  * @since 0.0.0
  */
 import { SchemaUtils } from "@beep/schema";
+import { PromotionGate, PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
-import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import {
+  ProfessionalRuntimePromotionBlocked,
+  ProfessionalRuntimeValidationError,
+} from "./ProfessionalRuntime.errors.ts";
 import { runRuntimeFixture } from "./ProfessionalRuntime.fixtures.ts";
 import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
 import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
@@ -184,6 +188,26 @@ const validateOutputSet = (
     : ProfessionalRuntimeValidationError.failEffect(`${outputSet.scenarioId}: ${A.join(issues, "; ")}`);
 };
 
+const requirePromotionClear = Effect.fn("ProfessionalRuntimeSdk.requirePromotionClear")(function* (
+  command: ProposeCandidateOutputSet
+) {
+  const gate = yield* PromotionGate;
+
+  yield* Effect.forEach(
+    command.promotionSubjects,
+    (subject) =>
+      gate.evaluate(subject).pipe(
+        Effect.flatMap((verdict) =>
+          PromotionGateVerdict.match(verdict, {
+            blocked: ({ reason }) => ProfessionalRuntimePromotionBlocked.failEffect(subject, reason),
+            clear: () => Effect.void,
+          })
+        )
+      ),
+    { discard: true }
+  );
+});
+
 /**
  * Create an in-memory SDK facade over deterministic runtime fixture inputs.
  *
@@ -276,6 +300,7 @@ export const makeInMemoryProfessionalRuntimeSdk = (
       toPlainJson(command.outputSet) === toPlainJson(generatedOutputSet),
       `${command.outputSet.scenarioId}: proposed output set does not match deterministic fixture output`
     );
+    yield* requirePromotionClear(command);
 
     return command.outputSet;
   }),

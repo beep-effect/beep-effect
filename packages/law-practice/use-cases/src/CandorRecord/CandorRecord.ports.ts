@@ -163,8 +163,9 @@ export class CandorRecordRepositoryUnavailable extends TaggedErrorClass<CandorRe
  *
  * **Gotchas**
  *
- * Every read is keyed by one exact tenant-scoped filing. Nothing
- * here matches across representations; reconciling them is a named follow-on.
+ * Every read is keyed by one exact tenant-scoped filing. Nothing here matches
+ * across representations: USPTO's series/serial number cannot supply ST.13's
+ * filing-year field, so inventing equality would corrupt the filing scope.
  *
  * **Example** (Build an empty in-memory repository)
  *

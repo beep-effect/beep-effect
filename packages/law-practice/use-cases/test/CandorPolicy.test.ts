@@ -420,14 +420,15 @@ const driftedSource = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-const examinerOnly = Effect.fnUntraced(function* () {
-  const a = yield* observation("a", TEXT_A);
-  return {
-    dispositions: [],
-    events: [yield* eventFixture(1, a, { discovery: "ExaminerObserved" })],
-    sources: [sourceEntry(a)],
-  } satisfies Fixture;
-});
+const examinerOnly = (disposed: boolean) =>
+  Effect.fnUntraced(function* () {
+    const a = yield* observation("a", TEXT_A);
+    return {
+      dispositions: disposed ? [yield* dispositionFixture(10, targets(1, a))] : [],
+      events: [yield* eventFixture(1, a, { discovery: "ExaminerObserved" })],
+      sources: [sourceEntry(a)],
+    } satisfies Fixture;
+  });
 
 // ---------------------------------------------------------------------------
 // Proof
@@ -649,8 +650,8 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
         // The AI event is superseded, but its history is not discharged by the
         // arrival of an examiner record — only a human can decide that.
         const verdict = yield* evaluateFiling();
-        expectBlocked(verdict, ["no-disposition"]);
-        expect(blockedEventIds(verdict)).toEqual([1]);
+        expectBlocked(verdict, ["no-disposition", "no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1, 2]);
       })
     );
   });
@@ -658,17 +659,27 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
   layer(scenario(examinerHeadOverAiEvent(true)()))((it) => {
     it.effect("releases once a disposition binds to that examiner-observed head", () =>
       Effect.gen(function* () {
-        // Pins the clearability half: "examiner events record without gating"
-        // constrains what INITIATES gating, not what can be dispositioned.
+        // The examiner head is the current observation; one human disposition
+        // clears the whole declared lineage.
         expectReleased(yield* evaluateFiling());
       })
     );
   });
 });
 
-describe("CandorPolicy — examiner occurrences record without gating", () => {
-  layer(scenario(examinerOnly()))((it) => {
-    it.effect("does not gate on an examiner-observed event that carries no disposition", () =>
+describe("CandorPolicy — examiner occurrences gate in their own right", () => {
+  layer(scenario(examinerOnly(false)()))((it) => {
+    it.effect("blocks on an examiner-observed event that carries no disposition", () =>
+      Effect.gen(function* () {
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1]);
+      })
+    );
+  });
+
+  layer(scenario(examinerOnly(true)()))((it) => {
+    it.effect("releases an examiner-only source after a human disposition", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
       })

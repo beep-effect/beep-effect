@@ -33,9 +33,9 @@ const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
  * The shape is read-only by construction: there is no update and no delete, so
  * a recorded disposition can only ever be revised by appending a superseding
  * record. Both methods are keyed by one exact citing-application
- * representation inside one organization; matching across representations is not
- * inferred here, and
- * reconciling them is a named follow-on.
+ * representation inside one organization. Matching across representations is
+ * deliberately absent because the USPTO number does not carry the filing year
+ * that ST.13 requires.
  *
  * **Gotchas**
  *
@@ -199,7 +199,7 @@ export class CandorPolicyShape extends S.Class<CandorPolicyShape>($I`CandorPolic
  * **When to use**
  *
  * Use when a filing-promotion decision must not proceed until every current
- * AI-discovered citation event carries an attorney judgment bound to its exact
+ * recorded citation event carries an attorney judgment bound to its exact
  * observation version.
  *
  * **Example** (Consume the gate through its tag)
