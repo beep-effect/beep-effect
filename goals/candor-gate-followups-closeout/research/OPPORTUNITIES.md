@@ -132,3 +132,17 @@
 - **Disposition:** added an actual migration preflight, finite known-office
   constraints on all three tables, desktop bundle sync, and pre-upgrade
   missing/null/unknown-code regression tests. The focused migration suite passes.
+
+## CGF-010 — Architecture proof manifest drift surfaced only in the aggregate suite
+
+- **Doing:** running the canonical full-repository repair after the new ST.13
+  migration and its focused migration tests were green.
+- **Evidence:** the repo-cli aggregate test failed with `ENOENT` for the new
+  migration under its generated temporary tree because db-admin migrations are
+  copied through a separate static `AcceptedProofManifest`, and the new
+  migration and snapshot descriptors had not been added there.
+- **Would prevent it:** make migration creation update the architecture proof
+  manifest atomically, or add a focused db-admin check that rejects manifest
+  drift before the full 1,484-test repository lane.
+- **Disposition:** registered both accepted proof files and reran the focused
+  architecture operation-plan test before resuming canonical proof.
