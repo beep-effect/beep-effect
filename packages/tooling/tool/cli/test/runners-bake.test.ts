@@ -66,7 +66,7 @@ const report = (priorPin: O.Option<string>) =>
 describe("runner bake schemas", () => {
   it.effect("round-trips configuration defaults and plan JSON", () =>
     Effect.gen(function* () {
-      const config = yield* S.decodeUnknownEffect(BakeConfig)({
+      const config = yield* S.decodeEffect(BakeConfig)({
         region: "us-east-1",
         subnetId: "subnet-0123456789abcdef0",
         securityGroupId: "sg-0123456789abcdef0",

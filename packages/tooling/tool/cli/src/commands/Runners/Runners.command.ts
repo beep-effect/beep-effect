@@ -124,8 +124,9 @@ const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: B
           )
         )
     ),
-    Match.when("bake", () =>
-      Effect.gen(function* () {
+    Match.when(
+      "bake",
+      Effect.fnUntraced(function* () {
         const subnetId = yield* requiredFlag("subnet", options.subnet);
         const securityGroupId = yield* requiredFlag("security-group", options.securityGroup);
         const instanceProfile = yield* requiredFlag("instance-profile", options.instanceProfile);
