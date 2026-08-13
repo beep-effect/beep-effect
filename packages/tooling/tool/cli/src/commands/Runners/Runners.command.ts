@@ -16,6 +16,7 @@ import { BakeCheckReportJson, BakeConfig, BakePlanJson, BakeReportJson } from ".
 import { RunnersService, RunnersServiceLive } from "./Runners.service.ts";
 import type * as S from "effect/Schema";
 import type { BakeCheckReport, BakeMode, BakePlan, BakeReport } from "./Runners.schemas.ts";
+import type { RunnersServiceShape } from "./Runners.service.ts";
 
 const DEFAULT_REGION = "us-east-1";
 
@@ -155,6 +156,25 @@ const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: B
     Match.exhaustive
   );
 });
+
+/**
+ * Test seam for exercising bake-mode rendering and flag validation with an injected runner service.
+ *
+ * **Example** (Inspect the bake command test seam)
+ *
+ * ```ts
+ * import { runBakeCommandForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof runBakeCommandForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runBakeCommandForTesting = Effect.fn("Runners.runBakeCommandForTesting")(
+  (options: BakeCliOptions, service: RunnersServiceShape) =>
+    runBakeCommand(options).pipe(Effect.provideService(RunnersService, service))
+);
 
 const bakeCommand = Command.make(
   "bake",

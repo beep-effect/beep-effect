@@ -11,7 +11,7 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export { resolveBakeMode, runnersCommand } from "./Runners.command.ts";
+export { resolveBakeMode, runBakeCommandForTesting, runnersCommand } from "./Runners.command.ts";
 /**
  * Public runner error export.
  *
