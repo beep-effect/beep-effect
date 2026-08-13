@@ -1541,6 +1541,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     return VaultSyncStatus.make({
       conflictItems: countItemsIn(SyncItemState.is.conflict),
       connected: probe.connected,
+      disconnectReason: probe.disconnectReason,
       currentItems: countItemsIn(SyncItemState.is.current),
       cursorPosition: O.map(cursor, (current) => current.streamPosition),
       errorItems: countItemsIn(SyncItemState.is.error),
