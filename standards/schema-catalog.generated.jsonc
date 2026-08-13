@@ -2161,6 +2161,14 @@
     },
     {
       "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsMirrorDisconnectReason",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsMirrorDisconnectReason",
+      "description": "Why a DMS mirror adapter reports the provider as disconnected."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
       "symbol": "DmsMirrorProbe",
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
@@ -12019,334 +12027,6 @@
       "owner": "@beep/semantic-web",
       "identity": "FingerprintDatasetRequest",
       "description": "Dataset fingerprint request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "CompactJsonLdIriRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdIriRequest",
-      "description": "Compact JSON-LD IRI request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "CompactJsonLdIriResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdIriResult",
-      "description": "Compact JSON-LD IRI result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "ExpandJsonLdTermRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdTermRequest",
-      "description": "Expand JSON-LD term request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "ExpandJsonLdTermResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdTermResult",
-      "description": "Expand JSON-LD term result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "JsonLdContextError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdContextError",
-      "description": "Typed JSON-LD context service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "JsonLdContextErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdContextErrorReason",
-      "description": "JSON-LD context error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "MergeJsonLdContextsRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "MergeJsonLdContextsRequest",
-      "description": "Merge JSON-LD contexts request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "NormalizeJsonLdContextRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "NormalizeJsonLdContextRequest",
-      "description": "Normalize JSON-LD context request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "CompactJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdDocumentRequest",
-      "description": "Compact JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "ExpandJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdDocumentRequest",
-      "description": "Expand JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "FlattenJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "FlattenJsonLdDocumentRequest",
-      "description": "Flatten JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "FrameJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "FrameJsonLdDocumentRequest",
-      "description": "Frame JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentError",
-      "description": "Typed JSON-LD document service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentErrorReason",
-      "description": "JSON-LD document error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentLoaderPolicy",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentLoaderPolicy",
-      "description": "Bounded JSON-LD document loader policy."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentNormalizationProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentNormalizationProfile",
-      "description": "JSON-LD document normalization profile."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentResult",
-      "description": "JSON-LD document result wrapper."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdFromRdfRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdFromRdfRequest",
-      "description": "RDF to JSON-LD request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdToRdfRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdToRdfRequest",
-      "description": "JSON-LD to RDF request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdToRdfResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdToRdfResult",
-      "description": "JSON-LD to RDF result wrapper."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "NormalizeJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "NormalizeJsonLdDocumentRequest",
-      "description": "Normalize JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdByteChunkStream",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdByteChunkStream",
-      "description": "JSON-LD UTF-8 byte chunk stream."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamMode",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamMode",
-      "description": "Streaming adapter mode."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseError",
-      "description": "Typed streaming parse error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseErrorReason",
-      "description": "Streaming parse error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseInput",
-      "kind": "tagged-union",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseInput",
-      "description": "Streaming parse input union."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseRequest",
-      "description": "Streaming parse request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseResult",
-      "description": "Streaming parse result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdTextChunkStream",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdTextChunkStream",
-      "description": "JSON-LD UTF-8 text chunk stream."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeError",
-      "description": "Typed streaming serialize error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeErrorReason",
-      "description": "Streaming serialize error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeRequest",
-      "description": "Streaming serialize request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeResult",
-      "description": "Streaming serialize result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "BoundedProvenanceProjection",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "BoundedProvenanceProjection",
-      "description": "Bounded provenance projection result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ExportProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExportProvenanceRequest",
-      "description": "Provenance export request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProjectProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ProjectProvenanceRequest",
-      "description": "Provenance projection request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceExportProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceExportProfile",
-      "description": "Provenance export profile."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceServiceError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceServiceError",
-      "description": "Typed provenance service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceServiceErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceServiceErrorReason",
-      "description": "Provenance service error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceSummary",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceSummary",
-      "description": "Provenance summary result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "SummarizeProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "SummarizeProvenanceRequest",
-      "description": "Provenance summary request."
     },
     {
       "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
@@ -35643,7 +35323,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "PrProvenance",
-      "description": "Origin and paste-ready resume command recorded in a Yeet pull request body."
+      "description": "Local origin and paste-ready resume command detected for a Yeet publish invocation."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
@@ -35652,6 +35332,14 @@
       "owner": "@beep/repo-cli",
       "identity": "PrProvenanceHarness",
       "description": "Harness that originated a Yeet pull request publish invocation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "symbol": "PublicPrProvenance",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PublicPrProvenance",
+      "description": "Public, non-resumable provenance appended to a Yeet pull request body."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",

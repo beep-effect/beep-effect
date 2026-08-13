@@ -16,16 +16,17 @@ and validated transforms.
   source hashes for strict drift checks.
 - Cross-agent transforms only where semantics are documented, with
   lossy/lossless evidence in `V1_TRANSFORM_EVIDENCE`.
-- Repo dogfooding validation for `.codex/config.toml` during package and root
+- Native repo-config validation plus safety-policy checks for both
+  `.codex/config.toml` and `.claude/settings.json` during package and root
   checks.
 
 ## Usage
 
 ```ts
-import { validateCurrentCheckoutDogfood, V1_SCHEMA_COVERAGE } from "@beep/ai-sync"
+import { validateCurrentCheckoutDogfoodConfigs, V1_SCHEMA_COVERAGE } from "@beep/ai-sync"
 
 console.log(V1_SCHEMA_COVERAGE.length)
-console.log(validateCurrentCheckoutDogfood)
+console.log(validateCurrentCheckoutDogfoodConfigs)
 ```
 
 ```ts
@@ -51,9 +52,19 @@ bun run validate -- --repo-root ../../../.. --config .codex/config.toml
 ```
 
 `check` stays offline and validates the committed generated artifact set plus
-the current checkout's `.codex/config.toml`. `drift --strict` may fetch
-upstream Tier-1 sources and compare committed content hashes. `generate` and
-`refresh` fetch pinned Tier-1 sources and rewrite generated artifacts.
+the current checkout's Codex and Claude configs through their native schemas
+and repository safety policies. Codex is pinned to `on-request` approvals with
+`workspace-write` sandboxing, disabled sandbox network access, and no additional
+writable roots. Claude requires an explicit `default` permission mode, and
+every Bash allow entry must belong to the exact 46-value
+repository grant domain. That domain retains named read-only GitHub queries and
+the intentional Yeet publication commands; direct Git pushes, broad `gh`,
+shell-wrapper, and Codex execution families require approval. Claude's deny rules must also
+exactly cover the current 19-value destructive-operation domain, including
+force-push, admin-merge, repository-deletion, and protected-file guards.
+`validate` checks one requested config through its native schema. `drift --strict`
+may fetch upstream Tier-1 sources and compare committed content hashes. `generate`
+and `refresh` fetch pinned Tier-1 sources and rewrite generated artifacts.
 
 ## License
 
