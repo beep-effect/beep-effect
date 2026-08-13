@@ -25177,6 +25177,14 @@
       "description": "Parquet export mode for one AI metrics derived storage write."
     },
     {
+      "file": "packages/tooling/library/ai-metrics/src/file-inventory.ts",
+      "symbol": "AiMetricsFileInventoryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsFileInventoryError",
+      "description": "Failure to inspect a file or read a directory in an AI metrics storage tree."
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
       "symbol": "AiMetricsForwarderError",
       "kind": "tagged-error",

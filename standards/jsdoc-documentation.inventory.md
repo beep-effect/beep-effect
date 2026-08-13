@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-13T17:14:20.933Z
+Generated: 2026-08-13T19:17:54.278Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 67 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2469 |
-| publicExports | 16224 |
+| publicModules | 2460 |
+| publicExports | 16162 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
 | 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 178 | 1353 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
-| 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
+| 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
 | 23 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 0 |
 | 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 25 | 145 | 13 | 0 |
@@ -116,7 +116,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 107 | 4 | 0 |
 | 60 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
 | 61 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
-| 62 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
+| 62 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 19 | 54 | 0 | 0 |
 | 63 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 207 | 4 | 1 |
 | 64 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 325 | 0 | 0 |
 | 65 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
@@ -353,7 +353,7 @@ Module findings:
 
 Export findings:
 - `src/commands/Ci/CiLane.ts:330` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:779` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:794` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:92` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
