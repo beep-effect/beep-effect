@@ -118,10 +118,10 @@ jobs:
     env:
       # PRs receive the repository read token; main pushes receive the
       # turbo-cache-write environment's trusted write token.
-      TURBO_API: ${{ vars.TURBO_API || '' }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
       TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
       DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
       DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
       EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -332,10 +332,10 @@ jobs:
     permissions:
       contents: read
     env:
-      TURBO_API: ${{ vars.TURBO_API || '' }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
       TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -442,10 +442,10 @@ jobs:
         id: fallow
         shell: bash
         env:
-          TURBO_API: ${{ vars.TURBO_API || '' }}
+          TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
           TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ vars.TURBO_API && vars.TURBO_TEAM || '' }}
-          TURBO_CACHE: ${{ vars.TURBO_API && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+          TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+          TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope
@@ -567,10 +567,10 @@ jobs:
     permissions:
       contents: read
     env:
-      TURBO_API: ${{ vars.TURBO_API || '' }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
       TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && 'local:rw,remote:rw' || 'local:rw' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
       EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
