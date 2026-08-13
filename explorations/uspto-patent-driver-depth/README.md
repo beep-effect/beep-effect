@@ -18,7 +18,8 @@ keep legal interpretation and reliability orchestration in their owning goals.
 ## Next Open Question
 
 None while graduated. `uspto-search-structured`, EPO OPS, Google Patents
-BigQuery, and the SerpApi lane remain MAP re-entry points; a fired gate reopens
+BigQuery, the SerpApi lane, and the approval-gated `uspto-ppubs-experiment`
+remain MAP re-entry points; a fired gate reopens
 this packet at `decompose`.
 
 ## Sources & provenance

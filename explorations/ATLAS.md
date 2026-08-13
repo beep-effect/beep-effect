@@ -246,6 +246,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`routing.json`](./_gold-intake/routing.json) (219/219 routed, user-approved). Each packet:
   CAPTURE seeded from its nuggets, `RESEARCH.md` (external landscape · in-repo inventory ·
   constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted.
+  **Graduate-now (Wave-1, user-confirmed):**
   [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md)
   (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
   [`uspto-mcp`](../goals/uspto-mcp/README.md), and

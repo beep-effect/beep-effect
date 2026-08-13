@@ -167,6 +167,7 @@ whole fan-out into `local-first-projection-sync`; one omnibus goal.
 
 ## 2026-08-13 — HOLDING-PEN CONVENTION — RATIFIED
 
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
 **Answer:** Graduate the packet now that its promised-now fusion goal exists.
 Keep `retrieval-vector-projection`, `retrieval-local-encoder`,
 `retrieval-evidence-dedup`, and `citation-graph-retrieval-channel` in `MAP.md`
@@ -175,3 +176,5 @@ gate reopens this packet at `decompose`; it does not spawn a goal directly.
 
 **Rationale:** Evidence-gated satellites remain discoverable and testable
 without holding the completed fusion exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

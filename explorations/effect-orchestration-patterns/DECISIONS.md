@@ -154,6 +154,7 @@ cross-reference, not a candidate graduated by this packet.
 
 ## 2026-08-13 — HOLDING-PEN CONVENTION — RATIFIED
 
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
 **Answer:** Graduate the packet now that its promised-now goal exists. Keep
 `circuit-breaker-consumer-spike`, `degraded-fanout-promotion`,
 `provider-build-selector`, and `llm-retry-consolidation` in `MAP.md` as re-entry
@@ -162,3 +163,5 @@ spawn a goal directly.
 
 **Rationale:** Demand-gated candidates preserve future routing without holding
 a completed exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

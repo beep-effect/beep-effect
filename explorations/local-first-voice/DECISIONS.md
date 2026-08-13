@@ -239,6 +239,7 @@ the user-visible latency, privacy, teardown, and seam assumptions the slice depe
 
 ## 2026-08-13 — holding-pen convention — RATIFIED
 
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
 **Answer:** Graduate the packet now that its promised-now goal exists. Keep
 `voice-provider-ports`, `voice-tts-playback`, `voice-cloud-transport`, and
 `voice-to-voice-session` in `MAP.md` as re-entry points. A fired gate reopens
@@ -246,3 +247,5 @@ this packet at `decompose`; it does not spawn a goal directly.
 
 **Rationale:** Gated voice follow-ons preserve the path beyond the proven slice
 without holding the exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

@@ -190,6 +190,7 @@ RESEARCH/DECISIONS/README/CAPTURE. Rejected: full integration now (clobber risk)
 
 ## 2026-08-13 — holding-pen graduation convention
 
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
 **Answer:** The two manifest questions are resolved by the completed-retained
 `epistemic-claim-lifecycle-gate` and `law-practice-office-action-spike` goals.
 Clear the frontier and graduate this packet. A future synthesis pass reopens
@@ -198,3 +199,5 @@ the packet at `decompose` or opens a fresh exploration packet.
 **Rationale:** Promised-now work, not possible future decomposition, determines
 graduation. A future synthesis pass is a re-entry event rather than a reason to
 hold this packet open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).
