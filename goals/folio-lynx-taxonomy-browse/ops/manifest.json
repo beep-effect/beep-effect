@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "folio-lynx-taxonomy-browse",
+    "title": "FOLIO and Lynx Taxonomy Browse",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/folio-lynx-taxonomy-browse",
+  "lifecycle": "active",
+  "mission": "Convert vetted FOLIO and Lynx slices through TaxonomySeed and expose read-only navigation in the existing ontology toolkit.",
+  "statusNote": "Graduated fourth from document-structure-ontologies; Lynx lkg.ttl remains blocked on the Lynx packet's artifact-level vetting and license proof.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/document-structure-ontologies",
+    "graduated": "2026-08-13",
+    "relatedExploration": "explorations/lynx-lkg-ontology-grounding"
+  },
+  "dependencies": [
+    "goals/patent-document-schema",
+    "goals/document-ast-pattern-classification",
+    "goals/spar-document-annotation-wire"
+  ],
+  "blockedBy": ["goals/spar-document-annotation-wire"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/folio-lynx-taxonomy-browse/README.md",
+    "goals/folio-lynx-taxonomy-browse/SPEC.md",
+    "goals/folio-lynx-taxonomy-browse/PLAN.md",
+    "goals/folio-lynx-taxonomy-browse/GOAL.md",
+    "goals/folio-lynx-taxonomy-browse/research/SOURCES.md",
+    "explorations/document-structure-ontologies/MAP.md",
+    "explorations/document-structure-ontologies/DECISIONS.md",
+    "explorations/lynx-lkg-ontology-grounding/DECISIONS.md",
+    "explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/document-structure-ontologies/research/SOURCES.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/folio-lynx-taxonomy-browse/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "pending" },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/folio-lynx-taxonomy-browse/GOAL.md)\" -le 4000",
+    "jq . goals/folio-lynx-taxonomy-browse/ops/manifest.json",
+    "rg -n \"folio-lynx-taxonomy-browse|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/folio-lynx-taxonomy-browse",
+    "git diff --check -- goals/folio-lynx-taxonomy-browse",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Exact FOLIO or Lynx artifact licensing and checksums are unavailable.",
+    "The sources require parallel vendor machinery instead of TaxonomySeed.",
+    "Tool delivery requires a new deployable or write surface."
+  ]
+}
