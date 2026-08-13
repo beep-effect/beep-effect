@@ -33,7 +33,8 @@ const $I = $ScratchpadId.create("claudecode/ClaudeRuntime");
 /**
  * The baseline services every default Claude runtime provides.
  *
- * @example
+ * **Example** (Name the baseline services)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -48,11 +49,13 @@ export type BaseServices = FileSystem.FileSystem | Path.Path;
 /**
  * Logger presets for `ClaudeRuntime.layer` / `ClaudeRuntime.make`.
  *
- * @example
+ * **Example** (Select a logger preset)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
  * const logger = ClaudeRuntime.LoggerKind.Enum.pretty
+ * console.log(logger) // "pretty"
  * ```
  *
  * @category configuration
@@ -67,7 +70,8 @@ export const LoggerKind = LiteralKit(["default", "pretty", "json", "logFmt", "st
 /**
  * Logger preset installed by a Claude runtime.
  *
- * @example
+ * **Example** (Constrain a logger preset)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -85,7 +89,8 @@ export type LoggerKind = typeof LoggerKind.Type;
  * `platformLayer` replaces the default Node-backed `FileSystem` / `Path`
  * layer, which is useful in tests. `layer` merges in additional services.
  *
- * @example
+ * **Example** (Configure a runtime)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -109,7 +114,8 @@ export interface RuntimeOptions<R = never, E = never, EP = never> {
  * Adds the cached `ClaudeProject` service for one concrete project root while
  * preserving the same platform / logger overrides as `ClaudeRuntime.make(...)`.
  *
- * @example
+ * **Example** (Configure a project runtime)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -132,7 +138,8 @@ export interface ProjectRuntimeOptions<R = never, E = never, EP = never> extends
  * plugin scans and named component lookups resolve against the plugin
  * directory instead of the project root.
  *
- * @example
+ * **Example** (Configure a plugin runtime)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -154,7 +161,8 @@ export interface PluginRuntimeOptions<R = never, E = never, EP = never> extends 
 /**
  * Managed runtime returned by `ClaudeRuntime.make`.
  *
- * @example
+ * **Example** (Name the runtime interface)
+ *
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
@@ -175,7 +183,8 @@ export interface Runtime<R = never, E = never> extends ManagedRuntime.ManagedRun
 /**
  * The default platform layer for effect-claudecode programs.
  *
- * @example
+ * **Example** (Inspect the platform layer)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
@@ -208,7 +217,8 @@ const loggerLayer = (kind: LoggerKind, mergeWithExistingLoggers: boolean): Layer
 /**
  * Build the full layer used by the shared runtime.
  *
- * @example
+ * **Example** (Build a runtime layer)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
@@ -283,11 +293,13 @@ const fromLayer = <R = never, E = never>(
 /**
  * Create a prewired `ManagedRuntime` for effect-claudecode programs.
  *
- * @example
+ * **Example** (Create and dispose a runtime)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
  * const runtime = ClaudeRuntime.make({ logger: "none" })
+ * console.log(runtime.layer)
  * await runtime.dispose()
  * ```
  *
@@ -300,11 +312,13 @@ export const make = <R = never, E = never, EP = never>(options?: RuntimeOptions<
 /**
  * Alias for `make` that highlights the default setup.
  *
- * @example
+ * **Example** (Create the default runtime)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
  * const runtime = ClaudeRuntime.defaultRuntime()
+ * console.log(runtime.layer)
  * await runtime.dispose()
  * ```
  *
@@ -323,11 +337,13 @@ export const defaultRuntime = <R = never, E = never, EP = never>(
  * settings, `.mcp.json`, or plugin component lookups in addition to the base
  * platform services.
  *
- * @example
+ * **Example** (Create a project runtime)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
  * const runtime = ClaudeRuntime.project({ cwd: "/repo" })
+ * console.log(runtime.layer)
  * await runtime.dispose()
  * ```
  *
@@ -345,7 +361,8 @@ export const project = <R = never, E = never, EP = never>(
  * `pluginRoot` so `ClaudeProject.plugin` and named component lookups read from
  * the plugin directory rather than the project root.
  *
- * @example
+ * **Example** (Create a plugin runtime)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *
@@ -353,6 +370,7 @@ export const project = <R = never, E = never, EP = never>(
  *   cwd: "/repo",
  *   pluginRoot: "/repo/.claude-plugin"
  * })
+ * console.log(runtime.layer)
  * await runtime.dispose()
  * ```
  *
@@ -366,7 +384,8 @@ export const plugin = <R = never, E = never, EP = never>(
 /**
  * Alias retained for ergonomic call sites: `ClaudeRuntime.default(...)`.
  *
- * @example
+ * **Example** (Use the default alias)
+ *
  * ```ts
  * import { ClaudeRuntime } from "effect-claudecode"
  *

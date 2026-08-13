@@ -29,7 +29,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PostToolUse");
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -62,7 +63,8 @@ export class Input extends S.Class<Input>($I`PostToolUseInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -88,7 +90,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolU
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -122,45 +125,48 @@ export class Output extends S.Class<Output>($I`PostToolUseOutput`)(
 /**
  * No-op output — tool result passes through unchanged.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.passthrough)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
  * Block the tool result and feed the reason back to Claude.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.block)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
  * Inject additional context into the transcript without blocking.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.addContext)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
   Output.make({
@@ -175,15 +181,16 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Replace the MCP tool's response. Only valid for MCP tool invocations.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.replaceOutput)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: string): Output =>
   Output.make({
@@ -199,7 +206,8 @@ export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: st
 /**
  * Constructor for `replaceMcpOutput`.
  *
- * @example
+ * **Example** (Use replaceMcpOutput)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -228,7 +236,8 @@ export const replaceMcpOutput = (updatedMCPToolOutput: unknown, additionalContex
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -252,15 +261,16 @@ export const define = <E, R>(config: {
  * Build a PostToolUse hook that only handles a specific supported tool.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PostToolUse hook that only handles a specific supported tool)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type BashHook = Hook.PostToolUse.OnToolConfig<"Bash", never, never>
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
   readonly toolName: T;
@@ -272,7 +282,8 @@ export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
 /**
  * Constructor for `onTool`.
  *
- * @example
+ * **Example** (Use onTool)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -303,15 +314,16 @@ export const onTool = <const T extends Tool.SupportedToolName, E, R>(
  * Build a PostToolUse hook that only handles matching `tool_name` values.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PostToolUse hook that only handles matching `tool_name` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -331,15 +343,16 @@ export const onMatcher = <E, R>(config: {
  * Build a PostToolUse hook from a custom typed tool adapter.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build PostToolUse hook from a custom typed tool adapter)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.PostToolUse.onAdapter)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onAdapter = <TName extends string, TTool, TResponse, E, R>(config: {
   readonly adapter: Tool.PostToolAdapter<TName, TTool, TResponse>;
@@ -366,12 +379,6 @@ export const onAdapter = <TName extends string, TTool, TResponse, E, R>(config: 
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PostToolUse.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -396,12 +403,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PostToolUse.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -426,12 +427,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.PostToolUse.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import * as O from "effect/Option";
@@ -88,6 +88,10 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
     const retryMs = O.getOrElse(this.retryAfterMs, () => this.resetTimeoutMs);
     return `Circuit breaker is open. Will retry in ${retryMs}ms`;
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
+
+  static readonly is = S.is(CircuitOpenError)
 }
 
 /**
@@ -193,6 +197,8 @@ export class RateLimitError extends RateLimitErrorBase {
       onSome: (retryAfterMs) => `${base}, retry after ${retryAfterMs}ms`,
     });
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 }
 
 const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(S.toTaggedUnion("_tag"));
@@ -214,7 +220,7 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 export const CircuitError = CircuitErrorDefinition.pipe(
   $I.annoteSchema("CircuitError", {
     description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
-    toArbitrary: () => () => S.toArbitrary(CircuitErrorDefinition),
+    toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
   })
 );
 

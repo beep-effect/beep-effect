@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowError = makeOntologyErrorClass(
+export const WorkflowError = makeOntologyErrorClass.make(
   $I`WorkflowError`,
   "WorkflowError",
   {
@@ -79,7 +79,7 @@ export type WorkflowError = typeof WorkflowError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowNotFoundError = makeOntologyErrorClass(
+export const WorkflowNotFoundError = makeOntologyErrorClass.make(
   $I`WorkflowNotFoundError`,
   "WorkflowNotFoundError",
   {
@@ -135,7 +135,7 @@ export type WorkflowNotFoundError = typeof WorkflowNotFoundError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowSuspendedError = makeOntologyErrorClass(
+export const WorkflowSuspendedError = makeOntologyErrorClass.make(
   $I`WorkflowSuspendedError`,
   "WorkflowSuspendedError",
   {
@@ -191,7 +191,7 @@ const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError
 export const AnyWorkflowError = AnyWorkflowErrorDefinition.pipe(
   $I.annoteSchema("AnyWorkflowError", {
     description: "Exhaustive tagged union of workflow execution failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyWorkflowErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyWorkflowErrorDefinition),
   })
 );
 

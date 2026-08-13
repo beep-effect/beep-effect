@@ -38,6 +38,66 @@ id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
 
+[[IgnoredVulns]]
+id = "GHSA-2pr8-phx7-x9h3"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "protobufjs 6.11.6 nested under onnx-proto@4.0.4 via @xenova/transformers@2.17.2 -> onnxruntime-web@1.14.0. onnx-proto declares protobufjs ^6.8.8, which cannot resolve to the fixed 7.5.6+ line without a root override against that range. Scratchpad-only embedding path; not introduced by the Effect RC catalog pin. Revisit when transformers/onnxruntime-web drop onnx-proto 4."
+
+[[IgnoredVulns]]
+id = "GHSA-66ff-xgx4-vchm"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-685m-2w69-288q"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-75px-5xx7-5xc7"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-f38q-mgvj-vph7"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-fx83-v9x8-x52w"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-jggg-4jg4-v7c6"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-jvwf-75h9-cwgg"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-q6x5-8v7m-xcrf"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-wcpc-wj8m-hjx6"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-xq3m-2v4x-88gg"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"

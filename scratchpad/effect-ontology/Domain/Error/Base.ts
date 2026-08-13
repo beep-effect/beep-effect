@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { FilePath, NonNegativeInt, SchemaUtils, TaggedErrorClass, URLStr } from "@beep/schema";
@@ -122,7 +122,7 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(ErrorUrl)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorUrl).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorUrl)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -209,7 +209,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(ErrorIri)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorIri).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorIri)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -345,7 +345,7 @@ export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -394,7 +394,7 @@ export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -444,7 +444,7 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -545,7 +545,7 @@ export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -636,7 +636,7 @@ export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -683,12 +683,12 @@ type OntologyErrorCodecStatics<Self> = {
  *
  * @example
  * ```ts
- * import { $ScratchpadId } from "@beep/identity/packages"
+ * import { $ScratchpadId } from "@beep/identity"
  * import * as S from "effect/Schema"
  * import { makeOntologyErrorClass } from "@effect-ontology/Error/Base.ts"
  *
  * const $I = $ScratchpadId.create("effect-ontology/example")
- * const ExampleError = makeOntologyErrorClass(
+ * const ExampleError = makeOntologyErrorClass.make(
  *   $I`ExampleError`,
  *   "ExampleError",
  *   { message: S.NonEmptyString },
@@ -707,30 +707,32 @@ type OntologyErrorCodecStatics<Self> = {
  * @category constructors
  * @since 0.0.0
  */
-export const makeOntologyErrorClass = <const Tag extends string, const Fields extends S.Struct.Fields>(
-  identifier: string,
-  tag: Tag,
-  fields: Fields,
-  annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
-): TaggedErrorClassFromFields<OntologyTaggedError<Tag, Fields>, Tag, Fields> &
-  OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
-  type Self = OntologyTaggedError<Tag, Fields>;
-  const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
-  const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
-    ...annotations,
-    toArbitrary:
-      ([from]) =>
-      () => ({
-        arbitrary: from.arbitrary.map(makeInstance),
-        terminal: from.terminal?.map(makeInstance),
-      }),
-  });
-  const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
-  return SchemaUtils.withStatics(ErrorClass, () => ({
-    is: S.is(ErrorClass),
-    fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),
-    decodeOption: S.decodeUnknownOption(ServiceFreeErrorClass),
-  }));
+export const makeOntologyErrorClass = {
+  make: <const Tag extends string, const Fields extends S.Struct.Fields>(
+    identifier: string,
+    tag: Tag,
+    fields: Fields,
+    annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
+  ): TaggedErrorClassFromFields<OntologyTaggedError<Tag, Fields>, Tag, Fields> &
+    OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
+    type Self = OntologyTaggedError<Tag, Fields>;
+    const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
+    const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
+      ...annotations,
+      toArbitrary:
+        ([from]) =>
+        () => ({
+          arbitrary: from.arbitrary.map(makeInstance),
+          terminal: from.terminal?.map(makeInstance),
+        }),
+    });
+    const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
+    return SchemaUtils.withStatics(ErrorClass, () => ({
+      is: S.is(ErrorClass),
+      fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),
+      decodeOption: S.decodeUnknownOption(ServiceFreeErrorClass),
+    }));
+  },
 };
 
 /**
@@ -756,7 +758,7 @@ export const makeOntologyErrorClass = <const Tag extends string, const Fields ex
  * @category errors
  * @since 0.0.0
  */
-export const BaseError = makeOntologyErrorClass(
+export const BaseError = makeOntologyErrorClass.make(
   $I`BaseError`,
   "BaseError",
   {
@@ -811,7 +813,7 @@ export type BaseError = typeof BaseError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const NotImplemented = makeOntologyErrorClass(
+export const NotImplemented = makeOntologyErrorClass.make(
   $I`NotImplemented`,
   "NotImplemented",
   {
@@ -873,7 +875,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-    toArbitrary: () => () => S.toArbitrary(BaseErrorDefinition),
+    toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 

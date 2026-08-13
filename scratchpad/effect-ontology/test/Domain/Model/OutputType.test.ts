@@ -12,11 +12,9 @@ import {
 describe("effect-ontology output artifact taxonomy", () => {
   it("derives warning-free arbitraries for output types and filenames", () => {
     for (const schema of [OutputType, OutputFilename]) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 32 }

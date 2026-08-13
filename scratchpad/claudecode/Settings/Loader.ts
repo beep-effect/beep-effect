@@ -29,13 +29,16 @@ const $I = $ScratchpadId.create("claudecode/Settings/Loader");
 /**
  * Optional source overrides accepted by {@link load}.
  *
- * @example
+ * **Example** (Configure an explicit settings source)
+ *
  * ```ts
  * import { Settings } from "effect-claudecode"
  *
  * const options: Settings.LoadOptions.Encoded = {
  *   settingsPath: "/tmp/session-settings.json"
  * }
+ *
+ * console.log(options.settingsPath) // "/tmp/session-settings.json"
  * ```
  *
  * @category configuration
@@ -55,12 +58,16 @@ export class LoadOptions extends S.Class<LoadOptions>($I`LoadOptions`)(
 /**
  * Companion types for {@link LoadOptions}.
  *
- * @example
+ * **Example** (Inspect encoded options)
+ *
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.LoadOptions.Encoded) => input
- * console.log(accept)
+ * const options = {
+ *   settingsPath: "/tmp/session-settings.json"
+ * } satisfies Settings.LoadOptions.Encoded
+ *
+ * console.log(options.settingsPath) // "/tmp/session-settings.json"
  * ```
  *
  * @category type-level
@@ -180,13 +187,22 @@ const materializeSettings = (raw: SettingsRaw): Effect.Effect<SettingsFile, Sett
 /**
  * Resolve the canonical user settings path.
  *
- * @example
+ * **Example** (Resolve the user settings file)
+ *
  * ```ts
  * import { Settings } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
+ * import * as Str from "effect/String"
  *
- * const path = Settings.userSettingsPath
+ * const path = Effect.runSync(
+ *   Effect.provide(Settings.userSettingsPath, Path.layer)
+ * )
+ *
+ * console.log(Str.endsWith("/.claude/settings.json")(path)) // true
  * ```
  *
+ * @effects Reads the `HOME` or `USERPROFILE` configuration value and requires `Path.Path` to join the path segments.
  * @category configuration
  * @since 0.0.0
  */
@@ -199,13 +215,21 @@ export const userSettingsPath = Effect.gen(function* () {
 /**
  * Resolve the shared project settings path for a working directory.
  *
- * @example
+ * **Example** (Resolve the project settings file)
+ *
  * ```ts
  * import { Settings } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
  *
- * const path = Settings.projectSettingsPath("/repo")
+ * const path = Effect.runSync(
+ *   Effect.provide(Settings.projectSettingsPath("/repo"), Path.layer)
+ * )
+ *
+ * console.log(path) // "/repo/.claude/settings.json"
  * ```
  *
+ * @effects Requires `Path.Path` to join the project-relative path without accessing the filesystem.
  * @category configuration
  * @since 0.0.0
  */
@@ -218,13 +242,21 @@ export const projectSettingsPath = (cwd: string): Effect.Effect<string, never, P
 /**
  * Resolve the local, normally gitignored settings path.
  *
- * @example
+ * **Example** (Resolve the local settings file)
+ *
  * ```ts
  * import { Settings } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
  *
- * const path = Settings.localSettingsPath("/repo")
+ * const path = Effect.runSync(
+ *   Effect.provide(Settings.localSettingsPath("/repo"), Path.layer)
+ * )
+ *
+ * console.log(path) // "/repo/.claude/settings.local.json"
  * ```
  *
+ * @effects Requires `Path.Path` to join the project-relative path without accessing the filesystem.
  * @category configuration
  * @since 0.0.0
  */
@@ -317,15 +349,20 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * settings. Files that do not exist are skipped. Malformed JSON and invalid
  * known settings fail with path-aware typed errors.
  *
- * @example
- * ```ts
- * import { Settings } from "effect-claudecode"
+ * **Example** (Load effective settings)
  *
- * const program = Settings.load("/repo", {
- *   settingsPath: "/tmp/session-settings.json"
- * })
+ * ```ts
+ * import { ClaudeRuntime, Settings } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Settings.load("/tmp/example-project").pipe(
+ *   Effect.provide(ClaudeRuntime.baseLayer)
+ * )
+ *
+ * Effect.runPromise(program).then((settings) => console.log(settings))
  * ```
  *
+ * @effects Reads available settings files in precedence order and resolves configuration and paths through the supplied services.
  * @category configuration
  * @since 0.0.0
  */

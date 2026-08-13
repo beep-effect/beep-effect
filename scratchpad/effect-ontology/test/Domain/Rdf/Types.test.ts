@@ -1,12 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { LocalName, makeBlankNode, makeLiteral, makeNamedNode, Triple } from "../../../Domain/Rdf/Types.ts";
+import { BlankNode, IRI, Literal, LocalName, Quad, Triple } from "../../../Domain/Rdf/Types.ts";
 
 describe("effect-ontology RDF types", () => {
   it("derives arbitraries whose values satisfy local schemas", () => {
     for (const schema of [LocalName, Triple]) {
-      const arbitrary = S.toArbitrary(schema);
+      const arbitrary = S.toArbitrary(schema)(fc);
 
       fc.assert(
         fc.property(arbitrary, (value) => {
@@ -18,27 +19,32 @@ describe("effect-ontology RDF types", () => {
   });
 
   it("uses canonical RDF/JS term discrimination", () => {
-    const namedNode = makeNamedNode("https://example.org/alice");
-    const blankNode = makeBlankNode("alice");
-    const literal = makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string");
+    const namedNode = IRI.make("https://example.org/alice");
+    const blankNode = BlankNode.make("_:alice");
+    const literal = Literal.make({
+      value: "Alice",
+      datatype: O.some(IRI.make("http://www.w3.org/2001/XMLSchema#string")),
+    });
 
-    expect(namedNode.termType).toBe("NamedNode");
-    expect(blankNode.termType).toBe("BlankNode");
-    expect(blankNode.value).toBe("alice");
-    expect(literal.termType).toBe("Literal");
+    expect(IRI.is(namedNode)).toBe(true);
+    expect(BlankNode.is(blankNode)).toBe(true);
+    expect(blankNode).toBe("_:alice");
+    expect(Literal.is(literal)).toBe(true);
   });
 
   it("round-trips graph-free triples through canonical default-graph quads", () => {
     const triple = Triple.make({
-      subject: makeNamedNode("https://example.org/alice"),
-      predicate: makeNamedNode("https://schema.org/name"),
-      object: makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string"),
+      subject: IRI.make("https://example.org/alice"),
+      predicate: IRI.make("https://schema.org/name"),
+      object: Literal.make({
+        value: "Alice",
+        datatype: O.some(IRI.make("http://www.w3.org/2001/XMLSchema#string")),
+      }),
     });
-    const quad = Triple.toQuad(triple);
-    const recovered = Triple.fromQuad(quad);
+    const quad = Quad.make({ ...triple, graph: O.none() });
+    const recovered = quad.toTriple();
 
-    expect(quad.graph.termType).toBe("DefaultGraph");
-    expect(quad.graph.value).toBe("");
+    expect(O.isNone(quad.graph)).toBe(true);
     expect(recovered.subject).toEqual(triple.subject);
     expect(recovered.predicate).toEqual(triple.predicate);
     expect(recovered.object).toEqual(triple.object);

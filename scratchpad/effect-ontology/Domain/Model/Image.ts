@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -247,6 +247,16 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
 
   /** Non-throwing asset decoder. */
   static readonly decodeOption = S.decodeUnknownOption(ImageAsset);
+
+  static readonly decodeJsonStringEffect = S.decodeEffect(
+    S.fromJsonString(ImageAsset)
+  )
+
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }))
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset)
+
+  static readonly encodeEffect = S.encodeEffect(ImageAsset)
 }
 
 const ImageRefFields = {
@@ -379,6 +389,15 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   get totalCount(): number {
     return A.length(this.images);
   }
+
+  static readonly fromUnknownEffect = (i: unknown) => {
+    const schema = S.fromJsonString(ImageManifest);
+    return S.decodeUnknownEffect(schema)(i);
+  };
+  static readonly encodeEffect = (i: ImageManifest) => {
+    const schema = S.fromJsonString(ImageManifest);
+    return S.encodeEffect(schema)(i);
+  };
 }
 
 const ImageForPromptFields = {

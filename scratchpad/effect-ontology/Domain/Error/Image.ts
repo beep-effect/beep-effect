@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import type { TaggedErrorClassFromFields } from "@beep/schema";
 import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as Duration from "effect/Duration";
@@ -41,7 +41,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Image");
  * @category errors
  * @since 0.0.0
  */
-export const ImageFetchError = makeOntologyErrorClass(
+export const ImageFetchError = makeOntologyErrorClass.make(
   $I`ImageFetchError`,
   "ImageFetchError",
   {
@@ -147,6 +147,8 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
   get timeout(): Duration.Duration {
     return Duration.millis(this.timeoutMs);
   }
+
+  static readonly is = S.is(this);
 }
 
 /**
@@ -168,7 +170,7 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
  * @category errors
  * @since 0.0.0
  */
-export const ImageTooLargeError = makeOntologyErrorClass(
+export const ImageTooLargeError = makeOntologyErrorClass.make(
   $I`ImageTooLargeError`,
   "ImageTooLargeError",
   {
@@ -220,7 +222,7 @@ export type ImageTooLargeError = typeof ImageTooLargeError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ImageInvalidTypeError = makeOntologyErrorClass(
+export const ImageInvalidTypeError = makeOntologyErrorClass.make(
   $I`ImageInvalidTypeError`,
   "ImageInvalidTypeError",
   {
@@ -285,7 +287,7 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-    toArbitrary: () => () => S.toArbitrary(ImageErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 
