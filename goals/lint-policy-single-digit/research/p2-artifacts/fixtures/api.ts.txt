@@ -1,0 +1,30 @@
+/** @deprecated Use currentCall instead. */
+export const deprecatedCall = (): string => "deprecated";
+
+export const currentCall = (): string => "current";
+
+export class MemberApi {
+  /** @deprecated Use currentMember instead. */
+  readonly deprecatedMember = "deprecated";
+
+  /** @deprecated Use currentMember instead. */
+  readonly computedMember = "computed";
+
+  readonly currentMember = "current";
+}
+
+export function overloadSpecific(value: string): string;
+/** @deprecated Numeric inputs are deprecated. */
+export function overloadSpecific(value: number): number;
+export function overloadSpecific(value: string | number): string | number {
+  return value;
+}
+
+/** @deprecated Use CurrentShape instead. */
+export interface DeprecatedShape {
+  readonly value: string;
+}
+
+export interface CurrentShape {
+  readonly value: string;
+}

@@ -1,0 +1,4 @@
+/** @deprecated P2 oxlint-tsgolint engagement canary. */
+const deprecatedCanary = (): string => "engaged";
+
+export const engagementCanary = deprecatedCanary();
