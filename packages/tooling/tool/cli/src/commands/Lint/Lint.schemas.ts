@@ -48,7 +48,9 @@ export const SchemaFirstInventoryPath = "standards/schema-first.inventory.jsonc"
  * @since 0.0.0
  */
 export const SchemaCrispeningPolicyPath = "standards/schema-crispening.policy.jsonc";
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+// infra/lambda/** stays out of scope: self-contained esbuild-bundled Lambda packages
+// (own package.json, no @beep/schema dependency) cannot carry annotated schemas.
+const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 
 /**

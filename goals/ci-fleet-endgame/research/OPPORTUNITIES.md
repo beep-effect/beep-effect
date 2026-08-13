@@ -419,3 +419,51 @@
   flat `tsconfig.check.json` (source mode) and skip declaration consumption
   entirely; the deeper fix (declaration emit that preserves type identity)
   is upstream work.
+
+## Mock-fidelity gap: SSM GetParameters echoes plain names for ARN queries
+
+- **Work:** P3 cache activation — first live probe wave against the deployed
+  authorizer (2026-08-12).
+- **What happened:** every valid-token request returned 403. The authorizer's
+  loader matched response entries with `parameter.Name === <queried ARN>`, but
+  the real `GetParameters` service echoes the plain parameter path in `Name`
+  even when queried by full ARN (the ARN arrives in the separate `ARN` field),
+  so every lookup missed and the fail-closed catch denied everything. All 31
+  unit tests passed because the mock mirrored the request shape instead of the
+  service response shape. The fail-closed design turned a lookup bug into a
+  clean deny — correct security posture, invisible cause: no log line
+  distinguishes "bad token" from "loader crashed".
+- **What would have prevented it:** a contract test against real service
+  response fixtures (captured `aws ssm get-parameters --names <arn>` output)
+  rather than hand-written mocks; and a structured log on the fail-closed
+  path (cause class only, never secret material) so live denials attribute
+  in one CloudWatch read instead of a source audit.
+
+## Bun cannot exit after successful docgen on the fleet lane (crash or hang)
+
+- **Work:** P3 activation PR closeout — Docgen lane on the fleet
+  (2026-08-13, run 31685113617, three consecutive attempts on one head).
+- **What happened:** every attempt completed the actual work — attempt 3's
+  log shows all 36 docgen tasks successful in 3m33s with the turbo summary
+  written — and then the wrapping `bun run docgen:local` process failed to
+  die: attempts 1-2 SIGABRTed during teardown seconds after
+  `✓ Docs generation succeeded!`, attempt 3 wedged silently for 40+ minutes
+  after the same success line and had to be cancelled. Two failure surfaces,
+  one defect: bun's post-main teardown after the docgen runner, on the fleet
+  image. Local runs and earlier hosted waves of the same content passed, so
+  content is exonerated. This also retro-explains the previously recorded
+  "fleet Docgen silent-hang" flake.
+- **Root cause (validated against the checked-in v4 source):** the platform
+  `runMain` observer only calls `process.exit` on failure or signal —
+  `if (receivedSignal || code !== 0)` — so a successful Effect CLI process
+  relies on the event loop draining, and one leaked handle (turbo daemon
+  socket, stuck bunx wrapper) keeps bun alive forever or trips its teardown
+  into SIGABRT. Exactly matches the field signature: failures always exit
+  promptly, successes wedge. Lint Policy reproduced the same class on a
+  hosted runner (five orphaned bun children reaped at cancellation), so this
+  is runtime-wide, not fleet-image-specific.
+- **Fix shipped:** both Effect CLI entrypoints (repo-cli `bin-main`, the
+  docgen bin) now exit explicitly on success in their teardown after
+  `Runtime.defaultTeardown`; the docgen:local turbo spawn also dropped its
+  resident bunx layer and runs `--daemon=false`. Upstream question for
+  effect: should the shared runner exit on success by default?
