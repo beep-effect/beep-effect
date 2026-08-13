@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,10 +18,8 @@ good API/MCP/SDK, or hybrid — reliable, agent-integratable, and developer-sane
 
 ## Next Open Question
 
-No blocking question remains. Four candidates stay queued behind their explicit
-gates: CPI access evaluation when handroll v1 lands; a qualifying US trademark
-matter; a qualifying court matter plus a separately shaped licensed rules
-engine; and a qualifying foreign matter plus its licensed engine/source shape.
+None while graduated. The four queued candidates remain MAP re-entry points; a
+fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -50,6 +48,9 @@ engine; and a qualifying foreign matter plus its licensed engine/source shape.
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its four queued MAP candidates remain re-entry points, and a
+  fired gate reopens this packet at `decompose`.
 - 2026-07-14: shape signed off with the six-week appetite and paired
   acceptance; graduated [`law-docketing-patent-spine`](../../goals/law-docketing-patent-spine/README.md)
   plus [`law-docketing-reliability`](../../goals/law-docketing-reliability/README.md)
