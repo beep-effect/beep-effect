@@ -99,25 +99,15 @@ export const pickVaultDirectoryOnHost = (
     )
   );
 
-/**
- * Env flag that disables the sidecar's native folder dialog entirely.
- *
- * **Details**
- *
- * kdialog reaches the operator's desktop through the D-Bus portal even when
- * `DISPLAY`/`WAYLAND_DISPLAY` are unset, so a headless or QA sidecar cannot
- * suppress the dialog by stripping display variables — an unattended run can
- * pop a folder picker on whatever desktop owns the session bus. Setting
- * `BEEP_DESKTOP_VAULT_PICKER_DISABLED=1` makes `PickVaultDirectory` fail with
- * the typed error immediately, which routes the renderer to its manual
- * vault-path form.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VAULT_PICKER_DISABLED_ENV = "BEEP_DESKTOP_VAULT_PICKER_DISABLED";
-
-const vaultPickerDisabled = Config.boolean(VAULT_PICKER_DISABLED_ENV).pipe(Config.withDefault(false));
+// Env flag that disables the sidecar's native folder dialog entirely.
+// kdialog reaches the operator's desktop through the D-Bus portal even when
+// DISPLAY/WAYLAND_DISPLAY are unset, so a headless or QA sidecar cannot
+// suppress the dialog by stripping display variables — an unattended run can
+// pop a folder picker on whatever desktop owns the session bus. Setting
+// BEEP_DESKTOP_VAULT_PICKER_DISABLED=true makes PickVaultDirectory fail with
+// the typed error immediately, which routes the renderer to its manual
+// vault-path form.
+const vaultPickerDisabled = Config.boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED").pipe(Config.withDefault(false));
 
 /**
  * RPC handler layer that opens the sidecar host's native folder dialog.
