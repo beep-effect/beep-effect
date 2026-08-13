@@ -27,7 +27,7 @@ completed-retained), so the fibered trigger has fired. Ratified 2026-08-13
 (see DECISIONS.md): `identity-iri-fibered` graduates as one goal with the full
 MAP scope, blockedBy the semantic-web PR2+PR3 cleanups (discrete case only;
 SHACL projection targets the post-move contract layer; store layers land as
-test/dev Layers). Next action: scaffold `goals/identity-iri-fibered` in the
+test/dev Layers). Next action: scaffold the future `identity-iri-fibered` goal (not yet created) in the
 ceremony PR, then flip this packet to `graduated`.
 
 ## Read This First
