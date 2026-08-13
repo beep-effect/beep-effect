@@ -387,7 +387,7 @@ const ActivityErrorDefinition = S.Union([
 export const ActivityError = ActivityErrorDefinition.pipe(
   $I.annoteSchema("ActivityError", {
     description: "Exhaustive journal-safe tagged union of workflow activity failures.",
-    toArbitrary: () => S.toArbitrary(ActivityErrorDefinition),
+  toArbitrary: () => S.toArbitrary(ActivityErrorDefinition),
   }),
   SchemaUtils.withStatics(() => ({
     fromUnknown: makeGeneric,

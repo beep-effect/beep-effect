@@ -653,14 +653,15 @@ describe("tagged errors", () => {
     });
     expect(equals(left, right)).toBe(true);
 
-    const recovered = runSync(
-      failEffect(
-        VersionConflictError.make({
-          table: "user",
-          id: 1,
-          expectedVersion: 2,
-        })
-      ).pipe(catchTag("VersionConflictError", () => succeed("recovered")))
+    const recovered = failEffect(
+      VersionConflictError.make({
+        table: "user",
+        id: 1,
+        expectedVersion: 2,
+      })
+    ).pipe(
+      catchTag("VersionConflictError", () => succeed("recovered")),
+      runSync
     );
     expect(recovered).toBe("recovered");
   });
