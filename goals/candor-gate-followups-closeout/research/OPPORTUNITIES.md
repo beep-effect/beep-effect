@@ -146,3 +146,16 @@
   drift before the full 1,484-test repository lane.
 - **Disposition:** registered both accepted proof files and reran the focused
   architecture operation-plan test before resuming canonical proof.
+
+## CGF-011 — Focused typechecks did not enforce direct test dependencies
+
+- **Doing:** running the canonical Yeet pre-push proof after the migration and
+  architecture-generator suites passed.
+- **Evidence:** Knip reported the migration test's direct
+  `drizzle-orm/migrator` import as unlisted even though TypeScript and Vitest
+  resolved it transitively through another workspace package.
+- **Would prevent it:** run the unlisted-dependency check in focused package
+  proof, or have package-local test configuration reject transitive-only module
+  resolution.
+- **Disposition:** declared `drizzle-orm` as a db-admin development dependency;
+  no regression-baseline exception was added.
