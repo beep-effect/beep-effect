@@ -6,17 +6,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { sanitizeSensitiveText } from "@beep/observability";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
+import { Str } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { extract as extractTar } from "tar";
-import { runCapturedStreams } from "../../internal/process/StepExec.ts";
+import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readGitRenames,
   readGitTree,
@@ -59,6 +60,7 @@ import {
 } from "./Knowledge.schemas.ts";
 import type { Crypto } from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 import type { KnowledgeCommandProbeResult } from "./Knowledge.schemas.ts";
@@ -84,9 +86,58 @@ const FINDING_ID_PREFIX = "knowledge-finding/v1:";
 const INDEX_PATH = "goals/INDEX.md";
 const COMMAND_PREFIX = "bun run beep";
 const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
+const PROBE_STREAM_MAX_CHARS = 1024 * 1024;
+const PROBE_DIAGNOSTIC_MAX_CHARS = 2048;
+const PROBE_STREAM_BOUND = OutputBound.make({
+  maxChars: PROBE_STREAM_MAX_CHARS,
+  truncatedNotice: "\n[probe stream truncated]",
+});
+const OSC_ESCAPE_PATTERN = /\u001B\][\s\S]*?(?:\u0007|\u001B\\)/gu;
+const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
+const OTHER_ESCAPE_PATTERN = /\u001B[@-Z\\-_]/gu;
+const DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/gu;
+const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
+const POSIX_ABSOLUTE_PATH_PATTERN =
+  /(?<![A-Za-z0-9_.>:/-])\/[A-Za-z0-9._@+-]+(?:\/[A-Za-z0-9._@+-]+)*(?::\d+(?::\d+)?)?/gu;
+const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
 const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
+
+const replaceKnownProbeRoots = (
+  input: string,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
+): string =>
+  A.reduce(
+    A.make(
+      [scratchRoot, "<probe-scratch>"] as const,
+      [archiveRoot, "<archive-data>"] as const,
+      [currentCheckoutRoot, "<current-checkout>"] as const
+    ),
+    input,
+    (text, [root, replacement]) =>
+      Str.isEmpty(root) || Str.equivalence(root, "/") ? text : Str.replaceAll(root, replacement)(text)
+  );
+
+const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiveRoot = "", scratchRoot = ""): string =>
+  pipe(
+    replaceKnownProbeRoots(input, currentCheckoutRoot, archiveRoot, scratchRoot),
+    Str.replace(/\r\n/gu, "\n"),
+    Str.replace(/\r/gu, ""),
+    Str.replace(OSC_ESCAPE_PATTERN, ""),
+    Str.replace(ANSI_ESCAPE_PATTERN, ""),
+    Str.replace(OTHER_ESCAPE_PATTERN, ""),
+    Str.replace(DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN, ""),
+    Str.replace(POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
+    Str.replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
+    sanitizeSensitiveText,
+    Str.truncate(PROBE_DIAGNOSTIC_MAX_CHARS)
+  );
+
+const sanitizePublicFindingText = (input: string): string =>
+  pipe(sanitizeProbeDiagnostic(input), Str.replace(FORMAT_CHARACTER_PATTERN, ""), Str.replace(/\n+/gu, " "), Str.trim);
 
 /**
  * Everything the scanner may read from one side of a comparison.
@@ -100,9 +151,9 @@ const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
  * **Gotchas**
  *
  * Only the two probe operations may fail with {@link KnowledgeProbeBootError}, and only that error is
- * survivable: it is how an oracle reports that its archive's probe could not start at all, which the
- * scanner treats as lost coverage on the base side and as an operational failure on the HEAD side.
- * Every other failure of every operation fails the whole comparison closed.
+ * survivable: it reports that the current-checkout probe could not start against that oracle's archive
+ * data, which the scanner treats as lost coverage on the base side and as an operational failure on
+ * the HEAD side. Every other failure of every operation fails the whole comparison closed.
  *
  * @see {@link KnowledgePairedOracleInput} for the two-sided input that carries rename lineage.
  * @category services
@@ -281,7 +332,7 @@ const makeHeadDocumentId = (
 
 const findingLocation = (path: string, line: number, column: number): KnowledgeFindingLocation =>
   KnowledgeFindingLocation.make({
-    path,
+    path: sanitizePublicFindingText(path),
     line: NonNegativeInt.make(line),
     column: NonNegativeInt.make(column),
   });
@@ -427,14 +478,23 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   return { candidates, commands };
 });
 
-const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
+const commandProbeResults = Effect.fn("Knowledge.commandProbeResults")(function* (
   oracle: KnowledgeArchiveOracle,
   occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
 ) {
-  if (A.isReadonlyArrayEmpty(occurrences)) {
-    return A.empty<KnowledgeFindingCandidate>();
-  }
   const results = yield* oracle.probeCommands(A.map(occurrences, (occurrence) => occurrence.words));
+  if (A.length(results) !== A.length(occurrences)) {
+    return yield* KnowledgeOperationalError.make({
+      message: "Current-checkout command probe returned a result count that did not match its archive-data inputs.",
+    });
+  }
+  return results;
+});
+
+const commandCandidatesFromResults = Effect.fn("Knowledge.commandCandidatesFromResults")(function* (
+  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>,
+  results: ReadonlyArray<KnowledgeCommandProbeResult>
+) {
   if (A.length(results) !== A.length(occurrences)) {
     return yield* KnowledgeOperationalError.make({
       message: "Current-checkout command probe returned a result count that did not match its archive-data inputs.",
@@ -461,6 +521,14 @@ const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
     );
   }
   return candidates;
+});
+
+const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
+  oracle: KnowledgeArchiveOracle,
+  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
+) {
+  const results = yield* commandProbeResults(oracle, occurrences);
+  return yield* commandCandidatesFromResults(occurrences, results);
 });
 
 const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
@@ -530,6 +598,25 @@ const probeCandidatesForSide = Effect.fn("Knowledge.probeCandidatesForSide")(fun
   });
 });
 
+const probeCandidatesForHead = Effect.fn("Knowledge.probeCandidatesForHead")(function* (
+  oracle: KnowledgeArchiveOracle,
+  baseCommands: ReadonlyArray<KnowledgeCommandOccurrence>,
+  head: KnowledgeProbeSideInput
+) {
+  // The current checkout must successfully load every command needed by either revision while using
+  // HEAD data before any merge-base-only failure may degrade coverage. Keep the raw base prefix in the
+  // probe input, then discard its results: only HEAD occurrences may produce HEAD findings.
+  const combinedOccurrences = A.appendAll(baseCommands, head.commands);
+  const combinedResults = yield* commandProbeResults(oracle, combinedOccurrences);
+  const headResults = A.drop(combinedResults, A.length(baseCommands));
+  const candidates = yield* commandCandidatesFromResults(head.commands, headResults);
+  const index = yield* indexCandidate(oracle, head.indexDocumentId);
+  return O.match(index, {
+    onNone: () => candidates,
+    onSome: (candidate) => A.append(candidates, candidate),
+  });
+});
+
 /**
  * Lines of a base boot failure carried into the report: the probe header plus the thrown error and
  * its runtime banner, which is everything needed to name the missing module without pasting a stack.
@@ -538,7 +625,9 @@ const PROBE_BOOT_EXCERPT_LINES = 5;
 
 const probeBootExcerpt = (error: KnowledgeProbeBootError): string =>
   pipe(
-    Str.split(/\r?\n/u)(error.message),
+    error.message,
+    sanitizeProbeDiagnostic,
+    Str.split(/\r?\n/u),
     A.map(Str.trimEnd),
     A.filter(P.not(Str.isEmpty)),
     A.take(PROBE_BOOT_EXCERPT_LINES),
@@ -562,14 +651,15 @@ const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Base runs first so its boot failure escapes before HEAD is probed at all. HEAD's own boot
-  // failure is converted here, which leaves the base one as the only survivable failure left.
-  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
-  const headCandidates = yield* probeCandidatesForSide(input.head, head).pipe(
+  // HEAD runs first because both sides execute the current checkout's code. Its command probe receives
+  // the union of base and HEAD inputs, so a current-code defect in a base-only command fails as the
+  // branch author's operational error before a base-data-only incompatibility may degrade coverage.
+  const headCandidates = yield* probeCandidatesForHead(input.head, base.commands, head).pipe(
     Effect.catchTag("KnowledgeProbeBootError", (error) =>
-      Effect.fail(KnowledgeOperationalError.make({ message: error.message }))
+      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
     )
   );
+  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
   return {
     policy: KnowledgeProbePolicy.Enum.enabled,
     detail: O.none<string>(),
@@ -623,12 +713,15 @@ const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(fun
         findingId,
         kind: candidate.kind,
         severity: "blocking",
-        documentId: candidate.documentId,
-        subject: candidate.subject,
+        documentId: sanitizePublicFindingText(candidate.documentId),
+        subject: sanitizePublicFindingText(candidate.subject),
         occurrence: NonNegativeInt.make(occurrence),
-        location: candidate.location,
-        message: candidate.message,
-        remediation: candidate.remediation,
+        location: KnowledgeFindingLocation.make({
+          ...candidate.location,
+          path: sanitizePublicFindingText(candidate.location.path),
+        }),
+        message: sanitizePublicFindingText(candidate.message),
+        remediation: sanitizePublicFindingText(candidate.remediation),
       })
     );
   }
@@ -650,9 +743,9 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * **Gotchas**
  *
  * `input.probePolicy` is the requested policy, applied to both sides at once; the report carries the
- * policy that was actually achieved, which is weaker when the merge-base archive's probe failed to
- * boot. Either way a non-`enabled` report is still a well-formed delta, but one whose empty buckets
- * only cover the classes that need no executable probe.
+ * policy that was actually achieved, which is weaker when the current-checkout probe failed to boot
+ * against merge-base archive data. Either way a non-`enabled` report is still a well-formed delta, but
+ * one whose empty buckets only cover the classes that need no executable probe.
  *
  * **Example** (Scan two empty archives)
  *
@@ -777,7 +870,7 @@ import { Command } from "effect/unstable/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()
-const commands = input.split("\\n").map((line) => line === "" ? [] : line.split("\\t"))
+const commands = input === "" ? [] : input.split("\\n").map((line) => line.split("\\t"))
 const children = (command) => command.subcommands.flatMap((group) => group.commands)
 const resolve = (words) => {
   let command = rootCommand
@@ -855,9 +948,40 @@ const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratc
   };
 });
 
-const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
-  runtimeExecutable: string,
+const probeStreamSection = (
+  label: string,
+  output: string,
+  currentCheckoutRoot: string,
   archiveRoot: string,
+  scratchRoot: string
+): O.Option<string> =>
+  pipe(
+    sanitizeProbeDiagnostic(output, currentCheckoutRoot, archiveRoot, scratchRoot),
+    O.liftPredicate(Str.isNonEmpty),
+    O.map((detail) => `${label}:\n${detail}`)
+  );
+
+const renderProbeStreams = (
+  result: CapturedStreams,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
+): string => {
+  const sections = A.getSomes(
+    A.make(
+      probeStreamSection("stdout", result.stdout, currentCheckoutRoot, archiveRoot, scratchRoot),
+      probeStreamSection("stderr", result.stderr, currentCheckoutRoot, archiveRoot, scratchRoot)
+    )
+  );
+  return A.join(result.truncated ? A.append(sections, "capture: truncated") : sections, "\n");
+};
+
+const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
+  probeLabel: string,
+  runtimeExecutable: string,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string,
   env: Readonly<Record<string, string>>,
   scriptPath: string,
   bunfigPath: string,
@@ -869,18 +993,25 @@ const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
     cwd: archiveRoot,
     env,
     extendEnv: false,
+    bound: PROBE_STREAM_BOUND,
   }).pipe(
-    KnowledgeOperationalError.mapError(`Failed to spawn current-checkout probe against archive data "${scriptPath}".`)
+    KnowledgeOperationalError.mapError(`Failed to spawn current-checkout ${probeLabel} probe against archive data.`)
   );
   // The probe writes its structured output in one final call, so a non-zero exit means it never got
   // there: the current-checkout probe failed to load or the projection itself failed.
   if (result.exitCode !== 0) {
-    const output = A.join([result.stdout, result.stderr], "");
+    const output = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
     return yield* KnowledgeProbeBootError.make({
-      message: `Current-checkout probe against archive data "${scriptPath}" failed with exit ${result.exitCode}.${Str.isEmpty(output) ? "" : `\n${output}`}`,
+      message: `Current-checkout ${probeLabel} probe against archive data failed with exit ${result.exitCode}.${Str.isEmpty(output) ? "" : `\n${output}`}`,
     });
   }
-  return result.stdout;
+  if (result.truncated) {
+    const output = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
+    return yield* KnowledgeOperationalError.make({
+      message: `Current-checkout ${probeLabel} probe emitted more than ${PROBE_STREAM_MAX_CHARS} characters for archive data; refusing to parse truncated structured output.${Str.isEmpty(output) ? "" : `\n${output}`}`,
+    });
+  }
+  return result;
 });
 
 const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProbeResult> => {
@@ -896,19 +1027,24 @@ const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProb
 };
 
 const decodeCommandProbeOutput = (
-  output: string,
-  expectedCount: number
+  result: CapturedStreams,
+  expectedCount: number,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
 ): Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError> => {
-  const lines = Str.isEmpty(output) ? A.empty<string>() : Str.split(/\r?\n/u)(output);
+  const lines = Str.isEmpty(result.stdout) ? A.empty<string>() : Str.split(/\r?\n/u)(result.stdout);
+  const actualCount = A.length(lines);
+  const diagnostic = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
   if (A.length(lines) !== expectedCount) {
     return KnowledgeOperationalError.make({
-      message: "Current-checkout command probe emitted malformed output for archive data.",
+      message: `Current-checkout command probe emitted malformed output for archive data: expected ${expectedCount} line(s), received ${actualCount}.${Str.isEmpty(diagnostic) ? "" : `\n${diagnostic}`}`,
     });
   }
   return O.match(O.all(A.map(lines, commandProbeResultFromLine)), {
     onNone: () =>
       KnowledgeOperationalError.make({
-        message: "Current-checkout command probe emitted an unknown status for archive data.",
+        message: `Current-checkout command probe emitted an unknown status for archive data: expected ${expectedCount} recognized line(s), received ${actualCount}.${Str.isEmpty(diagnostic) ? "" : `\n${diagnostic}`}`,
       }),
     onSome: Effect.succeed,
   });
@@ -983,9 +1119,6 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
   const probeCommands = Effect.fn("Knowledge.archiveProbeCommands")(function* (
     commands: ReadonlyArray<ReadonlyArray<string>>
   ) {
-    if (A.isReadonlyArrayEmpty(commands)) {
-      return A.empty<KnowledgeCommandProbeResult>();
-    }
     const inputPath = path.join(scratchRoot, "command-input");
     const scriptPath = path.join(scratchRoot, "command-probe.ts");
     yield* fs
@@ -1000,8 +1133,18 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
     yield* fs
       .writeFileString(scriptPath, commandProbeSource(path.join(currentCheckoutRoot, ROOT_COMMAND_MODULE), inputPath))
       .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command probe."));
-    const output = yield* runArchiveProcess(runtimeExecutable, archiveRoot, env, scriptPath, bunfigPath, tsconfigPath);
-    return yield* decodeCommandProbeOutput(output, A.length(commands));
+    const result = yield* runArchiveProcess(
+      "command",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath
+    );
+    return yield* decodeCommandProbeOutput(result, A.length(commands), currentCheckoutRoot, archiveRoot, scratchRoot);
   });
 
   const indexBytes = Effect.gen(function* () {
@@ -1009,9 +1152,18 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
     yield* fs
       .writeFileString(scriptPath, indexProbeSource(path.join(currentCheckoutRoot, PORTFOLIO_INDEX_MODULE)))
       .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout index probe."));
-    const expected = textEncoder.encode(
-      yield* runArchiveProcess(runtimeExecutable, archiveRoot, env, scriptPath, bunfigPath, tsconfigPath)
+    const result = yield* runArchiveProcess(
+      "index",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath
     );
+    const expected = textEncoder.encode(result.stdout);
     const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
     return KnowledgeIndexBytes.make({ expected, archived });
   }).pipe(Effect.provide(runtime));

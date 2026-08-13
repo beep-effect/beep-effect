@@ -8,7 +8,7 @@
     "capturedCount": 13,
     "capturedAt": "2026-08-13",
     "captureMethod": "signed-in-csv-export",
-    "note": "P2 and P3 complete: 12 remediate and 1 already-fixed. Six bounded fixes are hardened locally and Yeet repair passed all 9 lanes; the local quality-review-fix loop is authorized and Yeet verify awaits main reconciliation. Six CI findings remain architecture/deployment-blocked."
+    "note": "P2 and P3 complete: 12 remediate and 1 already-fixed. Six bounded remediations are locally complete, all 42 review items are fixed pending commit, refreshed baseline and aggregate proof are green, and two final compatibility reviewers returned literal 0 changes suggested. Publication is executing only in the ordered CSF-002, CSF-007, CSF-010 sequence; six runner findings remain held and CSF-013 has no Pulumi deployment claim."
   },
   "lanes": {
     "L1-ci-runner-admission": {
@@ -76,7 +76,7 @@
       },
       "remediation": {
         "status": "in-progress",
-        "summary": "Architecture/deployment-blocked: a durable admission boundary must be enforced outside pull-request-editable workflow content, active CI must land, and external GitHub organization runner-group plus AWS deployment proof must verify the result.",
+        "summary": "Architecture/deployment-blocked: a durable admission boundary must be enforced outside pull-request-editable workflow content, and external GitHub organization runner-group plus AWS deployment proof must verify the result.",
         "changedFiles": [],
         "verificationCommands": []
       }
@@ -99,10 +99,17 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "The legacy launcher is deleted, the remaining README is cleanup-only, and a regression test requires the launch surface to remain retired.",
+        "summary": "The legacy launcher is deleted, the remaining README is cleanup-only, a regression test requires the launch surface to remain retired, and the active fleet packet records that this security remediation supersedes its earlier break-glass plan.",
         "changedFiles": [
           "goals/speed-loop/ops/runner-burst/launch-burst-runners.sh",
           "goals/speed-loop/ops/runner-burst/README.md",
+          "goals/ci-fleet-endgame/GOAL.md",
+          "goals/ci-fleet-endgame/PLAN.md",
+          "goals/ci-fleet-endgame/README.md",
+          "goals/ci-fleet-endgame/ops/manifest.json",
+          "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md",
+          "goals/ci-fleet-endgame/research/p3-cache-design.md",
+          "goals/ci-fleet-endgame/research/lane-reopen-relay.md",
           "packages/tooling/tool/cli/test/ci-runner-security.test.ts"
         ],
         "verificationCommands": [
@@ -129,7 +136,7 @@
       },
       "remediation": {
         "status": "in-progress",
-        "summary": "Architecture/deployment-blocked: pull-request jobs must move to a non-privileged execution class or be admitted outside repository-editable YAML after active CI lands, then external GitHub organization runner-group plus AWS deployment proof must verify the result.",
+        "summary": "Architecture/deployment-blocked: pull-request jobs must move to a non-privileged execution class or be admitted outside repository-editable YAML, then external GitHub organization runner-group plus AWS deployment proof must verify the result.",
         "changedFiles": [],
         "verificationCommands": []
       }
@@ -175,7 +182,7 @@
       },
       "remediation": {
         "status": "in-progress",
-        "summary": "Architecture/deployment-blocked: a root-resistant workload-identity boundary must replace the rolled-back firewall approach after active CI lands, followed by deployed AWS proof against ordinary and privileged probes.",
+        "summary": "Architecture/deployment-blocked: a root-resistant workload-identity boundary must replace the rolled-back firewall approach, followed by deployed AWS proof against ordinary and privileged probes.",
         "changedFiles": [],
         "verificationCommands": []
       }
@@ -221,7 +228,7 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "Public provenance uses a schema-backed branch-and-harness model; local paths, session identifiers, resume commands, and the legacy public footer are absent, with focused and package proof green.",
+        "summary": "Public provenance uses a schema-backed branch-and-harness model; local paths, session identifiers, and resume commands are absent, and Git-valid branch names are escaped independently for visible Markdown and the hidden JSON comment.",
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
           "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts"
@@ -273,20 +280,24 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "Semantic archive probes execute only current-checkout command and index code; the internal oracle is available only through the source-only test kit, probe docs and diagnostics match the boundary, and hostile-archive, package, export, and local-docgen proof are green.",
+        "summary": "Current-checkout-only execution and source-only routing are implemented. Round 2 closes truncated output, CR/short-path sanitation, archive-derived public control text, and base/HEAD command-union gaps; focused Knowledge proof and the exact 15-lane aggregate audit are green. Publication remains held outside the current ordered sequence.",
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
           "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
           "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
           "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
           "packages/tooling/tool/cli/src/commands/Knowledge/index.ts",
+          "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
-          "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts"
+          "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+          "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+          "tsconfig.json"
         ],
         "verificationCommands": [
           "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/ci-runner-security.test.ts packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts packages/tooling/tool/cli/test/tsconfig-sync.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
           "bun run --filter @beep/repo-cli check",
-          "bun run docgen:local"
+          "bun run docgen:local -- --full"
         ]
       }
     },
@@ -308,7 +319,7 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "Codex defaults are explicit and safe, broad Claude GitHub CLI and Codex execution grants are removed, and AI-sync admits exactly the 47 checked-in Bash grants while rejecting broad families, wrappers, absolute executables, environment prefixes, and shell indirection; docs preserve intentional git push and Yeet publication grants and record the plural safety-validation surface.",
+        "summary": "Codex is pinned exactly to on-request/workspace-write, Claude must explicitly set permissions.defaultMode to default, broad command grants and approval drift are rejected, and AI-sync admits exactly the 47 checked-in Bash grants. Both governed configs participate in the cached check task hash.",
         "changedFiles": [
           ".codex/config.toml",
           ".claude/settings.json",
@@ -318,12 +329,15 @@
           "packages/tooling/library/ai-sync/README.md",
           "packages/tooling/library/ai-sync/src/validation.ts",
           "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+          "packages/tooling/library/ai-sync/turbo.json",
+          "bun.lock",
           ".changeset/codex-security-findings-2026-08-13.md"
         ],
         "verificationCommands": [
           "node node_modules/vitest/vitest.mjs run packages/tooling/library/ai-sync/test/ai-sync.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
           "bun run --filter @beep/ai-sync check",
           "bun run --filter @beep/ai-sync lint",
+          "bunx turbo run check --filter=@beep/ai-sync --dry=json",
           "jq '[.permissions.allow[] | select(. == \"Bash\" or startswith(\"Bash(\"))] | length' .claude/settings.json",
           "bun -e 'import parse from \"@changesets/parse\"; parse(await Bun.file(\".changeset/codex-security-findings-2026-08-13.md\").text())'"
         ]
@@ -375,16 +389,20 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "Strict schema v2 requires normalized per-file provenance and fails closed on any file-set change accompanying a package percentage drop. A temporary-repository regression proves scoped v1 refusal and one-way full-writer v1-to-v2 migration; the regenerated baseline has 127 package file maps, and shared baseline read/decode error mappers keep Fallow clean.",
+        "summary": "Strict schema v2 and per-file fail-closed comparison address contradictory counts, normalized-path collisions, control-bearing paths, truthful new-file diagnostics, and bounded decode failures. After refreshing origin/main 642331b86c into merge HEAD 8337a21710, regeneration wrote 127 packages in 22m54.534s with Turbo 230/230; publication remains held outside the current ordered sequence.",
         "changedFiles": [
           "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
           "packages/tooling/tool/cli/test/quality-tasks.test.ts",
           "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+          "packages/tooling/policy-pack/repo-configs/package.json",
+          "bun.lock",
           "standards/coverage.regression-baseline.jsonc"
         ],
         "verificationCommands": [
-          "bun run coverage:baseline:write",
+          "bun run beep coverage -- --write-baseline --concurrency=1",
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/quality-tasks.test.ts --maxWorkers=1 --fileParallelism=false",
           "cd packages/tooling/tool/cli && node ../../../../node_modules/vitest/vitest.mjs run test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/tsconfig-sync.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
           "cd packages/tooling/tool/cli && bun run beep:check",
           "cd packages/tooling/tool/cli && bunx biome check src/commands/Quality/internal/CoverageRegression.ts test/quality-tasks.test.ts",
           "bun run beep quality fallow audit --check --quiet"
@@ -409,7 +427,7 @@
       },
       "remediation": {
         "status": "complete",
-        "summary": "Both integrations use Function.invokeArn, Pulumi mocks distinguish ARN properties, and focused, package-check, and lint proof are green.",
+        "summary": "Both integrations use Function.invokeArn and Pulumi mocks distinguish ARN properties. Focused source/mock proof is green; no Pulumi deployment is claimed by this packet.",
         "changedFiles": [
           "infra/src/CiTurboCache.ts",
           "infra/test/CiTurboCache.test.ts",

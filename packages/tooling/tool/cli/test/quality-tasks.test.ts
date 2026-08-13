@@ -8,6 +8,7 @@ import {
 import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   baselineEntriesLostByReplacement,
+  CoverageComparisonFailure,
   CoverageFileBaseline,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
@@ -42,6 +43,7 @@ import {
   QualityTaskGroupFailed,
   QualityTaskStep,
   qualityProfileConfigForTesting,
+  renderCoverageFailuresForTesting,
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
@@ -55,15 +57,17 @@ import {
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
-import { findRepoRoot } from "@beep/repo-utils";
+import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { Percentage } from "@beep/schema/Percentage";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { Cause, Effect, Exit, FileSystem, Inspectable, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -81,6 +85,7 @@ const PlatformLayer = Layer.mergeAll(
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
+const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -91,34 +96,36 @@ const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string,
     stdout: "ignore",
     stderr: "ignore",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  assert.strictEqual(yield* handle.exitCode, 0);
+});
+const coveragePercentages = (value: number) => ({
+  lines: Percentage.make(value),
+  statements: Percentage.make(value),
+  branches: Percentage.make(value),
+  functions: Percentage.make(value),
 });
 const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
     path,
-    lines: metric,
-    statements: metric,
-    branches: metric,
-    functions: metric,
+    ...coveragePercentages(metric),
     uncovered: coverageUncovered(0),
     files: {},
   });
-const coverageUncovered = (count: number): CoverageUncoveredCounts =>
-  CoverageUncoveredCounts.make({
-    lines: count,
-    statements: count,
-    branches: count,
-    functions: count,
+const coverageUncovered = (count: number): CoverageUncoveredCounts => {
+  const decoded = NonNegativeInt.make(count);
+  return CoverageUncoveredCounts.make({
+    lines: decoded,
+    statements: decoded,
+    branches: decoded,
+    functions: decoded,
   });
+};
 const coverageFileBaseline = (metric: number, uncovered: number): CoverageFileBaseline =>
   CoverageFileBaseline.make({
-    lines: metric,
-    statements: metric,
-    branches: metric,
-    functions: metric,
+    ...coveragePercentages(metric),
     uncovered: coverageUncovered(uncovered),
   });
-const vitestCoverageMetrics = (total: number, covered: number, pct: number) => ({
+const vitestCoverageMetrics = (total: number, covered: number, pct: number | "Unknown") => ({
   lines: { total, covered, skipped: 0, pct },
   statements: { total, covered, skipped: 0, pct },
   branches: { total, covered, skipped: 0, pct },
@@ -1383,10 +1390,8 @@ describe("quality task adapter", () => {
           packageName: "@beep/existing",
           baseline: CoveragePackageBaseline.make({
             path: "packages/existing",
-            lines: 49.998,
-            statements: 50,
-            branches: 50,
-            functions: 50,
+            ...coveragePercentages(50),
+            lines: Percentage.make(49.998),
             uncovered: coverageUncovered(1),
             files: {},
           }),
@@ -1431,10 +1436,150 @@ describe("quality task adapter", () => {
       ).pipe(provideScopedLayer(NodePath.layer));
       const files = baseline.files;
 
-      expect(baseline.path).toBe("packages/existing");
-      expect(R.keys(files)).toEqual(["packages/existing/src/Absolute.ts", "packages/existing/src/Relative.ts"]);
-      expect(files["packages/existing/src/Relative.ts"]).toEqual(
-        expect.objectContaining({ lines: 50, uncovered: expect.objectContaining({ lines: 5 }) })
+      assert.strictEqual(baseline.path, "packages/existing");
+      assert.deepStrictEqual(R.keys(files), ["packages/existing/src/Absolute.ts", "packages/existing/src/Relative.ts"]);
+      const relativeFile = files["packages/existing/src/Relative.ts"];
+      assert.isDefined(relativeFile);
+      assert.strictEqual(relativeFile.lines, Percentage.make(50));
+      assert.strictEqual(relativeFile.uncovered.lines, NonNegativeInt.make(5));
+    })
+  );
+
+  it.effect(
+    "derives Istanbul-compatible percentages from trusted counts instead of the reported pct field",
+    Effect.fnUntraced(function* () {
+      const baseline = yield* coveragePackageBaselineFromSummaryForTesting(
+        "/repo",
+        "/repo/packages/existing",
+        encodeJson({
+          total: vitestCoverageMetrics(10, 0, 100),
+          "src/Fractional.ts": vitestCoverageMetrics(134, 115, 100),
+          "src/NoSubjects.ts": vitestCoverageMetrics(0, 0, "Unknown"),
+        })
+      ).pipe(provideScopedLayer(NodePath.layer));
+      const fractional = baseline.files["packages/existing/src/Fractional.ts"];
+      const noSubjects = baseline.files["packages/existing/src/NoSubjects.ts"];
+
+      assert.strictEqual(baseline.lines, Percentage.make(0));
+      assert.isDefined(fractional);
+      assert.strictEqual(fractional.lines, Percentage.make(85.82));
+      assert.isDefined(noSubjects);
+      assert.strictEqual(noSubjects.lines, Percentage.make(100));
+    })
+  );
+
+  it.effect(
+    "rejects absolute and relative summary entries that normalize to the same repository path in either order",
+    Effect.fnUntraced(function* () {
+      const absolutePath = "/repo/packages/existing/src/Dupe.ts";
+      const relativePath = "src/Dupe.ts";
+      const orders = [
+        [absolutePath, relativePath],
+        [relativePath, absolutePath],
+      ];
+      const messages = yield* Effect.forEach(
+        orders,
+        Effect.fnUntraced(function* (rawPaths) {
+          const error = yield* Effect.flip(
+            coveragePackageBaselineFromSummaryForTesting(
+              "/repo",
+              "/repo/packages/existing",
+              encodeJson({
+                total: vitestCoverageMetrics(10, 10, 100),
+                ...R.fromEntries(A.map(rawPaths, (rawPath) => [rawPath, vitestCoverageMetrics(10, 10, 100)])),
+              })
+            ).pipe(provideScopedLayer(NodePath.layer))
+          );
+          return error.message;
+        })
+      );
+
+      assert.strictEqual(messages[0], messages[1]);
+      assert.include(messages[0] ?? "", 'both normalize to "packages/existing/src/Dupe.ts"');
+      assert.include(messages[0] ?? "", "Remove the duplicate absolute/relative entry");
+    })
+  );
+
+  it.effect(
+    "rejects control characters in raw summary paths without reflecting them into diagnostics",
+    Effect.fnUntraced(function* () {
+      yield* Effect.forEach(
+        ["\u0000", "\u001B", "\u007F", "\u0085"],
+        Effect.fnUntraced(function* (control) {
+          const error = yield* Effect.flip(
+            coveragePackageBaselineFromSummaryForTesting(
+              "/repo",
+              "/repo/packages/existing",
+              encodeJson({
+                total: vitestCoverageMetrics(10, 10, 100),
+                [`src/Unsafe${control}Name.ts`]: vitestCoverageMetrics(10, 10, 100),
+              })
+            ).pipe(provideScopedLayer(NodePath.layer))
+          );
+
+          assert.include(error.message, "without control characters");
+          assert.notMatch(error.message, /[\u0000-\u001F\u007F-\u009F]/u);
+        }),
+        { discard: true }
+      );
+    })
+  );
+
+  it.effect(
+    "bounds coverage-summary decode diagnostics while retaining the typed parse cause",
+    Effect.fnUntraced(function* () {
+      const invalidPct = Str.repeat(20_000)("x");
+      const error = yield* Effect.flip(
+        coveragePackageBaselineFromSummaryForTesting(
+          "/repo",
+          "/repo/packages/existing",
+          encodeJson({
+            total: {
+              ...vitestCoverageMetrics(10, 10, 100),
+              lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
+            },
+          })
+        ).pipe(provideScopedLayer(NodePath.layer))
+      );
+
+      assert.isTrue(isDomainError(error));
+      if (isDomainError(error)) {
+        assert.include(error.message, "Failed to parse coverage summary fixture");
+        assert.isAtMost(Str.length(error.message), 4_096);
+        assert.isDefined(error.cause);
+        assert.isAbove(Str.length(Inspectable.toStringUnknown(error.cause, 0)), 16_384);
+      }
+    })
+  );
+
+  it.effect(
+    "rejects internally inconsistent Vitest coverage summary counts",
+    Effect.fnUntraced(function* () {
+      const valid = vitestCoverageMetrics(10, 8, 80);
+      const invalidSummaries = [
+        {
+          label: "covered exceeds total",
+          summary: { ...valid, lines: { ...valid.lines, covered: 11 } },
+        },
+        {
+          label: "skipped exceeds total",
+          summary: { ...valid, lines: { ...valid.lines, skipped: 11 } },
+        },
+      ];
+
+      yield* Effect.forEach(
+        invalidSummaries,
+        Effect.fnUntraced(function* ({ label, summary }) {
+          const decoded = yield* Effect.exit(
+            coveragePackageBaselineFromSummaryForTesting(
+              "/repo",
+              "/repo/packages/existing",
+              encodeJson({ total: valid, "src/Index.ts": summary })
+            ).pipe(provideScopedLayer(NodePath.layer))
+          );
+          assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
+        }),
+        { discard: true }
       );
     })
   );
@@ -1462,7 +1607,93 @@ describe("quality task adapter", () => {
         })
       );
 
-      expect(Exit.isFailure(decoded)).toBe(true);
+      assert.isTrue(Exit.isFailure(decoded));
+    })
+  );
+
+  it.effect(
+    "rejects out-of-range v2 metrics, unsupported epsilon, and non-normalized file keys",
+    Effect.fnUntraced(function* () {
+      const validPackage = {
+        path: "packages/existing",
+        lines: 50,
+        statements: 50,
+        branches: 50,
+        functions: 50,
+        uncovered: { lines: 5, statements: 5, branches: 5, functions: 5 },
+        files: {
+          "packages/existing/src/Index.ts": {
+            lines: 50,
+            statements: 50,
+            branches: 50,
+            functions: 50,
+            uncovered: { lines: 5, statements: 5, branches: 5, functions: 5 },
+          },
+        },
+      };
+      const document = (packageBaseline: unknown, epsilon = 0.001) => ({
+        schema_version: 2,
+        generated_at: "2026-07-06T00:00:00.000Z",
+        git_sha: "test-sha",
+        command: "bun run coverage:baseline:write",
+        epsilon,
+        packages: { "@beep/existing": packageBaseline },
+      });
+      const invalidDocuments = [
+        { label: "negative package percentage", input: document({ ...validPackage, lines: -0.01 }) },
+        { label: "package percentage above 100", input: document({ ...validPackage, lines: 100.01 }) },
+        {
+          label: "negative uncovered count",
+          input: document({
+            ...validPackage,
+            uncovered: { ...validPackage.uncovered, lines: -1 },
+          }),
+        },
+        { label: "unsupported epsilon", input: document(validPackage, 0.01) },
+        ...A.map(
+          [
+            "/absolute.ts",
+            "../escape.ts",
+            "packages/existing/src/../escape.ts",
+            "packages\\existing\\src\\Index.ts",
+            "packages/existing//src/Index.ts",
+            "packages/existing/src/Index.ts/",
+            "packages/existing/src/Null\u0000.ts",
+            "packages/existing/src/Escape\u001B.ts",
+            "packages/existing/src/Delete\u007F.ts",
+            "packages/existing/src/NextLine\u0085.ts",
+          ],
+          (filePath) => ({
+            label: `non-normalized file key ${filePath}`,
+            input: document({
+              ...validPackage,
+              files: { [filePath]: validPackage.files["packages/existing/src/Index.ts"] },
+            }),
+          })
+        ),
+      ];
+
+      yield* Effect.forEach(
+        invalidDocuments,
+        Effect.fnUntraced(function* ({ input, label }) {
+          const decoded = yield* Effect.exit(S.decodeUnknownEffect(CoverageRegressionBaseline)(input));
+          assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
+        }),
+        { discard: true }
+      );
+
+      const unsafeFailure = yield* Effect.exit(
+        S.decodeEffect(CoverageComparisonFailure)({
+          _tag: "baseline-drop",
+          actual: 0,
+          baseline: 100,
+          filePath: "packages/existing/src/Unsafe\u001B.ts",
+          metric: "lines",
+          packageName: "@beep/existing",
+          packagePath: "packages/existing",
+        })
+      );
+      assert.isTrue(Exit.isFailure(unsafeFailure));
     })
   );
 
@@ -1475,8 +1706,8 @@ describe("quality task adapter", () => {
       const content = yield* fs.readFileString(path.join(repoRoot, "standards/coverage.regression-baseline.jsonc"));
       const decoded = yield* decodeCoverageRegressionBaselineJsoncForTesting(content);
 
-      expect(decoded.schema_version).toBe(2);
-      expect(R.size(decoded.packages)).toBeGreaterThan(0);
+      assert.strictEqual(decoded.schema_version, 2);
+      assert.isTrue(R.size(decoded.packages) > 0);
     }, provideScopedLayer(FileSystemLayer))
   );
 
@@ -1504,13 +1735,14 @@ describe("quality task adapter", () => {
         })
       );
 
-      expect(Exit.isFailure(decoded)).toBe(true);
+      assert.isTrue(Exit.isFailure(decoded));
     })
   );
 
-  it("refuses scoped v1 writes and migrates a full regeneration to schema v2", () =>
-    Effect.runPromise(
-      withTempRepo(
+  it.effect(
+    "refuses scoped v1 writes and migrates a full regeneration to schema v2",
+    Effect.fnUntraced(function* () {
+      yield* withTempRepo(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1545,11 +1777,9 @@ describe("quality task adapter", () => {
           );
 
           const scopedExit = yield* Effect.exit(writeCoverageRegressionBaseline(repoRoot, true));
-          expect(Exit.isFailure(scopedExit)).toBe(true);
+          assert.isTrue(Exit.isFailure(scopedExit));
           if (Exit.isFailure(scopedExit)) {
-            expect(Cause.squash(scopedExit.cause)).toMatchObject({
-              message: expect.stringContaining("schema version 1 requires a full"),
-            });
+            assert.include(Cause.pretty(scopedExit.cause), "schema version 1 requires a full");
           }
 
           yield* runGit(repoRoot, ["init"]);
@@ -1562,11 +1792,16 @@ describe("quality task adapter", () => {
           const migrated = yield* decodeCoverageRegressionBaselineJsoncForTesting(
             yield* fs.readFileString(baselinePath)
           );
-          expect(migrated.schema_version).toBe(2);
-          expect(R.keys(migrated.packages["@beep/existing"]?.files ?? {})).toEqual(["src/Index.ts"]);
+          assert.strictEqual(migrated.schema_version, 2);
+          const migratedPackage = R.get(migrated.packages, "@beep/existing");
+          assert.isTrue(O.isSome(migratedPackage));
+          if (O.isSome(migratedPackage)) {
+            assert.deepStrictEqual(R.keys(migratedPackage.value.files), ["src/Index.ts"]);
+          }
         })
-      )
-    ));
+      );
+    })
+  );
 
   it("only fails missing baseline-package summaries for unscoped coverage runs", () => {
     expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], false).missingActuals).toEqual([
@@ -1577,6 +1812,36 @@ describe("quality task adapter", () => {
     );
   });
 
+  it("keeps rendered coverage diagnostics free of terminal control characters", () => {
+    const packageName = "@beep/existing\u001B[31m";
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        [packageName]: CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(0),
+          files: {},
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      ...coveragePercentages(49),
+      uncovered: coverageUncovered(1),
+      files: {},
+    });
+    const failures = compareCoverageRegressionSnapshotsForTesting(
+      before,
+      [{ packageName, baseline: actual }],
+      false
+    ).failures;
+    const rendered = renderCoverageFailuresForTesting(failures);
+
+    assert.isNotEmpty(rendered);
+    A.forEach(rendered, (line) => assert.notMatch(line, /[\u0000-\u001F\u007F-\u009F]/u));
+  });
+
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
     // 50% as 50/100 covered, so 50 lines uncovered.
     const before = CoverageRegressionBaseline.make({
@@ -1584,10 +1849,7 @@ describe("quality task adapter", () => {
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 50,
-          statements: 50,
-          branches: 50,
-          functions: 50,
+          ...coveragePercentages(50),
           uncovered: coverageUncovered(50),
           files: {},
         }),
@@ -1603,10 +1865,7 @@ describe("quality task adapter", () => {
       compare(
         CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 44.44,
-          statements: 44.44,
-          branches: 44.44,
-          functions: 44.44,
+          ...coveragePercentages(44.44),
           uncovered: coverageUncovered(50),
           files: {},
         })
@@ -1618,10 +1877,7 @@ describe("quality task adapter", () => {
       compare(
         CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 45.45,
-          statements: 45.45,
-          branches: 45.45,
-          functions: 45.45,
+          ...coveragePercentages(45.45),
           uncovered: coverageUncovered(60),
           files: {},
         })
@@ -1640,10 +1896,7 @@ describe("quality task adapter", () => {
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 66.67,
-          statements: 66.67,
-          branches: 66.67,
-          functions: 66.67,
+          ...coveragePercentages(66.67),
           uncovered: coverageUncovered(5),
           files: {
             [coveredFilePath]: coverageFileBaseline(100, 0),
@@ -1654,10 +1907,7 @@ describe("quality task adapter", () => {
     });
     const actual = CoveragePackageBaseline.make({
       path: "packages/existing",
-      lines: 50,
-      statements: 50,
-      branches: 50,
-      functions: 50,
+      ...coveragePercentages(50),
       uncovered: coverageUncovered(5),
       files: {
         [coveredFilePath]: coverageFileBaseline(50, 5),
@@ -1676,17 +1926,14 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("fails closed when coverage loss and uncovered deletion offset inside one surviving file", () => {
+  it("allows a surviving file percentage drop caused by deleting covered code", () => {
     const filePath = "packages/existing/src/Offset.ts";
     const before = CoverageRegressionBaseline.make({
       ...coverageRegressionBaseline,
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 60,
-          statements: 60,
-          branches: 60,
-          functions: 60,
+          ...coveragePercentages(60),
           uncovered: coverageUncovered(4),
           files: { [filePath]: coverageFileBaseline(60, 4) },
         }),
@@ -1694,10 +1941,7 @@ describe("quality task adapter", () => {
     });
     const actual = CoveragePackageBaseline.make({
       path: "packages/existing",
-      lines: 55.56,
-      statements: 55.56,
-      branches: 55.56,
-      functions: 55.56,
+      ...coveragePercentages(55.56),
       uncovered: coverageUncovered(4),
       files: { [filePath]: coverageFileBaseline(55.56, 4) },
     });
@@ -1705,24 +1949,17 @@ describe("quality task adapter", () => {
     expect(
       compareCoverageRegressionSnapshotsForTesting(before, [{ packageName: "@beep/existing", baseline: actual }], false)
         .failures
-    ).toEqual(
-      A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
-        expect.objectContaining({ packageName: "@beep/existing", filePath: O.some(filePath), metric })
-      )
-    );
+    ).toEqual([]);
   });
 
-  it("fails closed when a surviving file loses covered code with flat uncovered counts", () => {
+  it("detects a surviving file's coverage loss when uncovered counts rise", () => {
     const filePath = "packages/existing/src/Surviving.ts";
     const before = CoverageRegressionBaseline.make({
       ...coverageRegressionBaseline,
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 50,
-          statements: 50,
-          branches: 50,
-          functions: 50,
+          ...coveragePercentages(50),
           uncovered: coverageUncovered(50),
           files: { [filePath]: coverageFileBaseline(50, 50) },
         }),
@@ -1730,12 +1967,9 @@ describe("quality task adapter", () => {
     });
     const actual = CoveragePackageBaseline.make({
       path: "packages/existing",
-      lines: 44.44,
-      statements: 44.44,
-      branches: 44.44,
-      functions: 44.44,
-      uncovered: coverageUncovered(50),
-      files: { [filePath]: coverageFileBaseline(44.44, 50) },
+      ...coveragePercentages(44.44),
+      uncovered: coverageUncovered(51),
+      files: { [filePath]: coverageFileBaseline(44.44, 51) },
     });
 
     expect(
@@ -1754,10 +1988,7 @@ describe("quality task adapter", () => {
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 60,
-          statements: 60,
-          branches: 60,
-          functions: 60,
+          ...coveragePercentages(60),
           uncovered: coverageUncovered(4),
           files: { "packages/existing/src/Before.ts": coverageFileBaseline(60, 4) },
         }),
@@ -1765,10 +1996,7 @@ describe("quality task adapter", () => {
     });
     const actual = CoveragePackageBaseline.make({
       path: "packages/existing",
-      lines: 55.56,
-      statements: 55.56,
-      branches: 55.56,
-      functions: 55.56,
+      ...coveragePercentages(55.56),
       uncovered: coverageUncovered(4),
       files: { "packages/existing/src/After.ts": coverageFileBaseline(55.56, 4) },
     });
@@ -1778,7 +2006,160 @@ describe("quality task adapter", () => {
         .failures
     ).toEqual(
       A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
-        expect.objectContaining({ packageName: "@beep/existing", filePath: O.none(), metric })
+        expect.objectContaining({
+          packageName: "@beep/existing",
+          filePath: O.some("packages/existing/src/Before.ts"),
+          metric,
+        })
+      )
+    );
+  });
+
+  it("fails closed when a covered path disappears behind a flat-total new-path offset", () => {
+    const disappearedPath = "packages/existing/src/A.ts";
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(10),
+          files: {
+            [disappearedPath]: coverageFileBaseline(100, 0),
+            "packages/existing/src/B.ts": coverageFileBaseline(0, 10),
+          },
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      ...coveragePercentages(50),
+      uncovered: coverageUncovered(10),
+      files: {
+        "packages/existing/src/B.ts": coverageFileBaseline(0, 5),
+        "packages/existing/src/C.ts": coverageFileBaseline(50, 5),
+        "packages/existing/src/D.ts": coverageFileBaseline(100, 0),
+      },
+    });
+
+    expect(
+      compareCoverageRegressionSnapshotsForTesting(before, [{ packageName: "@beep/existing", baseline: actual }], false)
+        .failures
+    ).toEqual(
+      A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
+        expect.objectContaining({ packageName: "@beep/existing", filePath: O.some(disappearedPath), metric })
+      )
+    );
+  });
+
+  it("fails closed when a new uncovered path is offset behind flat package totals", () => {
+    const newPath = "packages/existing/src/NewUntested.ts";
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(10),
+          files: {
+            "packages/existing/src/Existing.ts": coverageFileBaseline(50, 10),
+          },
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      ...coveragePercentages(50),
+      uncovered: coverageUncovered(10),
+      files: {
+        "packages/existing/src/Existing.ts": coverageFileBaseline(100, 0),
+        [newPath]: coverageFileBaseline(0, 10),
+      },
+    });
+
+    const failures = compareCoverageRegressionSnapshotsForTesting(
+      before,
+      [{ packageName: "@beep/existing", baseline: actual }],
+      false
+    ).failures;
+
+    expect(failures).toEqual(
+      A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
+        expect.objectContaining({
+          _tag: "new-uncovered-file",
+          packageName: "@beep/existing",
+          filePath: O.some(newPath),
+          metric,
+          uncovered: 10,
+        })
+      )
+    );
+    A.forEach(failures, (failure) => assert.notProperty(failure, "baseline"));
+    assert.include(A.join(renderCoverageFailuresForTesting(failures), "\n"), "no baseline file identity");
+  });
+
+  it("allows a fully covered file addition when existing files do not regress", () => {
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(10),
+          files: {
+            "packages/existing/src/Existing.ts": coverageFileBaseline(50, 10),
+          },
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      ...coveragePercentages(75),
+      uncovered: coverageUncovered(10),
+      files: {
+        "packages/existing/src/Existing.ts": coverageFileBaseline(50, 10),
+        "packages/existing/src/NewCovered.ts": coverageFileBaseline(100, 0),
+      },
+    });
+
+    expect(
+      compareCoverageRegressionSnapshotsForTesting(before, [{ packageName: "@beep/existing", baseline: actual }], false)
+        .failures
+    ).toEqual([]);
+  });
+
+  it("fails closed when a covered baseline path disappears despite improving package totals", () => {
+    const disappearedPath = "packages/existing/src/Covered.ts";
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(10),
+          files: {
+            [disappearedPath]: coverageFileBaseline(100, 0),
+            "packages/existing/src/Uncovered.ts": coverageFileBaseline(0, 10),
+          },
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      ...coveragePercentages(75),
+      uncovered: coverageUncovered(5),
+      files: {
+        "packages/existing/src/Replacement.ts": coverageFileBaseline(100, 0),
+        "packages/existing/src/Uncovered.ts": coverageFileBaseline(0, 5),
+      },
+    });
+
+    expect(
+      compareCoverageRegressionSnapshotsForTesting(before, [{ packageName: "@beep/existing", baseline: actual }], false)
+        .failures
+    ).toEqual(
+      A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
+        expect.objectContaining({ packageName: "@beep/existing", filePath: O.some(disappearedPath), metric })
       )
     );
   });
@@ -1789,10 +2170,7 @@ describe("quality task adapter", () => {
       packages: {
         "@beep/existing": CoveragePackageBaseline.make({
           path: "packages/existing",
-          lines: 50,
-          statements: 50,
-          branches: 50,
-          functions: 50,
+          ...coveragePercentages(50),
           uncovered: coverageUncovered(10),
           files: {
             "packages/existing/src/Covered.ts": coverageFileBaseline(100, 0),
@@ -1803,10 +2181,7 @@ describe("quality task adapter", () => {
     });
     const actual = CoveragePackageBaseline.make({
       path: "packages/existing",
-      lines: 0,
-      statements: 0,
-      branches: 0,
-      functions: 0,
+      ...coveragePercentages(0),
       uncovered: coverageUncovered(10),
       files: {
         "packages/existing/src/Uncovered.ts": coverageFileBaseline(0, 10),
@@ -1818,7 +2193,11 @@ describe("quality task adapter", () => {
         .failures
     ).toEqual(
       A.map(A.sort(["lines", "statements", "branches", "functions"], Order.String), (metric) =>
-        expect.objectContaining({ packageName: "@beep/existing", filePath: O.none(), metric })
+        expect.objectContaining({
+          packageName: "@beep/existing",
+          filePath: O.some("packages/existing/src/Covered.ts"),
+          metric,
+        })
       )
     );
   });

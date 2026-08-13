@@ -10,10 +10,10 @@
   },
   "packetPath": "goals/codex-security-findings-2026-08-13",
   "lifecycle": "active",
-  "statusNote": "P4 and P5 are in progress: six bounded fixes are hardened locally and Yeet repair is green at 9/9 lanes; the local quality-review-fix loop is authorized and Yeet verify awaits main reconciliation; six CI findings remain architecture/deployment-blocked.",
+  "statusNote": "P4 and P5 remain in progress: all 42 quality items are fixed pending commit, the refreshed schema-v2 baseline and 15-lane aggregate audit are green, and two final compatibility reviewers returned literal 0 changes suggested. Further review rounds are closed by user direction. P6 publication is executing only for CSF-002 then CSF-007 then CSF-010; six runner findings lack external evidence and CSF-013 has no deployment proof.",
   "blockedBy": [
     "Runner admission and workload-identity architecture for CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008.",
-    "Active CI work must land and external GitHub organization runner-group/AWS deployment proof must pass before closeout; publication requires explicit operator authorization."
+    "External GitHub organization runner-group/AWS deployment proof must pass before runner-finding closeout; publication outside the ordered CSF-002, CSF-007, CSF-010 sequence requires new user authorization."
   ],
   "mission": "Remediate and close the 13 Codex Cloud security findings captured on 2026-08-13.",
   "executionCapable": true,
@@ -33,9 +33,14 @@
     "goals/codex-security-findings-2026-08-13/SPEC.md",
     "goals/codex-security-findings-2026-08-13/PLAN.md",
     "goals/codex-security-findings-2026-08-13/GOAL.md",
-    "goals/codex-security-findings-2026-08-13/research/SOURCES.md"
+    "goals/codex-security-findings-2026-08-13/research/SOURCES.md",
+    "goals/codex-security-findings-2026-08-13/research/QUALITY_REVIEW.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/QUALITY_REVIEW.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -71,7 +76,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "P2 and P3 are complete. Six bounded remediations are hardened locally, one finding was already fixed, Yeet repair passed all 9 lanes, the local quality-review-fix loop is authorized, Yeet verify awaits main reconciliation, and six CI trust-boundary findings remain architecture/deployment-blocked."
+    "note": "P2 and P3 are complete. All 42 quality items are fixed pending commit; refreshed baseline proof, the 15-lane aggregate audit, and final zero-suggestion compatibility review are green. Publication is executing only for CSF-002, CSF-007, and CSF-010. CSF-009/012 remain held, CSF-013 has no Pulumi deployment claim, and six CI trust-boundary findings still lack external evidence."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -127,7 +132,7 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P7",

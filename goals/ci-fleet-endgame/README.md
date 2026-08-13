@@ -44,10 +44,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is complete. Execution now moves through P3 asymmetric cache and P4 baked
-AMI before P2 cuts the heavy lane over to one-job-one-VM workers. This order
-preserves the security and cost gains without regressing heavy-lane wall time
-against the warm manual-burst baseline.
+P1 through P3 are complete. The ephemeral cutover landed in #666, cache
+activation landed in #673, and read-only PR consumption landed in #674.
+Execution now moves to P4's baked AMI. CSF-002 supersedes the earlier
+break-glass-retention plan: the non-ephemeral launcher remains retired, and only
+its cleanup teardown path remains available.
 
 ## Binding decisions
 

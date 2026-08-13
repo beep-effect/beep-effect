@@ -26,7 +26,8 @@ reaper, AMI-pinning, fork-PR, and cache-write boundaries.
 Sequence strictly:
 
 1. Module bridge spike and non-serving shadow deploy.
-2. Cut over `beep-ec2-heavy`; retain manual burst only as audited break-glass.
+2. Cut over `beep-ec2-heavy`; keep the non-ephemeral manual launch path
+   retired, with teardown retained only for cleanup.
 3. Ship trusted-write/PR-read-only asymmetric Turbo cache.
 4. Ship the lockfile-keyed baked AMI.
 5. Use pickup, cost, infra-success, peak-RSS, and wall-time evidence to

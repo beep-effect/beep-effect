@@ -6,9 +6,24 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { DomainError } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe, Tuple } from "effect";
+import {
+  Console,
+  DateTime,
+  Effect,
+  FileSystem,
+  Inspectable,
+  Match,
+  MutableHashMap,
+  Order,
+  Path,
+  pipe,
+  Tuple,
+} from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -47,6 +62,17 @@ export const coverageRegressionRegenerationCommand = "bun run coverage:baseline:
  */
 export const coverageRegressionEpsilon = 0.001;
 
+const COVERAGE_DIAGNOSTIC_MAX_CHARS = 4096;
+const COVERAGE_DIAGNOSTIC_CONTENT_MAX_CHARS = COVERAGE_DIAGNOSTIC_MAX_CHARS - 3;
+const COVERAGE_PATH_FRAGMENT_MAX_CHARS = 512;
+const DISALLOWED_COVERAGE_CONTROL_PATTERN = /[\u0000-\u001F\u007F-\u009F]/gu;
+
+const SupportedCoverageRegressionEpsilon = S.Literal(coverageRegressionEpsilon).pipe(
+  $I.annoteSchema("SupportedCoverageRegressionEpsilon", {
+    description: "Exact percentage-point tolerance supported by the coverage regression comparator.",
+  })
+);
+
 const CoverageMetricName = LiteralKit(["branches", "functions", "lines", "statements"]).pipe(
   $I.annoteSchema("CoverageMetricName", {
     description: "Coverage metric names tracked by the regression baseline.",
@@ -55,13 +81,71 @@ const CoverageMetricName = LiteralKit(["branches", "functions", "lines", "statem
 
 type CoverageMetricName = typeof CoverageMetricName.Type;
 
-const VitestCoveragePct = S.Union([S.Finite, S.Literal("Unknown")]).pipe(
+const VitestCoveragePct = S.Union([Percentage, S.Literal("Unknown")]).pipe(
   $I.annoteSchema("VitestCoveragePct", {
     description: "Vitest coverage percentage value; empty coverage maps render as the string Unknown.",
   })
 );
 
 type VitestCoveragePct = typeof VitestCoveragePct.Type;
+
+const CoverageRepoRelativeFilePath = S.NonEmptyString.check(
+  S.isPattern(
+    /^(?!.*[\u0000-\u001F\u007F-\u009F])(?!\/)(?![A-Za-z]:)(?!.*\\)(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))(?!.*\/\/)(?!.*\/$).+$/u,
+    {
+      identifier: $I`CoverageRepoRelativeFilePathCheck`,
+      title: "Normalized repository-relative coverage file path",
+      description:
+        "A non-empty repository-relative file path with POSIX separators, normalized segments, no control characters, and no trailing slash.",
+      message: "Expected a normalized repository-relative coverage file path without control characters",
+    }
+  )
+).pipe(
+  $I.annoteSchema("CoverageRepoRelativeFilePath", {
+    description: "Normalized repository-relative file key stored in a schema-v2 coverage baseline.",
+  })
+);
+
+const isCoverageRepoRelativeFilePath = S.is(CoverageRepoRelativeFilePath);
+
+const CoverageRepoRelativePackagePath = S.Union([S.Literal("."), CoverageRepoRelativeFilePath]).pipe(
+  $I.annoteSchema("CoverageRepoRelativePackagePath", {
+    description: "Normalized repository-relative workspace path, including the repository root package.",
+  })
+);
+
+const CoverageSummaryRawFilePath = S.NonEmptyString.check(
+  S.isPattern(/^[^\u0000-\u001F\u007F-\u009F]+$/u, {
+    identifier: $I`CoverageSummaryRawFilePathCheck`,
+    title: "Render-safe coverage summary file path",
+    description: "A non-empty raw coverage-summary path without C0 or C1 control characters.",
+    message: "Expected a coverage summary file path without control characters",
+  })
+).pipe(
+  $I.annoteSchema("CoverageSummaryRawFilePath", {
+    description: "Raw absolute or package-relative Vitest coverage file path safe for normalization and diagnostics.",
+  })
+);
+
+const isCoverageSummaryRawFilePath = S.is(CoverageSummaryRawFilePath);
+
+const sanitizeCoverageDiagnostic = (input: string): string =>
+  pipe(
+    input,
+    Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"),
+    Str.truncate(COVERAGE_DIAGNOSTIC_CONTENT_MAX_CHARS)
+  );
+
+const coverageDiagnosticFragment = (input: string): string =>
+  pipe(input, Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"), Str.truncate(COVERAGE_PATH_FRAGMENT_MAX_CHARS));
+
+type CoverageRegressionError = QualityTaskConfigurationError | DomainError;
+
+const coverageConfigurationError = (message: string, cause: unknown): DomainError =>
+  DomainError.make({
+    message: sanitizeCoverageDiagnostic(`${message}: ${Inspectable.toStringUnknown(cause, 0)}`),
+    cause,
+  });
 
 /**
  * Absolute uncovered counts per metric, recorded alongside the percentages.
@@ -82,10 +166,10 @@ type VitestCoveragePct = typeof VitestCoveragePct.Type;
  */
 export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I`CoverageUncoveredCounts`)(
   {
-    lines: S.Int,
-    statements: S.Int,
-    branches: S.Int,
-    functions: S.Int,
+    lines: NonNegativeInt,
+    statements: NonNegativeInt,
+    branches: NonNegativeInt,
+    functions: NonNegativeInt,
   },
   $I.annote("CoverageUncoveredCounts", {
     description: "Absolute uncovered counts per metric for one workspace package.",
@@ -100,10 +184,10 @@ export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I
  */
 export class CoverageFileBaseline extends S.Class<CoverageFileBaseline>($I`CoverageFileBaseline`)(
   {
-    lines: S.Finite,
-    statements: S.Finite,
-    branches: S.Finite,
-    functions: S.Finite,
+    lines: Percentage,
+    statements: Percentage,
+    branches: Percentage,
+    functions: Percentage,
     uncovered: CoverageUncoveredCounts,
   },
   $I.annote("CoverageFileBaseline", {
@@ -111,29 +195,59 @@ export class CoverageFileBaseline extends S.Class<CoverageFileBaseline>($I`Cover
   })
 ) {}
 
+const CoverageRepoRelativeFiles = S.Record(S.String, CoverageFileBaseline)
+  .check(
+    S.makeFilter<S.Record.Type<typeof S.String, typeof CoverageFileBaseline>>(
+      (files) =>
+        pipe(
+          R.keys(files),
+          A.findFirst((filePath) => !isCoverageRepoRelativeFilePath(filePath)),
+          O.match({
+            onNone: () => undefined,
+            onSome: (filePath) => ({
+              path: [filePath],
+              issue: "Expected a normalized repository-relative coverage file path",
+            }),
+          })
+        ),
+      {
+        identifier: $I`CoverageRepoRelativeFilesCheck`,
+        title: "Normalized repository-relative coverage file keys",
+        description: "Every coverage file key must be a normalized repository-relative path.",
+      }
+    )
+  )
+  .pipe(
+    $I.annoteSchema("CoverageRepoRelativeFiles", {
+      description: "Per-file coverage baselines keyed by normalized repository-relative paths.",
+    })
+  );
+
 /**
  * Per-package coverage percentages stored in the committed baseline.
  *
  * **Gotchas**
  *
  * Schema version 2 requires both uncovered counts and per-file provenance.
- * Surviving files fail closed on any metric drop beyond the floating-point
- * epsilon. A package drop accompanied by any file-set change also fails closed:
- * without source-control provenance, a true deletion and a move of newly
- * untested code into another file produce the same coverage summary.
+ * Surviving files fail when a percentage drop is accompanied by more uncovered
+ * units, while a baseline path that carried covered units fails closed if it
+ * disappears. Package drops accompanied by any other file-set change also fail
+ * closed, and a newly uncovered path fails when package totals would otherwise
+ * hide it: without source-control provenance, a true deletion and a move of
+ * newly untested code into another file produce the same summary.
  *
  * @category models
  * @since 0.0.0
  */
 export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I`CoveragePackageBaseline`)(
   {
-    path: S.String,
-    lines: S.Finite,
-    statements: S.Finite,
-    branches: S.Finite,
-    functions: S.Finite,
+    path: CoverageRepoRelativePackagePath,
+    lines: Percentage,
+    statements: Percentage,
+    branches: Percentage,
+    functions: Percentage,
     uncovered: CoverageUncoveredCounts,
-    files: S.Record(S.String, CoverageFileBaseline),
+    files: CoverageRepoRelativeFiles,
   },
   $I.annote("CoveragePackageBaseline", {
     description: "Committed package coverage totals with required per-file provenance.",
@@ -152,7 +266,7 @@ export class CoverageRegressionBaseline extends S.Class<CoverageRegressionBaseli
     generated_at: S.String,
     git_sha: S.String,
     command: S.String,
-    epsilon: S.Finite,
+    epsilon: SupportedCoverageRegressionEpsilon,
     packages: S.Record(S.String, CoveragePackageBaseline),
   },
   $I.annote("CoverageRegressionBaseline", {
@@ -193,25 +307,19 @@ const CoverageRegressionBaselineDocument = S.Union([
 
 type CoverageRegressionBaselineDocument = typeof CoverageRegressionBaselineDocument.Type;
 
-const isCurrentCoverageRegressionBaseline = (
-  document: CoverageRegressionBaselineDocument
-): document is CoverageRegressionBaseline => document.schema_version === 2;
+const isCurrentCoverageRegressionBaseline = S.is(CoverageRegressionBaseline);
 
-const baselineReadError = (cause: unknown): QualityTaskConfigurationError =>
-  QualityTaskConfigurationError.new(
-    `Failed to read ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-  );
+const baselineReadError = (cause: unknown): DomainError =>
+  coverageConfigurationError(`Failed to read ${coverageRegressionBaselinePath}.`, cause);
 
-const baselineDecodeError = (cause: unknown): QualityTaskConfigurationError =>
-  QualityTaskConfigurationError.new(
-    `Failed to parse ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-  );
+const baselineDecodeError = (cause: unknown): DomainError =>
+  coverageConfigurationError(`Failed to parse ${coverageRegressionBaselinePath}.`, cause);
 
 class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCoverageMetric`)(
   {
-    total: S.Finite,
-    covered: S.Finite,
-    skipped: S.Finite,
+    total: NonNegativeInt,
+    covered: NonNegativeInt,
+    skipped: NonNegativeInt,
     pct: VitestCoveragePct,
   },
   $I.annote("VitestCoverageMetric", {
@@ -219,12 +327,31 @@ class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCovera
   })
 ) {}
 
+const ValidVitestCoverageMetric = VitestCoverageMetric.check(
+  S.makeFilter<VitestCoverageMetric>(
+    (metric) =>
+      (metric.covered <= metric.total && metric.skipped <= metric.total) || {
+        path: [],
+        issue: "Expected covered and skipped counts not to exceed the total count",
+      },
+    {
+      identifier: $I`ValidVitestCoverageMetricCheck`,
+      title: "Consistent Vitest coverage metric counts",
+      description: "Covered and skipped counts must not exceed the corresponding total count.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("ValidVitestCoverageMetric", {
+    description: "Vitest coverage metric with internally consistent nonnegative counts.",
+  })
+);
+
 class VitestCoverageSummaryTotal extends S.Class<VitestCoverageSummaryTotal>($I`VitestCoverageSummaryTotal`)(
   {
-    lines: VitestCoverageMetric,
-    statements: VitestCoverageMetric,
-    branches: VitestCoverageMetric,
-    functions: VitestCoverageMetric,
+    lines: ValidVitestCoverageMetric,
+    statements: ValidVitestCoverageMetric,
+    branches: ValidVitestCoverageMetric,
+    functions: ValidVitestCoverageMetric,
   },
   $I.annote("VitestCoverageSummaryTotal", {
     description: "Total coverage metrics from a Vitest coverage-summary.json file.",
@@ -267,32 +394,95 @@ export class CoverageSnapshotEntry extends S.Class<CoverageSnapshotEntry>($I`Cov
 ) {}
 
 /**
- * One metric that dropped below its committed baseline for one package.
+ * One coverage comparison failure, distinguished by whether an existing
+ * baseline dropped or a new file introduced uncovered units without a prior
+ * file identity to compare.
  *
  * **Example** (Reporting one dropped metric)
  *
  * ```ts
  * import type { CoverageComparisonFailure } from "@beep/repo-cli/test/Quality"
  * declare const failure: CoverageComparisonFailure
- * console.log(`${failure.packageName} ${failure.metric}: ${failure.actual} < ${failure.baseline}`)
+ * console.log(failure._tag)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class CoverageComparisonFailure extends S.Class<CoverageComparisonFailure>($I`CoverageComparisonFailure`)(
+const CoverageComparisonFailureFields = {
+  actual: Percentage,
+  filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  metric: CoverageMetricName,
+  packageName: S.String,
+  packagePath: CoverageRepoRelativePackagePath,
+};
+
+class CoverageBaselineDropFailure extends S.TaggedClass<CoverageBaselineDropFailure>($I`CoverageBaselineDropFailure`)(
+  "baseline-drop",
   {
-    actual: S.Finite,
-    baseline: S.Finite,
-    filePath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    metric: CoverageMetricName,
-    packageName: S.String,
-    packagePath: S.String,
+    ...CoverageComparisonFailureFields,
+    baseline: Percentage,
   },
-  $I.annote("CoverageComparisonFailure", {
-    description: "One metric that dropped below its committed package or file baseline.",
+  $I.annote("CoverageBaselineDropFailure", {
+    description: "One package or existing-file metric that dropped below its committed baseline.",
   })
 ) {}
+
+class CoverageNewUncoveredFileFailure extends S.TaggedClass<CoverageNewUncoveredFileFailure>(
+  $I`CoverageNewUncoveredFileFailure`
+)(
+  "new-uncovered-file",
+  {
+    ...CoverageComparisonFailureFields,
+    uncovered: NonNegativeInt,
+  },
+  $I.annote("CoverageNewUncoveredFileFailure", {
+    description: "A newly observed file with uncovered units and no prior file baseline identity.",
+  })
+) {}
+
+/**
+ * Runtime schema for a tagged coverage regression caused by either a baseline
+ * drop or a newly uncovered file.
+ *
+ * **Example** (Decode a baseline drop)
+ *
+ * ```ts
+ * import { CoverageComparisonFailure } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(CoverageComparisonFailure)({
+ *   _tag: "baseline-drop",
+ *   actual: 90,
+ *   baseline: 95,
+ *   filePath: "packages/example/src/index.ts",
+ *   metric: "lines",
+ *   packageName: "@beep/example",
+ *   packagePath: "packages/example",
+ * })
+ *
+ * console.log(O.isSome(decoded)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CoverageComparisonFailure = S.Union([CoverageBaselineDropFailure, CoverageNewUncoveredFileFailure]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("CoverageComparisonFailure", {
+    description: "Tagged coverage regression reason for a baseline drop or newly uncovered file.",
+  })
+);
+
+/**
+ * Decoded tagged coverage regression produced by {@link CoverageComparisonFailure}.
+ *
+ * @see {@link CoverageComparisonFailure} for runtime decoding and tag discrimination.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CoverageComparisonFailure = typeof CoverageComparisonFailure.Type;
 
 /**
  * Outcome of comparing current coverage against the committed baseline:
@@ -332,9 +522,13 @@ const hasCoverageScript = (info: WorkspacePackageInfo): boolean =>
 const coverageSummaryPath = (path: Path.Path, info: WorkspacePackageInfo): string =>
   path.join(info.absolutePath, "coverage", "coverage-summary.json");
 
-const coveragePctValue = (value: VitestCoveragePct): number => (value === "Unknown" ? 0 : value);
+const coveragePercentageFromCounts = (metric: VitestCoverageMetric): Percentage =>
+  metric.total === 0
+    ? HUNDRED_PERCENTAGE
+    : Percentage.make(Math.floor((1_000 * 100 * metric.covered) / metric.total / 10) / 100);
 
-const uncoveredCount = (metric: VitestCoverageMetric): number => metric.total - metric.covered;
+const uncoveredCount = (metric: VitestCoverageMetric): NonNegativeInt =>
+  NonNegativeInt.make(metric.total - metric.covered);
 
 const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): CoverageUncoveredCounts =>
   CoverageUncoveredCounts.make({
@@ -346,10 +540,10 @@ const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): Coverag
 
 const toCoverageFileBaseline = (summary: VitestCoverageSummaryTotal): CoverageFileBaseline =>
   CoverageFileBaseline.make({
-    lines: coveragePctValue(summary.lines.pct),
-    statements: coveragePctValue(summary.statements.pct),
-    branches: coveragePctValue(summary.branches.pct),
-    functions: coveragePctValue(summary.functions.pct),
+    lines: coveragePercentageFromCounts(summary.lines),
+    statements: coveragePercentageFromCounts(summary.statements),
+    branches: coveragePercentageFromCounts(summary.branches),
+    functions: coveragePercentageFromCounts(summary.functions),
     uncovered: toCoverageUncoveredCounts(summary),
   });
 
@@ -361,38 +555,82 @@ const coverageFileByPathOrder = Order.mapInput(
 const normalizedCoverageFilePath = (filePath: string, repoRoot: string, packageRoot: string, path: Path.Path): string =>
   repoRelative(path.isAbsolute(filePath) ? filePath : path.resolve(packageRoot, filePath), repoRoot, path);
 
-const coverageFiles = (
+const coverageSummaryFileByRawPathOrder = Order.mapInput(
+  Order.String,
+  (entry: readonly [string, VitestCoverageSummaryTotal]) => entry[0]
+);
+
+const invalidCoverageFilePathError = (): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.make({
+    message:
+      "Coverage summary contains a file path that cannot be represented as a normalized repository-relative path without control characters. Regenerate the summary with the repository coverage command.",
+  });
+
+const duplicateCoverageFilePathError = (
+  normalizedPath: string,
+  firstRawPath: string,
+  secondRawPath: string
+): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.make({
+    message: sanitizeCoverageDiagnostic(
+      `Coverage summary paths "${coverageDiagnosticFragment(firstRawPath)}" and "${coverageDiagnosticFragment(secondRawPath)}" both normalize to "${coverageDiagnosticFragment(normalizedPath)}". Remove the duplicate absolute/relative entry and regenerate the summary with the repository coverage command.`
+    ),
+  });
+
+const coverageFiles = Effect.fn("CoverageRegression.coverageFiles")(function* (
   repoRoot: string,
   packageRoot: string,
   path: Path.Path,
   summary: VitestCoverageSummary
-): Record<string, CoverageFileBaseline> =>
-  pipe(
+): Effect.fn.Return<Record<string, CoverageFileBaseline>, QualityTaskConfigurationError> {
+  const seenNormalizedPaths = MutableHashMap.empty<string, string>();
+  const files = yield* pipe(
     summary,
     R.remove("total"),
     R.toEntries,
-    A.map(([filePath, metrics]) =>
-      Tuple.make(normalizedCoverageFilePath(filePath, repoRoot, packageRoot, path), toCoverageFileBaseline(metrics))
-    ),
-    A.sort(coverageFileByPathOrder),
-    R.fromEntries
+    A.sort(coverageSummaryFileByRawPathOrder),
+    Effect.forEach(
+      Effect.fnUntraced(function* ([rawPath, metrics]) {
+        if (!isCoverageSummaryRawFilePath(rawPath)) {
+          return yield* invalidCoverageFilePathError();
+        }
+
+        const normalizedPath = normalizedCoverageFilePath(rawPath, repoRoot, packageRoot, path);
+        if (!isCoverageRepoRelativeFilePath(normalizedPath)) {
+          return yield* invalidCoverageFilePathError();
+        }
+
+        const firstRawPath = MutableHashMap.get(seenNormalizedPaths, normalizedPath);
+        if (O.isSome(firstRawPath)) {
+          return yield* duplicateCoverageFilePathError(normalizedPath, firstRawPath.value, rawPath);
+        }
+
+        yield* Effect.sync(() => MutableHashMap.set(seenNormalizedPaths, normalizedPath, rawPath));
+        return Tuple.make(normalizedPath, toCoverageFileBaseline(metrics));
+      })
+    )
   );
 
-const toCoveragePackageBaseline = (
+  return pipe(files, A.sort(coverageFileByPathOrder), R.fromEntries);
+});
+
+const toCoveragePackageBaseline = Effect.fn("CoverageRegression.toCoveragePackageBaseline")(function* (
   repoRoot: string,
   packageRoot: string,
   path: Path.Path,
   summary: VitestCoverageSummary
-): CoveragePackageBaseline =>
-  CoveragePackageBaseline.make({
+): Effect.fn.Return<CoveragePackageBaseline, QualityTaskConfigurationError> {
+  const files = yield* coverageFiles(repoRoot, packageRoot, path, summary);
+  return CoveragePackageBaseline.make({
     path: repoRelative(packageRoot, repoRoot, path),
-    lines: coveragePctValue(summary.total.lines.pct),
-    statements: coveragePctValue(summary.total.statements.pct),
-    branches: coveragePctValue(summary.total.branches.pct),
-    functions: coveragePctValue(summary.total.functions.pct),
+    lines: coveragePercentageFromCounts(summary.total.lines),
+    statements: coveragePercentageFromCounts(summary.total.statements),
+    branches: coveragePercentageFromCounts(summary.total.branches),
+    functions: coveragePercentageFromCounts(summary.total.functions),
     uncovered: toCoverageUncoveredCounts(summary.total),
-    files: coverageFiles(repoRoot, packageRoot, path, summary),
+    files,
   });
+});
 
 const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshotEntry) => entry.packageName);
 
@@ -430,14 +668,14 @@ const workspaceCoveragePackages = Effect.fn("CoverageRegression.workspaceCoverag
 
 const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(function* (
   summaryPath: string
-): Effect.fn.Return<VitestCoverageSummary, QualityTaskConfigurationError, FileSystem.FileSystem> {
+): Effect.fn.Return<VitestCoverageSummary, CoverageRegressionError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(summaryPath)
     .pipe(QualityTaskConfigurationError.mapError(`Failed to read coverage summary ${summaryPath}.`));
 
   return yield* decodeVitestCoverageSummary(text).pipe(
-    QualityTaskConfigurationError.mapError(`Failed to parse coverage summary ${summaryPath}.`)
+    Effect.mapError((cause) => coverageConfigurationError(`Failed to parse coverage summary ${summaryPath}.`, cause))
   );
 });
 
@@ -461,19 +699,19 @@ export const coveragePackageBaselineFromSummaryForTesting = Effect.fn(
   repoRoot: string,
   packageRoot: string,
   summaryText: string
-): Effect.fn.Return<CoveragePackageBaseline, QualityTaskConfigurationError, Path.Path> {
+): Effect.fn.Return<CoveragePackageBaseline, CoverageRegressionError, Path.Path> {
   const path = yield* Path.Path;
   const summary = yield* decodeVitestCoverageSummary(summaryText).pipe(
-    QualityTaskConfigurationError.mapError("Failed to parse coverage summary fixture.")
+    Effect.mapError((cause) => coverageConfigurationError("Failed to parse coverage summary fixture.", cause))
   );
-  return toCoveragePackageBaseline(repoRoot, packageRoot, path, summary);
+  return yield* toCoveragePackageBaseline(repoRoot, packageRoot, path, summary);
 });
 
 const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(function* (
   repoRoot: string,
   path: Path.Path,
   info: WorkspacePackageInfo
-): Effect.fn.Return<O.Option<CoverageSnapshotEntry>, QualityTaskConfigurationError, FileSystem.FileSystem> {
+): Effect.fn.Return<O.Option<CoverageSnapshotEntry>, CoverageRegressionError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const summaryPath = coverageSummaryPath(path, info);
   const exists = yield* fs.exists(summaryPath).pipe(Effect.orElseSucceed(thunkFalse));
@@ -484,7 +722,7 @@ const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(fu
   const summary = yield* readCoverageSummary(summaryPath);
   return O.some({
     packageName: info.name,
-    baseline: toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
+    baseline: yield* toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
   });
 });
 
@@ -519,11 +757,7 @@ export const cleanCoverageRegressionOutputs = Effect.fn("CoverageRegression.clea
  */
 export const collectCoverageSnapshot = Effect.fn("CoverageRegression.collectCoverageSnapshot")(function* (
   repoRoot: string
-): Effect.fn.Return<
-  ReadonlyArray<CoverageSnapshotEntry>,
-  QualityTaskConfigurationError,
-  FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<ReadonlyArray<CoverageSnapshotEntry>, CoverageRegressionError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const packages = yield* workspaceCoveragePackages(repoRoot, path);
   const entries = yield* Effect.forEach(packages, (info) => maybeSnapshotEntry(repoRoot, path, info), {
@@ -645,7 +879,7 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
 
 const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
   repoRoot: string
-): Effect.fn.Return<CoverageRegressionBaseline, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<CoverageRegressionBaseline, CoverageRegressionError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const baselinePath = path.join(repoRoot, coverageRegressionBaselinePath);
   return yield* readArtifact({
@@ -668,7 +902,7 @@ const readPreviousBaseline = Effect.fn("CoverageRegression.readPreviousBaseline"
   repoRoot: string
 ): Effect.fn.Return<
   O.Option<CoverageRegressionBaselineDocument>,
-  QualityTaskConfigurationError,
+  CoverageRegressionError,
   FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
@@ -694,10 +928,8 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   baseline: CoverageRegressionBaseline
 ): Effect.fn.Return<string, QualityTaskConfigurationError> {
   // `formatJsonc` stringifies whatever it is handed, so the document has to be
-  // encoded first. That was invisible while every field was a plain scalar and
-  // the decoded value doubled as the wire value; `uncovered` is an `Option`
-  // decoded and an optional key encoded, so writing the decoded shape produces
-  // a baseline the reader rejects.
+  // encoded first. The v2 domain uses branded percentages, counts, and path
+  // keys whose wire representation remains plain JSON scalars and records.
   const encoded = yield* S.encodeEffect(CoverageRegressionBaseline)(baseline).pipe(
     QualityTaskConfigurationError.mapError("Failed to encode coverage regression baseline.")
   );
@@ -740,7 +972,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     scoped: boolean
   ): Effect.fn.Return<
     void,
-    QualityTaskConfigurationError,
+    CoverageRegressionError,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
     const path = yield* Path.Path;
@@ -843,14 +1075,16 @@ const droppedMetrics = (
   pipe(
     metricNames,
     A.filter((metric) => metricRegressed(metric, baseline, actual, epsilon)),
-    A.map((metric) => ({
-      packageName,
-      packagePath: baseline.path,
-      filePath: O.none(),
-      metric,
-      baseline: baseline[metric],
-      actual: actual[metric],
-    }))
+    A.map((metric) =>
+      CoverageBaselineDropFailure.make({
+        packageName,
+        packagePath: baseline.path,
+        filePath: O.none(),
+        metric,
+        baseline: baseline[metric],
+        actual: actual[metric],
+      })
+    )
   );
 
 const fileMetricRegressed = (
@@ -858,7 +1092,7 @@ const fileMetricRegressed = (
   baseline: CoverageFileBaseline,
   actual: CoverageFileBaseline,
   epsilon: number
-): boolean => actual[metric] + epsilon < baseline[metric];
+): boolean => actual[metric] + epsilon < baseline[metric] && actual.uncovered[metric] > baseline.uncovered[metric];
 
 const droppedFileMetrics = (
   packageName: string,
@@ -871,14 +1105,37 @@ const droppedFileMetrics = (
   pipe(
     metricNames,
     A.filter((metric) => fileMetricRegressed(metric, baseline, actual, epsilon)),
-    A.map((metric) => ({
-      packageName,
-      packagePath,
-      filePath: O.some(filePath),
-      metric,
-      baseline: baseline[metric],
-      actual: actual[metric],
-    }))
+    A.map((metric) =>
+      CoverageBaselineDropFailure.make({
+        packageName,
+        packagePath,
+        filePath: O.some(filePath),
+        metric,
+        baseline: baseline[metric],
+        actual: actual[metric],
+      })
+    )
+  );
+
+const droppedDisappearedFileMetrics = (
+  packageName: string,
+  packagePath: string,
+  filePath: string,
+  baseline: CoverageFileBaseline
+): ReadonlyArray<CoverageComparisonFailure> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => baseline[metric] > ZERO_PERCENTAGE),
+    A.map((metric) =>
+      CoverageBaselineDropFailure.make({
+        packageName,
+        packagePath,
+        filePath: O.some(filePath),
+        metric,
+        baseline: baseline[metric],
+        actual: ZERO_PERCENTAGE,
+      })
+    )
   );
 
 const perFileDroppedMetrics = (
@@ -897,10 +1154,42 @@ const perFileDroppedMetrics = (
         O.map((fileActual) =>
           droppedFileMetrics(packageName, baseline.path, filePath, fileBaseline, fileActual, epsilon)
         ),
-        // Coverage cannot tell a true deletion from code moved into a surviving
-        // file without tests. Any file-set change accompanying a package drop is
-        // therefore handled by the fail-closed package-level comparison.
-        O.getOrElse(A.empty<CoverageComparisonFailure>)
+        // A vanished path that carried covered units is identity-ambiguous: it
+        // may be a deletion, rename, or move whose tests were lost. Fail closed
+        // independently of the package aggregate's direction. Fully uncovered
+        // vanished paths remain governed by the package comparison.
+        O.getOrElse(() => droppedDisappearedFileMetrics(packageName, baseline.path, filePath, fileBaseline))
+      )
+    )
+  );
+
+const newFileUncoveredMetrics = (
+  packageName: string,
+  baseline: CoveragePackageBaseline,
+  actual: CoveragePackageBaseline,
+  epsilon: number
+): ReadonlyArray<CoverageComparisonFailure> =>
+  pipe(
+    R.toEntries(actual.files),
+    A.sort(coverageFileByPathOrder),
+    A.filter(([filePath]) => !R.has(baseline.files, filePath)),
+    A.flatMap(([filePath, fileActual]) =>
+      pipe(
+        metricNames,
+        // When the package comparator already sees the regression, its real
+        // package baseline is the truthful witness. A new-path witness is only
+        // needed for the offset case where package totals would otherwise pass.
+        A.filter((metric) => fileActual.uncovered[metric] > 0 && !metricRegressed(metric, baseline, actual, epsilon)),
+        A.map((metric) =>
+          CoverageNewUncoveredFileFailure.make({
+            packageName,
+            packagePath: baseline.path,
+            filePath: O.some(filePath),
+            metric,
+            actual: fileActual[metric],
+            uncovered: fileActual.uncovered[metric],
+          })
+        )
       )
     )
   );
@@ -911,7 +1200,13 @@ const droppedCoverageMetrics = (
   actual: CoveragePackageBaseline,
   epsilon: number
 ): ReadonlyArray<CoverageComparisonFailure> => {
-  const fileFailures = perFileDroppedMetrics(packageName, baseline, actual, epsilon);
+  const baselineFileFailures = perFileDroppedMetrics(packageName, baseline, actual, epsilon);
+  const baselineFileFailureMetrics = A.map(baselineFileFailures, (failure) => failure.metric);
+  const offsetNewFileFailures = pipe(
+    newFileUncoveredMetrics(packageName, baseline, actual, epsilon),
+    A.filter((failure) => !A.contains(baselineFileFailureMetrics, failure.metric))
+  );
+  const fileFailures = A.appendAll(baselineFileFailures, offsetNewFileFailures);
   const fileFailureMetrics = A.map(fileFailures, (failure) => failure.metric);
   const packageOnlyFailures = pipe(
     droppedMetrics(packageName, baseline, actual, epsilon),
@@ -984,21 +1279,41 @@ export const compareCoverageRegressionSnapshotsForTesting: {
   ): CoverageComparisonResult;
 } = dual(3, compareCoverage);
 
-const renderCoverageFailures = (failures: ReadonlyArray<CoverageComparisonFailure>): ReadonlyArray<string> =>
-  A.map(
-    failures,
-    (failure) =>
-      `  - ${failure.packageName} (${pipe(
-        failure.filePath,
-        O.getOrElse(() => failure.packagePath)
-      )}) ${failure.metric}: ${failure.actual} < ${failure.baseline}`
+const coverageFailureLocation = (failure: CoverageComparisonFailure): string =>
+  pipe(
+    failure.filePath,
+    O.getOrElse(() => failure.packagePath),
+    coverageDiagnosticFragment
   );
+
+const renderCoverageFailure = (failure: CoverageComparisonFailure): string =>
+  Match.value(failure).pipe(
+    Match.tags({
+      "baseline-drop": (drop) =>
+        `  - ${coverageDiagnosticFragment(drop.packageName)} (${coverageFailureLocation(drop)}) ${drop.metric}: ${drop.actual} < ${drop.baseline}`,
+      "new-uncovered-file": (newFile) =>
+        `  - ${coverageDiagnosticFragment(newFile.packageName)} (${coverageFailureLocation(newFile)}) ${newFile.metric}: new file has ${newFile.uncovered} uncovered unit(s) at ${newFile.actual}% (no baseline file identity)`,
+    }),
+    Match.exhaustive
+  );
+
+/**
+ * Render coverage comparison failures with bounded, control-free paths.
+ *
+ * @param failures - Typed coverage comparison failures.
+ * @returns Operator-facing diagnostic lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderCoverageFailuresForTesting = (
+  failures: ReadonlyArray<CoverageComparisonFailure>
+): ReadonlyArray<string> => A.map(failures, renderCoverageFailure);
 
 const renderNewPackageWarnings = (packages: ReadonlyArray<CoverageSnapshotEntry>): ReadonlyArray<string> =>
   A.map(
     packages,
     (entry) =>
-      `  - ${entry.packageName} (${entry.baseline.path}) is missing from ${coverageRegressionBaselinePath}; run ${coverageRegressionRegenerationCommand} and review the baseline diff.`
+      `  - ${coverageDiagnosticFragment(entry.packageName)} (${coverageDiagnosticFragment(entry.baseline.path)}) is missing from ${coverageRegressionBaselinePath}; run ${coverageRegressionRegenerationCommand} and review the baseline diff.`
   );
 
 const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string> => {
@@ -1006,15 +1321,15 @@ const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string
     ...A.match(result.failures, {
       onEmpty: A.empty<string>,
       onNonEmpty: (failures) => [
-        "[coverage-ratchet] coverage dropped below baseline:",
-        ...renderCoverageFailures(failures),
+        "[coverage-ratchet] coverage regression(s) detected:",
+        ...renderCoverageFailuresForTesting(failures),
       ],
     }),
     ...A.match(result.missingActuals, {
       onEmpty: A.empty<string>,
       onNonEmpty: (missing) => [
         "[coverage-ratchet] missing coverage summaries for baseline package(s):",
-        ...A.map(missing, (packageName) => `  - ${packageName}`),
+        ...A.map(missing, (packageName) => `  - ${coverageDiagnosticFragment(packageName)}`),
       ],
     }),
   ];
@@ -1033,7 +1348,7 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
   function* (
     repoRoot: string,
     scoped: boolean
-  ): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskFailed, FileSystem.FileSystem | Path.Path> {
+  ): Effect.fn.Return<void, CoverageRegressionError | QualityTaskFailed, FileSystem.FileSystem | Path.Path> {
     const baseline = yield* readBaseline(repoRoot);
     const actuals = yield* collectCoverageSnapshot(repoRoot);
     const result = compareCoverage(baseline, actuals, scoped);

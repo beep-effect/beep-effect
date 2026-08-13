@@ -160,7 +160,7 @@ export class KnowledgeOperationalError extends TaggedErrorClass<KnowledgeOperati
  * import { KnowledgeProbeBootError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
  *
  * const error = KnowledgeProbeBootError.make({
- *   message: 'Current-checkout probe against archive data "command-probe.ts" failed with exit 1.',
+ *   message: "Current-checkout command probe against archive data failed with exit 1.",
  * })
  *
  * console.log(error._tag) // "KnowledgeProbeBootError"

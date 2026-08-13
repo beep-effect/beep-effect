@@ -630,6 +630,9 @@
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
       ],
+      "@beep/repo-cli/test/Knowledge": [
+        "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts"
+      ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
       ],

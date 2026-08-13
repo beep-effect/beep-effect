@@ -9,7 +9,8 @@
  *
  * When multiple Claude sessions share one checkout, the newest recent
  * transcript wins. Modification time cannot honestly identify which concurrent
- * session invoked publish, so the footer may select the other live session.
+ * session invoked publish, so local resume detection may select the other live
+ * session. Session identity never enters the public footer.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -57,6 +58,62 @@ const PrProvenancePath = S.String.check(
 ).pipe(
   $I.annoteSchema("PrProvenancePath", {
     description: "Absolute or home-tokenized clone or linked-worktree path retained for local resume detection.",
+  })
+);
+
+const forbiddenGitBranchCharacter = /[\u0000-\u0020\u007f~^:?*[\]\\]/u;
+
+/**
+ * Git-valid branch name carried by local and public Yeet provenance.
+ *
+ * **Details**
+ *
+ * The refinement mirrors `git check-ref-format --branch`: it rejects option-like
+ * names, invalid path components, revision syntax, controls, whitespace, and
+ * Git's forbidden ref characters while retaining punctuation that is valid in
+ * a branch and must instead be escaped by each output context.
+ *
+ * **Example** (Validate a hostile but valid branch)
+ *
+ * ```ts
+ * import { PrProvenanceBranch } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PrProvenanceBranch)("feat/escaped`payload-->tail")) // true
+ * console.log(S.is(PrProvenanceBranch)("branch with spaces")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PrProvenanceBranch = S.NonEmptyString.check(
+  S.makeFilter<string>(
+    (branch) =>
+      (!Str.startsWith("-")(branch) &&
+        branch !== "@" &&
+        O.isNone(Str.match(forbiddenGitBranchCharacter)(branch)) &&
+        !Str.includes("..")(branch) &&
+        !Str.includes("@{")(branch) &&
+        !Str.startsWith("/")(branch) &&
+        !Str.endsWith("/")(branch) &&
+        !Str.endsWith(".")(branch) &&
+        A.every(
+          Str.split("/")(branch),
+          (component) =>
+            Str.isNonEmpty(component) && !Str.startsWith(".")(component) && !Str.endsWith(".lock")(component)
+        )) || {
+        path: [],
+        issue: "Expected a valid Git branch name",
+      },
+    {
+      identifier: $I`PrProvenanceBranchCheck`,
+      title: "Git-valid provenance branch",
+      description: "A non-option Git branch name accepted by git check-ref-format --branch.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("PrProvenanceBranch", {
+    description: "Git-valid branch name shared by local and public Yeet provenance.",
   })
 );
 
@@ -125,7 +182,7 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  */
 export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
   {
-    branch: S.String,
+    branch: PrProvenanceBranch,
     clonePath: PrProvenancePath,
     harness: PrProvenanceHarness,
     resumeCommand: S.String,
@@ -164,7 +221,7 @@ export class PrProvenance extends S.Class<PrProvenance>($I`PrProvenance`)(
 export class PublicPrProvenance extends S.Class<PublicPrProvenance>($I`PublicPrProvenance`)(
   {
     schemaVersion: S.Literal(1),
-    branch: S.String,
+    branch: PrProvenanceBranch,
     harness: PrProvenanceHarness,
   },
   $I.annote("PublicPrProvenance", {
@@ -204,7 +261,7 @@ export const mungeClaudeProjectPath = repoPathToClaudeProjectName;
  * ```
  *
  * @param home - Absolute home directory supplied by the runtime configuration.
- * @param path - Filesystem path to make safe for public provenance.
+ * @param path - Filesystem path to normalize for local resume output.
  * @returns The home-tokenized path, or the original path when it is outside home.
  * @category formatting
  * @since 0.0.0
@@ -357,6 +414,20 @@ export const resumeCommandFor: {
 
 const encodePublicPrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PublicPrProvenance));
 
+const escapeHtmlText = (value: string): string =>
+  pipe(
+    value,
+    Str.replaceAll("&", "&amp;"),
+    Str.replaceAll("<", "&lt;"),
+    Str.replaceAll(">", "&gt;"),
+    Str.replaceAll("`", "&#96;"),
+    Str.replaceAll("\r", "&#13;"),
+    Str.replaceAll("\n", "&#10;")
+  );
+
+const escapeHtmlCommentJson = (value: string): string =>
+  pipe(value, Str.replaceAll("&", "\\u0026"), Str.replaceAll("<", "\\u003c"), Str.replaceAll(">", "\\u003e"));
+
 /**
  * Render provenance as the trailing Markdown section of a pull request body.
  *
@@ -393,13 +464,15 @@ export const renderPrProvenance = (provenance: PrProvenance): string => {
     encodePublicPrProvenanceJson,
     Result.getOrThrow,
     renderPrettyCommandJson,
-    Str.trimEnd
+    Str.trimEnd,
+    escapeHtmlCommentJson
   );
+  const visibleBranch = escapeHtmlText(provenance.branch);
   return `---
 
 ## Provenance
 
-- Branch: \`${provenance.branch}\`
+- Branch: <code>${visibleBranch}</code>
 - Harness: \`${provenance.harness}\`
 
 <!-- yeet-provenance

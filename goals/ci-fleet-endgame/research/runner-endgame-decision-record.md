@@ -89,11 +89,12 @@ container/IMDS boundary — block IMDS from containers via host iptables,
 final call when the shadow deployment shows whether testcontainers needs
 IMDS; RO cache token is public-equivalent by construction — accepted,
 because cache contents are artifacts of reviewed merged code only;
-maintenance budget 4h/month sustained a quarter → RunsOn tripwire;
-break-glass `beep runners launch|teardown` manual path kept (audited,
-flag-gated); reaper TTL stays 90 min until measured p99 job duration
-justifies tightening; single m7i.2xlarge-class runner config until per-lane
-peak-RSS data justifies multi-runner right-sizing splits.
+maintenance budget 4h/month sustained a quarter → RunsOn tripwire. The original
+break-glass retention default is superseded by the 2026-08-13 CSF-002
+remediation: the non-ephemeral launcher stays retired, while teardown remains
+available only to clean up legacy resources. Reaper TTL stays 90 min until
+measured p99 job duration justifies tightening; single m7i.2xlarge-class runner
+config until per-lane peak-RSS data justifies multi-runner right-sizing splits.
 
 ## Alternatives (ranked by the survey)
 
@@ -181,9 +182,9 @@ follows on its own track.
 2. **Bridge spike + deploy** (GitHub App mint → Pulumi terraform-module
    bridge spike → module deployed on a non-serving shadow label; fallback:
    minimal Terraform root).
-3. **Cutover**: `beep-ec2-heavy` served by the module; manual burst scripts
-   demoted to break-glass; red-team suite re-run against a live ephemeral
-   worker.
+3. **Cutover**: `beep-ec2-heavy` served by the module; the manual launcher
+   remains retired under the CSF-002 security supersession; red-team suite
+   re-run against a live ephemeral worker.
 4. **Cache** (asymmetric turbo cache; biggest measured minutes).
 5. **Baked AMI** (`beep runners bake`, lockfile-keyed).
 6. **Ops hardening**: pickup-latency/cost/RSS dashboard feeding the

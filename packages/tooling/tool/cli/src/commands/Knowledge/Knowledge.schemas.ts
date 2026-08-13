@@ -15,6 +15,38 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
 
+const KnowledgePublicText = S.String.check(
+  S.isPattern(/^[^\p{Cc}\p{Cf}]*$/u, {
+    identifier: $I`KnowledgePublicTextCheck`,
+    title: "Control-free knowledge report text",
+    description: "Public knowledge finding fields contain no control or Unicode format characters.",
+    message: "Expected knowledge report text without control or format characters",
+  })
+).pipe(
+  $I.annoteSchema("KnowledgePublicText", {
+    description: "Single-line control-free text safe for public knowledge report fields.",
+  })
+);
+
+type KnowledgePublicText = typeof KnowledgePublicText.Type;
+
+const isKnowledgePublicText = S.is(KnowledgePublicText);
+
+const KnowledgePublicDetail = S.String.check(
+  S.isPattern(/^(?:[^\p{Cc}\p{Cf}]|\n)*$/u, {
+    identifier: $I`KnowledgePublicDetailCheck`,
+    title: "Control-free knowledge report detail",
+    description: "Public knowledge diagnostics may contain line feeds but no other control or format characters.",
+    message: "Expected knowledge report detail without unsafe control or format characters",
+  })
+).pipe(
+  $I.annoteSchema("KnowledgePublicDetail", {
+    description: "Multiline public knowledge diagnostic text whose only permitted control is line feed.",
+  })
+);
+
+type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
+
 /**
  * Stable finding classes owned by knowledge-surface evaluators.
  *
@@ -146,11 +178,12 @@ export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
  * as defense in depth against data-driven behavior and records that the run deliberately declined to
  * probe, so a green fork report can never be mistaken for a fully probed one.
  *
- * `skipped-base-boot-failure` records the other way probe coverage is lost. The merge-base archive's
- * probe process exited non-zero without emitting its structured output. That can happen when the
- * current probe cannot interpret the base revision's data. The branch cannot repair the base side,
- * so the comparison degrades rather than failing closed. The equivalent HEAD-data failure stays an
- * operational error, because HEAD is the branch author's own tree.
+ * `skipped-base-boot-failure` records the other way probe coverage is lost. The current-checkout
+ * probe process exited non-zero against merge-base archive data without emitting its structured
+ * output. That can happen when the current probe cannot interpret the base revision's data. The
+ * branch cannot repair the base side, so the comparison degrades rather than failing closed. The
+ * equivalent HEAD-data failure stays an operational error, because HEAD is the branch author's own
+ * tree.
  *
  * **Gotchas**
  *
@@ -312,6 +345,25 @@ export class KnowledgeFindingLocation extends S.Class<KnowledgeFindingLocation>(
   })
 ) {}
 
+const KnowledgePublicFindingLocation = KnowledgeFindingLocation.check(
+  S.makeFilter<KnowledgeFindingLocation>(
+    (location) =>
+      isKnowledgePublicText(location.path) || {
+        path: ["path"],
+        issue: "Expected a knowledge finding path without control or format characters",
+      },
+    {
+      identifier: $I`KnowledgePublicFindingLocationCheck`,
+      title: "Control-free knowledge finding location",
+      description: "Semantic-delta finding locations contain no terminal control or Unicode format characters.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("KnowledgePublicFindingLocation", {
+    description: "Display location safe for semantic-delta human and JSON report surfaces.",
+  })
+);
+
 /**
  * One normalized knowledge finding, versioned for cross-archive comparison.
  *
@@ -319,7 +371,10 @@ export class KnowledgeFindingLocation extends S.Class<KnowledgeFindingLocation>(
  *
  * `schemaVersion` and `normalizationVersion` are tags supplied by the constructor, so callers pass
  * only the semantic fields. Two findings are the same finding exactly when their `findingId` values
- * match; `occurrence` disambiguates repeated identical subjects inside one document.
+ * match; `occurrence` disambiguates repeated identical subjects inside one document. Report-facing
+ * document, subject, location, message, and remediation text is control-free. The scanner assigns the
+ * identity from the raw normalized candidate before sanitizing those display fields, so hardening a
+ * renderer does not churn stable finding ids.
  *
  * **Example** (Build a broken-path finding)
  *
@@ -359,12 +414,12 @@ export class KnowledgeFinding extends S.Class<KnowledgeFinding>($I`KnowledgeFind
     findingId: KnowledgeFindingId,
     kind: KnowledgeFindingKind,
     severity: KnowledgeFindingSeverity,
-    documentId: S.String,
-    subject: S.String,
+    documentId: KnowledgePublicText,
+    subject: KnowledgePublicText,
     occurrence: NonNegativeInt,
-    location: KnowledgeFindingLocation,
-    message: S.String,
-    remediation: S.String,
+    location: KnowledgePublicFindingLocation,
+    message: KnowledgePublicText,
+    remediation: KnowledgePublicText,
   },
   $I.annote("KnowledgeFinding", {
     description: "Versioned normalized knowledge finding with comparison-scoped semantic identity.",
@@ -801,7 +856,9 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
     resolved: S.Array(KnowledgeFinding),
     unchanged: S.Array(KnowledgeFinding),
     probePolicy: KnowledgeProbePolicy,
-    probeSkipDetail: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    probeSkipDetail: S.OptionFromOptionalKey(KnowledgePublicDetail).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<KnowledgePublicDetail>()))
+    ),
   },
   $I.annote("KnowledgeSemanticDeltaReport", {
     description: "Findings introduced, resolved, and unchanged between merge-base and HEAD archives.",

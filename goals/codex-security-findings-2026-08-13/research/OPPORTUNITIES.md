@@ -1,5 +1,33 @@
 # Opportunities
 
+## 2026-08-13 — Post-merge coverage baseline generation stopped on a locationless UI compiler diagnostic
+
+- **What was happening:** regenerating the coverage regression baseline on the
+  merged `origin/main` tree with `bun run coverage:baseline:write`.
+- **Evidence:** separate attempts stopped first in `@beep/ui#build` and then in
+  `@beep/box#build`, each emitting `TS2589: Type instantiation is excessively
+  deep and possibly infinite.` without a source location. The UI package
+  passed immediately in isolation, and the repository already classifies this
+  exact package-attributed signature as an environment-only flake. Neither
+  failed attempt updated the committed artifact.
+- **What would have prevented it:** a deterministic source location or a
+  package-level diagnostic receipt for locationless native-compiler failures
+  would make attribution possible without rerunning the full 133-package
+  coverage graph.
+
+## 2026-08-13 — Baseline retry stopped in an explicitly out-of-scope compiler-routing test
+
+- **What was happening:** retrying `bun run coverage:baseline:write` after the
+  isolated UI build passed.
+- **Evidence:** `@beep/repo-configs#coverage` failed because its compiler-routing
+  subprocess exited 0 but captured an empty TypeScript-version stdout. The
+  security branch keeps this test byte-identical to `origin/main`, per the
+  operator's instruction to evict its earlier edit from security scope.
+- **What would have prevented it:** make the compiler-routing assertion stable
+  under the repository's concurrent coverage runner, or give baseline
+  generation a supported way to consume already-proven package coverage
+  artifacts after an unrelated package test flakes.
+
 ## 2026-08-13 — Focused Vitest worker startup timeout
 
 - Work: current-HEAD validation for the candor, coverage, and CI Turbo cache
@@ -91,3 +119,79 @@
   whenever a changed source file adds or newly exports a documented symbol;
   successful doc generation alone does not enforce the totals ratchet. Keep
   titled examples after every prose section and immediately before JSDoc tags.
+
+## 2026-08-13 — Bun lock refresh could not discover a sandbox temp root
+
+- Work: refresh `bun.lock` after declaring the test dependencies used by the
+  reviewed infra and repo-configs packages.
+- Evidence: `bun install` exited before dependency resolution with `Unexpected
+  accessing temporary directory. Please set $BUN_TMPDIR or $BUN_INSTALL`.
+- Prevention: have repository package-install wrappers select a writable
+  workspace or `/tmp` temp root when Bun runs in a restricted agent sandbox.
+
+## 2026-08-13 — Cross-surface docgen found invalid Knowledge examples
+
+- Work: prove the AI-sync review fixes with the repository's scoped docgen lane.
+- Evidence: AI-sync documentation passed, then docgen stopped after 119 of 123
+  tasks because in-progress Knowledge examples referenced unavailable
+  `Str.equivalence` and `Str.truncate` APIs.
+- Prevention: typecheck new JSDoc examples with the owning package's focused
+  docgen task before a parallel fixer hands its surface back for aggregate proof.
+
+## 2026-08-13 — Canonical audit could not refresh Git state in the sandbox
+
+- Work: run the exact-head aggregate GitHub-quality audit after the Round 1
+  reviewer fixes converged.
+- Evidence: the audit stopped before quality lanes because `git fetch` could
+  not open `.git/FETCH_HEAD` on the read-only sandbox Git mount.
+- Prevention: grant the canonical audit command repository Git metadata access
+  when its preflight must refresh `origin/main`; keep read-only focused checks
+  available for iterations that do not require remote freshness.
+
+## 2026-08-13 — Tooling schema-first check has no changed-scope mode
+
+- Work: run focused schema proof after adding a Git-branch refinement and
+  coverage-summary invariants during the review/fix loop.
+- Evidence: `bun run beep lint tooling-schema-first` reported 173 repository-
+  wide findings, dominated by existing file-name and exported-interface rules,
+  while the baselined `bun run beep lint schema-first` check completed with
+  zero missing, stale, enforced, or advisory entries.
+- Prevention: add a base/diff or explicit-file mode to the tooling schema-first
+  command so a focused fixer can distinguish introduced violations from the
+  unbaselined repository inventory without parsing the aggregate output.
+
+## 2026-08-13 — Serialized coverage baseline generation reached a sandboxed OTLP bind
+
+- Work: regenerate the schema-v2 coverage regression baseline from the merged
+  tree while avoiding the native compiler's parallel resource failures.
+- Evidence: the serialized generator completed 172 of 205 tasks, then the
+  `@beep/repo-ai-metrics` coverage lane reported 204 passing tests and one
+  failure because its real OTLP endpoint could not bind a loopback address:
+  `listen EPERM ... 127.0.0.1:<redacted>`. The generator therefore wrote no
+  baseline.
+- Prevention: provide the coverage lane a supported loopback capability in
+  restricted environments, or add an explicit environment-gated transport
+  seam that preserves the real-endpoint test in capable CI environments.
+
+## 2026-08-13 — Aggregate build encountered a corrupt generated Next cache
+
+- Work: establish the exact post-merge GitHub-quality baseline after the
+  security review fixes and coverage baseline regeneration.
+- Evidence: `@beep/oip-web` stopped its production build because the generated
+  `.next/cache/turbopack/.../CURRENT` file was four invalid bytes; the build
+  reported `Failed to handle database versioning` before application source
+  compilation could complete.
+- Prevention: make the app build detect and discard an unreadable generated
+  Turbopack database, or isolate per-run Next caches so interrupted builds
+  cannot poison a later quality run.
+
+## 2026-08-13 — Scoped docgen emitted a retired Turbo daemon flag
+
+- Work: compile the corrected JSDoc examples for the changed repo-cli package
+  before rerunning the aggregate quality baseline.
+- Evidence: `bun run docgen:local -- --package @beep/repo-cli` stopped in the
+  planner because the current Turbo CLI rejected `--daemon=false` and expects
+  `--no-daemon`; no package docgen task executed.
+- Prevention: update the scoped docgen planner to emit the current Turbo flag
+  spelling, and keep a contract test that executes the generated command
+  against the repository-pinned Turbo version.

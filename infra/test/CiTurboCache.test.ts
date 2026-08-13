@@ -1,8 +1,9 @@
 import { CiTurboCache, CiTurboCachePulumiConfigValues } from "@beep/infra";
+import { assert, describe, expect, it } from "@effect/vitest";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, Result } from "effect";
+import { Effect, MutableHashMap, pipe, Result } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const validConfigValues = {
   bucketName: "beep-turbo-cache-123456789012",
@@ -84,14 +85,15 @@ describe("@beep/infra CiTurboCache", () => {
     );
   });
 
-  it("uses Lambda invocation ARNs for the read and write API integrations", () => {
-    const integrationUris = new Map<string, unknown>();
-    const functionArn = (name: string) => `arn:aws:lambda:us-east-1:123456789012:function:${name}`;
-    const invokeArn = (name: string) =>
-      `arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${functionArn(name)}/invocations`;
+  it.effect(
+    "uses Lambda invocation ARNs for the read and write API integrations",
+    Effect.fnUntraced(function* () {
+      const integrationUris = MutableHashMap.empty<string, unknown>();
+      const functionArn = (name: string) => `arn:aws:lambda:us-east-1:123456789012:function:${name}`;
+      const invokeArn = (name: string) =>
+        `arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${functionArn(name)}/invocations`;
 
-    return Effect.runPromise(
-      Effect.acquireUseRelease(
+      yield* Effect.acquireUseRelease(
         Effect.tryPromise(() =>
           pulumi.runtime.setMocks(
             {
@@ -101,15 +103,16 @@ describe("@beep/infra CiTurboCache", () => {
                 partition: "aws",
               }),
               newResource: (args) => {
-                const state = { ...args.inputs };
-                if (args.type === "aws:lambda/function:Function") {
-                  Object.assign(state, {
-                    arn: functionArn(args.name),
-                    invokeArn: invokeArn(args.name),
-                  });
-                }
+                const state =
+                  args.type === "aws:lambda/function:Function"
+                    ? {
+                        ...args.inputs,
+                        arn: functionArn(args.name),
+                        invokeArn: invokeArn(args.name),
+                      }
+                    : args.inputs;
                 if (args.type === "aws:apigatewayv2/integration:Integration") {
-                  integrationUris.set(args.name, args.inputs.integrationUri);
+                  MutableHashMap.set(integrationUris, args.name, args.inputs.integrationUri);
                 }
                 return { id: `${args.name}-id`, state };
               },
@@ -125,20 +128,20 @@ describe("@beep/infra CiTurboCache", () => {
             });
           }),
         () => Effect.tryPromise(() => pulumi.runtime.disconnect())
-      ).pipe(
-        Effect.andThen(
-          Effect.sync(() => {
-            expect(integrationUris).toEqual(
-              new Map([
-                ["ci-turbo-cache-test-read-integration", invokeArn("ci-turbo-cache-test-read")],
-                ["ci-turbo-cache-test-write-integration", invokeArn("ci-turbo-cache-test-write")],
-              ])
-            );
-            expect([...integrationUris.values()]).not.toContain(functionArn("ci-turbo-cache-test-read"));
-            expect([...integrationUris.values()]).not.toContain(functionArn("ci-turbo-cache-test-write"));
-          })
-        )
-      )
-    );
-  });
+      );
+
+      const readUri = pipe(
+        MutableHashMap.get(integrationUris, "ci-turbo-cache-test-read-integration"),
+        O.getOrUndefined
+      );
+      const writeUri = pipe(
+        MutableHashMap.get(integrationUris, "ci-turbo-cache-test-write-integration"),
+        O.getOrUndefined
+      );
+      assert.strictEqual(readUri, invokeArn("ci-turbo-cache-test-read"));
+      assert.strictEqual(writeUri, invokeArn("ci-turbo-cache-test-write"));
+      assert.notStrictEqual(readUri, functionArn("ci-turbo-cache-test-read"));
+      assert.notStrictEqual(writeUri, functionArn("ci-turbo-cache-test-write"));
+    })
+  );
 });

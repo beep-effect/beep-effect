@@ -24,12 +24,26 @@ const decodeCodexToml = decodeTomlTextAs(CodexConfig);
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);
 const decodeClaudeSettingsJson = decodeJsonTextAs(ClaudeSettings);
 
+const ClaudeRepoPermissionMode = LiteralKit([
+  "default",
+  "acceptEdits",
+  "plan",
+  "auto",
+  "dontAsk",
+  "bypassPermissions",
+]).pipe(
+  $I.annoteSchema("ClaudeRepoPermissionMode", {
+    description: "Claude Code permission modes inspected for repository-safe approval defaults.",
+  })
+);
+
 class ClaudeRepoPermissions extends S.Class<ClaudeRepoPermissions>($I`ClaudeRepoPermissions`)(
   {
     allow: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    defaultMode: ClaudeRepoPermissionMode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ClaudeRepoPermissions", {
-    description: "Narrow checked-in Claude permission allowlist inspected for repository-approved Bash grants.",
+    description: "Checked-in Claude approval mode and Bash allowlist inspected by the repository safety policy.",
   })
 ) {}
 
@@ -92,7 +106,12 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(rm -rf .beep/fallow)",
   "Bash(bunx commitlint:*)",
   "Bash(bun install:*)",
-]);
+]).pipe(
+  $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
+    description:
+      "Exact 47-value Bash grant domain approved for this repository, including named read-only GitHub queries and intentional Git and Yeet publication commands.",
+  })
+);
 
 const isApprovedClaudeRepoBashPermission = S.is(ApprovedClaudeRepoBashPermission);
 
@@ -119,13 +138,15 @@ const repoSafetyPolicyError = (relativePath: AiSyncValidatedConfigPath, message:
 
 const codexSettingSafetyFinding = (
   settingName: string,
-  unsafeValue: string,
+  expectedValue: string,
   value: string | undefined
 ): O.Option<string> =>
   O.match(O.fromNullishOr(value), {
-    onNone: () => O.some(`${settingName} must be explicitly set`),
+    onNone: () => O.some(`${settingName} must be explicitly set to "${expectedValue}"`),
     onSome: (actual) =>
-      O.liftPredicate(actual, Str.equivalence(unsafeValue)).pipe(O.as(`${settingName} must not be "${unsafeValue}"`)),
+      O.liftPredicate(actual, (candidate) => !Str.equivalence(expectedValue)(candidate)).pipe(
+        O.as(`${settingName} must be "${expectedValue}"`)
+      ),
   });
 
 const validateCodexRepoSafetyPolicy = (content: string) =>
@@ -133,13 +154,14 @@ const validateCodexRepoSafetyPolicy = (content: string) =>
     Effect.mapError(validationError(".codex/config.toml", "codex-config")),
     Effect.flatMap((config) => {
       const findings = A.getSomes([
-        codexSettingSafetyFinding("approval_policy", "never", config.approval_policy),
-        codexSettingSafetyFinding("sandbox_mode", "danger-full-access", config.sandbox_mode),
+        codexSettingSafetyFinding("approval_policy", "on-request", config.approval_policy),
+        codexSettingSafetyFinding("sandbox_mode", "workspace-write", config.sandbox_mode),
       ]);
 
-      return A.length(findings) > 0
-        ? Effect.fail(repoSafetyPolicyError(".codex/config.toml", A.join(findings, "; ")))
-        : Effect.void;
+      return A.match(findings, {
+        onEmpty: () => Effect.void,
+        onNonEmpty: (messages) => Effect.fail(repoSafetyPolicyError(".codex/config.toml", A.join(messages, "; "))),
+      });
     })
   );
 
@@ -153,14 +175,22 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
         O.getOrElse(A.empty<string>)
       );
       const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudeBashPermission);
-      return A.isReadonlyArrayNonEmpty(unapprovedPermissions)
-        ? Effect.fail(
-            repoSafetyPolicyError(
-              ".claude/settings.json",
-              `unapproved auto-approved Bash rule(s): ${A.join(unapprovedPermissions, ", ")}`
-            )
-          )
-        : Effect.void;
+      const defaultModeFinding = codexSettingSafetyFinding(
+        "permissions.defaultMode",
+        "default",
+        settings.permissions.pipe(
+          O.flatMap((permissions) => permissions.defaultMode),
+          O.getOrUndefined
+        )
+      );
+      const findings = A.appendAll(
+        A.map(unapprovedPermissions, (permission) => `unapproved auto-approved Bash rule: ${permission}`),
+        O.toArray(defaultModeFinding)
+      );
+      return A.match(findings, {
+        onEmpty: () => Effect.void,
+        onNonEmpty: (messages) => Effect.fail(repoSafetyPolicyError(".claude/settings.json", A.join(messages, "; "))),
+      });
     })
   );
 
@@ -229,6 +259,24 @@ const mapValidateRepoConfigError = (cause: AiSyncError | SchemaIssue.Issue): AiS
       })
     : cause;
 
+const validateRepoConfigContent = Effect.fn("AiSync.validateRepoConfigContent")(function* (
+  options: { readonly config: string },
+  content: string
+) {
+  return yield* validateByRelativePath(options.config, content).pipe(Effect.mapError(mapValidateRepoConfigError));
+});
+
+const validateRepoSafetyPolicyContent = Effect.fn("AiSync.validateRepoSafetyPolicyContent")(function* (
+  config: ".codex/config.toml" | ".claude/settings.json",
+  content: string
+) {
+  return yield* Match.value(config).pipe(
+    Match.when(".codex/config.toml", () => validateCodexRepoSafetyPolicy(content)),
+    Match.when(".claude/settings.json", () => validateClaudeRepoSafetyPolicy(content)),
+    Match.exhaustive
+  );
+});
+
 /**
  * Validate one repo-local config file through its native schema.
  *
@@ -265,6 +313,14 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
 /**
  * Validate the repository safety policy for a checked-in agent config.
  *
+ * **Details**
+ *
+ * Codex must use exactly `on-request` approvals and `workspace-write`
+ * sandboxing. Claude must explicitly set `permissions.defaultMode` to
+ * `default`, and every Bash allow entry must belong to the repository's exact
+ * 47-value grant domain. Named read-only GitHub queries and intentional Git and
+ * Yeet publication commands remain approved members of that domain.
+ *
  * **Example** (Reject ambient agent authority)
  *
  * ```ts
@@ -280,8 +336,8 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  * Effect.runPromise(program)
  * ```
  *
- * @effects Reads either the Codex or Claude repo-local config and rejects
- * settings that grant ambient host or authenticated GitHub authority.
+ * @effects Reads either the Codex or Claude repo-local config and applies the
+ * repository's exact approval, sandbox, and Bash-grant policy.
  * @category validation
  * @since 0.0.0
  */
@@ -290,19 +346,16 @@ export const validateRepoSafetyPolicy = Effect.fn("AiSync.validateRepoSafetyPoli
   readonly config: ".codex/config.toml" | ".claude/settings.json";
 }) {
   const content = yield* readRepoConfigContent(options);
-  return yield* Match.value(options.config).pipe(
-    Match.when(".codex/config.toml", () => validateCodexRepoSafetyPolicy(content)),
-    Match.when(".claude/settings.json", () => validateClaudeRepoSafetyPolicy(content)),
-    Match.exhaustive
-  );
+  return yield* validateRepoSafetyPolicyContent(options.config, content);
 });
 
 const validateRepoConfigWithSafetyPolicy = Effect.fn("AiSync.validateRepoConfigWithSafetyPolicy")(function* (options: {
   readonly repoRoot: string;
   readonly config: ".codex/config.toml" | ".claude/settings.json";
 }) {
-  const result = yield* validateRepoConfig(options);
-  yield* validateRepoSafetyPolicy(options);
+  const content = yield* readRepoConfigContent(options);
+  const result = yield* validateRepoConfigContent(options, content);
+  yield* validateRepoSafetyPolicyContent(options.config, content);
   return result;
 });
 

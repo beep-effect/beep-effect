@@ -70,7 +70,34 @@ const renderProbePolicy = (report: KnowledgeSemanticDeltaReport): string => {
   });
 };
 
-const renderHumanReport = (report: KnowledgeSemanticDeltaReport): string => {
+/**
+ * Renders a semantic-delta report for local human inspection.
+ *
+ * **Example** (Render an empty enabled report)
+ *
+ * ```ts
+ * import { KnowledgeSemanticDeltaReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import { renderKnowledgeSemanticDeltaHumanReport } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const output = renderKnowledgeSemanticDeltaHumanReport(
+ *   KnowledgeSemanticDeltaReport.make({
+ *     introduced: [],
+ *     resolved: [],
+ *     unchanged: [],
+ *     probePolicy: "enabled",
+ *   })
+ * )
+ *
+ * console.log(output.includes("introduced (0)")) // true
+ * ```
+ *
+ * @internal
+ * @param report - Paired-archive delta to format.
+ * @returns A stable multiline summary of probe policy and finding buckets.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderKnowledgeSemanticDeltaHumanReport = (report: KnowledgeSemanticDeltaReport): string => {
   const section = (label: string, findings: ReadonlyArray<KnowledgeFinding>): string =>
     A.join([`${label} (${A.length(findings)})`, ...A.map(findings, renderFinding)], "\n");
   return A.join(
@@ -140,7 +167,7 @@ const runSemanticDelta = Effect.fn("KnowledgeCommand.runSemanticDelta")(function
     );
     yield* Console.log(json);
   } else {
-    yield* Console.log(renderHumanReport(report));
+    yield* Console.log(renderKnowledgeSemanticDeltaHumanReport(report));
   }
   yield* O.match(knowledgeSemanticDeltaFailure(report), { onNone: () => Effect.void, onSome: Effect.fail });
 });

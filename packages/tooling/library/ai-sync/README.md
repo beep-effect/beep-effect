@@ -53,10 +53,15 @@ bun run validate -- --repo-root ../../../.. --config .codex/config.toml
 
 `check` stays offline and validates the committed generated artifact set plus
 the current checkout's Codex and Claude configs through their native schemas
-and repository safety policies. `validate` checks one requested config through
-its native schema. `drift --strict` may fetch upstream Tier-1 sources and
-compare committed content hashes. `generate` and `refresh` fetch pinned Tier-1
-sources and rewrite generated artifacts.
+and repository safety policies. Codex is pinned to `on-request` approvals with
+`workspace-write` sandboxing. Claude requires an explicit `default` permission
+mode, and every Bash allow entry must belong to the exact 47-value
+repository grant domain. That domain retains named read-only GitHub queries and
+the intentional Git and Yeet publication commands; it does not grant broad
+`gh`, shell-wrapper, or Codex execution families. `validate` checks one requested
+config through its native schema. `drift --strict` may fetch upstream Tier-1
+sources and compare committed content hashes. `generate` and `refresh` fetch
+pinned Tier-1 sources and rewrite generated artifacts.
 
 ## License
 

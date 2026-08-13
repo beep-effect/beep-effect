@@ -9,7 +9,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import * as jsonc from "jsonc-parser";
-import typescript from "typescript";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
@@ -144,19 +143,29 @@ describe("TypeScript compiler routing", () => {
   it("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const [tsc, tsgo] = yield* Effect.all(
+        const [tsc, tsgo, typescriptApi] = yield* Effect.all(
           [
             runCommand(process.execPath, [tscBinPath, "--version"], repoRoot),
             runCommand(process.execPath, [tsgoBinPath, "--version"], repoRoot),
+            runCommand(
+              process.execPath,
+              [
+                "--input-type=module",
+                "--eval",
+                'import typescript from "typescript"; process.stdout.write(typescript.version)',
+              ],
+              repoRoot
+            ),
           ],
           { concurrency: 1 }
         );
 
         expect(tsc.exitCode).toBe(0);
         expect(tsgo.exitCode).toBe(0);
+        expect(typescriptApi.exitCode).toBe(0);
         expect(tsc.stdout).toBe(tsgo.stdout);
         expect(tsc.stdout).toMatch(/^Version 7\..*\+effect-tsgo\./u);
-        expect(typescript.version).toMatch(/^6\./u);
+        expect(typescriptApi.stdout).toMatch(/^6\./u);
       }).pipe(provideScopedLayer(TestLayer))
     ));
 });

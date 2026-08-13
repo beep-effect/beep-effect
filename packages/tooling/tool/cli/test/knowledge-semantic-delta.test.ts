@@ -14,12 +14,12 @@ import {
   knowledgeSemanticDeltaFailure,
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
-import { makeKnowledgeArchiveOracle } from "@beep/repo-cli/test/Knowledge";
+import { makeKnowledgeArchiveOracle, renderKnowledgeSemanticDeltaHumanReport } from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { Crypto, Effect, Encoding, Exit, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -151,8 +151,8 @@ const explodingProbeOracle = (
 const BOOT_FAILURE = KnowledgeProbeBootError.make({
   message: A.join(
     [
-      'Current-checkout probe against archive data "/tmp/beep-knowledge-semantic-delta-8YSRkf/base-scratch/command-probe.ts" failed with exit 1.',
-      "SyntaxError: Export named 'DEFAULT_AI_METRICS_DATA_ROOT' not found in module '/repo/packages/tooling/library/ai-metrics/src/index.ts'.",
+      '\u001B[31mCurrent-checkout probe against archive data "/tmp/beep-knowledge-semantic-delta-8YSRkf/base-scratch/command-probe.ts" failed with exit 1.\u001B[0m',
+      "SyntaxError:\u0001 Export named 'DEFAULT_AI_METRICS_DATA_ROOT' not found in module '/repo/packages/tooling/library/ai-metrics/src/index.ts'.",
       "",
       "Bun v1.3.14 (Linux x64)",
     ],
@@ -539,6 +539,37 @@ describe("knowledge semantic-delta negative controls", () => {
       expect(introducedIds(report)).toEqual([]);
     })
   );
+
+  it.effect("sanitizes archive-derived public fields without changing their raw identity preimage", () =>
+    Effect.gen(function* () {
+      const hostilePath = "docs/\u001B[31mguide.md";
+      const hostileCommand = "\u001B[31mevil\u202E";
+      const report = yield* scan(
+        fixture({ [hostilePath]: "No command.\n" }, { [hostilePath]: `Run \`bun run beep ${hostileCommand}\`.\n` })
+      );
+      const introduced = A.head(report.introduced);
+      assert.isTrue(O.isSome(introduced));
+      if (O.isSome(introduced)) {
+        const finding = introduced.value;
+        assert.strictEqual(
+          finding.findingId,
+          yield* expectedId("unknown-beep-command", `base:${hostilePath}`, `beep-command:${hostileCommand}`)
+        );
+        assert.strictEqual(finding.documentId, "base:docs/guide.md");
+        assert.strictEqual(finding.subject, "beep-command:evil");
+        assert.strictEqual(finding.location.path, "docs/guide.md");
+        assert.strictEqual(finding.message, "Unknown beep command path: evil.");
+      }
+
+      const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
+      const human = renderKnowledgeSemanticDeltaHumanReport(report);
+      assert.notInclude(json, "\\u001b");
+      assert.notInclude(json, "\\u202e");
+      assert.notInclude(json, "\u202E");
+      assert.notInclude(human, "\u001B");
+      assert.notInclude(human, "\u202E");
+    })
+  );
 });
 
 describe("knowledge semantic-delta gate semantics", () => {
@@ -732,6 +763,54 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   const ROOT_MARKER = "archive-root-module-executed";
   const PORTFOLIO_MARKER = "archive-portfolio-module-executed";
 
+  const makeProbeRuntime = Effect.fn("KnowledgeTest.makeProbeRuntime")(function* (
+    root: string,
+    stdout: string,
+    stderr: string,
+    exitCode = 0
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const runtimePath = path.join(root, "probe-runtime.sh");
+    const stdoutPath = path.join(root, "probe-stdout");
+    const stderrPath = path.join(root, "probe-stderr");
+    yield* fs.writeFileString(stdoutPath, stdout);
+    yield* fs.writeFileString(stderrPath, stderr);
+    yield* fs.writeFileString(
+      runtimePath,
+      A.join(
+        ["#!/bin/sh", `/usr/bin/cat "${stdoutPath}"`, `/usr/bin/cat "${stderrPath}" >&2`, `exit ${exitCode}`, ""],
+        "\n"
+      )
+    );
+    yield* fs.chmod(runtimePath, 0o755);
+    return runtimePath;
+  });
+
+  const makeProbeHarness = Effect.fn("KnowledgeTest.makeProbeHarness")(function* (
+    runtimeStdout: string,
+    runtimeStderr: string,
+    runtimeExitCode = 0
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-probe-diagnostic-" });
+    const currentCheckoutRoot = path.join(tempRoot, "current-checkout");
+    const archiveRoot = path.join(tempRoot, "archive-data");
+    const scratchRoot = path.join(tempRoot, "scratch");
+    yield* fs.makeDirectory(path.join(currentCheckoutRoot, "node_modules"), { recursive: true });
+    yield* fs.makeDirectory(archiveRoot, { recursive: true });
+    const runtimeExecutable = yield* makeProbeRuntime(tempRoot, runtimeStdout, runtimeStderr, runtimeExitCode);
+    const oracle = yield* makeKnowledgeArchiveOracle(
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      [],
+      runtimeExecutable
+    );
+    return { archiveRoot, currentCheckoutRoot, oracle, scratchRoot } as const;
+  });
+
   it.effect("treats archived command modules and runtime configuration as data, never code", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -793,15 +872,98 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           "Archived index fixture emitted malformed UTF-8."
         );
 
-        expect(commands).toEqual([
+        assert.deepEqual(commands, [
           resolvedCommand(["goals", "doctor"]),
           KnowledgeCommandUnknown.make({ canonicalPath: ["goals", "doctro"] }),
         ]);
-        expect(expectedIndex).toContain("# Goals Index");
-        expect(archivedIndex).toBe(DEFAULT_INDEX);
-        expect(yield* fs.exists(path.join(archiveRoot, ROOT_MARKER))).toBe(false);
-        expect(yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER))).toBe(false);
-        expect(yield* fs.exists(path.join(archiveRoot, "node_modules"))).toBe(false);
+        assert.include(expectedIndex, "# Goals Index");
+        assert.strictEqual(archivedIndex, DEFAULT_INDEX);
+        assert.isFalse(yield* fs.exists(path.join(archiveRoot, ROOT_MARKER)));
+        assert.isFalse(yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER)));
+        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "node_modules")));
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("reports malformed command output with labeled sanitized stderr and expected counts", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeProbeHarness(
+          "resolved\tgoals\tdoctor\nextra",
+          "\u001B[31mwarning\u001B[0m at /home/operator/private/runtime.ts\u0001"
+        );
+        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "expected 1 line(s), received 2");
+        assert.include(error.message, "stdout:");
+        assert.include(error.message, "stderr:");
+        assert.include(error.message, "warning at <absolute-path>");
+        assert.notInclude(error.message, "/home/operator");
+        assert.notInclude(error.message, "\u001B");
+        assert.notInclude(error.message, "\u0001");
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("reports unknown command statuses with bounded labeled stderr", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeProbeHarness("unsupported\tgoals\tdoctor", Str.repeat(3_000)("x"));
+        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "unknown status");
+        assert.include(error.message, "expected 1 recognized line(s), received 1");
+        assert.include(error.message, "stderr:");
+        assert.isAtMost(Str.length(error.message), 2_500);
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("rejects truncated command and index output even when the probe exits zero", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeProbeHarness(Str.repeat(1_100_000)("x"), "");
+        const commandError = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+        const indexError = yield* Effect.flip(harness.oracle.indexBytes);
+
+        assert.strictEqual(commandError._tag, "KnowledgeOperationalError");
+        assert.include(commandError.message, "command probe emitted more than 1048576 characters");
+        assert.include(commandError.message, "refusing to parse truncated structured output");
+        assert.include(commandError.message, "capture: truncated");
+        assert.strictEqual(indexError._tag, "KnowledgeOperationalError");
+        assert.include(indexError.message, "index probe emitted more than 1048576 characters");
+        assert.include(indexError.message, "refusing to parse truncated structured output");
+        assert.include(indexError.message, "capture: truncated");
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("redacts checkout archive scratch and arbitrary absolute paths from boot failures", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeProbeHarness(
+          "unsafe stdout from /home/operator/private/stdout.ts",
+          "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret",
+          1
+        );
+        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+
+        assert.strictEqual(error._tag, "KnowledgeProbeBootError");
+        assert.include(error.message, "Current-checkout command probe against archive data failed with exit 1");
+        assert.include(error.message, "stdout:");
+        assert.include(error.message, "stderr:");
+        assert.notInclude(error.message, harness.currentCheckoutRoot);
+        assert.notInclude(error.message, harness.archiveRoot);
+        assert.notInclude(error.message, harness.scratchRoot);
+        assert.notInclude(error.message, "/home/operator");
+        assert.notInclude(error.message, "/secret");
+        assert.notInclude(error.message, "C:\\secret");
+        assert.include(error.message, "secondspoof");
+        assert.notInclude(error.message, "\r");
+        assert.notInclude(error.message, "\u001B");
+        assert.notInclude(error.message, "\u0001");
       })
     ).pipe(provideScopedLayer(testLayer))
   );
@@ -828,13 +990,18 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       const report = yield* scan(withUnbootableBase(CLEAN_BASE, DIRTY_HEAD, HEAD_DRIFT));
       const detail = O.getOrElse(report.probeSkipDetail, () => "");
 
-      expect(report.probePolicy).toBe("skipped-base-boot-failure");
-      expect(detail).toContain("failed with exit 1");
-      expect(detail).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+      assert.include(detail, "failed with exit 1");
+      assert.include(detail, "DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.include(detail, "<absolute-path>");
+      assert.notInclude(detail, "/tmp/beep-knowledge-semantic-delta");
+      assert.notInclude(detail, "/repo/packages");
+      assert.notInclude(detail, "\u001B");
+      assert.notInclude(detail, "\u0001");
       // Blank output lines are dropped, so the excerpt is three lines of evidence rather than four.
-      expect(A.length(Str.split("\n")(detail))).toBe(3);
+      assert.strictEqual(A.length(Str.split("\n")(detail)), 3);
       // The tracked-tree classes still work; only the probe-dependent ones went missing.
-      expect(sortedKinds(report.introduced)).toEqual(["broken-tracked-path"]);
+      assert.deepEqual(sortedKinds(report.introduced), ["broken-tracked-path"]);
     })
   );
 
@@ -845,11 +1012,11 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       // gate, so the pass above is degradation doing its job and not an empty fixture.
       const probed = yield* scan(fixture(CLEAN_BASE, CLEAN_BASE, { head: HEAD_DRIFT }));
 
-      expect(degraded.probePolicy).toBe("skipped-base-boot-failure");
-      expect(degraded.introduced).toEqual([]);
-      expect(O.isNone(knowledgeSemanticDeltaFailure(degraded))).toBe(true);
-      expect(sortedKinds(probed.introduced)).toEqual(["index-drift"]);
-      expect(O.isSome(knowledgeSemanticDeltaFailure(probed))).toBe(true);
+      assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
+      assert.deepEqual(degraded.introduced, []);
+      assert.isTrue(O.isNone(knowledgeSemanticDeltaFailure(degraded)));
+      assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
+      assert.isTrue(O.isSome(knowledgeSemanticDeltaFailure(probed)));
     })
   );
 
@@ -867,11 +1034,11 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       // half-probed base would have compared it against an unprobed HEAD.
       const probed = yield* scan(fixture(baseFiles, CLEAN_BASE));
 
-      expect(degraded.probePolicy).toBe("skipped-base-boot-failure");
-      expect(degraded.introduced).toEqual([]);
-      expect(degraded.resolved).toEqual([]);
-      expect(degraded.unchanged).toEqual([]);
-      expect(sortedKinds(probed.resolved)).toEqual(["unknown-beep-command"]);
+      assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
+      assert.deepEqual(degraded.introduced, []);
+      assert.deepEqual(degraded.resolved, []);
+      assert.deepEqual(degraded.unchanged, []);
+      assert.deepEqual(sortedKinds(probed.resolved), ["unknown-beep-command"]);
     })
   );
 
@@ -887,22 +1054,122 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         })
       );
 
-      expect(error._tag).toBe("KnowledgeOperationalError");
-      expect(error.message).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.strictEqual(error._tag, "KnowledgeOperationalError");
+      assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
+      assert.notInclude(error.message, "/repo/packages");
     }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("a shared current-checkout boot failure fails operationally even when HEAD has no command spans", () =>
+    Effect.gen(function* () {
+      const service = yield* KnowledgeService;
+      const error = yield* Effect.flip(
+        service.scanPair({
+          base: unbootableProbeOracle(CLEAN_BASE),
+          head: unbootableProbeOracle(CLEAN_BASE),
+          probePolicy: "enabled",
+          renames: [],
+        })
+      );
+
+      assert.strictEqual(error._tag, "KnowledgeOperationalError");
+      assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
+      assert.notInclude(error.message, "/repo/packages");
+    }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("a current-code failure for a base-only command fails during the HEAD preflight", () =>
+    Effect.gen(function* () {
+      const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
+      const preflightFailure = KnowledgeProbeBootError.make({
+        message: "Current-checkout command handler failed for the base-only legacy command.",
+      });
+      const head = {
+        ...makeOracle(CLEAN_BASE),
+        probeCommands: (commands: ReadonlyArray<ReadonlyArray<string>>) =>
+          A.some(commands, (words) => A.contains(words, "legacy"))
+            ? Effect.fail(preflightFailure)
+            : Effect.succeed(A.map(commands, probeCommand)),
+      };
+      const error = yield* Effect.flip(
+        scan({
+          base: makeOracle(baseFiles),
+          head,
+          probePolicy: "enabled",
+          renames: [],
+        })
+      );
+
+      assert.strictEqual(error._tag, "KnowledgeOperationalError");
+      assert.include(error.message, "base-only legacy command");
+    })
+  );
+
+  it.effect("a failure proved specific to merge-base data still degrades after the HEAD union preflight", () =>
+    Effect.gen(function* () {
+      const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
+      const report = yield* scan({
+        base: unbootableProbeOracle(baseFiles),
+        head: makeOracle(CLEAN_BASE),
+        probePolicy: "enabled",
+        renames: [],
+      });
+
+      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+      assert.deepEqual(report.introduced, []);
+    })
   );
 
   it.effect("the JSON report carries the degraded policy and its evidence, and omits both when clean", () =>
     Effect.gen(function* () {
-      const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(
-        yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE))
-      );
+      const degradedReport = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE));
+      const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(degradedReport);
+      const human = renderKnowledgeSemanticDeltaHumanReport(degradedReport);
       const clean = yield* encodeKnowledgeSemanticDeltaReportJson(yield* scan(fixture(CLEAN_BASE, CLEAN_BASE)));
 
-      expect(degraded).toContain(`"probePolicy":"skipped-base-boot-failure"`);
-      expect(degraded).toContain("DEFAULT_AI_METRICS_DATA_ROOT");
-      expect(clean).toContain(`"probePolicy":"enabled"`);
-      expect(clean).not.toContain("probeSkipDetail");
+      assert.include(degraded, `"probePolicy":"skipped-base-boot-failure"`);
+      assert.include(degraded, "DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.include(degraded, "<absolute-path>");
+      assert.notInclude(degraded, "/tmp/beep-knowledge-semantic-delta");
+      assert.notInclude(degraded, "/repo/packages");
+      assert.notInclude(degraded, "\\u001b");
+      assert.notInclude(degraded, "\\u0001");
+      assert.include(human, "DEFAULT_AI_METRICS_DATA_ROOT");
+      assert.include(human, "<absolute-path>");
+      assert.notInclude(human, "/tmp/beep-knowledge-semantic-delta");
+      assert.notInclude(human, "/repo/packages");
+      assert.notInclude(human, "\u001B");
+      assert.notInclude(human, "\u0001");
+      assert.include(clean, `"probePolicy":"enabled"`);
+      assert.notInclude(clean, "probeSkipDetail");
+    })
+  );
+
+  it.effect("the degraded public detail removes bare CR and short absolute paths", () =>
+    Effect.gen(function* () {
+      const unsafeFailure = KnowledgeProbeBootError.make({
+        message: "failure at /secret\r\nthen C:\\secret\rOVERWRITE",
+      });
+      const base = {
+        ...makeOracle(CLEAN_BASE),
+        probeCommands: () => Effect.fail(unsafeFailure),
+        indexBytes: Effect.fail(unsafeFailure),
+      };
+      const report = yield* scan({ base, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] });
+      const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
+      const human = renderKnowledgeSemanticDeltaHumanReport(report);
+
+      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+      assert.notInclude(json, "/secret");
+      assert.notInclude(json, "C:\\\\secret");
+      assert.notInclude(json, "\\r");
+      assert.include(json, "<absolute-path>");
+      assert.notInclude(human, "/secret");
+      assert.notInclude(human, "C:\\secret");
+      assert.notInclude(human, "\r");
+      assert.include(human, "<absolute-path>");
     })
   );
 });

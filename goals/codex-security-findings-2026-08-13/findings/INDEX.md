@@ -35,10 +35,13 @@ auth values, email addresses, and raw local paths.
 ## Current Remediation State
 
 - 6 confirmed CI trust-boundary findings remain `remediate` and are blocked on
-  runner admission/workload-identity architecture, active-CI landing, and
-  external GitHub organization runner-group/AWS deployment proof.
-- 6 bounded remediations are fixed and proven locally.
+  runner admission/workload-identity architecture and external GitHub
+  organization runner-group/AWS deployment proof.
+- 6 bounded remediations are locally complete.
 - 1 finding is already fixed on current HEAD by commit `618e81f4c0`.
+- Publication is executing only for `CSF-002`, then `CSF-007`, then `CSF-010`;
+  every other finding remains held.
+- CSF-013 has source/mock proof only; no Pulumi deployment is claimed.
 
 ## Closeout Mapping
 

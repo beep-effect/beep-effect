@@ -5,4 +5,5 @@
  * @since 0.0.0
  */
 
-export { makeKnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service";
+export { renderKnowledgeSemanticDeltaHumanReport } from "../commands/Knowledge/Knowledge.command.ts";
+export { makeKnowledgeArchiveOracle } from "../commands/Knowledge/Knowledge.service.ts";

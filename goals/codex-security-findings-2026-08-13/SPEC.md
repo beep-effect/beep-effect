@@ -47,16 +47,15 @@ exact captured findings until no packet-applicable finding remains open.
   metadata, summaries, validation, decisions, changed files, and proof.
 - Browser closure happens after merge, against the exact 13-ID allowlist.
 - Preserve unrelated work and stage only reviewed packet intent.
-- Local quality-review-fix-loop commits are authorized. Do not push, publish,
-  or open a PR until the operator confirms the active CI work has landed and
-  explicitly authorizes publication.
+- Publication is executing only for the ordered `CSF-002` then `CSF-007` then
+  `CSF-010` sequence; every other finding requires new user authorization.
 
 ## Known P4 Architecture Blocker
 
 CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 require a runner trust
 boundary enforced outside pull-request-editable workflow content and no usable
-cloud identity during job execution. They remain `remediate` pending active-CI
-landing plus external GitHub organization runner-group and AWS deployment proof;
+cloud identity during job execution. P2/P3 have landed, but these findings
+remain `remediate` pending external GitHub organization runner-group and AWS deployment proof;
 the packet does not reinterpret the stop condition as accepted risk or an
 eligible closeout disposition.
 

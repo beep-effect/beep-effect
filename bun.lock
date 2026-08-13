@@ -272,6 +272,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "effect": "catalog:",

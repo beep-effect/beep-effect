@@ -11,7 +11,12 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Knowledge.command.ts";
+export {
+  knowledgeCommand,
+  knowledgeRefsCommand,
+  knowledgeSemanticDeltaCommand,
+  knowledgeSemanticDeltaFailure,
+} from "./Knowledge.command.ts";
 /**
  * Knowledge semantic-delta tagged errors.
  *

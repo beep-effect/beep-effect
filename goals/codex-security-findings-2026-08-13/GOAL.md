@@ -15,6 +15,7 @@ Read first:
 - `goals/codex-security-findings-2026-08-13/ops/manifest.json`
 - `goals/codex-security-findings-2026-08-13/ops/triage.json`
 - `goals/codex-security-findings-2026-08-13/findings/INDEX.md`
+- `goals/codex-security-findings-2026-08-13/research/QUALITY_REVIEW.md`
 
 Then read `AGENTS.md`, required skills, and standards governing each target.
 Repo law outranks packet prose.
@@ -28,11 +29,16 @@ Scope:
   unrelated cleanup, weakened quality/security gates.
 
 Current position: P2/P3 are complete. CSF-002, CSF-007, CSF-009, CSF-010,
-CSF-012, and CSF-013 are fixed and proven locally. CSF-011 was already fixed.
+CSF-012, and CSF-013 are locally complete. CSF-011 was already fixed.
+The quality ledger contains 42 reviewer and gate items, all fixed with the
+commit pending. Post-merge baseline regeneration and the 15-lane aggregate
+audit are green. The final refresh used `origin/main` `642331b86c` and merge
+HEAD `8337a21710`; two compatibility reviewers returned literal
+`0 changes suggested`. Further review rounds are closed, and narrow publication
+is executing for `CSF-002` then `CSF-007` then `CSF-010`.
 CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain confirmed
-`remediate` items blocked on runner admission/workload-identity architecture,
-active-CI landing, and external GitHub organization runner-group/AWS deployment
-proof.
+`remediate` items blocked on runner admission/workload-identity architecture
+and external GitHub organization runner-group/AWS deployment proof.
 
 Rules:
 
@@ -48,9 +54,9 @@ Rules:
    repair/verify. Publish one intentional PR and monitor through mergeable.
 6. After merge, close only the exact 13-ID allowlist in Codex as Already fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
-7. Local commits required by the quality-review-fix loop are authorized. Do not
-   push, publish, or open a PR until the operator confirms the active CI work
-   has landed and explicitly authorizes publication.
+7. Execute publication only for the ordered `CSF-002` then `CSF-007` then
+   `CSF-010` sequence; do not publish any other finding without new
+   authorization.
 
 Stop if the signed-in CSV export is unavailable, tracked evidence contains secret
 or raw-path material, a fix needs an out-of-packet architecture decision, or the
