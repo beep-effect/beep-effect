@@ -44,10 +44,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is complete. Execution now moves through P3 asymmetric cache and P4 baked
-AMI before P2 cuts the heavy lane over to one-job-one-VM workers. This order
-preserves the security and cost gains without regressing heavy-lane wall time
-against the warm manual-burst baseline.
+P0-P3 are complete; the asymmetric cache is live (#673/#674). P4 and P5 are
+superseded into `goals/ci-fleet-residue` and `goals/ci-lane-economics`; only
+P6 (final close, gated on the lane-economics 20-minute outcome) remains here.
 
 ## Binding decisions
 
