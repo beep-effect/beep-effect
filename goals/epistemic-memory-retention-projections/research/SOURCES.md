@@ -14,11 +14,11 @@ verified nuggets, route `new-exploration`).
 
 - **Cluster:** Four-tier agent-memory schema w/ confidence + conflict edges
 - **Route:** `new-exploration` → graduates into a NEW goal extending the epistemic slice
-- **Gold-intake provenance:** [`ROUTING.md`](../../_gold-intake/ROUTING.md) ·
-  [`routing.json`](../../_gold-intake/routing.json) ·
-  [`GOLD_SYNTHESIS.md`](../../_gold-intake/GOLD_SYNTHESIS.md) (items 8 "four-tier
+- **Gold-intake provenance:** [`ROUTING.md`](../../../explorations/_gold-intake/ROUTING.md) ·
+  [`routing.json`](../../../explorations/_gold-intake/routing.json) ·
+  [`GOLD_SYNTHESIS.md`](../../../explorations/_gold-intake/GOLD_SYNTHESIS.md) (items 8 "four-tier
   agent-memory schema" and the GraphRAG/RRF retrieval item)
-- **Packet codex review:** [`reviews/2026-06-29-codex-research.md`](../reviews/2026-06-29-codex-research.md) (gate-1: 6 blocking + 7 advisory folded)
+- **Packet codex review:** [`reviews/2026-06-29-codex-research.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/reviews/2026-06-29-codex-research.md) (gate-1: 6 blocking + 7 advisory folded)
 - **Theme span:** agent-memory, governance-ops, kg-ontology-reasoning, legal-nlp, provenance-evidence
 - **Wave histogram:** P1×5, P2×7, P3×3
 
@@ -228,15 +228,15 @@ Theorem — reconcile `ConsolidationTier` against it), `…/05-context-graph-cap
   - `goals/trustgraph-port` — FalkorDB/GraphRAG retrieval home (Phase 1 scoreless lane)
   - `explorations/rag-retrieval-projection` — **single RRF owner**; this packet CONSUMES it (supplies the bitemporal-edge graph stream, reads span-carrying fused hits)
   - `explorations/_gold-intake` — source corpus
-- **This packet's own trail:** [`CAPTURE.md`](../CAPTURE.md) · [`RESEARCH.md`](../RESEARCH.md) ·
-  [`DECISIONS.md`](../DECISIONS.md) (7 pre-drafted forks Q1–Q7) · [`BRIEF.md`](../BRIEF.md) ·
-  [`MAP.md`](../MAP.md) · [`README.md`](../README.md)
-- **Sub-research:** [`research/bitemporal-versioned-edge-modeling.md`](bitemporal-versioned-edge-modeling.md) ·
-  [`research/claim-lifecycle-rejected-superseded-and-conflict.md`](claim-lifecycle-rejected-superseded-and-conflict.md) ·
-  [`research/memory-tier-decay-and-eviction.md`](memory-tier-decay-and-eviction.md) ·
-  [`research/rrf-retrieval-layer-consumption.md`](rrf-retrieval-layer-consumption.md) ·
-  [`research/license-aware-clean-room-reimplementation.md`](license-aware-clean-room-reimplementation.md)
-- **Codex review:** [`reviews/2026-06-29-codex-research.md`](../reviews/2026-06-29-codex-research.md)
-- **Gold synthesis:** [`GOLD_SYNTHESIS.md`](../../_gold-intake/GOLD_SYNTHESIS.md) §"Agent memory
+- **This packet's own trail:** [`CAPTURE.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/CAPTURE.md) · [`RESEARCH.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/RESEARCH.md) ·
+  [`DECISIONS.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md) (7 pre-drafted forks Q1–Q7) · [`BRIEF.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/BRIEF.md) ·
+  [`MAP.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/MAP.md) · [`README.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/README.md)
+- **Sub-research:** [`research/bitemporal-versioned-edge-modeling.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/research/bitemporal-versioned-edge-modeling.md) ·
+  [`research/claim-lifecycle-rejected-superseded-and-conflict.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/research/claim-lifecycle-rejected-superseded-and-conflict.md) ·
+  [`research/memory-tier-decay-and-eviction.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md) ·
+  [`research/rrf-retrieval-layer-consumption.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/research/rrf-retrieval-layer-consumption.md) ·
+  [`research/license-aware-clean-room-reimplementation.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/research/license-aware-clean-room-reimplementation.md)
+- **Codex review:** [`reviews/2026-06-29-codex-research.md`](../../../explorations/agent-memory-tiers-bitemporal-edges/reviews/2026-06-29-codex-research.md)
+- **Gold synthesis:** [`GOLD_SYNTHESIS.md`](../../../explorations/_gold-intake/GOLD_SYNTHESIS.md) §"Agent memory
   & learning" (item 8: four-tier schema; retention; relation-confidence) and the GraphRAG/RRF
   retrieval item

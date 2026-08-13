@@ -9,19 +9,19 @@ the exploration ledger remains the primary copy.
 - **Cluster / origin:** 2026-07-01 research fan-out: 3 spec-collection codex
   agents (`specs/`), 12 repo-mining codex agents (`repos/`), 3 repo audits,
   1 synthesis + 1 adversarial review. Seeded from the design handoff in
-  [`../assets/`](../assets/).
+  [`../assets/`](../../../explorations/identity-as-iri/assets/).
 - **Provenance:** design session distilled in
-  [`../assets/identity-iri-fibration-handoff.md`](../assets/identity-iri-fibration-handoff.md)
+  [`../assets/identity-iri-fibration-handoff.md`](../../../explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md)
   (+ XML packet); raw transcripts remain local-only outside the repo.
 
 ## 1. Mined source corpus
 
-The mined corpus is the 12 repo reports in [`repos/`](./repos/) — each report
+The mined corpus is the 12 repo reports in [`repos/`](../../../explorations/identity-as-iri/research/repos/) — each report
 carries its own file:line citations into its upstream repo. Dispositions are
 per-pattern in the synthesis diamonds matrix
-([`20-repo-mining-synthesis.md`](./20-repo-mining-synthesis.md) §2), corrected
-by [`21-synthesis-adversarial-review.md`](./21-synthesis-adversarial-review.md)
-and the arbitration rulings in [`../RESEARCH.md`](../RESEARCH.md).
+([`20-repo-mining-synthesis.md`](../../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md) §2), corrected
+by [`21-synthesis-adversarial-review.md`](../../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md)
+and the arbitration rulings in [`../RESEARCH.md`](../../../explorations/identity-as-iri/RESEARCH.md).
 
 ## 2. Upstream repositories & licenses
 
@@ -48,14 +48,14 @@ adversarial review confirmed no ledger row upgrades a reference-only source.
 Official specs fetched and cited (full per-source tables with fetch status at
 the end of each spec doc):
 
-- [`specs/01-iri-uri-curie.md`](./specs/01-iri-uri-curie.md) — RFC 3986
+- [`specs/01-iri-uri-curie.md`](../../../explorations/identity-as-iri/research/specs/01-iri-uri-curie.md) — RFC 3986
   (rfc-editor.org/rfc/rfc3986), RFC 3987 (rfc-editor.org/rfc/rfc3987), W3C
   CURIE Syntax 1.0 (w3.org/TR/curie/), RDFa Core 1.1 (w3.org/TR/rdfa-core/),
   plus RDF 1.1 Concepts and W3C slash/hash notes.
-- [`specs/02-rdf-turtle-jsonld.md`](./specs/02-rdf-turtle-jsonld.md) — RDF 1.1
+- [`specs/02-rdf-turtle-jsonld.md`](../../../explorations/identity-as-iri/research/specs/02-rdf-turtle-jsonld.md) — RDF 1.1
   Concepts (w3.org/TR/rdf11-concepts/), Turtle (w3.org/TR/turtle/), JSON-LD
   1.1 (w3.org/TR/json-ld11/), JSON-LD 1.1 API (w3.org/TR/json-ld11-api/).
-- [`specs/03-vocabularies.md`](./specs/03-vocabularies.md) — SKOS Reference
+- [`specs/03-vocabularies.md`](../../../explorations/identity-as-iri/research/specs/03-vocabularies.md) — SKOS Reference
   (w3.org/TR/skos-reference/), RDF Schema 1.1 (w3.org/TR/rdf-schema/), OWL 2
   Primer + New Features + Structural Spec (w3.org/TR/owl2-*), SHACL
   (w3.org/TR/shacl/), DCMI Terms (dublincore.org), PROV-O (w3.org/TR/prov-o/).
@@ -63,22 +63,22 @@ the end of each spec doc):
 ## 4. In-repo capability references
 
 Audited with file:line detail in
-[`10-audit-semantic-schema-metadata.md`](./10-audit-semantic-schema-metadata.md),
-[`11-audit-identity-coupling.md`](./11-audit-identity-coupling.md),
-[`12-audit-goals-supersession.md`](./12-audit-goals-supersession.md):
+[`10-audit-semantic-schema-metadata.md`](../../../explorations/identity-as-iri/research/10-audit-semantic-schema-metadata.md),
+[`11-audit-identity-coupling.md`](../../../explorations/identity-as-iri/research/11-audit-identity-coupling.md),
+[`12-audit-goals-supersession.md`](../../../explorations/identity-as-iri/research/12-audit-goals-supersession.md):
 
 - `@beep/identity` (`packages/foundation/modeling/identity`) — IdentityComposer / `$I`; REWRITE-IN-PLACE target (surface shape-stable).
 - `@beep/rdf` (`packages/foundation/modeling/rdf`) — Iri/Uri/Rdf(Curie, PrefixMap)/JsonLd/Vocab/* constants; EXTEND/reconcile; `SemanticSchemaMetadata` — reconciliation per audit recommendation.
 - `@beep/ontology` (`packages/foundation/modeling/ontology`) — holds FOLIO `Ontology.models.ts` (§8 migration target); REPOPULATE.
 - `@beep/semantic-web` (`packages/foundation/capability/semantic-web`) — SHACL/SPARQL runtime services; downstream consumer.
 - `JSDocTagDefinition.make` — fibration prior art; first `Fibered` consumer.
-- Old `@beep/ontology` prototype (packet [`../assets/ontology-prototype/`](../assets/ontology-prototype/)) — salvage donor (projections, assembly, error taxonomy, fixtures).
+- Old `@beep/ontology` prototype (packet [`../assets/ontology-prototype/`](../../../explorations/identity-as-iri/assets/ontology-prototype/)) — salvage donor (projections, assembly, error taxonomy, fixtures).
 - NET-NEW: vocab registry literal types, CURIE expand/contract codec, PN_LOCAL codec, `$I.key`/`$I.class`/`$I.ontology` nominal entrypoints, `Fibered` kit, registry service.
 
 ## 5. Cross-links & provenance
 
-- Exploration packet: [`../README.md`](../README.md) · [`../CAPTURE.md`](../CAPTURE.md) · [`../DECISIONS.md`](../DECISIONS.md) · [`../RESEARCH.md`](../RESEARCH.md)
-- Design authority: [`../assets/identity-iri-fibration-handoff.md`](../assets/identity-iri-fibration-handoff.md) (D1–D9) + [`../assets/identity-as-iri-agent-context.xml`](../assets/identity-as-iri-agent-context.xml)
-- Synthesis + verification: [`20-repo-mining-synthesis.md`](./20-repo-mining-synthesis.md) · [`21-synthesis-adversarial-review.md`](./21-synthesis-adversarial-review.md)
-- Prototype home: `scratchpad/identity/` (effect-only, test-enforced — see [`../DECISIONS.md`](../DECISIONS.md))
-- Supersession pending: `goals/ontology-modeling-foundation` (edit specified in [`12-audit-goals-supersession.md`](./12-audit-goals-supersession.md), not yet applied)
+- Exploration packet: [`../README.md`](../../../explorations/identity-as-iri/README.md) · [`../CAPTURE.md`](../../../explorations/identity-as-iri/CAPTURE.md) · [`../DECISIONS.md`](../../../explorations/identity-as-iri/DECISIONS.md) · [`../RESEARCH.md`](../../../explorations/identity-as-iri/RESEARCH.md)
+- Design authority: [`../assets/identity-iri-fibration-handoff.md`](../../../explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md) (D1–D9) + [`../assets/identity-as-iri-agent-context.xml`](../../../explorations/identity-as-iri/assets/identity-as-iri-agent-context.xml)
+- Synthesis + verification: [`20-repo-mining-synthesis.md`](../../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md) · [`21-synthesis-adversarial-review.md`](../../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md)
+- Prototype home: `scratchpad/identity/` (effect-only, test-enforced — see [`../DECISIONS.md`](../../../explorations/identity-as-iri/DECISIONS.md))
+- Supersession pending: `goals/ontology-modeling-foundation` (edit specified in [`12-audit-goals-supersession.md`](../../../explorations/identity-as-iri/research/12-audit-goals-supersession.md), not yet applied)

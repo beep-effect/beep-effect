@@ -5,7 +5,9 @@
     "title": "Exploration & Goal Packet System Redesign",
     "status": "active",
     "stage": "shape",
-    "openQuestions": [],
+    "openQuestions": [
+      "Operator shape gate: does BRIEF.md match the operator's picture? (sign-off required before decompose)"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],

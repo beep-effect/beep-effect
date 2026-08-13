@@ -24,7 +24,10 @@
     "goals/document-ast-pattern-classification",
     "goals/spar-document-annotation-wire"
   ],
-  "blockedBy": ["goals/spar-document-annotation-wire"],
+  "blockedBy": [
+    "goals/spar-document-annotation-wire",
+    "explorations/lynx-lkg-ontology-grounding#artifact-vetting-and-license-proof"
+  ],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

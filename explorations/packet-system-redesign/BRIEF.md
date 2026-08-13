@@ -20,9 +20,11 @@ second tracker.
 
 One bounded machinery cycle, self-hosted in advisory mode on this packet's
 graduated goals. Land the control-plane core, migration/projections, design
-gate, receipts/flow metrics, and static pulse-first HTML v1. Ratchet checks
-from advisory to blocking only after the pilot demonstrates affordable gates.
-React v2 remains a separately gated MAP candidate.
+gate, and receipts/flow metrics. Consume knowledge-surface-automation
+Workstream D's static pulse-first HTML v1 as an upstream dependency and pilot
+input. Ratchet checks from advisory to blocking only after the pilot
+demonstrates affordable gates. This packet's only dashboard candidate
+deliverable is the separately gated React v2.
 
 ## Solution Sketch
 
@@ -56,11 +58,14 @@ React v2 remains a separately gated MAP candidate.
    amendments. Separate deterministic `landed` from receipt-sealed `closed`.
    Observe approval wait, parked age, gate wall/cache rate, and amendment rate
    by tier.
-9. **Packets app v1.** Render one self-contained, read-only, pulse-first HTML
-   view from the same projector: runnable frontier/parallel groups, blocked-by
-   explanations, landed-not-closed work, and operator queue first; kanban, DAG,
-   roadmap, and markdown drill-in second. Git packets remain the sole system of
-   record.
+9. **Upstream v1 pilot and React v2 candidate.** Consume
+   knowledge-surface-automation Workstream D's self-contained, read-only,
+   pulse-first HTML v1 as the pilot input: runnable frontier/parallel groups,
+   blocked-by explanations, landed-not-closed work, and operator queue first;
+   kanban, DAG, roadmap, and markdown drill-in second. This packet may deliver
+   only the downstream React v2 candidate if daily v1 use proves an interaction
+   gap. Both renderers consume the same projector, and Git packets remain the
+   sole system of record.
 
 ## Rabbit Holes
 

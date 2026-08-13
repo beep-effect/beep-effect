@@ -27,7 +27,8 @@ layer, and provides local plus test/dev store Layers.
 
 ## Target Surfaces
 
-- `@beep/identity`: Fibered, IdentityRegistry interface, local layer
+- `@beep/identity`: Fibered, discrete pullback operation, IdentityRegistry
+  interface, local layer
 - `@beep/schema`: byte-identical `JSDocTagDefinition.make` migration
 - `@beep/semantic-web`: post-move SHACL projection and test/dev store Layers
 - Focused type, behavior, projection, and layer tests
@@ -47,6 +48,8 @@ layer, and provides local plus test/dev store Layers.
 
 - [ ] Fibered represents base, fibers, and section for the discrete case with
       type/behavior laws.
+- [ ] The discrete pullback operation is implemented and property-tested
+      without version, cartesian-lift, or coherence machinery.
 - [ ] JSDocTagDefinition migration is byte-identical.
 - [ ] IdentityRegistry resolves identity, IRI, and CURIE exactly through a
       local Layer.

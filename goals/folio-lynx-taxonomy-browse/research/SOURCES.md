@@ -39,11 +39,11 @@ remain next to the claims they support.
 
 | Lane | Report and external-citation ledger | Scope | Default disposition |
 | --- | --- | --- | --- |
-| 1 | [`01-metadata-ontologies.md`](./grok/01-metadata-ontologies.md#8-sources-canonical-urls) | metadata, bibliographic, citation, annotation, and provenance vocabularies | reference only unless a source has an explicit licensed disposition below |
-| 2 | [`02-legal-document-structure.md`](./grok/02-legal-document-structure.md#18-sources-appendix-url-ledger) | legal-document standards, patent XML/practice, and structure ontologies | reference only unless a source has an explicit licensed disposition below |
-| 3 | [`03-folio-and-legal-kg.md`](./grok/03-folio-and-legal-kg.md#12-source-ledger-non-exhaustive-but-load-bearing) | FOLIO, SALI, LKIF, Lynx, and live FOLIO API probes | reference only unless a source has an explicit licensed disposition below |
-| 4 | [`04-ontology-llm-integration.md`](./grok/04-ontology-llm-integration.md#9-source-index-urls-cited) | GraphRAG, MCP, constrained generation, and structure-aware retrieval | method/reference only |
-| 5 | [`05-x-and-practitioner-signal.md`](./grok/05-x-and-practitioner-signal.md) | practitioner signal cross-checked against primary project sources | signal only; primary sources govern claims |
+| 1 | [`01-metadata-ontologies.md`](../../../explorations/document-structure-ontologies/research/grok/01-metadata-ontologies.md#8-sources-canonical-urls) | metadata, bibliographic, citation, annotation, and provenance vocabularies | reference only unless a source has an explicit licensed disposition below |
+| 2 | [`02-legal-document-structure.md`](../../../explorations/document-structure-ontologies/research/grok/02-legal-document-structure.md#18-sources-appendix-url-ledger) | legal-document standards, patent XML/practice, and structure ontologies | reference only unless a source has an explicit licensed disposition below |
+| 3 | [`03-folio-and-legal-kg.md`](../../../explorations/document-structure-ontologies/research/grok/03-folio-and-legal-kg.md#12-source-ledger-non-exhaustive-but-load-bearing) | FOLIO, SALI, LKIF, Lynx, and live FOLIO API probes | reference only unless a source has an explicit licensed disposition below |
+| 4 | [`04-ontology-llm-integration.md`](../../../explorations/document-structure-ontologies/research/grok/04-ontology-llm-integration.md#9-source-index-urls-cited) | GraphRAG, MCP, constrained generation, and structure-aware retrieval | method/reference only |
+| 5 | [`05-x-and-practitioner-signal.md`](../../../explorations/document-structure-ontologies/research/grok/05-x-and-practitioner-signal.md) | practitioner signal cross-checked against primary project sources | signal only; primary sources govern claims |
 
 ## Key upstream artifacts surfaced by the sweep
 
