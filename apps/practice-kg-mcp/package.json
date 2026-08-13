@@ -21,6 +21,7 @@
     "beep:test": "bunx --bun vitest run --passWithNoTests",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
@@ -47,6 +48,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }
