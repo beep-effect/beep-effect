@@ -73,11 +73,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
   D1–D27 binds layering).
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  research-stage. Next open question: which candidate contract bricks already
-  exist in-repo, and which are net-new? See the packet's
-  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md),
-  [`SOURCES.md`](./typed-agent-skill-contracts/research/SOURCES.md), and
-  [`SYNTHESIS.md`](./typed-agent-skill-contracts/research/mining/SYNTHESIS.md).
+  graduate-stage, still active: spine graduated 2026-08-13 to
+  [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
+  (`@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
+  SKILL.md render-as-encode projection). Waves 2–6 (KG ingestion, ops ladder,
+  browser leases, memory routing, fleet protocols) remain candidates in
+  [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
+  [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
   research-stage: mine Harvey + Engram's open-sourced synthetic law firm
   (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
