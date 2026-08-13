@@ -243,8 +243,10 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         )
         .pipe(Effect.flip);
 
-      expect(refusal._tag).toBe("ProfessionalRuntimePromotionBlocked");
-      expect(refusal.subject.id).toBe("application-16138242");
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        subject: { id: "application-16138242" },
+      });
     })
   );
 
@@ -279,8 +281,10 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         )
         .pipe(Effect.flip);
 
-      expect(refusal._tag).toBe("ProfessionalRuntimePromotionBlocked");
-      expect(refusal.subject.id).toBe(blockingSubject.id);
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        subject: { id: blockingSubject.id },
+      });
     })
   );
 

@@ -159,3 +159,17 @@
   resolution.
 - **Disposition:** declared `drizzle-orm` as a db-admin development dependency;
   no regression-baseline exception was added.
+
+## CGF-012 — Package checks skipped the repository test-source compiler contract
+
+- **Doing:** completing exact-head Yeet verification after all package builds,
+  lints, and ordinary checks were green.
+- **Evidence:** `beep quality test-tsgo` found an `any` Effect context in a law
+  adapter fixture and two unnarrowed error-union property reads; the owning
+  packages' normal `check` scripts had already passed because their build-mode
+  configs did not exercise the same test-source contract.
+- **Would prevent it:** make each package's `check` script invoke the same
+  test-source TypeScript mode used by the repository aggregate, or expose a
+  changed-package form of `test-tsgo` for focused proof.
+- **Disposition:** explicitly typed the resolver fixture's Effect channel and
+  asserted the blocked-error shape without unsafe union property access.

@@ -38,7 +38,7 @@ const supportingLayers = Layer.mergeAll(
   Layer.succeed(
     CandorPromotionSubjectResolver,
     CandorPromotionSubjectResolver.of({
-      resolve: Effect.fn("CandorPromotionSubjectResolver.resolve")((candidate) =>
+      resolve: (candidate): Effect.Effect<CandorFilingScope, CandorPromotionSubjectResolutionError> =>
         candidate.tenantRef === request.tenantRef
           ? Effect.succeed(scope)
           : Effect.fail(
@@ -46,8 +46,7 @@ const supportingLayers = Layer.mergeAll(
                 reason: "tenant-mismatch",
                 request: candidate,
               })
-            )
-      ),
+            ),
     })
   ),
   Layer.succeed(
