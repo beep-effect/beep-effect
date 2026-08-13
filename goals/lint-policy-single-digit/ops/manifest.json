@@ -3,13 +3,13 @@
   "initiative": {
     "id": "lint-policy-single-digit",
     "title": "Lint Policy Single Digit",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
     "updated": "2026-08-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lint-policy-single-digit",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Drive the hosted Lint Policy required check from ~20 min to single-digit minutes with the full-scope proof intact: parallel deprecated-apis shards + LPT ordering now, oxlint-tsgolint engine swap behind hard parity/timing gates, PR changed-scope explicitly deferred.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -109,6 +109,16 @@
       "id": "no-architecture-decisions-entry",
       "decision": "No standards/architecture/DECISIONS.md entry; decisions are recorded here.",
       "rationale": "Reversible tooling/quality-gate work, not architecture-wide doctrine."
+    },
+    {
+      "id": "outer-3-after-cutover-disproven",
+      "decision": "With the engine swap disproven at P2, the operator unlocked outer step concurrency 2->3 (2026-08-13). The closeout PR's own hosted Lint Policy run is the memory-admission evidence; an OOM/exit-137 there reverts the constant before merge.",
+      "rationale": "Post-P1 the lane is sum-bound (~1124s total work): at outer 2 the floor is ~9.5 min regardless of the long pole. Outer 3 models ~8.3 min. The original lock assumed cutover would deliver the raise safely; cutover is dead, and the worst LPT co-resident trio (deprecated shards ~12-16 GiB, docgen, semantic-delta) fits the 64 GiB runner."
+    },
+    {
+      "id": "p2b-re-spike-precondition",
+      "decision": "Any future oxlint-tsgolint attempt starts with (1) assigning every allowDefaultProject file to a real tsconfig and (2) triaging the 13 oxlint-only existing-source findings; benchmarking again without those is wasted work.",
+      "rationale": "P2 evidence: timing passed while coverage and semantic parity failed structurally (history/p2-spike-2026-08-13.md, gates 2b and 4)."
     }
   ],
   "killedIdeas": [
@@ -129,26 +139,26 @@
     {
       "id": "P1",
       "name": "Phase-1 CLI speedup PR",
-      "status": "pending",
-      "exit": "Deprecated-apis shards run 4-wide with per-shard cache files and --cache-strategy content; lint-policy steps launch longest-first; scoped steps are omitted (not emitted with --include \"\") when their filtered changed set is empty; outer concurrency unchanged at 2; focused tests cover shard command construction and the empty-set plan; PR yeeted to mergeable; hosted Lint Policy job wall <= 9 min observed on the PR."
+      "status": "complete",
+      "exit": "SHIPPED PR #678 (main squash 642331b86c): 4-wide shards with per-shard content-strategy caches, LPT ordering, empty-scope step omission; outer concurrency held at 2. Hosted evidence: deprecated-apis 975s -> 435s, Lint Policy job 10m39s / 10m32s (jobs 94454948670, 94464070199) vs ~20 min baseline. The <=9 min acceptance was missed because the lane became sum-bound at outer 2; resolved by the closeout outer 2->3 unlock (this PR)."
     },
     {
       "id": "P2",
       "name": "Spike: oxlint-tsgolint behind gates",
-      "status": "pending",
-      "exit": "On a branch: oxlint-tsgolint installed, dedicated .oxlintrc profile, parity corpus (aliases/overloads/JSX/computed members/allowDefaultProject canaries) built and green or failures catalogued; cold full-scan wall + RSS measured on the heavy runner; temp standalone shadow workflow comparing normalized findings on main for one week. Go/no-go verdict recorded in history/."
+      "status": "complete",
+      "exit": "NO-GO verdict recorded in history/p2-spike-2026-08-13.md. Engagement + focused parity + timing passed (58.7s workstation full scan, ~18.5 GiB RSS); coverage FAILED (all 23 allowDefaultProject files receive no tsgolint program; 25 in-scope TS/TSX unmatched) and existing-source parity FAILED (13 oxlint-only findings on 7 files). Spike artifacts archived on local branch feat/lint-policy-oxlint-spike; never merge it. No shadow workflow was created."
     },
     {
       "id": "P3",
       "name": "Cutover PR (conditional on P2 gates)",
-      "status": "pending",
-      "exit": "Only if all three P2 gates pass: deprecated-apis becomes one oxlint --type-aware invocation, shard runner and ESLint deprecated profile removed, outer step concurrency raised to 4, shadow workflow deleted, dependency lands here; hosted lane <= 5 min observed. If any gate fails: record the verdict, keep shards as endgame, flip this phase to superseded."
+      "status": "superseded",
+      "exit": "NOT BUILT - P2 gates failed, so per the gate design no cutover, no outer-4, no shard removal. ESLint shards remain the endgame. Re-spike precondition (P2b, unscheduled backlog): assign the 23 default-project files to real tsconfigs and triage the 13 semantic diffs, then re-run all gates from scratch."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending",
-      "exit": "Packet lifecycle flipped and closeout reflection landed in the same PR as the final work; backlog items (docgen ownership move, PR changed-scope revisit) explicitly recorded as open levers."
+      "status": "complete",
+      "exit": "Closeout PR: outer step concurrency 2->3 (operator unlock 2026-08-13, superseding the outer-2-until-cutover lock now that cutover is disproven), lifecycle flip, and reflection history/reflections/2026-08-13-claude.md land together; backlog levers recorded (P2b re-spike precondition, docgen ownership move)."
     }
   ],
   "verificationCommands": [
@@ -164,5 +174,6 @@
     "Any change would touch .github/workflows/check.yml other than the temporary standalone shadow workflow file: stop and coordinate with the in-flight CI work first.",
     "Any change would make hosted and local `beep ci lane lint-policy` run different commands: stop; the parity invariant binds.",
     "Preserve unrelated user/worktree changes; never stage or commit files outside this packet and the named target surfaces."
-  ]
+  ],
+  "statusNote": "Closed 2026-08-13. Delivered: hosted Lint Policy ~20 min -> 10m32s (P1, PR #678) -> outer-3 raise in the closeout PR (modelled ~8.3 min; hosted number on that PR's own run). Engine swap disproven with a gate-driven NO-GO spike; shards remain the endgame. Open backlog: P2b re-spike precondition, docgen ownership move (next lever if the lane creeps), PR changed-scope (deferred by decision, design in research/04)."
 }
