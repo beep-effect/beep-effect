@@ -14,7 +14,8 @@ import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
 import { ExportResultCode } from "@opentelemetry/core";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { Context, Effect, flow, Layer, pipe } from "effect";
+import { Context, Effect, flow, Layer, pipe, Schedule } from "effect";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -339,6 +340,20 @@ const encodeOtlpExportJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtl
 
 const exportFailure = (message: string, cause: unknown): AiMetricsOtlpExportError =>
   AiMetricsOtlpExportError.make({ cause, message });
+
+const retryableOtlpExporterMessage = "Export failed with retryable status";
+
+const errorMessage = (cause: unknown): O.Option<string> =>
+  P.isError(cause)
+    ? O.some(cause.message)
+    : P.hasProperty(cause, "message") && P.isString(cause.message)
+      ? O.some(cause.message)
+      : O.none();
+
+const isRetryableOtlpExportError = (error: AiMetricsOtlpExportError): boolean =>
+  pipe(error.cause, errorMessage, O.exists(Eq.equals(retryableOtlpExporterMessage)));
+
+const otlpDeliveryRetrySchedule = Schedule.exponential("1 second").pipe(Schedule.jittered);
 
 const unknownMetadata = "unknown";
 
@@ -750,7 +765,11 @@ const deliverSpans = (
           ? Effect.void
           : Effect.fail(
               exportFailure(
-                "The AI metrics OTLP collector did not accept the exported spans.",
+                pipe(
+                  errorMessage(result.error),
+                  O.map((message) => `The AI metrics OTLP collector did not accept the exported spans: ${message}`),
+                  O.getOrElse(() => "The AI metrics OTLP collector did not accept the exported spans.")
+                ),
                 result.error ?? { exportResultCode: result.code }
               )
             )
@@ -882,7 +901,16 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
   yield* Effect.forEach(
     A.chunksOf(batch.projections, AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE),
     Effect.fnUntraced(function* (chunk) {
-      yield* sender.send(input, chunk);
+      // The SDK retries only inside one short request deadline. Phoenix reports a
+      // full ingest queue as retryable 503; retry the same uncheckpointed chunk
+      // with bounded exponential backoff after that deadline closes.
+      yield* sender.send(input, chunk).pipe(
+        Effect.retry({
+          schedule: otlpDeliveryRetrySchedule,
+          times: 5,
+          while: isRetryableOtlpExportError,
+        })
+      );
       yield* onChunkDelivered(chunk);
     }),
     { discard: true }
