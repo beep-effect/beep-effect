@@ -792,7 +792,13 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const resolve = resolveMirrorRootId.pipe(
       Effect.flatMap(decodeRemoteItemId),
       Effect.match({
-        onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
+        onFailure: () =>
+          DmsMirrorProbe.make({
+            connected: false,
+            disconnectReason: O.some("probe-failed"),
+            provider: "box",
+            rootRemoteId: O.none(),
+          }),
         onSuccess: (rootRemoteId) =>
           DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
       })

@@ -116,7 +116,14 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   };
 
   return (
-    <div className="shrink-0 border-t bg-background/80 p-3 backdrop-blur" data-testid="composer">
+    // Capped at half the chat surface: in a short dock panel the toolbar,
+    // editor, and send row otherwise consume the whole panel and starve the
+    // transcript to a ~20px strip (QA closeout P0). The transcript keeps the
+    // other half; overflow inside the composer scrolls internally.
+    <div
+      className="max-h-[50%] shrink-0 overflow-y-auto border-t bg-background/80 p-3 backdrop-blur"
+      data-testid="composer"
+    >
       {shell.isEditing ? (
         <div className="mb-2 flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
           <span>Editing message — sending will rewrite the thread from this point.</span>

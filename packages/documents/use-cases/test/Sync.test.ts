@@ -65,6 +65,7 @@ const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(1);
 const idleStatus = S.decodeSync(VaultSyncStatus)({
   conflictItems: 0,
   connected: false,
+  disconnectReason: "credentials-missing",
   currentItems: 0,
   cursorPosition: null,
   errorItems: 0,
@@ -154,6 +155,7 @@ describe("VaultSyncEngine port", () => {
     expect(S.encodeSync(VaultSyncStatus)(idleStatus)).toStrictEqual({
       conflictItems: 0,
       connected: false,
+      disconnectReason: "credentials-missing",
       currentItems: 0,
       cursorPosition: null,
       errorItems: 0,

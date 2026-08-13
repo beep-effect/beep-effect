@@ -273,7 +273,10 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
   root: SplitNode.make({
     splitId: SplitId.make("desktop-rows"),
     layout: VerticalSplitLayout.make({
-      topRatio: SplitRatio.make(6_600),
+      // 62/38 rather than 66/34: the bottom shell row hosts Chat, whose
+      // transcript was unreadable in the default split on short viewports
+      // (QA closeout P0). The ontology cluster keeps the majority share.
+      topRatio: SplitRatio.make(6_200),
       top: SplitNode.make({
         splitId: SplitId.make("desktop-ontology-columns"),
         layout: HorizontalSplitLayout.make({

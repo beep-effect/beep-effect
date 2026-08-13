@@ -35,6 +35,13 @@ export * from "./aggregates/Document/DocumentIntake.ts";
  */
 export * as Document from "./aggregates/Document/index.ts";
 /**
+ * Client-safe mirror disconnect reason export.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export { DmsMirrorDisconnectReason } from "./aggregates/Sync/DmsMirror.ts";
+/**
  * Vault sync use-case namespace exports.
  *
  * @category use-cases
