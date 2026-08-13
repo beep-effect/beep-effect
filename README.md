@@ -58,8 +58,12 @@ Only proof gets you across.
 ## What this is not
 
 - **Not a chatbot with a gavel emoji.** A confident model is not an attorney.
-- **Not a cloud SaaS.** Default path: nothing leaves the device. Embeddings
-  stay on-device. Privilege is not a Terms-of-Service checkbox.
+- **Not a cloud SaaS.** Practice files and the local store stay on the
+  machine. The current desktop default still calls a configured model
+  provider (Anthropic today) for chat turns and extraction when a key is
+  present — that is an explicit egress, not a silent vault upload.
+  Embeddings are intended on-device. Privilege is not a Terms-of-Service
+  checkbox.
 - **Not an autonomous lawyer.** Legal advice, filings, and anything a client
   sees wait behind an explicit approval gate.
 - **Not a replacement for email, billing, docketing, or the USPTO.** Those
@@ -159,7 +163,8 @@ This codebase uses Effect. All of it. v4, because the alternative is waiting
 for a newsletter to tell me the ecosystem moved.
 
 - No `async/await` in domain code
-- No `try/catch` anywhere
+- No `try/catch` in domain code. Boundaries may catch; they still surface
+  typed errors.
 - Dependency injection via Layers
 - Errors as values, typed and tracked
 - Schema as the source of truth for shape, codecs, and persistence

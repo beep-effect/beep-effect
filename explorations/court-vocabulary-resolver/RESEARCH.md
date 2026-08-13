@@ -320,9 +320,10 @@ ported resolver. Verified via `ls`/`rg` on 2026-06-29.
 
 - **Court/jurisdiction/reporter controlled vocabulary — NOT FOUND.** `rg` for
   `CourtJurisdictionCode|ReporterType|citation_string|CourtSystem|CourtLevel`
-  across `packages/law-practice/domain/src` and `@beep/courtlistener/src`
-  returned nothing; no `Court`/`Jurisdiction` entity dir in law-practice/domain.
-  The vocabularies are genuinely net-new.
+  across `packages/law-practice/domain/src` returned nothing; no
+  `Court`/`Jurisdiction` entity dir there. The CourtListener driver was
+  deleted 2026-08-13 — do not search a missing tree. The vocabularies are
+  genuinely net-new.
 
 - **courts-db dataset in `@beep/data` + a `targets/Courts.ts` sync target — NOT
   FOUND.** The `generated/` dir has only the four shipped datasets; no court
@@ -462,10 +463,10 @@ ported resolver. Verified via `ls`/`rg` on 2026-06-29.
 
 **Routing cautions.**
 
-- `@beep/courtlistener` driver is a **bare stub** (`@beep/courtlistener/src/index.ts`
-  exports only `VERSION`, verified) — building out the driver/API client is a
-  *different* packet (`gov-legal-data-driver-codegen`); this packet lands the
-  vocabulary + resolver in/alongside it but does not build the API client.
+- `@beep/courtlistener` was a **bare stub** and was deleted 2026-08-13.
+  Recreate the HTTP driver from `goals/honest-repo-signal/research/FOLLOW-UPS.md`
+  if a product pull needs it. This packet lands vocabulary + resolver only;
+  it does not own the API client.
 - The span-gate, exact-name fallback, and parent/child reduction are
   **verbatim-verified** but the precise `strip_punc` character class, the exact
   `gather_regexes` tuple order, and `parent`-field coverage across all 2,809 rows

@@ -254,10 +254,10 @@ open questions** — appetite and sequencing must size the net-new work, not jus
 
 ### Driver state (the gap this wedge fills)
 
-- **Four bare VERSION-only skeletons** (confirmed each `src/index.ts` exports
-  only `export const VERSION = "0.0.0" as const`):
-  `@beep/courtlistener`, `packages/drivers/ecfr`, `@beep/dol`,
-  `@beep/federal-register`. These are net-new builds.
+- **One remaining VERSION-only skeleton:** `packages/drivers/ecfr`.
+- **Deleted 2026-08-13** (do not extend; recreate when the owning goal
+  pulls): `@beep/courtlistener`, `@beep/dol`, `@beep/federal-register`.
+  Resume from [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md).
 - **`packages/drivers/govinfo` is PARTIAL — domain-only, 27 src files, no
   transport** (confirmed: `find … -name '*.service.ts' -o '*.config.ts' -o
   '*.client.ts'` returns nothing). It has `S.Class` value models

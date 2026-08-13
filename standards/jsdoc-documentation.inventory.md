@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 133 |
-| cleanPackages | 71 |
+| packages | 130 |
+| cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2477 |
-| publicExports | 16229 |
+| publicModules | 2474 |
+| publicExports | 16226 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |

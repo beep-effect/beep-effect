@@ -222,10 +222,11 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 
 ### Drivers & domain (compose at the boundary)
 
-- **`@beep/courtlistener` driver** — `@beep/courtlistener/src/index.ts`.
-  **Bare skeleton** (`VERSION = "0.0.0"` only; 1 src file), package license **MIT**. The
-  citation-lookup wrap is unbuilt here — this packet supplies it. (Tree-snapshot routes the
-  driver itself to `gov-legal-data-driver-codegen`; the citation-lookup slice to this packet.)
+- **`@beep/courtlistener` driver** — deleted 2026-08-13 (was a VERSION-only
+  MIT skeleton). Recreate when this packet's citation-lookup wrap is pulled;
+  see [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md).
+  (Tree-snapshot routed the driver to `gov-legal-data-driver-codegen`; the
+  citation-lookup slice stays here.)
 - **`@beep/anthropic` driver** — `packages/drivers/anthropic/src/`. The LLM driver to wire the
   Citations / `search_result` wire format through for native in-turn grounding.
 - **`@beep/agents-server` AssistantTurn kernel** — `packages/agents/server/src/AssistantTurn/`.
