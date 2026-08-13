@@ -11,6 +11,7 @@ import {
   CandorPolicy,
   CandorRecordReadError,
   CandorRecordReader,
+  CandorRecordSnapshot,
   UncoveredEvent,
 } from "@beep/law-practice-use-cases/CandorPolicy";
 import * as Shared from "@beep/shared-domain/identity/Shared";
@@ -52,8 +53,9 @@ const supportingLayers = Layer.mergeAll(
   Layer.succeed(
     CandorRecordReader,
     CandorRecordReader.of({
-      dispositionsForFiling: Effect.fn("CandorRecordReader.dispositionsForFiling")(() => Effect.succeed([])),
-      eventsForFiling: Effect.fn("CandorRecordReader.eventsForFiling")(() => Effect.succeed([])),
+      snapshotForFiling: Effect.fn("CandorRecordReader.snapshotForFiling")(() =>
+        Effect.succeed(CandorRecordSnapshot.make({ dispositions: [], events: [] }))
+      ),
     })
   ),
   Layer.succeed(
@@ -147,10 +149,9 @@ describe("CandorPromotionGate", () => {
               Layer.succeed(
                 CandorRecordReader,
                 CandorRecordReader.of({
-                  dispositionsForFiling: Effect.fn("CandorRecordReader.dispositionsForFiling")(() =>
-                    Effect.succeed([])
+                  snapshotForFiling: Effect.fn("CandorRecordReader.snapshotForFiling")(() =>
+                    Effect.succeed(CandorRecordSnapshot.make({ dispositions: [], events: [] }))
                   ),
-                  eventsForFiling: Effect.fn("CandorRecordReader.eventsForFiling")(() => Effect.succeed([])),
                 })
               ),
               Layer.succeed(
@@ -198,7 +199,7 @@ describe("CandorPromotionGate", () => {
                 CandorPolicy,
                 CandorPolicy.of({
                   evaluate: Effect.fn("CandorPolicy.evaluate")(() =>
-                    Effect.fail(CandorRecordReadError.fromReason("events-unavailable", "record unavailable"))
+                    Effect.fail(CandorRecordReadError.fromReason("snapshot-unavailable", "record unavailable"))
                   ),
                 })
               )

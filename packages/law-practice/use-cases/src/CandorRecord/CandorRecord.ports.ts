@@ -15,6 +15,7 @@ import { Context } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CandorFilingScope } from "../CandorPolicy/CandorPolicy.values.ts";
+import type { CandorRecordSnapshot } from "../CandorPolicy/CandorPolicy.ports.ts";
 
 const $I = $LawPracticeUseCasesId.create("CandorRecord/CandorRecord.ports");
 const CandorRecordOperationBase = LiteralKit([
@@ -24,6 +25,7 @@ const CandorRecordOperationBase = LiteralKit([
   "listEvents",
   "listDispositions",
   "listSubmissionFacts",
+  "readSnapshot",
 ]);
 
 /**
@@ -170,6 +172,7 @@ export class CandorRecordRepositoryUnavailable extends TaggedErrorClass<CandorRe
  * **Example** (Build an empty in-memory repository)
  *
  * ```ts
+ * import { CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord"
  * import { Effect } from "effect"
  *
@@ -180,6 +183,9 @@ export class CandorRecordRepositoryUnavailable extends TaggedErrorClass<CandorRe
  *   recordDisposition: (disposition) => Effect.succeed(disposition),
  *   recordEvent: (event) => Effect.succeed(event),
  *   recordSubmissionFact: (fact) => Effect.succeed(fact),
+ *   readSnapshot: () => Effect.succeed(
+ *     CandorRecordSnapshot.make({ dispositions: [], events: [] })
+ *   ),
  * })
  *
  * console.log(typeof repository.recordEvent) // "function"
@@ -226,6 +232,12 @@ export class CandorRecordRepositoryShape extends S.Class<CandorRecordRepositoryS
     }).annotateKey({
       description: "Append one information-disclosure submission act with its own operative date.",
     }),
+    readSnapshot: Fn({
+      input: CandorFilingScope,
+      output: EffectSchema<CandorRecordSnapshot, CandorRecordRepositoryUnavailable, never>(),
+    }).annotateKey({
+      description: "Read a filing's citation events and dispositions from one protected snapshot.",
+    }),
   },
   $I.annote("CandorRecordRepositoryShape", {
     description: "Append-and-read-only service shape over durable candor records for one filing.",
@@ -244,7 +256,7 @@ export class CandorRecordRepositoryShape extends S.Class<CandorRecordRepositoryS
  *
  * ```ts
  * import { CandorRecordRepository, CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord"
- * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
+ * import { CandorFilingScope, CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { Effect } from "effect"
@@ -270,6 +282,9 @@ export class CandorRecordRepositoryShape extends S.Class<CandorRecordRepositoryS
  *       recordDisposition: (disposition) => Effect.succeed(disposition),
  *       recordEvent: (event) => Effect.succeed(event),
  *       recordSubmissionFact: (fact) => Effect.succeed(fact),
+ *       readSnapshot: () => Effect.succeed(
+ *         CandorRecordSnapshot.make({ dispositions: [], events: [] })
+ *       ),
  *     })
  *   )
  * )

@@ -18,7 +18,7 @@ import { PromotionGate } from "@beep/shared-use-cases/server";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Ref, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -213,6 +213,43 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         .pipe(Effect.flip);
 
       expect(refusal._tag).toBe("ProfessionalRuntimePromotionBlocked");
+    })
+  );
+
+  it.effect("rechecks a clear promotion decision immediately before acceptance", () =>
+    Effect.gen(function* () {
+      const outputSet = yield* runRuntimeFixture(lawFixture);
+      const evaluations = yield* Ref.make(0);
+      const gate = PromotionGate.of({
+        evaluate: Effect.fn("PromotionGate.evaluate")(() =>
+          Ref.getAndUpdate(evaluations, (count) => count + 1).pipe(
+            Effect.map((count) =>
+              count === 0
+                ? PromotionGateVerdict.cases.clear.make({})
+                : PromotionGateVerdict.cases.blocked.make({
+                    reason: PromotionBlockReason.make("vertical-policy-revision-advanced"),
+                  })
+            )
+          )
+        ),
+      });
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: gate });
+
+      const refusal = yield* sdk
+        .proposeCandidateOutputSet(
+          ProposeCandidateOutputSet.make({
+            outputSet,
+            producedByPrincipalId: "principal-agent-runtime-fixture",
+            scope: lawScope,
+          })
+        )
+        .pipe(Effect.flip);
+
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        reason: "vertical-policy-revision-advanced",
+      });
+      expect(yield* Ref.get(evaluations)).toBe(2);
     })
   );
 

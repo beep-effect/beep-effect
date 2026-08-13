@@ -10,7 +10,7 @@ import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.errors");
-const CandorRecordReadReasonBase = LiteralKit(["events-unavailable", "dispositions-unavailable"]);
+const CandorRecordReadReasonBase = LiteralKit(["snapshot-unavailable"]);
 
 /**
  * Machine-readable reason the recorded candor material could not be read.
@@ -20,7 +20,7 @@ const CandorRecordReadReasonBase = LiteralKit(["events-unavailable", "dispositio
  * ```ts
  * import { CandorRecordReadReason } from "@beep/law-practice-use-cases/CandorPolicy"
  *
- * console.log(CandorRecordReadReason.is["events-unavailable"]("events-unavailable")) // true
+ * console.log(CandorRecordReadReason.is["snapshot-unavailable"]("snapshot-unavailable")) // true
  * ```
  *
  * @category errors
@@ -28,7 +28,7 @@ const CandorRecordReadReasonBase = LiteralKit(["events-unavailable", "dispositio
  */
 export const CandorRecordReadReason = CandorRecordReadReasonBase.pipe(
   $I.annoteSchema("CandorRecordReadReason", {
-    description: "Machine-readable reason the recorded events or dispositions could not be read.",
+    description: "Machine-readable reason the protected candor-record snapshot could not be read.",
   }),
   SchemaUtils.withLiteralKitStatics(CandorRecordReadReasonBase)
 );
@@ -58,10 +58,10 @@ export type CandorRecordReadReason = typeof CandorRecordReadReason.Type;
  * import { CandorRecordReadError } from "@beep/law-practice-use-cases/CandorPolicy"
  *
  * const error = CandorRecordReadError.fromReason(
- *   "events-unavailable",
- *   "Citation event store did not answer."
+ *   "snapshot-unavailable",
+ *   "Candor record store did not answer."
  * )
- * console.log(error.reason) // "events-unavailable"
+ * console.log(error.reason) // "snapshot-unavailable"
  * ```
  *
  * @category errors

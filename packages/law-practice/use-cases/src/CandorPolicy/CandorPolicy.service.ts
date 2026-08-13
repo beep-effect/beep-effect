@@ -41,6 +41,8 @@ const IdentifiedPatentReference = PatentReference.pipe(
 );
 const isIdentifiedPatentReference = S.is(IdentifiedPatentReference);
 const samePatentReference = S.toEquivalence(PatentReference);
+const CitationLineageKey = S.Struct({ reference: PatentReference, sourceRef: S.String });
+const encodeCitationLineageKey = S.encodeSync(S.fromJsonString(CitationLineageKey));
 const sameIdentifiedPatentReference = (head: PatentReference, candidate: PatentReference): boolean =>
   isIdentifiedPatentReference(head) && samePatentReference(head, candidate);
 
@@ -233,8 +235,9 @@ const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
  *
  * Events are deduplicated by id before anything else, so redelivering a record
  * that was already recorded cannot move a head or change a verdict. Grouping is
- * by `sourceRef`, the version-independent logical-source key, because currency
- * is a question about one source's observations.
+ * by `sourceRef` and the parsed patent reference. Currency is a question about
+ * successive observations of one cited document, not every citation that an
+ * examiner happened to record in the same prosecution document.
  *
  * **Example** (Evaluate through the constructed shape)
  *
@@ -252,13 +255,17 @@ export const makeCandorPolicy = (): CandorPolicyShape =>
   CandorPolicyShape.make({
     evaluate: Effect.fn("CandorPolicy.evaluate")(function* (scope: CandorFilingScope) {
       const reader = yield* CandorRecordReader;
-      const recorded = yield* reader.eventsForFiling(scope);
-      const dispositions = yield* reader.dispositionsForFiling(scope);
+      const snapshot = yield* reader.snapshotForFiling(scope);
 
-      const events = A.dedupeWith(recorded, (left, right) => left.id === right.id);
-      const groups = A.groupBy(events, (event) => event.grounding.source.sourceRef);
+      const events = A.dedupeWith(snapshot.events, (left, right) => left.id === right.id);
+      const groups = A.groupBy(events, (event) =>
+        encodeCitationLineageKey({
+          reference: event.reference,
+          sourceRef: event.grounding.source.sourceRef,
+        })
+      );
 
-      const uncovered = yield* Effect.forEach(R.values(groups), (group) => evaluateGroup(group, dispositions));
+      const uncovered = yield* Effect.forEach(R.values(groups), (group) => evaluateGroup(group, snapshot.dispositions));
 
       return CandorGateVerdict.make({
         scope,

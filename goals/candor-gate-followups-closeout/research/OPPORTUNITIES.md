@@ -215,3 +215,18 @@
 - **Disposition:** changed only the valid typed inputs to `decodeOption` and
   `decodeSync`; invalid wire-value regressions retain unknown decoding. The
   731-file strict compiler and both owning package suites pass locally.
+
+## CGF-016 — Pre-publication review missed lineage and read-snapshot races
+
+- **Doing:** answering the first hosted review of the candor closeout PR.
+- **Evidence:** two P1 threads showed that grouping only by prosecution-source
+  identity made independent citations look like competing lineage heads, and
+  that separate event/disposition selects could derive a clear verdict from
+  different database moments.
+- **Would prevent it:** include a same-source/multiple-reference fixture in the
+  policy matrix and require decision services that combine append-only streams
+  to declare their read-consistency and acceptance-time revision strategy.
+- **Disposition:** lineage now keys both logical source and parsed patent
+  reference; the reader consumes one read-only repeatable-read repository
+  snapshot, and candidate acceptance immediately re-evaluates the vertical gate.
+  Focused policy, repository, server, and agent-runtime suites pass.

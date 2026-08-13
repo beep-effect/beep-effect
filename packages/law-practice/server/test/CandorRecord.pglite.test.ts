@@ -335,12 +335,15 @@ if (!shouldRunPgliteIntegration) {
           const events = yield* repository.listEvents(filingA);
           const dispositions = yield* repository.listDispositions(filingA);
           const submissionFacts = yield* repository.listSubmissionFacts(filingA);
+          const snapshot = yield* repository.readSnapshot(filingA);
 
           // The database, not the fixture, assigned these ids; the append
           // returned the stored row, so the read must match it exactly.
           expect(ids(events)).toEqual([filed.event.id]);
           expect(ids(dispositions)).toEqual([filed.disposition.id]);
           expect(ids(submissionFacts)).toEqual([filed.submissionFact.id]);
+          expect(ids(snapshot.events)).toEqual([filed.event.id]);
+          expect(ids(snapshot.dispositions)).toEqual([filed.disposition.id]);
 
           // Round-tripping the recorded surface, not just the row count: what
           // came back out of jsonb must still be the observation that went in.
@@ -468,9 +471,9 @@ if (!shouldRunPgliteIntegration) {
           // Intentional failure last: no migration has run in this database, so
           // the physical table does not exist. A read that swallowed this would
           // let the gate report "not blocked" for a filing it never checked.
-          const failure = yield* Effect.flip(repository.listEvents(filing));
+          const failure = yield* Effect.flip(repository.readSnapshot(filing));
 
-          expect(failure.operation).toBe("listEvents");
+          expect(failure.operation).toBe("readSnapshot");
           expect(failure.reason).toContain("law_practice_patent_citation_event");
         }),
         PgliteIntegrationTimeout

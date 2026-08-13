@@ -216,10 +216,13 @@ describe("@beep/law-practice-server candor record repository", () => {
         const events = yield* repository.listEvents(filing);
         const dispositions = yield* repository.listDispositions(filing);
         const submissionFacts = yield* repository.listSubmissionFacts(filing);
+        const snapshot = yield* repository.readSnapshot(filing);
 
         expect(ids(events)).toEqual([1]);
         expect(ids(dispositions)).toEqual([101]);
         expect(ids(submissionFacts)).toEqual([201]);
+        expect(ids(snapshot.events)).toEqual([1]);
+        expect(ids(snapshot.dispositions)).toEqual([101]);
 
         // Round-tripping the recorded surface, not just the row count: the
         // disposition must still name the exact observation it answers.

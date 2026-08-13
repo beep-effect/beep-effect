@@ -194,7 +194,7 @@ const requirePromotionClear = Effect.fn("agents.professional_runtime.require_pro
   command: ProposeCandidateOutputSet,
   promotionSubjects: RuntimeFixtureInput["promotionSubjects"]
 ) {
-  yield* Effect.forEach(
+  const evaluateSubjects = Effect.forEach(
     promotionSubjects,
     (subject) =>
       gate
@@ -217,6 +217,13 @@ const requirePromotionClear = Effect.fn("agents.professional_runtime.require_pro
         ),
     { discard: true }
   );
+
+  // The first pass establishes policy clearance before acceptance work. The
+  // second pass is the acceptance-time revision check: vertical gates must
+  // re-read their authority, so a citation appended during the first pass is
+  // visible before this function returns an accepted candidate.
+  yield* evaluateSubjects;
+  yield* evaluateSubjects;
 
   yield* Effect.annotateCurrentSpan({ "agents.professional_runtime.promotion_outcome": "clear" });
 });

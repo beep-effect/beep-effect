@@ -19,6 +19,7 @@ import {
   CandorPolicyLive,
   CandorRecordReader,
   CandorRecordReaderShape,
+  CandorRecordSnapshot,
 } from "@beep/law-practice-use-cases/CandorPolicy";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -181,8 +182,8 @@ const readerLayer = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>
     CandorRecordReader,
     Effect.map(build, (fixture) =>
       CandorRecordReaderShape.make({
-        dispositionsForFiling: () => Effect.succeed(fixture.dispositions),
-        eventsForFiling: () => Effect.succeed(fixture.events),
+        snapshotForFiling: () =>
+          Effect.succeed(CandorRecordSnapshot.make({ dispositions: fixture.dispositions, events: fixture.events })),
       })
     )
   );
@@ -314,6 +315,17 @@ const foreignReferenceSupersession = Effect.fnUntraced(function* () {
       yield* eventFixture(2, newer, { reference: "9999999", supersedes: targets(1, older) }),
     ],
     sources: [sourceEntry(older), sourceEntry(newer)],
+  } satisfies Fixture;
+});
+
+/** Two separately identified citations happen to share one prosecution source. */
+const independentReferencesSameSource = Effect.fnUntraced(function* () {
+  const first = yield* observation("a", TEXT_A);
+  const second = yield* observation("a", TEXT_A2);
+  return {
+    dispositions: [yield* dispositionFixture(10, targets(1, first)), yield* dispositionFixture(11, targets(2, second))],
+    events: [yield* eventFixture(1, first), yield* eventFixture(2, second, { reference: "9999999" })],
+    sources: [sourceEntry(first), sourceEntry(second)],
   } satisfies Fixture;
 });
 
@@ -547,8 +559,16 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
     it.effect("does not release an AI citation through a foreign reference's disposition", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
-        expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
-        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+        expectBlocked(verdict, ["no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1]);
+      })
+    );
+  });
+
+  layer(scenario(independentReferencesSameSource()))((it) => {
+    it.effect("releases two independently disposed citations recorded in one prosecution source", () =>
+      Effect.gen(function* () {
+        expectReleased(yield* evaluateFiling());
       })
     );
   });
