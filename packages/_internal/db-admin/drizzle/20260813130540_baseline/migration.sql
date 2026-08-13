@@ -122,6 +122,43 @@ CREATE TABLE "documents_sync_operation" (
 	"public_id" text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "epistemic_candidate_claim" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"fixture_key" text NOT NULL,
+	"lifecycle" text NOT NULL,
+	"snapshot" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_claim_disposition" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"claim_id" integer NOT NULL,
+	"reason" text NOT NULL,
+	"resolved_at" bigint NOT NULL,
+	"resolved_by" jsonb NOT NULL,
+	"status" text NOT NULL,
+	"violations" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "epistemic_contradiction_candidate" (
 	"created_at" bigint NOT NULL,
 	"created_by_principal" jsonb NOT NULL,
@@ -180,6 +217,59 @@ CREATE TABLE "epistemic_contradiction_receipt" (
 	"public_id" text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "epistemic_edge_version" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"evidence_scope" text,
+	"expired_at" bigint,
+	"fact" jsonb NOT NULL,
+	"logical_key" text NOT NULL,
+	"matter_scope" text,
+	"qualifiers" jsonb NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"relation" text NOT NULL,
+	"source_claim_id" integer,
+	"source_entity_ref" text,
+	"source_evidence_id" integer,
+	"source_kind" text NOT NULL,
+	"source_observation_ref" text,
+	"supersedes_id" integer,
+	"target_claim_id" integer,
+	"target_entity_ref" text,
+	"target_evidence_id" integer,
+	"target_kind" text NOT NULL,
+	"target_observation_ref" text,
+	"valid_from" bigint NOT NULL,
+	"valid_to" bigint,
+	"version" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_evidence" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"artifact_fixture_key" text NOT NULL,
+	"span_fixture_key" text NOT NULL,
+	"span" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "epistemic_evidence_verification" (
 	"created_at" bigint NOT NULL,
 	"created_by_principal" jsonb NOT NULL,
@@ -195,6 +285,31 @@ CREATE TABLE "epistemic_evidence_verification" (
 	"entity_type" text NOT NULL,
 	"id" serial PRIMARY KEY,
 	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_execution_decision" (
+	"run_key" text NOT NULL,
+	"seq" integer NOT NULL,
+	"prev_hash" text,
+	"hash" text NOT NULL,
+	"verdict" text NOT NULL,
+	"reason" text,
+	"operation_digest" text NOT NULL,
+	"sink_class" text NOT NULL,
+	"audience" text NOT NULL,
+	"destination_digest" text NOT NULL,
+	"grant_set_digest" text NOT NULL,
+	"policy_revision" text NOT NULL,
+	"decided_at" bigint NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_execution_outcome" (
+	"run_key" text NOT NULL,
+	"decision_hash" text PRIMARY KEY,
+	"decision_verdict" text DEFAULT 'allowed' NOT NULL,
+	"settlement" text NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"hash" text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "epistemic_usage_record" (
@@ -493,6 +608,12 @@ CREATE INDEX "documents_sync_operation_status_lookup_idx" ON "documents_sync_ope
 CREATE INDEX "documents_sync_operation_sync_item_id_lookup_idx" ON "documents_sync_operation" ("sync_item_id");--> statement-breakpoint
 CREATE INDEX "documents_sync_operation_workspace_id_btree_idx" ON "documents_sync_operation" ("workspace_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "documents_sync_operation_public_id_unique_idx" ON "documents_sync_operation" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_candidate_claim_org_id_btree_idx" ON "epistemic_candidate_claim" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_candidate_claim_source_btree_idx" ON "epistemic_candidate_claim" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_candidate_claim_public_id_unique_idx" ON "epistemic_candidate_claim" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_claim_disposition_org_id_btree_idx" ON "epistemic_claim_disposition" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_claim_disposition_source_btree_idx" ON "epistemic_claim_disposition" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_claim_disposition_public_id_unique_idx" ON "epistemic_claim_disposition" ("public_id");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_org_id_btree_idx" ON "epistemic_contradiction_candidate" ("org_id");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_source_btree_idx" ON "epistemic_contradiction_candidate" ("source");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_candidate_recorded_at_btree_idx" ON "epistemic_contradiction_candidate" ("recorded_at");--> statement-breakpoint
@@ -506,6 +627,12 @@ CREATE INDEX "epistemic_contradiction_receipt_org_id_btree_idx" ON "epistemic_co
 CREATE INDEX "epistemic_contradiction_receipt_source_btree_idx" ON "epistemic_contradiction_receipt" ("source");--> statement-breakpoint
 CREATE INDEX "epistemic_contradiction_receipt_candidate_id_btree_idx" ON "epistemic_contradiction_receipt" ("candidate_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "epistemic_contradiction_receipt_public_id_unique_idx" ON "epistemic_contradiction_receipt" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_edge_version_org_id_btree_idx" ON "epistemic_edge_version" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_edge_version_source_btree_idx" ON "epistemic_edge_version" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_edge_version_public_id_unique_idx" ON "epistemic_edge_version" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_org_id_btree_idx" ON "epistemic_evidence" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_source_btree_idx" ON "epistemic_evidence" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_evidence_public_id_unique_idx" ON "epistemic_evidence" ("public_id");--> statement-breakpoint
 CREATE INDEX "epistemic_evidence_verification_org_id_btree_idx" ON "epistemic_evidence_verification" ("org_id");--> statement-breakpoint
 CREATE INDEX "epistemic_evidence_verification_source_btree_idx" ON "epistemic_evidence_verification" ("source");--> statement-breakpoint
 CREATE UNIQUE INDEX "epistemic_evidence_verification_public_id_unique_idx" ON "epistemic_evidence_verification" ("public_id");--> statement-breakpoint

@@ -21,6 +21,19 @@ const AiMetricsFileInventoryOperation = LiteralKit(["inspect", "read"]).pipe(
 /**
  * Failure to inspect a file or read a directory while building an AI metrics file inventory.
  *
+ * **Example** (Construct a file inventory error)
+ *
+ * ```ts
+ * import { AiMetricsFileInventoryError } from "@beep/repo-ai-metrics/file-inventory"
+ *
+ * const error = AiMetricsFileInventoryError.make({
+ *   cause: new Error("permission denied"),
+ *   operation: "inspect"
+ * })
+ *
+ * console.log(error.operation)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */

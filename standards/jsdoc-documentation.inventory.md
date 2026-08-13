@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-13T10:52:13.373Z
+Generated: 2026-08-13T15:30:51.655Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 70 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2470 |
-| publicExports | 16209 |
+| publicModules | 2472 |
+| publicExports | 16221 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |
@@ -66,7 +66,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 9 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 42 | 0 | 0 |
 | 10 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 62 | 8 | 4 |
 | 11 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 19 | 71 | 1 | 0 |
-| 12 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 40 | 2 | 0 |
+| 12 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
 | 13 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 263 | 3 | 2 |
 | 14 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 15 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 17 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 18 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 19 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 20 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 178 | 1352 | 46 | 10 |
+| 20 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 178 | 1353 | 46 | 10 |
 | 21 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 22 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 23 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -113,14 +113,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 803 | 51 | 36 |
 | 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 252 | 4 | 0 |
-| 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 5 | 10 | 0 | 0 |
+| 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 6 | 11 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 107 | 4 | 0 |
 | 62 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
 | 63 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
 | 64 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 65 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 207 | 4 | 1 |
-| 66 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 21 | 322 | 0 | 0 |
+| 66 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 325 | 0 | 0 |
 | 67 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 68 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
 | 69 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
@@ -145,7 +145,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 88 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 89 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 412 | 0 | 0 |
 | 90 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 9 | 0 |
-| 91 | `@beep/infra` | `infra` | needs-remediation | 10 | 100 | 3 | 23 |
+| 91 | `@beep/infra` | `infra` | needs-remediation | 10 | 101 | 3 | 23 |
 | 92 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 93 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 94 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
@@ -364,7 +364,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:412` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:610` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:635` `runBunAudit` (const) - 1 documentation section/link violation(s)
 
 ### @beep/pglite
 

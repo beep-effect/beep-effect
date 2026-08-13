@@ -11,6 +11,15 @@ import { Effect, Layer } from "effect";
 /**
  * Run a practice KG executable through the shared Bun service boundary when its module is the process entrypoint.
  *
+ * **Example** (Run a program when the module is the entrypoint)
+ *
+ * ```ts
+ * import { runEntrypoint } from "@beep/practice-kg-mcp/entrypoint"
+ * import { Effect } from "effect"
+ *
+ * runEntrypoint({ isMain: false, program: Effect.void })
+ * ```
+ *
  * @param input - Entrypoint status and Effect program.
  * @category utilities
  * @since 0.0.0
