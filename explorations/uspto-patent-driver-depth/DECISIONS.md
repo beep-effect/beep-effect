@@ -209,3 +209,14 @@ the applications endpoint before admitting a public method.
 
 Prove one authoritative retrieval route and checksum stability for the generated
 application-status, OA-event, document-code, and `PTMNFEE2`-event artifacts.
+
+## 2026-08-13 — Holding-pen graduation convention — LOCKED
+
+**Answer:** Graduate the packet now that its two promised-now goals exist. Keep
+`uspto-search-structured`, `epo-driver`,
+`google-patents-bigquery-driver`, and the SerpApi lane in `MAP.md` as re-entry
+points. A fired spike or consumer gate reopens this packet at `decompose`; it
+does not spawn a goal directly.
+
+**Rationale:** Spike-gated, consumer-pulled, and parked provider lanes preserve
+future routing without holding the official USPTO-depth exploration open.
