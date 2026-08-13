@@ -453,8 +453,17 @@
   image. Local runs and earlier hosted waves of the same content passed, so
   content is exonerated. This also retro-explains the previously recorded
   "fleet Docgen silent-hang" flake.
-- **Fix identified:** have the docgen:local CLI path force a clean
-  `process.exit(0)` after flushing output on success (and `exit(1)` on
-  failure) so bun's broken teardown never runs — removes both the crash and
-  hang modes for every future wave. Belongs to repo-cli; queued as a
-  follow-up alongside this receipt.
+- **Root cause (validated against the checked-in v4 source):** the platform
+  `runMain` observer only calls `process.exit` on failure or signal —
+  `if (receivedSignal || code !== 0)` — so a successful Effect CLI process
+  relies on the event loop draining, and one leaked handle (turbo daemon
+  socket, stuck bunx wrapper) keeps bun alive forever or trips its teardown
+  into SIGABRT. Exactly matches the field signature: failures always exit
+  promptly, successes wedge. Lint Policy reproduced the same class on a
+  hosted runner (five orphaned bun children reaped at cancellation), so this
+  is runtime-wide, not fleet-image-specific.
+- **Fix shipped:** both Effect CLI entrypoints (repo-cli `bin-main`, the
+  docgen bin) now exit explicitly on success in their teardown after
+  `Runtime.defaultTeardown`; the docgen:local turbo spawn also dropped its
+  resident bunx layer and runs `--daemon=false`. Upstream question for
+  effect: should the shared runner exit on success by default?
