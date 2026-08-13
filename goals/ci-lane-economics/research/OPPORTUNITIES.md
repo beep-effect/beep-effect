@@ -169,3 +169,17 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** make cold-build repeatability a first-class CI
   probe and automatically retry this diagnostic signature once before
   classifying it as a deterministic source failure.
+
+## 2026-08-13 — Turbo concurrency did not bound Vitest worker fan-out
+
+- **Doing:** admitting the four-shard Coverage Regression candidate on the
+  existing eight-vCPU fleet runner.
+- **Evidence:** PR #698 job `94608048289` took 24m10s and failed. Three mixed
+  shards passed in 15m30s-16m46s; the shard containing `@beep/repo-cli` took
+  19m13s and failed ten explicit 5-second timeout tests plus one 1-second
+  timing assertion. Although each shard used Turbo concurrency one, every
+  package-local Vitest process could still size its worker pool from the whole
+  host, oversubscribing four co-resident shards.
+- **Would have prevented it:** treat subprocess worker pools as part of the
+  lane's aggregate concurrency budget and pass an explicit per-shard Vitest
+  worker cap derived from host vCPUs divided by shard count.

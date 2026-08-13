@@ -38,7 +38,9 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
 1. Clean stale coverage outputs once.
 2. Prebuild the workspace once with the existing fleet concurrency of four.
 3. Run coverage with `turbo run coverage --only` in four concurrent,
-   single-task shards, so dependency builds are neither skipped nor repeated.
+   single-task shards, capping each Vitest process at two workers so aggregate
+   test fan-out fits the fleet worker's eight vCPUs; dependency builds are
+   neither skipped nor repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
 
@@ -62,8 +64,21 @@ All five candidate shards completed without shutdown or OOM in 5m00s, 5m01s,
 summaries. Live fleet job `94583467537` then rejected that five-way shape: the
 job passed correctness in 22m18s, but the four mixed shards took 14m59s to
 15m54s and the isolated `@beep/repo-cli` shard took 20m16s under aggregate
-five-way contention. The revised four-shard candidate matches the fleet's
-accepted Turbo concurrency instead of exceeding it.
+five-way contention. The first four-shard fleet attempt, job `94608048289`,
+then ran for 24m10s and failed: its three mixed shards passed in
+15m30s-16m46s, while the `@beep/repo-cli` shard took 19m13s and produced ten
+5-second timeout failures plus one 1-second timing-bound failure. One Turbo
+task per shard did not bound the Vitest subprocesses, so four packages could
+still size worker pools from the same eight-vCPU host. The revised candidate
+preserves four weighted shards but caps each Vitest pool at two workers,
+bounding aggregate test fan-out at the host's CPU count. A focused local
+coverage run under that cap passed all 90 `@beep/repo-cli` files and 1,492
+tests (five skipped) in 6m55s without the hosted timeout failures. The forced
+full local path then passed with remote cache disabled: the one-time prebuild
+took 23 seconds, the four shards completed 5, 32, 44, and 44 tasks in 8m32s,
+8m06s, 9m06s, and 9m40s, and the ratchet compared all 124 summaries. That is
+the candidate submitted for live fleet admission; local timing alone does not
+satisfy the hosted wall-time gate.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

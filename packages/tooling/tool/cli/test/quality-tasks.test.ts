@@ -1587,6 +1587,7 @@ describe("quality task adapter", () => {
         expect(step.args).toContain("--force");
         expect(step.args).toContain("--remote-only");
         expect(step.args).toContain("--output-logs=errors-only");
+        expect(A.takeRight(step.args, 2)).toEqual(["--", "--maxWorkers=2"]);
         expect(step.args).not.toContain("--concurrency=4");
         expect(step.args).not.toContain("9");
       }

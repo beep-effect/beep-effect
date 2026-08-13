@@ -114,6 +114,10 @@ const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // coverage processes made the isolated repo-cli long pole slower than the
 // 20-minute job charter on live fleet hardware.
 const COVERAGE_FULL_SHARD_COUNT = 4;
+// Each shard owns one Turbo task at a time, but Vitest otherwise sizes its
+// worker pool from the whole 8-vCPU host. Bound each pool so four shards cannot
+// oversubscribe the runner and starve repo-cli's intentionally sequential suite.
+const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -1325,6 +1329,8 @@ const coverageFullShardStep = (
         "--summarize",
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
+        "--",
+        COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
       ]
     ),
     cwd,
