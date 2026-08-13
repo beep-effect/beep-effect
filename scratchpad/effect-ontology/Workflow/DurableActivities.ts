@@ -43,11 +43,7 @@ import type {
   ResolutionActivityInput,
   ValidationActivityInput,
 } from "../Domain/Schema/Batch.ts";
-import {
-  BatchManifest,
-  ValidationActivityOutput,
-  ValidationActivityViolationSummary,
-} from "../Domain/Schema/Batch.ts";
+import { BatchManifest, ValidationActivityOutput, ValidationActivityViolationSummary } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingActivityInput } from "../Domain/Schema/DocumentMetadata.ts";
 import {
   ChunkingStrategy,
@@ -146,10 +142,7 @@ const requireContent = (opt: O.Option<string>, key: string) =>
   });
 
 const summarizeViolations = (violations: ReadonlyArray<ShaclViolation>) => {
-  const grouped = MutableHashMap.empty<
-    ShaclViolation["severity"],
-    { count: number; sampleMessages: Array<string> }
-  >();
+  const grouped = MutableHashMap.empty<ShaclViolation["severity"], { count: number; sampleMessages: Array<string> }>();
 
   for (const violation of violations) {
     const entry = O.getOrElse(
@@ -687,16 +680,14 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       const namespaceCanonicalPath = PathLayout.canonical(input.targetNamespace).entities;
 
       // Parse the new graph we want to merge
-      const newStore = yield* rdf
-        .parseTurtle(validatedGraph)
-        .pipe(
-          Effect.mapError((error) =>
-            ActivityGenericError.make({
-              message: `Failed to parse new graph: ${error.message}`,
-              cause: O.some(String(error)),
-            })
-          )
-        );
+      const newStore = yield* rdf.parseTurtle(validatedGraph).pipe(
+        Effect.mapError((error) =>
+          ActivityGenericError.make({
+            message: `Failed to parse new graph: ${error.message}`,
+            cause: O.some(String(error)),
+          })
+        )
+      );
       const newTripleCount = newStore._store.size;
 
       // Optimistic locking merge with retry on conflict
@@ -713,29 +704,25 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
           generation = existingGraphOpt.value.generation;
 
           // Merge with existing graph
-          const existingStore = yield* rdf
-            .parseTurtle(existingGraphOpt.value.content)
-            .pipe(
-              Effect.mapError((error) =>
-                ActivityGenericError.make({
-                  message: `Failed to parse existing graph: ${error.message}`,
-                  cause: O.some(String(error)),
-                })
-              )
-            );
+          const existingStore = yield* rdf.parseTurtle(existingGraphOpt.value.content).pipe(
+            Effect.mapError((error) =>
+              ActivityGenericError.make({
+                message: `Failed to parse existing graph: ${error.message}`,
+                cause: O.some(String(error)),
+              })
+            )
+          );
           mergedStats.existingTriples = existingStore._store.size;
 
           // Re-parse new graph for merge (since we can't clone N3 stores)
-          const newStoreForMerge = yield* rdf
-            .parseTurtle(validatedGraph)
-            .pipe(
-              Effect.mapError((error) =>
-                ActivityGenericError.make({
-                  message: `Failed to parse new graph for merge: ${error.message}`,
-                  cause: O.some(String(error)),
-                })
-              )
-            );
+          const newStoreForMerge = yield* rdf.parseTurtle(validatedGraph).pipe(
+            Effect.mapError((error) =>
+              ActivityGenericError.make({
+                message: `Failed to parse new graph for merge: ${error.message}`,
+                cause: O.some(String(error)),
+              })
+            )
+          );
 
           // Merge new into existing (union semantics)
           mergedStats.addedTriples = yield* rdf.mergeStores(existingStore, newStoreForMerge);
@@ -811,7 +798,14 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         if (generation !== undefined) {
           yield* storage.setIfGenerationMatch(namespaceCanonicalPath, mergedGraph, generation);
         } else {
-          // No existing file - just write directly
+          const raced = yield* storage.getWithGeneration(namespaceCanonicalPath);
+          if (O.isSome(raced)) {
+            return yield* new GenerationMismatchError({
+              key: namespaceCanonicalPath,
+              expectedGeneration: "missing",
+              actualGeneration: raced.value.generation,
+            });
+          }
           yield* storage.set(namespaceCanonicalPath, mergedGraph);
         }
 
@@ -935,6 +929,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 
       for (const meta of O.getOrElse(input.documentMetadata, () => [])) {
         MutableHashMap.set(metadataMap, meta.sourceUri, meta);
+        MutableHashMap.set(metadataMap, meta.documentId, meta);
       }
 
       let totalClaimsPersisted = 0;
@@ -955,13 +950,17 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 
           // Get metadata for this document
           // Try to find metadata by matching graph URI path to sourceUri
-          let docMeta = O.getOrUndefined(MutableHashMap.get(metadataMap, graphUri));
+          const pathMatch = graphPath.match(/documents\/([^/]+)\//);
+          const documentIdFromPath = pathMatch?.[1];
+          let docMeta = P.isNotUndefined(documentIdFromPath)
+            ? O.getOrUndefined(MutableHashMap.get(metadataMap, documentIdFromPath))
+            : undefined;
           if (P.isUndefined(docMeta)) {
-            // Fall back to extracting document ID from path
-            const pathMatch = graphPath.match(/documents\/([^/]+)\//);
-            const documentId = pathMatch?.[1] ?? graphPath;
+            docMeta = O.getOrUndefined(MutableHashMap.get(metadataMap, graphUri));
+          }
+          if (P.isUndefined(docMeta)) {
             docMeta = {
-              documentId,
+              documentId: documentIdFromPath ?? graphPath,
               sourceUri: graphUri,
               eventTime: O.none(),
               headline: O.none(),
@@ -1020,6 +1019,9 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
                 graphUri,
                 error: String(error),
               });
+              if (config.extraction.strictPersistence) {
+                return yield* Effect.fail(error);
+              }
               return { persisted: 0, failed: true, graphUri };
             })
           )

@@ -8,7 +8,7 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { DateTime, Effect, Option, Random, Schema } from "effect";
+import { Cause, Data, DateTime, Effect, Option, Random, Schedule, Schema } from "effect";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
@@ -18,7 +18,7 @@ import { ConfigService } from "../Service/Config.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { StorageService } from "../Service/Storage.ts";
-import { WorkflowOrchestrator } from "../Service/WorkflowOrchestrator.ts";
+import { pollToBatchState, WorkflowOrchestrator } from "../Service/WorkflowOrchestrator.ts";
 
 const CreateBatchFromLinksBody = Schema.Struct({
   linkIds: Schema.Array(Schema.String),
@@ -29,6 +29,11 @@ const decodeCreateBatchRequest = Schema.decodeUnknownOption(CreateBatchFromLinks
 const decodeBatchManifest = Schema.decodeUnknownEffect(BatchManifest);
 const encodeBatchManifest = Schema.encodeEffect(Schema.fromJsonString(BatchManifest));
 const decodeWorkflowPayload = Schema.decodeUnknownEffect(BatchWorkflowPayload);
+
+class BatchNotTerminalError extends Data.TaggedError("BatchNotTerminalError")<{
+  readonly batchId: string;
+  readonly status: string;
+}> {}
 
 export const LinkIngestionRouter = HttpRouter.addAll([
   HttpRouter.route(
@@ -132,6 +137,32 @@ export const LinkIngestionRouter = HttpRouter.addAll([
 
       yield* orchestrator.start(payload);
       yield* Effect.forEach(links, (link) => ingestion.markProcessing(link.id), { concurrency: 10 });
+      yield* Effect.forkDetach(
+        Effect.gen(function* () {
+          const state = yield* pollToBatchState(String(batchId)).pipe(
+            Effect.flatMap((current) =>
+              current._tag === "Complete" || current._tag === "Failed"
+                ? Effect.succeed(current)
+                : new BatchNotTerminalError({
+                    batchId: String(batchId),
+                    status: current._tag,
+                  })
+            ),
+            Effect.retry({ times: 120, schedule: Schedule.spaced("5 seconds") })
+          );
+          const failed = state._tag === "Failed";
+          yield* Effect.forEach(
+            links,
+            (link) =>
+              failed ? ingestion.markFailed(link.id, "batch extraction failed") : ingestion.markProcessed(link.id),
+            { concurrency: 10 }
+          );
+        }).pipe(
+          Effect.catchCause((cause) =>
+            Effect.logWarning("Failed to finalize ingested-link statuses", { cause: Cause.pretty(cause) })
+          )
+        )
+      );
       yield* Effect.logInfo("Batch created from ingested links", {
         ontologyId,
         batchId,

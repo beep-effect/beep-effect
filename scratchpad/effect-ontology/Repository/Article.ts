@@ -69,8 +69,16 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
     /**
      * Get article by URI
      */
-    const getArticleByUri = Effect.fn("getArticleByUri")(function* (uri: string) {
-      const [result] = yield* drizzle.select().from(articles).where(eq(articles.uri, uri)).limit(1);
+    const getArticleByUri = Effect.fn("getArticleByUri")(function* (uri: string, ontologyId?: string) {
+      const conditions = [eq(articles.uri, uri)];
+      if (P.isNotUndefined(ontologyId)) {
+        conditions.push(eq(articles.ontologyId, ontologyId));
+      }
+      const [result] = yield* drizzle
+        .select()
+        .from(articles)
+        .where(and(...conditions))
+        .limit(1);
       return Option.fromNullishOr(result);
     });
 
@@ -78,7 +86,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      * Get or create article by URI (upsert)
      */
     const getOrCreateArticle = Effect.fn("getOrCreateArticle")(function* (article: ArticleInsertRow) {
-      const existing = yield* getArticleByUri(article.uri);
+      const existing = yield* getArticleByUri(article.uri, article.ontologyId);
       if (Option.isSome(existing)) {
         return existing.value;
       }

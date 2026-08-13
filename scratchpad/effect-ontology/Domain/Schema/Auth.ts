@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Auth");
 
-const TicketTokenDefinition = S.NonEmptyString.pipe(S.Redacted);
+const TicketTokenDefinition = S.RedactedFromValue(S.NonEmptyString);
 
 const TicketToken = TicketTokenDefinition.annotate({
   toArbitrary: () => S.toArbitrary(TicketTokenDefinition),
@@ -20,7 +20,7 @@ const TicketToken = TicketTokenDefinition.annotate({
   })
 );
 
-const ApiKeyDefinition = S.NonEmptyString.pipe(S.Redacted);
+const ApiKeyDefinition = S.RedactedFromValue(S.NonEmptyString);
 
 const ApiKey = ApiKeyDefinition.annotate({
   toArbitrary: () => S.toArbitrary(ApiKeyDefinition),

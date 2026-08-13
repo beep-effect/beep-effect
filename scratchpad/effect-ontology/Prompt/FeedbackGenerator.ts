@@ -15,7 +15,6 @@ import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type * as SchemaError from "effect/SchemaError";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { dual2 } from "../Utils/Dual.ts";
@@ -104,7 +103,7 @@ export class Violation extends S.Class<Violation>($I`Violation`)(
  * @category destructors
  * @since 0.0.0
  */
-export const extractViolations = (error: SchemaError.SchemaError): ReadonlyArray<Violation> =>
+export const extractViolations = (error: S.SchemaError): ReadonlyArray<Violation> =>
   A.map(formatStandardIssue(error.issue).issues, (issue) =>
     Violation.make({
       path:
@@ -220,7 +219,7 @@ export const interpolate = dual2((template: string, values: Readonly<Record<stri
  * @category error-handling
  * @since 0.0.0
  */
-export const generateFeedback = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateFeedback = dual2((error: S.SchemaError, ruleSet: RuleSet): string =>
   pipe(
     extractViolations(error),
     A.match({
@@ -243,7 +242,7 @@ export const generateFeedback = dual2((error: SchemaError.SchemaError, ruleSet: 
   )
 );
 
-const buildRuleReminders = (error: SchemaError.SchemaError, ruleSet: RuleSet): PromptDoc => {
+const buildRuleReminders = (error: S.SchemaError, ruleSet: RuleSet): PromptDoc => {
   const matchedRuleIds = pipe(
     extractViolations(error),
     A.flatMap((violation) =>
@@ -291,7 +290,7 @@ const buildRuleReminders = (error: SchemaError.SchemaError, ruleSet: RuleSet): P
  * @category error-handling
  * @since 0.0.0
  */
-export const generateTreeFeedback = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateTreeFeedback = dual2((error: S.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
       Doc.text("Validation Errors:"),
@@ -324,7 +323,7 @@ export const generateTreeFeedback = dual2((error: SchemaError.SchemaError, ruleS
  * @category formatting
  * @since 0.0.0
  */
-export const generateImprovementPrompt = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateImprovementPrompt = dual2((error: S.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
       Doc.text("Your previous output had validation errors:"),
@@ -365,7 +364,7 @@ const matchesAny = (message: string, patterns: ReadonlyArray<RegExp>): boolean =
  * @category predicates
  * @since 0.0.0
  */
-export const isRetryable = (error: SchemaError.SchemaError): boolean => {
+export const isRetryable = (error: S.SchemaError): boolean => {
   const violations = extractViolations(error);
   return (
     A.isReadonlyArrayNonEmpty(violations) &&

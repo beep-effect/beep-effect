@@ -54,18 +54,26 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
       lookup: (id: ArticleId) => repo.getArticle(id),
     });
 
+    const uriCacheKey = (uri: string, ontologyId?: string): string =>
+      P.isUndefined(ontologyId) ? uri : `${ontologyId}\u0000${uri}`;
+
     // Article lookup by URI cache
     const uriCache = yield* Cache.make({
       capacity: URI_CACHE_CAPACITY,
       timeToLive: URI_CACHE_TTL,
-      lookup: (uri: string) => repo.getArticleByUri(uri),
+      lookup: (key: string) => {
+        const separator = key.indexOf("\u0000");
+        return separator === -1
+          ? repo.getArticleByUri(key)
+          : repo.getArticleByUri(key.slice(separator + 1), key.slice(0, separator));
+      },
     });
 
     // Cached single article lookup by ID
     const getArticle = (id: ArticleId) => Cache.get(articleCache, id);
 
     // Cached article lookup by URI
-    const getArticleByUri = (uri: string) => Cache.get(uriCache, uri);
+    const getArticleByUri = (uri: string, ontologyId?: string) => Cache.get(uriCache, uriCacheKey(uri, ontologyId));
 
     // Invalidate caches on insert
     const insertArticle = (article: ArticleInsertRow) =>
@@ -73,7 +81,9 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
         .insertArticle(article)
         .pipe(
           Effect.tap((result) =>
-            Cache.invalidate(articleCache, result.id).pipe(Effect.tap(() => Cache.invalidate(uriCache, article.uri)))
+            Cache.invalidate(articleCache, result.id).pipe(
+              Effect.tap(() => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
+            )
           )
         );
 
@@ -84,7 +94,9 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
           Cache.invalidate(articleCache, id).pipe(
             Effect.tap(() =>
               // If URI was updated, invalidate old and new URI caches
-              P.isNotUndefined(updates.uri) ? Cache.invalidate(uriCache, updates.uri) : Effect.void
+              P.isNotUndefined(updates.uri)
+                ? Cache.invalidate(uriCache, uriCacheKey(updates.uri, updates.ontologyId))
+                : Effect.void
             )
           )
         )
@@ -96,7 +108,9 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
         .getOrCreateArticle(article)
         .pipe(
           Effect.tap((result) =>
-            Cache.invalidate(articleCache, result.id).pipe(Effect.tap(() => Cache.invalidate(uriCache, article.uri)))
+            Cache.invalidate(articleCache, result.id).pipe(
+              Effect.tap(() => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
+            )
           )
         );
 
@@ -107,7 +121,7 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
           Effect.all(
             A.appendAll(
               A.map(results, (result) => Cache.invalidate(articleCache, result.id)),
-              A.map(articleList, (article) => Cache.invalidate(uriCache, article.uri))
+              A.map(articleList, (article) => Cache.invalidate(uriCache, uriCacheKey(article.uri, article.ontologyId)))
             ),
             { concurrency: "unbounded", discard: true }
           )

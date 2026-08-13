@@ -98,7 +98,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
       if (P.isNotUndefined(filter.rank)) {
         conditions.push(eq(claims.rank, filter.rank));
       }
-      if (P.isUndefined(filter.includeDeprecated)) {
+      if (filter.includeDeprecated !== true) {
         conditions.push(isNull(claims.deprecatedAt));
       }
 

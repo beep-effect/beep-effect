@@ -209,7 +209,6 @@ const ServerLive = SelectedHttpServerLive.pipe(
   Layer.provideMerge(BatchStateHubLayer),
   Layer.provideMerge(BatchStatePersistenceWithDeps),
   Layer.provideMerge(HealthCheckWithDeps),
-  Layer.provideMerge(ShutdownService.Default),
   Layer.provideMerge(ClaimPersistenceLayer), // ClaimPersistenceService (for activity persistence)
   Layer.provideMerge(LinkIngestionLayer), // LinkIngestionService for URL ingestion
   Layer.provideMerge(ImageServicesLayer), // ImageBlobStore + ImageStore for image routes
@@ -291,6 +290,8 @@ const server = Effect.gen(function* () {
   return yield* Layer.launch(ServerLive);
 });
 
+// One ShutdownService instance: SIGTERM drain and HTTP middleware share the same
+// in-flight counter. ServerLive must not construct a second Default.
 const main = Effect.scoped(
   Effect.gen(function* () {
     const shutdownContext = yield* Layer.build(ShutdownService.Default);

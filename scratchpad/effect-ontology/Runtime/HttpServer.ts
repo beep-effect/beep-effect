@@ -52,10 +52,11 @@ import type { ArticleRow, ClaimRow } from "../Repository/schema.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { StorageService } from "../Service/Storage.ts";
-import { WorkflowOrchestrator } from "../Service/WorkflowOrchestrator.ts";
+import { pollToBatchState, WorkflowOrchestrator } from "../Service/WorkflowOrchestrator.ts";
 import { AssetRouter } from "./AssetRouter.ts";
 import { AuthRouter } from "./AuthRouter.ts";
 import { EventBroadcastRouter } from "./EventBroadcastRouter.ts";
+import { HealthCheckService } from "./HealthCheck.ts";
 import { makeAuthMiddleware, makeLoggingMiddleware, makeShutdownMiddleware } from "./HttpMiddleware.ts";
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
@@ -467,31 +468,49 @@ export const SearchRouter = HttpRouter.addAll([
           const claims = yield* claimRepo.getClaims({
             ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
             includeDeprecated: false,
-            limit: 1000, // Get more for filtering
+            limit: 1000,
           });
 
-          // Filter by query text (case-insensitive match)
           const queryLower = Str.toLowerCase(request.query);
-          const filteredClaims = A.filter(claims, (claim) =>
-            Str.includes(queryLower)(Str.toLowerCase(claim.objectValue))
-          );
+          const predicateSet = O.map(request.predicates, HashSet.fromIterable);
+          const sourceSet = O.map(request.sources, HashSet.fromIterable);
+          const textMatched = A.filter(claims, (claim) => Str.includes(queryLower)(Str.toLowerCase(claim.objectValue)));
+          const predicateMatched = O.match(predicateSet, {
+            onNone: () => textMatched,
+            onSome: (predicates) => A.filter(textMatched, (claim) => HashSet.has(predicates, claim.predicateIri)),
+          });
 
-          // Apply pagination
-          const paginatedClaims = A.take(A.drop(filteredClaims, offset), limit);
-          const hasMore = filteredClaims.length > offset + limit;
-
-          // Get articles
-          const claimsWithArticles = yield* Effect.forEach(paginatedClaims, (claim) =>
+          const claimsWithArticles = yield* Effect.forEach(predicateMatched, (claim) =>
             Effect.gen(function* () {
               const articleOpt = yield* articleRepo.getArticle(claim.articleId);
               if (O.isNone(articleOpt)) {
                 return O.none<ClaimWithRank>();
               }
-              return O.some(yield* claimRowToClaimWithRank(claim, articleOpt.value));
+              const article = articleOpt.value;
+              if (
+                O.isSome(sourceSet) &&
+                !HashSet.has(sourceSet.value, P.isNotNull(article.sourceName) ? article.sourceName : "")
+              ) {
+                return O.none<ClaimWithRank>();
+              }
+              if (O.isSome(request.dateRange)) {
+                const published = article.publishedAt?.getTime();
+                if (P.isUndefined(published)) {
+                  return O.none<ClaimWithRank>();
+                }
+                const from = DateTime.toEpochMillis(request.dateRange.value.from);
+                const to = DateTime.toEpochMillis(request.dateRange.value.to);
+                if (published < from || published > to) {
+                  return O.none<ClaimWithRank>();
+                }
+              }
+              return O.some(yield* claimRowToClaimWithRank(claim, article));
             })
           );
 
-          const validClaims = A.getSomes(claimsWithArticles);
+          const filteredClaims = A.getSomes(claimsWithArticles);
+          const validClaims = A.take(A.drop(filteredClaims, offset), limit);
+          const hasMore = filteredClaims.length > offset + limit;
 
           return yield* HttpServerResponse.schemaJson(ClaimSearchResponse)({
             query: request.query,
@@ -555,11 +574,18 @@ export const SearchRouter = HttpRouter.addAll([
           }
 
           // Filter by query (match on IRI or label would be better with a label index)
+          const requestedTypes = O.map(request.types, HashSet.fromIterable);
           const entityCandidates = A.take(
             subjectMap.pipe(
               MutableHashMap.values,
               A.fromIterable,
-              A.filter((entity) => Str.includes(queryLower)(Str.toLowerCase(entity.iri)))
+              A.filter((entity) => Str.includes(queryLower)(Str.toLowerCase(entity.iri))),
+              A.filter((entity) =>
+                O.match(requestedTypes, {
+                  onNone: () => true,
+                  onSome: (types) => A.some(A.fromIterable(entity.types), (type) => HashSet.has(types, type)),
+                })
+              )
             ),
             limit
           );
@@ -625,10 +651,7 @@ export const SearchRouter = HttpRouter.addAll([
         if (suggestionIris.length >= limit) break;
 
         const localName = O.getOrElse(A.last(Str.split(/[#/]/)(claim.subjectIri)), () => "");
-        if (
-          Str.startsWith(prefixLower)(Str.toLowerCase(localName)) &&
-          !MutableHashSet.has(seen, claim.subjectIri)
-        ) {
+        if (Str.startsWith(prefixLower)(Str.toLowerCase(localName)) && !MutableHashSet.has(seen, claim.subjectIri)) {
           MutableHashSet.add(seen, claim.subjectIri);
           suggestionIris.push({
             label: localName,
@@ -686,28 +709,24 @@ export const SearchRouter = HttpRouter.addAll([
                   publishedBefore: DateTime.toDateUtc(request.dateRange.value.to),
                 }
               : {}),
-            limit: limit + 1,
-            offset,
           });
 
-          const hasMore = articles.length > limit;
-          const articleResults = hasMore ? A.take(articles, limit) : articles;
-
-          // Filter by query in headline if provided
           const queryLower = O.map(request.query, Str.toLowerCase);
           const filtered = O.match(queryLower, {
-            onNone: () => articleResults,
+            onNone: () => articles,
             onSome: (query) =>
-              A.filter(articleResults, (article) =>
+              A.filter(articles, (article) =>
                 O.exists(O.fromNullishOr(article.headline), (headline) =>
                   Str.includes(query)(Str.toLowerCase(headline))
                 )
               ),
           });
+          const hasMore = filtered.length > offset + limit;
+          const page = A.take(A.drop(filtered, offset), limit);
 
           // Get claim counts
           const results = yield* Effect.forEach(
-            filtered,
+            page,
             Effect.fn(function* (article) {
               const claims = yield* claimRepo.getClaims({
                 articleId: article.id,
@@ -775,6 +794,54 @@ const extractionRouteHandler = Effect.gen(function* () {
 export const ExtractionRouter = HttpRouter.addAll([
   HttpRouter.route("POST", "/v1/extract/batch", extractionRouteHandler),
   HttpRouter.route("POST", "/v1/extract", extractionRouteHandler),
+  HttpRouter.route(
+    "GET",
+    "/v1/extract/batch/:id/status",
+    Effect.gen(function* () {
+      const { id } = yield* HttpRouter.params;
+      if (P.isUndefined(id)) {
+        return yield* HttpServerResponse.json(
+          { error: "INVALID_REQUEST", message: "Batch ID is required" },
+          { status: 400 }
+        );
+      }
+      return yield* pollToBatchState(id).pipe(
+        Effect.flatMap((state) => HttpServerResponse.json(state)),
+        Effect.catch((error) =>
+          HttpServerResponse.json({ error: "NOT_FOUND", message: String(error) }, { status: 404 })
+        )
+      );
+    })
+  ),
+]);
+
+export const HealthRouter = HttpRouter.addAll([
+  HttpRouter.route(
+    "GET",
+    "/health/live",
+    Effect.gen(function* () {
+      const health = yield* HealthCheckService;
+      return yield* HttpServerResponse.json(yield* health.liveness());
+    })
+  ),
+  HttpRouter.route(
+    "GET",
+    "/health/ready",
+    Effect.gen(function* () {
+      const health = yield* HealthCheckService;
+      const result = yield* health.readiness();
+      return yield* HttpServerResponse.json(result, { status: result.status === "ok" ? 200 : 503 });
+    })
+  ),
+  HttpRouter.route(
+    "GET",
+    "/health/deep",
+    Effect.gen(function* () {
+      const health = yield* HealthCheckService;
+      const result = yield* health.deepCheck;
+      return yield* HttpServerResponse.json(result, { status: result.status === "error" ? 503 : 200 });
+    })
+  ),
 ]);
 
 // =============================================================================
@@ -812,6 +879,7 @@ export const OntologyRouter = HttpRouter.addAll([
 // =============================================================================
 
 export const ApiRouter = Layer.mergeAll(
+  HealthRouter,
   ExtractionRouter,
   TimelineRouter,
   SearchRouter,
@@ -826,6 +894,7 @@ export const ApiRouter = Layer.mergeAll(
 );
 
 export const ApiRouterWithoutRepositories = Layer.mergeAll(
+  HealthRouter,
   ExtractionRouter,
   OntologyRouter,
   InferenceRouter,

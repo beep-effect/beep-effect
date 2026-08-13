@@ -534,7 +534,37 @@ END $$;`,
   {
     version: 8,
     name: "008_content_hash_scoping",
-    sql: `-- Change content_hash unique constraint to be scoped by ontology_id
+    sql: `-- Ensure ingested_links exists before the ontology-scoped unique constraint.
+-- The checked-in 004_ingested_links.sql was never part of AllMigrations, so a
+-- fresh database would otherwise fail here on a missing table.
+CREATE TABLE IF NOT EXISTS ingested_links (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content_hash VARCHAR(64) NOT NULL UNIQUE,
+    source_uri TEXT,
+    source_type VARCHAR(32),
+    headline TEXT,
+    description TEXT,
+    published_at TIMESTAMPTZ,
+    author TEXT,
+    organization TEXT,
+    language VARCHAR(8) DEFAULT 'en',
+    topics JSONB DEFAULT '[]'::jsonb,
+    key_entities JSONB DEFAULT '[]'::jsonb,
+    storage_uri TEXT NOT NULL,
+    status VARCHAR(16) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'enriched', 'processed', 'failed', 'skipped')),
+    fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    enriched_at TIMESTAMPTZ,
+    processed_at TIMESTAMPTZ,
+    error_message TEXT,
+    word_count INTEGER,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE ingested_links ADD COLUMN IF NOT EXISTS ontology_id TEXT;
+
+-- Change content_hash unique constraint to be scoped by ontology_id
 -- Previously content_hash was globally unique, preventing the same content
 -- from being ingested into multiple ontologies.
 

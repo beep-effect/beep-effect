@@ -1047,34 +1047,26 @@ export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions
  * **Example** (Type quad options input)
  *
  * ```ts
- * import type { MakeQuadOptionsInput } from "@beep/rdf/Rdf"
- * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { MakeQuadOptionsInput, makeNamedNode } from "@beep/rdf/Rdf"
  *
- * const options: MakeQuadOptionsInput = {
+ * const options = MakeQuadOptionsInput.make({
  *   object: makeNamedNode("https://example.org/object")
- * }
+ * })
  * console.log(options.object)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const MakeQuadOptionsInput = S.Struct({
-  object: ObjectTerm,
-  graph: GraphTerm.pipe(S.optionalKey),
-}).pipe(
-  $I.annoteSchema("MakeQuadOptionsInput", {
+export class MakeQuadOptionsInput extends S.Class<MakeQuadOptionsInput>($I`MakeQuadOptionsInput`)(
+  {
+    object: ObjectTerm,
+    graph: GraphTerm.pipe(S.optionalKey),
+  },
+  $I.annote("MakeQuadOptionsInput", {
     description: "In-memory object and optional graph input accepted by makeQuad.",
   })
-);
-
-/**
- * Type for {@link MakeQuadOptionsInput}.
- *
- * @category utilities
- * @since 0.0.0
- */
-export type MakeQuadOptionsInput = typeof MakeQuadOptionsInput.Type;
+) {}
 
 const isMakeQuadOptions = (input: ObjectTerm | MakeQuadOptionsInput): input is MakeQuadOptionsInput =>
   P.hasProperty(input, "object");

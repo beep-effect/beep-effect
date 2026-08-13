@@ -9,7 +9,7 @@
  */
 
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Effect, Match, Schema } from "effect";
+import { Data, Effect, Match, Schema } from "effect";
 import * as DateTime from "effect/DateTime";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
@@ -36,6 +36,10 @@ const PubSubPushMessage = Schema.Struct({
 
 type PubSubPushMessage = typeof PubSubPushMessage.Type;
 
+class JobProcessorNotImplementedError extends Data.TaggedError("JobProcessorNotImplementedError")<{
+  readonly jobType: BackgroundJob["_tag"];
+}> {}
+
 // =============================================================================
 // Job Processing
 // =============================================================================
@@ -45,7 +49,10 @@ type PubSubPushMessage = typeof PubSubPushMessage.Type;
  *
  * @since 2.0.0
  */
-const processBackgroundJob = (job: BackgroundJob, meta: { id: string; attempts: number }): Effect.Effect<void, Error> =>
+const processBackgroundJob = (
+  job: BackgroundJob,
+  meta: { id: string; attempts: number }
+): Effect.Effect<void, JobProcessorNotImplementedError> =>
   Match.value(job).pipe(
     Match.tag(
       "EmbeddingJob",
@@ -56,16 +63,18 @@ const processBackgroundJob = (job: BackgroundJob, meta: { id: string; attempts: 
           reason: j.reason,
           attempts: meta.attempts,
         });
-        // TODO: Implement embedding recompute logic
-        // This will call EmbeddingService to recompute embeddings
+        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
       })
     ),
     Match.tag("PromptCacheJob", (j) =>
-      Effect.logInfo("Processing PromptCacheJob", {
-        id: j.id,
-        exampleId: j.exampleId,
-        isNegative: j.isNegative,
-        attempts: meta.attempts,
+      Effect.gen(function* () {
+        yield* Effect.logInfo("Processing PromptCacheJob", {
+          id: j.id,
+          exampleId: j.exampleId,
+          isNegative: j.isNegative,
+          attempts: meta.attempts,
+        });
+        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -77,7 +86,7 @@ const processBackgroundJob = (job: BackgroundJob, meta: { id: string; attempts: 
           reason: j.reason,
           attempts: meta.attempts,
         });
-        // TODO: Implement similarity recompute logic
+        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -88,7 +97,7 @@ const processBackgroundJob = (job: BackgroundJob, meta: { id: string; attempts: 
           entityId: j.entityId,
           attempts: meta.attempts,
         });
-        // TODO: Implement blocking token rebuild logic
+        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -100,7 +109,7 @@ const processBackgroundJob = (job: BackgroundJob, meta: { id: string; attempts: 
           eventType: j.eventType,
           attempts: meta.attempts,
         });
-        // TODO: Implement webhook delivery logic
+        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
       })
     ),
     Match.exhaustive

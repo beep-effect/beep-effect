@@ -29,6 +29,7 @@ import type * as Scope from "effect/Scope";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type * as Socket from "effect/unstable/socket/Socket";
 import { OntologyService } from "../Service/Ontology.ts";
+import { TicketService } from "../Service/Ticket.ts";
 
 // =============================================================================
 // Protocol Types
@@ -343,8 +344,22 @@ export const EventBroadcastRouter = HttpRouter.addAll([
         );
       }
 
-      // Upgrade to WebSocket
       const request = yield* HttpServerRequest.HttpServerRequest;
+      const ticket = new URL(request.url, "http://localhost").searchParams.get("ticket");
+      if (ticket === null || ticket.length === 0) {
+        return yield* HttpServerResponse.json(
+          { error: "UNAUTHORIZED", message: "Missing ticket query parameter" },
+          { status: 401 }
+        );
+      }
+      const scopedOntologyId = yield* (yield* TicketService).validateTicket(ticket);
+      if (scopedOntologyId !== ontologyId) {
+        return yield* HttpServerResponse.json(
+          { error: "FORBIDDEN", message: "Ticket is not scoped to this ontology" },
+          { status: 403 }
+        );
+      }
+
       const socket = yield* request.upgrade;
 
       // Handle WebSocket connection
