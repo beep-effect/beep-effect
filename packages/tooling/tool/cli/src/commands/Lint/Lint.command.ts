@@ -43,7 +43,8 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
 ]);
 const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
-const DEPRECATED_API_LINT_CACHE_LOCATION = "node_modules/.cache/eslint-deprecated-apis/.eslintcache";
+const DEPRECATED_API_LINT_CACHE_DIRECTORY = "node_modules/.cache/eslint-deprecated-apis";
+const DEPRECATED_API_LINT_CONCURRENCY = 4;
 const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
 const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
 const DEPRECATED_API_LINT_SHARDS = [
@@ -72,6 +73,8 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/tooling",
   "packages/workspace",
 ] as const;
+const deprecatedApiLintCacheLocation = (shard: string): string =>
+  `${DEPRECATED_API_LINT_CACHE_DIRECTORY}/.eslintcache-${Str.replaceAll("/", "__")(shard)}`;
 const REQUIRED_TAGGED_UNIONS = [
   "GenerationAction",
   "TsMorphMutation",
@@ -472,7 +475,9 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
   const eslintArgs = [
     "--cache",
     "--cache-location",
-    DEPRECATED_API_LINT_CACHE_LOCATION,
+    deprecatedApiLintCacheLocation(shard),
+    "--cache-strategy",
+    "content",
     "--config",
     "eslint.config.mjs",
     shard,
@@ -498,9 +503,14 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
 });
 
 const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
-  for (const shard of DEPRECATED_API_LINT_SHARDS) {
-    yield* runDeprecatedApiLintShard(shard);
-  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(DEPRECATED_API_LINT_CACHE_DIRECTORY, { recursive: true });
+  yield* Console.log(
+    `[lint:deprecated-apis] running ${A.length(DEPRECATED_API_LINT_SHARDS)} shards with concurrency ${DEPRECATED_API_LINT_CONCURRENCY}`
+  );
+  yield* Effect.forEach(DEPRECATED_API_LINT_SHARDS, runDeprecatedApiLintShard, {
+    concurrency: DEPRECATED_API_LINT_CONCURRENCY,
+  });
 
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });

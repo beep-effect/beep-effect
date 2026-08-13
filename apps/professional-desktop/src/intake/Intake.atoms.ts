@@ -12,7 +12,7 @@ import { DefaultVaultFilingContext, slugVaultSegment } from "@beep/documents-dom
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, N, O, P } from "@beep/utils";
 import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
@@ -224,6 +224,19 @@ class VaultSelectionChoosing extends S.Class<VaultSelectionChoosing>($I`VaultSel
   })
 ) {}
 
+class VaultSelectionManual extends S.Class<VaultSelectionManual>($I`VaultSelectionManual`)(
+  {
+    kind: S.tag("manual"),
+    // A rejected path is retained so the reopened form does not force the
+    // operator to retype it (the saving state unmounts the form in between).
+    draftPath: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    message: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("VaultSelectionManual", {
+    description: "A manual vault-path form is open because no native folder picker is available.",
+  })
+) {}
+
 class VaultSelectionSaving extends S.Class<VaultSelectionSaving>($I`VaultSelectionSaving`)(
   { kind: S.tag("saving") },
   $I.annote("VaultSelectionSaving", {
@@ -241,7 +254,7 @@ class VaultSelectionFailed extends S.Class<VaultSelectionFailed>($I`VaultSelecti
   })
 ) {}
 
-const VaultSelectionStateKind = LiteralKit(["idle", "choosing", "saving", "failed"]).pipe(
+const VaultSelectionStateKind = LiteralKit(["idle", "choosing", "manual", "saving", "failed"]).pipe(
   $I.annoteSchema("VaultSelectionStateKind", {
     description: "Exhaustive workspace vault selection lifecycle variants.",
   })
@@ -266,6 +279,7 @@ export const VaultSelectionState = VaultSelectionStateKind.mapMembers(
   Tuple.evolve([
     () => VaultSelectionIdle,
     () => VaultSelectionChoosing,
+    () => VaultSelectionManual,
     () => VaultSelectionSaving,
     () => VaultSelectionFailed,
   ])
@@ -379,7 +393,6 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Replace the vault-selection operator status.
    */
-  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   withVaultSelection(vaultSelection: VaultSelectionState): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, vaultSelection });
   }
@@ -598,6 +611,7 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
         return VaultSelectionState.match(state.vaultSelection, {
           idle: () => Tuple.make(true, choosing),
           choosing: () => Tuple.make(false, state),
+          manual: () => Tuple.make(false, state),
           saving: () => Tuple.make(false, state),
           failed: () => Tuple.make(true, choosing),
         });
@@ -607,9 +621,21 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       yield* Effect.annotateCurrentSpan({
         "professional_desktop.workspace.id": workspaceId,
       });
-      const browserPrompt = Effect.annotateCurrentSpan({
-        "professional_desktop.intake.vault_selection.fallback": "browser_prompt",
-      }).pipe(Effect.andThen(Effect.sync(() => O.fromNullishOr(globalThis.window.prompt("Workspace vault path")))));
+      // A real in-card form, not `window.prompt`: the raw prompt was
+      // unstyled, unlabeled, and cancelling it stranded the operator on the
+      // vault gate with no visible way forward (QA closeout finding).
+      const openManualEntry = Effect.annotateCurrentSpan({
+        "professional_desktop.intake.vault_selection.fallback": "manual_path_form",
+      }).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            ctx.registry.update(stateAtom, (state) =>
+              state.withVaultSelection(VaultSelectionState.cases.manual.make())
+            );
+          })
+        ),
+        Effect.as(O.none<string>())
+      );
       const selected = yield* hasTauriRuntime()
         ? Effect.tryPromise({
             try: () => invoke<string | null>("select_vault_directory"),
@@ -640,8 +666,8 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
               logIntakeCause(cause, "sidecar vault directory picker failed", "pick_workspace_vault")
             ),
             Effect.catchTags({
-              RpcClientError: () => browserPrompt,
-              VaultDirectoryPickError: () => browserPrompt,
+              RpcClientError: () => openManualEntry,
+              VaultDirectoryPickError: () => openManualEntry,
             })
           );
       const selectedPath = selected.pipe(O.map(Str.trim), O.filter(Str.isNonEmpty));
@@ -662,48 +688,133 @@ export const chooseWorkspaceVaultAtoms = Atom.family((workspaceId: WorkspaceIden
       yield* Effect.annotateCurrentSpan({
         "professional_desktop.intake.vault_selection.outcome": "selected",
       });
-      ctx.registry.update(stateAtom, (state) => state.withVaultSelection(VaultSelectionState.cases.saving.make()));
-      yield* decodeSetWorkspaceVaultInput({
-        vaultRootPath: selectedPath.value,
-        workspaceId,
-      }).pipe(
-        Effect.flatMap((payload) =>
-          Reactivity.mutation(client("SetWorkspaceVault", payload), [workspaceVaultKey(workspaceId)])
-        ),
-        Effect.tapCause((cause) => logIntakeCause(cause, "workspace vault persistence failed", "save_workspace_vault")),
-        Effect.matchEffect({
-          onFailure: (failure) =>
-            Effect.annotateCurrentSpan({
-              "professional_desktop.intake.vault_selection.outcome": "save_failure",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  ctx.registry.update(stateAtom, (state) =>
-                    state.withVaultSelection(
-                      VaultSelectionState.cases.failed.make({
-                        message: vaultConfigurationFailureMessage(failure),
-                      })
-                    )
-                  );
-                })
-              )
-            ),
-          onSuccess: () =>
-            Effect.annotateCurrentSpan({
-              "professional_desktop.intake.vault_selection.outcome": "success",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  ctx.registry.update(stateAtom, (state) =>
-                    state.withVaultSelection(VaultSelectionState.cases.idle.make())
-                  );
-                })
-              )
-            ),
-        })
+      yield* saveWorkspaceVaultPath(workspaceId, client, ctx, selectedPath.value, (message) =>
+        VaultSelectionState.cases.failed.make({ message })
       );
     }),
     { concurrent: true }
+  )
+);
+
+// Persist one selected vault root and settle the selection state machine.
+// `toFailureState` decides where a persistence failure lands: the native flow
+// falls back to the failed card, the manual form stays open with the message
+// rendered inline.
+const saveWorkspaceVaultPath = Effect.fnUntraced(function* (
+  workspaceId: WorkspaceIdentity.WorkspaceId,
+  client: DesktopIntakeClient["Service"],
+  ctx: Atom.FnContext,
+  vaultRootPath: string,
+  toFailureState: (message: string) => VaultSelectionState
+) {
+  const stateAtom = documentIntakeStateAtoms(workspaceId);
+  ctx.registry.update(stateAtom, (state) => state.withVaultSelection(VaultSelectionState.cases.saving.make()));
+  yield* decodeSetWorkspaceVaultInput({
+    vaultRootPath,
+    workspaceId,
+  }).pipe(
+    Effect.flatMap((payload) =>
+      Reactivity.mutation(client("SetWorkspaceVault", payload), [workspaceVaultKey(workspaceId)])
+    ),
+    Effect.tapCause((cause) => logIntakeCause(cause, "workspace vault persistence failed", "save_workspace_vault")),
+    Effect.matchEffect({
+      onFailure: (failure) =>
+        Effect.annotateCurrentSpan({
+          "professional_desktop.intake.vault_selection.outcome": "save_failure",
+        }).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              ctx.registry.update(stateAtom, (state) =>
+                state.withVaultSelection(toFailureState(vaultConfigurationFailureMessage(failure)))
+              );
+            })
+          )
+        ),
+      onSuccess: () =>
+        Effect.annotateCurrentSpan({
+          "professional_desktop.intake.vault_selection.outcome": "success",
+        }).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              ctx.registry.update(stateAtom, (state) =>
+                state.withVaultSelection(VaultSelectionState.cases.idle.make())
+              );
+            })
+          )
+        ),
+    })
+  );
+});
+
+/**
+ * Runtime action family that persists a manually typed vault root path from
+ * the onboarding form. An empty submission keeps the form open with guidance;
+ * a persistence failure keeps it open with the operator-safe message.
+ *
+ * **Example** (Check action family type)
+ *
+ * ```ts
+ * import { submitManualVaultPathAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof submitManualVaultPathAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const submitManualVaultPathAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  DesktopIntakeClient.runtime.fn<string>()(
+    Effect.fn("professional_desktop.intake.submit_manual_vault_path")(function* (rawPath, ctx) {
+      const client = yield* DesktopIntakeClient;
+      const stateAtom = documentIntakeStateAtoms(workspaceId);
+      if (!VaultSelectionState.guards.manual(ctx.registry.get(stateAtom).vaultSelection)) return;
+      yield* Effect.annotateCurrentSpan({
+        "professional_desktop.workspace.id": workspaceId,
+      });
+      const trimmed = Str.trim(rawPath);
+      if (!Str.isNonEmpty(trimmed)) {
+        yield* Effect.annotateCurrentSpan({
+          "professional_desktop.intake.vault_selection.outcome": "empty_manual_path",
+        });
+        ctx.registry.update(stateAtom, (state) =>
+          state.withVaultSelection(
+            VaultSelectionState.cases.manual.make({ message: O.some("Enter the absolute path of a local folder.") })
+          )
+        );
+        return;
+      }
+      yield* saveWorkspaceVaultPath(workspaceId, client, ctx, trimmed, (message) =>
+        VaultSelectionState.cases.manual.make({ draftPath: O.some(trimmed), message: O.some(message) })
+      );
+    }),
+    { concurrent: true }
+  )
+);
+
+/**
+ * Runtime action family that dismisses the manual vault-path form back to the
+ * idle onboarding card, so a cancelled entry never strands the operator.
+ *
+ * **Example** (Check action family type)
+ *
+ * ```ts
+ * import { cancelManualVaultPathAtoms } from "@/intake/Intake.atoms"
+ *
+ * console.log(typeof cancelManualVaultPathAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const cancelManualVaultPathAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  professionalBrowserRuntime.fn<void>()(
+    Effect.fnUntraced(function* (_, ctx) {
+      ctx.registry.update(documentIntakeStateAtoms(workspaceId), (state) =>
+        VaultSelectionState.guards.manual(state.vaultSelection)
+          ? state.withVaultSelection(VaultSelectionState.cases.idle.make())
+          : state
+      );
+    })
   )
 );
 
@@ -958,6 +1069,7 @@ export const openIntakeFilePickerAtoms = Atom.family((workspaceId: WorkspaceIden
  */
 export interface DocumentIntakeSurface {
   readonly actions: {
+    readonly cancelManualVaultPath: () => void;
     readonly chooseVault: () => void;
     readonly clearResults: () => void;
     readonly dragEnter: (input: { readonly preventDefault: () => void }) => void;
@@ -967,6 +1079,7 @@ export interface DocumentIntakeSurface {
     readonly fileSelection: (files: ReadonlyArray<File>) => void;
     readonly openFilePicker: () => void;
     readonly setFileInput: (element: HTMLInputElement | null) => void;
+    readonly submitManualVaultPath: (path: string) => void;
   };
   readonly configured: boolean;
   readonly needsOnboarding: boolean;
@@ -991,10 +1104,13 @@ export interface DocumentIntakeSurface {
 const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   Atom.make((get): DocumentIntakeSurface["actions"] => {
     const domEvents = intakeDomEventAtoms(workspaceId);
+    const cancelManualVaultPathAtom = cancelManualVaultPathAtoms(workspaceId);
     const chooseVaultAtom = chooseWorkspaceVaultAtoms(workspaceId);
     const clearResultsAtom = clearIntakeResultsAtoms(workspaceId);
     const openFilePickerAtom = openIntakeFilePickerAtoms(workspaceId);
     const setFileInputAtom = setIntakeFileInputAtoms(workspaceId);
+    const submitManualVaultPathAtom = submitManualVaultPathAtoms(workspaceId);
+    get.mount(cancelManualVaultPathAtom);
     get.mount(chooseVaultAtom);
     get.mount(clearResultsAtom);
     get.mount(domEvents.dragEnter);
@@ -1004,7 +1120,9 @@ const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
     get.mount(domEvents.fileSelection);
     get.mount(openFilePickerAtom);
     get.mount(setFileInputAtom);
+    get.mount(submitManualVaultPathAtom);
     return {
+      cancelManualVaultPath: () => get.set(cancelManualVaultPathAtom, void 0),
       chooseVault: () => get.set(chooseVaultAtom, void 0),
       clearResults: () => get.set(clearResultsAtom, void 0),
       dragEnter: (input) => get.set(domEvents.dragEnter, input),
@@ -1014,6 +1132,7 @@ const documentIntakeActionsAtoms = Atom.family((workspaceId: WorkspaceIdentity.W
       fileSelection: (files) => get.set(domEvents.fileSelection, files),
       openFilePicker: () => get.set(openFilePickerAtom, void 0),
       setFileInput: (element) => get.set(setFileInputAtom, element),
+      submitManualVaultPath: (path) => get.set(submitManualVaultPathAtom, path),
     };
   })
 );

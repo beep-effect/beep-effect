@@ -144,19 +144,42 @@ const readSidecarTransport = Effect.suspend(() =>
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTransport);
 
-const ContradictionTriageSurface = (): JSX.Element => {
-  const transport = useAtomValue(sidecarTransportAtom);
-  const unavailable = (
-    <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">
-      Contradiction triage requires the desktop IPC transport or an authenticated desktop HTTP session.
+// Write-capable surfaces (vault sync, ontology workbench, contradiction
+// triage) are served over HTTP only when the sidecar holds the per-launch
+// session token. Without it those panels used to mount anyway and fail RPC by
+// RPC — dead buttons, duplicated red errors, and a Vault panel that looked
+// "unauthenticated" with no explanation. The honest state is a gate that says
+// what this session is and how to unlock it.
+const DesktopSessionNotice = ({ label }: { readonly label: string }): JSX.Element => (
+  <div
+    className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground"
+    data-testid="desktop-session-required"
+  >
+    <div className="max-w-md">
+      <p>{label} needs the desktop shell or an authenticated desktop HTTP session.</p>
+      <p className="mt-2 text-xs">
+        This browser session is chat-only. Launch the sidecar with BEEP_DESKTOP_RPC_SESSION_TOKEN and start Vite with
+        the matching VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN to unlock vault, ontology, and triage surfaces over HTTP.
+      </p>
     </div>
-  );
-  const thunkUnavailable = () => unavailable;
+  </div>
+);
+
+const DesktopSessionGate = ({
+  children,
+  label,
+}: {
+  readonly children: ReactNode;
+  readonly label: string;
+}): JSX.Element => {
+  const transport = useAtomValue(sidecarTransportAtom);
+  const notice = <DesktopSessionNotice label={label} />;
+  const thunkNotice = () => notice;
 
   return AsyncResult.match(transport, {
-    onInitial: thunkUnavailable,
-    onFailure: thunkUnavailable,
-    onSuccess: ({ value }) => (hasDesktopRpcAccess(value) ? <ContradictionTriagePanel /> : unavailable),
+    onInitial: thunkNotice,
+    onFailure: thunkNotice,
+    onSuccess: ({ value }) => (hasDesktopRpcAccess(value) ? <>{children}</> : notice),
   });
 };
 
@@ -526,8 +549,12 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
       <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
     </RegistryContext.Provider>
   );
-  const wrapLazy = (label: string, content: ReactNode): JSX.Element =>
-    wrap(
+  // Desktop-RPC surfaces gate on the authenticated session instead of
+  // mounting into a transport that can only answer chat RPCs.
+  const wrapDesktop = (label: string, content: ReactNode): JSX.Element =>
+    wrap(label, <DesktopSessionGate label={label}>{content}</DesktopSessionGate>);
+  const wrapDesktopLazy = (label: string, content: ReactNode): JSX.Element =>
+    wrapDesktop(
       label,
       <Suspense
         fallback={
@@ -545,17 +572,17 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
   return {
     home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
-    sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
-    "contradiction-triage": () => wrap("Contradiction Triage", <ContradictionTriageSurface />),
-    "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
-    "ontology-document": () => wrap("Document", <OntologyDocumentRegion />),
-    "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
-    "ontology-source": () => wrap("Source", <OntologySourceRegion />),
-    "ontology-inspector": () => wrap("Inspector", <OntologyInspectorRegion />),
-    "ontology-sparql": () => wrapLazy("SPARQL", <OntologySparqlRegion />),
-    "ontology-validation": () => wrapLazy("Validation", <OntologyValidationRegion />),
-    "ontology-changelog": () => wrap("Change Log", <OntologyChangeLogRegion />),
-    "ontology-metrics": () => wrapLazy("Worker Metrics", <OntologyMetricsRegion />),
+    sync: () => wrapDesktop("Vault sync", <VaultSyncPanel floating={false} />),
+    "contradiction-triage": () => wrapDesktop("Contradiction Triage", <ContradictionTriagePanel />),
+    "ontology-explorer": () => wrapDesktop("Explorer", <OntologyExplorerRegion />),
+    "ontology-document": () => wrapDesktop("Document", <OntologyDocumentRegion />),
+    "ontology-graph": () => wrapDesktop("Graph", <OntologyGraphRegion />),
+    "ontology-source": () => wrapDesktop("Source", <OntologySourceRegion />),
+    "ontology-inspector": () => wrapDesktop("Inspector", <OntologyInspectorRegion />),
+    "ontology-sparql": () => wrapDesktopLazy("SPARQL", <OntologySparqlRegion />),
+    "ontology-validation": () => wrapDesktopLazy("Validation", <OntologyValidationRegion />),
+    "ontology-changelog": () => wrapDesktop("Change Log", <OntologyChangeLogRegion />),
+    "ontology-metrics": () => wrapDesktopLazy("Worker Metrics", <OntologyMetricsRegion />),
   };
 };
 
