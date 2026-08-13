@@ -1,8 +1,8 @@
-import { signedRequestFromEvent } from "./event.js";
-import { constantTimeEqual, signRequest } from "./hmac.js";
-import { loadAuthorizerSecrets } from "./ssm.js";
-import type { HttpApiEvent } from "./event.js";
-import type { AuthorizerSecrets } from "./ssm.js";
+import { signedRequestFromEvent } from "./event.ts";
+import { constantTimeEqual, signRequest } from "./hmac.ts";
+import { loadAuthorizerSecrets } from "./ssm.ts";
+import type { HttpApiEvent } from "./event.ts";
+import type { AuthorizerSecrets } from "./ssm.ts";
 
 type AuthorizerResponse = {
   readonly context: Readonly<Record<string, string>>;

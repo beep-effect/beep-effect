@@ -1,8 +1,8 @@
 import { handler as shimHandler } from "turborepo-remote-cache/aws-lambda";
-import { signedRequestFromEvent } from "./event.js";
-import { verifyRequestSignature } from "./hmac.js";
-import { loadWriterSecret } from "./ssm.js";
-import type { HttpApiEvent } from "./event.js";
+import { signedRequestFromEvent } from "./event.ts";
+import { verifyRequestSignature } from "./hmac.ts";
+import { loadWriterSecret } from "./ssm.ts";
+import type { HttpApiEvent } from "./event.ts";
 
 type ShimDelegate = (event: HttpApiEvent, ...args: ReadonlyArray<unknown>) => unknown;
 

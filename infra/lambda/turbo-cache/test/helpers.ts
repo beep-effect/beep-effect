@@ -1,4 +1,4 @@
-import type { HttpApiEvent } from "../src/event.js";
+import type { HttpApiEvent } from "../src/event.ts";
 
 export const READ_TOKEN = "read-token-for-tests";
 export const WRITE_TOKEN = "write-token-for-tests";

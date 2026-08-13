@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { signRequest } from "../src/hmac.js";
-import { createWriterHandler } from "../src/writer.js";
-import { requestEvent, WRITER_SECRET } from "./helpers.js";
+import { signRequest } from "../src/hmac.ts";
+import { createWriterHandler } from "../src/writer.ts";
+import { requestEvent, WRITER_SECRET } from "./helpers.ts";
 
 describe("writer wrapper", () => {
   test("returns 403 without invoking the shim when the signature is missing", async () => {

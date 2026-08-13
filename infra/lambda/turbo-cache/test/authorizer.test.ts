@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { createAuthorizerHandler } from "../src/authorizer.js";
-import { createAuthorizerSecretsLoader } from "../src/ssm.js";
-import { READ_TOKEN, requestEvent, WRITE_TOKEN, WRITER_SECRET } from "./helpers.js";
+import { createAuthorizerHandler } from "../src/authorizer.ts";
+import { createAuthorizerSecretsLoader } from "../src/ssm.ts";
+import { READ_TOKEN, requestEvent, WRITE_TOKEN, WRITER_SECRET } from "./helpers.ts";
 import type { GetParametersCommandOutput } from "@aws-sdk/client-ssm";
 
 const READ_ARN = "arn:aws:ssm:us-east-1:123456789012:parameter/cache/read";

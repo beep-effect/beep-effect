@@ -76,7 +76,7 @@ const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(f
     `${encodeJson({
       version: 1,
       generatedOn: "2026-06-08",
-      scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+      scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
       entries: [
         {
           file: "packages/example/src/Example.ts",

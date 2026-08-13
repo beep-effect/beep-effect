@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { createAuthorizerHandler } from "../src/authorizer.js";
-import { constantTimeEqual } from "../src/hmac.js";
-import { createWriterHandler } from "../src/writer.js";
-import { READ_TOKEN, requestEvent, WRITE_TOKEN, WRITER_SECRET } from "./helpers.js";
+import { createAuthorizerHandler } from "../src/authorizer.ts";
+import { constantTimeEqual } from "../src/hmac.ts";
+import { createWriterHandler } from "../src/writer.ts";
+import { READ_TOKEN, requestEvent, WRITE_TOKEN, WRITER_SECRET } from "./helpers.ts";
 
 describe("constant-time comparison", () => {
   test("handles equal and different-length inputs", () => {

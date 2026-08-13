@@ -61,12 +61,14 @@
     {
       "id": "P2",
       "name": "Cut over to ephemeral workers",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "Cutover merged in #666 (2026-08-11): 11/11 pickup gate, re-queue-to-fresh-runner proven live, burst registrations 75 to 6. Residue: full guest-isolation red-team re-run rides with the CSF-003 IMDS rework."
     },
     {
       "id": "P3",
       "name": "Asymmetric Turbo cache",
-      "status": "pending"
+      "status": "in-progress",
+      "statusNote": "Cache API deployed and probe-proven 2026-08-12 (10/10 acceptance matrix); CI consumption lands with the workflow env wiring PR."
     },
     {
       "id": "P4",
