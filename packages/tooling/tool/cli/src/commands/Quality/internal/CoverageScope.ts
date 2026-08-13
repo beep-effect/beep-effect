@@ -19,7 +19,12 @@ const COVERAGE_FULL_INPUT_FILES = [
   "bun.lock",
   "package.json",
   "standards/coverage.regression-baseline.jsonc",
+  "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+  "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+  "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+  "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+  "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
   "turbo.json",
   "tsconfig.base.json",
   "tsconfig.json",
@@ -29,8 +34,12 @@ const COVERAGE_FULL_INPUT_FILES = [
 
 const COVERAGE_FULL_INPUT_PREFIXES = [
   ".github/",
+  "packages/tooling/test-kit/",
   "packages/tooling/tool/cli/src/commands/Ci/",
   "packages/tooling/tool/cli/src/commands/Quality/internal/Coverage",
+  "packages/tooling/tool/cli/src/internal/artifacts/",
+  "packages/tooling/tool/cli/src/internal/process/",
+  "packages/tooling/tool/cli/src/internal/ratchet/",
 ] as const;
 
 const COVERAGE_NOOP_FILES = [
@@ -401,8 +410,8 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
     O.match({
       onNone: () => O.some(`${filePath}: no current workspace owner`),
       onSome: (owner) =>
-        !owner.hasCoverage && filePath === packageJsonPath(owner)
-          ? O.some(`${filePath}: package may have removed its coverage task`)
+        filePath === packageJsonPath(owner)
+          ? O.some(`${filePath}: package identity or coverage task may have changed`)
           : O.none(),
     })
   );
@@ -420,9 +429,9 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
  *
  * **Details**
  *
- * Global coverage inputs, unknown paths, and a package manifest that may have
- * removed its coverage task force a full run. Otherwise only directly changed
- * owners that currently define coverage are selected.
+ * Global coverage inputs, unknown paths, shared test-kit changes, and package
+ * manifest changes force a full run. Otherwise only directly changed owners
+ * that currently define coverage are selected.
  *
  * **Example** (Select a directly changed owner)
  *

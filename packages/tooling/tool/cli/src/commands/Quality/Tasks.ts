@@ -541,6 +541,41 @@ const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray
   (arg) => !isCoverageAffectedArg(arg)
 );
 
+const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
+  arg === "--only" || Str.startsWith("--only=")(arg) || arg === "--summarize" || Str.startsWith("--summarize=")(arg);
+
+const isCoverageFullOwnedValueArg = (arg: string): boolean =>
+  arg === "--concurrency" || arg === "--filter" || arg === "--since";
+
+const isCoverageFullOwnedArg = (arg: string): boolean =>
+  isCoverageAffectedArg(arg) ||
+  isCoverageFullOwnedBooleanArg(arg) ||
+  isCoverageFullOwnedValueArg(arg) ||
+  isTurboConcurrencyArg(arg) ||
+  isExplicitTurboScopeArg(arg);
+
+const coverageFullPassthroughArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const passthrough: Array<string> = [];
+  let skipValue = false;
+
+  for (const arg of args) {
+    if (skipValue && !Str.startsWith("--")(arg)) {
+      skipValue = false;
+      continue;
+    }
+    skipValue = false;
+    if (isCoverageFullOwnedValueArg(arg)) {
+      skipValue = true;
+      continue;
+    }
+    if (!isCoverageFullOwnedArg(arg)) {
+      passthrough.push(arg);
+    }
+  }
+
+  return passthrough;
+};
+
 const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
@@ -1270,13 +1305,24 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
     },
   });
 
-const coverageFullShardStep = (cwd: string, index: number, packageNames: ReadonlyArray<string>) =>
+const coverageFullShardStep = (
+  cwd: string,
+  index: number,
+  packageNames: ReadonlyArray<string>,
+  passthroughArgs: ReadonlyArray<string>
+) =>
   QualityTaskStep.make({
     label: `coverage:shard-${index}`,
     command: "bunx",
     args: turboRunArgs(
       ["coverage"],
-      ["--only", "--concurrency=1", "--summarize", ...A.map(packageNames, (packageName) => `--filter=${packageName}`)]
+      [
+        "--only",
+        "--concurrency=1",
+        "--summarize",
+        ...passthroughArgs,
+        ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
+      ]
     ),
     cwd,
     env: coverageEnvironment(),
@@ -1851,7 +1897,55 @@ export const rootQualityStepsForTesting: {
     rootStepsFor(repoRoot, invocation)
 );
 
-const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(function* (repoRoot: string) {
+const coverageFullSteps = (
+  repoRoot: string,
+  packageNames: ReadonlyArray<string>,
+  args: ReadonlyArray<string>
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
+  const passthroughArgs = coverageFullPassthroughArgs(args);
+  const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
+
+  return [
+    turboStep(repoRoot, "coverage:prebuild", ["build"], [CI_TURBO_CONCURRENCY_ARG, "--summarize", ...passthroughArgs]),
+    ...A.map(shards, (shard) => coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs)),
+  ];
+};
+
+/**
+ * Build the prebuild and weighted shard steps for a full hosted coverage run.
+ *
+ * **Example** (Preserve caller cache controls)
+ *
+ * ```ts
+ * import { coverageFullStepsForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const steps = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"])
+ * console.log(steps[0]?.args)
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param packageNames - Coverage-owning workspace package names.
+ * @param args - Parsed Turbo arguments supplied by the caller.
+ * @returns One prebuild step followed by the weighted coverage shard steps.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageFullStepsForTesting: {
+  (
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>
+  ): (repoRoot: string) => readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+  (
+    repoRoot: string,
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>
+  ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+} = dual(3, coverageFullSteps);
+
+const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
   const owners = yield* workspaceTaskOwners(repoRoot);
   const packageNames = pipe(
     owners,
@@ -1862,16 +1956,12 @@ const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(
     return yield* QualityTaskConfigurationError.new("No workspace packages define coverage.");
   }
 
-  const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
+  const [prebuildStep, ...shardSteps] = coverageFullSteps(repoRoot, packageNames, args);
   yield* Console.log(
-    `[beep-cli] coverage:full: prebuild once, then ${A.length(shards)} weighted in-job shard(s) at aggregate concurrency ${COVERAGE_FULL_SHARD_COUNT}`
+    `[beep-cli] coverage:full: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) at aggregate concurrency ${COVERAGE_FULL_SHARD_COUNT}`
   );
-  yield* runStep(turboStep(repoRoot, "coverage:prebuild", ["build"], [CI_TURBO_CONCURRENCY_ARG, "--summarize"]));
-  yield* runStreamingStepGroup(
-    "coverage:full",
-    A.map(shards, (shard) => coverageFullShardStep(repoRoot, shard.index, shard.packageNames)),
-    COVERAGE_FULL_SHARD_COUNT
-  );
+  yield* runStep(prebuildStep);
+  yield* runStreamingStepGroup("coverage:full", shardSteps, COVERAGE_FULL_SHARD_COUNT);
 });
 
 const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(function* (
@@ -1892,13 +1982,13 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
 
   yield* cleanCoverageRegressionOutputs(repoRoot);
   if (isCi() && !options.scoped && !options.writeBaseline) {
-    yield* runFullShardedCoverage(repoRoot);
+    yield* runFullShardedCoverage(repoRoot, options.args);
   } else {
     yield* runStep(coverageStep(repoRoot, options));
   }
 
   if (options.writeBaseline) {
-    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped);
+    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames);
     return;
   }
 

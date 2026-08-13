@@ -17,6 +17,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageFullStepsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -1438,12 +1439,17 @@ describe("quality task adapter", () => {
     });
   });
 
-  it("falls back to full coverage for global, unknown, or removed coverage inputs", () => {
+  it("falls back to full coverage for global, unknown, manifest, or shared test-kit inputs", () => {
     const owners = [
       CoverageScopeOwner.make({
         packageName: "@beep/a",
         packagePath: "packages/a",
         hasCoverage: false,
+      }),
+      CoverageScopeOwner.make({
+        packageName: "@beep/b",
+        packagePath: "packages/b",
+        hasCoverage: true,
       }),
     ];
 
@@ -1453,6 +1459,15 @@ describe("quality task adapter", () => {
     ).toMatchObject({ _tag: "full" });
     expect(planCoverageAffectedScope(owners, ["scripts/coverage-helper.ts"])).toMatchObject({ _tag: "full" });
     expect(planCoverageAffectedScope(owners, ["packages/a/package.json"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/b/package.json"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/tooling/test-kit/test-utils/src/TestClock.ts"])).toMatchObject({
+      _tag: "full",
+    });
+    expect(
+      planCoverageAffectedScope(owners, [
+        "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      ])
+    ).toMatchObject({ _tag: "full" });
   });
 
   it("skips affected coverage for docs-only and packages without a coverage task", () => {
@@ -1491,6 +1506,35 @@ describe("quality task adapter", () => {
     expect(planCoverageFullShards(packageNames, 3)).toEqual(shards);
     expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
   });
+
+  it("preserves caller Turbo flags while overriding full-coverage shard controls", () =>
+    withEnvVar("CI", "true", () => {
+      const steps = coverageFullStepsForTesting(
+        "/repo",
+        ["@beep/a", "@beep/b", "@beep/c", "@beep/d", "@beep/e"],
+        ["--concurrency", "9", "--force", "--remote-only", "--output-logs=errors-only", "--summarize"]
+      );
+
+      expect(steps[0]?.args).toEqual([
+        "turbo",
+        "run",
+        "build",
+        "--concurrency=4",
+        "--summarize",
+        "--force",
+        "--remote-only",
+        "--output-logs=errors-only",
+      ]);
+      for (const step of A.drop(steps, 1)) {
+        expect(step.args).toContain("--concurrency=1");
+        expect(step.args).toContain("--summarize");
+        expect(step.args).toContain("--force");
+        expect(step.args).toContain("--remote-only");
+        expect(step.args).toContain("--output-logs=errors-only");
+        expect(step.args).not.toContain("--concurrency=4");
+        expect(step.args).not.toContain("9");
+      }
+    }));
 
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
     // 50% as 50/100 covered, so 50 lines uncovered.
