@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ci-lane-economics",
+    "title": "CI Lane Economics",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ci-lane-economics",
+  "lifecycle": "active",
+  "statusNote": "Split from ci-fleet-endgame P5 on 2026-08-13; P0 cache-warm lane census is the entry point.",
+  "mission": "No required CI job waits 20 minutes: re-measure every lane cache-warm, then place each on the cheapest runner that meets the bar.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/ci-fleet-endgame",
+    "graduated": "2026-08-13",
+    "note": "Carries the second co-primary outcome of the ci-fleet-endgame charter (speed-loop decision 54 lineage); split so the fleet packet can close on its infrastructure outcomes."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until a representative week shows no required job p50 above 20 minutes and the final PR is driven to mergeable via /yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ci-lane-economics/README.md",
+    "goals/ci-lane-economics/SPEC.md",
+    "goals/ci-lane-economics/PLAN.md",
+    "goals/ci-lane-economics/GOAL.md",
+    "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md"
+  ],
+  "researchReports": [],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ci-lane-economics/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Cache-warm lane census",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Placement decisions",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Execute moves",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Evidence and close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ci-lane-economics/GOAL.md)\" -le 4000",
+    "jq . goals/ci-lane-economics/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/ci-lane-economics"
+  ],
+  "stopConditions": [
+    "A fleet move would breach the $100/mo projection gate (stop) or the $200/mo ceiling (hard stop).",
+    "A placement change would weaken fork-PR, cache-write, IAM, egress, or teardown rails.",
+    "Cache hit rates collapse (regression in #673/#674 infrastructure) - fix the cache before measuring."
+  ]
+}

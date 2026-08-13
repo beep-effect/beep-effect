@@ -5,12 +5,12 @@
     "title": "CI Fleet Endgame",
     "status": "active",
     "created": "2026-08-08",
-    "updated": "2026-08-12",
+    "updated": "2026-08-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-fleet-endgame",
   "lifecycle": "active",
-  "statusNote": "P1 and P2 are complete (#632/#633, #666); P3 asymmetric-cache activation is in flight; P4-P6 pending.",
+  "statusNote": "P0-P3 complete; P4 and P5 superseded into goals/ci-fleet-residue and goals/ci-lane-economics (2026-08-13 split); P6 fires when ci-lane-economics delivers the 20-minute outcome so the packet can close citing both charter halves.",
   "mission": "Deliver both co-primary CI endgames: an on-demand worker-per-job system and no required job that waits 20 minutes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -67,18 +67,20 @@
     {
       "id": "P3",
       "name": "Asymmetric Turbo cache",
-      "status": "in-progress",
-      "statusNote": "Cache API deployed and probe-proven 2026-08-12 (10/10 acceptance matrix); CI consumption lands with the workflow env wiring PR."
+      "status": "complete",
+      "statusNote": "Shipped in #673 (infra activation: authorizer + HMAC writer, 10/10 probe matrix) and #674 (CI consumption: PR read-only, main-only write environment), merged 2026-08-13; first write-enabled main wave seeded the bucket from 3 probe objects to 650+ real artifacts; PR-wave read-hit evidence recorded on the packet-split PR."
     },
     {
       "id": "P4",
       "name": "Lockfile-keyed baked AMI",
-      "status": "pending"
+      "status": "superseded",
+      "statusNote": "Continues as goals/ci-fleet-residue P0 (2026-08-13 split)."
     },
     {
       "id": "P5",
       "name": "Performance and operations hardening",
-      "status": "pending"
+      "status": "superseded",
+      "statusNote": "Continues as goals/ci-lane-economics (2026-08-13 split); P6 remains gated on its 20-minute outcome."
     },
     {
       "id": "P6",
