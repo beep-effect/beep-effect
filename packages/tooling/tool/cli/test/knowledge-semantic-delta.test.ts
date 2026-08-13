@@ -1250,10 +1250,8 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           ],
           bunExecutable
         );
-        const commands = yield* oracle.probeCommands([
-          ["goals", "doctor"],
-          ["goals", "doctro"],
-        ]);
+        const rootOnlyCommand = yield* oracle.probeCommands([[]]);
+        const commands = yield* oracle.probeCommands([[], ["goals", "doctor"], ["goals", "doctro"]]);
         const index = yield* oracle.indexBytes;
         const expectedIndex = yield* decodeKnowledgeUtf8(
           index.expected,
@@ -1264,7 +1262,9 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           "Archived index fixture emitted malformed UTF-8."
         );
 
+        assert.deepEqual(rootOnlyCommand, [resolvedCommand([])]);
         assert.deepEqual(commands, [
+          resolvedCommand([]),
           resolvedCommand(["goals", "doctor"]),
           KnowledgeCommandUnknown.make({ canonicalPath: ["goals", "doctro"] }),
         ]);

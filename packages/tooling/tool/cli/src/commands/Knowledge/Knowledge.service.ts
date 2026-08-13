@@ -87,6 +87,7 @@ const NORMALIZATION_VERSION = "knowledge-normalization/v1";
 const FINDING_ID_PREFIX = "knowledge-finding/v1:";
 const INDEX_PATH = "goals/INDEX.md";
 const COMMAND_PREFIX = "bun run beep";
+const COMMAND_INPUT_ROW_PREFIX = "command/v1";
 const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
 const PROBE_STREAM_MAX_CHARS = 1024 * 1024;
 const PROBE_DIAGNOSTIC_MAX_CHARS = 2048;
@@ -901,7 +902,12 @@ import { Command } from "effect/unstable/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()
-const commands = input === "" ? [] : input.split("\\n").map((line) => line.split("\\t"))
+// This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
+// file zero commands and a prefix-only row the root command without trusting archive data.
+const commands = input === "" ? [] : input.split("\\n").map((line) => {
+  const [, ...words] = line.split("\\t")
+  return words
+})
 const children = (command) => command.subcommands.flatMap((group) => group.commands)
 const resolve = (words) => {
   let command = rootCommand
@@ -929,7 +935,7 @@ const program = Effect.gen(function*() {
       )
       if (Result.isFailure(help) && help.failure?._tag !== "ShowHelp") yield* Effect.fail(help.failure)
     }
-    results.push(result.status + "\\t" + result.canonicalPath.join("\\t"))
+    results.push([result.status, ...result.canonicalPath].join("\\t"))
   }
   process.stdout.write(results.join("\\n"))
 })
@@ -1167,7 +1173,7 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
       .writeFileString(
         inputPath,
         A.join(
-          A.map(commands, (words) => A.join(words, "\t")),
+          A.map(commands, (words) => A.join(A.prepend(words, COMMAND_INPUT_ROW_PREFIX), "\t")),
           "\n"
         )
       )

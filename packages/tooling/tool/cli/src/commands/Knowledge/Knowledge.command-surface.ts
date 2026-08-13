@@ -564,28 +564,27 @@ const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (
     A.filter((filePath) => Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)),
     A.sort(Order.String)
   );
-  return yield* Effect.forEach(sourceNames, (filePath) =>
-    Effect.gen(function* () {
-      const info = yield* fs
-        .stat(filePath)
-        .pipe(
-          Effect.mapError(() =>
-            KnowledgeOperationalError.make({ message: "Failed to inspect command surface source data." })
-          )
-        );
-      if (info.type !== "File") {
-        return O.none<readonly [string, string]>();
-      }
-      const text = yield* fs
-        .readFileString(filePath)
-        .pipe(
-          Effect.mapError(() =>
-            KnowledgeOperationalError.make({ message: "Failed to read command surface source data." })
-          )
-        );
-      return O.some([path.relative(checkoutRoot, filePath), text] as const);
-    })
-  ).pipe(Effect.map(A.getSomes));
+  const readCommandSourceFile = Effect.fnUntraced(function* (filePath: string) {
+    const info = yield* fs
+      .stat(filePath)
+      .pipe(
+        Effect.mapError(() =>
+          KnowledgeOperationalError.make({ message: "Failed to inspect command surface source data." })
+        )
+      );
+    if (info.type !== "File") {
+      return O.none<readonly [string, string]>();
+    }
+    const text = yield* fs
+      .readFileString(filePath)
+      .pipe(
+        Effect.mapError(() =>
+          KnowledgeOperationalError.make({ message: "Failed to read command surface source data." })
+        )
+      );
+    return O.some([path.relative(checkoutRoot, filePath), text] as const);
+  });
+  return yield* Effect.forEach(sourceNames, readCommandSourceFile).pipe(Effect.map(A.getSomes));
 });
 
 const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(function* (checkoutRoot: string) {
