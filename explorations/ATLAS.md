@@ -214,26 +214,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   carries the arc). The thread-virtualization gate remains: secure beep-effect6
   editor-stack ownership and complete the pretext-driver handoff. Feeds
   [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
-- [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
-  (stage `research`): a maximal-fan-out synthesis of current repo state vs.
-  goals/vision, centered on a gap map
-  ([`synthesis/00-baseline-gap-map.md`](./atlas-synthesis/synthesis/00-baseline-gap-map.md)).
-  The **capability-inventory half of the grand-vision exercise** (renamed from
-  `baseline-synthesis`, 2026-06-17). First decomposition done (2026-06-17): graduated the
-  office-action wedge into two goal packets —
-  [`epistemic-claim-lifecycle-gate`](../goals/epistemic-claim-lifecycle-gate/README.md) (build
-  first) and [`law-practice-office-action-spike`](../goals/law-practice-office-action-spike/README.md).
-  More verticals (intake/drafting/contract review) follow once the loop turns once.
-- [`solo-firm-docketing`](./solo-firm-docketing/README.md) — how Tom's solo IP
-  practice deals with docketing (stage `graduate`, still active while gated
-  candidates remain). Graduated 2026-07-14 into
-  [`law-docketing-patent-spine`](../goals/law-docketing-patent-spine/README.md)
-  and [`law-docketing-reliability`](../goals/law-docketing-reliability/README.md),
-  with product orientation at
-  [`docs/product/solo-firm-docketing.md`](../docs/product/solo-firm-docketing.md).
-  Queued: CPI after the handroll-v1 trigger, trademark on a qualifying matter,
-  court on a qualifying matter plus licensed-engine shape, and foreign on a
-  qualifying matter plus licensed engine/source shape.
 - [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) —
   capture/prebill overlay for Tom's solo IP practice (stage `graduate`, still
   active while gated candidates remain). Graduated 2026-07-14 into
@@ -244,15 +224,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   permission/sync/retention P0 and consent, PST on a demonstrated need,
   profitability after sufficient Slice 1 data, and LEDES/UTBMS on a client
   mandate with a concrete billing target.
-- [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice for
-  `apps/professional-desktop` (stage `graduate`, still active while follow-ons remain).
-  Graduated 2026-07-14 into
-  [`voice-composer-slice`](../goals/voice-composer-slice/README.md): local
-  push-to-talk Moonshine dictation plus manual, interruptible Kokoro read-aloud,
-  with the five-day Linux Tauri proof as fail-fast P0. Capture foundation and the
-  general inference worker are absorbed until a second consumer appears. Provider
-  ports, auto/streaming read-aloud, cloud transport, and voice-to-voice remain gated
-  follow-ons off the proven slice.
 - [`domain-layer-hardening`](./domain-layer-hardening/README.md) — systematic
   hardening of every product slice's domain/schema layer (entities, aggregates,
   value objects, typed errors) against a regret-minimization rubric + external
@@ -274,12 +245,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /
   [`routing.json`](./_gold-intake/routing.json) (219/219 routed, user-approved). Each packet:
   CAPTURE seeded from its nuggets, `RESEARCH.md` (external landscape · in-repo inventory ·
-  constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted. **Graduate-now (Wave-1,
-  user-confirmed):** [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (stage
-  `graduate`, still active for queued/parked lanes): graduated
-  [`uspto-prosecution-read`](../goals/uspto-prosecution-read/README.md) and
-  [`uspto-ptmnfee2-ingest`](../goals/uspto-ptmnfee2-ingest/README.md) on
-  2026-07-14,
+  constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted.
+  **Graduate-now (Wave-1, user-confirmed):**
   [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md)
   (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
   [`uspto-mcp`](../goals/uspto-mcp/README.md), and
@@ -298,11 +265,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md);
   `citation-ground-before-cite` remains queued, with MPEP patterns, hosted
   enrichment, matter-wall enforcement, and rich-text annotation gated.
-  [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md)
-  (stage `graduate`, still active for four demand-gated candidates): graduated
-  [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md)
-  on 2026-07-14. Consumer-led reframe: Effect v4 workflow and promoted
-  `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
   (stage `graduate`, still active for the retention lane): graduated
@@ -327,14 +289,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (stage `graduate`, still active across two tracks): graduated
   [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) while five
   content-security/secret-governance candidates remain gated,
-  [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (stage
-  `graduate`, still active for four gated satellites): graduated
-  [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md),
-  the single RRF-layer owner,
-  [`secure-document-download-proxy`](./secure-document-download-proxy/README.md)
-  (stage `graduate`, still active for three gated candidates): graduated
-  [`secure-document-delivery`](../goals/secure-document-delivery/README.md) on
-  2026-07-14,
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (stage
   `graduate`, still active for gated projector/topology candidates): graduated
   [`projection-dispatch-core`](../goals/projection-dispatch-core/README.md) on
@@ -370,8 +324,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Proposed
 
-- (none — `atlas-synthesis` is now an Active packet above; its capability-inventory
-  half is done and the outcome-decomposition half is its next stage.)
+- (none)
 
 ### Parked
 
@@ -405,6 +358,28 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`atlas-synthesis`](./atlas-synthesis/README.md) — graduated 2026-08-13 after
+  its two promised-now goals completed-retained; a future synthesis pass reopens
+  the packet at `decompose` or starts a fresh packet.
+- [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md) —
+  graduated 2026-08-13 with its workflow-engine spike scaffolded and four
+  demand-gated MAP re-entry points; a fired MAP gate reopens at `decompose`.
+- [`local-first-voice`](./local-first-voice/README.md) — graduated 2026-08-13
+  with the composer slice scaffolded and four gated voice re-entry points; a
+  fired MAP gate reopens at `decompose`.
+- [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) — graduated
+  2026-08-13 with the fusion core scaffolded and four gate-proofed retrieval
+  satellites preserved; a fired MAP gate reopens at `decompose`.
+- [`secure-document-download-proxy`](./secure-document-download-proxy/README.md)
+  — graduated 2026-08-13 with secure document delivery scaffolded and three
+  gated integrations preserved; a fired MAP gate reopens at `decompose`.
+- [`solo-firm-docketing`](./solo-firm-docketing/README.md) — graduated
+  2026-08-13 with its patent spine and reliability goals scaffolded and four
+  queued lanes preserved; a fired MAP gate reopens at `decompose`.
+- [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) —
+  graduated 2026-08-13 with its prosecution-read and `PTMNFEE2` goals scaffolded
+  and four provider/search lanes preserved; a fired MAP gate reopens at
+  `decompose`.
 - [`fleet-coordination`](./fleet-coordination/README.md) — graduated
   2026-08-10 into the retained
   [`fleet-mirror`](../goals/fleet-mirror/README.md) goal with no open design
