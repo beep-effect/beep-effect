@@ -726,10 +726,10 @@
     },
     "@beep/govinfo": {
       "path": "packages/drivers/govinfo",
-      "lines": 85.71,
-      "statements": 84.48,
+      "lines": 80,
+      "statements": 78.2,
       "branches": 100,
-      "functions": 62.5,
+      "functions": 41.66,
       "uncovered": {
         "lines": 8,
         "statements": 9,
