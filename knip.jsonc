@@ -71,6 +71,10 @@
     "explorations/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",
+    // Self-contained Lambda bundle source (own package.json + lockfile, not a workspace
+    // member): esbuild bundles it into the deployed ZIP via infra/lambda/turbo-cache/build.sh,
+    // so nothing in the workspace import graph reaches it.
+    "infra/lambda/**",
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
