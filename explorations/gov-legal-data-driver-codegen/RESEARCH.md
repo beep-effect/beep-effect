@@ -254,10 +254,14 @@ open questions** — appetite and sequencing must size the net-new work, not jus
 
 ### Driver state (the gap this wedge fills)
 
-- **Four bare VERSION-only skeletons** (confirmed each `src/index.ts` exports
-  only `export const VERSION = "0.0.0" as const`):
-  `packages/drivers/courtlistener`, `packages/drivers/ecfr`, `packages/drivers/dol`,
-  `packages/drivers/federal-register`. These are net-new builds.
+- **One remaining VERSION-only skeleton:** `packages/drivers/ecfr`.
+- **Deleted 2026-08-13** (directories gone; do not `cd` into them or
+  extend a skeleton): `@beep/courtlistener`, `@beep/dol`,
+  `@beep/federal-register`. Recreate with
+  `bun run beep create-package <name> --family drivers` in the same PR as
+  the first real surface. Procedure:
+  [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md).
+  Delivery `GOAL.md` is recreate-first, not a path into deleted trees.
 - **`packages/drivers/govinfo` is PARTIAL — domain-only, 27 src files, no
   transport** (confirmed: `find … -name '*.service.ts' -o '*.config.ts' -o
   '*.client.ts'` returns nothing). It has `S.Class` value models

@@ -62,9 +62,9 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/drivers/ecfr` — endpoint breadth (2→15) + Stream helpers.
-- `packages/drivers/federal-register` — full keyless driver.
-- `packages/drivers/dol` — full keyed driver (gated).
-- `packages/drivers/courtlistener` — full keyed driver (gated).
+- `@beep/federal-register` — full keyless driver (deleted 2026-08-13; recreate when this packet resumes).
+- `@beep/dol` — full keyed driver (gated; same recreate rule).
+- `@beep/courtlistener` — full keyed driver (gated; same recreate rule).
 - `packages/foundation/capability/api-transport` — wire and exercise the
   existing, currently-unexercised `TokenHeaderAuth` and
   `ApiKeyHeaderAuth`/`ApiKeyQueryAuth` branches of `ApiAuth` (implemented in
@@ -189,7 +189,8 @@ Each criterion is falsifiable and maps to a Verification Matrix row.
       helpers for its list endpoints, each with an offline multi-page test
       (fake client returns successive pages/cursors).
 - [ ] **AC#7 — generated boundary.** The Q2 ripgrep ban-set finds no matches
-      under any `packages/drivers/{ecfr,federal-register,dol,courtlistener}/src/_generated/*`.
+      under `packages/drivers/ecfr/src/_generated/*` and any sibling driver
+      trees recreated from FOLLOW-UPS.
 - [ ] **AC#8 — determinism + CI drift.** Re-running each driver's
       `generate` produces no diff; the `beep ci lane codegen` step list
       (`packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`, dispatched by
@@ -204,14 +205,14 @@ Each criterion is falsifiable and maps to a Verification Matrix row.
 | AC | Check | Command or evidence | Required result |
 | --- | --- | --- | --- |
 | AC#1 | matrix present + registered | `test -f goals/gov-legal-data-driver-delivery/research/data-source-terms-matrix.md` + `jq '.currentSourceOfTruth' ops/manifest.json` | Exists, registered |
-| AC#1 | gate observable | before matrix: `rg -l -e COURTLISTENER_API_TOKEN -e DOL_API_KEY packages/drivers/{dol,courtlistener}/src` | No matches pre-matrix |
+| AC#1 | gate observable | before matrix: after recreate, `rg -l -e COURTLISTENER_API_TOKEN -e DOL_API_KEY` over those driver trees; until then the packages do not exist (see FOLLOW-UPS) | No matches pre-matrix |
 | AC#2 | ecfr parity | descriptor count in `packages/drivers/ecfr/src/_generated` vs committed spec paths; `bun run check --filter @beep/ecfr` | 15/15, green offline |
-| AC#3 | fedreg parity + shape | descriptor count vs spec; `bun run check --filter @beep/federal-register`; `rg -n "ApiAuth.NoAuth" packages/drivers/federal-register/src` | 14/14, green, keyless |
+| AC#3 | fedreg parity + shape | descriptor count vs spec; `bun run check --filter @beep/federal-register`; `rg -n "ApiAuth.NoAuth"` over the recreated federal-register driver | 14/14, green, keyless |
 | AC#4 | dol parity + auth | descriptor count vs spec; offline auth-branch test asserts verified mechanism; `bun run check --filter @beep/dol` | 6/6, green |
-| AC#5 | CL parity + policy | descriptor count vs committed official schema + recorded deltas; `rg -n "Token " packages/drivers/courtlistener/src`; fixture audit (synthetic only) | Parity, literal Token, clean |
-| AC#6 | Stream helpers | `rg -n -e paginateChunkEffect -e "Stream\." packages/drivers/{ecfr,federal-register,dol,courtlistener}/src` + multi-page offline tests | Present + tested |
+| AC#5 | CL parity + policy | descriptor count vs committed official schema + recorded deltas; `rg -n "Token "` over the recreated courtlistener driver; fixture audit (synthetic only) | Parity, literal Token, clean |
+| AC#6 | Stream helpers | `rg -n -e paginateChunkEffect -e "Stream\."` over `packages/drivers/ecfr` plus any recreated sibling drivers + multi-page offline tests | Present + tested |
 | AC#7 | generated boundary | ripgrep Q2 ban-set over the four `src/_generated/*` | No matches |
-| AC#8 | determinism + CI | per-driver `bun run generate` then `git diff --exit-code`; `rg -n "exit-code" packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` lists all four driver paths; `bun run beep ci lane codegen` exits 0 | No drift; lane covers all four |
+| AC#8 | determinism + CI | per existing or recreated driver `bun run generate` then `git diff --exit-code`; lane lists only packages that exist; `bun run beep ci lane codegen` exits 0 | No drift; lane covers live drivers |
 | AC#9 | docgen | `bun run docgen:local` (edit loops) / package docgen proof | Green |
 | AC#10 | scoped diff | `git diff --stat` per phase branch | In-scope only |
 | ops | launcher size | `test "$(wc -m < goals/gov-legal-data-driver-delivery/GOAL.md)" -le 4000` | Passes |

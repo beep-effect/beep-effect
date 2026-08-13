@@ -9,6 +9,7 @@ export {
   stringStatics,
 } from "../Codemode.method-names.ts"
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeStringStatic = (name: StringStatic, args: Array<unknown>, node: AstNode): unknown => {
   const codes = args.map((arg) => {
     if (typeof arg !== "number") throw InterpreterRuntimeError.new(`String.${name} expects number arguments.`, node)

@@ -30,6 +30,7 @@ import {
 import { PromiseRuntime } from "./Interpreter.promises.ts"
 import { Interpreter } from "./Interpreter.runtime.ts"
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   options: ExecuteOptions<ToolkitType>,
   limits: ExecutionLimits,

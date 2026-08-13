@@ -110,8 +110,9 @@ stale, malformed-unit, or cross-matter fixture fails closed.
 - **Epistemic admission:** `EvidenceSpan`, `ClaimGate`, and existing
   `ClaimLifecycle` public surfaces under `packages/epistemic/` and
   `packages/shared/domain/src/values/ClaimLifecycle/`.
-- **Optional hosted home:** the `@beep/courtlistener` skeleton at
-  `packages/drivers/courtlistener/`.
+- **Optional hosted home:** recreate `@beep/courtlistener` from
+  `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+  the hosted lookup wrap. It is not in the tree today.
 
 ### Honest NET-NEW work
 

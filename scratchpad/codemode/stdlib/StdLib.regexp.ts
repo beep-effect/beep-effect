@@ -49,6 +49,7 @@ export const regexFailureReason = (error: unknown): string =>
 export const escapeRegexHint =
   'To match special characters like ( ) [ ] { } + * ? . literally, escape them with a backslash (e.g. "\\\\(") or test for them with String.includes instead.'
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
   if (P.isUndefined(arg)) return new RegExp("", extraFlags)
@@ -83,6 +84,7 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   return result
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
     throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError")
@@ -90,6 +92,7 @@ export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, no
   return RegExp.escape(args[0])
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeRegExpMethod = (
   value: CodeModeRegExp,
   name: RegExpMethod,

@@ -22,6 +22,11 @@ is the ready-made seed for that vocabulary + resolver vertical.
 `court-string-resolver` only after the versioned artifact, stable-ID lifecycle,
 and compatibility contract are proven. Fuzzy ranking and SKOS remain gated.
 
+**Trail (2026-08-13):** the CourtListener HTTP driver package is gone. Search
+`packages/law-practice/domain` for vocabulary gaps. Recreate the driver only
+from `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+it.
+
 ## Sources & provenance
 
 [`research/SOURCES.md`](./research/SOURCES.md) — the provenance ledger tracing

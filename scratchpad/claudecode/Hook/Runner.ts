@@ -113,6 +113,7 @@ export const processOutput = (options: {
  *
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode });
 
 /**
@@ -339,7 +340,7 @@ export const runHookProgram = Effect.fn("Hook.runHookProgram")(function* <In ext
 ): Effect.fn.Return<void, RunnerError, Stdio.Stdio | HandlerRequirements<R>> {
   yield* Effect.logDebug("starting single hook runner").pipe(Effect.annotateLogs({ hookEventName: hook.event }));
   const raw = yield* readStdin;
-  const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw).pipe(
+  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(raw).pipe(
     Effect.mapError((cause) => HookInputDecodeError.make({ cause, phase: "json" }))
   );
   yield* runHookFromParsed(hook, parsed);
@@ -375,7 +376,7 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
     Effect.annotateLogs({ registeredHandlers: R.keys(hooks).length })
   );
   const raw = yield* readStdin;
-  const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw).pipe(
+  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(raw).pipe(
     Effect.mapError((cause) => HookInputDecodeError.make({ cause, phase: "json" }))
   );
   const envelope = yield* S.decodeUnknownEffect(HookEnvelope)(parsed).pipe(
@@ -426,6 +427,7 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
  * @category workflows
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
   if (Exit.isSuccess(exit)) return onExit(0);
   if (Cause.hasInterruptsOnly(exit.cause)) return onExit(130);
