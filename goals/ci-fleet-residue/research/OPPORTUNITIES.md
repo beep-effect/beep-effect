@@ -24,11 +24,14 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Evidence: `packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts`
   (`proof-changed-worktree` packet, "no staged, unstaged, or untracked paths
   remain").
-- Prevention: snapshot the worktree's untracked/dirty set at commit time and
-  fail only on paths that appeared DURING the proof (a diff of sets), or emit
-  an early advisory ("worktree must stay untouched until push") when the
-  publish starts. Either would let an operator/agent keep working on packet
-  docs during the ~30 min proof window without poisoning the run.
+- Prevention: a path-set diff (snapshot at commit, fail only on new paths)
+  does NOT work — files an agent writes during the proof are new paths in
+  the post-proof set and still fail, while grandfathering baseline paths
+  would mask proof-time mutations of those files. The honest options are
+  isolation or messaging: run the proof against a detached worktree of the
+  committed HEAD (the head-install preflight already builds exactly that
+  machinery), or emit an explicit advisory at publish start ("worktree is
+  sealed until push") so operators/agents park side work elsewhere.
 
 ## 2026-08-13 — no safe porcelain for bumping a locked transitive dep
 

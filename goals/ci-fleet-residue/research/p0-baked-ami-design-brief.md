@@ -41,28 +41,57 @@ config/report schemas → service contract → impl):
 
 1. Resolve base AMI (AL2023 via the same SSM parameter the controller uses).
 2. Launch one temporary instance in the runner VPC/subnet with the worker
-   security group; run the bake script (toolbelt + docker/libicu + bun +
-   `bun install` warm against the repo's committed `bun.lock`).
-3. Create the AMI, tagged with the lockfile key:
-   `beep-ci:lockfile-sha256=<sha256(bun.lock)>`, plus `App=ci-runners`,
-   `ManagedBy=beep-runners-bake`, base AMI id, and bake date.
-4. Wait for `available`, terminate the temp instance (teardown must be
-   unconditional — reaper-tag the instance at launch).
+   security group AND an explicit public IPv4 association: the runner
+   subnets set `mapPublicIpOnLaunch: false` (the controller compensates
+   with `associate_public_ipv4_address: true`), so a bare `RunInstances`
+   guest there has no internet path and every download (dnf, bun, git,
+   SSM if used) dies. Run the bake script (toolbelt + docker/libicu + bun
+   pinned to the repo's `.bun-version` + `bun install` warm against the
+   committed `bun.lock`).
+3. Create the AMI, tagged with the staleness key:
+   `beep-ci:lockfile-sha256=<sha256(bun.lock)>` AND
+   `beep-ci:bun-version=<.bun-version>`, plus `App=ci-runners`,
+   `ManagedBy=beep-runners-bake`, base AMI id, and bake date. The image
+   carries the Bun executable as well as the package store, so the
+   lockfile sha alone is not the invalidation key — a `.bun-version` bump
+   with unchanged dependencies must also read as stale.
+4. Wait for `available`, terminate the temp instance. Teardown must be
+   unconditional: launch with the reaper's exact filter tags
+   (`beep-ci=runner`, matching `runner_ec2_tags`) plus a
+   `beep-ci:bake=true` marker, so an interrupted bake is swept by the
+   existing reaper instead of leaking a running instance; keep the
+   in-guest `shutdown -P` backstop from the burst conventions too.
 5. Emit a machine-readable bake report artifact (schema-encoded through a
    JsonStringCodec — see the P3 closeout-writer lesson) with the new AMI id,
-   lockfile sha, and the exact pulumi config command to pin it.
+   lockfile sha, bun version, and the exact pulumi config command to pin it.
+
+Activation is NOT just the pin. Pinning `amiId` alone leaves every
+per-boot/per-job setup path running against the baked image and deletes no
+floor: the controller still inlines `runnerToolbeltPostInstall` and the
+module's docker/libicu user-data, and
+`.github/actions/setup-monorepo-ci/action.yml` still downloads bun via
+setup-bun, restores the Bun cache, and runs `bun install`. The activation
+change therefore lands as a coordinated set: (a) the pin, (b) controller
+user-data paths become baked-image no-ops (marker-file check, still
+subshell-scoped), and (c) the workflow setup action short-circuits its
+download/install steps when the baked marker + matching staleness key are
+present. Rollback restores all three together (unset pin -> per-boot
+installs resume; the workflow path re-activates on missing marker).
 
 Staleness check (`beep runners bake --check`): compare the live pin's
-lockfile tag against `sha256(bun.lock)` at HEAD; exit nonzero on mismatch so
-a CI lane or operator ritual can demand a rebake when `bun.lock` moves.
+lockfile AND bun-version tags against `sha256(bun.lock)` and `.bun-version`
+at HEAD; exit nonzero on any mismatch so a CI lane or operator ritual can
+demand a rebake when either moves.
 
 ## Rollback path (must be proven, per exit criteria)
 
-The pin is one Pulumi config value. Rollback = restore the previous
-`ciFleetController:amiId` (or unset → AL2023 latest + per-boot installs,
-the exact posture running today). The bake report records the prior pin so
-rollback is a copy-paste. Baked AMIs are retained (not deregistered) for at
-least one generation.
+Rollback = restore the previous `ciFleetController:amiId` (or unset ->
+AL2023 latest) AND revert the coordinated activation set from the section
+above in the same deploy — the user-data no-op markers and the workflow
+short-circuit both fail open (missing marker -> per-boot installs resume),
+which is the exact posture running today. The bake report records the
+prior pin so the config half is a copy-paste. Baked AMIs are retained (not
+deregistered) for at least one generation.
 
 ## Hard rails carried over
 
