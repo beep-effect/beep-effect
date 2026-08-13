@@ -572,9 +572,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 92,
+      "line": 93,
       "owner": "@beep/law-practice-use-cases",
-      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/ontology/server/test/OntologyTools.test.ts",

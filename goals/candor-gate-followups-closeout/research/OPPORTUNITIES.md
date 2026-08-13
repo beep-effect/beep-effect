@@ -230,3 +230,17 @@
   reference; the reader consumes one read-only repeatable-read repository
   snapshot, and candidate acceptance immediately re-evaluates the vertical gate.
   Focused policy, repository, server, and agent-runtime suites pass.
+
+## CGF-017 — Line-bound schema inventory moved during a review regression
+
+- **Doing:** running exact-head verification after adding the same-source,
+  independent-citation policy fixture.
+- **Evidence:** the schema-first lint reported the existing
+  `CandorPolicy.test.ts` exception stale at line 92 and simultaneously found the
+  same advisory at line 93, after a comment insertion moved its first codec.
+- **Would prevent it:** identify inventory entries by stable symbol and file
+  rather than source line; when an exception remains necessary, require its
+  reason to point to the owning property-test coverage instead of copying the
+  generated advisory text.
+- **Disposition:** refreshed the line and replaced the count-only reason with
+  the deterministic policy-fixture rationale and the domain property-test home.
