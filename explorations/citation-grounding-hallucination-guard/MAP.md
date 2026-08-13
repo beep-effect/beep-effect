@@ -111,7 +111,7 @@ stale, malformed-unit, or cross-matter fixture fails closed.
   `ClaimLifecycle` public surfaces under `packages/epistemic/` and
   `packages/shared/domain/src/values/ClaimLifecycle/`.
 - **Optional hosted home:** the `@beep/courtlistener` skeleton at
-  `packages/drivers/courtlistener/`.
+  `@beep/courtlistener/`.
 
 ### Honest NET-NEW work
 

@@ -82,7 +82,7 @@ without growing into an encyclopedia.
 | D7 | `beep goals bootstrap` is a KSA follow-up, not this packet. Scaffolded from `goals/_template`. | Live CLI (2026-08-13): `goals` has `doctor`, `index`, `set-status` only. Bootstrap is specified in KSA Workstream E and not implemented. | Pretend bootstrap exists; implement bootstrap here. |
 | D8 | Yeet this honesty PR as-is, then stop. | Grill 2026-08-13. P1 is already in the tree. Do not pile MUI or schema-wall work onto this branch. | Keep the branch open and stack the next win. |
 | D9 | MUI cut waits until housekeeping PR1 is on `main` and desktop UX #675 settles. | 07 already homes UI in `foundation/ui-system`. MUI is a second theme engine, not a lie. Parallel workbenches make it a packet, not a night. | Start MUI immediately after yeet; leave MUI forever. |
-| D10 | No special coordination protocol with `../beep-effect2`. If both land, resolve the conflict. | Operator: first-lander wins, the rest rebases. Do not start EntitySchema/Model/VariantSchema deletion in this packet. | Wait-for-their-PR1; parallel TaggedError/EntitySchema cut here. |
+| D10 | No special coordination protocol with the sibling beep-effect2 clone. If both land, resolve the conflict. | Operator: first-lander wins, the rest rebases. Do not start EntitySchema/Model/VariantSchema deletion in this packet. | Wait-for-their-PR1; parallel TaggedError/EntitySchema cut here. |
 
 ## Constraints
 

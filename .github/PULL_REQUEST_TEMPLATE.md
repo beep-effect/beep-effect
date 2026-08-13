@@ -6,7 +6,7 @@
 
 - [ ] Targeted checks or tests that cover the change
 - [ ] No empty workspace package added as a name claim
-- [ ] No secrets, `.env`, or `docs/_internal/` in the diff
+- [ ] No secrets, `.env`, or private working notes in the diff
 
 ## Follow-ups
 

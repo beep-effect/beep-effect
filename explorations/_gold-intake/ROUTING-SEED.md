@@ -59,7 +59,7 @@ Route mix: new-exploration×5, mixed×4, extend-goal×1.
 ### Gov/legal data drivers + OpenAPI codegen
 - **Route:** new-exploration · **Wave:** P1
 - **Primary target:** `gov-legal-data-driver-codegen` (NET-NEW packet)
-- **Coordinate with:** `packages/drivers/courtlistener`, `packages/drivers/ecfr`, `packages/drivers/dol`, `packages/drivers/federal-register`, `packages/drivers/govinfo`, `explorations/solo-firm-docketing`, `packages/drivers/runpod`, `packages/drivers/acp`
+- **Coordinate with:** `@beep/courtlistener`, `packages/drivers/ecfr`, `@beep/dol`, `@beep/federal-register`, `packages/drivers/govinfo`, `explorations/solo-firm-docketing`, `packages/drivers/runpod`, `packages/drivers/acp`
 - **Net-new (no existing home):**
   - OpenAPI single-spec -> dual (Effect SDK + MCP server) codegen pipeline ported onto beep's Effect/effect-Schema/HttpApi stack (us-legal-tools uses Orval/axios/Zod; port the architecture, not the code)
   - Implement the four bare skeleton drivers @beep/{courtlistener,ecfr,dol,federal-register} (currently only export VERSION='0.0.0')
@@ -148,7 +148,7 @@ Route mix: new-exploration×5, mixed×4, extend-goal×1.
 ### Court / jurisdiction controlled vocabulary
 - **Route:** new-exploration · **Wave:** P2
 - **Primary target:** `court-vocabulary-resolver` (NET-NEW packet)
-- **Coordinate with:** `goals/official-data-sync-foundation`, `packages/drivers/courtlistener`, `goals/ip-law-knowledge-graph`
+- **Coordinate with:** `goals/official-data-sync-foundation`, `@beep/courtlistener`, `goals/ip-law-knowledge-graph`
 - **Net-new (no existing home):**
   - courts-db canonical court entity dataset (~2,809 courts) with CourtListener IDs
   - regex court-name normalization dictionary

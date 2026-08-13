@@ -142,7 +142,7 @@ grounding verifies *any* quote against *any* source and is not legal-specific.
 (`packages/law-practice/*`), sibling to `law-practice-office-action-spike` /
 `ip-law-knowledge-graph`, keeping citation/IP vocab out of epistemic/shared.
 (3) The **hosted lookup wrap** (if/when Q4's lane is built) lands in the existing
-`@beep/courtlistener` driver skeleton (`packages/drivers/courtlistener`, MIT,
+`@beep/courtlistener` driver skeleton (`@beep/courtlistener`, MIT,
 currently `VERSION`-only). All three **compose** `@beep/epistemic-domain`
 `EvidenceSpan` + `@beep/provenance` `TextAnchor` via public surface, never by
 forking.

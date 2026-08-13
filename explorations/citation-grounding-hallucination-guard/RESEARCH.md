@@ -222,7 +222,7 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 
 ### Drivers & domain (compose at the boundary)
 
-- **`@beep/courtlistener` driver** — `packages/drivers/courtlistener/src/index.ts`.
+- **`@beep/courtlistener` driver** — `@beep/courtlistener/src/index.ts`.
   **Bare skeleton** (`VERSION = "0.0.0"` only; 1 src file), package license **MIT**. The
   citation-lookup wrap is unbuilt here — this packet supplies it. (Tree-snapshot routes the
   driver itself to `gov-legal-data-driver-codegen`; the citation-lookup slice to this packet.)

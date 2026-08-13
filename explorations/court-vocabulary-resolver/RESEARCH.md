@@ -320,7 +320,7 @@ ported resolver. Verified via `ls`/`rg` on 2026-06-29.
 
 - **Court/jurisdiction/reporter controlled vocabulary — NOT FOUND.** `rg` for
   `CourtJurisdictionCode|ReporterType|citation_string|CourtSystem|CourtLevel`
-  across `packages/law-practice/domain/src` and `packages/drivers/courtlistener/src`
+  across `packages/law-practice/domain/src` and `@beep/courtlistener/src`
   returned nothing; no `Court`/`Jurisdiction` entity dir in law-practice/domain.
   The vocabularies are genuinely net-new.
 
@@ -462,7 +462,7 @@ ported resolver. Verified via `ls`/`rg` on 2026-06-29.
 
 **Routing cautions.**
 
-- `@beep/courtlistener` driver is a **bare stub** (`packages/drivers/courtlistener/src/index.ts`
+- `@beep/courtlistener` driver is a **bare stub** (`@beep/courtlistener/src/index.ts`
   exports only `VERSION`, verified) — building out the driver/API client is a
   *different* packet (`gov-legal-data-driver-codegen`); this packet lands the
   vocabulary + resolver in/alongside it but does not build the API client.
