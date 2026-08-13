@@ -1919,6 +1919,9 @@
       ],
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/repo-cli/commands/Runners": [
+        "./packages/tooling/tool/cli/src/commands/Runners/index.ts"
       ]
     }
   }
