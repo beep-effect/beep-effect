@@ -4,19 +4,22 @@ import {
   findRecentClaudeSession,
   mungeClaudeProjectPath,
   PrProvenance,
+  PrProvenanceBranch,
+  PublicPrProvenance,
   renderPrProvenance,
   resumeCommandFor,
   tokenizeHomePath,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Duration, Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { ConfigProvider, Duration, Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -30,6 +33,47 @@ const withTempDirectory = <Result, Error, Requirements>(
   ).pipe(provideScopedLayer(PlatformLayer));
 
 describe("Yeet PR provenance", () => {
+  it("round-trips schema-derived public provenance values", () => {
+    const encode = S.encodeResult(PublicPrProvenance);
+    const decode = S.decodeResult(PublicPrProvenance);
+
+    fc.assert(
+      fc.property(S.toArbitrary(PublicPrProvenance)(fc), (value) => {
+        const encoded = encode(value);
+        if (Result.isFailure(encoded)) {
+          return assert.fail("Expected schema-derived public provenance to encode");
+        }
+        const decoded = decode(encoded.success);
+        if (Result.isFailure(decoded)) {
+          return assert.fail("Expected encoded public provenance to decode");
+        }
+        assert.deepStrictEqual(decoded.success, value);
+      }),
+      fcRuns(32)
+    );
+  });
+
+  it("accepts Git-valid hostile branches and rejects invalid ref names", () => {
+    const isBranch = S.is(PrProvenanceBranch);
+
+    expect(isBranch("feat/evil`payload-->still-branch")).toBe(true);
+    for (const invalid of [
+      "",
+      "-option",
+      "branch with spaces",
+      "feature\\windows",
+      "feature//double",
+      "feature/../escape",
+      "feature/.hidden",
+      "feature/locked.lock",
+      "feature/trailing.",
+      "feature/@{upstream}",
+      "@",
+    ]) {
+      expect(isBranch(invalid), invalid).toBe(false);
+    }
+  });
+
   it("delegates Claude project naming to the canonical slash converter", () => {
     expect(mungeClaudeProjectPath("/home/operator/beep.effect\\.claude/worktrees/end.game")).toBe(
       "-home-operator-beep.effect-.claude-worktrees-end.game"
@@ -181,7 +225,7 @@ describe("Yeet PR provenance", () => {
     );
   });
 
-  it.effect("tokenizes detected paths in both human and machine provenance", () =>
+  it.effect("keeps detected resume details local and omits them from public provenance", () =>
     Effect.gen(function* () {
       const clonePath = "/home/operator/YeeBois/projects/beep-effect3";
       const checkoutPath = `${clonePath}/.claude/worktrees/footer-redact`;
@@ -193,16 +237,19 @@ describe("Yeet PR provenance", () => {
       );
       const footer = renderPrProvenance(provenance);
 
-      expect(provenance.clonePath).toBe("~/YeeBois/projects/beep-effect3");
-      expect(provenance.worktreePath).toStrictEqual(
+      assert.strictEqual(provenance.clonePath, "~/YeeBois/projects/beep-effect3");
+      assert.deepStrictEqual(
+        provenance.worktreePath,
         O.some("~/YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact")
       );
-      expect(provenance.resumeCommand).toBe(
+      assert.strictEqual(
+        provenance.resumeCommand,
         "cd ~/'YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact' &&\n  codex resume 'thread-123'"
       );
-      expect(footer).not.toContain("/home/operator");
-      expect(footer).toContain("- Clone: `~/YeeBois/projects/beep-effect3`");
-      expect(footer).toContain("- Worktree: `~/YeeBois/projects/beep-effect3/.claude/worktrees/footer-redact`");
+      assert.isFalse(Str.includes("/home/operator")(footer));
+      assert.isFalse(Str.includes("~/YeeBois/projects/beep-effect3")(footer));
+      assert.isFalse(Str.includes("thread-123")(footer));
+      assert.isFalse(Str.includes("codex resume")(footer));
 
       const encoded = pipe(
         footer,
@@ -211,7 +258,14 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
+      assert.deepStrictEqual(
+        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        PublicPrProvenance.make({
+          schemaVersion: 1,
+          branch: "fix/yeet-footer-redact-home",
+          harness: "codex",
+        })
+      );
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -232,9 +286,15 @@ describe("Yeet PR provenance", () => {
         "fix/yeet-footer-redact-home"
       );
 
-      expect(provenance.clonePath).toBe(clonePath);
-      expect(provenance.worktreePath).toStrictEqual(O.some(checkoutPath));
-      expect(provenance.resumeCommand).toBe(`cd '${checkoutPath}' &&\n  codex resume 'thread-123'`);
+      assert.strictEqual(provenance.clonePath, clonePath);
+      assert.deepStrictEqual(provenance.worktreePath, O.some(checkoutPath));
+      assert.strictEqual(provenance.resumeCommand, `cd '${checkoutPath}' &&\n  codex resume 'thread-123'`);
+
+      const footer = renderPrProvenance(provenance);
+      assert.isFalse(Str.includes(clonePath)(footer));
+      assert.isFalse(Str.includes(checkoutPath)(footer));
+      assert.isFalse(Str.includes("thread-123")(footer));
+      assert.isFalse(Str.includes("codex resume")(footer));
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -244,7 +304,7 @@ describe("Yeet PR provenance", () => {
     )
   );
 
-  it.effect("renders human and schema-decodable machine provenance twins", () =>
+  it.effect("renders public human and machine provenance without resumable identity", () =>
     Effect.gen(function* () {
       const provenance = PrProvenance.make({
         branch: "feat/yeet-pr-provenance",
@@ -256,12 +316,12 @@ describe("Yeet PR provenance", () => {
       });
       const footer = renderPrProvenance(provenance);
 
-      expect(footer).toContain("---\n\n## Provenance");
-      expect(footer).toContain("- Clone: `~/workspace/beep-effect`");
-      expect(footer).toContain("- Worktree: `~/workspace/beep-effect/.claude/worktrees/endgame`");
-      expect(footer).toContain("- Branch: `feat/yeet-pr-provenance`");
-      expect(footer).toContain("- Harness: `claude-code`");
-      expect(footer).toContain("```sh\ncd ~/'workspace/beep-effect' &&\n  claude --resume 'session-123'\n```");
+      assert.isTrue(Str.includes("---\n\n## Provenance")(footer));
+      assert.isTrue(Str.includes("- Branch: <code>feat/yeet-pr-provenance</code>")(footer));
+      assert.isTrue(Str.includes("- Harness: `claude-code`")(footer));
+      assert.isFalse(Str.includes("~/workspace/beep-effect")(footer));
+      assert.isFalse(Str.includes("session-123")(footer));
+      assert.isFalse(Str.includes("claude --resume")(footer));
 
       const encoded = pipe(
         footer,
@@ -270,13 +330,51 @@ describe("Yeet PR provenance", () => {
         O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
         O.getOrThrow
       );
-      expect(yield* S.decodeEffect(S.fromJsonString(PrProvenance))(encoded)).toStrictEqual(provenance);
-      expect(
+      assert.deepStrictEqual(
+        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        PublicPrProvenance.make({
+          schemaVersion: 1,
+          branch: "feat/yeet-pr-provenance",
+          harness: "claude-code",
+        })
+      );
+      assert.isTrue(
         pipe(
           Str.split("\n")(footer),
           A.every((line) => Str.length(line) < 100)
         )
-      ).toBe(true);
+      );
+    })
+  );
+
+  it.effect("escapes Git-valid branch names in both public framing contexts", () =>
+    Effect.gen(function* () {
+      const branch = "feat/evil`payload-->still-branch";
+      const footer = renderPrProvenance(
+        PrProvenance.make({
+          branch,
+          clonePath: "/repo",
+          harness: "unknown",
+          resumeCommand: "cd '/repo' &&\n  claude --resume",
+          sessionId: O.none(),
+          worktreePath: O.none(),
+        })
+      );
+      const encoded = pipe(
+        footer,
+        Str.split("<!-- yeet-provenance\n"),
+        A.get(1),
+        O.flatMap((tail) => pipe(tail, Str.split("\n-->"), A.head)),
+        O.getOrThrow
+      );
+
+      assert.isTrue(Str.includes("<code>feat/evil&#96;payload--&gt;still-branch</code>")(footer));
+      assert.strictEqual(A.length(Str.split("-->")(footer)), 2);
+      assert.isTrue(Str.includes("\\u003e")(encoded));
+      assert.deepStrictEqual(
+        yield* S.decodeEffect(S.fromJsonString(PublicPrProvenance))(encoded),
+        PublicPrProvenance.make({ schemaVersion: 1, branch, harness: "unknown" })
+      );
     })
   );
 });
