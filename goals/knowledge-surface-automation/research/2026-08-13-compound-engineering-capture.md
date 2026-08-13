@@ -1,3 +1,11 @@
+# Provenance
+
+Provenance: copied from `explorations/compound-engineering/CAPTURE.md`.
+Captured 2026-08-06; folded 2026-08-13 by operator decision. The friction-ledger
+law, buzz channel, and reflection skill cover the near-term need; this note
+preserves the always-on compounding vision as research input to
+knowledge-surface automation.
+
 # Capture — compound engineering
 
 Append-only. Never interrogated, never reorganized.
