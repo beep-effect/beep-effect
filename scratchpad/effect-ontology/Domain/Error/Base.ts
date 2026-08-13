@@ -875,7 +875,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-    toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
+  toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 

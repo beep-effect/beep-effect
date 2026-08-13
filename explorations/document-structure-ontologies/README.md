@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,9 +18,9 @@ agents drafting patent applications in `apps/professional-desktop`?
 
 ## Next Open Question
 
-Shape review: does [`BRIEF.md`](./BRIEF.md) (DRAFT) match the operator's
-picture — problem, one-cycle appetite, 5-layer sketch per D1–D6, rabbit
-holes, no-gos? Iterate until confirmed, then decompose into `MAP.md`.
+Draft `MAP.md` for the four ratified goal packets: patent-document schema
+first, PO classification, SPAR wire vocabulary plus annotation shape, and the
+FOLIO slice plus MCP browse tools.
 
 ## Read This First
 
@@ -44,6 +44,11 @@ holes, no-gos? Iterate until confirmed, then decompose into `MAP.md`.
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13: D7 shape sign-off ratified `BRIEF.md` as-is; decomposition is
+  four goal packets with the patent-document schema first. D8 routes Lynx
+  `lkg.ttl` through this packet's FOLIO `TaxonomySeed` machinery with Lynx-owned
+  vetting/license checks. Stage advanced to `decompose`; MAP drafting is next.
 
 - 2026-08-11 (publish review): PR #662 opened; full local Yeet proof passed.
   Review hardening made the pending operator shape review machine-readable,

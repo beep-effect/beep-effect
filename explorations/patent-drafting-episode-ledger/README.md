@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `shape`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -31,20 +31,8 @@ after the relator wedge graduated).
 
 ## Next Open Question
 
-Both research lanes and the [`RESEARCH.md`](./RESEARCH.md) synthesis are
-complete (2026-08-06; review gate 1 folded). Next: the align session with
-Benjamin over six branches (`ops/manifest.json` `openQuestions`) — first
-branch: the episode set, rebuild proof, and raw fallback (parent align
-question 14; research found the recent-raw fallback is prescribed by no
-source), with the answer annex (4 of 7 fields net-new beep-side), the
-support schema/attorney gates (statutory N-closure, omission-type new
-matter, the objection/rejection split), routing modes, the T3-F5
-independent-benchmark choice, and the NEW runtime approval-decision
-vocabulary branch (the live `RuntimeApprovalDecision` is single-member
-`pending` — refusal is unrepresentable today) behind it. The research-stage
-record is on main (landed 2026-08-08 as its own PR per the amended
-PR-staging decision in [`DECISIONS.md`](./DECISIONS.md)); align outcomes
-land in the next PR, and BRIEF stays gated behind align.
+Draft and review `BRIEF.md` against the six-question contract ratified
+2026-08-13. All manifest questions are resolved; the packet is at `shape`.
 
 ## Read This First
 
@@ -55,6 +43,9 @@ land in the next PR, and BRIEF stays gated behind align.
 5. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
 
 ## Trail
+
+- 2026-08-13: align closed; all six questions resolved in `DECISIONS.md`.
+  Stage advanced to `shape`; BRIEF drafting/review is next.
 
 - 2026-08-06: packet opened on Benjamin's call, the day the relator wedge's
   graduation PR #590 merged (the 2026-08-04 unblock milestone — candor BRIEF

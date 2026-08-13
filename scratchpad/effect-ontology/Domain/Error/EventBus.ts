@@ -206,7 +206,7 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
 export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
   $I.annoteSchema("AnyEventBusError", {
     description: "Exhaustive tagged union of event-bus, Pub/Sub, and dead-letter failures.",
-    toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
+  toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
   })
 );
 

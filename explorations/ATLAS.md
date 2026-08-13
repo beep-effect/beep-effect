@@ -57,8 +57,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   candidate; push+poll realtime; git-markdown packets stay the sole system
   of record, hosted trackers ruled out). Next: `BRIEF.md`.
 - [`document-structure-ontologies`](./document-structure-ontologies/README.md) —
-  shape-stage (align complete, D1–D6 logged; BRIEF.md drafted, awaiting
-  operator review): DOCO/PO/DEO vs the
+  decompose-stage: D7 ratified the BRIEF as-is on 2026-08-13 and fixed four
+  goal packets (patent-document schema first, PO classification, SPAR wire +
+  annotation/DOCO fold, FOLIO slice + MCP browse tools); D8 routes Lynx
+  `lkg.ttl` through the FOLIO `TaxonomySeed` machinery. DOCO/PO/DEO vs the
   `@beep/md`/`@beep/pandoc-ast`/`@beep/lexical-schema` AST family (the
   recursive tagged unions already implement PO's content-model axioms) + a
   5-lane Grok 4.5 sweep (~250KB cited reports in
@@ -71,15 +73,22 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   browse tools planned for the existing governed ontology toolkit (D4) for
   `apps/professional-desktop` drafting agents. Related:
   `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
-  D1–D27 binds layering).
+  D1–D27 binds layering). Next: draft `MAP.md`.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  research-stage. Next open question: which candidate contract bricks already
-  exist in-repo, and which are net-new? See the packet's
-  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md),
-  [`SOURCES.md`](./typed-agent-skill-contracts/research/SOURCES.md), and
-  [`SYNTHESIS.md`](./typed-agent-skill-contracts/research/mining/SYNTHESIS.md).
+  graduate-stage, still active: spine graduated 2026-08-13 to
+  [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
+  (`@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
+  SKILL.md render-as-encode projection). Waves 2–6 (KG ingestion, ops ladder,
+  browser leases, memory routing, fleet protocols) remain candidates in
+  [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
+  [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
-  research-stage: mine Harvey + Engram's open-sourced synthetic law firm
+  shape-stage after align closed 2026-08-13: tracked-changes-aware ingest is
+  the wedge, with the U4 fixture spike as P0 kill-gate and structural
+  representation as fallback. Synthetic C&H is first; run the upstream
+  podman+metered-keys harness once, then keep an Effect-native eval as the
+  durable surface. Two goals advance (eval + tracked changes); generator/DMS
+  remain MAP re-entry points. Research mined Harvey + Engram's synthetic firm
   (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
   graded firm-knowledge tasks in MIT-licensed harvey-labs) for leverage: a
   graded testbed for the knowledge-engine bet, spec→feature→render synthetic
@@ -90,18 +99,20 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   10 WEAKEN / 2 KILL; new find: LAB's pipeline is redline-blind while 371
   tasks grade redlines — an unclaimed, OIP-load-bearing wedge). Two decisions
   pre-seeded: C&H is a standing test asset; their eval code is reference for a
-  roll-our-own Effect-native eval. Next: align — 8 questions queued, wedge
-  question (Q2) first.
+  roll-our-own Effect-native eval.
 - [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
-  align-stage: deep-dive of the Lynx project's Legal Knowledge Graph ontology
+  shape-stage after align closed 2026-08-13: span annotation leads; SHACL
+  generation waits behind M4; multilingual discipline is a re-entry;
+  `lkg.ttl` rides document-structure-ontologies' FOLIO machinery; ELI is a
+  reference-only research asset for future `legal-rule-time-identity`; and
+  lexicog receives a competency question. Deep-dive of the Lynx LKG ontology
   (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded
   against beep-effect's semantic/KG capability (successor strand to graduated
   `legal-ontology-landscape`, which cited Lynx in one line only). Research
   landed 2026-08-06: Lynx is a pattern donor, not a vocabulary donor — five
-  ranked opportunities in `research/05-value-assessment.md` (lead: attributed
-  multi-claim span annotation; `lkg.ttl` as first VETTED vendor slice); zero
+  ranked opportunities in `research/05-value-assessment.md`; zero
   patent/IP modelling in the whole corpus, so semantic-foundation M2/M3 gaps
-  stay open. Next: grill the five open questions.
+  stay open.
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
@@ -112,31 +123,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
-- [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
-  align-stage: wave 2 of the legal/patent ontology-KG strand
-  (`legal-ontology-landscape` graduated into
-  [`semantic-foundation`](../goals/semantic-foundation/README.md)); campaign
-  complete — 122 distillates, four verified track syntheses, /adhd pass, and
-  the routing seed (8 clusters, 4 proposed slugs) SIGNED OFF in the
-  2026-08-01 reconciliation grill with remo1/remo2/remo3 resolved without
-  supersession; first wedge opened 2026-08-04 (phase-2 grill; the
-  contradiction-semantics cluster re-routed to ride with
-  `legal-position-relator-runtime`); queued wedges UNBLOCKED 2026-08-04 (the
-  decided milestone — the candor BRIEF's approval — was reached the same
-  day). The first two wedges are fully GRADUATED: the first 2026-08-04 into
-  [`goals/patent-citation-candor-gate`](../goals/patent-citation-candor-gate/README.md)
-  (graduation PR #560 merged 2026-08-05; implementation PR #575 merged
-  2026-08-06), and the second — opened 2026-08-05 carrying the
-  contradiction-semantics cluster — 2026-08-06 into
-  [`goals/legal-position-relator-runtime`](../goals/legal-position-relator-runtime/README.md).
-  Third wedge
-  [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
-  OPENED 2026-08-06, research stage complete 2026-08-08 — its align session
-  is Benjamin's. Next behind it: the FunctionalUnit extension on
-  Benjamin's call.
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
-  research-stage third wedge of the `legal-patent-kg-deepening` routing matrix
-  (opened 2026-08-06; research complete 2026-08-08): a law-owned, append-only
+  shape-stage third wedge of the `legal-patent-kg-deepening` routing matrix;
+  all six align questions closed 2026-08-13. Full drafting event union ships,
+  watermark lag alone triggers fallback, rebuild proof compares bytes and
+  answers, all seven annex policy fields ship in rung 1, §112(d)-closure
+  support sets carry attorney-only verdicts, routing is fixed with override,
+  the public-USPTO benchmark is deferred, and refusal composes law-side on
+  `CandorGateVerdict.isBlocked`. The packet remains a law-owned, append-only
   `DraftingEpisode` product
   record — closed event union + pure replay fold over outline, retrieval,
   chunk generation, limitation support, deterministic validation, bounded
@@ -149,28 +143,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   remo2/remo3 boundaries binding (no persistent graph store; no projection
   becomes authority; the 2026-08-06 operator dev-memory role change leaves
   the product/operator boundary untouched). Research highlights: the
-  never-compute boundary proved two-sided from MPEP/statute primary text;
-  the recent-raw fallback is prescribed by no source; PR #575's law-practice
-  lane gives rung 2 a payload-bearing append-only precedent; a new sixth
-  align branch (the live runtime approval vocabulary cannot represent
-  refusal). Six align branches wait; the align session is Benjamin's, with
-  BRIEF gated behind it.
-- [`context-rent-telemetry`](./context-rent-telemetry/README.md) — capture-stage
-  spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md):
-  instrument which always-loaded guidance lines (CLAUDE.md / AGENTS.md / skill
-  frontmatter) actually change agent behavior, so context pruning becomes
-  empirical instead of taste; candidate backend is the
-  agent-effectiveness-loop Phoenix substrate.
-- [`bitemporal-goal-roadmap`](./bitemporal-goal-roadmap/README.md) — capture-stage
-  spin-off of [`goals/knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
-  and named sibling of
-  [`goals/epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md):
-  `beep goals next --as-of <commit|date>` replays the capability roadmap graph
-  over an event ledger; deliberately outside Workstream D's now-view v1.
-- [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
-  capture-stage preservation of the paused goal’s load-bearing governance
-  design: ordered law canon, explicit role authority, gated lifecycle,
-  decision-complete artifacts, and expiring exception contracts.
+  never-compute boundary proved two-sided from MPEP/statute primary text.
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   capture-stage: bind model qualification to the exact model, adapter,
   modality, prompt, wrapper, decoding configuration, and artifact digest —
@@ -185,61 +158,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md)
   landed. Carries master align Q1 (verdict-family naming) and Q3 (retention
   classes for prunable projections).
-- [`knowledge-workspace`](./knowledge-workspace/README.md) — capture-stage
-  product vision for an immutable event journal projected into a live graph,
-  Lexical wiki-link authoring/backlinks, and auditable temporal replay; stale
-  implementation anchors were deliberately discarded.
-- [`project-intelligence`](./project-intelligence/README.md) — capture-stage
-  condensation of the fixture-first watched-source research loop: repo-owned
-  evidence authority, rebuildable projections, stable source lifecycle,
-  untrusted-input boundaries, and deterministic briefs.
-- [`stack-installer`](./stack-installer/README.md) — capture-stage preservation
-  of approval-first repair UX, app/manual parity, fresh-machine evidence
-  contracts, and the still-unclosed Windows proof gap.
-- [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
-  pretext × dock kernel × blocks (stage `graduate`, opened 2026-07-12): text
-  layout as pure arithmetic over shippable per-engine font metrics closes the
-  workspace-as-data composition — rendered geometry becomes data, agents gain
-  sight, and the dock-divergence "costs" audit came back almost empty of true
-  costs. First proof landed same day:
-  [`scratchpad/computable-layout`](../scratchpad/computable-layout/README.md)
-  (browser-oracle fixture → pure greedy breaker reproduces Chrome's wrap
-  counts under `bun test`). Same-day landings: minimum-extent constraints in
-  the dock kernel itself (global floor + per-group `GroupMinimumLookup` via
-  `requiredExtent`; kernel 72/72), `FontMetricsSnapshotV1` versioned
-  envelope, and the full-circle proof (metrics → content minimum → kernel
-  geometry → guaranteed one-line render). Align closed 2026-07-13: Q1
-  RATIFIED (driver `@beep/pretext`), stage `graduate`, **goal #1 graduated →
-  [`goals/pretext-driver`](../goals/pretext-driver/README.md)** (PR #391
-  carries the arc). The thread-virtualization gate remains: secure beep-effect6
-  editor-stack ownership and complete the pretext-driver handoff. Feeds
-  [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
-- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) —
-  capture/prebill overlay for Tom's solo IP practice (stage `graduate`, still
-  active while gated candidates remain). Graduated 2026-07-14 into
-  [`law-time-capture-spine`](../goals/law-time-capture-spine/README.md), with
-  product orientation at
-  [`docs/product/ip-attorney-time-tracking.md`](../docs/product/ip-attorney-time-tracking.md).
-  Queued: FreshBooks after its API/write/mapping P0, one M365 signal after its
-  permission/sync/retention P0 and consent, PST on a demonstrated need,
-  profitability after sufficient Slice 1 data, and LEDES/UTBMS on a client
-  mandate with a concrete billing target.
-- [`domain-layer-hardening`](./domain-layer-hardening/README.md) — systematic
-  hardening of every product slice's domain/schema layer (entities, aggregates,
-  value objects, typed errors) against a regret-minimization rubric + external
-  best practice. At `graduate`: Phases 0–2 done (five-slice audit
-  [`10`–`14`](./domain-layer-hardening/synthesis/) + rollup
-  [`19`](./domain-layer-hardening/synthesis/19-phase1-crosscutting.md) + external
-  grounding [`20`](./domain-layer-hardening/synthesis/20-external-law-and-ontology.md)/[`21`](./domain-layer-hardening/synthesis/21-external-signature-dms-notes-corpus.md));
-  Phase 3 ([`BRIEF`](./domain-layer-hardening/BRIEF.md)+[`MAP`](./domain-layer-hardening/MAP.md))
-  decomposed into **7 goal packets**. First goal
-  [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) is
-  paused until KG tables approach scale with PRD P2 librarian; packets 2–7 are
-  held behind it. The six 2026-07-14 law consumers are packet-5 shaping inputs,
-  not dependency clearance. Frontier was: 0 typed
-  errors in 3 slices, two competing audit bases (`BaseEntity` vs unused
-  `@beep/schema/DomainModel`), no soft-delete / temporal-validity / domain-event
-  substrate, near-empty aggregates, law-practice rich-in-nouns-thin-in-lifecycle.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /
@@ -255,7 +173,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`agent-execution-authority`](../goals/agent-execution-authority/README.md)
   as its MCP sink class),
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
-  (stage `graduate`, still active while two lanes remain): graduated
+  (closed `graduated` 2026-08-13): graduated
   [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
   and scaffolded
   [`citation-extraction-engine`](../goals/citation-extraction-engine/README.md)
@@ -263,11 +181,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`docs/product/citation-grounding.md`](../docs/product/citation-grounding.md).
   The engine is blocked by the verified-span substrate and
   [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md);
-  `citation-ground-before-cite` remains queued, with MPEP patterns, hosted
+  `citation-ground-before-cite` is the reopen-at-`decompose` point once both
+  prerequisites land, with MPEP patterns, hosted
   enrichment, matter-wall enforcement, and rich-text annotation gated.
   **Queued (P2/P3, research-complete):**
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
-  (stage `graduate`, still active for the retention lane): graduated
+  (stage `graduate`, retention lane spun 2026-08-13): graduated
   [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
   the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
   operator Graphiti retirement without making product tables its backend —
@@ -275,22 +194,23 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated
   [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
   the same day (approval-gated `CONTRADICTS` candidates; Deferred spike B is its
-  P0 hard gate). Retention/tier projections remain the only queued lane,
+  P0 hard gate). Retention/tier projections now proceed through the ratified
+  optional-lane shape,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
-  (stage `graduate`, still active for queued families/streaming/calibration):
+  (closed `graduated` 2026-08-13; four MAP re-entry points):
   graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
   on 2026-07-14; it consumes the verified-span substrate and feeds the
   patent-docketing spine,
   [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md) (stage
-  `graduate`, still active for resolver/fuzzy/SKOS lanes): graduated
+  `graduate`, closed `graduated` 2026-08-13): graduated
   [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md)
   on 2026-07-14,
   [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md)
-  (stage `graduate`, still active across two tracks): graduated
+  (closed `graduated` 2026-08-13 with five re-entry points): graduated
   [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) while five
   content-security/secret-governance candidates remain gated,
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (stage
-  `graduate`, still active for gated projector/topology candidates): graduated
+  `graduate`, closed `graduated` 2026-08-13 with three re-entry points): graduated
   [`projection-dispatch-core`](../goals/projection-dispatch-core/README.md) on
   2026-07-14. Plus **9 non-invasive
   Case-A research notes** folded into existing goals (`file-processing-capability` OCR,
@@ -308,8 +228,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation` superseded, design proven by the
   effect-only `scratchpad/identity` prototype at 27/27).
   [`identity-iri-core`](../goals/identity-iri-core/README.md) is complete;
-  [`identity-iri-fold`](../goals/identity-iri-fold/README.md) graduated
-  2026-07-14; `identity-iri-fibered` remains gated behind it
+  [`identity-iri-fold`](../goals/identity-iri-fold/README.md) merged as PR #536
+  on 2026-08-01 and is completed-retained. The fibered trigger fired;
+  `identity-iri-fibered` is ratified as one future goal with full MAP scope,
+  blocked by semantic-web PR2+PR3 cleanups
   ([`MAP.md`](./identity-as-iri/MAP.md)) — merge `IdentityComposer`, the ontology layer, and fibered
   metadata retrieval: identity path and IRI as two literal-typed encodings of
   one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
@@ -328,6 +250,32 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`project-intelligence`](./project-intelligence/README.md) — parked
+  2026-08-13, superseded by the operating loop in
+  `goals/nightly-research-routine`; resume when a legal-grade provenance
+  consumer demands byte-reproducible authority.
+- [`knowledge-workspace`](./knowledge-workspace/README.md) — parked 2026-08-13
+  as a vision archive; the workspace-thread-domain / rich-text line is the
+  product path. Resume when the workspace product bet returns, with the first
+  vertical consuming `epistemic-bitemporal-edge-core` as a projection.
+- [`stack-installer`](./stack-installer/README.md) — parked 2026-08-13 as a
+  pattern archive; resume when product pull adopts the approval-first repair
+  and fresh-machine evidence pattern.
+- [`agent-governance-control-plane`](./agent-governance-control-plane/README.md)
+  — parked 2026-08-13 behind `agentic-governance-laws` and completed
+  `agent-execution-authority`; resume if the laws goal needs the full
+  role-authority / expiring-exception protocol.
+- [`domain-layer-hardening`](./domain-layer-hardening/README.md) — parked
+  2026-08-13 to mirror roadmap-paused `domain-kernel-hardening`; resume when
+  that goal unpauses, then give packets 2–7 a fresh align/shape pass.
+- [`bitemporal-goal-roadmap`](./bitemporal-goal-roadmap/README.md) — parked
+  2026-08-13 until knowledge-surface-automation Workstream D ships the now-view
+  roadmap projection; decide the ledger-source fork at unpark.
+- [`context-rent-telemetry`](./context-rent-telemetry/README.md) — parked
+  2026-08-13 until knowledge-surface-automation Workstream C ships pruning-
+  proposal machinery; decide the A/B guidance-degraded-session question at
+  unpark.
+
 - [`academia-corpus-mining`](./academia-corpus-mining/README.md) — parked
   2026-07-25 at align-complete with all 15 high-priority routes dispatched:
   443 canonical Academia.edu papers mined in tiers (T1 triage of all 443,
@@ -341,8 +289,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   argumentation after semantic-foundation M1. Medium/low routes stay
   recorded in the master table; the June-29 prior synthesis stays adopted
   (snippets errata-flagged); the normalized corpus lives externally
-  (`~/YeeBois/research/academia-2026-07/`). Revival trigger: the approved
-  wave-2 backlog run (97 legal-NLP/extraction papers first).
+  (`~/YeeBois/research/academia-2026-07/`). Wave 2 executed 2026-08-13 after
+  operator-ratified re-triage: 199 no-note papers classified core 2 / extended
+  44 / excluded 153, all 46 core+extended deep-read with zero failures. The
+  external synthesis found zero contradictions and made 14 routing proposals;
+  revival trigger is operator triage of those proposals, which never
+  auto-enter the packet tree.
 - [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — parked
   2026-07-14 at align-complete: harvest-not-port complete with zero goals by
   design; demand gates and reference routes are recorded, and every item must
@@ -357,6 +309,40 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   explicit decision to invest in agent capability guidance, as a fresh packet.
 
 ### Graduated
+
+- [`legal-patent-kg-deepening`](./legal-patent-kg-deepening/README.md) —
+  graduated 2026-08-13 after the candor and relator wedges completed and the
+  episode-ledger align gate closed. `uspto-patent-driver-depth` remains a
+  reopen-at-`decompose` point; ELI routes to future
+  `legal-rule-time-identity` on operator call.
+- [`computable-workspace-geometry`](./computable-workspace-geometry/README.md)
+  — graduated 2026-08-13 after the operator confirmed thread-renderer
+  ownership and scaffolded
+  [`thread-virtualization`](../goals/thread-virtualization/README.md). Kernel
+  residue remains in the dock-substrate goal's migrated Residuals section (the
+  historical route was `scratchpad/dockview/WHAT-IS-LEFT.md`).
+- [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
+  — graduated 2026-08-13; `citation-ground-before-cite` reopens at `decompose`
+  after both prerequisite goals land, and the reopened shape gate decides
+  qualifier-aware stance-layer placement.
+- [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md) —
+  graduated 2026-08-13; `court-string-resolver` is the reopen-at-`decompose`
+  point after artifact, stable-ID lifecycle, and compatibility proof.
+- [`local-first-projection-sync`](./local-first-projection-sync/README.md) —
+  graduated 2026-08-13; its three topology/projector/graph candidates remain
+  reopen-at-`decompose` points behind their named triggers.
+- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) —
+  graduated 2026-08-13; five external-trigger candidates remain
+  reopen-at-`decompose` points.
+- [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md)
+  — graduated 2026-08-13; five gated candidates remain
+  reopen-at-`decompose` points after `ingestion-secret-scrub` ships.
+- [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
+  — graduated 2026-08-13; its four gated MAP rows reopen at `decompose` after
+  first-slice acceptance.
+- `compound-engineering` — exploration directory removed 2026-08-13 after its
+  capture folded into
+  [`knowledge-surface-automation/research/2026-08-13-compound-engineering-capture.md`](../goals/knowledge-surface-automation/research/2026-08-13-compound-engineering-capture.md).
 
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — graduated 2026-08-13 after
   its two promised-now goals completed-retained; a future synthesis pass reopens
