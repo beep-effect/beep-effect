@@ -1148,15 +1148,18 @@ describe("ai-metrics command", () => {
                     expect(otlpExport.value.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
                     expect(otlpExport.value.ingestRunId).toBe(result.ingestRunId);
                     expect(otlpExport.value.message).toContain("OTLP export did not complete after the forwarder run.");
-                    expect(otlpExport.value.message).toContain("did not accept the exported spans");
+                    expect(otlpExport.value.message).toContain("Pending spans remain uncheckpointed for retry.");
+                    expect(otlpExport.value.message).not.toContain("did not accept the exported spans");
                     expect(otlpExport.value.message).not.toContain("private-forwarder-failed-otlp");
                     expect(otlpExport.value.message).not.toContain(tmpDir);
                   }
                 }
                 expect(errorOutput).toContain("OTLP export failed after forwarder run");
                 expect(errorOutput).toContain("OTLP export did not complete after the forwarder run.");
+                expect(errorOutput).not.toContain("did not accept the exported spans");
                 expect(errorOutput).not.toContain("private-forwarder-failed-otlp");
                 expect(errorOutput).not.toContain(tmpDir);
+                expect(resultJson).not.toContain("did not accept the exported spans");
                 expect(resultJson).not.toContain("private-forwarder-failed-otlp");
                 expect(resultJson).not.toContain(rawArchiveKey);
               })

@@ -342,6 +342,45 @@ describe("@beep/repo-ai-metrics identity registry", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("refuses a legacy registry when only the salt-independent repository identity matches", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const clonePath = pathApi.join(tmpDir, "clone");
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const homeDir = pathApi.join(tmpDir, "home");
+        const registryPath = pathApi.join(dataRoot, "identity/registry.json");
+        yield* makeClone(clonePath);
+
+        const upsertWithSalt = (salt: string) =>
+          upsertAiMetricsIdentityRegistry(
+            AiMetricsIdentityRegistryUpsertInput.make({
+              dataRoot,
+              hashSalt: salt,
+              homeDir,
+              rootPath: clonePath,
+              sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+            })
+          );
+
+        const current = yield* upsertWithSalt("provided-salt-a");
+        const legacy = AiMetricsIdentityRegistry.make({
+          generatedAtEpochMillis: current.generatedAtEpochMillis,
+          hashSaltStatus: current.hashSaltStatus,
+          registryVersion: current.registryVersion,
+          roots: current.roots,
+          sourceInstances: current.sourceInstances,
+        });
+        yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+
+        const failure = yield* upsertWithSalt("provided-salt-b").pipe(Effect.flip);
+
+        expect(failure._tag).toBe("AiMetricsIdentityRegistryError");
+        expect(failure.message).toContain("hash-salt namespaces");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("refuses to merge a populated registry across hash-salt namespaces", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {

@@ -778,7 +778,7 @@ const withFirstSeen = (root: AiMetricsCanonicalRoot, firstSeenAtEpochMillis: num
     worktreeIdHash: root.worktreeIdHash,
   });
 
-const legacyRegistrySharesIdentity = (
+const legacyRegistrySharesSaltedIdentity = (
   existing: AiMetricsIdentityRegistry,
   instances: ReadonlyArray<AiMetricsSourceInstance>,
   root: AiMetricsCanonicalRoot
@@ -786,9 +786,7 @@ const legacyRegistrySharesIdentity = (
   A.some(
     existing.roots,
     (existingRoot) =>
-      Eq.equals(existingRoot.rootId, root.rootId) ||
-      Eq.equals(existingRoot.repositoryIdHash, root.repositoryIdHash) ||
-      Eq.equals(existingRoot.worktreeIdHash, root.worktreeIdHash)
+      Eq.equals(existingRoot.rootId, root.rootId) || Eq.equals(existingRoot.worktreeIdHash, root.worktreeIdHash)
   ) ||
   A.some(existing.sourceInstances, (existingInstance) =>
     A.some(instances, (instance) => Eq.equals(existingInstance.homeDirHash, instance.homeDirHash))
@@ -847,8 +845,8 @@ export const identityRegistryToJson: (
  * differs from the current run's is refused, not merged: its digests live in a
  * different pseudonym namespace, so merging would silently break later joins.
  * A legacy populated registry has no fingerprint. It is migrated only when its
- * root, repository, worktree, or home-directory digests match a freshly derived
- * identity; because those digests are salt-dependent, a match proves namespace
+ * root, worktree, or home-directory digests match a freshly derived identity;
+ * because those digests are salt-dependent, a match proves namespace
  * continuity without persisting or exposing the salt. An unprovable legacy file
  * remains a hard failure and must be rebuilt deliberately.
  */
@@ -872,7 +870,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const existingNamespaceMatches = pipe(
     existing.hashSaltNamespaceId,
     O.map(Eq.equals(hashSaltNamespaceId)),
-    O.getOrElse(() => legacyRegistrySharesIdentity(existing, instances, root))
+    O.getOrElse(() => legacyRegistrySharesSaltedIdentity(existing, instances, root))
   );
   if (existingPopulated && (!Eq.equals(existing.hashSaltStatus, hashSaltStatus) || !existingNamespaceMatches)) {
     return yield* AiMetricsIdentityRegistryError.make({

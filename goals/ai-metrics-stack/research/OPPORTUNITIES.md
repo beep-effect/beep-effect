@@ -395,7 +395,65 @@
   three commits behind `origin/main` and named `bun.lock` as the overlapping
   path. After that merge, `main` advanced once more during repair with the
   dedicated transitive lockfile fix, requiring a second base synchronization.
+  The pattern recurred during PR review: a successful 998-second review-fix
+  proof finished three commits behind the base it had fetched at startup.
 - **Proposal:** Pin and surface base freshness at proof start, then allow a
   verified-tree publication grace window when the new base has no semantic
   conflict; otherwise fail before the expensive lanes or support proof reuse
   after a clean base-only merge with an explicit overlap check.
+
+## Recovery diagnostics crossed privacy and provenance boundaries
+
+- **Work:** Closing review on the AI metrics live-recovery fix.
+- **Friction:** The first migration proof treated the repository digest as
+  evidence of salt continuity even though that digest is intentionally public
+  and salt-independent. The first status improvement also copied the typed
+  exporter's diagnostic message into durable status and stderr, where a future
+  transport could include a local path or response body.
+- **Evidence:** Two independent PR review threads identified the same
+  salt-rotation bypass, and a third identified the durable diagnostic leak.
+- **Proposal:** Name identity evidence by privacy class and permit legacy
+  namespace migration only from salt-dependent digests. Keep durable operator
+  status to a closed vocabulary of remediation messages; retain raw causes only
+  inside the typed failure channel and ephemeral debug tooling.
+
+## Review-fix formatting ran after the expensive typecheck sweep
+
+- **Work:** Proving the PR review fixes with Yeet's `review-fix` tier.
+- **Friction:** Two formatter-only diagnostics surfaced sequentially after the
+  uncached 731-file test-source typecheck, so each trivial line-wrap correction
+  invalidated several minutes of otherwise-green proof.
+- **Evidence:** The first run reached lint after a 380-second test-source sweep
+  and failed one AI metrics line; the corrected run repeated the sweep for 426
+  seconds before failing one CLI line.
+- **Proposal:** Run formatting and affected lint before the expensive isolated
+  typecheck in review-fix proofs, or provide a formatter preflight that reports
+  every changed-file style issue in one pass.
+
+## Review-fix proof could not publish after base synchronization
+
+- **Work:** Publishing the proven PR review fixes after merging the moving base.
+- **Friction:** The documented review-fix tier proved the exact staged tree, but
+  Yeet refused `publish --reuse-verified` because only full-tier proofs may
+  publish normal commits. The amend-only reuse path was no longer safe because
+  the required base merge was now `HEAD`.
+- **Evidence:** After a successful 1,171-second review-fix proof, Yeet reported
+  `proof tier review-fix is not full` and required a new full verification.
+- **Proposal:** Let a successful review-fix proof publish a dedicated fix commit
+  when the only intervening commits are a clean recorded base merge, or state
+  the amend-only limitation beside the review-fix workflow in the operator
+  guidance.
+
+## Clean-HEAD publication exhausted shared temporary storage
+
+- **Work:** Publishing the fully verified PR review fixes through Yeet.
+- **Friction:** Yeet created the review-fix commit, then its isolated
+  clean-HEAD install failed while copying a dependency because shared `/tmp`
+  had only 3.8 GiB free. Several abandoned `beep-csf-*` preflight directories
+  from earlier runs occupied more than 40 GiB.
+- **Evidence:** `bun run beep yeet publish --reuse-verified` failed with
+  `ENOSPC: copying file ...react-server-dom-turbopack-server.edge.production.js`;
+  `df -h /tmp` reported 94% use.
+- **Proposal:** Make clean-HEAD preflight directories self-cleaning on success,
+  failure, and interruption, and add a capacity preflight that reports and
+  safely reclaims stale Yeet-owned directories before copying dependencies.

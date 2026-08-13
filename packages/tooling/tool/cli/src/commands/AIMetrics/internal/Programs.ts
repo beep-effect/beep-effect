@@ -1486,7 +1486,8 @@ const forwarderOtlpExported = (
     turnSpanCount: result.turnSpanCount,
   });
 
-const forwarderOtlpExportFailureMessage = "OTLP export did not complete after the forwarder run.";
+const forwarderOtlpExportFailureMessage =
+  "OTLP export did not complete after the forwarder run. Pending spans remain uncheckpointed for retry.";
 
 /**
  * Option schema for the ForwarderOtlpExportFailed AI metrics helper.
@@ -1570,13 +1571,14 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
     })
   ).pipe(
     Effect.matchEffect({
-      onFailure: Effect.fn(function* (error) {
-        const message = `${forwarderOtlpExportFailureMessage} ${error.message}`;
-        yield* Console.error(`ai-metrics: OTLP export failed after forwarder run: ${message}`);
+      onFailure: Effect.fn(function* () {
+        yield* Console.error(
+          `ai-metrics: OTLP export failed after forwarder run: ${forwarderOtlpExportFailureMessage}`
+        );
         return forwarderOtlpExportFailed({
           endpoint,
           forwarderResult,
-          message,
+          message: forwarderOtlpExportFailureMessage,
           target,
         });
       }),
