@@ -251,7 +251,7 @@ describe("Docgen operations", () => {
       "--concurrency=1",
       "--summarize",
       "--ui=stream",
-      "--daemon=false",
+      "--no-daemon",
     ]);
   });
 
