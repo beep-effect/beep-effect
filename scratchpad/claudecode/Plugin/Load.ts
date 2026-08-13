@@ -112,7 +112,7 @@ const readOptionalManifest = (
     Effect.flatMap((maybeContent) =>
       O.isNone(maybeContent)
         ? Effect.succeed(O.none())
-        : S.decodeUnknownEffect(PluginManifestJson)(maybeContent.value).pipe(
+        : S.decodeEffect(PluginManifestJson)(maybeContent.value).pipe(
             Effect.map(O.some),
             Effect.mapError((cause) => PluginLoadError.make({ path, cause }))
           )
@@ -154,7 +154,7 @@ const readStringFile = (path: string): Effect.Effect<string, PluginLoadError, Fi
 const readHooksFile = (path: string): Effect.Effect<HooksSection, PluginLoadError, FileSystem.FileSystem> =>
   readStringFile(path).pipe(
     Effect.flatMap((content) =>
-      S.decodeUnknownEffect(HooksFileJson)(content).pipe(
+      S.decodeEffect(HooksFileJson)(content).pipe(
         Effect.map((file) => file.hooks),
         Effect.mapError((cause) => PluginLoadError.make({ path, cause }))
       )

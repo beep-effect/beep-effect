@@ -560,7 +560,7 @@ export const loadJson = Effect.fn("Mcp.loadJson")(function* (
   yield* Effect.annotateCurrentSpan("mcp.path", path);
   yield* Effect.logDebug("loading MCP config").pipe(Effect.annotateLogs({ path }));
   const raw = yield* readFileString(path);
-  const decoded = yield* S.decodeUnknownEffect(McpJsonFileJson)(raw).pipe(
+  const decoded = yield* S.decodeEffect(McpJsonFileJson)(raw).pipe(
     Effect.mapError((cause) => McpConfigError.make({ path, cause }))
   );
   return yield* withoutReservedServerNames(decoded, path);
@@ -589,7 +589,7 @@ export const loadClaudeJson = Effect.fn("Mcp.loadClaudeJson")(function* (
 ): Effect.fn.Return<ClaudeJsonFile, McpConfigError, FileSystem.FileSystem> {
   yield* Effect.annotateCurrentSpan("mcp.claudeJsonPath", path);
   const raw = yield* readFileString(path);
-  return yield* S.decodeUnknownEffect(ClaudeJsonFileJson)(raw).pipe(
+  return yield* S.decodeEffect(ClaudeJsonFileJson)(raw).pipe(
     Effect.mapError((cause) => McpConfigError.make({ path, cause }))
   );
 });
@@ -718,6 +718,7 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * @category decoding
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const loadEffective = (
   cwd: string,
   options?: EffectiveMcpLoadOptions

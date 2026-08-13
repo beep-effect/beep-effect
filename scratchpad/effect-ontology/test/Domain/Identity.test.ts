@@ -39,7 +39,7 @@ const identitySchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology identity schemas", () => {
-  it("derives warning-free arbitraries whose values satisfy every public identity schema", () => {
+  it("derives arbitraries whose values satisfy every public identity schema", () => {
     for (const schema of identitySchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(

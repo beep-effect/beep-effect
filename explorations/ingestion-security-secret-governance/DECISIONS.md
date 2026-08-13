@@ -1,5 +1,11 @@
 # Ingestion Security + Secret/PII Governance — Decisions
 
+## 2026-08-13 — Packet graduation and re-entry
+
+**Decision:** Close the packet as `graduated`. Its five gated candidates remain
+re-entry points; shipping `ingestion-secret-scrub` reopens the packet at
+`decompose`, without waiving each candidate's named proof or ownership gate.
+
 ## 2026-07-14 — Q1: Program scope
 
 **Status:** LOCKED

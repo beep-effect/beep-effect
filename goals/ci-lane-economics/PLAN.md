@@ -6,9 +6,9 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Cache-warm census | pending | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | A lane-time table from >=1 representative week (or >=10 waves) with turbo hit rates where the lane runs turbo (n/a for uses_turbo: false lanes), replacing all cold-cache numbers. |
-| P1 Placement decisions | pending | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed placement table; projected spend within the $100/mo gate. |
-| P2 Execute moves | pending | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | All moves merged; no regression in wave wall time. |
+| P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
+| P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
+| P2 Execute moves | in progress | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | All moves merged; no regression in wave wall time. |
 | P3 Evidence + close | pending | Prove the charter on live waves and close. | No required job p95 > 20 minutes over a week (attempt-one successful runs); reflection lands; lifecycle completed-retained. |
 
 ## Notes

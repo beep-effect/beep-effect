@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -25,11 +25,8 @@ the unknown-license reimplement rule (lawyergpt), and the RRF single-owner manda
 
 ## Next Open Question
 
-Four implementation gates remain: PGlite 0.5.4 extension proof for
-`retrieval-vector-projection`, the runtime-adapter benchmark for
-`retrieval-local-encoder`, an independently authored clean-room policy for
-`retrieval-evidence-dedup`, and a live ODP edge-availability spike for
-`citation-graph-retrieval-channel`.
+None while graduated. The four gated satellites and their MAP gate proofs
+remain re-entry points; a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -42,6 +39,9 @@ Four implementation gates remain: PGlite 0.5.4 extension proof for
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. The four gated satellites and their MAP gate proofs remain
+  re-entry points, and a fired gate reopens this packet at `decompose`.
 - 2026-07-14: shape gate signed off; BRIEF ratified as drafted; graduated
   [`goals/hybrid-retrieval-fusion-core`](../../goals/hybrid-retrieval-fusion-core/README.md)
   as the sole RRF owner. Four gated satellites remain queued; no product prose

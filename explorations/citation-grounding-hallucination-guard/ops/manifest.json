@@ -3,7 +3,7 @@
   "exploration": {
     "slug": "citation-grounding-hallucination-guard",
     "title": "Citation Grounding & Hallucination Guard",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "links": {
@@ -15,7 +15,7 @@
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-07-14",
+    "updated": "2026-08-13",
     "sources": ["research/SOURCES.md"]
   }
 }

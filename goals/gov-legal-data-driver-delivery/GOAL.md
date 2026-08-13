@@ -23,9 +23,12 @@ Read those first, then `AGENTS.md`, `CLAUDE.md`, and the standards named by
 
 Scope:
 
-- In: `packages/drivers/{ecfr,federal-register,dol,courtlistener}`,
-  `packages/foundation/capability/api-transport` (wire existing `ApiAuth`
-  branches only), the CI codegen-drift lane
+- In: live `packages/drivers/ecfr`. Recreate `@beep/federal-register`,
+  `@beep/dol`, and `@beep/courtlistener` from
+  `goals/honest-repo-signal/research/FOLLOW-UPS.md` — those directories do
+  not exist; do not extend deleted trees.
+  Also `packages/foundation/capability/api-transport` (wire existing
+  `ApiAuth` branches only), the CI codegen-drift lane
   (`packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`), this packet, and
   named cross-links in `goals/gov-legal-data-driver-codegen`.
 - Out: `gov-legal-mcp`, PatentsView/patents, XML/CSV parsing, `/browser`

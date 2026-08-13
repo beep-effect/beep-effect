@@ -59,6 +59,10 @@ own docs-only PR per the ratified process.
 
 ## Notes
 
+Research input: [`research/2026-08-13-compound-engineering-capture.md`](./research/2026-08-13-compound-engineering-capture.md)
+preserves the folded always-on compounding vision behind the friction-ledger,
+buzz-channel, and reflection-skill direction.
+
 Self-hosting seed: this packet was deliberately hand-rolled before `beep goals
 bootstrap` exists. When Workstream E's adoption path lands, the doctor adopts this
 packet as its own first test case (hash-pinned adoption patch + preservation report).

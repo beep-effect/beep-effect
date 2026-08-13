@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `shape`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,12 +18,9 @@ methodology, and a legal-DMS task taxonomy.
 
 ## Next Open Question
 
-Align Q2 (the wedge question) first: is beep's bet against this corpus
-"amortized structural representation" (crowded — Harvey and Engram both claim
-it) or "tracked-changes-aware ingest" (unclaimed, 371-task graded testbed,
-OIP-load-bearing, gated on U4: does `@beep/pandoc-ast` preserve
-`w:ins`/`w:del`)? Full queue: RESEARCH.md §Open Questions (8, from
-verify-completeness §5).
+Draft/review the shaped pitch for two goals: the eval framework (including one
+external baseline run) and the tracked-changes wedge rung. The U4 fixture spike
+is the P0 kill-gate; generator and DMS rungs remain MAP re-entry points.
 
 ## Read This First
 
@@ -37,6 +34,12 @@ verify-completeness §5).
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13: align closed; tracked-changes-aware ingest selected with U4 as
+  the P0 kill-gate and structural fallback. Synthetic C&H is first; the
+  podman+metered-keys harness runs once for comparison, then the Effect-native
+  eval becomes durable. Two goals advance to shape; generator/DMS remain MAP
+  re-entry points.
 
 - 2026-08-08 (shipping): the packet's two live-defect finds shipped on
   `feat/judge-rubric-lint-and-json-salvage` (beep lint judge-rubric +

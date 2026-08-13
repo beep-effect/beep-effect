@@ -287,7 +287,7 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
+  toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 

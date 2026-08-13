@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -52,6 +52,11 @@ mandate with a concrete LEDES/UTBMS target.
 11. [`MAP.md`](./MAP.md) - candidate goal packets, gates, and first vertical slice.
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; the five externally triggered MAP
+  candidates remain re-entry points. A matching Tom task-set/consent, client
+  mandate, demonstrated PST need, or Slice-1 data trigger reopens the packet at
+  `decompose`.
 
 - 2026-07-14: shape signed off with `BRIEF.md` ratified as drafted; graduated
   [`law-time-capture-spine`](../../goals/law-time-capture-spine/README.md) and

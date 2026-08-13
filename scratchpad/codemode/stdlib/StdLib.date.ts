@@ -24,6 +24,7 @@ type DirectDateStatic = Exclude<DateStatic, "now">;
 
 // Date.parse / Date.UTC are guest JavaScript semantic adapters. Date.now is
 // dispatched effectfully by Interpreter through the Clock-backed DateTime.now.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
   DirectDateStatic.$match(name, {
     parse: () => Date.parse(coerceToString(args[0])),
@@ -35,6 +36,7 @@ export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 
     ? O.some(DateSetterArity[name])
     : O.none();
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeDateMethod = (
   value: CodeModeDate,
   name: DateMethod,

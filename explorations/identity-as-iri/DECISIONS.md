@@ -223,3 +223,15 @@ diagnostics ledger.
 **Rationale:** Tuples referencing schema handles directly are already terse;
 the inline channel is where the old API's synonym ghosts would re-enter.
 YAGNI until proven by evidence, not anticipation.
+
+## 2026-08-13 — Fibered trigger and one-goal scope
+
+**Decision:** `identity-iri-fold` merged as PR #536 on 2026-08-01, so the
+fibered trigger fired. `identity-iri-fibered` graduates as one goal carrying
+the full MAP scope, blocked by the semantic-web PR2 and PR3 cleanups.
+
+**SPEC constraints:** Discrete case only. SHACL projection targets the
+post-move contract layer. Store layers land as test/dev Layers.
+
+**Ceremony:** Record only in this PR; the goal scaffold belongs to the next
+ceremony PR.

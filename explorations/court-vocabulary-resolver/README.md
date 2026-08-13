@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -21,6 +21,11 @@ is the ready-made seed for that vocabulary + resolver vertical.
 **Resolver gate:** execute `court-reporter-vocabulary`; scaffold
 `court-string-resolver` only after the versioned artifact, stable-ID lifecycle,
 and compatibility contract are proven. Fuzzy ranking and SKOS remain gated.
+
+**Trail (2026-08-13):** the CourtListener HTTP driver package is gone. Search
+`packages/law-practice/domain` for vocabulary gaps. Recreate the driver only
+from `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+it.
 
 ## Sources & provenance
 
@@ -40,6 +45,11 @@ jurisdiction controlled vocabulary" (14 nuggets).
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; `court-string-resolver` is the
+  re-entry point and reopens this packet at `decompose` once the versioned
+  artifact, stable-ID lifecycle, and compatibility contract are proven.
+  Fuzzy ranking and SKOS remain gated follow-on notes.
 
 - 2026-07-14: shape gate signed off as drafted; graduated
   [`goals/court-reporter-vocabulary`](../../goals/court-reporter-vocabulary/README.md)

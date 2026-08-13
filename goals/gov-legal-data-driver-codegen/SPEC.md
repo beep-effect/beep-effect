@@ -53,12 +53,18 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
+Dated 2026-08-13: `federal-register`, `dol`, and `courtlistener` workspace
+packages were deleted. Resume recreates them via
+`goals/honest-repo-signal/research/FOLLOW-UPS.md`. Live trees from this list
+are `packages/drivers/govinfo` and `packages/drivers/ecfr` only.
+
 - `packages/drivers/govinfo` — finish: repair manifest (`@beep/identity` +
   `@beep/schema`), add `Govinfo.service.ts` / `Govinfo.config.ts`, incubate the
   transformer.
-- `packages/drivers/{ecfr,federal-register}` — the keyless reference driver
-  (one of these in v1) on the raw-client path.
-- `packages/drivers/{courtlistener,dol}` — authed drivers, **last**, gated.
+- `packages/drivers/ecfr` — the live keyless reference driver on the
+  raw-client path. Recreate `@beep/federal-register` only if a later keyless
+  sibling is pulled.
+- Recreate `@beep/courtlistener` / `@beep/dol` last, gated, via FOLLOW-UPS.
 - The **incubated transformer** — authored inside govinfo, promoted to
   `packages/foundation/capability/<name>` at P3.
 - Per-driver `scripts/generate.ts` + committed spec + package-private

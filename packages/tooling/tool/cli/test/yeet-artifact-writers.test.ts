@@ -1,9 +1,13 @@
 import {
   defaultYeetRunOptions,
+  GreptileSummary,
+  PrCloseoutReport,
+  PrCloseoutReportJson,
   RepoRunContext,
   RepoRunPlan,
   runArtifactPathForContext,
   TurboPlanSnapshot,
+  writePrCloseoutReportForTesting,
   writeRunVerdictForTesting,
   writeYeetStatusSnapshot,
   YeetAttemptStarted,
@@ -153,6 +157,61 @@ describe("writeRunVerdict", () => {
 
         const decoded = yield* YeetVerdictJson.decode(text);
         expect(decoded.mergeReady).toStrictEqual(O.none());
+      })
+    )
+  );
+});
+
+const reviewedSha = "0123456789abcdef0123456789abcdef01234567";
+
+const closeoutReportWith = (reviewedHeadSha: O.Option<string>): PrCloseoutReport =>
+  PrCloseoutReport.make({
+    actionableReviewThreadCount: 0,
+    botCommentCount: 2,
+    greptile: GreptileSummary.make({ issueCount: 0, score: "5/5" }),
+    issueCount: 0,
+    issues: A.empty(),
+    prNumber: 560,
+    prUrl: "https://github.com/YeeBois/beep-effect/pull/560",
+    reviewedHeadSha,
+    retriggeredGreptile: false,
+    schemaVersion: "yeet-pr-closeout/v1",
+  });
+
+describe("writePrCloseoutReport", () => {
+  it.effect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const context = contextForRoot(tmpDir);
+
+        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
+        expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
+
+        const text = yield* fs.readFileString(reportPath);
+        expect(text).not.toContain('"_id":"Option"');
+        expect(text).toContain(`"reviewedHeadSha":"${reviewedSha}"`);
+
+        const decoded = yield* PrCloseoutReportJson.decode(text);
+        expect(decoded.reviewedHeadSha).toStrictEqual(O.some(reviewedSha));
+        expect(decoded.greptile.score).toBe("5/5");
+      })
+    )
+  );
+
+  it.effect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const context = contextForRoot(tmpDir);
+
+        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.none()));
+
+        const text = yield* fs.readFileString(reportPath);
+        expect(text).not.toContain("reviewedHeadSha");
+
+        const decoded = yield* PrCloseoutReportJson.decode(text);
+        expect(decoded.reviewedHeadSha).toStrictEqual(O.none());
       })
     )
   );

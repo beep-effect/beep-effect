@@ -24,6 +24,11 @@ paused until a product feature pulls a named driver. The ≥2-driver gate is
 cleared by `@beep/govinfo` plus `@beep/ecfr`, so the collision-contract sibling
 is scaffolded at [`goals/gov-legal-mcp`](../../goals/gov-legal-mcp/README.md).
 
+**Trail (2026-08-13):** `@beep/courtlistener`, `@beep/dol`, and
+`@beep/federal-register` were deleted as empty scaffolds. Recreate from
+[`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md)
+when delivery resumes. `@beep/ecfr` is the remaining VERSION-only skeleton.
+
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
