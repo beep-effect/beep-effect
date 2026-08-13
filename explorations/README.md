@@ -104,7 +104,7 @@ conversation — every stage, both voices, and what changes on disk — lives in
 | --- | --- |
 | `active` | Being worked; appears in the ATLAS active tree. |
 | `parked` | Deliberately shelved with a dated reason in `DECISIONS.md`; revisit later. |
-| `graduated` | Spawned its goal packet(s); packet remains as provenance. |
+| `graduated` | Spawned its promised-now goal packet(s); packet remains as provenance and reopens at `decompose` when a MAP gate fires. |
 | `killed` | Explicitly rejected. Gets a one-line epitaph in `ATLAS.md`. Killing an idea is a successful outcome, not a failure. |
 
 ## Manifest Schema
@@ -161,8 +161,10 @@ Mechanics, per approved candidate goal:
   constraints, `DECISIONS.md` entries seed the decision log.
 - Use back-links to the exploration packet, not copies.
 - Cross-link both manifests (`links.goals` here; provenance entry there).
-- Update `ATLAS.md` and flip the exploration status (`graduated`, or keep
-  `active` if more candidates remain).
+- Once all promised-now goals exist, update `ATLAS.md` and flip the exploration
+  status to `graduated`. Gated candidates remain in `MAP.md` as re-entry points;
+  when a gate fires, reopen the exploration at `decompose` rather than spawning
+  a goal directly.
 
 ## Conventions
 
