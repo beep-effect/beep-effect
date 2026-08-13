@@ -184,7 +184,7 @@ describe("@beep/law-practice-domain", () => {
     expect("XX" in WipoSt13OfficeCode.is).toBe(false);
     expect(
       O.isSome(
-        S.decodeUnknownOption(CitingApplicationIdentity)({
+        S.decodeOption(CitingApplicationIdentity)({
           applicationNumber: "102014000345678",
           kind: "WipoSt13",
           officeCode: "EP",

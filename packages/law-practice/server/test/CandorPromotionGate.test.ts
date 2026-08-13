@@ -28,7 +28,7 @@ const otherTenantRequest = PromotionGateRequest.make({
   subject,
   tenantRef: PromotionTenantRef.make("org-other-fixture"),
 });
-const citingApplication = S.decodeUnknownSync(CitingApplicationIdentity)({
+const citingApplication = S.decodeSync(CitingApplicationIdentity)({
   applicationNumber: "16138242",
   kind: "UsptoNormalized",
 });

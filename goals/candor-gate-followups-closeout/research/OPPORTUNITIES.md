@@ -202,3 +202,16 @@
   substep names directly in the Yeet terminal verdict.
 - **Disposition:** regenerated `goals/INDEX.md` from manifests and proved it with
   `bun run beep goals index --check` before restarting canonical verification.
+
+## CGF-015 — Exact local proof missed two hosted Effect diagnostics
+
+- **Doing:** monitoring the first published exact-head Yeet proof for PR #699.
+- **Evidence:** hosted Check rejected two valid encoded test inputs passed through
+  `decodeUnknownOption` and `decodeUnknownSync` with `TS377112`, although the
+  prior local `quality:test-tsgo` lane had reported green on the same source.
+- **Would prevent it:** make local and hosted test-source diagnostics consume the
+  same compiler build and invalidate every diagnostic cache when that build or
+  its Effect rules change; retain per-file diagnostic inputs in the Yeet receipt.
+- **Disposition:** changed only the valid typed inputs to `decodeOption` and
+  `decodeSync`; invalid wire-value regressions retain unknown decoding. The
+  731-file strict compiler and both owning package suites pass locally.
