@@ -1,80 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../tsconfig.base.json",
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "include": ["**/*.ts"],
   "compilerOptions": {
-    "types": ["node", "bun"],
     "rootDir": ".",
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
     "composite": false,
-    "incremental": false
-  },
-  "references": [
-    {
-      "path": "../packages/drivers/drizzle/tsconfig.json"
-    },
-    {
-      "path": "../packages/drivers/postgres/tsconfig.json"
-    },
-    {
-      "path": "../packages/drivers/pretext/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/identity/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/md/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/ontology/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/rdf/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/schema/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/utils/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/ui-system/dock-react/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/ui-system/dock/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/primitive/data/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/nlp/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/capability/nlp-processing/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/capability/semantic-web/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/primitive/types/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/ui-system/ui/tsconfig.json"
-    },
-    {
-      "path": "../packages/tooling/tool/cli/tsconfig.json"
-    },
-    {
-      "path": "../packages/tooling/policy-pack/repo-configs/tsconfig.json"
-    },
-    {
-      "path": "../packages/tooling/library/repo-utils/tsconfig.json"
-    },
-    {
-      "path": "../packages/tooling/test-kit/test-utils/tsconfig.json"
-    }
-  ]
+    "incremental": false,
+    "types": ["node"],
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "namespaceImportPackages": []
+      }
+    ]
+  }
 }

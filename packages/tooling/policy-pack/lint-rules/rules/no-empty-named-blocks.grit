@@ -1,6 +1,0 @@
-language js
-
-// effect-smol preset `import/no-empty-named-blocks`: `import {} from "..."`.
-`import {} from $source` as $imp where {
-  register_diagnostic(span=$imp, message="Rule: empty named import block. Why: `import {}` imports nothing. Fix: remove the empty braces or the whole import.", severity="error")
-}

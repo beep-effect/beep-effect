@@ -1,4 +1,0 @@
-[state/db] state database schema migration pending; verifying integrity first
-[state/db] state database schema migration pending; verifying integrity first
-Config health-state write failed: OpenClaw state database /home/elpresidank/.cache/beep-p0-spike4.FmtrDN/spike4/state/state/openclaw.sqlite has a legacy audit event schema; run openclaw doctor --fix to migrate it.
-Config valid: /home/elpresidank/.cache/beep-p0-spike4.FmtrDN/spike4/root/gen-B/openclaw.json

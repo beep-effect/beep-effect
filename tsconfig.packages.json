@@ -1,406 +1,44 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.packages.tsbuildinfo"
-  },
   "include": [],
   "references": [
-    {
-      "path": "apps/architecture-lab-proof"
-    },
-    {
-      "path": "apps/oip-web"
-    },
-    {
-      "path": "apps/practice-kg-mcp"
-    },
-    {
-      "path": "apps/professional-desktop"
-    },
-    {
-      "path": "apps/storybook"
-    },
-    {
-      "path": "infra"
-    },
-    {
-      "path": "packages/_internal/db-admin"
-    },
-    {
-      "path": "packages/agents/client"
-    },
-    {
-      "path": "packages/agents/domain"
-    },
-    {
-      "path": "packages/agents/server"
-    },
-    {
-      "path": "packages/agents/tables"
-    },
-    {
-      "path": "packages/agents/use-cases"
-    },
-    {
-      "path": "packages/architecture-lab/client"
-    },
-    {
-      "path": "packages/architecture-lab/config"
-    },
-    {
-      "path": "packages/architecture-lab/domain"
-    },
-    {
-      "path": "packages/architecture-lab/server"
-    },
-    {
-      "path": "packages/architecture-lab/tables"
-    },
-    {
-      "path": "packages/architecture-lab/ui"
-    },
-    {
-      "path": "packages/architecture-lab/use-cases"
-    },
-    {
-      "path": "packages/documents/domain"
-    },
-    {
-      "path": "packages/documents/server"
-    },
-    {
-      "path": "packages/documents/tables"
-    },
-    {
-      "path": "packages/documents/use-cases"
-    },
-    {
-      "path": "packages/drivers/acp"
-    },
-    {
-      "path": "packages/drivers/ai-provider-cli"
-    },
-    {
-      "path": "packages/drivers/anthropic"
-    },
-    {
-      "path": "packages/drivers/box"
-    },
-    {
-      "path": "packages/drivers/cosmos"
-    },
-    {
-      "path": "packages/drivers/courtlistener"
-    },
-    {
-      "path": "packages/drivers/discord"
-    },
-    {
-      "path": "packages/drivers/doc-text"
-    },
-    {
-      "path": "packages/drivers/dol"
-    },
-    {
-      "path": "packages/drivers/drizzle"
-    },
-    {
-      "path": "packages/drivers/duckdb"
-    },
-    {
-      "path": "packages/drivers/ecfr"
-    },
-    {
-      "path": "packages/drivers/exiftool"
-    },
-    {
-      "path": "packages/drivers/face-detection"
-    },
-    {
-      "path": "packages/drivers/federal-register"
-    },
-    {
-      "path": "packages/drivers/ffmpeg"
-    },
-    {
-      "path": "packages/drivers/firecrawl"
-    },
-    {
-      "path": "packages/drivers/gov-legal-mcp"
-    },
-    {
-      "path": "packages/drivers/govinfo"
-    },
-    {
-      "path": "packages/drivers/graph-3d"
-    },
-    {
-      "path": "packages/drivers/hubspot"
-    },
-    {
-      "path": "packages/drivers/libpff"
-    },
-    {
-      "path": "packages/drivers/m365"
-    },
-    {
-      "path": "packages/drivers/m365-mcp"
-    },
-    {
-      "path": "packages/drivers/n3"
-    },
-    {
-      "path": "packages/drivers/nlp-mcp"
-    },
-    {
-      "path": "packages/drivers/obs"
-    },
-    {
-      "path": "packages/drivers/onepassword-cli"
-    },
-    {
-      "path": "packages/drivers/openai-compat"
-    },
-    {
-      "path": "packages/drivers/openclaw"
-    },
-    {
-      "path": "packages/drivers/oxigraph"
-    },
-    {
-      "path": "packages/drivers/pacer"
-    },
-    {
-      "path": "packages/drivers/pglite"
-    },
-    {
-      "path": "packages/drivers/phoenix"
-    },
-    {
-      "path": "packages/drivers/postgres"
-    },
-    {
-      "path": "packages/drivers/pretext"
-    },
-    {
-      "path": "packages/drivers/protobuf"
-    },
-    {
-      "path": "packages/drivers/rdf-canonize"
-    },
-    {
-      "path": "packages/drivers/runpod"
-    },
-    {
-      "path": "packages/drivers/sanity"
-    },
-    {
-      "path": "packages/drivers/shacl"
-    },
-    {
-      "path": "packages/drivers/tailscale"
-    },
-    {
-      "path": "packages/drivers/tika"
-    },
-    {
-      "path": "packages/drivers/uspto"
-    },
-    {
-      "path": "packages/drivers/uspto-mcp"
-    },
-    {
-      "path": "packages/drivers/venice-ai"
-    },
-    {
-      "path": "packages/drivers/wink"
-    },
-    {
-      "path": "packages/drivers/xai"
-    },
-    {
-      "path": "packages/ecosystem/effect-drizzle"
-    },
-    {
-      "path": "packages/epistemic/client"
-    },
-    {
-      "path": "packages/epistemic/config"
-    },
-    {
-      "path": "packages/epistemic/domain"
-    },
-    {
-      "path": "packages/epistemic/server"
-    },
-    {
-      "path": "packages/epistemic/tables"
-    },
-    {
-      "path": "packages/epistemic/ui"
-    },
-    {
-      "path": "packages/epistemic/use-cases"
-    },
-    {
-      "path": "packages/foundation/capability/api-transport"
-    },
-    {
-      "path": "packages/foundation/capability/chalk"
-    },
-    {
-      "path": "packages/foundation/capability/colors"
-    },
-    {
-      "path": "packages/foundation/capability/file-processing"
-    },
-    {
-      "path": "packages/foundation/capability/langextract"
-    },
-    {
-      "path": "packages/foundation/capability/mcp-kit"
-    },
-    {
-      "path": "packages/foundation/capability/nlp-processing"
-    },
-    {
-      "path": "packages/foundation/capability/observability"
-    },
-    {
-      "path": "packages/foundation/capability/semantic-web"
-    },
-    {
-      "path": "packages/foundation/modeling/html"
-    },
-    {
-      "path": "packages/foundation/modeling/identity"
-    },
-    {
-      "path": "packages/foundation/modeling/lexical"
-    },
-    {
-      "path": "packages/foundation/modeling/md"
-    },
-    {
-      "path": "packages/foundation/modeling/nlp"
-    },
-    {
-      "path": "packages/foundation/modeling/ontology"
-    },
-    {
-      "path": "packages/foundation/modeling/pandoc-ast"
-    },
-    {
-      "path": "packages/foundation/modeling/provenance"
-    },
-    {
-      "path": "packages/foundation/modeling/rdf"
-    },
-    {
-      "path": "packages/foundation/modeling/schema"
-    },
-    {
-      "path": "packages/foundation/modeling/utils"
-    },
-    {
-      "path": "packages/foundation/primitive/data"
-    },
-    {
-      "path": "packages/foundation/primitive/types"
-    },
-    {
-      "path": "packages/foundation/ui-system/dock"
-    },
-    {
-      "path": "packages/foundation/ui-system/dock-react"
-    },
-    {
-      "path": "packages/foundation/ui-system/editor"
-    },
-    {
-      "path": "packages/foundation/ui-system/ui"
-    },
-    {
-      "path": "packages/law-practice/domain"
-    },
-    {
-      "path": "packages/law-practice/server"
-    },
-    {
-      "path": "packages/law-practice/tables"
-    },
-    {
-      "path": "packages/law-practice/use-cases"
-    },
-    {
-      "path": "packages/ontology/client"
-    },
-    {
-      "path": "packages/ontology/config"
-    },
-    {
-      "path": "packages/ontology/domain"
-    },
-    {
-      "path": "packages/ontology/server"
-    },
-    {
-      "path": "packages/ontology/ui"
-    },
-    {
-      "path": "packages/ontology/use-cases"
-    },
-    {
-      "path": "packages/shared/domain"
-    },
-    {
-      "path": "packages/shared/tables"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics"
-    },
-    {
-      "path": "packages/tooling/library/ai-sync"
-    },
-    {
-      "path": "packages/tooling/library/qa-capture"
-    },
-    {
-      "path": "packages/tooling/library/repo-utils"
-    },
-    {
-      "path": "packages/tooling/policy-pack/lint-rules"
-    },
-    {
-      "path": "packages/tooling/policy-pack/repo-configs"
-    },
-    {
-      "path": "packages/tooling/test-kit/fc-runs"
-    },
-    {
-      "path": "packages/tooling/test-kit/test-utils"
-    },
-    {
-      "path": "packages/tooling/tool/cli"
-    },
-    {
-      "path": "packages/tooling/tool/docgen"
-    },
-    {
-      "path": "packages/workspace/domain"
-    },
-    {
-      "path": "packages/workspace/server"
-    },
-    {
-      "path": "packages/workspace/tables"
-    },
-    {
-      "path": "packages/workspace/use-cases"
-    },
-    {
-      "path": "scratchpad"
-    }
+    { "path": "ai-docs" },
+    { "path": "packages/effect" },
+    { "path": "packages/ai/anthropic" },
+    { "path": "packages/ai/openai-compat" },
+    { "path": "packages/ai/openai" },
+    { "path": "packages/ai/openrouter" },
+    { "path": "packages/atom/react" },
+    { "path": "packages/atom/vue" },
+    { "path": "packages/atom/solid" },
+    { "path": "packages/opentelemetry" },
+    { "path": "packages/platform/browser" },
+    { "path": "packages/platform/bun" },
+    { "path": "packages/platform/deno" },
+    { "path": "packages/platform/node" },
+    { "path": "packages/platform/node-shared" },
+    { "path": "packages/sql/clickhouse" },
+    { "path": "packages/sql/d1" },
+    { "path": "packages/sql/libsql" },
+    { "path": "packages/sql/mysql2" },
+    { "path": "packages/sql/mssql" },
+    { "path": "packages/sql/pg" },
+    { "path": "packages/sql/pglite" },
+    { "path": "packages/sql/sqlite-bun" },
+    { "path": "packages/sql/sqlite-do" },
+    { "path": "packages/sql/sqlite-node" },
+    { "path": "packages/sql/sqlite-react-native" },
+    { "path": "packages/sql/sqlite-wasm" },
+    { "path": "packages/tools/ai-codegen" },
+    { "path": "packages/tools/api-diff" },
+    { "path": "packages/tools/bundle" },
+    { "path": "packages/tools/docgen" },
+    { "path": "packages/tools/doctest" },
+    { "path": "packages/tools/openapi-generator" },
+    { "path": "packages/tools/jsdocs" },
+    { "path": "packages/tools/oxc" },
+    { "path": "packages/tools/utils" },
+    { "path": "packages/vitest" }
   ]
 }

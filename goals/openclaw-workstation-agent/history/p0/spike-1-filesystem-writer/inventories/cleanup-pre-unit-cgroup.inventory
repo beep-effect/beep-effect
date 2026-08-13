@@ -1,6 +1,0 @@
-control_group=/user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-spike.service
-ActiveState=active
-SubState=running
-MainPID=3987594
-ExecMainPID=3987594
-cgroup_pid=3987594 argv=openclaw-gateway                                                                                   

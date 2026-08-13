@@ -1,6 +1,0 @@
-language js
-
-// effect-smol preset `unicorn/prefer-array-flat-map`: `.map(f).flat()`.
-`$arr.map($fn).flat()` as $chain where {
-  register_diagnostic(span=$chain, message="Rule: avoid .map(...).flat(). Why: map+flat allocates an intermediate array. Fix: use .flatMap(...) instead.", severity="error")
-}

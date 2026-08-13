@@ -1,45 +1,26 @@
 {
-  // Lint-only oxlint lane (P3). Biome stays the formatter + primary linter; oxlint runs ONLY
-  // the @beep/lint-rules custom plugin for the stateful/path-aware rules that GritQL cannot
-  // express or cannot fix precisely. No native oxlint rule categories are enabled, to avoid
-  // overlap with Biome. Severity is per-rule: the two zero-violation rules are mandatory
-  // (error); the other four ship
-  // advisory (warn). `lint:oxlint` now runs in the blocking Lint Policy CI lane (via
-  // `beep lint policy`), so the mandatory rules are enforced on every PR; promoting the four
-  // advisory rules to error is tracked in the SPEC exception ledger (re-assess 2026-09-20).
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
-  "plugins": [],
-  "categories": {
-    "correctness": "off",
-    "suspicious": "off",
-    "perf": "off",
-    "style": "off",
-    "pedantic": "off",
-    "restriction": "off",
-    "nursery": "off"
-  },
-  "jsPlugins": ["./packages/tooling/policy-pack/lint-rules/src/rules/index.ts"],
+  "extends": ["./packages/tools/oxc/oxlintrc.json"],
   "ignorePatterns": [
-    "**/dist/**",
-    "**/build/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/.turbo/**",
-    "**/coverage/**",
-    "**/generated/**",
-    "**/*.gen.*",
-    ".repos/**",
-    "docs/generated/**",
-    "**/scripts/**",
-    "goals/**",
-    "explorations/**"
+    "LLMS.md",
+    "**/dist",
+    "**/build",
+    "**/docs",
+    "**/.tsbuildinfo",
+    "packages/effect/typeperf/**/*",
+    "packages/**/CHANGELOG.md",
+    "!scratchpad/**/*",
+    ".agents/**/*",
+    ".context/**/*",
+    ".specs/**/*"
   ],
-  "rules": {
-    "beep/no-js-extension-imports": "error",
-    "beep/no-opaque-instance-fields": "error",
-    "beep/no-manual-effect-runtime-in-tests": "warn",
-    "beep/namespace-node-imports": "warn",
-    "beep/no-global-process-runtime": "warn",
-    "beep/no-inline-schema-compile": "warn"
-  }
+  "jsPlugins": ["@effect/oxc/oxlint"],
+  "overrides": [{
+    "files": ["**/{test,typetest,examples,ai-docs,benchmark,bundle,scripts,scratchpad}/**"],
+    "rules": {
+      "effect/no-bigint-literals": "off",
+      "eslint/no-console": "off",
+      "effect/no-import-from-barrel-package": "off"
+    }
+  }]
 }

@@ -1,6 +1,0 @@
-{
-  "schemaVersion": 1,
-  "entrypoint": "test/bundle-pg-integer.consumer.ts",
-  "esbuildVersion": "0.28.2",
-  "rawBytes": 7864
-}
