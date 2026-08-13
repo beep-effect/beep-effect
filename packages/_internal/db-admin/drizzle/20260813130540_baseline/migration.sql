@@ -1,32 +1,4 @@
-/**
- * Generated from `packages/_internal/db-admin/drizzle` by
- * `scripts/sync-migration-bundle.ts`. Do not edit; refresh with
- * `bun run --cwd apps/professional-desktop codegen`.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-import type { MigrationBundleEntry } from "@beep/postgres";
-
-/**
- * Professional Desktop sidecar migration bundle, synced byte-exactly from
- * the db-admin drizzle migration folders.
- *
- * **Example** (Count the bundled migrations)
- *
- * ```ts
- * import { migrationBundle } from "@/runtime/Migrations.gen"
- *
- * console.log(migrationBundle.length)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const migrationBundle: ReadonlyArray<MigrationBundleEntry> = [
-  {
-    name: "20260813130540_baseline",
-    sql: `CREATE TABLE "architecture_lab_work_item" (
+CREATE TABLE "architecture_lab_work_item" (
 	"id" text PRIMARY KEY,
 	"title" text NOT NULL,
 	"status" text NOT NULL,
@@ -582,6 +554,4 @@ CREATE INDEX "workspace_turn_turn_index_btree_idx" ON "workspace_turn" ("turn_in
 CREATE UNIQUE INDEX "workspace_turn_public_id_unique_idx" ON "workspace_turn" ("public_id");--> statement-breakpoint
 CREATE INDEX "workspace_workspace_org_id_btree_idx" ON "workspace_workspace" ("org_id");--> statement-breakpoint
 CREATE INDEX "workspace_workspace_source_btree_idx" ON "workspace_workspace" ("source");--> statement-breakpoint
-CREATE UNIQUE INDEX "workspace_workspace_public_id_unique_idx" ON "workspace_workspace" ("public_id");`,
-  },
-];
+CREATE UNIQUE INDEX "workspace_workspace_public_id_unique_idx" ON "workspace_workspace" ("public_id");

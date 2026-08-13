@@ -245,7 +245,7 @@ const MigrationBundleEntryName = S.String.check(
  * import { MigrationBundleEntry } from "@beep/postgres"
  *
  * const entry = MigrationBundleEntry.make({
- *   name: "20260512000000_architecture_lab_work_item",
+ *   name: "20260813130540_baseline",
  *   sql: "CREATE TABLE architecture_lab_work_item (id TEXT PRIMARY KEY);\n",
  * })
  * console.log(entry.name)
